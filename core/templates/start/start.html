@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% load i18n %}
+
+{% get_current_language as LANGUAGE_CODE %}
+
+{% block content %}
+
+    <h2>DaTe</h2>
+
+    {% if user.is_authenticated %}
+        <p>Hello, {{ user.full_name }}!</p>
+        <p><a href="{% url 'logout' %}">{% trans 'Logga ut' %}</a></p>
+    {% else %}
+        <p>{% trans 'Du är inte inloggad' %}</p>
+        <p><a href="{% url 'login' %}">{% trans 'Logga in' %}</a></p>
+    {% endif %}
+
+{% endblock %}

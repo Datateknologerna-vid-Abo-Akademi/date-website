@@ -1,0 +1,10 @@
+.idea/
+
+*.env
+!*example.env
+
+*.mo
+
+__pycache__/
+*.py[cod]
+*$py.class

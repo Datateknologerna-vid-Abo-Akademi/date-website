@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:10.1-alpine
+    volumes:
+      - ${DATE_DB_PATH}:/var/lib/postgresql/data/
+    ports:
+      - ${DATE_DB_PORT}:5432
+    environment:
+      - POSTGRES_PASSWORD=${DATE_DB_PASSWORD}
+  web:
+    build: .
+    command: bash -c "python /code/manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/code
+    ports:
+      - ${DATE_DJANGO_PORT}:8000
+    environment:
+      - SECRET_KEY=${DATE_SECRET_KEY}
+      - DEBUG=${DATE_DEBUG}
+      - DEVELOP=${DATE_DEVELOP}
+      - DB_PASSWORD=${DATE_DB_PASSWORD}
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
