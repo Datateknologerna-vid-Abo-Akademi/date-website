@@ -15,8 +15,8 @@ class UserAdmin(auth_admin.UserAdmin):
 
     form = MemberUpdateForm
     add_form = MemberCreationForm
-    list_display = ('email', 'first_name', 'last_name', 'role', 'is_superuser')
-    list_filter = ('role', 'is_superuser', 'is_active', 'groups')
+    list_display = ('email', 'first_name', 'last_name', 'membership_type', 'is_staff')
+    list_filter = ('membership_type', 'is_staff', 'is_active', 'groups')
     search_fields = ('first_name', 'last_name', 'email')
     ordering = ('email', )
     readonly_fields = ('last_login',)
