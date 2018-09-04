@@ -21,6 +21,7 @@ class MemberCreationForm(forms.ModelForm):
     class Meta:
         model = Member
         fields = (
+            'username',
             'email',
             'first_name',
             'last_name',
@@ -60,6 +61,7 @@ class MemberUpdateForm(forms.ModelForm):
     class Meta:
         model = Member
         fields = (
+            'username',
             'email',
             'first_name',
             'last_name',
