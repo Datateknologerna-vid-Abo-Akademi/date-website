@@ -6,6 +6,8 @@ from django.core.mail import send_mail
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 
+from date import settings
+
 logger = logging.getLogger('date')
 
 
@@ -29,7 +31,7 @@ class MemberManager(BaseUserManager):
 
     def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_staff', True)
+        # extra_fields.setdefault('is_staff', True)
 
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
@@ -74,6 +76,10 @@ class Member(AbstractBaseUser, PermissionsMixin):
 
     def __unicode__(self):
         return u'{0} ({1})'.format(self.get_full_name(), self.email)
+
+    @property
+    def is_staff(self):
+        return self.groups.filter(name__in=settings.STAFF_GROUPS).exists() or self.is_superuser
 
     @property
     def full_name(self):

@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import ldap
+from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -116,6 +118,33 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+# LDAP Configs
+
+AUTH_LDAP_SERVER_URI = 'ldap://ldap.abo.fi'
+AUTH_LDAP_BIND_DN = 'dc=abo,dc=fi'
+
+AUTH_LDAP_USER_SEARCH = LDAPSearch(
+    AUTH_LDAP_BIND_DN,
+    ldap.SCOPE_SUBTREE,
+    '(uid=%(username)s)',
+)
+
+AUTH_LDAP_CACHE_TIMEOUT = 3600
+
+AUTHENTICATION_BACKENDS = (
+    # 'django_auth_ldap.backend.LDAPBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+# LDAP config end
+
+
+STAFF_GROUPS = [
+    'styrelse',
+    'admin'
+]
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
@@ -177,6 +206,11 @@ LOGGING = {
     },
     'loggers': {
         'django': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django_auth_ldap': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True,

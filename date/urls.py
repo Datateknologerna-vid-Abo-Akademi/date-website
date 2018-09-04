@@ -21,8 +21,8 @@ import core.views as core
 urlpatterns = [
     path('', core.index, name='index'),
     path('news/', include('news.urls')),
-    path('django-admin/', admin.site.urls),
+    path('admin/', admin.site.urls),
     path('members/', include('django.contrib.auth.urls')),
 
-    path('setlang/<str:lang>', core.language, name='language')
+    # path('setlang/<str:lang>', core.language, name='language')
 ]
