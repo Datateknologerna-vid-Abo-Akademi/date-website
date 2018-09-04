@@ -14,29 +14,28 @@ logger = logging.getLogger('date')
 class MemberManager(BaseUserManager):
     use_in_migrations = True
 
-    def _create_user(self, email, password, **extra_fields):
+    def _create_user(self, username, password, **extra_fields):
         """
         Creates and saves members with email and password
         """
-        if not email:
-            raise ValueError('Email is required')
-        email = self.normalize_email(email)
-        member = self.model(email=email, **extra_fields)
+        if not username:
+            raise ValueError('Username is required')
+        member = self.model(username=username, **extra_fields)
         member.set_password(password)
         member.save(using=self._db)
         return member
 
-    def create_user(self, email, password=None, **extra_fields):
-        return self._create_user(email, password, **extra_fields)
+    def create_user(self, username, password=None, **extra_fields):
+        return self._create_user(username, password, **extra_fields)
 
-    def create_superuser(self, email, password, **extra_fields):
+    def create_superuser(self, username, password, **extra_fields):
         extra_fields.setdefault('is_superuser', True)
         # extra_fields.setdefault('is_staff', True)
 
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
 
-        return self._create_user(email, password, **extra_fields)
+        return self._create_user(username, password, **extra_fields)
 
 
 FRESHMAN = 1
@@ -53,6 +52,7 @@ MEMBERSHP_TYPES = (
 
 
 class Member(AbstractBaseUser, PermissionsMixin):
+    username = models.CharField(_('Användarnamn'), unique=True, max_length=20, blank=False)
     email = models.EmailField(_('E-postadress'), unique=True)
     first_name = models.CharField(_('Förnamn'), max_length=30, blank=False)
     last_name = models.CharField(_('Efternamn'), max_length=30, blank=False)
@@ -66,7 +66,7 @@ class Member(AbstractBaseUser, PermissionsMixin):
 
     objects = MemberManager()
 
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = []
 
     class Meta:

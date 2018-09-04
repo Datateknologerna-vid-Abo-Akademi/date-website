@@ -120,14 +120,20 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # LDAP Configs
 
-AUTH_LDAP_SERVER_URI = 'ldap://ldap.abo.fi'
-AUTH_LDAP_BIND_DN = 'dc=abo,dc=fi'
+AUTH_LDAP_SERVER_URI = 'ldap://authur.abo.fi'
+AUTH_LDAP_BIND_DN = 'ou=unixaccounts,ou=accounts,dc=abo,dc=fi'
 
-AUTH_LDAP_USER_SEARCH = LDAPSearch(
-    AUTH_LDAP_BIND_DN,
-    ldap.SCOPE_SUBTREE,
-    '(uid=%(username)s)',
-)
+AUTH_LDAP_BIND_PASSWORD = '%(password)s'
+
+#AUTH_LDAP_USER_SEARCH = LDAPSearch(
+#    AUTH_LDAP_BIND_DN,
+#    ldap.SCOPE_SUBTREE,
+#    '(uid=%(username)s)',
+#)
+
+AUTH_LDAP_USER_DN_TEMPLATE = 'uid=%(user)s,'+AUTH_LDAP_BIND_DN
+
+AUTH_LDAP_ALWAYS_UPDATE_USER = False
 
 AUTH_LDAP_CACHE_TIMEOUT = 3600
 
@@ -211,7 +217,7 @@ LOGGING = {
             'propagate': True,
         },
         'django_auth_ldap': {
-            'handlers': ['console'],
+            'handlers': ['console_debug'],
             'level': 'DEBUG',
             'propagate': True,
         },
