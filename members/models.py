@@ -53,9 +53,9 @@ MEMBERSHP_TYPES = (
 
 class Member(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(_('Användarnamn'), unique=True, max_length=20, blank=False)
-    email = models.EmailField(_('E-postadress'), unique=True)
-    first_name = models.CharField(_('Förnamn'), max_length=30, blank=False)
-    last_name = models.CharField(_('Efternamn'), max_length=30, blank=False)
+    email = models.EmailField(_('E-postadress'), unique=True, blank=True, null=True)
+    first_name = models.CharField(_('Förnamn'), max_length=30, blank=True)
+    last_name = models.CharField(_('Efternamn'), max_length=30, blank=True)
     phone = models.CharField(_('Telefonnummer'), max_length=30, blank=True)
     address = models.CharField(_('Adress'), max_length=50, blank=True)
     zip_code = models.CharField(_('Postkod'), max_length=5, blank=True)
