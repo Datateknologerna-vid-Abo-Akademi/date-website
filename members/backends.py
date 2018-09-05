@@ -3,6 +3,8 @@ import ldap
 
 import logging
 
+from members.models import Member
+
 logger = logging.getLogger('date')
 
 
@@ -22,9 +24,10 @@ class AuthBackend(ModelBackend):
         #         # return all user data results
         #         connect.unbind_s()
         #         logger.info(result)
+        #         user = Member.objects.get(username=username)
+        #         return user
         #     except ldap.LDAPError:
         #         connect.unbind_s()
         #         logger.debug("Not no no oof oh no")
 
-        user = ModelBackend.authenticate(request, username, password, kwargs)
-        return user
+        return None
