@@ -99,9 +99,3 @@ class Member(AbstractBaseUser, PermissionsMixin):
         Sends email to members
         """
         send_mail(subject, message, from_email, [self.email], **kwargs)
-
-    def has_perm(self, perm, obj=None):
-        return self.is_superuser
-
-    def has_module_perms(self, app_label):
-        return self.is_superuser
