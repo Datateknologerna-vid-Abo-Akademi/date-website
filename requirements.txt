@@ -1,4 +1,4 @@
-ldap
+python-ldap
 django-auth-ldap
 environ
 Django>=2.1,<2.2

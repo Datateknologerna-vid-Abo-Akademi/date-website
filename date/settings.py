@@ -123,7 +123,7 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTH_LDAP_SERVER_URI = 'ldap://authur.abo.fi'
 AUTH_LDAP_BIND_DN = 'ou=unixaccounts,ou=accounts,dc=abo,dc=fi'
 
-AUTH_LDAP_BIND_PASSWORD = '%(password)s'
+# AUTH_LDAP_BIND_PASSWORD = '%(password)s'
 
 #AUTH_LDAP_USER_SEARCH = LDAPSearch(
 #    AUTH_LDAP_BIND_DN,
@@ -138,8 +138,7 @@ AUTH_LDAP_ALWAYS_UPDATE_USER = False
 AUTH_LDAP_CACHE_TIMEOUT = 3600
 
 AUTHENTICATION_BACKENDS = (
-    # 'django_auth_ldap.backend.LDAPBackend',
-    'django.contrib.auth.backends.ModelBackend',
+    'members.backends.AuthBackend',
 )
 
 # LDAP config end
