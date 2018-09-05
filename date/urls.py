@@ -23,6 +23,7 @@ urlpatterns = [
     path('news/', include('news.urls')),
     path('admin/', admin.site.urls),
     path('members/', include('django.contrib.auth.urls')),
+    path('tinymce/', include('tinymce.urls')),
 
     # path('setlang/<str:lang>', core.language, name='language')
 ]
