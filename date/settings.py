@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'news.apps.NewsConfig',
     'events.apps.EventsConfig',
     'members.apps.MemberConfig',
+    'archive.apps.ArchiveConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
