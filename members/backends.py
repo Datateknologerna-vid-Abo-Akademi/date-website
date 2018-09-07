@@ -23,7 +23,7 @@ class AuthBackend(ModelBackend):
                     user = Member.objects.get(username=username)
                     return user
                 except Member.DoesNotExist:
-                    logger.debug("User {} not registered")
+                    logger.debug("User {} not registered".format(username))
 
             # ldap_server = ldap3.Server("authur.abo.fi", get_info=ldap3.ALL, use_ssl=False)
             # base_dn = "dc=abo,dc=fi"

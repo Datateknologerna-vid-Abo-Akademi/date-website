@@ -31,7 +31,8 @@ class MemberCreationForm(forms.ModelForm):
             'city',
             'country',
             'membership_type',
-            'password'
+            'password',
+            'groups',
         )
 
     # def clean(self):
@@ -71,6 +72,7 @@ class MemberUpdateForm(forms.ModelForm):
             'city',
             'country',
             'membership_type',
+            'groups',
         )
 
     def save(self, commit=True):

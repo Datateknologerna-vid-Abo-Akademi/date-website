@@ -1,3 +1,4 @@
+django-ckeditor
 requests
 ldap3
 environ

@@ -8,3 +8,5 @@
 __pycache__/
 *.py[cod]
 *$py.class
+date/static/ckeditor
+date/static/admin
