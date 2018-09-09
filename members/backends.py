@@ -1,5 +1,5 @@
 from django.contrib.auth.backends import ModelBackend
-import ldap3
+#import ldap3
 import requests
 from requests.auth import HTTPBasicAuth
 

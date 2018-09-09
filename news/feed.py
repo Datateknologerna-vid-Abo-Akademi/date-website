@@ -24,6 +24,5 @@ class LatestPosts(Feed):
     def get_modified_time(self, item):
         return item.modified_time
 
-    #def item_link(self, item):
-        #pass
-        #return reverse('post', args=[item.pk])
+    def item_link(self, item):
+        return reverse('article-detail', args=[item.slug])
