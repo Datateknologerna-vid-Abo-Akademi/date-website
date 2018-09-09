@@ -9,7 +9,7 @@ from .models import Collection, AbstractFile
 def get_file_preview(obj):
     if obj.pk:
         return """<a href="{src}" target="_blank"><img src="{src}" alt="{title}" style="max-width: 200px; max-height: 200px;" /></a>""".format(
-                src=obj.BaseFile.url,
+                src=obj.AbstractFile.url,
                 title=obj.title,
         )
     return _("(choose a file and save and continue editing to see the preview)")
@@ -22,7 +22,7 @@ get_file_preview.short_description = _("File Preview")
 class FileInline(admin.StackedInline):
     model = AbstractFile
     extra = 0
-    fields = ["get_edit_link", "title", "file", get_file_preview]
+    fields = ["title", "file", get_file_preview]
     readonly_fields = ["get_edit_link", get_file_preview]
 
     def get_edit_link(self, obj=None):
@@ -45,7 +45,7 @@ class CollectionAdmin(admin.ModelAdmin):
 
 
 @admin.register(AbstractFile)
-class BaseFileAdmin(admin.ModelAdmin):
+class AbstractFileAdmin(admin.ModelAdmin):
     save_on_top = True
-    fields = ['belongs_in', 'title', 'baseFile', get_file_preview]
+    fields = ['belongs_in', 'title', 'abstractFile', get_file_preview]
     readonly_fields = [get_file_preview]
