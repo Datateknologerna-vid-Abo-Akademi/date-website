@@ -10,3 +10,6 @@ __pycache__/
 *$py.class
 date/static/ckeditor
 date/static/admin
+
+media
+!media/.gitkeep

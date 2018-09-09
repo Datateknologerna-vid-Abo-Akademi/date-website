@@ -1,13 +1,17 @@
-from django.db import models
-from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
-import datetime
+from __future__ import unicode_literals
+
 import os
 
+from django.db import models
+from django.utils.encoding import python_2_unicode_compatible
+from django.utils.translation import ugettext_lazy as _
+from django.utils.text import slugify
 
+
+@python_2_unicode_compatible
 class Collection(models.Model):
-    title = models.CharField(_('tittel'), max_length=100)
-    pub_date = models.DateTimeField(default=datetime.datetime.now())
+    title = models.CharField(_('Namn'), max_length=100)
+    pub_date = models.DateTimeField()
 
     class Meta:
         verbose_name =_('Samling')
@@ -16,32 +20,32 @@ class Collection(models.Model):
     def __str__(self):
         return self.title
 
+    def pub_date_pretty(self):
+        return self.pub_date.strftime('%b %e %Y')
+
 
 def upload_to(instance, filename):
     filename_base, filename_ext = os.path.splitext(filename)
-    return "archive/files/{collection}/{filename}{extension}".format(
-        collection=slugify(instance.belongs_in.title),
+    return "{collection}/{filename}{extension}".format(
+        collection=slugify(instance.collection.title),
         filename=slugify(filename_base),
         extension=filename_ext.lower(),
     )
 
 
+@python_2_unicode_compatible
 class AbstractFile(models.Model):
     """
         abstract class for all fileTypes, defines all common characters.
     """
 
-    belongs_in = models.ForeignKey(Collection, verbose_name=_('Samling'), on_delete=models.CASCADE)
+    collection = models.ForeignKey(Collection, verbose_name=_('Samling'), on_delete=models.CASCADE)
     title = models.CharField(_('Namn'), max_length=100, blank=True)
-    pub_date = models.DateTimeField(default=datetime.datetime.now())
     file = models.FileField(_('Fil'), blank=True, upload_to=upload_to)
 
     class Meta:
         verbose_name = _("fil")
         verbose_name_plural = _("filer")
-
-    def pub_date_pretty(self):
-        return self.pub_date.strftime('%b %e %Y')
 
     def __str__(self):
         return self.title
