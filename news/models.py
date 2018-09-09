@@ -40,3 +40,6 @@ class Post(models.Model):
     def update(self):
         self.modified_time = timezone.now()
         self.save()
+
+    #def get_absolute_url(self):
+    #    return "/news/%s/" % self.slug

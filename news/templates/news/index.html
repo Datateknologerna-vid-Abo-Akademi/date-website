@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="sv_FI">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Nyheter{% endblock %}</title>
+</head>
+<body>
+    <div class="container">
+        {% block content %}
+        <h1>Here will be news</h1>
+        {% for news_item in latest_news_items %}
+          <dt>{{ news_item.title }}, {{ news_item.author}}</dt>
+          <dd>{{ news_item.content }}</dd>
+        {% endfor %}
+        {% endblock %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="sv_FI">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ article.title }}{% endblock %}</title>
+</head>
+<body>
+    <div class="container">
+        {% block content %}
+          <h1>{{ article.title }}</h1>
+          <h2>{{ article.author }}</h2>
+          <h3>{{ article.published_time }}</h3>
+          {{ article.content | safe }}
+        {% endblock %}
+    </div>
+</body>
+</html>
