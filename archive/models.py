@@ -1,12 +1,15 @@
 from django.db import models
+from django.utils.translation import ugettext_lazy as _
 
 # Create your models here.
 
 
-class File(models.Model):
+class AbstractFile(models.Model):
     title = models.CharField(max_length=150)
     pub_date = models.DateTimeField()
-    file = models.FileField()
+
+    class Meta:
+        abstract = True
 
     def pub_date_pretty(self):
         return self.pub_date.strftime('%b %e %Y')
@@ -15,5 +18,16 @@ class File(models.Model):
         return self.title
 
 
-class Picture(File):
-    file = models.ImageField(upload_to='/Images')
+class File(AbstractFile):
+
+    class Meta:
+        verbose_name = _('fil')
+        verbose_name_plural = _('filer')
+
+
+class Picture(AbstractFile):
+    file = models.ImageField(upload_to='uploads/images')
+
+    class Meta:
+        verbose_name = _('bild')
+        verbose_name_plural = _('bilder')
