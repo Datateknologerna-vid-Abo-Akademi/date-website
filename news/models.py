@@ -4,6 +4,7 @@ from ckeditor.fields import RichTextField
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+from django.urls import reverse
 
 logger = logging.getLogger('date')
 
@@ -18,7 +19,7 @@ class Post(models.Model):
     published_time = models.DateTimeField(_('Publicerad'), editable=False, null=True, blank=True)
     modified_time = models.DateTimeField(_('Modifierad'), editable=False, null=True, blank=True)
     published = models.BooleanField(_('Publicera'), default=True)
-    slug = models.SlugField(_('Slug'), allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
+    slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
 
     class Meta:
         verbose_name = _('nyhet')
@@ -41,5 +42,5 @@ class Post(models.Model):
         self.modified_time = timezone.now()
         self.save()
 
-    def get_absolute_url(self):
-        return "/news/%s/" % self.slug
+    def get_link(self):
+        return reverse('article-detail', args=[self.slug])
