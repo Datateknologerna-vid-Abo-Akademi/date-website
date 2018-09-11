@@ -10,6 +10,8 @@
 
     {% if user.is_authenticated %}
         <p>Hello, {{ user.full_name }}!</p>
+        <p><a href="{% url 'upload' %}">NEW!! Upload pictures</a></p>
+
         <p><a href="{% url 'logout' %}">{% trans 'Logga ut' %}</a></p>
     {% else %}
         <p>{% trans 'Du är inte inloggad' %}</p>

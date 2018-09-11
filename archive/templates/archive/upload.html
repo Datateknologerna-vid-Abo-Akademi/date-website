@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% load i18n %}
+
+{% block content %}
+
+    <h2>DaTe</h2>
+
+    {% if user.is_authenticated %} <!-- TODO: if user allowed to upload -->
+        <p>Hello, {{ user.full_name }}!</p>
+
+        <form action="{% url 'upload' %}" method="POST">
+            {% csrf_token %}
+            <br>
+            <p>{% trans 'Välj album' %} :
+            <select>
+            {% for collection in collections %}
+                <option value="{{ collection.title }}"> {{ collection.title }}</option>
+            {% endfor %}
+            </select> </p>
+            <br>
+            {% trans 'Välj filer' %}: <input type="file" name="file" multiple>
+            <input type="submit" value="{% trans 'Ladda upp' %}">
+        </form>
+
+    {% endif %}
+
+{% endblock %}

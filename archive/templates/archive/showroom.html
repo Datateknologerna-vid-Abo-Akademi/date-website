@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File Showroom</title>
+</head>
+<body>
+    {% if msg %}
+        <h2>{{ msg }}</h2>
+    {% endif %}
+
+    <h1>File Showroom</h1>
+    {% for file in files %}
+        <img src="{{ file.file.url }}" style="max-width: 400px; max-height: 400px;">
+        <p>{{ file.collection.title }}</p>
+    {% endfor %}
+</body>
+</html>

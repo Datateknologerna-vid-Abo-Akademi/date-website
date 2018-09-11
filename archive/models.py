@@ -41,7 +41,7 @@ class AbstractFile(models.Model):
 
     collection = models.ForeignKey(Collection, verbose_name=_('Samling'), on_delete=models.CASCADE)
     title = models.CharField(_('Namn'), max_length=100, blank=True)
-    file = models.FileField(_('Fil'), blank=True, upload_to=upload_to)
+    file = models.FileField(upload_to=upload_to)
 
     class Meta:
         verbose_name = _("fil")

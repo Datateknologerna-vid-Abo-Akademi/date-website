@@ -1,19 +1,21 @@
-from django.views.generic.edit import FormView
-from .forms import FileFieldForm
+from django.shortcuts import render
+from .models import AbstractFile, Collection
 
 
-class FileFieldView(FormView):
-    form_class = FileFieldForm
-    template_name = 'upload.html'  # Replace with your template.
-    success_url = reversed()  # Replace with your URL or reverse().
+def showroom(request):
+    files = AbstractFile.objects.all()
+    return render(request, 'archive/showroom.html', {'files': files})
 
-    def post(self, request, *args, **kwargs):
-        form_class = self.get_form_class()
-        form = self.get_form(form_class)
-        files = request.FILES.getlist('file_field')
-        if form.is_valid():
-            for f in files:
-                ...  # Do something with each file.
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
+
+def upload(request):
+    if request.method == 'POST':
+        # Process files here.
+        request.FILES
+
+        files = AbstractFile.objects.all()
+        return render(request, 'archive/showroom.html', {'files': files, 'msg': msg})
+
+    else:
+        collections = Collection.objects.all()
+        return render(request, 'archive/upload.html', {'collections': collections})
+
