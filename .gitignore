@@ -14,6 +14,7 @@ date/static/admin
 media
 !media/.gitkeep
 
-**/migrations/*.py
-!**/migrations/*_initial.py
-!**/migrations/__init__.py
+# 2018-09-12 Decided to commit all migration files
+# **/migrations/*.py
+# !**/migrations/*_initial.py
+# !**/migrations/__init__.py
