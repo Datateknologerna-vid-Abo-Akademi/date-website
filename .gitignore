@@ -13,3 +13,7 @@ date/static/admin
 
 media
 !media/.gitkeep
+
+**/migrations/*.py
+!**/migrations/*_initial.py
+!**/migrations/__init__.py
