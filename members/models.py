@@ -3,6 +3,7 @@ import logging
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.core.mail import send_mail
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 
@@ -99,3 +100,38 @@ class Member(AbstractBaseUser, PermissionsMixin):
         Sends email to members
         """
         send_mail(subject, message, from_email, [self.email], **kwargs)
+
+
+SUBSCRIPTION_RENEWAL_SCALES = (
+    ('day', _('Dagar')),
+    ('month', _('Månader')),
+    ('year', _('År')),
+)
+
+
+class Subscription(models.Model):
+    name = models.CharField(_('Namn'), max_length=200, blank=False)
+    does_expire = models.BooleanField(_('Upphör'), default=True)
+    renewal_scale = models.CharField(
+        _('Förnyelse skala'), max_length=10, choices=SUBSCRIPTION_RENEWAL_SCALES, blank=False, null=True
+    )
+    renewal_period = models.IntegerField(_('Förnyelseperiod'), blank=True, null=True)
+    price = models.DecimalField(_('Pris'), decimal_places=2, max_digits=9, blank=False)
+
+    class Meta:
+        verbose_name = _('prenumeration')
+        verbose_name_plural = _('prenumerationer')
+        ordering = ('id',)
+
+
+class SubscriptionPayment(models.Model):
+    member = models.ForeignKey('members.Member', on_delete=models.CASCADE)
+    subscription = models.ForeignKey('members.Subscription', on_delete=models.CASCADE)
+    date_paid = models.DateField(_('Betald'), default=timezone.now, blank=False)
+    date_expires = models.DateField(_('Betald'), default=timezone.now, blank=True, null=True)
+    amount_paid = models.DecimalField(_('Betald summa'), max_digits=9, decimal_places=2, null=True, blank=True)
+
+    class Meta:
+        verbose_name = _('prenumerationsbetalning')
+        verbose_name_plural = _('prenumerationsbetalningar')
+        ordering = ('id',)
