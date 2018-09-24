@@ -12,8 +12,23 @@
 {% if event.registration_is_open_members %}
 <p>OBS! Anmälningen är bindande om inget annat meddelas. </p>
 <p>Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på förhinder.</p>
-  <form class="" action="attend">
+  <form class="" action="attend" method="post">
+    {% for form_element in event.get_registration_form %}
+    <label for="{{ form_element }}"> {{ form_element.name }}</label>
+      {% if form_element.type == 'select' %}
+        <select class="" name="{{ form_element }}">
+          {% for option in form_element.get_choices %}
+          <option value="{{ option }}">{{ option }}</option>
+          {% endfor %}
+        </select>
+      {% else %}
+        <input type="{{ form_element.type }}" name="{{ form_element }}" value="">
+      {% endif %}
+    {% empty %}
+      <p>No form elements</p>
+    {% endfor %}
     <input type="submit" value="Anmäl" />
+    {% csrf_token %}
   </form>
 {% elif event.registation_past_due %}
   <p>Anmälningstiden har gått tyvärr ut.</p>

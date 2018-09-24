@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.views import generic
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.utils import timezone
-from .models import Event, EventRegistration
+from .models import Event, EventRegistrationForm, EventAttendees
 
 # Create your views here.
 class IndexView(generic.ListView):
@@ -18,9 +18,12 @@ class DetailView(generic.DetailView):
     template_name = 'events/detail.html'
 
 def add_event_attendance(request, slug):
-    this_event = Event.objects.get(slug=slug)
-    this_event.add_event_attendance(user=request.user)
-    return redirect('detail', slug=slug)
+    if request.method == 'POST':
+        this_event = Event.objects.get(slug=slug)
+        this_event.add_event_attendance(user=request.user)
+        return redirect('detail', slug=slug)
+    else:
+        return redirect('detail', slug=slug)
 
 #TODO: Remove possibility to remove attendace without rights
 def cancel_event_attendance(request, slug):

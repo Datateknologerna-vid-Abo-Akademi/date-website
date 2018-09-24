@@ -5,7 +5,7 @@ from django.contrib import admin
 
 from core.functions import slugify_max
 from events import models
-from events.models import Event, EventRegistration
+from events.models import Event, EventRegistrationForm, EventAttendees
 
 logger = logging.getLogger('date')
 

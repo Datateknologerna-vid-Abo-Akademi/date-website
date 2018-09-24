@@ -56,18 +56,18 @@ class Event(models.Model):
         return reverse('detail', args=[self.slug])
 
     def get_registrations(self):
-        return EventRegistration.objects.filter(event = self)
+        return EventAttendees.objects.filter(event = self)
 
     def add_event_attendance(self, user):
         try:
-            registration = EventRegistration.objects.get(user=user, event=self)
+            registration = EventAttendees.objects.get(user=user, event=self)
         except ObjectDoesNotExist:
-            registration = EventRegistration.objects.create(user=user,
+            registration = EventAttendees.objects.create(user=user,
                                                         event=self,
                                                         time_registered=timezone.now())
 
     def cancel_event_attendance(self, user):
-        registration = EventRegistration.objects.get(user=user, event=self)
+        registration = EventAttendees.objects.get(user=user, event=self)
         registration.delete()
 
     def registration_is_open_members(self):
@@ -82,13 +82,35 @@ class Event(models.Model):
     def event_is_full(self):
         if self.event_max_participants == 0:
             return False
-        return EventRegistration.objects.filter(event=self).count() >= self.event_max_participants
+        return EventAttendees.objects.filter(event=self).count() >= self.event_max_participants
+
+    def get_registration_form(self):
+        return EventRegistrationForm.objects.filter(event = self)
 
 
-class EventRegistration(models.Model):
+class EventRegistrationForm(models.Model):
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
-    user = models.ForeignKey('members.Member', verbose_name='Attendee', on_delete=models.CASCADE)
-    time_registered = models.DateTimeField()
+    name = models.CharField(_('Namn'), max_length=255, blank=True)
+    type = models.CharField(_('Typ'), choices=(("text", "Text"),("select", "Multiple choice"),("checkbox", "Kryssryta")), blank=True, max_length=255, null=True)
+    required = models.BooleanField(_('Krävd'), default=False)
+    published = models.BooleanField(_('Visa'), default=True)
+    choice_list = models.CharField(_('Värden'), max_length=255, blank=True)
+
+    def __str__(self):
+        return str(self.name)
+
+    class Meta:
+        verbose_name = _('Anmälningsfält')
+        verbose_name_plural = _('Anmälningsfält')
+
+    def get_choices(self):
+        return str(self.choice_list).split(',')
+
+
+class EventAttendees(models.Model):
+    event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
+    user = models.ForeignKey('members.Member', verbose_name='Deltagare', on_delete=models.CASCADE)
+    time_registered = models.DateTimeField(_('Registrerad'))
 
     def __str__(self):
         return str(self.user)
@@ -102,4 +124,4 @@ class EventRegistration(models.Model):
     def save(self, *args, **kwargs):
         if self.time_registered is None:
             self.time_registered = timezone.now()
-        super(EventRegistration, self).save(*args, **kwargs)
+        super(EventAttendees, self).save(*args, **kwargs)

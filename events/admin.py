@@ -1,15 +1,22 @@
 from events import forms
 from django.contrib import admin
 
-from events.models import Event, EventRegistration
+from events.models import Event, EventRegistrationForm, EventAttendees
 
-class AttendeesInline(admin.TabularInline):
-    model = EventRegistration
+class EventRegistrationFormInline(admin.TabularInline):
+    model = EventRegistrationForm
+    fk_name = 'event'
+    extra = 0
+    fields = ('name', 'type', 'required', 'published', 'choice_list')
+    can_delete = True
+
+class EventAttendeesFormInline(admin.TabularInline):
+    model = EventAttendees
     fk_name = 'event'
     extra = 0
     fields = ('user', 'time_registered')
     can_delete = True
-    ordering = ['user']
+    ordering = ['-time_registered']
 
 class EventAdmin(admin.ModelAdmin):
 
@@ -18,7 +25,8 @@ class EventAdmin(admin.ModelAdmin):
     ordering = ['-event_date_start']
     save_on_top = True
     inlines = [
-        AttendeesInline,
+        EventRegistrationFormInline,
+        EventAttendeesFormInline
     ]
 
     def add_view(self, request, form_url='', extra_context=None):
