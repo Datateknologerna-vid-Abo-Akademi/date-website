@@ -1,10 +1,11 @@
 import logging
 from django import forms
 from django.utils import timezone
+from django.contrib import admin
 
 from core.functions import slugify_max
 from events import models
-from events.models import Event
+from events.models import Event, EventRegistration
 
 logger = logging.getLogger('date')
 
@@ -47,7 +48,6 @@ class EventCreationForm(forms.ModelForm):
         if commit:
             post.save()
         return post
-
 
 class EventEditForm(forms.ModelForm):
 

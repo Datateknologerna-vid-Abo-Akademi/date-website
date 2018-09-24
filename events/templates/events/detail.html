@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% load i18n %}
+{% block title %}Händelse{% endblock %}
+
+{% block content %}
+  <h1>{{ event.title }}</h1>
+  <h4>{{ event.event_date_start|date:"d M Y h:m" }}</h4>
+  <p>{{ event.content | safe }}</p>
+
+<h2>Anmälning</h2>
+{% if event.registration_is_open_members %}
+<p>OBS! Anmälningen är bindande om inget annat meddelas. </p>
+<p>Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på förhinder.</p>
+  <form class="" action="attend">
+    <input type="submit" value="Anmäl" />
+  </form>
+{% elif event.registation_past_due %}
+  <p>Anmälningstiden har gått tyvärr ut.</p>
+{% elif event.event_is_full %}
+  <p>Evenemanget är tyvärr full.</p>
+{% else %}
+  <p>Anmälan har inte ännu öppnats</p>
+{% endif %}
+
+<h2>Anmälda</h2>
+{% for attendee in event.get_registrations %}
+  <p>{{ attendee.user }}</p>
+{% empty %}
+  <p>Inga deltagare...</p>
+{% endfor %}
+
+{% endblock %}

@@ -6,18 +6,18 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.urls import reverse
 from core.functions import days_hence
+from django.core.exceptions import ObjectDoesNotExist
 
 logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
-
 
 class Event(models.Model):
     title = models.CharField(_('Titel'), max_length=255, blank=False)
     content = RichTextField(_('Innehåll'), blank=True)
     event_date_start = models.DateTimeField(_('Startdatum'), default=timezone.now)
     event_date_end = models.DateTimeField(_('Slutdatum'), default=timezone.now)
-    event_max_participants = models.IntegerField(_('Maximal antal deltagare'), null=True, blank=True)
+    event_max_participants = models.IntegerField(_('Maximal antal deltagare'), choices=[(0, u"Ingen begränsning")] + list(zip(range(1,200), range(1,200))), null=True, blank=True)
     sign_up = models.BooleanField(_('Anmälning'), default=True)
     sign_up_members = models.DateTimeField(_('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=timezone.now)
     sign_up_others = models.DateTimeField(_('Anmälan öppnas (övriga)'), null=True, blank=True, default=timezone.now)
@@ -53,5 +53,53 @@ class Event(models.Model):
         self.save()
 
     def get_link(self):
-        pass
-        #return reverse('article-detail', args=[self.slug])
+        return reverse('detail', args=[self.slug])
+
+    def get_registrations(self):
+        return EventRegistration.objects.filter(event = self)
+
+    def add_event_attendance(self, user):
+        try:
+            registration = EventRegistration.objects.get(user=user, event=self)
+        except ObjectDoesNotExist:
+            registration = EventRegistration.objects.create(user=user,
+                                                        event=self,
+                                                        time_registered=timezone.now())
+
+    def cancel_event_attendance(self, user):
+        registration = EventRegistration.objects.get(user=user, event=self)
+        registration.delete()
+
+    def registration_is_open_members(self):
+        return timezone.now() >= self.sign_up_members and not self.event_is_full() and not self.registation_past_due()
+
+    def registration_is_open_others(self):
+        return timezone.now() >= self.sign_up_others and not self.event_is_full() and not self.registation_past_due()
+
+    def registation_past_due(self):
+        return timezone.now() > self.sign_up_deadline
+
+    def event_is_full(self):
+        if self.event_max_participants == 0:
+            return False
+        return EventRegistration.objects.filter(event=self).count() >= self.event_max_participants
+
+
+class EventRegistration(models.Model):
+    event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
+    user = models.ForeignKey('members.Member', verbose_name='Attendee', on_delete=models.CASCADE)
+    time_registered = models.DateTimeField()
+
+    def __str__(self):
+        return str(self.user)
+
+    class Meta:
+        verbose_name = _('deltagare')
+        verbose_name_plural = _('deltagare')
+        ordering = ['time_registered', ]
+        unique_together = ('event', 'user')
+
+    def save(self, *args, **kwargs):
+        if self.time_registered is None:
+            self.time_registered = timezone.now()
+        super(EventRegistration, self).save(*args, **kwargs)

@@ -1,13 +1,25 @@
 from events import forms
 from django.contrib import admin
 
-from events.models import Event
+from events.models import Event, EventRegistration
 
+class AttendeesInline(admin.TabularInline):
+    model = EventRegistration
+    fk_name = 'event'
+    extra = 0
+    fields = ('user', 'time_registered')
+    can_delete = True
+    ordering = ['user']
 
 class EventAdmin(admin.ModelAdmin):
 
     list_display = ('title', 'created_time', 'event_date_start', 'published')
     search_fields = ('title', 'author', 'created_time')
+    ordering = ['-event_date_start']
+    save_on_top = True
+    inlines = [
+        AttendeesInline,
+    ]
 
     def add_view(self, request, form_url='', extra_context=None):
         self.fields = forms.EventCreationForm.Meta.fields
@@ -25,6 +37,5 @@ class EventAdmin(admin.ModelAdmin):
 
         form.user = request.user
         return form
-
 
 admin.site.register(Event, EventAdmin)
