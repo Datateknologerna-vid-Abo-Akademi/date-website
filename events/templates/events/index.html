@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% load i18n %}
+{% block title %}Händelser{% endblock %}
+
+{% block content %}
+{% for event in event_list %}
+
+    <a href="{{ event.get_link }}"><h1>{{ event.title }}</h1></a>
+    <h4>{{ event.event_date_start }}</h4>
+    <p> {{ event.content | safe | truncatewords_html:"70" }}
+{% empty %}
+    <li>No events, yet.</li>
+{% endfor %}
+{% endblock %}
