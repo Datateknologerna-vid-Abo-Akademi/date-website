@@ -21,12 +21,12 @@ def add_event_attendance(request, slug):
     if request.method == 'POST':
         this_event = Event.objects.get(slug=slug)
         this_event.add_event_attendance(user=request.user)
-        return redirect('detail', slug=slug)
+        return redirect('events_detail', slug=slug)
     else:
-        return redirect('detail', slug=slug)
+        return redirect('events_detail', slug=slug)
 
 #TODO: Remove possibility to remove attendace without rights
 def cancel_event_attendance(request, slug):
     this_event = Event.objects.get(slug=slug)
     this_event.cancel_event_attendance(request.user)
-    return redirect('detail', slug=slug)
+    return redirect('events_detail', slug=slug)

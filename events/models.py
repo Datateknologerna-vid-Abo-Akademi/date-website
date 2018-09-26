@@ -17,7 +17,7 @@ class Event(models.Model):
     content = RichTextField(_('Innehåll'), blank=True)
     event_date_start = models.DateTimeField(_('Startdatum'), default=timezone.now)
     event_date_end = models.DateTimeField(_('Slutdatum'), default=timezone.now)
-    event_max_participants = models.IntegerField(_('Maximal antal deltagare'), choices=[(0, u"Ingen begränsning")] + list(zip(range(1,200), range(1,200))), null=True, blank=True)
+    event_max_participants = models.IntegerField(_('Maximal antal deltagare'), choices=[(0, u"Ingen begränsning")] + list(zip(range(1,200), range(1,200))), default=0)
     sign_up = models.BooleanField(_('Anmälning'), default=True)
     sign_up_members = models.DateTimeField(_('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=timezone.now)
     sign_up_others = models.DateTimeField(_('Anmälan öppnas (övriga)'), null=True, blank=True, default=timezone.now)
@@ -33,7 +33,7 @@ class Event(models.Model):
 
     class Meta:
         verbose_name = _('evenemang')
-        verbose_name_plural = _('evenemanger')
+        verbose_name_plural = _('evenemang')
         ordering = ('id',)
 
     def __str__(self):
@@ -53,7 +53,7 @@ class Event(models.Model):
         self.save()
 
     def get_link(self):
-        return reverse('detail', args=[self.slug])
+        return reverse('events_detail', args=[self.slug])
 
     def get_registrations(self):
         return EventAttendees.objects.filter(event = self)

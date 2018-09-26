@@ -32,6 +32,9 @@ class EventCreationForm(forms.ModelForm):
             'slug'
         )
 
+    class Media:
+        js = ('js/eventform.js',)
+
     def save(self, commit=True):
         post = super(EventCreationForm, self).save(commit=False)
 
@@ -70,6 +73,9 @@ class EventEditForm(forms.ModelForm):
             'sign_up_cancelling_deadline',
             'slug'
         )
+
+    class Media:
+        js = ('js/eventform.js',)
 
     def save(self, commit=True):
         post = super(EventEditForm, self).save(commit=False)

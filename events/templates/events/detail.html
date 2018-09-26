@@ -5,44 +5,45 @@
 
 {% block content %}
   <h1>{{ event.title }}</h1>
-  <h4>{{ event.event_date_start|date:"d M Y h:m" }}</h4>
+  <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
   <p>{{ event.content | safe }}</p>
 
-<h2>Anmälning</h2>
-{% if event.registration_is_open_members %}
-<p>OBS! Anmälningen är bindande om inget annat meddelas. </p>
-<p>Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på förhinder.</p>
-  <form class="" action="attend" method="post">
-    {% for form_element in event.get_registration_form %}
-    <label for="{{ form_element }}"> {{ form_element.name }}</label>
-      {% if form_element.type == 'select' %}
-        <select class="" name="{{ form_element }}">
-          {% for option in form_element.get_choices %}
-          <option value="{{ option }}">{{ option }}</option>
-          {% endfor %}
-        </select>
-      {% else %}
-        <input type="{{ form_element.type }}" name="{{ form_element }}" value="">
-      {% endif %}
-    {% empty %}
-      <p>No form elements</p>
-    {% endfor %}
-    <input type="submit" value="Anmäl" />
-    {% csrf_token %}
-  </form>
-{% elif event.registation_past_due %}
-  <p>Anmälningstiden har gått tyvärr ut.</p>
-{% elif event.event_is_full %}
-  <p>Evenemanget är tyvärr full.</p>
-{% else %}
-  <p>Anmälan har inte ännu öppnats</p>
-{% endif %}
+{% if event.sign_up %}
+  <h2>Anmälning</h2>
+  {% if event.registration_is_open_members %}
+  <p>OBS! Anmälningen är bindande om inget annat meddelas. </p>
+  <p>Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på förhinder.</p>
+    <form class="" action="attend" method="post">
+      {% for form_element in event.get_registration_form %}
+      <label for="{{ form_element }}"> {{ form_element.name }}</label>
+        {% if form_element.type == 'select' %}
+          <select class="" name="{{ form_element }}" {% if form_element.required %} required {% endif %}>
+            {% for option in form_element.get_choices %}
+            <option value="{{ option }}">{{ option }}</option>
+            {% endfor %}
+          </select>
+        {% else %}
+          <input type="{{ form_element.type }}" name="{{ form_element }}" value="" {% if form_element.required %} required {% endif %}>
+        {% endif %}
+      {% empty %}
+      {% endfor %}
+      <input type="submit" value="Anmäl" />
+      {% csrf_token %}
+    </form>
+  {% elif event.registation_past_due %}
+    <p>Anmälningstiden har gått tyvärr ut.</p>
+  {% elif event.event_is_full %}
+    <p>Evenemanget är tyvärr full.</p>
+  {% else %}
+    <p>Anmälan har inte ännu öppnats</p>
+  {% endif %}
 
-<h2>Anmälda</h2>
-{% for attendee in event.get_registrations %}
-  <p>{{ attendee.user }}</p>
-{% empty %}
-  <p>Inga deltagare...</p>
-{% endfor %}
+  <h2>Anmälda</h2>
+  {% for attendee in event.get_registrations %}
+    <p>{{ attendee.user }}</p>
+  {% empty %}
+    <p>Inga deltagare...</p>
+  {% endfor %}
+{% endif %}
 
 {% endblock %}
