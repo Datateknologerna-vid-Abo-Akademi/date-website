@@ -13,4 +13,4 @@ admin.site.register(Picture)
 @admin.register(Collection)
 class CollectionAdmin(admin.ModelAdmin):
     save_on_top = True
-    fields = ['title', 'pub_date']
+    fields = ['title', 'type', 'pub_date']

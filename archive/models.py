@@ -9,20 +9,23 @@ import datetime
 
 
 TYPE_CHOICES = (
-    ('Pictures', 'pictures'),
-    ('Documents', 'documents'),
+    ('Pictures', 'Bilder'),
+    ('Documents', 'Dokument'),
 )
 
 
 class Collection(models.Model):
     title = models.CharField(_('Namn'), max_length=250)
-    type = models.CharField(max_length=2, choices=TYPE_CHOICES)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     pub_date = models.DateTimeField(default=datetime.datetime.now, null=True)
 
     class Meta:
         verbose_name = _('Samling')
         verbose_name_plural = _('Samlingar')
 
+    def get_first_picture(self):
+        if self.type == 'Pictures':
+            return self.picture_set.first()
 
     def get_absolute_url(self):
         return reverse('archive:detail', kwargs={'pk': self.pk})

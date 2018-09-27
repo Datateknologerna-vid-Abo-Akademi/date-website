@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views import generic
 from .models import Collection, Picture
-from .forms import CollectionForm, PictureUploadForm
+from .forms import PictureUploadForm
 
 
 def index(request):
@@ -24,7 +24,7 @@ def upload(request):
 
         print("form is :", form.is_valid())
         if form.is_valid():
-            collection = Collection(title=form['collection_name'].value())
+            collection = Collection(title=form['collection_name'].value(), type='Pictures')
             collection.save()
             for file in request.FILES.getlist('images'):
                 Picture(image=file, collection=collection).save()
