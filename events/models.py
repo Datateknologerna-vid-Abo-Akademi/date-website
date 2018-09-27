@@ -53,10 +53,10 @@ class Event(models.Model):
         self.save()
 
     def get_link(self):
-        return reverse('events_detail', args=[self.slug])
+        return reverse('events:detail', args=[self.slug])
 
     def get_registrations(self):
-        return EventAttendees.objects.filter(event = self)
+        return EventAttendees.objects.filter(event=self)
 
     def add_event_attendance(self, user):
         try:

@@ -25,7 +25,8 @@ urlpatterns = [
     path('news/', include('news.urls')),
     path('admin/', admin.site.urls),
     path('members/', include('django.contrib.auth.urls')),
-    path('archive/', include('archive.urls')),
+    path('pictures/', include('archive.urls')),
     path('events/', include('events.urls')),
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

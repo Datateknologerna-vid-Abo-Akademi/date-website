@@ -1,7 +1,8 @@
 <div class="header-bar">
   <div class="navBar" id="mainNavBar">
     <a href="{% url 'index' %}">Home</a>
-    <a href="{% url 'events_index' %}">Händelser</a>
-    <a href="{% url 'news_index' %}">Nyheter</a>
+    <a href="{% url 'events:index' %}">Händelser</a>
+    <a href="{% url 'news:index' %}">Nyheter</a>
+      <a href="{% url 'archive:index' %}">Bilder</a>
   </div>
 </div>

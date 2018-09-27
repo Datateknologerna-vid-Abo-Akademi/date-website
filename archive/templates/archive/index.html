@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File Showroom</title>
+</head>
+<body>
+    <h1>File Showroom</h1>
+    <a href="{% url 'archive:upload' %}"> new album </a>
+    {% if collections %}
+    <ul>
+        {% for collection in collections %}
+            <li><img src="{{ collection.}}"> <a href="{% url 'archive:detail' collection.id %}">{{ collection.title }}</a></li>
+        {% endfor %}
+
+    </ul>
+    {% else %}
+        <h3>No Albums to show</h3>
+    {% endif %}
+</body>
+</html>
