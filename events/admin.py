@@ -29,6 +29,9 @@ class EventAdmin(admin.ModelAdmin):
         EventAttendeesFormInline
     ]
 
+    class Media:
+        js = ('js/eventform.js',)
+
     def add_view(self, request, form_url='', extra_context=None):
         self.fields = forms.EventCreationForm.Meta.fields
         return super(EventAdmin, self).add_view(request, form_url, extra_context)

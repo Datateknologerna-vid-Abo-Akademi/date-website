@@ -1,21 +1,34 @@
 from __future__ import unicode_literals
-
 import os
 
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
+from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import slugify
+import datetime
 
 
-@python_2_unicode_compatible
+TYPE_CHOICES = (
+    ('Pictures', 'Bilder'),
+    ('Documents', 'Dokument'),
+)
+
+
 class Collection(models.Model):
-    title = models.CharField(_('Namn'), max_length=100)
-    pub_date = models.DateTimeField()
+    title = models.CharField(_('Namn'), max_length=250)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    pub_date = models.DateTimeField(default=datetime.datetime.now, null=True)
 
     class Meta:
-        verbose_name =_('Samling')
-        verbose_name_plural =_('Samlingar')
+        verbose_name = _('Samling')
+        verbose_name_plural = _('Samlingar')
+
+    def get_first_picture(self):
+        if self.type == 'Pictures':
+            return self.picture_set.first()
+
+    def get_absolute_url(self):
+        return reverse('archive:detail', kwargs={'pk': self.pk})
 
     def __str__(self):
         return self.title
@@ -33,19 +46,26 @@ def upload_to(instance, filename):
     )
 
 
-@python_2_unicode_compatible
-class AbstractFile(models.Model):
-    """
-        abstract class for all fileTypes, defines all common characters.
-    """
-
-    collection = models.ForeignKey(Collection, verbose_name=_('Samling'), on_delete=models.CASCADE)
-    title = models.CharField(_('Namn'), max_length=100, blank=True)
-    file = models.FileField(upload_to=upload_to)
+class Picture(models.Model):
+    collection = models.ForeignKey(Collection, verbose_name=_('Galleri'), on_delete=models.CASCADE)
+    image = models.ImageField(upload_to=upload_to)
+    favorite = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = _("fil")
-        verbose_name_plural = _("filer")
+        verbose_name = _("bild")
+        verbose_name_plural = _("bilder")
+
+    def __str__(self):
+        return self.image.name
+
+
+class Document(models.Model):
+    collection = models.ForeignKey(Collection, verbose_name=_('samling'), on_delete=models.CASCADE)
+    title = models.CharField(max_length=250)
+    document = models.FileField(upload_to=upload_to)
 
     def __str__(self):
         return self.title
+
+    class Meta:
+        verbose_name = _('dokument')  # Verbose plural is same.
