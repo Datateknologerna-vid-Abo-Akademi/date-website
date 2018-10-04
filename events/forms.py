@@ -1,7 +1,8 @@
 import logging
 from django import forms
+from django.template.loader import render_to_string
 from django.utils import timezone
-from django.contrib import admin
+from django.utils.safestring import mark_safe
 
 from core.functions import slugify_max
 from events import models

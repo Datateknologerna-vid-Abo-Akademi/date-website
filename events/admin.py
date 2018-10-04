@@ -1,5 +1,7 @@
 from events import forms
 from django.contrib import admin
+from prettyjson import PrettyJSONWidget
+from django.contrib.postgres.fields import JSONField
 
 from events.models import Event, EventRegistrationForm, EventAttendees
 
@@ -14,7 +16,10 @@ class EventAttendeesFormInline(admin.TabularInline):
     model = EventAttendees
     fk_name = 'event'
     extra = 0
-    fields = ('user', 'time_registered')
+    fields = ('user', 'preferences', 'time_registered')
+    formfield_overrides = {
+        JSONField: {'widget': PrettyJSONWidget }
+    }
     can_delete = True
     ordering = ['-time_registered']
 
@@ -50,3 +55,4 @@ class EventAdmin(admin.ModelAdmin):
         return form
 
 admin.site.register(Event, EventAdmin)
+

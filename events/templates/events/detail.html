@@ -13,7 +13,7 @@
   {% if event.registration_is_open_members %}
   <p>OBS! Anmälningen är bindande om inget annat meddelas. </p>
   <p>Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på förhinder.</p>
-    <form class="" action="attend" method="post">
+    <form class="" action="{% url 'events:attend' event.slug %}" method="post">
       {% for form_element in event.get_registration_form %}
       <label for="{{ form_element }}"> {{ form_element.name }}</label>
         {% if form_element.type == 'select' %}

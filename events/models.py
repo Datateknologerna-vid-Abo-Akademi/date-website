@@ -7,6 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.urls import reverse
 from core.functions import days_hence
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.postgres.fields import JSONField
 
 logger = logging.getLogger('date')
 
@@ -58,13 +59,13 @@ class Event(models.Model):
     def get_registrations(self):
         return EventAttendees.objects.filter(event=self)
 
-    def add_event_attendance(self, user):
+    def add_event_attendance(self, user, preferences):
         try:
-            registration = EventAttendees.objects.get(user=user, event=self)
+            registration = EventAttendees.objects.get(user=user, event=self, preferences=preferences)
         except ObjectDoesNotExist:
             registration = EventAttendees.objects.create(user=user,
                                                         event=self,
-                                                        time_registered=timezone.now())
+                                                        time_registered=timezone.now(), preferences=preferences)
 
     def cancel_event_attendance(self, user):
         registration = EventAttendees.objects.get(user=user, event=self)
@@ -110,6 +111,7 @@ class EventRegistrationForm(models.Model):
 class EventAttendees(models.Model):
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
     user = models.ForeignKey('members.Member', verbose_name='Deltagare', on_delete=models.CASCADE)
+    preferences = JSONField(_('Svar'), default=list)
     time_registered = models.DateTimeField(_('Registrerad'))
 
     def __str__(self):

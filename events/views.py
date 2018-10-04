@@ -1,7 +1,5 @@
 from django.shortcuts import render, redirect
 from django.views import generic
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.utils import timezone
 from .models import Event, EventRegistrationForm, EventAttendees
 
 
@@ -22,8 +20,10 @@ class DetailView(generic.DetailView):
 
 def add_event_attendance(request, slug):
     if request.method == 'POST':
+
         this_event = Event.objects.get(slug=slug)
-        this_event.add_event_attendance(user=request.user)
+        this_event.add_event_attendance(user=request.user, preferences=request.POST)
+
         return redirect('events:detail', slug=slug)
     else:
         return redirect('events:detail', slug=slug)
