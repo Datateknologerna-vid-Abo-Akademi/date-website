@@ -1,30 +1,50 @@
-{% extends 'base.html' %}
-
-{% load i18n %}
-{% block title %}Anmälda{% endblock %}
-
-{% block content %}
-    <h1>{{ event.title }}</h1>
-    <table>
-        <tr>
-            <th>Namn</th>
-            {% for preference in event.get_registration_form reversed %}
-                <th>{{ preference }}</th>
-            {% endfor %}
-        </tr>
-        {% for attendee in event.get_registrations %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="sv_FI">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Deltagarlista</title>
+    <link rel="stylesheet" href="{% static "css/normalize.css" %}">
+    <link rel="stylesheet" href="{% static "css/skeleton.css" %}">
+</head>
+<body>
+<div class="container">
+    <h2>{{ event.title }}</h2>
+    {% if event.get_registrations %}
+        <table>
             <tr>
-                <td>{{ attendee.user }}</td>
-                {% for preference in event.get_registration_form reversed %}
-                    <td>{% if preference.type == "checkbox" %} {# TODO:Check if true #}
-                        <img src="/static/img/icon-yes.svg" alt="True">
-                    {% else %}
-                        {{ attendee.preferences | get_item:preference }}
-                    {% endif %}</td>
+                <th>Namn</th>
+                <th>E-mail</th>
+                {# Had to use first attendee as example in order to get correct order for column headers #}
+                {# TODO:Get preferences eg. with a model property #}
+                {% for header, value in event.get_registrations.0.preferences.items %}
+                    <th>{{ header }}</th>
                 {% endfor %}
+                <th>Registrerad</th>
             </tr>
-        {% empty %}
-            <p>Inga deltagare...</p>
-        {% endfor %}
-    </table>
-{% endblock %}
+            {% for attendee in event.get_registrations %}
+                <tr>
+                    <td>{{ attendee.user }}</td>
+                    <td>{{ attendee.email }}</td>
+                    {% for key, value in attendee.preferences.items %}
+                        <td>
+                            {% if value is True %}
+                                <img src="/static/admin/img/icon-yes.svg" alt="True">
+                            {% elif value is False %}
+                                <img src="/static/admin/img/icon-no.svg" alt="True">
+                            {% else %}
+                                {{ value }}
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                    <td>{{ attendee.time_registered }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>Inga deltagare...</p>
+    {% endif %}
+</div>
+</body>
+</html>

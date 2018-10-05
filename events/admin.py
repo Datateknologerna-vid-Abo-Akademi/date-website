@@ -83,21 +83,8 @@ class EventAdmin(admin.ModelAdmin):
     class Media:
         js = ('js/eventform.js',)
 
-    def make_published(self, request, queryset):
-        rows_updated = queryset.update(published=True)
-        if rows_updated == 1:
-            message_bit = "1 evenemang"
-        else:
-            message_bit = "%s evenemang har" % rows_updated
-        self.message_user(request, "%s publicerades." % message_bit)
-
-    make_published.short_description = "Publicera valda evenemang"
-
-    actions = [make_published]
-
     def get_attendee_count(self, obj):
         return obj.get_registrations().count()
-
     get_attendee_count.short_description = 'Anmälda'
 
     def add_view(self, request, form_url='', extra_context=None):

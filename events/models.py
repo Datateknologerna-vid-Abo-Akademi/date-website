@@ -133,7 +133,7 @@ class EventRegistrationForm(models.Model):
 class EventAttendees(models.Model):
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
     user = models.CharField(_('Namn'), blank=False, max_length=255)
-    email = models.EmailField(_('E-postadress'), unique=True, blank=True, null=True)
+    email = models.EmailField(_('E-postadress'), blank=True, null=True)
     preferences = JSONField(_('Svar'), default=list)
     anonymous = models.BooleanField(_('Anonymt'), default=False)
     time_registered = models.DateTimeField(_('Registrerad'))
