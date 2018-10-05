@@ -1,0 +1,27 @@
+<p>Anmälan stängs om {{ event.sign_up_deadline | timeuntil }}</p>
+<p><b>OBS!</b> Anmälningen är bindande om inget annat meddelas. </p>
+<p>Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på förhinder.</p>
+<form class="" action="{% url 'events:attend' event.slug %}" method="post">
+    <label for="namn">Namn</label>
+    <input type="text" name="namn" value="{{ user.full_name }}" required>
+    <label for="anonymous">Visa som anonym</label>
+    <input type="checkbox" name="anonym">
+    <label for="email">Email</label>
+    <input type="email" name="email" value="{% if user.email %}{{ user.email }}{% endif %}" required>
+    {% for form_element in event.get_registration_form reversed %}
+        <label for="{{ form_element }}"> {{ form_element.name }}</label>
+        {% if form_element.type == 'select' %}
+            <select class="" name="{{ form_element }}" {% if form_element.required %} required {% endif %}>
+                {% for option in form_element.get_choices %}
+                    <option value="{{ option }}">{{ option }}</option>
+                {% endfor %}
+            </select>
+        {% else %}
+            <input type="{{ form_element.type }}" name="{{ form_element }}" value="" {% if form_element.required %}
+                   required {% endif %}>
+        {% endif %}
+    {% empty %}
+    {% endfor %}
+    <input type="submit" value="Anmäl" style="display: block"/>
+    {% csrf_token %}
+</form>

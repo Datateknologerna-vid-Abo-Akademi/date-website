@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% load i18n %}
+{% block title %}Anmälda{% endblock %}
+
+{% block content %}
+    <h1>{{ event.title }}</h1>
+    <table>
+        <tr>
+            <th>Namn</th>
+            {% for preference in event.get_registration_form reversed %}
+                <th>{{ preference }}</th>
+            {% endfor %}
+        </tr>
+        {% for attendee in event.get_registrations %}
+            <tr>
+                <td>{{ attendee.user }}</td>
+                {% for preference in event.get_registration_form reversed %}
+                    <td>{% if preference.type == "checkbox" %} {# TODO:Check if true #}
+                        <img src="/static/img/icon-yes.svg" alt="True">
+                    {% else %}
+                        {{ attendee.preferences | get_item:preference }}
+                    {% endif %}</td>
+                {% endfor %}
+            </tr>
+        {% empty %}
+            <p>Inga deltagare...</p>
+        {% endfor %}
+    </table>
+{% endblock %}

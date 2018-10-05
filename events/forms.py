@@ -1,15 +1,12 @@
 import logging
 from django import forms
-from django.template.loader import render_to_string
 from django.utils import timezone
-from django.utils.safestring import mark_safe
 
 from core.functions import slugify_max
 from events import models
-from events.models import Event, EventRegistrationForm, EventAttendees
+from events.models import Event
 
 logger = logging.getLogger('date')
-
 
 class EventCreationForm(forms.ModelForm):
 
@@ -24,7 +21,7 @@ class EventCreationForm(forms.ModelForm):
             'content',
             'published',
             'sign_up',
-            'event_max_participants',
+            'sign_up_max_participants',
             'sign_up_others',
             'sign_up_members',
             'sign_up_deadline',
@@ -66,7 +63,7 @@ class EventEditForm(forms.ModelForm):
             'content',
             'published',
             'sign_up',
-            'event_max_participants',
+            'sign_up_max_participants',
             'sign_up_others',
             'sign_up_members',
             'sign_up_deadline',

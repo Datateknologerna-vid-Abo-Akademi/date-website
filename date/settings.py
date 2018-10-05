@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ckeditor',
-    'prettyjson',
 ]
 
 MIDDLEWARE = [
@@ -163,7 +162,6 @@ DATE_INPUT_FORMATS = ('%d.%m.%Y', '%Y-%m-%d')
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'date/templates/static'),
-    os.path.join(BASE_DIR, 'events/templates/static'),
 ]
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))

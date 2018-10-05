@@ -17,20 +17,18 @@ class DetailView(generic.DetailView):
     model = Event
     template_name = 'events/detail.html'
 
+    def get_context_data(self, **kwargs):
+        context = super(DetailView, self).get_context_data(**kwargs)
+        context['logged_in_as'] = self.request.user
+        return context
 
 def add_event_attendance(request, slug):
     if request.method == 'POST':
-
-        this_event = Event.objects.get(slug=slug)
-        this_event.add_event_attendance(user=request.user, preferences=request.POST)
-
+        if len(request.body) > 0:
+            anonymous = True if request.POST.get('anonym') else False
+            this_event = Event.objects.get(slug=slug)
+            this_event.add_event_attendance(user=request.POST.get('namn'), email=request.POST.get('email'),
+                                            preferences=request.POST, anonymous=anonymous)
         return redirect('events:detail', slug=slug)
     else:
         return redirect('events:detail', slug=slug)
-
-
-#TODO: Remove possibility to remove attendace without rights
-def cancel_event_attendance(request, slug):
-    this_event = Event.objects.get(slug=slug)
-    this_event.cancel_event_attendance(request.user)
-    return redirect('events:detail', slug=slug)
