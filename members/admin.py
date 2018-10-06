@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth import admin as auth_admin
 
-from members.forms import MemberCreationForm, MemberUpdateForm
-from members.models import Member
+from members.forms import MemberCreationForm, MemberUpdateForm, SubscriptionPaymentForm
+from members.models import Member, Subscription, SubscriptionPayment
 
 from django.contrib.auth.models import Permission
 
@@ -27,3 +27,14 @@ class UserAdmin(auth_admin.UserAdmin):
 
 
 admin.site.register(Member, UserAdmin)
+
+
+class SubscriptionPaymentAdmin(admin.ModelAdmin):
+    form = SubscriptionPaymentForm
+    fields = SubscriptionPaymentForm.Meta.fields
+    list_display = ('member', 'subscription', 'is_active', 'expires')
+    list_filter = ('subscription', 'member', 'date_expires')
+
+
+admin.site.register(Subscription)
+admin.site.register(SubscriptionPayment, SubscriptionPaymentAdmin)

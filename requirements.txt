@@ -4,3 +4,4 @@ environ
 Django>=2.1,<2.2
 psycopg2-binary
 pillow
+python-dateutil
