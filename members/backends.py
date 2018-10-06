@@ -17,7 +17,7 @@ class AuthBackend(ModelBackend):
             if '@abo.fi' in username:
                 username = username.split('@')[0]
             r = requests.post('https://oldwww.abo.fi/personal', auth=HTTPBasicAuth(username, password))
-            logger.debug("Authenticating against oldwww.abo.fi", r.status_code)
+            logger.debug("Authenticating against oldwww.abo.fi " + str(r.status_code))
             if r.status_code == 200:
                 try:
                     user = Member.objects.get(username=username)
