@@ -2,7 +2,8 @@
 {% load app_filters %}
 {% load static %}
     {% block content %}
-    <link rel="stylesheet" href="{% static 'archive/style.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
+    <link rel="script" href="{% static 'archive/js/scripts.js' %}">
     <div class="container-soft">
 
         <h2>{{ collection.title }}</h2>
@@ -16,12 +17,20 @@
         <div class="picture-frame">
         <div class="column-frame">
         {% for picture in collection.picture_set.all %}
-            {% if forloop.counter|arrangePictures:collection.picture_set.count == 0%}
+            <img id="picture-{{ forloop.counter }}" onclick="imageClick({{ forloop.counter }})" src="{{ picture.image.url }}" class="smaller-img">
+            {% if forloop.counter|arrangePictures:collection.picture_set.count %}
                 </div><div class="column-frame">
             {% endif %}
-            <img src="{{ picture.image.url }}" class="smaller-img">
         {% endfor %}
             </div>
         </div>
 
+
+
+        <script>
+            function imageClick(id) {
+               let element = document.getElementById("picture-" + id);
+               element.classList.toggle("enlarge");
+            }
+        </script>
     {% endblock %}

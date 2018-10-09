@@ -1,0 +1,35 @@
+
+/* Overlay */
+
+.overlay {
+    font-family: "Chakra Petch", sans-serif;
+    display: none;
+    background-color: rgba(0,0,10, 0.8); /* Black background with opacity */
+    padding: 10rem 2rem 2rem 2rem;
+    font-size: 2em;
+    color: white;
+    position: fixed;
+    height: 100vh;
+
+    text-align: center;
+    line-height: 2.5em;
+    animation: moveInRight .8s;
+}
+
+.overlay a{
+    font-family: 'Mali', cursive;
+    display: block;
+}
+
+
+/* KEYFRAMES */
+
+@keyframes
+moveInRight{
+    0%{
+        transform: translateX(100%);
+    }
+    100%{
+        transform: translateX(0);
+    }
+}

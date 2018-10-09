@@ -4,9 +4,8 @@ from .models import Collection, Picture
 from .forms import PictureUploadForm
 
 
-def index(request):
-    collections = Collection.objects.all()
-
+def pictureindex(request):
+    collections = Collection.objects.filter(type="Pictures")
     context = {
         'collections': collections,
     }
@@ -44,7 +43,7 @@ def upload(request):
             collection.save()
             for file in request.FILES.getlist('images'):
                 Picture(image=file, collection=collection).save()
-        return redirect('archive:index')
+        return redirect('archive:pictures')
 
     form = PictureUploadForm
     context = {
