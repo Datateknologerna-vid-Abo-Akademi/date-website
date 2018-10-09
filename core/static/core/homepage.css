@@ -1,0 +1,41 @@
+.align-center {
+    text-align: center
+}
+
+.header {
+    color: white;
+    background-color: #000;
+    height: 90vh;
+}
+
+
+.hero-text-box {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.hero-text {
+    font-family: 'Chakra Petch', sans-serif;
+    color: white;
+}
+
+.hero-text-main {
+    display: block;
+    font-size: 15rem;
+    font-weight: 400;
+    letter-spacing: 3.5rem;
+}
+.hero-text-sub {
+    display: block;
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 1.2rem;
+}
+
+.section-events .text-box{
+    font-family: 'Chakra Petch', sans-serif;
+    padding: 10rem;
+}

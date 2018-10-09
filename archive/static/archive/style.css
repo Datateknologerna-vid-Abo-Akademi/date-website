@@ -1,4 +1,5 @@
 body{
+    margin: 0;
     padding: 0;
 }
 
@@ -10,17 +11,22 @@ li {
     list-style: none;
 
 }
-
-h1, h2, h3, h4 {
+h1, h2, h3, h4, h5, h6 {
     margin: 0.2rem;
     text-align: center;
 }
 
+img {
+    width: 100%;
+}
+
+
+/*
+    INDEX
+ */
 .collection_box{
-    margin: .5rem;
-    padding: 1rem;
-    border-radius: 1rem;
-    border: #000 2px solid;
+    margin: 1rem .2rem .2rem .2rem;
+    padding: .5rem;
     display: inline-block;
 }
 .collection_box:hover{
@@ -29,5 +35,48 @@ h1, h2, h3, h4 {
 }
 
 .preview_img{
+    max-height: 250px;
+    max-width: 250px;
     border-radius: 0.5rem;
+}
+
+/*
+    DETAILS
+ */
+
+
+/* Create four equal columns that sits next to each other */
+
+.picture-frame {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0 4px;
+}
+
+/* Create four equal columns that sits next to each other */
+.column-frame {
+  flex: 24%;
+  max-width: 25%;
+  padding: 0 4px;
+}
+
+.column-frame img {
+  margin-top: 8px;
+  vertical-align: middle;
+}
+
+/* Responsive layout - makes a two column-layout instead of four columns */
+@media screen and (max-width: 800px) {
+  .column-frame {
+    flex: 48%;
+    max-width: 50%;
+  }
+}
+
+/* Responsive layout - makes the two columns stack on top of each other instead of next to each other */
+@media screen and (max-width: 600px) {
+  .column-frame {
+    flex: 100%;
+    max-width: 100%;
+  }
 }

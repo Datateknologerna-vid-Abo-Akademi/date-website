@@ -1,16 +1,27 @@
 {% extends 'base.html' %}
+{% load app_filters %}
+{% load static %}
+    {% block content %}
+    <link rel="stylesheet" href="{% static 'archive/style.css' %}" type="text/css">
+    <div class="container-soft">
 
+        <h2>{{ collection.title }}</h2>
+        <p>Published on {{ collection.pub_date_pretty }}</p>
+        <p><a href="{% url 'archive:edit' collection.id %}">edit</a></p>
+        {% if error_msg %}
+            <p>{{ error_msg }}</p>
+        {% endif %}
+</div>
 
-{% block content %}
-<h2>{{ collection.title }}</h2>
-<p>Published on {{ collection.pub_date_pretty }}</p>
+        <div class="picture-frame">
+        <div class="column-frame">
+        {% for picture in collection.picture_set.all %}
+            {% if forloop.counter|arrangePictures:collection.picture_set.count == 0%}
+                </div><div class="column-frame">
+            {% endif %}
+            <img src="{{ picture.image.url }}" class="smaller-img">
+        {% endfor %}
+            </div>
+        </div>
 
-{% if error_msg %}
-    <p>{{ error_msg }}</p>
-{% endif %}
-
-{% for picture in collection.picture_set.all %}
-    <img src="{{ picture.image.url }}" style="height: 300px; width: 300px">
-{% endfor %}
-
-{% endblock %}
+    {% endblock %}

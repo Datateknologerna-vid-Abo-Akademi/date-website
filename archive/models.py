@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import os
+from django import template
 
 from django.db import models
 from django.urls import reverse
@@ -57,6 +58,9 @@ class Picture(models.Model):
 
     def __str__(self):
         return self.image.name
+
+    def get_file_path(self):
+        return self.image.url
 
 
 class Document(models.Model):

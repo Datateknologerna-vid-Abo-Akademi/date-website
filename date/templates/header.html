@@ -1,8 +1,15 @@
+{% load static %}
+{% load i18n %}
 <div class="header-bar">
   <div class="navBar" id="mainNavBar">
-    <a href="{% url 'index' %}">Home</a>
-    <a href="{% url 'events:index' %}">Händelser</a>
-    <a href="{% url 'news:index' %}">Nyheter</a>
+      <a href="{% url 'index' %}">Home</a>
+      <a href="{% url 'events:index' %}">Händelser</a>
+      <a href="{% url 'news:index' %}">Nyheter</a>
       <a href="{% url 'archive:index' %}">Bilder</a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'logout' %}">{% trans 'Logga ut' %}</a>
+        {% else %}
+            <a href="{% url 'login' %}">{% trans 'Logga in' %}</a>
+        {% endif %}
   </div>
 </div>

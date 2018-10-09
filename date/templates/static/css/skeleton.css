@@ -28,6 +28,10 @@
 
 /* Grid
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
+.container-soft {
+  padding: 5rem;
+}
+
 .container {
   position: relative;
   width: 100%;
