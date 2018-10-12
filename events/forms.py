@@ -4,7 +4,7 @@ from django.utils import timezone
 
 from core.functions import slugify_max
 from events import models
-from events.models import Event
+from events.models import Event, EventAttendees
 
 logger = logging.getLogger('date')
 
@@ -85,3 +85,14 @@ class EventEditForm(forms.ModelForm):
         if commit:
             post.save()
         return post
+
+class EventAttendeeForm(forms.ModelForm):
+
+
+    class Meta:
+        model = EventAttendees
+        fields = (
+            'user',
+            'email',
+            'anonymous',
+        )
