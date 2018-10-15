@@ -5,12 +5,12 @@
 {% block title %}Log in{% endblock %}
 
 {% block content %}
-
+<div class="container-soft">
 <h2>Log In</h2>
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Login</button>
 </form>
-
+</div>
 {% endblock %}

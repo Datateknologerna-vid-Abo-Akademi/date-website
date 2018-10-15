@@ -1,3 +1,8 @@
+.align-text-center {
+  text-align: center;
+}
+
+
 .navBar{
   background-color: #000000;
   overflow: hidden;
@@ -11,13 +16,18 @@ Removes the underline with text decoration = none.*/
   padding: 14px 16px;
   text-decoration: none;
   font-size: 17px;
-  font-family: Tahoma;
+  font-family: Tahoma, Mali, serif;
 }
 
 /*Background color change during hover state*/
 .navBar a:hover{
   background-color: white;
   color: #009cde;
+}
+
+.navBar a:last-child{
+  float:right;
+  margin-right: 2rem;
 }
 
 /*Hides the menu Icon which will show when the nav needs to be responsive*/

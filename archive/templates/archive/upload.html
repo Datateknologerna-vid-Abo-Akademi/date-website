@@ -3,13 +3,13 @@
 {% load i18n %}
 
 {% block content %}
-    <br>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ picture_form.as_p }}
-    <button type="submit">Upload</button>
-    </form>
-
-    <p><a href="{% url 'archive:index' %}">Return</a></p>
+    <div class="container-soft">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ picture_form.as_p }}
+        <button type="submit">Upload</button>
+        </form>
+        <p><a href="{% url 'archive:pictures' %}">Return</a></p>
+    </div>
 {% endblock %}
 

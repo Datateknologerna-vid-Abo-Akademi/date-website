@@ -1,31 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     {% load static %}
     <meta charset="UTF-8">
     <title>File Showroom</title>
-    <link rel="stylesheet" href="{% static 'archive/style.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
 </head>
-{% block content %}
 <body>
-    <h1>Bild arkiv</h1>
-    <!--  Check if User is loggen on and in group to add new album-->
-    <a class="button" href="{% url 'archive:upload' %}"> Skapa nytt album</a>
-    {% if collections %}
-    <ul>
-        {% for collection in collections %}
-            <a  href="{% url 'archive:detail' collection.id %}" class="collection_box">
-            <li><img class="preview_img" src="{{ collection.get_first_picture.image.url }}" style="height: 200px; width: 200px"><br>
-               <h3>{{ collection.title }}</h3>
-                <h4>{{ collection.pub_date_pretty }}</h4>
-            </li>
-            </a>
-        {% endfor %}
+    <div class="container-soft">
+        <h1>Bild arkiv</h1>
+        <!--  Check if User is loggen on and in group to add new album-->
+        <a class="button" href="{% url 'archive:upload' %}"> Skapa nytt album</a>
+        {% if collections %}
+        <ul>
+            {% for collection in collections %}
+                <a  href="{% url 'archive:detail' collection.id %}" class="collection_box">
+                <li>
+                   <h5 class="align-text-center">{{ collection.title }}</h5>
+                    <img class="preview_img" src="{{ collection.get_first_picture.image.url }}">
+                    <p>{{ collection.pub_date_pretty }}</p>
+                </li>
+                </a>
+            {% endfor %}
 
-    </ul>
-    {% else %}
-        <h3>No Albums to show</h3>
-    {% endif %}
+        </ul>
+        {% else %}
+            <h3>No Albums to show</h3>
+        {% endif %}
+
+    </div>
 </body>
-{% endblock %}
 </html>
+{% endblock %}
+

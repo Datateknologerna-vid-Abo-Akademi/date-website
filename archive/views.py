@@ -4,9 +4,8 @@ from .models import Collection, Picture
 from .forms import PictureUploadForm
 
 
-def index(request):
-    collections = Collection.objects.all()
-
+def pictureindex(request):
+    collections = Collection.objects.filter(type="Pictures")
     context = {
         'collections': collections,
     }
@@ -18,17 +17,33 @@ class DetailView(generic.DetailView):
     template_name = 'archive/detail.html'
 
 
+def edit(request, pk):
+    collection = Collection.objects.get(id=pk)
+    return render(request, 'archive/edit.html', {'collection': collection})
+
+
+def remove_file(request, collection_id, file_id):
+    file = Picture.objects.get(pk=file_id)
+    file.delete()
+    collection = Collection.objects.get(pk=collection_id)
+    print(collection.picture_set.count())
+    if collection.picture_set.count() > 0:
+        return render(request, 'archive/edit.html', {'collection': collection})
+    collection.delete()
+    collections = Collection.objects.all()
+    return render(request, 'archive/index.html', {'collections': collections})
+
+
 def upload(request):
     if request.method == 'POST':
         form = PictureUploadForm(request.POST)
 
-        print("form is :", form.is_valid())
         if form.is_valid():
-            collection = Collection(title=form['collection_name'].value(), type='Pictures')
+            collection = Collection(title=form['album'].value(), type='Pictures')
             collection.save()
             for file in request.FILES.getlist('images'):
                 Picture(image=file, collection=collection).save()
-        return redirect('archive:index')
+        return redirect('archive:pictures')
 
     form = PictureUploadForm
     context = {
