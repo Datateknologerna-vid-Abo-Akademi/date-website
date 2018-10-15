@@ -5,16 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}DaTE 2.0{% endblock %}</title>
-    <link rel="stylesheet" href="{% static "css/date.css" %}">
     <link rel="stylesheet" href="{% static "css/normalize.css" %}">
     <link rel="stylesheet" href="{% static "css/skeleton.css" %}">
+    <link rel="stylesheet" href="{% static "css/date.css" %}">
     <link href="https://fonts.googleapis.com/css?family=Chakra+Petch|Mali" rel="stylesheet">
 </head>
 <body>
-    {% include 'header.html' %}
-        {% block content %}
-            <!-- content from other pages -->
-        {% endblock %}
-    {% include 'footer.html' %}
+{% include 'header.html' %}
+{% block content %}
+    <!-- content from other pages -->
+{% endblock %}
+{% include 'footer.html' %}
 </body>
 </html>

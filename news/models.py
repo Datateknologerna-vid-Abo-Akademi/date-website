@@ -43,4 +43,4 @@ class Post(models.Model):
         self.save()
 
     def get_link(self):
-        return reverse('article_detail', args=[self.slug])
+        return reverse('news:article_detail', args=[self.slug])

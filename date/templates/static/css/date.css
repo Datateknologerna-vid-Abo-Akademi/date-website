@@ -63,3 +63,75 @@ Removes the underline with text decoration = none.*/
     text-align: left;
   }
 }
+
+/* CARD ELEMENTS */
+.card {
+    height: 200px;
+    box-shadow: 0 2px 6px 0 hsla(0, 0%, 0%, 0.2);
+    overflow: hidden;
+    margin-top: 4%;
+    padding: 5px;
+}
+
+.card-title {
+    display: inline-block;
+    font-weight: 700;
+}
+
+.card-date {
+    display: inline-block;
+    float: right;
+    font-weight: 500;
+    margin: 5px 5px;
+}
+
+.card-content {
+    font-weight: 400;
+    display: inline-block;
+    height: 50%;
+}
+
+.card-footer {
+    position: absolute;
+    bottom: 10px;
+    opacity: 1;
+    transition: all 300ms ease-out;
+    width: 47%;
+}
+
+.card:hover .card-footer {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+.card-footer-text {
+    display: inline-block;
+}
+
+.card-footer-reveal {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 300ms ease-out;
+}
+
+.card:hover .card-footer-reveal {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.columns.card:nth-child(odd),
+.column.card:nth-child(odd) {
+    margin-left: 0;
+}
+
+.all-cards-button {
+    margin-top: 5%;
+    position: relative;
+    letter-spacing: 3px;
+}
+
+.all-cards-button:hover {
+    background: #0f74a8;
+    color: #FFFFFF;
+    border-color: #FFFFFF;
+}

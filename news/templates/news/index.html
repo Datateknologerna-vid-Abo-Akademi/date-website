@@ -4,14 +4,13 @@
 {% block title %}Nyheter{% endblock %}
 
 {% block content %}
-<h1>Nyheter</h1>
-{% for news_item in latest_news_items %}
-  <a href="{{ news_item.get_link }}">
-  <dt>{{ news_item.title }}, {{ news_item.author}}</dt>
-  <dd>{{ news_item.published_time }}</dd>
-  <dd>{{ news_item.content | safe | truncatewords_html:"70" }}</dd>
-  </a>
-{% empty %}
-  <h1>Sorry, no news</h1>
-{% endfor %}
+    <div class="container-soft">
+        {% for news_item in latest_news_items %}
+            <a href="{{ news_item.get_link }}"><h2>{{ news_item.title }}</h2></a>
+            <h4>{{ news_item.author }}, {{ news_item.published_time }}</h4>
+            <p> {{ news_item.content | safe | truncatewords_html:"70" }}
+                {% empty %}
+            <li>No news, yet.</li>
+        {% endfor %}
+    </div>
 {% endblock %}

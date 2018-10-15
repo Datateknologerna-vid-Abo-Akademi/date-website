@@ -1,38 +1,63 @@
 {% extends 'base.html' %}
 {% block content %}
-<head>
-    {% load static %}
-    {% load i18n %}
+    <head>
+        {% load static %}
+        {% load i18n %}
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="{% static 'core/homepage.css' %}" type="text/css">
-    <link href="https://fonts.googleapis.com/css?family=Chakra+Petch|Mali" rel="stylesheet">
-    {% get_current_language as LANGUAGE_CODE %}
-</head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <link rel="stylesheet" href="{% static 'core/homepage.css' %}" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Chakra+Petch|Mali" rel="stylesheet">
+        {% get_current_language as LANGUAGE_CODE %}
+    </head>
 
     <header class="header">
-    <div class="hero-text-box align-center">
+        <div class="hero-text-box align-center">
 
-        <h1 class="hero-text">
-            <span class="hero-text-main">DaTe</span>
-            <span class="hero-text-sub">Datateknologerna vid Åbo Akademi rf</span>
-        </h1>
-    </div>
+            <h1 class="hero-text">
+                <span class="hero-text-main">DaTe</span>
+                <span class="hero-text-sub">Datateknologerna vid Åbo Akademi rf</span>
+            </h1>
+        </div>
     </header>
+
+    <!-- EVENTS SECTION  -->
     <section class="section-events">
         <div class="text-box">
-              <h1 class="align-center">EVENTS</h1>
-        <p>
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Alias consectetur laudantium odio praesentium
-            quae quidem quisquam quod tempora tempore, temporibus. Ad animi asperiores, cupiditate dolorum eligendi
-            est harum id illum laudantium magnam, magni maiores, minima natus non sequi vel voluptatibus. Eius error
-            esse, facilis incidunt itaque libero molestias nihil qui.
-        </p>
+            <h1 class="align-center">HÄNDELSER</h1>
+            <div class="container">
+                {% for event in events %}
+                    <div class="{% if events|length > 1 %}one-half{% endif %} column card">
+                        <p class="card-date">{{ event.event_date_start }}</p>
+                        <h3 class="card-title">{{ event.title }}</h3>
+                        <div class="card-content">{{ event.content | safe | truncatewords_html:"70" }}</div>
+                        <div class="card-footer card-footer-reveal">
+                            {% if event.registration_is_open_members and user.is_authenticated %}
+                                <span></span>
+                                <a href="{{ event.get_link }}#sign-up"
+                                   class="card-footer-text card-media-link" style="float: right;">
+                                    ANMÄL</a>
+                            {% else %}
+                                <span></span>
+                                <a href="{{ event.get_link }}"
+                                   class="card-footer-text card-media-link" style="float: right;">
+                                    MERA INFO</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <h3 class="align-text-center">Händelserna kommer att vara här...</h3>
+                {% endfor %}
+
+            </div>
+            <div class="container align-center">
+                <a href="{% url 'events:index' %}">
+                    <button class="all-cards-button align-center">Visa hela kalendern</button>
+                </a>
+            </div>
 
         </div>
     </section>
-
 
 {% endblock %}

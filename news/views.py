@@ -2,14 +2,14 @@ from django.shortcuts import render
 
 from . import models
 
-LATEST_NEWS_POSTS = 5
+LATEST_NEWS_POSTS = 10
 
 def index(request):
-    latest_news = models.Post.objects.filter(published=True).order_by('modified_time')[:LATEST_NEWS_POSTS]
+    latest_news = models.Post.objects.filter(published=True).order_by('modified_time').reverse()[:LATEST_NEWS_POSTS]
     return render(request, 'news/index.html', {'latest_news_items': latest_news})
 
 def article(request, slug):
-    articles =  models.Post.objects.filter(slug=slug, published=True).order_by('modified_time')
+    articles = models.Post.objects.filter(slug=slug, published=True).order_by('modified_time')
     return render(request, 'news/article.html', {'articles': articles})
 
 def author(request, author):
