@@ -29,21 +29,16 @@
             <div class="container">
                 {% for event in events %}
                     <div class="{% if events|length > 1 %}one-half{% endif %} column card">
-                        <p class="card-date">{{ event.event_date_start }}</p>
-                        <h3 class="card-title">{{ event.title }}</h3>
-                        <div class="card-content">{{ event.content | safe | truncatewords_html:"70" }}</div>
-                        <div class="card-footer card-footer-reveal">
-                            {% if event.registration_is_open_members and user.is_authenticated %}
+                        <div class="u-max-full-width">
+                            <p class="card-date">{{ event.event_date_start }}</p>
+                            <h3 class="card-title">{{ event.title }}</h3>
+                            <div class="card-content">{{ event.content | safe | truncatewords_html:"70" }}</div>
+                            <div class="card-footer card-footer-reveal">
                                 <span></span>
-                                <a href="{{ event.get_link }}#sign-up"
+                                <a href="{% url 'events:detail' event.slug %}"
                                    class="card-footer-text card-media-link" style="float: right;">
-                                    ANMÄL</a>
-                            {% else %}
-                                <span></span>
-                                <a href="{{ event.get_link }}"
-                                   class="card-footer-text card-media-link" style="float: right;">
-                                    MERA INFO</a>
-                            {% endif %}
+                                    MERA</a>
+                            </div>
                         </div>
                     </div>
                 {% empty %}

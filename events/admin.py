@@ -23,7 +23,6 @@ class EventRegistrationFormInline(admin.TabularInline):
     def line_number(self, obj):
         self.line_numbering += 1
         return self.line_numbering
-
     line_number.short_description = '#'
 
 

@@ -7,24 +7,37 @@
     <title>Deltagarlista</title>
     <link rel="stylesheet" href="{% static "css/normalize.css" %}">
     <link rel="stylesheet" href="{% static "css/skeleton.css" %}">
+    <link rel="stylesheet" href="{% static "css/date.css" %}">
+    <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
 </head>
 <body>
+
 <div class="container">
-    <h2>{{ event.title }}</h2>
+    <div class="qr-code"></div>
+    <h2 class="title" link="https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=Example"><a
+            href="{% url 'events:detail' event.slug %}">{{ event.title }}</a></h2>
+    <h5>Datum: {{ event.event_date_start }}</h5>
+
     {% if event.get_registrations %}
-        <table>
+        <table id="attendeeList">
+            <thead>
             <tr>
-                <th>Namn</th>
-                <th>E-mail</th>
+                <th>#<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
+                <th>Namn<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
+                <th>E-mail<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
                 {# Had to use first attendee as example in order to get correct order for column headers #}
                 {# TODO:Get preferences eg. with a model property #}
                 {% for header, value in event.get_registrations.0.preferences.items %}
-                    <th>{{ header }}</th>
+                    <th>{{ header }}<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove">
+                    </th>
                 {% endfor %}
-                <th>Registrerad</th>
+                <th>Registrerad<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
             </tr>
+            </thead>
+            <tbody>
             {% for attendee in event.get_registrations %}
                 <tr>
+                    <td>{{ forloop.counter }}</td>
                     <td>{{ attendee.user }}</td>
                     <td>{{ attendee.email }}</td>
                     {% for key, value in attendee.preferences.items %}
@@ -41,10 +54,27 @@
                     <td>{{ attendee.time_registered }}</td>
                 </tr>
             {% endfor %}
+            </tbody>
         </table>
     {% else %}
         <p>Inga deltagare...</p>
     {% endif %}
 </div>
+
+<script>
+    $(document).ready(function () {
+        $("#attendeeList tr:has(th)").mouseover(function (e) {
+            $(this).css("cursor", "pointer");
+        });
+        $("#attendeeList th").click(function () {
+            var iIndex = $(this).closest("th").prevAll("th").length;
+            $(this).parents("#attendeeList").find("tr").each(function () {
+                $(this).find("td:eq(" + iIndex + ")").toggle();
+                $(this).find("th:eq(" + iIndex + ")").toggle();
+            });
+        });
+    });
+</script>
+
 </body>
 </html>

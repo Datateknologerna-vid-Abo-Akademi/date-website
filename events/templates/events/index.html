@@ -5,12 +5,12 @@
 
 {% block content %}
     <div class="container-soft">
-    {% for event in event_list %}
-        <a href="{{ event.get_link }}"><h2>{{ event.title }}</h2></a>
-        <h4>{{ event.event_date_start }}</h4>
-        <p> {{ event.content | safe | truncatewords_html:"70" }}
-            {% empty %}
-        <li>No events, yet.</li>
-    {% endfor %}
+        {% for event in event_list %}
+            <a href="{% url 'events:detail' event.slug %}"><h2>{{ event.title }}</h2></a>
+            <h4>{{ event.event_date_start }}</h4>
+            <p> {{ event.content | safe | truncatewords_html:"70" }}
+                {% empty %}
+            <li>No events, yet.</li>
+        {% endfor %}
     </div>
 {% endblock %}

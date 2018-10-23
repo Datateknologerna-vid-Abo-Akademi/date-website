@@ -10,7 +10,6 @@ class PrettyJSONWidget(widgets.Textarea):
 
         return ('<div class="jsonwidget" data-initial="parsed">' + html + '<div ''class="parsed"></div></div>')
 
-
     @property
     def media(self):
         extra = '' if settings.DEBUG else '.min'
@@ -21,6 +20,6 @@ class PrettyJSONWidget(widgets.Textarea):
                 'prettyjson/prettyjson.js',
             ),
             css={
-                'all': ('prettyjson/prettyjson.css', )
+                'all': ('prettyjson/prettyjson.css',)
             },
         )

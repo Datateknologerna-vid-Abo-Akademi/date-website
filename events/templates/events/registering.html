@@ -16,21 +16,7 @@
     {% endfor %}
 {% endif %}
 <form class="" action="" method="post">
-    {{ basic_form }}
-    {% for form_element in event.get_registration_form reversed %}
-        <label for="{{ form_element }}"> {{ form_element.name }}</label>
-        {% if form_element.type == 'select' %}
-            <select class="" name="{{ form_element }}" {% if form_element.required %} required {% endif %}>
-                {% for option in form_element.get_choices %}
-                    <option value="{{ option }}">{{ option }}</option>
-                {% endfor %}
-            </select>
-        {% else %}
-            <input type="{{ form_element.type }}" name="{{ form_element }}" value="" {% if form_element.required %}
-                   required {% endif %}>
-        {% endif %}
-    {% empty %}
-    {% endfor %}
+    {{ form }}
     <input type="submit" value="Anmäl" style="display: block"/>
     {% csrf_token %}
 </form>

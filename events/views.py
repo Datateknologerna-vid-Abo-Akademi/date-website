@@ -1,11 +1,11 @@
-from django.shortcuts import render, redirect
-from django.views import generic
-from events.forms import EventAttendeeForm
-from .models import Event, EventRegistrationForm, EventAttendees
+from django.urls import reverse
+from django.views.generic import DetailView, ListView
+
+from .models import Event
 
 
 # Create your views here.
-class IndexView(generic.ListView):
+class IndexView(ListView):
     model = Event
     template_name = 'events/index.html'
     context_object_name = 'event_list'
@@ -14,34 +14,32 @@ class IndexView(generic.ListView):
         return Event.objects.all()
 
 
-class DetailView(generic.DetailView): #TODO: Validate preferences
+class DetailView(DetailView):
     model = Event
     template_name = 'events/detail.html'
 
+    def get_success_url(self):
+        return reverse('events:detail', kwargs={'slug': self.object.slug})
+
     def get_context_data(self, **kwargs):
         context = super(DetailView, self).get_context_data(**kwargs)
-        if not self.request.user.is_anonymous:
-            context['basic_form'] = EventAttendeeForm(
-                {'user': self.request.user.full_name, 'email': self.request.user.email})
-        else:
-            context['basic_form'] = EventAttendeeForm
+        context['form'] = self.object.make_registration_form()
         return context
 
-    def post(self, request, slug, *args, **kwargs):
-        form = EventAttendeeForm(request.POST, request.FILES)
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form = self.object.make_registration_form().__call__(data=request.POST)
         if form.is_valid():
-            self.object = self.get_object()
-            this_event = Event.objects.get(slug=slug)
-            this_event.add_event_attendance(user=form.cleaned_data['user'], email=form.cleaned_data['email'],
-                                            preferences=request.POST, anonymous=form.cleaned_data['anonymous'])
-            context = super(DetailView, self).get_context_data(**kwargs)
-            context['basic_form'] = EventAttendeeForm
-            return self.render_to_response(context=context)
+            return self.form_valid(form)
         else:
-            self.object = self.get_object()
-            context = super(DetailView, self).get_context_data(**kwargs)
-            context['basic_form'] = form
-            return self.render_to_response(context=context)
+            return self.form_invalid(form)
 
+    def form_valid(self, form):
+        self.get_object().add_event_attendance(user=form.cleaned_data['user'], email=form.cleaned_data['email'],
+                                               anonymous=form.cleaned_data['anonymous'], preferences=form.cleaned_data)
+        return self.render_to_response(self.get_context_data())
 
-
+    def form_invalid(self, form):
+        print(form.data)
+        print(form.errors)
+        return self.render_to_response(self.get_context_data(form=form))

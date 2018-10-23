@@ -1,14 +1,15 @@
 import logging
 
 from ckeditor.fields import RichTextField
+from django import forms
+from django.contrib.postgres.fields import JSONField
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.template.defaulttags import register
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from django.urls import reverse
+
 from core.functions import days_hence
-from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.postgres.fields import JSONField
 
 logger = logging.getLogger('date')
 
@@ -57,9 +58,6 @@ class Event(models.Model):
         self.modified_time = timezone.now()
         self.save()
 
-    def get_link(self):
-        return reverse('events:detail', args=[self.slug])
-
     def get_registrations(self):
         return EventAttendees.objects.filter(event=self)
 
@@ -71,17 +69,13 @@ class Event(models.Model):
             for item in self.get_registration_form():
                 if item.required and preferences.get(str(item)) is None:
                     return
-                elif item.type == "select" and preferences.get(str(item)) not in item.choice_list:
-                    return
-                elif item.type == "checkbox" and preferences.get(str(item)) == "":
-                    user_pref[str(item)] = True
                 else:
                     user_pref[str(item)] = preferences.get(str(item))
-
-            registration = EventAttendees.objects.create(user=user,
-                                                         event=self, email=email,
-                                                         time_registered=timezone.now(), preferences=user_pref,
-                                                         anonymous=anonymous)
+            if self.get_registrations().count() < self.sign_up_max_participants:
+                registration = EventAttendees.objects.create(user=user,
+                                                             event=self, email=email,
+                                                             time_registered=timezone.now(), preferences=user_pref,
+                                                             anonymous=anonymous)
 
     def cancel_event_attendance(self, user):
         registration = EventAttendees.objects.get(user=user, event=self)
@@ -102,10 +96,28 @@ class Event(models.Model):
         return EventAttendees.objects.filter(event=self).count() >= self.sign_up_max_participants
 
     def get_registration_form(self):
+        if EventRegistrationForm.objects.filter(event=self).count() == 0:
+            return None
         return EventRegistrationForm.objects.filter(event=self)
 
     def get_registration_form_public_info(self):
         return EventRegistrationForm.objects.filter(event=self, public_info=True)
+
+    def make_registration_form(self, data=None):
+        fields = {'user': forms.CharField(max_length=255),
+                  'email': forms.EmailField(),
+                  'anonymous': forms.BooleanField(required=False)}
+        for question in reversed(self.get_registration_form()):
+            if (question.type == "select"):
+                choices = question.choice_list.split(',')
+                fields[question.name] = forms.ChoiceField(label=question.name,
+                                                          choices=list(map(list, zip(choices, choices))),
+                                                          required=question.required)
+            elif (question.type == "checkbox"):
+                fields[question.name] = forms.BooleanField(label=question.name, required=question.required)
+            elif (question.type == "text"):
+                fields[question.name] = forms.CharField(label=question.name, required=question.required)
+        return type('EventAttendeeForm', (forms.BaseForm,), {'base_fields': fields, 'data': data}, )
 
 
 class EventRegistrationForm(models.Model):
@@ -134,7 +146,7 @@ class EventAttendees(models.Model):
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
     user = models.CharField(_('Namn'), blank=False, max_length=255)
     email = models.EmailField(_('E-postadress'), blank=False, null=True)
-    preferences = JSONField(_('Svar'), default=list)
+    preferences = JSONField(_('Svar'), default=list, blank=True)
     anonymous = models.BooleanField(_('Anonymt'), default=False)
     time_registered = models.DateTimeField(_('Registrerad'))
 
