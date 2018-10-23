@@ -27,9 +27,9 @@ class Event(models.Model):
     sign_up = models.BooleanField(_('Anmälning'), default=True)
     sign_up_members = models.DateTimeField(_('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=timezone.now)
     sign_up_others = models.DateTimeField(_('Anmälan öppnas (övriga)'), null=True, blank=True, default=timezone.now)
-    sign_up_deadline = models.DateTimeField(_('Anmälningen stängs'), default=days_hence(7))
+    sign_up_deadline = models.DateTimeField(_('Anmälningen stängs'), default=days_hence(7), null=True, blank=True)
     sign_up_cancelling = models.BooleanField(_('Avanmälning'), default=True)
-    sign_up_cancelling_deadline = models.DateTimeField(_('Avanmälningen stängs'), default=days_hence(5))
+    sign_up_cancelling_deadline = models.DateTimeField(_('Avanmälningen stängs'), default=days_hence(5), null=True, blank=True)
     author = models.ForeignKey('members.Member', on_delete=models.CASCADE)
     created_time = models.DateTimeField(_('Skapad'), default=timezone.now)
     published_time = models.DateTimeField(_('Publicerad'), editable=False, null=True, blank=True)
@@ -62,24 +62,27 @@ class Event(models.Model):
         return EventAttendees.objects.filter(event=self)
 
     def add_event_attendance(self, user, email, anonymous, preferences):
-        try:
-            registration = EventAttendees.objects.get(email=email, event=self)
-        except ObjectDoesNotExist:
-            user_pref = {}
-            for item in self.get_registration_form():
-                if item.required and preferences.get(str(item)) is None:
-                    return
-                else:
-                    user_pref[str(item)] = preferences.get(str(item))
-            if self.get_registrations().count() < self.sign_up_max_participants:
-                registration = EventAttendees.objects.create(user=user,
-                                                             event=self, email=email,
-                                                             time_registered=timezone.now(), preferences=user_pref,
-                                                             anonymous=anonymous)
+        if self.sign_up:
+            try:
+                registration = EventAttendees.objects.get(email=email, event=self)
+            except ObjectDoesNotExist:
+                user_pref = {}
+                if self.get_registration_form():
+                    for item in self.get_registration_form():
+                        if item.required and preferences.get(str(item)) is None:
+                            return
+                        else:
+                            user_pref[str(item)] = preferences.get(str(item))
+                if self.get_registrations().count() < self.sign_up_max_participants:
+                    registration = EventAttendees.objects.create(user=user,
+                                                                 event=self, email=email,
+                                                                 time_registered=timezone.now(), preferences=user_pref,
+                                                                 anonymous=anonymous)
 
     def cancel_event_attendance(self, user):
-        registration = EventAttendees.objects.get(user=user, event=self)
-        registration.delete()
+        if self.sign_up:
+            registration = EventAttendees.objects.get(user=user, event=self)
+            registration.delete()
 
     def registration_is_open_members(self):
         return timezone.now() >= self.sign_up_members and not self.event_is_full() and not self.registation_past_due()
@@ -104,20 +107,22 @@ class Event(models.Model):
         return EventRegistrationForm.objects.filter(event=self, public_info=True)
 
     def make_registration_form(self, data=None):
-        fields = {'user': forms.CharField(max_length=255),
-                  'email': forms.EmailField(),
-                  'anonymous': forms.BooleanField(required=False)}
-        for question in reversed(self.get_registration_form()):
-            if (question.type == "select"):
-                choices = question.choice_list.split(',')
-                fields[question.name] = forms.ChoiceField(label=question.name,
-                                                          choices=list(map(list, zip(choices, choices))),
-                                                          required=question.required)
-            elif (question.type == "checkbox"):
-                fields[question.name] = forms.BooleanField(label=question.name, required=question.required)
-            elif (question.type == "text"):
-                fields[question.name] = forms.CharField(label=question.name, required=question.required)
-        return type('EventAttendeeForm', (forms.BaseForm,), {'base_fields': fields, 'data': data}, )
+        if self.sign_up:
+            fields = {'user': forms.CharField(label='Namn',max_length=255),
+                      'email': forms.EmailField(label='Email'),
+                      'anonymous': forms.BooleanField(label='Anonymt',required=False)}
+            if self.get_registration_form():
+                for question in reversed(self.get_registration_form()):
+                    if (question.type == "select"):
+                        choices = question.choice_list.split(',')
+                        fields[question.name] = forms.ChoiceField(label=question.name,
+                                                                  choices=list(map(list, zip(choices, choices))),
+                                                                  required=question.required)
+                    elif (question.type == "checkbox"):
+                        fields[question.name] = forms.BooleanField(label=question.name, required=question.required)
+                    elif (question.type == "text"):
+                        fields[question.name] = forms.CharField(label=question.name, required=question.required)
+            return type('EventAttendeeForm', (forms.BaseForm,), {'base_fields': fields, 'data': data}, )
 
 
 class EventRegistrationForm(models.Model):

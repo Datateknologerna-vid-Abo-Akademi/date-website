@@ -1,4 +1,3 @@
-from django.urls import reverse
 from django.views.generic import DetailView, ListView
 
 from .models import Event
@@ -18,21 +17,23 @@ class DetailView(DetailView):
     model = Event
     template_name = 'events/detail.html'
 
-    def get_success_url(self):
-        return reverse('events:detail', kwargs={'slug': self.object.slug})
-
     def get_context_data(self, **kwargs):
         context = super(DetailView, self).get_context_data(**kwargs)
-        context['form'] = self.object.make_registration_form()
+        form = kwargs.pop('form', None)
+        if form:
+            context['form'] = form
+        else:
+            context['form'] = self.object.make_registration_form()
         return context
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        form = self.object.make_registration_form().__call__(data=request.POST)
-        if form.is_valid():
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
+        if self.object.sign_up:
+            form = self.object.make_registration_form().__call__(data=request.POST)
+            if form.is_valid():
+                return self.form_valid(form)
+            else:
+                return self.form_invalid(form)
 
     def form_valid(self, form):
         self.get_object().add_event_attendance(user=form.cleaned_data['user'], email=form.cleaned_data['email'],

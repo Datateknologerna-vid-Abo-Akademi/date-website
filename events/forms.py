@@ -9,7 +9,6 @@ from events.models import Event
 
 logger = logging.getLogger('date')
 
-
 class EventCreationForm(forms.ModelForm):
     user = None
 
@@ -47,6 +46,14 @@ class EventCreationForm(forms.ModelForm):
         if post.published:
             post.published_time = timezone.now()
 
+        if not post.sign_up:
+            post.sign_up_max_participants = 0
+            post.sign_up_others = None
+            post.sign_up_members = None
+            post.sign_up_deadline = None
+            post.sign_up_cancelling = False
+            post.sign_up_cancelling_deadline = None
+
         if commit:
             post.save()
         return post
@@ -83,10 +90,14 @@ class EventEditForm(forms.ModelForm):
 
         post.modified_time = timezone.now()
 
+        if not post.sign_up:
+            post.sign_up_max_participants = 0
+            post.sign_up_others = None
+            post.sign_up_members = None
+            post.sign_up_deadline = None
+            post.sign_up_cancelling = False
+            post.sign_up_cancelling_deadline = None
+
         if commit:
             post.save()
         return post
-
-
-class EventAttendeeForm(forms.BaseForm):
-    pass
