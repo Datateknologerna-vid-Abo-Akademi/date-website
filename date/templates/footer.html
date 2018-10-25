@@ -1,3 +1,8 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'css/date.css' %}">
+
 <div class="panel-footer">
-    <p>&copy; {% now "Y" %} - Datateknologerna vid Åbo akademi rf</p>
+    <img id="footer-img" src="{% static 'images/DatateknologernaLogo.png' %}">
+    <p>&copy; {% now "Y" %}</p>
 </div>

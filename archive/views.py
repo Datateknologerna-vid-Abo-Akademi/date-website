@@ -5,7 +5,15 @@ from .forms import PictureUploadForm
 
 
 def pictureindex(request):
-    collections = Collection.objects.filter(type="Pictures")
+    collections = Collection.objects.filter(type="Pictures").order_by('-pub_date')
+    context = {
+        'collections': collections,
+    }
+    return render(request, 'archive/index.html', context)
+
+
+def documentindex(request):
+    collections = Collection.objects.filter(type="Documents")
     context = {
         'collections': collections,
     }
@@ -37,7 +45,6 @@ def remove_file(request, collection_id, file_id):
 def upload(request):
     if request.method == 'POST':
         form = PictureUploadForm(request.POST)
-
         if form.is_valid():
             collection = Collection(title=form['album'].value(), type='Pictures')
             collection.save()

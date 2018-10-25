@@ -9,9 +9,9 @@
 {% endif %}
 {% for picture in collection.picture_set.all %}
     <div style="display: inline-block">
-        <img src="{{ picture.image.url }}" style="height: 300px; width: 300px">
+        <img src="{{ picture.image.url }}" style="height: 300px; width: auto">
         <p><a href="{% url 'archive:remove_file' collection.id picture.id %}">Remove</a></p>
     </div>
 {% endfor %}
-    <p><a href="{% url 'archive:index' %}">Return</a></p>
+    <p><a href="{% url 'archive:pictures' %}">Return</a></p>
 {% endblock %}

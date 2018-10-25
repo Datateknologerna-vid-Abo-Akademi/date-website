@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+    <head>
+        {% load static %}
+        {% load i18n %}
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <link rel="stylesheet" href="{% static 'core/intro.css' %}" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Pathway+Gothic+One" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Chakra+Petch|Mali" rel="stylesheet">
+        {% get_current_language as LANGUAGE_CODE %}
+    </head>
+        <div class="fade"></div>
+    <header class="star-wars header">
+            <div class="crawl">
+                <div class="title">
+                    <p>Eipsode III</p>
+                    <p class="main-title">A New Website</p>
+                </div>
+                <p>We have been waiting for this for many many year, can it be true, have they done it. is it finally here, our new website..</p>
+                <p>During the battle, Rebel spies managed to steal secret plans to the Empire's ultimate weapon, the NEW WEBSITE, an new website with enough power to destroy an entire planet.</p>
+                <p>Pursued by the Empire's sinister agents, Princess Otto raves home aboard his starship, custodian of the stolen plans that can save his people and restore freedom and faith to the galaxy... </p>
+            </div>
+    </header>
+
+        <div class="intro-text">
+            <h1>On a computer far far away...</h1>
+        </div>
+
+{% endblock %}

@@ -22,10 +22,11 @@ import core.views as core
 
 urlpatterns = [
     path('', core.index, name='index'),
+    path('intro/', core.intro, name='intro'),
     path('news/', include('news.urls')),
     path('admin/', admin.site.urls),
     path('members/', include('django.contrib.auth.urls')),
-    path('pictures/', include('archive.urls')),
+    path('archive/', include('archive.urls')),
     path('events/', include('events.urls')),
 
 ]

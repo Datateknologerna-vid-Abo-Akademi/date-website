@@ -6,8 +6,10 @@ from . import views
 app_name = 'archive'
 
 urlpatterns = [
-    # /archive/
-    path('', views.pictureindex, name='pictures'),
+    # /pictures/
+    path('pictures/', views.pictureindex, name='pictures'),
+    # /documents/
+    path('documents/', views.documentindex, name='documents'),
     # /archive/<Collection_id>/
     url(r'^(?P<pk>[0-9]+)/$', views.DetailView.as_view(), name='detail'),
     url(r'^(?P<pk>[0-9]+)/edit/$', views.edit, name='edit'),

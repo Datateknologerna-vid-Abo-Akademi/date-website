@@ -19,8 +19,12 @@
             {% for collection in collections %}
                 <a  href="{% url 'archive:detail' collection.id %}" class="collection_box">
                 <li>
-                   <h5 class="align-text-center">{{ collection.title }}</h5>
-                    <img class="preview_img" src="{{ collection.get_first_picture.image.url }}">
+                    {% if collection.title|length > 20 %}
+                        <h5 class="align-text-center">{{ collection.title|slice:"20" }}...</h5>
+                    {% else %}
+                        <h5 class="align-text-center">{{ collection.title }}</h5>
+                    {% endif %}
+                   <img class="preview_img" src="{{ collection.get_first_picture.image.url }}">
                     <p>{{ collection.pub_date_pretty }}</p>
                 </li>
                 </a>

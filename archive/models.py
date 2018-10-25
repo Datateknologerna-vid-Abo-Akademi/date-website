@@ -1,6 +1,12 @@
 from __future__ import unicode_literals
 import os
-from django import template
+import sys
+from django.conf import settings
+
+from PIL import Image
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
+import shutil
 
 from django.db import models
 from django.urls import reverse
@@ -37,6 +43,10 @@ class Collection(models.Model):
     def pub_date_pretty(self):
         return self.pub_date.strftime('%b %e %Y')
 
+    def delete(self, *args, **kwargs):
+        shutil.rmtree(os.path.join(settings.MEDIA_ROOT, self.title.lower()), ignore_errors=True)
+        super(Collection, self).delete(*args, **kwargs)
+
 
 def upload_to(instance, filename):
     filename_base, filename_ext = os.path.splitext(filename)
@@ -45,6 +55,16 @@ def upload_to(instance, filename):
         filename=slugify(filename_base),
         extension=filename_ext.lower(),
     )
+
+
+def compress_image(uploadedImage):
+    imageTemp = Image.open(uploadedImage)
+    outputIOStream = BytesIO()
+    imageTempResize = imageTemp.resize((1020, 573))
+    imageTemp.save(outputIOStream, format='JPEG', quality=60)
+    outputIOStream.seek(0)
+    uploadedImage = InMemoryUploadedFile(outputIOStream, 'ImageField', "%s.jpg" %uploadedImage.name.split('.')[0],  'image/jpeg', sys.getsizeof(outputIOStream), None)
+    return uploadedImage
 
 
 class Picture(models.Model):
@@ -61,6 +81,15 @@ class Picture(models.Model):
 
     def get_file_path(self):
         return self.image.url
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.image = compress_image(self.image)
+        super(Picture, self).save(*args, **kwargs)
+
+    def delete(self, using=None, keep_parents=False):
+        os.remove(os.path.join(settings.MEDIA_ROOT, self.image.name))
+        super(Picture, self).delete(using, keep_parents)
 
 
 class Document(models.Model):
