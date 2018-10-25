@@ -1,3 +1,5 @@
+import datetime
+
 from django.views.generic import DetailView, ListView
 
 from .models import Event
@@ -7,10 +9,12 @@ from .models import Event
 class IndexView(ListView):
     model = Event
     template_name = 'events/index.html'
-    context_object_name = 'event_list'
 
-    def get_queryset(self):
-        return Event.objects.all()
+    def get_context_data(self, **kwargs):
+        context = super(IndexView, self).get_context_data(**kwargs)
+        context['event_list'] = Event.objects.filter(published=True, event_date_end__gte=datetime.date.today())
+        context['past_events'] = Event.objects.filter(published=True, event_date_start__year=datetime.date.today().year, event_date_end__lte=datetime.date.today())
+        return context
 
 
 class DetailView(DetailView):

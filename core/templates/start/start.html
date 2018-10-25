@@ -29,29 +29,25 @@
             <div class="container">
                 {% for event in events %}
                     <div class="{% if events|length > 1 %}one-half{% endif %} column card">
-                        <div class="u-max-full-width">
-                            <p class="card-date">{{ event.event_date_start }}</p>
-                            <h3 class="card-title">{{ event.title }}</h3>
-                            <div class="card-content">{{ event.content | safe | truncatewords_html:"70" }}</div>
-                            <div class="card-footer card-footer-reveal">
-                                <span></span>
-                                <a href="{% url 'events:detail' event.slug %}"
-                                   class="card-footer-text card-media-link" style="float: right;">
-                                    MERA</a>
-                            </div>
+                        <p class="card-date">{{ event.event_date_start }}</p>
+                        <h3 class="card-title">{{ event.title }}</h3>
+                        <div class="card-content">{{ event.content | safe | truncatewords_html:"70" }}</div>
+                        <div class="card-footer card-footer-reveal">
+                            <span></span>
+                            <a href="{% url 'events:detail' event.slug %}"
+                               class="card-footer-text">
+                                MERA</a>
                         </div>
                     </div>
                 {% empty %}
                     <h3 class="align-text-center">Händelserna kommer att vara här...</h3>
                 {% endfor %}
-
             </div>
             <div class="container align-center">
                 <a href="{% url 'events:index' %}">
                     <button class="all-cards-button align-center">Visa hela kalendern</button>
                 </a>
             </div>
-
         </div>
     </section>
 

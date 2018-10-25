@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="sv_FI">
 <head>
@@ -57,7 +58,7 @@
             </tbody>
         </table>
     {% else %}
-        <p>Inga deltagare...</p>
+        <p>{% trans "Inga deltagare..." %}</p>
     {% endif %}
 </div>
 

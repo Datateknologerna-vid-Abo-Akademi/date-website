@@ -4,7 +4,6 @@ from ckeditor.fields import RichTextField
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from django.urls import reverse
 
 logger = logging.getLogger('date')
 
@@ -41,6 +40,3 @@ class Post(models.Model):
     def update(self):
         self.modified_time = timezone.now()
         self.save()
-
-    def get_link(self):
-        return reverse('news:article_detail', args=[self.slug])
