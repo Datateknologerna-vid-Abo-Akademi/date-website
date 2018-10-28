@@ -393,6 +393,7 @@ hr {
 
 /* Self Clearing Goodness */
 .container:after,
+.container-soft:after,
 .row:after,
 .u-cf {
   content: "";

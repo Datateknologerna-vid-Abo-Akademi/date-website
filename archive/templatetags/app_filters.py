@@ -1,5 +1,3 @@
-from math import floor
-
 from django import template
 from django.contrib.auth.models import Group
 

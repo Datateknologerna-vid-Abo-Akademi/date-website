@@ -64,8 +64,6 @@ def compress_image(uploaded_image):
     img = Image.open(uploaded_image)
     outputIOStream = BytesIO()
     img = img.convert('RGB')
-    # img = img.resize((1020, 573))
-
     wpercent = (basewidth / float(img.size[0]))
     hsize = int((float(img.size[1]) * float(wpercent)))
     img = img.resize((basewidth, hsize), Image.ANTIALIAS)
@@ -102,7 +100,7 @@ class Picture(models.Model):
 
 
 class Document(models.Model):
-    collection = models.ForeignKey(Collection, verbose_name=_('samling'), on_delete=models.CASCADE)
+    collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
     title = models.CharField(max_length=250)
     document = models.FileField(upload_to=upload_to)
 
