@@ -62,7 +62,7 @@ class Event(models.Model):
         return EventAttendees.objects.filter(event=self)
 
     def add_event_attendance(self, user, email, anonymous, preferences):
-        if self.sign_up:
+        if self.sign_up and self.published:
             try:
                 registration = EventAttendees.objects.get(email=email, event=self)
             except ObjectDoesNotExist:
