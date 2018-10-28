@@ -16,14 +16,16 @@
         {% endif %}
   </div>
 
+    <!-- OVERLAY -->
     <div id="overlay" class="overlay offset-by-eight four columns" onclick="loadMemberOptions()">
         <h2>Hello,</h2>
         <h3>{{ user.first_name }} {{ user.last_name }}</h3>
-        <a href="{% url 'archive:pictures' %}">{% trans 'Bilder' %}</a>
-        <a href="{% url 'archive:documents' %}">{% trans 'Tentarkiv' %}</a>
-        <a href="{% url 'logout' %}">{% trans 'Log out' %}</a>
+        <div class="overlay-links">
+            <a href="{% url 'archive:pictures' %}">{% trans 'Bilder' %}</a>
+            <a href="{% url 'archive:documents' %}">{% trans 'Tentarkiv' %}</a>
+            <a href="{% url 'logout' %}">{% trans 'Log out' %}</a>
+        </div>
     </div>
-
     </div>
 
 </div>

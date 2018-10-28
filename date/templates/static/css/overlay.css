@@ -14,11 +14,15 @@
     text-align: center;
     line-height: 2.5em;
     animation: moveInRight .8s;
+    z-index: 10;
 }
 
 .overlay a{
-    font-family: 'Mali', cursive;
+    font-family: "Chakra Petch", cursive;
     display: block;
+}
+.overlay a:hover {
+    color: #fff;
 }
 
 

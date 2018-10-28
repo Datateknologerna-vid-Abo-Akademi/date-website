@@ -7,6 +7,7 @@ from .forms import PictureUploadForm
 def pictureindex(request):
     collections = Collection.objects.filter(type="Pictures").order_by('-pub_date')
     context = {
+        'type': "pictures",
         'collections': collections,
     }
     return render(request, 'archive/index.html', context)
@@ -15,6 +16,7 @@ def pictureindex(request):
 def documentindex(request):
     collections = Collection.objects.filter(type="Documents")
     context = {
+        'type': "Documents",
         'collections': collections,
     }
     return render(request, 'archive/index.html', context)

@@ -12,7 +12,7 @@ class PicturesInline(admin.TabularInline):
     readonly_fields = ('preview_image',)
 
     def preview_image(self, obj):
-        return mark_safe("""<img src="%s" style="width: 120px; height: 100px"/> """ % obj.image.url)
+        return mark_safe("""<img src="%s" style="width: auto; height: 80px"/> """ % obj.image.url)
 
 
 @admin.register(Collection)

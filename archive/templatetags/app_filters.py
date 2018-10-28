@@ -1,7 +1,5 @@
-from math import floor
-
 from django import template
-
+from django.contrib.auth.models import Group
 
 register = template.Library()
 
@@ -18,8 +16,14 @@ def divide(value, arg):
 @register.filter(name="arrangePictures")
 def arrangepictures(value, arg):
     try:
-        columnsize = divide(arg+3, 4)  # args + 4 to ensure not 5 columns are created.
-        print(columnsize)
-        return bool(value % columnsize) is False
+        column_size = divide(arg+3, 4)  # args + 4 to ensure not 5 columns are created.
+        print(column_size)
+        return bool(value % column_size) is False
     except (ValueError, ZeroDivisionError):
         return None
+
+
+@register.filter(name='in_group')
+def in_group(user, group_name):
+    group = Group.objects.get(name=group_name)
+    return group in user.groups.all()

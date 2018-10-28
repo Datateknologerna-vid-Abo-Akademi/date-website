@@ -44,7 +44,9 @@ class Collection(models.Model):
         return self.pub_date.strftime('%b %e %Y')
 
     def delete(self, *args, **kwargs):
-        shutil.rmtree(os.path.join(settings.MEDIA_ROOT, self.title.lower()), ignore_errors=True)
+        dir_location = os.path.join(settings.MEDIA_ROOT, self.title.lower())
+        print(dir_location)
+        shutil.rmtree(dir_location, ignore_errors=True)
         super(Collection, self).delete(*args, **kwargs)
 
 
@@ -57,14 +59,19 @@ def upload_to(instance, filename):
     )
 
 
-def compress_image(uploadedImage):
-    imageTemp = Image.open(uploadedImage)
+def compress_image(uploaded_image):
+    basewidth = 1600
+    img = Image.open(uploaded_image)
     outputIOStream = BytesIO()
-    imageTempResize = imageTemp.resize((1020, 573))
-    imageTemp.save(outputIOStream, format='JPEG', quality=60)
+    img = img.convert('RGB')
+    wpercent = (basewidth / float(img.size[0]))
+    hsize = int((float(img.size[1]) * float(wpercent)))
+    img = img.resize((basewidth, hsize), Image.ANTIALIAS)
+
+    img.save(outputIOStream, format='JPEG', quality=60)
     outputIOStream.seek(0)
-    uploadedImage = InMemoryUploadedFile(outputIOStream, 'ImageField', "%s.jpg" %uploadedImage.name.split('.')[0],  'image/jpeg', sys.getsizeof(outputIOStream), None)
-    return uploadedImage
+    uploaded_image = InMemoryUploadedFile(outputIOStream, 'ImageField', "%s.jpg" % uploaded_image.name.split('.')[0],  'image/jpeg', sys.getsizeof(outputIOStream), None)
+    return uploaded_image
 
 
 class Picture(models.Model):
@@ -93,7 +100,7 @@ class Picture(models.Model):
 
 
 class Document(models.Model):
-    collection = models.ForeignKey(Collection, verbose_name=_('samling'), on_delete=models.CASCADE)
+    collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
     title = models.CharField(max_length=250)
     document = models.FileField(upload_to=upload_to)
 
