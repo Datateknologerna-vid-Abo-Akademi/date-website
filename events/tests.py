@@ -32,7 +32,7 @@ class EventTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
 
-    def test_hide_event(self):
+    def test_unpublished_event(self):
         self.event.unpublish()
         self.assertEqual(self.event.get_registrations().count(), 0)
         c = Client()
