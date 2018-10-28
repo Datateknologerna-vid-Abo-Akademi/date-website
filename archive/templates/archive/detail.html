@@ -8,7 +8,10 @@
 
         <h2>{{ collection.title }}</h2>
         <p>Published on {{ collection.pub_date_pretty }}</p>
-        <p><a class="button" href="{% url 'archive:edit' collection.id %}">edit</a></p>
+        <p><a href="{% url 'archive:pictures' %}" class="button">Return</a>
+            {% if request.user|in_group:"fotograf" or request.user|in_group:"styssen"%}
+            <a class="button" href="{% url 'archive:edit' collection.id %}">edit</a></p>
+            {% endif %}
         {% if error_msg %}
             <p>{{ error_msg }}</p>
         {% endif %}
@@ -25,10 +28,6 @@
             <h3>No {{ collection.type }} to show.</h3>
         {% endfor %}
             </div>
-        </div>
-
-        <div class="container-soft">
-        <a href="{% url 'archive:pictures' %}" class="button">Return</a>
         </div>
 
 

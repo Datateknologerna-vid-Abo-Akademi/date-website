@@ -32,8 +32,8 @@ img {
     top: 50%;
     transform: translate(-50%, -50%);
     z-index: 2;
-    height: 90vh;
-    width: auto;
+    height: fit-content;
+    width: max-content;
     max-width: 90vw;
 }
 
