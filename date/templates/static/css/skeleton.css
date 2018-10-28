@@ -30,6 +30,10 @@
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 .container-soft {
   padding: 5rem;
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .container {

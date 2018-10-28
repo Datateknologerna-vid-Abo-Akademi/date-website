@@ -35,6 +35,10 @@
     letter-spacing: 1.2rem;
 }
 
+.section-events {
+    border-top: 2px solid black;
+}
+
 .section-events .text-box{
     font-family: 'Chakra Petch', sans-serif;
     padding: 5rem;
