@@ -1,19 +1,28 @@
 {% extends 'base.html' %}
+{% load app_filters %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans "Arkiv" %}{% endblock %}
 
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
 <head>
-    {% load static %}
-    <meta charset="UTF-8">
-    <title>File Showroom</title>
     <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
 </head>
 <body>
     <div class="container-soft">
-        <h1>Bild arkiv</h1>
-        <!--  Check if User is loggen on and in group to add new album-->
-        <a class="button" href="{% url 'archive:upload' %}"> Skapa nytt album</a>
+        {% if type == 'pictures' %}
+            <h1>{% trans "Bild arkiv" %}</h1>
+            <!--  Check if User is loggen on and in group to add new album-->
+            {% if request.user|in_group:"Fotograf"%}
+                <a class="button" href="{% url 'archive:upload' %}"> Skapa nytt album</a>
+            {% endif %}
+        {% else %}
+            <h1>{% trans "Tent arkiv" %}</h1>
+
+            {% if request.user|in_group:"Styrelse"%}
+                <a class="button" href="{% url 'archive:upload' %}"> Ladda upp tent</a>
+            {% endif %}
+        {% endif %}
         {% if collections %}
         <ul>
             {% for collection in collections %}
@@ -32,11 +41,10 @@
 
         </ul>
         {% else %}
-            <h3>No Albums to show</h3>
+            <h3>{% trans "Inga arkiv hittades" %}</h3>
         {% endif %}
 
     </div>
 </body>
-</html>
 {% endblock %}
 
