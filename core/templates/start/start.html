@@ -1,9 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
+    {% load static %}
+    {% load i18n %}
     <head>
-        {% load static %}
-        {% load i18n %}
-
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -25,13 +24,16 @@
     <!-- EVENTS SECTION  -->
     <section class="section-events">
         <div class="text-box">
-            <h1 class="align-center">HÄNDELSER</h1>
+            <h1 class="align-center">{% trans "HÄNDELSER" %}</h1>
             <div class="container">
                 {% for event in events %}
-                    <div class="{% if events|length > 1 %}one-half{% endif %} column card">
+                    <div class="{% if events|length > 1 %}one-half{% endif %} column card events"
+                         onclick="location.href='{% url 'events:detail' event.slug %}'">
                         <p class="card-date">{{ event.event_date_start }}</p>
-                        <h3 class="card-title">{{ event.title }}</h3>
-                        <div class="card-content">{{ event.content | safe | truncatewords_html:"70" }}</div>
+                        <div class="card-title">
+                            <h3 class="card-title">{{ event.title }}</h3>
+                        </div>
+                        <div class="card-content">{{ event.content | safe | truncatewords_html:"25" }}</div>
                         <div class="card-footer card-footer-reveal">
                             <span></span>
                             <a href="{% url 'events:detail' event.slug %}"
@@ -40,12 +42,44 @@
                         </div>
                     </div>
                 {% empty %}
-                    <h3 class="align-text-center">Händelserna kommer att vara här...</h3>
+                    <h3 class="align-text-center">{% trans 'Händelserna kommer att vara här...' %}</h3>
                 {% endfor %}
             </div>
             <div class="container align-center">
                 <a href="{% url 'events:index' %}">
-                    <button class="all-cards-button align-center">Visa hela kalendern</button>
+                    <button class="all-cards-button align-center">{% trans 'Visa hela kalendern' %}</button>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- NEWS SECTION  -->
+    <section class="section-events">
+        <div class="text-box">
+            <h1 class="align-center">{% trans 'NYHETER' %}</h1>
+            <div class="container">
+                {% for news_item in news %}
+                    <div class="one-third column card news"
+                         onclick="location.href='{% url 'news:detail' news_item.slug %}'">
+                        <p class="card-date">{{ news_item.published_time }}</p>
+                        <div class="card-title">
+                            <h3 class="card-title">{{ news_item.title }}</h3>
+                        </div>
+                        <div class="card-content">{{ news_item.content | safe | truncatewords_html:"70" }}</div>
+                        <div class="card-footer card-footer-reveal">
+                            <span></span>
+                            <a href="{% url 'news:detail' news_item.slug %}"
+                               class="card-footer-text">
+                                LÄS MERA</a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <h3 class="align-text-center">{% trans 'Nyheterna kommer att vara här...' %}</h3>
+                {% endfor %}
+            </div>
+            <div class="container align-center">
+                <a href="{% url 'news:index' %}">
+                    <button class="all-cards-button align-center">{% trans 'Visa alla nyheter' %}</button>
                 </a>
             </div>
         </div>

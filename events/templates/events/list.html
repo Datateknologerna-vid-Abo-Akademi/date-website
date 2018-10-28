@@ -15,8 +15,9 @@
 
 <div class="container">
     <div class="qr-code"></div>
-    <h2 class="title" link="https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=Example"><a
+    <h2 class="title"><a>
             href="{% url 'events:detail' event.slug %}">{{ event.title }}</a></h2>
+    <img id="qr-link" src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ request.get_host }}{% url 'events:detail' event.slug%}">
     <h5>Datum: {{ event.event_date_start }}</h5>
 
     {% if event.get_registrations %}

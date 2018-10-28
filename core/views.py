@@ -13,8 +13,8 @@ def intro(request):
 
 
 def index(request):
-    events = Event.objects.filter(published=True, event_date_end__gte=datetime.date.today()).reverse()[:5]
-    news = Post.objects.filter(published=True).reverse()[:5]
+    events = Event.objects.filter(published=True, event_date_end__gte=datetime.date.today()).reverse()[:6]
+    news = Post.objects.filter(published=True).reverse()[:3]
     return render(request, 'start/start.html', {'events': events, 'news': news})
 
 

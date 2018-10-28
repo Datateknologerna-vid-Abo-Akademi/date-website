@@ -68,8 +68,20 @@ Removes the underline with text decoration = none.*/
 
 /* CARD ELEMENTS */
 .card {
+    cursor: pointer;
+}
+
+.card.events {
     height: 200px;
     box-shadow: 0 2px 6px 0 hsla(0, 0%, 0%, 0.2);
+    overflow: hidden;
+    margin-top: 4%;
+    /*padding: 5px;*/
+    position: relative;
+}
+
+.card.news {
+    height: 400px;
     overflow: hidden;
     margin-top: 4%;
     padding: 5px;
@@ -77,8 +89,9 @@ Removes the underline with text decoration = none.*/
 }
 
 .card-title {
-    display: inline-block;
     font-weight: 700;
+    width: 80%;
+    margin: 5px;
 }
 
 .card-date {
@@ -92,16 +105,22 @@ Removes the underline with text decoration = none.*/
     font-weight: 400;
     display: inline-block;
     height: 50%;
+    margin: 5px;
 }
 
 .card-footer {
+    width: 100%;
     display: block;
     position: absolute;
-    bottom: 10px;
-    right: 16px;
+    bottom: 0;
     opacity: 1;
+    padding: 10px;
+    height: 15px;
     transition: all 300ms ease-out;
-    width: 47%;
+    background: -moz-linear-gradient(bottom, rgba(255, 255, 255, 1) 41%, rgba(255, 255, 255, 1) 42%, rgba(255, 255, 255, 0) 100%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(bottom, rgba(255, 255, 255, 1) 41%, rgba(255, 255, 255, 1) 42%, rgba(255, 255, 255, 0) 100%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(top, rgba(255, 255, 255, 1) 41%, rgba(255, 255, 255, 1) 42%, rgba(255, 255, 255, 0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#00ffffff', GradientType=0);
 }
 
 .card:hover .card-footer {
@@ -110,7 +129,9 @@ Removes the underline with text decoration = none.*/
 }
 
 .card-footer-text {
-    float: right;
+    position: absolute;
+    right: 2em;
+    bottom: 0;
 }
 
 .card-footer-reveal {
@@ -124,8 +145,8 @@ Removes the underline with text decoration = none.*/
     transform: translateY(0);
 }
 
-.columns.card:nth-child(odd),
-.column.card:nth-child(odd) {
+.columns.card.events:nth-child(odd),
+.column.card.events:nth-child(odd) {
     margin-left: 0;
 }
 
@@ -150,15 +171,19 @@ th:hover .remove-column {
     display: inline;
 }
 
+#qr-link {
+    display: none;
+    position: absolute;
+    right: 0.5cm;
+    width: 50px;
+    height: 50px;
+}
+
 /* PRINTING LISTS */
 @media print {
 
-    h2.title:after {
-        position: absolute;
-        right: 0.5cm;
-        content: url(https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=Example);
-        width: 50px;
-        height: 50px;
+    #qr-link {
+        display: inline-block;
     }
 
     a {
