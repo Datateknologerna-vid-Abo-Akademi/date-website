@@ -4,7 +4,7 @@ from .models import Collection, Picture
 from .forms import PictureUploadForm
 
 
-def pictureindex(request):
+def picture_index(request):
     collections = Collection.objects.filter(type="Pictures").order_by('-pub_date')
     context = {
         'type': "pictures",
@@ -13,13 +13,15 @@ def pictureindex(request):
     return render(request, 'archive/index.html', context)
 
 
-def documentindex(request):
+def document_index(request):
     collections = Collection.objects.filter(type="Documents")
-    context = {
-        'type': "Documents",
-        'collections': collections,
-    }
-    return render(request, 'archive/index.html', context)
+    if request.user.is_authenticated:
+        context = {
+            'type': "Documents",
+            'collections': collections,
+        }
+        return render(request, 'archive/index.html', context)
+    return redirect('index')
 
 
 class DetailView(generic.DetailView):
