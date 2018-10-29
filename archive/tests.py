@@ -40,3 +40,8 @@ class CollectionTestCase(TestCase):
         self.assertTrue(isinstance(d, Document))
         self.assertEqual(d.__str__(), d.title)
         self.assertEqual(d.collection.type, TYPE_CHOICES[1])
+
+# Views tests
+    # https://realpython.com/testing-in-django-part-1-best-practices-and-examples/#testing-views
+# Forms tests
+    # https://realpython.com/testing-in-django-part-1-best-practices-and-examples/#testing-forms

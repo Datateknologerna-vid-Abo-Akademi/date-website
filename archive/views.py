@@ -50,6 +50,8 @@ def upload(request):
     if request.method == 'POST':
         form = PictureUploadForm(request.POST)
         if form.is_valid():
+            if request.FILES.getlist('images') is None:
+                return redirect('archive:pictures')
             collection = Collection(title=form['album'].value(), type='Pictures')
             collection.save()
             for file in request.FILES.getlist('images'):
