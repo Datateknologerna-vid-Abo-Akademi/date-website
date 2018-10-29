@@ -1,4 +1,4 @@
-body{
+body {
     height: 100%;
 }
 
@@ -9,8 +9,7 @@ footer {
     border-top: 2px solid black;
 }
 
-
-.align-text-center {
+.align-center {
     text-align: center;
 }
 
@@ -226,7 +225,7 @@ th:hover .remove-column {
 
 /* Footer */
 #footer-img {
-    display: block;
+    display: inline;
     height: 100px;
     width: auto;
 }
