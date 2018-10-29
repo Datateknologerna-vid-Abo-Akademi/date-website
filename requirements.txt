@@ -7,3 +7,4 @@ pillow
 python-dateutil
 icalendar
 django-ical
+django-admin-ordering

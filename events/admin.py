@@ -1,12 +1,12 @@
+from admin_ordering.admin import OrderableAdmin
 from django.conf.urls import url
+from django.contrib import admin
+from django.contrib.postgres.fields import JSONField
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.html import format_html
 
 from events import forms
-from django.contrib import admin
-from django.contrib.postgres.fields import JSONField
-
 from events.models import Event, EventRegistrationForm, EventAttendees
 from events.widgets import PrettyJSONWidget
 
@@ -23,25 +23,30 @@ class EventRegistrationFormInline(admin.TabularInline):
     def line_number(self, obj):
         self.line_numbering += 1
         return self.line_numbering
+
     line_number.short_description = '#'
 
 
-class EventAttendeesFormInline(admin.TabularInline):
+class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
+    ordering_field = 'attendee_nr'
+    ordering_field_hide_input = True
     model = EventAttendees
     fk_name = 'event'
     extra = 0
+    list_editable = ('attendee_nr',)
     readonly_fields = ('user', 'email', 'time_registered')
-    fields = ('user', 'email', 'anonymous', 'preferences', 'time_registered')
+    fields = ('attendee_nr', 'user', 'email', 'anonymous', 'preferences', 'time_registered')
     formfield_overrides = {
         JSONField: {'widget': PrettyJSONWidget()}
     }
     can_delete = True
-    ordering = ['-time_registered']
+    ordering = ['attendee_nr']
 
 
 class EventAdmin(admin.ModelAdmin):
     list_display = (
-        'title', 'created_time', 'event_date_start', 'get_attendee_count', 'sign_up_max_participants', 'published', 'account_actions')
+        'title', 'created_time', 'event_date_start', 'get_attendee_count', 'sign_up_max_participants', 'published',
+        'account_actions')
     search_fields = ('title', 'author', 'created_time')
     ordering = ['-event_date_start']
     save_on_top = True
@@ -66,6 +71,7 @@ class EventAdmin(admin.ModelAdmin):
             '<a class="button" href="{}">Deltagarlista</a>&nbsp;',
             reverse('admin:registration_list', args=[obj.pk])
         )
+
     account_actions.short_description = 'Deltagarlista'
     account_actions.allow_tags = True
 
@@ -84,6 +90,7 @@ class EventAdmin(admin.ModelAdmin):
 
     def get_attendee_count(self, obj):
         return obj.get_registrations().count()
+
     get_attendee_count.short_description = 'Anmälda'
 
     def add_view(self, request, form_url='', extra_context=None):

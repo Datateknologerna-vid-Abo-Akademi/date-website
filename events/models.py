@@ -29,7 +29,8 @@ class Event(models.Model):
     sign_up_others = models.DateTimeField(_('Anmälan öppnas (övriga)'), null=True, blank=True, default=timezone.now)
     sign_up_deadline = models.DateTimeField(_('Anmälningen stängs'), default=days_hence(7), null=True, blank=True)
     sign_up_cancelling = models.BooleanField(_('Avanmälning'), default=True)
-    sign_up_cancelling_deadline = models.DateTimeField(_('Avanmälningen stängs'), default=days_hence(5), null=True, blank=True)
+    sign_up_cancelling_deadline = models.DateTimeField(_('Avanmälningen stängs'), default=days_hence(5), null=True,
+                                                       blank=True)
     author = models.ForeignKey('members.Member', on_delete=models.CASCADE)
     created_time = models.DateTimeField(_('Skapad'), default=timezone.now)
     published_time = models.DateTimeField(_('Publicerad'), editable=False, null=True, blank=True)
@@ -59,7 +60,7 @@ class Event(models.Model):
         self.save()
 
     def get_registrations(self):
-        return EventAttendees.objects.filter(event=self)
+        return EventAttendees.objects.filter(event=self).order_by('attendee_nr')
 
     def add_event_attendance(self, user, email, anonymous, preferences):
         if self.sign_up and self.published:
@@ -105,9 +106,9 @@ class Event(models.Model):
 
     def make_registration_form(self, data=None):
         if self.sign_up:
-            fields = {'user': forms.CharField(label='Namn',max_length=255),
+            fields = {'user': forms.CharField(label='Namn', max_length=255),
                       'email': forms.EmailField(label='Email'),
-                      'anonymous': forms.BooleanField(label='Anonymt',required=False)}
+                      'anonymous': forms.BooleanField(label='Anonymt', required=False)}
             if self.get_registration_form():
                 for question in reversed(self.get_registration_form()):
                     if (question.type == "select"):
@@ -146,6 +147,7 @@ class EventRegistrationForm(models.Model):
 
 class EventAttendees(models.Model):
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
+    attendee_nr = models.PositiveSmallIntegerField(_('#'))
     user = models.CharField(_('Namn'), blank=False, max_length=255)
     email = models.EmailField(_('E-postadress'), blank=False, null=True)
     preferences = JSONField(_('Svar'), default=list, blank=True)
@@ -166,6 +168,8 @@ class EventAttendees(models.Model):
         return self.get(str(key))
 
     def save(self, *args, **kwargs):
+        if self.attendee_nr is None:
+            self.attendee_nr = self.event.get_registrations().count()
         if self.time_registered is None:
             self.time_registered = timezone.now()
         super(EventAttendees, self).save(*args, **kwargs)
