@@ -29,14 +29,19 @@
             <h2>{% trans "Anmälda" %}</h2>
             <table>
                 <tr>
-                    <th>{% trans "Namn" %}</th>
+                    {% if event.get_registrations %}
+                        <th>#</th>
+                        <th>{% trans "Namn" %}</th>
+                    {% endif %}
                     {% for preference in event.get_registration_form_public_info reversed %}
                         <th>{{ preference }}</th>
                     {% endfor %}
                 </tr>
                 {% for attendee in event.get_registrations %}
                     <tr>
-                        <td>{% if not attendee.anonymous %}{{ attendee.user }}{% else %}<i>{% trans "Anonymt" %}</i>{% endif %}</td>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{% if not attendee.anonymous %}{{ attendee.user }}{% else %}
+                            <i>{% trans "Anonymt" %}</i>{% endif %}</td>
                         {% for preference in event.get_registration_form_public_info reversed %}
                             <td>{{ attendee.preferences | get_item:preference }}</td>
                         {% endfor %}
