@@ -35,7 +35,37 @@
         <script>
             function imageClick(id) {
                let element = document.getElementById("picture-" + id);
+               console.log("ID: " + id);
                element.classList.toggle("enlarge");
+            }
+
+            document.addEventListener("keydown", cycleEnlargedImage, true);
+
+            function cycleEnlargedImage(e) {
+                let keyCode = e.keyCode;
+                if(keyCode === 37){
+                    console.log("Left arrow pressed");
+                    let element = document.getElementsByClassName("enlarge")[0];
+                    if (element){
+                        let element_id = element.id.split("-")[1];
+                        console.log(element_id);
+                        if( element_id > 1){
+                            imageClick(element_id);
+                            imageClick(parseInt(element_id)-1);
+                        }
+                    }
+                }
+                else if(keyCode === 39){
+                    console.log("Right arrow pressed");
+                    let element = document.getElementsByClassName("enlarge")[0];
+                    if (element){
+                        let element_id = element.id.split("-")[1];
+                        if( element_id < document.getElementsByClassName("smaller-img").length){
+                            imageClick(element_id);
+                            imageClick(parseInt(element_id)+1);
+                        }
+                    }
+                }
             }
         </script>
     {% endblock %}

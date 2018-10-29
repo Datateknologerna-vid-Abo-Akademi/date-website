@@ -33,8 +33,9 @@ img {
     transform: translate(-50%, -50%);
     z-index: 2;
     height: fit-content;
-    width: max-content;
+    width: auto;
     max-width: 90vw;
+    max-height: 95vh;
 }
 
 /*
