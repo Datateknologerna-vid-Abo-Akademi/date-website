@@ -213,5 +213,14 @@ th:hover .remove-column {
 
 /* Footer */
 #footer-img {
- width: auto;
+    height: 150px;
+    width: auto;
+}
+
+#copyright {
+    font-weight: 400;
+    display: block;
+    text-align: center;
+    font-size: 1.5rem;
+    letter-spacing: 0.3rem;
 }
