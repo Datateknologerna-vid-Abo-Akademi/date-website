@@ -20,6 +20,8 @@ from django.conf import settings
 
 import core.views as core
 
+app_name = 'base'
+
 urlpatterns = [
     path('', core.index, name='index'),
     path('intro/', core.intro, name='intro'),

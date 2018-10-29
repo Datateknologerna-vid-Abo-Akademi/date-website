@@ -25,5 +25,9 @@ def arrangepictures(value, arg):
 
 @register.filter(name='in_group')
 def in_group(user, group_name):
-    group = Group.objects.get(name=group_name)
-    return group in user.groups.all()
+    try:
+        group = Group.objects.get(name=group_name)
+        return group in user.groups.all()
+    except Group.DoesNotExist:
+        print("ERROR, No group", group_name)  # should not happen if server setup right.
+        return False
