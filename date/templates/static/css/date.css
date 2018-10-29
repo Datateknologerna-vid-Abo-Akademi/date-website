@@ -1,3 +1,15 @@
+body{
+    height: 100%;
+}
+
+footer {
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    border-top: 2px solid black;
+}
+
+
 .align-text-center {
     text-align: center;
 }
@@ -213,7 +225,8 @@ th:hover .remove-column {
 
 /* Footer */
 #footer-img {
-    height: 150px;
+    display: block;
+    height: 100px;
     width: auto;
 }
 
@@ -223,4 +236,5 @@ th:hover .remove-column {
     text-align: center;
     font-size: 1.5rem;
     letter-spacing: 0.3rem;
+    margin-bottom: 2rem;
 }
