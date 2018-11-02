@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^(?P<pk>[0-9]+)/edit/$', views.edit, name='edit'),
     url(r'^(?P<collection_id>[0-9]+)/edit/remove/(?P<file_id>[0-9]+)/$', views.remove_file, name='remove_file'),
     path('upload/', views.upload, name='upload'),
+    path('cleanMedia/', views.clean_media, name='cleanMedia'),
 
 ]
 

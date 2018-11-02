@@ -2,40 +2,40 @@ body {
     height: 100%;
 }
 
-footer {
-    position: relative;
-    bottom: 0;
-    width: 100%;
-    border-top: 2px solid black;
-}
-
 .align-center {
     text-align: center;
 }
 
+/* Section header */
+.header-bar {
+    background-color: black;
+}
+
 .navBar {
-    background-color: #000000;
     overflow: hidden;
 }
 
 /*Floats each item to the left with padding of 14 & 16 px.
 Removes the underline with text decoration = none.*/
+.navBar li {
+    display: inline-block;
+    font-size: 1.8vw;
+}
+
 .navBar a {
     float: left;
     color: white;
-    padding: 14px 16px;
+    padding: 14px 15px;
     text-decoration: none;
-    font-size: 17px;
     font-family: Tahoma, Mali, serif;
 }
 
 /*Background color change during hover state*/
 .navBar a:hover {
-    background-color: white;
-    color: #009cde;
+    text-shadow: 0 0 10px white;
 }
 
-.navBar a:last-child {
+.navBar li:last-child {
     float: right;
     margin-right: 2rem;
 }
@@ -45,40 +45,113 @@ Removes the underline with text decoration = none.*/
     display: none;
 }
 
+.sub-navBar {
+    display: none;
+    margin: 0;
+    padding: 0;
+    background-color: black;
+    color: white;
+}
+
+.sub-navBar h3 {
+    padding: 1.5rem 0 0 1.5rem;
+    float: left;
+    font-size: 8vw;
+    margin-bottom: 0;
+    letter-spacing: 2px;
+}
+
+.sub-navBar i {
+    font-size: 8vw;
+    padding: 2rem 2rem 0 0;
+    float: right;
+}
+
+#mobileNavBar a {
+    color: white;
+    margin: 0;
+    padding: 0;
+}
+
 /*Set your custom screen width here replacing 700*/
 @media (max-width: 700px) {
-    /*Ignores the first link (which is Home) in the div and       applies 'display = none' to everything else.   Basically hiding everything but Home*/
-    .navBar a:not(:first-child) {
+
+    .header-bar {
+        background-color: black;
+        overflow: hidden;
+        display: grid;
+    }
+
+    #mainNavBar{
+        overflow: hidden;
+        display: none;
+        background-color: black;
+        transition: max-height 1s ease-out;
+        min-height: 80vh;
+    }
+
+    #mainNavBar li{
+        overflow: hidden;
+        display: block;
+        float: none;
+        position: relative;
+        font-size: 10vw;
+        margin-bottom: 0;
+    }
+    #mainNavBar li:first-child{
         display: none;
     }
 
-    /*Brings the menu icon into view and floats it to the right*/
-    .navBar a.icon {
-        display: block;
-        float: right;
-    }
-
-    /*The navBar class will be changed to 'navBar responsive' using JS. This chunk of CSS makes the menu icon stay where it is by making the position absolute within it's parent 'right top corner'. Without this, the icon will get kicked around when the items are collapsed and expanded*/
-    .navBar.responsive {
-        position: relative;
-    }
-
-    .navBar.responsive a.icon {
+    #mainNavBar li:last-child{
         position: absolute;
-        right: 0;
-        top: 0;
+        left: 0;
+        bottom: 5vh;
+    }
+    /* Hide icons in mobile view to save space.*/
+    #mainNavBar i{
+        display: none;
+    }
+    #mainNavBar a {
+        padding: 2rem 5rem;
+        text-align: center;
     }
 
-    /*Removes the originally set float and brings them to view*/
-    .navBar.responsive a {
-        float: none;
-        display: block;
-        text-align: left;
+    #mobileNavBar {
+        padding-bottom: 2rem;
+        width: 100vw;
+        display: inline;
     }
+    /*
+        Overlay inline
+     */
+    .overlay {
+        border-top: 2px solid whitesmoke;
+    font-family: Tahoma, Mali, serif;
+    display: none;
+    background-color: black; /* Black background with opacity */
+        margin-top: 5rem;
+    padding: 0 5rem;
+    font-size: 10vw;
+    color: white;
+    top: 0;
+    right: 0;
+        position: relative;
+    text-align: left;
+    line-height: 2em;
+    animation: none;
+    z-index: 0;
+    box-shadow: none;
+}
+    .overlay-text{
+        display: none;
+    }
+
+
 }
 
 /* CARD ELEMENTS */
 .card {
+    background: rgba(0, 0, 0, 0.5);
     cursor: pointer;
 }
 
@@ -129,9 +202,7 @@ Removes the underline with text decoration = none.*/
     padding: 10px;
     height: 15px;
     transition: all 300ms ease-out;
-    background: -moz-linear-gradient(bottom, rgba(255, 255, 255, 1) 41%, rgba(255, 255, 255, 1) 42%, rgba(255, 255, 255, 0) 100%); /* FF3.6-15 */
-    background: -webkit-linear-gradient(bottom, rgba(255, 255, 255, 1) 41%, rgba(255, 255, 255, 1) 42%, rgba(255, 255, 255, 0) 100%); /* Chrome10-25,Safari5.1-6 */
-    background: linear-gradient(top, rgba(255, 255, 255, 1) 41%, rgba(255, 255, 255, 1) 42%, rgba(255, 255, 255, 0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    background: linear-gradient(top, rgba(0, 0, 0, 1) 41%, rgba(0, 0, 0, 1) 42%, rgba(0, 0, 0, 0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#00ffffff', GradientType=0);
 }
 
@@ -224,6 +295,13 @@ th:hover .remove-column {
 }
 
 /* Footer */
+
+footer {
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
 #footer-img {
     display: inline;
     height: 100px;

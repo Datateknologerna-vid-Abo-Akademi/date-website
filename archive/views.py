@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.views import generic
 from .models import Collection, Picture
 from .forms import PictureUploadForm
+from django.conf import settings
+import os
 
 
 def picture_index(request):
@@ -63,3 +65,14 @@ def upload(request):
         'picture_form': form,
     }
     return render(request, 'archive/upload.html', context)
+
+
+def clean_media(request):
+    folders = os.walk(settings.MEDIA_ROOT)
+    for f in folders:
+        # f[0] = Folder
+        # f[2] = list of pictures.
+
+        print(f[0])
+        print(f[2])
+    return redirect('archive:pictures')

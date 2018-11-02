@@ -5,13 +5,13 @@
 .header {
     color: white;
     background-color: #000;
-    height: 90vh;
+    height: 100vh;
 }
 
 
 .hero-text-box {
     position: absolute;
-    top: 40%;
+    top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
 }
@@ -20,6 +20,7 @@
     font-family: 'Chakra Petch', sans-serif;
     color: white;
 }
+
 
 .hero-text-main {
     display: block;
@@ -35,22 +36,33 @@
     letter-spacing: 1.2rem;
 }
 
-@media screen and (max-width: 600px) {
+@media screen and (max-width: 700px) {
+
+    .header {
+        height: 90vh;
+    }
+
+    .hero-text-box {
+        position: relative;
+    }
     .hero-text-main{
         font-size: 7rem;
         letter-spacing: 1.5rem;
     }
     .hero-text-sub {
+        padding: 0 2rem;
         font-size: 2rem;
-        letter-spacing: .8rem;
+        letter-spacing: .6rem;
     }
 }
 
 .section-events {
-    border-top: 2px solid black;
+    color: white;
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.3)), url("https://images.pexels.com/photos/595804/pexels-photo-595804.jpeg?auto=compress&cs=tinysrgb&h=750&w=1260") fixed;
+    background-size: cover;
 }
 
-.section-events .text-box{
+.text-box{
     font-family: 'Chakra Petch', sans-serif;
     padding: 5rem;
 }

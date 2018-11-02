@@ -4,25 +4,36 @@
 .overlay {
     font-family: "Chakra Petch", sans-serif;
     display: none;
-    background-color: rgba(0,0,10, 0.8); /* Black background with opacity */
-    padding: 10rem 2rem 2rem 2rem;
-    font-size: 2em;
+    background-color: black; /* Black background with opacity */
+    padding: 5rem 2rem 2rem 2rem;
+    font-size: 2vw;
     color: white;
     position: fixed;
-    height: 100vh;
-
+    height: 96vh;
+    top: 2vh;
+    right: 2vh;
     text-align: center;
-    line-height: 2.5em;
-    animation: moveInRight .8s;
+    line-height: 2em;
+    animation: moveInRight .5s;
     z-index: 10;
+    box-shadow: -2px -2px 10px white;
 }
 
-.overlay a{
+.overlay h3{
+    padding-bottom: 2rem;
+    border-bottom: 2px solid white;
+}
+
+.overlay a {
+    text-decoration: none;
+    color: white;
     font-family: "Chakra Petch", cursive;
     display: block;
 }
 .overlay a:hover {
-    color: #fff;
+    text-shadow: 0 0 10px white;
+}
+.overlay a:first-child{
 }
 
 
@@ -31,9 +42,9 @@
 @keyframes
 moveInRight{
     0%{
-        transform: translateX(100%);
+        transform: translateX(100%) scaleY(0) translateY(100%);
     }
     100%{
-        transform: translateX(0);
+        transform: translateX(0) scaleY(1);
     }
 }
