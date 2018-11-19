@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% load i18n %}
+
+{% block title %}Nyheter{% endblock %}
+
+{% block content %}
+    <div class="container-soft">
+        {% for news_item in latest_news_items %}
+            <a href="{% url 'news:detail' news_item.slug %}"><h2>{{ news_item.title }}</h2></a>
+            <h4>{{ news_item.author }}, {{ news_item.published_time }}</h4>
+            <p> {{ news_item.content | safe | truncatewords_html:"25" }}
+                {% empty %}
+            <li>{% trans "Inga nyheter, ännu" %}</li>
+        {% endfor %}
+    </div>
+{% endblock %}

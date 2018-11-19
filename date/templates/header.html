@@ -1,3 +1,76 @@
+{% load static %}
+{% load i18n %}
+
+<link rel="stylesheet" href="{% static "css/overlay.css" %}">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.2/css/all.css"
+      integrity="sha384-/rXc/GQVaYpyDdyxK+ecHPVYJSN9bmVFBvjA/9eOB+pb3F2w2N6fc5qB9Ew5yIns" crossorigin="anonymous">
+
 <div class="header-bar">
-    <p>wtf</p>
+
+    <!-- Mobile nav-bar -->
+    <div class="sub-navBar" id="mobileNavBar">
+        <a href="{% url 'index' %}"><h3 class="navBar-text">Datateknologerna</h3></a>
+        <a onclick="dropDownMobile()"><i id="dropDownMobileIcon" class="fas fa-bars"></i></a>
+    </div>
+
+    <!-- Main Nav-bar -->
+    <div class="navBar" id="mainNavBar">
+        <li><a href="{% url 'index' %}"><i class="fas fa-home"></i> {% trans 'Hem' %}</a></li> <!-- Home -->
+        <li><a href="{% url 'events:index' %}"><i
+                class="fas fa-american-sign-language-interpreting"></i></i> {% trans 'Händelser' %}</a></li>
+        <li><a href="{% url 'news:index' %}"><i class="far fa-calendar-plus"></i> {% trans 'Nyheter' %}</a></li>
+        <li><a href="{% url 'archive:pictures' %}"><i class="fas fa-camera-retro"></i> {% trans 'Bilder' %}</a></li>
+        {% if user.is_authenticated %}
+            <li><a id="members-btn" onclick="loadMemberOptions()">{% trans 'Medlemmar' %}</a></li>
+        {% else %}
+            <li><a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> {% trans 'Logga in' %}</a></li>
+        {% endif %}
+    </div>
+
+    <!-- OVERLAY -->
+    <div id="overlay" class="overlay offset-by-eight four columns" onclick="loadMemberOptions()">
+        <div class="overlay-text">
+        <h2>Välkommen</h2>
+        <h3 class="align-center">{{ user.first_name }} {{ user.last_name }}</h3>
+        </div>
+            <div class="overlay-links">
+            <a href="#">{% trans 'Organisation' %}</a>
+            <a href="#">{% trans 'Forum' %}</a>
+            <a href="#">{% trans 'Guides' %}</a>
+            <a href="#">{% trans 'Intresseklubbar' %}</a>
+            <a href="{% url 'archive:pictures' %}">{% trans 'Bilder' %}</a>
+            <a href="{% url 'archive:documents' %}">{% trans 'Tentarkiv' %}</a>
+            <a href="{% url 'logout' %}">{% trans 'Log out' %}</a>
+        </div>
+    </div>
 </div>
+
+
+<script>
+    function loadMemberOptions() {
+        if (document.getElementById("overlay").style.display === "block") {
+            document.getElementById("overlay").style.display = "none";
+        }
+        else {
+            document.getElementById("overlay").style.display = "block";
+        }
+    }
+
+    function dropDownMobile() {
+        if (document.getElementById("dropDownMobileIcon").classList.contains("fa-times")) {
+            document.getElementById("mainNavBar").style.display = "none";
+            document.getElementById("overlay").style.display = "none";
+            document.getElementById("dropDownMobileIcon").classList.remove("fa-times");
+            document.getElementById("dropDownMobileIcon").classList.add("fa-bar");
+        }
+        else {
+            document.getElementById("dropDownMobileIcon").classList.remove("fa-bar");
+            document.getElementById("dropDownMobileIcon").classList.add("fa-times");
+            document.getElementById("mainNavBar").style.display = "inline-block";
+            {% if user.is_authenticated %}
+            document.getElementById("overlay").style.display = "inline-block";
+            {% endif %}
+        }
+
+    }
+</script>

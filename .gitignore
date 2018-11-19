@@ -8,3 +8,14 @@
 __pycache__/
 *.py[cod]
 *$py.class
+date/static/
+date/templates/static/admin
+date/templates/static/ckeditor
+
+media
+!media/.gitkeep
+
+# 2018-09-12 Decided to commit all migration files
+# **/migrations/*.py
+# !**/migrations/*_initial.py
+# !**/migrations/__init__.py

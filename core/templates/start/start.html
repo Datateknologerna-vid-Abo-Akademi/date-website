@@ -1,19 +1,88 @@
 {% extends 'base.html' %}
-
-{% load i18n %}
-
-{% get_current_language as LANGUAGE_CODE %}
-
 {% block content %}
+    {% load static %}
+    {% load i18n %}
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <link rel="stylesheet" href="{% static 'core/homepage.css' %}" type="text/css">
+        <link href="https://fonts.googleapis.com/css?family=Mali" rel="stylesheet">
+        {% get_current_language as LANGUAGE_CODE %}
+    </head>
 
-    <h2>DaTe</h2>
+    <header class="header">
+        <div class="hero-text-box align-center">
 
-    {% if user.is_authenticated %}
-        <p>Hello, {{ user.full_name }}!</p>
-        <p><a href="{% url 'logout' %}">{% trans 'Logga ut' %}</a></p>
-    {% else %}
-        <p>{% trans 'Du är inte inloggad' %}</p>
-        <p><a href="{% url 'login' %}">{% trans 'Logga in' %}</a></p>
-    {% endif %}
+            <h1 class="hero-text">
+                <span class="hero-text-main">DaTe</span>
+                <span class="hero-text-sub">Datateknologerna vid Åbo Akademi rf</span>
+            </h1>
+        </div>
+    </header>
+
+    <!-- EVENTS SECTION  -->
+    <section class="section-events">
+        <div class="text-box">
+            <h1 class="align-center">{% trans "HÄNDELSER" %}</h1>
+            <div class="container">
+                {% for event in events %}
+                    <div class="{% if events|length > 1 %}one-half{% endif %} column card events"
+                         onclick="location.href='{% url 'events:detail' event.slug %}'">
+                        <p class="card-date">{{ event.event_date_start }}</p>
+                        <div class="card-title">
+                            <h3 class="card-title">{{ event.title }}</h3>
+                        </div>
+                        <div class="card-content">{{ event.content | safe | truncatewords_html:"25" }}</div>
+                        <div class="card-footer card-footer-reveal">
+                            <span></span>
+                            <a href="{% url 'events:detail' event.slug %}"
+                               class="card-footer-text">
+                                MERA</a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <h3 class="align-center">{% trans 'Händelserna kommer att vara här...' %}</h3>
+                {% endfor %}
+            </div>
+            <div class="container align-center">
+                <a href="{% url 'events:index' %}">
+                    <button class="all-cards-button align-center">{% trans 'Visa hela kalendern' %}</button>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- NEWS SECTION  -->
+    <section class="section-news">
+        <div class="text-box">
+            <h1 class="align-center">{% trans 'NYHETER' %}</h1>
+            <div class="container">
+                {% for news_item in news %}
+                    <div class="one-third column card news"
+                         onclick="location.href='{% url 'news:detail' news_item.slug %}'">
+                        <p class="card-date">{{ news_item.published_time }}</p>
+                        <div class="card-title">
+                            <h3 class="card-title">{{ news_item.title }}</h3>
+                        </div>
+                        <div class="card-content">{{ news_item.content | safe | truncatewords_html:"70" }}</div>
+                        <div class="card-footer card-footer-reveal">
+                            <span></span>
+                            <a href="{% url 'news:detail' news_item.slug %}"
+                               class="card-footer-text">
+                                LÄS MERA</a>
+                        </div>
+                    </div>
+                {% empty %}
+                    <h3 class="align-center">{% trans 'Nyheterna kommer att vara här...' %}</h3>
+                {% endfor %}
+            </div>
+            <div class="container align-center">
+                <a href="{% url 'news:index' %}">
+                    <button class="all-cards-button align-center">{% trans 'Visa alla nyheter' %}</button>
+                </a>
+            </div>
+        </div>
+    </section>
 
 {% endblock %}

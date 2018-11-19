@@ -1,0 +1,318 @@
+body {
+    height: 100%;
+}
+
+.align-center {
+    text-align: center;
+}
+
+/* Section header */
+.header-bar {
+    background-color: black;
+}
+
+.navBar {
+    overflow: hidden;
+}
+
+/*Floats each item to the left with padding of 14 & 16 px.
+Removes the underline with text decoration = none.*/
+.navBar li {
+    display: inline-block;
+    font-size: 1.8vw;
+}
+
+.navBar a {
+    float: left;
+    color: white;
+    padding: 14px 15px;
+    text-decoration: none;
+    font-family: Tahoma, Mali, serif;
+}
+
+/*Background color change during hover state*/
+.navBar a:hover {
+    text-shadow: 0 0 10px white;
+}
+
+.navBar li:last-child {
+    float: right;
+    margin-right: 2rem;
+}
+
+/*Hides the menu Icon which will show when the nav needs to be responsive*/
+.navBar .icon {
+    display: none;
+}
+
+.sub-navBar {
+    display: none;
+    margin: 0;
+    padding: 0;
+    background-color: black;
+    color: white;
+}
+
+.sub-navBar h3 {
+    padding: 1.5rem 0 0 1.5rem;
+    float: left;
+    font-size: 8vw;
+    margin-bottom: 0;
+    letter-spacing: 2px;
+}
+
+.sub-navBar i {
+    font-size: 8vw;
+    padding: 2rem 2rem 0 0;
+    float: right;
+}
+
+#mobileNavBar a {
+    color: white;
+    margin: 0;
+    padding: 0;
+}
+
+/*Set your custom screen width here replacing 700*/
+@media (max-width: 700px) {
+
+    .header-bar {
+        background-color: black;
+        overflow: hidden;
+        display: grid;
+    }
+
+    #mainNavBar{
+        overflow: hidden;
+        display: none;
+        background-color: black;
+        transition: max-height 1s ease-out;
+        min-height: 80vh;
+    }
+
+    #mainNavBar li{
+        overflow: hidden;
+        display: block;
+        float: none;
+        position: relative;
+        font-size: 10vw;
+        margin-bottom: 0;
+    }
+    #mainNavBar li:first-child{
+        display: none;
+    }
+
+    #mainNavBar li:last-child{
+        position: absolute;
+        left: 0;
+        bottom: 5vh;
+    }
+    /* Hide icons in mobile view to save space.*/
+    #mainNavBar i{
+        display: none;
+    }
+    #mainNavBar a {
+        padding: 2rem 5rem;
+        text-align: center;
+    }
+
+    #mobileNavBar {
+        padding-bottom: 2rem;
+        width: 100vw;
+        display: inline;
+    }
+    /*
+        Overlay inline
+     */
+    .overlay {
+        border-top: 2px solid whitesmoke;
+    font-family: Tahoma, Mali, serif;
+    display: none;
+    background-color: black; /* Black background with opacity */
+        margin-top: 5rem;
+    padding: 0 5rem;
+    font-size: 10vw;
+    color: white;
+    top: 0;
+    right: 0;
+        position: relative;
+    text-align: left;
+    line-height: 2em;
+    animation: none;
+    z-index: 0;
+    box-shadow: none;
+}
+    .overlay-text{
+        display: none;
+    }
+
+
+}
+
+/* CARD ELEMENTS */
+.card {
+    background: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+}
+
+.card.events {
+    height: 200px;
+    box-shadow: 0 2px 6px 0 hsla(0, 0%, 0%, 0.2);
+    overflow: hidden;
+    margin-top: 4%;
+    /*padding: 5px;*/
+    position: relative;
+}
+
+.card.news {
+    height: 400px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px 0 hsla(0, 0%, 0%, 0.1);
+    margin-top: 4%;
+    padding: 5px;
+    position: relative;
+}
+
+.card-title {
+    font-weight: 700;
+    width: 80%;
+    margin: 5px;
+}
+
+.card-date {
+    display: inline-block;
+    float: right;
+    font-weight: 500;
+    margin: 5px 5px;
+}
+
+.card-content {
+    font-weight: 400;
+    display: inline-block;
+    height: 50%;
+    margin: 5px;
+}
+
+.card-footer {
+    width: 100%;
+    display: block;
+    position: absolute;
+    bottom: 0;
+    opacity: 1;
+    padding: 10px;
+    height: 15px;
+    transition: all 300ms ease-out;
+    background: linear-gradient(top, rgba(0, 0, 0, 1) 41%, rgba(0, 0, 0, 1) 42%, rgba(0, 0, 0, 0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#00ffffff', GradientType=0);
+}
+
+.card:hover .card-footer {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+
+.card-footer-text {
+    position: absolute;
+    right: 2em;
+    bottom: 0;
+}
+
+.card-footer-reveal {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 300ms ease-out;
+}
+
+.card:hover .card-footer-reveal {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.columns.card.events:nth-child(odd),
+.column.card.events:nth-child(odd) {
+    margin-left: 0;
+}
+
+.all-cards-button {
+    margin-top: 5%;
+    position: relative;
+    letter-spacing: 3px;
+}
+
+.all-cards-button:hover {
+    background: #0f74a8;
+    color: #FFFFFF;
+    border-color: #FFFFFF;
+}
+
+/* LIST SPECIFIC ELEMENTS */
+th .remove-column {
+    display: none;
+}
+
+th:hover .remove-column {
+    display: inline;
+}
+
+#qr-link {
+    display: none;
+    position: absolute;
+    right: 0.5cm;
+    width: 50px;
+    height: 50px;
+}
+
+/* PRINTING LISTS */
+@media print {
+
+    #qr-link {
+        display: inline-block;
+    }
+
+    a {
+        color: #000;
+        text-decoration: none;
+    }
+
+    .navBar, .footer {
+        display: none;
+    }
+
+    @page {
+        margin: 0.5cm;
+    }
+
+    body {
+        font-size: 10pt;
+        line-height: 1.3;
+        color: #000;
+    }
+
+    ul {
+        list-style: none
+    }
+
+}
+
+/* Footer */
+
+footer {
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+#footer-img {
+    display: inline;
+    height: 100px;
+    width: auto;
+}
+
+#copyright {
+    font-weight: 400;
+    display: block;
+    text-align: center;
+    font-size: 1.5rem;
+    letter-spacing: 0.3rem;
+    margin-bottom: 2rem;
+}

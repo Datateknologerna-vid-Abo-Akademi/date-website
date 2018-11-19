@@ -1,6 +1,9 @@
 from django import forms
+from django.utils import timezone
 
-from members.models import Member
+from dateutil.relativedelta import relativedelta
+
+from members.models import Member, SubscriptionPayment, SUB_RE_SCALE_YEAR, SUB_RE_SCALE_MONTH, SUB_RE_SCALE_DAY
 
 import logging
 
@@ -21,6 +24,7 @@ class MemberCreationForm(forms.ModelForm):
     class Meta:
         model = Member
         fields = (
+            'username',
             'email',
             'first_name',
             'last_name',
@@ -30,7 +34,8 @@ class MemberCreationForm(forms.ModelForm):
             'city',
             'country',
             'membership_type',
-            'password'
+            'password',
+            'groups',
         )
 
     # def clean(self):
@@ -60,6 +65,7 @@ class MemberUpdateForm(forms.ModelForm):
     class Meta:
         model = Member
         fields = (
+            'username',
             'email',
             'first_name',
             'last_name',
@@ -69,6 +75,7 @@ class MemberUpdateForm(forms.ModelForm):
             'city',
             'country',
             'membership_type',
+            'groups',
         )
 
     def save(self, commit=True):
@@ -80,3 +87,35 @@ class MemberUpdateForm(forms.ModelForm):
         if commit:
             member.save()
         return member
+
+
+class SubscriptionPaymentForm(forms.ModelForm):
+
+    class Meta:
+        model = SubscriptionPayment
+        fields = (
+            'member',
+            'subscription',
+            'date_paid',
+            'amount_paid',
+        )
+
+    def save(self, commit=True):
+        subscription_payment = super(SubscriptionPaymentForm, self).save(commit=False)
+        if subscription_payment.subscription.does_expire:
+            date_paid = subscription_payment.date_paid
+            sub_duration = subscription_payment.subscription.renewal_period
+            sub_duration_type = subscription_payment.subscription.renewal_scale
+            delta = 0
+            if sub_duration_type == SUB_RE_SCALE_DAY:
+                delta = relativedelta(days=+sub_duration)
+            elif sub_duration_type == SUB_RE_SCALE_MONTH:
+                delta = relativedelta(months=+sub_duration)
+            elif sub_duration_type == SUB_RE_SCALE_YEAR:
+                delta = relativedelta(years=+sub_duration)
+            subscription_payment.date_expires = date_paid + delta
+            logger.debug("Calculated expiry date for subscription: {}".format(subscription_payment.date_expires))
+        if commit:
+            subscription_payment.save()
+            logger.debug("SubscriptionPayment saved")
+        return subscription_payment

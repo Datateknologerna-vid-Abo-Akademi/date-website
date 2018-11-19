@@ -16,7 +16,11 @@ Development happens mainly in the `develop`-branch
 
 ### 2. Create env variables
 
-Create a copy of `example.profile` and change `example` to your local username.
+Create a copy of `example.env` and change `example` to your local username with the following command:
+
+```bash
+cp example.env $USER.env
+```
 
 Eg. `otto.env`
 
@@ -36,7 +40,7 @@ Now you can run all `date-` commands!
 
 Start the server with 
 
-```
+```bash
 date-start
 ```
 
@@ -66,6 +70,8 @@ The admin page is at http://localhost:8000/admin
 
 ## Internationalization
 
+NOTE: No need to implement yet
+
 Locales (stupidly called language codes) used in this project
 
 - sv_FI (default)
@@ -89,7 +95,7 @@ $ django-admin makemessages -l fi_FI
 ```
 
 This creates/updates the `django.po` 
-in `date-django/locale/fi_FI/LC_MESSAGES`.
+in `date-website/locale/fi_FI/LC_MESSAGES`.
 
 Add translations to the empty fields or use a third party translation software,
 such as `Poedit`.

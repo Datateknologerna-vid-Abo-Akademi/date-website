@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% load i18n %}
+
+{% block title %}{{ article.title }}{% endblock %}
+
+{% block content %}
+    <div class="container-soft">
+        {% for article in articles %}
+            <h1>{{ article.title }}</h1>
+            <h4>{% trans "Skriven " %}{{ article.published_time }}{% trans " av " %}
+                <a href="{% url "news:author" article.author %}">
+                    {% if article.author.get_full_name != " " %}{{ article.author.get_full_name }}{% else %}
+                        {{ article.author }}{% endif %}</a></h4>
+            {{ article.content | safe }}
+        {% empty %}
+            <h1>{% trans "Inga artiklar, ännu" %}</h1>
+        {% endfor %}
+    </div>
+{% endblock %}

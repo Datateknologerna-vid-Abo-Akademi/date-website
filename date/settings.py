@@ -28,7 +28,7 @@ DEBUG = os.environ.get('DEBUG', False)
 
 DEVELOP = os.environ.get('DEVELOP', False)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['0.0.0.0']
 
 
 # Application definition
@@ -38,12 +38,15 @@ INSTALLED_APPS = [
     'news.apps.NewsConfig',
     'events.apps.EventsConfig',
     'members.apps.MemberConfig',
+    'archive.apps.ArchiveConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'ckeditor',
+    'admin_ordering',
 ]
 
 MIDDLEWARE = [
@@ -116,6 +119,20 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+AUTHENTICATION_BACKENDS = (
+    'members.backends.AuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+# LDAP config end
+
+
+STAFF_GROUPS = [
+    'styrelse',
+    'admin'
+]
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
@@ -145,10 +162,15 @@ DATE_INPUT_FORMATS = ('%d.%m.%Y', '%Y-%m-%d')
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'date/static')
+    os.path.join(BASE_DIR, 'date/templates/static'),
 ]
 
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_ROOT = os.path.join(PROJECT_DIR, 'static/')
 STATIC_URL = '/static/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
@@ -178,6 +200,11 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django_auth_ldap': {
+            'handlers': ['console_debug'],
             'level': 'DEBUG',
             'propagate': True,
         },

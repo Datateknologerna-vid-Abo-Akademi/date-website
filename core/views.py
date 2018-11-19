@@ -1,12 +1,21 @@
-from django import http
+import datetime
+
 from django.shortcuts import render, redirect
 from django.utils import translation
 
 from date import settings
+from events.models import Event
+from news.models import Post
+
+
+def intro(request):
+    return render(request, 'start/intro.html')
 
 
 def index(request):
-    return render(request, 'start/start.html')
+    events = Event.objects.filter(published=True, event_date_end__gte=datetime.date.today()).reverse()[:6]
+    news = Post.objects.filter(published=True).reverse()[:3]
+    return render(request, 'start/start.html', {'events': events, 'news': news})
 
 
 def language(request, lang):

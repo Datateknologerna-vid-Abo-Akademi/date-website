@@ -28,6 +28,15 @@
 
 /* Grid
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
+.container-soft {
+  padding: 5rem;
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  min-height: 78vh;
+}
+
 .container {
   position: relative;
   width: 100%;
@@ -385,6 +394,7 @@ hr {
 
 /* Self Clearing Goodness */
 .container:after,
+.container-soft:after,
 .row:after,
 .u-cf {
   content: "";

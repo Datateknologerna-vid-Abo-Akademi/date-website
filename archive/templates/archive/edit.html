@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>{{ collection.title }}</h2>
+<p>Published on {{ collection.pub_date_pretty }}</p>
+    <p>You're in edit mode <a href="{% url 'archive:detail' collection.id %}">Return</a></p>
+    {% if error_msg %}
+    <p>{{ error_msg }}</p>
+{% endif %}
+{% for picture in collection.picture_set.all %}
+    <div style="display: inline-block">
+        <img src="{{ picture.image.url }}" style="height: 300px; width: auto">
+        <p><a href="{% url 'archive:remove_file' collection.id picture.id %}">Remove</a></p>
+    </div>
+{% endfor %}
+    <p><a href="{% url 'archive:pictures' %}">Return</a></p>
+{% endblock %}
