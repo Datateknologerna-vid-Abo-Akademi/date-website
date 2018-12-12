@@ -1,0 +1,23 @@
+{% load static %}
+{%  load i18n %}
+<footer>
+    <head>
+        <link rel="stylesheet" href="{% static 'css/footer.css' %}">
+    </head>
+    <img id="footer-img" src="{% static 'images/DatateknologernaLogo.png' %}">
+    <div class="footer text">
+        <p>
+            {% trans 'Styrelsen för Datateknologerna vid Åbo Akademi rf kan kontaktas på följande sätt.' %}<br>
+            {% trans 'e-post' %}:
+            date[at]abo.fi
+            <br>
+        </p>
+        <p>
+            adress: <br>
+            Åbo Akademi, Agora<br>
+            Vattenborgsvägen 5<br>
+            20500 ÅBO
+        </p>
+    </div>
+    <p id="copyright">&copy {% now "Y" %}</p>
+</footer>

@@ -2,7 +2,7 @@ import logging
 from django import forms
 from django.utils import timezone
 
-from core.functions import slugify_max
+from date.functions import slugify_max
 from news import models
 from news.models import Post
 

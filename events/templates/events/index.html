@@ -1,9 +1,12 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% load i18n %}
 {% block title %}{% trans "Händelser" %}{% endblock %}
 
 {% block content %}
+    <head>
+        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    </head>
     <div class="container-soft">
         <h1>{% trans "Kommande händelser" %}</h1>
         {% for event in event_list %}

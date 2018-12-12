@@ -1,15 +1,22 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% load i18n %}
 
 {% block content %}
-    <div class="container-soft">
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ picture_form.as_p }}
-        <button type="submit">Upload</button>
-        </form>
-        <p><a href="{% url 'archive:pictures' %}">Return</a></p>
+
+<head>
+    <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
+</head>
+    <div class="container">
+        <h2>{% trans 'Ladda upp nytt album' %}</h2>
+        <div class="form-container">
+            <form class="form" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ picture_form.as_p }}
+            <button type="submit">Upload</button>
+            </form>
+            <p><a href="{% url 'archive:pictures' %}">Return</a></p>
+        </div>
     </div>
 {% endblock %}
 

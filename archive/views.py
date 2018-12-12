@@ -48,6 +48,17 @@ def remove_file(request, collection_id, file_id):
     return render(request, 'archive/index.html', {'collections': collections})
 
 
+def remove_collection(request, collection_id):
+    collection = Collection.objects.get(id=collection_id)
+    collection.delete()
+    collections = Collection.objects.filter(type="Pictures").order_by('-pub_date')
+    context = {
+        'type': "pictures",
+        'collections': collections,
+    }
+    return render(request, 'archive/index.html', context)
+
+
 def upload(request):
     if request.method == 'POST':
         form = PictureUploadForm(request.POST)
@@ -73,6 +84,14 @@ def clean_media(request):
         # f[0] = Folder
         # f[2] = list of pictures.
 
-        print(f[0])
+        print(f[0].title())
+        try:
+            folder = f[0].split('/')
+            print(folder[3])
+            collection = Collection.objects.get_or_create(title=folder[3])
+            for file in f[2]:
+                picture = Picture.objects.get_or_create(file=file, collection=collection)
+        except IndexError:
+            print("not a media folder.")
         print(f[2])
     return redirect('archive:pictures')

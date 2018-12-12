@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 
-from date import settings
+from core import settings
 
 logger = logging.getLogger('date')
 

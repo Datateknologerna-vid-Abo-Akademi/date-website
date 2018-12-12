@@ -1,6 +1,6 @@
 from django.forms import widgets
 
-from date import settings
+from core import settings
 
 
 class PrettyJSONWidget(widgets.Textarea):
@@ -20,6 +20,6 @@ class PrettyJSONWidget(widgets.Textarea):
                 'prettyjson/prettyjson.js',
             ),
             css={
-                'all': ('prettyjson/prettyjson.css',)
+                'all': ('prettyjson/prettyjson.date',)
             },
         )

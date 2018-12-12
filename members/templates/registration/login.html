@@ -1,16 +1,21 @@
 {% extends 'base.html' %}
 
 {% load i18n %}
-
+{% load static %}
 {% block title %}Log in{% endblock %}
-
 {% block content %}
-<div class="container-soft">
-<h2>Log In</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Login</button>
-</form>
+    <head>
+        <link rel="stylesheet" href="{% static 'members/login.css' %}">
+    </head>
+<div class="login-page">
+    <div class="form">
+        <h2>{% trans 'Login' %}</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="button" type="submit">Login</button>
+        </form>
+            <a href="#"><p>{% trans 'Glömt lösenordet?' %}</p></a>
+    </div>
 </div>
 {% endblock %}

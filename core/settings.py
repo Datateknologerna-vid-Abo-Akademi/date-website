@@ -16,7 +16,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-# Quick-core development settings - unsuitable for production
+# Quick-date development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -34,10 +34,10 @@ ALLOWED_HOSTS = ['0.0.0.0']
 # Application definition
 
 INSTALLED_APPS = [
-    'core.apps.CoreConfig',
+    'date',
     'news.apps.NewsConfig',
     'events.apps.EventsConfig',
-    'members.apps.MemberConfig',
+    'members',
     'archive.apps.ArchiveConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -58,15 +58,15 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    'core.middleware.LangMiddleware',
+    'date.middleware.LangMiddleware',
 ]
 
-ROOT_URLCONF = 'date.urls'
+ROOT_URLCONF = 'core.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['date/templates'],
+        'DIRS': ['core/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -80,7 +80,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'date.wsgi.application'
+WSGI_APPLICATION = 'core.wsgi.application'
 
 
 # Database
@@ -162,11 +162,17 @@ DATE_INPUT_FORMATS = ('%d.%m.%Y', '%Y-%m-%d')
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'date/templates/static'),
+    os.path.join(BASE_DIR, 'core/templates/static'),
+    os.path.join(BASE_DIR, 'archive/static'),
+    os.path.join(BASE_DIR, 'date/static'),
+    os.path.join(BASE_DIR, 'events/static'),
+    os.path.join(BASE_DIR, 'members/static'),
+    os.path.join(BASE_DIR, 'news/static'),
+
 ]
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_ROOT = os.path.join(PROJECT_DIR, 'static/')
+STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
 STATIC_URL = '/static/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

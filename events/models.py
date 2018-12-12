@@ -9,7 +9,7 @@ from django.template.defaulttags import register
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from core.functions import days_hence
+from date.functions import days_hence
 
 logger = logging.getLogger('date')
 
@@ -45,6 +45,9 @@ class Event(models.Model):
 
     def __str__(self):
         return self.title
+
+    def event_date_start_pretty(self):
+        return self.event_date_start.strftime("%-d %B")
 
     def publish(self):
         self.published_time = timezone.now()

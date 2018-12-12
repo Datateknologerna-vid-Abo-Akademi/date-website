@@ -1,8 +1,11 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% load i18n %}
 
 {% block title %}{{ article.title }}{% endblock %}
+<head>
+    <link rel="stylesheet" href="{% static 'news/css/style.css' %}">
+</head>
 
 {% block content %}
     <div class="container-soft">

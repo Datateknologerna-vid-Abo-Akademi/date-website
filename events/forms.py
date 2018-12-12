@@ -3,7 +3,7 @@ import logging
 from django import forms
 from django.utils import timezone
 
-from core.functions import slugify_max
+from date.functions import slugify_max
 from events import models
 from events.models import Event
 
