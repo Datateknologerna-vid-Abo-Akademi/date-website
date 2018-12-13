@@ -28,7 +28,7 @@ DEBUG = os.environ.get('DEBUG', False)
 
 DEVELOP = os.environ.get('DEVELOP', False)
 
-ALLOWED_HOSTS = ['0.0.0.0']
+ALLOWED_HOSTS = ['0.0.0.0','localhost']
 
 
 # Application definition
@@ -126,10 +126,11 @@ AUTHENTICATION_BACKENDS = (
 
 # LDAP config end
 
-
 STAFF_GROUPS = [
     'styrelse',
-    'admin'
+    'admin',
+    'fotograf'
+
 ]
 
 
@@ -178,6 +179,7 @@ STATIC_URL = '/static/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
+LOGIN_URL = '/members/login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 

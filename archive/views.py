@@ -3,7 +3,9 @@ from django.views import generic
 from .models import Collection, Picture
 from .forms import PictureUploadForm
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 import os
+
 
 
 def picture_index(request):
@@ -31,6 +33,7 @@ class DetailView(generic.DetailView):
     template_name = 'archive/detail.html'
 
 
+@login_required
 def edit(request, pk):
     collection = Collection.objects.get(id=pk)
     return render(request, 'archive/edit.html', {'collection': collection})

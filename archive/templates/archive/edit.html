@@ -11,7 +11,7 @@
     <div id="confirm-box" class="confirm-box">
           <div class="modal-content">
             <span class="close">&times;</span>
-            <p>{% trans 'Säker på borttagning?' %}</p>
+            <p>{% trans 'Är du helt säker och vet vad du håller på med?' %}</p>
               <a href="{% url 'archive:remove_collection' collection.id %}" id="confirm-remove">{% trans 'Ta bort' %}</a>
               <span class="close">{% trans 'Ångra' %}</span>
           </div>
@@ -31,7 +31,7 @@
             <p><a id="remove-img-tag" href="{% url 'archive:remove_file' collection.id picture.id %}">{% trans 'Ta bort' %}</a></p>
         </div>
     {% endfor %}
-        <p><a href="{% url 'archive:pictures' %}">Return</a></p>
+        <p><a href="{% url 'archive:pictures' %}">{% trans 'Gå tillbakas' %}</a></p>
     </div>
     <script>
     // Get the modal
