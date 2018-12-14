@@ -1,0 +1,9 @@
+/* Root colors */
+
+:root {
+    --primaryColor: #000;
+    --primaryColorLighter: #202020;
+    --primaryColorLight:#505050;
+    --secondaryColor: #fff;
+    --secondaryColorDarker: #eaeaea;
+}

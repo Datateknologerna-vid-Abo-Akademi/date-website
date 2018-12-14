@@ -14,7 +14,8 @@
         <p>Published on {{ collection.pub_date_pretty }}</p>
         <p><a href="{% url 'archive:pictures' %}" class="button">{% trans 'Gå tillbakas' %}</a>
             {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse"%}
-            <a class="button" href="{% url 'archive:edit' collection.id %}">{% trans 'editera' %}it</a></p>
+            <a class="button" href="{% url 'archive:edit' collection.id %}">{% trans 'Editera' %}</a>
+                <a class="button" href="{% url 'archive:upload' %}">{% trans 'Lägg till flera bilder' %}</a></p>
             {% endif %}
         {% if error_msg %}
             <p>{{ error_msg }}</p>

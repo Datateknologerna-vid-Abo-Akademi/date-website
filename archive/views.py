@@ -7,7 +7,6 @@ from django.contrib.auth.decorators import login_required
 import os
 
 
-
 def picture_index(request):
     collections = Collection.objects.filter(type="Pictures").order_by('-pub_date')
     context = {
@@ -63,8 +62,9 @@ def remove_collection(request, collection_id):
 
 
 def upload(request):
+    instance = Collection.objects.filter(collection=request.collection).first()
     if request.method == 'POST':
-        form = PictureUploadForm(request.POST)
+        form = PictureUploadForm(request.POST, instance=instance)
         if form.is_valid():
             if request.FILES.getlist('images') is None:
                 return redirect('archive:pictures')

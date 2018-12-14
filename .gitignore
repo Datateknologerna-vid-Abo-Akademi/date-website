@@ -8,9 +8,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
-date/static/
-date/templates/static/admin
-date/templates/static/ckeditor
+core/static/
+core/templates/static/admin
+core/templates/static/ckeditor
 
 media
 !media/.gitkeep
