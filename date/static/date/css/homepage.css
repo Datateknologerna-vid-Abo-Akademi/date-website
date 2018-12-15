@@ -22,27 +22,53 @@ body {
     position: absolute;
     top: 70%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    -webkit-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
     padding-top: 10rem;
 }
 .hero-text-box .text {
-    transform: translateX(10px);
-    animation: fadeIn 3s;
+    -webkit-transform: translateX(10px);
+            transform: translateX(10px);
+    -webkit-animation: fadeIn 3s;
+            animation: fadeIn 3s;
 }
 .albin {
     position: absolute;
     left: 50%;
-    transform: translate(-50%, -50%) scale(.3);
+    -webkit-transform: translate(-50%, -50%) scale(.3);
+            transform: translate(-50%, -50%) scale(.3);
 }
 .hero-text-box path {
     stroke: var(--secondaryColor);
     fill: var(--secondaryColor);
     stroke-dasharray: 25000;
     opacity: 10;
-    animation: animate 3s cubic-bezier(0,.18,.64,.1);
+    -webkit-animation: animate 3s cubic-bezier(0,.18,.64,.1);
+            animation: animate 3s cubic-bezier(0,.18,.64,.1);
 }
 
 /* Albin animation */
+@-webkit-keyframes animate {
+    0% {
+        opacity: 0;
+        fill: none;
+        stroke-dashoffset: 25000;
+    }
+    40% {
+        opacity: 10;
+        fill: none;
+        stroke-dashoffset: 15000;
+    }
+    80% {
+        fill: rgba(255,255,255,0);
+
+    }
+    100% {
+        opacity: 10;
+        fill: rgba(255,255,255,1);
+        stroke-dashoffset: 0;
+    }
+}
 @keyframes animate {
     0% {
         opacity: 0;
@@ -72,7 +98,8 @@ body {
     margin-bottom: 0;
     font-size: 12rem;
     font-weight: 400;
-    animation: fadeIn 3s;
+    -webkit-animation: fadeIn 3s;
+            animation: fadeIn 3s;
 }
 .hero-text-sub {
     display: block;
@@ -80,7 +107,8 @@ body {
     font-size: 1.8rem;
     font-weight: 700;
     letter-spacing: 1.2rem;
-    animation: fadeIn 4.5s ease-in;
+    -webkit-animation: fadeIn 4.5s ease-in;
+            animation: fadeIn 4.5s ease-in;
 }
 /* Section specific */
 
@@ -94,11 +122,14 @@ body {
     width: 250px;
     position: absolute;
     bottom: 5%;
-    transform: translateX(-50%);
+    -webkit-transform: translateX(-50%);
+            transform: translateX(-50%);
+    -webkit-transition: border 1.5s ease-in-out;
     transition: border 1.5s ease-in-out;
 }
 .section-button:hover {
-    transform: scale(1.2) translateX(-45%);
+    -webkit-transform: scale(1.2) translateX(-45%);
+            transform: scale(1.2) translateX(-45%);
     border: none;
     border-radius: 0;
     border-top: var(--secondaryColor) 2px solid;
@@ -120,6 +151,7 @@ body {
     text-align: center;
     border-top: 5px solid #fff;
     color: var(--secondaryColor);
+    background: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, .95)), to(rgba(0, 0, 0, 0.1))), var(--primaryColor) fixed;
     background: linear-gradient(rgba(0, 0, 0, .95), rgba(0, 0, 0, 0.1)), var(--primaryColor) fixed;
     background-size: cover;
 }
@@ -136,10 +168,12 @@ body {
 /* Cards */
 
 .card {
-    perspective: 1000px;
+    -webkit-perspective: 1000px;
+            perspective: 1000px;
 }
 .card:hover .card-inner{
-    transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg);
+            transform: rotateY(180deg);
 }
 
 .card, .card-front .card-back {
@@ -148,14 +182,17 @@ body {
 }
 
 .card-inner {
+    -webkit-transition: 0.6s;
     transition: 0.6s;
-    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+            transform-style: preserve-3d;
 
     position: relative;
 }
 
 .card-front, .card-back {
-    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
     position: absolute;
     height: 300px;
     width: 100%;
@@ -166,11 +203,13 @@ body {
 .card-front {
     z-index: 2;
     background-color: var(--primaryColorLighter);
-    transform: rotateY(0deg);
+    -webkit-transform: rotateY(0deg);
+            transform: rotateY(0deg);
 }
 .card-back {
     background-color: var(--primaryColorLight);
-    transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg);
+            transform: rotateY(180deg);
 }
 
 .card-title {
@@ -179,7 +218,8 @@ body {
     margin: 0;
     top: 50%;
     left: 50%;
-    transform: translate(-50%,-50%);
+    -webkit-transform: translate(-50%,-50%);
+            transform: translate(-50%,-50%);
     border: #00cc66 2px solid;
     padding: 2rem;
 }
@@ -191,13 +231,15 @@ body {
     position: absolute;
     top: 80%;
     left: 5%;
-    transform: translate(5%,5%);
+    -webkit-transform: translate(5%,5%);
+            transform: translate(5%,5%);
 }
 .card-signup {
     position: absolute;
     top: 80%;
     right: 5%;
-    transform: translate(5%,5%);
+    -webkit-transform: translate(5%,5%);
+            transform: translate(5%,5%);
 }
 
 /* Section-news*/
@@ -235,6 +277,18 @@ body {
 
 /* Generic animations*/
 
+@-webkit-keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    60% {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -250,10 +304,12 @@ body {
 @media screen and (max-width: 1200px){
     .hero-text-main {
         font-size: 10rem;
+        padding-top: 8vh;
     }
 
     .albin {
-        transform: translate(-50%, -52%) scale(0.28);
+        -webkit-transform: translate(-50%, -52%) scale(0.28);
+                transform: translate(-50%, -52%) scale(0.28);
     }
 
     .news {
@@ -266,13 +322,16 @@ body {
 
 @media screen and (max-width: 900px){
     .hero-text-main {
-        font-size: 8rem;
+        font-size: 6rem;
+        padding-top: 3vh;
     }
     .albin {
-        transform: translate(-50%, -52%) scale(0.24);
+        -webkit-transform: translate(-50%, -52%) scale(0.19);
+                transform: translate(-50%, -52%) scale(0.19);
     }
     .card .card-inner{
-        transform: rotateY(180deg);
+        -webkit-transform: rotateY(180deg);
+                transform: rotateY(180deg);
     }
     .section-events .events-grid {
         margin: 3rem 3rem 7rem 3rem;
@@ -281,11 +340,12 @@ body {
 
 @media screen and (max-width: 800px) {
     .hero-text-main {
-        font-size: 6rem;
+        font-size: 5rem;
     }
 
     .albin {
-        transform: translate(-50%, -51%) scale(0.18);
+        -webkit-transform: translate(-49.8%, -51%) scale(0.15);
+                transform: translate(-49.8%, -51%) scale(0.15);
     }
 }
 
@@ -296,14 +356,20 @@ body {
     }
 
     .hero-text-main {
-        font-size: 4rem;
+        font-size: 3rem;
     }
     .hero-text-box .text {
-        transform: translateX(6px);
+        -webkit-transform: translateX(5px);
+                transform: translateX(5px);
+    }
+    .hero-text-box .hero-text-sub {
+        letter-spacing: 1rem;
     }
 
     .albin {
-        transform: translate(-50%, -50%) scale(0.12);
+
+        -webkit-transform: translate(-50%, -50%) scale(0.08);
+                transform: translate(-50%, -50%) scale(0.08);
     }
     .section-events {
         padding: 5rem 0;
@@ -313,7 +379,8 @@ body {
         padding-bottom: 5rem;
     }
     .card {
-        transform: translateX(15px);
+        -webkit-transform: translateX(15px);
+                transform: translateX(15px);
     }
 
     .news-grid {

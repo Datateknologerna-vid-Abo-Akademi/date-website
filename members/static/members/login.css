@@ -25,7 +25,8 @@ form{
     max-width: 360px;
     padding: 4em 4.5em;
     text-align: center;
-    box-shadow: 0 0 20px 0 rgba(255,255,255,0.5), 0 5px 5px 0 rgba(200,200,200,0.24);
+    -webkit-box-shadow: 0 0 20px 0 rgba(255,255,255,0.5), 0 5px 5px 0 rgba(200,200,200,0.24);
+            box-shadow: 0 0 20px 0 rgba(255,255,255,0.5), 0 5px 5px 0 rgba(200,200,200,0.24);
 }
 .form input{
     font-family: 'Josefin Sans', Roboto, sans-serif;
@@ -35,7 +36,8 @@ form{
     border: 0;
     margin: 0 0 15px;
     padding: 15px;
-    box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+            box-sizing: border-box;
     font-size: 1.5em;
 }
 .form label {
