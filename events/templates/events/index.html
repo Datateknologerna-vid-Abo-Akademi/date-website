@@ -1,27 +1,31 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
-{% block title %}{% trans "Händelser" %}{% endblock %}
+{% block title %}{% trans "DaTe - Händelser" %}{% endblock %}
 
 {% block content %}
     <head>
-        <link rel="stylesheet" href="{% static 'css/style.css' %}">
+        <link rel="stylesheet" href="{% static 'events/css/style.css' %}">
     </head>
-    <div class="container-soft">
-        <h1>{% trans "Kommande händelser" %}</h1>
+    <div class="container">
+        <h1 class="heading">{% trans "Kommande händelser" %}</h1>
+        <div class="container-box">
         {% for event in event_list %}
-            <a href="{% url 'events:detail' event.slug %}"><h2>{{ event.title }}</h2></a>
-            <h4>{{ event.event_date_start }}</h4>
-            <p> {{ event.content | safe | truncatewords_html:"25" }}
-                {% empty %}
-            <li>{% trans "Inga händelser, ännu" %}</li>
-        {% endfor %}
-        <h1>{% trans "Tidigare händelser" %}</h1>
-        {% for event in past_events %}
             <a href="{% url 'events:detail' event.slug %}">
-                <h5>{{ event.event_date_start|date:"j.n.Y" }} {{ event.title }}</h5></a>
+                <h1>{{ event.title }}</h1>
+                <h3>{{ event.event_date_start_pretty }}</h3>
+            </a>
         {% empty %}
             <li>{% trans "Inga tidigare händelser" %}</li>
         {% endfor %}
+        </div>
+        <h1 class="heading">{% trans "Tidigare händelser" %}</h1>
+        <div class="container-box">
+            {% for event in past_events %}
+                <a href="{% url 'events:detail' event.slug %}"><h2>{{ event.title }}</h2></a>
+            {% empty %}
+                <li>{% trans "Inga tidigare händelser" %}</li>
+            {% endfor %}
+        </div>
     </div>
 {% endblock %}

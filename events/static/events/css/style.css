@@ -1,0 +1,36 @@
+body{
+    margin: 0;
+}
+
+ul{
+    list-style: none;
+}
+
+li {
+    list-style: none;
+
+}
+h1, h2, h3, h4, h5, h6 {
+    color: var(--secondaryColor);
+    margin: 0.2rem;
+    text-align: center;
+}
+
+
+.container {
+    padding: 18vh 2vw;
+    background-color: var(--primaryColorLighter);
+    min-height: 50vh;
+    text-align: center;
+}
+
+.heading {
+    font-size: 4rem;
+    display: inline-block;
+    border-bottom: 2px solid var(--secondaryColor)
+}
+
+.container-box {
+    padding: 3rem 0;
+}
+
