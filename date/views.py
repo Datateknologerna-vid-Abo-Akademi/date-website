@@ -13,7 +13,6 @@ def index(request):
     news = Post.objects.filter(published=True).reverse()[:2]
     return render(request, 'date/start.html', {'events': events, 'news': news})
 
-
 def language(request, lang):
     if str(lang).lower() == 'fi':
         lang = settings.LANG_FINNISH

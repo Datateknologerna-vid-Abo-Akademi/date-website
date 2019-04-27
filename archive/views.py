@@ -62,9 +62,8 @@ def remove_collection(request, collection_id):
 
 
 def upload(request):
-    instance = Collection.objects.filter(collection=request.collection).first()
     if request.method == 'POST':
-        form = PictureUploadForm(request.POST, instance=instance)
+        form = PictureUploadForm(request.POST)
         if form.is_valid():
             if request.FILES.getlist('images') is None:
                 return redirect('archive:pictures')
@@ -81,6 +80,7 @@ def upload(request):
     return render(request, 'archive/upload.html', context)
 
 
+# TODO: implement and test.
 def clean_media(request):
     folders = os.walk(settings.MEDIA_ROOT)
     for f in folders:

@@ -120,7 +120,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 AUTHENTICATION_BACKENDS = (
-    'members.backends.AuthBackend',
+    # 'members.backends.AuthBackend', # disable to skip auth against oldwww.abo.fi
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -164,12 +164,11 @@ DATE_INPUT_FORMATS = ('%d.%m.%Y', '%Y-%m-%d')
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'core/templates/static'),
-    os.path.join(BASE_DIR, 'archive/static'),
-    os.path.join(BASE_DIR, 'date/static'),
-    os.path.join(BASE_DIR, 'events/static'),
-    os.path.join(BASE_DIR, 'members/static'),
-    os.path.join(BASE_DIR, 'news/static'),
-
+    # os.path.join(BASE_DIR, 'archive/static'),
+    # os.path.join(BASE_DIR, 'date/static'),
+    # os.path.join(BASE_DIR, 'events/static'),
+    # os.path.join(BASE_DIR, 'members/static'),
+    # os.path.join(BASE_DIR, 'news/static'),
 ]
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))

@@ -1,8 +1,9 @@
-body{
+body {
+    font-size: 1.5em;
     margin: 0;
 }
 
-ul{
+ul {
     list-style: none;
 }
 
@@ -10,27 +11,43 @@ li {
     list-style: none;
 
 }
+
 h1, h2, h3, h4, h5, h6 {
     color: var(--secondaryColor);
     margin: 0.2rem;
-    text-align: center;
 }
-
 
 .container {
     padding: 18vh 2vw;
     background-color: var(--primaryColorLighter);
+    color: var(--secondaryColor);
     min-height: 50vh;
-    text-align: center;
 }
 
+/* Events - Index */
+
 .heading {
-    font-size: 4rem;
     display: inline-block;
-    border-bottom: 2px solid var(--secondaryColor)
+    border-bottom: 2px solid var(--secondaryColor);
 }
 
 .container-box {
     padding: 3rem 0;
+    transition: all .3s ease;
 }
 
+.content:hover h1,
+.content:hover h2,
+.content:hover h3 {
+    color: yellow;
+}
+
+/* Events - Details */
+.container .detail {
+    font-size: 300%;
+}
+
+#no-registration {
+    padding-top: 1rem;
+    color: red;
+}

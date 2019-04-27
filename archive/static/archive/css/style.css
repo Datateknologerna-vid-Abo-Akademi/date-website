@@ -48,7 +48,6 @@ h1, h2, h3, h4, h5, h6 {
     Enlarge picture
  */
 
-
 .enlarge{
     padding: 20vw;
     background-color: rgba(40,40,40,0.8);
@@ -58,11 +57,9 @@ h1, h2, h3, h4, h5, h6 {
     -webkit-transform: translate(-50%, -50%);
             transform: translate(-50%, -50%);
     z-index: 2;
-    height: -webkit-fit-content;
-    height: -moz-fit-content;
-    height: fit-content;
-    width: auto;
-    max-width: 80vw;
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
 }
 
 /*

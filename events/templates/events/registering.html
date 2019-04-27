@@ -1,4 +1,11 @@
 {% load i18n %}
+{% load static %}
+
+<head>
+    <link rel="stylesheet" href="{% static 'events/css/form.css' %}">
+</head>
+
+
 <p>{% trans "Anmälan stängs om " %}{{ event.sign_up_deadline | timeuntil }}</p>
 <p><b>{% trans "OBS!" %} </b>{% trans "Anmälningen är bindande om inget annat meddelas." %}</p>
 <p>{% trans "Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på förhinder." %}</p>
@@ -16,8 +23,8 @@
         </div>
     {% endfor %}
 {% endif %}
-<form class="" action="" method="post">
-    {{ form }}
-    <input type="submit" value="{% trans 'Anmäl' %}" style="display: block"/>
+<form method="post">
+    {{ form.as_p }}
+    <button class="button" type="submit">{% trans 'Anmälan' %}</button>
     {% csrf_token %}
 </form>

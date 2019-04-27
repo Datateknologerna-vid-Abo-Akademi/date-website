@@ -1,32 +1,36 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% load i18n %}
 {% block title %}{{ event.title }}{% endblock %}
 
 {% block content %}
-    <div class="container-soft">
+    <head>
+        <link rel="stylesheet" href="{% static 'events/css/style.css' %}">
+    </head>
+    <div class="container">
         <h1>{{ event.title }}</h1>
-        <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
-        <p>{{ event.content | safe }}</p>
-
-
-        {% if event.sign_up %}
-            <h2 id="sign-up">{% trans "Anmälning" %}</h2>
-            {% if event.registration_is_open_members and user.is_authenticated %}
-                {% include 'events/registering.html' %}
-            {% elif event.registration_is_open_others %}
-                {% include 'events/registering.html' %}
-            {% elif event.registation_past_due %}
-                <p>{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }}</p>
-            {% elif event.event_is_full %}
-                <p>{% trans "Evenemanget är tyvärr full." %}</p>
-            {% elif not event.registation_past_due and user.is_authenticated %}
-                <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_members | timeuntil }}</p>
-            {% else %}
-                <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_others | timeuntil }}</p>
-            {% endif %}
-
-            <h2>{% trans "Anmälda" %}</h2>
+        <div class="container-box">
+            <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
+            <p>{{ event.content | safe }}</p>
+            {% if event.sign_up %}
+                <h2 id="sign-up">{% trans "Anmälning" %}</h2>
+                <div class="form-container">
+                    {% if event.registration_is_open_members and user.is_authenticated %}
+                        {% include 'events/registering.html' %}
+                    {% elif event.registration_is_open_others %}
+                        {% include 'events/registering.html' %}
+                    {% elif event.registation_past_due %}
+                        <h4 id="no-registration">{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }} {% trans 'sedan' %}</h4>
+                    {% elif event.event_is_full %}
+                        <p>{% trans "Evenemanget är tyvärr full." %}</p>
+                    {% elif not event.registation_past_due and user.is_authenticated %}
+                        <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_members | timeuntil }}</p>
+                    {% else %}
+                        <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_others | timeuntil }}</p>
+                    {% endif %}
+                </div>
+        </div>
+            <h1>{% trans "Anmälda" %}</h1>
             <table>
                 <tr>
                     {% if event.get_registrations %}
