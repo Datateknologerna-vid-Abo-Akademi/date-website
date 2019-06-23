@@ -1,69 +1,17 @@
 {% extends 'base.html' %}
-{% load static %}
-{% load i18n %}
 
 {% block content %}
-<head>
-    <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
-</head>
-    <div class="container">
-
-    <div id="confirm-box" class="confirm-box">
-          <div class="modal-content">
-            <span class="close">&times;</span>
-            <p>{% trans 'Är du helt säker och vet vad du håller på med?' %}</p>
-              <a href="{% url 'archive:remove_collection' collection.id %}" id="confirm-remove">{% trans 'Ta bort' %}</a>
-              <span class="close">{% trans 'Ångra' %}</span>
-          </div>
+<h2>{{ collection.title }}</h2>
+<p>Published on {{ collection.pub_date_pretty }}</p>
+    <p>You're in edit mode <a href="{% url 'archive:detail' collection.id %}">Return</a></p>
+    {% if error_msg %}
+    <p>{{ error_msg }}</p>
+{% endif %}
+{% for picture in collection.picture_set.all %}
+    <div style="display: inline-block">
+        <img src="{{ picture.image.url }}" style="height: 300px; width: auto">
+        <p><a href="{% url 'archive:remove_file' collection.id picture.id %}">Remove</a></p>
     </div>
-
-    <h2>{{ collection.title }}</h2>
-    <h4>Published on {{ collection.pub_date_pretty }}</h4>
-        <p id="edit-tag">{% trans 'Du är i editerings läge' %}:
-            <a id="remove-btn" href="#" >{% trans 'Ta bort album' %}</a>
-        <a href="{% url 'archive:detail' collection.id %}">{% trans 'Gå tillbakas' %}</a></p>
-        {% if error_msg %}
-        <p>{{ error_msg }}</p>
-    {% endif %}
-    {% for picture in collection.picture_set.all %}
-        <div style="display: inline-block">
-            <img src="{{ picture.image.url }}" style="height: 300px; width: auto">
-            <p><a id="remove-img-tag" href="{% url 'archive:remove_file' collection.id picture.id %}">{% trans 'Ta bort' %}</a></p>
-        </div>
-    {% endfor %}
-        <p><a href="{% url 'archive:pictures' %}">{% trans 'Gå tillbakas' %}</a></p>
-    </div>
-    <script>
-    // Get the modal
-    var modal = document.getElementById('confirm-box');
-
-    // Get the button that opens the modal
-    var btn = document.getElementById("remove-btn");
-
-    // Get the <span> element that closes the modal
-    var span = document.getElementsByClassName("close")[0];
-    var closeBtn = document.getElementsByClassName("close")[1];
-
-    // When the user clicks on the button, open the modal
-    btn.onclick = function() {
-      modal.style.display = "block";
-    };
-    // When the user clicks on <span> (x), close the modal
-    span.onclick = function() {
-      modal.style.display = "none";
-    };
-    closeBtn.onclick = function() {
-      modal.style.display = "none";
-    };
-
-
-    // When the user clicks anywhere outside of the modal, close it
-    window.onclick = function(event) {
-      if (event.target == modal) {
-        modal.style.display = "none";
-      };
-    };
-
-    </script>
-
+{% endfor %}
+    <p><a href="{% url 'archive:pictures' %}">Return</a></p>
 {% endblock %}

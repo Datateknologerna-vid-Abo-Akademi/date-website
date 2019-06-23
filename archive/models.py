@@ -43,16 +43,10 @@ class Collection(models.Model):
     def pub_date_pretty(self):
         return self.pub_date.strftime('%b %e %Y')
 
-    # Forced to remove collections the hard way because django...
-    # Python removes the files for you.
     def delete(self, *args, **kwargs):
         dir_location = os.path.join(settings.MEDIA_ROOT, self.title.lower())
-        for root, dirs, file in os.walk(dir_location, topdown=False):
-            for name in file:
-                os.remove(os.path.join(root, name))
-            for name in dirs:
-                os.rmdir(os.path.join(root, name))
-        os.rmdir(dir_location)
+        print(dir_location)
+        shutil.rmtree(dir_location, ignore_errors=True)
         super(Collection, self).delete(*args, **kwargs)
 
 

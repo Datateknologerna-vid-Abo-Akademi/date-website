@@ -3,7 +3,6 @@ from django.views import generic
 from .models import Collection, Picture
 from .forms import PictureUploadForm
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
 import os
 
 
@@ -32,7 +31,6 @@ class DetailView(generic.DetailView):
     template_name = 'archive/detail.html'
 
 
-@login_required
 def edit(request, pk):
     collection = Collection.objects.get(id=pk)
     return render(request, 'archive/edit.html', {'collection': collection})
@@ -48,17 +46,6 @@ def remove_file(request, collection_id, file_id):
     collection.delete()
     collections = Collection.objects.all()
     return render(request, 'archive/index.html', {'collections': collections})
-
-
-def remove_collection(request, collection_id):
-    collection = Collection.objects.get(id=collection_id)
-    collection.delete()
-    collections = Collection.objects.filter(type="Pictures").order_by('-pub_date')
-    context = {
-        'type': "pictures",
-        'collections': collections,
-    }
-    return render(request, 'archive/index.html', context)
 
 
 def upload(request):
@@ -80,21 +67,12 @@ def upload(request):
     return render(request, 'archive/upload.html', context)
 
 
-# TODO: implement and test.
 def clean_media(request):
     folders = os.walk(settings.MEDIA_ROOT)
     for f in folders:
         # f[0] = Folder
         # f[2] = list of pictures.
 
-        print(f[0].title())
-        try:
-            folder = f[0].split('/')
-            print(folder[3])
-            collection = Collection.objects.get_or_create(title=folder[3])
-            for file in f[2]:
-                picture = Picture.objects.get_or_create(file=file, collection=collection)
-        except IndexError:
-            print("not a media folder.")
+        print(f[0])
         print(f[2])
     return redirect('archive:pictures')

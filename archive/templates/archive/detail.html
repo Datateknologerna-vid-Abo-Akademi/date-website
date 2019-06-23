@@ -1,21 +1,16 @@
 {% extends 'base.html' %}
-
-{% load i18n %}
 {% load app_filters %}
 {% load static %}
     {% block content %}
-<head>
     <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
     <link rel="script" href="{% static 'archive/js/scripts.js' %}">
-</head>
-    <div class="container">
+    <div class="container-soft">
 
-        <h1 class="page-title">{{ collection.title }}</h1>
+        <h2>{{ collection.title }}</h2>
         <p>Published on {{ collection.pub_date_pretty }}</p>
-        <p><a href="{% url 'archive:pictures' %}" class="button">{% trans 'Gå tillbakas' %}</a>
+        <p><a href="{% url 'archive:pictures' %}" class="button">Return</a>
             {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse"%}
-            <a class="button" href="{% url 'archive:edit' collection.id %}">{% trans 'Editera' %}</a>
-                <a class="button" href="{% url 'archive:upload' %}">{% trans 'Lägg till flera bilder' %}</a></p>
+            <a class="button" href="{% url 'archive:edit' collection.id %}">edit</a></p>
             {% endif %}
         {% if error_msg %}
             <p>{{ error_msg }}</p>
@@ -24,9 +19,7 @@
         <div class="picture-frame">
         <div class="column-frame">
         {% for picture in collection.picture_set.all %}
-            <div class="img-container">
-                <img id="picture-{{ forloop.counter }}" onclick="imageClick({{ forloop.counter }})" src="{{ picture.image.url }}" class="smaller-img">
-            </div>
+            <img id="picture-{{ forloop.counter }}" onclick="imageClick({{ forloop.counter }})" src="{{ picture.image.url }}" class="smaller-img">
             {% if forloop.counter|arrangePictures:collection.picture_set.count %}
                 </div><div class="column-frame">
             {% endif %}
@@ -37,12 +30,12 @@
         </div>
 
 
+
         <script>
             function imageClick(id) {
                let element = document.getElementById("picture-" + id);
                console.log("ID: " + id);
                element.classList.toggle("enlarge");
-               element.classList.toggle("smaller-img");
             }
 
             document.addEventListener("keydown", cycleEnlargedImage, true);
@@ -66,7 +59,7 @@
                     let element = document.getElementsByClassName("enlarge")[0];
                     if (element){
                         let element_id = element.id.split("-")[1];
-                        if( element_id <= document.getElementsByClassName("smaller-img").length){
+                        if( element_id < document.getElementsByClassName("smaller-img").length){
                             imageClick(element_id);
                             imageClick(parseInt(element_id)+1);
                         }
