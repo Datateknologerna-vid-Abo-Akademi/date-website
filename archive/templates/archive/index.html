@@ -8,8 +8,8 @@
 <head>
     <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
 </head>
-<body>
     <div class="container-soft">
+        <div>
         {% if type == 'pictures' %}
             <h1>{% trans "Bild arkiv" %}</h1>
             <!--  Check if User is loggen on and in group to add new album-->
@@ -43,8 +43,7 @@
         {% else %}
             <h3>{% trans "Inga arkiv hittades" %}</h3>
         {% endif %}
-
+        </div>
     </div>
-</body>
 {% endblock %}
 

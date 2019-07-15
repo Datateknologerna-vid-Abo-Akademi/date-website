@@ -1,21 +1,3 @@
-body{
-    margin: 0;
-    padding: 0;
-}
-
-ul{
-    list-style: none;
-}
-
-li {
-    list-style: none;
-
-}
-h1, h2, h3, h4, h5, h6 {
-    margin: 0.2rem;
-    text-align: center;
-}
-
 img {
     width: 100%;
 }
@@ -42,6 +24,10 @@ img {
 /*
     INDEX
  */
+.container-soft{
+    padding-top: 10vh;
+    min-height: 100vh;
+}
 .collection_box{
     margin: 1rem .2rem .2rem .2rem;
     padding: .5rem;
