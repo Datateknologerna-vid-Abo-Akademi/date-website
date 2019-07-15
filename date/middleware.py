@@ -2,7 +2,6 @@ from django.conf import settings
 from django.utils import translation
 from django.utils.deprecation import MiddlewareMixin
 
-
 class LangMiddleware(MiddlewareMixin):
 
     @staticmethod

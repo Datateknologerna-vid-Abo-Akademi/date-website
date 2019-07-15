@@ -1,7 +1,6 @@
 from django.utils.text import slugify
 from django.utils import timezone
 
-
 def slugify_max(text, max_length=50):
     slug = slugify(text)
     if len(slug) <= max_length:

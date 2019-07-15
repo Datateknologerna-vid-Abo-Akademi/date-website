@@ -9,7 +9,6 @@ from news.models import Post
 
 from itertools import chain
 
-
 def index(request):
     events = Event.objects.filter(published=True, event_date_end__gte=datetime.date.today()).reverse()[:6]
     news = Post.objects.filter(published=True).reverse()[:2]

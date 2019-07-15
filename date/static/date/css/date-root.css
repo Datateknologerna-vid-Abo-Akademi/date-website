@@ -1,4 +1,5 @@
 /* Root colors */
+/* use with var(--color); included in base.html*/
 
 :root {
     --primaryColor: #000;
