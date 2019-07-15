@@ -8,12 +8,11 @@ ul {
     position: fixed;
     z-index: 10;
     width: 100vw;
-    height: 5vh;
 }
 
 .nav-bar {
     font-family: josefin-sans sans-serif;
-    padding: 2rem 3rem 1rem 1rem;
+    padding: 0 3rem 1rem 1rem;
     text-align: right;
     line-height: 2.5rem;
     font-size: 1.5vw;
@@ -47,7 +46,7 @@ ul {
     display: inline-block;
     color: var(--secondaryColor);
     text-align: center;
-    padding: 16px 16px;
+    padding: 2rem;
     text-decoration: none;
   -webkit-transition: border-width 0.6s linear;
   transition: border-width 0.6s linear;
@@ -58,7 +57,7 @@ ul {
 }
 
 .dropdown {
-    margin-right: 1rem;
+    margin-right: 2rem;
     display: inline-block;
 }
 
