@@ -1,17 +1,17 @@
 {% load static %}
 {% load i18n %}
 <head>
-    <link rel="stylesheet" href="{% static "css/header.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "css/header.css" %}?version=1">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
           integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css?family=Josefin+Sans" rel="stylesheet">
 </head>
 <div class="header-bar">
+        <a id="logo" href="{% url 'index' %}">"logo goes here"</a>
     <div class="nav-bar">
-        <li><a href="{% url 'events:index' %}">{% trans 'Händelser' %}</a></li>
+        <li><a href="{% url 'events:index' %}">{% trans 'Evenemang' %}</a></li>
         <li><a href="{% url 'news:index' %}">{% trans 'Nyheter' %}</a></li>
-        <li><a id="logo" href="{% url 'index' %}">DaTe</a></li>
-        <li><a href="#">{% trans 'Om oss' %}</a></li>
+        <li><a href="{% url 'index' %}#about">{% trans 'Om oss' %}</a></li>
         {% if user.is_authenticated %}
             <div class="dropdown">
                 <button class="dropbtn">
@@ -33,7 +33,7 @@
             <li><a href="{% url 'events:index' %}">{% trans 'Händelser' %}</a></li>
             <li><a href="{% url 'news:index' %}">{% trans 'Nyheter' %}</a></li>
             <li><a href="{% url 'index' %}">{% trans 'Startsidan' %}</a></li>
-            <li><a href="#">{% trans 'Om oss' %}</a></li>
+            <li><a href="{% url 'index' %}#about">{% trans 'Om oss' %}</a></li>
         </div>
     </div>
 

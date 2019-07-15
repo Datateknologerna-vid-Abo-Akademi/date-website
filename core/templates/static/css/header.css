@@ -8,19 +8,31 @@ ul {
     position: fixed;
     z-index: 10;
     width: 100vw;
+    height: 5vh;
 }
 
 .nav-bar {
     font-family: josefin-sans sans-serif;
-    padding: 5px 0;
-    text-align: center;
-    line-height: 2rem;
+    padding: 2rem 3rem 1rem 1rem;
+    text-align: right;
+    line-height: 2.5rem;
     font-size: 1.5vw;
     background-color: var(--primaryColor);
 }
+
+#logo {
+    font-size: 200%;
+    position: absolute;
+    padding: 20px 20px;
+}
 .nav-bar li{
-    margin-right: 5vw;
+    margin-right: 2vw;
     display: inline-block;
+}
+
+/* Set logo left */
+.nav-bar:first-child {
+    text-align: left;
 }
 
 .nav-bar #logo {
@@ -41,11 +53,12 @@ ul {
   transition: border-width 0.6s linear;
 }
 
-.nav-bar a:hover {
-    border-width: 3px var(--secondaryColor);
+.nav-bar a:hover{
+    border-bottom: 3px var(--secondaryColor);
 }
 
 .dropdown {
+    margin-right: 1rem;
     display: inline-block;
 }
 
@@ -81,13 +94,15 @@ ul {
     text-align: center;
     border-bottom: 2px solid var(--secondaryColor);
     min-width: 200px;
-    padding: 12px 16px;
+    padding: 1rem 1rem;
     text-decoration: none;
     display: block;
     margin-bottom: 1rem;
 }
 .dropdown-content a:hover {
-    background-color: var(--secondaryColorDarker);
+    font-size: 110%;
+    transition: all .3s;
+    color: var(--secondaryColorDarker);
 }
 
 .dropdown:hover .dropdown-content {

@@ -16,9 +16,11 @@ footer p{
 
 .footer{
     font-size: 90%;
-    margin: 2rem 2rem 0 0;
-    max-width: 30vw;
+    margin: 2rem 2rem 0 3rem;
     display: inline-block;
+}
+.footer-text {
+    margin-left: 20vw;
 }
 
 @media screen and (max-width: 800px){

@@ -7,11 +7,10 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <link rel="stylesheet" href="{% static 'date/css/homepage.css' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'date/css/homepage.css' %}?{% now "U" %}" type="text/css">
         {% get_current_language as LANGUAGE_CODE %}
     </head>
-
-    <header class="header">
+    <header class="header wave">
         <div class="hero-text-box align-center">
             <div class="albin">
                 <svg version="1.0" xmlns="http://www.w3.org/2000/svg"
@@ -169,65 +168,77 @@ c-132 -94 -567 -160 -888 -133 -145 12 -285 45 -355 84 -35 20 -37 24 -44 87
             </div>
         </div>
     </header>
-    <!-- EVENTS SECTION  -->
-    <section class="section-events" id="events">
-        <h1 class="section-title">{% trans "HÄNDELSER" %}</h1>
-        <div class="events-grid">
-            {% for event in events %}
-                    <div class="card">
-                <a href="{% url 'events:detail' event.slug %}">
-                        <div class="card-inner">
-                            <div class="card-front">
-                                <h1 class="card-title">{{ event.title|truncatechars_html:"40" }}</h1>
-                            </div>
-                            <div class="card-back">
-                                <h2>{{ event.title }}</h2>
-                                <p>{{ event.content|safe|truncatewords_html:"30" }}
-                                    {% if event.content|wordcount > 30 %} {% trans ' LÄSA MERA' %} {% endif %}</p>
-                                <p class="card-date">{{ event.event_date_start_pretty }}</p>
-                                {% if user.is_authenticated %}
-                                    {% if event.registration_is_open_members %}
-                                        <p class="card-signup">{% trans 'Anmäl dig nu' %}</p>
-                                    {% else %}
-                                        <p class="card-signup">{% trans 'Anmälan öppar om' %}: {{ event.sign_up_members|timeuntil }}</p>
-                                    {% endif %}
-                                {% else %}
-                                    {% if event.registration_is_open_others %}
-                                        <p class="card-signup">{% trans 'Anmäl dig nu' %}</p>
-                                    {% else %}
-                                        <p class="card-signup">{% trans 'Anmälan öppnar om' %}: {{ event.sign_up_others|timeuntil }}</p>
-                                    {% endif %}
-                                {% endif %}
-                            </div>
-                        </div>
-                </a>
-                  </div>
-              {% empty %}
-                <h3 class="align-center">{% trans 'Inga aktiva händelser att visa...' %}</h3>
-            {% endfor %}
+    <section id="about" class="about">
+            <h2 class="section-header">Om oss</h2>
+    {% comment %}
+        <div class="about-grid-content">
+            <div>
+                <h3>Vem</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aliquid, at dolor, expedita iusto, magni maxime modi nobis officia perspiciatis quasi quidem rem totam voluptas voluptatem voluptatibus! A accusantium, corporis delectus dicta, dolorem dolorum in itaque laudantium non quaerat quod reprehenderit. Id nobis possimus vero? Magnam reiciendis repellat repellendus temporibus vitae.</p>
+            </div>
+            <img src="https://cdn.pixabay.com/photo/2014/08/26/21/27/service-428540_960_720.jpg" class="about-img fade-in">
+            <div>
+                <h3>Varför</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dignissimos eos fuga mollitia, odit quis sunt tempore totam ullam voluptatibus. Amet dicta explicabo facilis harum quaerat quam quidem similique? A accusamus dicta, distinctio eos in ipsum iste labore, numquam porro quisquam tenetur veniam? Minima odio odit officia quis rerum sequi, sunt.</p>
+            </div>
+            <img src="https://cdn.pixabay.com/photo/2016/05/30/14/23/detective-1424831_960_720.png" class="about-img">
+            <div>
+                <h3>För vem</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Adipisci asperiores commodi consequatur corporis debitis delectus deserunt dolor doloremque eligendi eos exercitationem fugiat laboriosam, libero magni minus nobis numquam optio perferendis suscipit tempore tenetur totam vel voluptatem. Et in maxime optio. Ad architecto debitis ipsam libero saepe soluta tempora. Perspiciatis, soluta!</p>
+            </div>
+            <img src="https://cdn.pixabay.com/photo/2018/05/04/10/30/team-3373638_960_720.jpg" class="about-img">
         </div>
-        <a href="{% url 'events:index' %}">
-            <button class="section-button">{% trans 'Visa hela kalendern' %}</button>
-        </a>
-    </section>
+     {% endcomment %}
+        <div class="about-grid-content">
+            <div class="text">
+                <div>
+                <h3>Vem</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aliquid, at dolor, expedita iusto, magni maxime modi nobis officia perspiciatis quasi quidem rem totam voluptas voluptatem voluptatibus! A accusantium, corporis delectus dicta, dolorem dolorum in itaque laudantium non quaerat quod reprehenderit. Id nobis possimus vero? Magnam reiciendis repellat repellendus temporibus vitae.</p>
+            </div>
+            <div>
+                <h3>Varför</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dignissimos eos fuga mollitia, odit quis sunt tempore totam ullam voluptatibus. Amet dicta explicabo facilis harum quaerat quam quidem similique? A accusamus dicta, distinctio eos in ipsum iste labore, numquam porro quisquam tenetur veniam? Minima odio odit officia quis rerum sequi, sunt.</p>
+            </div>
+            <div>
+                <h3>För vem</h3>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Adipisci asperiores commodi consequatur corporis debitis delectus deserunt dolor doloremque eligendi eos exercitationem fugiat laboriosam, libero magni minus nobis numquam optio perferendis suscipit tempore tenetur totam vel voluptatem. Et in maxime optio. Ad architecto debitis ipsam libero saepe soluta tempora. Perspiciatis, soluta!</p>
+            </div>
+            </div>
+            <div class="about-nav">
+                <div class="about-links">
+                    <ul>
+                        <li><a href="#">Bli medlem</a></li>
+                        <li><a href="#">Organisation</a></li>
+                        <li><a href="#">Gulisvärksamhet</a></li>
+                        <li><a href="#">Vänföreningar</a></li>
+                        <li><a href="#">Tofsguiden</a></li>
+                        <li><a href="#">Kontakta oss</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
 
-    <!-- NEWS SECTION  -->
-    <section class="section-news" id="news">
-        <h1 class="section-title">{% trans 'NYHETER' %}</h1>
-        <div class="news-grid">
-            {% for news_item in news %}
-                  <a href="{% url 'news:detail' news_item.slug %}">
-                    <div class="news">
-                        <h2>{{ news_item.title }}</h2>
-                        <p class="news-publish-date">{% trans 'publiserat' %}: {{ news_item.published_time|timesince }} {% trans 'sedan' %}</p>
-                        <p>{{ news_item.content|safe|truncatewords_html:"25" }}
-                            {% if news_item.content|wordcount > 30 %} {% trans ' LÄSA MERA' %} {% endif %}</p>
+    </section>
+    <section class="news-events">
+        <div class="section-title">
+        <!-- TODO: Image/font? -->
+        <h2>Nyheter & Evenemang</h2>
+    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusantium ad, consequatur dolorum explicabo ipsam minima nesciunt obcaecati odit quae quisquam.</p>
+        </div>
+        <div class="comming-soon">
+            <h3>Kommer snart...</h3>
+        </div>
+        {% comment %}
+        <div class="container-box">
+            {% for ne in news_events%}
+                    <div class="content">
+                        <h2>{{ ne.title }}</h2>
+                        <h5>{{ ne.published_time }}</h5>
+                        <p>{{ ne.content|safe }}</p>
+                        <button class="news-button" type="button">Click me!</button>
                     </div>
-                </a>
             {% endfor %}
         </div>
-        <a href="{% url 'news:index' %}">
-            <button class="section-button">{% trans 'Visa alla nyheter' %}</button>
-        </a>
-    </section>
+        {% endcomment %}
+         </section>
 {% endblock %}
