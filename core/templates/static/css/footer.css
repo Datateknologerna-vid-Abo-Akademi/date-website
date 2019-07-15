@@ -1,0 +1,49 @@
+footer {
+ font-family: 'Josefin Sans', sans-serif;
+    background-color: var(--primaryColor);
+    color: var(--secondaryColor);
+    font-size: 1.5em;
+    height: auto;
+}
+footer p{
+    margin: 0;
+    padding: 0 0 1rem 1.5rem;
+}
+
+#footer-img {
+    padding: 2rem 0 0 2rem;
+}
+
+.footer{
+    font-size: 90%;
+    margin: 2rem 2rem 0 3rem;
+    display: inline-block;
+}
+.footer-text {
+    margin-left: 20vw;
+}
+
+@media screen and (max-width: 800px){
+    #footer-img {
+        width: 50vw;
+        padding: 2rem;
+    }
+    footer {
+        height: 25vh;
+    }
+    footer p{
+        padding: 1rem;
+    }
+}
+
+@media screen and (max-width: 450px){
+    footer p{
+        font-size: 85%;
+        margin: 0 2rem 0 0;
+        max-width: none;
+        float: none;
+        display: block;
+
+        padding: .5rem;
+    }
+}
