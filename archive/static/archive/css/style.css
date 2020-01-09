@@ -25,18 +25,26 @@ img {
     INDEX
  */
 .container-soft{
+    background-color: var(--primaryColor);
     padding-top: 10vh;
     min-height: 100vh;
+    color: var(--secondaryColor);
 }
 .collection_box{
     margin: 1rem .2rem .2rem .2rem;
     padding: .5rem;
     display: inline-block;
+    text-align: center;
+    transition: 0.2s ease-in-out;
 }
 .collection_box:hover{
-    background-color: #eaeaea;
-    transform: scale(1.1);
+    transform: scale(1.05);
+    transition: 0.2s ease-in-out;
 }
+.collection_box:hover img {
+    box-shadow: 0 0 3px 2px var(--secondaryColorDarker);
+}
+
 
 .preview_img{
     max-height: 250px;

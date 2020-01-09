@@ -12,7 +12,6 @@
         <div>
         {% if type == 'pictures' %}
             <h1>{% trans "Bild arkiv" %}</h1>
-            <!--  Check if User is loggen on and in group to add new album-->
             {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse" %}
                 <a class="button" href="{% url 'archive:upload' %}"> Skapa nytt album</a>
             {% endif %}
@@ -29,7 +28,7 @@
                 <a  href="{% url 'archive:detail' collection.id %}" class="collection_box">
                 <li>
                     {% if collection.title|length > 20 %}
-                        <h5 class="align-center">{{ collection.title|slice:"20" }}...</h5>
+                        <h3 class="align-center">{{ collection.title|slice:"20" }}...</h3>
                     {% else %}
                         <h5 class="align-center">{{ collection.title }}</h5>
                     {% endif %}

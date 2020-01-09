@@ -18,4 +18,3 @@ urlpatterns = [
     path('cleanMedia/', views.clean_media, name='cleanMedia'),
 
 ]
-

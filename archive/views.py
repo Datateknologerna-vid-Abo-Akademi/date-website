@@ -70,9 +70,6 @@ def upload(request):
 def clean_media(request):
     folders = os.walk(settings.MEDIA_ROOT)
     for f in folders:
-        # f[0] = Folder
-        # f[2] = list of pictures.
-
         print(f[0])
         print(f[2])
     return redirect('archive:pictures')
