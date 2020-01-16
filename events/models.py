@@ -9,8 +9,6 @@ from django.template.defaulttags import register
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from date.functions import days_hence
-
 logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
@@ -27,9 +25,9 @@ class Event(models.Model):
     sign_up = models.BooleanField(_('Anmälning'), default=True)
     sign_up_members = models.DateTimeField(_('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=timezone.now)
     sign_up_others = models.DateTimeField(_('Anmälan öppnas (övriga)'), null=True, blank=True, default=timezone.now)
-    sign_up_deadline = models.DateTimeField(_('Anmälningen stängs'), default=days_hence(7), null=True, blank=True)
+    sign_up_deadline = models.DateTimeField(_('Anmälningen stängs'), null=True, blank=True)
     sign_up_cancelling = models.BooleanField(_('Avanmälning'), default=True)
-    sign_up_cancelling_deadline = models.DateTimeField(_('Avanmälningen stängs'), default=days_hence(5), null=True,
+    sign_up_cancelling_deadline = models.DateTimeField(_('Avanmälningen stängs'), null=True,
                                                        blank=True)
     author = models.ForeignKey('members.Member', on_delete=models.CASCADE)
     created_time = models.DateTimeField(_('Skapad'), default=timezone.now)
