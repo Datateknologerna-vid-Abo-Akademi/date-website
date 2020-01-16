@@ -1,0 +1,22 @@
+{% comment %} {% extends 'base.html' %}
+
+{% load i18n %}
+{% load static %}
+{% block title %}{% trans 'Användarinformation' %}{% endblock %}
+{% block content %} {% endcomment %}
+    {% if user.is_authenticated %}
+        <h1> {{user.username}} </h1>
+        <p>Mail: {{user.email}}</p>
+        <p>Firstname: {{user.first_name}}</p>
+        <p>Lastname: {{user.last_name}}</p>
+        <p>Phone number: {{user.phone}}</p>
+        <p>Address: {{user.address}}</p>
+        <p>Zip code: {{user.zip_code}}</p>
+        <p>City: {{user.city}}</p>
+        <p>Country: {{user.country}}</p>
+        <p>Membership type: {{user.membership_type}}</p>
+        <p>Is active: {{user.is_active}}</p>
+    {% else %}
+        <p>Log in to view info</p>
+    {% endif %}
+{% comment %} {% endblock %} {% endcomment %}
