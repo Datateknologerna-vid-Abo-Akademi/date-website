@@ -47,7 +47,7 @@
                         <td>{% if not attendee.anonymous %}{{ attendee.user }}{% else %}
                             <i>{% trans "Anonymt" %}</i>{% endif %}</td>
                         {% for preference in event.get_registration_form_public_info reversed %}
-                            <td>{{ attendee.preferences | get_item:preference }}</td>
+                            <td>{{ attendee | get_preference:preference }}</td>
                         {% endfor %}
                     </tr>
                 {% empty %}
