@@ -1,0 +1,97 @@
+
+.container{
+    background-color: var(--primaryColor);
+    padding-top: 10vh;
+    min-height: 100vh;
+    color: var(--secondaryColor);
+    font-family: 'Josefin Sans', sans-serif;
+    text-align: center;
+    align-content: start;
+}
+
+/*GRID STUFF*/
+.container{
+    display: grid;
+    grid-template-columns: 10vw 40vw 40vw 10vw;
+    grid-template-rows: auto;
+    grid-template-areas: 
+      ". coming coming ."
+      ". ended ended .";     
+}
+
+.coming {
+    grid-area: coming;
+  }
+.ended {
+    grid-area: ended;
+}
+
+h1{
+    font-size: 5rem;
+}
+
+h2{
+    transition: color 0.2s ease;
+    font-size: 3rem;
+}
+
+h3{
+    font-size: 3rem;
+}
+
+.content{
+    color: rgb(208, 255, 0);
+}
+
+.content:hover {
+    color: rgb(109, 122, 40);
+}
+
+.event-date{
+    background-color:rgb(43, 43, 43) ;
+    padding: 0px;
+    margin: 10px;
+}
+
+.right{
+    grid-area: right;
+    background-color: rgb(156, 156, 156) ;
+}
+
+
+.left{
+    grid-area: left;
+    background-color: rgb(199, 199, 199);
+}
+
+
+.event-date{
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    grid-template-areas:
+    "right"
+    "left";
+}
+
+@media only screen and (min-width: 836px) {
+
+    .container{
+        display: grid;
+        grid-template-columns: 15vw 35vw 35vw 15vw;
+        grid-template-rows: auto;
+        grid-template-areas: 
+          ". coming coming ."
+          ". ended ended .";     
+    }
+
+    .event-date{
+        background-color:rgb(43, 43, 43) ;
+        display: grid;
+        grid-template-columns: 5vw 1fr 3fr 5vw;
+        grid-template-rows: auto;
+        grid-template-areas: 
+          ". left right .";    
+        justify-items: stretch; 
+    }
+  }
