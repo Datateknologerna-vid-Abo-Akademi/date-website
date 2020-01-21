@@ -170,7 +170,9 @@ class EventAttendees(models.Model):
 
     def save(self, *args, **kwargs):
         if self.attendee_nr is None:
-            self.attendee_nr = self.event.get_registrations().count()
+            # attendee_nr increments by 10, e.g 10,20,30,40...
+            # this is needed so the admin sorting library will work.
+            self.attendee_nr = (self.event.get_registrations().count()+1) * 10
         if self.time_registered is None:
             self.time_registered = timezone.now()
         super(EventAttendees, self).save(*args, **kwargs)
