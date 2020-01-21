@@ -33,8 +33,8 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
     model = EventAttendees
     fk_name = 'event'
     extra = 0
-    list_editable = ('attendee_nr',)
-    readonly_fields = ('user', 'email', 'time_registered')
+    list_editable = ('user', 'email', 'preferences')
+    readonly_fields = ('time_registered',)
     fields = ('attendee_nr', 'user', 'email', 'anonymous', 'preferences', 'time_registered')
     formfield_overrides = {
         JSONField: {'widget': PrettyJSONWidget()}
