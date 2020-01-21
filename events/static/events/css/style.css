@@ -17,61 +17,100 @@
     grid-template-areas: 
       ". coming coming ."
       ". ended ended .";     
+      grid-row-gap: 50px;
 }
 
-.coming {
-    grid-area: coming;
-  }
-.ended {
-    grid-area: ended;
+.container-box-coming{
+    display: grid;
+    grid-row-gap: 2vh;
+     word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+    grid-area: coming;   
 }
 
+.event-coming{
+    display: grid;
+    grid-template-columns: 20vw 30vw 30vw;
+    grid-template-rows: auto;
+    grid-template-areas:
+    "date title title";
+}
+
+/*Headers*/
 h1{
-    font-size: 5rem;
+    font-size: 4rem;
 }
-
 h2{
     transition: color 0.2s ease;
-    font-size: 3rem;
+    font-size: 2rem;
 }
-
 h3{
-    font-size: 3rem;
+    font-size: 13px;
 }
 
 .content{
     color: rgb(208, 255, 0);
 }
 
-.content:hover {
-    color: rgb(109, 122, 40);
+.title{
+    grid-area: title;
+    background-color: rgb(36, 36, 36) ;
+    border-radius: 5px;
 }
 
-.event-date{
-    background-color:rgb(43, 43, 43) ;
-    padding: 0px;
-    margin: 10px;
+.btn{
+    -webkit-transition: all 0.2s;
+	-moz-transition: all 0.2s;
+    transition: all 0.2s;
+    border: 2px solid rgb(66, 66, 66);
 }
 
-.right{
-    grid-area: right;
-    background-color: rgb(156, 156, 156) ;
+.btn:after {
+	-webkit-transition: all 0.2s;
+	-moz-transition: all 0.2s;
+	transition: all 0.2s;
 }
 
-
-.left{
-    grid-area: left;
-    background-color: rgb(199, 199, 199);
+.btn:active {
+	border-color: #b6b6b6;
+	color: #c0c0c0;
 }
 
+.btn:hover {
+    background: #414141;
+    color: rgb(242, 253, 185);
+}
 
-.event-date{
+.text-center{
+    place-self: center;
+    margin: 5px;
+    vertical-align: middle;
+}
+
+/*Actual date, not DaTe*/
+.date{
+    grid-area: date;
+    background-color: rgb(97, 97, 97);
+    border-radius: 5px;
     display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-    grid-template-areas:
-    "right"
-    "left";
+}
+
+.container-box-ended {
+    grid-area: ended;
+}
+
+.event-ended{
+    display: grid;
+    grid-template-rows: 5vh;
+}
+
+.content-ended{
+    color: rgb(208, 255, 0);
+}
+
+.content-ended:hover{
+    color: rgb(65, 73, 22);
 }
 
 @media only screen and (min-width: 836px) {
@@ -85,13 +124,26 @@ h3{
           ". ended ended .";     
     }
 
-    .event-date{
-        background-color:rgb(43, 43, 43) ;
+    .event-coming{
         display: grid;
         grid-template-columns: 5vw 1fr 3fr 5vw;
         grid-template-rows: auto;
         grid-template-areas: 
-          ". left right .";    
+          ". date title .";    
         justify-items: stretch; 
     }
+
+    h1{
+        font-size: 5rem;
+    }
+
+    h2{
+        transition: color 0.2s ease;
+        font-size: 3rem;
+    }
+    
+    h3{
+        font-size: 3rem;
+    }
+
   }
