@@ -73,7 +73,7 @@
     }
 
 .button{
-    background-color: rgb(53, 53, 53);
+    background-color: rgb(36, 36, 36);
     border: none;
     color: var(--secondaryColor);
     padding: 1.5vh 3vw;
@@ -91,7 +91,7 @@
 }
     
 .button:active{
-    background-color: #707070;
+    background-color: #414141;;
 }
 
 tbody{
@@ -170,10 +170,6 @@ td{
         }
         .header{
             font-size: 3vw;
-        }
-
-        .form-container{
-            
         }
 
         input{
