@@ -23,7 +23,7 @@
 .container-box-coming{
     display: grid;
     grid-row-gap: 2vh;
-     word-break: break-all;
+    word-break: break-all;
     word-break: break-word;
     hyphens: auto;
     grid-area: coming;   

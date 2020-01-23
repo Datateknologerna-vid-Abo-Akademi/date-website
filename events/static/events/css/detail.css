@@ -1,0 +1,197 @@
+.container{
+    background-color: var(--primaryColor);
+    padding-top: 10vh;
+    min-height: 100vh;
+    color: var(--secondaryColor);
+    font-family: 'Josefin Sans', sans-serif;
+    text-align: start;
+    align-content: start;
+}
+
+.container{
+    display: grid;
+    grid-template-columns: 10vw 80vw 10vw;
+    grid-template-rows: auto;
+    grid-template-areas: 
+      ". box ."
+      ". signup .";     
+      grid-row-gap: 50px;
+}
+
+.container-box{
+    grid-area: box;
+    display: grid;
+    grid-template-columns: 80vw;
+    grid-template-rows: auto;
+    grid-template-areas: 
+      "textstuff"
+      "form";
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.content-container{
+    grid-area: textstuff;
+    font-size: 5vw;
+}
+
+.form-container{
+    grid-area: form;
+    display: grid;
+}
+
+.signed-up{
+    grid-area: signup;
+    display: grid;
+}
+
+.text-size{
+    font-size: 3vw;
+}
+
+.header{
+    font-size: 8vw;
+}
+
+#id_user{
+    border-radius: 5px;
+    width: 70vw;
+    height: 3vh;
+    font-size: 5vw;
+}
+#id_email{
+    border-radius: 5px;
+    width: 70vw;
+    height: 3vh;
+    font-size: 5vw;
+}
+
+#id_anonymous{
+    height: 1.5vh;
+    scale: 1.5;
+    }
+
+.button{
+    background-color: rgb(53, 53, 53);
+    border: none;
+    color: var(--secondaryColor);
+    padding: 1.5vh 3vw;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    border-radius: 5px;
+    transition: color 0.2s ease;
+    transition: background-color 0.2s ease;
+}
+.button:hover{
+    background-color: rgb(80, 80, 80);
+    color: rgb(208, 255, 0);
+}
+    
+.button:active{
+    background-color: #707070;
+}
+
+tbody{
+    display: grid;
+    
+}
+
+th{
+    padding: 0.3vh;
+}
+
+td{
+    padding: 0.3vh;
+}
+
+
+@media only screen and (min-width: 675px) {
+    #id_user{
+        border-radius: 5px;
+        width: 50vw;
+        height: 3vh;
+        font-size: 3vw;
+    }
+    #id_email{
+        border-radius: 5px;
+        width: 50vw;
+        height: 3vh;
+        font-size: 3vw;
+    }
+}
+
+@media only screen and (min-width: 836px) {
+ 
+    .container-box{
+        grid-area: box;
+        display: grid;
+        grid-template-columns: 10vw 60vw 10vw;
+        grid-template-rows: auto;
+        grid-template-areas: 
+          " . textstuff . "
+          " . form . ";     
+    }
+
+    .text-size{
+        font-size: 2vw;
+    }
+    .header{
+        font-size: 3vw;
+    }
+
+    #id_user{
+        border-radius: 5px;
+        width: 25vw;
+        height: 3vh;
+        font-size: 1.5vw;
+    }
+    #id_email{
+        border-radius: 5px;
+        width: 25vw;
+        height: 3vh;
+        font-size: 1.5vw;
+    }
+    @media only screen and (min-width: 1237px) {
+        .container-box{
+            grid-area: box;
+            display: grid;
+            grid-template-columns: 10vw 60vw 10vw;
+            grid-template-rows: auto;
+            grid-template-areas: 
+              " . textstuff . "
+              " . form . ";     
+        }
+    
+        .text-size{
+            font-size: 1vw;
+        }
+        .header{
+            font-size: 3vw;
+        }
+
+        .form-container{
+            
+        }
+
+        input{
+            border-radius: 3px;
+        }
+
+        #id_user{
+            border-radius: 5px;
+            width: 20vw;
+            height: 3vh;
+            font-size: 1.3vw;
+        }
+        #id_email{
+            border-radius: 5px;
+            width: 20vw;
+            height: 3vh;
+            font-size: 1.3vw;
+        }
+
+    }
+}
