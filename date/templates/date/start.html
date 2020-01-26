@@ -163,63 +163,47 @@ c-132 -94 -567 -160 -888 -133 -145 12 -285 45 -355 84 -35 20 -37 24 -44 87
                 </svg>
             </div>
             <div class="text">
-                <h1 class="hero-text-main">Datatekn&nbsp;&nbsp;logerna</h1>
+                <h1 class="hero-text-main">Datateknologerna</h1>
                 <h3 class="hero-text-sub">vid Åbo Akademi rf</h3>
             </div>
         </div>
     </header>
-    <section id="about" class="about">
-            <h2 class="section-header">Om oss</h2>
+    <section id="about" class="about text-size">
         <div class="about-grid-content">
+            <h2 class="section-header">Om oss</h2>
             <div class="text">
-                <div>
-                <h3>Vem</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Aliquid, at dolor, expedita iusto, magni maxime modi nobis officia perspiciatis quasi quidem rem totam voluptas voluptatem voluptatibus! A accusantium, corporis delectus dicta, dolorem dolorum in itaque laudantium non quaerat quod reprehenderit. Id nobis possimus vero? Magnam reiciendis repellat repellendus temporibus vitae.</p>
+                <p>Datateknologerna vid Åbo Akademi rf är en förening för studerande vid utbildningsprogrammet i datateknik vid Fakulteten för  Naturvetenskaper och Teknik vid Åbo Akademi, samt för studerande vid övriga tekniskt inriktade utbildningslinjer i databehandling. Föreningen grundades 1999, närmare bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare och stiliga tofsmössor.</p>
             </div>
-            <div>
-                <h3>Varför</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dignissimos eos fuga mollitia, odit quis sunt tempore totam ullam voluptatibus. Amet dicta explicabo facilis harum quaerat quam quidem similique? A accusamus dicta, distinctio eos in ipsum iste labore, numquam porro quisquam tenetur veniam? Minima odio odit officia quis rerum sequi, sunt.</p>
+        </div>
+    </section>
+    <section id="news" class="news-events text-size">
+        <div class="ne-container">
+            <div class="container-box news-container">
+                <h2 class="border-bottom">Nyheter</h2>
+                {% for ne in news%}
+                    <div class="content news-box border-bottom">
+                        <h2 class="news-title">{{ ne.title }}</h2>
+                        <h5 class="news-date">{{ ne.published_time }}</h5>
+                        <div class="news-content">
+                            <p>{{ ne.content|safe|truncatewords_html:"20"}}</p>
+                        </div>
+                        <a class="news-button" href="#">LÄS MERA...</a>
+                    </div>
+                {% endfor %}
             </div>
-            <div>
-                <h3>För vem</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Adipisci asperiores commodi consequatur corporis debitis delectus deserunt dolor doloremque eligendi eos exercitationem fugiat laboriosam, libero magni minus nobis numquam optio perferendis suscipit tempore tenetur totam vel voluptatem. Et in maxime optio. Ad architecto debitis ipsam libero saepe soluta tempora. Perspiciatis, soluta!</p>
-            </div>
-            </div>
-            <div class="about-nav">
-                <div class="about-links">
-                    <ul>
-                        <li><a href="#">Bli medlem</a></li>
-                        <li><a href="#">Organisation</a></li>
-                        <li><a href="#">Gulisvärksamhet</a></li>
-                        <li><a href="#">Vänföreningar</a></li>
-                        <li><a href="#">Tofsguiden</a></li>
-                        <li><a href="#">Kontakta oss</a></li>
-                    </ul>
+            <div class="sidebar-container">
+                <h2 class="border-bottom">Evenemang</h2>
+                <div class="events-container">
+                    {% for ev in events%}
+                    <a href="#">
+                        <div class="content event-box">
+                            <h3 class="event-title">{{ ev.title }}</h3>
+                            <h5 class="event-date">{{ ev.event_date_start_pretty}}</h5>
+                        </div>
+                    </a>
+                    {% endfor %}
                 </div>
             </div>
         </div>
-
     </section>
-    <section id="news" class="news-events">
-        <div class="section-title">
-        <!-- TODO: Image/font? -->
-        <h2>Nyheter & Evenemang</h2>
-    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Accusantium ad, consequatur dolorum explicabo ipsam minima nesciunt obcaecati odit quae quisquam.</p>
-        </div>
-        <div class="comming-soon">
-            <h3>Kommer snart...</h3>
-        </div>
-        {% comment %}
-        <div class="container-box">
-            {% for ne in news_events%}
-                    <div class="content">
-                        <h2>{{ ne.title }}</h2>
-                        <h5>{{ ne.published_time }}</h5>
-                        <p>{{ ne.content|safe }}</p>
-                        <button class="news-button" type="button">Click me!</button>
-                    </div>
-            {% endfor %}
-        </div>
-        {% endcomment %}
-         </section>
 {% endblock %}
