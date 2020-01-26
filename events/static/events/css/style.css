@@ -55,7 +55,7 @@ h3{
 
 .title{
     grid-area: title;
-    background-color: rgb(36, 36, 36) ;
+    background-color: var(--primaryColorLighter) ;
     border-radius: 5px;
 }
 
@@ -91,7 +91,7 @@ h3{
 /*Actual date, not DaTe*/
 .date{
     grid-area: date;
-    background-color: rgb(97, 97, 97);
+    background-color: var(--primaryColorLight);
     border-radius: 5px;
     display: grid;
 }
