@@ -7,5 +7,4 @@ from . import models
 class StaticPageView(View):
     def get(self, request, slug):
         page = models.StaticPage.objects.get(slug=slug)
-
-        return render(request, 'staticpages/staticpage.html', {'page':page})
+        return render(request, 'staticpage.html', {'page':page})
