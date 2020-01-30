@@ -1,0 +1,60 @@
+body {
+    font-family: 'Josefin Sans', sans-serif;
+ }
+html{
+    scroll-behavior: smooth;
+}
+
+.container{
+    background-color: var(--primaryColor);
+    padding-top: 10vh;
+    min-height: 100vh;
+    color: var(--secondaryColor);    
+}
+
+.container{
+    display: grid;
+    grid-template-columns: 10vw 1fr 10vw;
+    grid-template-rows: auto;
+    grid-template-areas:
+    " . info .";
+}
+
+.container-info{
+    grid-area: info;
+}
+
+.font-size{
+    font-size: 3vw;
+}
+
+.heading{
+    border-bottom: solid;
+    border-width: 2px;
+    border-color: rgb(197, 197, 197);
+    display: inline-block;
+}
+
+table {
+  width: 100%;
+}
+
+td, th {
+  text-align: left;
+  padding: 8px;
+}
+
+@media screen and (min-width: 600px) {
+    .font-size{
+        font-size: 2vw;    
+    }
+  }
+
+  @media screen and (min-width: 1200px) {
+    .font-size{
+        font-size: 1.2vw;    
+    }
+    table {
+        width: 70%;
+      }
+  }
