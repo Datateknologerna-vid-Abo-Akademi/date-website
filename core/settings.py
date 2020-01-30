@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'date',
     'news.apps.NewsConfig',
     'events.apps.EventsConfig',
+    'staticpages.apps.StaticpagesConfig',
     'members',
     'archive.apps.ArchiveConfig',
     'django.contrib.admin',
