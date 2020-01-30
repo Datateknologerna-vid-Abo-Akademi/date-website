@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans "DaTe - Händelser" %}{% endblock %}
+
+{% block content %}
+    <div>
+        {% for page in staticpages %}
+            <a href="/static/{{page.slug}}">{{page.title}}</a>
+        {% endfor %}
+    </div>
+{% endblock %}
