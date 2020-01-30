@@ -23,7 +23,7 @@
         </div>
     {% endfor %}
 {% endif %}
-<form method="post">
+<form method="post" class="form-grid">
     {{ form.as_p }}
     <button class="button" type="submit">{% trans 'Anmälan' %}</button>
     {% csrf_token %}

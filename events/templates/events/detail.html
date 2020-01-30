@@ -5,16 +5,18 @@
 
 {% block content %}
     <head>
-        <link rel="stylesheet" href="{% static 'events/css/style.css' %}">
+        <link rel="stylesheet" href="{% static 'events/css/detail.css' %}">
     </head>
     <div class="container">
-        <h1>{{ event.title }}</h1>
         <div class="container-box">
-            <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
-            <p>{{ event.content | safe }}</p>
+            <div class="content-container text-size">
+                <h1 class="header">{{ event.title }}</h1>
+                <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
+                <p>{{ event.content | safe }}</p>
+            </div>
             {% if event.sign_up %}
-                <h2 id="sign-up">{% trans "Anmälning" %}</h2>
-                <div class="form-container">
+                <div class="form-container text-size">
+                    <h2 id="sign-up">{% trans "Anmälning" %}</h2>
                     {% if event.registration_is_open_members and user.is_authenticated %}
                         {% include 'events/registering.html' %}
                     {% elif event.registration_is_open_others %}
@@ -22,7 +24,7 @@
                     {% elif event.registation_past_due %}
                         <h4 id="no-registration">{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }} {% trans 'sedan' %}</h4>
                     {% elif event.event_is_full %}
-                        <p>{% trans "Evenemanget är tyvärr full." %}</p>
+                        <p>{% trans "Evenemanget är tyvärr fullt." %}</p>
                     {% elif not event.registation_past_due and user.is_authenticated %}
                         <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_members | timeuntil }}</p>
                     {% else %}
@@ -30,6 +32,7 @@
                     {% endif %}
                 </div>
         </div>
+        <div class="signed-up text-size">
             <h1>{% trans "Anmälda" %}</h1>
             <table>
                 <tr>
@@ -54,6 +57,7 @@
                     <p>{% trans "Inga deltagare..." %}</p>
                 {% endfor %}
             </table>
+        </div>
         {% endif %}
     </div>
 {% endblock %}

@@ -1,0 +1,149 @@
+
+.container{
+    background-color: var(--primaryColor);
+    padding-top: 10vh;
+    min-height: 100vh;
+    color: var(--secondaryColor);
+    font-family: 'Josefin Sans', sans-serif;
+    text-align: center;
+    align-content: start;
+}
+
+/*GRID STUFF*/
+.container{
+    display: grid;
+    grid-template-columns: 10vw 40vw 40vw 10vw;
+    grid-template-rows: auto;
+    grid-template-areas: 
+      ". coming coming ."
+      ". ended ended .";     
+      grid-row-gap: 50px;
+}
+
+.container-box-coming{
+    display: grid;
+    grid-row-gap: 2vh;
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+    grid-area: coming;   
+}
+
+.event-coming{
+    display: grid;
+    grid-template-columns: 20vw 30vw 30vw;
+    grid-template-rows: auto;
+    grid-template-areas:
+    "date title title";
+}
+
+/*Headers*/
+h1{
+    font-size: 4rem;
+}
+h2{
+    transition: color 0.2s ease;
+    font-size: 2rem;
+}
+h3{
+    font-size: 13px;
+}
+
+.content{
+    color: rgb(208, 255, 0);
+}
+
+.title{
+    grid-area: title;
+    background-color: var(--primaryColorLighter) ;
+    border-radius: 5px;
+}
+
+.btn{
+    -webkit-transition: all 0.2s;
+	-moz-transition: all 0.2s;
+    transition: all 0.2s;
+    border: 2px solid rgb(66, 66, 66);
+}
+
+.btn:after {
+	-webkit-transition: all 0.2s;
+	-moz-transition: all 0.2s;
+	transition: all 0.2s;
+}
+
+.btn:active {
+	border-color: #b6b6b6;
+	color: #c0c0c0;
+}
+
+.btn:hover {
+    background-color: #414141;
+    color: rgb(242, 253, 185);
+}
+
+.text-center{
+    place-self: center;
+    margin: 5px;
+    vertical-align: middle;
+}
+
+/*Actual date, not DaTe*/
+.date{
+    grid-area: date;
+    background-color: var(--primaryColorLight);
+    border-radius: 5px;
+    display: grid;
+}
+
+.container-box-ended {
+    grid-area: ended;
+}
+
+.event-ended{
+    display: grid;
+    grid-template-rows: 5vh;
+}
+
+.content-ended{
+    color: rgb(208, 255, 0);
+}
+
+.content-ended:hover{
+    color: rgb(65, 73, 22);
+}
+
+@media only screen and (min-width: 836px) {
+
+    .container{
+        display: grid;
+        grid-template-columns: 15vw 35vw 35vw 15vw;
+        grid-template-rows: auto;
+        grid-template-areas: 
+          ". coming coming ."
+          ". ended ended .";     
+    }
+
+    .event-coming{
+        display: grid;
+        grid-template-columns: 5vw 1fr 3fr 5vw;
+        grid-template-rows: auto;
+        grid-template-areas: 
+          ". date title .";    
+        justify-items: stretch; 
+    }
+
+    h1{
+        font-size: 5rem;
+    }
+
+    h2{
+        transition: color 0.2s ease;
+        font-size: 3rem;
+    }
+    
+    h3{
+        font-size: 3rem;
+    }
+
+  }
