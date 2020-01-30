@@ -10,7 +10,7 @@
         <a id="logo" href="{% url 'index' %}">"logo goes here"</a>
     <div class="nav-bar">
         <li><a href="{% url 'events:index' %}">{% trans 'Evenemang' %}</a></li>
-        <li><a href="{% url 'index' %}#news">{% trans 'Nyheter' %}</a></li>
+        <li><a href="{% url 'index' %}news">{% trans 'Nyheter' %}</a></li>
         <li><a href="{% url 'index' %}#about">{% trans 'Om oss' %}</a></li>
         {% if user.is_authenticated %}
             <div class="dropdown">

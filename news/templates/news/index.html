@@ -8,16 +8,16 @@
         <link rel="stylesheet" href="{% static 'news/css/style.css' %}">
     </head>
     <div class="container">
-    <div class="news-grid">
+    <div class="news-grid text-size">
         {% for news_item in latest_news_items %}
             <div class="news">
-                <a href="{% url 'news:detail' news_item.slug %}"><h2>{{ news_item.title }}</h2></a>
-                <h4>{{ news_item.author }}, {{ news_item.published_time }}</h4>
+                <a href="{% url 'news:detail' news_item.slug %}"><h2 class="heading">{{ news_item.title }}</h2></a>
+                <h4 class="author">{{ news_item.author }}, {{ news_item.published_time }}</h4>
                 <div class="news-content">
                     <p>{{ news_item.content | safe | truncatewords_html:"25" }}</p>
                 </div>
                 {% if news_item.content|wordcount > 25 %}
-                    <a href="{% url 'news:detail' news_item.slug %}"><p class="more-button">{% trans 'LÄSA MERA' %}</p></a>
+                    <a href="{% url 'news:detail' news_item.slug %}"><p class="more-button">{% trans 'LÄS MERA...' %}</p></a>
                 {% endif %}
             </div>
                     {% empty %}
