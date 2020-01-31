@@ -6,8 +6,11 @@ from django.utils import timezone
 from date.functions import slugify_max
 from events import models
 from events.models import Event
+import re
 
 logger = logging.getLogger('date')
+
+slug_transtable = str.maketrans("åäö ","aao_")
 
 class EventCreationForm(forms.ModelForm):
     user = None
@@ -33,15 +36,32 @@ class EventCreationForm(forms.ModelForm):
     class Media:
         js = ('js/eventform.js',)
 
+    def clean_slug(self):
+        slug = self.cleaned_data['slug']
+
+        if slug.strip() == "":
+            base_slug = self.cleaned_data['title'].lower().translate(slug_transtable)
+            base_slug = re.sub("[^a-zA-Z0-9_]*",'',base_slug)
+            base_slug = re.sub("__+",'_',base_slug)
+            slug = base_slug
+
+            collisions = Event.objects.filter(slug = slug)
+            suffix = 1
+            while collisions:
+                slug = base_slug+"_"+str(suffix)
+                collisions = Event.objects.filter(slug = slug)
+                suffix += 1
+        else:
+            slug = slugify_max(self.cleaned_data['slug'], max_length=models.POST_SLUG_MAX_LENGTH)
+
+        return slug
+
     def save(self, commit=True):
         post = super(EventCreationForm, self).save(commit=False)
 
         if self.user is None:
             return None
         post.author = self.user
-
-        # Generate slug
-        post.slug = slugify_max(self.data['slug'], max_length=models.POST_SLUG_MAX_LENGTH)
 
         if post.published:
             post.published_time = timezone.now()
