@@ -34,7 +34,7 @@ class Event(models.Model):
     published_time = models.DateTimeField(_('Publicerad'), editable=False, null=True, blank=True)
     modified_time = models.DateTimeField(_('Modifierad'), editable=False, null=True, blank=True)
     published = models.BooleanField(_('Publicera'), default=True)
-    slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
+    slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH, blank=True)
 
     class Meta:
         verbose_name = _('evenemang')
