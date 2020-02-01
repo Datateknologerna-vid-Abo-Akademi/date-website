@@ -51,8 +51,8 @@ class EventCreationForm(forms.ModelForm):
                 slug = base_slug+"_"+str(suffix)
                 collisions = Event.objects.filter(slug = slug)
                 suffix += 1
-        else:
-            slug = slugify_max(self.cleaned_data['slug'], max_length=models.POST_SLUG_MAX_LENGTH)
+        #slugify_max actually does a trim down to the size of the underlying database column
+        slug = slugify_max(slug, max_length=models.POST_SLUG_MAX_LENGTH)
 
         return slug
 
