@@ -185,23 +185,26 @@ c-132 -94 -567 -160 -888 -133 -145 12 -285 45 -355 84 -35 20 -37 24 -44 87
                         <h2 class="news-title">{{ ne.title }}</h2>
                         <h5 class="news-date">{{ ne.published_time }}</h5>
                         <div class="news-content">
-                            <p>{{ ne.content|safe|truncatewords_html:"20"}}</p>
+                            <p>{{ ne.content|safe|truncatewords_html:"50"}}</p>
                         </div>
-                        <a class="news-button" href="#">LÄS MERA...</a>
+                        <a class="news-button" href="{% url 'news:detail' ne.slug %}">Läs mera...</a>
                     </div>
                 {% endfor %}
             </div>
             <div class="sidebar-container">
                 <h2 class="border-bottom">Evenemang</h2>
                 <div class="events-container">
-                    {% for ev in events%}
-                    <a href="#">
-                        <div class="content event-box">
-                            <h3 class="event-title">{{ ev.title }}</h3>
-                            <h5 class="event-date">{{ ev.event_date_start_pretty}}</h5>
+                    {% for ev in events|slice:":5" %}
+                    <a href="{% url 'events:detail' ev.slug %}">
+                        <div class="event-box border-left">
+                            <h4 class="event-title">{{ ev.title }}  </h4>
+                            <p class="event-date">{{ ev.event_date_start_pretty}}</p>
                         </div>
                     </a>
                     {% endfor %}
+                    {% if events|length >= 5 %}
+                    <a class="more-events-button" href="{% url 'events:index'%}">Mera evenemang...</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
