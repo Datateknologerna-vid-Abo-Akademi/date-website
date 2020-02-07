@@ -5,7 +5,7 @@ from . import models
 LATEST_NEWS_POSTS = 10
 
 def index(request):
-    latest_news = models.Post.objects.filter(published=True).order_by('modified_time').reverse()[:LATEST_NEWS_POSTS]
+    latest_news = models.Post.objects.filter(published=True).reverse()[:LATEST_NEWS_POSTS]
     return render(request, 'news/index.html', {'latest_news_items': latest_news})
 
 def article(request, slug):
