@@ -25,3 +25,10 @@ a {
         font-size: 55%;
     }
 }
+
+.container-soft{
+    background-color: var(--primaryColor);
+    padding-top: 10vh;
+    min-height: 100vh;
+    color: var(--secondaryColor);
+}

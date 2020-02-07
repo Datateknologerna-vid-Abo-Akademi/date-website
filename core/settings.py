@@ -183,6 +183,9 @@ LOGIN_URL = '/members/login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
+# Read more here: https://simpleisbetterthancomplex.com/tutorial/2016/06/13/how-to-send-email.html
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 LOGGING = {
     'version': 1,
     'formatters': {
