@@ -27,6 +27,7 @@ urlpatterns = [
     path('', date.index, name='index'),
     path('news/', include('news.urls')),
     path('members/', include('django.contrib.auth.urls')),
+    path('members/', include('members.urls')),
     path('archive/', include('archive.urls')),
     path('events/', include('events.urls')),
     path('admin/', admin.site.urls),
