@@ -8,3 +8,4 @@ python-dateutil
 icalendar
 django-ical
 django-admin-ordering
+whitenoise
