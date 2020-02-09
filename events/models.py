@@ -166,7 +166,7 @@ class EventAttendees(models.Model):
 
     @register.filter
     def get_preference(self, key):
-        return self.preferences[key]
+        return self.preferences.get(key, "")
 
     def save(self, *args, **kwargs):
         if self.attendee_nr is None:
