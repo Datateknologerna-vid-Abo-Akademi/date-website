@@ -93,7 +93,7 @@ CHANNEL_LAYERS = {
         'CONFIG': {
             # TODO: change in production
             # "hosts": [('127.0.0.1', 6379)],
-            "hosts": [('172.19.0.1', 6379)],
+            "hosts": [('192.168.0.1', 6379)],
         },
     },
 }
@@ -155,8 +155,9 @@ LOCALE_PATHS = (
     'locale',
 )
 
-LANG_FINNISH = 'fi_FI'
-LANG_SWEDISH = 'sv_FI'
+# According to
+LANG_FINNISH = 'fi'
+LANG_SWEDISH = 'sv'
 
 LANGUAGE_CODE = LANG_SWEDISH
 

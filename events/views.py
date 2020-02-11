@@ -5,8 +5,12 @@ from django.http import HttpResponseForbidden
 from django.views.generic import DetailView, ListView
 from .models import Event
 from websocket import create_connection
+from websocket._exceptions import WebSocketBadStatusException
 import json
 
+import logging
+
+logger = logging.getLogger('date')
 
 class IndexView(ListView):
     model = Event
@@ -58,10 +62,13 @@ def ws_send(request, form):
     ws_schema = 'ws' if request.scheme == 'http' else 'wss'
     url = request.META.get('HTTP_HOST')
     path = ws_schema + '://' + url + '/ws' + request.path
-    ws = create_connection(path)
-    print("ws connected")
-    ws.send(json.dumps(ws_data(form.cleaned_data)))
-    ws.close()
+    try:
+        ws = create_connection(path)
+        ws.send(json.dumps(ws_data(form.cleaned_data)))
+        ws.close()
+    except WebSocketBadStatusException:
+        logger.error("Could not create connection for web socket")
+        # Alert Datörer
 
 
 def ws_data(form):
