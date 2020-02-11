@@ -6,6 +6,7 @@
     font-family: 'Josefin Sans', sans-serif;
     text-align: start;
     align-content: start;
+    font-size: 1.5em;
 }
 
 .container{
@@ -13,84 +14,45 @@
     grid-template-columns: 10vw 80vw 10vw;
     grid-template-rows: auto;
     grid-template-areas: 
-      ". box ."
-      ". signup .";     
+      ". information ."
+      ". signup-form ."
+      ". signed-table .";
       grid-row-gap: 50px;
 }
-
-.container-box{
-    grid-area: box;
-    display: grid;
-    grid-template-columns: 80vw;
-    grid-template-rows: auto;
-    grid-template-areas: 
-      "textstuff"
-      "form";
-    word-break: break-all;
-    word-break: break-word;
-    hyphens: auto;
+.container-text{
+    grid-area: information;
+}
+.container-text, h4 {
+    margin: 0.1em;
 }
 
-.content-container{
-    grid-area: textstuff;
-    font-size: 5vw;
+.container-form{
+    grid-area: signup-form;
 }
 
-.form-container{
-    grid-area: form;
-    display: grid;
+.container-signed {
+    grid-area: signed-table;
 }
 
-.signed-up{
-    grid-area: signup;
-    display: grid;
+.header {
+    margin: 0;
 }
 
-.text-size{
-    font-size: 3vw;
+table {
+    border-collapse: collapse;
+    width: 80%;
+    font-size: 1.3em;
 }
 
-.header{
-    font-size: 8vw;
+th {
+    padding-bottom: 1rem;
 }
 
-@media only screen and (min-width: 836px) {
- 
-    .container-box{
-        grid-area: box;
-        display: grid;
-        grid-template-columns: 10vw 60vw 10vw;
-        grid-template-rows: auto;
-        grid-template-areas: 
-          " . textstuff . "
-          " . form . ";     
-    }
-
-    .text-size{
-        font-size: 2vw;
-    }
-
-    .header{
-        font-size: 3vw;
-    }
-
-    @media only screen and (min-width: 1237px) {
-        .container-box{
-            grid-area: box;
-            display: grid;
-            grid-template-columns: 10vw 60vw 10vw;
-            grid-template-rows: auto;
-            grid-template-areas: 
-              " . textstuff . "
-              " . form . ";     
-        }
-
-        .text-size{
-            font-size: 1vw;
-        }
-
-        .header{
-            font-size: 3vw;
-        }
-    }
+th, td {
+    text-align: left;
+    padding: 8px;
+}
+tr:hover {
+    transition: 200ms;
+    background-color: var(--primaryColorLighter);
 }
