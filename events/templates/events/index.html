@@ -14,7 +14,7 @@
             <div class="event event-coming">
                     <a class="content title btn" href="{% url 'events:detail' event.slug %}">
                         <div class="text-center">
-                        <h2>{{ event.title }}</h2>
+                        <h2 class="event-title">{{ event.title }}</h2>
                         </div>
                     </a>
                 <div class="date">
@@ -29,7 +29,7 @@
             <h1 class="heading">{% trans "Tidigare händelser" %}</h1>
             {% for event in past_events %}
             <div class="event-ended">
-                <a class="content-ended" href="{% url 'events:detail' event.slug %}"><h2>{{ event.title }}</h2></a>
+                <a class="content-ended" href="{% url 'events:detail' event.slug %}"><h2 class="event-title">{{ event.title }}</h2></a>
             </div>
                 
             {% empty %}

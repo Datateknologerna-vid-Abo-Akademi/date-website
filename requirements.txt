@@ -8,3 +8,7 @@ python-dateutil
 icalendar
 django-ical
 django-admin-ordering
+whitenoise
+channels
+channels_redis
+websocket_client

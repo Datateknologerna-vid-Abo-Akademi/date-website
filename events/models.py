@@ -25,10 +25,9 @@ class Event(models.Model):
     sign_up = models.BooleanField(_('Anmälning'), default=True)
     sign_up_members = models.DateTimeField(_('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=timezone.now)
     sign_up_others = models.DateTimeField(_('Anmälan öppnas (övriga)'), null=True, blank=True, default=timezone.now)
-    sign_up_deadline = models.DateTimeField(_('Anmälningen stängs'), null=True, blank=True)
+    sign_up_deadline = models.DateTimeField(_('Anmälningen stängs'), null=True, blank=True, default=timezone.now)
     sign_up_cancelling = models.BooleanField(_('Avanmälning'), default=True)
-    sign_up_cancelling_deadline = models.DateTimeField(_('Avanmälningen stängs'), null=True,
-                                                       blank=True)
+    sign_up_cancelling_deadline = models.DateTimeField(_('Avanmälningen stängs'), null=True, blank=True, default=timezone.now)
     author = models.ForeignKey('members.Member', on_delete=models.CASCADE)
     created_time = models.DateTimeField(_('Skapad'), default=timezone.now)
     published_time = models.DateTimeField(_('Publicerad'), editable=False, null=True, blank=True)
@@ -131,7 +130,6 @@ class EventRegistrationForm(models.Model):
                             choices=(("text", "Text"), ("select", "Multiple choice"), ("checkbox", "Kryssryta")),
                             blank=True, max_length=255, null=True)
     required = models.BooleanField(_('Krävd'), default=False)
-    published = models.BooleanField(_('Visa'), default=True)
     public_info = models.BooleanField(_('Öppen info'), default=False)
     choice_list = models.CharField(_('Alternativ'), max_length=255, blank=True)
 
@@ -150,7 +148,7 @@ class EventAttendees(models.Model):
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
     attendee_nr = models.PositiveSmallIntegerField(_('#'))
     user = models.CharField(_('Namn'), blank=False, max_length=255)
-    email = models.EmailField(_('E-postadress'), blank=False, null=True)
+    email = models.EmailField(_('E-postadress'), blank=False, null=True, unique=False)
     preferences = JSONField(_('Svar'), default=list, blank=True)
     anonymous = models.BooleanField(_('Anonymt'), default=False)
     time_registered = models.DateTimeField(_('Registrerad'))
@@ -166,7 +164,7 @@ class EventAttendees(models.Model):
 
     @register.filter
     def get_preference(self, key):
-        return self.preferences[key]
+        return self.preferences.get(str(key), "")
 
     def save(self, *args, **kwargs):
         if self.attendee_nr is None:
@@ -175,4 +173,6 @@ class EventAttendees(models.Model):
             self.attendee_nr = (self.event.get_registrations().count()+1) * 10
         if self.time_registered is None:
             self.time_registered = timezone.now()
+        if isinstance(self.preferences, list):
+            self.preferences = {}
         super(EventAttendees, self).save(*args, **kwargs)

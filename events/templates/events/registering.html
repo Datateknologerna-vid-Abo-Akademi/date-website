@@ -5,10 +5,9 @@
     <link rel="stylesheet" href="{% static 'events/css/form.css' %}">
 </head>
 
-
 <p>{% trans "Anmälan stängs om " %}{{ event.sign_up_deadline | timeuntil }}</p>
-<p><b>{% trans "OBS!" %} </b>{% trans "Anmälningen är bindande om inget annat meddelas." %}</p>
-<p>{% trans "Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på förhinder." %}</p>
+<small>{% trans "OBS!" %} {% trans "Anmälningen är bindande om inget annat meddelas." %} <br>
+    {% trans "Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på förhinder." %}</small>
 {% if form.errors %}
     {% for field in form %}
         {% for error in field.errors %}
@@ -23,8 +22,8 @@
         </div>
     {% endfor %}
 {% endif %}
-<form method="post" class="form-grid">
+<form method="post" class="form" id="attend-form">
     {{ form.as_p }}
-    <button class="button" type="submit">{% trans 'Anmälan' %}</button>
+    <button class="button" type="submit">{% trans 'Anmäl dig' %}</button>
     {% csrf_token %}
 </form>
