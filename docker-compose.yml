@@ -25,6 +25,10 @@ services:
       - DB_PASSWORD=${DATE_DB_PASSWORD}
     depends_on:
       - db
+  redis:
+    image: redis:2.8
+    ports:
+      - ${REDIS_PORT}:6379
 
 volumes:
   date_postgres_data:
