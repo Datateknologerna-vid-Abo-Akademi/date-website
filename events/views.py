@@ -3,14 +3,15 @@ import os
 
 from django.http import HttpResponseForbidden
 from django.views.generic import DetailView, ListView
-from .models import Event
+from django.shortcuts import render
+from .models import Event, EventAttendees
 from websocket import create_connection
 from websocket._exceptions import WebSocketBadStatusException
 import json
-
 import logging
 
 logger = logging.getLogger('date')
+
 
 class IndexView(ListView):
     model = Event
@@ -18,9 +19,12 @@ class IndexView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(IndexView, self).get_context_data(**kwargs)
-        context['event_list'] = Event.objects.filter(published=True, event_date_end__gte=datetime.date.today()).order_by('event_date_start')
+        context['event_list'] = Event.objects.filter(published=True,
+                                                     event_date_end__gte=datetime.date.today()).order_by(
+            'event_date_start')
         context['past_events'] = Event.objects.filter(published=True, event_date_start__year=datetime.date.today().year,
-                                                      event_date_end__lte=datetime.date.today()).order_by('event_date_start').reverse()
+                                                      event_date_end__lte=datetime.date.today()).order_by(
+            'event_date_start').reverse()
         return context
 
 
@@ -52,10 +56,10 @@ class EventDetailView(DetailView):
     def form_valid(self, form):
         self.get_object().add_event_attendance(user=form.cleaned_data['user'], email=form.cleaned_data['email'],
                                                anonymous=form.cleaned_data['anonymous'], preferences=form.cleaned_data)
-        return self.render_to_response(self.get_context_data())
+        return render(self.request, self.template_name, self.get_context_data())
 
     def form_invalid(self, form):
-        return self.render_to_response(self.get_context_data(form=form))
+        return render(self.request, self.template_name, self.get_context_data(form=form))
 
 
 def ws_send(request, form):
