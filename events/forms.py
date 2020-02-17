@@ -75,7 +75,7 @@ class EventCreationForm(forms.ModelForm):
             post.sign_up_cancelling_deadline = None
 
         if commit:
-            post.save()
+            post.update_or_create(pk=post.pk)
         return post
 
 
@@ -119,5 +119,5 @@ class EventEditForm(forms.ModelForm):
             post.sign_up_cancelling_deadline = None
 
         if commit:
-            post.save()
+            post.update_or_create(pk=post.pk)
         return post
