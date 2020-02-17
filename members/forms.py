@@ -113,14 +113,14 @@ class SubscriptionPaymentForm(forms.ModelForm):
 
 
 class SignUpForm(forms.ModelForm):
-    # send_email = forms.BooleanField(required=False)
     username = forms.CharField(help_text='detta fält är inte obligatoriskt')
+    email = forms.EmailField(max_length=200, help_text='detta fält är obligatoriskt')
     password = forms.CharField(
         widget=forms.PasswordInput(),
-        required=False,
+        required=True,
         min_length=8,
         error_messages={'required': 'Password is required'},
-        help_text='detta fält är inte obligatoriskt'
+        help_text='detta fält är obligatoriskt'
     )
 
     class Meta:
@@ -137,16 +137,3 @@ class SignUpForm(forms.ModelForm):
             'country',
             'membership_type'
         )
-
-    def save(self, commit=True):
-        member = super(SignUpForm, self).save(commit=False)
-        # if not '@abo.fi' in self.cleaned_data['email']:
-        # logger.debug('Setting member password')
-        member.set_password(self.cleaned_data['password1'])
-        # else:
-        # TODO: send password creation email to member
-        # pass
-        if commit:
-            member.save()
-            logger.debug("Saved", member)
-        return member
