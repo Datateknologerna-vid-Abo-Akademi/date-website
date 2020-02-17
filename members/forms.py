@@ -40,25 +40,13 @@ class MemberCreationForm(forms.ModelForm):
             'groups',
         )
 
-    # def clean(self):
-    #     cleaned = self.cleaned_data
-    #     if cleaned.get('send_email') is False and not cleaned.get("password"):
-    #         self._errors['password'] = self.error_class(["Password is required if not sending email"])
-    #         del cleaned['password']
-    #     else:
-    #         return cleaned
-
     def save(self, commit=True):
         member = super(MemberCreationForm, self).save(commit=False)
-        #if not '@abo.fi' in self.cleaned_data['email']:
-            #logger.debug('Setting member password')
         member.set_password(self.cleaned_data['password'])
-        #else:
             # TODO: send password creation email to member
-            #pass
         if commit:
-            member.save()
-            logger.debug("Saved", member)
+            member.update_or_create(pk=member.pk)
+            logger.debug("Saved new member:", member)
         return member
 
 
@@ -87,7 +75,7 @@ class MemberUpdateForm(forms.ModelForm):
         if password:
             member.set_password(password)
         if commit:
-            member.save()
+            member.update_or_create(pk=member.pk)
         return member
 
 
@@ -118,6 +106,6 @@ class SubscriptionPaymentForm(forms.ModelForm):
             subscription_payment.date_expires = date_paid + delta
             logger.debug("Calculated expiry date for subscription: {}".format(subscription_payment.date_expires))
         if commit:
-            subscription_payment.save()
+            subscription_payment.update_or_create(pk=subscription_payment.pk)
             logger.debug("SubscriptionPayment saved")
         return subscription_payment

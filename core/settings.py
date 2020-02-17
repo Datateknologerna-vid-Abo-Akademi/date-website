@@ -36,8 +36,8 @@ ALLOWED_HOSTS = ['0.0.0.0', '127.0.0.1', 'localhost']
 
 INSTALLED_APPS = [
     'date',
-    'news.apps.NewsConfig',
-    'events.apps.EventsConfig',
+    'news',
+    'events',
     'members',
     'archive.apps.ArchiveConfig',
     'django.contrib.admin',
@@ -46,14 +46,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'ckeditor',
     'admin_ordering',
+    'ckeditor',
     'channels',
 ]
 
 MIDDLEWARE = [
-    #'django.middleware.security.SecurityMiddleware',
-    # TODO: add whitenoise middleware for production
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
