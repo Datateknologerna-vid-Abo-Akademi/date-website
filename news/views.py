@@ -4,17 +4,21 @@ from . import models
 
 LATEST_NEWS_POSTS = 10
 
+
 def index(request):
-    latest_news = models.Post.objects.filter(published=True).order_by('modified_time').reverse()[:LATEST_NEWS_POSTS]
+    latest_news = models.Post.objects.filter(published=True).reverse()[:LATEST_NEWS_POSTS]
     return render(request, 'news/index.html', {'latest_news_items': latest_news})
 
+
 def article(request, slug):
-    articles = models.Post.objects.filter(slug=slug, published=True).order_by('modified_time')
-    return render(request, 'news/article.html', {'articles': articles})
+    post = models.Post.objects.filter(slug=slug, published=True)
+    return render(request, 'news/article.html', {'article': post})
+
 
 def author(request, author):
     articles = models.Post.objects.filter(author__username__exact=author, published=True).order_by('modified_time')
-    return render(request, 'news/article.html', {'articles': articles})
+    return render(request, 'news/author.html', {'articles': articles})
+
 
 def section(request):
     pass

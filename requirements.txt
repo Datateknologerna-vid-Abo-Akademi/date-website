@@ -1,10 +1,14 @@
 django-ckeditor
 requests
 environ
-Django>=2.1,<2.2
+Django==2.2
 psycopg2-binary
 pillow
 python-dateutil
 icalendar
 django-ical
 django-admin-ordering
+whitenoise
+channels
+channels_redis
+websocket_client

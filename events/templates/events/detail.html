@@ -6,43 +6,44 @@
 {% block content %}
     <head>
         <link rel="stylesheet" href="{% static 'events/css/detail.css' %}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+        <script src="{% static 'js/live-attendee-list.js' %}"></script>
     </head>
     <div class="container">
-        <div class="container-box">
-            <div class="content-container text-size">
-                <h1 class="header">{{ event.title }}</h1>
-                <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
-                <p>{{ event.content | safe }}</p>
-            </div>
-            {% if event.sign_up %}
-                <div class="form-container text-size">
-                    <h2 id="sign-up">{% trans "Anmälning" %}</h2>
-                    {% if event.registration_is_open_members and user.is_authenticated %}
-                        {% include 'events/registering.html' %}
-                    {% elif event.registration_is_open_others %}
-                        {% include 'events/registering.html' %}
-                    {% elif event.registation_past_due %}
-                        <h4 id="no-registration">{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }} {% trans 'sedan' %}</h4>
-                    {% elif event.event_is_full %}
-                        <p>{% trans "Evenemanget är tyvärr fullt." %}</p>
-                    {% elif not event.registation_past_due and user.is_authenticated %}
-                        <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_members | timeuntil }}</p>
-                    {% else %}
-                        <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_others | timeuntil }}</p>
-                    {% endif %}
-                </div>
+        <div class="container-text">
+            <h1 class="header">{{ event.title }}</h1>
+            <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
+            <p>{{ event.content | safe }}</p>
         </div>
-        <div class="signed-up text-size">
+        {% if event.sign_up %}
+            <div class="container-form">
+                <h2 id="sign-up">{% trans "Anmälning" %}</h2>
+                {% if event.registration_is_open_members and user.is_authenticated %}
+                    {% include 'events/registering.html' %}
+                {% elif event.registration_is_open_others %}
+                    {% include 'events/registering.html' %}
+                {% elif event.registation_past_due %}
+                    <h4 id="no-registration">{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }} {% trans 'sedan' %}</h4>
+                {% elif event.event_is_full %}
+                    <p>{% trans "Evenemanget är tyvärr fullt." %}</p>
+                {% elif not event.registation_past_due and user.is_authenticated %}
+                    <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_members | timeuntil }}</p>
+                {% else %}
+                    <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_others | timeuntil }}</p>
+                {% endif %}
+            </div>
+            <div class="container-signed">
             <h1>{% trans "Anmälda" %}</h1>
-            <table>
-                <tr>
-                    {% if event.get_registrations %}
+            <table id="attendees">
+                <tr id="attendees-header"
+                    {% if not event.get_registrations %} style="display: none;"
+                    {% endif %}>
                         <th>#</th>
                         <th>{% trans "Namn" %}</th>
-                    {% endif %}
-                    {% for preference in event.get_registration_form_public_info reversed %}
-                        <th>{{ preference }}</th>
-                    {% endfor %}
+                        {% for preference in event.get_registration_form_public_info reversed %}
+                            <th>{{ preference }}</th>
+                        {% endfor %}
                 </tr>
                 {% for attendee in event.get_registrations %}
                     <tr>
@@ -54,7 +55,7 @@
                         {% endfor %}
                     </tr>
                 {% empty %}
-                    <p>{% trans "Inga deltagare..." %}</p>
+                    <p id="no-attendee">{% trans "Inga anmälda, var det första att anmäla sig." %}</p>
                 {% endfor %}
             </table>
         </div>

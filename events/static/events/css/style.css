@@ -5,8 +5,8 @@
     min-height: 100vh;
     color: var(--secondaryColor);
     font-family: 'Josefin Sans', sans-serif;
-    text-align: center;
     align-content: start;
+    text-align: center;
 }
 
 /*GRID STUFF*/
@@ -57,6 +57,7 @@ h3{
     grid-area: title;
     background-color: var(--primaryColorLighter) ;
     border-radius: 5px;
+    text-align: center;
 }
 
 .btn{
@@ -94,15 +95,19 @@ h3{
     background-color: var(--primaryColorLight);
     border-radius: 5px;
     display: grid;
+    text-align: center;
 }
 
 .container-box-ended {
     grid-area: ended;
+    
+}
+
+.event-title{
+    margin: 10px;
 }
 
 .event-ended{
-    display: grid;
-    grid-template-rows: 5vh;
 }
 
 .content-ended{

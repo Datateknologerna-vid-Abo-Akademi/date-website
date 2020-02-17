@@ -1,10 +1,16 @@
 import datetime
+import os
 
 from django.http import HttpResponseForbidden
 from django.views.generic import DetailView, ListView
-
 from .models import Event
+from websocket import create_connection
+from websocket._exceptions import WebSocketBadStatusException
+import json
 
+import logging
+
+logger = logging.getLogger('date')
 
 class IndexView(ListView):
     model = Event
@@ -12,18 +18,18 @@ class IndexView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(IndexView, self).get_context_data(**kwargs)
-        context['event_list'] = Event.objects.filter(published=True, event_date_end__gte=datetime.date.today())
+        context['event_list'] = Event.objects.filter(published=True, event_date_end__gte=datetime.date.today()).order_by('event_date_start')
         context['past_events'] = Event.objects.filter(published=True, event_date_start__year=datetime.date.today().year,
-                                                      event_date_end__lte=datetime.date.today())
+                                                      event_date_end__lte=datetime.date.today()).order_by('event_date_start').reverse()
         return context
 
 
-class DetailView(DetailView):
+class EventDetailView(DetailView):
     model = Event
     template_name = 'events/detail.html'
 
     def get_context_data(self, **kwargs):
-        context = super(DetailView, self).get_context_data(**kwargs)
+        context = super(EventDetailView, self).get_context_data(**kwargs)
         form = kwargs.pop('form', None)
         if form:
             context['form'] = form
@@ -33,9 +39,12 @@ class DetailView(DetailView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if self.object.sign_up and self.object.published and (request.user.is_authenticated and self.object.registration_is_open_members() or self.object.registration_is_open_others()):
+        if self.object.sign_up and self.object.published and (request.user.is_authenticated
+                                                              and self.object.registration_is_open_members()
+                                                              or self.object.registration_is_open_others()):
             form = self.object.make_registration_form().__call__(data=request.POST)
             if form.is_valid():
+                ws_send(request, form)
                 return self.form_valid(form)
             return self.form_invalid(form)
         return HttpResponseForbidden()
@@ -47,3 +56,24 @@ class DetailView(DetailView):
 
     def form_invalid(self, form):
         return self.render_to_response(self.get_context_data(form=form))
+
+
+def ws_send(request, form):
+    ws_schema = 'ws' if request.scheme == 'http' else 'wss'
+    url = request.META.get('HTTP_HOST')
+    path = ws_schema + '://' + url + '/ws' + request.path
+    try:
+        ws = create_connection(path)
+        ws.send(json.dumps(ws_data(form.cleaned_data)))
+        ws.close()
+    except WebSocketBadStatusException:
+        logger.error("Could not create connection for web socket")
+        # Alert Datörer
+
+
+def ws_data(form):
+    pref = dict(form)  # Creates copy of form
+    pref['user'] = "Anonymous" if pref['anonymous'] else pref['user']
+    del pref['anonymous']
+    del pref['email']
+    return {"data": pref}

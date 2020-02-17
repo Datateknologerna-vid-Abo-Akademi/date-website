@@ -1,21 +1,35 @@
-#id_user{
-    border-radius: 5px;
-    width: 70vw;
-    height: 3vh;
-    font-size: 5vw;
+.form p{
+    margin-left: 1em;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-bottom: .5em;
+    width: 30vw
 }
-#id_email{
-    border-radius: 5px;
-    width: 70vw;
-    height: 3vh;
-    font-size: 5vw;
+.form, p:nth-child(4) {
+    margin-top: 2em;
 }
 
-#id_anonymous{
-    height: 1.5vh;
-    scale: 1.5;
-    }
-
+.form p input[type=text],input[type=email], input[type=select] {
+    padding: 3px;
+    border-radius: 5px;
+    width: 20vw;
+    height: 3vh;
+    font-size: 1.3em;
+}
+.form p select {
+    display: block;
+    font-size: 16px;
+    font-weight: 700;
+    padding: .6em 1.4em .5em .8em;
+    color: var(--primaryColorLight);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    border: 1px solid var(--primaryColorLight);
+    box-shadow: 0 1px 0 1px rgba(255,255,255,0.4);
+    border-radius: .5em;
+}
 .button{
     background-color: rgb(36, 36, 36);
     border: none;
@@ -33,32 +47,13 @@
     background-color: rgb(80, 80, 80);
     color: rgb(208, 255, 0);
 }
-    
+
 .button:active{
     background-color: #414141;;
 }
 
-tbody{
-    display: grid;
-    
-}
-
-th{
-    padding: 0.3vh;
-}
-
-td{
-    padding: 0.3vh;
-}
-
 @media only screen and (min-width: 675px) {
-    #id_user{
-        border-radius: 5px;
-        width: 50vw;
-        height: 3vh;
-        font-size: 3vw;
-    }
-    #id_email{
+    form p input{
         border-radius: 5px;
         width: 50vw;
         height: 3vh;
@@ -67,13 +62,7 @@ td{
 }
 
 @media only screen and (min-width: 836px) {
-    #id_user{
-        border-radius: 5px;
-        width: 25vw;
-        height: 3vh;
-        font-size: 1.5vw;
-    }
-    #id_email{
+    form p input{
         border-radius: 5px;
         width: 25vw;
         height: 3vh;
@@ -84,18 +73,5 @@ td{
 @media only screen and (min-width: 1237px) {
     input{
         border-radius: 3px;
-    }
-
-    #id_user{
-        border-radius: 5px;
-        width: 20vw;
-        height: 3vh;
-        font-size: 1.3vw;
-    }
-    #id_email{
-        border-radius: 5px;
-        width: 20vw;
-        height: 3vh;
-        font-size: 1.3vw;
     }
 }

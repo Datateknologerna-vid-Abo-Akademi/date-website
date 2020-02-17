@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% load i18n %}
+{% load static %}
+{% block title %}{% trans 'Användarinformation' %}{% endblock %}
+{% block content %}
+    <head>
+        <link rel="stylesheet" href="{% static 'members/css/userinfo.css' %}" type="text/css">
+    </head>
+    <div class="container">
+        <div class="container-info font-size">
+            {% if user.is_authenticated %}
+            <h1 class="heading"> {{user.username}} </h1>
+            <table>
+                <tr>
+                    <td>Mail:</td>
+                    <td>{{user.email}}</td>
+                </tr>
+                <tr>
+                    <td>Firstname:</td>
+                    <td>{{user.first_name}}</td>
+                </tr>
+                <tr>
+                    <td>Lastname:</td>
+                    <td>{{user.last_name}}</td>
+                </tr>
+                <tr>
+                    <td>Phone number:</td>
+                    <td>{{user.phone}}</td>
+                </tr>
+                <tr>
+                    <td>Addres:</td>
+                    <td>{{user.address}}</td>
+                </tr>
+                <tr>
+                    <td>Zip code:</td>
+                    <td>{{user.zip_code}}</td>
+                </tr>
+                <tr>
+                    <td>City:</td>
+                    <td>{{user.city}}</td>
+                </tr>
+                <tr>
+                    <td>Country</td>
+                    <td>{{user.country}}</td>
+                </tr>
+                <tr>
+                    <td>Membership type:</td>
+                    <td>{{user.membership_type}}</td>
+                </tr>
+                <tr>
+                    <td>Is active:</td>
+                    <td>{{user.is_active}}</td>
+                </tr>
+            </table>
+            {% else %}
+            <p>Log in to view info</p>
+            {% endif %}
+        </div>
+    </div>
+
+ {% endblock %} 

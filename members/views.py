@@ -17,3 +17,8 @@ def signup(request):
     else:
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form})
+
+class EditView(View):
+    def get(self, request):
+        user = request.user
+        return render(request, 'userinfo.html', {"user":user})
