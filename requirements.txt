@@ -1,7 +1,7 @@
 django-ckeditor
 requests
 environ
-Django==3.0
+Django==3.0.3
 psycopg2-binary
 pillow
 python-dateutil
