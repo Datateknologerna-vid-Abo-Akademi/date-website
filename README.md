@@ -46,6 +46,8 @@ date-start
 
 and make sure everything starts ok.
 
+If the `date-start` command complains about docker not being found, make sure that your user account is in the `docker` group (with command `groups $USER`). If it is not, run `usermod -aG docker $USER`, and restart your bash session!
+
 *TODO: Is migrate needed here?*
 
 In a new window where you remember to run `source $USER.env`, run
