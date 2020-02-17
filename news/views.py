@@ -11,7 +11,7 @@ def index(request):
 
 
 def article(request, slug):
-    post = models.Post.objects.filter(slug=slug, published=True)
+    post = models.Post.objects.get(slug=slug, published=True)
     return render(request, 'news/article.html', {'article': post})
 
 
