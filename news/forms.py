@@ -37,7 +37,7 @@ class PostCreationForm(forms.ModelForm):
             post.published_time = timezone.now()
 
         if commit:
-            post.save()
+            post.update_or_create(pk=post.pk)
         return post
 
 
@@ -62,5 +62,5 @@ class PostEditForm(forms.ModelForm):
         post.modified_time = timezone.now()
 
         if commit:
-            post.save()
+            post.update_or_create(pk=post.pk)
         return post
