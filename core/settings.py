@@ -151,7 +151,6 @@ LOCALE_PATHS = (
     'locale',
 )
 
-# According to
 LANG_FINNISH = 'fi'
 LANG_SWEDISH = 'sv'
 
@@ -194,6 +193,15 @@ MEDIA_URL = '/media/'
 LOGIN_URL = '/members/login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+# Read more here: https://simpleisbetterthancomplex.com/tutorial/2016/06/13/how-to-send-email.html
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS')
+EMAIL_HOST = os.environ.get('EMAIL_HOST')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = os.environ.get('EMAIL_PORT')
 
 LOGGING = {
     'version': 1,

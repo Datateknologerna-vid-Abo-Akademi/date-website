@@ -1,6 +1,7 @@
 from django import forms
 from django.forms.widgets import PasswordInput, TextInput
-
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 
 
 from dateutil.relativedelta import relativedelta
@@ -109,3 +110,30 @@ class SubscriptionPaymentForm(forms.ModelForm):
             subscription_payment.update_or_create(pk=subscription_payment.pk)
             logger.debug("SubscriptionPayment saved")
         return subscription_payment
+
+
+class SignUpForm(forms.ModelForm):
+    username = forms.CharField(help_text='detta fält är inte obligatoriskt')
+    email = forms.EmailField(max_length=200, help_text='detta fält är obligatoriskt')
+    password = forms.CharField(
+        widget=forms.PasswordInput(),
+        required=True,
+        min_length=8,
+        error_messages={'required': 'Password is required'},
+        help_text='detta fält är obligatoriskt'
+    )
+
+    class Meta:
+        model = Member
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'phone',
+            'address',
+            'zip_code',
+            'city',
+            'country',
+            'membership_type'
+        )

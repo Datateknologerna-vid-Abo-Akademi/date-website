@@ -5,7 +5,7 @@
 {% block title %}Log in{% endblock %}
 {% block content %}
     <head>
-        <link rel="stylesheet" href="{% static 'members/login.css' %}">
+        <link rel="stylesheet" href="{% static 'members/style.css' %}">
     </head>
 <div class="login-page">
     <div class="form">
@@ -16,7 +16,7 @@
             <button class="button" type="submit">Login</button>
         </form>
             <a href="{% url 'password_reset' %}"><p>{% trans 'Glömt lösenordet?' %}</p></a>
-            <a href="#"><p>{% trans 'Registrera dig' %}</p></a>
+            <a href="{% url 'members:signup' %}"><p>{% trans 'Registrera dig' %}</p></a>
     </div>
 </div>
 {% endblock %}

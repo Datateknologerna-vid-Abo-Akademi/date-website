@@ -12,3 +12,4 @@ whitenoise
 channels
 channels_redis
 websocket_client
+six
