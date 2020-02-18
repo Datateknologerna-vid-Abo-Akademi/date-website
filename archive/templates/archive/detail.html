@@ -5,62 +5,52 @@
     <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
     <link rel="script" href="{% static 'archive/js/scripts.js' %}">
     <div class="container-soft">
-
         <h2>{{ collection.title }}</h2>
         <p>Published on {{ collection.pub_date_pretty }}</p>
-        <p><a href="{% url 'archive:pictures' %}" class="button">Return</a>
-            {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse"%}
-            <a class="button" href="{% url 'archive:edit' collection.id %}">edit</a></p>
-            {% endif %}
-        {% if error_msg %}
+            {% if error_msg %}
             <p>{{ error_msg }}</p>
         {% endif %}
-
-        <div class="picture-frame">
-        <div class="column-frame">
-        {% for picture in collection.picture_set.all %}
-            <img id="picture-{{ forloop.counter }}" onclick="imageClick({{ forloop.counter }})" src="{{ picture.image.url }}" class="smaller-img">
-            {% if forloop.counter|arrangePictures:collection.picture_set.count %}
-                </div><div class="column-frame">
+        <p><a href="{% url 'archive:pictures' %}" class="button">Return</a>
+            {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse"%}
+            <a class="button" href="{% url 'admin:archive_collection_change' collection.id %}">edit</a></p>
             {% endif %}
-            {% empty %}
-            <h3>No {{ collection.type }} to show.</h3>
-        {% endfor %}
+        {% for picture in collection.picture_set.all %}
+            <div style="display: inline-block;">
+                <img id="picture-{{ forloop.counter }}" onclick="imageClick({{ forloop.counter }})" src="{{ picture.image.url }}" class="gallery-item">
             </div>
-        </div>
+        {% endfor %}
+        <p><a href="{% url 'archive:pictures' %}">Return</a></p>
+    </div>
+    <script>
+        function imageClick(id) {
+           let element = document.getElementById("picture-" + id);
+           element.classList.toggle("enlarge");
+        }
 
+        document.addEventListener("keydown", cycleEnlargedImage, true);
 
-
-        <script>
-            function imageClick(id) {
-               let element = document.getElementById("picture-" + id);
-               element.classList.toggle("enlarge");
-            }
-
-            document.addEventListener("keydown", cycleEnlargedImage, true);
-
-            function cycleEnlargedImage(e) {
-                let keyCode = e.keyCode;
-                if(keyCode === 37){
-                    let element = document.getElementsByClassName("enlarge")[0];
-                    if (element){
-                        let element_id = element.id.split("-")[1];
-                        if( element_id > 1){
-                            imageClick(element_id);
-                            imageClick(parseInt(element_id)-1);
-                        }
-                    }
-                }
-                else if(keyCode === 39){
-                    let element = document.getElementsByClassName("enlarge")[0];
-                    if (element){
-                        let element_id = element.id.split("-")[1];
-                        if( element_id < document.getElementsByClassName("smaller-img").length){
-                            imageClick(element_id);
-                            imageClick(parseInt(element_id)+1);
-                        }
+        function cycleEnlargedImage(e) {
+            let keyCode = e.keyCode;
+            if(keyCode === 37){
+                let element = document.getElementsByClassName("enlarge")[0];
+                if (element){
+                    let element_id = element.id.split("-")[1];
+                    if( element_id > 1){
+                        imageClick(element_id);
+                        imageClick(parseInt(element_id)-1);
                     }
                 }
             }
-        </script>
-    {% endblock %}
+            else if(keyCode === 39){
+                let element = document.getElementsByClassName("enlarge")[0];
+                if (element){
+                    let element_id = element.id.split("-")[1];
+                    if( element_id < document.getElementsByClassName("gallery-item").length){
+                        imageClick(element_id);
+                        imageClick(parseInt(element_id)+1);
+                    }
+                }
+            }
+        }
+    </script>
+{% endblock %}

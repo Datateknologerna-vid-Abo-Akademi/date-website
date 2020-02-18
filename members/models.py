@@ -44,7 +44,7 @@ ORDINARY_MEMBER = 2
 SUPPORTING_MEMBER = 3
 SENIOR_MEMBER = 4
 
-MEMBERSHP_TYPES = (
+MEMBERSHIP_TYPES = (
     (FRESHMAN, _('Gulnäbb')),
     (ORDINARY_MEMBER, _('Ordinarie medlem')),
     (SUPPORTING_MEMBER, _('Stödjande medlem')),
@@ -62,8 +62,9 @@ class Member(AbstractBaseUser, PermissionsMixin):
     zip_code = models.CharField(_('Postkod'), max_length=5, blank=True)
     city = models.CharField(_('Postanstalt'), max_length=30, blank=True)
     country = models.CharField(_('Land'), max_length=30, default=_('Finland'), blank=True)
-    membership_type = models.IntegerField(_('Medlemskap'), default=FRESHMAN, choices=MEMBERSHP_TYPES, blank=False)
+    membership_type = models.IntegerField(_('Medlemskap'), default=FRESHMAN, choices=MEMBERSHIP_TYPES, blank=False)
     is_active = models.BooleanField(default=True)
+    email_confirmed = models.BooleanField(default=False)
 
     objects = MemberManager()
 

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <title>Page not found</title>
+    <link href="{% static 'css/error-view.css' %}" rel="stylesheet">
+</head>
+<body>
+    <div class="container-soft">
+        <div class="text-wrapper">
+            <h1>- 500 -</h1>
+            <h2>{% trans 'Server fel, försök pånytt om ett tag' %}</h2>
+            <p><a href="{% url 'index' %}">{% trans 'Till startsidan' %}</a></p>
+        </div>
+    </div>
+
+</body>
+{% endblock %}

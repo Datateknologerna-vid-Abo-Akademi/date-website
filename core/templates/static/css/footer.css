@@ -16,9 +16,8 @@ footer p{
 }
 
 .img-container {
-    width: 200px;
-    height: 200px;
-    box-shadow: 1px -1px rgba(255,255,255,0.5);
+    width: 150px;
+    height: 150px;
     border-radius: 50%;
     grid-area: logo;
     margin-top: 1rem;

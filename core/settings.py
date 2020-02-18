@@ -36,8 +36,8 @@ ALLOWED_HOSTS = ['0.0.0.0', '127.0.0.1', 'localhost']
 
 INSTALLED_APPS = [
     'date',
-    'news.apps.NewsConfig',
-    'events.apps.EventsConfig',
+    'news',
+    'events',
     'members',
     'archive.apps.ArchiveConfig',
     'django.contrib.admin',
@@ -46,14 +46,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'ckeditor',
     'admin_ordering',
+    'ckeditor',
     'channels',
 ]
 
 MIDDLEWARE = [
-    #'django.middleware.security.SecurityMiddleware',
-    # TODO: add whitenoise middleware for production
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -153,7 +151,6 @@ LOCALE_PATHS = (
     'locale',
 )
 
-# According to
 LANG_FINNISH = 'fi'
 LANG_SWEDISH = 'sv'
 
@@ -196,6 +193,15 @@ MEDIA_URL = '/media/'
 LOGIN_URL = '/members/login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+# Read more here: https://simpleisbetterthancomplex.com/tutorial/2016/06/13/how-to-send-email.html
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS')
+EMAIL_HOST = os.environ.get('EMAIL_HOST')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = os.environ.get('EMAIL_PORT')
 
 LOGGING = {
     'version': 1,

@@ -40,7 +40,6 @@ def remove_file(request, collection_id, file_id):
     file = Picture.objects.get(pk=file_id)
     file.delete()
     collection = Collection.objects.get(pk=collection_id)
-    print(collection.picture_set.count())
     if collection.picture_set.count() > 0:
         return render(request, 'archive/edit.html', {'collection': collection})
     collection.delete()
@@ -72,4 +71,5 @@ def clean_media(request):
     for f in folders:
         print(f[0])
         print(f[2])
+        # If picture not in any collection, remove it.
     return redirect('archive:pictures')
