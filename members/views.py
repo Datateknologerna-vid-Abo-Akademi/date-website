@@ -44,7 +44,6 @@ def signup(request):
                 'token': account_activation_token.make_token(user),
             })
             to_email = os.environ.get('EMAIL_HOST_RECEIVER')
-            to_email = "jifagerh@abo.fi"
             email = EmailMessage(
                         mail_subject, message, to=[to_email]
             )
