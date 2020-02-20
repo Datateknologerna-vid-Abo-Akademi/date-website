@@ -206,10 +206,10 @@ LOGOUT_REDIRECT_URL = '/'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # During development
 
 EMAIL_USE_TLS = True
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_HOST_USER = "fagerholm.jimmy@gmail.com" # env('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = "pthxuxtjxldxpxpc" # env.email_url('EMAIL_HOST_PASSWORD')
-EMAIL_PORT = 587 # env('EMAIL_PORT')
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env.email_url('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = env('EMAIL_PORT')
 
 LOGGING = {
     'version': 1,
