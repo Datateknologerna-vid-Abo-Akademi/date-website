@@ -64,8 +64,6 @@ class Member(AbstractBaseUser, PermissionsMixin):
     country = models.CharField(_('Land'), max_length=30, default=_('Finland'), blank=True)
     membership_type = models.IntegerField(_('Medlemskap'), default=FRESHMAN, choices=MEMBERSHIP_TYPES, blank=False)
     is_active = models.BooleanField(default=True)
-    email_confirmed = models.BooleanField(default=False)
-
     objects = MemberManager()
 
     USERNAME_FIELD = 'username'

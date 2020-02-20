@@ -1,6 +1,6 @@
 django-ckeditor
 requests
-environ
+django-environ
 Django==3.0.3
 psycopg2-binary
 pillow
