@@ -32,6 +32,7 @@
 
 .container-signed {
     grid-area: signed-table;
+    margin-bottom: 20rem;
 }
 
 .header {
