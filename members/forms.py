@@ -44,7 +44,6 @@ class MemberCreationForm(forms.ModelForm):
     def save(self, commit=True):
         member = super(MemberCreationForm, self).save(commit=False)
         member.set_password(self.cleaned_data['password'])
-            # TODO: send password creation email to member
         if commit:
             member.update_or_create(pk=member.pk)
             logger.debug("Saved new member:", member)
@@ -71,8 +70,8 @@ class MemberUpdateForm(forms.ModelForm):
 
     def save(self, commit=True):
         member = super(MemberUpdateForm, self).save(commit=False)
-        # password = self.cleaned_data["password"]
-        password = None
+        password = self.cleaned_data["password"]
+        # password = None
         if password:
             member.set_password(password)
         if commit:
@@ -135,5 +134,6 @@ class SignUpForm(forms.ModelForm):
             'zip_code',
             'city',
             'country',
-            'membership_type'
+            'membership_type',
+            'password'
         )

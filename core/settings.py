@@ -12,6 +12,14 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 # update
 
 import os
+import environ
+
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
+# reading .env file
+environ.Env.read_env()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -194,14 +202,14 @@ LOGIN_URL = '/members/login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# Read more here: https://simpleisbetterthancomplex.com/tutorial/2016/06/13/how-to-send-email.html
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # During development
 
-EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS')
-EMAIL_HOST = os.environ.get('EMAIL_HOST')
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-EMAIL_PORT = os.environ.get('EMAIL_PORT')
+EMAIL_USE_TLS = True
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_HOST_USER = "fagerholm.jimmy@gmail.com" # env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = "pthxuxtjxldxpxpc" # env.email_url('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = 587 # env('EMAIL_PORT')
 
 LOGGING = {
     'version': 1,
