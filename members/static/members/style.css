@@ -12,36 +12,40 @@ form{
 }
 
 .login-page {
-    max-width: 360px;
+    width: 360px;
+    max-width: 95vw;
     padding: 15% 0 0;
     margin: auto auto 10rem auto;
 }
 
 .signup-page {
     width: 480px;
+    max-width: 95vw;
     padding: 12% 0 0;
     margin: auto auto 10rem auto;
 }
 .forgot-password-page {
     width: 480px;
+    max-width: 95vw;
     padding: 12% 0 0;
     margin: auto auto 10rem auto;
 }
 .reset-password-page {
     width: 480px;
+    max-width: 95vw;
     padding: 12% 0 0;
     margin: auto auto 10rem auto;
 }
 .center-box {
     font-size: 2em;
     background-color: var(--secondaryColor);
-    max-width: 620px;
+    width: 620px;
+    max-width: 95vw;
     padding: 3em 3.5em;
     text-align: center;
     -webkit-box-shadow: 0 0 20px 0 rgba(255,255,255,0.5), 0 5px 5px 0 rgba(200,200,200,0.12);
             box-shadow: 0 0 20px 0 rgba(255,255,255,0.5), 0 5px 5px 0 rgba(200,200,200,0.12);
-    width: 620px;
-    margin: 10rem auto 10rem auto;
+    margin: 20rem auto 10rem auto;
 }
 
 .center-box a {
@@ -157,7 +161,13 @@ font-size: 2em;
 .container .info span .fa {
   color: #EF3B3A;
 }
-p {
+.container-soft p, .center-box p, .reset-password-page p, .form p {
     padding-top: 3px;
     color: var(--primaryColor);
+}
+
+@media screen and (max-width: 600px) {
+    .center-box {
+        padding: 2rem 1rem;
+    }
 }
