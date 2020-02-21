@@ -5,23 +5,24 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css"
           integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css?family=Josefin+Sans" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
 </head>
 <div class="header-bar">
-        <a id="logo" href="{% url 'index' %}">"logo goes here"</a>
+    <a id="logo" href="{% url 'index' %}">"logo goes here"</a>
     <div class="nav-bar">
-        <li><a href="{% url 'events:index' %}">{% trans 'Evenemang' %}</a></li>
-        <li><a href="{% url 'index' %}news">{% trans 'Nyheter' %}</a></li>
-        <li><a href="{% url 'index' %}#about">{% trans 'Om oss' %}</a></li>
+        <li id="nav-event" ><a href="{% url 'events:index' %}">{% trans 'Evenemang' %}</a></li>
+        <li id="nav-news"><a href="{% url 'news:index' %}">{% trans 'Nyheter' %}</a></li>
+        <li id="nav-about"><a href="{% url 'index' %}#about">{% trans 'Om oss' %}</a></li>
         {% if user.is_authenticated %}
-            <div class="dropdown">
+            <div id="nav-member" class="dropdown">
                 <button class="dropbtn">
                     {% trans 'Medlemmar' %}
                 </button>
                 <div class="dropdown-content">
                     <a href="{% url 'archive:pictures' %}">{% trans 'Bilder' %}</a>
                     <a href="#">{% trans 'Guider' %}</a>
+                    <a href="{% url 'members:info' %}">{% trans 'Min profil' %}</a>
                     <a href="/admin">Admin</a>
-                    <a href="/members/info">{% trans 'Min profil' %}</a>
                     <a href="{% url 'logout' %}">{% trans 'Log out' %}</a>
                 </div>
             </div>
@@ -29,13 +30,60 @@
             <li><a href="{% url 'login' %}">{% trans 'Logga in' %}</a></li>
         {% endif %}
     </div>
-    <div class="mobile-dropdown"><button class="dropbtn"><i class="fas fa-bars"></i></button>
-        <div class="mobile-nav-bar">
+    <div id="mobile-dropdown" class="mobile-dropdown"><button id="mobile-dropbtn" class="dropbtn"><i class="fas fa-bars"></i></button>
+        <div id="mobile-group" class="mobile-nav-bar">
+            <li><a href="{% url 'index' %}">{% trans 'Startsidan' %}</a></li>
             <li><a href="{% url 'events:index' %}">{% trans 'Händelser' %}</a></li>
             <li><a href="{% url 'news:index' %}">{% trans 'Nyheter' %}</a></li>
-            <li><a href="{% url 'index' %}">{% trans 'Startsidan' %}</a></li>
             <li><a href="{% url 'index' %}#about">{% trans 'Om oss' %}</a></li>
+            {% if user.is_authenticated %}
+                <div id="mobile-nav-member" class="dropdown">
+                <li class="dropbtn">
+                    {% trans 'Medlemmar' %}
+                </li>
+                <div class="mobile-dropdown-content">
+                    <a href="{% url 'archive:pictures' %}">{% trans 'Bilder' %}</a>
+                    <a href="#">{% trans 'Guider' %}</a>
+                    <a href="{% url 'members:info' %}">{% trans 'Min profil' %}</a>
+                    <a href="/admin">Admin</a>
+                    <a href="{% url 'logout' %}">{% trans 'Log out' %}</a>
+                </div>
+            </div>
+            {% else %}
+                <li><a href="{% url 'login' %}">{% trans 'Logga in' %}</a></li>
+            {% endif %}
         </div>
     </div>
-
 </div>
+
+<script>
+    $('#mobile-dropbtn').click(function() {
+        let btn = $('#mobile-group');
+        let btnChild = $("#mobile-dropbtn > i");
+        if(btn.hasClass("show")){
+            btn.css("display", "none");
+            btn.removeClass("show");
+            btnChild.removeClass("fa-times");
+            btnChild.addClass("fa-bars");
+            $('#mobile-dropdown').css("background-color", "rgba(0,0,0,0)");
+        }else {
+            $('#mobile-dropdown').css("background-color", "rgba(0,0,0,0.8)");
+            $('#mobile-dropbtn').css("background-color", "rgba(0,0,0,-0.6)");
+            btn.css("display", "block");
+            btn.addClass('show');
+            btnChild.removeClass("fa-bars");
+            btnChild.addClass("fa-times");
+        }
+    });
+    $('#mobile-group').click(function() {
+        let btn = $('#mobile-group');
+        let btnChild = $("#mobile-dropbtn > i");
+        if(btn.hasClass("show")){
+            btn.css("display", "none");
+            btn.removeClass("show");
+            btnChild.removeClass("fa-times");
+            btnChild.addClass("fa-bars");
+            $('#mobile-dropdown').css("background-color", "rgba(0,0,0,0)");
+        }
+    });
+</script>
