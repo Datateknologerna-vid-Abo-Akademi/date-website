@@ -1,0 +1,14 @@
+#container-soft {
+    background-color: var(--primaryColor);
+    color: var(--secondaryColor);
+    padding-top: 10vh;
+    min-height: 100vh;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+    font-size: small;
+}
+
+body {
+    background-color: var(--primaryColor);
+}

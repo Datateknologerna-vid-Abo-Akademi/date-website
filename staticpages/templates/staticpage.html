@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{page.title}}{% endblock %}
+
+{% block content %}
+
+    <head>
+        <link rel="stylesheet" href="{% static 'staticpages/css/staticpage.css' %}" type="text/css">
+    </head>
+
+    <div id="container-soft">
+        {{page.content | safe}}
+    </div>
+{% endblock %}
