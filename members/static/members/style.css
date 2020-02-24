@@ -13,34 +13,34 @@ form{
 
 .login-page {
     width: 360px;
-    max-width: 95vw;
-    padding: 15% 0 0;
+    max-width: 90vw;
+    padding: 25vh 0 0;
     margin: auto auto 10rem auto;
 }
 
 .signup-page {
     width: 480px;
-    max-width: 95vw;
-    padding: 12% 0 0;
+    max-width: 90vw;
+    padding: 25vh 0 0;
     margin: auto auto 10rem auto;
 }
 .forgot-password-page {
     width: 480px;
-    max-width: 95vw;
-    padding: 12% 0 0;
+    max-width: 90vw;
+    padding: 25vh 0 0;
     margin: auto auto 10rem auto;
 }
 .reset-password-page {
     width: 480px;
-    max-width: 95vw;
-    padding: 12% 0 0;
+    max-width: 90vw;
+    padding: 25vh 0 0;
     margin: auto auto 10rem auto;
 }
 .center-box {
     font-size: 2em;
     background-color: var(--secondaryColor);
     width: 620px;
-    max-width: 95vw;
+    max-width: 90vw;
     padding: 3em 3.5em;
     text-align: center;
     -webkit-box-shadow: 0 0 20px 0 rgba(255,255,255,0.5), 0 5px 5px 0 rgba(200,200,200,0.12);
@@ -48,25 +48,19 @@ form{
     margin: 20rem auto 10rem auto;
 }
 
-.center-box a {
-    font-weight: 700;
-    font-size: 1.1em;
-    color: var(--primaryColorLight);
-}
-
 .form {
     position: relative;
     z-index: 1;
     background-color: var(--secondaryColor);
-    max-width: 360px;
+    max-width: 90vw;
     padding: 4em 4.5em;
     text-align: center;
     -webkit-box-shadow: 0 0 20px 0 rgba(255,255,255,0.5), 0 5px 5px 0 rgba(200,200,200,0.12);
             box-shadow: 0 0 20px 0 rgba(255,255,255,0.5), 0 5px 5px 0 rgba(200,200,200,0.12);
 }
 
-.form, .big {
-    max-width: 480px
+.form .big {
+    max-width: 90vw;
 }
 
 .form input{
@@ -161,6 +155,22 @@ font-size: 2em;
 .container .info span .fa {
   color: #EF3B3A;
 }
+
+.pw-reset-button {
+    font-family: "Roboto", sans-serif;
+    text-transform: uppercase;
+    outline: 0;
+    background: #4CAF50;
+    width: 100%;
+    border: 0;
+    padding: 15px;
+    color: #FFFFFF;
+    font-size: 14px;
+    -webkit-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
 .container-soft p, .center-box p, .reset-password-page p, .form p {
     padding-top: 3px;
     color: var(--primaryColor);

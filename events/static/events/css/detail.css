@@ -1,3 +1,11 @@
+.container-text img {
+    max-height: 50vh;
+    max-width: 100%;
+    /* keep img ratio correct */
+      width: auto !important;
+      height: auto !important;
+}
+
 .container{
     background-color: var(--primaryColor);
     padding-top: 10vh;

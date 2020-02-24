@@ -1,3 +1,7 @@
+h1 {
+    text-align: center;
+}
+
 img {
     width: 100%;
 }
@@ -29,7 +33,7 @@ img {
  */
 .container-soft{
     background-color: var(--primaryColor);
-    padding-top: 10vh;
+    padding: 10vh 5vw;
     min-height: 100vh;
     color: var(--secondaryColor);
 }

@@ -22,18 +22,18 @@
                 </div>
             </div>
             {% empty %}
-            <li>{% trans "Inga tidigare händelser" %}</li>
+            <h3>{% trans "Inga aktiva händelser" %}</h3>
         {% endfor %}
         </div>
         <div class="container-box-ended">
             <h1 class="heading">{% trans "Tidigare händelser" %}</h1>
-            {% for event in past_events %}
+            {% for event in past_events|slice:5 %}
             <div class="event-ended">
                 <a class="content-ended" href="{% url 'events:detail' event.slug %}"><h2 class="event-title">{{ event.title }}</h2></a>
             </div>
                 
             {% empty %}
-                <li>{% trans "Inga tidigare händelser" %}</li>
+                <h3>{% trans "Inga tidigare händelser" %}</h3>
             {% endfor %}
         </div>
     </div>
