@@ -4,7 +4,7 @@
     min-height: 100vh;
     color: var(--secondaryColor);
     font-family: 'Josefin Sans', sans-serif;
-    
+
     align-content: start;
 }
 
@@ -41,7 +41,7 @@
 }
 
 .text-size{
-    font-size: 3vw;
+    font-size: 10pt;
 }
 
 .more-button{
@@ -70,9 +70,4 @@
         max-width: 100%;
     
     }
-
-    .text-size{
-        font-size: 0.9vw;
-    }
-
 }
