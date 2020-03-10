@@ -16,7 +16,6 @@
         {% else %}
         <div class="container-box-coming">
         {% endif%}
-        
             {% for event in event_list %}
             <div class="event event-coming">
                     <a class="content title btn" href="{% url 'events:detail' event.slug %} " style="background: 
@@ -38,14 +37,12 @@
             <h3>{% trans "Inga aktiva händelser" %}</h3>
         {% endfor %}
         </div>
-        
         <div class="container-box-ended">
             <h1 class="heading">{% trans "Tidigare händelser" %}</h1>
             {% for event in past_events|slice:5 %}
             <div class="event-ended">
                 <a class="content-ended" href="{% url 'events:detail' event.slug %}"><h2 class="event-title-ended">{{ event.title }}</h2></a>
             </div>
-                
             {% empty %}
                 <h3>{% trans "Inga tidigare händelser" %}</h3>
             {% endfor %}

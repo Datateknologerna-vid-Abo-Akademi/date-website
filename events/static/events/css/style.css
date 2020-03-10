@@ -51,12 +51,10 @@
     grid-area: coming;   
 }
 
-
-
 .event-coming{
     display: grid;
     grid-template-columns: 4fr 250pt 4fr;
-    grid-template-rows: 85pt 20pt;
+    grid-template-rows: 110pt 20pt;
     grid-template-areas:
     ". title ."
     ". date . ";
@@ -77,9 +75,8 @@ h3{
     font-size: 10pt;
 }
 
-
 .event-text{
-    vertical-align: text-bottom;
+    font-size: 9pt;
 }
 
 .content{
@@ -183,7 +180,7 @@ h3{
     .event-coming{
         display: grid;
         grid-template-columns: 90vw;
-        grid-template-rows: 75pt 20pt;
+        grid-template-rows: 100pt 20pt;
         grid-template-areas:
         "title"
         "date";
@@ -198,6 +195,7 @@ h3{
         hyphens: auto;
         grid-area: coming;   
     }
+
     .container-box-coming-two{
         grid-template-columns: 1fr;
     }
