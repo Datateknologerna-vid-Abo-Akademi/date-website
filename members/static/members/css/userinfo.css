@@ -44,6 +44,10 @@ td, th {
   padding: 8px;
 }
 
+tr:nth-child(odd){
+    background-color: var(--primaryColorLighter);
+}
+
 @media screen and (min-width: 600px) {
     .font-size{
         font-size: 2vw;    
