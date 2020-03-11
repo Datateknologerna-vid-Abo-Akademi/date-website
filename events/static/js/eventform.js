@@ -1,5 +1,8 @@
 (function($) {
     $(document).ready(function() {
+
+        $('#id_sign_up').prop("checked", false);
+
         if (!$('#id_sign_up').is(':checked')) {
             $('[class*="form-row field-sign_up_"]').hide()
             $('fieldset.module').find('h2').each((index, element) => {
@@ -24,6 +27,6 @@
         });
         $('select[id$="type"]').change();
 
-
+        $('p.datetime').find('br').replaceWith("&nbsp;&nbsp;");
     });
 })(django.jQuery);

@@ -1,19 +1,28 @@
 import logging
 
 from django import forms
-from django.utils import timezone
+from django.utils.timezone import now
 
 from date.functions import slugify_max
 from events import models
 from events.models import Event
+from django.contrib.admin import widgets
 import re
+from datetime import datetime
 
 logger = logging.getLogger('date')
 
 slug_transtable = str.maketrans("åäö ","aao_")
 
+
 class EventCreationForm(forms.ModelForm):
     user = None
+    event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
+    event_date_end = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
+    sign_up_others = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
+    sign_up_members = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
+    sign_up_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
+    sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
 
     class Meta:
         model = Event
@@ -22,7 +31,6 @@ class EventCreationForm(forms.ModelForm):
             'event_date_start',
             'event_date_end',
             'content',
-            'published',
             'sign_up',
             'sign_up_max_participants',
             'sign_up_others',
@@ -30,11 +38,14 @@ class EventCreationForm(forms.ModelForm):
             'sign_up_deadline',
             'sign_up_cancelling',
             'sign_up_cancelling_deadline',
+            'published',
             'slug'
         )
 
     class Media:
-        js = ('js/eventform.js',)
+        js = (
+            '//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',  # jquery,
+            'js/eventform.js',)
 
     def clean_slug(self):
         slug = self.cleaned_data['slug']
@@ -64,7 +75,7 @@ class EventCreationForm(forms.ModelForm):
         post.author = self.user
 
         if post.published:
-            post.published_time = timezone.now()
+            post.published_time = now()
 
         if not post.sign_up:
             post.sign_up_max_participants = 0
@@ -81,6 +92,13 @@ class EventCreationForm(forms.ModelForm):
 
 class EventEditForm(forms.ModelForm):
     user = None
+    event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
+    event_date_end = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
+    sign_up_others = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
+    sign_up_members = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
+    sign_up_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
+    sign_up_cancelling = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
+    sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
 
     class Meta:
         model = Event
@@ -89,7 +107,6 @@ class EventEditForm(forms.ModelForm):
             'event_date_start',
             'event_date_end',
             'content',
-            'published',
             'sign_up',
             'sign_up_max_participants',
             'sign_up_others',
@@ -97,18 +114,21 @@ class EventEditForm(forms.ModelForm):
             'sign_up_deadline',
             'sign_up_cancelling',
             'sign_up_cancelling_deadline',
+            'published',
             'slug'
         )
 
     class Media:
-        js = ('js/eventform.js',)
+        js = (
+            '//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',  # jquery,
+            'js/eventform.js',)
 
     def save(self, commit=True):
         post = super(EventEditForm, self).save(commit=False)
         if self.user is None:
             return None
 
-        post.modified_time = timezone.now()
+        post.modified_time = now()
 
         if not post.sign_up:
             post.sign_up_max_participants = 0

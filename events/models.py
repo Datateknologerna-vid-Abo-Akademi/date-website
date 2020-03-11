@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import logging
 
 from ckeditor.fields import RichTextField
@@ -8,6 +9,8 @@ from django.db import models
 from django.template.defaulttags import register
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
+from django.utils.timezone import now
+from django.conf import settings
 
 logger = logging.getLogger('date')
 
@@ -17,19 +20,19 @@ POST_SLUG_MAX_LENGTH = 50
 class Event(models.Model):
     title = models.CharField(_('Titel'), max_length=255, blank=False)
     content = RichTextField(_('Innehåll'), blank=True)
-    event_date_start = models.DateTimeField(_('Startdatum'), default=timezone.now)
-    event_date_end = models.DateTimeField(_('Slutdatum'), default=timezone.now)
+    event_date_start = models.DateTimeField(_('Startdatum'), default=now)
+    event_date_end = models.DateTimeField(_('Slutdatum'), default=now)
     sign_up_max_participants = models.IntegerField(_('Maximal antal deltagare'),
                                                    choices=[(0, u"Ingen begränsning")] + list(
                                                        zip(range(1, 200), range(1, 200))), default=0)
     sign_up = models.BooleanField(_('Anmälning'), default=True)
-    sign_up_members = models.DateTimeField(_('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=timezone.now)
-    sign_up_others = models.DateTimeField(_('Anmälan öppnas (övriga)'), null=True, blank=True, default=timezone.now)
-    sign_up_deadline = models.DateTimeField(_('Anmälningen stängs'), null=True, blank=True, default=timezone.now)
+    sign_up_members = models.DateTimeField(_('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=now)
+    sign_up_others = models.DateTimeField(_('Anmälan öppnas (övriga)'), null=True, blank=True, default=now)
+    sign_up_deadline = models.DateTimeField(_('Anmälningen stängs'), null=True, blank=True, default=now)
     sign_up_cancelling = models.BooleanField(_('Avanmälning'), default=True)
-    sign_up_cancelling_deadline = models.DateTimeField(_('Avanmälningen stängs'), null=True, blank=True, default=timezone.now)
-    author = models.ForeignKey('members.Member', on_delete=models.CASCADE)
-    created_time = models.DateTimeField(_('Skapad'), default=timezone.now)
+    sign_up_cancelling_deadline = models.DateTimeField(_('Avanmälningen stängs'), null=True, blank=True, default=now)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    created_time = models.DateTimeField(_('Skapad'), default=now)
     published_time = models.DateTimeField(_('Publicerad'), editable=False, null=True, blank=True)
     modified_time = models.DateTimeField(_('Modifierad'), editable=False, null=True, blank=True)
     published = models.BooleanField(_('Publicera'), default=True)
@@ -47,7 +50,7 @@ class Event(models.Model):
         return self.event_date_start.strftime("%-d %B")
 
     def publish(self):
-        self.published_time = timezone.now()
+        self.published_time = now
         self.published = True
         self.save()
 
@@ -56,7 +59,7 @@ class Event(models.Model):
         self.save()
 
     def update(self):
-        self.modified_time = timezone.now()
+        self.modified_time = now
         self.save()
 
     def get_registrations(self):
@@ -74,7 +77,7 @@ class Event(models.Model):
                 if self.get_registrations().count() < self.sign_up_max_participants or self.sign_up_max_participants is 0:
                     registration = EventAttendees.objects.create(user=user,
                                                                  event=self, email=email,
-                                                                 time_registered=timezone.now(), preferences=user_pref,
+                                                                 time_registered=now, preferences=user_pref,
                                                                  anonymous=anonymous)
 
     def cancel_event_attendance(self, user):
@@ -83,13 +86,13 @@ class Event(models.Model):
             registration.delete()
 
     def registration_is_open_members(self):
-        return timezone.now() >= self.sign_up_members and not self.event_is_full() and not self.registation_past_due()
+        return now >= self.sign_up_members and not self.event_is_full() and not self.registation_past_due()
 
     def registration_is_open_others(self):
-        return timezone.now() >= self.sign_up_others and not self.event_is_full() and not self.registation_past_due()
+        return now >= self.sign_up_others and not self.event_is_full() and not self.registation_past_due()
 
     def registation_past_due(self):
-        return timezone.now() > self.sign_up_deadline
+        return now > self.sign_up_deadline
 
     def event_is_full(self):
         if self.sign_up_max_participants == 0:
@@ -111,14 +114,14 @@ class Event(models.Model):
                       'anonymous': forms.BooleanField(label='Anonymt', required=False)}
             if self.get_registration_form():
                 for question in reversed(self.get_registration_form()):
-                    if (question.type == "select"):
+                    if question.type == "select":
                         choices = question.choice_list.split(',')
                         fields[question.name] = forms.ChoiceField(label=question.name,
                                                                   choices=list(map(list, zip(choices, choices))),
                                                                   required=question.required)
-                    elif (question.type == "checkbox"):
+                    elif question.type == "checkbox":
                         fields[question.name] = forms.BooleanField(label=question.name, required=question.required)
-                    elif (question.type == "text"):
+                    elif question.type == "text":
                         fields[question.name] = forms.CharField(label=question.name, required=question.required)
             return type('EventAttendeeForm', (forms.BaseForm,), {'base_fields': fields, 'data': data}, )
 
@@ -172,7 +175,7 @@ class EventAttendees(models.Model):
             # this is needed so the admin sorting library will work.
             self.attendee_nr = (self.event.get_registrations().count()+1) * 10
         if self.time_registered is None:
-            self.time_registered = timezone.now()
+            self.time_registered = now
         if isinstance(self.preferences, list):
             self.preferences = {}
         super(EventAttendees, self).save(*args, **kwargs)

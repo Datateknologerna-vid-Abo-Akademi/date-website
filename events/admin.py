@@ -10,6 +10,10 @@ from events import forms
 from events.models import Event, EventRegistrationForm, EventAttendees
 from events.widgets import PrettyJSONWidget
 
+import logging
+
+logger = logging.getLogger('date')
+
 
 class EventRegistrationFormInline(admin.TabularInline):
     line_numbering = 0
@@ -43,13 +47,17 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
     ordering = ['attendee_nr']
 
 
+@admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
+    save_on_top = True
     list_display = (
         'title', 'created_time', 'event_date_start', 'get_attendee_count', 'sign_up_max_participants', 'published',
         'account_actions')
     search_fields = ('title', 'author', 'created_time')
     ordering = ['-event_date_start']
-    save_on_top = True
+
+    form = forms.EventCreationForm
+
     inlines = [
         EventRegistrationFormInline,
         EventAttendeesFormInline
@@ -109,6 +117,3 @@ class EventAdmin(admin.ModelAdmin):
 
         form.user = request.user
         return form
-
-
-admin.site.register(Event, EventAdmin)
