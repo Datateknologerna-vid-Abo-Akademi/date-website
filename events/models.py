@@ -7,9 +7,9 @@ from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.template.defaulttags import register
-from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
+from datetime import timedelta
 from django.conf import settings
 
 logger = logging.getLogger('date')
@@ -50,7 +50,7 @@ class Event(models.Model):
         return self.event_date_start.strftime("%-d %B")
 
     def publish(self):
-        self.published_time = now
+        self.published_time = now()
         self.published = True
         self.save()
 
@@ -59,7 +59,7 @@ class Event(models.Model):
         self.save()
 
     def update(self):
-        self.modified_time = now
+        self.modified_time = now()
         self.save()
 
     def get_registrations(self):
@@ -77,7 +77,7 @@ class Event(models.Model):
                 if self.get_registrations().count() < self.sign_up_max_participants or self.sign_up_max_participants is 0:
                     registration = EventAttendees.objects.create(user=user,
                                                                  event=self, email=email,
-                                                                 time_registered=now, preferences=user_pref,
+                                                                 time_registered=now(), preferences=user_pref,
                                                                  anonymous=anonymous)
 
     def cancel_event_attendance(self, user):
@@ -86,13 +86,13 @@ class Event(models.Model):
             registration.delete()
 
     def registration_is_open_members(self):
-        return now >= self.sign_up_members and not self.event_is_full() and not self.registation_past_due()
+        return now() >= self.sign_up_members and not self.event_is_full() and not self.registation_past_due()
 
     def registration_is_open_others(self):
-        return now >= self.sign_up_others and not self.event_is_full() and not self.registation_past_due()
+        return now() >= self.sign_up_others and not self.event_is_full() and not self.registation_past_due()
 
     def registation_past_due(self):
-        return now > self.sign_up_deadline
+        return now() > self.sign_up_deadline
 
     def event_is_full(self):
         if self.sign_up_max_participants == 0:
@@ -124,6 +124,10 @@ class Event(models.Model):
                     elif question.type == "text":
                         fields[question.name] = forms.CharField(label=question.name, required=question.required)
             return type('EventAttendeeForm', (forms.BaseForm,), {'base_fields': fields, 'data': data}, )
+
+    @register.filter
+    def show_attendee_list(self):
+        return self.event_date_end > now() + timedelta(days=1)
 
 
 class EventRegistrationForm(models.Model):
@@ -175,7 +179,7 @@ class EventAttendees(models.Model):
             # this is needed so the admin sorting library will work.
             self.attendee_nr = (self.event.get_registrations().count()+1) * 10
         if self.time_registered is None:
-            self.time_registered = now
+            self.time_registered = now()
         if isinstance(self.preferences, list):
             self.preferences = {}
         super(EventAttendees, self).save(*args, **kwargs)

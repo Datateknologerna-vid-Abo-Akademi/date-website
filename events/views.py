@@ -8,8 +8,8 @@ from .models import Event, EventAttendees
 from websocket import create_connection
 from websocket._exceptions import WebSocketBadStatusException
 import json
-import logging
 
+import logging
 logger = logging.getLogger('date')
 
 
@@ -39,6 +39,7 @@ class EventDetailView(DetailView):
             context['form'] = form
         else:
             context['form'] = self.object.make_registration_form()
+
         return context
 
     def post(self, request, *args, **kwargs):

@@ -9,6 +9,7 @@ from events.models import Event
 from django.contrib.admin import widgets
 import re
 from datetime import datetime
+from django.utils.timezone import now
 
 logger = logging.getLogger('date')
 
@@ -17,12 +18,12 @@ slug_transtable = str.maketrans("åäö ","aao_")
 
 class EventCreationForm(forms.ModelForm):
     user = None
-    event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
-    event_date_end = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
-    sign_up_others = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
-    sign_up_members = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
-    sign_up_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
-    sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
+    event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    event_date_end = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    sign_up_others = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    sign_up_members = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    sign_up_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
 
     class Meta:
         model = Event
@@ -62,7 +63,7 @@ class EventCreationForm(forms.ModelForm):
                 slug = base_slug+"_"+str(suffix)
                 collisions = Event.objects.filter(slug = slug)
                 suffix += 1
-        #slugify_max actually does a trim down to the size of the underlying database column
+        # slugify_max actually does a trim down to the size of the underlying database column
         slug = slugify_max(slug, max_length=models.POST_SLUG_MAX_LENGTH)
 
         return slug
@@ -92,13 +93,12 @@ class EventCreationForm(forms.ModelForm):
 
 class EventEditForm(forms.ModelForm):
     user = None
-    event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
-    event_date_end = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
-    sign_up_others = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
-    sign_up_members = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
-    sign_up_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
-    sign_up_cancelling = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
-    sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=datetime.now())
+    event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    event_date_end = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    sign_up_others = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    sign_up_members = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    sign_up_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
 
     class Meta:
         model = Event
