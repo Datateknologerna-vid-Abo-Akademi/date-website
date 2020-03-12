@@ -12,16 +12,6 @@ def divide(value, arg):
         return None
 
 
-@register.filter(name="arrangePictures")
-def arrangepictures(value, arg):
-    try:
-        column_size = divide(arg-1, 4)  # args + 4 to ensure not 5 columns are created.
-        print("Value:", value, " Column size:", column_size, " args:", arg, " Column:", value % column_size)
-        return bool(value % column_size) is False
-    except (ValueError, ZeroDivisionError):
-        return None
-
-
 @register.filter(name='in_group')
 def in_group(user, group_name):
     try:
