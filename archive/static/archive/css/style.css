@@ -18,6 +18,11 @@ img {
     border-bottom: solid 1px var(--secondaryColor);
 }
 
+#picture-count {
+    margin-left: 3rem;
+    text-align: right;
+}
+
 .collection-frame {
     padding: 0 2rem;
     display: grid;

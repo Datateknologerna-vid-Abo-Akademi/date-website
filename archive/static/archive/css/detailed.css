@@ -19,7 +19,7 @@ body {
 .gallery {
   display: flex;
   flex-wrap: wrap;
-  padding: 0 4rem;
+  padding: 0 10rem;
 }
 .back-button {
     padding: 2rem;
@@ -49,7 +49,7 @@ body {
 }
 
 .column img {
-  margin-top: 8px;
+  margin-top: 2rem;
   vertical-align: middle;
 }
 
@@ -72,9 +72,15 @@ body {
   color: white;
 }
 
+
+@media only screen and (max-width: 1200px) {
+    .gallery {
+        padding: 0 5rem;
+    }
+}
 @media only screen and (max-width: 1000px) {
     .gallery {
-        padding: 0 5px;
+        padding: 0 2rem;
     }
     .hero-text-sub {
         display: none;
