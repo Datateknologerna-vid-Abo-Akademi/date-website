@@ -187,8 +187,10 @@ c-132 -94 -567 -160 -888 -133 -145 12 -285 45 -355 84 -35 20 -37 24 -44 87
                         <div class="news-content">
                             <p>{{ ne.content|safe|truncatewords_html:"50"}}</p>
                         </div>
-                        <a class="news-button" href="{% url 'news:detail' ne.slug %}">Läs mera...</a>
+                        <a class="news-button" href="{% url 'news:detail' ne.slug %}">{% trans 'Läs mera' %}...</a>
                     </div>
+                    {% empty %}
+                    <h3>{% trans 'inga nyheter hittades' %}...</h3>
                 {% endfor %}
             </div>
             <div class="sidebar-container">
@@ -201,12 +203,16 @@ c-132 -94 -567 -160 -888 -133 -145 12 -285 45 -355 84 -35 20 -37 24 -44 87
                             <p class="event-date">{{ ev.event_date_start_pretty}}</p>
                         </div>
                     </a>
+                        {% empty %}
+                        <h5>{% trans 'inga aktiva evenemang hittades' %}...</h5>
                     {% endfor %}
                     {% if events|length >= 5 %}
-                    <a class="more-events-button" href="{% url 'events:index'%}">Mera evenemang...</a>
+                    <a class="more-events-button" href="{% url 'events:index'%}">{% trans 'Mera evenemang' %}...</a>
                     {% endif %}
                 </div>
             </div>
         </div>
+    </section>
+    <section id="reklam" class="text-size">
     </section>
 {% endblock %}

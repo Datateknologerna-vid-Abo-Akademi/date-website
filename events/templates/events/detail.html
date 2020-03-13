@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% load app_filters %}
 {% block title %}{{ event.title }}{% endblock %}
 
 {% block content %}
@@ -34,30 +35,34 @@
                 {% endif %}
             </div>
             <div class="container-signed">
-            <h1>{% trans "Anmälda" %}</h1>
-            <table id="attendees">
-                <tr id="attendees-header"
-                    {% if not event.get_registrations %} style="display: none;"
-                    {% endif %}>
-                        <th>#</th>
-                        <th>{% trans "Namn" %}</th>
-                        {% for preference in event.get_registration_form_public_info reversed %}
-                            <th>{{ preference }}</th>
-                        {% endfor %}
-                </tr>
-                {% for attendee in event.get_registrations %}
-                    <tr>
-                        <td>{{ forloop.counter }}</td>
-                        <td>{% if not attendee.anonymous %}{{ attendee.user }}{% else %}
-                            <i>{% trans "Anonymt" %}</i>{% endif %}</td>
-                        {% for preference in event.get_registration_form_public_info reversed %}
-                            <td>{{ attendee | get_preference:preference }}</td>
-                        {% endfor %}
+            {% if event|show_attendee_list %}
+                <h1>{% trans "Anmälda" %}</h1>
+                <table id="attendees">
+                    <tr id="attendees-header"
+                        {% if not event.get_registrations %} style="display: none;"
+                        {% endif %}>
+                            <th>#</th>
+                            <th>{% trans "Namn" %}</th>
+                            {% for preference in event.get_registration_form_public_info reversed %}
+                                <th>{{ preference }}</th>
+                            {% endfor %}
                     </tr>
-                {% empty %}
-                    <p id="no-attendee">{% trans "Inga anmälda, var det första att anmäla sig." %}</p>
-                {% endfor %}
-            </table>
+                    {% for attendee in event.get_registrations %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{% if not attendee.anonymous %}{{ attendee.user }}{% else %}
+                                <i>{% trans "Anonymt" %}</i>{% endif %}</td>
+                            {% for preference in event.get_registration_form_public_info reversed %}
+                                <td>{{ attendee | get_preference:preference }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% empty %}
+                        <p id="no-attendee">{% trans "Inga anmälda, var det första att anmäla sig." %}</p>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <h4 id="no-attendee">{% trans 'Deltagarlistan har gjömts eftersom det är ett gammalt evenemang, kontakta styrelsen vid behov.' %}</h4>
+            {% endif %}
         </div>
         {% endif %}
     </div>

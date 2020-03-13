@@ -1,9 +1,8 @@
 .form p{
     margin-left: 1em;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 4fr;
     margin-bottom: .5em;
-    width: 30vw
 }
 .form, p:nth-child(4) {
     margin-top: 2em;
@@ -12,7 +11,7 @@
 .form p input[type=text],input[type=email], input[type=select] {
     padding: 3px;
     border-radius: 5px;
-    width: 20vw;
+    width: 50vw;
     height: 3vh;
     font-size: 1.3em;
 }
@@ -67,6 +66,11 @@
         width: 25vw;
         height: 3vh;
         font-size: 1.5vw;
+    }
+
+
+    .form p input[type=text],input[type=email], input[type=select] {
+        width: 20vw;
     }
 }
 

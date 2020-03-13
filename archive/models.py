@@ -7,6 +7,7 @@ from PIL import Image
 from io import BytesIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 import shutil
+from django.template.defaulttags import register
 
 from django.db import models
 from django.urls import reverse
@@ -48,6 +49,10 @@ class Collection(models.Model):
         print(dir_location)
         shutil.rmtree(dir_location, ignore_errors=True)
         super(Collection, self).delete(*args, **kwargs)
+
+    @register.filter
+    def get_file_count(self):
+        return Picture.objects.filter(collection=self).count()
 
 
 def upload_to(instance, filename):

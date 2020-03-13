@@ -1,0 +1,91 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.hero-text-sub .btn{
+    height: 40px;
+    width: 40px;
+}
+.active {
+    background-color: #8a8a8a;
+    border: none;
+}
+
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 0 10rem;
+}
+.back-button {
+    padding: 2rem;
+}
+.back-button:hover i {
+    transition: ease-in-out, 500ms;
+    font-size: 1.3em;
+}
+
+.enlarge {
+    position: relative;
+    height: 100%;
+    width: 100vw;
+
+
+  /* Center and scale the image nicely */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* Create two equal columns that sits next to each other */
+.column {
+  -ms-flex: 50%; /* IE 10 */
+  flex: 50%;
+  padding: 0 4px;
+}
+
+.column img {
+  margin-top: 2rem;
+  vertical-align: middle;
+}
+
+/* Style the buttons */
+.btn {
+  border: none;
+  outline: none;
+  padding: 10px 16px;
+  background-color: #f1f1f1;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.btn:hover {
+  background-color: #ddd;
+}
+
+.btn.active {
+  background-color: #666;
+  color: white;
+}
+
+
+@media only screen and (max-width: 1200px) {
+    .gallery {
+        padding: 0 5rem;
+    }
+}
+@media only screen and (max-width: 1000px) {
+    .gallery {
+        padding: 0 2rem;
+    }
+    .hero-text-sub {
+        display: none;
+    }
+    .column {
+        flex: 100%;
+    }
+}

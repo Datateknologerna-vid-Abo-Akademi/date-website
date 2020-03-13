@@ -1,67 +1,60 @@
+body {
+    font-size: 1.5em;
+}
+
 img {
+    height: auto;
     width: 100%;
+
 }
 
-/*
-    Enlarge picture
- */
-
-
-.enlarge{
-    padding: 1000px;
-    background-color: rgba(40,40,40,0.8);
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 2;
-    height: fit-content;
-    width: auto;
-    max-width: 90vw;
-    max-height: 95vh;
-}
-.enlarge .gallery-item {
-    height: fit-content;
-}
-
-/*
-    INDEX
- */
-.container-soft{
-    background-color: var(--primaryColor);
-    padding-top: 10vh;
-    min-height: 100vh;
-    color: var(--secondaryColor);
-}
-
-.collection_box{
-    margin: 1rem .2rem .2rem .2rem;
-    padding: .5rem;
-    display: inline-block;
+.hero-text-box {
+    min-height: 20vh;
     text-align: center;
-    transition: 0.2s ease-in-out;
 }
-.collection_box:hover{
-    transform: scale(1.05);
-    transition: 0.2s ease-in-out;
-}
-.collection_box:hover img {
-    box-shadow: 0 0 3px 2px var(--secondaryColorDarker);
+.hero-text-main {
+    padding-bottom: 1rem;
+    display: inline-block;
+    border-bottom: solid 1px var(--secondaryColor);
 }
 
-
-.preview_img{
-    max-height: 250px;
-    max-width: 250px;
-    border-radius: 0.5rem;
+#picture-count {
+    margin-left: 3rem;
+    text-align: right;
 }
 
-/*
-    DETAILS
- */
+.collection-frame {
+    padding: 0 2rem;
+    display: grid;
+    grid-gap: 1.5rem;
+    grid-template-columns: repeat(4, 1fr);
+}
+.collection-item {
+    text-align: center;
+}
+.collection-item img:hover {
+    border: solid 1px var(--secondaryColor);
+}
 
-/* Create four equal columns that sits next to each other */
-.gallery-item {
-    height: 33vh;
-    width: auto;
+.collection-item:hover a {
+    transition: 500ms;
+    color: var(--primaryColorLight);
+}
+
+@media only screen and (max-width: 1000px) {
+
+    .collection-frame {
+        padding: 0 2rem;
+        display: grid;
+        grid-gap: 1.5rem;
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media only screen and (max-width: 700px) {
+
+    .collection-frame {
+        padding: 1rem;
+        display: block;
+    }
 }

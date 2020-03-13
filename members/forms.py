@@ -1,7 +1,4 @@
 from django import forms
-from django.forms.widgets import PasswordInput, TextInput
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
 
 
 from dateutil.relativedelta import relativedelta
@@ -70,8 +67,7 @@ class MemberUpdateForm(forms.ModelForm):
 
     def save(self, commit=True):
         member = super(MemberUpdateForm, self).save(commit=False)
-        password = self.cleaned_data["password"]
-        # password = None
+        password = None
         if password:
             member.set_password(password)
         if commit:

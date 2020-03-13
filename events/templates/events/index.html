@@ -8,13 +8,25 @@
         <link rel="stylesheet" href="{% static 'events/css/style.css' %}"type="text/css">
     </head>
     <div class="container detail">
+        <h1 class="heading">{% trans "Kommande händelser" %}</h1>
+        {% if event_list.count == 1 %}
+        <div class="container-box-coming-one">
+        {% elif event_list.count == 2 %}
+        <div class="container-box-coming-two">
+        {% else %}
         <div class="container-box-coming">
-            <h1 class="heading">{% trans "Kommande händelser" %}</h1>
+        {% endif%}
             {% for event in event_list %}
             <div class="event event-coming">
-                    <a class="content title btn" href="{% url 'events:detail' event.slug %}">
+                    <a class="content title btn" href="{% url 'events:detail' event.slug %} " style="background: 
+                    linear-gradient(
+                      rgba(0, 0, 0, 0.8),
+                      rgba(0, 0, 0, 0.8)
+                    ),
+                    url(/static/images/albin_black.png);background-size: 100% 100%";>
                         <div class="text-center">
-                        <h2 class="event-title">{{ event.title }}</h2>
+                            <h2 class="event-title">{{ event.title }}</h2>
+                            <p class="event-text">{{ event.content|safe|striptags|truncatewords_html:"25"}}</p>
                         </div>
                     </a>
                 <div class="date">
@@ -22,18 +34,17 @@
                 </div>
             </div>
             {% empty %}
-            <li>{% trans "Inga tidigare händelser" %}</li>
+            <h3>{% trans "Inga aktiva händelser" %}</h3>
         {% endfor %}
         </div>
         <div class="container-box-ended">
             <h1 class="heading">{% trans "Tidigare händelser" %}</h1>
-            {% for event in past_events %}
+            {% for event in past_events|slice:5 %}
             <div class="event-ended">
-                <a class="content-ended" href="{% url 'events:detail' event.slug %}"><h2 class="event-title">{{ event.title }}</h2></a>
+                <a class="content-ended" href="{% url 'events:detail' event.slug %}"><h2 class="event-title-ended">{{ event.title }}</h2></a>
             </div>
-                
             {% empty %}
-                <li>{% trans "Inga tidigare händelser" %}</li>
+                <h3>{% trans "Inga tidigare händelser" %}</h3>
             {% endfor %}
         </div>
     </div>
