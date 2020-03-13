@@ -4,5 +4,6 @@ from . import views
 app_name = 'staticpages'
 
 urlpatterns = [
-    url(r'^(?P<slug>[-\w]+)/$', views.StaticPageView.as_view(), name='staticpage'),
+    url('index/', views.StaticPageIndex.as_view(), name='index'),
+    url(r'^(?P<slug>[-\w]+)/$', views.StaticPageView.as_view(), name='page'),
 ]

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans 'Guider' %}{% endblock %}
+
+{% block content %}
+
+    <head>
+        <link rel="stylesheet" href="{% static 'staticpages/css/staticpage.css' %}" type="text/css">
+    </head>
+
+    <div id="container-soft">
+        <h1>{% trans 'Guider' %}</h1>
+
+        {% for page in pages %}
+            <a href="{% url 'staticpages:page' page.slug %}"> {{page.title}} </a>
+        {% endfor %}
+    </div>
+
+{% endblock %}
