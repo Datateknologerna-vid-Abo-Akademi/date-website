@@ -9,7 +9,7 @@
     </head>
     <div class="container detail">
         <h1 class="heading">{% trans "Kommande händelser" %}</h1>
-        {% if event_list.count == 1 %}
+        {% if event_list.count <= 1 %}
         <div class="container-box-coming-one">
         {% elif event_list.count == 2 %}
         <div class="container-box-coming-two">
