@@ -104,6 +104,15 @@ CHANNEL_LAYERS = {
         },
     },
 }
+#CKEDITOR
+
+CKEDITOR_CONFIGS = {
+    'default': {
+        'height': '100%',
+        'width': '100%',
+        'toolbarCanCollapse': False,
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
