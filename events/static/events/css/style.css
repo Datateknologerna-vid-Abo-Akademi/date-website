@@ -53,7 +53,7 @@
 
 .event-coming{
     display: grid;
-    grid-template-columns: 4fr 250pt 4fr;
+    grid-template-columns: 2fr 250pt 2fr;
     grid-template-rows: 110pt 20pt;
     grid-template-areas:
     ". title ."
@@ -152,7 +152,11 @@ h3{
 .content-ended:hover{
     color: rgb(65, 73, 22);
 }
+
 @media only screen and (max-width: 1450px) {
+    .container{
+        grid-template-columns: 10vw 1fr 10vw ;
+    }
     .container-box-coming{
         grid-template-columns: 1fr 1fr;
     }
@@ -160,29 +164,32 @@ h3{
 
 @media only screen and (max-width: 960px) {
     .container{
-        grid-template-columns: 2vw 96vw 2vw;
+        grid-template-columns: 2vw 1fr 2vw ;
     }
     .container-box-coming{
         grid-template-columns: 1fr 1fr;
     }
 }
 
-@media only screen and (max-width: 690px) {
+@media only screen and (max-width: 710px) {
+    .container-box-coming-two{
+        grid-template-columns: 1fr;
+    }
+    .container-box-coming{
+        grid-template-columns: 1fr;
+    }
+}
+
+@media only screen and (max-width: 420px) {
 
     .container{
-        display: grid;
-        grid-template-columns: 5vw 10vw 5vw;
-        grid-template-rows: auto;
-        grid-template-areas: 
-          ". header1 ."
-          ". coming ."
-          ". ended .";     
+        grid-template-columns: 1fr 1fr 1fr;
     }
 
     .event-coming{
         display: grid;
         grid-template-columns: 90vw;
-        grid-template-rows: 100pt 20pt;
+        grid-template-rows: 110pt 20pt;
         grid-template-areas:
         "title"
         "date";
