@@ -176,6 +176,9 @@ html{
 .content img{
     max-height: 25vw;
     max-width: 80%;
+    /* keep img ratio correct */
+    width: auto !important;
+    height: auto !important;
 
 }
 
