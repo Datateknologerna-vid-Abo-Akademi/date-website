@@ -49,9 +49,8 @@ class EventCreationForm(forms.ModelForm):
             'js/eventform.js',)
 
     def clean_slug(self):
-        slug = self.cleaned_data['slug']
-
-        if slug.strip() == "":
+        slug = self.cleaned_data['slug'].strip()
+        if slug == "" and "title" in self.cleaned_data:
             base_slug = self.cleaned_data['title'].lower().translate(slug_transtable)
             base_slug = re.sub("[^a-zA-Z0-9_]*",'',base_slug)
             base_slug = re.sub("__+",'_',base_slug)
