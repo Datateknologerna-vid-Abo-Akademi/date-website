@@ -65,3 +65,9 @@ tr:hover {
     transition: 200ms;
     background-color: var(--primaryColorLighter);
 }
+@media only screen and (min-width: 836px) {
+    .container{
+        grid-template-columns: 20vw 60vw 20vw;
+    }
+
+}

@@ -10,6 +10,20 @@
 <div class="header-bar">
     <a id="logo" href="{% url 'index' %}">"logo goes here"</a>
     <div class="nav-bar">
+        {% for category in categories %}    
+            <div id="nav-member" class="dropdown">
+                <button class="dropbtn">
+                    {{category.category_name}}
+                </button>
+                <div class="dropdown-content">
+                    {% for page in pages %}
+                        {% if page.category|lower == category.category_name|lower %}
+                            <a href="{% url 'staticpages:page' page.slug %}">{{page.title}}</a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
         <li id="nav-event" ><a href="{% url 'events:index' %}">{% trans 'Evenemang' %}</a></li>
         <li id="nav-news"><a href="{% url 'news:index' %}">{% trans 'Nyheter' %}</a></li>
         <li id="nav-about"><a href="{% url 'index' %}#about">{% trans 'Om oss' %}</a></li>
@@ -20,7 +34,7 @@
                 </button>
                 <div class="dropdown-content">
                     <a href="{% url 'archive:pictures' %}">{% trans 'Bilder' %}</a>
-                    <a href="#">{% trans 'Guider' %}</a>
+                    <a href="{% url 'staticpages:index' %}">{% trans 'Guider' %}</a>
                     <a href="{% url 'members:info' %}">{% trans 'Min profil' %}</a>
                     <a href="/admin">Admin</a>
                     <a href="{% url 'logout' %}">{% trans 'Log out' %}</a>

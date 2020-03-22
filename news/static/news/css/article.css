@@ -18,7 +18,7 @@
 }
 
 .text-size{
-    font-size: 3vw;
+    font-size: 1.5rem;
 }
 
 .news{
@@ -31,6 +31,9 @@
 .news img{
     max-height: 50vw;
     max-width: 100%;
+    /* keep img ratio correct */
+    width: auto !important;
+    height: auto !important;
 
 }
 
@@ -49,13 +52,9 @@
 }
 
 @media only screen and (min-width: 836px) {
+    
     .container{
-        display: grid;
         grid-template-columns: 20vw 60vw 20vw;
-        grid-template-rows: auto;
-        grid-template-areas: 
-            ". news .";     
-        grid-row-gap: 50px;
     }
 
     .news img{
@@ -63,9 +62,5 @@
         max-width: 100%;
     
     }
-
-    .text-size{
-        font-size: 1.1vw;
-    }
-
+    
 }

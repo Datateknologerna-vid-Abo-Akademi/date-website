@@ -157,7 +157,8 @@ html{
 }
 
 .text-size{
-    font-size: 0.9vw;
+    font-size: 1.5rem;
+    font-weight: bold;
 }
 
 .news-container{
@@ -175,6 +176,9 @@ html{
 .content img{
     max-height: 25vw;
     max-width: 80%;
+    /* keep img ratio correct */
+    width: auto !important;
+    height: auto !important;
 
 }
 
@@ -375,10 +379,6 @@ i {
                 transform: translate(-50%, -56%) scale(0.28);
     }
 
-    .text-size{
-        font-size: 1.5vw;
-    }
-
     .ne-container{
         display: grid;
         grid-template-columns: 2vw 5fr 2fr 2vw;
@@ -427,9 +427,6 @@ i {
         grid-template-columns: 5vw 1fr 5vw;
     }
 
-    .text-size{
-        font-size: 2vw;
-    }
 }
 
 @media screen and (max-width: 800px) {
@@ -468,9 +465,6 @@ i {
     
     }
 
-    .text-size{
-        font-size: 2.4vw;
-    }
 }
 
 @media screen and (max-width: 450px) {
@@ -525,7 +519,4 @@ i {
     
     }
 
-    .text-size{
-        font-size: 3vw;
-    }
 }

@@ -44,7 +44,7 @@ ALLOWED_HOSTS = ['0.0.0.0', '127.0.0.1', 'localhost']
 
 INSTALLED_APPS = [
     'date',
-    'staticpages.apps.StaticpagesConfig',
+    'staticpages',
     'news',
     'events',
     'members',
@@ -86,6 +86,8 @@ TEMPLATES = [
                 'django.template.context_processors.i18n',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'staticpages.context_processors.get_pages',
+                'staticpages.context_processors.get_categories',
             ],
         },
     },
@@ -100,6 +102,15 @@ CHANNEL_LAYERS = {
         'CONFIG': {
             "hosts": [('redis', 6379)],
         },
+    },
+}
+#CKEDITOR
+
+CKEDITOR_CONFIGS = {
+    'default': {
+        'height': '100%',
+        'width': '100%',
+        'toolbarCanCollapse': False,
     },
 }
 
