@@ -43,8 +43,15 @@
     border-color: rgb(180, 180, 180);
 }
 
-.admin-link{
+div.news a{
+    display: inline-block;
     color: rgb(208, 255, 0);
+}
+
+div.news a:hover{
+    transition: 0.3s;
+    scale: 1.1;
+    color: rgb(65, 73, 22);
 }
 
 .author{
