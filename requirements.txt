@@ -1,7 +1,7 @@
+Django==3.0.3
 django-ckeditor
 requests
 django-environ
-Django==3.0.3
 psycopg2-binary
 pillow
 python-dateutil
@@ -13,3 +13,6 @@ channels
 channels_redis
 websocket_client
 six
+django-tables2
+django-filter
+django-bootstrap3

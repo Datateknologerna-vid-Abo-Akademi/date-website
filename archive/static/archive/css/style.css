@@ -7,6 +7,16 @@ img {
     width: 100%;
 
 }
+#logo {
+    color: var(--secondaryColor) !important;
+}
+#logo:hover {
+    text-decoration: none;
+}
+.nav-bar a:hover {
+    color :var(--secondaryColor);
+    text-decoration: none;
+}
 
 .hero-text-box {
     min-height: 20vh;
@@ -41,6 +51,17 @@ img {
     color: var(--primaryColorLight);
 }
 
+.filter-form {
+    margin: 1rem 4rem;
+}
+.custom-table-container {
+    margin: 0 4rem;
+}
+.pagination {
+    padding-left: 2rem !important;
+}
+
+
 @media only screen and (max-width: 1000px) {
 
     .collection-frame {
@@ -57,4 +78,15 @@ img {
         padding: 1rem;
         display: block;
     }
+    .filter-form {
+        margin: 1.5rem;
+    }
+    .custom-table-container {
+        margin: 0;
+    }
+
+    .pagination{
+        padding-left: 0;
+    }
+
 }

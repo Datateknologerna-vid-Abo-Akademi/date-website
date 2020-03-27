@@ -1,8 +1,15 @@
 from django.shortcuts import render, redirect
 from django.views import generic
-from .models import Collection, Picture
-from .forms import PictureUploadForm
 from django.conf import settings
+from django_tables2 import SingleTableMixin
+from django_filters.views import FilterView
+from .models import Collection, Picture, Document
+from .forms import PictureUploadForm
+from .filters import DocumentFilter
+from .tables import DocumentTable
+from django.contrib.auth.decorators import permission_required
+
+
 import os
 
 
@@ -15,15 +22,12 @@ def picture_index(request):
     return render(request, 'archive/index.html', context)
 
 
-def document_index(request):
-    collections = Collection.objects.filter(type="Documents")
-    if request.user.is_authenticated:
-        context = {
-            'type': "Documents",
-            'collections': collections,
-        }
-        return render(request, 'archive/index.html', context)
-    return redirect('index')
+class FilteredDocumentsListView(SingleTableMixin, FilterView):
+    model = Document
+    paginate_by = 15
+    table_class = DocumentTable
+    template_name = 'archive/document_index.html'
+    filterset_class = DocumentFilter
 
 
 class DetailView(generic.DetailView):
@@ -31,22 +35,7 @@ class DetailView(generic.DetailView):
     template_name = 'archive/detail.html'
 
 
-def edit(request, pk):
-    collection = Collection.objects.get(id=pk)
-    return render(request, 'archive/edit.html', {'collection': collection})
-
-
-def remove_file(request, collection_id, file_id):
-    file = Picture.objects.get(pk=file_id)
-    file.delete()
-    collection = Collection.objects.get(pk=collection_id)
-    if collection.picture_set.count() > 0:
-        return render(request, 'archive/edit.html', {'collection': collection})
-    collection.delete()
-    collections = Collection.objects.all()
-    return render(request, 'archive/index.html', {'collections': collections})
-
-
+@permission_required('add_collection')
 def upload(request):
     if request.method == 'POST':
         form = PictureUploadForm(request.POST)

@@ -1,5 +1,5 @@
 from django import forms
-from .models import Collection, Picture
+from .models import Collection, Picture, Document
 
 
 class PictureUploadForm(forms.Form):
@@ -7,18 +7,24 @@ class PictureUploadForm(forms.Form):
     images = forms.ImageField(required=False, widget=forms.ClearableFileInput(attrs={'multiple': True}))
 
 
-class CollectionUpdateForm(forms.ModelForm):
-    images = forms.ImageField(required=False, widget=forms.ClearableFileInput(attrs={'multiple': True}))
+class PictureAdminForm(forms.ModelForm):
+    files = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
+                            label="Ladda upp flera dokument",
+                            required=False)
 
     class Meta:
         model = Collection
-        fields = (
-            'title',
-            'images'
-        )
+        fields = '__all__'
+
+    def save(self, *args, **kwargs):
+        collection = super(PictureAdminForm, self).save(*args, **kwargs)
+        if hasattr(self.files, 'getlist'):
+            for f in self.files.getlist('images'):
+                Picture.objects.create(collection=collection, image=f)
+        return collection
 
 
-class PictureAdminForm(forms.ModelForm):
+class DocumentAdminForm(forms.ModelForm):
     images = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
                              label="Ladda upp flera bilder",
                              required=False)
@@ -28,9 +34,8 @@ class PictureAdminForm(forms.ModelForm):
         fields = '__all__'
 
     def save(self, *args, **kwargs):
-        collection = super(PictureAdminForm, self).save(*args, **kwargs)
+        collection = super(DocumentAdminForm, self).save(*args, **kwargs)
         if hasattr(self.files, 'getlist'):
-            print(self.files.getlist('images'))
-            for f in self.files.getlist('images'):
-                Picture.objects.create(collection=collection, image=f)
+            for f in self.files.getlist('files'):
+                Document.objects.create(collection=collection, document=f)
         return collection

@@ -1,9 +1,7 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
-from .models import Collection, Picture
-from .forms import PictureAdminForm
-
-admin.site.register(Picture)
+from .models import Picture, Document, DocumentCollection, PictureCollection
+from .forms import PictureAdminForm, DocumentAdminForm
 
 
 class PicturesInline(admin.TabularInline):
@@ -17,13 +15,42 @@ class PicturesInline(admin.TabularInline):
         return mark_safe("""<img src="%s" style="width: auto; height: 80px"/> """ % obj.image.url)
 
 
-@admin.register(Collection)
-class CollectionAdmin(admin.ModelAdmin):
-    actions_on_top = ['clean_media']
+class DocumentInline(admin.TabularInline):
+    model = Document
+    fk_name = 'collection'
+    can_delete = True
+    extra = 1
+
+
+@admin.register(PictureCollection)
+class PictureCollectionAdmin(admin.ModelAdmin):
+    model = PictureCollection
     save_on_top = True
     form = PictureAdminForm
     inlines = [
-        PicturesInline,
+        PicturesInline
     ]
-    change_list_template = 'admin/archive/collection/change_list.html'
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(type='Pictures')
+
+    def get_changeform_initial_data(self, request):
+        return {'type': 'Pictures'}
+
+
+@admin.register(DocumentCollection)
+class DocumentCollectionAdmin(admin.ModelAdmin):
+    model = DocumentCollection
+    save_on_top = True
+    form = DocumentAdminForm
+    inlines = [
+        DocumentInline
+    ]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(type='Documents')
+
+    def get_changeform_initial_data(self, request):
+        return {'type': 'Documents'}
