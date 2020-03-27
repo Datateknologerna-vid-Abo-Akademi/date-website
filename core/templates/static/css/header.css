@@ -8,20 +8,20 @@ ul {
     position: fixed;
     z-index: 10;
     width: 100vw;
+    font-family: 'Josefin Sans', sans-serif;
 }
 
 .nav-bar {
-    font-family: josefin-sans sans-serif;
     text-align: right;
-    line-height: 2.5rem;
-    font-size: 1.5vw;
+    line-height: 2rem;
+    font-size: 2rem;
     background-color: var(--primaryColor);
 }
 
 #logo {
     font-size: 200%;
     position: absolute;
-    padding: 20px 20px;
+    padding: 10px 20px;
 }
 .nav-bar li{
     margin-right: 2vw;
@@ -31,6 +31,11 @@ ul {
 /* Set logo left */
 .nav-bar:first-child {
     text-align: left;
+}
+
+.header-logo{
+    max-width: 35pt;
+    max-height: 35pt;
 }
 
 .nav-bar #logo {
@@ -100,7 +105,7 @@ ul {
 }
 
 .dropdown-content a:hover {
-    font-size: 110%;
+    transform: scale(1.15);
     transition: all .3s;
     color: var(--secondaryColorDarker);
 }
@@ -113,8 +118,8 @@ ul {
     position: fixed;
     z-index: 10;
     display: none;
-
 }
+
 .mobile-dropdown i {
     border: none;
     text-shadow: 3px 3px 10px black;
@@ -138,26 +143,41 @@ ul {
     color: var(--secondaryColor);
     background-color: inherit;
     font-family: inherit;
-    margin: 1.5rem;
+    margin-left: 1.5rem;
+}
+
+.mobile-dropdown{
+    overflow: hidden;
 }
 
 .mobile-nav-bar{
     list-style-type: none;
     display: none;
     position: fixed;
-    font-size: 5rem;
-    padding-left: 2rem;
+    font-size: 4rem;
     width: 100vw;
-    height: 100vh;
+    height: 90vh;
     background-color: rgba(0,0,0,0.8);
+    overflow-y: scroll;
 }
+
 .mobile-nav-bar li{
-    padding-top: 2rem;;
+    padding-top: 2rem;
 }
 .mobile-dropdown-content{
     margin-left: 2rem;
     font-size: 0.7em;
+    display: none;
 }
+
+.dropdown .mobile-dropdown-content{
+    display: block;
+}
+
+#mobile-nav-member{
+    max-width: 80vw;    
+}
+
 #mobile-nav-member .dropbtn{
     margin-left: 0;
 }
@@ -167,10 +187,33 @@ ul {
     width: 100vw;
 }
 
+.grid-container{
+    display: grid;
+    grid-template-columns: 3vw 1fr 3vw;
+    grid-template-areas: 
+    ". navlinks .";
+}
+
+.grid-space{
+    grid-area: navlinks;
+    display: grid;
+}
+
+div.mobile-dropdown-content a{
+    display: inline;
+}
+
+.mobile-btn-height{
+    height: 10vh;
+}
 
 @media screen and (max-width: 1200px) {
     .dropdown-content a {
         min-width: 100px;
+    }
+    .header-logo{
+        max-width: 30pt;
+        max-height: 30pt;
     }
 }
 @media screen and (max-width: 1000px) {
@@ -180,11 +223,19 @@ ul {
     }
 }
 
-
 @media screen and (max-width: 900px) {
 
     .nav-bar a {
         padding: 10px 12px;
+    }
+    .header-logo{
+        display: none;
+    }
+    .nav-bar{
+        display: none;
+    }
+    .mobile-dropdown {
+        display: block;
     }
 }
 @media screen and (max-width: 700px){

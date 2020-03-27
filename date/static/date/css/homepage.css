@@ -501,7 +501,7 @@ i {
 
     .ne-container{
         display: grid;
-        grid-template-columns: 5vw 1fr 5vw;
+        grid-template-columns: 2vw 1fr 2vw;
         grid-template-rows: auto;
         grid-template-areas: 
           ". events ."
