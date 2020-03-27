@@ -8,8 +8,8 @@ class PictureUploadForm(forms.Form):
 
 
 class PictureAdminForm(forms.ModelForm):
-    files = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
-                            label="Ladda upp flera dokument",
+    images = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
+                            label="Ladda upp flera bilder",
                             required=False)
 
     class Meta:
@@ -25,8 +25,8 @@ class PictureAdminForm(forms.ModelForm):
 
 
 class DocumentAdminForm(forms.ModelForm):
-    images = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
-                             label="Ladda upp flera bilder",
+    files = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
+                             label="Ladda upp flera dokument",
                              required=False)
 
     class Meta:
@@ -37,5 +37,5 @@ class DocumentAdminForm(forms.ModelForm):
         collection = super(DocumentAdminForm, self).save(*args, **kwargs)
         if hasattr(self.files, 'getlist'):
             for f in self.files.getlist('files'):
-                Document.objects.create(collection=collection, document=f)
+                Document.objects.create(collection=collection, document=f, title=f)
         return collection
