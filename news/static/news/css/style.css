@@ -50,9 +50,19 @@
 .more-button{
     display: inline-block;
     color: rgb(208, 255, 0);
-    
 }
 .more-button:hover{
+    transition: 0.3s;
+    scale: 1.1;
+    color: rgb(65, 73, 22);
+}
+
+div.news-content a{
+    display: inline-block;
+    color: rgb(208, 255, 0);
+}
+
+div.news-content a:hover{
     transition: 0.3s;
     scale: 1.1;
     color: rgb(65, 73, 22);

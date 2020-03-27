@@ -64,6 +64,10 @@ def upload_to(instance, filename):
     )
 
 
+def get_collections_of_type(t):
+    return Collection.objects.filter(type=t)
+
+
 def compress_image(uploaded_image):
     basewidth = 1600
     img = Image.open(uploaded_image)
@@ -77,6 +81,18 @@ def compress_image(uploaded_image):
     outputIOStream.seek(0)
     uploaded_image = InMemoryUploadedFile(outputIOStream, 'ImageField', "%s.jpg" % uploaded_image.name.split('.')[0],  'image/jpeg', sys.getsizeof(outputIOStream), None)
     return uploaded_image
+
+
+class PictureCollection(Collection):
+    class Meta:
+        verbose_name_plural = verbose_name = _('Bildarkiv')
+        proxy = True
+
+
+class DocumentCollection(Collection):
+    class Meta:
+        verbose_name_plural = verbose_name = _('Dokumentarkiv')
+        proxy = True
 
 
 class Picture(models.Model):
@@ -105,12 +121,14 @@ class Picture(models.Model):
 
 
 class Document(models.Model):
-    collection = models.ForeignKey(Collection, on_delete=models.CASCADE)
-    title = models.CharField(max_length=250)
-    document = models.FileField(upload_to=upload_to)
+    id = models.AutoField(primary_key=True)
+    collection = models.ForeignKey(Collection, on_delete=models.CASCADE, verbose_name=_('Samling'))
+    title = models.CharField(max_length=250, verbose_name=_('Namn'))
+    document = models.FileField(upload_to=upload_to, verbose_name=_('Filnamn'))
 
     def __str__(self):
         return self.title
 
     class Meta:
         verbose_name = _('dokument')  # Verbose plural is same.
+        verbose_name_plural = _('dokument')

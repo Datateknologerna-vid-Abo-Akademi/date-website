@@ -190,12 +190,12 @@ html{
     color: var(--primaryColorLight);
 }
 
-.news-button{
+div.content a{
     display: inline-block;
     color: var(--primaryColorLight)
 }
 
-.news-button:hover{
+div.content a:hover{
     transition: 0.2s;
     scale: 1.1;
     color: rgb(180, 180, 180);
@@ -501,7 +501,7 @@ i {
 
     .ne-container{
         display: grid;
-        grid-template-columns: 5vw 1fr 5vw;
+        grid-template-columns: 2vw 1fr 2vw;
         grid-template-rows: auto;
         grid-template-areas: 
           ". events ."

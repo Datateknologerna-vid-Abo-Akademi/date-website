@@ -34,6 +34,17 @@
     margin: 0.1em;
 }
 
+div.container-text a{
+    display: inline-block;
+    color: rgb(208, 255, 0);
+}
+
+div.container-text a:hover{
+    transition: 0.3s;
+    scale: 1.1;
+    color: rgb(65, 73, 22);
+}
+
 .container-form{
     grid-area: signup-form;
 }
