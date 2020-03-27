@@ -7,6 +7,8 @@ from .models import Collection, Picture, Document
 from .forms import PictureUploadForm
 from .filters import DocumentFilter
 from .tables import DocumentTable
+from django.contrib.auth.decorators import permission_required
+
 
 import os
 
@@ -33,22 +35,7 @@ class DetailView(generic.DetailView):
     template_name = 'archive/detail.html'
 
 
-def edit(request, pk):
-    collection = Collection.objects.get(id=pk)
-    return render(request, 'archive/edit.html', {'collection': collection})
-
-
-def remove_file(request, collection_id, file_id):
-    file = Picture.objects.get(pk=file_id)
-    file.delete()
-    collection = Collection.objects.get(pk=collection_id)
-    if collection.picture_set.count() > 0:
-        return render(request, 'archive/edit.html', {'collection': collection})
-    collection.delete()
-    collections = Collection.objects.all()
-    return render(request, 'archive/index.html', {'collections': collections})
-
-
+@permission_required('add_collection')
 def upload(request):
     if request.method == 'POST':
         form = PictureUploadForm(request.POST)
