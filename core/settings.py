@@ -58,6 +58,9 @@ INSTALLED_APPS = [
     'admin_ordering',
     'ckeditor',
     'channels',
+    'django_tables2',
+    'django_filters',
+    'bootstrap3'
 ]
 
 MIDDLEWARE = [
@@ -214,8 +217,8 @@ LOGIN_URL = '/members/login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # During development
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # During development
 
 EMAIL_USE_TLS = True
 EMAIL_HOST = env('EMAIL_HOST')

@@ -9,7 +9,7 @@ urlpatterns = [
     # /pictures/
     path('pictures/', views.picture_index, name='pictures'),
     # /documents/
-    path('documents/', views.document_index, name='documents'),
+    path('documents/', views.FilteredDocumentsListView.as_view(), name='documents'),
     # /archive/<Collection_id>/
     url(r'^(?P<pk>[0-9]+)/$', views.DetailView.as_view(), name='detail'),
     url(r'^(?P<pk>[0-9]+)/edit/$', views.edit, name='edit'),

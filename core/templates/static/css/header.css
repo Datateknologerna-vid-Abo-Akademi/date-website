@@ -200,22 +200,10 @@ ul {
     .dropdown {
         margin-right: 2rem;
     }
-}
-@media screen and (max-width: 550px){
+
     #logo {
         display: none;
     }
-    .nav-bar li{
-        width: 85px;
-    }
-    .nav-bar a {
-        padding: 10px 5px;
-    }
-
-}
-
-
-@media screen and (max-width: 450px){
 
     .nav-bar{
         display: none;
@@ -223,4 +211,15 @@ ul {
     .mobile-dropdown {
         display: block;
     }
+
+
+}
+@media screen and (max-width: 550px){
+    .nav-bar li{
+        width: 85px;
+    }
+    .nav-bar a {
+        padding: 10px 5px;
+    }
+
 }

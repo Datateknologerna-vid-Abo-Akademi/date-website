@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load app_filters %}
+{% load static %}
+{% load i18n %}
+{% load render_table from django_tables2 %}
+{% load bootstrap3 %}
+{% block title %}{% trans 'Dokument arkiv' %}{% endblock %}
+
+{% block content %}
+<head>
+    <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+</head>
+    <div class="container-soft">
+        <div class="hero-text-box">
+            <h1>{% trans "Dokument arkiv" %}</h1>
+            {% if request.user|in_group:"styrelse"%}
+                <a class="button" href="{% url 'archive:upload' %}">{% trans 'Ladda upp dokument' %}</a>
+            {% endif %}
+        </div>
+        <div class="filter-form">
+            {% if filter %}
+                <form action="" method="get" class="form form-inline">
+                    {% bootstrap_form filter.form layout='inline' %}
+                    {% bootstrap_button 'filter' %}
+                </form>
+            {% endif %}
+        </div>
+        <div class="custom-table-container">
+            {% render_table table 'django_tables2/bootstrap.html' %}
+        </div>
+    </div>
+{% endblock %}
+

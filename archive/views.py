@@ -1,8 +1,13 @@
 from django.shortcuts import render, redirect
 from django.views import generic
-from .models import Collection, Picture
-from .forms import PictureUploadForm
 from django.conf import settings
+from django_tables2 import SingleTableMixin
+from django_filters.views import FilterView
+from .models import Collection, Picture, Document
+from .forms import PictureUploadForm
+from .filters import DocumentFilter
+from .tables import DocumentTable
+
 import os
 
 
@@ -15,15 +20,12 @@ def picture_index(request):
     return render(request, 'archive/index.html', context)
 
 
-def document_index(request):
-    collections = Collection.objects.filter(type="Documents")
-    if request.user.is_authenticated:
-        context = {
-            'type': "Documents",
-            'collections': collections,
-        }
-        return render(request, 'archive/index.html', context)
-    return redirect('index')
+class FilteredDocumentsListView(SingleTableMixin, FilterView):
+    model = Document
+    paginate_by = 15
+    table_class = DocumentTable
+    template_name = 'archive/document_index.html'
+    filterset_class = DocumentFilter
 
 
 class DetailView(generic.DetailView):
