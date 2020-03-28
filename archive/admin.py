@@ -30,6 +30,7 @@ class PictureCollectionAdmin(admin.ModelAdmin):
     inlines = [
         PicturesInline
     ]
+    list_display = ('title', 'pub_date')
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -47,6 +48,7 @@ class DocumentCollectionAdmin(admin.ModelAdmin):
     inlines = [
         DocumentInline
     ]
+    list_display = ('title', 'pub_date')
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
