@@ -60,7 +60,6 @@ ul {
     background-color: var(--primaryColorLight);
 }
 
-
 .dropdown {
     margin-right: 3rem;
     display: inline-block;
@@ -125,19 +124,8 @@ ul {
     text-shadow: 3px 3px 10px black;
 }
 
-.mobile-dropdown:hover {
-    display: block;
-    width: 100vw;
-}
-
-.mobile-dropdown:hover .mobile-nav-bar{
-    display: block;
-    text-shadow: 3px 3px 10px var(--primaryColor);
-}
-
-
 .mobile-dropdown .dropbtn {
-    font-size: 4rem;
+    font-size: 3.5rem;
     border: none;
     outline: none;
     color: var(--secondaryColor);
@@ -146,19 +134,25 @@ ul {
     margin-left: 1.5rem;
 }
 
-.mobile-dropdown{
-    overflow: hidden;
+.mobile-dropdown-bg{
+    background-color: inherit;
+    width: 100vw;
 }
 
 .mobile-nav-bar{
     list-style-type: none;
     display: none;
     position: fixed;
-    font-size: 4rem;
+    font-size: 3.5rem;
     width: 100vw;
-    height: 90vh;
+    height: 100vh;
     background-color: rgba(0,0,0,0.8);
+    text-shadow: 3px 3px 10px var(--primaryColor);
+}
+
+.mobile-nav-text{
     overflow-y: scroll;
+    height: 80vh;
 }
 
 .mobile-nav-bar li{

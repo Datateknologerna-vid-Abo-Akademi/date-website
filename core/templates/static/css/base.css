@@ -6,6 +6,13 @@ body {
     margin: 0;
 
 }
+
+.noscroll {
+    overflow: hidden;
+    position: relative;
+    height: 100%;
+}
+
 h1 { font-size: 3em; /* 48 / 16 */ line-height: 1em; /* 48 / 48 */ margin-bottom: .5em; /* 24 / 48 */ }
 h2 { font-size: 2.25em; /* 36 / 16 */ line-height: 1.333333333333333em; /* 48 / 36 */ margin-bottom: .6666666666666667em; /* 24 / 36 */ }
 h3 { font-size: 1.5em; /* 24 / 16 */ line-height: 1em; /* 24 / 24 */ margin-bottom: 1em; /* 24 / 24 */ }
