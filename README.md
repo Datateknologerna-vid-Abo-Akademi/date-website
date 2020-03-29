@@ -76,13 +76,13 @@ NOTE: No need to implement yet
 
 Locales (stupidly called language codes) used in this project
 
-- sv_FI (default)
-- fi_FI
+- sv (default)
+- fi
 
 The actual language code will be one of
 
-- sv-fi
-- fi-fi
+- sv
+- fi
 
 ### Translations
 
@@ -93,11 +93,11 @@ To generate the translation file, called `django.po`
 is done by executing the following command **in the root directory of the project**
 
 ```bash
-$ django-admin makemessages -l fi_FI
+$ django-admin makemessages -l fi
 ```
 
 This creates/updates the `django.po` 
-in `date-website/locale/fi_FI/LC_MESSAGES`.
+in `date-website/locale/fi/LC_MESSAGES`.
 
 Add translations to the empty fields or use a third party translation software,
 such as `Poedit`.
