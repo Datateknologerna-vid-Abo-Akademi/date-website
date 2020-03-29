@@ -19,7 +19,7 @@ class UserAdmin(auth_admin.UserAdmin):
 
     form = MemberUpdateForm
     add_form = MemberCreationForm
-    list_display = ('username', 'first_name', 'last_name', 'membership_type', 'is_staff')
+    list_display = ('username', 'first_name', 'last_name', 'email', 'membership_type', 'is_active', 'is_staff')
     list_filter = ('membership_type', 'is_active', 'groups')
     search_fields = ('first_name', 'last_name', 'email')
     ordering = ('username', )
