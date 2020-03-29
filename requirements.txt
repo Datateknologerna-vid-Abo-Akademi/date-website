@@ -16,3 +16,4 @@ six
 django-tables2
 django-filter
 django-bootstrap3
+django_cleanup

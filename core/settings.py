@@ -60,7 +60,8 @@ INSTALLED_APPS = [
     'channels',
     'django_tables2',
     'django_filters',
-    'bootstrap3'
+    'bootstrap3',
+    'django_cleanup',  # Should be places last
 ]
 
 MIDDLEWARE = [
