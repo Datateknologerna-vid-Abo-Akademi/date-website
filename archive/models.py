@@ -46,7 +46,6 @@ class Collection(models.Model):
 
     def delete(self, *args, **kwargs):
         dir_location = os.path.join(settings.MEDIA_ROOT, self.title.lower())
-        print(dir_location)
         shutil.rmtree(dir_location, ignore_errors=True)
         super(Collection, self).delete(*args, **kwargs)
 

@@ -18,6 +18,7 @@ class PictureAdminForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         collection = super(PictureAdminForm, self).save(*args, **kwargs)
+        collection.save()
         if hasattr(self.files, 'getlist'):
             for f in self.files.getlist('images'):
                 Picture.objects.create(collection=collection, image=f)
@@ -35,6 +36,7 @@ class DocumentAdminForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         collection = super(DocumentAdminForm, self).save(*args, **kwargs)
+        collection.save()
         if hasattr(self.files, 'getlist'):
             for f in self.files.getlist('files'):
                 Document.objects.create(collection=collection, document=f, title=f)

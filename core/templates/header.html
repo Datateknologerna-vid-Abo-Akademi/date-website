@@ -31,7 +31,7 @@
                 <button class="dropbtn">
                     {% trans 'Medlemmar' %}
                 </button>
-                <div class="dropdown-content md">
+                <div class="dropdown-content">
                     <a href="{% url 'archive:pictures' %}">{% trans 'Bilder' %}</a>
                     <a href="{% url 'archive:documents' %}">{% trans 'Dokument' %}</a>
                     <a href="{% url 'members:info' %}">{% trans 'Min profil' %}</a>
@@ -43,52 +43,51 @@
             <li><a href="{% url 'login' %}">{% trans 'Logga in' %}</a></li>
         {% endif %}
     </div>
-
-
     <div id="mobile-dropdown" class="mobile-dropdown"><button id="mobile-dropbtn" class="dropbtn mobile-btn-height"><i class="fas fa-bars"></i></button>
         <div id="mobile-group" class="mobile-nav-bar">
-            <div class="grid-container">
-                <div class="grid-space">
-                    <li><a href="{% url 'index' %}">{% trans 'Startsidan' %} </a></li>
-                    <li><a href="{% url 'events:index' %}">{% trans 'Händelser' %}</a></li>
-                    <li><a href="{% url 'news:index' %}">{% trans 'Nyheter' %}</a></li>
-                    {% if user.is_authenticated %}
+            <div class="mobile-nav-text">
+                <div class="grid-container">
+                    <div class="grid-space">
+                        <li><a href="{% url 'index' %}">{% trans 'Startsidan' %} </a></li>
+                        <li><a href="{% url 'events:index' %}">{% trans 'Händelser' %}</a></li>
+                        <li><a href="{% url 'news:index' %}">{% trans 'Nyheter' %}</a></li>
+                        {% if user.is_authenticated %}
+                            <div id="mobile-nav-member" class="dropdown">
+                            <button class="dropbtn">
+                                {% trans 'Medlemmar' %}
+                            </button>
+                            <div class="mobile-dropdown-content">
+                                <a href="{% url 'archive:pictures' %}">{% trans 'Bilder' %}</a>
+                                <br>
+                                <a href="{% url 'archive:documents' %}">{% trans 'Dokument' %}</a>
+                                <br>
+                                <a href="{% url 'members:info' %}">{% trans 'Min profil' %}</a>
+                                <br>
+                                <a href="/admin">Admin</a>
+                                <br>
+                                <a href="{% url 'logout' %}">{% trans 'Log out' %}</a>
+                            </div>
+                        </div>
+                        {% else %}
+                            <li><a href="{% url 'login' %}">{% trans 'Logga in' %}</a></li>
+                        {% endif %}
+                        {% for category in categories %}    
                         <div id="mobile-nav-member" class="dropdown">
-                        <button class="dropbtn">
-                            {% trans 'Medlemmar' %}
-                        </button>
-                        <div class="mobile-dropdown-content">
-                            <a href="{% url 'archive:pictures' %}">{% trans 'Bilder' %}</a>
-                            <br>
-                            <a href="#">{% trans 'Guider' %}</a>
-                            <br>
-                            <a href="{% url 'members:info' %}">{% trans 'Min profil' %}</a>
-                            <br>
-                            <a href="/admin">Admin</a>
-                            <br>
-                            <a href="{% url 'logout' %}">{% trans 'Log out' %}</a>
+                            <button class="dropbtn">
+                                {{category.category_name}}
+                            </button>
+                            <div class="mobile-dropdown-content">
+                                {% for page in pages %}
+                                    {% if page.category|lower == category.category_name|lower %}
+                                        <a href="{% url 'staticpages:page' page.slug %}">{{page.title}}</a>
+                                        <br>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                         </div>
+                    {% endfor %}
                     </div>
-                    {% else %}
-                        <li><a href="{% url 'login' %}">{% trans 'Logga in' %}</a></li>
-                    {% endif %}
-                    {% for category in categories %}    
-                    <div id="mobile-nav-member" class="dropdown">
-                        <button class="dropbtn">
-                            {{category.category_name}}
-                        </button>
-                        <div class="mobile-dropdown-content">
-                            {% for page in pages %}
-                                {% if page.category|lower == category.category_name|lower %}
-                                    <a href="{% url 'staticpages:page' page.slug %}">{{page.title}}</a>
-                                    <br>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endfor %}
                 </div>
-                
             </div>
         </div>
     </div>
@@ -98,11 +97,15 @@
     $('#mobile-dropbtn').click(function() {
         let btn = $('#mobile-group');
         let btnChild = $("#mobile-dropbtn > i");
+        let noscroll = $("#noscroll");
+        let btnbg = $("#mobile-dropdown");
         if(btn.hasClass("show")){
             btn.css("display", "none");
             btn.removeClass("show");
             btnChild.removeClass("fa-times");
             btnChild.addClass("fa-bars");
+            noscroll.removeClass("noscroll");
+            btnbg.removeClass('mobile-dropdown-bg');
             $('#mobile-dropdown').css("background-color", "rgba(0,0,0,0)");
         }else {
             $('#mobile-dropdown').css("background-color", "rgba(0,0,0,0.8)");
@@ -111,17 +114,23 @@
             btn.addClass('show');
             btnChild.removeClass("fa-bars");
             btnChild.addClass("fa-times");
+            noscroll.addClass("noscroll")
+            btnbg.addClass('mobile-dropdown-bg');
         }
     });
 
     $('#mobile-group').click(function() {
         let btn = $('#mobile-group');
         let btnChild = $("#mobile-dropbtn > i");
+        let noscroll = $("#noscroll");
+        let btnbg = $("#mobile-dropdown");
         if(btn.hasClass("show")){
             btn.css("display", "none");
             btn.removeClass("show");
             btnChild.removeClass("fa-times");
             btnChild.addClass("fa-bars");
+            noscroll.removeClass("noscroll");
+            btnbg.removeClass('mobile-dropdown-bg');
             $('#mobile-dropdown').css("background-color", "rgba(0,0,0,0)");
         }
     });
