@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% load i18n %}
+{% load static %}
+{% block title %}Registration completed{% endblock %}
+{% block content %}
+    <head>
+        <link rel="stylesheet" href="{% static 'members/style.css' %}">
+    </head>
+    <div style="padding-top: 1rem;">
+        <div class="center-box">
+          <p>
+              {% trans 'Styrelsen har blivit notifierad angående din anmälan.' %}
+          </p>
+          <p>
+            {% trans 'Du kan logga in <strong>efter</strong> att styrelsen har granskat och godkänt ditt konto.' %}
+          </p>
+            <p><a class="pw-reset-button" href="{% url 'index' %}">{% trans 'Gå till Startsidan' %}</a></p>
+    </div>
+</div>
+{% endblock %}

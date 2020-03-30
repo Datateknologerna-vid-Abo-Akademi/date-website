@@ -7,6 +7,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from django.shortcuts import render, redirect
 from django.contrib.auth.hashers import make_password
+from django.utils.translation import ugettext_lazy as _
 from django.views import View
 import os
 
@@ -49,8 +50,7 @@ def signup(request):
             )
             logger.info(f"NEW USER: Sending email to {to_email}")
             email.send()
-            # return HttpResponse('Please confirm your email address to complete the registration')
-            return redirect('index')
+            return render(request, 'registration/registration_complete.html')
     else:
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form})
@@ -65,6 +65,7 @@ def activate(request, uidb64, token):
     if user is not None and account_activation_token.check_token(user, token):
         user.is_active = True
         user.save()
-        return HttpResponse(f'User {user} activated')
+        msg = _("Användare aktiverad")
+        return render(request, 'userinfo.html', {"user": user, "msg": msg})
     else:
         return HttpResponse('Activation link is invalid!')

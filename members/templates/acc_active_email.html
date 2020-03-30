@@ -5,4 +5,8 @@ En ny användare har registrerat sig:
 
 Aktivera användaren genom att klicka på länken nedan,
 http://{{ domain }}{% url 'members:activate' uidb64=uid token=token %}
+
+Eller granska och aktivera medlemmen via admin sidan,
+http://{{ domain }}/admin/members/member
+
 {% endautoescape %}
