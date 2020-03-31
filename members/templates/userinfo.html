@@ -9,6 +9,9 @@
     </head>
     <div class="container">
         <div class="container-info font-size">
+        {% if msg %}
+            <h3 style="color: green; text-align: center">{{ msg }}</h3>
+        {% endif %}
             {% if user.is_authenticated %}
             <h1 class="heading"> {{user.username}} </h1>
             <table>
