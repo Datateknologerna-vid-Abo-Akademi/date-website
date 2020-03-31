@@ -8,6 +8,11 @@ from django.contrib.auth.models import Permission
 admin.site.register(Permission)
 admin.site.register(Subscription)
 
+FRESHMAN = 1
+ORDINARY_MEMBER = 2
+SUPPORTING_MEMBER = 3
+SENIOR_MEMBER = 4
+
 
 @admin.register(Member)
 class UserAdmin(auth_admin.UserAdmin):
@@ -40,11 +45,11 @@ class UserAdmin(auth_admin.UserAdmin):
     deactivate_user.short_description = "Deaktivera användare"
 
     def make_ordinary_member(self, request, queryset):
-        queryset.update(membership_type=MEMBERSHIP_TYPES['ORDINARY_MEMBER'])
+        queryset.update(membership_type=ORDINARY_MEMBER)
     make_ordinary_member.short_description = "Sätt medlem till ordinariemedlem"
 
     def make_senior_member(self, request, queryset):
-        queryset.update(membership_type=MEMBERSHIP_TYPES['SENIOR_MEMBER'])
+        queryset.update(membership_type=SENIOR_MEMBER)
     make_senior_member.short_description = "Sätt medlem till seniormedlem"
 
 
