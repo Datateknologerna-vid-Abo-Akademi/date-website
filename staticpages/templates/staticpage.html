@@ -9,7 +9,9 @@
         <link rel="stylesheet" href="{% static 'staticpages/css/staticpage.css' %}" type="text/css">
     </head>
 
-    <div id="container-soft">
-        {{page.content | safe}}
+    <div id="container-soft" class="container-soft">
+        <div class="content-grid">
+            {{page.content | safe}}
+        </div>
     </div>
 {% endblock %}
