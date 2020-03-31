@@ -16,7 +16,7 @@
                 <p>{{ error_msg }}</p>
             {% endif %}
             {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse"%}
-                <p><a class="button" href="{% url 'admin:archive_collection_change' collection.id %}">{% trans 'editera' %}</a></p>
+                <p><a class="button" href="{% url 'admin:archive_picturecollection_change' collection.id %}">{% trans 'editera' %}</a></p>
             {% endif %}
             <div class="hero-text-sub">
                 <button class="btn" onclick="one()">1</button>
