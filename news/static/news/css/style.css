@@ -53,8 +53,7 @@
 }
 .more-button:hover{
     transition: 0.3s;
-    scale: 1.1;
-    color: rgb(65, 73, 22);
+    color: rgb(146, 179, 0);
 }
 
 div.news-content a{
@@ -64,8 +63,7 @@ div.news-content a{
 
 div.news-content a:hover{
     transition: 0.3s;
-    scale: 1.1;
-    color: rgb(65, 73, 22);
+    color: rgb(146, 179, 0);
 }
 
 @media only screen and (min-width: 836px) {
