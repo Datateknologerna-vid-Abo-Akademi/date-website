@@ -50,8 +50,7 @@ div.news a{
 
 div.news a:hover{
     transition: 0.3s;
-    scale: 1.1;
-    color: rgb(65, 73, 22);
+    color: rgb(146, 179, 0);
 }
 
 .author{

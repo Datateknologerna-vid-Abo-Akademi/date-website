@@ -192,13 +192,12 @@ html{
 
 div.content a{
     display: inline-block;
-    color: var(--primaryColorLight)
+    color: var(--primaryColorLight);
 }
 
 div.content a:hover{
     transition: 0.2s;
-    scale: 1.1;
-    color: rgb(180, 180, 180);
+    color: rgb(126, 126, 126);
 }
 
 .sidebar-container{
