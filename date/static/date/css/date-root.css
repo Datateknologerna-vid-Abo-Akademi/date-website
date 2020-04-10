@@ -2,8 +2,8 @@
 /* use with var(--color); included in base.html*/
 
 :root {
-    --primaryColor: #000;
-    --primaryColorLighter: #202020;
+    --primaryColor: rgb(10, 140, 65);
+    --primaryColorLighter: rgb(10, 170, 77);
     --primaryColorLight:#505050;
     --secondaryColor: #fff;
     --secondaryColorDarker: #eaeaea;

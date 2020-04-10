@@ -9,11 +9,12 @@ ul {
     z-index: 10;
     width: 100vw;
     font-family: 'Josefin Sans', sans-serif;
+    border-bottom: 1px solid rgb(255, 255, 255);
 }
 
 .nav-bar {
     text-align: right;
-    line-height: 2rem;
+    line-height: 1rem;
     font-size: 2rem;
     background-color: var(--primaryColor);
 }
@@ -21,7 +22,7 @@ ul {
 #logo {
     font-size: 200%;
     position: absolute;
-    padding: 10px 20px;
+    padding: 2px 20px;
 }
 .nav-bar li{
     margin-right: 2vw;
