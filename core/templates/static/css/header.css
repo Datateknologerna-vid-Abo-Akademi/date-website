@@ -24,7 +24,6 @@ ul {
     padding: 10px 20px;
 }
 .nav-bar li{
-    margin-right: 2vw;
     display: inline-block;
 }
 
@@ -56,13 +55,18 @@ ul {
   transition: border-width 0.6s linear;
 }
 
-.nav-bar li:hover, #nav-member:hover{
+.nav-bar li:hover, .dropdown:hover {
     background-color: var(--primaryColorLight);
 }
 
 .dropdown {
-    margin-right: 3rem;
     display: inline-block;
+}
+.nav-bar li:last-child {
+    margin-right: 3rem;
+}
+.nav-bar #nav-member {
+    margin-right: 3rem;
 }
 
 .dropdown button {
@@ -84,8 +88,9 @@ ul {
     color: var(--secondaryColor);
     position: absolute;
     display: none;
-    min-width: 160px;
+    min-width: 120px;
     z-index: 1;
+    max-width: 100%;
 }
 
 .dropdown-content a {
@@ -96,7 +101,7 @@ ul {
     padding: 1rem 1rem;
     text-decoration: none;
     display: block;
-    min-width: 180px;
+    min-width: 120px;
     margin-bottom: 1rem;
 }
 .dropdown-content a:last-child {
