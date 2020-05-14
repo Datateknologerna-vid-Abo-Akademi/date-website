@@ -19,7 +19,7 @@ class Calendar(HTMLCalendar):
 			a += f'</a>'
 
 		if day != 0:
-			return f"<td class='day'>{d}<span class='date'>{day}</span>{a}<ul> </ul></td>"
+			return f"<td class='day'>{d}{day}{a}</td>"
 		return '<td></td>'
 
 	# formats a week as a tr 
