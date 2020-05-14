@@ -5,7 +5,6 @@ app_name = 'events'
 
 urlpatterns = [
     url(r'^$', views.IndexView.as_view(), name='index'),
-    url(r'^calendar/$', views.CalendarView.as_view(), name='calendar'),
     url(r'^(?P<slug>[-\w]+)/$', views.EventDetailView.as_view(), name='detail'),
     url(r'^feed$', feed.EventFeed(), name='feed'),
 ]
