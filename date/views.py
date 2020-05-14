@@ -22,6 +22,7 @@ def index(request):
 
     d = get_date(request.GET.get('day', None))
     cal = Calendar(d.year, d.month)
+
     calendar = cal.formatmonth(withyear=True)
 
     return render(request, 'date/start.html', {'news_events': news_events, 'events': events, 'news': news, 'calendar': calendar })

@@ -13,11 +13,13 @@ class Calendar(HTMLCalendar):
 	def formatday(self, day, events):
 		events_per_day = events.filter(event_date_start__day=day)
 		d = ''
+		a = ''
 		for event in events_per_day:
-			d += f'<li> {event.title} </li>'
+			d += f'<a href=/events/{event.slug}>'
+			a += f'</a>'
 
 		if day != 0:
-			return f"<td class='day'><span class='date'>{day}</span><ul> {d} </ul></td>"
+			return f"<td class='day'>{d}<span class='date'>{day}</span>{a}<ul> </ul></td>"
 		return '<td></td>'
 
 	# formats a week as a tr 
