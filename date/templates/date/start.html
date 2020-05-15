@@ -64,7 +64,7 @@
                     <div class="calendar-container">
                         <div class="calendar-box">
                             <p class="month">
-                                <span ><span><a href="#"> < </a></span> Month <span><a href="#"> > </a></span></span>
+                                <span ><span><a href="#"></a></span> Month <span><a href="#"></a></span></span>
                             </p>
                             <table class="calendar"> 
                                 <tr class="week">
@@ -143,27 +143,11 @@
                         <h2 class="border-bottom">Sammarbetspartners</h2>
                         <div class="carousel">
                             <ul>
+                                {%for ad in ads%}
                                 <li class="company-logo">
-                                    <img src="{% static 'images/albin.png' %}" alt="ig-content">
+                                    <img src="{{ad}}" alt="ig-content">
                                 </li>
-                                <li class="company-logo">
-                                    <img src="{% static 'images/albin.png' %}" alt="ig-content">
-                                </li>
-                                <li class="company-logo">
-                                    <img src="{% static 'images/axel.png' %}" alt="ig-content">
-                                </li>
-                                <li class="company-logo">
-                                    <img src="{% static 'images/albin.png' %}" alt="ig-content">
-                                </li>
-                                <li class="company-logo">
-                                    <img src="https://www.itewiki.fi/write/post_images/1608.png" alt="ig-content">
-                                </li>
-                                <li class="company-logo">
-                                    <img src="https://digit.fi/uploads/20200318/futurice_logo(1).png" alt="ig-content">
-                                </li>
-                                <li class="company-logo">
-                                    <img src="https://digit.fi/uploads/20200318/Sofokus-RGB.png" alt="ig-content">
-                                </li>
+                                {% endfor %}
                             </ul>
                         </div>
                     </div>  

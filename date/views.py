@@ -7,6 +7,7 @@ from django.utils import translation
 from django.conf import settings
 from events.models import Event
 from news.models import Post
+from ads.models import AdUrl
 
 from itertools import chain
 
@@ -16,7 +17,9 @@ def index(request):
     news = Post.objects.filter(published=True).reverse()[:2]
     news_events = list(chain(events, news))
 
-    return render(request, 'date/start.html', {'news_events': news_events, 'events': events, 'news': news})
+    ads = AdUrl.objects.all()
+
+    return render(request, 'date/start.html', {'news_events': news_events, 'events': events, 'news': news, 'ads': ads})
 
 
 def language(request, lang):
