@@ -7,11 +7,8 @@ from django.utils import translation
 from django.conf import settings
 from events.models import Event
 from news.models import Post
-<<<<<<< HEAD
 from ads.models import AdUrl
-=======
 from itertools import chain, islice
->>>>>>> feature/kkinstagram
 
 import instaloader
 
