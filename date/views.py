@@ -59,17 +59,15 @@ def handler500(request, *args, **argv):
     response.status_code = 404
     return response
 
-<<<<<<< HEAD
 def get_date(req_day):
     if req_day:
         year, month = (int(x) for x in req_day.split('-'))
         return date(year, month, day=1)
     return datetime.date.today()
-=======
+
 def getIgPics():
     L = instaloader.Instaloader()
     igProfile = instaloader.Profile.from_username(L.context, "kemistklubben")
     posts = igProfile.get_posts()
     top11 = islice(posts, 11)
     return top11
->>>>>>> feature/kkinstagram
