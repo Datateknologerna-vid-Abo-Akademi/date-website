@@ -7,9 +7,13 @@ from django.utils import translation
 from django.conf import settings
 from events.models import Event
 from news.models import Post
+<<<<<<< HEAD
 from ads.models import AdUrl
+=======
+from itertools import chain, islice
+>>>>>>> feature/kkinstagram
 
-from itertools import chain
+import instaloader
 
 from django.views import generic
 from django.utils.safestring import mark_safe
@@ -21,14 +25,14 @@ def index(request):
     news = Post.objects.filter(published=True).reverse()[:2]
     news_events = list(chain(events, news))
     ads = AdUrl.objects.all()
-
+    posts = getIgPics()
 
     d = get_date(request.GET.get('day', None))
     cal = Calendar(d.year, d.month)
 
     calendar = cal.formatmonth(withyear=True)
 
-    return render(request, 'date/start.html', {'news_events': news_events, 'events': events, 'news': news, 'calendar': calendar, 'ads':ads })
+    return render(request, 'date/start.html', {'news_events': news_events, 'events': events, 'news': news, 'calendar': calendar, 'ads':ads, 'posts':posts})
 
 
 def language(request, lang):
@@ -55,8 +59,17 @@ def handler500(request, *args, **argv):
     response.status_code = 404
     return response
 
+<<<<<<< HEAD
 def get_date(req_day):
     if req_day:
         year, month = (int(x) for x in req_day.split('-'))
         return date(year, month, day=1)
     return datetime.date.today()
+=======
+def getIgPics():
+    L = instaloader.Instaloader()
+    igProfile = instaloader.Profile.from_username(L.context, "kemistklubben")
+    posts = igProfile.get_posts()
+    top11 = islice(posts, 11)
+    return top11
+>>>>>>> feature/kkinstagram

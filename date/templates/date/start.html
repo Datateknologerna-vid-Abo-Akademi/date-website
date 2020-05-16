@@ -102,47 +102,11 @@
                     <div class="scroll-content">
                         <div class="slideshow">
                             <div class="images">
-                                <a href="#">
-                                    <img src="https://i.imgur.com/6431X2S.jpg" alt="ig-content">
+                                {% for post in posts%}
+                                <a href="https://www.instagram.com/p/{{post.shortcode}}/">
+                                    <img src="{{post.url}}" alt="lul">
                                 </a>
-                                <a href="#">
-                                    <img src="https://i.imgur.com/OuXI1g6.jpg" alt="ig-content">
-                                </a>
-                                <a href="#">
-                                    <img src="{% static 'images/axel.png' %}" alt="ig-content">
-                                </a>
-                                <a href="#">
-                                    <img src="https://i.imgur.com/6431X2S.jpg" alt="ig-content">
-                                </a>
-                                <a href="#">
-                                    <img src="https://i.imgur.com/OuXI1g6.jpg" alt="ig-content">
-                                </a>
-                                <a href="#">
-                                    <img src="{% static 'images/albin.png' %}" alt="ig-content">
-                                </a>                                <a href="#">
-                                    <img src="https://i.imgur.com/6431X2S.jpg" alt="ig-content">
-                                </a>
-                                <a href="#">
-                                    <img src="https://i.imgur.com/OuXI1g6.jpg" alt="ig-content">
-                                </a>
-                                <a href="#">
-                                    <img src="{% static 'images/axel.png' %}" alt="ig-content">
-                                </a>
-                                <a href="#">
-                                    <img src="{% static 'images/axel.png' %}" alt="ig-content">
-                                </a>
-                                <a href="#">
-                                    <img src="{% static 'images/axel.png' %}" alt="ig-content">
-                                </a>
-                                <a href="#">
-                                    <img src="{% static 'images/axel.png' %}" alt="ig-content">
-                                </a>
-                                <a href="#">
-                                    <img src="{% static 'images/axel.png' %}" alt="ig-content">
-                                </a>
-                                <a href="#">
-                                    <img src="{% static 'images/axel.png' %}" alt="ig-content">
-                                </a>
+                                {%endfor%}
                             </div>
                          </div>
                     </div>
