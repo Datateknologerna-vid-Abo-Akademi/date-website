@@ -63,64 +63,10 @@
                     <h2 class="border-bottom">Evenemang</h2>
                     <div class="calendar-container">
                         <div class="calendar-box">
-                            <p class="month">
-                                <span ><span><a href="#"></a></span> Month <span><a href="#"></a></span></span>
-                            </p>
-                            <table class="calendar"> 
-                                <tr class="week">
-                                    <td class="weekday">MÅ</td>
-                                    <td class="weekday">TI</td>
-                                    <td class="weekday">ON</td>
-                                    <td class="weekday">TO</td>
-                                    <td class="weekday">FR</td>
-                                    <td class="weekday">LÖ</td>
-                                    <td class="weekday">SÖ</td>
-                                </tr>
-                                <tr class="week">
-                                    <td class="day"></td>
-                                    <td class="day">1</td>
-                                    <td class="day">2</td>
-                                    <td class="day"><a href="#">3</a></td>
-                                    <td class="day">4</td>
-                                    <td class="day">5</td>
-                                    <td class="day">6</td>
-                                </tr>
-                                <tr class="week">
-                                    <td class="day">7</td>
-                                    <td class="day">8</td>
-                                    <td class="day">9</td>
-                                    <td class="day">10</td>
-                                    <td class="day">11</td>
-                                    <td class="day">12</td>
-                                    <td class="day">13</td>
-                                </tr>
-                                <tr class="week">
-                                    <td class="day">14</td>
-                                    <td class="day">15</td>
-                                    <td class="day">16</td>
-                                    <td class="day">17</td>
-                                    <td class="day">18</td>
-                                    <td class="day">19</td>
-                                    <td class="day">20</td>
-                                </tr>
-                                <tr class="week">
-                                    <td class="day">21</td>
-                                    <td class="day">22</td>
-                                    <td class="day">23</td>
-                                    <td class="day">24</td>
-                                    <td class="day">25</td>
-                                    <td class="day">26</td>
-                                    <td class="day">27</td>
-                                </tr>
-                                <tr class="week">
-                                    <td class="day">28</td>
-                                    <td class="day">29</td>
-                                    <td class="day">30</td>
-                                    <td class="day">31</td>
-                                    <td class="day"></td>
-                                    <td class="day"></td>
-                                    <td class="day"></td>
-                                </tr>
+                            <table class="calendar">
+                                {% autoescape off %}
+                                {{calendar}}
+                                {% endautoescape %}
                             </table>
                         </div>
                     </div>
@@ -140,7 +86,7 @@
                         {% endif %}
                     </div>
                     <div class="logo-container">
-                        <h2 class="border-bottom">Sammarbetspartners</h2>
+                        <h2 class="border-bottom">Samarbetspartners</h2>
                         <div class="carousel">
                             <ul>
                                 {%for ad in ads%}
