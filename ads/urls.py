@@ -1,8 +1,10 @@
-from django.conf.urls import url
+from django.urls import path
 from . import views
 
 app_name = 'ads'
 
 urlpatterns = [
-    url('', views.AdsIndex.as_view(), name='index'),
+    path('update/', views.igUrl, name='igurl'),
+    path('', views.adsIndex, name='index'),
+
 ]

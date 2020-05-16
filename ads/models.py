@@ -12,3 +12,10 @@ class AdUrl(models.Model):
 
     def __str__(self):
         return self.ad_url
+
+class IgUrl(models.Model):
+    url = models.CharField(_('URL'), max_length=255, blank=False)
+    shortcode = models.CharField(_('SHORTCODE'), max_length=255, blank=False)
+
+    def __str__(self):
+        return self.url

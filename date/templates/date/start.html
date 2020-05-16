@@ -75,7 +75,7 @@
                         <a href="{% url 'events:detail' ev.slug %}">
                             <div class="event-box border-left">
                                 <h4 class="event-title">{{ ev.title }}  </h4>
-                                <p class="event-date">{{ ev.event_date_start_pretty|slice:5}}</p>
+                                <p class="event-date">{{ ev.event_date_start_pretty|slice:6}}</p>
                             </div>
                         </a>
                             {% empty %}
@@ -104,7 +104,7 @@
                             <div class="images">
                                 {% for post in posts%}
                                 <a href="https://www.instagram.com/p/{{post.shortcode}}/">
-                                    <img src="{{post.url}}" alt="lul">
+                                    <img src="{{post.url}}" alt="image">
                                 </a>
                                 {%endfor%}
                             </div>
