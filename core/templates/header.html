@@ -13,7 +13,7 @@
         <li id="nav-event" ><a href="{% url 'events:index' %}">{% trans 'Evenemang' %}</a></li>
         <li id="nav-news"><a href="{% url 'news:index' %}">{% trans 'Nyheter' %}</a></li>
         {% for category in categories %}    
-            <div id="nav-member" class="dropdown">
+            <div class="dropdown">
                 <button class="dropbtn">
                     {{category.category_name}}
                 </button>
