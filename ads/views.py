@@ -8,9 +8,11 @@ from ads.models import IgUrl
 
 # Create your views here.
 
+
 def adsIndex(request):
     ads = models.AdUrl.objects.all()
     return render(request, 'ads/adsindex.html', {'ads': ads})
+
 
 def igUrl(request):
     L = instaloader.Instaloader()
@@ -21,9 +23,9 @@ def igUrl(request):
     models.IgUrl.objects.all().delete()
 
     for post in top20:
-        u = IgUrl(url=post.url,shortcode=post.shortcode)
+        u = IgUrl(url=post.url, shortcode=post.shortcode)
         u.save()
 
     igPosts = IgUrl.objects.all()
 
-    return render(request, 'ads/igurls.html', {'igurls':igPosts})
+    return render(request, 'ads/igurls.html', {'igurls': igPosts})

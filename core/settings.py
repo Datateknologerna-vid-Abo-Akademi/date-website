@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'events',
     'members',
     'ads',
+    'event_calendar',
     'archive.apps.ArchiveConfig',
     'django.contrib.admin',
     'django.contrib.auth',
