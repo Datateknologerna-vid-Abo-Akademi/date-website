@@ -1,7 +1,7 @@
 from .models import StaticPage, StaticPageNav, StaticUrl
 
 def get_pages(context):
-    pages = StaticPage.objects.all()
+    pages = StaticPage.objects.all().order_by('dropdown_element')
     return {'pages': pages}
 
 def get_categories(context):
@@ -9,5 +9,5 @@ def get_categories(context):
     return {'categories': categories}
 
 def get_urls(context):
-    urls = StaticUrl.objects.all()
+    urls = StaticUrl.objects.all().order_by('dropdown_element')
     return {'urls': urls}

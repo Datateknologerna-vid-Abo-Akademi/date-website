@@ -22,6 +22,7 @@ class StaticPage(models.Model):
     modified_time = models.DateTimeField(_('Modifierad'), editable=False, null=True, blank=True)
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
     category = models.ForeignKey(StaticPageNav, on_delete=models.CASCADE, blank=True, null=True)
+    dropdown_element = models.IntegerField()
 
     def __str__(self):
         return self.title
@@ -32,8 +33,9 @@ class StaticPage(models.Model):
 
 class StaticUrl(models.Model):
     title = models.CharField(_('Titel'), max_length=255, blank=False)
-    url = models.URLField(max_length=200)
+    url = models.CharField(_('Url'),max_length=200)
     category = models.ForeignKey(StaticPageNav, on_delete=models.CASCADE, blank=True)
+    dropdown_element = models.IntegerField()
 
     def __str__(self):
         return self.title
