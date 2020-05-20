@@ -7,8 +7,9 @@ from django.utils import translation
 from django.conf import settings
 from events.models import Event
 from news.models import Post
-from ads.models import AdUrl, IgUrl
-from itertools import chain, islice
+from ads.models import AdUrl
+from social.models import IgUrl
+from itertools import chain
 from events.utils import Calendar
 
 def index(request):
