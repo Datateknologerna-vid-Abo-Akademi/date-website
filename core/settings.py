@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'members',
     'ads',
     'event_calendar',
+    'social',
     'archive.apps.ArchiveConfig',
     'django.contrib.admin',
     'django.contrib.auth',

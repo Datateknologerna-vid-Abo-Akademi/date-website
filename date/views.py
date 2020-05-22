@@ -6,10 +6,10 @@ from django.utils import translation
 from django.conf import settings
 from events.models import Event
 from news.models import Post
-from ads.models import AdUrl, IgUrl
 from itertools import chain
 from event_calendar.views import get_calendar, get_date, prev_month, next_month
-
+from ads.models import AdUrl
+from social.models import IgUrl
 
 def index(request):
     d = get_date(request.GET.get('month', None))
