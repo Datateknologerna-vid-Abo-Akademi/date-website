@@ -23,6 +23,11 @@
                             <a href="{% url 'staticpages:page' page.slug %}">{{page.title}}</a>
                         {% endif %}
                     {% endfor %}
+                    {% for page in urls %}
+                    {% if page.category|lower == category.category_name|lower %}
+                        <a href="{{ page.url }}">{{page.title}}</a>
+                    {% endif %}
+                    {% endfor %}
                 </div>
             </div>
         {% endfor %}
@@ -82,6 +87,11 @@
                                         <a href="{% url 'staticpages:page' page.slug %}">{{page.title}}</a>
                                         <br>
                                     {% endif %}
+                                {% endfor %}
+                                {% for page in urls %}
+                                {% if page.category|lower == category.category_name|lower %}
+                                    <a href="{{ page.url }}">{{page.title}}</a>
+                                {% endif %}
                                 {% endfor %}
                             </div>
                         </div>

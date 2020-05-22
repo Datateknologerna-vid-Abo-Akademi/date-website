@@ -95,6 +95,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'staticpages.context_processors.get_pages',
                 'staticpages.context_processors.get_categories',
+                'staticpages.context_processors.get_urls',
             ],
         },
     },

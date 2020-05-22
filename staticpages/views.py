@@ -7,9 +7,13 @@ from . import models
 class StaticPageIndex(View):
     def get(self, request):
         pages = models.StaticPage.objects.all()
-        return render(request, 'staticpageindex.html', {'pages':pages})
+        return render(request, 'staticpages/staticpageindex.html', {'pages':pages})
 
 class StaticPageView(View):
     def get(self, request, slug):
         page = models.StaticPage.objects.get(slug=slug)
-        return render(request, 'staticpage.html', {'page':page})
+        return render(request, 'staticpages/staticpage.html', {'page':page})
+
+def staticUrl(request):
+    staticUrls = models.StaticUrl.objects.all()
+    return render(request, 'staticpages/staticUrls.html', {'staticUrls': staticUrls})
