@@ -65,7 +65,11 @@
                         <div class="calendar-box">
                             <table class="calendar">
                                 {% autoescape off %}
-                                {{calendar}}
+                                    <div class="clearfix">
+                                        <a class="btn btn-info left" href="{% url 'index' %}?{{ prev_month }}">{% trans 'föregående' %}</a>
+                                        <a class="btn btn-info right" href="{% url 'index' %}?{{ next_month }}">{% trans 'nästa' %}</a>
+                                    </div>
+                                    {{calendar}}
                                 {% endautoescape %}
                             </table>
                         </div>

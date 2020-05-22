@@ -30,8 +30,9 @@ urlpatterns = [
     path('members/', include('members.urls')),
     path('archive/', include('archive.urls')),
     path('events/', include('events.urls')),
-    path('guides/', include('staticpages.urls')),
+    path('pages/', include('staticpages.urls')),
     path('ads/',include('ads.urls')),
+    path('social/',include('social.urls')),
     path('admin/', admin.site.urls),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
