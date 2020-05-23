@@ -14,11 +14,11 @@ def igUrls(request):
     L = instaloader.Instaloader()
     igProfile = instaloader.Profile.from_username(L.context, "kemistklubben")
     posts = igProfile.get_posts()
-    top20 = islice(posts, 20)
+    top40 = islice(posts, 40)
 
     models.IgUrl.objects.all().delete()
 
-    for post in top20:
+    for post in top40:
         u = IgUrl(url=post.url,shortcode=post.shortcode)
         u.save()
 

@@ -13,16 +13,19 @@ ul {
 }
 
 .nav-bar {
-    text-align: right;
+    display: flex;
+    justify-content: flex-end;
     line-height: 1rem;
     font-size: 2rem;
-    background-color: var(--primaryColor);
+    position: relative;
+    width: 93%;
+    left: 5%;
 }
 
 #logo {
-    font-size: 200%;
     position: absolute;
-    padding: 2px 20px;
+    z-index: 1;
+    padding:  2px 20px;
 }
 .nav-bar li{
     display: inline-block;
@@ -35,7 +38,7 @@ ul {
 
 .header-logo{
     max-width: 35pt;
-    max-height: 35pt;
+    max-height: 40px;
 }
 
 .nav-bar #logo {
@@ -56,13 +59,18 @@ ul {
   transition: border-width 0.6s linear;
 }
 
-.nav-bar li:hover, .dropdown:hover {
+.nav-bar li:hover, .dropdown-hover:hover {
     background-color: var(--primaryColorLight);
 }
 
 .dropdown {
-    display: inline-block;
+    cursor: pointer;
 }
+
+.dropbtn-height{
+    padding: 10px;
+}
+
 .nav-bar li:last-child {
     margin-right: 3rem;
 }
@@ -105,6 +113,11 @@ ul {
     min-width: 120px;
     margin-bottom: 1rem;
 }
+
+.dropdown-content a:first-child{
+    font-weight: bold;
+}
+
 .dropdown-content a:last-child {
     margin-bottom: 0;
 }
@@ -153,7 +166,7 @@ ul {
     width: 100vw;
     height: 100vh;
     background-color: rgba(0,0,0,0.8);
-    text-shadow: 3px 3px 10px var(--primaryColor);
+    text-shadow: 3px 3px 10px rgb(0, 0, 0);
 }
 
 .mobile-nav-text{
@@ -185,6 +198,10 @@ ul {
 .mobile-dropdown-content a {
     display: block;
     width: 100vw;
+}
+
+.mobile-dropdown-content a:first-child {
+    font-weight: bold;
 }
 
 .grid-container{
