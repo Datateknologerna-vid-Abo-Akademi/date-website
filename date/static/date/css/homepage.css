@@ -112,7 +112,7 @@ h2{
 .hero-text-sub {
     display: block;
     text-align: center;
-    font-size: 1.8rem;
+    font-size: 3rem;
     font-weight: 700;
     letter-spacing: 1.2rem;
     -webkit-animation: fadeIn 4.5s ease-in;
@@ -515,29 +515,46 @@ div.scroll-content img{
 
 @media screen and (max-height: 850px){
     .hero-text-box {
-        -webkit-transform: translate(-50%, 20%)scale(0.45);
-                transform: translate(-50%, 20%)scale(0.45);
+        -webkit-transform: translate(-50%, 25%)scale(0.45);
+                transform: translate(-50%, 25%)scale(0.45);
     }
+    .hero-text-main {
+        font-size: 9rem;
+    }
+
+    .hero-text-sub{
+        font-size: 2rem;
+    }
+
+    .hero-text-box .hero-text-sub {
+        letter-spacing: 1rem;
+    }
+
+    .hero-text-box .text {
+        -webkit-transform: translateY(20px);
+                transform: translateY(20px);
+    }
+
 }
 
 @media screen and (max-height: 700px){
     .hero-text-box {
-        -webkit-transform: translate(-50%, 15%)scale(0.4);
-                transform: translate(-50%, 15%)scale(0.4);
+        -webkit-transform: translate(-50%, 22%)scale(0.4);
+                transform: translate(-50%, 22%)scale(0.4);
     }
 }
 
 @media screen and (max-height: 600px){
     .hero-text-box {
-        -webkit-transform: translate(-50%, 10%)scale(0.3);
-                transform: translate(-50%, 10%)scale(0.3);
+        -webkit-transform: translate(-50%, 15%)scale(0.3);
+                transform: translate(-50%, 15%)scale(0.3);
     }
 }
 
 @media screen and (max-height: 500px){
     .hero-text-box {
-        -webkit-transform: translate(-50%, -10%)scale(0.2);
-                transform: translate(-50%, -10%)scale(0.2);
+        -webkit-transform: translate(-50%, 0%)scale(0.2);
+                transform: translate(-50%, 0%)scale(0.2);
     }
 }
 
@@ -550,11 +567,6 @@ div.scroll-content img{
 }
 @media screen and (max-width: 1200px){
     
-    .hero-text-main {
-        font-size: 10rem;
-        padding-top: 10vh;
-    }
-
     .main-container{
         grid-template-columns: 2vw 5fr 2fr 2vw;
     }
@@ -605,17 +617,6 @@ div.scroll-content img{
 }
 
 @media screen and (max-width: 450px) {
-
-    .hero-text-main {
-        font-size: 6rem;
-    }
-    .hero-text-box .text {
-        -webkit-transform: translateX(5px);
-                transform: translateX(5px);
-    }
-    .hero-text-box .hero-text-sub {
-        letter-spacing: 1rem;
-    }
 
     .news-grid {
         grid-template-columns: 1fr;

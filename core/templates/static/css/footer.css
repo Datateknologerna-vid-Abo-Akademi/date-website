@@ -45,9 +45,6 @@ footer p{
         height: 100px;
         box-shadow: none;
     }
-    #footer-img img {
-        width: 100%;
-    }
 
     footer p{
         padding: 1rem;
