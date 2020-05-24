@@ -49,6 +49,7 @@ h2{
     fill: var(--secondaryColor);
     stroke-dasharray: 25000;
     opacity: 10;
+    fill-rule: evenodd;
     -webkit-animation: animate 3.5s cubic-bezier(0,.18,.70,.1);
             animation: animate 3.5s cubic-bezier(0,.18,.70,.1);
 }
@@ -364,11 +365,6 @@ div.calendar-container a {
   margin: 15px;
 }
 
-.tooltip {
-  position: relative;
-  display: inline-block;
-}
-
 /* Calendar tooltip */
 .tooltip {
   position: relative;
@@ -519,7 +515,7 @@ div.scroll-content img{
                 transform: translate(-50%, 25%)scale(0.45);
     }
     .hero-text-main {
-        font-size: 7rem;
+        font-size: 9rem;
     }
 
     .hero-text-sub{
@@ -614,6 +610,12 @@ div.scroll-content img{
         margin-left: 0;
     }
 
+    .tooltip .tooltiptext {
+        width: 0;
+      }
+      .tooltip:hover .tooltiptext {
+        visibility: hidden;
+      }
 }
 
 @media screen and (max-width: 450px) {
