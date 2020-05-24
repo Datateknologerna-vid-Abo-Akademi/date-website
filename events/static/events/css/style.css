@@ -80,7 +80,7 @@ h3{
 }
 
 .content{
-    color: rgb(208, 255, 0);
+    color: var(--secondaryColorDarker);
 }
 
 .title{
@@ -113,7 +113,7 @@ h3{
     transition: 0.2s ease-in-out;
     transform: scale(1.03);
     background-color: #414141;
-    color: rgb(129, 146, 55);
+    color: var(--primaryColorLight);
 }
 
 .text-center{
@@ -146,11 +146,11 @@ h3{
 }
 
 .content-ended{
-    color: rgb(208, 255, 0);
+    color: var(--secondaryColorDarker);
 }
 
 .content-ended:hover{
-    color: rgb(146, 179, 0);
+    color: var(--primaryColorLight);
 }
 
 @media only screen and (max-width: 1450px) {

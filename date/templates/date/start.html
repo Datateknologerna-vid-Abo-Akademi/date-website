@@ -57,6 +57,7 @@
                             {% empty %}
                             <h3>{% trans 'inga nyheter hittades' %}...</h3>
                         {% endfor %}
+                        <a class="more-news" href="/news/">Mera nyheter...</a>
                     </div>
                 </div>
                 <div class="sidebar-container">
@@ -66,8 +67,8 @@
                             <table class="calendar">
                                 {% autoescape off %}
                                     <div class="clearfix">
-                                        <a class="btn btn-info left" href="{% url 'index' %}?{{ prev_month }}">{% trans 'föregående' %}</a>
-                                        <a class="btn btn-info right" href="{% url 'index' %}?{{ next_month }}">{% trans 'nästa' %}</a>
+                                        <a class="btn btn-info left" href="{% url 'index' %}?{{ prev_month }}">{% trans '<<' %}</a>
+                                        <a class="btn btn-info right" href="{% url 'index' %}?{{ next_month }}">{% trans '>>' %}</a>
                                     </div>
                                     {{calendar}}
                                 {% endautoescape %}
@@ -90,12 +91,12 @@
                         {% endif %}
                     </div>
                     <div class="logo-container">
-                        <h2 class="border-bottom">Samarbetspartners</h2>
+                        <h2>Samarbetspartners</h2>
                         <div class="carousel">
                             <ul>
                                 {%for ad in ads%}
                                 <li class="company-logo">
-                                    <img src="{{ad}}" alt="ig-content">
+                                    <img src="{{ad}}" alt="img">
                                 </li>
                                 {% endfor %}
                             </ul>

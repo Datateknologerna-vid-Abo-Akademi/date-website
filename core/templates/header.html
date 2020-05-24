@@ -10,13 +10,11 @@
 <div class="header-bar">
     <a id="logo" href="{% url 'index' %}"><img class="header-logo" src="/static/images/axel.png" alt="Albin"></a>
     <div class="nav-bar">
-        <li id="nav-event" ><a href="{% url 'events:index' %}">{% trans 'Evenemang' %}</a></li>
-        <li id="nav-news"><a href="{% url 'news:index' %}">{% trans 'Nyheter' %}</a></li>
         {% for category in categories %}    
-            <div class="dropdown">
-                <button class="dropbtn">
+            <div class="dropdown dropdown-hover">
+                <li class="dropbtn dropbtn-height">
                     {{category.category_name}}
-                </button>
+                </li>
                 <div class="dropdown-content">
                     {% for page in pages %}
                         {% if page.category|lower == category.category_name|lower %}
@@ -24,29 +22,18 @@
                         {% endif %}
                     {% endfor %}
                     {% for page in urls %}
-                    {% if page.category|lower == category.category_name|lower %}
-                        <a href="{{ page.url }}">{{page.title}}</a>
-                    {% endif %}
+                        {% if page.category|lower == category.category_name|lower %}
+                            {% if user.is_authenticated and page.url == "/members/login/" %}
+                                <a href="/admin/">Admin</a>
+                                <a href="/members/logout/">Logga ut</a>
+                            {% else %}
+                                <a href="{{ page.url }}">{{page.title}}</a>
+                            {% endif %}
+                        {% endif %}
                     {% endfor %}
                 </div>
             </div>
         {% endfor %}
-        {% if user.is_authenticated %}
-            <div id="nav-member" class="dropdown">
-                <button class="dropbtn">
-                    {% trans 'Medlemmar' %}
-                </button>
-                <div class="dropdown-content">
-                    <a href="{% url 'archive:pictures' %}">{% trans 'Bilder' %}</a>
-                    <a href="{% url 'archive:documents' %}">{% trans 'Dokument' %}</a>
-                    <a href="{% url 'members:info' %}">{% trans 'Min profil' %}</a>
-                    <a href="/admin">Admin</a>
-                    <a href="{% url 'logout' %}">{% trans 'Log out' %}</a>
-                </div>
-            </div>
-        {% else %}
-            <li><a href="{% url 'login' %}">{% trans 'Logga in' %}</a></li>
-        {% endif %}
     </div>
     <div id="mobile-dropdown" class="mobile-dropdown"><button id="mobile-dropbtn" class="dropbtn mobile-btn-height"><i class="fas fa-bars"></i></button>
         <div id="mobile-group" class="mobile-nav-bar">
@@ -54,48 +41,34 @@
                 <div class="grid-container">
                     <div class="grid-space">
                         <li><a href="{% url 'index' %}">{% trans 'Startsidan' %} </a></li>
-                        <li><a href="{% url 'events:index' %}">{% trans 'Händelser' %}</a></li>
-                        <li><a href="{% url 'news:index' %}">{% trans 'Nyheter' %}</a></li>
-                        {% if user.is_authenticated %}
-                            <div id="mobile-nav-member" class="dropdown">
-                            <button class="dropbtn">
-                                {% trans 'Medlemmar' %}
-                            </button>
-                            <div class="mobile-dropdown-content">
-                                <a href="{% url 'archive:pictures' %}">{% trans 'Bilder' %}</a>
-                                <br>
-                                <a href="{% url 'archive:documents' %}">{% trans 'Dokument' %}</a>
-                                <br>
-                                <a href="{% url 'members:info' %}">{% trans 'Min profil' %}</a>
-                                <br>
-                                <a href="/admin">Admin</a>
-                                <br>
-                                <a href="{% url 'logout' %}">{% trans 'Log out' %}</a>
-                            </div>
-                        </div>
-                        {% else %}
-                            <li><a href="{% url 'login' %}">{% trans 'Logga in' %}</a></li>
-                        {% endif %}
                         {% for category in categories %}    
-                        <div id="mobile-nav-member" class="dropdown">
-                            <button class="dropbtn">
-                                {{category.category_name}}
-                            </button>
-                            <div class="mobile-dropdown-content">
-                                {% for page in pages %}
-                                    {% if page.category|lower == category.category_name|lower %}
-                                        <a href="{% url 'staticpages:page' page.slug %}">{{page.title}}</a>
-                                        <br>
-                                    {% endif %}
-                                {% endfor %}
-                                {% for page in urls %}
-                                {% if page.category|lower == category.category_name|lower %}
-                                    <a href="{{ page.url }}">{{page.title}}</a>
-                                {% endif %}
-                                {% endfor %}
+                            <div id="mobile-nav-member" class="dropdown">
+                                <button class="dropbtn">
+                                    {{category.category_name}}
+                                </button>
+                                <div class="mobile-dropdown-content">
+                                    {% for page in pages %}
+                                        {% if page.category|lower == category.category_name|lower %}
+                                            <a href="{% url 'staticpages:page' page.slug %}">{{page.title}}</a>
+                                            <br>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% for page in urls %}
+                                        {% if page.category|lower == category.category_name|lower %}
+                                            {% if user.is_authenticated and page.url == "/members/login/" %}
+                                                <a href="/admin/">Admin</a>
+                                                <br>
+                                                <a href="/members/logout/">Logga ut</a>
+                                                <br>
+                                            {% else %}
+                                                <a href="{{ page.url }}">{{page.title}}</a>
+                                                <br>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
                             </div>
-                        </div>
-                    {% endfor %}
+                        {% endfor %}
                     </div>
                 </div>
             </div>

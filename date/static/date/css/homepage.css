@@ -190,17 +190,24 @@ h2{
 }
 
 .news-date{
-    color: var(--primaryColorLight);
+    color: var(--helpText);
 }
 
 div.content a{
     display: inline-block;
-    color: var(--primaryColorLight);
+    color: var(--linkColor);
 }
 
 div.content a:hover{
-    transition: 0.2s;
-    color: rgb(126, 126, 126);
+    color: var(--primaryColorLight);
+}
+
+.more-news{
+    color: var(--linkColor);
+}
+
+.more-news:hover{
+    color: var(--primaryColorLight);
 }
 
 /*News end*/
@@ -243,7 +250,7 @@ div.content a:hover{
     -webkit-transition: all 0.2s;
 	-moz-transition: all 0.2s;
     transition: all 0.2s;
-    border-top: rgb(44, 148, 120) solid 2pt;
+    border-top: var(--linkColor) solid 2pt;
     box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
     display: grid;
     grid-template-columns: 3fr 1fr;
@@ -335,7 +342,7 @@ i {
 }
   
 div.calendar-container a {
-    color: rgb(44, 148, 120);
+    color: var(--linkColor);
 }
 
 .left {
@@ -393,6 +400,13 @@ div.calendar-container a {
 
 /*logos start*/
 
+.carousel{
+    border-top: solid;
+    border-bottom: solid;
+    border-width: 2px;
+    border-color: rgb(180, 180, 180);
+}
+
 div.carousel {
     overflow: hidden;
   }
@@ -437,15 +451,16 @@ div.scroll-content img{
     grid-area: ig-image;
     position: relative;
     overflow: hidden;
-
+    border-radius: 5px;
   }
+  
   .images {
     position: absolute;
     left: 0;
     top: 0;
     height: 100%;
-    width: 1000%;
-    animation: slideshow 30s linear infinite;
+    width: 35000px;
+    animation: slideshow 60s linear infinite;
     transform: translate3d(0, 0, 0);
   }
 
@@ -591,6 +606,11 @@ div.scroll-content img{
 }
 
 @media screen and (max-width: 550px) {
+    
+    .images{
+        width: 70000px;
+        animation: slideshow 120s linear infinite;
+    }
 
     .sidebar-container{
         max-width: 100%;
