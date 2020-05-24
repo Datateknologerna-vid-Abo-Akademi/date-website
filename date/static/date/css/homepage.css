@@ -41,16 +41,16 @@ h2{
 .albin {
     position: absolute;
     left: 50%;
-    -webkit-transform: translate(-50%, -60%) scale(.5);
-            transform: translate(-50%, -60%) scale(.5);
+    -webkit-transform: translate(-60%, -55%) scale(.7);
+            transform: translate(-60%, -55%) scale(.7);
 }
 .hero-text-box path {
     stroke: var(--secondaryColor);
     fill: var(--secondaryColor);
     stroke-dasharray: 25000;
     opacity: 10;
-    -webkit-animation: animate 2.5s cubic-bezier(0,.18,.94,.1);
-            animation: animate 2.5s cubic-bezier(0,.18,.94,.1);
+    -webkit-animation: animate 3.5s cubic-bezier(0,.18,.70,.1);
+            animation: animate 3.5s cubic-bezier(0,.18,.70,.1);
 }
 
 /* Albin animation */
@@ -506,31 +506,38 @@ div.scroll-content img{
 }
 
 /*Albin size with height*/
-@media screen and (max-height: 870px){
+@media screen and (max-height: 950px){
     .hero-text-box {
-        -webkit-transform: translate(-50%, 25%)scale(0.55);
-                transform: translate(-50%, 25%)scale(0.55);
+        -webkit-transform: translate(-50%, 30%)scale(.5);
+                transform: translate(-50%, 30%)scale(.5);
     }
 }
 
-@media screen and (max-height: 740px){
+@media screen and (max-height: 850px){
     .hero-text-box {
-        -webkit-transform: translate(-50%, 20%)scale(0.5);
-                transform: translate(-50%, 20%)scale(0.5);
+        -webkit-transform: translate(-50%, 20%)scale(0.45);
+                transform: translate(-50%, 20%)scale(0.45);
     }
 }
 
-@media screen and (max-height: 650px){
+@media screen and (max-height: 700px){
     .hero-text-box {
         -webkit-transform: translate(-50%, 15%)scale(0.4);
                 transform: translate(-50%, 15%)scale(0.4);
     }
 }
 
-@media screen and (max-height: 550px){
+@media screen and (max-height: 600px){
     .hero-text-box {
         -webkit-transform: translate(-50%, 10%)scale(0.3);
                 transform: translate(-50%, 10%)scale(0.3);
+    }
+}
+
+@media screen and (max-height: 500px){
+    .hero-text-box {
+        -webkit-transform: translate(-50%, -10%)scale(0.2);
+                transform: translate(-50%, -10%)scale(0.2);
     }
 }
 
@@ -545,12 +552,7 @@ div.scroll-content img{
     
     .hero-text-main {
         font-size: 10rem;
-        padding-top: 8vh;
-    }
-
-    .albin {
-        -webkit-transform: translate(-50%, -56%) scale(0.45);
-                transform: translate(-50%, -56%) scale(0.45);
+        padding-top: 10vh;
     }
 
     .main-container{
@@ -564,30 +566,13 @@ div.scroll-content img{
 }
 
 @media screen and (max-width: 900px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 40%)scale(0.7);
-                transform: translate(-50%, 40%)scale(0.7);
-    }
-
-    .hero-text-main {
-        font-size: 6rem;
-        padding-top: 3vh;
-    }
-
-    .albin {
-        -webkit-transform: translate(-50%, -58%) scale(0.30);
-                transform: translate(-50%, -58%) scale(0.30);
-    }
 
     .main-container{
-        display: grid;
         grid-template-columns: 5vw 1fr 5vw;
-        grid-template-rows: auto;
         grid-template-areas: 
           ". news ."
           ". events ."
           ". ig-scroll .";   
-        grid-column-gap: 3vw;
     }
 
     .sidebar-container{
@@ -621,12 +606,8 @@ div.scroll-content img{
 
 @media screen and (max-width: 450px) {
 
-    .hero-text-box {
-        -webkit-transform: translate(-51%, 40%);
-                transform: translate(-51%, 40%);
-    }
     .hero-text-main {
-        font-size: 4rem;
+        font-size: 6rem;
     }
     .hero-text-box .text {
         -webkit-transform: translateX(5px);
@@ -634,11 +615,6 @@ div.scroll-content img{
     }
     .hero-text-box .hero-text-sub {
         letter-spacing: 1rem;
-    }
-
-    .albin {
-        -webkit-transform: translate(-49.8%, -54%) scale(0.20);
-                transform: translate(-49.8%, -54%) scale(0.20);
     }
 
     .news-grid {
@@ -654,5 +630,4 @@ div.scroll-content img{
         max-width: 100%;
     
     }
-
 }
