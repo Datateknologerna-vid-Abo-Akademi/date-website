@@ -15,7 +15,8 @@ ul {
 .nav-bar {
     display: flex;
     justify-content: flex-end;
-    line-height: 1rem;
+    flex-wrap: wrap;
+    line-height: 0.5rem;
     font-size: 2rem;
     position: relative;
     width: 93%;
