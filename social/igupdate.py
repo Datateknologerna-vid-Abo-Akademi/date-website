@@ -14,16 +14,17 @@ from datetime import datetime
 
 logger = logging.getLogger('date')
 
-SCHEDULED_TIME = '12:26'
+SCHEDULED_TIME = '00:00'
 
-print("STARTING IG SCHEDULER")
+logger.info("STARTING IG SCHEDULER")
 
 def updateIg():
-    print("WORKING")
+    logger.info("IGSCHEDULER WORKING")
+    logger.info(datetime.now())
     L = instaloader.Instaloader()
-    igProfile = instaloader.Profile.from_username(L.context, "datateknologerna")
+    igProfile = instaloader.Profile.from_username(L.context, "kemistklubben")
     posts = igProfile.get_posts()
-    top40 = islice(posts, 14)
+    top40 = islice(posts, 40)
 
     IgUrl.objects.all().delete()
 
@@ -36,8 +37,6 @@ def updateIg():
 schedule.every().day.at(SCHEDULED_TIME).do(updateIg)
 
 while True:
-    logger.info("HULULULUU")
-    #print(datetime.now())
     schedule.run_pending()
-    time.sleep(15)
+    time.sleep(60)
 

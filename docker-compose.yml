@@ -13,7 +13,7 @@ services:
   web:
     build: .
     restart: always
-    command: bash -c "./wait-for-postgres.sh db:5432 && python /code/manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8000"
+    command: bash -c "./wait-for-postgres.sh db:5432 && python /code/manage.py migrate --noinput && python manage.py collectstatic --noinput && (nohup python /code/social/igupdate.py &) && python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/code
     ports:
