@@ -32,8 +32,6 @@ def updateIg():
         u = IgUrl(url=post.url,shortcode=post.shortcode)
         u.save()
 
-    igPosts = IgUrl.objects.all()
-
 schedule.every().day.at(SCHEDULED_TIME).do(updateIg)
 
 while True:
