@@ -14,6 +14,7 @@ channels_redis
 websocket_client
 six
 instaloader
+schedule
 django-tables2
 django-filter
 django-bootstrap3
