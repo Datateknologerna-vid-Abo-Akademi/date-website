@@ -21,6 +21,14 @@ body {
   flex-wrap: wrap;
   padding: 0 10rem;
 }
+
+div.gallery img {
+  height: auto;
+  width: auto;
+  max-width: 100%;
+  max-height: 80vh;
+}
+
 .back-button {
     padding: 2rem;
 }

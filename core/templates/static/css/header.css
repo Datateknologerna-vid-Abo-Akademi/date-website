@@ -214,6 +214,10 @@ ul {
     display: grid;
 }
 
+div.mobile-nav-text a{
+    color: var(--secondaryColorDarker);
+}
+
 div.mobile-dropdown-content a{
     display: inline;
 }

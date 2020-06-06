@@ -72,7 +72,7 @@ div.news-content a:hover{
     color: var(--primaryColorLight);
 }
 
-@media only screen and (min-width: 836px) {
+@media only screen and (min-width: 900px) {
     .container{
         display: grid;
         grid-template-columns: 20vw 1fr 20vw;

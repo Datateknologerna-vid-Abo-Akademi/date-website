@@ -8,7 +8,7 @@
 
 .container{
     display: grid;
-    grid-template-columns: 25vw 1fr 25vw;
+    grid-template-columns: 20vw 1fr 20vw;
     grid-template-areas: 
     ". text-area .";
 }
@@ -41,9 +41,9 @@ div.content-grid a:hover{
     color: var(--linkColor);
 }
 
-@media only screen and (max-width: 1020px) {
+@media only screen and (max-width: 1280px) {
     .container{
-        grid-template-columns: 15vw 1fr 15vw;
+        grid-template-columns: 10vw 1fr 10vw;
     }
 }
 @media only screen and (max-width: 720px) {

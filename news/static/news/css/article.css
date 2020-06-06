@@ -58,7 +58,7 @@ div.news a:hover{
     color: var(--helpText);
 }
 
-@media only screen and (min-width: 836px) {
+@media only screen and (min-width: 900px) {
     
     .container{
         grid-template-columns: 20vw 1fr 20vw;

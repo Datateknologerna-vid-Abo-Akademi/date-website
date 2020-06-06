@@ -2,20 +2,24 @@ body {
     font-size: 1.5em;
 }
 
-img {
-    height: auto;
-    width: 100%;
-
-}
 #logo {
     color: var(--secondaryColor) !important;
 }
 #logo:hover {
     text-decoration: none;
 }
+
+.container-soft{
+    font-family: 'Josefin Sans', sans-serif;
+}
+
 .nav-bar a:hover {
     color :var(--secondaryColor);
     text-decoration: none;
+}
+
+table.table a{
+    color: rgb(36, 193, 255);
 }
 
 .hero-text-box {
@@ -42,13 +46,18 @@ img {
 .collection-item {
     text-align: center;
 }
+
+li.collection-item img {
+    height: auto;
+    width: 100%;
+}
+
 .collection-item img:hover {
     border: solid 1px var(--secondaryColor);
 }
 
 .collection-item:hover a {
-    transition: 500ms;
-    color: var(--primaryColorLight);
+    color: rgb(48, 48, 48);
 }
 
 .filter-form {
