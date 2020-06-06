@@ -62,9 +62,6 @@ ul {
 
 .nav-bar li:hover, .dropdown-hover:hover {
     background-color: var(--primaryColorLight);
-}
-
-.dropdown {
     cursor: pointer;
 }
 

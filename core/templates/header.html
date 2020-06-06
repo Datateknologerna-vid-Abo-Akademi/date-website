@@ -25,6 +25,7 @@
                         {% if page.category|lower == category.category_name|lower %}
                             {% if user.is_authenticated and page.url == "/members/login/" %}
                                 <a href="/admin/">Admin</a>
+                                <a href="/members/info/">Min profil</a>
                                 <a href="/members/logout/">Logga ut</a>
                             {% else %}
                                 <a href="{{ page.url }}">{{page.title}}</a>
@@ -43,9 +44,9 @@
                         <li><a href="{% url 'index' %}">{% trans 'Startsidan' %} </a></li>
                         {% for category in categories %}    
                             <div id="mobile-nav-member" class="dropdown">
-                                <button class="dropbtn">
+                                <li class="dropbtn">
                                     {{category.category_name}}
-                                </button>
+                                </li>
                                 <div class="mobile-dropdown-content">
                                     {% for page in pages %}
                                         {% if page.category|lower == category.category_name|lower %}
@@ -57,6 +58,8 @@
                                         {% if page.category|lower == category.category_name|lower %}
                                             {% if user.is_authenticated and page.url == "/members/login/" %}
                                                 <a href="/admin/">Admin</a>
+                                                <br>
+                                                <a href="/members/info/">Min profil</a>
                                                 <br>
                                                 <a href="/members/logout/">Logga ut</a>
                                                 <br>
