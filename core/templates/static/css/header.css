@@ -20,7 +20,7 @@ ul {
     font-size: 2rem;
     position: relative;
     width: 93%;
-    left: 5%;
+    left: 3%;
 }
 
 #logo {
@@ -91,13 +91,13 @@ ul {
 
 .dropdown-content {
     background-color: var(--primaryColor);
-    padding-top: 2rem;
     color: var(--secondaryColor);
     position: absolute;
     display: none;
     min-width: 120px;
     z-index: 1;
     max-width: 100%;
+    border: 1px solid white;
 }
 
 .dropdown-content a {
@@ -109,7 +109,8 @@ ul {
     text-decoration: none;
     display: block;
     min-width: 120px;
-    margin-bottom: 1rem;
+    padding-top: 15px;
+    padding-bottom: 15px;
 }
 
 .dropdown-content a:first-child{
@@ -121,8 +122,8 @@ ul {
 }
 
 .dropdown-content a:hover {
-    transform: scale(1.15);
     transition: all .3s;
+    background-color: var(--primaryColorLight);
     color: var(--secondaryColorDarker);
 }
 
