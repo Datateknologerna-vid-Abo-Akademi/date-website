@@ -108,7 +108,7 @@ class SubscriptionPaymentForm(forms.ModelForm):
 
 
 class SignUpForm(forms.ModelForm):
-    username = forms.CharField(help_text='detta fält är inte obligatoriskt')
+    username = forms.CharField(max_length=20, help_text='detta fält är obligatoriskt')
     email = forms.EmailField(max_length=200, help_text='detta fält är obligatoriskt')
     password = forms.CharField(
         widget=forms.PasswordInput(),
