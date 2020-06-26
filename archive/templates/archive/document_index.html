@@ -8,27 +8,28 @@
 
 {% block content %}
 <head>
-    <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="{% static 'archive/css/document.css' %}" type="text/css">
 </head>
     <div class="container-soft">
         <div class="container">
-            <div class="hero-text-box">
-                <h1>{% trans "Dokument arkiv" %}</h1>
-                {% if request.user|in_group:"styrelse"%}
-                    <a class="button" href="{% url 'archive:upload' %}">{% trans 'Ladda upp dokument' %}</a>
-                {% endif %}
-            </div>
-            <div class="filter-form">
-                {% if filter %}
-                    <form action="" method="get" class="form form-inline">
-                        {% bootstrap_form filter.form layout='inline' %}
-                        {% bootstrap_button 'filter' %}
-                    </form>
-                {% endif %}
-            </div>
-            <div class="custom-table-container">
-                {% render_table table 'django_tables2/bootstrap.html' %}
+            <div class="container-wrap">
+                <div class="hero-text-box">
+                    <h1>{% trans "Dokument arkiv" %}</h1>
+                    {% if request.user|in_group:"styrelse"%}
+                        <a class="button" href="{% url 'archive:upload' %}">{% trans 'Ladda upp dokument' %}</a>
+                    {% endif %}
+                </div>
+                <div class="filter-form">
+                    {% if filter %}
+                        <form action="" method="get" class="form form-inline">
+                            {% bootstrap_form filter.form layout='inline' %}
+                            {% bootstrap_button 'filter' %}
+                        </form>
+                    {% endif %}
+                </div>
+                <div class="custom-table-container">
+                    {% render_table table 'django_tables2/bootstrap.html' %}
+                </div>
             </div>
         </div>
     </div>
