@@ -23,27 +23,42 @@ h2{
     height: 45vh;
 }
 
-
 .hero-text-box {
     text-align: center;
     position: absolute;
     left: 50%;
-    -webkit-transform: translate(-50%, 30%)scale(.50);
-            transform: translate(-50%, 30%)scale(.50);
+    -webkit-transform: translate(-50%, 30%)scale(.60);
+            transform: translate(-50%, 30%)scale(.60);
     padding-top: 10vh;
 }
+
 .hero-text-box .text {
     -webkit-transform: translateX(10px);
             transform: translateX(10px);
     -webkit-animation: fadeIn 3s;
             animation: fadeIn 3s;
 }
+
 .albin {
     position: absolute;
     left: 50%;
     -webkit-transform: translate(-60%, -55%) scale(.7);
             transform: translate(-60%, -55%) scale(.7);
 }
+
+.staticlogo{
+    -webkit-filter: invert(100%);
+            filter: invert(100%);
+
+    -webkit-transform: translate(17%, -20%)scale(1);
+            transform: translate(17%, -20%)scale(1);
+
+    -webkit-animation: fadeIn 2s;
+            animation: fadeIn 2s;
+
+    display: none;
+}
+
 .hero-text-box path {
     stroke: var(--secondaryColor);
     fill: var(--secondaryColor);
@@ -308,7 +323,7 @@ i {
 /*Calendar*/
 .calendar-container{
     display: grid;
-    grid-template-columns: 30px 1fr 30px;
+    grid-template-columns: 0 1fr 0;
     grid-template-areas: 
     ". box ."
     ". calendar .";
@@ -504,6 +519,13 @@ div.scroll-content img{
 }
 
 /*Albin size with height*/
+@media screen and (max-height: 1200px){
+    .hero-text-box {
+        -webkit-transform: translate(-50%, 28%)scale(.50);
+                transform: translate(-50%, 28%)scale(.50);
+    }
+}
+
 @media screen and (max-height: 950px){
     .hero-text-box {
         -webkit-transform: translate(-50%, 28%)scale(.45);
@@ -513,9 +535,10 @@ div.scroll-content img{
 
 @media screen and (max-height: 850px){
     .hero-text-box {
-        -webkit-transform: translate(-50%, 25%)scale(0.35);
-                transform: translate(-50%, 25%)scale(0.35);
+        -webkit-transform: translate(-50%, 30%)scale(0.45);
+                transform: translate(-50%, 30%)scale(0.45);
     }
+
     .hero-text-main {
         font-size: 9rem;
     }
@@ -528,31 +551,47 @@ div.scroll-content img{
         letter-spacing: 1rem;
     }
 
-    .hero-text-box .text {
-        -webkit-transform: translateY(20px);
-                transform: translateY(20px);
-    }
+}
 
+@media screen and (max-height: 750px){
+    .hero-text-box {
+        -webkit-transform: translate(-50%, 30%)scale(0.40);
+                transform: translate(-50%, 30%)scale(0.40);
+    }
 }
 
 @media screen and (max-height: 700px){
     .hero-text-box {
-        -webkit-transform: translate(-50%, 22%)scale(0.25);
-                transform: translate(-50%, 22%)scale(0.25);
+        -webkit-transform: translate(-50%, 26%)scale(0.35);
+                transform: translate(-50%, 26%)scale(0.35);
+    }
+}
+
+@media screen and (max-height: 650px){
+    .hero-text-box {
+        -webkit-transform: translate(-50%, 24%)scale(0.30);
+                transform: translate(-50%, 24%)scale(0.30);
     }
 }
 
 @media screen and (max-height: 600px){
     .hero-text-box {
-        -webkit-transform: translate(-50%, 18%)scale(0.2);
-                transform: translate(-50%, 18%)scale(0.2);
+        -webkit-transform: translate(-50%, 18%)scale(0.25);
+                transform: translate(-50%, 18%)scale(0.25);
+    }
+}
+
+@media screen and (max-height: 550px){
+    .hero-text-box {
+        -webkit-transform: translate(-50%, 10%)scale(0.20);
+                transform: translate(-50%, 10%)scale(0.20);
     }
 }
 
 @media screen and (max-height: 500px){
     .hero-text-box {
-        -webkit-transform: translate(-50%, 0%)scale(0.15);
-                transform: translate(-50%, 0%)scale(0.15);
+        -webkit-transform: translate(-50%, 5%)scale(0.15);
+                transform: translate(-50%, 5%)scale(0.15);
     }
 }
 
@@ -568,11 +607,6 @@ div.scroll-content img{
     .main-container{
         grid-template-columns: 2vw 5fr 2fr 2vw;
     }
-
-    .calendar-container{
-        grid-template-columns: 5px 1fr 5px;
-    }
-
 }
 
 @media screen and (max-width: 900px){
@@ -590,6 +624,14 @@ div.scroll-content img{
         margin-left: 10vw;
     }
 
+    .staticlogo{
+        display: inline;
+    }
+
+    svg{
+        display: none;
+    }
+
 }
 
 @media screen and (max-width: 800px) {
@@ -601,56 +643,6 @@ div.scroll-content img{
 }
 
 @media screen and (max-width: 550px) {
-
-    .hero-text-box path {
-        fill: none;
-    }
-    
-    @-webkit-keyframes animate {
-        0% {
-            opacity: 0;
-            fill: none;
-            stroke-dashoffset: 25000;
-        }
-        40% {
-            opacity: 10;
-            fill: none;
-            stroke-dashoffset: 23000;
-        }
-        80% {
-            fill: none;
-            stroke-dashoffset: 21000;
-    
-        }
-        100% {
-            opacity: 10;
-            fill: none;
-            stroke-dashoffset: 0;
-        }
-    }
-
-    @keyframes animate {
-        0% {
-            opacity: 0;
-            fill: none;
-            stroke-dashoffset: 25000;
-        }
-        40% {
-            opacity: 10;
-            fill: none;
-            stroke-dashoffset: 23000;
-        }
-        80% {
-            fill: none;
-            stroke-dashoffset: 21000;
-    
-        }
-        100% {
-            opacity: 10;
-            fill: none;
-            stroke-dashoffset: 0;
-        }
-    }
     
     .images{
         width: 70000px;
