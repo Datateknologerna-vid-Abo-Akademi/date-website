@@ -7,6 +7,7 @@ from django.shortcuts import render
 from .models import Event, EventAttendees
 from websocket import create_connection
 from websocket._exceptions import WebSocketBadStatusException
+
 import json
 
 import logging

@@ -1,22 +1,34 @@
 import datetime
 
 from django.shortcuts import render, redirect
-from django.template import RequestContext
 from django.utils import translation
 
 from django.conf import settings
 from events.models import Event
 from news.models import Post
-
 from itertools import chain
-
+from event_calendar.views import get_calendar, get_date, prev_month, next_month
+from ads.models import AdUrl
+from social.models import IgUrl
 
 def index(request):
-    events = Event.objects.filter(published=True, event_date_end__gte=datetime.date.today()).order_by('event_date_start')
-    news = Post.objects.filter(published=True).reverse()[:2]
-    news_events = list(chain(events, news))
+    d = get_date(request.GET.get('month', None))
 
-    return render(request, 'date/start.html', {'news_events': news_events, 'events': events, 'news': news})
+    events = Event.objects.filter(published=True, event_date_end__gte=d).order_by(
+        'event_date_start')
+    news = Post.objects.filter(published=True).reverse()[:2]
+    context = {
+        'events': events,
+        'news': news,
+        'news_events': list(chain(events, news)),
+        'ads': AdUrl.objects.all(),
+        'posts': IgUrl.objects.all(),
+        'calendar': get_calendar(request),
+        'prev_month': prev_month(d),
+        'next_month': next_month(d),
+    }
+
+    return render(request, 'date/start.html', context)
 
 
 def language(request, lang):
@@ -26,8 +38,6 @@ def language(request, lang):
         lang = settings.LANG_SWEDISH
     translation.activate(lang)
     request.session[translation.LANGUAGE_SESSION_KEY] = lang
-    # response = http.HttpResponse()
-    # response.set_cookie()
     origin = request.META.get('HTTP_REFERER')
     return redirect(origin)
 

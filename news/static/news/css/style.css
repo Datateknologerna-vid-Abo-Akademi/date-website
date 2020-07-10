@@ -1,16 +1,18 @@
+a{
+    color: var(--linkColor);
+}
+
 .container{
     background-color: var(--primaryColor);
     padding-top: 10vh;
     min-height: 100vh;
-    color: var(--secondaryColor);
     font-family: 'Josefin Sans', sans-serif;
-
     align-content: start;
 }
 
 .container{
     display: grid;
-    grid-template-columns: 10vw 80vw 10vw;
+    grid-template-columns: 3vw 1fr 3vw;
     grid-template-rows: auto;
     grid-template-areas: 
       ". news .";     
@@ -25,9 +27,13 @@
 }
 
 .news{
+    background-color: var(--secondaryColor);
     border-bottom: solid;
     border-width: 2px;
     border-color: rgb(180, 180, 180);
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
 }
 
 .news img{
@@ -40,7 +46,7 @@
 }
 
 .author{
-    color: rgb(172, 172, 172);
+    color: var(--helpText);
 }
 
 .text-size{
@@ -49,27 +55,27 @@
 
 .more-button{
     display: inline-block;
-    color: rgb(208, 255, 0);
+    color: var(--linkColor);
 }
 .more-button:hover{
     transition: 0.3s;
-    color: rgb(146, 179, 0);
+    color: var(--primaryColorLight);
 }
 
 div.news-content a{
     display: inline-block;
-    color: rgb(208, 255, 0);
+    color: var(--linkColor);
 }
 
 div.news-content a:hover{
     transition: 0.3s;
-    color: rgb(146, 179, 0);
+    color: var(--primaryColorLight);
 }
 
-@media only screen and (min-width: 836px) {
+@media only screen and (min-width: 900px) {
     .container{
         display: grid;
-        grid-template-columns: 20vw 60vw 20vw;
+        grid-template-columns: 20vw 1fr 20vw;
         grid-template-rows: auto;
         grid-template-areas: 
           ". news .";     

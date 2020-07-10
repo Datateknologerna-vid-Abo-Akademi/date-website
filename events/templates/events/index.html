@@ -20,10 +20,10 @@
             <div class="event event-coming">
                     <a class="content title btn" href="{% url 'events:detail' event.slug %} " style="background: 
                     linear-gradient(
-                      rgba(0, 0, 0, 0.8),
-                      rgba(0, 0, 0, 0.95)
+                      rgba(5, 31, 9, 0.8),
+                      rgba(39, 70, 52, 0.95)
                     ),
-                    url(/static/images/albin_black.png);background-size: 100% 100%";>
+                    url();background-size: 100% 100%";>
                         <div class="text-center">
                             <h2 class="event-title">{{ event.title }}</h2>
                             <p class="event-text">{{ event.content|safe|striptags|truncatewords_html:"25"}}</p>
