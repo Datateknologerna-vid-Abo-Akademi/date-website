@@ -13,7 +13,7 @@
             <h3 style="color: green; text-align: center">{{ msg }}</h3>
         {% endif %}
             {% if user.is_authenticated %}
-            <h1 class="heading"> {{user.username}} </h1>
+            <h2 class="heading"> {{user.username}} </h2>
             <table>
                 <tr>
                     <td>Mail:</td>
@@ -57,7 +57,7 @@
                 </tr>
             </table>
             <br>
-            <p>För att ta bort eller ändra din information, kontakta styrelsen på kk@abo.fi</p>
+            <p>För att ta bort eller ändra din information, kontakta styrelsen på date@abo.fi</p>
             {% else %}
             <p>Log in to view info</p>
             {% endif %}

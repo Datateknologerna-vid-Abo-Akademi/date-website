@@ -1,7 +1,7 @@
 
 .container {
     background-color: var(--primaryColor);
-    color: black;
+    color: var(--secondaryColorDarker);
     font-family: 'Josefin Sans', sans-serif;
     font-size: 1.5rem;
 }
@@ -18,7 +18,7 @@
     word-break: break-all;
     word-break: break-word;
     hyphens: auto;
-    background-color: var(--secondaryColor);
+    background-color: var(--primaryColorLighter);
     padding: 10px;
     border-radius: 5px;
 }
@@ -33,12 +33,12 @@
 
 div.content-grid a{
     display: inline-block;
-    color: var(--linkColor);
+    color: var(--linkColorSecondary);
 }
 
 div.content-grid a:hover{
     transition: 0.3s;
-    color: var(--linkColor);
+    color: var(--linkSecondaryHover);
 }
 
 @media only screen and (max-width: 1280px) {

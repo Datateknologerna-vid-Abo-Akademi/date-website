@@ -2,12 +2,15 @@
 /* use with var(--color); included in base.html*/
 
 :root {
-    --primaryColor: rgb(10, 140, 65);
-    --primaryColorLighter: rgb(10, 170, 77);
-    --primaryColorLight:#2a693d;
+    --primaryColor: #000;
+    --primaryColorLighter:  #202020;
+    --primaryColorLighte:#3d3d3d;
+    --primaryColorLight:#505050;
     --secondaryColor: #fff;
-    --secondaryColorDarker: #e0e0e0;
+    --secondaryColorDarker: #eaeaea;
     --helpText: #888;
     --helpTextLighter: rgb(199, 199, 199);
-    --linkColor: rgb(44, 148, 96);
+    --linkColor: #2c6092;
+    --linkColorSecondary: rgb(208, 255, 0);
+    --linkSecondaryHover: rgb(146, 179, 0);
 }

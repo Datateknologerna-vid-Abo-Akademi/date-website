@@ -66,5 +66,5 @@ td{
 }
 
 .odd{
-    background-color: rgb(67, 173, 111);
+    background-color: var(--primaryColorLight);
 }

@@ -18,12 +18,7 @@
         {% endif%}
             {% for event in event_list %}
             <div class="event event-coming">
-                    <a class="content title btn" href="{% url 'events:detail' event.slug %} " style="background: 
-                    linear-gradient(
-                      rgba(5, 31, 9, 0.8),
-                      rgba(39, 70, 52, 0.95)
-                    ),
-                    url();background-size: 100% 100%";>
+                    <a class="content title btn" href="{% url 'events:detail' event.slug %}">
                         <div class="text-center">
                             <h2 class="event-title">{{ event.title }}</h2>
                             <p class="event-text">{{ event.content|safe|striptags|truncatewords_html:"25"}}</p>

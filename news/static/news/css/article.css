@@ -4,6 +4,7 @@
     min-height: 100vh;
     font-family: 'Josefin Sans', sans-serif;
     align-content: start;
+    color: var(--secondaryColorDarker);
 }
 
 .container{
@@ -20,7 +21,7 @@
 }
 
 .news{
-    background-color: var(--secondaryColor);
+    background-color: var(--primaryColorLighter);
     grid-area: news;
     word-break: break-all;
     word-break: break-word;
@@ -46,12 +47,12 @@
 
 div.news a{
     display: inline-block;
-    color: var(--linkColor);
+    color: var(--linkColorSecondary);
 }
 
 div.news a:hover{
     transition: 0.3s;
-    color: var(--primaryColorLight);
+    color: var(--linkSecondaryHover);
 }
 
 .author{

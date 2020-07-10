@@ -1,5 +1,5 @@
 a{
-    color: var(--linkColor);
+    color: var(--linkColorSecondary);
 }
 
 .container{
@@ -8,6 +8,7 @@ a{
     min-height: 100vh;
     font-family: 'Josefin Sans', sans-serif;
     align-content: start;
+    color: var(--secondaryColorDarker);
 }
 
 .container{
@@ -27,7 +28,7 @@ a{
 }
 
 .news{
-    background-color: var(--secondaryColor);
+    background-color: var(--primaryColorLighter);
     border-bottom: solid;
     border-width: 2px;
     border-color: rgb(180, 180, 180);
@@ -55,21 +56,21 @@ a{
 
 .more-button{
     display: inline-block;
-    color: var(--linkColor);
+    color: var(--linkColorSecondary);
 }
 .more-button:hover{
     transition: 0.3s;
-    color: var(--primaryColorLight);
+    color: var(--linkSecondaryHover);
 }
 
 div.news-content a{
     display: inline-block;
-    color: var(--linkColor);
+    color: var(--linkColorSecondary);
 }
 
 div.news-content a:hover{
     transition: 0.3s;
-    color: var(--primaryColorLight);
+    color: var(--linkSecondaryHover);
 }
 
 @media only screen and (min-width: 900px) {

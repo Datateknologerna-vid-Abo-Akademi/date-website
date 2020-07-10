@@ -21,7 +21,7 @@
     font-weight: 700;
     padding: .6em 1.4em .5em .8em;
     color: var(--primaryColorLight);
-    width: 100%;
+    width: 80%;
     max-width: 100%;
     box-sizing: border-box;
     margin: 0;
@@ -30,7 +30,7 @@
     border-radius: .5em;
 }
 .button{
-    background-color: rgb(36, 36, 36);
+    background-color: var(--primaryColorLight);
     border: none;
     color: var(--secondaryColor);
     padding: 1.5vh 3vw;
@@ -42,12 +42,12 @@
 }
 .button:hover{
     transition: 0.2s ease;
-    background-color: rgb(48, 48, 48);
-    color: var(--linkColor);
+    background-color: var(--primaryColorLighte);
+    color: var(--linkSecondaryHover);
 }
 
 .button:active{
-    background-color: #414141;;
+    background-color: var(--primaryColorLight);
 }
 
 @media only screen and (min-width: 675px) {
@@ -67,6 +67,9 @@
         font-size: 1.5vw;
     }
 
+    .form p select {
+        max-width: 50%;
+    }
 
     .form p input[type=text],input[type=email], input[type=select] {
         width: 20vw;

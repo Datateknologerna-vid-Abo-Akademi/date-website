@@ -8,8 +8,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
 </head>
 <div class="header-bar">
-    <a id="logo" href="{% url 'index' %}"><img class="header-logo" src="/static/images/axel.png" alt="Albin"></a>
+    <a id="logo" href="{% url 'index' %}"><img class="header-logo" src="/static/images/albin_black.png" alt="Albin"></a>
     <div class="nav-bar">
+        <div class="dropdown dropdown-hover">
+            <a href="{% url 'events:index' %}">Evenemang</a>
+        </div>
+        <div class="dropdown dropdown-hover">
+            <a href="{% url 'news:index' %}">Nyheter</a>
+        </div>
         {% for category in categories %}    
             <div class="dropdown dropdown-hover">
                 <li class="dropbtn dropbtn-height">
@@ -42,6 +48,8 @@
                 <div class="grid-container">
                     <div class="grid-space">
                         <li><a href="{% url 'index' %}">{% trans 'Startsidan' %} </a></li>
+                        <li><a href="{% url 'events:index' %}">{% trans 'Evenemang' %} </a></li>
+                        <li><a href="{% url 'news:index' %}">{% trans 'Nyheter' %} </a></li>
                         {% for category in categories %}    
                             <div id="mobile-nav-member" class="dropdown">
                                 <li class="dropbtn">

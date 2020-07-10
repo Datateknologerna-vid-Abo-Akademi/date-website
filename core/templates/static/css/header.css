@@ -9,14 +9,14 @@ ul {
     z-index: 10;
     width: 100vw;
     font-family: 'Josefin Sans', sans-serif;
-    border-bottom: 1px solid rgb(255, 255, 255);
+    /*border-bottom: 1px solid rgb(255, 255, 255);*/
 }
 
 .nav-bar {
     display: flex;
     justify-content: flex-end;
     flex-wrap: wrap;
-    line-height: 0.5rem;
+    line-height: 1rem;
     font-size: 2rem;
     position: relative;
     width: 93%;
@@ -67,6 +67,10 @@ ul {
 
 .dropbtn-height{
     padding: 10px;
+}
+
+.staticnav{
+    margin-right: 0;
 }
 
 .nav-bar li:last-child {
@@ -216,7 +220,7 @@ ul {
 }
 
 div.mobile-nav-text a{
-    color: var(--secondaryColorDarker);
+    color: var(--secondaryColor);
 }
 
 div.mobile-dropdown-content a{

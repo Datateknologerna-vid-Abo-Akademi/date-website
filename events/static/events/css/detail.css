@@ -14,6 +14,7 @@
     text-align: start;
     align-content: start;
     font-size: 1.5em;
+    color: var(--secondaryColorDarker);
 }
 
 .container{
@@ -30,7 +31,7 @@
 .container-text{
     grid-area: information;
     padding: 20px;
-    background-color: var(--secondaryColor);
+    background-color: var(--primaryColorLighter);
     border-radius: 5px;
 }
 .container-text, h4 {
@@ -39,18 +40,18 @@
 
 div.container-text a{
     display: inline-block;
-    color: var(--linkColor);
+    color: var(--linkColorSecondary);
 }
 
 div.container-text a:hover{
     transition: 0.3s;
-    color: var(--primaryColorLight);
+    color: var(--LinkSecondaryHover);
 }
 
 .container-form{
     grid-area: signup-form;
     padding: 10px;
-    background-color: var(--secondaryColor);
+    background-color: var(--primaryColorLighter);
     border-radius: 5px;
 }
 
@@ -58,7 +59,7 @@ div.container-text a:hover{
     grid-area: signed-table;
     margin-bottom: 20rem;
     padding: 10px;
-    background-color: var(--secondaryColor);
+    background-color: var(--primaryColorLighter);
     border-radius: 5px;
 }
 
@@ -82,7 +83,7 @@ th, td {
 }
 tr:hover {
     transition: 200ms;
-    background-color: var(--primaryColorLighter);
+    background-color: var(--primaryColorLight);
 }
 @media only screen and (min-width: 900px) {
     .container{
