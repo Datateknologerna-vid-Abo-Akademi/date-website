@@ -67,6 +67,10 @@
                                     {% for page in urls %}
                                         {% if page.category|lower == category.category_name|lower %}
                                             {% if user.is_authenticated and page.url == "/members/login/" %}
+                                                <a href="/archive/pictures/">Bilder</a>
+                                                <br>
+                                                <a href="/archive/documents/">Dokument</a>
+                                                <br>
                                                 <a href="/admin/">Admin</a>
                                                 <br>
                                                 <a href="/members/info/">Min profil</a>
