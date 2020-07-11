@@ -30,8 +30,10 @@
                     {% for page in urls %}
                         {% if page.category|lower == category.category_name|lower %}
                             {% if user.is_authenticated and page.url == "/members/login/" %}
-                                <a href="/admin/">Admin</a>
+                                <a href="/archive/pictures/">Bilder</a>
+                                <a href="/archive/documents/">Dokument</a>
                                 <a href="/members/info/">Min profil</a>
+                                <a href="/admin/">Admin</a>
                                 <a href="/members/logout/">Logga ut</a>
                             {% else %}
                                 <a href="{{ page.url }}">{{page.title}}</a>
