@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from .models import StaticPage, StaticPageNav, StaticUrl
 
 # Register your models here.

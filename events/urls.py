@@ -1,5 +1,6 @@
 from django.conf.urls import url
-from . import views, feed
+
+from . import feed, views
 
 app_name = 'events'
 

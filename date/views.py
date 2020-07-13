@@ -1,15 +1,16 @@
 import datetime
-
-from django.shortcuts import render, redirect
-from django.utils import translation
+from itertools import chain
 
 from django.conf import settings
+from django.shortcuts import redirect, render
+from django.utils import translation
+
+from ads.models import AdUrl
+from event_calendar.views import get_calendar, get_date, next_month, prev_month
 from events.models import Event
 from news.models import Post
-from itertools import chain
-from event_calendar.views import get_calendar, get_date, prev_month, next_month
-from ads.models import AdUrl
 from social.models import IgUrl
+
 
 def index(request):
     d = get_date(request.GET.get('month', None))
