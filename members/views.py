@@ -1,20 +1,21 @@
-from django.http import HttpResponse
-from django.core.mail import EmailMessage
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from .tokens import account_activation_token
-from django.utils.encoding import force_bytes, force_text
-from django.contrib.sites.shortcuts import get_current_site
-from django.template.loader import render_to_string
-from django.shortcuts import render, redirect
-from django.contrib.auth.hashers import make_password
-from django.utils.translation import ugettext_lazy as _
-from django.views import View
+import logging
 import os
 
-from members.forms import SignUpForm
-from .models import Member
+from django.contrib.auth.hashers import make_password
+from django.contrib.sites.shortcuts import get_current_site
+from django.core.mail import EmailMessage
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
+from django.utils.encoding import force_bytes, force_text
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.translation import ugettext_lazy as _
+from django.views import View
 
-import logging
+from members.forms import SignUpForm
+
+from .models import Member
+from .tokens import account_activation_token
 
 logger = logging.getLogger('date')
 

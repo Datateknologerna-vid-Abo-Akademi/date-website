@@ -1,9 +1,11 @@
+import os
+
+from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.conf import settings
-from archive.models import Picture, Document, Collection, TYPE_CHOICES
-import os
+
+from archive.models import TYPE_CHOICES, Collection, Document, Picture
 
 
 # models tests

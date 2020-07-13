@@ -1,16 +1,22 @@
-import sys, os ,django, logging
+import logging
+import os
+import sys
+
+import django
+
 sys.path.append("/code")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 django.setup()
 
-import schedule
 import time
-import instaloader
-
-from itertools import islice
-from django.shortcuts import render
-from social.models import IgUrl
 from datetime import datetime
+from itertools import islice
+
+import instaloader
+import schedule
+from django.shortcuts import render
+
+from social.models import IgUrl
 
 logger = logging.getLogger('date')
 

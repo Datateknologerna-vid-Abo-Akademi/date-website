@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
-from .models import Picture, Document, DocumentCollection, PictureCollection
-from .forms import PictureAdminForm, DocumentAdminForm
+
+from .forms import DocumentAdminForm, PictureAdminForm
+from .models import Document, DocumentCollection, Picture, PictureCollection
 
 
 class PicturesInline(admin.TabularInline):

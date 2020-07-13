@@ -1,16 +1,16 @@
-from django.shortcuts import render, redirect
-from django.views import generic
-from django.conf import settings
-from django_tables2 import SingleTableMixin
-from django_filters.views import FilterView
-from .models import Collection, Picture, Document
-from .forms import PictureUploadForm
-from .filters import DocumentFilter
-from .tables import DocumentTable
-from django.contrib.auth.decorators import permission_required
-
-
 import os
+
+from django.conf import settings
+from django.contrib.auth.decorators import permission_required
+from django.shortcuts import redirect, render
+from django.views import generic
+from django_filters.views import FilterView
+from django_tables2 import SingleTableMixin
+
+from .filters import DocumentFilter
+from .forms import PictureUploadForm
+from .models import Collection, Document, Picture
+from .tables import DocumentTable
 
 
 def picture_index(request):

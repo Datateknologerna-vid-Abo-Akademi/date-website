@@ -1,16 +1,16 @@
 import datetime
+import json
+import logging
 import os
 
 from django.http import HttpResponseForbidden
-from django.views.generic import DetailView, ListView
 from django.shortcuts import render
-from .models import Event, EventAttendees
+from django.views.generic import DetailView, ListView
 from websocket import create_connection
 from websocket._exceptions import WebSocketBadStatusException
 
-import json
+from .models import Event, EventAttendees
 
-import logging
 logger = logging.getLogger('date')
 
 
