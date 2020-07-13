@@ -378,7 +378,10 @@ div.calendar-container a {
 }
 
 .clearfix {
-  margin: 15px;
+  margin-left: 15px;
+  margin-right: 15px;
+  position: relative;
+  top: 15px;
 }
 
 /* Calendar tooltip */
@@ -555,8 +558,8 @@ div.scroll-content img{
 
 @media screen and (max-height: 750px){
     .hero-text-box {
-        -webkit-transform: translate(-50%, 30%)scale(0.40);
-                transform: translate(-50%, 30%)scale(0.40);
+        -webkit-transform: translate(-51%, 30%)scale(0.40);
+                transform: translate(-51%, 30%)scale(0.40);
     }
 }
 
