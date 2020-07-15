@@ -75,7 +75,7 @@ class Event(models.Model):
                 if self.get_registration_form():
                     for item in self.get_registration_form():
                         user_pref[str(item)] = preferences.get(str(item))
-                if self.get_registrations().count() < self.sign_up_max_participants or self.sign_up_max_participants is 0:
+                if self.get_registrations().count() < self.sign_up_max_participants or self.sign_up_max_participants == 0:
                     registration = EventAttendees.objects.create(user=user,
                                                                  event=self, email=email,
                                                                  time_registered=now(), preferences=user_pref,
