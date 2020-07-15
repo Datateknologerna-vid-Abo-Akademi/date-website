@@ -10,25 +10,29 @@
     background-color: var(--primaryColor);
     padding-top: 10vh;
     min-height: 100vh;
-    color: var(--secondaryColor);
     font-family: 'Josefin Sans', sans-serif;
     text-align: start;
     align-content: start;
     font-size: 1.5em;
+    color: var(--secondaryColorDarker);
 }
 
 .container{
     display: grid;
-    grid-template-columns: 10vw 80vw 10vw;
+    grid-template-columns: 3vw 1fr 3vw;
     grid-template-rows: auto;
     grid-template-areas: 
       ". information ."
       ". signup-form ."
       ". signed-table .";
-      grid-row-gap: 50px;
+      grid-row-gap: 10px;
 }
+
 .container-text{
     grid-area: information;
+    padding: 20px;
+    background-color: var(--primaryColorLighter);
+    border-radius: 5px;
 }
 .container-text, h4 {
     margin: 0.1em;
@@ -36,21 +40,27 @@
 
 div.container-text a{
     display: inline-block;
-    color: rgb(208, 255, 0);
+    color: var(--linkColorSecondary);
 }
 
 div.container-text a:hover{
     transition: 0.3s;
-    color: rgb(146, 179, 0);
+    color: var(--LinkSecondaryHover);
 }
 
 .container-form{
     grid-area: signup-form;
+    padding: 10px;
+    background-color: var(--primaryColorLighter);
+    border-radius: 5px;
 }
 
 .container-signed {
     grid-area: signed-table;
     margin-bottom: 20rem;
+    padding: 10px;
+    background-color: var(--primaryColorLighter);
+    border-radius: 5px;
 }
 
 .header {
@@ -73,11 +83,11 @@ th, td {
 }
 tr:hover {
     transition: 200ms;
-    background-color: var(--primaryColorLighter);
+    background-color: var(--primaryColorLight);
 }
-@media only screen and (min-width: 836px) {
+@media only screen and (min-width: 900px) {
     .container{
-        grid-template-columns: 20vw 60vw 20vw;
+        grid-template-columns: 20vw 1fr 20vw;
     }
 
 }

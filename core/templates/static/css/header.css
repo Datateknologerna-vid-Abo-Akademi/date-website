@@ -9,19 +9,24 @@ ul {
     z-index: 10;
     width: 100vw;
     font-family: 'Josefin Sans', sans-serif;
+    /*border-bottom: 1px solid rgb(255, 255, 255);*/
 }
 
 .nav-bar {
-    text-align: right;
-    line-height: 2rem;
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    line-height: 1rem;
     font-size: 2rem;
-    background-color: var(--primaryColor);
+    position: relative;
+    width: 93%;
+    left: 3%;
 }
 
 #logo {
-    font-size: 200%;
     position: absolute;
-    padding: 10px 20px;
+    z-index: 1;
+    padding:  2px 20px;
 }
 .nav-bar li{
     display: inline-block;
@@ -34,7 +39,7 @@ ul {
 
 .header-logo{
     max-width: 35pt;
-    max-height: 35pt;
+    max-height: 40px;
 }
 
 .nav-bar #logo {
@@ -55,13 +60,19 @@ ul {
   transition: border-width 0.6s linear;
 }
 
-.nav-bar li:hover, .dropdown:hover {
+.nav-bar li:hover, .dropdown-hover:hover {
     background-color: var(--primaryColorLight);
+    cursor: pointer;
 }
 
-.dropdown {
-    display: inline-block;
+.dropbtn-height{
+    padding: 10px;
 }
+
+.staticnav{
+    margin-right: 0;
+}
+
 .nav-bar li:last-child {
     margin-right: 3rem;
 }
@@ -84,13 +95,13 @@ ul {
 
 .dropdown-content {
     background-color: var(--primaryColor);
-    padding-top: 2rem;
     color: var(--secondaryColor);
     position: absolute;
     display: none;
     min-width: 120px;
     z-index: 1;
     max-width: 100%;
+    border: 1px solid white;
 }
 
 .dropdown-content a {
@@ -102,15 +113,21 @@ ul {
     text-decoration: none;
     display: block;
     min-width: 120px;
-    margin-bottom: 1rem;
+    padding-top: 15px;
+    padding-bottom: 15px;
 }
+
+.dropdown-content a:first-child{
+    font-weight: bold;
+}
+
 .dropdown-content a:last-child {
     margin-bottom: 0;
 }
 
 .dropdown-content a:hover {
-    transform: scale(1.15);
     transition: all .3s;
+    background-color: var(--primaryColorLight);
     color: var(--secondaryColorDarker);
 }
 
@@ -152,12 +169,12 @@ ul {
     width: 100vw;
     height: 100vh;
     background-color: rgba(0,0,0,0.8);
-    text-shadow: 3px 3px 10px var(--primaryColor);
+    text-shadow: 3px 3px 10px rgb(0, 0, 0);
 }
 
 .mobile-nav-text{
     overflow-y: scroll;
-    height: 80vh;
+    height: 75vh;
 }
 
 .mobile-nav-bar li{
@@ -186,6 +203,10 @@ ul {
     width: 100vw;
 }
 
+.mobile-dropdown-content a:first-child {
+    font-weight: bold;
+}
+
 .grid-container{
     display: grid;
     grid-template-columns: 3vw 1fr 3vw;
@@ -196,6 +217,10 @@ ul {
 .grid-space{
     grid-area: navlinks;
     display: grid;
+}
+
+div.mobile-nav-text a{
+    color: var(--secondaryColor);
 }
 
 div.mobile-dropdown-content a{

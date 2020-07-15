@@ -28,7 +28,7 @@
                         {% else %}
                             <h3>{{ collection.title }}</h3>
                         {% endif %}
-                        <img src="{{ collection.get_first_picture.image.url }}">
+                        <img class="collection-img" src="{{ collection.get_first_picture.image.url }}">
                         <p>{{ collection.pub_date_pretty }}<span id="picture-count">{{ collection.get_file_count }} {% trans 'Bilder' %}</span></p>
                     </a>
                 </li>

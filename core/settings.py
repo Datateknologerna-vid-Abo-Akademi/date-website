@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 # update
 
 import os
+
 import environ
 
 env = environ.Env(
@@ -48,6 +49,9 @@ INSTALLED_APPS = [
     'news',
     'events',
     'members',
+    'ads',
+    'event_calendar',
+    'social',
     'archive.apps.ArchiveConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -92,6 +96,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'staticpages.context_processors.get_pages',
                 'staticpages.context_processors.get_categories',
+                'staticpages.context_processors.get_urls',
             ],
         },
     },

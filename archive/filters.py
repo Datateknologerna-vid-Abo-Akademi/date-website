@@ -1,4 +1,5 @@
 import django_filters
+
 from .models import Document, get_collections_of_type
 
 

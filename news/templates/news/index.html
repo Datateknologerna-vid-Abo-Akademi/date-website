@@ -17,7 +17,7 @@
                     <p>{{ news_item.content | safe | truncatewords_html:"50" }}</p>
                 </div>
                 {% if news_item.content|wordcount > 50 %}
-                    <a href="{% url 'news:detail' news_item.slug %}"><p class="more-button">{% trans 'LÄS MERA...' %}</p></a>
+                    <a href="{% url 'news:detail' news_item.slug %}"><p class="more-button">{% trans 'Läs mera...' %}</p></a>
                 {% endif %}
             </div>
                     {% empty %}

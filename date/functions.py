@@ -1,5 +1,5 @@
-from django.utils.text import slugify
 from django.utils import timezone
+from django.utils.text import slugify
 
 
 def slugify_max(text, max_length=50):

@@ -3,6 +3,7 @@ from django.urls import reverse
 
 from . import models
 
+
 class LatestPosts(Feed):
     title = "DaTe nyheter"
     link = "/news/feed"
