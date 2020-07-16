@@ -71,7 +71,7 @@ h2{
 
 /* Albin animation */
 @-webkit-keyframes animate {
-    0% {
+    1% {
         opacity: 0;
         fill: none;
         stroke-dashoffset: 25000;
@@ -93,7 +93,7 @@ h2{
     }
 }
 @keyframes animate {
-    0% {
+    1% {
         opacity: 0;
         fill: none;
         stroke-dashoffset: 25000;
@@ -625,14 +625,6 @@ div.scroll-content img{
     .sidebar-container{
         max-width: 70%;
         margin-left: 10vw;
-    }
-
-    .staticlogo{
-        display: inline;
-    }
-
-    svg{
-        display: none;
     }
 
 }
