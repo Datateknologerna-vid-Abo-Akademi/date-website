@@ -197,8 +197,8 @@ h2{
 }
 
 .content img{
-    max-height: 25vw;
-    max-width: 80%;
+    max-height: 50vh;
+    max-width: 100%;
     /* keep img ratio correct */
     width: auto !important;
     height: auto !important;
@@ -629,14 +629,6 @@ div.scroll-content img{
 
 }
 
-@media screen and (max-width: 800px) {
-
-    .content img{
-        max-height: 50vw;
-        max-width: 100%;
-    }
-}
-
 @media screen and (max-width: 550px) {
     
     .images{
@@ -667,9 +659,4 @@ div.scroll-content img{
         grid-template-columns: 1vw 1fr 1vw;
     }
 
-    .content img{
-        max-height: 50vw;
-        max-width: 100%;
-    
-    }
 }
