@@ -19,7 +19,7 @@
 
 .container{
     display: grid;
-    grid-template-columns: 3vw 1fr 3vw;
+    grid-template-columns: 1fr 1000px 1fr;
     grid-template-rows: auto;
     grid-template-areas: 
       ". information ."
@@ -85,9 +85,14 @@ tr:hover {
     transition: 200ms;
     background-color: var(--primaryColorLight);
 }
-@media only screen and (min-width: 900px) {
-    .container{
-        grid-template-columns: 20vw 1fr 20vw;
-    }
 
+@media only screen and (max-width: 1200px) {
+    .container{
+        grid-template-columns: 10vw 1fr 10vw;
+    }
+}
+@media only screen and (max-width: 900px) {
+    .container{
+        grid-template-columns: 3vw 1fr 3vw;
+    }
 }

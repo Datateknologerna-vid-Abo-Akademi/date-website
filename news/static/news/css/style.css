@@ -13,7 +13,7 @@ a{
 
 .container{
     display: grid;
-    grid-template-columns: 3vw 1fr 3vw;
+    grid-template-columns: 1fr 1000px 1fr;
     grid-template-rows: auto;
     grid-template-areas: 
       ". news .";     
@@ -38,7 +38,7 @@ a{
 }
 
 .news img{
-    max-height: 50vw;
+    max-height: 50vh;
     max-width: 100%;
     /* keep img ratio correct */
     width: auto !important;
@@ -73,19 +73,13 @@ div.news-content a:hover{
     color: var(--linkSecondaryHover);
 }
 
-@media only screen and (min-width: 900px) {
+@media only screen and (max-width: 1200px) {
     .container{
-        display: grid;
-        grid-template-columns: 20vw 1fr 20vw;
-        grid-template-rows: auto;
-        grid-template-areas: 
-          ". news .";     
-        grid-row-gap: 50px;
+        grid-template-columns: 10vw 1fr 10vw;
     }
-
-    .news img{
-        max-height: 30vw;
-        max-width: 100%;
-    
+}
+@media only screen and (max-width: 900px) {
+    .container{
+        grid-template-columns: 3vw 1fr 3vw;
     }
 }
