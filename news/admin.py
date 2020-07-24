@@ -1,6 +1,6 @@
-from news import forms
 from django.contrib import admin
 
+from news import forms
 from news.models import Post
 
 

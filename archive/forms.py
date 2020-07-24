@@ -1,5 +1,6 @@
 from django import forms
-from .models import Collection, Picture, Document
+
+from .models import Collection, Document, Picture
 
 
 class PictureUploadForm(forms.Form):

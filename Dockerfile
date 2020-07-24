@@ -1,4 +1,4 @@
-FROM python:3.6-slim
+FROM python:3.8-slim
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && \
     apt-get -y install gcc libldap2-dev libsasl2-dev libssl-dev && \

@@ -1,3 +1,5 @@
+import logging
+
 from admin_ordering.admin import OrderableAdmin
 from django.conf.urls import url
 from django.contrib import admin
@@ -7,10 +9,8 @@ from django.urls import reverse
 from django.utils.html import format_html
 
 from events import forms
-from events.models import Event, EventRegistrationForm, EventAttendees
+from events.models import Event, EventAttendees, EventRegistrationForm
 from events.widgets import PrettyJSONWidget
-
-import logging
 
 logger = logging.getLogger('date')
 
