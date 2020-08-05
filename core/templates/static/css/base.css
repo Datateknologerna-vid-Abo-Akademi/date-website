@@ -26,13 +26,6 @@ a {
     color: var(--secondaryColor);
 }
 
-
-@media screen and (max-width: 1200px){
-    html{
-        font-size: 55%;
-    }
-}
-
 .container-soft{
     background-color: var(--primaryColor);
     padding-top: 10vh;

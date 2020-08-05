@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth import admin as auth_admin
-
-from members.forms import MemberCreationForm, MemberUpdateForm, SubscriptionPaymentForm
-from members.models import Member, Subscription, SubscriptionPayment, MEMBERSHIP_TYPES
 from django.contrib.auth.models import Permission
+
+from members.forms import (MemberCreationForm, MemberUpdateForm,
+                           SubscriptionPaymentForm)
+from members.models import (MEMBERSHIP_TYPES, Member, Subscription,
+                            SubscriptionPayment)
 
 admin.site.register(Permission)
 admin.site.register(Subscription)

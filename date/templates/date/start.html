@@ -9,6 +9,8 @@
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
         <link rel="stylesheet" href="{% static 'date/css/homepage.css' %}?{% now "U" %}" type="text/css">
         {% get_current_language as LANGUAGE_CODE %}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/157670/jquery.jcarousellite.min.js"></script>
     </head>
     <header class="header wave">
         <div class="hero-text-box align-center">
@@ -177,30 +179,46 @@ c-132 -94 -567 -160 -888 -133 -145 12 -285 45 -355 84 -35 20 -37 24 -44 87
         </div>
     </section>
     <section id="news" class="news-events text-size">
-        <div class="ne-container">
-            <div class="container-box news-container">
+        <div class="main-container">
+            <div class="feed-container">
                 <h2 class="border-bottom">Nyheter</h2>
-                {% for ne in news%}
-                    <div class="content news-box border-bottom">
-                        <h2 class="news-title">{{ ne.title }}</h2>
-                        <h5 class="news-date">{{ ne.published_time }}</h5>
-                        <div class="news-content">
-                            <p>{{ ne.content|safe|truncatewords_html:"50"}}</p>
+                <div class="news-container">
+                    {% for ne in news%}
+                        <div class="content news-box border-bottom">
+                            <h3 class="news-title">{{ ne.title }}</h3>
+                            <h5 class="news-date">{{ ne.published_time }}</h5>
+                            <div class="news-content">
+                                <p>{{ ne.content|safe|truncatewords_html:"50"}}</p>
+                            </div>
+                            <a class="news-button" href="{% url 'news:detail' ne.slug %}">{% trans 'Läs mera' %}...</a>
                         </div>
-                        <a class="news-button" href="{% url 'news:detail' ne.slug %}">{% trans 'Läs mera' %}...</a>
-                    </div>
-                    {% empty %}
-                    <h3>{% trans 'inga nyheter hittades' %}...</h3>
-                {% endfor %}
+                        {% empty %}
+                        <h3>{% trans 'inga nyheter hittades' %}...</h3>
+                    {% endfor %}
+                    <a class="more-news" href="/news/">Mera nyheter...</a>
+                </div>
             </div>
             <div class="sidebar-container">
                 <h2 class="border-bottom">Evenemang</h2>
+                <div class="calendar-container">
+                    <div class="calendar-box">
+                        <table class="calendar">
+                            {% autoescape off %}
+                                <div class="clearfix">
+                                    <a class="btn btn-info left" href="{% url 'index' %}?{{ prev_month }}">{% trans '<<' %}</a>
+                                    <a class="btn btn-info right" href="{% url 'index' %}?{{ next_month }}">{% trans '>>' %}</a>
+                                </div>
+                                {{calendar}}
+                            {% endautoescape %}
+                        </table>
+                    </div>
+                </div>
                 <div class="events-container">
                     {% for ev in events|slice:":5" %}
                     <a href="{% url 'events:detail' ev.slug %}">
                         <div class="event-box border-left">
                             <h4 class="event-title">{{ ev.title }}  </h4>
-                            <p class="event-date">{{ ev.event_date_start_pretty}}</p>
+                            <p class="event-date">{{ ev.event_date_start_pretty|slice:6}}</p>
                         </div>
                     </a>
                         {% empty %}
@@ -210,9 +228,31 @@ c-132 -94 -567 -160 -888 -133 -145 12 -285 45 -355 84 -35 20 -37 24 -44 87
                     <a class="more-events-button" href="{% url 'events:index'%}">{% trans 'Mera evenemang' %}...</a>
                     {% endif %}
                 </div>
+                <div class="logo-container">
+                    <h3>Samarbetspartners</h3>
+                    <div class="carousel">
+                        <ul>
+                            {%for ad in ads%}
+                            <li class="company-logo">
+                                <img src="{{ad}}" alt="img">
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>  
             </div>
         </div>
     </section>
     <section id="reklam" class="text-size">
     </section>
+    <script>
+        $(".carousel").jCarouselLite({
+        circular: true,
+        vertical: true,
+        auto: 1500,
+        speed: 1500,
+        pause: true,
+        visible: 4
+        });
+        </script>
 {% endblock %}

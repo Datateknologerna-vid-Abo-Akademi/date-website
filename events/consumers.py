@@ -1,8 +1,10 @@
-from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.db import database_sync_to_async
 import json
+
+from channels.db import database_sync_to_async
+from channels.generic.websocket import AsyncWebsocketConsumer
 from django.db import models
-from .models import EventAttendees, Event
+
+from .models import Event, EventAttendees
 from .views import EventDetailView
 
 

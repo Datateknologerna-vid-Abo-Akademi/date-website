@@ -1,16 +1,17 @@
 from __future__ import unicode_literals
+
 import logging
+from datetime import timedelta
 
 from ckeditor.fields import RichTextField
 from django import forms
+from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.template.defaulttags import register
-from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
-from datetime import timedelta
-from django.conf import settings
+from django.utils.translation import ugettext_lazy as _
 
 logger = logging.getLogger('date')
 
@@ -74,7 +75,7 @@ class Event(models.Model):
                 if self.get_registration_form():
                     for item in self.get_registration_form():
                         user_pref[str(item)] = preferences.get(str(item))
-                if self.get_registrations().count() < self.sign_up_max_participants or self.sign_up_max_participants is 0:
+                if self.get_registrations().count() < self.sign_up_max_participants or self.sign_up_max_participants == 0:
                     registration = EventAttendees.objects.create(user=user,
                                                                  event=self, email=email,
                                                                  time_registered=now(), preferences=user_pref,

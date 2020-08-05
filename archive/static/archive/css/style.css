@@ -2,17 +2,17 @@ body {
     font-size: 1.5em;
 }
 
-img {
-    height: auto;
-    width: 100%;
-
-}
 #logo {
     color: var(--secondaryColor) !important;
 }
 #logo:hover {
     text-decoration: none;
 }
+
+.container-soft{
+    font-family: 'Josefin Sans', sans-serif;
+}
+
 .nav-bar a:hover {
     color :var(--secondaryColor);
     text-decoration: none;
@@ -42,13 +42,24 @@ img {
 .collection-item {
     text-align: center;
 }
+
+li.collection-item img {
+    height: auto;
+    width: 100%;
+}
+/*
 .collection-item img:hover {
     border: solid 1px var(--secondaryColor);
 }
 
 .collection-item:hover a {
-    transition: 500ms;
-    color: var(--primaryColorLight);
+    color: rgb(48, 48, 48);
+}
+*/
+
+.collection-img:hover{
+    transition: 0.3s ease-in-out;
+    transform: scale(1.02);
 }
 
 .filter-form {
