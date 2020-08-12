@@ -1,5 +1,6 @@
-from datetime import datetime, timedelta
 from calendar import HTMLCalendar
+from datetime import datetime, timedelta
+
 from events.models import Event
 
 

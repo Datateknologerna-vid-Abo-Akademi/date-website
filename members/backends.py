@@ -1,9 +1,9 @@
-from django.contrib.auth.backends import ModelBackend
+import logging
+
 #import ldap3
 import requests
+from django.contrib.auth.backends import ModelBackend
 from requests.auth import HTTPBasicAuth
-
-import logging
 
 from members.models import Member
 
