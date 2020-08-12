@@ -6,7 +6,6 @@ from django.shortcuts import redirect, render
 from django.utils import translation
 
 from ads.models import AdUrl
-from event_calendar.views import get_calendar, get_date, next_month, prev_month
 from events.models import Event
 from news.models import Post
 from itertools import chain
