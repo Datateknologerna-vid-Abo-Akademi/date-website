@@ -9,12 +9,9 @@ from ads.models import AdUrl
 from event_calendar.views import get_calendar, get_date, next_month, prev_month
 from events.models import Event
 from news.models import Post
-<<<<<<< HEAD
 from itertools import chain
 from event_calendar.views import CalendarManager
 from ads.models import AdUrl
-=======
->>>>>>> develop
 from social.models import IgUrl
 
 
