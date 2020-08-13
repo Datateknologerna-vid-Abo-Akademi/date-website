@@ -1,19 +1,20 @@
 import datetime
-from itertools import chain
 
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.utils import translation
 
-from ads.models import AdUrl
-from event_calendar.views import get_calendar, get_date, next_month, prev_month
 from events.models import Event
 from news.models import Post
+from itertools import chain
+from event_calendar.views import CalendarManager
+from ads.models import AdUrl
 from social.models import IgUrl
 
 
 def index(request):
-    d = get_date(request.GET.get('month', None))
+    cm = CalendarManager(request)
+    d = cm.date
 
     events = Event.objects.filter(published=True, event_date_end__gte=d).order_by(
         'event_date_start')
@@ -24,9 +25,10 @@ def index(request):
         'news_events': list(chain(events, news)),
         'ads': AdUrl.objects.all(),
         'posts': IgUrl.objects.all(),
-        'calendar': get_calendar(request),
-        'prev_month': prev_month(d),
-        'next_month': next_month(d),
+        'calendar': cm.get_calendar(),
+        'prev_month': cm.prev_month(),
+        'next_month': cm.next_month(),
+        'curr_month': cm.curr_month_as_string(),
     }
 
     return render(request, 'date/start.html', context)
