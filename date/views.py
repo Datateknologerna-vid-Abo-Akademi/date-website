@@ -1,11 +1,9 @@
 import datetime
-from itertools import chain
 
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.utils import translation
 
-from ads.models import AdUrl
 from events.models import Event
 from news.models import Post
 from itertools import chain

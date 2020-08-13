@@ -203,10 +203,10 @@ c-132 -94 -567 -160 -888 -133 -145 12 -285 45 -355 84 -35 20 -37 24 -44 87
                 <div class="calendar-container">
                     <div class="calendar-box">
                         <table class="calendar">
-                                <div class="" align="center">
-                                    <a class="btn btn-info pull-left" href="{% url 'index' %}?{{ prev_month }}"><<</a>
+                                <div class="clearfix">
+                                    <a class="btn left" href="{% url 'index' %}?{{ prev_month }}"><<</a>
                                     <span>{{ curr_month }}</span>
-                                    <a class="btn btn-info pull-right" href="{% url 'index' %}?{{ next_month }}">>></a>
+                                    <a class="btn right" href="{% url 'index' %}?{{ next_month }}">>></a>
                                 </div>
                             {% autoescape off %}
                                 {{calendar}}
