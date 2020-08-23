@@ -28,7 +28,7 @@ class Calendar(HTMLCalendar):
     # formats a week as a tr
     def formatweek(self, the_week, events, **kwargs):
         week = ''
-        for d, weekday in the_week:
+        for d, _ in the_week:
             week += self.formatday(d, events)
         return f'<tr class="weekday"> {week} </tr>'
 
@@ -38,7 +38,7 @@ class Calendar(HTMLCalendar):
         events = Event.objects.filter(event_date_start__year=self.year, event_date_start__month=self.month)
 
         cal = ""
-        cal += f'{self.formatmonthname(self.year, self.month, withyear=with_year)}\n'
+        # cal += f'{self.formatmonthname(self.year, self.month, withyear=with_year)}\n'
         cal += f'{self.formatweekheader()}\n'
         for week in self.monthdays2calendar(self.year, self.month):
             cal += f'{self.formatweek(week, events)}\n'

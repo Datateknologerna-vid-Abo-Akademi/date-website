@@ -19,12 +19,12 @@
     word-break: break-word;
     hyphens: auto;
     background-color: var(--primaryColorLighter);
-    padding: 10px;
+    padding: 20px;
     border-radius: 5px;
 }
 
 .content-grid img{
-    max-height: 50vh;
+    max-height: 35vh;
     max-width: 100%;
     /* keep img ratio correct */
     width: auto !important;

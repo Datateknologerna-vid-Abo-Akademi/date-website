@@ -11,8 +11,8 @@ html{
     scroll-behavior: smooth;
 }
 
-h2{
-    font-size: 25px;
+.h3-plus{
+    font-size: 26px;
 }
 
 /* Header */
@@ -153,7 +153,7 @@ h2{
 
 .main-container{
     display: grid;
-    grid-template-columns: 10vw 5fr 2fr 10vw;
+    grid-template-columns: 1fr 850px 350px 1fr;
     grid-template-rows: auto;
     grid-template-areas: 
       ". news events ."
@@ -182,8 +182,8 @@ h2{
 }
 
 .content img{
-    max-height: 25vw;
-    max-width: 80%;
+    max-height: 30vh;
+    max-width: 100%;
     /* keep img ratio correct */
     width: auto !important;
     height: auto !important;
@@ -362,10 +362,8 @@ div.calendar-container a {
 }
 
 .clearfix {
-  margin-left: 15px;
-  margin-right: 15px;
-  position: relative;
-  top: 15px;
+  padding: 10px;
+  text-align: center;
 }
 
 /* Calendar tooltip */
@@ -433,7 +431,7 @@ div.carousel img{
 
 .about{ 
     display: grid;
-    grid-template-columns: 20vw 1fr 20vw;
+    grid-template-columns: 1fr 1000px 1fr;
     grid-template-rows: auto;
     grid-template-areas: 
       ". about .";
@@ -531,20 +529,13 @@ div.carousel img{
 
 /*width responsiveness*/
 
-@media screen and (max-width: 1600px){
+@media screen and (max-width: 1400px){
     .main-container{
-        grid-template-columns: 3vw 5fr 2fr 3vw;
-    }
-}
-
-@media screen and (max-width: 1200px){
-    
-    .main-container{
-        grid-template-columns: 2vw 5fr 2fr 2vw;
+        grid-template-columns: 5vw 5fr 2fr 5vw;
     }
 
     .about{
-        grid-template-columns: 2vw 1fr 2vw;
+        grid-template-columns: 10vw 1fr 10vw;
     }
 }
 
@@ -624,12 +615,6 @@ div.carousel img{
         grid-template-columns: 3vw 1fr 5vw;
     }
 
-    .content img{
-        max-height: 50vw;
-        max-width: 100%;
-    
-    }
-
     .hero-text-box {
         -webkit-transform: translate(-50%, 55%)scale(0.40);
                 transform: translate(-50%, 55%)scale(0.40);
@@ -701,12 +686,6 @@ div.carousel img{
 
     .about{
         grid-template-columns: 5vw 1fr 5vw;
-    }
-
-    .content img{
-        max-height: 50vw;
-        max-width: 100%;
-    
     }
 
 }
