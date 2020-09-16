@@ -235,7 +235,9 @@ c-132 -94 -567 -160 -888 -133 -145 12 -285 45 -355 84 -35 20 -37 24 -44 87
                         <ul>
                             {%for ad in ads%}
                             <li class="company-logo">
-                                <img src="{{ad}}" alt="img">
+                                <a href="{{ ad.company_url }}">
+                                    <img src="{{ ad.ad_url }}" alt="img">
+                                </a>
                             </li>
                             {% endfor %}
                         </ul>
