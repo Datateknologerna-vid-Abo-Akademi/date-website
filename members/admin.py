@@ -66,5 +66,8 @@ class UserAdmin(auth_admin.UserAdmin):
 class SubscriptionPaymentAdmin(admin.ModelAdmin):
     form = SubscriptionPaymentForm
     fields = SubscriptionPaymentForm.Meta.fields
-    list_display = ('member', 'subscription', 'is_active', 'expires')
-    list_filter = ('subscription', 'member', 'date_expires')
+    list_display = ('full_name', 'subscription', 'is_active', 'expires')
+    list_filter = ('subscription', 'date_expires')
+
+    def full_name(self, obj):
+        return obj.member.get_full_name()
