@@ -14,9 +14,6 @@ from .managers import MemberManager
 logger = logging.getLogger('date')
 
 
-
-
-
 FRESHMAN = 1
 ORDINARY_MEMBER = 2
 SUPPORTING_MEMBER = 3
@@ -45,7 +42,6 @@ class Member(AbstractBaseUser, PermissionsMixin):
     objects = MemberManager()
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = []
 
     class Meta:
         verbose_name = _('medlem')
