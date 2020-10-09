@@ -17,9 +17,10 @@ class Calendar(HTMLCalendar):
         d = ''
         a = ''
         for event in events_per_day:
-            d += f'<a class="tooltip" href=/events/{event.slug}>'
-            d += f'<span class="tooltiptext">{event.title}</span>'
-            a += f'</a>'
+            if event.published == True:
+                d += f'<a class="tooltip" href=/events/{event.slug}>'
+                d += f'<span class="tooltiptext">{event.title}</span>'
+                a += f'</a>'
 
         if day != 0:
             return f"<td class='day'>{d}{day}{a}</td>"
