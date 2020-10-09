@@ -14,18 +14,18 @@ html{
 
 .container{
     display: grid;
-    grid-template-columns: 10vw 1fr 10vw;
+    grid-template-columns: 3vw 1fr 3vw;
     grid-template-rows: auto;
     grid-template-areas:
     " . info .";
 }
 
-.container-info{
-    grid-area: info;
+.font-size{
+    font-size: 1.2em;    
 }
 
-.font-size{
-    font-size: 3vw;
+.container-info{
+    grid-area: info;
 }
 
 .heading{
@@ -50,15 +50,9 @@ tr:nth-child(odd){
 
 @media screen and (min-width: 600px) {
     .font-size{
-        font-size: 2vw;    
+        font-size: 2em;    
     }
-  }
-
-  @media screen and (min-width: 1200px) {
-    .font-size{
-        font-size: 1.2vw;    
+    .container{
+        grid-template-columns: 1fr 580px 1fr;
     }
-    table {
-        width: 70%;
-      }
   }
