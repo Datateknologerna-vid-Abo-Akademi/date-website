@@ -50,7 +50,7 @@ div.container-text a:hover{
 
 .container-form{
     grid-area: signup-form;
-    padding: 10px;
+    padding: 20px;
     background-color: var(--primaryColorLighter);
     border-radius: 5px;
 }
@@ -58,7 +58,7 @@ div.container-text a:hover{
 .container-signed {
     grid-area: signed-table;
     margin-bottom: 20rem;
-    padding: 10px;
+    padding: 20px;
     background-color: var(--primaryColorLighter);
     border-radius: 5px;
 }
@@ -71,6 +71,10 @@ table {
     border-collapse: collapse;
     width: 80%;
     font-size: 1.3em;
+}
+
+.event-full{
+    color: gray;
 }
 
 th {

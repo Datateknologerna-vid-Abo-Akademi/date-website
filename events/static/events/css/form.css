@@ -39,6 +39,7 @@
     display: inline-block;
     font-size: 16px;
     border-radius: 5px;
+    font-family: 'Josefin Sans', sans-serif;
 }
 .button:hover{
     transition: 0.2s ease;
@@ -48,6 +49,10 @@
 
 .button:active{
     background-color: var(--primaryColorLight);
+}
+
+.warning{
+    color:rgb(216 153 146);
 }
 
 @media only screen and (min-width: 675px) {
