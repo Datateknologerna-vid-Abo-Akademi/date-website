@@ -26,8 +26,6 @@
                     {% include 'events/registering.html' %}
                 {% elif event.registation_past_due %}
                     <h4 id="no-registration">{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }} {% trans 'sedan' %}</h4>
-                {% elif event.event_is_full %}
-                    <p>{% trans "Evenemanget är tyvärr fullt." %}</p>
                 {% elif not event.registation_past_due and user.is_authenticated %}
                     <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_members | timeuntil }}</p>
                 {% else %}
@@ -36,6 +34,7 @@
             </div>
             <div class="container-signed">
             {% if event|show_attendee_list %}
+                <p>Det finns {{ event.sign_up_max_participants }} platser!</p>
                 <h1>{% trans "Anmälda" %}</h1>
                 <table id="attendees">
                     <tr id="attendees-header"
@@ -48,7 +47,7 @@
                             {% endfor %}
                     </tr>
                     {% for attendee in event.get_registrations %}
-                        <tr>
+                        <tr {% if forloop.counter > event.sign_up_max_participants %} class="event-full" {% endif %} >
                             <td>{{ forloop.counter }}</td>
                             <td>{% if not attendee.anonymous %}{{ attendee.user }}{% else %}
                                 <i>{% trans "Anonymt" %}</i>{% endif %}</td>

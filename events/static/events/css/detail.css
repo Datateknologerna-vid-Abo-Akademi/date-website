@@ -72,6 +72,10 @@ table {
     font-size: 1.3em;
 }
 
+.event-full{
+    color: gray;
+}
+
 th {
     padding-bottom: 1rem;
 }
