@@ -43,7 +43,7 @@ a{
     /* keep img ratio correct */
     width: auto !important;
     height: auto !important;
-
+    border-radius: 3px;
 }
 
 .author{

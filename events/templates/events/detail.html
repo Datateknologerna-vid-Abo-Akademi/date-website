@@ -13,7 +13,7 @@
     </head>
     <div class="container">
         <div class="container-text">
-            <h1 class="header">{{ event.title }}</h1>
+            <h2 class="header">{{ event.title }}</h2>
             <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
             <p>{{ event.content | safe }}</p>
         </div>
@@ -35,7 +35,7 @@
             <div class="container-signed">
             {% if event|show_attendee_list %}
                 <p>Det finns {{ event.sign_up_max_participants }} platser!</p>
-                <h1>{% trans "Anmälda" %}</h1>
+                <h2>{% trans "Anmälda" %}</h2>
                 <table id="attendees">
                     <tr id="attendees-header"
                         {% if not event.get_registrations %} style="display: none;"

@@ -172,16 +172,16 @@ c-132 -94 -567 -160 -888 -133 -145 12 -285 45 -355 84 -35 20 -37 24 -44 87
     </header>
     <section id="about" class="about text-size">
         <div class="about-grid-content">
-            <h2 class="h3-plus">Om oss</h2>
+            <h3>Om oss</h3>
             <div class="text">
                 <p>Datateknologerna vid Åbo Akademi rf är en förening för studerande vid utbildningsprogrammet i datateknik vid Fakulteten för  Naturvetenskaper och Teknik vid Åbo Akademi, samt för studerande vid övriga tekniskt inriktade utbildningslinjer i databehandling. Föreningen grundades 1999, närmare bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare och stiliga tofsmössor.</p>
             </div>
         </div>
     </section>
     <section id="news" class="news-events text-size">
-        <div class="main-container">
+        <div id="main" class="main-container">
             <div class="feed-container">
-                <h2 class="border-bottom h3-plus">Nyheter</h2>
+                <h3 class="border-bottom">Nyheter</h3>
                 <div class="news-container">
                     {% for ne in news%}
                         <div class="content news-box border-bottom">
@@ -198,8 +198,8 @@ c-132 -94 -567 -160 -888 -133 -145 12 -285 45 -355 84 -35 20 -37 24 -44 87
                     <a class="more-news" href="/news/">Mera nyheter...</a>
                 </div>
             </div>
-            <div class="sidebar-container">
-                <h2 class="border-bottom h3-plus">Evenemang</h2>
+            <div class="events-container">
+                <h3 class="border-bottom">Evenemang</h3>
                 <div class="calendar-container">
                     <div class="calendar-box">
                         <table class="calendar">
@@ -214,36 +214,36 @@ c-132 -94 -567 -160 -888 -133 -145 12 -285 45 -355 84 -35 20 -37 24 -44 87
                         </table>
                     </div>
                 </div>
-                <div class="events-container">
+                <div class="events">
                     {% for ev in events|slice:":5" %}
-                    <a href="{% url 'events:detail' ev.slug %}">
-                        <div class="event-box border-left">
-                            <h4 class="event-title">{{ ev.title }}  </h4>
-                            <p class="event-date">{{ ev.event_date_start_pretty|slice:6}}</p>
-                        </div>
-                    </a>
+                        <a href="{% url 'events:detail' ev.slug %}">
+                            <div class="event-box border-left">
+                                <h4 class="event-title">{{ ev.title }}  </h4>
+                                <p class="event-date">{{ ev.event_date_start_pretty|slice:6}}</p>
+                            </div>
+                        </a>
                         {% empty %}
                         <h5>{% trans 'inga aktiva evenemang hittades' %}...</h5>
                     {% endfor %}
                     {% if events|length >= 5 %}
-                    <a class="more-events-button" href="{% url 'events:index'%}">{% trans 'Mera evenemang' %}...</a>
+                        <a class="more-events-button" href="{% url 'events:index'%}">{% trans 'Mera evenemang' %}...</a>
                     {% endif %}
-                </div>
-                <div class="logo-container">
-                    <h3>Samarbetspartners</h3>
-                    <div class="carousel">
-                        <ul>
-                            {%for ad in ads%}
-                            <li class="company-logo">
-                                <a href="{{ ad.company_url }}">
-                                    <img src="{{ ad.ad_url }}" alt="img">
-                                </a>
-                            </li>
-                            {% endfor %}
-                        </ul>
                     </div>
-                </div>  
             </div>
+            <div class="logo-container">
+                <h3>Samarbetspartners</h3>
+                <div class="carousel">
+                    <ul>
+                        {%for ad in ads%}
+                        <li class="company-logo">
+                            <a href="{{ ad.company_url }}">
+                                <img src="{{ ad.ad_url }}" alt="img">
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>  
         </div>
     </section>
     <section id="reklam" class="text-size">
