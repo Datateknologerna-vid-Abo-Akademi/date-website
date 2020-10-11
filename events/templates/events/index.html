@@ -11,20 +11,20 @@
         <h1 class="heading"><span>{% trans "Kommande händelser" %}</span></h1>
         <div class="container-box-coming">
             {% for event in event_list %}
-            <a class="event-coming event-card" href="{% url 'events:detail' event.slug %}">
-                <div class="content title btn">
-                    <div class="text-center">
-                        <h2 class="event-title">{{ event.title }}</h2>
-                        <p class="event-text">{{ event.content|safe|striptags|truncatewords_html:"50"}}</p>
+                <a class="event-coming event-card" href="{% url 'events:detail' event.slug %}">
+                    <div class="content title btn">
+                        <div class="text-center">
+                            <h2 class="event-title">{{ event.title }}</h2>
+                            <p class="event-text">{{ event.content|safe|striptags|truncatewords_html:"50"}}</p>
+                        </div>
+                        <div class="date">
+                            <h3>{{ event.event_date_start_pretty }}</h3>
+                        </div>
                     </div>
-                    <div class="date">
-                        <h3 class="text-center">{{ event.event_date_start_pretty }}</h3>
-                    </div>
-                </div>
-            </a>
-            {% empty %}
-            <h3>{% trans "Inga aktiva händelser" %}</h3>
-        {% endfor %}
+                </a>
+                {% empty %}
+                <h3>{% trans "Inga aktiva händelser" %}</h3>
+            {% endfor %}
         </div>
         <div class="container-box-past">
             <h1 class="heading"><span>{% trans "Tidigare händelser" %}</span></h1>
