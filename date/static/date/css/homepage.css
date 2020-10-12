@@ -156,8 +156,8 @@ html{
     grid-template-columns: 1fr 850px 350px 1fr;
     grid-template-rows: auto;
     grid-template-areas: 
-      ". news events ."
-      ". news logos ."
+      ". news sidebar ."
+      ". news sidebar ."
       ". ig-scroll ig-scroll .";   
     grid-column-gap: 3vw;
 }
@@ -217,10 +217,19 @@ div.content a:hover{
 
 /*Sidebar*/
 
+.sidebar-container{
+    grid-area: sidebar;
+}
+
 /*Event start*/
 
 .events-container{
+    display: block;
+}
+
+.mobile-events-container{
     grid-area: events;
+    display: none;
 }
 
 .events{
@@ -398,7 +407,12 @@ div.calendar-container a {
 /*logos start*/
 
 .logo-container{
+    display: block;
+}
+
+.mobile-logo-container{
     grid-area: logos;
+    display: none;
 }
 
 .carousel{
@@ -579,6 +593,22 @@ div.carousel img{
           ". news ."
           ". logos ."
           ". ig-scroll .";   
+    }
+
+    .events-container{
+        display: none;
+    }
+
+    .mobile-events-container{
+        display: block;
+    }
+
+    .logo-container{
+        display: none;
+    }
+
+    .mobile-logo-container{
+        display: block;
     }
 
     .calendar-container{
