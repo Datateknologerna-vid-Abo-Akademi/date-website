@@ -60,6 +60,7 @@ div.container-text a:hover{
     padding: 20px;
     background-color: var(--secondaryColor);
     border-radius: 5px;
+    overflow: scroll;
 }
 
 .header {
