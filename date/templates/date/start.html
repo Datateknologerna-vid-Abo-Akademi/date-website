@@ -198,7 +198,55 @@ c-132 -94 -567 -160 -888 -133 -145 12 -285 45 -355 84 -35 20 -37 24 -44 87
                     <a class="more-news" href="/news/">Mera nyheter...</a>
                 </div>
             </div>
-            <div class="events-container">
+            <div class="sidebar-container">
+                <div class="events-container">
+                    <h3 class="border-bottom">Evenemang</h3>
+                    <div class="calendar-container">
+                        <div class="calendar-box">
+                            <table class="calendar">
+                                    <div class="clearfix">
+                                        <a class="btn left" href="{% url 'index' %}?{{ prev_month }}"><<</a>
+                                        <span>{{ curr_month }}</span>
+                                        <a class="btn right" href="{% url 'index' %}?{{ next_month }}">>></a>
+                                    </div>
+                                {% autoescape off %}
+                                    {{calendar}}
+                                {% endautoescape %}
+                            </table>
+                        </div>
+                    </div>
+                    <div class="events">
+                        {% for ev in events|slice:":5" %}
+                            <a href="{% url 'events:detail' ev.slug %}">
+                                <div class="event-box border-left">
+                                    <h4 class="event-title">{{ ev.title }}  </h4>
+                                    <p class="event-date">{{ ev.event_date_start_pretty|slice:6}}</p>
+                                </div>
+                            </a>
+                            {% empty %}
+                            <h5>{% trans 'inga aktiva evenemang hittades' %}...</h5>
+                        {% endfor %}
+                        {% if events|length >= 5 %}
+                            <a class="more-events-button" href="{% url 'events:index'%}">{% trans 'Mera evenemang' %}...</a>
+                        {% endif %}
+                        </div>
+                </div>
+                <div class="logo-container">
+                    <h3>Samarbetspartners</h3>
+                    <div class="carousel">
+                        <ul>
+                            {%for ad in ads%}
+                            <li class="company-logo">
+                                <a href="{{ ad.company_url }}">
+                                    <img src="{{ ad.ad_url }}" alt="img">
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>  
+            </div>
+            <div class="mobile-events-container">
                 <h3 class="border-bottom">Evenemang</h3>
                 <div class="calendar-container">
                     <div class="calendar-box">
@@ -230,7 +278,7 @@ c-132 -94 -567 -160 -888 -133 -145 12 -285 45 -355 84 -35 20 -37 24 -44 87
                     {% endif %}
                     </div>
             </div>
-            <div class="logo-container">
+            <div class="mobile-logo-container">
                 <h3>Samarbetspartners</h3>
                 <div class="carousel">
                     <ul>
