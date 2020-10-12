@@ -3,8 +3,12 @@ import logging
 from dateutil.relativedelta import relativedelta
 from django import forms
 
+from django.utils.translation import ugettext_lazy as _
 from members.models import (SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH,
                             SUB_RE_SCALE_YEAR, Member, SubscriptionPayment)
+
+
+import logging
 
 logger = logging.getLogger('date')
 
@@ -107,14 +111,14 @@ class SubscriptionPaymentForm(forms.ModelForm):
 
 
 class SignUpForm(forms.ModelForm):
-    username = forms.CharField(max_length=20, help_text='detta fält är obligatoriskt')
-    email = forms.EmailField(max_length=200, help_text='detta fält är obligatoriskt')
+    username = forms.CharField(max_length=20, help_text=_('detta fält är obligatoriskt'))
+    email = forms.EmailField(max_length=200, help_text=_('detta fält är obligatoriskt'))
     password = forms.CharField(
         widget=forms.PasswordInput(),
         required=True,
         min_length=8,
         error_messages={'required': 'Password is required'},
-        help_text='detta fält är obligatoriskt'
+        help_text=_('detta fält är obligatoriskt')
     )
 
     class Meta:

@@ -4,6 +4,7 @@
     /* keep img ratio correct */
       width: auto !important;
       height: auto !important;
+      border-radius: 3px;
 }
 
 .container{
@@ -50,7 +51,7 @@ div.container-text a:hover{
 
 .container-form{
     grid-area: signup-form;
-    padding: 10px;
+    padding: 20px;
     background-color: var(--primaryColorLighter);
     border-radius: 5px;
 }
@@ -58,10 +59,20 @@ div.container-text a:hover{
 .container-signed {
     grid-area: signed-table;
     margin-bottom: 20rem;
-    padding: 10px;
+    padding: 20px;
     background-color: var(--primaryColorLighter);
     border-radius: 5px;
+    overflow: scroll;
+
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
 }
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.container-signed::-webkit-scrollbar {
+    display: none;
+  }
+  
 
 .header {
     margin: 0;
@@ -71,6 +82,10 @@ table {
     border-collapse: collapse;
     width: 80%;
     font-size: 1.3em;
+}
+
+.event-full{
+    color: gray;
 }
 
 th {

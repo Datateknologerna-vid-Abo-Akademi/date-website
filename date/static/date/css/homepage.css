@@ -157,6 +157,7 @@ html{
     grid-template-rows: auto;
     grid-template-areas: 
       ". news events ."
+      ". news logos ."
       ". ig-scroll ig-scroll .";   
     grid-column-gap: 3vw;
 }
@@ -179,6 +180,7 @@ html{
 .news-box{
     background-color: var(--secondaryColor);
     padding: 10px;
+    border-radius: 5px;
 }
 
 .content img{
@@ -187,7 +189,7 @@ html{
     /* keep img ratio correct */
     width: auto !important;
     height: auto !important;
-
+    border-radius: 3px;
 }
 
 .news-date{
@@ -214,18 +216,16 @@ div.content a:hover{
 /*News end*/
 
 /*Sidebar*/
-.sidebar-container{
-    grid-area: events;
-}
 
 /*Event start*/
 
 .events-container{
+    grid-area: events;
+}
+
+.events{
     display: grid;
-    grid-template-rows: auto;
     grid-row-gap: 10px;
-    max-height: 100vh;
-    padding-bottom: 10px;
 }
 /*
 .border-left{
@@ -396,6 +396,10 @@ div.calendar-container a {
 /*Calendar end*/
 
 /*logos start*/
+
+.logo-container{
+    grid-area: logos;
+}
 
 .carousel{
     border-top: solid;
@@ -571,14 +575,14 @@ div.carousel img{
     .main-container{
         grid-template-columns: 5vw 1fr 5vw;
         grid-template-areas: 
-          ". news ."
           ". events ."
+          ". news ."
+          ". logos ."
           ". ig-scroll .";   
     }
 
-    .sidebar-container{
-        max-width: 70%;
-        margin-left: 10vw;
+    .calendar-container{
+        display: none;
     }
 
     .about{

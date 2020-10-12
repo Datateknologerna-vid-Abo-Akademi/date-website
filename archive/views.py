@@ -35,7 +35,7 @@ class DetailView(generic.DetailView):
     template_name = 'archive/detail.html'
 
 
-@permission_required('add_collection')
+@permission_required('archive.add_collection')
 def upload(request):
     if request.method == 'POST':
         form = PictureUploadForm(request.POST)
