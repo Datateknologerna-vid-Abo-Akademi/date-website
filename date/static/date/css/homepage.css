@@ -595,16 +595,12 @@ div.carousel img{
           ". ig-scroll .";   
     }
 
-    .events-container{
+    .sidebar-container{
         display: none;
     }
 
     .mobile-events-container{
         display: block;
-    }
-
-    .logo-container{
-        display: none;
     }
 
     .mobile-logo-container{
@@ -670,11 +666,6 @@ div.carousel img{
 }
 
 @media screen and (max-width: 550px) {
-
-    .sidebar-container{
-        max-width: 100%;
-        margin-left: 0;
-    }
 
     .tooltip .tooltiptext {
         width: 0;
