@@ -61,7 +61,16 @@ div.container-text a:hover{
     background-color: var(--secondaryColor);
     border-radius: 5px;
     overflow: scroll;
+
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
 }
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.container-signed::-webkit-scrollbar {
+    display: none;
+  }
+  
 
 .header {
     margin: 0;
