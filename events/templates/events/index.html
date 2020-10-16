@@ -7,39 +7,35 @@
     <head>
         <link rel="stylesheet" href="{% static 'events/css/style.css' %}"type="text/css">
     </head>
-    <div class="container detail">
-        <h1 class="heading">{% trans "Kommande händelser" %}</h1>
-        {% if event_list.count <= 1 %}
-        <div class="container-box-coming-one">
-        {% elif event_list.count == 2 %}
-        <div class="container-box-coming-two">
-        {% else %}
+    <div class="container">
+        <h1 class="heading"><span>{% trans "Kommande händelser" %}</span></h1>
         <div class="container-box-coming">
-        {% endif%}
             {% for event in event_list %}
-            <div class="event event-coming">
-                    <a class="content title btn" href="{% url 'events:detail' event.slug %}">
+                <a class="event-coming event-card" href="{% url 'events:detail' event.slug %}">
+                    <div class="content title btn">
                         <div class="text-center">
                             <h2 class="event-title">{{ event.title }}</h2>
-                            <p class="event-text">{{ event.content|safe|striptags|truncatewords_html:"25"}}</p>
+                            <p class="event-text">{{ event.content|safe|striptags|truncatewords_html:"50"}}</p>
                         </div>
-                    </a>
-                <div class="date">
-                    <h3 class="text-center">{{ event.event_date_start_pretty }}</h3>
-                </div>
-            </div>
-            {% empty %}
-            <h3>{% trans "Inga aktiva händelser" %}</h3>
-        {% endfor %}
+                        <div class="date">
+                            <h3>{{ event.event_date_start_pretty }}</h3>
+                        </div>
+                    </div>
+                </a>
+                {% empty %}
+                <h3>{% trans "Inga aktiva händelser" %}</h3>
+            {% endfor %}
         </div>
-        <div class="container-box-ended">
-            <h1 class="heading">{% trans "Tidigare händelser" %}</h1>
+        <div class="container-box-past">
+            <h1 class="heading"><span>{% trans "Tidigare händelser" %}</span></h1>
             {% for event in past_events|slice:5 %}
-            <div class="event-ended">
-                <a class="content-ended" href="{% url 'events:detail' event.slug %}"><h2 class="event-title-ended">{{ event.title }}</h2></a>
+            <div class="event-past">
+                <a class="content-past" href="{% url 'events:detail' event.slug %}"><h2 class="event-title-ended">{{ event.title }}</h2></a>
             </div>
             {% empty %}
-                <h3>{% trans "Inga tidigare händelser" %}</h3>
+                <div class="empty-content-past">
+                    <h3>{% trans "Inga tidigare händelser" %}</h3>
+                </div>
             {% endfor %}
         </div>
     </div>

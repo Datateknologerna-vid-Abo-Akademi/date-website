@@ -26,7 +26,7 @@ ul {
 #logo {
     position: absolute;
     z-index: 1;
-    padding:  2px 20px;
+    padding:  10px 20px;
 }
 .nav-bar li{
     display: inline-block;

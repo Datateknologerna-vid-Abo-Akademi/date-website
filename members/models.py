@@ -1,6 +1,6 @@
 import logging
 
-from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.core.mail import send_mail
 from django.db import models
@@ -9,34 +9,9 @@ from django.utils.translation import ugettext_lazy as _
 
 from core import settings
 
+from .managers import MemberManager
+
 logger = logging.getLogger('date')
-
-
-class MemberManager(BaseUserManager):
-    use_in_migrations = True
-
-    def _create_user(self, username, password, **extra_fields):
-        """
-        Creates and saves members with email and password
-        """
-        if not username:
-            raise ValueError('Username is required')
-        member = self.model(username=username, **extra_fields)
-        member.set_password(password)
-        member.save(using=self._db)
-        return member
-
-    def create_user(self, username, password=None, **extra_fields):
-        return self._create_user(username, password, **extra_fields)
-
-    def create_superuser(self, username, password, **extra_fields):
-        extra_fields.setdefault('is_superuser', True)
-        # extra_fields.setdefault('is_staff', True)
-
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
-
-        return self._create_user(username, password, **extra_fields)
 
 
 FRESHMAN = 1
@@ -67,7 +42,6 @@ class Member(AbstractBaseUser, PermissionsMixin):
     objects = MemberManager()
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = []
 
     class Meta:
         verbose_name = _('medlem')
