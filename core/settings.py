@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'admin_ordering',
     'ckeditor',
     'channels',
+    'storages',
     'django_tables2',
     'django_filters',
     'bootstrap3',
@@ -215,6 +216,16 @@ STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
 STATIC_URL = '/static/'
 
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# S3 conf
+
+# STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+AWS_STORAGE_BUCKET_NAME = 'static'
+
+AWS_ACCESS_KEY_ID = 'accesskey'
+AWS_SECRET_ACCESS_KEY = 'password'
+AWS_S3_ENDPOINT_URL = 'http://localhost:9000'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
