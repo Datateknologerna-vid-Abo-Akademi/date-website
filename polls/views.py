@@ -3,9 +3,12 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views import generic
 from django.db.models import F
+from members.models import Member
+import logging
 
-from .models import Choice, Question
+from .models import Choice, Question, Vote
 
+logger = logging.getLogger('date')
 
 class IndexView(generic.ListView):
     template_name = 'polls/index.html'
@@ -24,7 +27,14 @@ class DetailView(generic.DetailView):
 class ResultsView(generic.DetailView):
     model = Question
     template_name = 'polls/results.html'
+
 def vote(request, question_id):
+
+    user = None
+    if request.user.is_authenticated:
+        user = Member.objects.get(username=request.user.username)
+    logger.info(request.user)
+
     question = get_object_or_404(Question, pk=question_id)
     try:
         selected_choice = question.choice_set.get(pk=request.POST['choice'])
@@ -32,11 +42,30 @@ def vote(request, question_id):
         # Redisplay the question voting form.
         return render(request, 'polls/detail.html', {
             'question': question,
-            'error_message': "You didn't select a choice.",
+            'error_message': question.voters.values('username'),#"Du valde inget alternativ.",
         })
     else:
-        selected_choice.votes = F("votes") + 1
-        selected_choice.save()
+        if question.members_only:
+            # checks if user is a member
+            if request.user.is_authenticated and not question.voters.filter(username=request.user.username).exists():
+                selected_choice.votes = F("votes") + 1
+                selected_choice.save()
+                user = Member.objects.get(username=request.user.username)
+                question.voters.add(user)
+                logger.info("is just member")
+        elif question.ordinary_members_only:
+            # checks if user is ordinary member
+            if request.user.is_authenticated and not question.voters.filter(username=request.user.username).exists() and user.membership_type == 2:
+                selected_choice.votes = F("votes") + 1
+                selected_choice.save()
+                user = Member.objects.get(username=request.user.username)
+                question.voters.add(user)
+                logger.info("ordinary member")
+        # anyone can vote
+        else:
+            logger.info("voted")
+            selected_choice.votes = F("votes") + 1
+            selected_choice.save()
         # Always return an HttpResponseRedirect after successfully dealing
         # with POST data. This prevents data from being posted twice if a
         # user hits the Back button.
