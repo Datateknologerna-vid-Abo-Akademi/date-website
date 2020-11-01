@@ -30,14 +30,22 @@ class ResultsView(generic.DetailView):
 
 def vote(request, question_id):
 
-    user = None
+    logger.info(request.user)
+    choices = None
+
+
     if request.user.is_authenticated:
         user = Member.objects.get(username=request.user.username)
-    logger.info(request.user)
+        logger.info(user)
 
+    if request.method == 'POST':
+        choices = request.POST.getlist('choice')
+        
     question = get_object_or_404(Question, pk=question_id)
+
     try:
-        selected_choice = question.choice_set.get(pk=request.POST['choice'])
+        selected_choices = [question.choice_set.get(pk=choice_id) for choice_id in choices]
+        logger.info(selected_choices)
     except (KeyError, Choice.DoesNotExist):
         # Redisplay the question voting form.
         return render(request, 'polls/detail.html', {
@@ -46,26 +54,67 @@ def vote(request, question_id):
         })
     else:
         if question.members_only:
-            # checks if user is a member
-            if request.user.is_authenticated and not question.voters.filter(username=request.user.username).exists():
-                selected_choice.votes = F("votes") + 1
-                selected_choice.save()
-                user = Member.objects.get(username=request.user.username)
-                question.voters.add(user)
-                logger.info("is just member")
+            if request.user.is_authenticated:
+                # checks if user is a member
+                if not question.voters.filter(username=request.user.username).exists():
+                    for choice in selected_choices:
+                        # Avoid race condition https://docs.djangoproject.com/en/3.1/ref/models/expressions/#avoiding-race-conditions-using-f
+                        choice.votes = F("votes") + 1
+                        choice.save()
+                    question.voters.add(user)
+                else:
+                    return render(request, 'polls/detail.html', {
+                        'question': question,
+                        'error_message': "Du kan inte rösta. Orsaken kan vara att du redan använt din röst eller inte är röstberättigad",
+                    })
+            else:
+                return render(request, 'polls/detail.html', {
+                    'question': question,
+                    'error_message': "Logga in för att rösta.",
+                })
+
         elif question.ordinary_members_only:
-            # checks if user is ordinary member
-            if request.user.is_authenticated and not question.voters.filter(username=request.user.username).exists() and user.membership_type == 2:
-                selected_choice.votes = F("votes") + 1
-                selected_choice.save()
-                user = Member.objects.get(username=request.user.username)
-                question.voters.add(user)
-                logger.info("ordinary member")
+            if request.user.is_authenticated:
+                # checks if user is ordinary member
+                if not question.voters.filter(username=request.user.username).exists() and user.membership_type == 2:
+                    for choice in selected_choices:
+                        choice.votes = F("votes") + 1
+                        choice.save()
+                    question.voters.add(user)
+                else:
+                    return render(request, 'polls/detail.html', {
+                        'question': question,
+                        'error_message': "Du kan inte rösta. Orsaken kan vara att du redan använt din röst eller inte är röstberättigad",
+                    })
+            else:
+                return render(request, 'polls/detail.html', {
+                    'question': question,
+                    'error_message': "Logga in för att rösta.",
+                })
+        elif question.vote_members_only:
+            if request.user.is_authenticated:
+                # checks if user registered voter
+                if not question.voters.filter(username=request.user.username).exists() and user.membership_type == 2 and question.suffrages.filter(username=request.user.username).exists():
+                    for choice in selected_choices:
+                        choice.votes = F("votes") + 1
+                        choice.save()
+                    question.voters.add(user)
+                else:
+                    return render(request, 'polls/detail.html', {
+                        'question': question,
+                        'error_message': "Du kan inte rösta. Orsaken kan vara att du redan använt din röst eller inte är röstberättigad",
+                    })
+            else:
+                return render(request, 'polls/detail.html', {
+                    'question': question,
+                    'error_message': "Logga in för att rösta.",
+                })
         # anyone can vote
         else:
             logger.info("voted")
-            selected_choice.votes = F("votes") + 1
-            selected_choice.save()
+            for choice in selected_choices:
+                choice.votes = F("votes") + 1
+                choice.save()
         # Always return an HttpResponseRedirect after successfully dealing
         # with POST data. This prevents data from being posted twice if a
         # user hits the Back button.

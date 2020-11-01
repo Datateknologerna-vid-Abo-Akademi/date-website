@@ -15,18 +15,11 @@ class Question(models.Model):
     multiple_choice = models.BooleanField(_('Flerval'), default=False)
     members_only = models.BooleanField(_('Endast medlemmar'), default=False)
     ordinary_members_only = models.BooleanField(_('Endast ordinarie medlemmar'), default=False)
-    voters = models.ManyToManyField(Member, through="Vote")
+    vote_members_only = models.BooleanField(_('Endast röstberättigade medlemmar'), default=False)
+    voters = models.ManyToManyField(Member, through="Vote", related_name='voters')
+    suffrages = models.ManyToManyField(Member, through="Suffrage", related_name='suffrages')
     def __str__(self):
         return self.question_text
-
-    def publish(self):
-        self.published_time = now()
-        self.published = True
-        self.save()
-
-    def unpublish(self):
-        self.published = False
-        self.save()
 
 class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
@@ -34,8 +27,18 @@ class Choice(models.Model):
     votes = models.IntegerField(default=0)
     def __str__(self):
         return self.choice_text
+    class Meta:
+        verbose_name = _('Val')
+        verbose_name_plural = _('Val')
 
 class Vote(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     user = models.ForeignKey(Member, on_delete=models.CASCADE)
     voted_at = models.DateTimeField(auto_now_add=True)
+
+class Suffrage(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    user = models.ForeignKey(Member, on_delete=models.CASCADE)
+    class Meta:
+            verbose_name = _('Röstberättigad medlem')
+            verbose_name_plural = _('Röstberättigade medlemmar')
