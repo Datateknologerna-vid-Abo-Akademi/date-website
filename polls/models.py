@@ -42,3 +42,5 @@ class Suffrage(models.Model):
     class Meta:
             verbose_name = _('Röstberättigad medlem')
             verbose_name_plural = _('Röstberättigade medlemmar')
+    def __str__(self):
+        return self.user.first_name +  " " + self.user.last_name

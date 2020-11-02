@@ -1,11 +1,30 @@
-<h1>{{ question.question_text }}</h1>
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans "DaTe - Poll" %}{% endblock %}
 
-<ul>
-{% if question.show_results %}
-    {% for choice in question.choice_set.all %}
-        <li>{{ choice.choice_text }} -- {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
-    {% endfor %}
-{% endif %}
-</ul>
+{% block content %}
 
-<a href="{% url 'polls:detail' question.id %}">Vote again?</a>
+<head>
+    <link rel="stylesheet" href="{% static 'polls/css/style.css' %}">
+</head>
+
+<div class="container">
+    <div class="polls">
+        <a href="/polls">Tillbaka</a>
+        <div class="results">
+            <h1>{{ question.question_text }}</h1>
+            <ul>
+            {% if question.show_results %}
+                {% for choice in question.choice_set.all %}
+                    <li>{{ choice.choice_text }} -- {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
+                {% endfor %}
+            {% endif %}
+            </ul>
+            <a href="{% url 'polls:detail' question.id %}">Vote again?</a>        
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

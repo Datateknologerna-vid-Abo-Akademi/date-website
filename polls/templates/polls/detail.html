@@ -1,18 +1,40 @@
-<h1>{{ question.question_text }}</h1>
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans "DaTe - Poll" %}{% endblock %}
 
-{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+{% block content %}
 
-<form action="{% url 'polls:vote' question.id %}" method="post">
-{% csrf_token %}
-{% for choice in question.choice_set.all %}
-    <input type=
-    {% if question.multiple_choice == True %}
-        "checkbox"
-    {% else %}
-        "radio"
-    {% endif %}
-    name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
-    <label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br>
-{% endfor %}
-<input type="submit" value="Vote">
-</form>
+<head>
+    <link rel="stylesheet" href="{% static 'polls/css/style.css' %}">
+</head>
+
+<div class="container">
+    <div class="polls">
+        <a href="/polls">Tillbaka</a>
+        <div class="detail">
+            <h1>{{ question.question_text }}</h1>
+
+            {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+    
+            <form action="{% url 'polls:vote' question.id %}" method="post">
+            {% csrf_token %}
+            {% for choice in question.choice_set.all %}
+                <input type=
+                {% if question.multiple_choice == True %}
+                    "checkbox"
+                {% else %}
+                    "radio"
+                {% endif %}
+                name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
+                <label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br>
+            {% endfor %}
+            <input type="submit" value="Rösta">
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
