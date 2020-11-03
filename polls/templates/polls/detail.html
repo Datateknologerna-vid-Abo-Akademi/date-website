@@ -11,11 +11,11 @@
 
 <div class="container">
     <div class="polls">
-        <a href="/polls">Tillbaka</a>
+        <a class="back-button" href="/polls">Tillbaka</a>
         <div class="detail">
             <h3>{{ question.question_text }}</h3>
 
-            {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+            {% if error_message %}<p class="warning"><strong>{{ error_message }}</strong></p>{% endif %}
     
             <form action="{% url 'polls:vote' question.id %}" method="post">
             {% csrf_token %}

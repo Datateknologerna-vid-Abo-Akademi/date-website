@@ -67,7 +67,7 @@ def vote(request, question_id):
                     else:
                         return render(request, 'polls/detail.html', {
                             'question': question,
-                            'error_message': "Du kan inte rösta. Orsaken kan vara att du redan använt din röst eller inte är röstberättigad",
+                            'error_message': "Du kan inte rösta. Orsaken kan vara att du redan använt din röst eller inte är röstberättigad!",
                         })
                 else:
                     return render(request, 'polls/detail.html', {
@@ -86,7 +86,7 @@ def vote(request, question_id):
                     else:
                         return render(request, 'polls/detail.html', {
                             'question': question,
-                            'error_message': "Du kan inte rösta. Orsaken kan vara att du redan använt din röst eller inte är röstberättigad",
+                            'error_message': "Du kan inte rösta. Orsaken kan vara att du redan använt din röst eller inte är röstberättigad!",
                         })
                 else:
                     return render(request, 'polls/detail.html', {
@@ -104,7 +104,7 @@ def vote(request, question_id):
                     else:
                         return render(request, 'polls/detail.html', {
                             'question': question,
-                            'error_message': "Du kan inte rösta. Orsaken kan vara att du redan använt din röst eller inte är röstberättigad",
+                            'error_message': "Du kan inte rösta. Orsaken kan vara att du redan använt din röst eller inte är röstberättigad!",
                         })
                 else:
                     return render(request, 'polls/detail.html', {

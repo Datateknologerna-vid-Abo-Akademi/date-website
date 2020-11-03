@@ -17,7 +17,7 @@
             <ul>
             {% for question in latest_question_list %}
                 {% if question.published %}
-                    <a href="{% url 'polls:detail' question.id %}">
+                    <a href="{% if question.end_vote %}{% url 'polls:detail' question.id %}results{% else %}{% url 'polls:detail' question.id %}{% endif %}">
                         <li>{{ question.question_text }}</li>
                 {% endif %}
                 </a>
