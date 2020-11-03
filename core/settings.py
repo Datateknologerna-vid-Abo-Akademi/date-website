@@ -169,7 +169,8 @@ AUTHENTICATION_BACKENDS = (
 STAFF_GROUPS = [
     'styrelse',
     'admin',
-    'fotograf'
+    'fotograf',
+    'rösträknare'
 
 ]
 

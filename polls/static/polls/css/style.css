@@ -41,6 +41,10 @@
 
 }
 
+.questions li{
+    border-top: 2px solid var(--linkColor);
+}
+
 .questions li:hover{
     color: var(--linkColor);
     transform: scale(1.05);

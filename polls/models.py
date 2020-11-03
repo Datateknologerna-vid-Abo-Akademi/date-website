@@ -31,6 +31,9 @@ class Question(models.Model):
     right_to_vote = models.ForeignKey(RightToVote, on_delete=models.CASCADE, null=True, blank=True)
     def __str__(self):
         return self.question_text
+    class Meta:
+        verbose_name = _('Fråga')
+        verbose_name_plural = _('Frågor')
 
 class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)

@@ -13,7 +13,7 @@
     <div class="polls">
         <a href="/polls">Tillbaka</a>
         <div class="results">
-            <h1>{{ question.question_text }}</h1>
+            <h3>{{ question.question_text }}</h3>
             <ul>
             {% if question.show_results %}
                 {% for choice in question.choice_set.all %}
