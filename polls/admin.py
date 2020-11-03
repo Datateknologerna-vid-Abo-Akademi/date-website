@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Choice, Question, Suffrage
+from .models import Choice, Question, RightToVote, User
 
 
 class ChoiceInline(admin.TabularInline):
@@ -8,22 +8,26 @@ class ChoiceInline(admin.TabularInline):
     extra = 0
     readonly_fields = ['votes']
 
-
-class SuffrageInline(admin.TabularInline):
-    model = Suffrage
-    extra = 0
-    llist_display = ('user_full_name',)
-    def user_full_name(self, obj):
-        return obj.user.get_full_name()
-
-
 class QuestionAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None,               {'fields': ['question_text', 'multiple_choice', 'members_only', 'ordinary_members_only', 'vote_members_only', 'published', 'show_results']}),
+        (None,               {'fields': ['question_text', 'multiple_choice', 'members_only', 'ordinary_members_only', 'vote_members_only', 'published', 'show_results', 'end_vote', 'right_to_vote']}),
     ]
-    list_display = ('question_text', 'pub_date')
-    inlines = [ChoiceInline, SuffrageInline]
+    list_display = ('question_text', 'pub_date',)
+    inlines = [ChoiceInline]
     list_filter = ['pub_date']
     search_fields = ['question_text']
 
 admin.site.register(Question, QuestionAdmin)
+
+class UserInline(admin.TabularInline):
+    model = User
+    extra = 0
+    def full_name(self, obj):
+        return obj.user.get_full_name()
+
+@admin.register(RightToVote)
+class RightToVoteAdmin(admin.ModelAdmin):
+    Model = RightToVote
+    list_display = ('reason',)
+    inlines = [UserInline]
+
