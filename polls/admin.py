@@ -24,7 +24,7 @@ class VoteInline(admin.TabularInline):
 
 class QuestionAdmin(admin.ModelAdmin):
     fieldsets = [
-        (None,               {'fields': ['question_text', 'multiple_choice', 'members_only', 'ordinary_members_only', 'vote_members_only', 'published', 'show_results', 'end_vote', 'right_to_vote']}),
+        (None,               {'fields': ['question_text', 'multiple_choice', 'members_only', 'ordinary_members_only', 'vote_members_only', 'published', 'show_results', 'end_vote']}),
     ]
     list_display = ('question_text', 'pub_date',)
     inlines = [ChoiceInline, VoteInline]
