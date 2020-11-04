@@ -6,7 +6,7 @@ from django.db.models import F
 from members.models import Member
 import logging
 
-from .models import Choice, Question, Vote, RightToVote
+from .models import Choice, Question, Vote
 
 logger = logging.getLogger('date')
 
@@ -96,7 +96,7 @@ def vote(request, question_id):
             elif question.vote_members_only:
                 if request.user.is_authenticated:
                     # checks if user registered voter
-                    if not question.voters.filter(username=request.user.username).exists() and user.membership_type == 2 and question.right_to_vote.suffrages.filter(username=request.user.username).exists():
+                    if not question.voters.filter(username=request.user.username).exists() and user.membership_type == 2 and user.get_active_subscription() != None:
                         for choice in selected_choices:
                             choice.votes = F("votes") + 1
                             choice.save()

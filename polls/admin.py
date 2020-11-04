@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Choice, Question, RightToVote, User, Vote
+from .models import Choice, Question, Vote
 
 
 class ChoiceInline(admin.TabularInline):
@@ -32,16 +32,4 @@ class QuestionAdmin(admin.ModelAdmin):
     search_fields = ['question_text']
 
 admin.site.register(Question, QuestionAdmin)
-
-class UserInline(admin.TabularInline):
-    model = User
-    extra = 0
-    def full_name(self, obj):
-        return obj.user.get_full_name()
-
-@admin.register(RightToVote)
-class RightToVoteAdmin(admin.ModelAdmin):
-    Model = RightToVote
-    list_display = ('reason',)
-    inlines = [UserInline]
 
