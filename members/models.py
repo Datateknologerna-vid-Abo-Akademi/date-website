@@ -75,9 +75,7 @@ class Member(AbstractBaseUser, PermissionsMixin):
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
     def get_active_subscription(self):
-        all_subscriptions = SubscriptionPayment.objects\
-            .filter(member=self, date_expires__gte=timezone.now, date_expires__isnull=True)\
-            .order_by('-id')
+        all_subscriptions = SubscriptionPayment.objects.filter(member=self).exclude(date_expires__lt=timezone.now())
         if len(all_subscriptions) != 0:
             return all_subscriptions[0].subscription
         return None
