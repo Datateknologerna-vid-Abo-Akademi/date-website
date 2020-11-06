@@ -24,26 +24,16 @@ services:
       - DEBUG=${DATE_DEBUG}
       - DEVELOP=${DATE_DEVELOP}
       - DB_PASSWORD=${DATE_DB_PASSWORD}
-      - S3_ENDPOINT_URL=${S3_ENDPOINT_URL}
-      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
-      - S3_SECRET_KEY=${S3_SECRET_KEY}
+      - USE_S3=TRUE
+      - AWS_ACCESS_KEY_ID=AKIAYE4NWKUKXLE2HFOX
+      - AWS_SECRET_ACCESS_KEY=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
+      - AWS_STORAGE_BUCKET_NAME=date-images
     depends_on:
       - db
-      - s3
   redis:
     image: redis:6.0
     ports:
       - ${REDIS_PORT}:6379
-  s3:
-    image: minio/minio
-    ports:
-      - "${MINIO_PORT}:9000"
-    volumes:
-      - ./storage/minio:/data
-    environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-    command: server /data
 
 volumes:
   date_postgres_data:
