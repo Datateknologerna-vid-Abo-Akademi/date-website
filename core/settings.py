@@ -219,7 +219,7 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 # S3 conf https://testdriven.io/blog/storing-django-static-and-media-files-on-amazon-s3/
 USE_S3 = os.getenv('USE_S3') == 'TRUE'
 
-if USE_S3:
+if True:
     # aws settings
     AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
