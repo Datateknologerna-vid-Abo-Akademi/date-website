@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'ads',
     'event_calendar',
     'social',
+    'polls',
     'archive.apps.ArchiveConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -168,7 +169,8 @@ AUTHENTICATION_BACKENDS = (
 STAFF_GROUPS = [
     'styrelse',
     'admin',
-    'fotograf'
+    'fotograf',
+    'rösträknare'
 
 ]
 
