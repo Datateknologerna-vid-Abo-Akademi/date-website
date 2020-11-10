@@ -32,6 +32,9 @@
     padding: 20px;
     background-color: var(--secondaryColor);
     border-radius: 5px;
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
 }
 .container-text, h4 {
     margin: 0.1em;
@@ -52,6 +55,9 @@ div.container-text a:hover{
     padding: 20px;
     background-color: var(--secondaryColor);
     border-radius: 5px;
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
 }
 
 .container-signed {

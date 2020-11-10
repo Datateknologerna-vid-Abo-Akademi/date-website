@@ -1,7 +1,7 @@
 .form p{
     margin-left: 1em;
     display: grid;
-    grid-template-columns: 1fr 4fr;
+    grid-template-columns: 2fr 5fr;
     margin-bottom: .5em;
 }
 .form, p:nth-child(4) {
@@ -12,9 +12,17 @@
     padding: 3px;
     border-radius: 5px;
     width: 50vw;
-    height: 3vh;
+    height: 30px;
     font-size: 1.3em;
 }
+
+form p input[type=checkbox]{
+    border-radius: 5px;
+    width: 20px;
+    height: 20px;
+    font-size: 1.5vw;
+}
+
 .form p select {
     display: block;
     font-size: 16px;
@@ -22,7 +30,8 @@
     padding: .6em 1.4em .5em .8em;
     color: var(--primaryColorLight);
     width: 100%;
-    max-width: 100%;
+    max-width: 50vw;
+    max-height: 40px;
     box-sizing: border-box;
     margin: 0;
     border: 1px solid var(--primaryColorLight);
@@ -55,31 +64,13 @@
     color: var(--warning)
 }
 
-@media only screen and (min-width: 675px) {
-    form p input{
-        border-radius: 5px;
-        width: 50vw;
-        height: 3vh;
-        font-size: 3vw;
-    }
-}
 
 @media only screen and (min-width: 836px) {
-    form p input{
-        border-radius: 5px;
-        width: 25vw;
-        height: 3vh;
-        font-size: 1.5vw;
-    }
-
 
     .form p input[type=text],input[type=email], input[type=select] {
-        width: 20vw;
+        width: 300px;
     }
-}
-
-@media only screen and (min-width: 1237px) {
-    input{
-        border-radius: 3px;
+    .form p select {
+        width: 300px;
     }
 }
