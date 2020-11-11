@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans "DaTe - Poll" %}{% endblock %}
+
+{% block content %}
+
+<head>
+    <link rel="stylesheet" href="{% static 'polls/css/style.css' %}">
+</head>
+
+<div class="container">
+    <div class="polls">
+        <div class="questions">
+            <h3>Polls</h3>
+        {% if latest_question_list %}
+            <ul>
+            {% for question in latest_question_list %}
+                {% if question.published %}
+                    <a href="{% if question.end_vote %}{% url 'polls:detail' question.id %}results{% else %}{% url 'polls:detail' question.id %}{% endif %}">
+                        <li>{{ question.question_text }}</li>
+                {% endif %}
+                </a>
+            {% endfor %}
+            </ul>
+            {% else %}
+                <p>No polls are available.</p>
+        {% endif %}
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
