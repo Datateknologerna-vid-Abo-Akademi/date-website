@@ -159,8 +159,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = (
-    # 'members.backends.AuthBackend', # disable to skip auth against oldwww.abo.fi
-    'django.contrib.auth.backends.ModelBackend',
+    'members.backends.AuthBackend', # disable to skip auth against oldwww.abo.fi
+    # 'django.contrib.auth.backends.ModelBackend',
 )
 
 # LDAP config end
