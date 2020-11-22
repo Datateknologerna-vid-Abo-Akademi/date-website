@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{page.title}}{% endblock %}
+
+{% block content %}
+
+<head>
+    <link rel="stylesheet" href="{% static 'lucia/css/style.css' %}" type="text/css">
+</head>
+
+<div class="container">
+    {% for candidate in candidates %}
+    <a href="{% url 'lucia:candidate' candidate.slug %}"><p>{{ candidate.title }}</p></a>
+    {% endfor %}
+</div>
+
+{% endblock %}

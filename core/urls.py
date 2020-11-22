@@ -34,6 +34,7 @@ urlpatterns = [
     path('ads/',include('ads.urls')),
     path('social/',include('social.urls')),
     path('polls/', include('polls.urls')),
+    path('lucia/', include('lucia.urls')),
     path('admin/', admin.site.urls),
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
