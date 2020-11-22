@@ -95,7 +95,9 @@
                             <ul>
                                 {%for ad in ads%}
                                 <li class="company-logo">
-                                    <img src="{{ad}}" alt="img">
+                                    <a href="{{ ad.company_url }}">
+                                        <img src="{{ad}}" alt="img">
+                                    </a>
                                 </li>
                                 {% endfor %}
                             </ul>
