@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div>
+        <h1>{{ blog.title }}</h1>
+        <p>{{ blog.summary }}</p>
+        <p> {{ blog.pub_date_pretty }}</p>
+    </div>
+    <div>
+        {% for comment in comments %}
+            <span>
+                {{ comment.user }}
+                {{ comment.text }}
+                {{ comment.pub_date }}
+            </span>
+            <br>
+        {% endfor %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div>
+        <h1>Forward</h1>
+        {% for blog in all_blogs %}
+            <a href="{% url 'blog:detail' blog.id %}"><h3>{{ blog.title }}</h3></a>
+            <p> {{ blog.summary }}</p>
+        {% endfor %}
+    </div>
+</body>
+</html>
