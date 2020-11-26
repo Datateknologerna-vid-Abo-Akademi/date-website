@@ -1,0 +1,21 @@
+<!-- This is our detail.html page -->
+<head>
+    {% load static %} <!-- Loads django static files directory -->
+</head>
+<body>
+    <div>
+        <h1>{{ blog.title }}</h1>
+        <p>{{ blog.summary | safe}}</p>
+        <p> {{ blog.pub_date }}</p>
+    </div>
+    <div>
+        {% for comment in comments %}
+            <span>
+                {{ comment.user }}
+                {{ comment.text | safe}}
+                {{ comment.pub_date }}
+            </span>
+            <br>
+        {% endfor %}
+    </div>
+</body>

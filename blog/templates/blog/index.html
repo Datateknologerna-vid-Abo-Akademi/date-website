@@ -1,0 +1,12 @@
+<head>
+    {% load static %} <!-- Loads django static files directory -->
+</head>
+<body>
+    <h1>Forward</h1>
+    <div>
+        {% for blog in all_blogs %} <!-- Django syntax -->
+            <a href="{% url 'blog:detail' blog.id %}"><h3>{{ blog.title }}</h3></a>
+            <p>{{ blog.summary | safe }}</p>
+        {% endfor %}
+    </div>
+</body>
