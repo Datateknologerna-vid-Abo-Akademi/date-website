@@ -16,7 +16,7 @@ class Blog(models.Model):
         return self.pub_date.strftime('%d %e %Y')
 
     def was_published_recently(self):
-        return self.pub_date >= timezone.now() - datetime.timedelta(days=1)
+        return  timezone.now() > self.pub_date >= timezone.now() - datetime.timedelta(days=1)
 
     def __str__(self):
         return self.title
