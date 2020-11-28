@@ -11,6 +11,11 @@ def index(request):
     context = {'candidates': candidates}
     return render(request, 'lucia/index.html', context)
 
+def candidates(request):
+    candidates = models.Candidate.objects.all()
+    context = {'candidates': candidates}
+    return render(request, 'lucia/candidates.html', context)    
+
 def candidate(request, slug):
     candidate = models.Candidate.objects.get(slug=slug, published=True)
     context = {'candidate': candidate}

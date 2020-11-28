@@ -10,9 +10,49 @@
 </head>
 
 <div class="container">
-    <img src="{{ candidate.img_url }}" alt="">
-    {{ candidate.title }}
-    {{ candidate.content | safe }}
-    <a href="http://localhost:8000/polls/1/">BUTTON</a>
+    <div class="container-content">
+        <a href="{% url 'lucia:candidates'%}"><h2>Tillbaka</h2></a>
+        {% if user.is_authenticated %}
+            <img src="{{ candidate.img_url }}" alt="">
+            <h2>{{ candidate.title }}</h2>
+                {{ candidate.content | safe }}
+            <a href="{{ candidate.poll_url }}"><h2>Rösta</h2></a>
+        {% else %}
+            <h2><a href="/members/login">Logga in</a> <br> för att fortsätta.</h2>
+        {% endif %}
+
+        <div class="snowflakes" aria-hidden="true">
+            <div class="snowflake">
+            ❅
+            </div>
+            <div class="snowflake">
+            ❅
+            </div>
+            <div class="snowflake">
+            ❆
+            </div>
+            <div class="snowflake">
+            ❄
+            </div>
+            <div class="snowflake">
+            ❅
+            </div>
+            <div class="snowflake">
+            ❆
+            </div>
+            <div class="snowflake">
+            ❄
+            </div>
+            <div class="snowflake">
+            ❅
+            </div>
+            <div class="snowflake">
+            ❆
+            </div>
+            <div class="snowflake">
+            ❄
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

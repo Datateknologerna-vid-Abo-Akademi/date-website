@@ -11,17 +11,19 @@
 
 <div class="container">
     <div class="container-content">
-        <h1>Lucia - Kemistklubben vid Åbo Akademi</h1>
-        <a class="candidates-button" href="{% url 'lucia:candidates' %}"><h2>Kandidaterna</h2></a>
-        <img class="lucia-img" src="{% static 'images/luciapic.png' %}" alt="lucia">
-        <h1 class="lucia-text">Sankta Lucia, ljusklara hägring,
+        <a href="{% url 'lucia:index'%}"><h2>Tillbaka</h2></a>
+        {% if user.is_authenticated %}
+            <h1>Kandidater</h1>
+            {% for candidate in candidates %}
+                <article>
+                    <img src="{{candidate.img_url}}" alt="lucia">
+                    <a href="{% url 'lucia:candidate' candidate.slug %}"><h2>{{ candidate.title }}</h2></a>
+                </article>
+            {% endfor %}
 
-            sprid i vår vinternatt ljus av din fägring.
-            
-            // Drömmar med vingesus, undret oss sia,
-            
-            tänd dina vita ljus, Sankta Lucia. //
-        </h1>
+        {% else %}
+            <h2><a href="/members/login">Logga in</a> <br> för att fortsätta.</h2>
+        {% endif %}
 
         <div class="snowflakes" aria-hidden="true">
             <div class="snowflake">
