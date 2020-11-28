@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'django_tables2',
     'django_filters',
     'bootstrap3',
+    'blog_module',
     'django_cleanup',  # Should be places last
 ]
 

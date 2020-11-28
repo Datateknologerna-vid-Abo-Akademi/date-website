@@ -1,0 +1,22 @@
+
+
+
+{% load static %}
+{% block title %}Blogs{% endblock %}
+
+
+<head>
+    <link rel="stylesheet" href="{% static 'blog_module/css/style.css' %}">
+</head>
+    <div class ="container">
+        <div>
+            {% for blog in all_blogs %}
+            <div>
+            <a href="{% url 'blog_module:detail' blog.id %}">
+            {{ blog.title }}
+            </a>
+            <p>{{ blog.summary }}</p>
+            {% endfor %}
+            </div>
+        </div>
+    </div>
