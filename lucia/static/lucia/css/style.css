@@ -1,0 +1,110 @@
+.container{
+    background-color: var(--luciaBackgroundColor);
+    padding-top: 5vh;
+    padding-bottom: 5vh;
+    min-height: 90vh;
+    font-family: 'Monotype Corsiva', cursive;
+    align-content: start;
+    color:var(--luciaBackgroundColor);
+}
+
+.header-bar{
+    display: none;
+}
+
+footer{
+    display: none;
+}
+
+.container{
+    display: grid;
+    grid-template-columns: 1fr 800px 1fr;
+    grid-template-rows: auto;
+    grid-template-areas: ". content .";
+}
+
+.container-content{
+    grid-area: content;
+    background-color: rgb(238, 238, 238);
+    padding-right: 70px;
+    padding-left: 70px;
+    border-radius: 5px;
+    border: 5px #ebb135a4 solid;
+    -webkit-box-shadow: 0px 0px 0px 7px#00873E;
+    -moz-box-shadow: 0px 0px 0px 7px#00873E;
+    box-shadow: 0px 0px 0px 7px#00873E;
+    text-align: center;
+}
+
+.container-content img{
+    border-radius: 5px;
+}
+
+.container img{
+    max-height: 70vh;
+    max-width: 100%;
+    /* keep img ratio correct */
+    width: auto !important;
+    height: auto !important;
+}
+
+.container-content p{
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.container-content h1 {
+    line-height: 200%;
+}
+
+.lucia-img{
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    -webkit-animation:wobble 4s linear infinite;
+    -moz-animation:wobble 4s linear infinite;
+    animation: wobble 4s linear infinite;
+}
+
+@keyframes wobble {  0% { transform: translateX(0%); } 
+    0% { transform:  rotate(0); } 
+    50% { transform:  rotate(-5deg); } 
+    100% { transform:  rotate(0); } }
+
+@-moz-keyframes wobble {  0% { transform: translateX(0%); } 
+0% { transform:  rotate(0); } 
+50% { transform:  rotate(-5deg); } 
+100% { transform:  rotate(0); } }
+
+@-webkit-keyframes wobble {  0% { transform: translateX(0%); } 
+0% { transform:  rotate(0); } 
+50% { transform:  rotate(-5deg); } 
+100% { transform:  rotate(0); } }
+
+.container a{
+    color:#00873E;
+    transition: .15s;
+}
+
+.container a:hover{
+    color:#00642f;
+}
+  /* customizable snowflake styling */
+  .snowflake {
+    color: #fff;
+    font-size: 2.5em;
+    font-family: Arial;
+    text-shadow: 0 0 2px #000;
+  }
+  
+  @-webkit-keyframes snowflakes-fall{0%{top:-10%}100%{top:100%}}@-webkit-keyframes snowflakes-shake{0%{-webkit-transform:translateX(0px);transform:translateX(0px)}50%{-webkit-transform:translateX(80px);transform:translateX(80px)}100%{-webkit-transform:translateX(0px);transform:translateX(0px)}}@keyframes snowflakes-fall{0%{top:-10%}100%{top:100%}}@keyframes snowflakes-shake{0%{transform:translateX(0px)}50%{transform:translateX(80px)}100%{transform:translateX(0px)}}.snowflake{position:fixed;top:-10%;z-index:9999;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;cursor:default;-webkit-animation-name:snowflakes-fall,snowflakes-shake;-webkit-animation-duration:10s,3s;-webkit-animation-timing-function:linear,ease-in-out;-webkit-animation-iteration-count:infinite,infinite;-webkit-animation-play-state:running,running;animation-name:snowflakes-fall,snowflakes-shake;animation-duration:10s,3s;animation-timing-function:linear,ease-in-out;animation-iteration-count:infinite,infinite;animation-play-state:running,running}.snowflake:nth-of-type(0){left:1%;-webkit-animation-delay:0s,0s;animation-delay:0s,0s}.snowflake:nth-of-type(1){left:10%;-webkit-animation-delay:1s,1s;animation-delay:1s,1s}.snowflake:nth-of-type(2){left:20%;-webkit-animation-delay:6s,.5s;animation-delay:6s,.5s}.snowflake:nth-of-type(3){left:30%;-webkit-animation-delay:4s,2s;animation-delay:4s,2s}.snowflake:nth-of-type(4){left:40%;-webkit-animation-delay:2s,2s;animation-delay:2s,2s}.snowflake:nth-of-type(5){left:50%;-webkit-animation-delay:8s,3s;animation-delay:8s,3s}.snowflake:nth-of-type(6){left:60%;-webkit-animation-delay:6s,2s;animation-delay:6s,2s}.snowflake:nth-of-type(7){left:70%;-webkit-animation-delay:2.5s,1s;animation-delay:2.5s,1s}.snowflake:nth-of-type(8){left:80%;-webkit-animation-delay:1s,0s;animation-delay:1s,0s}.snowflake:nth-of-type(9){left:90%;-webkit-animation-delay:3s,1.5s;animation-delay:3s,1.5s}
+
+@media only screen and (max-width: 900px) {
+    .container{
+        grid-template-columns: 5vw 1fr 5vw;
+    }
+
+    .container-content{
+        padding: 20px;
+    }
+}
