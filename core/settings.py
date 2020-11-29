@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     'ads',
     'event_calendar',
     'social',
+    'polls',
+    'lucia',
     'archive.apps.ArchiveConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -158,8 +160,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = (
-    # 'members.backends.AuthBackend', # disable to skip auth against oldwww.abo.fi
-    'django.contrib.auth.backends.ModelBackend',
+    'members.backends.AuthBackend', # disable to skip auth against oldwww.abo.fi
+    # 'django.contrib.auth.backends.ModelBackend',
 )
 
 # LDAP config end
@@ -167,7 +169,8 @@ AUTHENTICATION_BACKENDS = (
 STAFF_GROUPS = [
     'styrelse',
     'admin',
-    'fotograf'
+    'fotograf',
+    'rösträknare'
 
 ]
 

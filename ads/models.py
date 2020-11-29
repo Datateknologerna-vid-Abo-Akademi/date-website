@@ -8,6 +8,7 @@ logger = logging.getLogger('date')
 
 class AdUrl(models.Model):
     ad_url = models.URLField(max_length=255, blank=False)
+    company_url = models.URLField(max_length=255, blank=True)
 
     def __str__(self):
         return self.ad_url

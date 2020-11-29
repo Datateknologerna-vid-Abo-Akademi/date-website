@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans "KK - Poll" %}{% endblock %}
+
+{% block content %}
+
+<head>
+    <link rel="stylesheet" href="{% static 'polls/css/style.css' %}">
+</head>
+
+<div class="container">
+    <div class="polls">
+        <a class="back-button" href="/polls">Tillbaka</a>
+        <div class="detail">
+            <h3>{{ question.question_text }}</h3>
+
+            {% if error_message %}<p class="warning"><strong>{{ error_message }}</strong></p>{% endif %}
+    
+            <form action="{% url 'polls:vote' question.id %}" method="post">
+            {% csrf_token %}
+            {% for choice in question.choice_set.all %}
+                <input type=
+                {% if question.multiple_choice == True %}
+                    "checkbox"
+                {% else %}
+                    "radio"
+                {% endif %}
+                name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
+                <label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br>
+            {% endfor %}
+            <input type="submit" value="Rösta">
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}

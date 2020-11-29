@@ -50,7 +50,9 @@ class EventDetailView(DetailView):
                                                               or self.object.registration_is_open_others()):
             form = self.object.make_registration_form().__call__(data=request.POST)
             if form.is_valid():
-                ws_send(request, form)
+
+                public_info = self.object.get_registration_form_public_info()
+                ws_send(request, form, public_info)
                 return self.form_valid(form)
             return self.form_invalid(form)
         return HttpResponseForbidden()
@@ -64,22 +66,27 @@ class EventDetailView(DetailView):
         return render(self.request, self.template_name, self.get_context_data(form=form))
 
 
-def ws_send(request, form):
+def ws_send(request, form, public_info):
     ws_schema = 'ws' if request.scheme == 'http' else 'wss'
     url = request.META.get('HTTP_HOST')
     path = ws_schema + '://' + url + '/ws' + request.path
     try:
         ws = create_connection(path)
-        ws.send(json.dumps(ws_data(form.cleaned_data)))
+        ws.send(json.dumps(ws_data(form, public_info)))
         ws.close()
     except WebSocketBadStatusException:
         logger.error("Could not create connection for web socket")
         # Alert Datörer
 
 
-def ws_data(form):
-    pref = dict(form)  # Creates copy of form
-    pref['user'] = "Anonymous" if pref['anonymous'] else pref['user']
-    del pref['anonymous']
-    del pref['email']
-    return {"data": pref}
+def ws_data(form, public_info):
+    data = {}
+    pref = dict(form.cleaned_data)  # Creates copy of form
+
+    data['user'] = "Anonymous" if pref['anonymous'] else pref['user']
+    # parse the public info and only send that through websockets.
+    for index, info in enumerate(public_info):
+        if str(info) in pref:
+            data[str(info)] = pref[str(info)]
+    print(data)
+    return {"data": data}

@@ -32,9 +32,8 @@ class PostCreationForm(forms.ModelForm):
 
         # Generate slug
         post.slug = slugify_max(self.data['slug'], max_length=models.POST_SLUG_MAX_LENGTH)
-
-        if post.published:
-            post.published_time = timezone.now()
+            
+        post.published_time = timezone.now()
 
         if commit:
             post.update_or_create(pk=post.pk)

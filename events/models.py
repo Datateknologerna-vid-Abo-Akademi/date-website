@@ -74,11 +74,10 @@ class Event(models.Model):
                 if self.get_registration_form():
                     for item in self.get_registration_form():
                         user_pref[str(item)] = preferences.get(str(item))
-                if self.get_registrations().count() < self.sign_up_max_participants or self.sign_up_max_participants is 0:
-                    registration = EventAttendees.objects.create(user=user,
-                                                                 event=self, email=email,
-                                                                 time_registered=now(), preferences=user_pref,
-                                                                 anonymous=anonymous)
+                registration = EventAttendees.objects.create(user=user,
+                                                                event=self, email=email,
+                                                                time_registered=now(), preferences=user_pref,
+                                                                anonymous=anonymous)
 
     def cancel_event_attendance(self, user):
         if self.sign_up:
@@ -86,10 +85,10 @@ class Event(models.Model):
             registration.delete()
 
     def registration_is_open_members(self):
-        return now() >= self.sign_up_members and not self.event_is_full() and not self.registation_past_due()
+        return now() >= self.sign_up_members and not self.registation_past_due()
 
     def registration_is_open_others(self):
-        return now() >= self.sign_up_others and not self.event_is_full() and not self.registation_past_due()
+        return now() >= self.sign_up_others and not self.registation_past_due()
 
     def registation_past_due(self):
         return now() > self.sign_up_deadline
@@ -127,7 +126,7 @@ class Event(models.Model):
 
     @register.filter
     def show_attendee_list(self):
-        return self.event_date_end > now() + timedelta(days=1)
+        return self.event_date_end > now() + timedelta(days=-1)
 
 
 class EventRegistrationForm(models.Model):

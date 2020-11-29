@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{page.title}}{% endblock %}
+
+{% block content %}
+
+<head>
+    <link rel="stylesheet" href="{% static 'lucia/css/style.css' %}" type="text/css">
+</head>
+
+<div class="container">
+    <div class="container-content">
+        <a href="{% url 'lucia:index'%}"><h2>Tillbaka</h2></a>
+        {% if user.is_authenticated %}
+            <h1>Kandidater</h1>
+            {% for candidate in candidates %}
+                <article>
+                    <img src="{{candidate.img_url}}" alt="lucia">
+                    <a href="{% url 'lucia:candidate' candidate.slug %}"><h2>{{ candidate.title }}</h2></a>
+                </article>
+            {% endfor %}
+
+        {% else %}
+            <h2><a href="/members/login">Logga in</a> <br> för att fortsätta.</h2>
+        {% endif %}
+
+        <div class="snowflakes" aria-hidden="true">
+            <div class="snowflake">
+            ❅
+            </div>
+            <div class="snowflake">
+            ❅
+            </div>
+            <div class="snowflake">
+            ❆
+            </div>
+            <div class="snowflake">
+            ❄
+            </div>
+            <div class="snowflake">
+            ❅
+            </div>
+            <div class="snowflake">
+            ❆
+            </div>
+            <div class="snowflake">
+            ❄
+            </div>
+            <div class="snowflake">
+            ❅
+            </div>
+            <div class="snowflake">
+            ❆
+            </div>
+            <div class="snowflake">
+            ❄
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

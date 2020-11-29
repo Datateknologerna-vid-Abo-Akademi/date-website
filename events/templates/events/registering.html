@@ -27,3 +27,7 @@
     <button class="button" type="submit">{% trans 'Anmäl dig' %}</button>
     {% csrf_token %}
 </form>
+
+{% if event.event_is_full %}
+<p class="warning">Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan och meddelas om du får plats!</p>
+{% endif %}

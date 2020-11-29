@@ -32,6 +32,9 @@
     padding: 20px;
     background-color: var(--secondaryColor);
     border-radius: 5px;
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
 }
 .container-text, h4 {
     margin: 0.1em;
@@ -52,6 +55,9 @@ div.container-text a:hover{
     padding: 20px;
     background-color: var(--secondaryColor);
     border-radius: 5px;
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
 }
 
 .container-signed {
@@ -60,7 +66,17 @@ div.container-text a:hover{
     padding: 20px;
     background-color: var(--secondaryColor);
     border-radius: 5px;
+    overflow: scroll;
+
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
 }
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.container-signed::-webkit-scrollbar {
+    display: none;
+  }
+  
 
 .header {
     margin: 0;
@@ -70,6 +86,10 @@ table {
     border-collapse: collapse;
     width: 80%;
     font-size: 1.3em;
+}
+
+.event-full{
+    color: gray;
 }
 
 th {
