@@ -126,7 +126,7 @@ class Event(models.Model):
 
     @register.filter
     def show_attendee_list(self):
-        return self.event_date_end > now() + timedelta(days=1)
+        return self.event_date_end > now() + timedelta(days=-1)
 
 
 class EventRegistrationForm(models.Model):
