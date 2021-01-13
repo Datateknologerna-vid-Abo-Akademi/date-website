@@ -12,14 +12,27 @@ from .forms import PictureUploadForm
 from .models import Collection, Document, Picture
 from .tables import DocumentTable
 
+def year_index(request):
+    years = Collection.objects.dates('pub_date', 'year').reverse()
 
-def picture_index(request):
-    collections = Collection.objects.filter(type="Pictures").order_by('-pub_date')
+    year_list = []
+    for year in years:
+        year_list.append(year.strftime("%Y"))
+
     context = {
         'type': "pictures",
-        'collections': collections,
+        'years': year_list,
     }
     return render(request, 'archive/index.html', context)
+
+def picture_index(request, year):
+    collections = Collection.objects.filter(type="Pictures", pub_date__year=year).order_by('-pub_date')
+    context = {
+        'type': "pictures",
+        'year' : year,
+        'collections': collections,
+    }
+    return render(request, 'archive/picture_index.html', context)
 
 
 class FilteredDocumentsListView(SingleTableMixin, FilterView):
@@ -33,7 +46,6 @@ class FilteredDocumentsListView(SingleTableMixin, FilterView):
 class DetailView(generic.DetailView):
     model = Collection
     template_name = 'archive/detail.html'
-
 
 @permission_required('archive.add_collection')
 def upload(request):

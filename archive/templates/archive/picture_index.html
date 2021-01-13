@@ -18,11 +18,19 @@
         {% endif %}
 
         </div>
-        {% if years %}
-        <ul class="">
-            {% for year in years %}
-                <li class="">
-                    <a  href="{% url 'archive:pictures' year %}">{{ year }}</a>
+        {% if collections %}
+        <ul class="collection-frame">
+            {% for collection in collections %}
+                <li class="collection-item">
+                    <a  href="{% url 'archive:detail' year collection.id %}">
+                        {% if collection.title|length > 20 %}
+                            <h4>{{ collection.title|slice:"20" }}...</h4>
+                        {% else %}
+                            <h3>{{ collection.title }}</h3>
+                        {% endif %}
+                        <img class="collection-img" src="{{ collection.get_first_picture.image.url }}">
+                        <p>{{ collection.pub_date_pretty }}<span id="picture-count">{{ collection.get_file_count }} {% trans 'Bilder' %}</span></p>
+                    </a>
                 </li>
             {% endfor %}
 

@@ -217,7 +217,7 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # S3 conf https://testdriven.io/blog/storing-django-static-and-media-files-on-amazon-s3/
-USE_S3 = os.getenv('USE_S3') == 'TRUE'
+USE_S3 = os.getenv('USE_S3')
 
 if True:
     # aws settings

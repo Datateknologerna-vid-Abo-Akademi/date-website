@@ -55,7 +55,8 @@ class Collection(models.Model):
 
 def upload_to(instance, filename):
     filename_base, filename_ext = os.path.splitext(filename)
-    return "{collection}/{filename}{extension}".format(
+    return "{year}/{collection}/{filename}{extension}".format(
+        year=instance.collection.pub_date.strftime("%Y"),
         collection=slugify(instance.collection.title),
         filename=slugify(filename_base),
         extension=filename_ext.lower(),
