@@ -1,4 +1,5 @@
 import os
+import boto3
 
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
@@ -13,8 +14,27 @@ from .models import Collection, Document, Picture
 from .tables import DocumentTable
 
 def year_index(request):
-    years = Collection.objects.dates('pub_date', 'year').reverse()
+    
+    client = boto3.client('s3')
+    result = client.list_objects(Bucket=os.getenv('AWS_STORAGE_BUCKET_NAME'), Prefix='media/', Delimiter='/')
 
+    for o in result.get('CommonPrefixes'):
+        print('sub folder : ', o.get('Prefix').replace("media/",""))
+
+    #s3 = boto3.resource('s3')
+    #bucket = s3.Bucket(os.getenv('AWS_STORAGE_BUCKET_NAME'))
+    # Iterates through all the objects, doing the pagination for you. Each obj
+    # is an ObjectSummary, so it doesn't contain the body. You'll need to call
+    # get to get the whole body.
+    #for obj in bucket.objects.filter(Prefix='media/', Delimiter='/'):
+    #    key = obj.key
+    #    url = f'https://{bucket.name}.s3.amazonaws.com/{key}'
+    #    print(url)
+    
+    #print(body)
+
+    
+    years = Collection.objects.dates('pub_date', 'year').reverse()
     year_list = []
     for year in years:
         year_list.append(year.strftime("%Y"))
