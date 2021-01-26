@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{page.title}}{% endblock %}
+
+{% block content %}
+
+    <head>
+        <link rel="stylesheet" href="{% static 'formal_events/detail.css' %}" type="text/css">
+    </head>
+
+    <div>
+        <h1>hello from detail</h1>
+    </div>
+   
+{% endblock %}

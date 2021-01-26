@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'event_calendar',
     'social',
     'polls',
+    'formal_events',
     'archive.apps.ArchiveConfig',
     'django.contrib.admin',
     'django.contrib.auth',
