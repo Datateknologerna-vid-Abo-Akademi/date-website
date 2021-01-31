@@ -1,13 +1,13 @@
 from django.shortcuts import render
 from django.views.generic import ListView
 
-from .models import Event
+from .models import Formal_Event
 
 
 # Create your views here.
 
 class IndexView(ListView):
-    model = Event
+    model = Formal_Event
     template_name = 'formal_events/index.html'
 
 #TODO CREATE DETAIL TEXT VIEW
