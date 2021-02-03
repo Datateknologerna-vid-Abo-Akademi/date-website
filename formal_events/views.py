@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views.generic import ListView
 
-from .models import FormalEvent
+from .models import FormalEvent, FormalEventAttendees
 
 
 # Create your views here.
@@ -9,6 +9,9 @@ from .models import FormalEvent
 class IndexView(ListView):
     model = FormalEvent
     template_name = 'formal_events/index.html'
+
+class AttendeeView(ListView):
+    model = FormalEventAttendees
 
 #TODO CREATE DETAIL TEXT VIEW
 

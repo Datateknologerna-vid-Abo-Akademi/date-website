@@ -50,4 +50,18 @@ class FormalStaticPage(models.Model):
     
     #TODO ALL NEEDED FUNCTIONS GOES HERE
 
+class FormalEventAttendee(models.Model):
+    event = models.ForeignKey(FormalEvent, on_delete=models.CASCADE, blank=True, null=True)
+    name = models.CharField(_('Namn'), max_length=255, blank=False)
+
+    class Meta:
+        verbose_name = _('Formal Event Attendee')
+        verbose_name_plural = _('Formal Event Attendees')
+        ordering = ('id',)
+
+
+    def __str__(self):
+        return self.name
+    
+
 #TODO ADDITIONAL CLASSES HERE

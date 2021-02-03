@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import FormalEvent, FormalStaticPage
+from .models import FormalEvent, FormalStaticPage, FormalEventAttendee
 
 # Register your models here.
 
@@ -12,8 +12,13 @@ class FormalStaticPageInline(admin.TabularInline):
     model = FormalStaticPage
     extra = 0
 
+class FormalEventAttendeeInline(admin.TabularInline):
+    model = FormalEventAttendee
+    extra = 0
+
 @admin.register(FormalEvent)
 class FormalEventsAdmin(admin.ModelAdmin):
     inlines = [
-        FormalStaticPageInline
+        FormalStaticPageInline,
+        FormalEventAttendeeInline
     ]
