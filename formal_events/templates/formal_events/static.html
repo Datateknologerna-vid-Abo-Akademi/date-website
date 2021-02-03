@@ -6,14 +6,14 @@
 {% block content %}
 
     <head>
-        <link rel="stylesheet" href="{% static 'formal_events/detail.css' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'formal_events/style.css' %}" type="text/css">
     </head>
-
+    
     <div>
         <br>
         <br>
         <br>
-        <h1> Formal title:  {{ object.created_time }}</h1>
+        <h1 class="container">Hello from static {{ static_page.title }} </h1>
     </div>
    
 {% endblock %}

@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from django.views.generic import ListView
-
-from .models import FormalEvent
+from django.views.generic import ListView, DetailView
+from django.shortcuts import get_object_or_404
+from .models import FormalEvent, FormalStaticPage
 
 
 # Create your views here.
@@ -11,6 +11,25 @@ class IndexView(ListView):
     template_name = 'formal_events/index.html'
 
 #TODO CREATE DETAIL TEXT VIEW
+class DetailView(DetailView): #Homepage of formal event
+    model = FormalEvent
+    template_name = 'formal_events/detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+def static_view(request, slug, static_slug):
+    #TODO: koll så att staticpagen tillhör formalevent
+    static_page = FormalStaticPage.objects.get(slug=static_slug, slug='arsfest1') 
+    
+    return render(request, 'formal_events/static.html', {
+            'static_page': static_page,
+            'error_message': "Du valde inget alternativ.",
+        })
+
+
+
 
 #TODO CREATE SINGUPFORM VIEW
 
