@@ -6,7 +6,7 @@ from django.utils.timezone import now
 
 POST_SLUG_MAX_LENGTH = 50
 
-class Formal_Event(models.Model):
+class FormalEvent(models.Model):
     title = models.CharField(_('Titel'), max_length=255, blank=False)
     content = RichTextField(_('Innehåll'), blank=True)
     event_date_start = models.DateTimeField(_('Startdatum'), default=now)
@@ -30,8 +30,8 @@ class Formal_Event(models.Model):
     def __str__(self):
         return self.title
 
-class Formal_Static_Page(models.Model):
-    event = models.ForeignKey(Formal_Event, on_delete=models.CASCADE, blank=True, null=True)
+class FormalStaticPage(models.Model):
+    event = models.ForeignKey(FormalEvent, on_delete=models.CASCADE, blank=True, null=True)
     title = models.CharField(_('Titel'), max_length=255, blank=False)
     content = RichTextField(_('Innehåll'), blank=True)
     created_time = models.DateTimeField(_('Skapad'), default=now)
