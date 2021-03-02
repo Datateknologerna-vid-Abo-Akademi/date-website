@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load app_filters %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans "Arkiv" %}{% endblock %}
+
+{% block content %}
+<head>
+    <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
+</head>
+    <div class="container-soft">
+        {% if years %}
+        <ul class="">
+            {% for year in years reversed %}
+                <li class="">
+                    <a  href="{% url 'archive:old_pictures' year %}"><h4>{{ year }}</h4></a>
+                </li>
+            {% endfor %}
+
+        </ul>
+        {% else %}
+            <h3>{% trans "Inga arkiv hittades" %}</h3>
+        {% endif %}
+    </div>
+{% endblock %}
+

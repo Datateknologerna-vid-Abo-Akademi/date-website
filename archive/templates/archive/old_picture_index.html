@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load app_filters %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans "Arkiv" %}{% endblock %}
+
+{% block content %}
+<head>
+    <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
+</head>
+    <div class="container-soft">
+        <h1>Hello from old picture index</h1>
+        {% if collections %}
+        <ul class="collection-frame">
+            {% for collection in collections %}
+                <li class="collection-item">
+                    <a  href="{% url 'archive:old_detail' year collection %}">
+                        {% if collection|length > 20 %}
+                            <h4>title sliced</h4>
+                        {% else %}
+                            <h3>Title</h3>
+                        {% endif %}
+                        <img class="collection-img" src="http://localhost:8000/static/images/albin_black.png">
+                        <p>date<span id="picture-count"> images count {% trans 'Bilder' %}</span></p>
+                    </a>
+                </li>
+            {% endfor %}
+
+        </ul>
+        {% else %}
+            <h3>{% trans "Inga arkiv hittades" %}</h3>
+        {% endif %}
+    </div>
+{% endblock %}
+

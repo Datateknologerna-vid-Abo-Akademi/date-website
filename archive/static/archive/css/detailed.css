@@ -80,6 +80,34 @@ div.gallery img {
   color: white;
 }
 
+/* pagination */
+.center {
+  text-align: center;
+}
+
+.pagination {
+  display: inline-block;
+  margin-top: 5px;
+}
+
+.pagination a {
+  color: var(--secondaryColorDarker);
+  background-color: var(--primaryColorLighter);
+  float: left;
+  padding: 8px 16px;
+  text-decoration: none;
+  transition: background-color .3s;
+  border: 1px solid #ddd;
+  margin: 0 4px;
+}
+
+.pagination a.active {
+  color: white;
+  border: 1px solid var(--linkColorSecondary);
+}
+
+.pagination a:hover:not(.active) {background-color: var(--primaryColorLight);}
+
 
 @media only screen and (max-width: 1200px) {
     .gallery {
