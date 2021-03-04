@@ -22,7 +22,7 @@
         <ul class="collection-frame">
             {% for collection in collections %}
                 <li class="collection-item">
-                    <a  href="{% url 'archive:detail' year collection.id %}">
+                    <a  href="{% url 'archive:detail' year collection.title %}">
                         {% if collection.title|length > 20 %}
                             <h4>{{ collection.title|slice:"20" }}...</h4>
                         {% else %}

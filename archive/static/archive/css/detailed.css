@@ -87,7 +87,7 @@ div.gallery img {
 
 .pagination {
   display: inline-block;
-  margin-top: 5px;
+  margin-top: 30px;
 }
 
 .pagination a {
@@ -101,13 +101,16 @@ div.gallery img {
   margin: 0 4px;
 }
 
+.pagination .disabled{
+  border: 0;
+}
+
 .pagination a.active {
   color: white;
   border: 1px solid var(--linkColorSecondary);
 }
 
-.pagination a:hover:not(.active) {background-color: var(--primaryColorLight);}
-
+.pagination a:hover:not(.active, .disabled) {background-color: var(--primaryColorLight);}
 
 @media only screen and (max-width: 1200px) {
     .gallery {

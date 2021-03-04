@@ -1,12 +1,15 @@
 import os
 import boto3
 
+from botocore.client import Config
+
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.shortcuts import redirect, render
 from django.views import generic
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from .filters import DocumentFilter
 from .forms import PictureUploadForm
@@ -44,9 +47,37 @@ class FilteredDocumentsListView(SingleTableMixin, FilterView):
     filterset_class = DocumentFilter
 
 
-class DetailView(generic.DetailView):
-    model = Collection
-    template_name = 'archive/detail.html'
+def picture_detail(request, year, album):
+    collection = Collection.objects.filter(type="Pictures", pub_date__year=year, title=album).order_by('-pub_date')
+    pictures = Picture.objects.filter(collection=collection[0])
+
+    page = request.GET.get('page', 1)
+
+    paginator = Paginator(pictures, 10)
+    try:
+        pictures = paginator.page(page)
+    except PageNotAnInteger:
+        pictures = paginator.page(1)
+    except EmptyPage:
+        pictures = paginator.page(paginator.num_pages)
+
+    print("PRINTING PICTURES")
+    for i in pictures:
+        print(i)
+
+    context = {
+        'type': "pictures",
+        'year' : year,
+        'album' : album,
+        'collection' : collection[0],
+        'pictures': pictures,
+    }
+
+    return render(request, 'archive/detail.html', context )
+
+#class DetailView(generic.DetailView):
+#    model = Collection
+#    template_name = 'archive/detail.html'
 
 @permission_required('archive.add_collection')
 def upload(request):
@@ -78,8 +109,14 @@ def clean_media(request):
 
 def old_year_index(request):
     
-    client = boto3.client('s3')
-    result = client.list_objects(Bucket=os.getenv('AWS_STORAGE_BUCKET_NAME'), Prefix='media/old/', Delimiter='/')
+    #client = boto3.client('s3')
+    client = boto3.client('s3',
+                    endpoint_url='http://s3:9000',
+                    aws_access_key_id='key',
+                    aws_secret_access_key='password',
+                    config=Config(signature_version='s3v4'),
+                    region_name='us-east-1')
+    result = client.list_objects(Bucket="date-images", Prefix='media/old/', Delimiter='/')
 
     year_list = []
     for o in result.get('CommonPrefixes'):
@@ -93,8 +130,14 @@ def old_year_index(request):
     return render(request, 'archive/old_index.html', context)
 
 def old_picture_index(request, year):
-    client = boto3.client('s3')
-    result = client.list_objects(Bucket=os.getenv('AWS_STORAGE_BUCKET_NAME'), Prefix=f'media/old/{year}/', Delimiter='/')
+    #client = boto3.client('s3')
+    client = boto3.client('s3',
+                endpoint_url='http://s3:9000',
+                aws_access_key_id='key',
+                aws_secret_access_key='password',
+                config=Config(signature_version='s3v4'),
+                region_name='us-east-1')
+    result = client.list_objects(Bucket="date-images", Prefix=f'media/old/{year}/', Delimiter='/')
     print(year)
     album_list = []
     for o in result.get('CommonPrefixes'):
@@ -112,9 +155,15 @@ def old_detail(request, year, album):
 
     selected_page = int(request.GET.get('page', 0))
 
-    client = boto3.client('s3')
+    #client = boto3.client('s3')
+    client = boto3.client('s3',
+                endpoint_url='http://s3:9000',
+                aws_access_key_id='key',
+                aws_secret_access_key='password',
+                config=Config(signature_version='s3v4'),
+                region_name='us-east-1')
     paginator = client.get_paginator('list_objects')
-    operation_parameters = {'Bucket': os.getenv('AWS_STORAGE_BUCKET_NAME'),
+    operation_parameters = {'Bucket': "date-images",
                             'Prefix': f'media/old/{year}/{album}/'}
     page_iterator = paginator.paginate(**operation_parameters, PaginationConfig={'PageSize': 3})
 

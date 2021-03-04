@@ -10,13 +10,13 @@
     <script src="https://kit.fontawesome.com/d9427d2408.js" crossorigin="anonymous"></script>
     <div class="container-soft">
         <div class="hero-text-box" id="page-header">
-            <h1 class="hero-text-main">&nbsp; {{ collection.title }} &nbsp;</h1>
+            <h1 class="hero-text-main">&nbsp; {{ album }} &nbsp;</h1>
             <h3>{% trans 'Publiserats' %} {{ collection.pub_date_pretty }}</h3>
             {% if error_msg %}
                 <p>{{ error_msg }}</p>
             {% endif %}
             {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse"%}
-                <p><a class="button" href="{% url 'admin:archive_picturecollection_change' collection.id %}">{% trans 'editera' %}</a></p>
+                <p><a class="button" href="{% url 'admin:archive_picturecollection_change' album %}">{% trans 'editera' %}</a></p>
             {% endif %}
             <div class="hero-text-sub">
                 <button class="btn" onclick="one()">1</button>
@@ -26,12 +26,36 @@
         </div>
         <div class="gallery" id="gallery">
             <div class="column" id="col0">
-                {% for picture in collection.picture_set.all %}
+                {% for picture in pictures %}
                     <img id="picture-{{ forloop.counter }}" onclick="imageClick({{ forloop.counter }})" src="{{ picture.image.url }}">
                 {% endfor %}
             </div>
         </div>
+        {% if pictures.has_other_pages %}
+        <div class="center">
+            <div class="pagination">
+                {% if pictures.has_previous %}
+                <a href="?page={{ pictures.previous_page_number }}">&laquo;</a>
+                {% else %}
+                <a class="disabled">&laquo;</a>
+                {% endif %}
+                {% for i in pictures.paginator.page_range %}
+                {% if pictures.number == i %}
+                    <a class="active">{{ i }}</a>
+                {% else %}
+                    <a href="?page={{ i }}">{{ i }}</a>
+                {% endif %}
+                {% endfor %}
+                {% if pictures.has_next %}
+                <a href="?page={{ pictures.next_page_number }}">&raquo;</a>
+                {% else %}
+                <a class="disabled">&raquo;</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
     </div>
+
     <script>
         // Get the elements with class="column"
         let elements = document.getElementsByClassName("column");
