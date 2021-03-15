@@ -111,7 +111,7 @@ def old_year_index(request):
     
     client = s3_config()
 
-    result = client.list_objects(Bucket="date-images", Prefix='media/old/', Delimiter='/')
+    result = client.list_objects(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Prefix='media/old/', Delimiter='/')
 
     year_list = []
     for o in result.get('CommonPrefixes'):
@@ -126,7 +126,7 @@ def old_year_index(request):
 def old_picture_index(request, year):
     client = s3_config()
 
-    result = client.list_objects(Bucket="date-images", Prefix=f'media/old/{year}/', Delimiter='/')
+    result = client.list_objects(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Prefix=f'media/old/{year}/', Delimiter='/')
     album_list = []
     for o in result.get('CommonPrefixes'):
         print('sub folder : ', o.get('Prefix').replace(f"media/old/{year}","").replace("/",""))
@@ -145,7 +145,7 @@ def old_detail(request, year, album):
 
     client = s3_config()
     paginator = client.get_paginator('list_objects')
-    operation_parameters = {'Bucket': "date-images",
+    operation_parameters = {'Bucket': settings.AWS_STORAGE_BUCKET_NAME,
                             'Prefix': f'media/old/{year}/{album}/'}
 
     page_iterator = paginator.paginate(**operation_parameters, PaginationConfig={'PageSize': 3})

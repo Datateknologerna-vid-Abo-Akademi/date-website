@@ -217,14 +217,14 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # S3 conf https://testdriven.io/blog/storing-django-static-and-media-files-on-amazon-s3/
-USE_S3 = os.getenv('USE_S3')
+USE_S3 = env('USE_S3')
 
-if True:
+if USE_S3:
     # aws settings
-    AWS_S3_ENDPOINT_URL = "http://s3:9000"
-    AWS_ACCESS_KEY_ID = "key"
-    AWS_SECRET_ACCESS_KEY = "password"
-    AWS_STORAGE_BUCKET_NAME = "date-images"
+    AWS_S3_ENDPOINT_URL = env('AWS_S3_ENDPOINT_URL')
+    AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
     AWS_QUERYSTRING_AUTH = False
 
     # s3 public media settings
