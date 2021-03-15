@@ -9,19 +9,22 @@
     <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
 </head>
     <div class="container-soft">
-        <h1>Hello from old picture index</h1>
+        <div class="hero-text-box">
+                <h1 class="hero-text-main">&nbsp; {% trans "Gamla bilder arkiv" %} &nbsp;</h1>
+            </div>
+
         {% if collections %}
         <ul class="collection-frame">
             {% for collection in collections %}
                 <li class="collection-item">
                     <a  href="{% url 'archive:old_detail' year collection %}">
                         {% if collection|length > 20 %}
-                            <h4>title sliced</h4>
+                            <h4>{{collection|slice:"20"]]</h4>
                         {% else %}
-                            <h3>Title</h3>
+                            <h3>{{collection}}</h3>
                         {% endif %}
                         <img class="collection-img" src="http://localhost:8000/static/images/albin_black.png">
-                        <p>date<span id="picture-count"> images count {% trans 'Bilder' %}</span></p>
+                        <p>{{ year }}</p>
                     </a>
                 </li>
             {% endfor %}

@@ -225,7 +225,7 @@ if True:
     AWS_ACCESS_KEY_ID = "key"
     AWS_SECRET_ACCESS_KEY = "password"
     AWS_STORAGE_BUCKET_NAME = "date-images"
-
+    AWS_QUERYSTRING_AUTH = False
 
     # s3 public media settings
     PUBLIC_MEDIA_LOCATION = 'media'

@@ -9,12 +9,13 @@
     <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
 </head>
     <div class="container-soft">
+        <div class="hero-text-box">
+                <h1 class="hero-text-main">&nbsp; {% trans "Gamla bilder arkiv" %} &nbsp;</h1>
+        </div>
         {% if years %}
-        <ul class="">
+        <ul class="years">
             {% for year in years reversed %}
-                <li class="">
-                    <a  href="{% url 'archive:old_pictures' year %}"><h4>{{ year }}</h4></a>
-                </li>
+                    <a href="{% url 'archive:old_pictures' year %}"> <li class="year">{{ year }}</li></a>
             {% endfor %}
 
         </ul>

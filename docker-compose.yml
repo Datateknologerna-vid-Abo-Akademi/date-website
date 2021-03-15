@@ -37,3 +37,8 @@ services:
 
 volumes:
   date_postgres_data:
+
+networks: 
+  default: 
+    external: 
+      name: external-example 

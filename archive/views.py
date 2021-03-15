@@ -1,5 +1,6 @@
 import os
 import boto3
+import requests
 
 from botocore.client import Config
 
@@ -15,6 +16,13 @@ from .filters import DocumentFilter
 from .forms import PictureUploadForm
 from .models import Collection, Document, Picture
 from .tables import DocumentTable
+
+def s3_config():
+    return boto3.client('s3',
+            endpoint_url='http://s3:9000',
+            aws_access_key_id='key',
+            aws_secret_access_key='password',
+            region_name='eu-north-1')
 
 def year_index(request):
     
@@ -61,10 +69,6 @@ def picture_detail(request, year, album):
     except EmptyPage:
         pictures = paginator.page(paginator.num_pages)
 
-    print("PRINTING PICTURES")
-    for i in pictures:
-        print(i)
-
     context = {
         'type': "pictures",
         'year' : year,
@@ -74,10 +78,6 @@ def picture_detail(request, year, album):
     }
 
     return render(request, 'archive/detail.html', context )
-
-#class DetailView(generic.DetailView):
-#    model = Collection
-#    template_name = 'archive/detail.html'
 
 @permission_required('archive.add_collection')
 def upload(request):
@@ -109,18 +109,12 @@ def clean_media(request):
 
 def old_year_index(request):
     
-    #client = boto3.client('s3')
-    client = boto3.client('s3',
-                    endpoint_url='http://s3:9000',
-                    aws_access_key_id='key',
-                    aws_secret_access_key='password',
-                    config=Config(signature_version='s3v4'),
-                    region_name='us-east-1')
+    client = s3_config()
+
     result = client.list_objects(Bucket="date-images", Prefix='media/old/', Delimiter='/')
 
     year_list = []
     for o in result.get('CommonPrefixes'):
-        print('sub folder : ', o.get('Prefix').replace("media/old","").replace("/",""))
         year = o.get('Prefix').replace("media/old","").replace("/","")
         year_list.append(year)
     
@@ -130,15 +124,9 @@ def old_year_index(request):
     return render(request, 'archive/old_index.html', context)
 
 def old_picture_index(request, year):
-    #client = boto3.client('s3')
-    client = boto3.client('s3',
-                endpoint_url='http://s3:9000',
-                aws_access_key_id='key',
-                aws_secret_access_key='password',
-                config=Config(signature_version='s3v4'),
-                region_name='us-east-1')
+    client = s3_config()
+
     result = client.list_objects(Bucket="date-images", Prefix=f'media/old/{year}/', Delimiter='/')
-    print(year)
     album_list = []
     for o in result.get('CommonPrefixes'):
         print('sub folder : ', o.get('Prefix').replace(f"media/old/{year}","").replace("/",""))
@@ -155,16 +143,11 @@ def old_detail(request, year, album):
 
     selected_page = int(request.GET.get('page', 0))
 
-    #client = boto3.client('s3')
-    client = boto3.client('s3',
-                endpoint_url='http://s3:9000',
-                aws_access_key_id='key',
-                aws_secret_access_key='password',
-                config=Config(signature_version='s3v4'),
-                region_name='us-east-1')
+    client = s3_config()
     paginator = client.get_paginator('list_objects')
     operation_parameters = {'Bucket': "date-images",
                             'Prefix': f'media/old/{year}/{album}/'}
+
     page_iterator = paginator.paginate(**operation_parameters, PaginationConfig={'PageSize': 3})
 
     page_list = []
