@@ -4,6 +4,12 @@ from django.shortcuts import get_object_or_404
 from .models import FormalEvent, FormalStaticPage
 
 
+#TODO: list formalevent under /formal
+#TODO: /formal/event should redirect to first staticpage.
+
+
+
+
 # Create your views here.
 
 class IndexView(ListView):
@@ -21,11 +27,15 @@ class DetailView(DetailView): #Homepage of formal event
 
 def static_view(request, slug, static_slug):
     #TODO: koll så att staticpagen tillhör formalevent
-    static_page = FormalStaticPage.objects.get(slug=static_slug, slug='arsfest1') 
-    
+    static_page = FormalStaticPage.objects.get(slug=static_slug) 
+    event = FormalEvent.objects.get(slug=slug)
+    static_page_list = FormalStaticPage.objects.filter(event=event)
+
     return render(request, 'formal_events/static.html', {
             'static_page': static_page,
             'error_message': "Du valde inget alternativ.",
+            'static_page_list': static_page_list,
+            'slug': slug
         })
 
 
