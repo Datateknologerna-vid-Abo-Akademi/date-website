@@ -19,9 +19,9 @@ from .tables import DocumentTable
 
 def s3_config():
     return boto3.client('s3',
-            endpoint_url='http://s3:9000',
-            aws_access_key_id='key',
-            aws_secret_access_key='password',
+            endpoint_url=settings.AWS_S3_ENDPOINT_URL,
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
             region_name='eu-north-1')
 
 def year_index(request):
