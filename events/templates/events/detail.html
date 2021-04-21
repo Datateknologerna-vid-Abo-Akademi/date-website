@@ -34,7 +34,9 @@
             </div>
             <div class="container-signed">
             {% if event|show_attendee_list %}
-                <p>Det finns {{ event.sign_up_max_participants }} platser!</p>
+                {% if event.sign_up_max_participants != 0 %}
+                    <p>Det finns {{ event.sign_up_max_participants }} platser!</p>
+                {% endif %}
                 <h1>{% trans "Anmälda" %}</h1>
                 <table id="attendees">
                     <tr id="attendees-header"
@@ -47,7 +49,7 @@
                             {% endfor %}
                     </tr>
                     {% for attendee in event.get_registrations %}
-                        <tr {% if forloop.counter > event.sign_up_max_participants %} class="event-full" {% endif %} >
+                        <tr {% if forloop.counter > event.sign_up_max_participants and event.sign_up_max_participants != 0 %} class="event-full" {% endif %} >
                             <td>{{ forloop.counter }}</td>
                             <td>{% if not attendee.anonymous %}{{ attendee.user }}{% else %}
                                 <i>{% trans "Anonymt" %}</i>{% endif %}</td>
