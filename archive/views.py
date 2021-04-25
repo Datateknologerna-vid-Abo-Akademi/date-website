@@ -90,7 +90,7 @@ def upload(request):
             collection.save()
             for file in request.FILES.getlist('images'):
                 Picture(image=file, collection=collection).save()
-        return redirect('archive:pictures')
+        return redirect('archive:years')
 
     form = PictureUploadForm
     context = {
