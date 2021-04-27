@@ -1,4 +1,4 @@
-#Iports to get django setup
+#Imports to get django setup
 import os
 import sys
 import django
@@ -31,7 +31,7 @@ def s3_config():
 
 client = s3_config()
 
-path = "2001"
+path = input("enter folder year path: ")
 query_list = []
 collection_list = []
 for root,dirs,files in os.walk(path):
@@ -48,7 +48,7 @@ for root,dirs,files in os.walk(path):
         album_year = int(split_path[1])
 
         #Creates a collection from path (path has to end with /<year>/<album_name>) 
-        collection = Collection(title=album_name, type="Pictures", pub_date=datetime.datetime(album_year,10,10,10,10,tzinfo=pytz.timezone('Europe/Helsinki')))
+        collection = Collection(title=album_name, type="Pictures", pub_date=datetime.datetime(album_year,1,1,10,10,tzinfo=pytz.timezone('Europe/Helsinki')))
         collection.save()
         collection_list.append(collection)
 
