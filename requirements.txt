@@ -1,4 +1,5 @@
-Django==3.0.7
+Django==3.0.14
+asgiref==3.2.10
 django-ckeditor
 requests
 django-environ
@@ -9,9 +10,9 @@ icalendar
 django-ical
 django-admin-ordering
 whitenoise
-channels
+channels==2.4.0
 channels_redis
-websocket_client
+websocket_client==0.57.0
 six
 instaloader
 schedule

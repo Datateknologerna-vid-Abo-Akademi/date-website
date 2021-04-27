@@ -52,7 +52,7 @@
 }
 
 .warning{
-    color:rgb(216 153 146);
+    color: var(--warning)
 }
 
 @media only screen and (min-width: 675px) {
