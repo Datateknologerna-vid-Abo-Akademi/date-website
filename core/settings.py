@@ -221,7 +221,7 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 # S3 conf using django storages
 USE_S3 = env('USE_S3')
 
-if USE_S3:
+if USE_S3 == True:
     # aws settings
     AWS_S3_ENDPOINT_URL = env('AWS_S3_ENDPOINT_URL')
     AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
