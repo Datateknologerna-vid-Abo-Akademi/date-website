@@ -14,6 +14,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from PIL import Image
+from django.dispatch import receiver
 
 TYPE_CHOICES = (
     ('Pictures', 'Bilder'),
@@ -55,7 +56,8 @@ class Collection(models.Model):
 
 def upload_to(instance, filename):
     filename_base, filename_ext = os.path.splitext(filename)
-    return "{collection}/{filename}{extension}".format(
+    return "{year}/{collection}/{filename}{extension}".format(
+        year=instance.collection.pub_date.strftime("%Y"),
         collection=slugify(instance.collection.title),
         filename=slugify(filename_base),
         extension=filename_ext.lower(),
@@ -112,10 +114,12 @@ class Picture(models.Model):
         if not self.id:
             self.image = compress_image(self.image)
         super(Picture, self).save(*args, **kwargs)
-
-    def delete(self, using=None, keep_parents=False):
-        os.remove(os.path.join(settings.MEDIA_ROOT, self.image.name))
-        super(Picture, self).delete(using, keep_parents)
+    
+    USE_S3 = os.environ['USE_S3']
+    if not USE_S3:
+        def delete(self, using=None, keep_parents=False):
+                os.remove(os.path.join(settings.MEDIA_ROOT, self.image.name))
+                super(Picture, self).delete(using, keep_parents)
 
 
 class Document(models.Model):
