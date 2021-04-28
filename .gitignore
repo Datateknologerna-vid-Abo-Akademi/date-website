@@ -20,3 +20,6 @@ media
 **/migrations/*.py
 !**/migrations/*_initial.py
 !**/migrations/__init__.py
+
+#minio storage
+storage
