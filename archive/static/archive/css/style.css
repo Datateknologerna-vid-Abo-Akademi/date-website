@@ -15,7 +15,6 @@
 }
 
 .hero-text-box {
-    min-height: 20vh;
     text-align: center;
 }
 .hero-text-main {
@@ -44,6 +43,46 @@ li.collection-item img {
     width: 100%;
 }
 
+.center{
+    text-align: center;
+}
+
+.years{
+    text-align: center;
+    font-size: 1.5rem;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+.year{
+    background-color: var(--secondaryColor);
+    color: var(--primaryColor);
+    position: relative;
+    padding: 1rem;
+    margin: 10px;
+    font-size: 1.2em;
+    font-weight: bold;
+    border-radius: 5px;
+    transition: .3s all;
+    -webkit-box-shadow: 3px -3px 0px 0px var(--linkColor);
+    -moz-box-shadow: 3px -3px 0px 0px var(--linkColor);
+    box-shadow: 3px -3px 0px 0px var(--linkColor);
+}
+
+.year:hover{
+    transform: scale(1.01);
+    color: var(--primaryColorLight);
+    -webkit-box-shadow: 0px 0px 0px 0px var(--linkColor);
+    -moz-box-shadow: 0px 0px 0px 0px var(--linkColor);
+    box-shadow: 0px 0px 0px 0px var(--linkColor);
+}
+
+.old{
+    text-align: center;
+    margin-top: 40px;
+}
+/*
 .collection-item img:hover {
     border: solid 1px var(--secondaryColor);
 }

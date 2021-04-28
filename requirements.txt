@@ -16,6 +16,8 @@ websocket_client==0.57.0
 six
 instaloader
 schedule
+boto3
+django-storages
 django-tables2
 django-filter
 django-bootstrap3
