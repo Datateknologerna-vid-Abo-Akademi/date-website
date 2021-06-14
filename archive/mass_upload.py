@@ -26,8 +26,7 @@ def s3_config():
     return boto3.client('s3',
             endpoint_url=settings.AWS_S3_ENDPOINT_URL,
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name='eu-north-1')
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
 
 client = s3_config()
 
@@ -66,7 +65,8 @@ for root,dirs,files in os.walk(path):
                 query_list.append(picture_data)
                 with open(os.path.join(root,file), "rb") as f:
                     #Image content type had to be set in order to access img url. Currently set as "image/jpeg"
-                    client.upload_fileobj(f, settings.AWS_STORAGE_BUCKET_NAME, "media/" + os.path.join(root,file), ExtraArgs={'ContentType': 'image/jpeg'})
+                    client.upload_fileobj(f, settings.AWS_STORAGE_BUCKET_NAME, settings.PUBLIC_MEDIA_LOCATION + "/" + os.path.join(root,file), ExtraArgs={'ContentType': 'image/jpeg'})
+                    logger.info(path + " uploaded")
             
 # Creates a connection to the database and inserts the query list to the correct table
 cursor = connection.cursor()
