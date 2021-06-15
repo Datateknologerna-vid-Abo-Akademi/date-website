@@ -26,7 +26,11 @@ class PublicFileInline(admin.TabularInline):
     model = PublicFile
     fk_name = 'collection'
     can_delete = True
+    readonly_fields = ('preview_image',)
     extra = 1
+
+    def preview_image(self, obj):
+        return mark_safe("""<img src="%s" style="width: auto; height: 80px"/> """ % obj.some_file.url)
 
 
 @admin.register(PictureCollection)

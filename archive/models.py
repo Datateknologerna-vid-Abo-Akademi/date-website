@@ -58,13 +58,25 @@ class Collection(models.Model):
 
 
 def upload_to(instance, filename):
+    file_location = ""
     filename_base, filename_ext = os.path.splitext(filename)
-    return "{year}/{collection}/{filename}{extension}".format(
-        year=instance.collection.pub_date.strftime("%Y"),
-        collection=slugify(instance.collection.title),
-        filename=slugify(filename_base),
-        extension=filename_ext.lower(),
-    )
+
+    if instance.collection.type == "Documents":
+        file_location = "documents/{year}/{collection}/{filename}{extension}".format(
+            year=instance.collection.pub_date.strftime("%Y"),
+            collection=slugify(instance.collection.title),
+            filename=slugify(filename_base),
+            extension=filename_ext.lower(),
+        )
+
+    else:
+        file_location = "{year}/{collection}/{filename}{extension}".format(
+            year=instance.collection.pub_date.strftime("%Y"),
+            collection=slugify(instance.collection.title),
+            filename=slugify(filename_base),
+            extension=filename_ext.lower(),
+        )
+    return file_location
 
 
 def get_collections_of_type(t):
@@ -146,7 +158,7 @@ class Document(models.Model):
 
 class PublicFile(models.Model):
     collection = models.ForeignKey(Collection, verbose_name=_('Galleri'), on_delete=models.CASCADE)
-    some_file = PublicFileField(_('file'))
+    some_file = PublicFileField(upload_to=upload_to, verbose_name=_('file'))
     
     class Meta:
         verbose_name = _("fil")
