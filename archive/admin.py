@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
-from .forms import DocumentAdminForm, PictureAdminForm
-from .models import Document, DocumentCollection, Picture, PictureCollection
+from .forms import DocumentAdminForm, PictureAdminForm, PublicAdminForm
+from .models import Document, DocumentCollection, Picture, PictureCollection, PublicFile, PublicCollection
 
 
 class PicturesInline(admin.TabularInline):
@@ -18,6 +18,12 @@ class PicturesInline(admin.TabularInline):
 
 class DocumentInline(admin.TabularInline):
     model = Document
+    fk_name = 'collection'
+    can_delete = True
+    extra = 1
+
+class PublicFileInline(admin.TabularInline):
+    model = PublicFile
     fk_name = 'collection'
     can_delete = True
     extra = 1
@@ -57,3 +63,19 @@ class DocumentCollectionAdmin(admin.ModelAdmin):
 
     def get_changeform_initial_data(self, request):
         return {'type': 'Documents'}
+
+@admin.register(PublicCollection)
+class PublicCollectionAdmin(admin.ModelAdmin):
+    model = PublicCollection
+    save_on_top = True
+    form = PublicAdminForm
+    inlines = [
+        PublicFileInline
+    ]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(type='PublicFiles')
+
+    def get_changeform_initial_data(self, request):
+        return {'type': 'PublicFiles'}

@@ -231,9 +231,10 @@ if USE_S3 == "True":
     AWS_QUERYSTRING_EXPIRE = 3600
 
     # s3 public media settings
-    PUBLIC_MEDIA_LOCATION = env('MEDIA_LOCATION')
-    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/{PUBLIC_MEDIA_LOCATION}/'
-    DEFAULT_FILE_STORAGE = 'core.storage_backends.PublicMediaStorage'
+    PRIVATE_MEDIA_LOCATION = env('PRIVATE_MEDIA_LOCATION')
+    PUBLIC_MEDIA_LOCATION = env('PUBLIC_MEDIA_LOCATION')
+    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/'
+    DEFAULT_FILE_STORAGE = 'core.storage_backends.PrivateMediaStorage'
 else:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
     MEDIA_URL = '/media/'

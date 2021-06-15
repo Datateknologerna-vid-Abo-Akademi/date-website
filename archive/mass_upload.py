@@ -65,7 +65,7 @@ for root,dirs,files in os.walk(path):
                 query_list.append(picture_data)
                 with open(os.path.join(root,file), "rb") as f:
                     #Image content type had to be set in order to access img url. Currently set as "image/jpeg"
-                    client.upload_fileobj(f, settings.AWS_STORAGE_BUCKET_NAME, settings.PUBLIC_MEDIA_LOCATION + "/" + os.path.join(root,file), ExtraArgs={'ContentType': 'image/jpeg'})
+                    client.upload_fileobj(f, settings.AWS_STORAGE_BUCKET_NAME, settings.PRIVATE_MEDIA_LOCATION + "/" + os.path.join(root,file), ExtraArgs={'ContentType': 'image/jpeg'})
                     logger.info(path + " uploaded")
             
 # Creates a connection to the database and inserts the query list to the correct table
