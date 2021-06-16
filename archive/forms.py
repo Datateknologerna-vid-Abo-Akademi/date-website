@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Collection, Document, Picture
+from .models import Collection, Document, Picture, PublicFile
 
 
 class PictureUploadForm(forms.Form):
@@ -41,4 +41,21 @@ class DocumentAdminForm(forms.ModelForm):
         if hasattr(self.files, 'getlist'):
             for f in self.files.getlist('files'):
                 Document.objects.create(collection=collection, document=f, title=f)
+        return collection
+
+class PublicAdminForm(forms.ModelForm):
+    files = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
+                             label="Ladda upp flera filer",
+                             required=False)
+
+    class Meta:
+        model = Collection
+        fields = '__all__'
+
+    def save(self, *args, **kwargs):
+        collection = super(PublicAdminForm, self).save(*args, **kwargs)
+        collection.save()
+        if hasattr(self.files, 'getlist'):
+            for f in self.files.getlist('files'):
+                PublicFile.objects.create(collection=collection, some_file=f)
         return collection
