@@ -26,48 +26,49 @@ def s3_config():
     return boto3.client('s3',
             endpoint_url=settings.AWS_S3_ENDPOINT_URL,
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name='eu-north-1')
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
 
 client = s3_config()
 
-path = input("enter folder year path: ")
 query_list = []
 collection_list = []
-for root,dirs,files in os.walk(path):
-    #Loops through all directories in a directory
+year_list = []
 
-    for name in dirs:
-        #Splits the path into a list and reverses it so that album is always split_path[0]
-        path = os.path.join(root, name)
-        split_path = path.split("/")
-        split_path.reverse()
 
-        #Splits the path and uses year and album name (path has to end with /<year>/<album_name>)
-        album_name = split_path[0]
-        album_year = int(split_path[1])
+response = client.list_objects(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Prefix=settings.PRIVATE_MEDIA_LOCATION + "/", Delimiter="/")
 
-        #Creates a collection from path (path has to end with /<year>/<album_name>) 
-        collection = Collection(title=album_name, type="Pictures", pub_date=datetime.datetime(album_year,1,1,10,10,tzinfo=pytz.timezone('Europe/Helsinki')))
-        collection.save()
-        collection_list.append(collection)
+# Gets a list of years
+for obj in response.get('CommonPrefixes'):
+    year = obj.get('Prefix').replace(settings.PRIVATE_MEDIA_LOCATION,"").replace("/","")
+    if year != "documents":
+        year_list.append(year)
+        logger.info(year)
 
-    for file in files:
-        #Loops through every file in a directory
-        
-        path = os.path.join(root, file)
-        #Splits the path and uses album name (path has to end with /<year>/<album_name>)
-        split_path = path.split("/")
-        split_path.reverse()
 
-        for collection in collection_list:
-            if collection.title == split_path[1]:
+for year in year_list:
+    response = client.list_objects(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Prefix=settings.PRIVATE_MEDIA_LOCATION + f"/{year}/", Delimiter="/")
+    album_year = int(year)
+    # For every year, list containing albums
+    for obj in response.get('CommonPrefixes'):
+        album_name = obj.get('Prefix').replace(settings.PRIVATE_MEDIA_LOCATION + f"/{year}","").replace("/","")
+        exists_check = Collection.objects.filter(title=album_name, pub_date__year=album_year).count()
+        # check if album name not exists
+        if exists_check == 0:
+            logger.info("Album does not exist")
+            # Create a collection from album name
+            collection = Collection(title=album_name, type="Pictures", pub_date=datetime.datetime(album_year,1,1,10,10,tzinfo=pytz.timezone('Europe/Helsinki')))
+            # If an album with same name in a specific year does not exist, save the collection
+            collection.save()
+            response = client.list_objects(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Prefix=settings.PRIVATE_MEDIA_LOCATION + f"/{year}/{album_name}")
+            contents = response.get('Contents')
+            # For every album, list its contents
+            for data in contents:
+                path = data["Key"].replace(settings.PRIVATE_MEDIA_LOCATION + "/", "")
+                logger.info(path)
                 picture_data = (path, False, collection.id)
                 query_list.append(picture_data)
-                with open(os.path.join(root,file), "rb") as f:
-                    #Image content type had to be set in order to access img url. Currently set as "image/jpeg"
-                    client.upload_fileobj(f, settings.AWS_STORAGE_BUCKET_NAME, "media/" + os.path.join(root,file), ExtraArgs={'ContentType': 'image/jpeg'})
-            
+
+
 # Creates a connection to the database and inserts the query list to the correct table
 cursor = connection.cursor()
 
