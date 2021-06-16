@@ -17,10 +17,13 @@ import datetime
 
 from PIL import Image
 from django.dispatch import receiver
+from .fields import PublicFileField
+
 
 TYPE_CHOICES = (
     ('Pictures', 'Bilder'),
     ('Documents', 'Dokument'),
+    ('PublicFiles', 'OffentligaFiler')
 )
 
 
@@ -57,13 +60,25 @@ class Collection(models.Model):
 
 
 def upload_to(instance, filename):
+    file_location = ""
     filename_base, filename_ext = os.path.splitext(filename)
-    return "{year}/{collection}/{filename}{extension}".format(
-        year=instance.collection.pub_date.strftime("%Y"),
-        collection=slugify(instance.collection.title),
-        filename=slugify(filename_base),
-        extension=filename_ext.lower(),
-    )
+
+    if instance.collection.type == "Documents":
+        file_location = "documents/{year}/{collection}/{filename}{extension}".format(
+            year=instance.collection.pub_date.strftime("%Y"),
+            collection=slugify(instance.collection.title),
+            filename=slugify(filename_base),
+            extension=filename_ext.lower(),
+        )
+
+    else:
+        file_location = "{year}/{collection}/{filename}{extension}".format(
+            year=instance.collection.pub_date.strftime("%Y"),
+            collection=slugify(instance.collection.title),
+            filename=slugify(filename_base),
+            extension=filename_ext.lower(),
+        )
+    return file_location
 
 
 def get_collections_of_type(t):
@@ -94,6 +109,11 @@ class PictureCollection(Collection):
 class DocumentCollection(Collection):
     class Meta:
         verbose_name_plural = verbose_name = _('Dokumentarkiv')
+        proxy = True
+
+class PublicCollection(Collection):
+    class Meta:
+        verbose_name_plural = verbose_name = _('Offentliga Filer')
         proxy = True
 
 
@@ -136,3 +156,15 @@ class Document(models.Model):
     class Meta:
         verbose_name = _('dokument')  # Verbose plural is same.
         verbose_name_plural = _('dokument')
+
+
+class PublicFile(models.Model):
+    collection = models.ForeignKey(Collection, verbose_name=_('Galleri'), on_delete=models.CASCADE)
+    some_file = PublicFileField(upload_to=upload_to, verbose_name=_('file'))
+    
+    class Meta:
+        verbose_name = _("fil")
+        verbose_name_plural = _("filer")
+
+    def __str__(self):
+        return self.some_file.name
