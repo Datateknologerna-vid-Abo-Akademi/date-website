@@ -36,7 +36,8 @@ for root,dirs,files in os.walk(path):
 
         #Splits the path and uses year and album name (path has to end with /<year>/<album_name>)
         album_name = split_path[0]
-        album_year = int(split_path[1])
+        #album_year = int(split_path[1])
+
 
         #Creates a collection from path (path has to end with /<year>/<album_name>) 
 
@@ -48,14 +49,17 @@ for root,dirs,files in os.walk(path):
         path = os.path.join(root, file)
         #Splits the path and uses album name (path has to end with /<year>/<album_name>)
         split_path = path.split("/")
-        split_path.reverse()
 
-        for title in album_list:
-            if title == split_path[1]:
-                with open(os.path.join(root,file), "rb") as f:
-                    #Image content type had to be set in order to access img url. Currently set as "image/jpeg"
-                    client.upload_fileobj(f, AWS_STORAGE_BUCKET_NAME, PRIVATE_MEDIA_LOCATION + "/" + os.path.join(root,file), ExtraArgs={'ContentType': 'image/jpeg'})
-                    print(path + " uploaded")
+        # Do not include files from thumbnails folder
+        if 'thumbs' != split_path[2]:
+            split_path.reverse()
+
+            for title in album_list:
+                if title == split_path[1]:
+                    with open(os.path.join(root,file), "rb") as f:
+                        #Image content type had to be set in order to access img url. Currently set as "image/jpeg"
+                        client.upload_fileobj(f, AWS_STORAGE_BUCKET_NAME, PRIVATE_MEDIA_LOCATION + "/" + os.path.join(root,file), ExtraArgs={'ContentType': 'image/jpeg'})
+                        print(path + " uploaded")
             
 
 print("IMAGE UPLOADER COMPLETE")
