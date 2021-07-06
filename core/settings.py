@@ -221,7 +221,7 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 # S3 conf using django storages
 USE_S3 = env('USE_S3')
 
-if USE_S3 == "True":
+if USE_S3:
     # aws settings
     AWS_S3_ENDPOINT_URL = env('AWS_S3_ENDPOINT_URL')
     AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
@@ -238,6 +238,9 @@ if USE_S3 == "True":
 else:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
     MEDIA_URL = '/media/'
+    # Not in use when not using s3 but need to be set in order not to cause errors
+    PRIVATE_MEDIA_LOCATION = 'media/private'
+    PUBLIC_MEDIA_LOCATION = 'media/public'
 
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
 STATIC_URL = '/static/'
