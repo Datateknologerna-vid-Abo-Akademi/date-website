@@ -59,7 +59,7 @@ def picture_detail(request, year, album):
 
     page = request.GET.get('page', 1)
 
-    paginator = Paginator(pictures, 10)
+    paginator = Paginator(pictures, 15)
     try:
         pictures = paginator.page(page)
     except PageNotAnInteger:
