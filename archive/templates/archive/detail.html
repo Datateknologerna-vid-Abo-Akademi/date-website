@@ -3,56 +3,59 @@
 {% load static %}
 {% load i18n %}
     {% block content %}
-    <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
-    <link rel="stylesheet" href="{% static 'archive/css/detailed.css' %}" type="text/css">
-    <script src="https://kit.fontawesome.com/d9427d2408.js" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js" crossorigin="anonymous"></script>
+    <head>
+        <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'archive/css/detailed.css' %}" type="text/css">
+    </head>
+
 
     <div class="container-soft">
-        <div class="hero-text-box" id="page-header">
-            <h1 class="hero-text-main">&nbsp; {{ album }} &nbsp;</h1>
-            <h3>{% trans 'Publiserats' %} {{ collection.pub_date_pretty }}</h3>
-            {% if error_msg %}
-                <p>{{ error_msg }}</p>
-            {% endif %}
-            {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse"%}
-                <p><a class="button" href="{% url 'admin:archive_picturecollection_change' album %}">{% trans 'editera' %}</a></p>
-            {% endif %}
-        </div>
-        <div class="grid">
+        <div class="collection-grid">
+            <div class="hero-text-box" id="page-header">
+                <h1 class="hero-text-main">&nbsp; {{ album }} &nbsp;</h1>
+                <h3>{% trans 'Publiserats' %} {{ collection.pub_date_pretty }}</h3>
+                {% if error_msg %}
+                    <p>{{ error_msg }}</p>
+                {% endif %}
+                <div class="back-btn"><a href="{% url 'archive:pictures' year %}"><i class="fas fa-chevron-left"></i> Tillbaka</a></div>
+            </div>
+            <div class="grid">
                 {% for picture in pictures %}
                     <div class="grid-sizer"></div>
                     <a data-fslightbox="gallery" href="{{ picture.image.url }}">
-                        <img class="grid-item" id="picture-{{ forloop.counter }}" src="{{ picture.image.url }}">
+                        <img class="grid-item gallery-image" id="picture-{{ forloop.counter }}" src="{{ picture.image.url }}">
                     </a>
                 {% endfor %}
-        </div>
-        {% if pictures.has_other_pages %}
-        <div class="center">
-            <div class="pagination">
-                {% if pictures.has_previous %}
-                <a href="?page={{ pictures.previous_page_number }}">&laquo;</a>
-                {% else %}
-                <a class="disabled">&laquo;</a>
-                {% endif %}
-                {% for i in pictures.paginator.page_range %}
-                {% if pictures.number == i %}
-                    <a class="active">{{ i }}</a>
-                {% else %}
-                    <a href="?page={{ i }}">{{ i }}</a>
-                {% endif %}
-                {% endfor %}
-                {% if pictures.has_next %}
-                <a href="?page={{ pictures.next_page_number }}">&raquo;</a>
-                {% else %}
-                <a class="disabled">&raquo;</a>
+            </div>
+            {% if pictures.has_other_pages %}
+            <div class="center">
+                <div class="pagination">
+                    {% if pictures.has_previous %}
+                    <a href="?page={{ pictures.previous_page_number }}">&laquo;</a>
+                    {% else %}
+                    <a class="disabled">&laquo;</a>
+                    {% endif %}
+                    {% for i in pictures.paginator.page_range %}
+                    {% if pictures.number == i %}
+                        <a class="active">{{ i }}</a>
+                    {% else %}
+                        <a href="?page={{ i }}">{{ i }}</a>
+                    {% endif %}
+                    {% endfor %}
+                    {% if pictures.has_next %}
+                    <a href="?page={{ pictures.next_page_number }}">&raquo;</a>
+                    {% else %}
+                    <a class="disabled">&raquo;</a>
+                    {% endif %}
+                </div>
                 {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
     <script src="{% static 'archive/js/fslightbox.js' %}"></script>
+    <script src="https://kit.fontawesome.com/d9427d2408.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js" crossorigin="anonymous"></script>
     <script>
             var $grid = $('.grid').imagesLoaded( function() {
             // init Masonry after all images have loaded

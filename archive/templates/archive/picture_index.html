@@ -9,35 +9,34 @@
     <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
 </head>
     <div class="container-soft">
-        <div class="hero-text-box">
-        {% if type == 'pictures' %}
-            <h1 class="hero-text-main">&nbsp; {% trans "Bild arkiv" %} &nbsp;</h1>
-            {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse" %}
-                <h3><a class="button" href="{% url 'archive:upload' %}"> Skapa nytt album</a></h3>
-            {% endif %}
-        {% endif %}
-
-        </div>
-        {% if collections %}
-        <div class="grid">
-            {% for collection in collections %}
-            <div class="grid-sizer"></div>
-            <div class="grid-item">
-                <a  href="{% url 'archive:detail' year collection.title %}">
-                    {% if collection.title|length > 20 %}
-                        <h4>{{ collection.title|slice:"20" }}...</h4>
-                    {% else %}
-                        <h3>{{ collection.title }}</h3>
-                    {% endif %}
-                        <img class="" src={{ collection.get_first_picture.image.url }}>
-                    <p>{{ collection.pub_date_pretty }} <span id="picture-count">{{ collection.get_file_count }} {% trans 'Bilder' %}</span></p>
-                </a>
+        <div class="collection-grid">
+            <div class="hero-text-box">
+                <h1 class="hero-text-main">&nbsp; {% trans "Bild arkiv" %} &nbsp;</h1>
+                <div class="back-btn"><a href="{% url 'archive:years' %}"><i class="fas fa-chevron-left"></i> Tillbaka</a></div>
             </div>
-            {% endfor %}
+            {% if collections %}
+            <div class="grid">
+                {% for collection in collections %}
+                <div class="grid-sizer"></div>
+                <div class="grid-item">
+                    <a  href="{% url 'archive:detail' year collection.title %}">
+                        <div>
+                            {% if collection.title|length > 20 %}
+                            <h4>{{ collection.title|slice:"20" }}...</h4>
+                            {% else %}
+                            <h3>{{ collection.title }}</h3>
+                            {% endif %}
+                            <p>{{ collection.pub_date_pretty }} <span id="picture-count">{{ collection.get_file_count }} {% trans 'Bilder' %}</span></p>
+                        </div>
+                        <img class="gallery-image" src={{ collection.get_first_picture.image.url }}>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+                <h3>{% trans "Inga arkiv hittades" %}</h3>
+            {% endif %}
         </div>
-        {% else %}
-            <h3>{% trans "Inga arkiv hittades" %}</h3>
-        {% endif %}
     </div>
     <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
     <script src="https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js"></script>
