@@ -18,6 +18,7 @@ instaloader
 schedule
 boto3
 django-storages
+sorl-thumbnail
 django-tables2
 django-filter
 django-bootstrap3
