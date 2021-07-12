@@ -47,7 +47,7 @@
                 {% for picture in pictures %}
                     <div class="grid-sizer"></div>
                     <a data-fslightbox="gallery" href="{{ picture.image.url }}">
-                        {% thumbnail picture "500x500" crop="center" as image %}
+                        {% thumbnail picture "500" crop="center" as image %}
                             <img class="grid-item gallery-image" id="picture-{{ forloop.counter }}" src="{{ image.url }}">
                         {% endthumbnail %}
                     </a>
