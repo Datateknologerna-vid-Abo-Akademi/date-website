@@ -2,6 +2,7 @@
 {% load app_filters %}
 {% load static %}
 {% load i18n %}
+{% load thumbnail %}
     {% block content %}
     <head>
         <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
@@ -19,37 +20,62 @@
                 {% endif %}
                 <div class="back-btn"><a href="{% url 'archive:pictures' year %}"><i class="fas fa-chevron-left"></i> Tillbaka</a></div>
             </div>
+            {% if pictures.has_other_pages %}
+                <div class="center">
+                    <div class="pagination">
+                        {% if pictures.has_previous %}
+                            <a href="?page={{ pictures.previous_page_number }}">&laquo;</a>
+                        {% else %}
+                            <a class="disabled">&laquo;</a>
+                        {% endif %}
+                        {% for i in pictures.paginator.page_range %}
+                            {% if pictures.number == i %}
+                                <a class="active">{{ i }}</a>
+                            {% else %}
+                                <a href="?page={{ i }}">{{ i }}</a>
+                            {% endif %}
+                        {% endfor %}
+                        {% if pictures.has_next %}
+                            <a href="?page={{ pictures.next_page_number }}">&raquo;</a>
+                        {% else %}
+                            <a class="disabled">&raquo;</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
             <div class="grid">
                 {% for picture in pictures %}
                     <div class="grid-sizer"></div>
                     <a data-fslightbox="gallery" href="{{ picture.image.url }}">
-                        <img class="grid-item gallery-image" id="picture-{{ forloop.counter }}" src="{{ picture.image.url }}">
+                        {% thumbnail picture "500" crop="center" as image %}
+                            <img class="grid-item gallery-image" id="picture-{{ forloop.counter }}" src="{{ image.url }}">
+                        {% endthumbnail %}
                     </a>
                 {% endfor %}
             </div>
             {% if pictures.has_other_pages %}
-            <div class="center">
-                <div class="pagination">
-                    {% if pictures.has_previous %}
-                    <a href="?page={{ pictures.previous_page_number }}">&laquo;</a>
-                    {% else %}
-                    <a class="disabled">&laquo;</a>
-                    {% endif %}
-                    {% for i in pictures.paginator.page_range %}
-                    {% if pictures.number == i %}
-                        <a class="active">{{ i }}</a>
-                    {% else %}
-                        <a href="?page={{ i }}">{{ i }}</a>
-                    {% endif %}
-                    {% endfor %}
-                    {% if pictures.has_next %}
-                    <a href="?page={{ pictures.next_page_number }}">&raquo;</a>
-                    {% else %}
-                    <a class="disabled">&raquo;</a>
-                    {% endif %}
+                <div class="center">
+                    <div class="pagination">
+                        {% if pictures.has_previous %}
+                            <a href="?page={{ pictures.previous_page_number }}">&laquo;</a>
+                        {% else %}
+                            <a class="disabled">&laquo;</a>
+                        {% endif %}
+                        {% for i in pictures.paginator.page_range %}
+                            {% if pictures.number == i %}
+                                <a class="active">{{ i }}</a>
+                            {% else %}
+                                <a href="?page={{ i }}">{{ i }}</a>
+                            {% endif %}
+                        {% endfor %}
+                        {% if pictures.has_next %}
+                            <a href="?page={{ pictures.next_page_number }}">&raquo;</a>
+                        {% else %}
+                            <a class="disabled">&raquo;</a>
+                        {% endif %}
+                    </div>
                 </div>
-                {% endif %}
-            </div>
+            {% endif %}
         </div>
     </div>
     <script src="{% static 'archive/js/fslightbox.js' %}"></script>

@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'django_tables2',
     'django_filters',
     'bootstrap3',
+    'sorl.thumbnail',
     'django_cleanup',  # Should be places last
 ]
 
@@ -215,6 +216,8 @@ STATICFILES_DIRS = [
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Helps thumbnails overly query S3
+THUMBNAIL_FORCE_OVERWRITE = True
 
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
