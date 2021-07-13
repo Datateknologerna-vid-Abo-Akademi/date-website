@@ -63,9 +63,11 @@ INSTALLED_APPS = [
     'admin_ordering',
     'ckeditor',
     'channels',
+    'storages',
     'django_tables2',
     'django_filters',
     'bootstrap3',
+    'sorl.thumbnail',
     'django_cleanup',  # Should be places last
 ]
 
@@ -160,8 +162,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = (
-    # 'members.backends.AuthBackend', # disable to skip auth against oldwww.abo.fi
-    'django.contrib.auth.backends.ModelBackend',
+    'members.backends.AuthBackend', # disable to skip auth against oldwww.abo.fi
+    # 'django.contrib.auth.backends.ModelBackend',
 )
 
 # LDAP config end
@@ -213,13 +215,38 @@ STATICFILES_DIRS = [
 ]
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
-STATIC_URL = '/static/'
+
+# Helps thumbnails overly query S3
+THUMBNAIL_FORCE_OVERWRITE = True
 
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = '/media/'
+# S3 conf using django storages
+USE_S3 = env('USE_S3')
+
+if USE_S3:
+    # aws settings
+    AWS_S3_ENDPOINT_URL = env('AWS_S3_ENDPOINT_URL')
+    AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
+    AWS_QUERYSTRING_AUTH = True
+    AWS_QUERYSTRING_EXPIRE = 3600
+
+    # s3 public media settings
+    PRIVATE_MEDIA_LOCATION = env('PRIVATE_MEDIA_LOCATION')
+    PUBLIC_MEDIA_LOCATION = env('PUBLIC_MEDIA_LOCATION')
+    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/'
+    DEFAULT_FILE_STORAGE = 'core.storage_backends.PrivateMediaStorage'
+else:
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    MEDIA_URL = '/media/'
+    # Not in use when not using s3 but need to be set in order not to cause errors
+    PRIVATE_MEDIA_LOCATION = 'media/private'
+    PUBLIC_MEDIA_LOCATION = 'media/public'
+
+STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
+STATIC_URL = '/static/'
 
 LOGIN_URL = '/members/login'
 LOGIN_REDIRECT_URL = '/'
@@ -233,6 +260,8 @@ EMAIL_HOST = env('EMAIL_HOST')
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = env('EMAIL_PORT')
+
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 
 LOGGING = {
     'version': 1,

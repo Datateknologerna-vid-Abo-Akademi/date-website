@@ -1,4 +1,7 @@
 import os
+import requests
+
+from botocore.client import Config
 
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
@@ -6,20 +9,34 @@ from django.shortcuts import redirect, render
 from django.views import generic
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from .filters import DocumentFilter
 from .forms import PictureUploadForm
 from .models import Collection, Document, Picture
 from .tables import DocumentTable
 
+def year_index(request):
+    
+    years = Collection.objects.dates('pub_date', 'year').reverse()
+    year_list = []
+    for year in years:
+        year_list.append(year.strftime("%Y"))
 
-def picture_index(request):
-    collections = Collection.objects.filter(type="Pictures").order_by('-pub_date')
     context = {
         'type': "pictures",
-        'collections': collections,
+        'years': year_list,
     }
     return render(request, 'archive/index.html', context)
+
+def picture_index(request, year):
+    collections = Collection.objects.filter(type="Pictures", pub_date__year=year).order_by('-pub_date')
+    context = {
+        'type': "pictures",
+        'year' : year,
+        'collections': collections,
+    }
+    return render(request, 'archive/picture_index.html', context)
 
 
 class FilteredDocumentsListView(SingleTableMixin, FilterView):
@@ -30,10 +47,29 @@ class FilteredDocumentsListView(SingleTableMixin, FilterView):
     filterset_class = DocumentFilter
 
 
-class DetailView(generic.DetailView):
-    model = Collection
-    template_name = 'archive/detail.html'
+def picture_detail(request, year, album):
+    collection = Collection.objects.filter(type="Pictures", pub_date__year=year, title=album).order_by('-pub_date')
+    pictures = Picture.objects.filter(collection=collection[0])
 
+    page = request.GET.get('page', 1)
+
+    paginator = Paginator(pictures, 15)
+    try:
+        pictures = paginator.page(page)
+    except PageNotAnInteger:
+        pictures = paginator.page(1)
+    except EmptyPage:
+        pictures = paginator.page(paginator.num_pages)
+
+    context = {
+        'type': "pictures",
+        'year' : year,
+        'album' : album,
+        'collection' : collection[0],
+        'pictures': pictures,
+    }
+
+    return render(request, 'archive/detail.html', context )
 
 @permission_required('archive.add_collection')
 def upload(request):
@@ -46,7 +82,7 @@ def upload(request):
             collection.save()
             for file in request.FILES.getlist('images'):
                 Picture(image=file, collection=collection).save()
-        return redirect('archive:pictures')
+        return redirect('archive:years')
 
     form = PictureUploadForm
     context = {
