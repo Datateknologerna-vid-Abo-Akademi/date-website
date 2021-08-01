@@ -1,3 +1,5 @@
+# This script uploads one year of albums to s3
+# Year folder should have the structure: <year>/<album_name>/<image.jpg>
 
 import os
 import sys
@@ -23,7 +25,7 @@ print("STARTING IMAGE UPLOADER")
 
 client = s3_config()
 
-path = input("enter folder year path: ")
+path = input("Enter path to album year: ")
 album_list = []
 for root,dirs,files in os.walk(path):
     #Loops through all directories in a directory
@@ -34,32 +36,25 @@ for root,dirs,files in os.walk(path):
         split_path = path.split("/")
         split_path.reverse()
 
-        #Splits the path and uses year and album name (path has to end with /<year>/<album_name>)
+        #Splits the path and uses album name
         album_name = split_path[0]
-        #album_year = int(split_path[1])
-
-
-        #Creates a collection from path (path has to end with /<year>/<album_name>) 
 
         album_list.append(album_name)
 
     for file in files:
         #Loops through every file in a directory
-        
         path = os.path.join(root, file)
-        #Splits the path and uses album name (path has to end with /<year>/<album_name>)
         split_path = path.split("/")
-
+        split_path.reverse()
         # Do not include files from thumbnails folder
-        if 'thumbs' != split_path[2]:
-            split_path.reverse()
-
+        if 'thumbs' != split_path[1]:
             for title in album_list:
                 if title == split_path[1]:
+                    split_path.reverse()
+                    album_path = "/".join(split_path[-3:])
                     with open(os.path.join(root,file), "rb") as f:
                         #Image content type had to be set in order to access img url. Currently set as "image/jpeg"
-                        client.upload_fileobj(f, AWS_STORAGE_BUCKET_NAME, PRIVATE_MEDIA_LOCATION + "/" + os.path.join(root,file), ExtraArgs={'ContentType': 'image/jpeg'})
-                        print(path + " uploaded")
-            
+                        #client.upload_fileobj(f, AWS_STORAGE_BUCKET_NAME, PRIVATE_MEDIA_LOCATION + "/" + album_path, ExtraArgs={'ContentType': 'image/jpeg'})
+                        print(f"UPLOADED: {path}")
 
 print("IMAGE UPLOADER COMPLETE")
