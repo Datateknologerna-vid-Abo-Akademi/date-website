@@ -9,35 +9,28 @@
     <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
 </head>
     <div class="container-soft">
-        <div class="hero-text-box">
-        {% if type == 'pictures' %}
-            <h1 class="hero-text-main">&nbsp; {% trans "Bild arkiv" %} &nbsp;</h1>
-            {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse" %}
-                <h3><a class="button" href="{% url 'archive:upload' %}"> Skapa nytt album</a></h3>
-            {% endif %}
-        {% endif %}
-
+        <div class="collection-grid">
+            <div class="hero-text-box">
+                {% if type == 'pictures' %}
+                    <h1 class="hero-text-main">&nbsp; {% trans "Bild arkiv" %} &nbsp;</h1>
+                    {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse" %}
+                        <h3><a class="button" href="{% url 'archive:upload' %}"> Skapa nytt album</a></h3>
+                    {% endif %}
+                {% endif %}
+                </div>
+        
+                {% if years %}
+                <ul class="years">
+                    {% for year in years %}
+                            <a  href="{% url 'archive:pictures' year %}">
+                                <li class="year">{{ year }}</li>
+                            </a>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                    <h3>{% trans "Inga arkiv hittades" %}</h3>
+                {% endif %}
         </div>
-        {% if collections %}
-        <ul class="collection-frame">
-            {% for collection in collections %}
-                <li class="collection-item">
-                    <a  href="{% url 'archive:detail' collection.id %}">
-                        {% if collection.title|length > 20 %}
-                            <h4>{{ collection.title|slice:"20" }}...</h4>
-                        {% else %}
-                            <h3>{{ collection.title }}</h3>
-                        {% endif %}
-                        <img src="{{ collection.get_first_picture.image.url }}">
-                        <p>{{ collection.pub_date_pretty }}<span id="picture-count">{{ collection.get_file_count }} {% trans 'Bilder' %}</span></p>
-                    </a>
-                </li>
-            {% endfor %}
-
-        </ul>
-        {% else %}
-            <h3>{% trans "Inga arkiv hittades" %}</h3>
-        {% endif %}
     </div>
 {% endblock %}
 
