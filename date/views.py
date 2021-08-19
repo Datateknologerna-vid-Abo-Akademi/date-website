@@ -3,6 +3,7 @@ import datetime
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.utils import translation
+from django.utils import timezone
 
 from events.models import Event
 from news.models import Post
@@ -18,7 +19,17 @@ def index(request):
 
     events = Event.objects.filter(published=True, event_date_end__gte=d).order_by(
         'event_date_start')
-    news = Post.objects.filter(published=True).reverse()[:2]
+    news = Post.objects.filter(published=True, albins_angels=False).reverse()[:2]
+
+    # Show Albins Angels logo if new post in last 10 days
+    aa_posts = Post.objects.filter(published=True, albins_angels=True).order_by('published_time').reverse()[:1]
+    time_since = timezone.now() - datetime.timedelta(days=10)
+    aa_post = ''
+    if aa_posts and aa_posts[0].published_time > time_since:
+        aa_post = aa_posts[0]
+
+
+
     context = {
         'events': events,
         'news': news,
@@ -29,6 +40,7 @@ def index(request):
         'prev_month': cm.prev_month(),
         'next_month': cm.next_month(),
         'curr_month': cm.curr_month_as_string(),
+        'aa_post': aa_post,
     }
 
     return render(request, 'date/start.html', context)

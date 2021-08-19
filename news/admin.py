@@ -6,7 +6,7 @@ from news.models import Post
 
 class PostAdmin(admin.ModelAdmin):
 
-    list_display = ('title', 'author', 'created_time', 'modified_time', 'published')
+    list_display = ('title', 'author', 'created_time', 'modified_time', 'published', 'albins_angels')
     search_fields = ('title', 'author', 'created_time')
 
     def add_view(self, request, form_url='', extra_context=None):
