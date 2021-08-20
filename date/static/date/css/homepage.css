@@ -213,6 +213,44 @@ div.content a:hover{
     color: var(--primaryColorLight);
 }
 
+.news-header{
+    position: relative;
+}
+
+.aa-img {
+    background-color:transparent;
+    width:35px;
+    height:35px;
+    border-radius:50px;
+    box-shadow: 0 0 6px 2px rgb(201, 115, 142);
+    -webkit-animation: pulse 2s linear 1s infinite;
+    animation: pulse 2s linear 1s infinite;
+    position: absolute;
+    left: 95%;
+    bottom: 0%;
+  }
+
+
+.aa-img img{
+    max-width: 100%;
+    border-radius: 20px;
+    -webkit-filter: saturate(45%); /* Safari 6.0 - 9.0 */
+    filter: saturate(45%);
+}
+
+@-webkit-keyframes pulse {
+    0% { box-shadow:0 0 6px 2px rgb(201, 115, 142);}
+    50% { box-shadow:0 0 14px 2px rgb(201, 115, 142);}
+    100% { box-shadow:0 0 6px 2px rgb(201, 115, 142);}
+}
+
+@keyframes pulse {
+    0% { box-shadow:0 0 6px 2px rgb(201, 115, 142); }
+    50% { box-shadow:0 0 14px 2px rgb(201, 115, 142); }
+    100% { box-shadow:0 0 6px 2px rgb(201, 115, 142); }
+}
+    
+
 /*News end*/
 
 /*Sidebar*/
@@ -230,6 +268,7 @@ div.content a:hover{
 .mobile-events-container{
     grid-area: events;
     display: none;
+    margin-bottom: 10px;
 }
 
 .events{
@@ -661,8 +700,6 @@ div.carousel img{
     .hero-text-box .hero-text-sub {
         letter-spacing: 1rem;
     }
-
-
 }
 
 @media screen and (max-width: 550px) {
@@ -697,6 +734,10 @@ div.carousel img{
         -webkit-transform: translate(-50%, -60%) scale(.3);
                 transform: translate(-50%, -60%) scale(.3);
     }
+
+    .aa-img {
+        left: 85%;
+      }
 }
 
 @media screen and (max-width: 450px) {

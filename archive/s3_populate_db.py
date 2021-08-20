@@ -18,6 +18,8 @@ from django.conf import settings
 from archive.models import Collection, Picture
 from django.db import connection,transaction
 
+FORBIDDEN_NAMES = ["documents", "cache"]
+
 logger = logging.getLogger('date')
 
 logger.info("STARTING IMAGE UPLOADER")
@@ -40,10 +42,8 @@ response = client.list_objects(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Prefix=s
 # Gets a list of years
 for obj in response.get('CommonPrefixes'):
     year = obj.get('Prefix').replace(settings.PRIVATE_MEDIA_LOCATION,"").replace("/","")
-    if year != "documents":
+    if year not in FORBIDDEN_NAMES:
         year_list.append(year)
-        logger.info(year)
-
 
 for year in year_list:
     response = client.list_objects(Bucket=settings.AWS_STORAGE_BUCKET_NAME, Prefix=settings.PRIVATE_MEDIA_LOCATION + f"/{year}/", Delimiter="/")

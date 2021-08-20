@@ -19,6 +19,7 @@ class Post(models.Model):
     modified_time = models.DateTimeField(_('Modifierad'), editable=False, null=True, blank=True)
     published = models.BooleanField(_('Publicera'), default=True)
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
+    albins_angels = models.BooleanField(('Albins Angels'), default=False)
 
     class Meta:
         verbose_name = _('nyhet')

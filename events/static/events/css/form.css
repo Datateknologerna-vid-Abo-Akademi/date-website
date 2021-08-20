@@ -1,46 +1,39 @@
 .form p{
-    margin-left: 1em;
     display: grid;
-    grid-template-columns: 1fr 4fr;
-    margin-bottom: .5em;
-}
-.form, p:nth-child(4) {
-    margin-top: 2em;
+    grid-template-columns: 30% 1fr;
+    grid-gap: 5px;
+    box-sizing: border-box;
 }
 
-.form p input[type=text],input[type=email], input[type=select] {
-    padding: 3px;
+.form p label, input, select{
+    font-family: 'Josefin Sans', sans-serif;
+    padding: 5px;
     border-radius: 5px;
-    width: 50vw;
-    height: 3vh;
-    font-size: 1.3em;
+    align-self: end;
 }
-.form p select {
-    display: block;
-    font-size: 16px;
-    font-weight: 700;
-    padding: .6em 1.4em .5em .8em;
-    color: var(--primaryColorLight);
-    width: 80%;
-    max-width: 100%;
-    box-sizing: border-box;
-    margin: 0;
-    border: 1px solid var(--primaryColorLight);
-    box-shadow: 0 1px 0 1px rgba(255,255,255,0.4);
-    border-radius: .5em;
+
+.form p input{
+    height: 20px;
 }
+
+.form p input[type=checkbox]{
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+}
+
 .button{
     background-color: var(--primaryColorLight);
     border: none;
     color: var(--secondaryColor);
-    padding: 1.5vh 3vw;
+    padding: 10px 20px;
     text-align: center;
-    text-decoration: none;
-    display: inline-block;
     font-size: 16px;
     border-radius: 5px;
     font-family: 'Josefin Sans', sans-serif;
+    cursor: pointer;
 }
+
 .button:hover{
     transition: 0.2s ease;
     background-color: var(--primaryColorLighte);
@@ -55,34 +48,14 @@
     color: var(--warning)
 }
 
-@media only screen and (min-width: 675px) {
-    form p input{
-        border-radius: 5px;
-        width: 50vw;
-        height: 3vh;
-        font-size: 3vw;
+@media only screen and (min-width: 600px) {
+    .form p{
+        grid-template-columns: 30% 350px;
     }
 }
 
-@media only screen and (min-width: 836px) {
-    form p input{
-        border-radius: 5px;
-        width: 25vw;
-        height: 3vh;
-        font-size: 1.5vw;
-    }
-
-    .form p select {
-        max-width: 50%;
-    }
-
-    .form p input[type=text],input[type=email], input[type=select] {
-        width: 20vw;
-    }
-}
-
-@media only screen and (min-width: 1237px) {
-    input{
-        border-radius: 3px;
+@media only screen and (min-width: 1200px) {
+    .form p{
+        grid-template-columns: 20% 350px;
     }
 }

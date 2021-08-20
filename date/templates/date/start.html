@@ -181,7 +181,11 @@ c-132 -94 -567 -160 -888 -133 -145 12 -285 45 -355 84 -35 20 -37 24 -44 87
     <section id="news" class="news-events text-size">
         <div id="main" class="main-container">
             <div class="feed-container">
-                <h3 class="border-bottom">Nyheter</h3>
+                <h3 class="news-header border-bottom">Nyheter 
+                    {% if aa_post %}
+                    <div class="aa-img"><a href="{% url 'news:aa_detail' aa_post.slug %}"><img src="{% static 'images/albins-angels.png' %}"/></a></div>
+                    {% endif %}
+                </h3>
                 <div class="news-container">
                     {% for ne in news%}
                         <div class="content news-box border-bottom">
