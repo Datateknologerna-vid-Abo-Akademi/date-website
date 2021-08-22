@@ -8,22 +8,41 @@
         <link rel="stylesheet" href="{% static 'news/css/style.css' %}">
     </head>
     <div class="container">
-    <div class="news-grid text-size">
-        {% for news_item in latest_news_items %}
-            <div class="news">
-                <a href="{% url 'news:detail' news_item.slug %}"><h2 class="heading">{{ news_item.title }}</h2></a>
-                <h4 class="author">{{ news_item.author }}, {{ news_item.published_time }}</h4>
-                <div class="news-content">
-                    <p>{{ news_item.content | safe | truncatewords_html:"50" }}</p>
-                </div>
-                {% if news_item.content|wordcount > 50 %}
-                    <a href="{% url 'news:detail' news_item.slug %}"><p class="more-button">{% trans 'Läs mera...' %}</p></a>
-                {% endif %}
-            </div>
-                    {% empty %}
-                <h4>{% trans "Inga nyheter, ännu" %}</h4>
+        <div class="news-grid text-size">
+            {% if latest_news_items.0.albins_angels == True %}
+                <div class="aa-img"><img src="{% static 'images/albins-angels.png' %}"/></div>
+            {% endif %}
+            {% for news_item in latest_news_items %}
+                <div class="news">
+                    <a href="
+                    {% if news_item.albins_angels == True %}
+                        {% url 'news:aa_detail' news_item.slug %}
+                    {% else %}
+                        {% url 'news:detail' news_item.slug %}
+                    {% endif %}
+                        ">
+                        <h2 class="heading">{{ news_item.title }}</h2>
+                    </a>
+                    <h4 class="author">{{ news_item.author }}, {{ news_item.published_time }}</h4>
+                    <div class="news-content">
+                        <p>{{ news_item.content | safe | truncatewords_html:"50" }}</p>
+                    </div>
 
-        {% endfor %}
-    </div>
+                    {% if news_item.content|wordcount > 50 %}
+                        <a href="
+                        {% if news_item.albins_angels == True %}
+                            {% url 'news:aa_detail' news_item.slug %}
+                        {% else %}
+                            {% url 'news:detail' news_item.slug %}
+                        {% endif %}
+                            ">
+                            <p class="more-button">{% trans 'Läs mera...' %}</p>
+                        </a>
+                    {% endif %}
+                </div>
+                {% empty %}
+                    <h4>{% trans "Inga nyheter, ännu" %}</h4>
+            {% endfor %}
+        </div>
     </div>
 {% endblock %}
