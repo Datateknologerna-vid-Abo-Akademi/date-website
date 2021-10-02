@@ -1,4 +1,4 @@
-Django==3.1.12
+Django==3.1.13
 asgiref==3.2.10
 django-ckeditor
 requests

@@ -52,7 +52,10 @@ class EventDetailView(DetailView):
             if form.is_valid():
 
                 public_info = self.object.get_registration_form_public_info()
-                ws_send(request, form, public_info)
+                # Do not send ws data on refresh after initial signup.
+                if not EventAttendees.objects.filter(email=request.POST.get('email'), event=self.object.id).first():
+                    logger.info(f"User {request.user} signed up with name: {request.POST.get('user')}")
+                    ws_send(request, form, public_info)
                 return self.form_valid(form)
             return self.form_invalid(form)
         return HttpResponseForbidden()
