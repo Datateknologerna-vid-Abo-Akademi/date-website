@@ -6,6 +6,7 @@ from django import forms
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import Max
 from django.template.defaulttags import register
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
@@ -64,6 +65,9 @@ class Event(models.Model):
 
     def get_registrations(self):
         return EventAttendees.objects.filter(event=self).order_by('attendee_nr')
+
+    def get_highest_attendee_nr(self):
+        return EventAttendees.objects.filter(event=self).aggregate(Max('attendee_nr'))
 
     def add_event_attendance(self, user, email, anonymous, preferences):
         if self.sign_up and self.published:
@@ -177,6 +181,9 @@ class EventAttendees(models.Model):
             # attendee_nr increments by 10, e.g 10,20,30,40...
             # this is needed so the admin sorting library will work.
             self.attendee_nr = (self.event.get_registrations().count()+1) * 10
+            # Add ten from highest attendee_nr so signups dont get in weird order after deletions.
+            if self.event.get_highest_attendee_nr().get('attendee_nr__max'):
+                 self.attendee_nr = self.event.get_highest_attendee_nr().get('attendee_nr__max') + 10
         if self.time_registered is None:
             self.time_registered = now()
         if isinstance(self.preferences, list):
