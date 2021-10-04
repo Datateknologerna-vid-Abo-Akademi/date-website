@@ -82,6 +82,13 @@ class Event(models.Model):
                                                                 event=self, email=email,
                                                                 time_registered=now(), preferences=user_pref,
                                                                 anonymous=anonymous)
+                # kemistklubben baal event avec settings
+                if 'baal' in str(self).lower() and user_pref.get('Avec') and user_pref.get('Avec Namn') != '':
+                    logger.debug(f"avec is true: {user_pref.get('Avec')}")
+                    EventAttendees.objects.create(user=user_pref.get('Avec Namn'),
+                                                    event=self, email='avec-' + email,
+                                                    time_registered=now(), preferences={'Avec till': user, 'Avec Diet' : user_pref.get('Avec Diet')},
+                                                    anonymous=anonymous)
 
     def cancel_event_attendance(self, user):
         if self.sign_up:

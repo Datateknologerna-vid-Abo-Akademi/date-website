@@ -1,12 +1,15 @@
 import datetime
 import os
+from django.db import models
 
 from django.http import HttpResponseForbidden
 from django.views.generic import DetailView, ListView
 from django.shortcuts import render
 from .models import Event, EventAttendees
+from staticpages.models import StaticPage, StaticPageNav
 from websocket import create_connection
 from websocket._exceptions import WebSocketBadStatusException
+from copy import deepcopy
 
 import json
 
@@ -31,7 +34,12 @@ class IndexView(ListView):
 
 class EventDetailView(DetailView):
     model = Event
-    template_name = 'events/detail.html'
+
+    def get_template_names(self):
+        template_name = 'events/detail.html'
+        if self.get_context_data().get('event').title.lower() == 'baal':
+           template_name = 'events/baal_detail.html'
+        return template_name
 
     def get_context_data(self, **kwargs):
         context = super(EventDetailView, self).get_context_data(**kwargs)
@@ -40,6 +48,11 @@ class EventDetailView(DetailView):
             context['form'] = form
         else:
             context['form'] = self.object.make_registration_form()
+        if context.get('event').title.lower() == 'baal':
+            baal_staticnav = StaticPageNav.objects.filter(category_name="Kemistbaal")
+            if len(baal_staticnav) > 0:
+                baal_staticpages = StaticPage.objects.filter(category=baal_staticnav[0].pk)
+                context['staticpages'] = baal_staticpages
 
         return context
 
@@ -63,10 +76,10 @@ class EventDetailView(DetailView):
     def form_valid(self, form):
         self.get_object().add_event_attendance(user=form.cleaned_data['user'], email=form.cleaned_data['email'],
                                                anonymous=form.cleaned_data['anonymous'], preferences=form.cleaned_data)
-        return render(self.request, self.template_name, self.get_context_data())
+        return render(self.request, self.get_template_names(), self.get_context_data())
 
     def form_invalid(self, form):
-        return render(self.request, self.template_name, self.get_context_data(form=form))
+        return render(self.request, self.get_template_names(), self.get_context_data(form=form))
 
 
 def ws_send(request, form, public_info):
@@ -76,6 +89,12 @@ def ws_send(request, form, public_info):
     try:
         ws = create_connection(path)
         ws.send(json.dumps(ws_data(form, public_info)))
+        # Send ws again if avec
+        if dict(form.cleaned_data).get('Avec') and dict(form.cleaned_data).get('Avec Namn'):
+            newform = deepcopy(form)
+            newform.cleaned_data['user'] = dict(newform.cleaned_data).get('Avec Namn')
+            public_info = ''
+            ws.send(json.dumps(ws_data(newform, public_info)))
         ws.close()
     except WebSocketBadStatusException:
         logger.error("Could not create connection for web socket")
