@@ -18,13 +18,13 @@
             <div class="baal-nav">
                 <a class="baal-link" onclick="showPage(this)" href="#/main" data-nav="main">Välkommen</a>
                 {% for page in staticpages %}
-                    <a class="baal-link" onclick="showPage(this)" href="#/{{ page.title }}" data-nav="{{ page.title }}">{{ page.title }}</a>
+                    <a class="baal-link" onclick="showPage(this)" href="#/{{ page.slug }}" data-nav="{{ page.slug }}">{{ page.title }}</a>
                 {% endfor %}
                 <a class="baal-link" onclick="showPage(this)" href="#/anmalan" data-nav="anmalan">Anmälan</a>
             </div>
             <div class="text-content">
                 {% for page in staticpages %}
-                <div id="{{ page.title }}" class="baal-content {{ page.title }} hidden">
+                <div id="{{ page.slug }}" class="baal-content {{ page.slug }} hidden">
                     <h1>{{ page.title }}</h1>
                     <p>{{ page.content | safe }}</p>
                 </div>
