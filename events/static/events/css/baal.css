@@ -3,7 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap');
 
 :root {
-    --opacityColor: rgba(227, 230, 209, 0.7);
+    --opacityColor: rgba(227, 230, 209, 0.75);
     --backdropBlur:  blur(10px);
 }
 
