@@ -10,8 +10,18 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
         <script src="{% static 'js/live-attendee-list.js' %}"></script>
+        <style>
+            .container{
+                background-image: url("{% static 'images/baalbg.png' %}");
+            }
+            @media only screen and (max-width: 850px) {
+                .container{
+                    background-image: url("{% static 'images/baalbg-mobile.png' %}");
+                }
+            }
+        </style>
     </head>
-    <div class="container" style="background-image: url({% static 'images/baalbg.png' %});">
+    <div class="container">
         <div class="container-text">
             <img class="header-logo" src="{% static 'images/HQKK.svg' %}">
             <h1 class="baal-header">XCVIII Kemistbaal</h1>
@@ -20,7 +30,8 @@
                 {% for page in staticpages %}
                     <a class="baal-link" onclick="showPage(this)" href="#/{{ page.slug }}" data-nav="{{ page.slug }}">{{ page.title }}</a>
                 {% endfor %}
-                <a class="baal-link" onclick="showPage(this)" href="#/anmalan" data-nav="anmalan">Anmälan</a>
+                <a class="baal-link" href="anmalan">Anmälan</a>
+                <a class="baal-link" onclick="showPage(this)" href="#/anmalda" data-nav="anmalda">Anmälda</a>
             </div>
             <div class="text-content">
                 {% for page in staticpages %}
@@ -36,22 +47,7 @@
             </div>
             </div>
         </div>
-        {% if event.sign_up %}
-            <div id="anmalan" class="container-form baal-content anmalan hidden">
-                <h2 id="sign-up">{% trans "Anmälning" %}</h2>
-                {% if event.registration_is_open_members and user.is_authenticated %}
-                    {% include 'events/registering.html' %}
-                {% elif event.registration_is_open_others %}
-                    {% include 'events/registering.html' %}
-                {% elif event.registation_past_due %}
-                    <h4 id="no-registration">{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }} {% trans 'sedan' %}</h4>
-                {% elif not event.registation_past_due and user.is_authenticated %}
-                    <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_members | timeuntil }}</p>
-                {% else %}
-                    <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_others | timeuntil }}</p>
-                {% endif %}
-            </div>
-            <div id="anmalan" class="container-signed baal-content anmalan hidden">
+        <div id="anmalda" class="container-signed baal-content anmalda hidden">
             {% if event|show_attendee_list %}
                 {% if event.sign_up_max_participants != 0 %}
                     <p>Det finns {{ event.sign_up_max_participants }} platser!</p>
@@ -84,7 +80,6 @@
                 <h4 id="no-attendee">{% trans 'Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta styrelsen vid behov.' %}</h4>
             {% endif %}
         </div>
-        {% endif %}
     </div>
     <script>
         $( document ).ready(function() {
