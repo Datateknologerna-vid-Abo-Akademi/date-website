@@ -37,7 +37,7 @@ DEBUG = os.environ.get('DEBUG', False)
 
 DEVELOP = os.environ.get('DEVELOP', False)
 
-ALLOWED_HOSTS = ['0.0.0.0', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['0.0.0.0', '127.0.0.1', 'localhost', 'web']
 
 
 # Application definition
