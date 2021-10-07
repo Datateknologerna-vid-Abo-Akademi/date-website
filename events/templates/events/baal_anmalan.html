@@ -36,6 +36,21 @@
             });
             $("input[type=checkbox][name=Avec]").parent().nextAll("p").toggleClass("hidden")
             $("input[type=checkbox][name=Avec]").prop( "checked", false );
+
+            $("form button").click(function(e){
+                console.log($("input[type=checkbox][name=Avec]").is(":checked"));
+                console.log($("label[for='id_Avecs Namn']").next().val() === "")
+                if ($("input[type=checkbox][name=Avec]").is(":checked")){
+                    if ($("label[for='id_Avecs Namn']").next().val() === ""){
+                        alert("Ange avecs namn")
+                        e.preventDefault()
+                    }
+                    if ($("label[for='id_Avecs e-post']").next().val() === ""){
+                        alert("Ange avecs e-post")
+                        e.preventDefault()
+                    }
+                }
+            });
         });
     </script>
 {% endblock %}
