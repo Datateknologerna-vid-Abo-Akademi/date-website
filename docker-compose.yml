@@ -33,10 +33,11 @@ services:
       - AWS_STORAGE_BUCKET_NAME=${S3_BUCKET_NAME}
       - PUBLIC_MEDIA_LOCATION=${PUBLIC_MEDIA_LOCATION}
       - PRIVATE_MEDIA_LOCATION=${PRIVATE_MEDIA_LOCATION}
-
     depends_on:
       - db
+      
   redis:
+    restart: always
     image: redis:6.0
     ports:
       - ${REDIS_PORT}:6379

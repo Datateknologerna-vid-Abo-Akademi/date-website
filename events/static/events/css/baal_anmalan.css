@@ -11,6 +11,10 @@
     color: var(--warning);
 }
 
+.warning{
+    color: rgb(216, 121, 110) !important;
+}
+
 .hidden{
     display: none !important;
 }

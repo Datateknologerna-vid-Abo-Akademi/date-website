@@ -91,7 +91,7 @@ class EventDetailView(DetailView):
 def ws_send(request, form, public_info):
     ws_schema = 'ws' if request.scheme == 'http' else 'wss'
     url = request.META.get('HTTP_HOST')
-    path = ws_schema + '://' + url + '/ws' + request.path
+    path = ws_schema + '://' + 'localhost:8000' + '/ws' + request.path
     try:
         ws = create_connection(path)
         ws.send(json.dumps(ws_data(form, public_info)))

@@ -38,33 +38,6 @@
 }
 /* fade animations end */
 
-/* nav animations start*/
-@keyframes fadeNav {
-0% {opacity:0;}
-100% {opacity:1;}
-}
-
-@-moz-keyframes fadeNav {
-0% {opacity:0;}
-100% {opacity:1;}
-}
-
-@-webkit-keyframes fadeNav {
-0% {opacity:0;}
-100% {opacity:1;}
-}
-
-@-o-keyframes fadeNav {
-0% {opacity:0;}
-100% {opacity:1;}
-}
-
-@-ms-keyframes fadeNav {
-0% {opacity:0;}
-100% {opacity:1;}
-}
-
-/* nav animations end */
 .header-logo{
     display: block;
     margin-left: auto;

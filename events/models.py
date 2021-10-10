@@ -84,8 +84,8 @@ class Event(models.Model):
                                             event=self, email=email,
                                             time_registered=now(), preferences=user_pref,
                                             anonymous=anonymous)
-                    EventAttendees.objects.create(user=user_pref.get('Avecs Namn'),
-                                                event=self, email=user_pref.get('Avecs e-post'),
+                    EventAttendees.objects.create(user=user_pref.get('Avecs Namn*'),
+                                                event=self, email=user_pref.get('Avecs e-post*'),
                                                 time_registered=now(), preferences=user_pref,
                                                 anonymous=anonymous)
                 else:
