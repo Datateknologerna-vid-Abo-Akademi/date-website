@@ -2,9 +2,11 @@ import datetime
 import os
 from django.db import models
 
+from django.core.mail import EmailMessage
 from django.http import HttpResponseForbidden, request
 from django.views.generic import DetailView, ListView
 from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
 from .models import Event, EventAttendees
 from staticpages.models import StaticPage, StaticPageNav
 from websocket import create_connection
@@ -81,6 +83,18 @@ class EventDetailView(DetailView):
         self.get_object().add_event_attendance(user=form.cleaned_data['user'], email=form.cleaned_data['email'],
                                                anonymous=form.cleaned_data['anonymous'], preferences=form.cleaned_data)
         if self.get_context_data().get('event').title.lower() == 'baal':
+            # Send email to new baal attendee
+            mail_subject = 'XCVIII Kemistbaal Anmälan'
+            message = render_to_string('events/baal_email.html', {
+                'user': 'randomuser',
+                'form': form.cleaned_data
+            })
+            to_email = form.cleaned_data['email']
+            email = EmailMessage(
+                        mail_subject, message, to=[to_email]
+            )
+            logger.info(f"New Baal Attendance: Sending email to {to_email}")
+            email.send()
             return redirect('/events/baal/#/anmalda')            
         return render(self.request, self.get_template_names(), self.get_context_data())
 
@@ -91,14 +105,16 @@ class EventDetailView(DetailView):
 def ws_send(request, form, public_info):
     ws_schema = 'ws' if request.scheme == 'http' else 'wss'
     url = request.META.get('HTTP_HOST')
-    path = ws_schema + '://' + 'localhost:8000' + '/ws' + request.path
+    if 'localhost' in url:
+        url = 'localhost:8000'
+    path = ws_schema + '://' + url + '/ws' + request.path
     try:
         ws = create_connection(path)
         ws.send(json.dumps(ws_data(form, public_info)))
         # Send ws again if avec
-        if dict(form.cleaned_data).get('Avec') and dict(form.cleaned_data).get('Avec Namn'):
+        if dict(form.cleaned_data).get('Avec') and dict(form.cleaned_data).get('Avecs Namn*'):
             newform = deepcopy(form)
-            newform.cleaned_data['user'] = dict(newform.cleaned_data).get('Avec Namn')
+            newform.cleaned_data['user'] = dict(newform.cleaned_data).get('Avecs Namn*')
             public_info = ''
             ws.send(json.dumps(ws_data(newform, public_info)))
         ws.close()

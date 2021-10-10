@@ -1,0 +1,15 @@
+{% autoescape off %}
+
+Du har anmält dig till XCVIII Kemistbaal!
+
+Vänligen kontrollera att dina preferenser är korrekta:
+
+    {% for key, value in form.items %} 
+      {{key}} - {{value}}
+    {% endfor %}
+
+Vid frågor, kontakta baalmarshalkerna på kkbaal@abo.fi
+
+Observera även att antalet platser är begränsade och att du meddelas om du har lagts till reservlistan och får plats.
+
+{% endautoescape %}
