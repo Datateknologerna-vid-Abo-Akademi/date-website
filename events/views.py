@@ -84,17 +84,7 @@ class EventDetailView(DetailView):
                                                anonymous=form.cleaned_data['anonymous'], preferences=form.cleaned_data)
         if self.get_context_data().get('event').title.lower() == 'baal':
             # Send email to new baal attendee
-            mail_subject = 'XCVIII Kemistbaal Anmälan'
-            message = render_to_string('events/baal_email.html', {
-                'user': 'randomuser',
-                'form': form.cleaned_data
-            })
-            to_email = form.cleaned_data['email']
-            email = EmailMessage(
-                        mail_subject, message, to=[to_email]
-            )
-            logger.info(f"New Baal Attendance: Sending email to {to_email}")
-            email.send()
+            send_baal_mail(form)
             return redirect('/events/baal/#/anmalda')            
         return render(self.request, self.get_template_names(), self.get_context_data())
 
@@ -134,3 +124,21 @@ def ws_data(form, public_info):
             data[str(info)] = pref[str(info)]
     print(data)
     return {"data": data}
+
+def send_baal_mail(form):
+    mail_subject = 'XCVIII Kemistbaal Anmälan'
+    for key, value in form.cleaned_data.items():
+        if isinstance(value, bool):
+            if value == True:
+                form.cleaned_data[key] = 'Ja'
+            else:
+                form.cleaned_data[key] = 'Nej'
+    message = render_to_string('events/baal_email.html', {
+        'form': form.cleaned_data
+    })
+    to_email = form.cleaned_data['email']
+    email = EmailMessage(
+                mail_subject, message, to=[to_email]
+    )
+    logger.info(f"New Baal Attendance: Sending email to {to_email}")
+    email.send()
