@@ -78,11 +78,21 @@ class Event(models.Model):
                 if self.get_registration_form():
                     for item in self.get_registration_form():
                         user_pref[str(item)] = preferences.get(str(item))
-                registration = EventAttendees.objects.create(user=user,
-                                                                event=self, email=email,
-                                                                time_registered=now(), preferences=user_pref,
-                                                                anonymous=anonymous)
-
+                # kemistklubben baal event avec settings
+                if 'baal' in str(self).lower() and user_pref.get('Avec'):
+                    EventAttendees.objects.create(user=user,
+                                            event=self, email=email,
+                                            time_registered=now(), preferences=user_pref,
+                                            anonymous=anonymous)
+                    EventAttendees.objects.create(user=user_pref.get('Avecs Namn*'),
+                                                event=self, email=user_pref.get('Avecs e-post*'),
+                                                time_registered=now(), preferences=user_pref,
+                                                anonymous=anonymous)
+                else:
+                    registration = EventAttendees.objects.create(user=user,
+                                                event=self, email=email,
+                                                time_registered=now(), preferences=user_pref,
+                                                anonymous=anonymous)
     def cancel_event_attendance(self, user):
         if self.sign_up:
             registration = EventAttendees.objects.get(user=user, event=self)

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% load app_filters %}
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block content %}
+    <head>
+        <link rel="stylesheet" href="{% static 'events/css/baal_anmalan.css' %}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+    </head>
+    <div class="container">
+        {% if event.sign_up %}
+            <div id="anmalan" class="container-form baal-content anmalan">
+                <div class="baal-nav"><a class="baal-link" href="/events/baal/">Tillbaka</a></div>
+                <h2 id="sign-up">{% trans "Kemistbaal Anmälning" %}</h2>
+                {% if event.registration_is_open_members and user.is_authenticated %}
+                    {% include 'events/registering.html' %}
+                {% elif event.registration_is_open_others %}
+                    {% include 'events/registering.html' %}
+                {% elif event.registation_past_due %}
+                    <h4 id="no-registration">{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }} {% trans 'sedan' %}</h4>
+                {% elif not event.registation_past_due and user.is_authenticated %}
+                    <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_members | timeuntil }}</p>
+                {% else %}
+                    <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_others | timeuntil }}</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+    <script>
+        $( document ).ready(function() {
+            $("input[type=checkbox][name=Avec]").click(function(){
+                $(this).parent().nextAll("p").toggleClass("hidden");
+            });
+            $("input[type=checkbox][name=Avec]").parent().nextAll("p").toggleClass("hidden")
+            $("input[type=checkbox][name=Avec]").prop( "checked", false );
+
+            $("form button").click(function(e){
+                console.log($("input[type=checkbox][name=Avec]").is(":checked"));
+                console.log($("label[for='id_Avecs Namn']").next().val() === "")
+                if ($("input[type=checkbox][name=Avec]").is(":checked")){
+                    if ($("label[for='id_Avecs Namn*']").next().val() === ""){
+                        alert("Ange avecs namn")
+                        e.preventDefault()
+                    }
+                    if ($("label[for='id_Avecs e-post*']").next().val() === ""){
+                        alert("Ange avecs e-post")
+                        e.preventDefault()
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

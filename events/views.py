@@ -1,12 +1,17 @@
 import datetime
 import os
+from django.db import models
 
-from django.http import HttpResponseForbidden
+from django.core.mail import EmailMessage
+from django.http import HttpResponseForbidden, request
 from django.views.generic import DetailView, ListView
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
 from .models import Event, EventAttendees
+from staticpages.models import StaticPage, StaticPageNav
 from websocket import create_connection
 from websocket._exceptions import WebSocketBadStatusException
+from copy import deepcopy
 
 import json
 
@@ -29,9 +34,24 @@ class IndexView(ListView):
         return context
 
 
+def baal_home(request):
+    context = {}
+    context['event'] = Event.objects.filter(title='Baal').first()
+    baal_staticnav = StaticPageNav.objects.filter(category_name="Kemistbaal")
+    if len(baal_staticnav) > 0:
+        baal_staticpages = StaticPage.objects.filter(category=baal_staticnav[0].pk)
+        context['staticpages'] = baal_staticpages
+    return render(request, 'events/baal_detail.html', context)
+
+
 class EventDetailView(DetailView):
     model = Event
-    template_name = 'events/detail.html'
+
+    def get_template_names(self):
+        template_name = 'events/detail.html'
+        if self.get_context_data().get('event').title.lower() == 'baal':
+           template_name = 'events/baal_anmalan.html'
+        return template_name
 
     def get_context_data(self, **kwargs):
         context = super(EventDetailView, self).get_context_data(**kwargs)
@@ -40,7 +60,6 @@ class EventDetailView(DetailView):
             context['form'] = form
         else:
             context['form'] = self.object.make_registration_form()
-
         return context
 
     def post(self, request, *args, **kwargs):
@@ -63,19 +82,31 @@ class EventDetailView(DetailView):
     def form_valid(self, form):
         self.get_object().add_event_attendance(user=form.cleaned_data['user'], email=form.cleaned_data['email'],
                                                anonymous=form.cleaned_data['anonymous'], preferences=form.cleaned_data)
-        return render(self.request, self.template_name, self.get_context_data())
+        if self.get_context_data().get('event').title.lower() == 'baal':
+            # Turn off baal mail
+            #send_baal_mail(form)
+            return redirect('/events/baal/#/anmalda')            
+        return render(self.request, self.get_template_names(), self.get_context_data())
 
     def form_invalid(self, form):
-        return render(self.request, self.template_name, self.get_context_data(form=form))
+        return render(self.request, self.get_template_names(), self.get_context_data(form=form))
 
 
 def ws_send(request, form, public_info):
     ws_schema = 'ws' if request.scheme == 'http' else 'wss'
     url = request.META.get('HTTP_HOST')
+    if 'localhost' in url:
+        url = 'localhost:8000'
     path = ws_schema + '://' + url + '/ws' + request.path
     try:
         ws = create_connection(path)
         ws.send(json.dumps(ws_data(form, public_info)))
+        # Send ws again if avec
+        if dict(form.cleaned_data).get('Avec') and dict(form.cleaned_data).get('Avecs Namn*'):
+            newform = deepcopy(form)
+            newform.cleaned_data['user'] = dict(newform.cleaned_data).get('Avecs Namn*')
+            public_info = ''
+            ws.send(json.dumps(ws_data(newform, public_info)))
         ws.close()
     except WebSocketBadStatusException:
         logger.error("Could not create connection for web socket")
@@ -93,3 +124,21 @@ def ws_data(form, public_info):
             data[str(info)] = pref[str(info)]
     print(data)
     return {"data": data}
+
+def send_baal_mail(form):
+    mail_subject = 'XCVIII Kemistbaal Anmälan'
+    for key, value in form.cleaned_data.items():
+        if isinstance(value, bool):
+            if value == True:
+                form.cleaned_data[key] = 'Ja'
+            else:
+                form.cleaned_data[key] = 'Nej'
+    message = render_to_string('events/baal_email.html', {
+        'form': form.cleaned_data
+    })
+    to_email = form.cleaned_data['email']
+    email = EmailMessage(
+                mail_subject, message, to=[to_email]
+    )
+    logger.info(f"New Baal Attendance: Sending email to {to_email}")
+    email.send()
