@@ -83,8 +83,8 @@ class EventDetailView(DetailView):
         self.get_object().add_event_attendance(user=form.cleaned_data['user'], email=form.cleaned_data['email'],
                                                anonymous=form.cleaned_data['anonymous'], preferences=form.cleaned_data)
         if self.get_context_data().get('event').title.lower() == 'baal':
-            # Send email to new baal attendee
-            send_baal_mail(form)
+            # Turn off baal mail
+            #send_baal_mail(form)
             return redirect('/events/baal/#/anmalda')            
         return render(self.request, self.get_template_names(), self.get_context_data())
 
