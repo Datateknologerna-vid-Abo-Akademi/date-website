@@ -115,7 +115,7 @@ class Event(models.Model):
     def get_registration_form(self):
         if EventRegistrationForm.objects.filter(event=self).count() == 0:
             return None
-        return EventRegistrationForm.objects.filter(event=self)
+        return EventRegistrationForm.objects.filter(event=self).order_by('-id')
 
     def get_registration_form_public_info(self):
         return EventRegistrationForm.objects.filter(event=self, public_info=True)
