@@ -288,6 +288,9 @@
                     </svg>
                 </div>
             </div>
+            <h1 class="header">{{ event.title }}</h1>
+            <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
+            <p>{{ event.content | safe }}</p>
         </div>
         {% if event.sign_up %}
             <div class="container-form">
