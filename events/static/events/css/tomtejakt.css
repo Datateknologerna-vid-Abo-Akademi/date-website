@@ -1,0 +1,269 @@
+@import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&display=swap');
+
+:root {
+
+}
+
+.hidden{
+    display: none;
+}
+
+.header-bar{
+    display: none;
+}
+
+.container-text img {
+    max-height: 50vh;
+    max-width: 100%;
+    /* keep img ratio correct */
+      width: auto !important;
+      height: auto !important;
+}
+
+.container{
+    background-color: #F2ECC6;
+    padding-top: 10vh;
+    min-height: 100vh;
+    /*font-family: 'Josefin Sans', sans-serif;*/
+    font-family: 'Mountains of Christmas', cursive;
+    text-align: start;
+    align-content: start;
+    font-size: 1.7em;
+    font-weight: bold;
+    padding: 0;
+    border-radius: 5px;
+    color: rgb(41, 41, 41);
+}
+
+.container{
+    display: grid;
+    grid-template-columns: 1fr 800px 1fr;
+    grid-template-rows: auto;
+    grid-template-areas: 
+      ". information ."
+      ". signup-form ."
+      ". signed-table .";
+      grid-row-gap: 10px;
+}
+
+/* header svgs */
+
+@keyframes fadeIn {
+    0% {opacity:0;}
+    50% {transform: scale(1.1);}
+    100% {opacity:1;}
+    }
+
+@keyframes elfWalk {
+    0% {opacity:0; left:70%; transform: rotate(0deg);}
+    20% {opacity:0;}
+    25% {opacity:0.5; left: 60%; transform: rotate(-25deg);}
+    40% {opacity:0;}
+    50% {opacity: 0.5; left: 50%; transform: rotate(0deg);}
+    60% {opacity:0;}
+    75% {opacity: 0.5; left: 40%; transform: rotate(25deg);}
+    90% {opacity:0;}
+    100% {opacity: 0 ;left: 20%; transform: rotate(0deg);}
+    }
+
+@keyframes elfWiggle {
+    0% {transform: rotate(0deg);}
+    25% {transform: rotate(10deg);}
+    50% {transform: rotate(0deg);}
+    75% {transform: rotate(-10deg);}
+    100% {transform: rotate(0deg);}
+    }
+
+@keyframes treeShadow {
+    0% {filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 2px #006c33);}
+    25% {filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 6px #009947);}
+    50% {filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 14px #00c05a);}
+    75% {filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 6px #009947);}
+    100% {filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 2px #006c33);}
+    }
+
+
+
+.tomte-header{
+    margin-top: 20px;
+}
+
+.icon,
+.text {
+    vertical-align: middle;
+    display: inline-block;
+}
+
+.header-span{
+}
+
+.tomte-header .text{
+    font-size: 40px;
+    text-shadow: 1px 1px 2px rgb(0, 0, 0);
+    animation: fadeIn linear 2s;
+}
+
+.container .sitting-elf svg{
+    width: 100px;
+    height: 100px;
+    animation: elfWiggle linear 10s infinite;
+    filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%);
+}
+    
+.container .tree-svg svg{
+    width: 500px;
+    height: 500px;
+    display: block;
+    margin: auto;
+    filter: invert(92%) sepia(15%) saturate(475%) hue-rotate(353deg) brightness(104%) contrast(90%) drop-shadow(2px -2px 2px rgb(0, 0, 0));
+    animation: treeShadow 5s linear infinite;
+    transition: 1s;
+}
+
+.container .elf-svg svg{
+    position: absolute;
+    left: 70%;
+    top: 50%;
+    width: 100px;
+    height: 100px;
+    display: block;
+    margin: auto;
+    animation: elfWalk ease-in-out 15s infinite;
+}
+
+.tomte-header{
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* header svgs end */
+
+.container-text{
+    grid-area: information;
+    padding: 20px;
+    border-radius: 5px;
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+}
+.container-text, h4 {
+    margin: 0.1em;
+}
+
+div.container-text a{
+    display: inline-block;
+    color: var(--linkColor);
+}
+
+div.container-text a:hover{
+    transition: 0.3s;
+    color: var(--primaryColorLight);
+}
+
+.container-form{
+    grid-area: signup-form;
+    padding: 20px;
+    border-radius: 5px;
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.container-signed {
+    grid-area: signed-table;
+    margin-bottom: 20rem;
+    padding: 20px;
+    border-radius: 5px;
+    overflow: scroll;
+
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+form label{
+    font-family: 'Mountains of Christmas', cursive !important;
+}
+
+form button{
+    background-color: #006c33 !important;
+}
+
+form button:hover{
+    background-color: #019b49 !important;
+    color: rgb(41, 41, 41) !important;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.container-signed::-webkit-scrollbar {
+    display: none;
+  }
+  
+
+.header {
+    margin: 0;
+}
+
+table {
+    border-collapse: collapse;
+    width: 80%;
+    font-size: 1.3em;
+}
+
+.event-full{
+    color: gray;
+}
+
+th {
+    padding-bottom: 1rem;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+}
+tr:hover {
+    transition: 200ms;
+    background-color: #006c33;
+    color: #e096a2;
+}
+
+footer{
+    display: none;
+}
+
+
+@media only screen and (max-width: 1000px) {
+    .container{
+        grid-template-columns: 3vw 1fr 3vw;
+    }
+    .container .tree-svg svg{
+        width: 400px;
+        height: 400px;
+
+    }
+    .container .elf-svg svg{
+        left: 70%;
+        top: 40%;
+    }
+}
+
+@media only screen and (max-width: 850px) {
+    .header-bar{
+        display: initial;
+    }
+    .container{
+        grid-template-columns: 3vw 1fr 3vw;
+    }
+    .container .tree-svg svg{
+        width: 250px;
+        height: 250px;
+    }
+    .container .elf-svg svg{
+        left: 70%;
+        top: 25%;
+    }
+    .container .sitting-elf svg{
+        width: 65px;
+        height: 65px;
+    }
+}

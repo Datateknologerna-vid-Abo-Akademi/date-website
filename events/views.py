@@ -51,6 +51,8 @@ class EventDetailView(DetailView):
         template_name = 'events/detail.html'
         if self.get_context_data().get('event').title.lower() == 'baal':
            template_name = 'events/baal_anmalan.html'
+        if 'tomtejakt' in self.get_context_data().get('event').title.lower():
+           template_name = 'events/tomtejakt.html'
         return template_name
 
     def get_context_data(self, **kwargs):
