@@ -51,6 +51,8 @@ class EventDetailView(DetailView):
         template_name = 'events/detail.html'
         if self.get_context_data().get('event').title.lower() == 'baal':
            template_name = 'events/baal_anmalan.html'
+        if 'tomtejakt' in self.get_context_data().get('event').title.lower():
+           template_name = 'events/tomtejakt.html'
         return template_name
 
     def get_context_data(self, **kwargs):
@@ -64,7 +66,7 @@ class EventDetailView(DetailView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if self.object.sign_up and self.object.published and (request.user.is_authenticated
+        if self.object.sign_up and (request.user.is_authenticated
                                                               and self.object.registration_is_open_members()
                                                               or self.object.registration_is_open_others()):
             form = self.object.make_registration_form().__call__(data=request.POST)
