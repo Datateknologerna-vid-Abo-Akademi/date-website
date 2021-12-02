@@ -1,9 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&display=swap');
+
 .container{
     background-color: var(--luciaBackgroundColor);
     padding-top: 5vh;
     padding-bottom: 5vh;
     min-height: 90vh;
-    font-family: 'Monotype Corsiva', cursive;
+    font-family: 'Mountains of Christmas', cursive;
     align-content: start;
     color:var(--luciaBackgroundColor);
 }
@@ -14,6 +16,11 @@
 
 footer{
     display: none;
+}
+
+
+article{
+    margin-bottom: 50px;
 }
 
 .container{
