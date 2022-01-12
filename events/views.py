@@ -23,8 +23,7 @@ class IndexView(ListView):
         context['event_list'] = Event.objects.filter(published=True,
                                                      event_date_end__gte=datetime.date.today()).order_by(
             'event_date_start')
-        context['past_events'] = Event.objects.filter(published=True, event_date_start__year=datetime.date.today().year,
-                                                      event_date_end__lte=datetime.date.today()).order_by(
+        context['past_events'] = Event.objects.filter(published=True, event_date_end__lte=datetime.date.today()).order_by(
             'event_date_start').reverse()
         return context
 
