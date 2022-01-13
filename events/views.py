@@ -23,8 +23,7 @@ class IndexView(ListView):
         context['event_list'] = Event.objects.filter(published=True,
                                                      event_date_end__gte=datetime.date.today()).order_by(
             'event_date_start')
-        context['past_events'] = Event.objects.filter(published=True, event_date_start__year=datetime.date.today().year,
-                                                      event_date_end__lte=datetime.date.today()).order_by(
+        context['past_events'] = Event.objects.filter(published=True, event_date_end__lte=datetime.date.today()).order_by(
             'event_date_start').reverse()
         return context
 
@@ -45,7 +44,7 @@ class EventDetailView(DetailView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if self.object.sign_up and self.object.published and (request.user.is_authenticated
+        if self.object.sign_up and (request.user.is_authenticated
                                                               and self.object.registration_is_open_members()
                                                               or self.object.registration_is_open_others()):
             form = self.object.make_registration_form().__call__(data=request.POST)
