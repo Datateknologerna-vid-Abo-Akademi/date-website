@@ -3,3 +3,52 @@ html body{
     color: var(--secondaryColorDarker);
     font-family: 'Josefin Sans', sans-serif;
 }
+
+div img{
+    max-height: 35vh;
+    max-width: 100%;
+    /* keep img ratio correct */
+    width: auto !important;
+    height: auto !important;
+    border-radius: var(--defaultRadius);
+}
+
+/* Link colors */
+div a{
+    color: var(--linkColorSecondary);
+    display: inline-block;
+    text-decoration: none;
+}
+
+div a:hover{
+    transition: 0.3s;
+    color: var(--linkSecondaryHover);
+}
+/* ---- */
+
+.break-words{
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.help-text{
+    color: var(--helpText);
+}
+
+.container-margin-top {
+    margin-top: 10vh;
+}
+
+.container-size{
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.content{
+    margin: 20px 2vw;
+    background-color: var(--primaryColorLighter);
+    padding: var(--defaultPadding);
+    border-radius: var(--defaultRadius);
+}
+
