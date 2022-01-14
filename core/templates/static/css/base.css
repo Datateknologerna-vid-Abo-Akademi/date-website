@@ -4,7 +4,7 @@ html body{
     font-family: 'Josefin Sans', sans-serif;
 }
 
-div img{
+.content img{
     max-height: 35vh;
     max-width: 100%;
     /* keep img ratio correct */
