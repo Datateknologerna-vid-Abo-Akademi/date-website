@@ -32,9 +32,15 @@ div a:hover{
     hyphens: auto;
 }
 
+/* TEXT COLORS */
 .help-text{
     color: var(--helpText);
 }
+
+.warning{
+    color: var(--warning);
+}
+/* ---- */
 
 .container-margin-top {
     margin-top: 10vh;
