@@ -1,94 +1,36 @@
-.container {
-  display: grid;
-  gap: 2rem;
-  grid-auto-rows: minmax(100px, auto);
-  background-color: var(--primaryColor);
-  padding: 10vh 20vw 0 20vw;
-  min-height: 100vh;
-  color: var(--secondaryColor);
-  font-family: "Josefin Sans", sans-serif;
-  align-content: start;
-  text-align: center;
+.card {
+  border-radius: var(--defaultRadius);
 }
 
-.heading {
-  grid-row: 1;
-}
-.heading span {
-  border-bottom: 2px solid;
+.evet-card > .card .list-inline-item {
+  color: var(--helpText);
+  font-size: 14px;
 }
 
-.container-box-coming {
-  grid-row: 2;
-  display: grid;
-  grid-template-columns: auto;
-  grid-auto-rows: minmax(150px, auto);
-  gap: 1rem;
+.evet-card > .card .badge {
+  background: var(--helpText);
 }
 
-.event-card {
-  background-color: var(--secondaryColor);
-  color: var(--primaryColor);
-  position: relative;
-  padding: 1rem;
-  margin: 10px;
-  font-size: 1.2em;
-  font-weight: bold;
-  border-radius: 5px;
-  transition: .3s all;
-  -webkit-box-shadow: 3px -3px 0px 0px var(--linkColor);
-  -moz-box-shadow: 3px -3px 0px 0px var(--linkColor);
-  box-shadow: 3px -3px 0px 0px var(--linkColor);
+.evet-card > .card {
+  background: var(--primaryColorLight);
 }
 
-.event-card:hover {
-  transform: scale(1.01);
-  color: var(--primaryColorLight);
-  -webkit-box-shadow: 0px 0px 0px 0px var(--linkColor);
-  -moz-box-shadow: 0px 0px 0px 0px var(--linkColor);
-  box-shadow: 0px 0px 0px 0px var(--linkColor);
+.card-body a{
+  color: var(--linkColorSecondary);
+  border-color: var(--linkColorSecondary);
 }
 
-.event-card p {
-  margin-bottom: 2em;
+.card-body a:active{
+  color: var(--linkColorSecondary);
 }
 
-.event-card .date {
-  position: absolute;
-  float: left;
-  padding-left: 1rem;
-  bottom: 0;
+.card-body a:hover{
+  background-color: inherit;
+  color: var(--linkSecondaryHover);
+  border-color: var(--linkSecondaryHover);
 }
 
-.date h3{
-  margin-bottom: 10px;
-  margin-top: 10px;
-}
-
-.container-box-past {
-  grid-row: 3;
-  gap: 2rem;
-}
-.empty-content-past {
-  margin-top: 4rem;
-}
-
-.event-past a {
-  color: var(--secondaryColor);
-  transition: .3s;
-}
-
-.event-past a:hover{
-  color: var(--linkColor)
-}
-
-@media only screen and (max-width: 600px) {
-  .container {
-    padding: 6rem 2px 1rem 2px;
-  }
-
-  .event-card .date {
-    position: relative;
-    float: none;
-  }
+.card-body a:focus{
+  background-color: inherit;
+  box-shadow: none;
 }

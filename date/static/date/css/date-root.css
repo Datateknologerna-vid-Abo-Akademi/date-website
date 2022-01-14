@@ -3,9 +3,9 @@
 
 :root {
     --primaryColor: #000;
-    --primaryColorLighter:  #202020;
+    --primaryColorLight:  #202020;
     --primaryColorLighte:#3d3d3d;
-    --primaryColorLight:#505050;
+    --primaryColorLighter:#505050;
     --primaryColorTransparent: rgba(0,0,0,0.9);
     --primaryColorTransparenter: rgba(0,0,0,0.8);
     --secondaryColor: #fff;

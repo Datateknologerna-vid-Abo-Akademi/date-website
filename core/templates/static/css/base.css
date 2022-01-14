@@ -47,7 +47,7 @@ div a:hover{
 
 .content{
     margin: 20px 2vw;
-    background-color: var(--primaryColorLighter);
+    background-color: var(--primaryColorLight);
     padding: var(--defaultPadding);
     border-radius: var(--defaultRadius);
 }
