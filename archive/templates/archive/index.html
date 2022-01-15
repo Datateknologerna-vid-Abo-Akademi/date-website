@@ -8,28 +8,43 @@
 <head>
     <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
 </head>
-    <div class="container-soft">
-        <div class="collection-grid">
-            <div class="hero-text-box">
-                {% if type == 'pictures' %}
-                    <h1 class="hero-text-main">&nbsp; {% trans "Bildarkiv" %} &nbsp;</h1>
-                    {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse" %}
-                        <h3><a class="button" href="{% url 'archive:upload' %}"> Skapa nytt album</a></h3>
-                    {% endif %}
+    <div class="container-md min-vh-100 container-margin-top">
+        <div class="container-size" style="max-width: 600px;">
+            {% if type == 'pictures' %}
+                <h1 class="text-center">&nbsp; {% trans "Bildarkiv" %} &nbsp;</h1>
+                {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse" %}
+                    <h3><a class="button" href="{% url 'archive:upload' %}"> Skapa nytt album</a></h3>
                 {% endif %}
-                </div>
-        
-                {% if years %}
-                <ul class="years">
-                    {% for year in years %}
-                            <a  href="{% url 'archive:pictures' year %}">
-                                <li class="year">{{ year }}</li>
-                            </a>
+            {% endif %}
+            <div class="row">
+                <div class="col-md-12">
+                    {% for year, album_count in year_albums.items %}
+                        <div class="card-group evet-card text-light mb-2">
+                            <div class="card mb-0 p-1">
+                                <div class="card-body py-1">
+                                    <div class="row display-6">
+                                        <div class="col-5">
+                                            <div>
+                                                <span class="badge">{{ year }}</span>
+                                            </div>
+                                            <div>
+                                                <span>{{ album_count }} Album</span>
+                                            </div>
+                                        </div>
+                                        <div style="margin: auto;" class="col-7 d-flex justify-content-end">
+                                            <div>
+                                                <a href="{% url 'archive:pictures' year %}"><i class="far fa-images"></i> {{ year }} <i class="fas fa-chevron-right fa-lg"></i></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <h3>{% trans "Inga arkiv hittades" %}</h3>
                     {% endfor %}
-                </ul>
-                {% else %}
-                    <h3>{% trans "Inga arkiv hittades" %}</h3>
-                {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}
