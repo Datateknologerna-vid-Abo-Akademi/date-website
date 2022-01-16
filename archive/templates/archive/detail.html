@@ -10,11 +10,11 @@
     </head>
 
 
-    <div class="container-soft">
-        <div class="collection-grid">
-            <div class="hero-text-box" id="page-header">
+    <div class="container-md min-vh-100 container-margin-top">
+        <div class="">
+            <div class="text-center" id="page-header">
                 <h1 class="hero-text-main">&nbsp; {{ album }} &nbsp;</h1>
-                <h3>{% trans 'Publiserats' %} {{ collection.pub_date_pretty }}</h3>
+                <h3>{% trans 'Publiserats' %} <i class="far fa-calendar-alt"></i> {{ collection.pub_date_pretty }}</h3>
                 {% if error_msg %}
                     <p>{{ error_msg }}</p>
                 {% endif %}
@@ -24,9 +24,9 @@
                 <div class="center">
                     <div class="pagination">
                         {% if pictures.has_previous %}
-                            <a href="?page={{ pictures.previous_page_number }}">&laquo;</a>
+                            <a href="?page={{ pictures.previous_page_number }}"><i class="fas fa-backward"></i></a>
                         {% else %}
-                            <a class="disabled">&laquo;</a>
+                            <a class="disabled"><i class="fas fa-backward"></i></a>
                         {% endif %}
                         {% for i in pictures.paginator.page_range %}
                             {% if pictures.number == i %}
@@ -36,9 +36,9 @@
                             {% endif %}
                         {% endfor %}
                         {% if pictures.has_next %}
-                            <a href="?page={{ pictures.next_page_number }}">&raquo;</a>
+                            <a href="?page={{ pictures.next_page_number }}"><i class="fas fa-forward"></i></a>
                         {% else %}
-                            <a class="disabled">&raquo;</a>
+                            <a class="disabled"><i class="fas fa-forward"></i></a>
                         {% endif %}
                     </div>
                 </div>
@@ -57,9 +57,9 @@
                 <div class="center">
                     <div class="pagination">
                         {% if pictures.has_previous %}
-                            <a href="?page={{ pictures.previous_page_number }}">&laquo;</a>
+                            <a href="?page={{ pictures.previous_page_number }}"><i class="fas fa-backward"></i></a>
                         {% else %}
-                            <a class="disabled">&laquo;</a>
+                            <a class="disabled"><i class="fas fa-backward"></i></a>
                         {% endif %}
                         {% for i in pictures.paginator.page_range %}
                             {% if pictures.number == i %}
@@ -69,9 +69,9 @@
                             {% endif %}
                         {% endfor %}
                         {% if pictures.has_next %}
-                            <a href="?page={{ pictures.next_page_number }}">&raquo;</a>
+                            <a href="?page={{ pictures.next_page_number }}"><i class="fas fa-forward"></i></a>
                         {% else %}
-                            <a class="disabled">&raquo;</a>
+                            <a class="disabled"><i class="fas fa-forward"></i></a>
                         {% endif %}
                     </div>
                 </div>

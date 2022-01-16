@@ -19,35 +19,61 @@
     transform: translateX(10px);
 }
 
-  .evet-card > .card .list-inline-item {
+.evet-card > .card .list-inline-item {
     color: var(--helpText);
     font-size: 14px;
   }
   
-  .evet-card > .card .badge {
+.evet-card > .card .badge {
     background: var(--helpText);
   }
   
-  .evet-card > .card {
+.evet-card > .card, .grid-item .card{
     background: var(--primaryColorLight);
   }
   
-  .card-body a{
+.card-body a{
     color: var(--linkColorSecondary);
     border-color: var(--linkColorSecondary);
   }
   
-  .card-body a:active{
+.card-body a:active{
     color: var(--linkColorSecondary);
   }
   
-  .card-body a:hover{
+.card-body a:hover{
     background-color: inherit;
     color: var(--linkSecondaryHover);
     border-color: var(--linkSecondaryHover);
   }
   
-  .card-body a:focus{
+.card-body a:focus{
     background-color: inherit;
     box-shadow: none;
   }
+
+  /* Masonary image gallery */
+.grid {
+    margin: 0 auto;
+    max-width: 100%;
+  }
+
+/* fluid 5 columns */
+.grid-sizer,
+.grid-item { 
+    width: 97%;
+    margin: 5px;
+    text-align: center;
+}
+
+.grid-item .card{
+    border-radius: var(--defaultRadius);
+    width: 100% !important;
+}
+
+@media only screen and (min-width: 768px) {
+    .grid-sizer,
+    .grid-item { 
+        width: 32.5%;
+    }
+}
