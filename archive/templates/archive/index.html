@@ -20,25 +20,25 @@
                 <div class="col-md-12">
                     {% for year, album_count in year_albums.items %}
                         <div class="card-group evet-card text-light mb-2">
-                            <div class="card mb-0 p-1">
+                            <a href="{% url 'archive:pictures' year %}" class="card mb-0 p-1">
                                 <div class="card-body py-1">
                                     <div class="row display-6">
                                         <div class="col-5">
                                             <div>
                                                 <span class="badge">{{ year }}</span>
                                             </div>
-                                            <div>
+                                            <div class="text-color">
                                                 <span>{{ album_count }} Album</span>
                                             </div>
                                         </div>
                                         <div style="margin: auto;" class="col-7 d-flex justify-content-end">
                                             <div>
-                                                <a href="{% url 'archive:pictures' year %}"><i class="far fa-images"></i> {{ year }} <i class="fas fa-chevron-right fa-lg"></i></a>
+                                                <i class="far fa-images"></i> {{ year }} <i class="fas fa-chevron-right fa-lg"></i>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </a>
                         </div>
                     {% empty %}
                         <h3>{% trans "Inga arkiv hittades" %}</h3>
