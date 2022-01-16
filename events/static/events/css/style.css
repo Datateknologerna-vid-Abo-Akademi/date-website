@@ -2,6 +2,14 @@
   border-radius: var(--defaultRadius);
 }
 
+.card .fa-chevron-right{
+  transition: .3s;
+}
+
+.card a:hover .fa-chevron-right{
+  transform: translateX(10px);
+}
+
 .evet-card > .card .list-inline-item {
   color: var(--helpText);
   font-size: 14px;
