@@ -1,10 +1,5 @@
 .card {
-    border-radius: var(--defaultRadius);
     transition: .3s;
-  }
-  
-.card .text-color {
-    color: var(--secondaryColorDarker);
 }
 
 .card:hover {
@@ -19,38 +14,9 @@
     transform: translateX(10px);
 }
 
-.evet-card > .card .list-inline-item {
-    color: var(--helpText);
-    font-size: 14px;
-  }
-  
-.evet-card > .card .badge {
-    background: var(--helpText);
-  }
-  
-.evet-card > .card, .grid-item .card{
+.grid-item .card {
     background: var(--primaryColorLight);
-  }
-  
-.card-body a{
-    color: var(--linkColorSecondary);
-    border-color: var(--linkColorSecondary);
-  }
-  
-.card-body a:active{
-    color: var(--linkColorSecondary);
-  }
-  
-.card-body a:hover{
-    background-color: inherit;
-    color: var(--linkSecondaryHover);
-    border-color: var(--linkSecondaryHover);
-  }
-  
-.card-body a:focus{
-    background-color: inherit;
-    box-shadow: none;
-  }
+}
 
   /* Masonary image gallery */
 .grid {

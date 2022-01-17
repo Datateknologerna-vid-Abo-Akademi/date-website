@@ -194,12 +194,12 @@
                                 <h3 class="news-title">{{ ne.title }}</h3>
                                 <h5 class="news-date">{{ ne.published_time }}</h5>
                                 <div>{{ ne.content|safe|truncatewords_html:"50"}}</div>
-                                <a class="news-button" href="{% url 'news:detail' ne.slug %}">{% trans 'Läs mera' %}...</a>
+                                <a class="news-button" href="{% url 'news:detail' ne.slug %}"><i class="fab fa-readme"></i> {% trans 'Läs mera' %}...</a>
                             </div>
                             {% empty %}
                             <h3>{% trans 'inga nyheter hittades' %}...</h3>
                         {% endfor %}
-                        <a class="more-news" href="/news/">Mera nyheter...</a>
+                        <a class="more-news" href="/news/"><i class="far fa-newspaper"></i> Mera nyheter...</a>
                     </div>
                 </div>
                 <div class="sidebar-container">
@@ -220,20 +220,50 @@
                             </div>
                         </div>
                         <div class="events">
-                            {% for ev in events|slice:":5" %}
-                                <a href="{% url 'events:detail' ev.slug %}">
-                                    <div class="event-box border-left">
-                                        <h6 class="event-title">{{ ev.title }}  </h6>
-                                        <p class="event-date">{{ ev.event_date_start_pretty|slice:6}}</p>
-                                    </div>
-                                </a>
-                                {% empty %}
-                                <h6>{% trans 'inga aktiva evenemang hittades' %}...</h6>
-                            {% endfor %}
-                            {% if events|length >= 5 %}
-                                <a class="more-events-button" href="{% url 'events:index'%}">{% trans 'Mera evenemang' %}...</a>
-                            {% endif %}
+                            <div class="row">
+                                <div class="col-md-12">
+                                    {% for ev in events|slice:":4" %}
+                                        <div class="card-group evet-card text-light mb-2">
+                                            <a href="{% url 'events:detail' ev.slug %}" class="card mb-0 p-1">
+                                                <div class="card-body py-1">
+                                                    <div class="row">
+                                                        <div style="margin: auto;" class="col-2">
+                                                            <div>
+                                                                <span class="badge">{{ ev.event_date_start|date:"d" }}</span>
+                                                            </div>
+                                                            <div class="text-color">
+                                                                <small>
+                                                                    {{ ev.event_date_start|date:"M" }}
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                        <div style="margin: auto;" class="col-8">
+                                                            <div class="d-flex flex-column">
+                                                                <small class="list-inline-item">
+                                                                    <i class="fas fa-calendar-check"></i> {{ ev.event_date_start|date:"D"}}
+                                                                    <i class="far fa-clock"></i> {{ev.event_date_start|date:"H:i"}}
+                                                                </small>
+                                                                <h6 class="card-title text-uppercase mt-0">
+                                                                    <strong>{{ ev.title }}</strong>
+                                                                </h6>
+                                                            </div>
+                                                        </div>
+                                                        <div style="margin: auto;" class="col-2">
+                                                            <i class="fas fa-chevron-right fa-lg"></i>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    {% empty %}
+                                        <h6>{% trans 'inga aktiva evenemang hittades' %}...</h6>
+                                    {% endfor %}
+                                    {% if events|length >= 4 %}
+                                        <a class="more-events-button" href="{% url 'events:index'%}"><i class="far fa-calendar-alt"></i> {% trans 'Mera evenemang' %}...</a>
+                                    {% endif %}
+                                </div>
                             </div>
+                        </div>
                     </div>
                     <div class="logo-container">
                         <h3 class="mt-3">Samarbetspartners</h3>
@@ -267,20 +297,48 @@
                         </div>
                     </div>
                     <div class="events">
-                        {% for ev in events|slice:":5" %}
-                            <a href="{% url 'events:detail' ev.slug %}">
-                                <div class="event-box border-left">
-                                    <h6 class="event-title">{{ ev.title }}  </h6>
-                                    <p class="event-date">{{ ev.event_date_start_pretty|slice:6}}</p>
-                                </div>
-                            </a>
-                            {% empty %}
-                            <h6>{% trans 'inga aktiva evenemang hittades' %}...</h6>
-                        {% endfor %}
-                        {% if events|length >= 5 %}
-                            <a class="more-events-button" href="{% url 'events:index'%}">{% trans 'Mera evenemang' %}...</a>
-                        {% endif %}
+                        <div class="row">
+                            <div class="col-md-12">
+                                {% for ev in events|slice:":4" %}
+                                    <div class="card-group evet-card text-light mb-2">
+                                        <a href="{% url 'events:detail' ev.slug %}" class="card mb-0 p-1">
+                                            <div class="card-body py-1">
+                                                <div class="row">
+                                                    <div style="margin: auto;" class="col-2">
+                                                        <div>
+                                                            <span class="badge">{{ ev.event_date_start|date:"d" }}</span>
+                                                        </div>
+                                                        <div class="text-color">
+                                                            {{ ev.event_date_start|date:"M" }}
+                                                        </div>
+                                                    </div>
+                                                    <div style="margin: auto;" class="col-8">
+                                                        <div class="d-flex flex-column">
+                                                            <small class="list-inline-item">
+                                                                <i class="fas fa-calendar-check"></i> {{ ev.event_date_start|date:"D"}}
+                                                                <i class="far fa-clock"></i> {{ev.event_date_start|date:"H:i"}}
+                                                            </small>
+                                                            <h6 class="card-title text-uppercase mt-0">
+                                                                <strong>{{ ev.title }}</strong>
+                                                            </h6>
+                                                        </div>
+                                                    </div>
+                                                    <div style="margin: auto;" class="col-2">
+                                                        <i class="fas fa-chevron-right fa-lg"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                {% empty %}
+                                    <h6>{% trans 'inga aktiva evenemang hittades' %}...</h6>
+                                {% endfor %}
+                                {% if events|length >= 4 %}
+                                    <a class="more-events-button" href="{% url 'events:index'%}"><i class="far fa-calendar-alt"></i> {% trans 'Mera evenemang' %}...</a>
+                                {% endif %}
+                            </div>
                         </div>
+                    </div>
                 </div>
                 <div class="mobile-logo-container">
                     <h3>Samarbetspartners</h3>
