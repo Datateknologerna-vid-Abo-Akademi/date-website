@@ -13,7 +13,7 @@
                 <div class="aa-img"><img src="{% static 'images/albins-angels.png' %}"/></div>
             {% endif %}
             {% for news_item in latest_news_items %}
-                <div class="content">
+                <div class="content overflow-auto">
                     <a href="
                     {% if news_item.albins_angels == True %}
                         {% url 'news:aa_detail' news_item.slug %}

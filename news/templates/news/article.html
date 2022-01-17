@@ -13,7 +13,7 @@
             {% if article.albins_angels == True %}
                 <div class="aa-img"><img src="{% static 'images/albins-angels.png' %}"/></div>
             {% endif %}
-            <div class="content">
+            <div class="content overflow-auto">
                 <h2>{{ article.title }}</h2>
                 <h4 class="author">{% trans "Skriven " %}{{ article.published_time }} {% trans "av" %}
                     <a href="{% url "news:author" article.author %}">
