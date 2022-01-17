@@ -12,10 +12,6 @@
     align-self: end;
 }
 
-.form p input{
-    height: 20px;
-}
-
 .form p input[type=checkbox]{
     width: 20px;
     height: 20px;
@@ -23,7 +19,7 @@
 }
 
 .button{
-    background-color: var(--primaryColorLight);
+    background-color: var(--primaryColorLighter);
     border: none;
     color: var(--secondaryColor);
     padding: 10px 20px;
@@ -41,7 +37,7 @@
 }
 
 .button:active{
-    background-color: var(--primaryColorLight);
+    background-color: var(--primaryColorLighter);
 }
 
 .warning{

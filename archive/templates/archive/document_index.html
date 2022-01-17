@@ -10,20 +10,20 @@
 <head>
     <link rel="stylesheet" href="{% static 'archive/css/document.css' %}" type="text/css">
 </head>
-    <div class="container-soft">
-        <div class="container">
-            <div class="container-wrap">
+    <div class="container-md min-vh-100 container-margin-top">
+        <div class="container-size">
+            <div class="content">
                 <div class="hero-text-box">
                     <h1>{% trans "Dokument arkiv" %}</h1>
                     {% if request.user|in_group:"styrelse"%}
-                        <a class="button" href="{% url 'archive:upload' %}">{% trans 'Ladda upp dokument' %}</a>
+                        <a class="btn btn-dark" href="{% url 'archive:upload' %}">{% trans 'Ladda upp dokument' %}</a>
                     {% endif %}
                 </div>
                 <div class="filter-form">
                     {% if filter %}
                         <form action="" method="get" class="form form-inline">
                             {% bootstrap_form filter.form layout='inline' %}
-                            {% bootstrap_button 'filter' %}
+                            {% bootstrap_button 'filter' button_class="btn-light" %}
                         </form>
                     {% endif %}
                 </div>

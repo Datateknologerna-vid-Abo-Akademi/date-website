@@ -1,22 +1,10 @@
-* {
-  box-sizing: border-box;
+.gallery-image{
+  transition: .3s;
+  border-radius: var(--defaultRadius);
 }
 
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-.enlarge {
-    position: relative;
-    height: 100%;
-    width: 100vw;
-
-
-  /* Center and scale the image nicely */
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
+.gallery-image:hover{
+    transform: scale(1.01);
 }
 
 /* pagination */
@@ -38,6 +26,7 @@ body {
   transition: background-color .3s;
   border: 1px solid #ddd;
   margin: 0 4px;
+  border-radius: var(--defaultRadius);
 }
 
 .pagination .disabled{
@@ -50,7 +39,6 @@ body {
 }
 
 .pagination a:hover:not(.active, .disabled) {background-color: var(--primaryColorLight);}
-
 
 @media only screen and (min-width: 768px) {
   .grid-sizer,

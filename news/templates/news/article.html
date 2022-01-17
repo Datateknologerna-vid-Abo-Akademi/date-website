@@ -5,17 +5,18 @@
 {% block title %}{{ article.title }}{% endblock %}
 {% block content %}
     <head>
+        <link rel="stylesheet" href="{% static 'news/css/style.css' %}">
         <link rel="stylesheet" href="{% static 'news/css/article.css' %}">
     </head>
-    <div class="container text-size">
-        <div class="news-grid">
+    <div class="container-md container-margin-top min-vh-100">
+        <div class="container-size break-words">
             {% if article.albins_angels == True %}
                 <div class="aa-img"><img src="{% static 'images/albins-angels.png' %}"/></div>
             {% endif %}
-            <div class="news">
+            <div class="content overflow-auto">
                 <h2>{{ article.title }}</h2>
                 <h4 class="author">{% trans "Skriven " %}{{ article.published_time }} {% trans "av" %}
-                    <a class="admin-link" href="{% url "news:author" article.author %}">
+                    <a href="{% url "news:author" article.author %}">
                         {% if article.author.get_full_name != " " %}{{ article.author.get_full_name }}{% else %}
                             {{ article.author }}{% endif %}</a></h4>
                 {{ article.content | safe }}

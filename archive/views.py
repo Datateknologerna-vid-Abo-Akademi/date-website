@@ -19,13 +19,13 @@ from .tables import DocumentTable
 def year_index(request):
     
     years = Collection.objects.dates('pub_date', 'year').reverse()
-    year_list = []
+    year_albumcount = {}
     for year in years:
-        year_list.append(year.strftime("%Y"))
+        year_albumcount[str(year.year)] = Collection.objects.filter(pub_date__year = year.year).count()
 
     context = {
         'type': "pictures",
-        'years': year_list,
+        'year_albums': year_albumcount
     }
     return render(request, 'archive/index.html', context)
 
