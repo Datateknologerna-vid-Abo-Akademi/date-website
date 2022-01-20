@@ -3,9 +3,11 @@
 
 :root {
     --primaryColor: #000;
-    --primaryColorLighter:  #202020;
+    --primaryColorLight:  #202020;
     --primaryColorLighte:#3d3d3d;
-    --primaryColorLight:#505050;
+    --primaryColorLighter:#505050;
+    --primaryColorTransparent: rgba(0,0,0,0.9);
+    --primaryColorTransparenter: rgba(0,0,0,0.8);
     --secondaryColor: #fff;
     --secondaryColorDarker: #eaeaea;
     --helpText: #888;
@@ -14,4 +16,6 @@
     --linkColorSecondary: rgb(208, 255, 0);
     --linkSecondaryHover: rgb(146, 179, 0);
     --warning: rgb(216, 153, 146);
+    --defaultPadding: 20px;
+    --defaultRadius: 5px;
 }
