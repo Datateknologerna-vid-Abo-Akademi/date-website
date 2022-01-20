@@ -13,7 +13,7 @@
         <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/157670/jquery.jcarousellite.min.js"></script>
     </head>
 
-    <div class="container-fluid min-vh-100">
+    <div class="container-fluid p-2 min-vh-100">
         <header class="header">
             <div class="hero-text-box align-center">
                 <div class="albin">
@@ -227,7 +227,7 @@
                                             <a href="{% url 'events:detail' ev.slug %}" class="card mb-0 p-1">
                                                 <div class="card-body py-1">
                                                     <div class="row">
-                                                        <div style="margin: auto;" class="col-2">
+                                                        <div style="margin: auto;" class="col-3">
                                                             <div>
                                                                 <span class="badge">{{ ev.event_date_start|date:"d" }}</span>
                                                             </div>
@@ -237,7 +237,7 @@
                                                                 </small>
                                                             </div>
                                                         </div>
-                                                        <div style="margin: auto;" class="col-8">
+                                                        <div style="margin: auto;" class="col-7">
                                                             <div class="d-flex flex-column">
                                                                 <small class="list-inline-item">
                                                                     <i class="fas fa-calendar-check"></i> {{ ev.event_date_start|date:"D"}}
@@ -304,7 +304,7 @@
                                         <a href="{% url 'events:detail' ev.slug %}" class="card mb-0 p-1">
                                             <div class="card-body py-1">
                                                 <div class="row">
-                                                    <div style="margin: auto;" class="col-2">
+                                                    <div style="margin: auto;" class="col-3">
                                                         <div>
                                                             <span class="badge">{{ ev.event_date_start|date:"d" }}</span>
                                                         </div>
@@ -312,7 +312,7 @@
                                                             {{ ev.event_date_start|date:"M" }}
                                                         </div>
                                                     </div>
-                                                    <div style="margin: auto;" class="col-8">
+                                                    <div style="margin: auto;" class="col-7">
                                                         <div class="d-flex flex-column">
                                                             <small class="list-inline-item">
                                                                 <i class="fas fa-calendar-check"></i> {{ ev.event_date_start|date:"D"}}
