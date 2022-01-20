@@ -9,9 +9,13 @@ from django.db import models
 from django.db.models import Max
 from django.template.defaulttags import register
 from django.utils.translation import ugettext_lazy as _
+<<<<<<< HEAD
 from django.utils.timezone import now
 from datetime import timedelta
 from django.conf import settings
+=======
+from django.core.exceptions import ValidationError
+>>>>>>> 3601837... Add validation for unique emails on event registration form
 
 logger = logging.getLogger('date')
 
@@ -123,7 +127,7 @@ class Event(models.Model):
     def make_registration_form(self, data=None):
         if self.sign_up:
             fields = {'user': forms.CharField(label='Namn', max_length=255),
-                      'email': forms.EmailField(label='Email'),
+                      'email': forms.EmailField(label='Email', validators=[self.validate_unique_email]),
                       'anonymous': forms.BooleanField(label='Anonymt', required=False)}
             if self.get_registration_form():
                 for question in reversed(self.get_registration_form()):
@@ -142,6 +146,11 @@ class Event(models.Model):
     def show_attendee_list(self):
         return self.event_date_end > now() + timedelta(days=-1)
 
+    def validate_unique_email(self, email):
+        attendees = self.get_registrations()
+        for attendee in attendees:
+            if email == attendee.email:
+                raise ValidationError(_("Det finns redan någon anmäld med denna email"))
 
 class EventRegistrationForm(models.Model):
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
