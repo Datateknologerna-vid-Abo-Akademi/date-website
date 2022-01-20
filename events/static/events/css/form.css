@@ -18,6 +18,10 @@
     border-radius: 5px;
 }
 
+.form > ul.errorlist{
+    display: none;
+}
+
 .button{
     background-color: var(--primaryColorLighter);
     border: none;
