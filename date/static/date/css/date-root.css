@@ -10,6 +10,10 @@
     --primaryColorTransparenter: rgba(0,0,0,0.8);
     --secondaryColor: #fff;
     --secondaryColorDarker: #eaeaea;
+    --textColorLight: #fff;
+    --textColorLightish: #eaeaea;
+    --textColorDark: #000;
+    --textColorDarkish: #202020;
     --helpText: #888;
     --helpTextLighter: rgb(199, 199, 199);
     --linkColor: #3a80c3;

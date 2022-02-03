@@ -7,7 +7,7 @@ nav{
 }
 
 .container .navbar-toggler{
-    color: var(--secondaryColor);
+    color: var(--textColorLight);
     border: none;
 }
 
@@ -40,7 +40,7 @@ li .dropdown-menu {
 }
 
 .navbar-nav li a {
-color: white !important;
+color: var(--textColorLight) !important;
 }
 
 @media (min-width: 1200px){

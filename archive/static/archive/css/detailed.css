@@ -18,7 +18,7 @@
 }
 
 .pagination a {
-  color: var(--secondaryColorDarker);
+  color: var(--textColorLightish);
   background-color: var(--primaryColorLighter);
   float: left;
   padding: 8px 16px;
@@ -34,7 +34,7 @@
 }
 
 .pagination a.active {
-  color: white;
+  color: var(--textColorLight);
   border: 1px solid var(--linkColorSecondary);
 }
 

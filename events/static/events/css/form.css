@@ -25,7 +25,7 @@
 .button{
     background-color: var(--primaryColorLighter);
     border: none;
-    color: var(--secondaryColor);
+    color: var(--textColorLight);
     padding: 10px 20px;
     text-align: center;
     font-size: 16px;

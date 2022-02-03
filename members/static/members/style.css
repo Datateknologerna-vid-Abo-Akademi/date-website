@@ -4,7 +4,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
     background-color: var(--primaryColor);
-    color: var(--primaryColor);
+    color: var(--textColorDark);
 }
 
 form{
@@ -37,7 +37,7 @@ form{
     margin: auto auto 10rem auto;
 }
 .center-box {
-    color: var(--primaryColor);
+    color: var(--textColorDark);
     background-color: var(--secondaryColor);
     width: 620px;
     max-width: 90vw;
@@ -52,7 +52,7 @@ form{
     position: relative;
     z-index: 1;
     background-color: var(--secondaryColor);
-    color: var(--primaryColor);
+    color: var(--textColorDark);
     max-width: 90vw;
     padding: 4em 4.5em;
     text-align: center;
@@ -61,11 +61,11 @@ form{
 }
 
 .members-form a {
-  color: var(--primaryColorLight);
+  color: var(--textColorDark);
 } 
 
 .members-form a:hover {
-  color: var(--primaryColorLighter);
+  color: var(--textColorDarkish);
 } 
 
 .members-form .big {
@@ -102,7 +102,7 @@ form{
   width: 100%;
   border: 0;
   padding: 15px;
-  color: #FFFFFF;
+  color: var(--textColorLight);
   font-size: 14px;
   -webkit-transition: all 0.3s ease;
   transition: all 0.3s ease;
@@ -113,7 +113,7 @@ form{
 }
 .members-form .message {
   margin: 15px 0 0;
-  color: #b3b3b3;
+  color: var(--helpText);
   font-size: 12px;
 }
 .members-form .message a {
@@ -131,7 +131,7 @@ form{
     width: 100%;
     border: 0;
     padding: 15px;
-    color: #FFFFFF;
+    color: var(--textColorLight);
     font-size: 14px;
     -webkit-transition: all 0.3s ease;
     transition: all 0.3s ease;

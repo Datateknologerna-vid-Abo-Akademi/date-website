@@ -5,7 +5,7 @@
 /* Header */
 
 .header {
-    color: var(--secondaryColor);
+    color: var(--textColorLight);
     background-color: var(--primaryColor);
     height: 65vh;
 }
@@ -109,7 +109,7 @@
 
 .about{ 
     background-color: var(--secondaryColor);
-    color: var(--primaryColor);
+    color: var(--textColorDark);
     min-height: 35vh;
     border-radius: var(--defaultRadius);
     padding: 20px;
@@ -118,7 +118,7 @@
 /*NEWS-EVENTS*/
 
 .news-events {
-    color: var(--primaryColor);
+    color: var(--textColorDark);
     margin-top: 2vh;
     background: linear-gradient(180deg, var(--secondaryColorDarker) 0%, var(--secondaryColor) 100%);
     min-height: 100vh;
@@ -187,7 +187,7 @@ div.news-content a{
 }
 
 div.news-content a:hover{
-    color: var(--primaryColorLighter);
+    color: var(--textColorDarkish);
 }
 
 .more-news{
@@ -195,7 +195,7 @@ div.news-content a:hover{
 }
 
 .more-news:hover{
-    color: var(--primaryColorLighter);
+    color: var(--textColorDarkish);
 }
 
 .news-header{
@@ -283,7 +283,7 @@ div.news-content a:hover{
   
 .evet-card a:hover{
     background-color: inherit;
-    color: var(--primaryColorLighter);
+    color: var(--textColorDarkish);
   }
   
 .evet-card a:focus{
@@ -299,7 +299,7 @@ div.news-content a:hover{
 }
 
 .text-color {
-    color: var(--primaryColor);
+    color: var(--textColorDark);
 }
 
 .card {
@@ -333,7 +333,7 @@ div.news-content a:hover{
     display: grid;
     /*background-color: var(--primaryColorLighter);*/
     background-color: var(--secondaryColor);
-    color: black;
+    color: var(--textColorDark);
     text-align: left;
     padding: 1px;
     -webkit-transition: all 0.2s;
@@ -347,7 +347,7 @@ div.news-content a:hover{
 }
 
 .event-box:hover {
-    color: var(--secondaryColor);
+    color: var(--textColorLight);
     background-color: var(--primaryColorLighter);
 
 }
@@ -382,7 +382,7 @@ div.news-content a:hover{
 .more-events-button:hover{
     transition: 0.2s;
     scale: 1.01;
-    color: var(--primaryColorLighter);
+    color: var(--textColorDarkish);
 }
 /*Events end*/
 
@@ -438,7 +438,7 @@ div.calendar-container a {
 
 .cal-btn {
   outline: none;
-  color: black;
+  color: var(--textColorDark);
   background-color: transparent;
   box-shadow: 0 0 0 0;
 }
@@ -458,7 +458,7 @@ div.calendar-container a {
   visibility: hidden;
   width: 150px;
   background-color: var(--primaryColor);
-  color: #fff;
+  color: var(--textColorLight);
   text-align: center;
   border-radius: 6px;
   padding: 5px 0;
