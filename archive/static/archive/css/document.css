@@ -1,70 +1,45 @@
-.container-soft{
-    font-family: 'Josefin Sans', sans-serif;
+.card {
+    transition: .3s;
 }
 
-.container{
-    display: grid;
-    grid-template-columns: 5vw 1fr 5vw;
-    grid-template-rows: auto;
-    grid-template-areas: 
-    " . wrap . ";
+.card:hover {
+    transform: scale(1.01);
 }
 
-.container-wrap{
-    grid-area: wrap;
+.card .fa-chevron-right{
+    transition: .3s;
 }
 
-.form-group{
-    margin-bottom: 5px;
+.card:hover .fa-chevron-right{
+    transform: translateX(10px);
 }
 
-.form-control{
-    width: 200px;
-    height: 25px;
-    background-color: var(--secondaryColor);
-    border-radius: 5px;
+.grid-item .card {
+    background: var(--primaryColorLight);
 }
 
-.btn-default{
-    width: 70px;
-    height: 30px;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    color: rgb(94, 209, 255);
-    font-weight: bold;
-}
+  /* Masonary image gallery */
+.grid {
+    margin: 0 auto;
+    max-width: 100%;
+  }
 
-.table-container{
-    display: grid;
-    grid-template-rows: auto;
-}
-
-table{
-    font-size: 1.5rem;
-    word-break: break-all;
-    word-break: break-word;
-    hyphens: auto;
-}
-
-thead{
-    background-color: var(--primaryColorLight);
-    line-height: 2;
-}
-
-table.table a{
-    color: rgb(94, 209, 255);
-}
-  
-td{
+/* fluid 5 columns */
+.grid-sizer,
+.grid-item { 
+    width: 97%;
+    margin: 5px;
     text-align: center;
-    padding: 8px;
-    min-width: 50px;
-}
-  
-.even{
-    background-color: var(--primaryColorLighter);
 }
 
-.odd{
-    background-color: rgb(67, 173, 111);
+.grid-item .card{
+    border-radius: var(--defaultRadius);
+    width: 100% !important;
+}
+
+@media only screen and (min-width: 768px) {
+    .grid-sizer,
+    .grid-item { 
+        width: 32.5%;
+    }
 }

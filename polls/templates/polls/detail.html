@@ -9,10 +9,10 @@
     <link rel="stylesheet" href="{% static 'polls/css/style.css' %}">
 </head>
 
-<div class="container">
-    <div class="polls">
-        <a class="back-button" href="/polls">Tillbaka</a>
-        <div class="detail">
+<div class="container-md min-vh-100 container-margin-top">
+    <div class="container-size" style="max-width: 500px;">
+        <div class="content">
+            <a class="mb-2" href="/polls"><i class="fas fa-long-arrow-alt-left"></i> Tillbaka</a>
             <h3>{{ question.question_text }}</h3>
 
             {% if error_message %}<p class="warning"><strong>{{ error_message }}</strong></p>{% endif %}
@@ -27,9 +27,9 @@
                     "radio"
                 {% endif %}
                 name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
-                <label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br>
+                <label class="p-2" for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br>
             {% endfor %}
-            <input type="submit" value="Rösta">
+            <input class="btn btn-dark" type="submit" value="Rösta">
             </form>
         </div>
     </div>

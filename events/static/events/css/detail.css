@@ -1,95 +1,9 @@
-.container-text img {
-    max-height: 50vh;
-    max-width: 100%;
-    /* keep img ratio correct */
-      width: auto !important;
-      height: auto !important;
-}
-
-.container{
-    background-color: var(--primaryColor);
-    padding-top: 10vh;
-    min-height: 100vh;
-    font-family: 'Josefin Sans', sans-serif;
-    text-align: start;
-    align-content: start;
-    font-size: 1.5em;
-}
-
-.container{
-    display: grid;
-    grid-template-columns: 1fr 1000px 1fr;
-    grid-template-rows: auto;
-    grid-template-areas: 
-      ". information ."
-      ". signup-form ."
-      ". signed-table .";
-      grid-row-gap: 10px;
-}
-
-.container-text{
-    grid-area: information;
-    padding: 20px;
-    background-color: var(--secondaryColor);
-    border-radius: 5px;
-    word-break: break-all;
-    word-break: break-word;
-    hyphens: auto;
-}
-.container-text, h4 {
-    margin: 0.1em;
-}
-
-div.container-text a{
-    display: inline-block;
-    color: var(--linkColor);
-}
-
-div.container-text a:hover{
-    transition: 0.3s;
-    color: var(--primaryColorLight);
-}
-
-.container-form{
-    grid-area: signup-form;
-    padding: 20px;
-    background-color: var(--secondaryColor);
-    border-radius: 5px;
-    word-break: break-all;
-    word-break: break-word;
-    hyphens: auto;
-}
-
-.container-signed {
-    grid-area: signed-table;
-    margin-bottom: 20rem;
-    padding: 20px;
-    background-color: var(--secondaryColor);
-    border-radius: 5px;
-    overflow: scroll;
-
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-}
-
-/* Hide scrollbar for Chrome, Safari and Opera */
-.container-signed::-webkit-scrollbar {
-    display: none;
-  }
-  
-
-.header {
-    margin: 0;
-}
-
 table {
     border-collapse: collapse;
-    width: 80%;
-    font-size: 1.3em;
 }
 
 .event-full{
-    color: gray;
+    color: var(--helpText);
 }
 
 th {
@@ -103,15 +17,5 @@ th, td {
 tr:hover {
     transition: 200ms;
     background-color: var(--primaryColorLighter);
-}
-
-@media only screen and (max-width: 1200px) {
-    .container{
-        grid-template-columns: 10vw 1fr 10vw;
-    }
-}
-@media only screen and (max-width: 768px) {
-    .container{
-        grid-template-columns: 3vw 1fr 3vw;
-    }
+    color: var(--secondaryColor);
 }
