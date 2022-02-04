@@ -1,45 +1,19 @@
-.card {
-    transition: .3s;
+
+.form-group{
+    margin-bottom: 5px;
 }
 
-.card:hover {
-    transform: scale(1.01);
+table tbody{
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+    color: var(--textColorLightish);
+}
+  
+.even{
+    background-color: var(--primaryColorLighter);
 }
 
-.card .fa-chevron-right{
-    transition: .3s;
-}
-
-.card:hover .fa-chevron-right{
-    transform: translateX(10px);
-}
-
-.grid-item .card {
-    background: var(--primaryColorLight);
-}
-
-  /* Masonary image gallery */
-.grid {
-    margin: 0 auto;
-    max-width: 100%;
-  }
-
-/* fluid 5 columns */
-.grid-sizer,
-.grid-item { 
-    width: 97%;
-    margin: 5px;
-    text-align: center;
-}
-
-.grid-item .card{
-    border-radius: var(--defaultRadius);
-    width: 100% !important;
-}
-
-@media only screen and (min-width: 768px) {
-    .grid-sizer,
-    .grid-item { 
-        width: 32.5%;
-    }
+.odd{
+    background-color: var(--primaryColorLight);
 }
