@@ -670,8 +670,8 @@ div.scroll-content img{
     }
 
     .hero-text-box {
-        -webkit-transform: translate(-50%, 45%)scale(0.50);
-                transform: translate(-50%, 45%)scale(0.50);
+        -webkit-transform: translate(-50%, 45%)scale(0.45);
+                transform: translate(-50%, 45%)scale(0.45);
     }
 
     .hero-text-main {
