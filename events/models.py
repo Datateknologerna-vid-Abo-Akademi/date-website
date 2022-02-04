@@ -9,13 +9,10 @@ from django.db import models
 from django.db.models import Max
 from django.template.defaulttags import register
 from django.utils.translation import ugettext_lazy as _
-<<<<<<< HEAD
 from django.utils.timezone import now
 from datetime import timedelta
 from django.conf import settings
-=======
 from django.core.exceptions import ValidationError
->>>>>>> 3601837... Add validation for unique emails on event registration form
 
 logger = logging.getLogger('date')
 
