@@ -73,11 +73,6 @@ color: var(--textColorLight) !important;
     }
 }
 
-.navbar-brand {
-    padding: 0;
-    margin-left: 15px;
-}
-
 .header-logo{
     max-height: 45px;
 }
