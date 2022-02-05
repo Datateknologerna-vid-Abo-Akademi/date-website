@@ -1,34 +1,65 @@
 html {
-    font-size: 62.5%;
+    scroll-behavior: smooth;
 }
 
-body {
-    margin: 0;
-
-}
-
-.noscroll {
-    overflow: hidden;
-    position: relative;
-    height: 100%;
-}
-
-h1 { font-size: 3em; /* 48 / 16 */ line-height: 1em; /* 48 / 48 */ margin-bottom: .5em; /* 24 / 48 */ }
-h2 { font-size: 2.25em; /* 36 / 16 */ line-height: 1.333333333333333em; /* 48 / 36 */ margin-bottom: .6666666666666667em; /* 24 / 36 */ }
-h3 { font-size: 1.5em; /* 24 / 16 */ line-height: 1em; /* 24 / 24 */ margin-bottom: 1em; /* 24 / 24 */ }
-h4 { font-size: 1.3125em; /* 21 / 16 */ line-height: 1.142857142857143em; /* 24 / 21 */ margin-bottom: 1.142857142857143em; /* 24 / 21 */ }
-h5 { font-size: 1.125em; /* 18 / 16 */ line-height: 1.333333333333333em; /* 24 / 18 */ margin-bottom: 1.333333333333333em; /* 24 / 18 */ }
-h6 { font-size: 1em; /* 16 / 16 */ line-height: 1.5em; /* 24 / 16 */ margin-bottom: 1.5em; /* 24 / 16 */ }
-p { font-size: 1em; /* 16 / 16 */ line-height: 1.5em; /* 24 / 16 */ margin-bottom: 1.5em; /* 24 / 16 */ }
-
-a {
-    text-decoration: none;
-    color: var(--secondaryColor);
-}
-
-.container-soft{
+html body{
     background-color: var(--primaryColor);
-    padding-top: 10vh;
-    min-height: 100vh;
-    color: var(--secondaryColor);
+    color: var(--textColorLightish);
+    font-family: 'Josefin Sans', sans-serif;
 }
+
+.content img{
+    max-height: 35vh;
+    max-width: 100%;
+    /* keep img ratio correct */
+    width: auto !important;
+    height: auto !important;
+    border-radius: var(--defaultRadius);
+}
+
+/* Link colors */
+div a{
+    color: var(--linkColorSecondary);
+    display: inline-block;
+    text-decoration: none;
+}
+
+div a:hover{
+    transition: 0.3s;
+    color: var(--linkSecondaryHover);
+}
+/* ---- */
+
+.break-words{
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+/* TEXT COLORS */
+.help-text{
+    color: var(--helpText);
+}
+
+.warning{
+    color: var(--warning);
+}
+/* ---- */
+
+.container-margin-top {
+    margin-top: 10vh;
+}
+
+.container-size{
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.content{
+    margin: 20px 2vw;
+    background-color: var(--secondaryColor);
+    color: var(--textColorDarkish);
+    padding: var(--defaultPadding);
+    border-radius: var(--defaultRadius);
+}
+

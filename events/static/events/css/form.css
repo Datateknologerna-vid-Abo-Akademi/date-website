@@ -12,20 +12,20 @@
     align-self: end;
 }
 
-.form p input{
-    height: 20px;
-}
-
 .form p input[type=checkbox]{
     width: 20px;
     height: 20px;
     border-radius: 5px;
 }
 
+.form > ul.errorlist{
+    display: none;
+}
+
 .button{
-    background-color: var(--primaryColorLight);
+    background-color: var(--primaryColorLighter);
     border: none;
-    color: var(--secondaryColor);
+    color: var(--textColorLight);
     padding: 10px 20px;
     text-align: center;
     font-size: 16px;
@@ -36,12 +36,12 @@
 
 .button:hover{
     transition: 0.2s ease;
-    background-color: var(--primaryColorLighter);
-    color: #000000;
+    background-color: var(--primaryColorLighte);
+    color: var(--linkSecondaryHover);
 }
 
 .button:active{
-    background-color: #414141;;
+    background-color: var(--primaryColorLighter);
 }
 
 .warning{

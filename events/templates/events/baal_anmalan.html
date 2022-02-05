@@ -6,13 +6,14 @@
 
 {% block content %}
     <head>
-        <link rel="stylesheet" href="{% static 'events/css/baal_anmalan.css' %}">
+        <link rel="stylesheet" href="{% static 'events/css/baal.css' %}">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
     </head>
-    <div class="container">
-        {% if event.sign_up %}
-            <div id="anmalan" class="container-form baal-content anmalan">
+    <div class="container-md min-vh-100 p-1">
+        <div class="container-size">
+            {% if event.sign_up %}
+            <div id="anmalan" class="content baal-content anmalan">
                 <div class="baal-nav"><a class="baal-link" href="/events/baal/">Tillbaka</a></div>
                 <h2 id="sign-up">{% trans "Kemistbaal Anmälning" %}</h2>
                 {% if event.registration_is_open_members and user.is_authenticated %}
@@ -28,6 +29,7 @@
                 {% endif %}
             </div>
         {% endif %}
+        </div>
     </div>
     <script>
         $( document ).ready(function() {

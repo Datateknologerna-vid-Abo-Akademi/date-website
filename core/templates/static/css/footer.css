@@ -1,52 +1,8 @@
-footer {
- font-family: 'Josefin Sans', sans-serif;
-    background-color: var(--primaryColor);
-    color: var(--secondaryColor);
-    font-size: 1.5em;
-    height: auto;
-}
-footer p{
-    margin: 0;
-    padding: 0 0 1rem 1.5rem;
-}
-#footer-container {
-    display: grid;
-    grid-template-areas:
-        "logo text";
-}
-
-.img-container {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    grid-area: logo;
-    margin-top: 1rem;
-    padding: 3rem;
-}
-#footer-img img {
+.footer-img {
+    max-height: 200px;
     width: auto;
-    height: auto;
-    max-height: 100%;
 }
 
-.footer-text {
-    grid-area: text;
-    padding: 3rem 3rem 0 2rem;
-}
-
-@media screen and (max-width: 800px){
-    #footer-container {
-        grid-template-areas:
-        "text"
-        "logo";
-    }
-    .img-container {
-        width: 100px;
-        height: 100px;
-        box-shadow: none;
-    }
-
-    footer p{
-        padding: 1rem;
-    }
+footer section {
+    margin: 25px;
 }

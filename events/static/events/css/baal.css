@@ -87,15 +87,15 @@
     -ms-animation: fadeIn ease 2s;
 }
 
-.alert-danger, .errorlist{
-    color: var(--warning);
+.alert-danger, .errorlist, .warning{
+    color: rgb(201, 99, 88) !important;
 }
 
 footer{
     display: none;
 }
 
-.header-bar{
+.navbar{
     display: none;
 }
 
@@ -114,17 +114,7 @@ form button:hover {
     color: var(--secondaryColor) !important;
 }
 
-/* NEW STUFF END */
-
-.container-text img {
-    max-height: 50vh;
-    max-width: 100%;
-    /* keep img ratio correct */
-      width: auto !important;
-      height: auto !important;
-}
-
-.container{
+.container-md{
     position: relative;
     padding-top: 10vh;
     min-height: 100vh;
@@ -132,90 +122,22 @@ form button:hover {
     font-family: 'Dancing Script', cursive;
     text-align: start;
     align-content: start;
-    font-size: 1.8em;
+    font-size: 1.3em;
     font-weight: bold;
     background-position: top;
+    background-attachment: fixed;
     background-repeat: no-repeat;
     background-size: 100vw 140vh;
     background-color: black;
     border-bottom: 3px solid var(--primaryColor);
 }
 
-.container{
-    display: grid;
-    grid-template-columns: 1fr 800px 1fr;
-    grid-template-rows: auto;
-    grid-template-areas: 
-      ". information ."
-      ". signup-form ."
-      ". signed-table .";
-      grid-row-gap: 10px;
-}
-
-.container-text{
-    grid-area: information;
-    padding: 20px;
+.content{
     background-color: var(--opacityColor);
-    border-radius: 5px;
-    word-break: break-all;
-    word-break: break-word;
-    hyphens: auto;
     backdrop-filter: var(--backdropBlur);
     -webkit-backdrop-filter: var(--backdropBlur);
     border-top: 2px solid var(--primaryColor);
-}
-.container-text, h4 {
-    margin: 0.1em;
-}
-
-div.container-text a{
-    display: inline-block;
-    color: var(--primaryColor);
-}
-
-div.container-text a:hover{
-    transition: 0.3s;
-    color: var(--secondaryColor);
-}
-
-.container-form{
-    grid-area: signup-form;
-    padding: 20px;
-    background-color: var(--opacityColor);
-    border-radius: 5px;
-    word-break: break-all;
-    word-break: break-word;
-    hyphens: auto;
-    backdrop-filter: var(--backdropBlur);
-}
-
-.container-signed {
-    grid-area: signed-table;
-    margin-bottom: 20rem;
-    padding: 20px;
-    background-color: var(--opacityColor);
-    border-radius: 5px;
-    overflow: scroll;
-
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-    backdrop-filter: var(--backdropBlur);
-}
-
-/* Hide scrollbar for Chrome, Safari and Opera */
-.container-signed::-webkit-scrollbar {
-    display: none;
-  }
-  
-
-.header {
-    margin: 0;
-}
-
-table {
-    border-collapse: collapse;
-    width: 80%;
-    font-size: 1.3em;
+    color: var(--textColorDark);
 }
 
 .event-full{
@@ -234,10 +156,4 @@ tr:hover {
     transition: 200ms;
     background-color: var(--secondaryColor);
     color: var(--primaryColor);
-}
-
-@media only screen and (max-width: 850px) {
-    .container{
-        grid-template-columns: 3vw 1fr 3vw;
-    }
 }

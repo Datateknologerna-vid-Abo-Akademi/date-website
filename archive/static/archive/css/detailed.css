@@ -1,22 +1,10 @@
-* {
-  box-sizing: border-box;
+.gallery-image{
+  transition: .3s;
+  border-radius: var(--defaultRadius);
 }
 
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-.enlarge {
-    position: relative;
-    height: 100%;
-    width: 100vw;
-
-
-  /* Center and scale the image nicely */
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
+.gallery-image:hover{
+    transform: scale(1.01);
 }
 
 /* pagination */
@@ -30,7 +18,7 @@ body {
 }
 
 .pagination a {
-  color: var(--secondaryColorDarker);
+  color: var(--textColorLightish);
   background-color: var(--primaryColorLighter);
   float: left;
   padding: 8px 16px;
@@ -38,6 +26,7 @@ body {
   transition: background-color .3s;
   border: 1px solid #ddd;
   margin: 0 4px;
+  border-radius: var(--defaultRadius);
 }
 
 .pagination .disabled{
@@ -45,12 +34,11 @@ body {
 }
 
 .pagination a.active {
-  color: white;
+  color: var(--textColorLight);
   border: 1px solid var(--linkColorSecondary);
 }
 
-.pagination a:hover:not(.active, .disabled) {background-color: var(--primaryColorLight);}
-
+.pagination a:hover:not(.active, .disabled) {background-color: var(--secondaryColor);}
 
 @media only screen and (min-width: 768px) {
   .grid-sizer,

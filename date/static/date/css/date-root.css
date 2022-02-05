@@ -3,13 +3,26 @@
 
 :root {
     --primaryColor: rgb(10, 140, 65);
-    --primaryColorLighter: rgb(10, 170, 77);
     --primaryColorLight:#2a693d;
+    --primaryColorLighte:#3b8b53;
+    --primaryColorLighter: rgb(10, 170, 77);
     --secondaryColor: #fff;
     --secondaryColorDarker: #e0e0e0;
+    --luciaBackgroundColor: #960014;
+    --primaryColorTransparent: rgb(10, 140, 65, 0.9);
+    --primaryColorTransparenter: rgb(10, 140, 65, 0.8);
+    --textColorLight: #fff;
+    --textColorLightish: #eaeaea;
+    --textColorDark: #000;
+    --textColorDarkish: #202020;
     --helpText: #888;
     --helpTextLighter: rgb(199, 199, 199);
     --linkColor: rgb(44, 148, 96);
+    --linkColorSecondary: rgb(10, 170, 77);
+    --linkSecondaryHover: #2a693d;
+    --linkColorLight: rgb(37, 240, 122);
+    --linkColorLightHover: rgb(29, 185, 94);
     --warning: rgb(216, 153, 146);
-    --luciaBackgroundColor: #960014;
+    --defaultPadding: 20px;
+    --defaultRadius: 5px;
 }
