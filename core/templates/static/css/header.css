@@ -7,20 +7,20 @@ nav{
     background-color: var(--primaryColorTransparenter);
 }
 
-.container .navbar-toggler{
+.container-fluid .navbar-toggler{
     color: var(--textColorLight);
     border: none;
 }
 
-.container .navbar-toggler:active{
+.container-fluid .navbar-toggler:active{
     color: var(--linkColorSecondary);
 }
 
-.container .navbar-toggler:hover{
+.container-fluid .navbar-toggler:hover{
     background-color: inherit;
 }
 
-.container .navbar-toggler:focus{
+.container-fluid .navbar-toggler:focus{
     background-color: inherit;
     box-shadow: none;
 }
