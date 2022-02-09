@@ -9,7 +9,7 @@ html body{
 }
 
 .content img{
-    max-height: 35vh;
+    max-height: 40vh;
     max-width: 100%;
     /* keep img ratio correct */
     width: auto !important;

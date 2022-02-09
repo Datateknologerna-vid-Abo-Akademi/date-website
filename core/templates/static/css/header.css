@@ -30,6 +30,10 @@ nav{
     border-radius: var(--defaultRadius);
 }
 
+.navbar-nav {
+    margin-right: 30px;
+}
+
 /* display dropdown on hover */
 .dropdown:hover .dropdown-menu {
     display: block;
