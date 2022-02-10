@@ -9,23 +9,22 @@ then
     [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1 # handle exits from shell or function but don't exit interactive shell
 fi
 
+source ../example.env
 COMPOSE_PATH="../docker-compose.yml"
-DB_NAME=tempDB
+DB_NAME=date-website-db-1
 
 docker-compose down
 
-source ../example.env
 find ../ -path "*/migrations/*.py" -not -name "__init__.py" -delete
 docker-compose -f $COMPOSE_PATH build
-docker-compose -f $COMPOSE_PATH run -d --name $DB_NAME db 
-docker exec $DB_NAME psql -U postgres << EOF
-CREATE DATABASE temp;
-CONNECT DATABASE temp;
-DROP DATABASE postgres;
-CREATE DATABASE postgres;
-CONNECT DATABASE postgres;
-DROP DATABASE temp;
-EOF
+docker-compose -f $COMPOSE_PATH up -d db
+
+sleep 2
+
+docker exec $DB_NAME psql -U postgres -c "CREATE DATABASE temp;"
+docker exec $DB_NAME psql -U postgres -d temp -c "DROP DATABASE postgres;"
+docker exec $DB_NAME psql -U postgres -d temp -c "CREATE DATABASE postgres;"
+docker exec $DB_NAME psql -U postgres -c "DROP DATABASE temp;"
 
 echo "Database cleared."
 echo "Deleting migration files"
