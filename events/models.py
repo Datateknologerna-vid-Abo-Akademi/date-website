@@ -6,10 +6,9 @@ from datetime import timedelta
 from ckeditor.fields import RichTextField
 from django import forms
 from django.conf import settings
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.db.models import Max
+from django.db.models import Max, JSONField
 from django.template.defaulttags import register
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
