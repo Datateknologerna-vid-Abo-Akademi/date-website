@@ -11,7 +11,6 @@ fi
 
 source ../example.env
 COMPOSE_PATH="../docker-compose.yml"
-DB_NAME=date-website-db-1 # Name of your database container
 
 # Shut down any currently running containers
 docker-compose down
@@ -26,10 +25,10 @@ docker-compose -f $COMPOSE_PATH up -d db
 sleep 2
 
 # Connect to a temporary database to delete and recreate the postgres database
-docker exec $DB_NAME psql -U postgres -c "CREATE DATABASE temp;"
-docker exec $DB_NAME psql -U postgres -d temp -c "DROP DATABASE postgres;"
-docker exec $DB_NAME psql -U postgres -d temp -c "CREATE DATABASE postgres;"
-docker exec $DB_NAME psql -U postgres -c "DROP DATABASE temp;"
+docker-compose exec db psql -U postgres -c "CREATE DATABASE temp;"
+docker-compose exec db psql -U postgres -d temp -c "DROP DATABASE postgres;"
+docker-compose exec db psql -U postgres -d temp -c "CREATE DATABASE postgres;"
+docker-compose exec db psql -U postgres -c "DROP DATABASE temp;"
 
 echo "Database cleared."
 echo "Deleting migration files"
