@@ -64,7 +64,15 @@ date-createsuperuser
 
 and create the superuser.
 
-### 5. Try out the server
+### 5. Set up initial test data
+
+**This will completely delete and recreate the database (all existing data will be lost)**
+
+If you want initial development data run the script `clean-init.sh` in the folder `scripts/`.
+
+If you get an `illegal option error` in your shell, use `/bin/bash clean-init.sh` to run the script instead.
+
+### 6. Try out the server
 
 Visit http://localhost:8000 or whatever your port is.
 
