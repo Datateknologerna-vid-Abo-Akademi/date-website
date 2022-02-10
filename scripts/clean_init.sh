@@ -13,6 +13,7 @@ COMPOSE_PATH="../docker-compose.yml"
 DB_NAME=tempDB
 
 source ../example.env
+find . -path "../*/migrations/*.py" -not -name "__init__.py" -delete
 docker-compose -f $COMPOSE_PATH build
 docker-compose -f $COMPOSE_PATH run -d --name $DB_NAME db 
 docker exec $DB_NAME psql -U postgres << EOF
@@ -26,8 +27,6 @@ EOF
 
 echo "Database cleared."
 echo "Deleting migration files"
-
-find . -path "../*/migrations/*.py" -not -name "__init__.py" -delete
 
 docker-compose -f $COMPOSE_PATH run web python /code/manage.py makemigrations
 docker-compose -f $COMPOSE_PATH run web python /code/manage.py migrate
