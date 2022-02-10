@@ -48,21 +48,9 @@ and make sure everything starts ok.
 
 If the `date-start` command complains about docker not being found, make sure that your user account is in the `docker` group (with command `groups $USER`). If it is not, run `usermod -aG docker $USER`, and restart your bash session!
 
-*TODO: Is migrate needed here?*
-
-In a new window where you remember to run `source $USER.env`, run
-
-```bash
-date-migrate
-```
-
-After that finishes, run
-
-```bash
-date-createsuperuser
-```
-
-and create the superuser.
+If you want a clean database you can run the 
+`date-migrate`
+command after everything has started correctly. Otherwise continue on to the next step.
 
 ### 5. Set up initial test data
 
@@ -71,6 +59,8 @@ and create the superuser.
 If you want initial development data run the script `clean-init.sh` in the folder `scripts/`.
 
 If you get an `illegal option error` in your shell, use `/bin/bash clean-init.sh` to run the script instead.
+
+After this you can re-run the date-createsuperuser.
 
 ### 6. Try out the server
 
