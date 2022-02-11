@@ -80,6 +80,7 @@
 }
 
 .baal-header{
+    text-shadow: 2px 2px #fe00fe;
     text-align: center;
     animation: fadeIn ease 5s;
     -webkit-animation: fadeIn ease 5s;
