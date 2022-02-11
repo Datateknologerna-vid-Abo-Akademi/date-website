@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% load app_filters %}
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block content %}
+    <head>
+        <link rel="stylesheet" href="{% static 'events/css/arsfest.css' %}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+        <script src="{% static 'js/live-attendee-list.js' %}"></script>
+        <style>
+            .background-img{
+                background-image: url("{% static 'images/glitchoverlay.png' %}");
+            }
+        </style>
+    </head>
+    <div class="background-img">
+        <div class="container-md min-vh-100 p-1">
+            <div class="container-size">
+                <div class="content">
+                    <img class="header-logo" src="{% static 'images/albin_black_pink.png' %}" alt="albin">
+                    <h1 class="baal-header">DaTe XXIII Årsfest</h1>
+                    <div class="baal-nav">
+                        <a class="baal-link" onclick="showPage(this)" href="#/main" data-nav="main">Välkommen</a>
+                        {% for page in staticpages %}
+                            <a class="baal-link" onclick="showPage(this)" href="#/{{ page.slug }}" data-nav="{{ page.slug }}">{{ page.title }}</a>
+                        {% endfor %}
+                        <a class="baal-link" onclick="showPage(this)" href="#/anmalan" data-nav="anmalan">Anmälan</a>
+                        <a class="baal-link" onclick="showPage(this)" href="#/anmalda" data-nav="anmalda">Anmälda</a>
+                    </div>
+                    <div class="text-content">
+                        {% for page in staticpages %}
+                        <div id="{{ page.slug }}" class="baal-content {{ page.slug }} hidden">
+                            <h1>{{ page.title }}</h1>
+                            <p>{{ page.content | safe }}</p>
+                        </div>
+                    {% endfor %}
+                        <div id="main" class="baal-content main">
+                            <h1 class="header">{{ event.title }}</h1>
+                            <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
+                            <p>{{ event.content | safe }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="content baal-content anmalan hidden break-words">
+                    <h2 id="sign-up">{% trans "Anmälning" %}</h2>
+                    {% if event.registration_is_open_members and user.is_authenticated %}
+                        {% include 'events/registering.html' %}
+                    {% elif event.registration_is_open_others %}
+                        {% include 'events/registering.html' %}
+                    {% elif event.registation_past_due %}
+                        <h4 id="no-registration">{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }} {% trans 'sedan' %}</h4>
+                    {% elif not event.registation_past_due and user.is_authenticated %}
+                        <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_members | timeuntil }}</p>
+                    {% else %}
+                        <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_others | timeuntil }}</p>
+                    {% endif %}
+                </div>
+                <div id="anmalda" class="content baal-content anmalda hidden">
+                    {% if event|show_attendee_list %}
+                        {% if event.sign_up_max_participants != 0 %}
+                            <p>Det finns {{ event.sign_up_max_participants }} platser!</p>
+                        {% endif %}
+                        <h1>{% trans "Anmälda" %}</h1>
+                        <table id="attendees">
+                            <tr id="attendees-header"
+                                {% if not event.get_registrations %} style="display: none;"
+                                {% endif %}>
+                                    <th>#</th>
+                                    <th>{% trans "Namn" %}</th>
+                                    {% for preference in event.get_registration_form_public_info reversed %}
+                                        <th>{{ preference }}</th>
+                                    {% endfor %}
+                            </tr>
+                            {% for attendee in event.get_registrations %}
+                                <tr {% if forloop.counter > event.sign_up_max_participants and event.sign_up_max_participants != 0 %} class="event-full" {% endif %} >
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{% if not attendee.anonymous %}{{ attendee.user }}{% else %}
+                                        <i>{% trans "Anonymt" %}</i>{% endif %}</td>
+                                    {% for preference in event.get_registration_form_public_info reversed %}
+                                        <td>{{ attendee | get_preference:preference }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% empty %}
+                                <p id="no-attendee">{% trans "Inga anmälda, var den första att anmäla dig!" %}</p>
+                            {% endfor %}
+                        </table>
+                    {% else %}
+                        <h4 id="no-attendee">{% trans 'Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta styrelsen vid behov.' %}</h4>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        $( document ).ready(function() {
+            $("form button").click(function(e){
+                console.log($("input[type=checkbox][name=Avec]").is(":checked"));
+                console.log($("label[for='id_Avecs Namn']").next().val() === "")
+                if ($("input[type=checkbox][name=Avec]").is(":checked")){
+                    if ($("label[for='id_Avecs Namn*']").next().val() === ""){
+                        alert("Ange avecs namn")
+                        e.preventDefault()
+                    }
+                    if ($("label[for='id_Avecs e-post*']").next().val() === ""){
+                        alert("Ange avecs e-post")
+                        e.preventDefault()
+                    }
+                }
+                if ($("input[type=checkbox][name=Avec]").is(":checked")){
+                    if ($("label[for='id_Avecs e-post*']").next().val() === $("label[for='id_email']").next().val()){
+                        alert("Avec e-post är samma som din egen, ange din avecs epost.")
+                        e.preventDefault()
+                    }
+                }
+            });
+        });
+
+        $( document ).ready(function() {
+            $("input[type=checkbox][name=Avec]").click(function(){
+                $(this).parent().nextAll("p").toggleClass("hidden");
+            });
+            $("input[type=checkbox][name=Avec]").parent().nextAll("p").toggleClass("hidden")
+            $("input[type=checkbox][name=Avec]").prop( "checked", false );
+
+            if(window.location.hash){
+                currentPage()
+            }
+        });
+
+        function showPage(element){
+            $(".baal-content").addClass("hidden");
+            $(`.${element.dataset.nav}`).toggleClass("hidden")
+            let pageHash = window.location.hash.substr(1).replace(/\//g,'');
+        }
+
+        function currentPage(element){
+            $(".baal-content").addClass("hidden");
+            let pageHash = window.location.hash.substr(1).replace(/\//g,'');
+            $(`.${pageHash}`).toggleClass("hidden")
+        }
+
+    </script>
+{% endblock %}

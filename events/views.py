@@ -4,10 +4,13 @@ import logging
 import os
 
 from django.http import HttpResponseForbidden
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import DetailView, ListView
 from websocket import create_connection
 from websocket._exceptions import WebSocketBadStatusException
+from staticpages.models import StaticPage, StaticPageNav
+from django.http import HttpResponseForbidden, request
+from copy import deepcopy
 
 from .models import Event, EventAttendees
 
@@ -32,6 +35,13 @@ class EventDetailView(DetailView):
     model = Event
     template_name = 'events/detail.html'
 
+    def get_template_names(self):
+        template_name = 'events/detail.html'
+        logger.debug(self.get_context_data().get('event').title.lower())
+        if self.get_context_data().get('event').title.lower() == 'årsfest':
+           template_name = 'events/arsfest.html'
+        return template_name
+
     def get_context_data(self, **kwargs):
         context = super(EventDetailView, self).get_context_data(**kwargs)
         form = kwargs.pop('form', None)
@@ -39,6 +49,10 @@ class EventDetailView(DetailView):
             context['form'] = form
         else:
             context['form'] = self.object.make_registration_form()
+        baal_staticnav = StaticPageNav.objects.filter(category_name="Årsfest")
+        if len(baal_staticnav) > 0:
+            baal_staticpages = StaticPage.objects.filter(category=baal_staticnav[0].pk)
+            context['staticpages'] = baal_staticpages
 
         return context
 
@@ -62,9 +76,13 @@ class EventDetailView(DetailView):
     def form_valid(self, form):
         self.get_object().add_event_attendance(user=form.cleaned_data['user'], email=form.cleaned_data['email'],
                                                anonymous=form.cleaned_data['anonymous'], preferences=form.cleaned_data)
+        if self.get_context_data().get('event').title.lower() == 'årsfest':
+            return redirect('/events/arsfest/#/anmalda') 
         return render(self.request, self.template_name, self.get_context_data())
 
     def form_invalid(self, form):
+        if self.get_context_data().get('event').title.lower() == 'årsfest':
+            return render(self.request, 'events/arsfest.html', self.get_context_data(form=form))
         return render(self.request, self.template_name, self.get_context_data(form=form))
 
 
@@ -75,6 +93,12 @@ def ws_send(request, form, public_info):
     try:
         ws = create_connection(path)
         ws.send(json.dumps(ws_data(form, public_info)))
+        # Send ws again if avec
+        if dict(form.cleaned_data).get('Avec') and dict(form.cleaned_data).get('Avecs Namn*'):
+            newform = deepcopy(form)
+            newform.cleaned_data['user'] = dict(newform.cleaned_data).get('Avecs Namn*')
+            public_info = ''
+            ws.send(json.dumps(ws_data(newform, public_info)))
         ws.close()
     except WebSocketBadStatusException:
         logger.error("Could not create connection for web socket")

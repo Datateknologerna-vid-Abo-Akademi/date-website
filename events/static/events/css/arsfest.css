@@ -1,0 +1,206 @@
+/* NEW STUFF */
+
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+:root {
+    --opacityColor: rgba(240, 240, 240, 0.65);
+    --backdropBlur:  blur(10px);
+}
+
+.hidden{
+    display: none !important;
+}
+
+.container-md{
+    padding-top: 10vh;
+    min-height: 100vh;
+    /*font-family: 'Carattere', cursive;*/
+    font-family: 'Press Start 2P', cursive;
+    text-align: start;
+    align-content: start;
+    font-weight: bold;
+    background-position: top;
+    border-bottom: 3px solid var(--primaryColor);
+}
+
+.content{
+    background-color: var(--opacityColor);
+    backdrop-filter: var(--backdropBlur);
+    -webkit-backdrop-filter: var(--backdropBlur);
+    border-top: 2px solid var(--primaryColor);
+    color: var(--textColorDark);
+    font-size: 0.7em;
+}
+
+.background-img {
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: 100vw 140vh;
+}
+
+/* fade animations start*/
+@keyframes fadeIn {
+0% {opacity:0;}
+100% {opacity:1;}
+}
+
+@-moz-keyframes fadeIn {
+0% {opacity:0;}
+100% {opacity:1;}
+}
+
+@-webkit-keyframes fadeIn {
+0% {opacity:0;}
+100% {opacity:1;}
+}
+
+@-o-keyframes fadeIn {
+0% {opacity:0;}
+100% {opacity:1;}
+}
+
+@-ms-keyframes fadeIn {
+0% {opacity:0;}
+100% {opacity:1;}
+}
+/* fade animations end */
+
+.header-logo{
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+    max-height: 20vh !important;
+    animation: fadeIn ease 5s;
+    -webkit-animation: fadeIn ease 5s;
+    -moz-animation: fadeIn ease 5s;
+    -o-animation: fadeIn ease 5s;
+    -ms-animation: fadeIn ease 5s;
+}
+
+.baal-header{
+    text-align: center;
+    animation: fadeIn ease 5s;
+    -webkit-animation: fadeIn ease 5s;
+    -moz-animation: fadeIn ease 5s;
+    -o-animation: fadeIn ease 5s;
+    -ms-animation: fadeIn ease 5s;
+}
+
+.baal-nav{
+    text-align: center;
+    margin: 8px;
+}
+
+.baal-nav a{
+    margin: 5px;
+    padding: 10px;
+    background-color: var(--primaryColor);
+    border-radius: 5px;
+    transition: .3s;
+    box-shadow: 3px 3px 5px 0px rgb(32, 32, 32);
+}
+
+.baal-nav a:hover{
+    background-color: var(--primaryColor);
+    color: var(--secondaryColor) !important;
+}
+
+.text-content div, .container-form, .container-signed{
+    animation: fadeIn ease 2s;
+    -webkit-animation: fadeIn ease 2s;
+    -moz-animation: fadeIn ease 2s;
+    -o-animation: fadeIn ease 2s;
+    -ms-animation: fadeIn ease 2s;
+}
+
+.alert-danger, .errorlist, .warning{
+    color: rgb(201, 99, 88) !important;
+}
+
+footer{
+    display: none;
+}
+
+.navbar{
+    display: none;
+}
+
+form p > * {
+    width: 100%;
+}
+
+form label{
+    font-family: 'Press Start 2P', cursive !important;
+}
+
+form select{
+    font-family: 'Press Start 2P', cursive !important;
+}
+
+form input {
+    font-family: 'Press Start 2P', cursive !important;
+}
+
+form button {
+    font-family: 'Press Start 2P', cursive !important;
+    background-color: var(--secondaryColor) !important;
+    color: var(--primaryColor) !important;
+}
+
+form button:hover {
+    background-color: var(--primaryColor) !important;
+    color: var(--secondaryColor) !important;
+}
+
+.event-full{
+    color: #b30116;
+}
+
+th {
+    padding-bottom: 1rem;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+}
+tr:hover {
+    transition: 200ms;
+    background-color: var(--secondaryColor);
+    color: var(--primaryColor);
+}
+
+  .glowing::before{
+      border-radius: var(--defaultRadius);
+    content: '';
+    position: absolute;
+    left: -2px;
+    top: -2px;
+    background: linear-gradient(45deg, rgb(37, 179 ,178), rgb(199, 129, 253), rgb(4, 83, 220), rgb(5, 66, 118), rgb(153, 134, 250), rgb(207, 0, 114), rgb(68, 16, 102), rgb(215, 3, 68), rgb(0, 80, 163));
+    background-size: 400%;
+    width: calc(100% + 5px);
+    height: calc(100% + 5px);
+    z-index: -1;
+    animation: glower 20s linear infinite;
+  }
+  
+  @keyframes glower {
+    0% {
+      background-position: 0 0;
+    }
+    
+    50% {
+      background-position: 400% 0;
+    }
+    
+    100% {
+      background-position: 0 0;
+    }
+  }
+
+  .inner {
+      background-color: var(--opacityColor);
+      padding: var(--defaultPadding);
+  }
