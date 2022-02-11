@@ -132,6 +132,7 @@ form p > * {
 }
 
 form label{
+    font-size: 0.7em;
     font-family: 'Press Start 2P', cursive !important;
 }
 
