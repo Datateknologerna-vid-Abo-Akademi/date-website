@@ -19,7 +19,15 @@
     <div class="background-img">
         <div class="container-md min-vh-100 p-1">
             <div class="container-size">
-                <div class="content">
+                <div class="content header-box">
+                    <div class="square" style="left: 10%; bottom: 0;"></div>
+                    <div class="square" style="left: 15%; bottom: -15%;"></div>
+                    <div class="square" style="left: 40%; bottom: 40%;"></div>
+                    <div class="square" style="left: 50%; bottom: -20%;"></div>
+                    <div class="square" style="left: 60%; bottom: 50%;"></div>
+                    <div class="square" style="left: 80%; bottom: -60%;"></div>
+                    <div class="square" style="left: 90%; bottom: 30%;"></div>
+                    <div class="square" style="left: 95%; bottom: -40%;"></div>
                     <img class="header-logo" src="{% static 'images/albin_glitch.png' %}" alt="albin">
                     <h1 class="baal-header">DaTe XXIII Årsfest</h1>
                     <div class="baal-nav">
@@ -30,18 +38,18 @@
                         <a class="baal-link" onclick="showPage(this)" href="#/anmalan" data-nav="anmalan">Anmälan</a>
                         <a class="baal-link" onclick="showPage(this)" href="#/anmalda" data-nav="anmalda">Anmälda</a>
                     </div>
-                    <div class="text-content">
-                        {% for page in staticpages %}
-                        <div id="{{ page.slug }}" class="baal-content {{ page.slug }} hidden">
+                </div>
+                <div class="text-content">
+                    {% for page in staticpages %}
+                        <div id="{{ page.slug }}" class="content baal-content {{ page.slug }} hidden">
                             <h1>{{ page.title }}</h1>
                             <p>{{ page.content | safe }}</p>
                         </div>
                     {% endfor %}
-                        <div id="main" class="baal-content main">
-                            <h1 class="header">{{ event.title }}</h1>
-                            <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
-                            <p>{{ event.content | safe }}</p>
-                        </div>
+                    <div id="main" class="content baal-content main">
+                        <h1 class="header">{{ event.title }}</h1>
+                        <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
+                        <p>{{ event.content | safe }}</p>
                     </div>
                 </div>
                 <div class="content baal-content anmalan hidden break-words">
@@ -142,6 +150,5 @@
             let pageHash = window.location.hash.substr(1).replace(/\//g,'');
             $(`.${pageHash}`).toggleClass("hidden")
         }
-
     </script>
 {% endblock %}
