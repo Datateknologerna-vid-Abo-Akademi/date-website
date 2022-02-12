@@ -25,7 +25,7 @@
 }
 
 .content{
-    background-color: rgba(0, 0, 0, 0.90);
+    background-color: rgba(0, 0, 0, 0.80);
     border-top: 2px solid var(--primaryColor);
     color: var(--textColorDark);
     font-size: 0.7em;
