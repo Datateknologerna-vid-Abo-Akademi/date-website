@@ -48,14 +48,12 @@
     color: var(--warning)
 }
 
-@media only screen and (min-width: 600px) {
+@media only screen and (max-width: 768px) {
     .form p{
-        grid-template-columns: 30% 350px;
+        display: block;
     }
-}
-
-@media only screen and (min-width: 1200px) {
-    .form p{
-        grid-template-columns: 20% 350px;
+    input, select, label {
+        display: block;
+        width: 100%;
     }
 }
