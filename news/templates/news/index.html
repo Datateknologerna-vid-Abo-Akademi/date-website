@@ -7,13 +7,13 @@
     <head>
         <link rel="stylesheet" href="{% static 'news/css/style.css' %}">
     </head>
-    <div class="container">
-        <div class="news-grid text-size">
+    <div class="container-md container-margin-top min-vh-100 p-1">
+        <div class="container-size break-words">
             {% if latest_news_items.0.albins_angels == True %}
                 <div class="aa-img"><img src="{% static 'images/albins-angels.png' %}"/></div>
             {% endif %}
             {% for news_item in latest_news_items %}
-                <div class="news">
+                <div class="content overflow-auto">
                     <a href="
                     {% if news_item.albins_angels == True %}
                         {% url 'news:aa_detail' news_item.slug %}
@@ -21,11 +21,11 @@
                         {% url 'news:detail' news_item.slug %}
                     {% endif %}
                         ">
-                        <h2 class="heading">{{ news_item.title }}</h2>
+                        <h2>{{ news_item.title }}</h2>
                     </a>
-                    <h4 class="author">{{ news_item.author }}, {{ news_item.published_time }}</h4>
-                    <div class="news-content">
-                        <p>{{ news_item.content | safe | truncatewords_html:"50" }}</p>
+                    <h4 class="help-text">{{ news_item.author }}, {{ news_item.published_time }}</h4>
+                    <div>
+                        {{ news_item.content | safe | truncatewords_html:"50" }}
                     </div>
 
                     {% if news_item.content|wordcount > 50 %}

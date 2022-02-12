@@ -1,28 +1,14 @@
 /* Homepage for DaTe */
 
-@import "date-root.css";
-
 /* Main */
-
-body {
-    font-family: 'Josefin Sans', sans-serif;
- }
-html{
-    scroll-behavior: smooth;
-}
-
-.h3-plus{
-    font-size: 26px;
-}
 
 /* Header */
 
 .header {
-    color: var(--secondaryColor);
+    color: var(--textColorLight);
     background-color: var(--primaryColor);
     height: 65vh;
 }
-
 
 .hero-text-box {
     text-align: center;
@@ -35,6 +21,8 @@ html{
 .hero-text-box .text {
     -webkit-transform: translateX(10px);
             transform: translateX(10px);
+    -webkit-transform: translateY(50px);
+            transform: translateY(50px);
     -webkit-animation: fadeIn 3s;
             animation: fadeIn 3s;
 }
@@ -102,7 +90,7 @@ html{
     padding-top: 5vh;
     display: block;
     margin-bottom: 0;
-    font-size: 12rem;
+    font-size: 8rem;
     font-weight: 400;
     -webkit-animation: fadeIn 3s;
             animation: fadeIn 3s;
@@ -117,28 +105,26 @@ html{
             animation: fadeIn 4.5s ease-in;
 }
 
-/*
-.wave:before {
-    content: '';
-    position: absolute;
-    bottom: 45vh;
-    left:0;
-    width: 100%;
-    height: 200px;
-    background-size: cover;
-    background: url(../../images/waves.png) no-repeat;
+/*About content*/
+
+.about{ 
+    background-color: var(--secondaryColor);
+    color: var(--textColorDark);
+    min-height: 35vh;
+    border-radius: var(--defaultRadius);
+    padding: 20px;
 }
-*/
 
 /*NEWS-EVENTS*/
 
 .news-events {
-    background: linear-gradient(180deg, rgba(154,169,182,0.2) 0%, rgba(255,255,255,1) 100%);
+    color: var(--textColorDark);
+    margin-top: 2vh;
+    background: linear-gradient(180deg, var(--secondaryColorDarker) 0%, var(--secondaryColor) 100%);
     min-height: 100vh;
     word-break: break-all;
     word-break: break-word;
     hyphens: auto;
-    font-size: 110%;
     border-radius: 5px;
 }
 
@@ -163,7 +149,6 @@ html{
 }
 
 .text-size{
-    font-size: 1.5rem;
     font-weight: bold;
 }
 
@@ -183,7 +168,7 @@ html{
     border-radius: 5px;
 }
 
-.content img{
+.news-content img{
     max-height: 30vh;
     max-width: 100%;
     /* keep img ratio correct */
@@ -196,13 +181,13 @@ html{
     color: var(--helpText);
 }
 
-div.content a{
+div.news-content a{
     display: inline-block;
     color: var(--linkColor);
 }
 
-div.content a:hover{
-    color: var(--primaryColorLight);
+div.news-content a:hover{
+    color: var(--textColorDarkish);
 }
 
 .more-news{
@@ -210,7 +195,7 @@ div.content a:hover{
 }
 
 .more-news:hover{
-    color: var(--primaryColorLight);
+    color: var(--textColorDarkish);
 }
 
 .news-header{
@@ -261,6 +246,74 @@ div.content a:hover{
 
 /*Event start*/
 
+  
+.card {
+    border-radius: var(--defaultRadius);
+  }
+  
+.card .fa-chevron-right{
+    transition: .3s;
+  }
+  
+.card a:hover .fa-chevron-right{
+    transform: translateX(10px);
+  }
+  
+.evet-card > .card .list-inline-item {
+    color: var(--helpText);
+    font-size: 14px;
+  }
+  
+.evet-card > .card .badge {
+    background: var(--primaryColorLighter);
+  }
+  
+.evet-card > .card {
+    background: var(--secondaryColor);
+  }
+  
+.evet-card a{
+    color: var(--linkColor);
+    border-top: 2px solid var(--linkColor);
+  }
+  
+.evet-card a:active{
+    color: var(--linkColor);
+  }
+  
+.evet-card a:hover{
+    background-color: inherit;
+    color: var(--textColorDarkish);
+  }
+  
+.evet-card a:focus{
+    background-color: inherit;
+    box-shadow: none;
+  }
+
+.chevron-box {
+    margin: auto; 
+    border: 1px solid var(--linkColorSecondary); 
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.text-color {
+    color: var(--textColorDark);
+}
+
+.card {
+    box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
+}
+
+.card:hover {
+    transform: scale(1.01);
+}
+
+.card:hover .fa-chevron-right{
+    transform: translateX(10px);
+  }
+
 .events-container{
     display: block;
 }
@@ -275,24 +328,12 @@ div.content a:hover{
     display: grid;
     grid-row-gap: 10px;
 }
-/*
-.border-left{
-    border-left: 3px solid;
-    border-image: 
-    linear-gradient(
-      to bottom, 
-      rgba(255, 255, 255, 0), 
-      rgb(0, 0, 0)
-    ) 1 100%;
-}
-*/
 
 .event-box{
     display: grid;
     /*background-color: var(--primaryColorLighter);*/
     background-color: var(--secondaryColor);
-    color: black;
-    font-size: 1.2rem;
+    color: var(--textColorDark);
     text-align: left;
     padding: 1px;
     -webkit-transition: all 0.2s;
@@ -306,17 +347,10 @@ div.content a:hover{
 }
 
 .event-box:hover {
-    color: var(--secondaryColor);
-    background-color: var(--primaryColorLight);
+    color: var(--textColorLight);
+    background-color: var(--primaryColorLighter);
 
 }
-
-i {
-    border: solid var(--primaryColor);
-    border-width: 0 2px 2px 0;
-    display: inline-block;
-    padding: 3px;
-  }
 
 .event-title{
     padding-top: 5px;
@@ -334,10 +368,10 @@ i {
     margin: 5px;
 }
 
-.border-bottom{
+.header-border-bottom{
     border-bottom: solid;
     border-width: 2px;
-    border-color: rgb(180, 180, 180);
+    border-color: var(--helpTextLighter);
 }
 
 .more-events-button{
@@ -348,7 +382,7 @@ i {
 .more-events-button:hover{
     transition: 0.2s;
     scale: 1.01;
-    color: var(--primaryColorLight);
+    color: var(--textColorDarkish);
 }
 /*Events end*/
 
@@ -366,6 +400,7 @@ i {
     grid-area: box;
     border: 2px solid rgb(163, 163, 163);
     border-radius: 5px;
+    padding: 3px;
 }
 
 .calendar {
@@ -373,7 +408,6 @@ i {
     width: 100%;
     margin: auto;
     font-size: 13px;
-
 }
 
 .month{
@@ -387,7 +421,7 @@ i {
 }
 
 .calendar td {
-    padding: 15px 0px 0px 10px;
+    padding: 10px 0px 0px 10px;
 }
   
 div.calendar-container a {
@@ -402,9 +436,9 @@ div.calendar-container a {
   float: right;
 }
 
-.btn {
+.cal-btn {
   outline: none;
-  color: black;
+  color: var(--textColorDark);
   background-color: transparent;
   box-shadow: 0 0 0 0;
 }
@@ -415,17 +449,16 @@ div.calendar-container a {
 }
 
 /* Calendar tooltip */
-.tooltip {
+.calendar-tooltip {
   position: relative;
   display: inline-block;
 }
 
-.tooltip .tooltiptext {
+.calendar-tooltip .tooltiptext {
   visibility: hidden;
-  font-size: 1.3em;
   width: 150px;
   background-color: var(--primaryColor);
-  color: #fff;
+  color: var(--textColorLight);
   text-align: center;
   border-radius: 6px;
   padding: 5px 0;
@@ -438,7 +471,7 @@ div.calendar-container a {
   margin-left: -60px;
 }
 
-.tooltip:hover .tooltiptext {
+.calendar-tooltip:hover .tooltiptext {
   visibility: visible;
 }
 /*Calendar end*/
@@ -454,18 +487,18 @@ div.calendar-container a {
     display: none;
 }
 
-.carousel{
+.carousel-logos{
     border-top: solid;
     border-bottom: solid;
     border-width: 2px;
     border-color: rgb(180, 180, 180);
 }
 
-div.carousel {
+div.carousel-logos {
     overflow: hidden;
   }
 
-div.carousel img{
+div.carousel-logos img{
     display: block;
     margin-left: auto;
     margin-right: auto;
@@ -483,22 +516,6 @@ div.carousel img{
 /*logos end*/
 
 /*Sidebar end*/
-
-/*About content*/
-
-.about{ 
-    display: grid;
-    grid-template-columns: 1fr 1000px 1fr;
-    grid-template-rows: auto;
-    grid-template-areas: 
-      ". about .";
-      align-items: center;
-    min-height: 35vh;
-}
-
-.about-grid-content{
-    grid-area: about;
-}
 
 /* Generic animations*/
 
@@ -591,42 +608,14 @@ div.carousel img{
         grid-template-columns: 5vw 5fr 2fr 5vw;
     }
 
-    .about{
-        grid-template-columns: 10vw 1fr 10vw;
-    }
-}
-
-@media screen and (max-width: 1000px){
-
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 65%)scale(0.45);
-                transform: translate(-50%, 65%)scale(0.45);
-    }
-
-    .hero-text-main {
-        font-size: 9rem;
-    }
-
-    .hero-text-sub{
-        font-size: 2rem;
-    }
-
-    .hero-text-box .hero-text-sub {
-        letter-spacing: 1rem;
-    }
-
-    .albin {
-        position: absolute;
-        left: 50%;
-        -webkit-transform: translate(-50%, -60%) scale(.3);
-                transform: translate(-50%, -60%) scale(.3);
-    }
 
 }
 
-@media screen and (max-width: 900px){
+
+
+@media screen and (max-width: 991px){
     .main-container{
-        grid-template-columns: 5vw 1fr 5vw;
+        grid-template-columns: 1vw 1fr 1vw;
         grid-template-areas: 
           ". events ."
           ". news ."
@@ -650,10 +639,6 @@ div.carousel img{
         display: none;
     }
 
-    .about{
-        grid-template-columns: 5vw 1fr 5vw;
-    }
-
     .hero-text-box {
         -webkit-transform: translate(-50%, 65%)scale(0.45);
                 transform: translate(-50%, 65%)scale(0.45);
@@ -671,49 +656,13 @@ div.carousel img{
         letter-spacing: 1rem;
     }
 
-    .hero-text-box .text {
-        -webkit-transform: translateY(10px);
-                transform: translateY(10px);
-    } 
-
 }
 
 @media screen and (max-width: 800px) {
 
-    .about{
-        grid-template-columns: 3vw 1fr 5vw;
-    }
-
     .hero-text-box {
         -webkit-transform: translate(-50%, 55%)scale(0.40);
                 transform: translate(-50%, 55%)scale(0.40);
-    }
-
-    .hero-text-main {
-        font-size: 7rem;
-    }
-
-    .hero-text-sub{
-        font-size: 3rem;
-    }
-
-    .hero-text-box .hero-text-sub {
-        letter-spacing: 1rem;
-    }
-}
-
-@media screen and (max-width: 550px) {
-
-    .tooltip .tooltiptext {
-        width: 0;
-      }
-      .tooltip:hover .tooltiptext {
-        visibility: hidden;
-      }
-
-      .hero-text-box {
-        -webkit-transform: translate(-50%, 55%)scale(0.35);
-                transform: translate(-50%, 55%)scale(0.35);
     }
 
     .hero-text-main {
@@ -722,6 +671,21 @@ div.carousel img{
 
     .hero-text-sub{
         font-size: 3rem;
+    }
+}
+
+@media screen and (max-width: 550px) {
+
+    .calendar-tooltip .tooltiptext {
+        width: 0;
+      }
+    .calendar-tooltip:hover .tooltiptext {
+        visibility: hidden;
+      }
+
+      .hero-text-box {
+        -webkit-transform: translate(-50%, 55%)scale(0.35);
+                transform: translate(-50%, 55%)scale(0.35);
     }
 
     .hero-text-box .hero-text-sub {
@@ -738,20 +702,4 @@ div.carousel img{
     .aa-img {
         left: 85%;
       }
-}
-
-@media screen and (max-width: 450px) {
-
-    .news-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .main-container{
-        grid-template-columns: 1vw 1fr 1vw;
-    }
-
-    .about{
-        grid-template-columns: 5vw 1fr 5vw;
-    }
-
 }
