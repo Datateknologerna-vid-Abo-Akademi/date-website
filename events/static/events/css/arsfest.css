@@ -25,14 +25,21 @@
 }
 
 .content{
-    background-color: var(--opacityColor);
-    backdrop-filter: var(--backdropBlur);
-    -webkit-backdrop-filter: var(--backdropBlur);
+    background-color: rgba(0, 0, 0, 0.90);
     border-top: 2px solid var(--primaryColor);
     color: var(--textColorDark);
     font-size: 0.7em;
     text-shadow: 2px 2px #fe00fe;
 }
+   
+  /* if backdrop support: very transparent and blurred */
+  @supports ((-webkit-backdrop-filter: blur(2em)) or (backdrop-filter: blur(2em))) {
+    .content {
+    background-color: var(--opacityColor);
+      -webkit-backdrop-filter: var(--backdropBlur);
+      backdrop-filter: var(--backdropBlur);
+    }
+  }
 
 .content a, .baal-content h2, .baal-content h1 {
     color: rgb(36, 36, 36);
