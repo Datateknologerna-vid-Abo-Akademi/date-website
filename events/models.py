@@ -6,13 +6,13 @@ from datetime import timedelta
 from ckeditor.fields import RichTextField
 from django import forms
 from django.conf import settings
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
-from django.db.models import Max
+from django.db.models import Max, JSONField
 from django.template.defaulttags import register
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
+from django.core.exceptions import ValidationError
 
 logger = logging.getLogger('date')
 
@@ -79,10 +79,21 @@ class Event(models.Model):
                 if self.get_registration_form():
                     for item in self.get_registration_form():
                         user_pref[str(item)] = preferences.get(str(item))
-                registration = EventAttendees.objects.create(user=user,
-                                                                event=self, email=email,
-                                                                time_registered=now(), preferences=user_pref,
-                                                                anonymous=anonymous)
+            # kemistklubben baal event avec settings
+                if 'årsfest' in str(self).lower() and user_pref.get('Avec'):
+                    EventAttendees.objects.create(user=user,
+                                            event=self, email=email,
+                                            time_registered=now(), preferences=user_pref,
+                                            anonymous=anonymous)
+                    EventAttendees.objects.create(user=user_pref.get('Avecs Namn*'),
+                                                event=self, email=user_pref.get('Avecs e-post*'),
+                                                time_registered=now(), preferences=user_pref,
+                                                anonymous=anonymous)
+                else:
+                    registration = EventAttendees.objects.create(user=user,
+                                                event=self, email=email,
+                                                time_registered=now(), preferences=user_pref,
+                                                anonymous=anonymous)
 
     def cancel_event_attendance(self, user):
         if self.sign_up:
@@ -114,7 +125,7 @@ class Event(models.Model):
     def make_registration_form(self, data=None):
         if self.sign_up:
             fields = {'user': forms.CharField(label='Namn', max_length=255),
-                      'email': forms.EmailField(label='Email'),
+                      'email': forms.EmailField(label='Email', validators=[self.validate_unique_email]),
                       'anonymous': forms.BooleanField(label='Anonymt', required=False)}
             if self.get_registration_form():
                 for question in reversed(self.get_registration_form()):
@@ -133,6 +144,14 @@ class Event(models.Model):
     def show_attendee_list(self):
         return self.event_date_end > now() + timedelta(-1)
 
+    def validate_unique_email(self, email):
+        attendees = self.get_registrations()
+        for attendee in attendees:
+            logger.debug(email)
+            logger.debug(attendee.email)
+            if email == attendee.email:
+                logger.debug("SAME EMAIL")
+                raise ValidationError(_("Det finns redan någon anmäld med denna email"))
 
 class EventRegistrationForm(models.Model):
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)

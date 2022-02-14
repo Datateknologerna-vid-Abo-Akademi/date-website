@@ -3,7 +3,7 @@ table {
 }
 
 .event-full{
-    color: gray;
+    color: var(--helpText);
 }
 
 th {
