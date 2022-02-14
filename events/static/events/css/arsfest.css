@@ -3,7 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 :root {
-    --opacityColor: rgba(0, 0, 0, 0.55);
+    --opacityColor: rgba(0, 0, 0, 0.70);
     /*--opacityColor: rgba(223, 223, 223, 0.55);*/
     --backdropBlur:  blur(10px);
 }
