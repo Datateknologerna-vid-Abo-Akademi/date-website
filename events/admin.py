@@ -21,7 +21,7 @@ class EventRegistrationFormInline(admin.TabularInline):
     fk_name = 'event'
     extra = 0
     readonly_fields = ('line_number',)
-    fields = ('line_number', 'name', 'type', 'required', 'public_info', 'choice_list')
+    fields = ('line_number', 'name', 'type', 'required', 'public_info', 'hide_for_avec', 'choice_list')
     can_delete = True
 
     def line_number(self, obj):
@@ -38,14 +38,20 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
     fk_name = 'event'
     extra = 0
     list_editable = ('user', 'email', 'preferences')
-    readonly_fields = ('time_registered',)
-    fields = ('attendee_nr', 'user', 'email', 'anonymous', 'preferences', 'time_registered')
     formfield_overrides = {
         JSONField: {'widget': PrettyJSONWidget()}
     }
     can_delete = True
     ordering = ['attendee_nr']
 
+    def get_fields(self, request, event):
+        fields = ['attendee_nr', 'user', 'email', 'anonymous', 'preferences', 'time_registered']
+        if event and event.sign_up_avec:
+            fields.append('avec_for')
+        return fields
+    def get_readonly_fields(self, request, event):
+        readonly_fields = ['time_registered']
+        return readonly_fields
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):

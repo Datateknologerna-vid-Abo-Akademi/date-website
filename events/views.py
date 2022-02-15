@@ -63,7 +63,6 @@ class EventDetailView(DetailView):
                                                               or self.object.registration_is_open_others()):
             form = self.object.make_registration_form().__call__(data=request.POST)
             if form.is_valid():
-
                 public_info = self.object.get_registration_form_public_info()
                 # Do not send ws data on refresh after initial signup.
                 if not EventAttendees.objects.filter(email=request.POST.get('email'), event=self.object.id).first():
@@ -74,8 +73,17 @@ class EventDetailView(DetailView):
         return HttpResponseForbidden()
 
     def form_valid(self, form):
-        self.get_object().add_event_attendance(user=form.cleaned_data['user'], email=form.cleaned_data['email'],
+        attendee = self.get_object().add_event_attendance(user=form.cleaned_data['user'], email=form.cleaned_data['email'],
                                                anonymous=form.cleaned_data['anonymous'], preferences=form.cleaned_data)
+        if 'avec' in form.cleaned_data and form.cleaned_data['avec']:
+            avec_data = {'avec_for': attendee}
+            for key in form.cleaned_data:
+                if key.startswith('avec_'):
+                    field_name = key.split('avec_')[1]
+                    value = form.cleaned_data[key]
+                    avec_data[field_name] = value
+            self.get_object().add_event_attendance(user=avec_data['user'], email=avec_data['email'],
+                                               anonymous=avec_data['anonymous'], preferences=avec_data, avec_for=avec_data['avec_for'])
         if self.get_context_data().get('event').title.lower() == 'årsfest':
             return redirect('/events/arsfest/#/anmalda') 
         return render(self.request, self.template_name, self.get_context_data())
