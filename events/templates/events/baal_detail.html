@@ -80,12 +80,6 @@
     </div>
     <script>
         $( document ).ready(function() {
-            $("input[type=checkbox][name=Avec]").click(function(){
-                $(this).parent().nextAll("p").toggleClass("hidden");
-            });
-            $("input[type=checkbox][name=Avec]").parent().nextAll("p").toggleClass("hidden")
-            $("input[type=checkbox][name=Avec]").prop( "checked", false );
-
             if(window.location.hash){
                 currentPage()
             }
