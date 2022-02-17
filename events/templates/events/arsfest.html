@@ -104,36 +104,8 @@
     </div>
     
     <script>
-        $( document ).ready(function() {
-            $("form button").click(function(e){
-                console.log($("input[type=checkbox][name=Avec]").is(":checked"));
-                console.log($("label[for='id_Avecs Namn']").next().val() === "")
-                if ($("input[type=checkbox][name=Avec]").is(":checked")){
-                    if ($("label[for='id_Avecs Namn*']").next().val() === ""){
-                        alert("Ange avecs namn")
-                        e.preventDefault()
-                    }
-                    if ($("label[for='id_Avecs e-post*']").next().val() === ""){
-                        alert("Ange avecs e-post")
-                        e.preventDefault()
-                    }
-                }
-                if ($("input[type=checkbox][name=Avec]").is(":checked")){
-                    if ($("label[for='id_Avecs e-post*']").next().val() === $("label[for='id_email']").next().val()){
-                        alert("Avec e-post är samma som din egen, ange din avecs epost.")
-                        e.preventDefault()
-                    }
-                }
-            });
-        });
 
         $( document ).ready(function() {
-            $("input[type=checkbox][name=Avec]").click(function(){
-                $(this).parent().nextAll("p").toggleClass("hidden");
-            });
-            $("input[type=checkbox][name=Avec]").parent().nextAll("p").toggleClass("hidden")
-            $("input[type=checkbox][name=Avec]").prop( "checked", false );
-
             if(window.location.hash){
                 currentPage()
             }

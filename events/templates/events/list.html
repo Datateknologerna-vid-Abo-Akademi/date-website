@@ -31,6 +31,9 @@
                     <th>{{ header }}<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove">
                     </th>
                 {% endfor %}
+                {% if event.sign_up_avec %}
+                    <th>Avec till<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
+                {% endif %}
                 <th>Registrerad<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
             </tr>
             </thead>
@@ -51,6 +54,9 @@
                             {% endif %}
                         </td>
                     {% endfor %}
+                    {% if event.sign_up_avec %}
+                        <td>{{ attendee.avec_for }}</td>
+                    {% endif %}
                     <td>{{ attendee.time_registered }}</td>
                 </tr>
             {% endfor %}

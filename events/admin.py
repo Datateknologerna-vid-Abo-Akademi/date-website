@@ -3,7 +3,7 @@ import logging
 from admin_ordering.admin import OrderableAdmin
 from django.conf.urls import url
 from django.contrib import admin
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils.html import format_html
@@ -21,7 +21,7 @@ class EventRegistrationFormInline(admin.TabularInline):
     fk_name = 'event'
     extra = 0
     readonly_fields = ('line_number',)
-    fields = ('line_number', 'name', 'type', 'required', 'public_info', 'choice_list')
+    fields = ('line_number', 'name', 'type', 'required', 'public_info', 'hide_for_avec', 'choice_list')
     can_delete = True
 
     def line_number(self, obj):
@@ -38,14 +38,26 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
     fk_name = 'event'
     extra = 0
     list_editable = ('user', 'email', 'preferences')
-    readonly_fields = ('time_registered',)
-    fields = ('attendee_nr', 'user', 'email', 'anonymous', 'preferences', 'time_registered')
     formfield_overrides = {
         JSONField: {'widget': PrettyJSONWidget()}
     }
     can_delete = True
     ordering = ['attendee_nr']
 
+    def get_fields(self, request, event):
+        fields = ['attendee_nr', 'user', 'email', 'anonymous', 'preferences', 'time_registered']
+        if event and event.sign_up_avec:
+            fields.append('avec_for')
+        return fields
+    def get_readonly_fields(self, request, event):
+        readonly_fields = ['time_registered']
+        return readonly_fields
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        event_id = request.resolver_match.kwargs.get('object_id')
+        if db_field.name == "avec_for":
+            kwargs["queryset"] = EventAttendees.objects.filter(event=event_id)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):

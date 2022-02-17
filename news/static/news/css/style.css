@@ -6,3 +6,45 @@
     margin-right: auto;
     margin-bottom: 2vh;
 }
+
+/* pagination */
+.center {
+    text-align: center;
+  }
+  
+  .pagination {
+    display: inline-block;
+    margin-top: 30px;
+  }
+  
+  .pagination a {
+    color: var(--textColorLightish);
+    background-color: var(--primaryColorLighter);
+    float: left;
+    padding: 8px 16px;
+    text-decoration: none;
+    transition: background-color .3s;
+    border: 1px solid #ddd;
+    margin: 0 4px;
+    border-radius: var(--defaultRadius);
+  }
+  
+  .pagination .disabled{
+    border: 0;
+  }
+  
+  .pagination a.active {
+    color: var(--textColorLight);
+    border: 1px solid var(--linkColorSecondary);
+  }
+
+@media only screen and (max-width: 1200px) {
+    .container{
+        grid-template-columns: 10vw 1fr 10vw;
+    }
+}
+@media only screen and (max-width: 900px) {
+    .container{
+        grid-template-columns: 3vw 1fr 3vw;
+    }
+}
