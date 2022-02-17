@@ -102,9 +102,10 @@ def ws_send(request, form, public_info):
         ws = create_connection(path)
         ws.send(json.dumps(ws_data(form, public_info)))
         # Send ws again if avec
-        if dict(form.cleaned_data).get('Avec') and dict(form.cleaned_data).get('Avecs Namn*'):
+        logger.debug(dict(form.cleaned_data))
+        if dict(form.cleaned_data).get('avec'):
             newform = deepcopy(form)
-            newform.cleaned_data['user'] = dict(newform.cleaned_data).get('Avecs Namn*')
+            newform.cleaned_data['user'] = dict(newform.cleaned_data).get('avec_user')
             public_info = ''
             ws.send(json.dumps(ws_data(newform, public_info)))
         ws.close()
