@@ -53,6 +53,12 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
         readonly_fields = ['time_registered']
         return readonly_fields
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        event_id = request.resolver_match.kwargs.get('object_id')
+        if db_field.name == "avec_for":
+            kwargs["queryset"] = EventAttendees.objects.filter(event=event_id)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
     save_on_top = True
