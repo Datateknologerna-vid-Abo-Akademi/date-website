@@ -10,4 +10,5 @@ urlpatterns = [
     path('activate/<uidb64>/<token>/', views.activate, name='activate'),
     url('^', include('django.contrib.auth.urls')),
     path('info/', views.EditView.as_view(), name='info'),
+    path('cert/', views.CertificateView.as_view(), name='certificate'),
 ]

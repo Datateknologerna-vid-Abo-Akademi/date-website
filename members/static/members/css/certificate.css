@@ -1,0 +1,57 @@
+.content {
+    padding: 0;
+}
+
+.card {
+    color: var(--textColorDark);
+}
+
+.validation {
+    height: 250px;
+    position: relative;
+    border-radius:var(--defaultRadius);
+    padding: 5px;
+}
+
+.valid {
+    background-color: rgb(31, 141, 31);
+}
+
+.invalid {
+    background-color: rgb(141, 31, 31);
+}
+
+
+.checkmark {
+    position: absolute;
+    color: white;
+    bottom: 5px;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    text-align: center;
+}
+
+
+.fa-rotate {  
+    animation: infinite-spinning 4s linear infinite;
+    position: absolute;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    text-align: center;
+    top: 25%;
+    transform: translateY(-25%);
+    color: white;
+}
+
+@keyframes infinite-spinning {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
