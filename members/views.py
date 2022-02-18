@@ -1,3 +1,9 @@
+import logging
+import os
+import datetime
+
+from django.contrib.auth.hashers import make_password
+from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.core.mail import EmailMessage
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -23,6 +29,30 @@ class EditView(View):
     def get(self, request):
         user = request.user
         return render(request, 'userinfo.html', {"user": user})
+
+class CertificateView(View):
+    def get(self, request):
+        icons = ['atom', 'asterisk', 'bahai', 'certificate', 'cog', 'compact-disc', 'snowflake']
+        user = request.user
+        current_time = datetime.datetime.now()
+
+        icon_options = {
+            'Monday' : icons[0],
+            'Tuesday' : icons[1],
+            'Wednesday' : icons[2],
+            'Thursday' : icons[3],
+            'Friday' : icons[4],
+            'Saturday' : icons[5],
+            'Sunday' : icons[6],
+        }
+        icon = icon_options[current_time.strftime("%A")]
+
+        context = {
+            'user': user,
+            'current_time': current_time,
+            'icon': icon,
+        }
+        return render(request, 'certificate.html', context)
 
 
 def signup(request):

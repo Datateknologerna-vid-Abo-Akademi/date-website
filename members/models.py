@@ -84,6 +84,16 @@ class Member(AbstractBaseUser, PermissionsMixin):
             return all_subscriptions[0].subscription
         return None
 
+    def get_str_membership_type(self):
+        membership_types = {
+            1 : 'Gulnäbb',
+            2 : 'Ordinarie medlem',
+            3 : 'Stödjande medlem',
+            4 : 'Senior medlem',
+        }
+        return membership_types[self.membership_type]
+
+
 
 SUB_RE_SCALE_DAY = 'day'
 SUB_RE_SCALE_MONTH = 'month'
