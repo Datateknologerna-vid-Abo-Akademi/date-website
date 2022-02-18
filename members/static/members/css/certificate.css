@@ -1,5 +1,5 @@
 .content {
-    padding: 0;
+    padding: 5px;
 }
 
 .card {
@@ -11,10 +11,11 @@
     position: relative;
     border-radius:var(--defaultRadius);
     padding: 5px;
+    color: var(--textColorLight);
 }
 
 .valid {
-    background-color: rgb(31, 141, 31);
+    background-color: var(--primaryColorLighter);
 }
 
 .invalid {
