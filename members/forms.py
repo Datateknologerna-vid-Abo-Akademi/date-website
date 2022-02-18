@@ -133,3 +133,9 @@ class SignUpForm(forms.ModelForm):
             'membership_type',
             'password'
         )
+
+class SubscriptionPaymentChoiceField(forms.ModelChoiceField):
+     def label_from_instance(self, obj):
+        if not obj.first_name or not obj.last_name:
+            return obj.username
+        return f'{obj.first_name} {obj.last_name}'

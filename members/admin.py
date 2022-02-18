@@ -3,8 +3,10 @@ from django.contrib.auth import admin as auth_admin
 
 
 from django.db.models.functions import Lower
-from members.forms import MemberCreationForm, MemberUpdateForm, SubscriptionPaymentForm
-from members.models import Member, Subscription, SubscriptionPayment, MEMBERSHIP_TYPES
+from members.forms import (MemberCreationForm, MemberUpdateForm,
+                           SubscriptionPaymentForm, SubscriptionPaymentChoiceField)
+from members.models import (MEMBERSHIP_TYPES, Member, Subscription,
+                            SubscriptionPayment)
 from django.contrib.auth.models import Permission
 
 admin.site.register(Permission)
@@ -66,3 +68,8 @@ class SubscriptionPaymentAdmin(admin.ModelAdmin):
 
     def full_name(self, obj):
         return obj.member.get_full_name()
+    
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'member':
+            return SubscriptionPaymentChoiceField(queryset=Member.objects.all())
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
