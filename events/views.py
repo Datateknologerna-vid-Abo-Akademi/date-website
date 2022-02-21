@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 import os
+from django.conf import settings
 
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect
@@ -96,14 +97,13 @@ class EventDetailView(DetailView):
 
 
 def ws_send(request, form, public_info):
-    ws_schema = 'ws' if request.scheme == 'http' else 'wss'
+    ws_schema = 'ws' if settings.DEVELOP else 'wss'
     url = request.META.get('HTTP_HOST')
     path = ws_schema + '://' + url + '/ws' + request.path
     try:
         ws = create_connection(path)
         ws.send(json.dumps(ws_data(form, public_info)))
         # Send ws again if avec
-        logger.debug(dict(form.cleaned_data))
         if dict(form.cleaned_data).get('avec'):
             newform = deepcopy(form)
             newform.cleaned_data['user'] = dict(newform.cleaned_data).get('avec_user')
