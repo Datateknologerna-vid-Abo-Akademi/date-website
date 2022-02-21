@@ -35,6 +35,7 @@ services:
     depends_on:
       - db
   redis:
+    restart: always
     image: redis:6.0
     ports:
       - ${REDIS_PORT}:6379
