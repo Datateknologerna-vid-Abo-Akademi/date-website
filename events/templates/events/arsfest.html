@@ -54,6 +54,8 @@
                 </div>
                 <div class="content baal-content anmalan hidden break-words">
                     <h2 id="sign-up">{% trans "Anmälning" %}</h2>
+                    {% if user|in_group:"commodore" %}
+                        {% include 'events/registering.html' %}
                     {% if event.registration_is_open_members and user.is_authenticated %}
                         {% include 'events/registering.html' %}
                     {% elif event.registration_is_open_others %}
