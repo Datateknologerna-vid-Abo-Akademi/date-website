@@ -1,6 +1,7 @@
 import datetime
 import os
 from django.db import models
+from django.conf import settings
 
 from django.core.mail import EmailMessage
 from django.http import HttpResponseForbidden, request
@@ -100,7 +101,7 @@ class EventDetailView(DetailView):
 
 
 def ws_send(request, form, public_info):
-    ws_schema = 'ws' if request.scheme == 'http' else 'wss'
+    ws_schema = 'ws' if settings.DEVELOP else 'wss'
     url = request.META.get('HTTP_HOST')
     if 'localhost' in url:
         url = 'localhost:8000'
