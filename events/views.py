@@ -59,8 +59,9 @@ class EventDetailView(DetailView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         if self.object.sign_up and (request.user.is_authenticated
-                                                              and self.object.registration_is_open_members()
-                                                              or self.object.registration_is_open_others()):
+                                    and self.object.registration_is_open_members()
+                                    or self.object.registration_is_open_others()
+                                    or request.user.groups.filter(name="commodore").exists()): # Temp fix to allow commodore peeps to enter pre-signed up attendees
             form = self.object.make_registration_form().__call__(data=request.POST)
             if form.is_valid():
                 public_info = self.object.get_registration_form_public_info()
