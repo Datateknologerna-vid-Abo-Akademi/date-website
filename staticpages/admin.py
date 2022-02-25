@@ -21,3 +21,5 @@ class StaticPageNavAdmin(admin.ModelAdmin):
         PageInline,
         UrlInline,
     ]
+
+admin.site.register(StaticPage)
