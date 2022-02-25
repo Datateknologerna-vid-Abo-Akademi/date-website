@@ -1,0 +1,30 @@
+/* pagination */
+.center {
+    text-align: center;
+  }
+  
+  .pagination {
+    display: inline-block;
+    margin-top: 30px;
+  }
+  
+  .pagination a {
+    color: var(--textColorLightish);
+    background-color: var(--primaryColorLighter);
+    float: left;
+    padding: 8px 16px;
+    text-decoration: none;
+    transition: background-color .3s;
+    border: 1px solid #ddd;
+    margin: 0 4px;
+    border-radius: var(--defaultRadius);
+  }
+  
+  .pagination .disabled{
+    border: 0;
+  }
+  
+  .pagination a.active {
+    color: var(--textColorLight);
+    border: 1px solid var(--linkColorSecondary);
+  }

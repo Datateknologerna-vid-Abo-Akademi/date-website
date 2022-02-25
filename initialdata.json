@@ -1,0 +1,1237 @@
+[
+{
+  "model": "staticpages.staticpagenav",
+  "pk": 1,
+  "fields": {
+    "category_name": "Medlemmar",
+    "nav_element": 0
+  }
+},
+{
+  "model": "staticpages.staticpagenav",
+  "pk": 2,
+  "fields": {
+    "category_name": "staticpages",
+    "nav_element": 0
+  }
+},
+{
+  "model": "staticpages.staticpagenav",
+  "pk": 3,
+  "fields": {
+    "category_name": "static urls",
+    "nav_element": 0
+  }
+},
+{
+  "model": "staticpages.staticpagenav",
+  "pk": 4,
+  "fields": {
+    "category_name": "Static pages urls",
+    "nav_element": 0
+  }
+},
+{
+  "model": "staticpages.staticpage",
+  "pk": 1,
+  "fields": {
+    "title": "staticpage",
+    "content": "<p>I&#39;m baby selvage hexagon heirloom typewriter, four dollar toast kitsch chia. Woke cronut roof party YOLO blue bottle, pug actually ethical ugh ramps. Cray fashion axe activated charcoal asymmetrical, jean shorts schlitz typewriter intelligentsia irony cloud bread vaporware kitsch raw denim palo santo literally. 3 wolf moon fanny pack hoodie, coloring book shoreditch hexagon affogato art party green juice 90&#39;s viral la croix. Beard ennui tousled photo booth skateboard celiac chicharrones heirloom.</p>\r\n\r\n<p><img alt=\"\" src=\"https://images.unsplash.com/photo-1642425064261-34d190628bd3?ixlib=rb-1.2.1&amp;ixid=MnwxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHw5fHx8ZW58MHx8fHw%3D&amp;auto=format&amp;fit=crop&amp;w=800&amp;q=60\" /></p>\r\n\r\n<p>&nbsp;</p>\r\n\r\n<p>Locavore echo park jianbing, scenester distillery fixie tumblr snackwave shaman tilde cloud bread schlitz pug gluten-free. Authentic banh mi literally biodiesel man bun kinfolk raclette pork belly, chillwave YOLO jianbing pabst. Echo park sustainable flannel readymade, YOLO listicle cred raclette celiac. Vexillologist messenger bag retro, synth actually sustainable banjo stumptown lyft. Fam vaporware four dollar toast sriracha, austin actually adaptogen art party chillwave kogi viral ramps kickstarter tattooed celiac. Pickled woke master cleanse leggings ethical shoreditch waistcoat.</p>",
+    "created_time": "2022-01-17T17:53:21Z",
+    "modified_time": null,
+    "slug": "staticpage",
+    "category": 2,
+    "dropdown_element": 0
+  }
+},
+{
+  "model": "staticpages.staticpage",
+  "pk": 2,
+  "fields": {
+    "title": "asd",
+    "content": "<p>asd</p>",
+    "created_time": "2022-01-17T17:53:21Z",
+    "modified_time": null,
+    "slug": "asd",
+    "category": 2,
+    "dropdown_element": 0
+  }
+},
+{
+  "model": "staticpages.staticpage",
+  "pk": 3,
+  "fields": {
+    "title": "asdasd",
+    "content": "<p>asdasd</p>",
+    "created_time": "2022-01-17T17:53:21Z",
+    "modified_time": null,
+    "slug": "asdasd",
+    "category": 2,
+    "dropdown_element": 0
+  }
+},
+{
+  "model": "staticpages.staticpage",
+  "pk": 4,
+  "fields": {
+    "title": "asdasd",
+    "content": "<p>asdasd</p>",
+    "created_time": "2022-01-17T17:55:09Z",
+    "modified_time": null,
+    "slug": "asdasda",
+    "category": 4,
+    "dropdown_element": 0
+  }
+},
+{
+  "model": "staticpages.staticurl",
+  "pk": 1,
+  "fields": {
+    "title": "Logga in",
+    "url": "/members/login/",
+    "category": 1,
+    "dropdown_element": 0
+  }
+},
+{
+  "model": "staticpages.staticurl",
+  "pk": 2,
+  "fields": {
+    "title": "DaTe",
+    "url": "https://datateknologerna.org/",
+    "category": 3,
+    "dropdown_element": 0
+  }
+},
+{
+  "model": "staticpages.staticurl",
+  "pk": 3,
+  "fields": {
+    "title": "KK",
+    "url": "https://kemistklubben.org/",
+    "category": 3,
+    "dropdown_element": 0
+  }
+},
+{
+  "model": "staticpages.staticurl",
+  "pk": 4,
+  "fields": {
+    "title": "TFIF",
+    "url": "https://tfif.fi",
+    "category": 3,
+    "dropdown_element": 0
+  }
+},
+{
+  "model": "staticpages.staticurl",
+  "pk": 5,
+  "fields": {
+    "title": "Github",
+    "url": "https://github.com/",
+    "category": 4,
+    "dropdown_element": 0
+  }
+},
+{
+  "model": "events.eventregistrationform",
+  "pk": 1,
+  "fields": {
+    "event": 2,
+    "name": "texfield",
+    "type": "text",
+    "required": false,
+    "public_info": false,
+    "choice_list": ""
+  }
+},
+{
+  "model": "events.eventregistrationform",
+  "pk": 2,
+  "fields": {
+    "event": 2,
+    "name": "multifield",
+    "type": "select",
+    "required": false,
+    "public_info": false,
+    "choice_list": "opt1, opt2, opt3"
+  }
+},
+{
+  "model": "events.eventregistrationform",
+  "pk": 3,
+  "fields": {
+    "event": 2,
+    "name": "checkfield",
+    "type": "checkbox",
+    "required": false,
+    "public_info": false,
+    "choice_list": ""
+  }
+},
+{
+  "model": "events.eventattendees",
+  "pk": 1,
+  "fields": {
+    "event": 2,
+    "attendee_nr": 10,
+    "user": "teeeest",
+    "email": "test@example.com",
+    "preferences": {
+      "texfield": "Najjs",
+      "checkfield": true,
+      "multifield": "opt1"
+    },
+    "anonymous": false,
+    "time_registered": "2022-01-20T18:12:00.484Z"
+  }
+},
+{
+  "model": "events.eventattendees",
+  "pk": 2,
+  "fields": {
+    "event": 2,
+    "attendee_nr": 20,
+    "user": "wuljem nihland",
+    "email": "a@a.com",
+    "preferences": {
+      "texfield": "asd",
+      "checkfield": true,
+      "multifield": "opt1"
+    },
+    "anonymous": false,
+    "time_registered": "2022-02-08T20:07:55.909Z"
+  }
+},
+{
+  "model": "events.eventattendees",
+  "pk": 3,
+  "fields": {
+    "event": 2,
+    "attendee_nr": 30,
+    "user": "testboi2",
+    "email": "b@b.com",
+    "preferences": {
+      "texfield": "test data is fun",
+      "checkfield": false,
+      "multifield": "opt1"
+    },
+    "anonymous": true,
+    "time_registered": "2022-02-08T20:08:16.206Z"
+  }
+},
+{
+  "model": "events.eventattendees",
+  "pk": 4,
+  "fields": {
+    "event": 2,
+    "attendee_nr": 40,
+    "user": "will i am, newland",
+    "email": "ab@a.com",
+    "preferences": {
+      "texfield": "hello",
+      "checkfield": true,
+      "multifield": "opt1"
+    },
+    "anonymous": false,
+    "time_registered": "2022-02-08T20:08:49.938Z"
+  }
+},
+{
+  "model": "ads.adurl",
+  "pk": 1,
+  "fields": {
+    "ad_url": "https://fra1.digitaloceanspaces.com/albin-storage/date/public/2021/partner-logos/tfif-logo.png",
+    "company_url": "https://tfif.fi/"
+  }
+},
+{
+  "model": "ads.adurl",
+  "pk": 2,
+  "fields": {
+    "ad_url": "https://datateknologerna.org/static/images/albin_black.png",
+    "company_url": "https://kemistklubben.org/"
+  }
+},
+{
+  "model": "polls.question",
+  "pk": 1,
+  "fields": {
+    "question_text": "testpoll",
+    "pub_date": "2022-01-17T17:59:54.718Z",
+    "published": true,
+    "show_results": false,
+    "end_vote": false,
+    "multiple_choice": false,
+    "members_only": false,
+    "ordinary_members_only": false,
+    "vote_members_only": false
+  }
+},
+{
+  "model": "polls.choice",
+  "pk": 1,
+  "fields": {
+    "question": 1,
+    "choice_text": "choice1",
+    "votes": 0
+  }
+},
+{
+  "model": "polls.choice",
+  "pk": 2,
+  "fields": {
+    "question": 1,
+    "choice_text": "choice2",
+    "votes": 0
+  }
+},
+{
+  "model": "polls.choice",
+  "pk": 3,
+  "fields": {
+    "question": 1,
+    "choice_text": "choice3",
+    "votes": 0
+  }
+},
+{
+  "model": "archive.collection",
+  "pk": 1,
+  "fields": {
+    "title": "testgallery1",
+    "type": "Pictures",
+    "pub_date": "2022-01-17T18:00:04Z"
+  }
+},
+{
+  "model": "archive.collection",
+  "pk": 2,
+  "fields": {
+    "title": "testdocu",
+    "type": "Documents",
+    "pub_date": "2022-01-17T18:02:30Z"
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 1,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/ana-od5ktcxfjhc-unsplash.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 2,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/elia-pellegrini-jn77rl8dy1e-unsplash.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 3,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/fahmi-ramadhan-64vtj6cafji-unsplash.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 4,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/jade-scarlato-hhgsojpbuji-unsplash.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 5,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/olga-serjantu-tqkdgqpw8vo-unsplash.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 6,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/surface-ajghhdmmmko-unsplash.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 7,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/ana-od5ktcxfjhc-unsplash_bzFOnXK.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 8,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/elia-pellegrini-jn77rl8dy1e-unsplash_vc8rYUt.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 9,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/fahmi-ramadhan-64vtj6cafji-unsplash_GrBRmIy.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 10,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/jade-scarlato-hhgsojpbuji-unsplash_O5ybOQW.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 11,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/olga-serjantu-tqkdgqpw8vo-unsplash_NFqMkhC.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 12,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/surface-ajghhdmmmko-unsplash_Jui47eb.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 13,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/ana-od5ktcxfjhc-unsplash_kHPli4F.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 14,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/elia-pellegrini-jn77rl8dy1e-unsplash_dWC5s42.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 15,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/fahmi-ramadhan-64vtj6cafji-unsplash_NgFzcqg.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 16,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/jade-scarlato-hhgsojpbuji-unsplash_mBYySNd.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 17,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/olga-serjantu-tqkdgqpw8vo-unsplash_ZnDfbAj.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.picture",
+  "pk": 18,
+  "fields": {
+    "collection": 1,
+    "image": "2022/testgallery1/surface-ajghhdmmmko-unsplash_lxIAOKv.jpg",
+    "favorite": false
+  }
+},
+{
+  "model": "archive.document",
+  "pk": 1,
+  "fields": {
+    "collection": 2,
+    "title": "Höstmöte Protokoll 13.11.2020.docx",
+    "document": "documents/2022/testdocu/hostmote-protokoll-13112020.docx"
+  }
+},
+{
+  "model": "archive.document",
+  "pk": 2,
+  "fields": {
+    "collection": 2,
+    "title": "Salibandyn_otteluohjelma_2021_2022.pdf",
+    "document": "documents/2022/testdocu/salibandyn_otteluohjelma_2021_2022.pdf"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "dpu1v687mo1c60h7z4dyc2qv3e74acu2",
+  "fields": {
+    "session_data": ".eJxVizsOwjAQBe_iGkVe_5Klg4tYu961jFAoYlIh7o6RUkDzipk3L5Npf7a8d93yTczZgDn9MqZy18dXrLqybn06SJ8u43Q99F_TqLcRJEjRQwhpsQUlOioVqpPiHNq5elFBDo6YkyX0hEIJOM5jNAAsbN4ft4Uy2Q:1n9W91:zy77n45F20BQIH5pFDKNcU8x9WsWH00KF-uMwvTN8Os",
+    "expire_date": "2022-01-31T17:50:15.249Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "kv5m74d5pdenhwqory8p1sp7km2x3odt",
+  "fields": {
+    "session_data": ".eJxVizsOwjAQBe_iGkVe_5Klg4tYu961jFAoYlIh7o6RUkDzipk3L5Npf7a8d93yTczZgDn9MqZy18dXrLqybn06SJ8u43Q99F_TqLcRJEjRQwhpsQUlOioVqpPiHNq5elFBDo6YkyX0hEIJOM5jNAAsbN4ft4Uy2Q:1n9WRG:97DB0NiA54pY5mp1wPpOQw8Z_Xqu3JrphWZ8px7JS60",
+    "expire_date": "2022-01-31T18:09:06.984Z"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||10790224bbff4442772fbc4001196548",
+  "fields": {
+    "value": "{\"name\": \"2022/testgallery1/elia-pellegrini-jn77rl8dy1e-unsplash.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [1600, 898]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||113fe67a839fdce2854295658d757c62",
+  "fields": {
+    "value": "{\"name\": \"cache/fc/7f/fc7fe0416865fa5c02c901e878bec630.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [500, 750]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||12a80164abaeff7fc72b927b5222d638",
+  "fields": {
+    "value": "{\"name\": \"2022/testgallery1/surface-ajghhdmmmko-unsplash_Jui47eb.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [1600, 1066]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||13a8378daef38dbfafebf25a2d64a76d",
+  "fields": {
+    "value": "{\"name\": \"2022/testgallery1/jade-scarlato-hhgsojpbuji-unsplash_O5ybOQW.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [1600, 2400]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||17a8cf0787ca1cbed5c7f273463b7f3f",
+  "fields": {
+    "value": "{\"name\": \"cache/64/16/64167786888b2ed238546f5b85902956.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [500, 281]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||2082c7b9534c93effd6282118b2ca397",
+  "fields": {
+    "value": "{\"name\": \"2022/testgallery1/surface-ajghhdmmmko-unsplash.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [1600, 1066]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||274553e66fa168d0d42f0f2d5f421340",
+  "fields": {
+    "value": "{\"name\": \"cache/08/55/08552312ba15a975567b19b7954e3562.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [500, 281]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||37f840bbff6cc07821638bdf50adb4d7",
+  "fields": {
+    "value": "{\"name\": \"cache/13/ae/13aecb5364cdb8cf7bd3bb59832b240f.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [500, 748]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||38bcb8f0c7cc0105401cd78f67c3e620",
+  "fields": {
+    "value": "{\"name\": \"cache/c0/8a/c08a5fc77b1578fd258e42f0d8e02058.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [500, 748]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||3ad9e23fea61d6f79e77935a14fb84e7",
+  "fields": {
+    "value": "{\"name\": \"cache/7d/32/7d32160dcbd8132dcb65ab9706ab27ef.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [500, 281]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||3cf6a3559e690b6a0bc5e8034bc33bcf",
+  "fields": {
+    "value": "{\"name\": \"cache/d6/31/d6318a3fc380281aea8bd6498dbdc180.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [500, 333]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||3fb6576e345f633be6bee7f6f0da3585",
+  "fields": {
+    "value": "{\"name\": \"cache/31/d6/31d6c17950f3b077d3ec702a88eb20b1.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [500, 281]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||4e5b6459fea43728101c62367bfae4e5",
+  "fields": {
+    "value": "{\"name\": \"cache/e0/4b/e04b002113c0000b5b15b8ecf3cce36b.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [500, 333]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||587453c8221938ec3df068995611e44c",
+  "fields": {
+    "value": "{\"name\": \"2022/testgallery1/fahmi-ramadhan-64vtj6cafji-unsplash.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [1600, 2395]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||5ad9416de77543d9c76649a3a5370d8d",
+  "fields": {
+    "value": "{\"name\": \"2022/testgallery1/ana-od5ktcxfjhc-unsplash_kHPli4F.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [1600, 899]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||655694aa863bffa970da4823c1039950",
+  "fields": {
+    "value": "{\"name\": \"cache/3c/3e/3c3ecc55fc31fb6615f06309d6023ade.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [500, 750]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||78cb08b3962926e5bb267d51624e0aaf",
+  "fields": {
+    "value": "{\"name\": \"2022/testgallery1/elia-pellegrini-jn77rl8dy1e-unsplash_vc8rYUt.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [1600, 898]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||7f3021d02614ff93031f8539a4890e2b",
+  "fields": {
+    "value": "{\"name\": \"cache/f1/b9/f1b9d518843020dcf5177ef70ef67662.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [500, 750]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||89c12a0f5b59cfbbc52528b4f9d6314e",
+  "fields": {
+    "value": "{\"name\": \"2022/testgallery1/fahmi-ramadhan-64vtj6cafji-unsplash_NgFzcqg.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [1600, 2395]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||935fc257d1eb8dde61ae41c49c79b792",
+  "fields": {
+    "value": "{\"name\": \"2022/testgallery1/ana-od5ktcxfjhc-unsplash.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [1600, 899]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||96c95f55087f1f7c4ba6e7c7d25260a8",
+  "fields": {
+    "value": "{\"name\": \"2022/testgallery1/ana-od5ktcxfjhc-unsplash_bzFOnXK.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [1600, 899]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||c6da906fecad193511d672108611b013",
+  "fields": {
+    "value": "{\"name\": \"cache/68/f3/68f3c8e6573101f921693a907378cfc1.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [500, 750]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||c7263c04ab9de3dccedd7e1c1bf23293",
+  "fields": {
+    "value": "{\"name\": \"2022/testgallery1/olga-serjantu-tqkdgqpw8vo-unsplash_NFqMkhC.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [1600, 2400]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||c82b15841c6e41c1b287b4acb966a32d",
+  "fields": {
+    "value": "{\"name\": \"cache/59/fe/59fed9e342936650fa99b3a087eedbfb.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [500, 748]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||cc7053893ee645c8fc3dfe7d34524a69",
+  "fields": {
+    "value": "{\"name\": \"2022/testgallery1/fahmi-ramadhan-64vtj6cafji-unsplash_GrBRmIy.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [1600, 2395]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||d0c2489c6219a0f6b79ab910a87b6e5c",
+  "fields": {
+    "value": "{\"name\": \"2022/testgallery1/olga-serjantu-tqkdgqpw8vo-unsplash.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [1600, 2400]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||d0e42bdc10d631377975c45d8d71486a",
+  "fields": {
+    "value": "{\"name\": \"cache/39/de/39de5c7f6672c007259063b6dc83e049.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [500, 281]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||dc3f612a245e3940270b21f82d0bb868",
+  "fields": {
+    "value": "{\"name\": \"2022/testgallery1/elia-pellegrini-jn77rl8dy1e-unsplash_dWC5s42.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [1600, 898]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||e4612eab849577828cf3a8505e0fd8c4",
+  "fields": {
+    "value": "{\"name\": \"cache/43/b9/43b96c4f3b2322813351b00b437eb4dc.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [500, 281]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||image||ebd5e79d385c6640f5ee0ae04cd1e791",
+  "fields": {
+    "value": "{\"name\": \"2022/testgallery1/jade-scarlato-hhgsojpbuji-unsplash.jpg\", \"storage\": \"core.storage_backends.PrivateMediaStorage\", \"size\": [1600, 2400]}"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||thumbnails||10790224bbff4442772fbc4001196548",
+  "fields": {
+    "value": "[\"3fb6576e345f633be6bee7f6f0da3585\"]"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||thumbnails||12a80164abaeff7fc72b927b5222d638",
+  "fields": {
+    "value": "[\"3cf6a3559e690b6a0bc5e8034bc33bcf\"]"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||thumbnails||13a8378daef38dbfafebf25a2d64a76d",
+  "fields": {
+    "value": "[\"113fe67a839fdce2854295658d757c62\"]"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||thumbnails||2082c7b9534c93effd6282118b2ca397",
+  "fields": {
+    "value": "[\"4e5b6459fea43728101c62367bfae4e5\"]"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||thumbnails||587453c8221938ec3df068995611e44c",
+  "fields": {
+    "value": "[\"37f840bbff6cc07821638bdf50adb4d7\"]"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||thumbnails||5ad9416de77543d9c76649a3a5370d8d",
+  "fields": {
+    "value": "[\"17a8cf0787ca1cbed5c7f273463b7f3f\"]"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||thumbnails||78cb08b3962926e5bb267d51624e0aaf",
+  "fields": {
+    "value": "[\"d0e42bdc10d631377975c45d8d71486a\"]"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||thumbnails||89c12a0f5b59cfbbc52528b4f9d6314e",
+  "fields": {
+    "value": "[\"38bcb8f0c7cc0105401cd78f67c3e620\"]"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||thumbnails||935fc257d1eb8dde61ae41c49c79b792",
+  "fields": {
+    "value": "[\"274553e66fa168d0d42f0f2d5f421340\"]"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||thumbnails||96c95f55087f1f7c4ba6e7c7d25260a8",
+  "fields": {
+    "value": "[\"e4612eab849577828cf3a8505e0fd8c4\"]"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||thumbnails||c7263c04ab9de3dccedd7e1c1bf23293",
+  "fields": {
+    "value": "[\"7f3021d02614ff93031f8539a4890e2b\"]"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||thumbnails||cc7053893ee645c8fc3dfe7d34524a69",
+  "fields": {
+    "value": "[\"c82b15841c6e41c1b287b4acb966a32d\"]"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||thumbnails||d0c2489c6219a0f6b79ab910a87b6e5c",
+  "fields": {
+    "value": "[\"655694aa863bffa970da4823c1039950\"]"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||thumbnails||dc3f612a245e3940270b21f82d0bb868",
+  "fields": {
+    "value": "[\"3ad9e23fea61d6f79e77935a14fb84e7\"]"
+  }
+},
+{
+  "model": "thumbnail.kvstore",
+  "pk": "sorl-thumbnail||thumbnails||ebd5e79d385c6640f5ee0ae04cd1e791",
+  "fields": {
+    "value": "[\"c6da906fecad193511d672108611b013\"]"
+  }
+},
+{
+  "model": "members.member",
+  "fields": {
+    "password": "pbkdf2_sha256$216000$Pza41nldCcBB$s7ab3C1Ayvk67O89/3n8r4AZN5Qv8zWBMB39uRkGkYQ=",
+    "last_login": "2022-01-17T18:09:06.981Z",
+    "is_superuser": true,
+    "username": "date-admin",
+    "email": null,
+    "first_name": "",
+    "last_name": "",
+    "phone": "",
+    "address": "",
+    "zip_code": "",
+    "city": "",
+    "country": "Finland",
+    "membership_type": 1,
+    "is_active": true,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "events.event",
+  "pk": 1,
+  "fields": {
+    "title": "No deltagare",
+    "content": "<p>asdasd</p>\r\n\r\n<p>I&#39;m baby selvage hexagon heirloom typewriter, four dollar toast kitsch chia. Woke cronut roof party YOLO blue bottle, pug actually ethical ugh ramps. Cray fashion axe activated charcoal asymmetrical, jean shorts schlitz typewriter intelligentsia irony cloud bread vaporware kitsch raw denim palo santo literally. 3 wolf moon fanny pack hoodie, coloring book shoreditch hexagon affogato art party green juice 90&#39;s viral la croix. Beard ennui tousled photo booth skateboard celiac chicharrones heirloom.</p>\r\n\r\n<p>Locavore echo park jianbing, scenester distillery fixie tumblr snackwave shaman tilde cloud bread schlitz pug gluten-free. Authentic banh mi literally biodiesel man bun kinfolk raclette pork belly, chillwave YOLO jianbing pabst. Echo park sustainable flannel readymade, YOLO listicle cred raclette celiac. Vexillologist messenger bag retro, synth actually sustainable banjo stumptown lyft. Fam vaporware four dollar toast sriracha, austin actually adaptogen art party chillwave kogi viral ramps kickstarter tattooed celiac. Pickled woke master cleanse leggings ethical shoreditch waistcoat.</p>",
+    "event_date_start": "2022-02-25T17:46:40Z",
+    "event_date_end": "2022-02-25T17:46:40Z",
+    "sign_up_max_participants": 0,
+    "sign_up": false,
+    "sign_up_members": null,
+    "sign_up_others": null,
+    "sign_up_deadline": null,
+    "sign_up_cancelling": false,
+    "sign_up_cancelling_deadline": null,
+    "author": [
+      "date-admin"
+    ],
+    "created_time": "2022-01-17T17:57:06.153Z",
+    "published_time": "2022-01-17T17:57:06.159Z",
+    "modified_time": null,
+    "published": true,
+    "slug": "no_deltagare"
+  }
+},
+{
+  "model": "events.event",
+  "pk": 2,
+  "fields": {
+    "title": "DaTe Testevent 2022",
+    "content": "<p>I&#39;m baby selvage hexagon heirloom typewriter, four dollar toast kitsch chia. Woke cronut roof party YOLO blue bottle, pug actually ethical ugh ramps. Cray fashion axe activated charcoal asymmetrical, jean shorts schlitz typewriter intelligentsia irony cloud bread vaporware kitsch raw denim palo santo literally. 3 wolf moon fanny pack hoodie, coloring book shoreditch hexagon affogato art</p>\r\n\r\n<p><img alt=\"\" src=\"https://images.unsplash.com/photo-1642409370386-446eec2fab0f?ixlib=rb-1.2.1&amp;ixid=MnwxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwxMHx8fGVufDB8fHx8&amp;auto=format&amp;fit=crop&amp;w=800&amp;q=60\" /></p>\r\n\r\n<p>party green juice 90&#39;s viral la croix. Beard ennui tousled photo booth skateboard celiac chicharrones heirloom.</p>\r\n\r\n<p>Locavore echo park jianbing, scenester distillery fixie tumblr snackwave shaman tilde cloud bread schlitz pug gluten-free. Authentic banh mi literally biodiesel man bun kinfolk raclette pork belly, chillwave YOLO jianbing pabst. Echo park sustainable flannel readymade, YOLO listicle cred raclette celiac. Vexillologist messenger bag retro, synth actually sustainable banjo stumptown lyft. Fam vaporware four dollar toast sriracha, austin actually adaptogen art party chillwave kogi viral ramps kickstarter tattooed celiac. Pickled woke master cleanse leggings ethical shoreditch waistcoat.</p>",
+    "event_date_start": "2022-03-25T18:00:00Z",
+    "event_date_end": "2022-03-25T21:00:00Z",
+    "sign_up_max_participants": 80,
+    "sign_up": true,
+    "sign_up_members": "2022-01-17T17:46:40Z",
+    "sign_up_others": "2022-01-17T17:46:40Z",
+    "sign_up_deadline": "2022-03-09T17:46:40Z",
+    "sign_up_cancelling": true,
+    "sign_up_cancelling_deadline": "2022-03-09T17:46:40Z",
+    "author": [
+      "date-admin"
+    ],
+    "created_time": "2022-01-17T17:59:23.061Z",
+    "published_time": "2022-01-17T17:59:23.073Z",
+    "modified_time": null,
+    "published": true,
+    "slug": "date_testevent"
+  }
+},
+{
+  "model": "news.post",
+  "pk": 1,
+  "fields": {
+    "title": "simple news",
+    "content": "<p>I&#39;m baby selvage hexagon heirloom typewriter, four dollar toast kitsch chia. Woke cronut roof party YOLO blue bottle, pug actually ethical ugh ramps. Cray fashion axe activated charcoal asymmetrical, jean shorts schlitz typewriter intelligentsia irony cloud bread vaporware kitsch raw denim palo santo literally. 3 wolf moon fanny pack hoodie, coloring book shoreditch hexagon affogato art party green juice 90&#39;s viral la croix. Beard ennui tousled photo booth skateboard celiac chicharrones heirloom.</p>",
+    "author": [
+      "date-admin"
+    ],
+    "created_time": "2022-01-17T17:52:14.891Z",
+    "published_time": "2022-01-17T17:52:14.899Z",
+    "modified_time": null,
+    "published": true,
+    "slug": "simple_news",
+    "albins_angels": false
+  }
+},
+{
+  "model": "news.post",
+  "pk": 2,
+  "fields": {
+    "title": "Picture news",
+    "content": "<p>I&#39;m baby selvage hexagon heirloom typewriter, four dollar toast kitsch chia. Woke cronut roof party YOLO blue bottle, pug actually ethical ugh ramps.</p>\r\n\r\n<p><img alt=\"\" src=\"https://images.unsplash.com/photo-1642019224929-7340fd777743?ixlib=rb-1.2.1&amp;ixid=MnwxMjA3fDB8MHxlZGl0b3JpYWwtZmVlZHwyfHx8ZW58MHx8fHw%3D&amp;auto=format&amp;fit=crop&amp;w=800&amp;q=60\" style=\"height:1200px; width:800px\" /></p>\r\n\r\n<p>Cray fashion axe activated charcoal asymmetrical, jean shorts schlitz typewriter intelligentsia irony cloud bread vaporware kitsch raw denim palo santo literally. 3 wolf moon fanny pack hoodie, coloring book shoreditch hexagon affogato art party green juice 90&#39;s viral la croix. Beard ennui tousled photo booth skateboard celiac chicharrones heirloom.</p>",
+    "author": [
+      "date-admin"
+    ],
+    "created_time": "2022-01-17T17:53:02.950Z",
+    "published_time": "2022-01-17T17:53:02.955Z",
+    "modified_time": null,
+    "published": true,
+    "slug": "picture_news",
+    "albins_angels": false
+  }
+},
+{
+  "model": "news.post",
+  "pk": 3,
+  "fields": {
+    "title": "aa_news",
+    "content": "<p>I&#39;m baby selvage hexagon heirloom typewriter, four dollar toast kitsch chia. Woke cronut roof party YOLO blue bottle, pug actually ethical ugh ramps. Cray fashion axe activated charcoal asymmetrical, jean shorts schlitz typewriter intelligentsia irony cloud bread vaporware kitsch raw denim palo santo literally. 3 wolf moon fanny pack hoodie, coloring book shoreditch hexagon affogato art party green juice 90&#39;s viral la croix. Beard ennui tousled photo booth skateboard celiac chicharrones heirloom.</p>",
+    "author": [
+      "date-admin"
+    ],
+    "created_time": "2022-01-17T17:53:16.408Z",
+    "published_time": "2022-01-17T17:53:16.411Z",
+    "modified_time": null,
+    "published": true,
+    "slug": "aa_news",
+    "albins_angels": true
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 1,
+  "fields": {
+    "action_time": "2022-01-17T17:51:11.759Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "staticpages",
+      "staticpagenav"
+    ],
+    "object_id": "1",
+    "object_repr": "Medlemmar",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}, {\"added\": {\"name\": \"static url\", \"object\": \"Logga in\"}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 2,
+  "fields": {
+    "action_time": "2022-01-17T17:52:14.904Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "news",
+      "post"
+    ],
+    "object_id": "1",
+    "object_repr": "simple news",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 3,
+  "fields": {
+    "action_time": "2022-01-17T17:53:02.959Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "news",
+      "post"
+    ],
+    "object_id": "2",
+    "object_repr": "Picture news",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 4,
+  "fields": {
+    "action_time": "2022-01-17T17:53:16.413Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "news",
+      "post"
+    ],
+    "object_id": "3",
+    "object_repr": "aa_news",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 5,
+  "fields": {
+    "action_time": "2022-01-17T17:54:22.816Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "staticpages",
+      "staticpagenav"
+    ],
+    "object_id": "2",
+    "object_repr": "staticpages",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}, {\"added\": {\"name\": \"static page\", \"object\": \"staticpage\"}}, {\"added\": {\"name\": \"static page\", \"object\": \"asd\"}}, {\"added\": {\"name\": \"static page\", \"object\": \"asdasd\"}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 6,
+  "fields": {
+    "action_time": "2022-01-17T17:55:09.427Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "staticpages",
+      "staticpagenav"
+    ],
+    "object_id": "3",
+    "object_repr": "static urls",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}, {\"added\": {\"name\": \"static url\", \"object\": \"DaTe\"}}, {\"added\": {\"name\": \"static url\", \"object\": \"KK\"}}, {\"added\": {\"name\": \"static url\", \"object\": \"TFIF\"}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 7,
+  "fields": {
+    "action_time": "2022-01-17T17:56:06.437Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "staticpages",
+      "staticpagenav"
+    ],
+    "object_id": "4",
+    "object_repr": "Static pages urls",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}, {\"added\": {\"name\": \"static page\", \"object\": \"asdasd\"}}, {\"added\": {\"name\": \"static url\", \"object\": \"Github\"}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 8,
+  "fields": {
+    "action_time": "2022-01-17T17:57:06.167Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "events",
+      "event"
+    ],
+    "object_id": "1",
+    "object_repr": "No deltagare",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 9,
+  "fields": {
+    "action_time": "2022-01-17T17:59:23.085Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "events",
+      "event"
+    ],
+    "object_id": "2",
+    "object_repr": "DaTe Testevent 2022",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}, {\"added\": {\"name\": \"Anm\\u00e4lningsf\\u00e4lt\", \"object\": \"texfield\"}}, {\"added\": {\"name\": \"Anm\\u00e4lningsf\\u00e4lt\", \"object\": \"multifield\"}}, {\"added\": {\"name\": \"Anm\\u00e4lningsf\\u00e4lt\", \"object\": \"checkfield\"}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 10,
+  "fields": {
+    "action_time": "2022-01-17T17:59:54.724Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "polls",
+      "question"
+    ],
+    "object_id": "1",
+    "object_repr": "testpoll",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}, {\"added\": {\"name\": \"Val\", \"object\": \"choice1\"}}, {\"added\": {\"name\": \"Val\", \"object\": \"choice2\"}}, {\"added\": {\"name\": \"Val\", \"object\": \"choice3\"}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 11,
+  "fields": {
+    "action_time": "2022-01-17T18:01:22.557Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "archive",
+      "picturecollection"
+    ],
+    "object_id": "1",
+    "object_repr": "testgallery1",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 12,
+  "fields": {
+    "action_time": "2022-01-17T18:01:52.120Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "archive",
+      "picturecollection"
+    ],
+    "object_id": "1",
+    "object_repr": "testgallery1",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Ladda upp flera bilder\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 13,
+  "fields": {
+    "action_time": "2022-01-17T18:02:23.347Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "archive",
+      "picturecollection"
+    ],
+    "object_id": "1",
+    "object_repr": "testgallery1",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Ladda upp flera bilder\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 14,
+  "fields": {
+    "action_time": "2022-01-17T18:04:34.788Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "archive",
+      "documentcollection"
+    ],
+    "object_id": "2",
+    "object_repr": "testdocu",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 15,
+  "fields": {
+    "action_time": "2022-01-17T18:05:08.168Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "ads",
+      "adurl"
+    ],
+    "object_id": "1",
+    "object_repr": "https://fra1.digitaloceanspaces.com/albin-storage/date/public/2021/partner-logos/tfif-logo.png",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 16,
+  "fields": {
+    "action_time": "2022-01-17T18:05:26.822Z",
+    "user": [
+      "date-admin"
+    ],
+    "content_type": [
+      "ads",
+      "adurl"
+    ],
+    "object_id": "2",
+    "object_repr": "https://datateknologerna.org/static/images/albin_black.png",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+}
+]

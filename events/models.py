@@ -3,7 +3,7 @@ import logging
 
 from ckeditor.fields import RichTextField
 from django import forms
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import Max
@@ -39,6 +39,7 @@ class Event(models.Model):
     modified_time = models.DateTimeField(_('Modifierad'), editable=False, null=True, blank=True)
     published = models.BooleanField(_('Publicera'), default=True)
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH, blank=True)
+    sign_up_avec = models.BooleanField(_('Avec'), default=False)
 
     class Meta:
         verbose_name = _('evenemang')
@@ -70,7 +71,7 @@ class Event(models.Model):
     def get_highest_attendee_nr(self):
         return EventAttendees.objects.filter(event=self).aggregate(Max('attendee_nr'))
 
-    def add_event_attendance(self, user, email, anonymous, preferences):
+    def add_event_attendance(self, user, email, anonymous, preferences, avec_for=None):
         if self.sign_up:
             try:
                 registration = EventAttendees.objects.get(email=email, event=self)
@@ -79,21 +80,12 @@ class Event(models.Model):
                 if self.get_registration_form():
                     for item in self.get_registration_form():
                         user_pref[str(item)] = preferences.get(str(item))
-                # kemistklubben baal event avec settings
-                if 'baal' in str(self).lower() and user_pref.get('Avec'):
-                    EventAttendees.objects.create(user=user,
-                                            event=self, email=email,
-                                            time_registered=now(), preferences=user_pref,
-                                            anonymous=anonymous)
-                    EventAttendees.objects.create(user=user_pref.get('Avecs Namn*'),
-                                                event=self, email=user_pref.get('Avecs e-post*'),
-                                                time_registered=now(), preferences=user_pref,
-                                                anonymous=anonymous)
-                else:
-                    registration = EventAttendees.objects.create(user=user,
-                                                event=self, email=email,
-                                                time_registered=now(), preferences=user_pref,
-                                                anonymous=anonymous)
+                registration = EventAttendees.objects.create(user=user,
+                                                                event=self, email=email,
+                                                                time_registered=now(), preferences=user_pref,
+                                                                anonymous=anonymous, avec_for=avec_for)
+                return registration
+
     def cancel_event_attendance(self, user):
         if self.sign_up:
             registration = EventAttendees.objects.get(user=user, event=self)
@@ -137,6 +129,23 @@ class Event(models.Model):
                         fields[question.name] = forms.BooleanField(label=question.name, required=question.required)
                     elif question.type == "text":
                         fields[question.name] = forms.CharField(label=question.name, required=question.required)
+            if self.sign_up_avec:
+                fields['avec'] = forms.BooleanField(label='Avec', required=False)
+                fields['avec_user'] = forms.CharField(label='Namn', max_length=255, required=False, widget=forms.TextInput(attrs={'class': "avec-field"}))
+                fields['avec_email'] = forms.EmailField(label='Email', validators=[self.validate_unique_email], required=False, widget=forms.TextInput(attrs={'class': "avec-field"}))
+                fields['avec_anonymous'] = forms.BooleanField(label='Anonymt', required=False, widget=forms.CheckboxInput(attrs={'class': "avec-field"}))
+                if self.get_registration_form():
+                    for question in reversed(self.get_registration_form()):
+                        if not question.hide_for_avec:
+                            if question.type == "select":
+                                choices = question.choice_list.split(',')
+                                fields['avec_'+question.name] = forms.ChoiceField(label=question.name,
+                                                                    choices=list(map(list, zip(choices, choices))),
+                                                                    required=False, widget=forms.Select(attrs={'class': "avec-field"}))
+                            elif question.type == "checkbox":
+                                fields['avec_'+question.name] = forms.BooleanField(label=question.name, required=False, widget=forms.CheckboxInput(attrs={'class': "avec-field"}))
+                            elif question.type == "text":
+                                fields['avec_'+question.name] = forms.CharField(label=question.name, required=False, widget=forms.TextInput(attrs={'class': "avec-field"}))
             return type('EventAttendeeForm', (forms.BaseForm,), {'base_fields': fields, 'data': data}, )
 
     @register.filter
@@ -158,6 +167,7 @@ class EventRegistrationForm(models.Model):
     required = models.BooleanField(_('Krävd'), default=False)
     public_info = models.BooleanField(_('Öppen info'), default=False)
     choice_list = models.CharField(_('Alternativ'), max_length=255, blank=True)
+    hide_for_avec = models.BooleanField(_('Göm för avec'), default=False)
 
     class Meta:
         verbose_name = _('Anmälningsfält')
@@ -178,6 +188,7 @@ class EventAttendees(models.Model):
     preferences = JSONField(_('Svar'), default=list, blank=True)
     anonymous = models.BooleanField(_('Anonymt'), default=False)
     time_registered = models.DateTimeField(_('Registrerad'))
+    avec_for = models.ForeignKey("self", verbose_name=_('Avec till'), null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = _('deltagare')

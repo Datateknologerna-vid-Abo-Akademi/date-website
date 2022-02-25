@@ -40,6 +40,7 @@ class EventCreationForm(forms.ModelForm):
             'sign_up_cancelling',
             'sign_up_cancelling_deadline',
             'published',
+            'sign_up_avec',
             'slug'
         )
 
@@ -121,6 +122,7 @@ class EventEditForm(forms.ModelForm):
             'sign_up_cancelling',
             'sign_up_cancelling_deadline',
             'published',
+            'sign_up_avec',
             'slug'
         )
 

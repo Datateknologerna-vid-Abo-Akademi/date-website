@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.core.paginator import Paginator
 
 from . import models
 
@@ -6,9 +7,12 @@ LATEST_NEWS_POSTS = 10
 
 
 def index(request):
-    latest_news = models.Post.objects.filter(published=True).reverse()[:LATEST_NEWS_POSTS]
-    return render(request, 'news/index.html', {'latest_news_items': latest_news})
-
+    latest_news = models.Post.objects.filter(published=True).reverse()
+    paginator = Paginator(latest_news, LATEST_NEWS_POSTS)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)  
+    return render(request, 'news/index.html', {'latest_news_items': page_obj})
+    
 
 def article(request, slug):
     post = models.Post.objects.get(slug=slug, published=True)
