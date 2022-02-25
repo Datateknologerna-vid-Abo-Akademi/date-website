@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 # update
 
 import os
+import json
 
 import environ
 
@@ -38,8 +39,7 @@ DEBUG = os.environ.get('DEBUG', False)
 
 DEVELOP = os.environ.get('DEVELOP', False)
 
-ALLOWED_HOSTS = ['0.0.0.0', '127.0.0.1', 'localhost']
-
+ALLOWED_HOSTS = json.loads(os.environ['ALLOWED_HOSTS'])
 
 # Application definition
 
@@ -175,7 +175,7 @@ STAFF_GROUPS = [
     'rösträknare'
 
 ]
-
+STAFF_GROUPS.extend(json.loads(os.environ['EXTRA_STAFF_GROUPS']))
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
@@ -252,6 +252,8 @@ LOGIN_URL = '/members/login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
+DEFAULT_FROM_EMAIL=os.environ.get('DEFAULT_FROM_EMAIL', 'admin@datateknologerna.org')
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # During development
 
@@ -262,6 +264,8 @@ EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = env('EMAIL_PORT')
 
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS=3000
 
 LOGGING = {
     'version': 1,

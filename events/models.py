@@ -155,8 +155,6 @@ class Event(models.Model):
     def validate_unique_email(self, email):
         attendees = self.get_registrations()
         for attendee in attendees:
-            logger.debug(email)
-            logger.debug(attendee.email)
             if email == attendee.email:
                 logger.debug("SAME EMAIL")
                 raise ValidationError(_("Det finns redan någon anmäld med denna email"))
