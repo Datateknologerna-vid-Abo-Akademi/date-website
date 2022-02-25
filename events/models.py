@@ -3,7 +3,7 @@ import logging
 
 from ckeditor.fields import RichTextField
 from django import forms
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import Max
