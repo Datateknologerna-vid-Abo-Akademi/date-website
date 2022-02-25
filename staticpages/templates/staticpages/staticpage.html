@@ -11,9 +11,15 @@
 
     <div class="container-md min-vh-100 container-margin-top p-1">
         <div class="container-size break-words">
-            <div class="content">
-                {{page.content | safe}}
-            </div>
+            {% if show_content %}
+                <div class="content">
+                    {{page.content | safe}}
+                </div>
+            {% else %}
+                <div class="content">
+                    <h5>Logga in för att se den här sidan.</h5>
+                </div>
+            {% endif %}
         </div>
     </div>
    
