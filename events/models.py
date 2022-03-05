@@ -40,6 +40,7 @@ class Event(models.Model):
     published = models.BooleanField(_('Publicera'), default=True)
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH, blank=True)
     sign_up_avec = models.BooleanField(_('Avec'), default=False)
+    members_only = models.BooleanField(_('Kräv inloggning för innehåll'), default=False)
 
     class Meta:
         verbose_name = _('evenemang')

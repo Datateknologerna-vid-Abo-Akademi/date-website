@@ -64,6 +64,16 @@ class EventDetailView(DetailView):
             context['form'] = self.object.make_registration_form()
         return context
 
+
+    def get(self, request,  *args, **kwargs):
+        self.object = self.get_object()
+        show_content = not self.object.members_only or (self.object.members_only and request.user.is_authenticated)
+        if not show_content:
+            return redirect('/members/login')
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         if self.object.sign_up and (request.user.is_authenticated
