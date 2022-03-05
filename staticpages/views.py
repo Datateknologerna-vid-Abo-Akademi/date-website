@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.views import View
 
 from . import models
@@ -13,7 +13,11 @@ class StaticPageIndex(View):
 class StaticPageView(View):
     def get(self, request, slug):
         page = models.StaticPage.objects.get(slug=slug)
-        return render(request, 'staticpages/staticpage.html', {'page':page})
+        show_content = not page.members_only or (page.members_only and request.user.is_authenticated)
+        if show_content:
+            return render(request, 'staticpages/staticpage.html', {'page':page, 'show_content': show_content})
+        else:
+            return redirect('/members/login')
 
 def staticUrl(request):
     staticUrls = models.StaticUrl.objects.all()

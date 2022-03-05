@@ -24,6 +24,7 @@ class StaticPage(models.Model):
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
     category = models.ForeignKey(StaticPageNav, on_delete=models.CASCADE, blank=True, null=True)
     dropdown_element = models.IntegerField(default=0)
+    members_only = models.BooleanField(_('Kräv inloggning'), default=False)
 
     def __str__(self):
         return self.title
