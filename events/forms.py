@@ -40,7 +40,8 @@ class EventCreationForm(forms.ModelForm):
             'sign_up_cancelling_deadline',
             'published',
             'sign_up_avec',
-            'slug'
+            'slug',
+            'members_only'
         )
 
     class Media:
@@ -122,7 +123,8 @@ class EventEditForm(forms.ModelForm):
             'sign_up_cancelling_deadline',
             'published',
             'sign_up_avec',
-            'slug'
+            'slug',
+            'members_only'
         )
 
     class Media:
