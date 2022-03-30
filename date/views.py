@@ -1,4 +1,5 @@
 import datetime
+import random
 
 from django.shortcuts import render, redirect
 from django.utils import translation
@@ -28,7 +29,13 @@ def index(request):
         'next_month': next_month(d),
     }
 
+    # KK april fools frontpage
+    date = datetime.date(1337,4,1)
+    date_of_today = datetime.date.today()
+    if date.month == date_of_today.month and date.day == date_of_today.day and random.randint(1,3) == 3:
+        return render(request, 'date/april_start.html', context)
     return render(request, 'date/start.html', context)
+    
 
 
 def language(request, lang):
