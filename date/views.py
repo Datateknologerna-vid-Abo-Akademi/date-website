@@ -30,9 +30,9 @@ def index(request):
     }
 
     # KK april fools frontpage
-    date = datetime.date(1337,4,1)
+    date = datetime.date(1337,3,31)
     date_of_today = datetime.date.today()
-    if date.month == date_of_today.month and date.day == date_of_today.day and random.randint(1,3) == 3:
+    if date.month == date_of_today.month and date.day == date_of_today.day and random.randint(1,4) == 1:
         return render(request, 'date/april_start.html', context)
     return render(request, 'date/start.html', context)
     
