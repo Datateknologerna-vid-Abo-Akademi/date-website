@@ -53,6 +53,8 @@ class EventDetailView(DetailView):
            template_name = 'events/baal_anmalan.html'
         if 'tomtejakt' in self.get_context_data().get('event').title.lower():
            template_name = 'events/tomtejakt.html'
+        if 'wappmiddag' in self.get_context_data().get('event').title.lower():
+           template_name = 'events/wappmiddag.html'
         return template_name
 
     def get_context_data(self, **kwargs):
@@ -104,6 +106,8 @@ class EventDetailView(DetailView):
                                                anonymous=avec_data['anonymous'], preferences=avec_data, avec_for=avec_data['avec_for'])
         if self.get_context_data().get('event').title.lower() == 'baal':
             return redirect('/events/baal/#/anmalda') 
+        elif 'wappmiddag' in self.get_context_data().get('event').title.lower():
+            return redirect(f'/events/{self.get_context_data().get("event").slug}/#/anmalda') 
         return render(self.request, self.get_template_names(), self.get_context_data())
 
     def form_invalid(self, form):
