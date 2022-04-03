@@ -12,7 +12,11 @@
         <script src="{% static 'js/live-attendee-list.js' %}"></script>
         <style>
             .background-img{
-                background-image: url("{% static 'images/wapp.jpeg' %}");
+                background: url("{% static 'images/wapp.jpeg' %}") no-repeat center center fixed;
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
             }
         </style>
     </head>
