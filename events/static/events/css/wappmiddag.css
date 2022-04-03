@@ -61,10 +61,6 @@ html body{
 }
 
 .background-img {
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    object-fit: cover;
-    background-size: 100vw 140vh;
 }
 
 /* fade animations start*/
