@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans "DaTe - Händelser" %}{% endblock %}
+
+{% block content %}
+    <head>
+        <link rel="stylesheet" href="{% static 'events/css/form.css' %}">
+    </head>
+    
+    <div class="container-md min-vh-100 container-margin-top">
+        <div class="container-size break-words">
+            <div class="content">
+                <h2>{{event.title}}</h2>
+                {% if passcode_error %}
+                <div class="alert alert-danger">
+                    <strong>{{ passcode_error }}</strong>
+                </div>
+                {% endif %}
+                <form method="post" class="form" id="passcode-form">
+                    {{ form.as_p }}
+                    <button class="button" type="submit">{% trans 'Skicka' %}</button>
+                    {% csrf_token %}
+                </form>
+            </div>
+        </div>
+    </div>
+      
+{% endblock %}
