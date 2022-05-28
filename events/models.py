@@ -41,6 +41,7 @@ class Event(models.Model):
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH, blank=True)
     sign_up_avec = models.BooleanField(_('Avec'), default=False)
     members_only = models.BooleanField(_('Kräv inloggning för innehåll'), default=False)
+    passcode = models.CharField(_('Passcode'), max_length=255, blank=True)
 
     class Meta:
         verbose_name = _('evenemang')

@@ -42,7 +42,8 @@ class EventCreationForm(forms.ModelForm):
             'published',
             'sign_up_avec',
             'slug',
-            'members_only'
+            'members_only',
+            'passcode'
         )
 
     class Media:
@@ -125,7 +126,8 @@ class EventEditForm(forms.ModelForm):
             'published',
             'sign_up_avec',
             'slug',
-            'members_only'
+            'members_only',
+            'passcode'
         )
 
     class Media:
@@ -151,3 +153,7 @@ class EventEditForm(forms.ModelForm):
         if commit:
             post.update_or_create(pk=post.pk)
         return post
+
+
+class PasscodeForm(forms.Form):
+    passcode = forms.CharField()
