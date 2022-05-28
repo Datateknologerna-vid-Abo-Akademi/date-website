@@ -4,7 +4,7 @@ import logging
 import os
 from django.conf import settings
 
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponse
 from django.shortcuts import render, redirect
 from django.views.generic import DetailView, ListView
 from websocket import create_connection
@@ -14,6 +14,7 @@ from django.http import HttpResponseForbidden, request
 from copy import deepcopy
 
 from .models import Event, EventAttendees
+from .forms import PasscodeForm
 
 logger = logging.getLogger('date')
 
@@ -41,11 +42,16 @@ class EventDetailView(DetailView):
         logger.debug(self.get_context_data().get('event').title.lower())
         if self.get_context_data().get('event').title.lower() == 'årsfest':
            template_name = 'events/arsfest.html'
+        if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
+            template_name = 'events/event_passcode.html'
+
         return template_name
 
     def get_context_data(self, **kwargs):
         context = super(EventDetailView, self).get_context_data(**kwargs)
         form = kwargs.pop('form', None)
+        if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
+            form = PasscodeForm
         if form:
             context['form'] = form
         else:
@@ -69,6 +75,14 @@ class EventDetailView(DetailView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        # set passcode status to session if passcode is enabled
+        if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
+            if self.object.passcode == request.POST.get('passcode'):
+                self.request.session['passcode_status'] = self.object.passcode
+                return render(self.request, 'events/detail.html', self.get_context_data())
+            else:
+                return render(self.request, 'events/event_passcode.html', self.get_context_data(passcode_error='invalid passcode'))
+
         if self.object.sign_up and (request.user.is_authenticated
                                     and self.object.registration_is_open_members()
                                     or self.object.registration_is_open_others()
