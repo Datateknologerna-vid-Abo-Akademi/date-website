@@ -16,6 +16,7 @@ from django.utils.timezone import now
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
+from archive.fields import PublicFileField
 
 logger = logging.getLogger('date')
 
@@ -56,6 +57,7 @@ class Event(models.Model):
     members_only = models.BooleanField(_('Kräv inloggning för innehåll'), default=False)
     passcode = models.CharField(_('Passcode'), max_length=255, blank=True)
     image = models.ImageField(_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
+    s3_image = PublicFileField(verbose_name=_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
 
     class Meta:
         verbose_name = _('evenemang')
