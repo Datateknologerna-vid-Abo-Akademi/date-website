@@ -42,7 +42,8 @@ class EventCreationForm(forms.ModelForm):
             'sign_up_avec',
             'slug',
             'members_only',
-            'passcode'
+            'passcode',
+            'image'
         )
 
     class Media:
@@ -126,7 +127,8 @@ class EventEditForm(forms.ModelForm):
             'sign_up_avec',
             'slug',
             'members_only',
-            'passcode'
+            'passcode',
+            'image'
         )
 
     class Media:
