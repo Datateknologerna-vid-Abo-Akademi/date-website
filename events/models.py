@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
+from distutils.command.upload import upload
 
 import logging
+import os
 from datetime import timedelta
 
 from ckeditor.fields import RichTextField
@@ -11,12 +13,24 @@ from django.db import models
 from django.db.models import Max, JSONField
 from django.template.defaulttags import register
 from django.utils.timezone import now
+from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 from django.core.exceptions import ValidationError
+from archive.fields import PublicFileField
 
 logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
+
+
+def upload_to(instance, filename):
+    filename_base, filename_ext = os.path.splitext(filename)
+
+    file_location = "events/{filename}{extension}".format(
+        filename=slugify(filename_base),
+        extension=filename_ext.lower(),
+    )
+    return file_location
 
 
 class Event(models.Model):
@@ -42,6 +56,8 @@ class Event(models.Model):
     sign_up_avec = models.BooleanField(_('Avec'), default=False)
     members_only = models.BooleanField(_('Kräv inloggning för innehåll'), default=False)
     passcode = models.CharField(_('Passcode'), max_length=255, blank=True)
+    image = models.ImageField(_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
+    s3_image = PublicFileField(verbose_name=_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
 
     class Meta:
         verbose_name = _('evenemang')

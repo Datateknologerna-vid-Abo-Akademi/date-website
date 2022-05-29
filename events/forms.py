@@ -5,6 +5,7 @@ from datetime import datetime
 from django import forms
 from django.contrib.admin import widgets
 from django.utils.timezone import now
+from django.conf import settings
 
 from date.functions import slugify_max
 from events import models
@@ -26,7 +27,7 @@ class EventCreationForm(forms.ModelForm):
 
     class Meta:
         model = Event
-        fields = (
+        temp_fields = (
             'title',
             'event_date_start',
             'event_date_end',
@@ -44,7 +45,12 @@ class EventCreationForm(forms.ModelForm):
             'members_only',
             'passcode'
         )
-
+        if settings.USE_S3:
+            fields = temp_fields + ('s3_image',)
+        else:
+            fields = temp_fields + ('image',)
+    
+    
     class Media:
         js = (
             '//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',  # jquery,
@@ -110,7 +116,7 @@ class EventEditForm(forms.ModelForm):
 
     class Meta:
         model = Event
-        fields = (
+        temp_fields = (
             'title',
             'event_date_start',
             'event_date_end',
@@ -128,6 +134,11 @@ class EventEditForm(forms.ModelForm):
             'members_only',
             'passcode'
         )
+        if settings.USE_S3:
+            fields = temp_fields + ('s3_image',)
+        else:
+            fields = temp_fields + ('image',)
+
 
     class Media:
         js = (
