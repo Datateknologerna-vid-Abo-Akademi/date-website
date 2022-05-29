@@ -10,63 +10,74 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
         <script src="{% static 'js/live-attendee-list.js' %}"></script>
+        <style>
+            .background-img{
+                background: url("{% if event.image %}{{ event.image.url }}{% endif %}") no-repeat center center fixed;
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
+            }
+        </style>
     </head>
-    <div class="container-md min-vh-100 container-margin-top p-1">
-        <div class="container-size">
-            <div class="content">
-                <h2 class="header">{{ event.title }}</h2>
-                <h4 class="help-text">{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
-                <p>{{ event.content | safe }}</p>
-            </div>
-            {% if event.sign_up %}
+    <div class="background-img">
+        <div class="container-md min-vh-100 p-1">
+            <div class="container-size" style="margin-top: 13vh">
                 <div class="content">
-                    <h2 id="sign-up">{% trans "Anmälning" %}</h2>
-                    {% if event.registration_is_open_members and user.is_authenticated %}
-                        {% include 'events/registering.html' %}
-                    {% elif event.registration_is_open_others %}
-                        {% include 'events/registering.html' %}
-                    {% elif event.registation_past_due %}
-                        <h4 id="no-registration">{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }} {% trans 'sedan' %}</h4>
-                    {% elif not event.registation_past_due and user.is_authenticated %}
-                        <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_members | timeuntil }}</p>
+                    <h2 class="header">{{ event.title }}</h2>
+                    <h4 class="help-text">{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
+                    <p>{{ event.content | safe }}</p>
+                </div>
+                {% if event.sign_up %}
+                    <div class="content">
+                        <h2 id="sign-up">{% trans "Anmälning" %}</h2>
+                        {% if event.registration_is_open_members and user.is_authenticated %}
+                            {% include 'events/registering.html' %}
+                        {% elif event.registration_is_open_others %}
+                            {% include 'events/registering.html' %}
+                        {% elif event.registation_past_due %}
+                            <h4 id="no-registration">{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }} {% trans 'sedan' %}</h4>
+                        {% elif not event.registation_past_due and user.is_authenticated %}
+                            <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_members | timeuntil }}</p>
+                        {% else %}
+                            <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_others | timeuntil }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="content overflow-auto">
+                    {% if event|show_attendee_list %}
+                        {% if event.sign_up_max_participants != 0 %}
+                        <p>Det finns {{ event.sign_up_max_participants }} platser!</p>
+                        {% endif %}
+                        <h2>{% trans "Anmälda" %}</h2>
+                        <table class="" id="attendees">
+                            <tr id="attendees-header"
+                                {% if not event.get_registrations %} style="display: none;"
+                                {% endif %}>
+                                    <th>#</th>
+                                    <th>{% trans "Namn" %}</th>
+                                    {% for preference in event.get_registration_form_public_info reversed %}
+                                        <th>{{ preference }}</th>
+                                    {% endfor %}
+                            </tr>
+                            {% for attendee in event.get_registrations %}
+                                <tr {% if forloop.counter > event.sign_up_max_participants and event.sign_up_max_participants != 0 %} class="event-full" {% endif %} >
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{% if not attendee.anonymous %}{{ attendee.user }}{% else %}
+                                        <i>{% trans "Anonymt" %}</i>{% endif %}</td>
+                                    {% for preference in event.get_registration_form_public_info reversed %}
+                                        <td>{{ attendee | get_preference:preference }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% empty %}
+                                <p id="no-attendee">{% trans "Inga anmälda, var den första att anmäla dig!" %}</p>
+                            {% endfor %}
+                        </table>
                     {% else %}
-                        <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_others | timeuntil }}</p>
+                        <h4 id="no-attendee">{% trans 'Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta styrelsen vid behov.' %}</h4>
                     {% endif %}
                 </div>
-                <div class="content overflow-auto">
-                {% if event|show_attendee_list %}
-                    {% if event.sign_up_max_participants != 0 %}
-                    <p>Det finns {{ event.sign_up_max_participants }} platser!</p>
-                    {% endif %}
-                    <h2>{% trans "Anmälda" %}</h2>
-                    <table class="" id="attendees">
-                        <tr id="attendees-header"
-                            {% if not event.get_registrations %} style="display: none;"
-                            {% endif %}>
-                                <th>#</th>
-                                <th>{% trans "Namn" %}</th>
-                                {% for preference in event.get_registration_form_public_info reversed %}
-                                    <th>{{ preference }}</th>
-                                {% endfor %}
-                        </tr>
-                        {% for attendee in event.get_registrations %}
-                            <tr {% if forloop.counter > event.sign_up_max_participants and event.sign_up_max_participants != 0 %} class="event-full" {% endif %} >
-                                <td>{{ forloop.counter }}</td>
-                                <td>{% if not attendee.anonymous %}{{ attendee.user }}{% else %}
-                                    <i>{% trans "Anonymt" %}</i>{% endif %}</td>
-                                {% for preference in event.get_registration_form_public_info reversed %}
-                                    <td>{{ attendee | get_preference:preference }}</td>
-                                {% endfor %}
-                            </tr>
-                        {% empty %}
-                            <p id="no-attendee">{% trans "Inga anmälda, var den första att anmäla dig!" %}</p>
-                        {% endfor %}
-                    </table>
-                {% else %}
-                    <h4 id="no-attendee">{% trans 'Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta styrelsen vid behov.' %}</h4>
                 {% endif %}
             </div>
-            {% endif %}
         </div>
     </div>
 {% endblock %}
