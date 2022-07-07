@@ -7,7 +7,7 @@
 .header {
     color: var(--textColorLight);
     background-color: var(--primaryColor);
-    height: 65vh;
+    height: 50vh;
 }
 
 .hero-text-box {
@@ -30,7 +30,7 @@
 .scaling-svg-container {
     margin-top: 55px;
         position: relative; 
-        height: 40vh; 
+        height: 35vh; 
         width: 100%; 
         padding: 0;
         /* override this inline for aspect ratio other than square */
@@ -44,12 +44,15 @@
     top: 0;
 }
 
-.albin {
-    position: absolute;
-    left: 50%;
-    -webkit-transform: translate(-50%, -57%) scale(.3);
-            transform: translate(-50%, -57%) scale(.3);
+.header path {
+    stroke: var(--secondaryColor);
+    fill: var(--secondaryColor);
+    stroke-dasharray: 25000;
+    opacity: 10;
+    fill-rule: evenodd;
+    animation: animate 3.5s cubic-bezier(0,.18,.50,.1);
 }
+
 .hero-text-box path {
     stroke: var(--secondaryColor);
     fill: var(--secondaryColor);
