@@ -29,6 +29,7 @@ class Collection(models.Model):
     title = models.CharField(_('Namn'), max_length=250)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     pub_date = models.DateTimeField(default=datetime.datetime.now, null=True)
+    hide_for_gulis = models.BooleanField(_('Göm för gulisar'), default=False)
 
     class Meta:
         verbose_name = _('Samling')
