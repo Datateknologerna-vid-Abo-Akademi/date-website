@@ -5,9 +5,9 @@ from . import models
 
 
 class LatestPosts(Feed):
-    title = "DaTe nyheter"
+    title = "Biologica nyheter"
     link = "/news/feed"
-    description = "DaTe nyhetsflöde"
+    description = "Biocum nyhetsflöde"
 
     def items(self):
         return models.Post.objects.order_by('modified_time')[:10]
