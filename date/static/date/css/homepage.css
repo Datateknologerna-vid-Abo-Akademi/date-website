@@ -26,6 +26,24 @@
     -webkit-animation: fadeIn 3s;
             animation: fadeIn 3s;
 }
+
+.scaling-svg-container {
+    margin-top: 55px;
+        position: relative; 
+        height: 30vh; 
+        width: 100%; 
+        padding: 0;
+        /* override this inline for aspect ratio other than square */
+   }
+
+.scaling-svg-container svg {
+    position: absolute; 
+    height: 100%; 
+    width: 100%; 
+    left: 0; 
+    top: 0;
+}
+
 .albin {
     position: absolute;
     left: 50%;
@@ -90,17 +108,19 @@
     padding-top: 5vh;
     display: block;
     margin-bottom: 0;
-    font-size: 8rem;
+    font-size: 4rem;
     font-weight: 400;
     -webkit-animation: fadeIn 3s;
             animation: fadeIn 3s;
+    text-align: center;
 }
+
 .hero-text-sub {
     display: block;
     text-align: center;
-    font-size: 1.8rem;
+    font-size: 1.2rem;
     font-weight: 700;
-    letter-spacing: 1.2rem;
+    letter-spacing: 0.5rem;
     -webkit-animation: fadeIn 4.5s ease-in;
             animation: fadeIn 4.5s ease-in;
 }
