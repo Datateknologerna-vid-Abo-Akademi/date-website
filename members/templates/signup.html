@@ -24,6 +24,13 @@
                 {% endfor %}
               </p>
             {% endfor %}
+            <p class="consent-form-group">
+              <input type="checkbox" name="consent" required/>
+              Jag godkänner
+              <a href="http://{{ request.get_host }}/pages/registerbeskrivning/" target="_blank">
+                villkoren <i class="fa fa-external-link" aria-hidden="true"></i>
+              </a>
+            </p>
             <button class="button" type="submit">Sign up</button>
           </form>
         </div>

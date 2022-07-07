@@ -111,14 +111,15 @@ class SubscriptionPaymentForm(forms.ModelForm):
 
 
 class SignUpForm(forms.ModelForm):
-    username = forms.CharField(max_length=20, help_text=_('detta fält är obligatoriskt'))
-    email = forms.EmailField(max_length=200, help_text=_('detta fält är obligatoriskt'))
+    username = forms.CharField(max_length=20, help_text=_('detta fält är obligatoriskt'), label=_('Användarnamn'))
+    email = forms.EmailField(max_length=200, help_text=_('detta fält är obligatoriskt'), label=_('E-postadress'))
     password = forms.CharField(
         widget=forms.PasswordInput(),
         required=True,
         min_length=8,
         error_messages={'required': 'Password is required'},
-        help_text=_('detta fält är obligatoriskt')
+        help_text=_('detta fält är obligatoriskt'),
+        label=_('Lösenord')
     )
 
     class Meta:
