@@ -72,10 +72,11 @@
     40% {
         opacity: 10;
         fill: none;
-        stroke-dashoffset: 15000;
+        stroke-dashoffset: 24500;
     }
     80% {
         fill: rgba(255,255,255,0);
+        stroke-dashoffset: 23250;
 
     }
     100% {
@@ -84,6 +85,7 @@
         stroke-dashoffset: 0;
     }
 }
+
 @keyframes animate {
     0% {
         opacity: 0;
@@ -93,10 +95,11 @@
     40% {
         opacity: 10;
         fill: none;
-        stroke-dashoffset: 15000;
+        stroke-dashoffset: 24500;
     }
     80% {
         fill: rgba(255,255,255,0);
+        stroke-dashoffset: 23250;
 
     }
     100% {
@@ -114,8 +117,8 @@
     margin-bottom: 0;
     font-size: 4rem;
     font-weight: 400;
-    -webkit-animation: fadeIn 3s;
-            animation: fadeIn 3s;
+    -webkit-animation: fadeIn 4.5s ease-in;
+            animation: fadeIn 4.5s ease-in;
     text-align: center;
 }
 
@@ -125,8 +128,8 @@
     font-size: 1.2rem;
     font-weight: 700;
     letter-spacing: 0.5rem;
-    -webkit-animation: fadeIn 4.5s ease-in;
-            animation: fadeIn 4.5s ease-in;
+    -webkit-animation: fadeIn 4.75s ease-in;
+            animation: fadeIn 4.75s ease-in;
 }
 
 /*About content*/
