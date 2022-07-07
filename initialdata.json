@@ -249,7 +249,7 @@
   "model": "ads.adurl",
   "pk": 2,
   "fields": {
-    "ad_url": "https://datateknologerna.org/static/images/albin_black.png",
+    "ad_url": "https://Biologica.org/static/images/albin_black.png",
     "company_url": "https://kemistklubben.org/"
   }
 },
