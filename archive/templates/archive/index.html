@@ -12,7 +12,7 @@
     <div class="container-md min-vh-100 container-margin-top">
         <div class="container-size" style="max-width: 600px;">
             {% if type == 'pictures' %}
-                <h1 class="text-center">&nbsp; {% trans "Bildarkiv" %} &nbsp;</h1>
+                <h1 class="text-center archive-heading">&nbsp; {% trans "Bildarkiv" %} &nbsp;</h1>
                 {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse" %}
                     <h3><a class="button" href="{% url 'archive:upload' %}"> Skapa nytt album</a></h3>
                 {% endif %}

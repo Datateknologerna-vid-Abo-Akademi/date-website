@@ -74,4 +74,5 @@ color: var(--textColorLight) !important;
 
 .header-logo{
     max-height: 45px;
+    filter: brightness(0) invert(1);
 }

@@ -187,7 +187,7 @@ div.news-content a{
 }
 
 div.news-content a:hover{
-    color: var(--textColorDarkish);
+    color: var(--linkColorHover);
 }
 
 .more-news{
@@ -195,7 +195,7 @@ div.news-content a:hover{
 }
 
 .more-news:hover{
-    color: var(--textColorDarkish);
+    color: var(--linkColorHover);
 }
 
 .news-header{
@@ -265,7 +265,7 @@ div.news-content a:hover{
   }
   
 .evet-card > .card .badge {
-    background: var(--primaryColorLighter);
+    background: var(--badgeColor);
   }
   
 .evet-card > .card {

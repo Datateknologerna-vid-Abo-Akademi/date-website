@@ -15,7 +15,7 @@
 }
 
 .grid-item .card {
-    background: var(--primaryColorLight);
+    background: var(--secondaryColor); 
 }
 
   /* Masonary image gallery */
@@ -35,6 +35,17 @@
 .grid-item .card{
     border-radius: var(--defaultRadius);
     width: 100% !important;
+}
+
+.back-btn {
+    background-color: var(--secondaryColor);
+    padding: 5px;
+    border-radius: var(--defaultRadius);
+    display: inline-block;
+}
+
+.archive-heading {
+    color: var(--textColorLightish);
 }
 
 @media only screen and (min-width: 768px) {

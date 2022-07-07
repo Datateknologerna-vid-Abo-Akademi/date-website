@@ -1,11 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500&display=swap');
+
 html {
     scroll-behavior: smooth;
 }
 
 html body{
     background-color: var(--primaryColor);
-    color: var(--textColorLightish);
-    font-family: 'Josefin Sans', sans-serif;
+    color: var(--textColorDarkish);
+    font-family: 'Space Grotesk', sans-serif;
 }
 
 .content img{
@@ -57,7 +59,7 @@ div a:hover{
 
 .content{
     margin: 20px 2vw;
-    background-color: var(--primaryColorLight);
+    background-color: var(--secondaryColor);
     padding: var(--defaultPadding);
     border-radius: var(--defaultRadius);
 }

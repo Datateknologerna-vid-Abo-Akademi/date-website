@@ -13,7 +13,7 @@
         <div class="container-size break-words">
             <div class="row">
                 <div class="col-md-12">
-                    <h2 class="text-center"><span>{% trans "Kommande händelser" %}</span></h2>
+                    <h2 class="text-center handelser"><span>{% trans "Kommande händelser" %}</span></h2>
                     {% for event in event_list %}
                         <div class="card-group evet-card text-light mb-2">
                             <div class="card mb-0 p-1">
@@ -56,7 +56,7 @@
                     {% endfor %}
                 </div>
                 <div class="text-center mt-5">
-                    <h2><span>{% trans "Tidigare händelser" %}</span></h2>
+                    <h2 class="handelser"><span>{% trans "Tidigare händelser" %}</span></h2>
                     {% for event in past_events|slice:5 %}
                     <div>
                         <a class="content-past" href="{% url 'events:detail' event.slug %}"><h4 class="event-title-ended">{{ event.title }}</h4></a>

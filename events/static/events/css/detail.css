@@ -17,4 +17,5 @@ th, td {
 tr:hover {
     transition: 200ms;
     background-color: var(--primaryColorLighter);
+    color: var(--textColorLightish);
 }

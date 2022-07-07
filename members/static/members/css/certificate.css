@@ -3,7 +3,7 @@
 }
 
 .card {
-    color: var(--textColorDark);
+    color: var(--textColorLight);
 }
 
 .validation {
@@ -11,6 +11,7 @@
     position: relative;
     border-radius:var(--defaultRadius);
     padding: 5px;
+    color: var(--textColorLight);
 }
 
 .valid {

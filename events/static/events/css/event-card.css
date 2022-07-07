@@ -1,5 +1,6 @@
 .card {
     border-radius: var(--defaultRadius);
+    color: var(--textColorDarkish);
   }
   
 .card .fa-chevron-right{
@@ -16,11 +17,11 @@
   }
   
 .evet-card > .card .badge {
-    background: var(--helpText);
+    background: var(--badgeColor);
   }
   
 .evet-card > .card {
-    background: var(--primaryColorLight);
+    background: var(--secondaryColor);
   }
   
 .card-body a{
