@@ -30,7 +30,7 @@
 .scaling-svg-container {
     margin-top: 55px;
         position: relative; 
-        height: 30vh; 
+        height: 40vh; 
         width: 100%; 
         padding: 0;
         /* override this inline for aspect ratio other than square */
@@ -107,6 +107,7 @@
     text-transform: uppercase;
     padding-top: 5vh;
     display: block;
+    padding: 0;
     margin-bottom: 0;
     font-size: 4rem;
     font-weight: 400;
