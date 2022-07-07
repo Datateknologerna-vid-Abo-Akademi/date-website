@@ -1,4 +1,4 @@
-/* Homepage for DaTe */
+/* Homepage for Biocum */
 
 /* Main */
 
@@ -564,75 +564,13 @@ div.carousel-logos img{
     }
 }
 
-/*Albin size with height*/
-
-@media screen and (max-height: 950px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 60%)scale(.65);
-                transform: translate(-50%, 60%)scale(.65);
-    }
-}
-
-@media screen and (max-height: 850px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 50%)scale(0.55);
-                transform: translate(-50%, 50%)scale(0.55);
-    }
-}
-
-@media screen and (max-height: 750px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 45%)scale(0.50);
-                transform: translate(-50%, 45%)scale(0.50);
-    }
-}
-
-@media screen and (max-height: 700px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 45%)scale(0.45);
-                transform: translate(-50%, 45%)scale(0.45);
-    }
-}
-
-@media screen and (max-height: 650px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 40%)scale(0.40);
-                transform: translate(-50%, 40%)scale(0.40);
-    }
-}
-
-@media screen and (max-height: 600px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 35%)scale(0.35);
-                transform: translate(-50%, 35%)scale(0.35);
-    }
-}
-
-@media screen and (max-height: 550px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 30%)scale(0.30);
-                transform: translate(-50%, 30%)scale(0.30);
-    }
-}
-
-@media screen and (max-height: 500px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 20%)scale(0.25);
-                transform: translate(-50%, 20%)scale(0.25);
-    }
-}
-
 /*width responsiveness*/
 
 @media screen and (max-width: 1400px){
     .main-container{
         grid-template-columns: 5vw 5fr 2fr 5vw;
     }
-
-
 }
-
-
 
 @media screen and (max-width: 991px){
     .main-container{
@@ -664,19 +602,6 @@ div.carousel-logos img{
         -webkit-transform: translate(-50%, 65%)scale(0.45);
                 transform: translate(-50%, 65%)scale(0.45);
     }
-
-    .hero-text-main {
-        font-size: 8rem;
-    }
-
-    .hero-text-sub{
-        font-size: 2rem;
-    }
-
-    .hero-text-box .hero-text-sub {
-        letter-spacing: 1rem;
-    }
-
 }
 
 @media screen and (max-width: 800px) {
@@ -685,13 +610,16 @@ div.carousel-logos img{
         -webkit-transform: translate(-50%, 55%)scale(0.40);
                 transform: translate(-50%, 55%)scale(0.40);
     }
-
     .hero-text-main {
-        font-size: 6rem;
+        font-size: 3rem;
     }
 
     .hero-text-sub{
-        font-size: 3rem;
+        font-size: 1.5rem;
+    }
+
+    .hero-text-box .hero-text-sub {
+        letter-spacing: 1rem;
     }
 }
 
