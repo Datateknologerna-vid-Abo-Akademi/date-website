@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% load app_filters %}
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block content %}
+    <head>
+        <link rel="stylesheet" href="{% static 'events/css/kk100.css' %}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+        <script src="{% static 'js/live-attendee-list.js' %}"></script>
+        <style>
+            .background-img{
+                background: url("{% static 'images/stars.png' %}") no-repeat center center fixed;
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
+            }
+        </style>
+    </head>
+    <div class="background-img">
+        <div class="container-md min-vh-100">
+            <div class="main-text d-flex align-items-center justify-content-center flex-column min-vh-100">
+            <h1>DETAIL</h1>
+            </div>
+          </div>
+    </div>
+{% endblock %}

@@ -15,6 +15,8 @@ from websocket._exceptions import WebSocketBadStatusException
 from copy import deepcopy
 
 import json
+from .models import Event, EventAttendees
+from .forms import PasscodeForm
 
 import logging
 logger = logging.getLogger('date')
@@ -44,22 +46,35 @@ def baal_home(request):
     return render(request, 'events/baal_detail.html', context)
 
 
+def kk100_index(request):
+    context = {}
+    context['event'] = Event.objects.filter(title='kk100').first()
+    return render(request, 'events/kk100_index.html', context)
+
+
 class EventDetailView(DetailView):
     model = Event
 
     def get_template_names(self):
         template_name = 'events/detail.html'
-        if self.get_context_data().get('event').title.lower() == 'baal':
+        if 'baal' in self.get_context_data().get('event').title.lower():
            template_name = 'events/baal_anmalan.html'
         if 'tomtejakt' in self.get_context_data().get('event').title.lower():
            template_name = 'events/tomtejakt.html'
         if 'wappmiddag' in self.get_context_data().get('event').title.lower():
            template_name = 'events/wappmiddag.html'
+        #if 'kk100' in self.get_context_data().get('event').title.lower():
+        #   template_name = 'events/kk100_detail.html'
+        if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
+            template_name = 'events/event_passcode.html'
+
         return template_name
 
     def get_context_data(self, **kwargs):
         context = super(EventDetailView, self).get_context_data(**kwargs)
         form = kwargs.pop('form', None)
+        if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
+            form = PasscodeForm
         if form:
             context['form'] = form
         else:
@@ -78,6 +93,14 @@ class EventDetailView(DetailView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        # set passcode status to session if passcode is enabled
+        if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
+            if self.object.passcode == request.POST.get('passcode'):
+                self.request.session['passcode_status'] = self.object.passcode
+                return render(self.request, 'events/detail.html', self.get_context_data())
+            else:
+                return render(self.request, 'events/event_passcode.html', self.get_context_data(passcode_error='invalid passcode'))
+
         if self.object.sign_up and (request.user.is_authenticated
                                                               and self.object.registration_is_open_members()
                                                               or self.object.registration_is_open_others()):

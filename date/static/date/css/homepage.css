@@ -171,37 +171,32 @@ div.news-content a:hover{
     position: relative;
 }
 
-.aa-img {
+.kk100-text a{
+    color: #ffbb00 !important;
+}
+
+.kk100-text {
     background-color:transparent;
-    width:35px;
+    width:50px;
     height:35px;
-    border-radius:50px;
-    box-shadow: 0 0 6px 2px rgb(201, 115, 142);
-    -webkit-animation: pulse 2s linear 1s infinite;
-    animation: pulse 2s linear 1s infinite;
+    text-shadow: 0 0 1px #ff9600;
+    -webkit-animation: pulse 2s linear infinite;
+    animation: pulse 2s linear infinite;
     position: absolute;
-    left: 95%;
+    left: 90%;
     bottom: 0%;
   }
 
-
-.aa-img img{
-    max-width: 100%;
-    border-radius: 20px;
-    -webkit-filter: saturate(45%); /* Safari 6.0 - 9.0 */
-    filter: saturate(45%);
-}
-
 @-webkit-keyframes pulse {
-    0% { box-shadow:0 0 6px 2px rgb(201, 115, 142);}
-    50% { box-shadow:0 0 14px 2px rgb(201, 115, 142);}
-    100% { box-shadow:0 0 6px 2px rgb(201, 115, 142);}
+    0% { text-shadow:0 0 1px #ff9600;}
+    50% { text-shadow:0 0 6px #ff9600;}
+    100% { text-shadow:0 0 1px #ff9600;}
 }
 
 @keyframes pulse {
-    0% { box-shadow:0 0 6px 2px rgb(201, 115, 142); }
-    50% { box-shadow:0 0 14px 2px rgb(201, 115, 142); }
-    100% { box-shadow:0 0 6px 2px rgb(201, 115, 142); }
+    0% { text-shadow:0 0 1px #ff9600; }
+    50% { text-shadow:0 0 6px #ff9600; }
+    100% { text-shadow:0 0 1px #ff9600; }
 }
     
 

@@ -39,9 +39,7 @@
             <div id="main" class="main-container">
                 <div class="feed-container">
                     <h3 class="news-header header-border-bottom mt-3">Nyheter 
-                        {% if aa_post %}
-                        <div class="aa-img"><a href="{% url 'news:aa_detail' aa_post.slug %}"><img src="{% static 'images/albins-angels.png' %}"/></a></div>
-                        {% endif %}
+                        <div class="kk100-text"><a href="{% url 'events:kk100' %}">100</a></div>
                     </h3>
                     <div class="news-container">
                         {% for ne in news%}

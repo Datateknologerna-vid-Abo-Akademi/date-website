@@ -2,6 +2,7 @@ import logging
 
 from django import forms
 from django.utils.timezone import now
+from django.conf import settings
 
 from date.functions import slugify_max
 from events import models
@@ -27,7 +28,7 @@ class EventCreationForm(forms.ModelForm):
 
     class Meta:
         model = Event
-        fields = (
+        temp_fields = (
             'title',
             'event_date_start',
             'event_date_end',
@@ -42,9 +43,15 @@ class EventCreationForm(forms.ModelForm):
             'published',
             'sign_up_avec',
             'slug',
-            'members_only'
+            'members_only',
+            'passcode'
         )
-
+        if settings.USE_S3:
+            fields = temp_fields + ('s3_image',)
+        else:
+            fields = temp_fields + ('image',)
+    
+    
     class Media:
         js = (
             '//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',  # jquery,
@@ -110,7 +117,7 @@ class EventEditForm(forms.ModelForm):
 
     class Meta:
         model = Event
-        fields = (
+        temp_fields = (
             'title',
             'event_date_start',
             'event_date_end',
@@ -125,8 +132,14 @@ class EventEditForm(forms.ModelForm):
             'published',
             'sign_up_avec',
             'slug',
-            'members_only'
+            'members_only',
+            'passcode'
         )
+        if settings.USE_S3:
+            fields = temp_fields + ('s3_image',)
+        else:
+            fields = temp_fields + ('image',)
+
 
     class Media:
         js = (
@@ -151,3 +164,7 @@ class EventEditForm(forms.ModelForm):
         if commit:
             post.update_or_create(pk=post.pk)
         return post
+
+
+class PasscodeForm(forms.Form):
+    passcode = forms.CharField()
