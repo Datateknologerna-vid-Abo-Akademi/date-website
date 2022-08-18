@@ -1,0 +1,185 @@
+@import url('https://fonts.googleapis.com/css2?family=Slabo+27px&display=swap');
+
+.background-img {
+  background-color: #030826;
+}
+
+footer, .navbar{
+  display: none;
+}
+
+.container-md {
+  font-family: 'Slabo 27px', serif;
+  position: relative; 
+  z-index: 10;
+}
+
+.main-text {
+  color: #d0af55;
+  font-size: 25px !important;
+  line-height: 2;
+  -webkit-animation: fadeIn ease 5s;
+  animation: fadeIn ease 5s;
+}
+
+.bigtext {
+  font-size: 40px !important;
+  line-height: 1;
+}
+
+.big100 {
+  font-size: 100px !important;
+  line-height: 1;
+}
+
+@-webkit-keyframes fadeIn {
+  0% {opacity:0;}
+  25% {opacity:0;}
+  100% {opacity:1;}
+  }
+
+@keyframes fadeIn {
+  0% {opacity:0;}
+  25% {opacity:0;}
+  100% {opacity:1;}
+  }
+
+.scaling-svg-container svg {
+  position: absolute; 
+  height: 100%;
+  width: 100%; 
+  left: 0; 
+  top: 0;
+}
+
+.scaling-svg-container path {
+  stroke: #d0af55;
+  fill: none;
+  stroke-dasharray: 25000;
+  opacity: 0.3;
+  fill-rule: evenodd;
+  animation: animate 5s cubic-bezier(0,.18,.50,.1);
+}
+
+/* Albin animation */
+@keyframes animate {
+  1% {
+      opacity: 0;
+      fill: none;
+      stroke-dashoffset: 25000;
+  }
+  20% {
+    opacity: 0.3;
+  }
+  40% {
+      fill: none;
+      stroke-dashoffset: 24500;
+  }
+  80% {
+      fill: none;
+      stroke-dashoffset: 23500;
+
+  }
+  100% {
+      opacity: 0.3;
+      fill: none;
+      stroke-dashoffset: 0;
+  }
+}
+
+.big100 {
+  -webkit-animation: glow 1.5s infinite alternate;
+  animation: glow 1.5s infinite alternate;
+}
+
+@-webkit-keyframes glow {
+  to {
+      text-shadow: 0 0 10px #cdba84;
+  }
+}
+
+@keyframes glow {
+  to {
+      text-shadow: 0 0 10px #cdba84;
+  }
+}
+
+@media only screen and (min-width: 1000px) {
+  .main-text {
+    font-size: 3vw !important;
+  }
+  .bigtext {
+    font-size: 5vw !important;
+    line-height: 1;
+  }
+  .big100 {
+    font-size: 10vw !important;
+    line-height: 1;
+  }
+}
+
+/* ============================================================================================== 
+SED Innovations
+yoinked from https://codepen.io/WebSonick/pen/nBPZZO
+https://sed.am
+https://mkrtchyan.ga
+================================================================================================= */
+
+@keyframes move-twink-back {
+  from {background-position:0 0;}
+  to {background-position:-10000px 5000px;}
+}
+@-webkit-keyframes move-twink-back {
+  from {background-position:0 0;}
+  to {background-position:-10000px 5000px;}
+}
+@-moz-keyframes move-twink-back {
+  from {background-position:0 0;}
+  to {background-position:-10000px 5000px;}
+}
+@-ms-keyframes move-twink-back {
+  from {background-position:0 0;}
+  to {background-position:-10000px 5000px;}
+}
+
+@keyframes move-clouds-back {
+  from {background-position:0 0;}
+  to {background-position:10000px 0;}
+}
+@-webkit-keyframes move-clouds-back {
+  from {background-position:0 0;}
+  to {background-position:10000px 0;}
+}
+@-moz-keyframes move-clouds-back {
+  from {background-position:0 0;}
+  to {background-position:10000px 0;}
+}
+@-ms-keyframes move-clouds-back {
+  from {background-position: 0;}
+  to {background-position:10000px 0;}
+}
+
+.stars, .twinkling {
+position:absolute;
+top:0;
+left:0;
+right:0;
+bottom:0;
+width:100%;
+height:100%;
+display:block;
+}
+
+.stars {
+z-index:0;
+}
+
+.twinkling{
+z-index:1;
+
+-moz-animation:move-twink-back 200s linear infinite;
+-ms-animation:move-twink-back 200s linear infinite;
+-o-animation:move-twink-back 200s linear infinite;
+-webkit-animation:move-twink-back 200s linear infinite;
+animation:move-twink-back 200s linear infinite;
+}

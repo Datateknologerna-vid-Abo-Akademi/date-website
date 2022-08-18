@@ -46,17 +46,25 @@ def baal_home(request):
     return render(request, 'events/baal_detail.html', context)
 
 
+def kk100_index(request):
+    context = {}
+    context['event'] = Event.objects.filter(title='kk100').first()
+    return render(request, 'events/kk100_index.html', context)
+
+
 class EventDetailView(DetailView):
     model = Event
 
     def get_template_names(self):
         template_name = 'events/detail.html'
-        if self.get_context_data().get('event').title.lower() == 'baal':
+        if 'baal' in self.get_context_data().get('event').title.lower():
            template_name = 'events/baal_anmalan.html'
         if 'tomtejakt' in self.get_context_data().get('event').title.lower():
            template_name = 'events/tomtejakt.html'
         if 'wappmiddag' in self.get_context_data().get('event').title.lower():
            template_name = 'events/wappmiddag.html'
+        #if 'kk100' in self.get_context_data().get('event').title.lower():
+        #   template_name = 'events/kk100_detail.html'
         if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
             template_name = 'events/event_passcode.html'
 
