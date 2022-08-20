@@ -3,7 +3,7 @@ nav{
 }
 
 .offcanvas{
-    background-color: var(--primaryColorTransparenter);
+    background-color: var(--primaryColorTransparent);
 }
 
 .container .navbar-toggler{
