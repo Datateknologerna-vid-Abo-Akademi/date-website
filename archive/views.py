@@ -48,8 +48,11 @@ class FilteredDocumentsListView(SingleTableMixin, FilterView):
 
 
 def picture_detail(request, year, album):
-    collection = Collection.objects.filter(type="Pictures", pub_date__year=year, title=album).order_by('-pub_date')
-    pictures = Picture.objects.filter(collection=collection[0])
+    collection = Collection.objects.filter(type="Pictures", pub_date__year=year, title=album).order_by('-pub_date').first()
+    if collection.hide_for_gulis and request.user.membership_type == 1:
+        return render(request, '404.html', {'error_msg': "Gulisar har inte tillgång till detta album!",} )
+
+    pictures = Picture.objects.filter(collection=collection)
 
     page = request.GET.get('page', 1)
 
@@ -65,7 +68,7 @@ def picture_detail(request, year, album):
         'type': "pictures",
         'year' : year,
         'album' : album,
-        'collection' : collection[0],
+        'collection' : collection,
         'pictures': pictures,
     }
 

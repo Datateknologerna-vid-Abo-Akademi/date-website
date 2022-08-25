@@ -23,3 +23,5 @@ media
 
 #minio storage
 storage
+
+.DS_Store

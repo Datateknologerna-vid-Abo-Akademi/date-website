@@ -4,16 +4,22 @@
 {% block title %}{{ event.title }}{% endblock %}
 
 {% block content %}
+
 <head>
     <meta charset="UTF-8">
     <title>Page not found</title>
     <link href="{% static 'css/error-view.css' %}" rel="stylesheet">
 </head>
+
 <body>
     <div class="container-soft">
         <div class="text-wrapper">
-            <h1>- 404 -</h1>
-            <h2>{% trans 'Sidan hittades inte' %}</h2>
+            {% if error_msg %}
+                <h2>{{ error_msg }}</h2>
+            {% else %}
+                <h1>- 404 -</h1>
+                <h2>{% trans 'Sidan hittades inte' %}</h2>
+            {% endif %}
             <p><a href="{% url 'index' %}">{% trans 'Till startsidan' %}</a></p>
         </div>
     </div>

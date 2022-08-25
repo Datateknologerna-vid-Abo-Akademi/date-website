@@ -1,0 +1,7 @@
+.valid {
+    color: rgb(54, 176, 95);
+}
+
+.invalid {
+    color: rgb(176, 54, 89);
+}
