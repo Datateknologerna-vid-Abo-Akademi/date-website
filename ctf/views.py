@@ -44,8 +44,8 @@ def flag(request, ctf_slug, flag_slug):
 
     # Check if user has already solved a flag
     user_solved = False
-    for flag in ctf_flags:
-        if flag.solver and request.user == flag.solver:
+    for ctf_flag in ctf_flags:
+        if ctf_flag.solver and request.user == ctf_flag.solver:
             # Can't send a flag is already solved one
             user_solved = True
             context['user_solved'] = user_solved
