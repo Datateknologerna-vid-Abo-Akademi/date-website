@@ -61,6 +61,7 @@ def flag(request, ctf_slug, flag_slug):
                 # Check if a input matches the flag
                 flag_input = form.cleaned_data.get('flag')
                 if flag_input:
+                    logger.debug(f'USER: {request.user} INPUT: {flag_input}')
                     flag = Flag.objects.filter(ctf=ctf, flag=flag_input)
                     if flag.exists():
                         flag.update(solver=request.user, solved_date=datetime.datetime.now())
