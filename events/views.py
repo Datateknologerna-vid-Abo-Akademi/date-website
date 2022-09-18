@@ -40,8 +40,8 @@ class EventDetailView(DetailView):
     def get_template_names(self):
         template_name = 'events/detail.html'
         logger.debug(self.get_context_data().get('event').title.lower())
-        if self.get_context_data().get('event').title.lower() == 'årsfest':
-           template_name = 'events/arsfest.html'
+        #if self.get_context_data().get('event').title.lower() == 'årsfest':
+        #   template_name = 'events/arsfest.html'
         if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
             template_name = 'events/event_passcode.html'
 
@@ -110,13 +110,13 @@ class EventDetailView(DetailView):
                     avec_data[field_name] = value
             self.get_object().add_event_attendance(user=avec_data['user'], email=avec_data['email'],
                                                anonymous=avec_data['anonymous'], preferences=avec_data, avec_for=avec_data['avec_for'])
-        if self.get_context_data().get('event').title.lower() == 'årsfest':
-            return redirect('/events/arsfest/#/anmalda') 
+        #if self.get_context_data().get('event').title.lower() == 'årsfest':
+        #    return redirect('/events/arsfest/#/anmalda') 
         return render(self.request, self.template_name, self.get_context_data())
 
     def form_invalid(self, form):
-        if self.get_context_data().get('event').title.lower() == 'årsfest':
-            return render(self.request, 'events/arsfest.html', self.get_context_data(form=form))
+        #if self.get_context_data().get('event').title.lower() == 'årsfest':
+        #    return render(self.request, 'events/arsfest.html', self.get_context_data(form=form))
         return render(self.request, self.template_name, self.get_context_data(form=form))
 
 
