@@ -42,7 +42,7 @@ class Event(models.Model):
     event_date_end = models.DateTimeField(_('Slutdatum'), default=now)
     sign_up_max_participants = models.IntegerField(_('Maximal antal deltagare'),
                                                    choices=[(0, u"Ingen begränsning")] + list(
-                                                       zip(range(1, 200), range(1, 200))), default=0)
+                                                       zip(range(1, 500), range(1, 500))), default=0)
     sign_up = models.BooleanField(_('Anmälning'), default=True)
     sign_up_members = models.DateTimeField(_('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=now)
     sign_up_others = models.DateTimeField(_('Anmälan öppnas (övriga)'), null=True, blank=True, default=now)
