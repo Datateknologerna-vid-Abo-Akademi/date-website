@@ -36,16 +36,6 @@ class IndexView(ListView):
         return context
 
 
-def baal_home(request):
-    context = {}
-    context['event'] = Event.objects.filter(title='Baal').first()
-    baal_staticnav = StaticPageNav.objects.filter(category_name="Kemistbaal")
-    if len(baal_staticnav) > 0:
-        baal_staticpages = StaticPage.objects.filter(category=baal_staticnav[0].pk)
-        context['staticpages'] = baal_staticpages
-    return render(request, 'events/baal_detail.html', context)
-
-
 def kk100_index(request):
     context = {}
     context['event'] = Event.objects.filter(title='kk100').first()
@@ -58,7 +48,7 @@ class EventDetailView(DetailView):
     def get_template_names(self):
         template_name = 'events/detail.html'
         if 'baal' in self.get_context_data().get('event').title.lower():
-           template_name = 'events/baal_anmalan.html'
+           template_name = 'events/baal_detail.html'
         if 'tomtejakt' in self.get_context_data().get('event').title.lower():
            template_name = 'events/tomtejakt.html'
         if 'wappmiddag' in self.get_context_data().get('event').title.lower():
@@ -79,6 +69,10 @@ class EventDetailView(DetailView):
             context['form'] = form
         else:
             context['form'] = self.object.make_registration_form()
+        baal_staticnav = StaticPageNav.objects.filter(category_name="Kemistbaal")
+        if len(baal_staticnav) > 0:
+            baal_staticpages = StaticPage.objects.filter(category=baal_staticnav[0].pk)
+            context['staticpages'] = baal_staticpages
         return context
 
 
@@ -127,8 +121,8 @@ class EventDetailView(DetailView):
                     avec_data[field_name] = value
             self.get_object().add_event_attendance(user=avec_data['user'], email=avec_data['email'],
                                                anonymous=avec_data['anonymous'], preferences=avec_data, avec_for=avec_data['avec_for'])
-        if self.get_context_data().get('event').title.lower() == 'baal':
-            return redirect('/events/baal/#/anmalda') 
+        if 'baal' in self.get_context_data().get('event').title.lower():
+            return redirect(f'/events/{self.get_context_data().get("event").slug}/#/anmalda')
         elif 'wappmiddag' in self.get_context_data().get('event').title.lower():
             return redirect(f'/events/{self.get_context_data().get("event").slug}/#/anmalda') 
         return render(self.request, self.get_template_names(), self.get_context_data())

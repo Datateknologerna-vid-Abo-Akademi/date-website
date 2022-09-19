@@ -1,14 +1,69 @@
 /* NEW STUFF */
 
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Slab:ital,wght@1,600&display=swap');
 
 :root {
-    --opacityColor: rgba(227, 230, 209, 0.75);
+    --opacityColor: rgba(235, 235, 235, 0.7);
+    /*--opacityColor: rgba(223, 223, 223, 0.55);*/
     --backdropBlur:  blur(10px);
+}
+
+html body{
+
 }
 
 .hidden{
     display: none !important;
+}
+
+.container-md, form label, form select, form input, form button{
+    font-family: 'Josefin Slab', serif !important;
+}
+
+.container-md{
+    padding-top: 10vh;
+    min-height: 100vh;
+    text-align: start;
+    align-content: start;
+    font-weight: bold;
+    background-position: top;
+}
+
+.content{
+    background-color: rgba(243, 243, 243, 0.9);
+    border-top: 2px solid var(--primaryColor);
+    color: var(--textColorDark);
+    font-size: 1.1em;
+}
+   
+  /* if backdrop support: very transparent and blurred */
+  @supports ((-webkit-backdrop-filter: blur(2em)) or (backdrop-filter: blur(2em))) {
+    .content {
+    background-color: var(--opacityColor);
+      -webkit-backdrop-filter: var(--backdropBlur);
+      backdrop-filter: var(--backdropBlur);
+    }
+  }
+
+.content a, .baal-content h2, .baal-content h1 {
+    color: rgb(255, 255, 255);
+}
+
+.content a:hover {
+    border-radius: 5px;
+    background-color: var(--secondaryColor);
+    color: var(--textColorDark);
+}
+
+.baal-content h2, .baal-content h1 {
+    color: var(--textColorDark);
+}
+
+.baal-content {
+
+}
+
+.background-img {
 }
 
 /* fade animations start*/
@@ -38,6 +93,43 @@
 }
 /* fade animations end */
 
+.header-box {
+    overflow: hidden;
+    position: relative;
+}
+
+img.balloon {
+    position: absolute;
+    width: 100px !important;
+    height: 120px !important;
+    transition: .3s;
+}
+
+img.balloon-right {
+    right: 15px;
+    animation: balloon ease 4s;
+}
+
+img.balloon-right:hover {
+    transform: rotate(45deg);
+}
+
+img.balloon-left {
+    transform: scaleX(-1);
+    animation: balloon2 ease 4s;
+}
+
+img.balloon-left:hover {
+    transform: scaleX(-1) rotate(45deg);
+}
+
+#canvas{
+    position: absolute;
+    width:100%;
+    height:100%;
+    z-index: -10;
+}
+
 .header-logo{
     display: block;
     margin-left: auto;
@@ -49,6 +141,18 @@
     -moz-animation: fadeIn ease 5s;
     -o-animation: fadeIn ease 5s;
     -ms-animation: fadeIn ease 5s;
+}
+
+.container-md .content svg{
+    width: 110px;
+    height: 150px;
+    display: block;
+    margin: auto;
+
+    -webkit-transition: 1s;
+    -o-transition: 1s;
+    transition: 1s;
+    transform: scale(1.2) !important;
 }
 
 .baal-header{
@@ -68,18 +172,18 @@
 .baal-nav a{
     margin: 5px;
     padding: 10px;
-    background-color: var(--secondaryColor);
+    background-color: #d4c5a4;
     border-radius: 5px;
     transition: .3s;
-    box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
+    box-shadow: 1px 1px 5px 0px rgb(32, 32, 32);
 }
 
 .baal-nav a:hover{
-    background-color: var(--primaryColor);
-    color: var(--secondaryColor) !important;
+    background-color: var(--secondaryColor);
+    color: var(--textColorDark) !important;
 }
 
-.text-content div, .container-form, .container-signed{
+.text-content div > *, .anmalan > *, .anmalda > *{
     animation: fadeIn ease 2s;
     -webkit-animation: fadeIn ease 2s;
     -moz-animation: fadeIn ease 2s;
@@ -99,49 +203,23 @@ footer{
     display: none;
 }
 
-form p label{
-    font-family: 'Dancing Script', cursive !important;
+form p > * {
+    width: 100%;
 }
 
 form button {
-    font-family: 'Dancing Script', cursive !important;
-    background-color: var(--secondaryColor) !important;
-    color: var(--primaryColor) !important;
+    background-color: #d4c5a4 !important;
+    color: var(--textColorLight) !important;
+    transition: .3s;
 }
 
 form button:hover {
-    background-color: var(--primaryColor) !important;
-    color: var(--secondaryColor) !important;
-}
-
-.container-md{
-    position: relative;
-    padding-top: 10vh;
-    min-height: 100vh;
-    /*font-family: 'Carattere', cursive;*/
-    font-family: 'Dancing Script', cursive;
-    text-align: start;
-    align-content: start;
-    font-size: 1.3em;
-    font-weight: bold;
-    background-position: top;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    background-size: 100vw 140vh;
-    background-color: black;
-    border-bottom: 3px solid var(--primaryColor);
-}
-
-.content{
-    background-color: var(--opacityColor);
-    backdrop-filter: var(--backdropBlur);
-    -webkit-backdrop-filter: var(--backdropBlur);
-    border-top: 2px solid var(--primaryColor);
-    color: var(--textColorDark);
+    background-color: var(--secondaryColor) !important;
+    color: var(--textColorDark) !important;
 }
 
 .event-full{
-    color: gray;
+    color: #b30116;
 }
 
 th {
@@ -155,5 +233,10 @@ th, td {
 tr:hover {
     transition: 200ms;
     background-color: var(--secondaryColor);
-    color: var(--primaryColor);
+    color: var(--textColorDark);
+}
+
+.inner {
+    background-color: var(--opacityColor);
+    padding: var(--defaultPadding);
 }
