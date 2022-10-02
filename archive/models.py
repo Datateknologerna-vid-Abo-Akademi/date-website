@@ -21,6 +21,7 @@ from .fields import PublicFileField
 TYPE_CHOICES = (
     ('Pictures', 'Bilder'),
     ('Documents', 'Dokument'),
+    ('Exams', 'Tenter'),
     ('PublicFiles', 'OffentligaFiler')
 )
 
@@ -69,6 +70,14 @@ def upload_to(instance, filename):
             filename=slugify(filename_base),
             extension=filename_ext.lower(),
         )
+    
+    elif instance.collection.type == "Exams":
+        file_location = "Exams/{year}/{collection}/{filename}{extension}".format(
+            year=instance.collection.pub_date.strftime("%Y"),
+            collection=slugify(instance.collection.title),
+            filename=slugify(filename_base),
+            extension=filename_ext.lower(),
+        )
 
     else:
         file_location = "{year}/{collection}/{filename}{extension}".format(
@@ -108,6 +117,11 @@ class PictureCollection(Collection):
 class DocumentCollection(Collection):
     class Meta:
         verbose_name_plural = verbose_name = _('Dokumentarkiv')
+        proxy = True
+
+class ExamCollection(Collection):
+    class Meta:
+        verbose_name_plural = verbose_name = _('Tentarkiv')
         proxy = True
 
 class PublicCollection(Collection):
