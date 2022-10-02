@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load app_filters %}
+{% load static %}
+{% load i18n %}
+{% load render_table from django_tables2 %}
+{% load bootstrap3 %}
+{% block title %}{% trans 'Tentarkiv' %}{% endblock %}
+
+{% block content %}
+<head>
+    <link rel="stylesheet" href="{% static 'archive/css/document.css' %}" type="text/css">
+</head>
+    <div class="container-md min-vh-100 container-margin-top p-1">
+        <div class="container-size">
+            <div class="content">
+                <div class="hero-text-box" style="text-align:center;">
+                    <a href="{% url 'archive:exam_upload' collection.id %}">Lägg Till Tentamen</a>
+                    <h1><a href="{% url 'archive:exams' %}"><i class="fa fa-arrow-left" aria-hidden="true"></i></a> {{ collection.title }} <i class="fas fa-book-dead"></i></h1>
+                </div>
+                <div class="custom-table-container">
+                    {% render_table table 'django_tables2/bootstrap.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
