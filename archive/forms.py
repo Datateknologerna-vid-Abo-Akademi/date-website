@@ -10,7 +10,7 @@ class PictureUploadForm(forms.Form):
 
 class ExamUploadForm(forms.Form):
     title = forms.CharField()
-    exams = forms.FileField(required=False, widget=forms.ClearableFileInput(attrs={'multiple': True}))
+    exam = forms.FileField(required=False, widget=forms.ClearableFileInput(attrs={'multiple': False}))
 
 
 class ExamArchiveUploadForm(forms.Form):

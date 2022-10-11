@@ -59,7 +59,7 @@ def exam_upload(request, pk):
         if form.is_valid():
             if request.FILES.getlist('exams') is None:
                 return redirect('archive:exams')
-            for file in request.FILES.getlist('exams'):
+            for file in request.FILES.getlist('exam'):
                 Document(document=file, title=form.cleaned_data['title'], collection=collection).save()
             logger.debug(f'User: {request.user} added files to {collection.title}')
         return redirect('archive:exams_detail', collection.pk)
