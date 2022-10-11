@@ -8,6 +8,15 @@ class PictureUploadForm(forms.Form):
     images = forms.ImageField(required=False, widget=forms.ClearableFileInput(attrs={'multiple': True}))
 
 
+class ExamUploadForm(forms.Form):
+    title = forms.CharField()
+    exam = forms.FileField(required=False, widget=forms.ClearableFileInput(attrs={'multiple': False}))
+
+
+class ExamArchiveUploadForm(forms.Form):
+    title = forms.CharField()
+    
+
 class PictureAdminForm(forms.ModelForm):
     images = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
                             label="Ladda upp flera bilder",

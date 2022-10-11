@@ -3,7 +3,7 @@ from django.utils.safestring import mark_safe
 from django.conf import settings
 
 from .forms import DocumentAdminForm, PictureAdminForm, PublicAdminForm
-from .models import Document, DocumentCollection, Picture, PictureCollection, PublicFile, PublicCollection
+from .models import Document, DocumentCollection, Picture, PictureCollection, PublicFile, PublicCollection, ExamCollection
 
 
 class PicturesInline(admin.TabularInline):
@@ -68,6 +68,24 @@ class DocumentCollectionAdmin(admin.ModelAdmin):
 
     def get_changeform_initial_data(self, request):
         return {'type': 'Documents'}
+
+
+@admin.register(ExamCollection)
+class ExamCollectionAdmin(admin.ModelAdmin):
+    model = ExamCollection
+    save_on_top = True
+    form = DocumentAdminForm
+    inlines = [
+        DocumentInline
+    ]
+    list_display = ('title', 'pub_date')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(type='Exams')
+
+    def get_changeform_initial_data(self, request):
+        return {'type': 'Exams'}
 
 
 if settings.USE_S3:
