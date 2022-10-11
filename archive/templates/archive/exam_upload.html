@@ -22,6 +22,11 @@
                         {% endif %}
                          <i class="fas fa-book-dead"></i>
                     </h1>
+                    {% if collection %}
+                        <small>❗️ Namnge tenten: "tent DD.MM.YYYY" ❗️</small>
+                    {% else %}
+                        <small>❗️ Namnge arkivet enligt kursnamn. t.ex, Ingengörsmatematik 1 ❗️</small>
+                    {% endif %}
                 </div>
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
