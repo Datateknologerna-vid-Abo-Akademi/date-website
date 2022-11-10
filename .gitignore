@@ -15,11 +15,5 @@ core/templates/static/ckeditor
 media
 !media/.gitkeep
 
-# 2018-09-12 Decided to commit all migration files
-# 2020-03-14 Made the decision to not commit migration files
-**/migrations/*.py
-!**/migrations/*_initial.py
-!**/migrations/__init__.py
-
 #minio storage
 storage
