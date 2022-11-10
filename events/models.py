@@ -112,12 +112,18 @@ class Event(models.Model):
             registration.delete()
 
     def registration_is_open_members(self):
+        if self.sign_up_members is None:
+            return False
         return now() >= self.sign_up_members and not self.registation_past_due()
 
     def registration_is_open_others(self):
+        if self.sign_up_others is None:
+            return False
         return now() >= self.sign_up_others and not self.registation_past_due()
 
     def registation_past_due(self):
+        if self.sign_up_deadline is None:
+            return False
         return now() > self.sign_up_deadline
 
     def event_is_full(self):
