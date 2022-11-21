@@ -23,6 +23,8 @@ def year_index(request):
     
     years = Collection.objects.dates('pub_date', 'year').reverse()
     year_albumcount = {}
+    if request.user.membership_type == 3:
+        return render(request, '404.html', {'error_msg': "Stödjande medlemmar har inte tillgång till bildarkivet",} )
     for year in years:
         year_albumcount[str(year.year)] = Collection.objects.filter(pub_date__year = year.year, type='Pictures').count()
 
@@ -34,6 +36,8 @@ def year_index(request):
 
 def picture_index(request, year):
     collections = Collection.objects.filter(type="Pictures", pub_date__year=year).order_by('-pub_date')
+    if request.user.membership_type == 3:
+        return render(request, '404.html', {'error_msg': "Stödjande medlemmar har inte tillgång till bildarkivet",} )
     context = {
         'type': "pictures",
         'year' : year,
