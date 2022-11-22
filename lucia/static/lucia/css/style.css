@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&display=swap');
 
-.container{
+html body{
     background-color: var(--luciaBackgroundColor);
     padding-top: 5vh;
     padding-bottom: 5vh;
@@ -10,12 +10,9 @@
     color:var(--luciaBackgroundColor);
 }
 
-.header-bar{
-    display: none;
-}
 
-footer{
-    display: none;
+nav, footer{
+    display: none !important;
 }
 
 
