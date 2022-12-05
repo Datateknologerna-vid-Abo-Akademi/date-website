@@ -58,7 +58,9 @@
                             {% if page.category|lower == category.category_name|lower %}
                                 {% if user.is_authenticated and page.url == "/members/login/" %}
                                     <li><a class="dropdown-item" href="https://wiki.datateknologerna.org/">DaTe Wiki</a></li>
-                                    <li><a class="dropdown-item" href="/archive/pictures/">Bilder</a></li>
+                                    {% if user.membership_type != 3%}
+                                        <li><a class="dropdown-item" href="/archive/pictures/">Bilder</a></li>
+                                    {%endif%}
                                     <li><a class="dropdown-item" href="/archive/documents/">Dokument</a></li>
                                     <li><a class="dropdown-item" href="/archive/exams/">Tentarkiv</a></li>
                                     <li><a class="dropdown-item" href="/ctf/">CTF</a></li>
