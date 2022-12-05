@@ -5,7 +5,7 @@ import logging
 from botocore.client import Config
 
 from django.conf import settings
-from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.decorators import permission_required, user_passes_test
 from django.shortcuts import redirect, render
 from django.views import generic
 from django_filters.views import FilterView
@@ -19,12 +19,14 @@ from .tables import DocumentTable
 
 logger = logging.getLogger('date')
 
+def user_type(user):
+    return user.membership_type != 3
+
+@user_passes_test(user_type, login_url='/members/login/')
 def year_index(request):
     
     years = Collection.objects.dates('pub_date', 'year').reverse()
     year_albumcount = {}
-    if request.user.membership_type == 3:
-        return render(request, '404.html', {'error_msg': "Stödjande medlemmar har inte tillgång till bildarkivet",} )
     for year in years:
         year_albumcount[str(year.year)] = Collection.objects.filter(pub_date__year = year.year, type='Pictures').count()
 
@@ -34,10 +36,9 @@ def year_index(request):
     }
     return render(request, 'archive/index.html', context)
 
+@user_passes_test(user_type, login_url='/members/login/')
 def picture_index(request, year):
     collections = Collection.objects.filter(type="Pictures", pub_date__year=year).order_by('-pub_date')
-    if request.user.membership_type == 3:
-        return render(request, '404.html', {'error_msg': "Stödjande medlemmar har inte tillgång till bildarkivet",} )
     context = {
         'type': "pictures",
         'year' : year,
@@ -46,6 +47,7 @@ def picture_index(request, year):
     return render(request, 'archive/picture_index.html', context)
 
 
+@user_passes_test(user_type, login_url='/members/login/')
 def exams_index(request):
     collections = Collection.objects.filter(type="Exams").order_by('title')
     context = {
@@ -55,7 +57,7 @@ def exams_index(request):
     return render(request, 'archive/exams_index.html', context)
 
 
-
+@user_passes_test(user_type, login_url='/members/login/')
 def exam_upload(request, pk):
     collection = Collection.objects.filter(pk=pk).first()
     if request.method == 'POST' and collection:
@@ -76,7 +78,7 @@ def exam_upload(request, pk):
     return render(request, 'archive/exam_upload.html', context)
 
 
-
+@user_passes_test(user_type, login_url='/members/login/')
 def exam_archive_upload(request):
     if request.method == 'POST':
         form = ExamArchiveUploadForm(request.POST)
@@ -92,6 +94,7 @@ def exam_archive_upload(request):
     return render(request, 'archive/exam_upload.html', context)
 
 
+@user_passes_test(user_type, login_url='/members/login/')
 class FilteredDocumentsListView(SingleTableMixin, FilterView):
     model = Document
     paginate_by = 15
@@ -119,6 +122,7 @@ class FilteredDocumentsListView(SingleTableMixin, FilterView):
             return Document.objects.filter(collection__type='Documents')
 
 
+@user_passes_test(user_type, login_url='/members/login/')
 class FilteredExamsListView(SingleTableMixin, FilterView):
     model = Document
     paginate_by = 15
@@ -142,6 +146,7 @@ class FilteredExamsListView(SingleTableMixin, FilterView):
         return context
 
 
+@user_passes_test(user_type, login_url='/members/login/')
 def picture_detail(request, year, album):
     collection = Collection.objects.filter(type="Pictures", pub_date__year=year, title=album).order_by('-pub_date').first()
     if collection.hide_for_gulis and request.user.membership_type == 1:
