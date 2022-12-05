@@ -6,6 +6,7 @@ from botocore.client import Config
 
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required, user_passes_test
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.shortcuts import redirect, render
 from django.views import generic
 from django_filters.views import FilterView
@@ -94,8 +95,7 @@ def exam_archive_upload(request):
     return render(request, 'archive/exam_upload.html', context)
 
 
-@user_passes_test(user_type, login_url='/members/login/')
-class FilteredDocumentsListView(SingleTableMixin, FilterView):
+class FilteredDocumentsListView(UserPassesTestMixin, SingleTableMixin, FilterView):
     model = Document
     paginate_by = 15
     table_class = DocumentTable
@@ -121,9 +121,11 @@ class FilteredDocumentsListView(SingleTableMixin, FilterView):
         else:
             return Document.objects.filter(collection__type='Documents')
 
+    def test_func(self):
+        return self.request.user.membership_type != 3
 
-@user_passes_test(user_type, login_url='/members/login/')
-class FilteredExamsListView(SingleTableMixin, FilterView):
+
+class FilteredExamsListView(UserPassesTestMixin, SingleTableMixin, FilterView):
     model = Document
     paginate_by = 15
     table_class = DocumentTable
@@ -144,6 +146,9 @@ class FilteredExamsListView(SingleTableMixin, FilterView):
         collection = Collection.objects.filter(pk=collection_pk).first()
         context['collection'] = collection
         return context
+
+    def test_func(self):
+        return self.request.user.membership_type != 3
 
 
 @user_passes_test(user_type, login_url='/members/login/')
