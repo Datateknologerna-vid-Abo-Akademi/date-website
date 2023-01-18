@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Slabo+27px&display=swap');
+/*@import url('https://fonts.googleapis.com/css2?family=Slabo+27px&display=swap');*/
+@import url('https://fonts.googleapis.com/css2?family=Prata&display=swap');
 
 .background-img {
   background-color: #030826;
@@ -9,7 +10,8 @@ footer, .navbar{
 }
 
 .container-md {
-  font-family: 'Slabo 27px', serif;
+  /*font-family: 'Slabo 27px', serif;*/
+  font-family: 'Prata', serif;
   position: relative; 
   z-index: 10;
 }
@@ -48,7 +50,7 @@ footer, .navbar{
   position: absolute; 
   height: 100%;
   width: 100%; 
-  left: 0; 
+  right: 10px;
   top: 0;
 }
 
@@ -56,7 +58,7 @@ footer, .navbar{
   stroke: #d0af55;
   fill: none;
   stroke-dasharray: 25000;
-  opacity: 0.3;
+  opacity: 0.4;
   fill-rule: evenodd;
   animation: animate 5s cubic-bezier(0,.18,.50,.1);
 }
@@ -69,7 +71,7 @@ footer, .navbar{
       stroke-dashoffset: 25000;
   }
   20% {
-    opacity: 0.3;
+    opacity: 0.4;
   }
   40% {
       fill: none;
@@ -81,7 +83,7 @@ footer, .navbar{
 
   }
   100% {
-      opacity: 0.3;
+      opacity: 0.4;
       fill: none;
       stroke-dashoffset: 0;
   }
@@ -115,6 +117,10 @@ footer, .navbar{
   .big100 {
     font-size: 10vw !important;
     line-height: 1;
+  }
+
+  .scaling-svg-container svg {
+    right: 20px;
   }
 }
 
