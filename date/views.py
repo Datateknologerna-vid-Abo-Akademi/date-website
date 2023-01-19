@@ -19,7 +19,7 @@ def index(request):
 
     events = Event.objects.filter(published=True, event_date_end__gte=d).order_by(
         'event_date_start')
-    news = Post.objects.filter(published=True, albins_angels=False).reverse()[:2]
+    news = Post.objects.filter(published=True, albins_angels=False).reverse()[:3]
 
     # Show Albins Angels logo if new post in last 10 days
     aa_posts = Post.objects.filter(published=True, albins_angels=True).order_by('published_time').reverse()[:1]
