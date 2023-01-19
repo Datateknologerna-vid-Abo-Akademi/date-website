@@ -152,7 +152,8 @@ class Event(models.Model):
                     elif question.type == "checkbox":
                         fields[question.name] = forms.BooleanField(label=question.name, required=question.required)
                     elif question.type == "text":
-                        fields[question.name] = forms.CharField(label=question.name, required=question.required)
+                        fields[question.name] = forms.CharField(label=question.name, required=question.required,
+                                                                max_length=255)
             if self.sign_up_avec:
                 fields['avec'] = forms.BooleanField(label='Avec', required=False)
                 fields['avec_user'] = forms.CharField(label='Namn', max_length=255, required=False, widget=forms.TextInput(attrs={'class': "avec-field"}))
