@@ -142,7 +142,7 @@ class Event(models.Model):
     def make_registration_form(self, data=None):
         if self.sign_up:
             fields = {'user': forms.CharField(label='Namn', max_length=255),
-                      'email': forms.EmailField(label='Email', validators=[self.validate_unique_email]),
+                      'email': forms.EmailField(label='Email', validators=[self.validate_unique_email], max_length=320),
                       'anonymous': forms.BooleanField(label='Anonymt', required=False)}
             if self.get_registration_form():
                 for question in reversed(self.get_registration_form()):
@@ -154,12 +154,15 @@ class Event(models.Model):
                     elif question.type == "checkbox":
                         fields[question.name] = forms.BooleanField(label=question.name, required=question.required)
                     elif question.type == "text":
-                        fields[question.name] = forms.CharField(label=question.name, required=question.required)
+                        fields[question.name] = forms.CharField(label=question.name, required=question.required,
+                                                                max_length=255)
             if self.sign_up_avec:
                 fields['avec'] = forms.BooleanField(label='Avec', required=False)
                 fields['avec_user'] = forms.CharField(label='Namn', max_length=255, required=False, widget=forms.TextInput(attrs={'class': "avec-field"}))
-                fields['avec_email'] = forms.EmailField(label='Email', validators=[self.validate_unique_email], required=False, widget=forms.TextInput(attrs={'class': "avec-field"}))
-                fields['avec_anonymous'] = forms.BooleanField(label='Anonymt', required=False, widget=forms.CheckboxInput(attrs={'class': "avec-field"}))
+                fields['avec_email'] = forms.EmailField(label='Email', validators=[self.validate_unique_email],
+                                                        required=False, widget=forms.TextInput(attrs={'class': "avec-field"}), max_length=320)
+                fields['avec_anonymous'] = forms.BooleanField(label='Anonymt', required=False, widget=forms
+                                                              .CheckboxInput(attrs={'class': "avec-field"}))
                 if self.get_registration_form():
                     for question in reversed(self.get_registration_form()):
                         if not question.hide_for_avec:
@@ -171,7 +174,7 @@ class Event(models.Model):
                             elif question.type == "checkbox":
                                 fields['avec_'+question.name] = forms.BooleanField(label=question.name, required=False, widget=forms.CheckboxInput(attrs={'class': "avec-field"}))
                             elif question.type == "text":
-                                fields['avec_'+question.name] = forms.CharField(label=question.name, required=False, widget=forms.TextInput(attrs={'class': "avec-field"}))
+                                fields['avec_'+question.name] = forms.CharField(label=question.name, required=False, widget=forms.TextInput(attrs={'class': "avec-field"}), max_length=255)
             return type('EventAttendeeForm', (forms.BaseForm,), {'base_fields': fields, 'data': data}, )
 
     @register.filter
