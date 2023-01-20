@@ -41,7 +41,7 @@
                                             <ul class="list-group my-0 pl-1">
                                                 <li class="list-inline-item"><i class="far fa-clock"></i> {{event.event_date_start|date:"H:i"}} - {{ event.event_date_end|date:"H:i"}}</li>
                                                 <li class="list-inline-item"><i class="fas fa-calendar-check"></i> {{ event.event_date_start|date:"D"}}</li>
-                                                <li class="list-inline-item"><i class="fas fa-users"></i> {{ event.sign_up_max_participants }}</li>
+                                                <li class="list-inline-item"><i class="fas fa-users"></i> {{ event.get_sign_up_max_participants }}</li>
                                               </ul>
                                         </div>
                                         <div style="margin: auto;" class="col-6 col-sm-2 text-center">

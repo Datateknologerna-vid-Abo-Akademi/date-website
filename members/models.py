@@ -131,7 +131,7 @@ class SubscriptionPayment(models.Model):
         verbose_name = _('prenumerationsbetalning')
         verbose_name_plural = _('prenumerationsbetalningar')
         ordering = ('id',)
-
+    
     @property
     def is_active(self):
         if self.date_expires is None:
