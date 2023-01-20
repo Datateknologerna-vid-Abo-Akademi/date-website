@@ -117,7 +117,7 @@ class EventDetailView(DetailView):
     def form_invalid(self, form):
         if self.get_context_data().get('event').title.lower() == 'årsfest':
             return render(self.request, 'events/arsfest.html', self.get_context_data(form=form))
-        return render(self.request, self.template_name, self.get_context_data(form=form))
+        return render(self.request, self.template_name, self.get_context_data(form=form), status=400)
 
 
 def ws_send(request, form, public_info):
