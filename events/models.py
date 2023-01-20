@@ -64,11 +64,6 @@ class Event(models.Model):
         verbose_name_plural = _('evenemang')
         ordering = ('id',)
 
-    def get_sign_up_max_participants(self):
-        if (self.sign_up_max_participants == 0):
-            return "Ingen Begränsning"
-        return self.sign_up_max_participants
-
     def __str__(self):
         return self.title
 
@@ -187,6 +182,11 @@ class Event(models.Model):
             if email == attendee.email:
                 logger.debug("SAME EMAIL")
                 raise ValidationError(_("Det finns redan någon anmäld med denna email"))
+
+    def get_sign_up_max_participants(self):
+        if (self.sign_up_max_participants == 0):
+            return "Ingen Begränsning"
+        return self.sign_up_max_participants
 
 class EventRegistrationForm(models.Model):
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
