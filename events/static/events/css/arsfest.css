@@ -35,19 +35,37 @@
 
 .gold-right img{
     position: absolute;
-    width: 100px !important;
-    height: 100px !important;
+    width: 70px !important;
+    height: 70px !important;
     top: 0;
     right: 0;
-  }
-  .gold-left img{
+}
+.gold-left img{
     position: absolute;
-    width: 100px !important;
-    height: 100px !important;
+    width: 70px !important;
+    height: 70px !important;
     top: 0;
     left: 0;
-  }
-   
+}
+
+.gold-right-bottom img{
+    position: absolute;
+    width: 70px !important;
+    height: 70px !important;
+    bottom: 0;
+    right: 0;
+    transform: scaleY(-1);
+}
+
+.gold-left-bottom img{
+    position: absolute;
+    width: 70px !important;
+    height: 70px !important;
+    bottom: 0;
+    left: 0;
+    transform: scaleY(-1);
+}
+
   /* if backdrop support: very transparent and blurred */
   @supports ((-webkit-backdrop-filter: blur(2em)) or (backdrop-filter: blur(2em))) {
     .content {
@@ -233,3 +251,38 @@ tr:hover {
       background-color: var(--opacityColor);
       padding: var(--defaultPadding);
   }
+
+@media only screen and (min-width: 768px) {
+    .gold-right img{
+        position: absolute;
+        width: 100px !important;
+        height: 100px !important;
+        top: 0;
+        right: 0;
+    }
+    .gold-left img{
+        position: absolute;
+        width: 100px !important;
+        height: 100px !important;
+        top: 0;
+        left: 0;
+    }
+    
+    .gold-right-bottom img{
+        position: absolute;
+        width: 100px !important;
+        height: 100px !important;
+        bottom: 0;
+        right: 0;
+        transform: scaleY(-1);
+    }
+    
+    .gold-left-bottom img{
+        position: absolute;
+        width: 100px !important;
+        height: 100px !important;
+        bottom: 0;
+        left: 0;
+        transform: scaleY(-1);
+    }
+}
