@@ -118,14 +118,40 @@
 
 /* square animation start */
 @keyframes moveSquare {
-    0% {opacity:0;
-        box-shadow: 0 0 10px var(--goldColor);}
-    20% {box-shadow: 0 0 10px 3px var(--goldColor);}
-    40% {box-shadow: 0 0 10px var(--goldColor);}
-    60% {box-shadow: 0 0 10px 3px var(--goldColor);}
-    80% {opacity: 1;
-        box-shadow: 0 0 0px var(--goldColor);}
-    100% {opacity:0; transform: translateY(-400px); box-shadow: 0 0 10px 3px var(--goldColor);}
+    0% {
+        opacity:0;
+        box-shadow: 0 0 10px var(--goldColor);
+        -webkit-box-shadow: 0 0 10px var(--goldColor);
+        -moz-box-shadow: 0 0 10px var(--goldColor);
+    }
+    20% {
+        box-shadow: 0 0 10px 3px var(--goldColor);
+        -webkit-box-shadow: 0 0 10px 3px var(--goldColor);
+        -moz-box-shadow: 0 0 10px 3px var(--goldColor);
+    }
+    40% {
+        box-shadow: 0 0 10px var(--goldColor);
+        -webkit-box-shadow: 0 0 10px var(--goldColor);
+        -moz-box-shadow: 0 0 10px var(--goldColor);
+    }
+    60% {
+        box-shadow: 0 0 10px 3px var(--goldColor);
+        -webkit-box-shadow: 0 0 10px 3px var(--goldColor);
+        -moz-box-shadow: 0 0 10px 3px var(--goldColor);
+    }
+    80% {
+        opacity: 1;
+        box-shadow: 0 0 0px var(--goldColor);
+        -webkit-box-shadow: 0 0 0px var(--goldColor);
+        -moz-box-shadow: 0 0 0px var(--goldColor);
+    }
+    100% {
+        opacity:0; 
+        transform: translateY(-400px); 
+        box-shadow: 0 0 10px 3px var(--goldColor);
+        -webkit-box-shadow: 0 0 10px 3px var(--goldColor);
+        -moz-box-shadow: 0 0 10px 3px var(--goldColor);
+    }
     }
 /* square animation end */
 
@@ -182,6 +208,8 @@
     background-color: var(--goldButtonHover);
     color: var(--secondaryColor) !important;
     box-shadow: 0 0 10px var(--goldColor);
+    -webkit-box-shadow: 0 0 10px var(--goldColor);
+    -moz-box-shadow: 0 0 10px var(--goldColor);
 }
 
 .baal-nav a:active{
@@ -235,6 +263,8 @@ form button:hover {
     background-color: var(--goldButtonHover) !important;
     color: var(--secondaryColor) !important;
     box-shadow: 0 0 10px var(--goldColor) !important;
+    -webkit-box-shadow: 0 0 10px var(--goldColor) !important;
+    -moz-box-shadow: 0 0 10px var(--goldColor) !important;
 }
 
 form button:active{
