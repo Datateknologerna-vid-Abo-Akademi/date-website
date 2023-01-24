@@ -3,10 +3,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Amethysta&display=swap');
 
 :root {
-    --opacityColor: rgba(0, 0, 0, 0.7);
+    --opacityColor: #11110ed3;
     /*--opacityColor: rgba(223, 223, 223, 0.55);*/
     --backdropBlur:  blur(10px);
     --goldColor: #a28d3f;
+    --goldTextColor: #cbb14f;
+    --goldButtonHover: #d5b541;
     --arsfest-font: 'Amethysta', serif;
 }
 
@@ -29,8 +31,8 @@
     position: relative;
     background-color: rgba(0, 0, 0, 0.80);
     border: 1px solid var(--goldColor);
-    color: var(--goldColor);
-    font-size: 0.7em;
+    color: var(--goldTextColor);
+    font-size: 0.8em;
 }
 
 .gold-right img{
@@ -76,15 +78,15 @@
   }
 
 .content a, .baal-content h2, .baal-content h1 {
-    color: var(--goldColor);
+    color: var(--goldTextColor);
 }
 
 .baal-content h2, .baal-content h1 {
-    color: var(--goldColor);
+    color: var(--goldTextColor);
 }
 
 .baal-content {
-    color: var(--goldColor);
+    color: var(--goldTextColor);
 }
 
 /* fade animations start*/
@@ -116,14 +118,27 @@
 
 /* square animation start */
 @keyframes moveSquare {
-    0% {opacity:0;}
-    80% {opacity: 1;}
-    100% {opacity:0; transform: translateY(-400px);}
+    0% {opacity:0;
+        box-shadow: 0 0 10px var(--goldColor);}
+    20% {box-shadow: 0 0 10px 3px var(--goldColor);}
+    40% {box-shadow: 0 0 10px var(--goldColor);}
+    60% {box-shadow: 0 0 10px 3px var(--goldColor);}
+    80% {opacity: 1;
+        box-shadow: 0 0 0px var(--goldColor);}
+    100% {opacity:0; transform: translateY(-400px); box-shadow: 0 0 10px 3px var(--goldColor);}
     }
 /* square animation end */
 
 .header-box {
     overflow: hidden;
+}
+
+.header-box .square{
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background-color: var(--goldTextColor);
+    animation: moveSquare 5s linear infinite;
 }
 
 .header-logo{
@@ -154,18 +169,23 @@
 }
 
 .baal-nav a{
-    color: var(--goldColor);
+    color: var(--goldTextColor);
     margin: 5px;
     padding: 10px;
     background-color: var(--primaryColor);
     border-radius: 5px;
     transition: .3s;
-    box-shadow: 3px 3px 5px 0px rgb(32, 32, 32);
+    border: 1px solid var(--goldColor);
 }
 
 .baal-nav a:hover{
-    background-color: var(--primaryColor);
+    background-color: var(--goldButtonHover);
     color: var(--secondaryColor) !important;
+    box-shadow: 0 0 10px var(--goldColor);
+}
+
+.baal-nav a:active{
+    transform: scale(1.05);
 }
 
 .text-content div > *, .anmalan > *, .anmalda > *{
@@ -206,17 +226,23 @@ form input {
 
 form button {
     font-family: var(--arsfest-font) !important;
-    background-color: var(--secondaryColor) !important;
-    color: var(--primaryColor) !important;
+    background-color: var(--primaryColor) !important;
+    color: var(--goldTextColor) !important;
+    border: 1px solid var(--goldColor) !important;
 }
 
 form button:hover {
-    background-color: var(--primaryColor) !important;
+    background-color: var(--goldButtonHover) !important;
     color: var(--secondaryColor) !important;
+    box-shadow: 0 0 10px var(--goldColor) !important;
+}
+
+form button:active{
+    transform: scale(1.05);
 }
 
 .event-full{
-    color: #b30116;
+    color: #e4001b;
 }
 
 th {
@@ -229,8 +255,8 @@ th, td {
 }
 tr:hover {
     transition: 200ms;
-    background-color: var(--secondaryColor);
-    color: var(--primaryColor);
+    background-color: var(--goldButtonHover);
+    color: var(--textColorLight);
 }
   
   @keyframes glower {
