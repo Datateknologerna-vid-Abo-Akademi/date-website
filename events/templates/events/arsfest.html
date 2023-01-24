@@ -12,7 +12,11 @@
         <script src="{% static 'js/live-attendee-list.js' %}"></script>
         <style>
             .background-img{
-                background-image: url("{% static 'images/glitchoverlay.png' %}");
+                background: url({% static 'images/goldbg.png' %}) no-repeat center center fixed;
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
             }
         </style>
     </head>
@@ -28,8 +32,20 @@
                     <div class="square" style="left: 80%; bottom: -60%;"></div>
                     <div class="square" style="left: 90%; bottom: 30%;"></div>
                     <div class="square" style="left: 95%; bottom: -40%;"></div>
-                    <img class="header-logo" src="{% static 'images/albin_glitch.png' %}" alt="albin">
-                    <h1 class="baal-header">DaTe XXIII Årsfest</h1>
+                    <div class="gold-left">
+                        <img src={% static 'images/goldborderleft.png' %} alt="gold">
+                    </div>
+                    <div class="gold-right">
+                        <img src={% static 'images/goldborderright.png' %} alt="gold">
+                    </div>
+                    <div class="gold-left-bottom">
+                        <img src={% static 'images/goldborderleft.png' %} alt="gold">
+                    </div>
+                    <div class="gold-right-bottom">
+                        <img src={% static 'images/goldborderright.png' %} alt="gold">
+                    </div>
+                    <img class="header-logo" src="{% static 'images/albin_gold2.png' %}" alt="albin">
+                    <h1 class="baal-header">DaTe XXIV</h1>
                     <div class="baal-nav">
                         <a class="baal-link" onclick="showPage(this)" href="#/main" data-nav="main">Välkommen</a>
                         {% for page in staticpages %}
