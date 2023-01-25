@@ -113,7 +113,7 @@ class EventDetailView(DetailView):
             self.get_object().add_event_attendance(user=avec_data['user'], email=avec_data['email'],
                                                anonymous=avec_data['anonymous'], preferences=avec_data, avec_for=avec_data['avec_for'])
         if self.get_context_data().get('event').title.lower() == 'årsfest':
-            return redirect('/events/arsfest/#/anmalda') 
+            return redirect(f"/events/{self.get_context_data().get('event').slug}/#/anmalda") 
         return render(self.request, self.template_name, self.get_context_data())
 
     def form_invalid(self, form):
