@@ -44,6 +44,8 @@ ALLOWED_HOSTS = json.loads(os.environ['ALLOWED_HOSTS'])
 # Application definition
 
 INSTALLED_APPS = [
+    'jet',
+    'jet.dashboard',
     'date',
     'staticpages',
     'news',
@@ -201,6 +203,42 @@ USE_TZ = True
 DECIMAL_INPUT_FORMATS = ()
 
 DATE_INPUT_FORMATS = ('%d.%m.%Y', '%Y-%m-%d')
+
+JET_INDEX_DASHBOARD = 'core.dashboard.CustomIndexDashboard'
+
+# Custom themes can be added to static/jet/css/themes, can be modeled after, for example, 'light-violet'
+JET_THEMES = [
+    {
+        'theme': 'default', # theme folder name
+        'color': '#47bac1', # color of the theme's button in user menu
+        'title': 'Default' # theme title
+    },
+    {
+        'theme': 'green',
+        'color': '#44b78b',
+        'title': 'Green'
+    },
+    {
+        'theme': 'light-green',
+        'color': '#2faa60',
+        'title': 'Light Green'
+    },
+    {
+        'theme': 'light-violet',
+        'color': '#a464c4',
+        'title': 'Light Violet'
+    },
+    {
+        'theme': 'light-blue',
+        'color': '#5EADDE',
+        'title': 'Light Blue'
+    },
+    {
+        'theme': 'light-gray',
+        'color': '#222',
+        'title': 'Light Gray'
+    }
+]
 
 
 # Static files (CSS, JavaScript, Images)

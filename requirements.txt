@@ -23,3 +23,5 @@ django-tables2
 django-filter
 django-bootstrap3
 django_cleanup
+django-jet-reboot
+#google-api-python-client==1.4.1

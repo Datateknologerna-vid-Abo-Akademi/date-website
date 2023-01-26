@@ -26,6 +26,8 @@ app_name = 'core'
 
 urlpatterns = [
     path('', date.index, name='index'),
+    path('jet/', include('jet.urls', 'jet')),  # Django JET URLS
+    path('jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),  # Django JET dashboard URLS
     path('news/', include('news.urls')),
     path('members/', include('django.contrib.auth.urls')),
     path('members/', include('members.urls')),
