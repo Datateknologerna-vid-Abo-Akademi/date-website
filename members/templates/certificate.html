@@ -52,8 +52,8 @@
 setInterval(function() {
     var date = new Date();
     $('#clock-wrapper').html(
-        date.getDate() + "." + 
-        date.getMonth() + "." + 
+        date.getDate() + "." +
+        (Number(date.getMonth()) + 1) + "." +
         date.getFullYear() + " " + 
         date.getHours() + ":" + 
         (date.getMinutes() < 10? '0' : '') + date.getMinutes() + ":" + 

@@ -79,6 +79,8 @@ class EventDetailView(DetailView):
         if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
             if self.object.passcode == request.POST.get('passcode'):
                 self.request.session['passcode_status'] = self.object.passcode
+                if self.get_context_data().get('event').title.lower() == 'årsfest':
+                    return render(self.request, 'events/arsfest.html', self.get_context_data())
                 return render(self.request, 'events/detail.html', self.get_context_data())
             else:
                 return render(self.request, 'events/event_passcode.html', self.get_context_data(passcode_error='invalid passcode'))
@@ -111,13 +113,13 @@ class EventDetailView(DetailView):
             self.get_object().add_event_attendance(user=avec_data['user'], email=avec_data['email'],
                                                anonymous=avec_data['anonymous'], preferences=avec_data, avec_for=avec_data['avec_for'])
         if self.get_context_data().get('event').title.lower() == 'årsfest':
-            return redirect('/events/arsfest/#/anmalda') 
+            return redirect(f"/events/{self.get_context_data().get('event').slug}/#/anmalda") 
         return render(self.request, self.template_name, self.get_context_data())
 
     def form_invalid(self, form):
         if self.get_context_data().get('event').title.lower() == 'årsfest':
             return render(self.request, 'events/arsfest.html', self.get_context_data(form=form))
-        return render(self.request, self.template_name, self.get_context_data(form=form))
+        return render(self.request, self.template_name, self.get_context_data(form=form), status=400)
 
 
 def ws_send(request, form, public_info):
