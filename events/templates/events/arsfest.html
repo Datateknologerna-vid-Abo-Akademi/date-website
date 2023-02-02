@@ -140,5 +140,112 @@
             let pageHash = window.location.hash.substr(1).replace(/\//g,'');
             $(`.${pageHash}`).toggleClass("hidden")
         }
+
+        /* viggos silly stuff please ignore*/
+        var counter = 0;
+
+        $('.header-logo').click(function () {
+            counter++;
+
+            if (counter == 10) {
+                $('.square').css({
+
+                    'transform': 'scale(15.01)',
+                    'background-color': 'turquoise',
+                    'color': 'white',
+                });
+                $('.baal-header').text("SILLIZ!!");
+
+
+                $('.header-logo').css({
+                    'animation': ' spin 3s infinite',
+                })
+
+                $('.baal-link').css({
+                    'animation': ' shake 3s infinite',
+                    'color': "turquoise"
+                })
+
+
+                $('h1,h2,h4,p').css({
+                    'animation': ' shake 5s infinite',
+                    'color': "turquoise"
+                })
+
+                $('.background-img').css({
+                    'background': "url('https://images.alko.fi/images/cs_srgb,f_auto,t_medium/cdn/700324/original-long-drink-tolkki.jpg') center center fixed"
+                })
+                $('.content').css({
+                    'color': "turquoise",
+                    'font-family': 'Comic Sans MS'
+                })
+
+                $(".gold-left,.gold-right,.gold-left-bottom,.gold-right-bottom").remove();
+
+
+                $(".header-logo").append('<audio autoplay src="https://dl.sndup.net/twr9/yt1scom%20-%20Moomin%20Hardbass%20Remix%20Extended.mp3"></audio>');
+
+
+            }
+
+            if (counter == 20) {
+                $('.square').css({
+                    'transform': 'scale(35.01)',
+                    'background-color': 'gold',
+                    'color': 'white',
+                });
+                $('body').css({
+                    'animation': ' shake 1s infinite',
+                });
+                $('.baal-header').text("krapulaAAA");
+
+                $('.background-img').css({
+                    'background': "url('https://i.imgur.com/AyB1M56.jpg') center center fixed"
+                })
+
+                $('.square').css({
+                    'animation': ' moveSquare 3s infinite',
+                });
+
+                $('.content').css({
+                    'color': "red",
+                    'font-family': 'Comic Sans MS'
+                })
+
+                $('h1,h2,h4,p').css({
+                    'animation': ' shake 1s infinite',
+                    'color': "red"
+                })
+
+                $('.baal-link').css({
+                    'animation': ' shake 0.5s infinite',
+                    'color': "red"
+                })
+
+                $("p").append('<audio autoplay src="https://dl.sndup.net/twr9/yt1scom%20-%20Moomin%20Hardbass%20Remix%20Extended.mp3"></audio>');
+
+                $(".header-logo").append('<audio autoplay loop src="https://dl.sndup.net/pwrr/vom.mp3"></audio>');
+
+            }
+            if (counter == 40) {
+
+                $("audio").remove();
+
+                $(".content").append('<audio autoplay src="https://dl.sndup.net/wmcd/died.mp3"></audio>');
+
+                $('.content').css({
+                    'display': 'none',
+                });
+                $('body').css({
+                    'animation': ' shake 1s infinite',
+                });
+                $('.background-img').css({
+                    'background': "url('https://i.scdn.co/image/ab67616d0000b273bd05173ef76dfa8a6106570a') no-repeat center center fixed",
+                })
+            }
+        });
+
+        /*im sorry*/
+
     </script>
 {% endblock %}
