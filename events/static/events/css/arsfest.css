@@ -196,13 +196,6 @@
     animation: moveSquare 5s linear infinite;
 }
 
-.albin-square{
-    position: absolute;
-    width: 233px;
-    height: 233px;
-    background-color: var(--goldTextColor);
-}
-
 .header-logo{
     display: block;
     margin-left: auto;
