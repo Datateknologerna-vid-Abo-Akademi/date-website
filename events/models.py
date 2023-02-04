@@ -186,6 +186,11 @@ class Event(models.Model):
                 logger.debug("SAME EMAIL")
                 raise ValidationError(_("Det finns redan någon anmäld med denna email"))
 
+    def get_sign_up_max_participants(self):
+        if (self.sign_up_max_participants == 0):
+            return "Ingen Begränsning"
+        return self.sign_up_max_participants
+
 class EventRegistrationForm(models.Model):
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
     name = models.CharField(_('Namn'), max_length=255, blank=True)
