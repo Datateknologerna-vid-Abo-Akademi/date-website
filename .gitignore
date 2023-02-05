@@ -19,3 +19,6 @@ media
 storage
 
 .DS_Store
+
+# Database dumps from backup
+*.bck

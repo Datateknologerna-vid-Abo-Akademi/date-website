@@ -106,3 +106,17 @@ To compile the translations to `django.mo`, use the following command
 $ django-admin compilemessages
 ```
 
+## Updating the database
+
+### Warning
+This script will wipe out __ALL__ data from the volume \
+MAKE SURE YOU HAVE PROPER BACKUPS BEFORE ATTEMPTING THIS
+
+Run
+```bash
+./update-postgres.sh target_version [env_file]
+```
+after which you have to update your environment variables using
+```bash
+source ${USER}.env
+```
