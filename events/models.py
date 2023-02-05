@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-from distutils.command.upload import upload
 
 import logging
 import os
