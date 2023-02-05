@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-from distutils.command.upload import upload
 
 import logging
 import os
@@ -7,17 +6,16 @@ from datetime import timedelta
 
 from ckeditor.fields import RichTextField
 from django import forms
-from django.db.models import JSONField
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Max
+from django.db.models import Max, JSONField
 from django.template.defaulttags import register
 from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
 from django.utils.timezone import now
-from datetime import timedelta
-from django.conf import settings
-from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+
 from archive.fields import PublicFileField
 
 logger = logging.getLogger('date')

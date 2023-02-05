@@ -1,11 +1,10 @@
-from django import forms
-
+import logging
 
 from dateutil.relativedelta import relativedelta
+from django import forms
 
-from members.models import Member, SubscriptionPayment, SUB_RE_SCALE_YEAR, SUB_RE_SCALE_MONTH, SUB_RE_SCALE_DAY
-
-import logging
+from members.models import (SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH,
+                            SUB_RE_SCALE_YEAR, Member, SubscriptionPayment)
 
 logger = logging.getLogger('date')
 
