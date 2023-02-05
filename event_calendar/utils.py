@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta
 from calendar import HTMLCalendar
+
 from events.models import Event
 
 
@@ -16,7 +16,7 @@ class Calendar(HTMLCalendar):
         d = ''
         a = ''
         for event in events_per_day:
-            if event.published == True:
+            if event.published:
                 d += f'<a class="calendar-tooltip" href=/events/{event.slug}>'
                 d += f'<span class="tooltiptext">{event.title}</span>'
                 a += f'</a>'

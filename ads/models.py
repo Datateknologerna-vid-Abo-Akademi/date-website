@@ -1,9 +1,10 @@
 import logging
 
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 
 logger = logging.getLogger('date')
+
+
 # Create your models here.
 
 class AdUrl(models.Model):
