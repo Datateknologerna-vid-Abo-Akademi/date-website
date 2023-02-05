@@ -52,7 +52,8 @@ def language(request, lang):
     else:
         lang = settings.LANG_SWEDISH
     translation.activate(lang)
-    request.session[translation.LANGUAGE_SESSION_KEY] = lang
+    # TODO Replace LANGUAGE_SESSION_KEY with something that works in django 4.0
+    # request.session[translation.LANGUAGE_SESSION_KEY] = lang
     origin = request.META.get('HTTP_REFERER')
     return redirect(origin)
 
