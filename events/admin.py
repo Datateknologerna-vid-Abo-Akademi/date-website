@@ -1,11 +1,10 @@
 import logging
 
 from admin_ordering.admin import OrderableAdmin
-from django.conf.urls import url
 from django.contrib import admin
 from django.db.models import JSONField
 from django.template.response import TemplateResponse
-from django.urls import reverse
+from django.urls import reverse, re_path
 from django.utils.html import format_html
 
 from events import forms
@@ -78,7 +77,7 @@ class EventAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
-            url(
+            re_path(
                 r'^(?P<event_id>.+)/list/$',
                 self.admin_site.admin_view(self.process_list),
                 name="registration_list"
