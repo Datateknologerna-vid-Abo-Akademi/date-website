@@ -39,7 +39,7 @@ services:
       - db
   redis:
     restart: always
-    image: redis:6.0
+    image: redis:7.0-alpine
     ports:
       - ${REDIS_PORT}:6379
 
