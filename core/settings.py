@@ -202,6 +202,8 @@ DECIMAL_INPUT_FORMATS = ()
 
 DATE_INPUT_FORMATS = ('%d.%m.%Y', '%Y-%m-%d')
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
