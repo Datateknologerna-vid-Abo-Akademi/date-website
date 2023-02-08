@@ -19,11 +19,13 @@ from .tokens import account_activation_token
 
 logger = logging.getLogger('date')
 
+
 class EditView(View):
 
     def get(self, request):
         user = request.user
         return render(request, 'userinfo.html', {"user": user})
+
 
 class CertificateView(View):
     def get(self, request):
@@ -32,13 +34,13 @@ class CertificateView(View):
         current_time = datetime.datetime.now()
 
         icon_options = {
-            'Monday' : icons[0],
-            'Tuesday' : icons[1],
-            'Wednesday' : icons[2],
-            'Thursday' : icons[3],
-            'Friday' : icons[4],
-            'Saturday' : icons[5],
-            'Sunday' : icons[6],
+            'Monday': icons[0],
+            'Tuesday': icons[1],
+            'Wednesday': icons[2],
+            'Thursday': icons[3],
+            'Friday': icons[4],
+            'Saturday': icons[5],
+            'Sunday': icons[6],
         }
         icon = icon_options[current_time.strftime("%A")]
 
@@ -71,7 +73,7 @@ def signup(request):
             })
             to_email = os.environ.get('EMAIL_HOST_RECEIVER')
             email = EmailMessage(
-                        mail_subject, message, to=[to_email]
+                mail_subject, message, to=[to_email]
             )
             logger.info(f"NEW USER: Sending email to {to_email}")
             email.send()
