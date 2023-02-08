@@ -37,11 +37,23 @@ docker compose down && sleep 15 && docker-compose up db -d
 # Wait for db to start
 sleep 15
 
+# Check if the container is stopped
+if [ -z `docker ps -q --no-trunc | grep $(docker-compose ps -q db)` ]; then
+  echo "The container failed to start, This is probably because of wrong postgres version"
+  exit 1
+fi
+
+# Check if any container is in a restart loop
+if docker-compose exec db echo "Test command"; then
+    echo "Test command ran successfully."
+else
+  echo "Test command failed to run."
+  exit 1
+fi
+
 # Dump database to host file system
-# TODO Imlement a check that the container is actually running
 docker-compose exec -T db pg_dump -U postgres postgres > ./db_backup.bck
 
-# TODO Check for errors from the previous command
 # Stop container and remove volumes
 docker-compose down --volumes && sleep 15
 
