@@ -41,6 +41,8 @@ DEVELOP = os.environ.get('DEVELOP', False)
 
 ALLOWED_HOSTS = json.loads(os.environ['ALLOWED_HOSTS'])
 
+CSRF_TRUSTED_ORIGINS = json.loads(os.environ['ALLOWED_ORIGINS'])
+
 # Application definition
 
 INSTALLED_APPS = [

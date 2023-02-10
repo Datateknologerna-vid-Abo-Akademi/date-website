@@ -32,7 +32,7 @@ if [ -z "$DATE_POSTGRESQL_VERSION" ] || [ -z "$DATE_DB_PORT" ] || [ -z "$DATE_DB
 fi
 
 # Make sure website is stopped
-docker compose down && sleep 15 && docker-compose up db -d
+docker-compose down && sleep 15 && docker-compose up db -d
 
 # Wait for db to start
 sleep 15
