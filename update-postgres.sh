@@ -25,11 +25,16 @@ if [ ! -f "$config_file" ]; then
   exit 1
 fi
 
+source $config_file
+
 # Check if the required environment variables are set
 if [ -z "$DATE_POSTGRESQL_VERSION" ] || [ -z "$DATE_DB_PORT" ] || [ -z "$DATE_DB_PASSWORD" ]; then
   echo "Error: Required environment variables are not set"
   exit 1
 fi
+
+#Remove old backup file
+rm db_backup.bck
 
 # Make sure website is stopped
 docker-compose down && sleep 15 && docker-compose up db -d
@@ -53,6 +58,12 @@ fi
 
 # Dump database to host file system
 docker-compose exec -T db pg_dump -U postgres postgres > ./db_backup.bck
+
+# Check that dump file is not empty
+if [ ! -s "db_backup.bck"]; then
+  echo "Backup file is empty, exiting"
+  exit 1
+fi
 
 # Stop container and remove volumes
 docker-compose down --volumes && sleep 15
