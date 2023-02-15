@@ -28,18 +28,33 @@ def index(request):
     if aa_posts and aa_posts[0].published_time > time_since:
         aa_post = aa_posts[0]
 
+    def calendar_format(x):
+        formatstr = "%H:%M"
+        event_url = "events/" + x.slug
+        return {x.event_date_start.strftime("%Y-%m-%d") :
+                {
+                "link": event_url,
+                "modifier": "calendar-eventday",
+                 "html": f"<a class='calendar-eventday-popup' id='calendar_link' href='{event_url}'> {x.event_date_start.strftime(formatstr)}<br>{x.title}</a>"
+                 }
+                }
+
+    calendar_events_dict = {}
+    for x in events:
+        calendar_events_dict.update(calendar_format(x))
+
     context = {
-        'events': events,
-        'news': news,
-        'news_events': list(chain(events, news)),
-        'ads': AdUrl.objects.all(),
-        'posts': IgUrl.objects.all(),
-        'calendar': cm.get_calendar(),
-        'prev_month': cm.prev_month(),
-        'next_month': cm.next_month(),
-        'curr_month': cm.curr_month_as_string(),
-        'aa_post': aa_post,
-    }
+            'calendar_events' : calendar_events_dict,
+            'events': events,
+            'news': news,
+            'news_events': list(chain(events, news)),
+            'ads': AdUrl.objects.all(),
+            'posts': IgUrl.objects.all(), #'calendar': cm.get_calendar(),
+            'prev_month': cm.prev_month(),
+            'next_month': cm.next_month(),
+            'curr_month': cm.curr_month_as_string(),
+            'aa_post': aa_post,
+            }
 
     return render(request, 'date/start.html', context)
 
