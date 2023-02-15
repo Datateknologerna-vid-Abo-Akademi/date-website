@@ -2,26 +2,26 @@
 /* use with var(--color); included in base.html*/
 
 :root {
-    --primaryColor: #49796B;
+    --primaryColor: #225E41;
     --primaryColorLight:  #2F4C42;
     --primaryColorLighte:#35564a;
     --primaryColorLighter:#3c6153;
-    --primaryColorTransparent: #49796cd8;
+    --primaryColorTransparent: #225e41ad;
     --primaryColorTransparenter: rgba(0,0,0,0.8);
-    --secondaryColor: #ececec;
-    --secondaryColorDarker: #d8d8d8;
+    --secondaryColor: #ffffff;
+    --secondaryColorDarker: #f8f8f8;
     --textColorLight: #fff;
     --textColorLightish: #eaeaea;
     --textColorDark: #000;
     --textColorDarkish: #202020;
     --helpText: rgb(171, 171, 171);
     --helpTextLighter: rgb(199, 199, 199);
-    --linkColor: #73bdc2;
-    --linkColorHover: #5d999d;
-    --linkColorSecondary: #73bdc2;
-    --linkSecondaryHover: #5d999d;
+    --linkColor: #49796b;
+    --linkColorHover: #225E41;
+    --linkColorSecondary: #49796b;
+    --linkSecondaryHover: #225E41;
     --warning: rgb(216, 153, 146);
-    --badgeColor: #32adb5;
+    --badgeColor: #49796b;
     --defaultPadding: 20px;
     --defaultRadius: 5px;
 }
