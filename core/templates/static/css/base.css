@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500&display=swap');
-
 html {
     scroll-behavior: smooth;
 }
@@ -7,7 +5,7 @@ html {
 html body{
     background-color: var(--primaryColor);
     color: var(--textColorDarkish);
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Josefin Sans', sans-serif;
 }
 
 .content img{
