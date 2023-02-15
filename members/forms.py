@@ -3,7 +3,7 @@ import logging
 from dateutil.relativedelta import relativedelta
 from django import forms
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from members.models import (SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH,
                             SUB_RE_SCALE_YEAR, Member, SubscriptionPayment)
 

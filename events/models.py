@@ -13,8 +13,8 @@ from django.db import models
 from django.db.models import Max, JSONField
 from django.template.defaulttags import register
 from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import now
-from django.utils.translation import ugettext_lazy as _
 
 from archive.fields import PublicFileField
 
