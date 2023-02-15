@@ -60,7 +60,7 @@ fi
 docker-compose exec -T db pg_dump -U postgres postgres > ./db_backup.bck
 
 # Check that dump file is not empty
-if [ ! -s "db_backup.bck"]; then
+if [ ! -s "db_backup.bck" ]; then
   echo "Backup file is empty, exiting"
   exit 1
 fi
