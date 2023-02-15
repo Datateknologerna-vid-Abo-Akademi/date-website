@@ -50,7 +50,6 @@ INSTALLED_APPS = [
     'events',
     'members',
     'ads',
-    'event_calendar',
     'social',
     'polls',
     'ctf',
