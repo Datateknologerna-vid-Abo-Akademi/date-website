@@ -351,6 +351,42 @@
         <section id="reklam" class="text-size">
         </section>
     </div>
+
+    <script id="custom">
+        $(".carousel-logos").jCarouselLite({
+            circular: true,
+            vertical: true,
+            auto: 1500,
+            speed: 1500,
+            pause: true,
+            visible: 4
+        });
+        // element with id "calendar_json" is populated by django as defined in views.py context object
+        const events = JSON.parse(document.getElementById('calendar_json').textContent);
+        addEventListener('DOMContentLoaded', (event) => {
+        // Refer to vanilla calendar documentation for how the configuration works
+        const calendarPopups = new VanillaCalendar('#calendar', {
+            actions:{
+            clickDay(event, date){
+                if(events[date[0]] !== undefined){
+                    location.href = events[date[0]].link
+                }
+            },
+            },
+            settings: {
+                visibility : {
+                    weekend: false,
+                },
+                selected: {
+                    month: new Date().getMonth(),
+                    year: new Date().getFullYear(),
+                },
+            },
+            popups: events
+            })
+        calendarPopups.init();
+        });
+    </script>
     <script>
         async function getJoke() {
             return await fetch("https://icanhazdadjoke.com", {

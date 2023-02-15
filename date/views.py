@@ -26,19 +26,18 @@ def index(request):
 
     def calendar_format(x):
         formatstr = "%H:%M"
-        calendar_events_dict = {}
-        for e in x:
-            event_url = "events/" + e.slug
-            event_dict = {e.event_date_start.strftime("%Y-%m-%d") :
+        event_url = "events/" + x.slug
+        return {x.event_date_start.strftime("%Y-%m-%d") :
                 {
                 "link": event_url,
                 "modifier": "calendar-eventday",
-                 "html": f"<a class='calendar-eventday-popup' id='calendar_link' href='{event_url}'> {e.event_date_start.strftime(formatstr)}<br>{e.title}</a>"
+                 "html": f"<a class='calendar-eventday-popup' id='calendar_link' href='{event_url}'> {x.event_date_start.strftime(formatstr)}<br>{x.title}</a>"
                  }
                 }
-            calendar_events_dict.update(event_dict)
-        return calendar_events_dict
 
+    calendar_events_dict = {}
+    for x in events:
+        calendar_events_dict.update(calendar_format(x))
 
     context = {
             'calendar_events' : calendar_format(events),
