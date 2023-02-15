@@ -393,9 +393,10 @@ div.news-content a:hover{
     grid-template-areas: 
     ". box ."
     ". calendar .";
-    padding-bottom: 10px;
 }
-
+#calendar{
+    margin-bottom: 1rem;
+}
 .calendar-box{
     grid-area: box;
     border: 2px solid rgb(163, 163, 163);
@@ -453,6 +454,7 @@ div.calendar-container a {
   position: relative;
   display: inline-block;
 }
+
 .calendar-eventday {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
