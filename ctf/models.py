@@ -1,15 +1,12 @@
-from django.db import models
+import logging
+
 from ckeditor.fields import RichTextField
-from django.utils.translation import ugettext_lazy as _
-from django import forms
-from django.core.exceptions import ValidationError
+from django.db import models
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 
 from members.models import Member
 
-import uuid
-
-import logging
 logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
@@ -24,11 +21,9 @@ class Ctf(models.Model):
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
     published = models.BooleanField(_('Publicera'), default=True)
 
-
     class Meta:
         verbose_name = _('ctf')
         verbose_name_plural = _('ctf')
-
 
     def __str__(self):
         return self.title
@@ -50,11 +45,9 @@ class Flag(models.Model):
     clues = RichTextField(_('Clue'), blank=True)
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
 
-
     class Meta:
         verbose_name = _('Flag')
         verbose_name_plural = _('Flags')
-
 
     def __str__(self):
         return self.title
