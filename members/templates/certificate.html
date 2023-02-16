@@ -15,17 +15,21 @@
                 {% endif %}
                 {% if user.is_authenticated %}
                     {% if user.get_active_subscription %}
-                        <div class="validation valid">
-                            <h3 style="margin: 0;">Datateknologerna</h3>
-                            <div id="clock-wrapper"></div>
-                            <i class="fas fa-{{ icon }} fa-6x fa-rotate"></i>
-                            <i class="far fa-check-circle checkmark fa-4x"></i>
-                        </div>
-                        <div class="card-body">
-                            <h5>{{ user.get_str_membership_type }} - Aktiv</h5>
-                            <h5 class="card-title">{{ user.first_name }} {{ user.last_name }}</h5>
-                            <h6>{{ user.username }}</h6>
-                        </div>
+                        {% if user.membership_type != 3 %}
+                            <div class="validation valid">
+                        {% else %}
+                            <div class="validation invalid">
+                        {% endif %}
+                                <h3 style="margin: 0;">Datateknologerna</h3>
+                                <div id="clock-wrapper"></div>
+                                <i class="fas fa-{{ icon }} fa-6x fa-rotate"></i>
+                                <i class="far fa-check-circle checkmark fa-4x"></i>
+                            </div>
+                            <div class="card-body">
+                                <h5>{{ user.get_str_membership_type }} - Aktiv</h5>
+                                <h5 class="card-title">{{ user.first_name }} {{ user.last_name }}</h5>
+                                <h6>{{ user.username }}</h6>
+                            </div>
                     {% else %}
                         <div class="validation invalid">
                             <h3 style="margin: 0;">Datateknologerna</h3>
