@@ -2,7 +2,6 @@
 {% load app_filters %}
 {% load static %}
 {% load i18n %}
-{% load thumbnail %}
     {% block content %}
     <head>
         <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
@@ -47,9 +46,7 @@
                 {% for picture in pictures %}
                     <div class="grid-sizer"></div>
                     <a data-fslightbox="gallery" href="{{ picture.image.url }}">
-                        {% thumbnail picture "500" crop="center" as image %}
-                            <img class="grid-item gallery-image" id="picture-{{ forloop.counter }}" src="{{ image.url }}">
-                        {% endthumbnail %}
+                        <img class="grid-item gallery-image" id="picture-{{ forloop.counter }}" src="{{ picture.image.url }}">
                     </a>
                 {% endfor %}
             </div>
