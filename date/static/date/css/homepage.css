@@ -505,6 +505,11 @@ div.carousel-logos img{
     width: 50%;
 }
 
+ul#logo-list {
+    list-style-type: none;
+    padding: 0;
+}
+
 .company-logo img{
     max-height: 100px;
     max-width: 100%;

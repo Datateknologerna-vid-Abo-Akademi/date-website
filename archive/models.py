@@ -12,7 +12,7 @@ from django.db import models
 from django.template.defaulttags import register
 from django.urls import reverse
 from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from PIL import Image
 from django.dispatch import receiver
 from .fields import PublicFileField

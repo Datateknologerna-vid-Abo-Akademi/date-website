@@ -1,20 +1,18 @@
 import datetime
 import json
 import logging
-import os
-from django.conf import settings
+from copy import deepcopy
 
-from django.http import HttpResponseForbidden, HttpResponse
+from django.conf import settings
+from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect
 from django.views.generic import DetailView, ListView
 from websocket import create_connection
 from websocket._exceptions import WebSocketBadStatusException
-from staticpages.models import StaticPage, StaticPageNav
-from django.http import HttpResponseForbidden, request
-from copy import deepcopy
 
-from .models import Event, EventAttendees
+from staticpages.models import StaticPage, StaticPageNav
 from .forms import PasscodeForm
+from .models import Event, EventAttendees
 
 logger = logging.getLogger('date')
 
@@ -28,7 +26,8 @@ class IndexView(ListView):
         context['event_list'] = Event.objects.filter(published=True,
                                                      event_date_end__gte=datetime.date.today()).order_by(
             'event_date_start')
-        context['past_events'] = Event.objects.filter(published=True, event_date_end__lte=datetime.date.today()).order_by(
+        context['past_events'] = Event.objects.filter(published=True,
+                                                      event_date_end__lte=datetime.date.today()).order_by(
             'event_date_start').reverse()
         return context
 
@@ -41,7 +40,7 @@ class EventDetailView(DetailView):
         template_name = 'events/detail.html'
         logger.debug(self.get_context_data().get('event').title.lower())
         if self.get_context_data().get('event').title.lower() == 'årsfest':
-           template_name = 'events/arsfest.html'
+            template_name = 'events/arsfest.html'
         if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
             template_name = 'events/event_passcode.html'
 
@@ -63,15 +62,13 @@ class EventDetailView(DetailView):
 
         return context
 
-
-    def get(self, request,  *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         show_content = not self.object.members_only or (self.object.members_only and request.user.is_authenticated)
         if not show_content:
             return redirect('/members/login')
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
-
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -83,12 +80,14 @@ class EventDetailView(DetailView):
                     return render(self.request, 'events/arsfest.html', self.get_context_data())
                 return render(self.request, 'events/detail.html', self.get_context_data())
             else:
-                return render(self.request, 'events/event_passcode.html', self.get_context_data(passcode_error='invalid passcode'))
+                return render(self.request, 'events/event_passcode.html',
+                              self.get_context_data(passcode_error='invalid passcode'))
 
         if self.object.sign_up and (request.user.is_authenticated
                                     and self.object.registration_is_open_members()
                                     or self.object.registration_is_open_others()
-                                    or request.user.groups.filter(name="commodore").exists()): # Temp fix to allow commodore peeps to enter pre-signed up attendees
+                                    or request.user.groups.filter(
+                    name="commodore").exists()):  # Temp fix to allow commodore peeps to enter pre-signed up attendees
             form = self.object.make_registration_form().__call__(data=request.POST)
             if form.is_valid():
                 public_info = self.object.get_registration_form_public_info()
@@ -101,8 +100,10 @@ class EventDetailView(DetailView):
         return HttpResponseForbidden()
 
     def form_valid(self, form):
-        attendee = self.get_object().add_event_attendance(user=form.cleaned_data['user'], email=form.cleaned_data['email'],
-                                               anonymous=form.cleaned_data['anonymous'], preferences=form.cleaned_data)
+        attendee = self.get_object().add_event_attendance(user=form.cleaned_data['user'],
+                                                          email=form.cleaned_data['email'],
+                                                          anonymous=form.cleaned_data['anonymous'],
+                                                          preferences=form.cleaned_data)
         if 'avec' in form.cleaned_data and form.cleaned_data['avec']:
             avec_data = {'avec_for': attendee}
             for key in form.cleaned_data:
@@ -111,9 +112,10 @@ class EventDetailView(DetailView):
                     value = form.cleaned_data[key]
                     avec_data[field_name] = value
             self.get_object().add_event_attendance(user=avec_data['user'], email=avec_data['email'],
-                                               anonymous=avec_data['anonymous'], preferences=avec_data, avec_for=avec_data['avec_for'])
+                                                   anonymous=avec_data['anonymous'], preferences=avec_data,
+                                                   avec_for=avec_data['avec_for'])
         if self.get_context_data().get('event').title.lower() == 'årsfest':
-            return redirect(f"/events/{self.get_context_data().get('event').slug}/#/anmalda") 
+            return redirect(f"/events/{self.get_context_data().get('event').slug}/#/anmalda")
         return render(self.request, self.template_name, self.get_context_data())
 
     def form_invalid(self, form):
