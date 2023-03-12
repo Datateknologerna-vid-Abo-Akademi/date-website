@@ -299,7 +299,7 @@ html body{
 
 .content a:hover {
     border-radius: 5px;
-    background-color: color: var(--baal-gold);;
+    background-color: var(--baal-gold);
     color: var(--baal-blue);
 }
 
