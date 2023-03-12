@@ -184,13 +184,13 @@ def send_event_mail(event, form):
     avec = cleaned_form.get('avec')
 
     attendee_price = get_attendee_price(cleaned_form, event)
-    attendee_avec_price = get_attendee_price(cleaned_form, event, avec=avec)
+    attendee_avec_price = get_attendee_price(cleaned_form, event, avec=avec) if avec else 0
     total_price = attendee_price + attendee_avec_price
 
     attendee_fields, attendee_avec_fields = get_attendee_fields(cleaned_form)
 
     mail_subject = f"Du är anmäld till {event.title}!"
-    message = render_to_string('events/baal_email.html', {
+    message = render_to_string('events/event_email.html', {
         'event': event,
         'avec': avec,
         'attendee_price': attendee_price,

@@ -8,16 +8,13 @@ Dina uppgifter:
         {{ key|title }}: {{ value }}
     {% endfor %}
     {% if avec %} {{ attendee_price }}€
-
     Avec:
     {% for key, value in attendee_avec_fields.items %}
         {{ key|title }}: {{ value }}
     {% endfor %}
     {{ attendee_avec_price }}€
     {% endif %}
-
 Pris Totalt: {{ total_price }}€
-
 Betalningen för KK 100 görs på Kemistklubbens konto.
 
 Mottagare: Kemistklubben vid Åbo Akademi rf
