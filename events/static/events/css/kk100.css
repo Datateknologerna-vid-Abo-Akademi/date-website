@@ -98,7 +98,7 @@ footer, .navbar{
   }
 
 .scaling-svg-container svg {
-  z-index: -999;
+  z-index: -100;
   position: absolute; 
   height: 100%;
   width: 100%; 
@@ -116,7 +116,7 @@ footer, .navbar{
 }
 
 .scaling-svg-container-anmalan svg {
-  z-index: -999;
+  z-index: -100;
   position: absolute;
   height: 100%;
   width: 100%;
@@ -246,11 +246,11 @@ display:block;
 }
 
 .stars {
-z-index:0;
+z-index:-150;
 }
 
 .twinkling{
-z-index:1;
+z-index:-149;
 
 -moz-animation:move-twink-back 200s linear infinite;
 -ms-animation:move-twink-back 200s linear infinite;
