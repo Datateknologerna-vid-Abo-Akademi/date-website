@@ -424,6 +424,7 @@ form p > * {
 form button {
     background-color: var(--baal-blue) !important;
     color: var(--baal-gold) !important;
+    border: 1px solid var(--baal-gold) !important;
     transition: .3s;
 }
 

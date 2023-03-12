@@ -121,5 +121,36 @@
             let pageHash = window.location.hash.substr(1).replace(/\//g,'');
             $(`.${pageHash}`).toggleClass("hidden")
         }
+
+        // Get the form element
+        const form = document.querySelector('form');
+
+        // Attach an event listener to the form's submit event
+        form.addEventListener('submit', event => {
+          // Select all input elements whose id contains "Årskurs"
+          const inputElements = document.querySelectorAll('input[id*="Årskurs"]');
+
+          // Loop through each input element
+          inputElements.forEach(input => {
+            // Get the input value
+            const inputValue = input.value.trim();
+
+            // Check if the input is filled in
+            if (inputValue) {
+              // Validate the input format
+              if (!/^\d{4}$/.test(inputValue)) {
+                // Display an error message
+                alert(`Input ${inputValue} är inte i YYYY format, t.ex. 2020.`);
+                // Clear the input value
+                input.value = '';
+                // Prevent the form from being submitted
+                event.preventDefault();
+              }
+            }
+          });
+        });
+
+
+
     </script>
 {% endblock %}

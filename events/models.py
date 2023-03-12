@@ -139,6 +139,9 @@ class Event(models.Model):
     def get_registration_form_public_info(self):
         return EventRegistrationForm.objects.filter(event=self, public_info=True)
 
+    def get_registration_form_prices(self):
+        return EventRegistrationForm.objects.filter(event=self, price__gt=0)
+
     def make_registration_form(self, data=None):
         if self.sign_up:
             fields = {'user': forms.CharField(label='Namn', max_length=255),
@@ -197,6 +200,7 @@ class EventRegistrationForm(models.Model):
     public_info = models.BooleanField(_('Öppen info'), default=False)
     choice_list = models.CharField(_('Alternativ'), max_length=255, blank=True)
     hide_for_avec = models.BooleanField(_('Göm för avec'), default=False)
+    price = models.DecimalField(_('Pris'), max_digits=10, decimal_places=2, default=0)
 
     class Meta:
         verbose_name = _('Anmälningsfält')
