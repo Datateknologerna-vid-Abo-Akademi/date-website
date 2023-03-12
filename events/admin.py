@@ -21,7 +21,7 @@ class EventRegistrationFormInline(admin.TabularInline):
     fk_name = 'event'
     extra = 0
     readonly_fields = ('line_number',)
-    fields = ('line_number', 'name', 'type', 'required', 'public_info', 'hide_for_avec', 'choice_list')
+    fields = ('line_number', 'name', 'type', 'required', 'public_info', 'hide_for_avec', 'choice_list', 'price')
     can_delete = True
 
     def line_number(self, obj):

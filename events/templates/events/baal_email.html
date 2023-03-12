@@ -1,17 +1,35 @@
 {% autoescape off %}
 
-Du har anmält dig till XCVIII Kemistbaal!
+Du har anmält dig till {{ event.title }}!
 
-Vänligen kontrollera att dina preferenser är korrekta:
+Dina uppgifter:
 
-    {% for key, value in form.items %} 
-      {% if 'user' in key %}Namn{% else %}{{key}}{% endif %}: {{value}}
+    {% for key, value in attendee_fields.items %}
+        {{ key|title }}: {{ value }}
     {% endfor %}
+    {% if avec %} {{ attendee_price }}€
 
-Vid frågor, kontakta baalmarshalkerna på kkbaal@abo.fi
+    Avec:
+    {% for key, value in attendee_avec_fields.items %}
+        {{ key|title }}: {{ value }}
+    {% endfor %}
+    {{ attendee_avec_price }}€
+    {% endif %}
 
-Observera även att antalet platser är begränsade och att du meddelas om du har lagts till reservlistan och får plats.
+Pris Totalt: {{ total_price }}€
 
-Det här är ett automatiskt meddelande, svara inte på det här mailet.
+Betalningen för KK 100 görs på Kemistklubbens konto.
+
+Mottagare: Kemistklubben vid Åbo Akademi rf
+Kontonummer: FI20 6601 0001 0479 76
+Referensnummer: 4129
+Meddelande: Deltagaravgift & namn
+Sista betalningsdag: 1.6.2023
+
+Använd i första hand referensnummer vid betalning. Ifall du betalar mer än en deltagaravgift, vänligen ange i meddelandet vems deltagaravgifter i tillägg till referensnumret, om möjligt.
+
+Vid frågor, kontakta baalmarskalkerna på kkbaal@abo.fi.
+
+Observera även att antalet platser är begränsade. Om du lagts till på reservlistan meddelas du om du får plats.
 
 {% endautoescape %}
