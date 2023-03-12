@@ -134,7 +134,7 @@ class EventDetailView(DetailView):
             return redirect(f'/events/{self.get_context_data().get("event").slug}/#/anmalda')
         elif 'wappmiddag' in self.get_context_data().get('event').title.lower():
             return redirect(f'/events/{self.get_context_data().get("event").slug}/#/anmalda')
-        elif 'kk 100' in self.get_context_data().get('event').title.lower():
+        elif '100 baal' in self.get_context_data().get('event').title.lower():
             send_event_mail(self.get_object(), form)
             return redirect(f'/events/{self.get_context_data().get("event").slug}/#/anmalda')
         return render(self.request, self.get_template_names(), self.get_context_data())
