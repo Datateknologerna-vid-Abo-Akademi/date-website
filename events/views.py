@@ -189,7 +189,7 @@ def send_event_mail(event, form):
 
     attendee_fields, attendee_avec_fields = get_attendee_fields(cleaned_form)
 
-    mail_subject = event.title
+    mail_subject = f"Du är anmäld till {event.title}!"
     message = render_to_string('events/baal_email.html', {
         'event': event,
         'avec': avec,
@@ -201,7 +201,7 @@ def send_event_mail(event, form):
     })
     to_email = form.cleaned_data['email']
     email = EmailMessage(
-        mail_subject, message, 'noreply@kemisklubben.org', [to_email]
+        mail_subject, message, '"Kemistklubben" noreply@kemisklubben.org', [to_email]
     )
     logger.info(f"New Baal Attendance: Sending email to {to_email}")
     email.send()
