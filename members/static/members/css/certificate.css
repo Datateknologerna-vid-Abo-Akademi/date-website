@@ -21,6 +21,10 @@
     background-color: rgb(141, 31, 31);
 }
 
+.supporting {
+    background-color: orange;
+}
+
 
 .checkmark {
     position: absolute;
