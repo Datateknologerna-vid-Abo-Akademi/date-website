@@ -230,7 +230,7 @@ class EventRegistrationForm(models.Model):
 
 class EventAttendees(models.Model):
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
-    attendee_nr = models.PositiveSmallIntegerField(_('#'))
+    attendee_nr = models.PositiveSmallIntegerField(_('#'), blank=True)
     user = models.CharField(_('Namn'), blank=False, max_length=255)
     email = models.EmailField(_('E-postadress'), blank=False, null=True, unique=False)
     preferences = JSONField(_('Svar'), default=list, blank=True)
