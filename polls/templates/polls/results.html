@@ -12,18 +12,18 @@
 <div class="container-md min-vh-100 container-margin-top">
     <div class="container-size" style="max-width: 500px;">
         <div class="content">
-            <a class="mb-2" href="/polls"><i class="fas fa-long-arrow-alt-left"></i> Tillbaka</a>
+            <a class="mb-2" href="/polls"><i class="fas fa-long-arrow-alt-left"></i> {% trans "Tillbaka" %}</a>
             <div class="text-center">
                 <h3>{{ question.question_text }}</h3>
-                <h4>Resultat:</h4>
+                <h4>{% trans "Resultat: "%}</h4>
                 <ul class="list-unstyled">
                 {% if question.show_results %}
                     {% for choice in question.choice_set.all %}
                         <li>{{ choice.choice_text }}: {{ choice.votes }} vote{{ choice.votes|pluralize }} -- {{ choice.get_vote_percentage }}%</li>
                     {% endfor %}
-                    <p class="mt-2">Total votes: {{ question.get_total_votes }}</p>
+                    <p class="mt-2"> {% trans "Totala röster: "%} {{ question.get_total_votes }} </p>
                 {% else %}
-                    <p>Resultaten är gömda.</p>
+                    <p>{% trans "Resultaten är gömda" %}</p>
                 {% endif %}
                 </ul>      
             </div>

@@ -14,7 +14,7 @@
         <div class="container-size">
             <div class="content">
                 <div class="hero-text-box" style="text-align:center;">
-                    <a href="{% url 'archive:exam_upload' collection.id %}">Lägg Till Tentamen</a>
+                    <a href="{% url 'archive:exam_upload' collection.id %}">{% trans "Lägg till tentamen" %}</a>
                     <h1><a href="{% url 'archive:exams' %}"><i class="fa fa-arrow-left" aria-hidden="true"></i></a> {{ collection.title }} <i class="fas fa-book-dead"></i></h1>
                 </div>
                 <div class="custom-table-container">
