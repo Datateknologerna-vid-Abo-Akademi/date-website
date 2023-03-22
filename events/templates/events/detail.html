@@ -69,11 +69,11 @@
                                     {% endfor %}
                                 </tr>
                             {% empty %}
-                                <p id="no-attendee">{% trans "Inga anmälda, var den första att anmäla dig!" %}</p>
+                                <p id="no-attendee">{% trans "Inga anmälda ännu, var den första!" %}</p>
                             {% endfor %}
                         </table>
                     {% else %}
-                        <h4 id="no-attendee">{% trans 'Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta styrelsen vid behov.' %}</h4>
+                        <h4 id="no-attendee">{% trans 'Deltagarlistan har gömts eftersom det här är ett gammalt evenemang, kontakta styrelsen vid behov.' %}</h4>
                     {% endif %}
                 </div>
                 {% endif %}

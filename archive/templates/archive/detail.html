@@ -13,11 +13,11 @@
         <div class="">
             <div class="text-center" id="page-header">
                 <h1 class="hero-text-main">&nbsp; {{ album }} &nbsp;</h1>
-                <h3>{% trans 'Publiserats' %} <i class="far fa-calendar-alt"></i> {{ collection.pub_date_pretty }}</h3>
+                <h3>{% trans 'Publicerats' %} <i class="far fa-calendar-alt"></i> {{ collection.pub_date_pretty }}</h3>
                 {% if error_msg %}
                     <p>{{ error_msg }}</p>
                 {% endif %}
-                <div class="back-btn"><a href="{% url 'archive:pictures' year %}"><i class="fas fa-chevron-left"></i> Tillbaka</a></div>
+                <div class="back-btn"><a href="{% url 'archive:pictures' year %}"><i class="fas fa-chevron-left"></i> {% trans "Tillbaka" %}</a></div>
             </div>
             {% if pictures.has_other_pages %}
                 <div class="center">

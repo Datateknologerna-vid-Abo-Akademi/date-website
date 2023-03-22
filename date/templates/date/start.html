@@ -173,10 +173,10 @@
             </div>
         </header>
         <section class="about d-flex align-items-center">
-            <div class="container-size">
+            <div class="container-size" style="text-align: justify">
                 <h3>Om oss</h3>
                 <div>
-                    <p>Datateknologerna vid Åbo Akademi rf är en förening för studerande vid utbildningsprogrammet i datateknik vid Fakulteten för  Naturvetenskaper och Teknik vid Åbo Akademi, samt för studerande vid övriga tekniskt inriktade utbildningslinjer i databehandling. Föreningen grundades 1999, närmare bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare och stiliga tofsmössor.</p>
+                    <p>Datateknologerna vid Åbo Akademi rf är en förening för studerande vid utbildningsprogrammet i datateknik vid Fakulteten för Naturvetenskaper och Teknik vid Åbo Akademi, samt för studerande vid övriga tekniskt inriktade utbildningslinjer i databehandling. Föreningen grundades 1999, närmare bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare och stiliga tofsmössor.</p>
                 </div>
             </div>
         </section>
@@ -197,7 +197,7 @@
                                 <a class="news-button" href="{% url 'news:detail' ne.slug %}"><i class="fab fa-readme"></i> {% trans 'Läs mera' %}...</a>
                             </div>
                             {% empty %}
-                            <h3>{% trans 'inga nyheter hittades' %}...</h3>
+                            <h3>{% trans 'Inga nyheter hittades' %}...</h3>
                         {% endfor %}
                         <a class="more-news" href="/news/"><i class="far fa-newspaper"></i> Mera nyheter...</a>
                     </div>
@@ -256,7 +256,7 @@
                                             </a>
                                         </div>
                                     {% empty %}
-                                        <h6>{% trans 'inga aktiva evenemang hittades' %}...</h6>
+                                        <h6>{% trans 'Inga aktiva evenemang hittades' %}...</h6>
                                     {% endfor %}
                                     {% if events|length >= 4 %}
                                         <a class="more-events-button" href="{% url 'events:index'%}"><i class="far fa-calendar-alt"></i> {% trans 'Mera evenemang' %}...</a>
@@ -331,7 +331,7 @@
                                         </a>
                                     </div>
                                 {% empty %}
-                                    <h6>{% trans 'inga aktiva evenemang hittades' %}...</h6>
+                                    <h6>{% trans 'Inga aktiva evenemang hittades' %}...</h6>
                                 {% endfor %}
                                 {% if events|length >= 4 %}
                                     <a class="more-events-button" href="{% url 'events:index'%}"><i class="far fa-calendar-alt"></i> {% trans 'Mera evenemang' %}...</a>
