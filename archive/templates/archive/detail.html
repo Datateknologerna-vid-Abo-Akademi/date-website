@@ -43,10 +43,10 @@
                 </div>
             {% endif %}
             <div class="grid">
-                {% for picture in pictures %}
+                {% for picture in imgs %}
                     <div class="grid-sizer"></div>
-                    <a data-fslightbox="gallery" href="{{ picture.image.url }}">
-                        <img class="grid-item gallery-image" id="picture-{{ forloop.counter }}" src="{{ picture.image.url }}">
+                    <a data-fslightbox="gallery" href="{{ picture.0 }}">
+                        <img class="grid-item gallery-image" id="picture-{{ forloop.counter }}" src="https://faas-fra1-afec6ce7.doserverless.co/api/v1/web/fn-97bb41aa-998a-4003-a6d2-13eb649799b8/archive/image-resizer?height=400&width=600&url={{ picture.1 }}">
                     </a>
                 {% endfor %}
             </div>

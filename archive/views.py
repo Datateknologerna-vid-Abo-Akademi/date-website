@@ -1,5 +1,6 @@
 import logging
 import os
+import urllib.parse
 
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required, user_passes_test
@@ -168,12 +169,15 @@ def picture_detail(request, year, album):
     except EmptyPage:
         pictures = paginator.page(paginator.num_pages)
 
+    imgs = [(pic.image.url, urllib.parse.quote(str(pic.image.url))) for pic in pictures]
+
     context = {
         'type': "pictures",
         'year': year,
         'album': album,
         'collection': collection,
         'pictures': pictures,
+        'imgs': imgs,
     }
 
     return render(request, 'archive/detail.html', context)
