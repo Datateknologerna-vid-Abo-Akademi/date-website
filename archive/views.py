@@ -29,7 +29,6 @@ def year_index(request):
     return render(request, 'archive/index.html', context)
 
 
-@user_passes_test(user_type, login_url='/members/login/')
 def picture_index(request, year):
     collections = Collection.objects.filter(type="Pictures", pub_date__year=year).order_by('-pub_date')
     context = {
