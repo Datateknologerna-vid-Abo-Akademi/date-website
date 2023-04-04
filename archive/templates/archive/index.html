@@ -14,7 +14,7 @@
             {% if type == 'pictures' %}
                 <h1 class="text-center archive-heading">&nbsp; {% trans "Bildarkiv" %} &nbsp;</h1>
                 {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse" %}
-                    <h3><a class="button" href="{% url 'archive:upload' %}"> Skapa nytt album</a></h3>
+                    <h3><a class="button" href="{% url 'archive:upload' %}"> {% trans "Skapa nytt album" %}</a></h3>
                 {% endif %}
             {% endif %}
             <div class="row">
@@ -44,7 +44,7 @@
                         </div>
                         {% endif %}
                     {% empty %}
-                        <h3>{% trans "Inga arkiv hittades" %}</h3>
+                        <h3>{% trans "Inga arkiv hittades..." %}</h3>
                     {% endfor %}
                 </div>
             </div>
