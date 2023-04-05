@@ -146,7 +146,7 @@ QUIET=${QUIET:-0}
 TIMEOUT_PATH=$(realpath $(which timeout))
 if [[ $TIMEOUT_PATH =~ "busybox" ]]; then
         ISBUSY=1
-        BUSYTIMEFLAG="-t"
+        BUSYTIMEFLAG=""
 else
         ISBUSY=0
         BUSYTIMEFLAG=""

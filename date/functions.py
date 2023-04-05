@@ -1,4 +1,3 @@
-from django.utils import timezone
 from django.utils.text import slugify
 
 
@@ -11,7 +10,3 @@ def slugify_max(text, max_length=50):
         return trimmed_slug
     # First word is > max_length chars, so we have to break it
     return slug[:max_length]
-
-
-def days_hence(days):
-    return timezone.now() + timezone.timedelta(days=days)

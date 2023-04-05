@@ -14,7 +14,7 @@
         <div class="container-size">
             <div class="content">
                 <div class="hero-text-box">
-                    <h1>{% trans "Dokument arkiv" %}</h1>
+                    <h1>{% trans "Dokumentarkiv" %}</h1>
                     {% if request.user|in_group:"styrelse"%}
                         <a class="btn btn-dark" href="{% url 'archive:upload' %}">{% trans 'Ladda upp dokument' %}</a>
                     {% endif %}

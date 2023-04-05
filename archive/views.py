@@ -1,16 +1,12 @@
-import os
-import requests
 import logging
-
-from botocore.client import Config
+import os
 
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import redirect, render
-from django.views import generic
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from .filters import DocumentFilter, ExamFilter
 from .forms import PictureUploadForm, ExamUploadForm, ExamArchiveUploadForm
@@ -19,12 +15,12 @@ from .tables import DocumentTable
 
 logger = logging.getLogger('date')
 
+
 def year_index(request):
-    
     years = Collection.objects.dates('pub_date', 'year').reverse()
     year_albumcount = {}
     for year in years:
-        year_albumcount[str(year.year)] = Collection.objects.filter(pub_date__year = year.year, type='Pictures').count()
+        year_albumcount[str(year.year)] = Collection.objects.filter(pub_date__year=year.year, type='Pictures').count()
 
     context = {
         'type': "pictures",
@@ -32,11 +28,12 @@ def year_index(request):
     }
     return render(request, 'archive/index.html', context)
 
+
 def picture_index(request, year):
     collections = Collection.objects.filter(type="Pictures", pub_date__year=year).order_by('-pub_date')
     context = {
         'type': "pictures",
-        'year' : year,
+        'year': year,
         'collections': collections,
     }
     return render(request, 'archive/picture_index.html', context)
@@ -49,7 +46,6 @@ def exams_index(request):
         'collections': collections,
     }
     return render(request, 'archive/exams_index.html', context)
-
 
 
 def exam_upload(request, pk):
@@ -70,7 +66,6 @@ def exam_upload(request, pk):
         'exam_form': form,
     }
     return render(request, 'archive/exam_upload.html', context)
-
 
 
 def exam_archive_upload(request):
@@ -98,7 +93,7 @@ class FilteredDocumentsListView(SingleTableMixin, FilterView):
     def get_table_data(self):
         filter_collection = self.request.GET.get('collection', '')
         filter_title_contains = self.request.GET.get('title__contains', '')
-        
+
         if filter_collection or filter_title_contains:
             if filter_collection:
                 return Document.objects.filter(
@@ -129,7 +124,7 @@ class FilteredExamsListView(SingleTableMixin, FilterView):
             return Document.objects.filter(collection=collection_pk)
         else:
             return Document.objects.all()
-    
+
     def get_context_data(self, *args, **kwargs):
         context = super(FilteredExamsListView, self).get_context_data(*args, **kwargs)
         collection_pk = self.kwargs.get('pk')
@@ -154,13 +149,14 @@ def picture_detail(request, year, album):
 
     context = {
         'type': "pictures",
-        'year' : year,
-        'album' : album,
-        'collection' : collection[0],
+        'year': year,
+        'album': album,
+        'collection': collection[0],
         'pictures': pictures,
     }
 
-    return render(request, 'archive/detail.html', context )
+    return render(request, 'archive/detail.html', context)
+
 
 @permission_required('archive.add_collection')
 def upload(request):
