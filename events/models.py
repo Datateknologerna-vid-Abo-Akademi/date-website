@@ -60,6 +60,7 @@ class Event(models.Model):
     passcode = models.CharField(_('Passcode'), max_length=255, blank=True)
     image = models.ImageField(_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
     s3_image = PublicFileField(verbose_name=_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
+    price = models.DecimalField(_('Pris'), max_digits=10, decimal_places=2, default=0)
 
     class Meta:
         verbose_name = _('evenemang')

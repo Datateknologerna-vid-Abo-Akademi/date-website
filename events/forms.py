@@ -44,7 +44,8 @@ class EventCreationForm(forms.ModelForm):
             'sign_up_avec',
             'slug',
             'members_only',
-            'passcode'
+            'passcode',
+            'price'
         )
         if settings.USE_S3:
             fields = temp_fields + ('s3_image',)
@@ -133,7 +134,8 @@ class EventEditForm(forms.ModelForm):
             'sign_up_avec',
             'slug',
             'members_only',
-            'passcode'
+            'passcode',
+            'price'
         )
         if settings.USE_S3:
             fields = temp_fields + ('s3_image',)

@@ -9,7 +9,7 @@ def get_attendee_price(cleaned_form, event, avec=False):
                 attendee_price += item.price * int(cleaned_form.get(price_field))
             else:
                 attendee_price += item.price
-    return attendee_price
+    return attendee_price + event.price
 
 
 def get_attendee_fields(cleaned_form):
