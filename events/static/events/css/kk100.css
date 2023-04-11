@@ -1,12 +1,56 @@
 /*@import url('https://fonts.googleapis.com/css2?family=Slabo+27px&display=swap');*/
 @import url('https://fonts.googleapis.com/css2?family=Prata&display=swap');
 
+:root {
+    --baal-blue: #030826;
+    --baal-gold: #f3c26c;
+    --baal-blue-opacity: rgba(3, 8, 38, 0.8);
+    /*--opacityColor: rgba(223, 223, 223, 0.55);*/
+}
+
+html body {
+  background-color: #030826;
+}
+
 .background-img {
   background-color: #030826;
 }
 
 footer, .navbar{
   display: none;
+}
+
+.anmalan-btn {
+  font-size: 20px;
+  color: #d0af55;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #d0af55;
+}
+
+.anmalan-btn:hover {
+  background-color: #d0af55;
+  color: #030826;
+}
+
+.figure-imgs img {
+  width: 250px;
+}
+
+.anmalan-link {
+  font-size: 20px;
+  color: #d0af55;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #d0af55;
+  text-align: center;
+  margin-bottom: 10px;
+  background-color: #030826;
+}
+
+.anmalan-link:hover {
+    background-color: #d0af55;
+    color: #030826;
 }
 
 .container-md {
@@ -24,9 +68,16 @@ footer, .navbar{
   animation: fadeIn ease 5s;
 }
 
+.main-text-anmalan {
+  color: #d0af55;
+  font-size: 25px !important;
+  line-height: 2;
+}
+
 .bigtext {
-  font-size: 40px !important;
+  font-size: 35px !important;
   line-height: 1;
+  margin-top: 15px;
 }
 
 .big100 {
@@ -47,6 +98,7 @@ footer, .navbar{
   }
 
 .scaling-svg-container svg {
+  z-index: -100;
   position: absolute; 
   height: 100%;
   width: 100%; 
@@ -61,6 +113,23 @@ footer, .navbar{
   opacity: 0.4;
   fill-rule: evenodd;
   animation: animate 5s cubic-bezier(0,.18,.50,.1);
+}
+
+.scaling-svg-container-anmalan svg {
+  z-index: -100;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  right: 10px;
+  top: 0;
+}
+
+.scaling-svg-container-anmalan path {
+  stroke: #d0af55;
+  fill: none;
+  stroke-dasharray: 25000;
+  opacity: 0.4;
+  fill-rule: evenodd;
 }
 
 /* Albin animation */
@@ -177,15 +246,211 @@ display:block;
 }
 
 .stars {
-z-index:0;
+z-index:-150;
 }
 
 .twinkling{
-z-index:1;
+z-index:-149;
 
 -moz-animation:move-twink-back 200s linear infinite;
 -ms-animation:move-twink-back 200s linear infinite;
 -o-animation:move-twink-back 200s linear infinite;
 -webkit-animation:move-twink-back 200s linear infinite;
 animation:move-twink-back 200s linear infinite;
+}
+
+/*BAAL SIGNUP FORM CSS*/
+
+/* NEW STUFF */
+
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Slab:ital,wght@1,600&display=swap');
+
+html body{
+
+}
+
+.hidden{
+    display: none !important;
+}
+
+.container-md, form label, form select, form input, form button{
+    font-family: 'Prata', serif !important;
+}
+
+.container-md{
+    min-height: 100vh;
+    text-align: start;
+    align-content: start;
+    font-weight: bold;
+    background-position: top;
+}
+
+.content{
+    background-color: var(--baal-blue-opacity);
+    border: 1px solid var(--baal-gold);
+    color: var(--baal-gold);
+    font-size: 1.1em;
+}
+
+.content a, .baal-content h2, .baal-content h1 {
+    color: var(--baal-gold);
+}
+
+.content a:hover {
+    border-radius: 5px;
+    background-color: var(--baal-gold);
+    color: var(--baal-blue);
+}
+
+.baal-content h2, .baal-content h1 {
+    color: var(--baal-gold);
+}
+
+/* fade animations start*/
+@keyframes fadeIn {
+0% {opacity:0;}
+100% {opacity:1;}
+}
+
+@-moz-keyframes fadeIn {
+0% {opacity:0;}
+100% {opacity:1;}
+}
+
+@-webkit-keyframes fadeIn {
+0% {opacity:0;}
+100% {opacity:1;}
+}
+
+@-o-keyframes fadeIn {
+0% {opacity:0;}
+100% {opacity:1;}
+}
+
+@-ms-keyframes fadeIn {
+0% {opacity:0;}
+100% {opacity:1;}
+}
+/* fade animations end */
+
+.header-box {
+    overflow: hidden;
+    position: relative;
+}
+
+#canvas{
+    position: absolute;
+    width:100%;
+    height:100%;
+    z-index: -10;
+}
+
+.header-logo{
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    animation: fadeIn ease 5s;
+    -webkit-animation: fadeIn ease 5s;
+    -moz-animation: fadeIn ease 5s;
+    -o-animation: fadeIn ease 5s;
+    -ms-animation: fadeIn ease 5s;
+}
+
+.container-md .content svg{
+    width: 110px;
+    height: 150px;
+    display: block;
+    margin: auto;
+
+    -webkit-transition: 1s;
+    -o-transition: 1s;
+    transition: 1s;
+    transform: scale(1.2) !important;
+}
+
+.baal-header{
+    text-align: center;
+    animation: fadeIn ease 5s;
+    -webkit-animation: fadeIn ease 5s;
+    -moz-animation: fadeIn ease 5s;
+    -o-animation: fadeIn ease 5s;
+    -ms-animation: fadeIn ease 5s;
+}
+
+.baal-nav{
+    text-align: center;
+    margin: 8px;
+}
+
+.baal-nav a{
+    margin: 5px;
+    padding: 10px;
+    background-color: var(--baal-blue);
+    border-radius: 5px;
+    transition: .3s;
+    border: 1px solid var(--baal-gold);
+}
+
+.baal-nav a:hover{
+    background-color: var(--baal-gold);
+    color: var(--baal-blue) !important;
+}
+
+.text-content div > *, .anmalan > *, .anmalda > *{
+    animation: fadeIn ease 2s;
+    -webkit-animation: fadeIn ease 2s;
+    -moz-animation: fadeIn ease 2s;
+    -o-animation: fadeIn ease 2s;
+    -ms-animation: fadeIn ease 2s;
+}
+
+.alert-danger, .errorlist, .warning{
+    color: rgb(201, 99, 88) !important;
+}
+
+footer{
+    display: none;
+}
+
+.navbar{
+    display: none;
+}
+
+form p > * {
+    width: 100%;
+}
+
+form button {
+    background-color: var(--baal-blue) !important;
+    color: var(--baal-gold) !important;
+    border: 1px solid var(--baal-gold) !important;
+    transition: .3s;
+}
+
+form button:hover {
+    background-color: var(--baal-gold) !important;
+    color: var(--baal-blue) !important;
+}
+
+.event-full{
+    color: #b30116;
+}
+
+th {
+    padding-bottom: 1rem;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+}
+tr:hover {
+    transition: 200ms;
+    background-color: var(--baal-gold);
+    color: var(--baal-blue);
+}
+
+.inner {
+    background-color: var(--baal-blue-opacity);
+    padding: var(--defaultPadding);
 }

@@ -19,6 +19,9 @@ from .models import Event, EventAttendees
 from .forms import PasscodeForm
 
 import logging
+
+from .utils import get_attendee_price, get_attendee_fields
+
 logger = logging.getLogger('date')
 
 
@@ -42,20 +45,26 @@ def kk100_index(request):
     return render(request, 'events/kk100_index.html', context)
 
 
+def kk100_anmalan(request):
+    context = {}
+    context['event'] = Event.objects.filter(title='kk100').first()
+    return render(request, 'events/kk100_anmalan.html', context)
+
+
 class EventDetailView(DetailView):
     model = Event
 
     def get_template_names(self):
         template_name = 'events/detail.html'
-        if 'baal' in self.get_context_data().get('event').title.lower():
+        if '100 baal' in self.get_context_data().get('event').title.lower():
+          template_name = 'events/kk100_detail.html'
+        elif 'baal' in self.get_context_data().get('event').title.lower():
            template_name = 'events/baal_detail.html'
-        if 'tomtejakt' in self.get_context_data().get('event').title.lower():
+        elif 'tomtejakt' in self.get_context_data().get('event').title.lower():
            template_name = 'events/tomtejakt.html'
-        if 'wappmiddag' in self.get_context_data().get('event').title.lower():
+        elif 'wappmiddag' in self.get_context_data().get('event').title.lower():
            template_name = 'events/wappmiddag.html'
-        #if 'kk100' in self.get_context_data().get('event').title.lower():
-        #   template_name = 'events/kk100_detail.html'
-        if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
+        elif self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
             template_name = 'events/event_passcode.html'
 
         return template_name
@@ -121,10 +130,14 @@ class EventDetailView(DetailView):
                     avec_data[field_name] = value
             self.get_object().add_event_attendance(user=avec_data['user'], email=avec_data['email'],
                                                anonymous=avec_data['anonymous'], preferences=avec_data, avec_for=avec_data['avec_for'])
-        if 'baal' in self.get_context_data().get('event').title.lower():
+        if '100baal' in self.get_context_data().get('event').title.lower().replace(' ', ''):
+            logger.info("HERE")
+            send_event_mail(self.get_object(), form)
+            return redirect(f'/events/{self.get_context_data().get("event").slug}/#/anmalda')
+        elif 'baal' in self.get_context_data().get('event').title.lower():
             return redirect(f'/events/{self.get_context_data().get("event").slug}/#/anmalda')
         elif 'wappmiddag' in self.get_context_data().get('event').title.lower():
-            return redirect(f'/events/{self.get_context_data().get("event").slug}/#/anmalda') 
+            return redirect(f'/events/{self.get_context_data().get("event").slug}/#/anmalda')
         return render(self.request, self.get_template_names(), self.get_context_data())
 
     def form_invalid(self, form):
@@ -162,23 +175,33 @@ def ws_data(form, public_info):
     for index, info in enumerate(public_info):
         if str(info) in pref:
             data[str(info)] = pref[str(info)]
-    print(data)
     return {"data": data}
 
-def send_baal_mail(form):
-    mail_subject = 'XCVIII Kemistbaal Anmälan'
-    for key, value in form.cleaned_data.items():
-        if isinstance(value, bool):
-            if value == True:
-                form.cleaned_data[key] = 'Ja'
-            else:
-                form.cleaned_data[key] = 'Nej'
-    message = render_to_string('events/baal_email.html', {
-        'form': form.cleaned_data
+
+def send_event_mail(event, form):
+    cleaned_form = form.cleaned_data
+
+    avec = cleaned_form.get('avec')
+
+    attendee_price = get_attendee_price(cleaned_form, event)
+    attendee_avec_price = get_attendee_price(cleaned_form, event, avec=avec) if avec else 0
+    total_price = attendee_price + attendee_avec_price
+
+    attendee_fields, attendee_avec_fields = get_attendee_fields(cleaned_form)
+
+    mail_subject = f"Du är anmäld till {event.title}!"
+    message = render_to_string('events/event_email.html', {
+        'event': event,
+        'avec': avec,
+        'attendee_price': attendee_price,
+        'attendee_avec_price': attendee_avec_price,
+        'total_price': total_price,
+        'attendee_fields': attendee_fields,
+        'attendee_avec_fields': attendee_avec_fields,
     })
     to_email = form.cleaned_data['email']
     email = EmailMessage(
-                mail_subject, message, to=[to_email]
+        mail_subject, message, '"Kemistklubben" noreply@kemisklubben.org', [to_email]
     )
     logger.info(f"New Baal Attendance: Sending email to {to_email}")
     email.send()

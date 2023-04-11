@@ -60,6 +60,7 @@ class Event(models.Model):
     passcode = models.CharField(_('Passcode'), max_length=255, blank=True)
     image = models.ImageField(_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
     s3_image = PublicFileField(verbose_name=_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
+    price = models.DecimalField(_('Pris'), max_digits=10, decimal_places=2, default=0)
 
     class Meta:
         verbose_name = _('evenemang')
@@ -139,10 +140,13 @@ class Event(models.Model):
     def get_registration_form_public_info(self):
         return EventRegistrationForm.objects.filter(event=self, public_info=True)
 
+    def get_registration_form_prices(self):
+        return EventRegistrationForm.objects.filter(event=self, price__gt=0)
+
     def make_registration_form(self, data=None):
         if self.sign_up:
             fields = {'user': forms.CharField(label='Namn', max_length=255),
-                      'email': forms.EmailField(label='Email', validators=[self.validate_unique_email]),
+                      'email': forms.EmailField(label='Email', validators=[self.validate_unique_email], max_length=320),
                       'anonymous': forms.BooleanField(label='Anonymt', required=False)}
             if self.get_registration_form():
                 for question in reversed(self.get_registration_form()):
@@ -154,12 +158,15 @@ class Event(models.Model):
                     elif question.type == "checkbox":
                         fields[question.name] = forms.BooleanField(label=question.name, required=question.required)
                     elif question.type == "text":
-                        fields[question.name] = forms.CharField(label=question.name, required=question.required)
+                        fields[question.name] = forms.CharField(label=question.name, required=question.required,
+                                                                max_length=255)
             if self.sign_up_avec:
                 fields['avec'] = forms.BooleanField(label='Avec', required=False)
                 fields['avec_user'] = forms.CharField(label='Namn', max_length=255, required=False, widget=forms.TextInput(attrs={'class': "avec-field"}))
-                fields['avec_email'] = forms.EmailField(label='Email', validators=[self.validate_unique_email], required=False, widget=forms.TextInput(attrs={'class': "avec-field"}))
-                fields['avec_anonymous'] = forms.BooleanField(label='Anonymt', required=False, widget=forms.CheckboxInput(attrs={'class': "avec-field"}))
+                fields['avec_email'] = forms.EmailField(label='Email', validators=[self.validate_unique_email],
+                                                        required=False, widget=forms.TextInput(attrs={'class': "avec-field"}), max_length=320)
+                fields['avec_anonymous'] = forms.BooleanField(label='Anonymt', required=False, widget=forms
+                                                              .CheckboxInput(attrs={'class': "avec-field"}))
                 if self.get_registration_form():
                     for question in reversed(self.get_registration_form()):
                         if not question.hide_for_avec:
@@ -171,7 +178,7 @@ class Event(models.Model):
                             elif question.type == "checkbox":
                                 fields['avec_'+question.name] = forms.BooleanField(label=question.name, required=False, widget=forms.CheckboxInput(attrs={'class': "avec-field"}))
                             elif question.type == "text":
-                                fields['avec_'+question.name] = forms.CharField(label=question.name, required=False, widget=forms.TextInput(attrs={'class': "avec-field"}))
+                                fields['avec_'+question.name] = forms.CharField(label=question.name, required=False, widget=forms.TextInput(attrs={'class': "avec-field"}), max_length=255)
             return type('EventAttendeeForm', (forms.BaseForm,), {'base_fields': fields, 'data': data}, )
 
     @register.filter
@@ -194,6 +201,7 @@ class EventRegistrationForm(models.Model):
     public_info = models.BooleanField(_('Öppen info'), default=False)
     choice_list = models.CharField(_('Alternativ'), max_length=255, blank=True)
     hide_for_avec = models.BooleanField(_('Göm för avec'), default=False)
+    price = models.DecimalField(_('Pris'), max_digits=10, decimal_places=2, default=0)
 
     class Meta:
         verbose_name = _('Anmälningsfält')
