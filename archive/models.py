@@ -1,24 +1,21 @@
 from __future__ import unicode_literals
-import os
-import sys
-from django.conf import settings
 
-from PIL import Image
-from io import BytesIO
-from django.core.files.uploadedfile import InMemoryUploadedFile
-import shutil
-from django.template.defaulttags import register
-
-from django.db import models
-from django.urls import reverse
-from django.utils.translation import ugettext_lazy as _
-from django.utils.text import slugify
 import datetime
+import os
+import shutil
+import sys
+from io import BytesIO
 
 from PIL import Image
-from django.dispatch import receiver
-from .fields import PublicFileField
+from django.conf import settings
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.db import models
+from django.template.defaulttags import register
+from django.urls import reverse
+from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
 
+from .fields import PublicFileField
 
 TYPE_CHOICES = (
     ('Pictures', 'Bilder'),

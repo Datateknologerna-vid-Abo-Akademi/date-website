@@ -106,3 +106,28 @@ To compile the translations to `django.mo`, use the following command
 $ django-admin compilemessages
 ```
 
+## Updating the database
+
+### Warning
+
+##### Only use the script for major version upgrades
+For minor version upgrades change the `DATE_POSTGRESQL_VERSION` environment variable.
+
+This script will wipe out __ALL__ data from the volume \
+MAKE SURE YOU HAVE PROPER BACKUPS BEFORE ATTEMPTING THIS
+
+If the dump command fails all data may be lost.
+
+### How to upgrade major version
+
+Run
+
+#### Make sure `DATE_POSTGRESQL_VERSION` is set to the CURRENT version before running the following command
+
+```bash
+./update-postgres.sh target_version [env_file]
+```
+after which you have to update your environment variables using
+```bash
+source ${USER}.env
+```

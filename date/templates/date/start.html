@@ -50,7 +50,7 @@
                                 <a class="news-button" href="{% url 'news:detail' ne.slug %}"><i class="fab fa-readme"></i> {% trans 'Läs mera' %}...</a>
                             </div>
                             {% empty %}
-                            <h3>{% trans 'inga nyheter hittades' %}...</h3>
+                            <h3>{% trans 'Inga nyheter hittades' %}...</h3>
                         {% endfor %}
                         <a class="more-news" href="/news/"><i class="far fa-newspaper"></i> Mera nyheter...</a>
                     </div>
@@ -109,7 +109,7 @@
                                             </a>
                                         </div>
                                     {% empty %}
-                                        <h6>{% trans 'inga aktiva evenemang hittades' %}...</h6>
+                                        <h6>{% trans 'Inga aktiva evenemang hittades' %}...</h6>
                                     {% endfor %}
                                     {% if events|length >= 4 %}
                                         <a class="more-events-button" href="{% url 'events:index'%}"><i class="far fa-calendar-alt"></i> {% trans 'Mera evenemang' %}...</a>

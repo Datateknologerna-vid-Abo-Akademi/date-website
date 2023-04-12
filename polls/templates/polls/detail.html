@@ -12,7 +12,7 @@
 <div class="container-md min-vh-100 container-margin-top">
     <div class="container-size" style="max-width: 500px;">
         <div class="content">
-            <a class="mb-2" href="/polls"><i class="fas fa-long-arrow-alt-left"></i> Tillbaka</a>
+            <a class="mb-2" href="/polls"><i class="fas fa-long-arrow-alt-left"></i> {% trans "Tillbaka" %}</a>
             <h3>{{ question.question_text }}</h3>
 
             {% if error_message %}<p class="warning"><strong>{{ error_message }}</strong></p>{% endif %}

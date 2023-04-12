@@ -12,7 +12,7 @@
         <div class="container-size" style="max-width: 500px;">
             <div class="content" style="text-align:center;">
                 <div class="hero-text-box">
-                    <a href="{% url 'archive:exam_archive_upload' %}">Lägg Till Arkiv</a>
+                    <a href="{% url 'archive:exam_archive_upload' %}"> {% trans "Lägg till arkiv" %}</a>
                     <h1>{% trans "Tentarkiv" %} <i class="fas fa-book-dead"></i></h1>
                 </div>
                 {% for collection in collections %}

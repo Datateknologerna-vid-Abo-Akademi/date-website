@@ -3,19 +3,14 @@ import logging
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.core.mail import send_mail
-from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
 from django.db import models
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from core import settings
-
 from .managers import MemberManager
 
 logger = logging.getLogger('date')
-
-
-
-
 
 FRESHMAN = 1
 ORDINARY_MEMBER = 2
@@ -86,13 +81,12 @@ class Member(AbstractBaseUser, PermissionsMixin):
 
     def get_str_membership_type(self):
         membership_types = {
-            1 : 'Gulnäbb',
-            2 : 'Ordinarie medlem',
-            3 : 'Stödjande medlem',
-            4 : 'Senior medlem',
+            1: 'Gulnäbb',
+            2: 'Ordinarie medlem',
+            3: 'Stödjande medlem',
+            4: 'Senior medlem',
         }
         return membership_types[self.membership_type]
-
 
 
 SUB_RE_SCALE_DAY = 'day'

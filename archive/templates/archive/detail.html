@@ -2,7 +2,6 @@
 {% load app_filters %}
 {% load static %}
 {% load i18n %}
-{% load thumbnail %}
     {% block content %}
     <head>
         <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
@@ -14,11 +13,11 @@
         <div class="">
             <div class="text-center" id="page-header">
                 <h1 class="hero-text-main">&nbsp; {{ album }} &nbsp;</h1>
-                <h3>{% trans 'Publiserats' %} <i class="far fa-calendar-alt"></i> {{ collection.pub_date_pretty }}</h3>
+                <h3>{% trans 'Publicerats' %} <i class="far fa-calendar-alt"></i> {{ collection.pub_date_pretty }}</h3>
                 {% if error_msg %}
                     <p>{{ error_msg }}</p>
                 {% endif %}
-                <div class="back-btn"><a href="{% url 'archive:pictures' year %}"><i class="fas fa-chevron-left"></i> Tillbaka</a></div>
+                <div class="back-btn"><a href="{% url 'archive:pictures' year %}"><i class="fas fa-chevron-left"></i> {% trans "Tillbaka" %}</a></div>
             </div>
             {% if pictures.has_other_pages %}
                 <div class="center">
@@ -47,9 +46,7 @@
                 {% for picture in pictures %}
                     <div class="grid-sizer"></div>
                     <a data-fslightbox="gallery" href="{{ picture.image.url }}">
-                        {% thumbnail picture "500" crop="center" as image %}
-                            <img class="grid-item gallery-image" id="picture-{{ forloop.counter }}" src="{{ image.url }}">
-                        {% endthumbnail %}
+                        <img class="grid-item gallery-image" id="picture-{{ forloop.counter }}" src="{{ picture.image.url }}">
                     </a>
                 {% endfor %}
             </div>

@@ -1,8 +1,5 @@
-FROM python:3.8-slim
-ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update && \
-    apt-get -y install gcc libldap2-dev libsasl2-dev libssl-dev && \
-    rm -rf /var/lib/apt/lists/*
+FROM python:3.11-alpine
+RUN apk add --no-cache gcc libldap libsasl libressl bash
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 RUN mkdir /code

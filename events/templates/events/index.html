@@ -62,7 +62,7 @@
                         <a class="content-past" href="{% url 'events:detail' event.slug %}"><h4 class="event-title-ended">{{ event.title }}</h4></a>
                     </div>
                     {% empty %}
-                        <h3>{% trans "Inga tidigare händelser" %}</h3>
+                        <h5>{% trans "Inga tidigare händelser" %}</h5>
                     {% endfor %}
                 </div>
             </div>

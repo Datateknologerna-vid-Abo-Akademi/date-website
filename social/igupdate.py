@@ -1,22 +1,28 @@
-import sys, os ,django, logging
+import logging
+import os
+import sys
+import time
+from datetime import datetime
+from itertools import islice
+
+import django
+import instaloader
+import schedule
+
+from social.models import IgUrl
+
+
 sys.path.append("/code")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 django.setup()
 
-import schedule
-import time
-import instaloader
-
-from itertools import islice
-from django.shortcuts import render
-from social.models import IgUrl
-from datetime import datetime
 
 logger = logging.getLogger('date')
 
 SCHEDULED_TIME = '00:00'
 
 logger.info("STARTING IG SCHEDULER")
+
 
 def updateIg():
     logger.info("IGSCHEDULER WORKING")
@@ -29,12 +35,12 @@ def updateIg():
     IgUrl.objects.all().delete()
 
     for post in top40:
-        u = IgUrl(url=post.url,shortcode=post.shortcode)
+        u = IgUrl(url=post.url, shortcode=post.shortcode)
         u.save()
+
 
 schedule.every().day.at(SCHEDULED_TIME).do(updateIg)
 
 while True:
     schedule.run_pending()
     time.sleep(60)
-

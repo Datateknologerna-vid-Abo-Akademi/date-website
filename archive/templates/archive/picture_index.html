@@ -2,7 +2,6 @@
 {% load app_filters %}
 {% load static %}
 {% load i18n %}
-{% load thumbnail %}
 {% block title %}{% trans "Arkiv" %}{% endblock %}
 
 {% block content %}
@@ -23,9 +22,7 @@
                         <div class="grid-item">
                             <a href="{% url 'archive:detail' year collection.title %}">
                                 <div class="card" style="width: 18rem;">
-                                    {% thumbnail collection.get_first_picture "500" crop="center" as image %}
-                                        <img class="card-img-top gallery-image" src={{ image.url }}>
-                                    {% endthumbnail %}
+                                    <img class="card-img-top gallery-image" src={{ collection.get_first_picture.image.url }}>
                                     <div class="card-body">
                                         <div class="card-text">
                                             {% if collection.title|length > 20 %}
@@ -42,7 +39,7 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <h3>{% trans "Inga arkiv hittades" %}</h3>
+                <h3>{% trans "Inga arkiv hittades..." %}</h3>
             {% endif %}
         </div>
     </div>
