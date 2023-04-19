@@ -1,25 +1,20 @@
 import datetime
-import os
-from django.db import models
-from django.conf import settings
-
-from django.core.mail import EmailMessage
-from django.http import HttpResponseForbidden, request
-from django.views.generic import DetailView, ListView
-from django.shortcuts import redirect, render
-from django.template.loader import render_to_string
-from .models import Event, EventAttendees
-from staticpages.models import StaticPage, StaticPageNav
-from websocket import create_connection
-from websocket._exceptions import WebSocketBadStatusException
+import json
+import logging
 from copy import deepcopy
 
-import json
-from .models import Event, EventAttendees
+from django.conf import settings
+from django.core.mail import EmailMessage
+from django.http import HttpResponseForbidden
+from django.shortcuts import render, redirect
+from django.template.loader import render_to_string
+from django.views.generic import DetailView, ListView
+from websocket import create_connection
+from websocket._exceptions import WebSocketBadStatusException
+
+from staticpages.models import StaticPage, StaticPageNav
 from .forms import PasscodeForm
-
-import logging
-
+from .models import Event, EventAttendees
 from .utils import get_attendee_price, get_attendee_fields
 
 logger = logging.getLogger('date')
@@ -84,15 +79,13 @@ class EventDetailView(DetailView):
             context['staticpages'] = baal_staticpages
         return context
 
-
-    def get(self, request,  *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         show_content = not self.object.members_only or (self.object.members_only and request.user.is_authenticated)
         if not show_content:
             return redirect('/members/login')
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
-
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()

@@ -1,17 +1,16 @@
-from django import forms
-
+import logging
 
 from dateutil.relativedelta import relativedelta
+from django import forms
+from django.contrib.auth.forms import ReadOnlyPasswordHashField
 
-from members.models import Member, SubscriptionPayment, SUB_RE_SCALE_YEAR, SUB_RE_SCALE_MONTH, SUB_RE_SCALE_DAY
-
-import logging
+from members.models import (SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH,
+                            SUB_RE_SCALE_YEAR, Member, SubscriptionPayment)
 
 logger = logging.getLogger('date')
 
 
 class MemberCreationForm(forms.ModelForm):
-
     send_email = forms.BooleanField(required=False)
 
     password = forms.CharField(
@@ -48,6 +47,10 @@ class MemberCreationForm(forms.ModelForm):
 
 
 class MemberUpdateForm(forms.ModelForm):
+    password = ReadOnlyPasswordHashField(label="Lösenord",
+                                         help_text=("Raw passwords are not stored, so there is no way to see "
+                                                    "this user's password, but you can change the password "
+                                                    "using <a href=\"../password/\">this form</a>."))
 
     class Meta:
         model = Member
@@ -63,6 +66,7 @@ class MemberUpdateForm(forms.ModelForm):
             'country',
             'membership_type',
             'groups',
+            'password',
         )
 
     def save(self, commit=True):
@@ -76,7 +80,6 @@ class MemberUpdateForm(forms.ModelForm):
 
 
 class SubscriptionPaymentForm(forms.ModelForm):
-
     class Meta:
         model = SubscriptionPayment
         fields = (
@@ -134,8 +137,9 @@ class SignUpForm(forms.ModelForm):
             'password'
         )
 
+
 class SubscriptionPaymentChoiceField(forms.ModelChoiceField):
-     def label_from_instance(self, obj):
+    def label_from_instance(self, obj):
         if not obj.first_name or not obj.last_name:
             return obj.username
         return f'{obj.first_name} {obj.last_name}'

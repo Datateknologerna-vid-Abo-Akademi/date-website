@@ -1,16 +1,14 @@
 import logging
+import re
 
 from django import forms
-from django.utils.timezone import now
 from django.conf import settings
+from django.contrib.admin import widgets
+from django.utils.timezone import now
 
 from date.functions import slugify_max
 from events import models
 from events.models import Event
-from django.contrib.admin import widgets
-import re
-from datetime import datetime
-from django.utils.timezone import now
 
 logger = logging.getLogger('date')
 

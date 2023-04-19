@@ -41,9 +41,12 @@ DEVELOP = os.environ.get('DEVELOP', False)
 
 ALLOWED_HOSTS = json.loads(os.environ['ALLOWED_HOSTS'])
 
+CSRF_TRUSTED_ORIGINS = json.loads(os.environ['ALLOWED_ORIGINS'])
+
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'date',
     'staticpages',
     'news',
@@ -68,7 +71,6 @@ INSTALLED_APPS = [
     'django_tables2',
     'django_filters',
     'bootstrap3',
-    'sorl.thumbnail',
     'django_cleanup',  # Should be places last
 ]
 
@@ -201,6 +203,8 @@ USE_TZ = True
 DECIMAL_INPUT_FORMATS = ()
 
 DATE_INPUT_FORMATS = ('%d.%m.%Y', '%Y-%m-%d')
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 
 # Static files (CSS, JavaScript, Images)

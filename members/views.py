@@ -1,34 +1,31 @@
+import datetime
 import logging
 import os
-import datetime
 
 from django.contrib.auth.hashers import make_password
 from django.contrib.sites.shortcuts import get_current_site
-from django.http import HttpResponse
 from django.core.mail import EmailMessage
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from .tokens import account_activation_token
-from django.utils.encoding import force_bytes, force_text
-from django.contrib.sites.shortcuts import get_current_site
+from django.http import HttpResponse
+from django.shortcuts import render
 from django.template.loader import render_to_string
-from django.shortcuts import render, redirect
-from django.contrib.auth.hashers import make_password
-from django.utils.translation import ugettext_lazy as _
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.translation import gettext_lazy as _
 from django.views import View
-import os
 
 from members.forms import SignUpForm
 from .models import Member
-
-import logging
+from .tokens import account_activation_token
 
 logger = logging.getLogger('date')
+
 
 class EditView(View):
 
     def get(self, request):
         user = request.user
         return render(request, 'userinfo.html', {"user": user})
+
 
 class CertificateView(View):
     def get(self, request):
@@ -37,13 +34,13 @@ class CertificateView(View):
         current_time = datetime.datetime.now()
 
         icon_options = {
-            'Monday' : icons[0],
-            'Tuesday' : icons[1],
-            'Wednesday' : icons[2],
-            'Thursday' : icons[3],
-            'Friday' : icons[4],
-            'Saturday' : icons[5],
-            'Sunday' : icons[6],
+            'Monday': icons[0],
+            'Tuesday': icons[1],
+            'Wednesday': icons[2],
+            'Thursday': icons[3],
+            'Friday': icons[4],
+            'Saturday': icons[5],
+            'Sunday': icons[6],
         }
         icon = icon_options[current_time.strftime("%A")]
 
@@ -76,7 +73,7 @@ def signup(request):
             })
             to_email = os.environ.get('EMAIL_HOST_RECEIVER')
             email = EmailMessage(
-                        mail_subject, message, to=[to_email]
+                mail_subject, message, to=[to_email]
             )
             logger.info(f"NEW USER: Sending email to {to_email}")
             email.send()

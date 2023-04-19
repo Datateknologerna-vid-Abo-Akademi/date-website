@@ -1,8 +1,6 @@
 from channels.generic.websocket import AsyncWebsocketConsumer
 import json
 
-from .views import EventDetailView
-
 
 class EventConsumer(AsyncWebsocketConsumer):
 
