@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 
 from . import feed, views
 
@@ -11,5 +11,5 @@ urlpatterns = [
     path('articles/<slug:slug>/', views.article, name='detail'),
     path('aa/<slug:slug>/', views.aa_article, name='aa_detail'),
     path('articles/<slug:slug>/<int:section>/', views.section, name='section'),
-    path('author/<slug:author>/', views.author, name='author'),
+    re_path(r'author/(?P<author>[\w\s-]+)/$', views.author, name='author'),
 ]
