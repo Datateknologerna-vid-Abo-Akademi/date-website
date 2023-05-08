@@ -10,12 +10,18 @@
     <div style="padding-top: 1rem;">
         <div class="center-box">
           <p>
-              {% trans 'Styrelsen har blivit notifierad angående din anmälan.' %}
+            {% trans 'Styrelsen har blivit notifierad angående din anmälan.' %}
           </p>
-          <p>
-            {% trans 'Du kan logga in <strong>efter</strong> att styrelsen har granskat och godkänt ditt konto.' %}
-          </p>
-            <p><a class="pw-reset-button" href="{% url 'index' %}">{% trans 'Gå till Startsidan' %}</a></p>
+          {% if alumni %}
+            <p>
+              {% trans 'Kolla e-postadressen du registrerade dig med för ytterligare instruktioner' %}
+            </p>
+          {% else %}
+            <p>
+              {% trans 'Du kan logga in <strong>efter</strong> att styrelsen har granskat och godkänt ditt konto.' %}
+            </p>
+          {% endif %}
+          <p><a class="pw-reset-button" href="{% url 'index' %}">{% trans 'Gå till Startsidan' %}</a></p>
     </div>
 </div>
 {% endblock %}

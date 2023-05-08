@@ -9,7 +9,11 @@
     </head>
     <div class="signup-page">
         <div class="members-form big">
+            {% if alumni %}
+              <h2>ARG sign up</h2>
+            {% else %}
               <h2>Sign up</h2>
+            {% endif %}
           <form method="post">
             {% csrf_token %}
             {% for field in form %}
