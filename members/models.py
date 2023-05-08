@@ -144,3 +144,14 @@ class SubscriptionPayment(models.Model):
         if self.date_expires is None:
             return _('Aldrig')
         return self.date_expires
+    
+
+class AlumniEmailRecipient(models.Model):
+    recipient_email = models.EmailField(max_length=256)
+
+    def __str__(self):
+        return self.recipient_email
+
+    class Meta:
+        verbose_name = _("Emailmottagare för ARG")
+        verbose_name_plural = _("Emailmottagare för ARG")
