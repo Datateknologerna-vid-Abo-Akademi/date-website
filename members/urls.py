@@ -10,4 +10,5 @@ urlpatterns = [
     re_path('^', include('django.contrib.auth.urls')),
     path('info/', views.EditView.as_view(), name='info'),
     path('cert/', views.CertificateView.as_view(), name='certificate'),
+    path('alumn/signup', views.alumni_signup , name='alumni-signup'),
 ]
