@@ -23,7 +23,7 @@ class MultipleFileField(forms.FileField):
 
 class PictureUploadForm(forms.Form):
     album = forms.CharField()
-    images = forms.ImageField(required=False, widget=forms.ClearableFileInput())
+    images = MultipleFileField(required=False)
 
 
 class ExamUploadForm(forms.Form):
