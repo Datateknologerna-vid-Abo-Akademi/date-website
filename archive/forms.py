@@ -3,14 +3,32 @@ from django import forms
 from .models import Collection, Document, Picture, PublicFile
 
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultipleFileInput())
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            result = [single_file_clean(d, initial) for d in data]
+        else:
+            result = single_file_clean(data, initial)
+        return result
+
+
 class PictureUploadForm(forms.Form):
     album = forms.CharField()
-    images = forms.ImageField(required=False, widget=forms.ClearableFileInput(attrs={'multiple': True}))
+    images = MultipleFileField(required=False)
 
 
 class ExamUploadForm(forms.Form):
     title = forms.CharField()
-    exam = forms.FileField(required=False, widget=forms.ClearableFileInput(attrs={'multiple': False}))
+    exam = MultipleFileField(required=False)
 
 
 class ExamArchiveUploadForm(forms.Form):
@@ -18,9 +36,7 @@ class ExamArchiveUploadForm(forms.Form):
     
 
 class PictureAdminForm(forms.ModelForm):
-    images = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
-                            label="Ladda upp flera bilder",
-                            required=False)
+    images = MultipleFileField(label="Ladda upp flera bilder", required=False)
 
     class Meta:
         model = Collection
@@ -36,9 +52,7 @@ class PictureAdminForm(forms.ModelForm):
 
 
 class DocumentAdminForm(forms.ModelForm):
-    files = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
-                             label="Ladda upp flera dokument",
-                             required=False)
+    files = MultipleFileField(label="Ladda upp flera dokument", required=False)
 
     class Meta:
         model = Collection
@@ -54,9 +68,7 @@ class DocumentAdminForm(forms.ModelForm):
         return collection
 
 class PublicAdminForm(forms.ModelForm):
-    files = forms.FileField(widget=forms.ClearableFileInput(attrs={'multiple': True}),
-                             label="Ladda upp flera filer",
-                             required=False)
+    files = MultipleFileField(label="Ladda upp flera filer", required=False)
 
     class Meta:
         model = Collection
