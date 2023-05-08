@@ -28,7 +28,7 @@ class PictureUploadForm(forms.Form):
 
 class ExamUploadForm(forms.Form):
     title = forms.CharField()
-    exam = forms.FileField(required=False, widget=forms.ClearableFileInput())
+    exam = MultipleFileField(required=False)
 
 
 class ExamArchiveUploadForm(forms.Form):
@@ -52,9 +52,7 @@ class PictureAdminForm(forms.ModelForm):
 
 
 class DocumentAdminForm(forms.ModelForm):
-    files = forms.FileField(widget=forms.ClearableFileInput(),
-                             label="Ladda upp flera dokument",
-                             required=False)
+    files = MultipleFileField(label="Ladda upp flera dokument", required=False)
 
     class Meta:
         model = Collection
@@ -69,9 +67,7 @@ class DocumentAdminForm(forms.ModelForm):
         return collection
 
 class PublicAdminForm(forms.ModelForm):
-    files = forms.FileField(widget=forms.ClearableFileInput(),
-                             label="Ladda upp flera filer",
-                             required=False)
+    files = MultipleFileField(label="Ladda upp flera filer", required=False)
 
     class Meta:
         model = Collection
