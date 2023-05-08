@@ -6,7 +6,7 @@ from django.db.models.functions import Lower
 from members.forms import (MemberCreationForm, MemberUpdateForm,
                            SubscriptionPaymentForm, SubscriptionPaymentChoiceField)
 from members.models import (Member, Subscription,
-                            SubscriptionPayment)
+                            SubscriptionPayment, AlumniEmailRecipient)
 
 admin.site.register(Permission)
 admin.site.register(Subscription)
@@ -78,3 +78,6 @@ class SubscriptionPaymentAdmin(admin.ModelAdmin):
         if db_field.name == 'member':
             return SubscriptionPaymentChoiceField(queryset=Member.objects.all())
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+admin.site.register(AlumniEmailRecipient)
