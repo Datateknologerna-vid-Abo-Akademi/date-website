@@ -32,16 +32,7 @@ jobs:
 
       - name: Wait for web container
         run: |
-          timeout=0
-          until [[ $timeout -eq 30 ]]; do
-            if curl -sSf http://localhost:8000 >/dev/null; then
-              echo "Web container is up!"
-              break
-            fi
-            echo "Waiting for web container to be up..."
-            sleep 1
-            ((timeout++))
-          done
+          sleep 20
 
       - name: Check HTTP response
         run: |
