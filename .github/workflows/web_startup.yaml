@@ -28,7 +28,7 @@ jobs:
       - name: Build and run Docker Compose
         run: |
           source example.env
-          date-start-detached
+          docker-compose up -d --build
 
       - name: Wait for web container
         run: |
