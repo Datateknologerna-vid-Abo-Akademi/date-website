@@ -1,0 +1,51 @@
+name: Check website startup
+
+on:
+  pull_request:
+    branches:
+      - develop
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+    branches:
+      - develop
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Build and run Docker Compose
+        run: |
+          source example.env
+          date-start-detached
+
+      - name: Wait for web container
+        run: |
+          timeout=0
+          until [[ $timeout -eq 30 ]]; do
+            if curl -sSf http://localhost:8000 >/dev/null; then
+              echo "Web container is up!"
+              break
+            fi
+            echo "Waiting for web container to be up..."
+            sleep 1
+            ((timeout++))
+          done
+
+      - name: Check HTTP response
+        run: |
+          if ! curl -sSf http://localhost:8000 >/dev/null; then
+            echo "Failed to get HTTP response. Exiting..."
+            exit 1
+          fi
