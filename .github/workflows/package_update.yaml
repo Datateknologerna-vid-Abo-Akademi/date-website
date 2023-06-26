@@ -1,0 +1,38 @@
+name: Update python packages
+
+on:
+  schedule:
+    - 0 12 1 * *
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install pip-tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-tools
+
+      - name: Run pip-compile
+        run: |
+          pip-compile --resolver=backtracking requirements.in
+
+      - name: Commit changes
+        run: |
+          git config --global user.name "Albin"
+          git config --global user.email "date@abo.fi"
+          git add requirements.txt
+          git commit -m "Update requirements.txt"
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Update requirements.txt
+          branch: pip-compile-update
+          title: Update requirements.txt
