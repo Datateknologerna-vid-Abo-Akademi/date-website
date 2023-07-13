@@ -208,6 +208,11 @@ div.news-content a:hover{
     grid-area: sidebar;
 }
 
+.sidebar-logo-container {
+    margin-top: 0.5rem;
+    max-width: 100%;
+}
+
 /*Event start*/
 
   
