@@ -1,0 +1,31 @@
+on:
+  push:
+    branches:
+      - develop
+      - master
+  workflow_dispatch:
+    branches:
+      - develop
+      - master
+  schedule:
+    - cron: '0 0 1 * *'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Docker build
+        run: |
+          docker build -t $${{ github.ref.name }} .
+          docker tag $${{ github.ref.name }} $${{ secrets.DOCKER_HUB_USERNAME }}/$${{ github.ref.name }}
+
+  push:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: GHCR login
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Docker push
+        run: docker push ghcr.io/${{ github.repository }}/${{ github.ref.name }}
