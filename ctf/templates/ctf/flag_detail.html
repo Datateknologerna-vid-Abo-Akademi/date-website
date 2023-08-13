@@ -20,17 +20,12 @@
                 {% if invalid %}<p class='invalid'>{{ invalid }}</p>{% endif %}
                 {% if flag.solver or solved %}
                     <p><span class="valid">[SOLVED]</span><br>av: {{ flag.solver }}<br>tid: {{ flag.solved_date|timeuntil:ctf.start_date }}</p>
-                {% else %}
-                    {% if user_solved %}
-                        <p class='invalid'>Du har redan löst en flagga.</p>
-                    {% else %}
-                        <form method="post">
-                            {% csrf_token %}
-                            {{ form.as_p }}
-                                <input type="submit" value="Submit">
-                        </form>
-                    {% endif %}
                 {% endif %}
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                            <input type="submit" value="Submit">
+                    </form>
             {% endif %}
         </div>
     </div>
