@@ -38,34 +38,32 @@ def flag(request, ctf_slug, flag_slug):
     ctf_flags = Flag.objects.filter(ctf=ctf)
     flag = Flag.objects.filter(ctf=ctf, slug=flag_slug).first()
 
-    disable_field = {'disable_field': 'flag'} if flag.solver else {}
-    form = FlagForm(initial=disable_field)
+    form = FlagForm()
     context = {'ctf': ctf, 'flag': flag, 'form': form}
 
     # Check if user has already solved a flag
     user_solved = False
     for ctf_flag in ctf_flags:
         if ctf_flag.solver and request.user == ctf_flag.solver:
-            # Can't send a flag is already solved one
             user_solved = True
             context['user_solved'] = user_solved
 
     if request.method == 'POST':
-        if user_solved:
-            return HttpResponseForbidden()
-
-        if ctf.ctf_is_open() and ctf.published and (request.user.is_authenticated) and not flag.solver:
-            form = FlagForm(request.POST or None, initial=disable_field)
+        if ctf.ctf_is_open() and ctf.published and (request.user.is_authenticated):
+            form = FlagForm(request.POST or None)
 
             if form.is_valid():
                 # Check if a input matches the flag
                 flag_input = form.cleaned_data.get('flag')
                 if flag_input:
-                    logger.debug(f'FLAG: {flag.title} USER: {request.user} INPUT: {flag_input}')
-                    flag = Flag.objects.filter(ctf=ctf, flag=flag_input)
+                    logger.info(f'FLAG: {flag.title} USER: {request.user} INPUT: {flag_input}')
+                    flag = Flag.objects.filter(ctf=ctf, slug=flag_slug, flag=flag_input)
                     if flag.exists():
+                        if user_solved or flag.first().solver:
+                            # User has already solved a flag or flag is already solved
+                            return form_valid(request, context)
                         flag.update(solver=request.user, solved_date=datetime.datetime.now())
-                        logger.debug(f'Solver: {flag.first().solver}')
+                        logger.info(f'Solver: {flag.first().solver}')
                         context['flag'] = flag.first()
                         context['solved'] = True
                         return form_valid(request, context)
@@ -78,12 +76,12 @@ def flag(request, ctf_slug, flag_slug):
 
 
 def form_valid(request, context):
-    logger.debug('VALID')
+    logger.info('VALID FLAG')
     context['valid'] = '🎊🎊🎊 Rätt Flag! 🎊🎊🎊'
     return render(request, 'ctf/flag_detail.html', context)
 
 
 def form_invalid(request, context):
-    logger.debug('INVALID')
+    logger.info('INVALID FLAG')
     context['invalid'] = 'Fel Flag angiven, prova igen.'
     return render(request, 'ctf/flag_detail.html', context)
