@@ -107,6 +107,10 @@ def alumni_signup(request):
     form = AlumniSignUpForm(request.POST or None)
 
     if request.method == 'POST' and form.is_valid():
+
+        alumni = form.save(commit=False)
+        alumni.save()
+
         # Mail to the person signing up
         alumni_email = form.cleaned_data['email']
         alumni_message_subject = "Välkommen till ARG - Betalningsinstruktioner"
@@ -116,7 +120,7 @@ def alumni_signup(request):
         # Mail to relevant people
         admin_message_recipients = list(AlumniEmailRecipient.objects.all().values_list('recipient_email', flat=True))
         admin_message_subject = f"ARG - Ny medlem {form.cleaned_data['name']}"
-        admin_message_content = render_to_string('alumni_signup_email_admin.html', {'alumni': form.cleaned_data})
+        admin_message_content = render_to_string('alumni_signup_email_admin.html', {'alumni': form.cleaned_data, 'alumni_id': alumni.id})
         final_admin_email = EmailMessage(admin_message_subject, admin_message_content, to=admin_message_recipients)
 
         # Send mails

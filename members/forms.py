@@ -6,7 +6,7 @@ from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.utils.translation import gettext as _
 
 from members.models import (SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH,
-                            SUB_RE_SCALE_YEAR, Member, SubscriptionPayment)
+                            SUB_RE_SCALE_YEAR, Member, SubscriptionPayment, AlumniSignUp)
 
 logger = logging.getLogger('date')
 
@@ -139,7 +139,7 @@ class SignUpForm(forms.ModelForm):
         )
 
 
-class AlumniSignUpForm(forms.Form):
+class AlumniSignUpForm(forms.ModelForm):
     tfif_choices = (
         ('ja', 'Ja'),
         ('nej', 'Nej'),
@@ -156,6 +156,19 @@ class AlumniSignUpForm(forms.Form):
     tfif_membership = forms.ChoiceField(choices=tfif_choices, label=_('TFiF medlemskap'), required=False)
     alumni_newsletter_consent = forms.BooleanField(label=_('Jag tar gärna emot information om alumnevenemang'), required=False)
 
+    class Meta:
+        model = AlumniSignUp
+        fields = (
+            'name',
+            'email',
+            'phone_number',
+            'address',
+            'year_of_admission',
+            'employer',
+            'work_title',
+            'tfif_membership',
+            'alumni_newsletter_consent',
+        )
 
 class SubscriptionPaymentChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):

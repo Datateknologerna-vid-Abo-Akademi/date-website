@@ -3,9 +3,9 @@ from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Permission
 from django.db.models.functions import Lower
 
-from members.forms import (MemberCreationForm, MemberUpdateForm,
+from members.forms import (MemberCreationForm, MemberUpdateForm, AlumniSignUpForm,
                            SubscriptionPaymentForm, SubscriptionPaymentChoiceField)
-from members.models import (Member, Subscription,
+from members.models import (Member, Subscription, AlumniSignUp,
                             SubscriptionPayment, AlumniEmailRecipient)
 
 admin.site.register(Permission)
@@ -78,6 +78,22 @@ class SubscriptionPaymentAdmin(admin.ModelAdmin):
         if db_field.name == 'member':
             return SubscriptionPaymentChoiceField(queryset=Member.objects.all())
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+@admin.register(AlumniSignUp)
+class AlumniSignUpAdmin(admin.ModelAdmin):
+    form = AlumniSignUpForm
+    fields = [
+        *AlumniSignUpForm.Meta.fields,
+        'signup_date',
+        'acknowledge',
+    ]
+    readonly_fields = [
+        *AlumniSignUpForm.Meta.fields,
+        'signup_date'
+    ]
+    list_display = ('name', 'email', 'signup_date')
+    list_filter = ('year_of_admission', 'tfif_membership', 'acknowledge', 'signup_date')
 
 
 admin.site.register(AlumniEmailRecipient)
