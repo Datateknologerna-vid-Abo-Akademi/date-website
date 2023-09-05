@@ -98,7 +98,7 @@ def compress_image(uploaded_image):
     img = img.convert('RGB')
     wpercent = (basewidth / float(img.size[0]))
     hsize = int((float(img.size[1]) * float(wpercent)))
-    img = img.resize((basewidth, hsize), Image.ANTIALIAS)
+    img = img.resize((basewidth, hsize), Image.LANCZOS)
 
     img.save(outputIOStream, format='JPEG', quality=60)
     outputIOStream.seek(0)
