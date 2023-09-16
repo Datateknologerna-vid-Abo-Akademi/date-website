@@ -3,9 +3,10 @@ import logging
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
+from django.utils.translation import gettext as _
 
 from members.models import (SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH,
-                            SUB_RE_SCALE_YEAR, Member, SubscriptionPayment)
+                            SUB_RE_SCALE_YEAR, Member, SubscriptionPayment, AlumniSignUp)
 
 logger = logging.getLogger('date')
 
@@ -137,6 +138,37 @@ class SignUpForm(forms.ModelForm):
             'password'
         )
 
+
+class AlumniSignUpForm(forms.ModelForm):
+    tfif_choices = (
+        ('ja', 'Ja'),
+        ('nej', 'Nej'),
+        ('vet inte', 'Vet inte')
+    )
+
+    name = forms.CharField(max_length=200, required=True, help_text=_('detta fält är obligatoriskt'), label=_('Namn'))
+    email = forms.EmailField(max_length=320, help_text=_('detta fält är obligatoriskt'), label=_('E-postadress'), required=True)
+    phone_number = forms.CharField(max_length=20, label=_('Telefonnummer'), required=False)
+    address = forms.CharField(max_length=200, label=_('Adress'), required=False)
+    year_of_admission = forms.IntegerField(min_value=1900 ,max_value=3000, label=_('Inskrivningsår'), required=False)
+    employer = forms.CharField(max_length=200, label=_('Arbetsplats'), required=False)
+    work_title = forms.CharField(max_length=200, label=_('Arbetsuppgift'), required=False)
+    tfif_membership = forms.ChoiceField(choices=tfif_choices, label=_('TFiF medlemskap'), required=False)
+    alumni_newsletter_consent = forms.BooleanField(label=_('Jag tar gärna emot information om alumnevenemang'), required=False)
+
+    class Meta:
+        model = AlumniSignUp
+        fields = (
+            'name',
+            'email',
+            'phone_number',
+            'address',
+            'year_of_admission',
+            'employer',
+            'work_title',
+            'tfif_membership',
+            'alumni_newsletter_consent',
+        )
 
 class SubscriptionPaymentChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
