@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Max, JSONField
+from django.db.models import Max, JSONField, Q
 from django.template.defaulttags import register
 from django.utils.text import slugify
 from django.utils.timezone import now
@@ -139,7 +139,7 @@ class Event(models.Model):
         return EventRegistrationForm.objects.filter(event=self, public_info=True)
 
     def get_registration_form_prices(self):
-        return EventRegistrationForm.objects.filter(event=self, price__gt=0)
+        return EventRegistrationForm.objects.filter(Q(event=self, price__lt=0) | Q(event=self, price__gt=0))
 
     def make_registration_form(self, data=None):
         if self.sign_up:
