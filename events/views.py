@@ -124,7 +124,6 @@ class EventDetailView(DetailView):
             self.get_object().add_event_attendance(user=avec_data['user'], email=avec_data['email'],
                                                anonymous=avec_data['anonymous'], preferences=avec_data, avec_for=avec_data['avec_for'])
         if '100baal' in self.get_context_data().get('event').title.lower().replace(' ', ''):
-            logger.info("HERE")
             send_event_mail(self.get_object(), form)
             return redirect(f'/events/{self.get_context_data().get("event").slug}/#/anmalda')
         elif 'baal' in self.get_context_data().get('event').title.lower():
