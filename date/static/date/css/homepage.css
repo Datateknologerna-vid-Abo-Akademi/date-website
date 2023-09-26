@@ -393,10 +393,9 @@ div.news-content a:hover{
     grid-template-areas: 
     ". box ."
     ". calendar .";
+    padding-bottom: 10px;
 }
-#calendar{
-    margin-bottom: 1rem;
-}
+
 .calendar-box{
     grid-area: box;
     border: 2px solid rgb(163, 163, 163);
@@ -455,20 +454,26 @@ div.calendar-container a {
   display: inline-block;
 }
 
-.calendar-eventday {
-  /* Override vanilla calendar default
-   * Dont use this class for anything else*/
-  color: white !important;
-  background-color: var(--linkColor) !important;
+.calendar-tooltip .tooltiptext {
+  visibility: hidden;
+  width: 150px;
+  background-color: var(--primaryColor);
+  color: var(--textColorLight);
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+
+  /* Position the tooltip */
+  position: absolute;
+  z-index: 1;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -60px;
 }
 
-.calendar-eventday-popup {
-  /* Override vanilla calendar default
-   * Dont use this class for anything else*/
-  color: black;
-  font-size: 0.75rem;
+.calendar-tooltip:hover .tooltiptext {
+  visibility: visible;
 }
-
 /*Calendar end*/
 
 /*logos start*/
