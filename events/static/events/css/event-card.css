@@ -42,3 +42,7 @@
     background-color: inherit;
     box-shadow: none;
   }
+
+.event-date-txt{
+  white-space: nowrap;
+}
