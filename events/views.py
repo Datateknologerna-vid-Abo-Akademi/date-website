@@ -64,8 +64,6 @@ class EventDetailView(DetailView):
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if not self.object.published:
-            return HttpResponse(content="404")
         show_content = not self.object.members_only or (self.object.members_only and request.user.is_authenticated)
         if not show_content:
             return redirect('/members/login')
@@ -74,11 +72,6 @@ class EventDetailView(DetailView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-
-        # Do not allow registrations to unpublished events, under any circumstances
-        if not self.object.published:
-            return HttpResponseForbidden()
-
         # set passcode status to session if passcode is enabled
         if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
             if self.object.passcode == request.POST.get('passcode'):
@@ -102,7 +95,8 @@ class EventDetailView(DetailView):
                 # Do not send ws data on refresh after initial signup.
                 if not EventAttendees.objects.filter(email=request.POST.get('email'), event=self.object.id).first():
                     logger.info(f"User {request.user} signed up with name: {request.POST.get('user')}")
-                    ws_send(request, form, public_info)
+                    if not settings.TEST:
+                        ws_send(request, form, public_info)
                 return self.form_valid(form)
             return self.form_invalid(form)
         return HttpResponseForbidden()
@@ -135,9 +129,6 @@ class EventDetailView(DetailView):
 def ws_send(request, form, public_info):
     ws_schema = 'ws' if settings.DEVELOP else 'wss'
     url = request.META.get('HTTP_HOST')
-    # This indicates that the request is being ran by the tests
-    if not url:
-        return
     path = ws_schema + '://' + url + '/ws' + request.path
     try:
         ws = create_connection(path)

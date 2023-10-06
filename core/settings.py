@@ -39,6 +39,9 @@ DEBUG = os.environ.get('DEBUG', False)
 
 DEVELOP = os.environ.get('DEVELOP', False)
 
+# This gets set only when tests are ran with date-test command
+TEST = os.environ.get('TEST', False)
+
 ALLOWED_HOSTS = json.loads(os.environ['ALLOWED_HOSTS'])
 
 CSRF_TRUSTED_ORIGINS = json.loads(os.environ['ALLOWED_ORIGINS'])

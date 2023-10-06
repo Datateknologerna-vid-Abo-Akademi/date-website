@@ -46,8 +46,8 @@ class EventTestCase(TestCase):
         c = Client()
         response = c.post(reverse('events:detail', args=[self.event.slug]),
                           {'user': 'person2', 'email': 'person2@test.com'})
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(self.event.get_registrations().count(), 0)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.event.get_registrations().count(), 1)
 
     def test_form_validation(self):
         self.assertEqual(self.event.get_registrations().count(), 0)
