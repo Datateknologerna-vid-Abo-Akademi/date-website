@@ -4,7 +4,7 @@ import logging
 from copy import deepcopy
 
 from django.conf import settings
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponse
 from django.shortcuts import render, redirect
 from django.views.generic import DetailView, ListView
 from websocket import create_connection
@@ -64,6 +64,8 @@ class EventDetailView(DetailView):
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
+        if not self.object.published:
+            return HttpResponse(content="404")
         show_content = not self.object.members_only or (self.object.members_only and request.user.is_authenticated)
         if not show_content:
             return redirect('/members/login')
@@ -72,6 +74,11 @@ class EventDetailView(DetailView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+
+        # Do not allow registrations to unpublished events, under any circumstances
+        if not self.object.published:
+            return HttpResponseForbidden()
+
         # set passcode status to session if passcode is enabled
         if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
             if self.object.passcode == request.POST.get('passcode'):
@@ -82,6 +89,7 @@ class EventDetailView(DetailView):
             else:
                 return render(self.request, 'events/event_passcode.html',
                               self.get_context_data(passcode_error='invalid passcode'))
+
 
         if self.object.sign_up and (request.user.is_authenticated
                                     and self.object.registration_is_open_members()
@@ -127,6 +135,9 @@ class EventDetailView(DetailView):
 def ws_send(request, form, public_info):
     ws_schema = 'ws' if settings.DEVELOP else 'wss'
     url = request.META.get('HTTP_HOST')
+    # This indicates that the request is being ran by the tests
+    if not url:
+        return
     path = ws_schema + '://' + url + '/ws' + request.path
     try:
         ws = create_connection(path)

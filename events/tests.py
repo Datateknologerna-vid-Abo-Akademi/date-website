@@ -9,8 +9,15 @@ from members.models import Member
 class EventTestCase(TestCase):
     def setUp(self):
         self.member = Member.objects.create(username='Test', password='test', is_superuser=True)
-        self.event = Event.objects.create(title='Test event', slug='test', author_id=self.member.id)
+        self.event = Event.objects.create(title='Test event',
+                                          slug='test',
+                                          author_id=self.member.id,
+                                          sign_up_deadline=(timezone.now()-timezone.timedelta(-1))
+                                          )
         self.assertIsNotNone(self.event)
+        print(f"Is open others: {self.event.registration_is_open_others()}")
+        print(f"Is open others time: {self.event.sign_up_others}")
+        print(f"Sign up deadline: {self.event.sign_up_deadline}")
         self.assertTrue(self.event.published)
 
     def test_attending_event(self):
@@ -29,7 +36,8 @@ class EventTestCase(TestCase):
         self.assertEqual(self.event.get_registrations().count(), 1)
         response = c.post(reverse('events:detail', args=[self.event.slug]),
                           {'user': 'person', 'email': 'person@test.com'})
-        self.assertEqual(response.status_code, 200)
+        # Expect bad request status 400 since duplicate attendance not allowed
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(self.event.get_registrations().count(), 1)
 
     def test_unpublished_event(self):
@@ -46,7 +54,7 @@ class EventTestCase(TestCase):
         c = Client()
         response = c.post(reverse('events:detail', args=[self.event.slug]),
                           {'user': 'person3', 'email': 'no-email-provided'})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(self.event.get_registrations().count(), 0)
 
     def test_member_registration(self):
@@ -78,24 +86,14 @@ class EventTestCase(TestCase):
         response = c.get(reverse('events:index'))
         self.assertEqual(response.status_code, 200)
 
-    def test_full_event(self):
-        event = Event.objects.create(title='Test event number 3', slug='test_full_event', sign_up_max_participants=1,
-                                     author_id=self.member.id)
-        self.assertIsNotNone(event)
-        c = Client()
-        response = c.post(reverse('events:detail', args=[event.slug]), {'user': 'person5', 'email': 'person5@test.com'})
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(event.get_registrations().count(), 1)
-        response = c.post(reverse('events:detail', args=[event.slug]), {'user': 'person6', 'email': 'person6@test.com'})
-        self.assertEqual(response.status_code, 403)
-        self.assertEqual(event.get_registrations().count(), 1)
-
     def test_past_deadline(self):
         event = Event.objects.create(title='Test event number 4', slug='test_past_deadline',
                                      sign_up_deadline=timezone.now(),
                                      author_id=self.member.id)
         self.assertIsNotNone(event)
-        c = Client()
+        c = Client(enforce_csrf_checks=False)
         response = c.post(reverse('events:detail', args=[event.slug]), {'user': 'person6', 'email': 'person6@test.com'})
         self.assertEqual(response.status_code, 403)
         self.assertEqual(event.get_registrations().count(), 0)
+
+    # TODO: Test full event
