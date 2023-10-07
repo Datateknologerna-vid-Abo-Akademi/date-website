@@ -1,4 +1,4 @@
-name: Check website startup
+name: Run unit tests and ping website
 
 on:
   pull_request:
@@ -13,7 +13,19 @@ on:
       - master
 
 jobs:
-  build:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Run django unit tests
+        run: |
+          source example.env
+          date-test
+
+  ping_test:
     runs-on: ubuntu-latest
 
     steps:
@@ -30,21 +42,6 @@ jobs:
           source example.env
           docker-compose build
 
-  test:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Run django unit tests
-        run: |
-          source example.env
-          date-test
-
-  ping_test:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
       - name: Wait for web container
         run: |
           sleep 20
