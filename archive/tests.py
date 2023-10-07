@@ -1,10 +1,11 @@
 import os
+from PIL import Image
+import tempfile
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
-from PIL import Image
 
 from archive.models import TYPE_CHOICES, Collection, Document, Picture
 
@@ -29,11 +30,13 @@ def create_picture(favorite=False):
 
 def create_document(title="Test document"):
     collection = create_collection(collection_type=TYPE_CHOICES[1][1])
-    doc_file = open(os.path.join(settings.MEDIA_ROOT, 'test_document.doc'), "rb")
-    doc_data = doc_file.read()
-    doc_file.close()
-    test_document = SimpleUploadedFile(name='test_document.doc',
-                                        content=doc_data)
+
+    # Create a temporary file with some test data
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(b'This is some test data for the document')
+        temp_file.seek(0)  # Reset the file pointer to the beginning
+        test_document = SimpleUploadedFile(name='test_document.doc', content=temp_file.read())
+
     return Document.objects.create(collection=collection, title=title, document=test_document)
 
 
