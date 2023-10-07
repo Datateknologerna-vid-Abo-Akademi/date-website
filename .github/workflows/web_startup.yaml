@@ -28,8 +28,23 @@ jobs:
       - name: Build and run Docker Compose
         run: |
           source example.env
-          docker-compose up -d --build
+          docker-compose build
 
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Run django unit tests
+        run: |
+          source example.env
+          date-test
+
+  ping_test:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Wait for web container
         run: |
           sleep 20
