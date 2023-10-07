@@ -4,7 +4,7 @@ import logging
 from copy import deepcopy
 
 from django.conf import settings
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponse
 from django.shortcuts import render, redirect
 from django.views.generic import DetailView, ListView
 from websocket import create_connection
@@ -83,6 +83,7 @@ class EventDetailView(DetailView):
                 return render(self.request, 'events/event_passcode.html',
                               self.get_context_data(passcode_error='invalid passcode'))
 
+
         if self.object.sign_up and (request.user.is_authenticated
                                     and self.object.registration_is_open_members()
                                     or self.object.registration_is_open_others()
@@ -94,7 +95,8 @@ class EventDetailView(DetailView):
                 # Do not send ws data on refresh after initial signup.
                 if not EventAttendees.objects.filter(email=request.POST.get('email'), event=self.object.id).first():
                     logger.info(f"User {request.user} signed up with name: {request.POST.get('user')}")
-                    ws_send(request, form, public_info)
+                    if not settings.TEST:
+                        ws_send(request, form, public_info)
                 return self.form_valid(form)
             return self.form_invalid(form)
         return HttpResponseForbidden()
