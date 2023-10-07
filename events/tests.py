@@ -15,9 +15,6 @@ class EventTestCase(TestCase):
                                           sign_up_deadline=(timezone.now()-timezone.timedelta(-1))
                                           )
         self.assertIsNotNone(self.event)
-        print(f"Is open others: {self.event.registration_is_open_others()}")
-        print(f"Is open others time: {self.event.sign_up_others}")
-        print(f"Sign up deadline: {self.event.sign_up_deadline}")
         self.assertTrue(self.event.published)
 
     def test_attending_event(self):
@@ -95,5 +92,3 @@ class EventTestCase(TestCase):
         response = c.post(reverse('events:detail', args=[event.slug]), {'user': 'person6', 'email': 'person6@test.com'})
         self.assertEqual(response.status_code, 403)
         self.assertEqual(event.get_registrations().count(), 0)
-
-    # TODO: Test full event
