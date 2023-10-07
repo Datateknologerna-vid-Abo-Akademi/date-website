@@ -40,7 +40,7 @@ jobs:
       - name: Build and run Docker Compose
         run: |
           source example.env
-          docker-compose build
+          docker-compose up -d
 
       - name: Wait for web container
         run: |
