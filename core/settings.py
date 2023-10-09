@@ -39,6 +39,9 @@ DEBUG = os.environ.get('DEBUG', False)
 
 DEVELOP = os.environ.get('DEVELOP', False)
 
+# This gets set only when tests are ran with date-test command
+TEST = os.environ.get('TEST', False)
+
 ALLOWED_HOSTS = json.loads(os.environ['ALLOWED_HOSTS'])
 
 CSRF_TRUSTED_ORIGINS = json.loads(os.environ['ALLOWED_ORIGINS'])
@@ -249,6 +252,7 @@ else:
     # Not in use when not using s3 but need to be set in order not to cause errors
     PRIVATE_MEDIA_LOCATION = 'media/private'
     PUBLIC_MEDIA_LOCATION = 'media/public'
+    AWS_STORAGE_BUCKET_NAME = "media"
 
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
 STATIC_URL = '/static/'

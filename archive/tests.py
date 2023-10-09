@@ -1,4 +1,6 @@
 import os
+from PIL import Image
+import tempfile
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -8,40 +10,55 @@ from django.utils import timezone
 from archive.models import TYPE_CHOICES, Collection, Document, Picture
 
 
+def create_collection(title="Test collection", collection_type=None):
+    return Collection.objects.create(title=title, pub_date=timezone.now(), type=collection_type)
+
+
+def create_picture(favorite=False):
+    collection = create_collection(collection_type=TYPE_CHOICES[0][1])
+    img = Image.new('RGB', (100, 100))
+    img.save(os.path.join(settings.MEDIA_ROOT, 'test_image.jpg'))
+    img.close()
+    img_file = open(os.path.join(settings.MEDIA_ROOT, 'test_image.jpg'),"rb")
+    img_data = img_file.read()
+    img_file.close()
+    test_image = SimpleUploadedFile(name='test_image.jpg',
+                                    content=img_data,
+                                    content_type='image/jpg')
+    return Picture.objects.create(collection=collection, image=test_image, favorite=favorite)
+
+
+def create_document(title="Test document"):
+    collection = create_collection(collection_type=TYPE_CHOICES[1][1])
+
+    # Create a temporary file with some test data
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(b'This is some test data for the document')
+        temp_file.seek(0)  # Reset the file pointer to the beginning
+        test_document = SimpleUploadedFile(name='test_document.doc', content=temp_file.read())
+
+    return Document.objects.create(collection=collection, title=title, document=test_document)
+
+
 # models tests
 class CollectionTestCase(TestCase):
-
-    def create_collection(self, title="Test collection", collection_type=None):
-        return Collection.objects.create(title=title, pub_date=timezone.now(), type=collection_type)
-
     def test_collection_creation(self):
-        c = self.create_collection()
+        c = create_collection(collection_type=TYPE_CHOICES[0][1])
         self.assertTrue(isinstance(c, Collection))
         self.assertEqual(c.__str__(), c.title)
-        self.assertEqual(c.type, TYPE_CHOICES[0])
-
-    def create_picture(self, collection=create_collection(collection_type=TYPE_CHOICES[0]), favorite=False):
-        test_image = SimpleUploadedFile(name='test_image.jpg',
-                                        content=open(os.path.join(settings.MEDIA_ROOT, 'test_image.jpg'), 'rb').read(),
-                                        content_type='image/jpeg')
-        return Picture.objects.create(collection=collection, image=test_image, favorite=favorite)
+        self.assertEqual(c.type, TYPE_CHOICES[0][1])
 
     def test_picture_creation(self):
-        p = self.create_picture()
+        p = create_picture(favorite=False)
         self.assertTrue(isinstance(p, Picture))
         self.assertEqual(p.__str__(), p.image.name)
         self.assertEqual(p.favorite, False)
 
-    def create_document(self, collection=create_collection(collection_type=TYPE_CHOICES[1]), title="Test document"):
-        test_document = SimpleUploadedFile(name='test_document.doc',
-                                           content=open(os.path.join(settings.MEDIA_ROOT, 'test_document.doc')))
-        return Document.objects.create(collection=collection, title=title, document=test_document)
-
     def test_document_creation(self):
-        d = self.create_document()
+        d = create_document()
         self.assertTrue(isinstance(d, Document))
         self.assertEqual(d.__str__(), d.title)
-        self.assertEqual(d.collection.type, TYPE_CHOICES[1])
+        self.assertEqual(d.collection.type, TYPE_CHOICES[1][1])
 
 # Views tests
     # https://realpython.com/testing-in-django-part-1-best-practices-and-examples/#testing-views
