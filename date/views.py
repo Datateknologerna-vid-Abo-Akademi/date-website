@@ -5,6 +5,8 @@ from django.conf import settings
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils import translation
+from django.utils import timezone
+from django.http import HttpResponse
 
 from ads.models import AdUrl
 from events.models import Event
@@ -62,16 +64,15 @@ def index(request):
     return render(request, 'date/start.html', context)
 
 
-def language(request, lang):
-    if str(lang).lower() == 'fi':
-        lang = settings.LANG_FINNISH
-    else:
-        lang = settings.LANG_SWEDISH
-    translation.activate(lang)
-    # TODO Replace LANGUAGE_SESSION_KEY with something that works in django 4.0
-    # request.session[translation.LANGUAGE_SESSION_KEY] = lang
+def set_language(request):
+    user_language = request.POST.get("lang")
+
+    # persist the language preference using a cookie
+    translation.activate(user_language)
     origin = request.META.get('HTTP_REFERER')
-    return redirect(origin)
+    response = redirect(origin)
+    response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user_language)
+    return response
 
 
 def handler404(request, *args, **argv):
