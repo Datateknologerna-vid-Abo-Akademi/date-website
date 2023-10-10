@@ -35,7 +35,7 @@
   
   .pagination a.active {
     color: var(--textColorLight);
-    border: 1px solid var(--linkColorSecondary);
+    border: 1px solid var(--linkColorLight);
   }
 
 @media only screen and (max-width: 1200px) {

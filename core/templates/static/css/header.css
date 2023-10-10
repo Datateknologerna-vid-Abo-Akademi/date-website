@@ -12,7 +12,7 @@ nav{
 }
 
 .container .navbar-toggler:active{
-    color: var(--linkColorSecondary);
+    color: var(--linkColorLight);
 }
 
 .container .navbar-toggler:hover{

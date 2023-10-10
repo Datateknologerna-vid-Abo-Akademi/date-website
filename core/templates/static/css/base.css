@@ -19,14 +19,14 @@ html body{
 
 /* Link colors */
 div a{
-    color: var(--linkColorSecondary);
+    color: var(--linkColorLight);
     display: inline-block;
     text-decoration: none;
 }
 
 div a:hover{
     transition: 0.3s;
-    color: var(--linkSecondaryHover);
+    color: var(--linkColorLightHover);
 }
 /* ---- */
 
