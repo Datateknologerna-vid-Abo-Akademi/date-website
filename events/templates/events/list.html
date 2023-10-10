@@ -27,7 +27,7 @@
                 <th>E-mail<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
                 {# Had to use first attendee as example in order to get correct order for column headers #}
                 {# TODO:Get preferences eg. with a model property #}
-                {% for header, value in event.get_registrations.0.preferences.items %}
+                {% for header in form %}
                     <th>{{ header }}<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove">
                     </th>
                 {% endfor %}
@@ -43,14 +43,14 @@
                     <td>{{ forloop.counter }}</td>
                     <td>{{ attendee.user }}</td>
                     <td>{{ attendee.email }}</td>
-                    {% for key, value in attendee.preferences.items %}
+                    {% for key in form %}
                         <td>
                             {% if value is True %}
                                 <img src="/static/admin/img/icon-yes.svg" alt="True">
                             {% elif value is False %}
                                 <img src="/static/admin/img/icon-no.svg" alt="True">
                             {% else %}
-                                {{ value }}
+                                {{ attendee|get_preference:key }}
                             {% endif %}
                         </td>
                     {% endfor %}
