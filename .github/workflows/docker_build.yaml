@@ -15,12 +15,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+      - name: Convert github.repo to lower
+        id: string
+        uses: ASzc/change-string-case-action@v2
+        with:
+          string: ${{ github.repository }}
       - name: Docker build
         run: |
-          docker build -t ghcr.io/${{github.repository}}:${{ github.ref_name }} .
+          docker build -t ghcr.io/${{ steps.string.outputs.lower }}:${{ github.ref_name }} .
       - name: Docker login
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Docker push
         run: |
-          docker push ghcr.io/${{github.repository}}:${{ github.ref_name }}
+          docker push ghcr.io/${{ steps.string.outputs.lower }}:${{ github.ref_name }}
