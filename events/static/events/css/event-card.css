@@ -24,18 +24,18 @@
   }
   
 .card-body a{
-    color: var(--linkColorSecondary);
-    border-color: var(--linkColorSecondary);
+    color: var(--linkColorLight);
+    border-color: var(--linkColorLight);
   }
   
 .card-body a:active{
-    color: var(--linkColorSecondary);
+    color: var(--linkColorLight);
   }
   
 .card-body a:hover{
     background-color: inherit;
-    color: var(--linkSecondaryHover);
-    border-color: var(--linkSecondaryHover);
+    color: var(--linkColorLightHover);
+    border-color: var(--linkColorLightHover);
   }
   
 .card-body a:focus{

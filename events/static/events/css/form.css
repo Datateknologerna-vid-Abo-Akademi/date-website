@@ -37,7 +37,7 @@
 .button:hover{
     transition: 0.2s ease;
     background-color: var(--primaryColorLighte);
-    color: var(--linkSecondaryHover);
+    color: var(--linkColorLightHover);
 }
 
 .button:active{

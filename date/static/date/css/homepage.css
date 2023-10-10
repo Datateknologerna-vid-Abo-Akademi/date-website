@@ -183,7 +183,7 @@
 
 div.news-content a{
     display: inline-block;
-    color: var(--linkColor);
+    color: var(--linkColorDark);
 }
 
 div.news-content a:hover{
@@ -191,7 +191,7 @@ div.news-content a:hover{
 }
 
 .more-news{
-    color: var(--linkColor);
+    color: var(--linkColorDark);
 }
 
 .more-news:hover{
@@ -273,12 +273,12 @@ div.news-content a:hover{
   }
   
 .evet-card a{
-    color: var(--linkColor);
-    border-top: 2px solid var(--linkColor);
+    color: var(--linkColorDark);
+    border-top: 2px solid var(--linkColorDark);
   }
   
 .evet-card a:active{
-    color: var(--linkColor);
+    color: var(--linkColorDark);
   }
   
 .evet-card a:hover{
@@ -293,7 +293,7 @@ div.news-content a:hover{
 
 .chevron-box {
     margin: auto; 
-    border: 1px solid var(--linkColorSecondary); 
+    border: 1px solid var(--linkColorDarkSecondary);
     border-radius: 5px;
     padding: 5px;
 }
@@ -339,7 +339,7 @@ div.news-content a:hover{
     -webkit-transition: all 0.2s;
 	-moz-transition: all 0.2s;
     transition: all 0.2s;
-    border-top: var(--linkColor) solid 2pt;
+    border-top: var(--linkColorDark) solid 2pt;
     box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
     display: grid;
     grid-template-columns: 3fr 1fr;
@@ -376,7 +376,7 @@ div.news-content a:hover{
 
 .more-events-button{
     display: inline-block;
-    color: var(--linkColor)
+    color: var(--linkColorDark)
 }
 
 .more-events-button:hover{
@@ -425,7 +425,7 @@ div.news-content a:hover{
 }
   
 div.calendar-container a {
-    color: var(--linkColor);
+    color: var(--linkColorDark);
 }
 
 .left {
