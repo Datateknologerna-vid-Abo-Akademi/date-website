@@ -139,15 +139,9 @@ class Event(models.Model):
 
     def make_registration_form(self, data=None):
         if self.sign_up:
-            fields = {'user': forms.CharField(label='Namn', max_length=255),
-                      'email': forms.EmailField(label='Email', validators=[self.validate_unique_email], max_length=320),
-                      'anonymous': forms.BooleanField(label='Anonymt', required=False)}
-            # Temporary fix until we get proper translations
-            if self.slug in settings.CONTENT_VARIABLES.get('INTERNATIONAL_EVENT_SLUGS', []):
-                fields['user'] = forms.CharField(label='Nimi/Namn/Name', max_length=255)
-                fields['email'] = forms.EmailField(label='Sähköposti/Email', validators=[self.validate_unique_email],
-                                                   max_length=320)
-                fields['anonymous'] = forms.BooleanField(label='Anonyymi/Anonym/Anonymous', required=False)
+            fields = {'user': forms.CharField(label=_('Namn'), max_length=255),
+                      'email': forms.EmailField(label=_('Email'), validators=[self.validate_unique_email], max_length=320),
+                      'anonymous': forms.BooleanField(label=_('Anonymt'), required=False)}
             if self.get_registration_form():
                 for question in self.get_registration_form():
                     if question.type == "select":

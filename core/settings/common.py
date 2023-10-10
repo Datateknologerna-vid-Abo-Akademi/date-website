@@ -170,6 +170,11 @@ AUTHENTICATION_BACKENDS = (
     'members.backends.AuthBackend',
 )
 
+# Make CKEditor5 Work with modeltranslations
+MODELTRANSLATION_CUSTOM_FIELDS = (
+    'django_ckeditor_5.fields.CKEditor5Field',
+)
+
 
 def get_staff_groups(default_groups: list):
     """Add extra staff groups from environment variable to default_groups."""
@@ -184,10 +189,13 @@ LOCALE_PATHS = (
     'locale',
 )
 
-LANG_FINNISH = 'fi'
-LANG_SWEDISH = 'sv'
+LANGUAGES = (
+    ('sv', ("Svenska")),
+    ('en', ("English")),
+    ('fi', ("Suomi"))
+)
 
-LANGUAGE_CODE = LANG_SWEDISH
+LANGUAGE_CODE = 'sv'
 
 TIME_ZONE = 'Europe/Helsinki'
 

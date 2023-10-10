@@ -33,13 +33,14 @@
 </form>
 <br>
 <small>
+    {% blocktranslate trimmed %}
     Genom att anmäla dig godkänner du att {{ ASSOCIATION_NAME_FULL }} lagrar ditt namn, din e-post samt eventuell annan nödvändig information.
     Under anmälningstiden syns den anmäldas namn i listan nedan. 
-    Efter evenemanget sparas informationen för statistiska ändamål och syns endast för hemsidans administratörer.
+    Efter evenemanget sparas informationen för statistiska ändamål och syns endast för hemsidans administratörer. {% endblocktranslate %}
 </small>
 
 {% if event.event_is_full %}
-<p class="warning">Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan och meddelas om du får plats.</p>
+<p class="warning">{% translate "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan och meddelas om du får plats." %}</p>
 {% endif %}
 
 <script>
