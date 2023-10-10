@@ -3,7 +3,7 @@
 {% load i18n %}
 {% load cache %}
 
-{% block title %}Nyheter{% endblock %}
+{% block title %}{% translate "Nyheter" %}{% endblock %}
 {% cache 60 news_index %}
 {% block content %}
     <head>
