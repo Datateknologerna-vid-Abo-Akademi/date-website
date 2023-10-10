@@ -1,5 +1,5 @@
 FROM python:3.11-alpine
-RUN apk add --no-cache gcc libldap libsasl libressl bash
+RUN apk add --no-cache gcc libldap libsasl libressl bash gettext
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 RUN mkdir /code

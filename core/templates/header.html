@@ -38,10 +38,10 @@
         <div class="offcanvas-body p-lg-0 justify-content-end">
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="/events/">Evenemang</a>
+                    <a class="nav-link active" aria-current="page" href="/events/">{% translate "Evenemang" %}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="/news/">Nyheter</a>
+                    <a class="nav-link active" aria-current="page" href="/news/">{% translate "Nyheter" %}</a>
                 </li>
                 {% for category in categories %}
                 <li class="nav-item dropdown">
@@ -76,6 +76,23 @@
                         {% endfor %}
                     </ul>
                 {% endfor %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Language
+                        </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                                {% if LANGUAGES|length > 1 %}
+                                    <form action="{% url 'set_lang' %}" method="post">
+                                        {% csrf_token %}
+                                        {% for language in LANGUAGES %}
+                                            {% if language.0 == "sv" or language.0 == "en" or language.0 == "fi" %}
+                                                <li><button class="dropdown-item" name="lang" type="submit" value={{language.0}}>{{language.1}}</button></li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </form>
+                                {%endif%}
+                            </ul>
+                    </li>
             </ul>
         </div>
       </div>

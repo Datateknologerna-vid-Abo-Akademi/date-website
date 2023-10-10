@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
+{% load i18n %}
 {% block content %}
 
     {% load static %}
-    {% load i18n %}
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -167,23 +167,29 @@
                     </svg>
                 </div>
                 <div class="text">
-                    <h1 class="hero-text-main">Datateknologerna</h1>
-                    <h3 class="hero-text-sub">vid Åbo Akademi rf</h3>
+                    <h1 class="hero-text-main">{% trans "Datateknologerna" %}</h1>
+                    <h3 class="hero-text-sub">{% trans "vid Åbo Akademi rf" %}</h3>
                 </div>
             </div>
         </header>
         <section class="about d-flex align-items-center">
             <div class="container-size" style="text-align: justify">
-                <h3>Om oss</h3>
+                <h3>{% translate "Om oss" %}</h3>
                 <div>
-                    <p>Datateknologerna vid Åbo Akademi rf är en förening för studerande vid utbildningsprogrammet i datateknik vid Fakulteten för Naturvetenskaper och Teknik vid Åbo Akademi, samt för studerande vid övriga tekniskt inriktade utbildningslinjer i databehandling. Föreningen grundades 1999, närmare bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare och stiliga tofsmössor.</p>
+                    <p>
+                    {% blocktranslate trimmed %}
+                        Datateknologerna vid Åbo Akademi rf är en förening för studerande vid utbildningsprogrammet i datateknik vid Fakulteten för Naturvetenskaper och Teknik vid Åbo Akademi, samt för studerande vid övriga tekniskt inriktade utbildningslinjer i databehandling.
+                        Föreningen grundades 1999, närmare bestämt den 24.8 kl. 16:32.
+                        Medlemmarna känns igen på deras svarta halare och stiliga tofsmössor.
+                    {% endblocktranslate %}
+                </p>
                 </div>
             </div>
         </section>
         <section id="news" class="news-events">
             <div id="main" class="main-container">
                 <div class="feed-container">
-                    <h3 class="news-header header-border-bottom mt-3">Nyheter 
+                    <h3 class="news-header header-border-bottom mt-3">{% translate "Nyheter" %} 
                         {% if aa_post %}
                         <div class="aa-img"><a href="{% url 'news:aa_detail' aa_post.slug %}"><img src="{% static 'images/albins-angels.png' %}"/></a></div>
                         {% endif %}
@@ -197,14 +203,14 @@
                                 <a class="news-button" href="{% url 'news:detail' ne.slug %}"><i class="fab fa-readme"></i> {% trans 'Läs mera' %}...</a>
                             </div>
                             {% empty %}
-                            <h3>{% trans 'Inga nyheter hittades' %}...</h3>
+                            <h3>{% translate 'Inga nyheter hittades' %}...</h3>
                         {% endfor %}
-                        <a class="more-news" href="/news/"><i class="far fa-newspaper"></i> Mera nyheter...</a>
+                        <a class="more-news" href="/news/"><i class="far fa-newspaper"></i>{% translate "Mera nyheter..." %}</a>
                     </div>
                 </div>
                 <div class="sidebar-container">
                     <div class="events-container">
-                        <h3 class="header-border-bottom mt-3">Evenemang</h3>
+                        <h3 class="header-border-bottom mt-3">{% translate "Evenemang" %}</h3>
                         <div class="calendar-container">
                             <div class="calendar-box">
                                 <table class="calendar">
@@ -266,7 +272,7 @@
                         </div>
                     </div>
                     <div class="logo-container">
-                        <h3 class="mt-3">Samarbetspartners</h3>
+                        <h3 class="mt-3">{% translate "Samarbetspartners" %}</h3>
                         <div class="carousel-logos">
                             <ul id="logo-list">
                                 {%for ad in ads%}

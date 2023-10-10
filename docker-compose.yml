@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   db:
@@ -14,7 +14,7 @@ services:
     build: .
     restart: always
     #igSheduler startup command (nohup python /code/social/igupdate.py &) &&
-    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python /code/manage.py migrate --noinput && python manage.py collectstatic --noinput &&  python manage.py runserver 0.0.0.0:8000"
+    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python /code/manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py compilemessages && python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/code
     ports:
@@ -46,8 +46,7 @@ services:
 
 volumes:
   date_postgres_data:
-
-#networks: 
-#  default: 
-#    external: 
-#      name: external-example 
+#networks:
+#  default:
+#    external:
+#      name: external-example

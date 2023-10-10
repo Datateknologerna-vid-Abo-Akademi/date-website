@@ -2,7 +2,7 @@
 
 {% load i18n %}
 {% load static %}
-{% block title %}Sign up{% endblock %}
+{% block title %}{% translate Sign up %}{% endblock %}
 {% block content %}
     <head>
         <link rel="stylesheet" href="{% static 'members/style.css' %}">
@@ -12,7 +12,7 @@
             {% if alumni %}
               <h2>ARG sign up</h2>
             {% else %}
-              <h2>Sign up</h2>
+              <h2>{% translate "Sign up" %}</h2>
             {% endif %}
           <form method="post">
             {% csrf_token %}
@@ -30,12 +30,12 @@
             {% endfor %}
             <p class="consent-form-group">
               <input type="checkbox" name="consent" required/>
-              Jag godkänner
+              {% translate "Jag godkänner" %}
               <a href="http://{{ request.get_host }}/pages/registerbeskrivning/" target="_blank">
-                villkoren <i class="fa fa-external-link" aria-hidden="true"></i>
+                {% translate "villkoren" %} <i class="fa fa-external-link" aria-hidden="true"></i>
               </a>
             </p>
-            <button class="button" type="submit">Sign up</button>
+            <button class="button" type="submit">{% translate Sign up %}</button>
           </form>
         </div>
     </div>
