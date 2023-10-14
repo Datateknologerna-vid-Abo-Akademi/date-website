@@ -16,9 +16,10 @@
     --textColorDarkish: #202020;
     --helpText: #888;
     --helpTextLighter: rgb(199, 199, 199);
-    --linkColor: #3a80c3;
-    --linkColorSecondary: rgb(208, 255, 0);
-    --linkSecondaryHover: rgb(146, 179, 0);
+    --linkColorDark: #3a80c3;
+    --linkColorDarkHover: #3a80c3;
+    --linkColorLight: rgb(208, 255, 0);
+    --linkColorLightHover: rgb(146, 179, 0);
     --warning: rgb(216, 153, 146);
     --defaultPadding: 20px;
     --defaultRadius: 5px;

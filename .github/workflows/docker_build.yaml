@@ -1,0 +1,31 @@
+on:
+  push:
+    branches:
+      - develop
+      - master
+  workflow_dispatch:
+    branches:
+      - develop
+      - master
+  schedule:
+    - cron: '0 0 1 * *'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Convert github.repo to lower
+        id: string
+        uses: ASzc/change-string-case-action@v2
+        with:
+          string: ${{ github.repository }}
+      - name: Docker build
+        run: |
+          docker build -t ghcr.io/${{ steps.string.outputs.lowercase }}:${{ github.ref_name }} .
+      - name: Docker login
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Docker push
+        run: |
+          docker push ghcr.io/${{ steps.string.outputs.lowercase }}:${{ github.ref_name }}
