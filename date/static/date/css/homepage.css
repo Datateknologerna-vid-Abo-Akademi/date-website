@@ -519,6 +519,14 @@ ul#logo-list {
     height: auto !important;
 }
 
+.extra-container a, .mobile-extra-container a {
+    color: var(--linkColorDark);
+}
+
+.extra-container a:hover, .mobile-extra-container a:hover{
+    color: var(--textColorDarkish);
+}
+
 /*extras end*/
 
 /*Sidebar end*/
