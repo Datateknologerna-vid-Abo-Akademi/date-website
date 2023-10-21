@@ -144,7 +144,8 @@
     grid-template-areas: 
       ". news sidebar ."
       ". news sidebar ."
-      ". ig-scroll ig-scroll .";   
+      ". ig-scroll ig-scroll ."
+      ". logos logos .";
     grid-column-gap: 3vw;
 }
 
@@ -476,14 +477,14 @@ div.calendar-container a {
 }
 /*Calendar end*/
 
-/*logos start*/
+/*extras start*/
 
-.logo-container{
+.extra-container{
     display: block;
 }
 
-.mobile-logo-container{
-    grid-area: logos;
+.mobile-extra-container{
+    grid-area: extras;
     display: none;
 }
 
@@ -518,9 +519,42 @@ ul#logo-list {
     height: auto !important;
 }
 
-/*logos end*/
+.extra-container a, .mobile-extra-container a {
+    color: var(--linkColorDark);
+}
+
+.extra-container a:hover, .mobile-extra-container a:hover{
+    color: var(--textColorDarkish);
+}
+
+/*extras end*/
 
 /*Sidebar end*/
+
+/*Logos start*/
+
+.logo-container {
+    grid-area: logos;
+    margin-top: 20px;
+}
+
+.logo-container a {
+    color: var(--linkColorDark);
+    margin-top: 20px;
+}
+
+.logo-container a:hover {
+    color: var(--textColorDarkish);
+}
+
+.logo-container img {
+    max-width: 300px;
+    max-height: 200px;
+    width: auto !important;
+    height: auto !important;
+}
+
+/*Logos end*/
 
 /* Generic animations*/
 
@@ -624,6 +658,7 @@ ul#logo-list {
         grid-template-areas: 
           ". events ."
           ". news ."
+          ". extras ."
           ". logos ."
           ". ig-scroll .";   
     }
@@ -636,7 +671,7 @@ ul#logo-list {
         display: block;
     }
 
-    .mobile-logo-container{
+    .mobile-extra-container{
         display: block;
     }
 
