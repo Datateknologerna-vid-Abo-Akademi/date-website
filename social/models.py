@@ -13,3 +13,11 @@ class IgUrl(models.Model):
 
     def __str__(self):
         return self.url
+
+
+class Harassment(models.Model):
+    email = models.EmailField(_('Email'), max_length=255, blank=True, null=True)
+    message = models.TextField(_('Beskrivning av händelsen'), blank=False, max_length=1500)
+
+    def __str__(self):
+        return self.message
