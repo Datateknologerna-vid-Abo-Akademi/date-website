@@ -265,20 +265,15 @@
                             </div>
                         </div>
                     </div>
-                    <div class="logo-container">
-                        <h3 class="mt-3">Samarbetspartners</h3>
-                        <div class="carousel-logos">
-                            <ul id="logo-list">
-                                {%for ad in ads%}
-                                <li class="company-logo text-center">
-                                    <a href="{{ ad.company_url }}">
-                                        <img src="{{ ad.ad_url }}" alt="img">
-                                    </a>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </div>  
+                    <div class="extra-container">
+                        <h3 class="mt-3 header-border-bottom">Annat</h3>
+                        <h5>Trakasseriombud</h5>
+                        <p>Om du upplever trakasserier i samband med datateknologernas verksamhet, vänligen tag kontakt med styrelsen. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar.</p>
+                        {% if joke %}
+                            <h5>Joke</h5>
+                            <p>{{ joke }}</p>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="mobile-events-container">
                     <h3 class="header-border-bottom mt-3">Evenemang</h3>
@@ -340,20 +335,28 @@
                         </div>
                     </div>
                 </div>
-                <div class="mobile-logo-container">
-                    <h3>Samarbetspartners</h3>
-                    <div class="carousel-logos text-center">
-                        <ul>
+                <div class="mobile-extra-container">
+                    <h3 class="mt-3 header-border-bottom">Annat</h3>
+                    <h5>Trakasseriombud</h5>
+                    <p>Om du upplever trakasserier i samband med datateknologernas verksamhet, vänligen tag kontakt med styrelsen. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar.</p>
+                    {% if joke %}
+                        <h5>Joke</h5>
+                        <p>{{ joke }}</p>
+                    {% endif %}
+                </div>
+                <div class="logo-container">
+                    <h3 class="header-border-bottom">Samarbetspartners</h3>
+                        <div class="d-flex flex-wrap justify-content-center align-items-center">
                             {%for ad in ads%}
-                            <li class="company-logo">
-                                <a href="{{ ad.company_url }}">
+                                <a class="m-2" href="{{ ad.company_url }}">
                                     <img src="{{ ad.ad_url }}" alt="img">
                                 </a>
-                            </li>
                             {% endfor %}
-                        </ul>
+                        </div>
+                    <div class="text-center">
+                        <a href="/pages/foretagssamarbete/">Vill du samarbeta med DaTe?</a>
                     </div>
-                </div>  
+                </div>
             </div>
         </section>
         <section id="reklam" class="text-size">
