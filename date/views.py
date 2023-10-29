@@ -11,7 +11,6 @@ from itertools import chain
 from event_calendar.views import CalendarManager
 from ads.models import AdUrl
 from social.models import IgUrl
-import requests
 
 
 def index(request):
@@ -29,12 +28,6 @@ def index(request):
     if aa_posts and aa_posts[0].published_time > time_since:
         aa_post = aa_posts[0]
 
-    joke_request = requests.get("https://icanhazdadjoke.com/", headers={"Accept": "application/json"})
-    if joke_request.status_code == 200:
-        joke = joke_request.json().get('joke', 'Joke not found')
-    else:
-        joke = 'Joke not found'
-
     context = {
         'events': events,
         'news': news,
@@ -46,7 +39,6 @@ def index(request):
         'next_month': cm.next_month(),
         'curr_month': cm.curr_month_as_string(),
         'aa_post': aa_post,
-        'joke': joke,
     }
 
     return render(request, 'date/start.html', context)
