@@ -39,6 +39,7 @@ def index(request):
         'next_month': cm.next_month(),
         'curr_month': cm.curr_month_as_string(),
         'aa_post': aa_post,
+        'joke': joke,
     }
 
     return render(request, 'date/start.html', context)
