@@ -26,6 +26,7 @@ class Question(models.Model):
     show_results = models.BooleanField(_('Visa resultat'), default=False)
     end_vote = models.BooleanField(_('Avsluta röstande'), default=False)
     multiple_choice = models.BooleanField(_('Flerval'), default=False)
+    required_multiple_choices = models.IntegerField(_('Antal flerval som krävs'), blank=True, null=True)
     voting_options = models.IntegerField(_('Valmöjligheter'), choices=VOTING_OPTIONS, default=ANYONE)
     voters = models.ManyToManyField(Member, through="Vote", related_name='voters')
 

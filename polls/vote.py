@@ -13,6 +13,7 @@ ERROR_MESSAGES = {
     'vote_ended': "Röstandet har avslutats.",
     'not_authorized': "Du inte är röstberättigad.",
     'single_choice': "Endast ett val är tillåtet.",
+    'required_multiple_choices': "Du måste välja exakt %s alternativ.",
 }
 
 
@@ -55,6 +56,13 @@ def user_has_voted(request, question, user):
     return question.voters.filter(username=user.username).exists()
 
 
+def require_multiple_choices_matches_selected(question, selected_choices):
+    if question.required_multiple_choices is None:
+        return True
+
+    return len(selected_choices) == question.required_multiple_choices
+
+
 def validate_vote(request, question, user, selected_choices):
     if vote_ended(request, question):
         return ERROR_MESSAGES['vote_ended']
@@ -64,6 +72,9 @@ def validate_vote(request, question, user, selected_choices):
 
     if single_choice_multiple_selected(request, question, selected_choices):
         return ERROR_MESSAGES['single_choice']
+
+    if not require_multiple_choices_matches_selected(question, selected_choices):
+        return ERROR_MESSAGES['required_multiple_choices'] % question.required_multiple_choices
 
     if is_user_authorized_to_vote(question, user):
         if user_has_voted(request, question, user) and question.voting_options != ANYONE:
