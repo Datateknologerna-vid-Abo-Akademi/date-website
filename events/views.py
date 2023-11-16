@@ -10,6 +10,7 @@ from django.views.generic import DetailView, ListView
 from websocket import create_connection
 from websocket._exceptions import WebSocketBadStatusException
 
+from core.utils import validate_captcha
 from staticpages.models import StaticPage, StaticPageNav
 from .forms import PasscodeForm
 from .models import Event, EventAttendees
@@ -90,6 +91,9 @@ class EventDetailView(DetailView):
                                     or request.user.groups.filter(
                     name="commodore").exists()):  # Temp fix to allow commodore peeps to enter pre-signed up attendees
             form = self.object.make_registration_form().__call__(data=request.POST)
+            if self.object.captcha:
+                if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
+                    return self.form_invalid(form)
             if form.is_valid():
                 public_info = self.object.get_registration_form_public_info()
                 # Do not send ws data on refresh after initial signup.
