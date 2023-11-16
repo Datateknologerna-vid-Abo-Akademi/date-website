@@ -22,6 +22,8 @@ logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
 
+EVENT_PARTICIPANT_LIMIT = 250
+
 
 def upload_to(instance, filename):
     filename_base, filename_ext = os.path.splitext(filename)
@@ -40,7 +42,8 @@ class Event(models.Model):
     event_date_end = models.DateTimeField(_('Slutdatum'), default=now)
     sign_up_max_participants = models.IntegerField(_('Maximal antal deltagare'),
                                                    choices=[(0, u"Ingen begränsning")] + list(
-                                                       zip(range(1, 500), range(1, 500))), default=0)
+                                                       zip(range(1, EVENT_PARTICIPANT_LIMIT),
+                                                           range(1, EVENT_PARTICIPANT_LIMIT))), default=0)
     sign_up = models.BooleanField(_('Anmälning'), default=True)
     sign_up_members = models.DateTimeField(_('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=now)
     sign_up_others = models.DateTimeField(_('Anmälan öppnas (övriga)'), null=True, blank=True, default=now)
@@ -59,6 +62,7 @@ class Event(models.Model):
     image = models.ImageField(_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
     s3_image = PublicFileField(verbose_name=_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
     price = models.DecimalField(_('Pris'), max_digits=10, decimal_places=2, default=0)
+    captcha = models.BooleanField(_('Captcha'), default=False)
 
     class Meta:
         verbose_name = _('evenemang')
@@ -100,9 +104,9 @@ class Event(models.Model):
                     for item in self.get_registration_form():
                         user_pref[str(item)] = preferences.get(str(item))
                 registration = EventAttendees.objects.create(user=user,
-                                                                event=self, email=email,
-                                                                time_registered=now(), preferences=user_pref,
-                                                                anonymous=anonymous, avec_for=avec_for)
+                                                             event=self, email=email,
+                                                             time_registered=now(), preferences=user_pref,
+                                                             anonymous=anonymous, avec_for=avec_for)
                 return registration
 
     def cancel_event_attendance(self, user):
@@ -181,13 +185,20 @@ class Event(models.Model):
 
     @register.filter
     def show_attendee_list(self):
-        return self.event_date_end > now() + timedelta(days=-1)
+        return self.event_date_end > now() + timedelta(-1)
 
     def validate_unique_email(self, email):
         attendees = self.get_registrations()
         for attendee in attendees:
             if email == attendee.email:
+                logger.debug("SAME EMAIL")
                 raise ValidationError(_("Det finns redan någon anmäld med denna email"))
+
+    def get_sign_up_max_participants(self):
+        if (self.sign_up_max_participants == 0):
+            return "Ingen Begränsning"
+        return self.sign_up_max_participants
+
 
 class EventRegistrationForm(models.Model):
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)

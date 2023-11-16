@@ -44,6 +44,8 @@ class EventCreationForm(forms.ModelForm):
             'members_only',
             'passcode',
             'price'
+            'passcode',
+            'captcha',
         )
         if settings.USE_S3:
             fields = temp_fields + ('s3_image',)
@@ -134,6 +136,8 @@ class EventEditForm(forms.ModelForm):
             'members_only',
             'passcode',
             'price'
+            'passcode',
+            'captcha',
         )
         if settings.USE_S3:
             fields = temp_fields + ('s3_image',)
