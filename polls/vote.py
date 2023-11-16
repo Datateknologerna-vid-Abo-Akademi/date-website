@@ -56,7 +56,7 @@ def user_has_voted(request, question, user):
     return question.voters.filter(username=user.username).exists()
 
 
-def require_multiple_choices_matches_selected(question, selected_choices):
+def required_multiple_choices_matches_selected(question, selected_choices):
     if question.required_multiple_choices is None:
         return True
 
@@ -73,7 +73,7 @@ def validate_vote(request, question, user, selected_choices):
     if single_choice_multiple_selected(request, question, selected_choices):
         return ERROR_MESSAGES['single_choice']
 
-    if not require_multiple_choices_matches_selected(question, selected_choices):
+    if not required_multiple_choices_matches_selected(question, selected_choices):
         return ERROR_MESSAGES['required_multiple_choices'] % question.required_multiple_choices
 
     if is_user_authorized_to_vote(question, user):
