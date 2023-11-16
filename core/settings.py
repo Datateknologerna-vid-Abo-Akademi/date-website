@@ -106,6 +106,7 @@ TEMPLATES = [
                 'staticpages.context_processors.get_pages',
                 'staticpages.context_processors.get_categories',
                 'staticpages.context_processors.get_urls',
+                'core.context_processors.captcha_context',
             ],
         },
     },
@@ -226,6 +227,10 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Helps thumbnails overly query S3
 THUMBNAIL_FORCE_OVERWRITE = True
+
+# Cloudflare captcha config
+TURNSTILE_SECRET_KEY = os.environ.get("CF_TURNSTILE_SECRET_KEY", "")
+CAPTCHA_SITE_KEY = os.environ.get("CF_TURNSTILE_SITE_KEY", "")
 
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
