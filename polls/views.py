@@ -4,7 +4,7 @@ from members.models import Member
 import logging
 
 from .models import Question
-from .validation import validate_and_handle_vote
+from .vote import handle_vote
 
 logger = logging.getLogger('date')
 
@@ -36,4 +36,6 @@ def vote(request, question_id):
     else:
         user = request.user
 
-    return validate_and_handle_vote(request, question, user)
+    selected_choices = [question.choice_set.get(pk=choice_id) for choice_id in set(request.POST.getlist('choice'))]
+
+    return handle_vote(request, question, user, selected_choices)
