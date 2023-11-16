@@ -3,6 +3,7 @@
 
 <head>
     <link rel="stylesheet" href="{% static 'events/css/form.css' %}">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
 
 <p>{% trans "Anmälan stängs om " %}{{ event.sign_up_deadline | timeuntil }}</p>
@@ -24,6 +25,9 @@
 {% endif %}
 <form method="post" class="form" id="attend-form">
     {{ form.as_p }}
+    {% if event.captcha %}
+        <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}" data-callback="javascriptCallback"></div>
+    {% endif %}
     <button class="button" type="submit">{% trans 'Anmäl' %}</button>
     {% csrf_token %}
 </form>
