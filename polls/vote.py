@@ -57,7 +57,7 @@ def user_has_voted(request, question, user):
 
 
 def required_multiple_choices_matches_selected(question, selected_choices):
-    if question.required_multiple_choices is None:
+    if question.required_multiple_choices is None or question.required_multiple_choices <= 0:
         return True
 
     return len(selected_choices) == question.required_multiple_choices
