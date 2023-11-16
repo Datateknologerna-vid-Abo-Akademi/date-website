@@ -44,7 +44,6 @@ class EventCreationForm(forms.ModelForm):
             'members_only',
             'passcode',
             'price',
-            'passcode',
             'captcha',
         )
         if settings.USE_S3:
@@ -136,7 +135,6 @@ class EventEditForm(forms.ModelForm):
             'members_only',
             'passcode',
             'price',
-            'passcode',
             'captcha',
         )
         if settings.USE_S3:
