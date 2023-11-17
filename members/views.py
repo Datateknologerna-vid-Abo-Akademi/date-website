@@ -15,6 +15,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 
+from core.utils import validate_captcha
 from members.forms import SignUpForm, AlumniSignUpForm
 
 from .models import Member, AlumniEmailRecipient
@@ -58,6 +59,10 @@ class CertificateView(View):
 def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
+
+        if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
+            return render(request, 'signup.html', {'form': form, 'alumni': True})
+        
         if form.is_valid():
             # Create user
             user = form.save(commit=False)
@@ -107,6 +112,8 @@ def alumni_signup(request):
     form = AlumniSignUpForm(request.POST or None)
 
     if request.method == 'POST' and form.is_valid():
+        if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
+            return render(request, 'signup.html', {'form': form, 'alumni': True})
 
         alumni = form.save(commit=False)
         alumni.save()

@@ -6,6 +6,7 @@
 {% block content %}
     <head>
         <link rel="stylesheet" href="{% static 'members/style.css' %}">
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     </head>
     <div class="signup-page">
         <div class="members-form big">
@@ -35,6 +36,7 @@
                 villkoren <i class="fa fa-external-link" aria-hidden="true"></i>
               </a>
             </p>
+            <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}" data-callback="javascriptCallback"></div>
             <button class="button" type="submit">Sign up</button>
           </form>
         </div>

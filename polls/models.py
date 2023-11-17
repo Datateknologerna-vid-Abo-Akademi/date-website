@@ -2,10 +2,22 @@ import logging
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.utils.timezone import now
 from members.models import Member
 
 logger = logging.getLogger('date')
+
+ANYONE = 1
+MEMBERS_ONLY = 2
+ORDINARY_MEMBERS_ONLY = 3
+VOTE_MEMBERS_ONLY = 4
+
+VOTING_OPTIONS = [
+    (ANYONE, _('Vem som helst')),
+    (MEMBERS_ONLY, _('Endast medlemmar')),
+    (ORDINARY_MEMBERS_ONLY, _('Endast ordinarie medlemmar')),
+    (VOTE_MEMBERS_ONLY, _('Endast röstberättigade medlemmar')),
+]
+
 
 class Question(models.Model):
     question_text = models.CharField(max_length=200)
@@ -14,9 +26,8 @@ class Question(models.Model):
     show_results = models.BooleanField(_('Visa resultat'), default=False)
     end_vote = models.BooleanField(_('Avsluta röstande'), default=False)
     multiple_choice = models.BooleanField(_('Flerval'), default=False)
-    members_only = models.BooleanField(_('Endast medlemmar'), default=False)
-    ordinary_members_only = models.BooleanField(_('Endast ordinarie medlemmar'), default=False)
-    vote_members_only = models.BooleanField(_('Endast röstberättigade medlemmar'), default=False)
+    required_multiple_choices = models.IntegerField(_('Antal flerval som krävs'), blank=True, null=True)
+    voting_options = models.IntegerField(_('Valmöjligheter'), choices=VOTING_OPTIONS, default=ANYONE)
     voters = models.ManyToManyField(Member, through="Vote", related_name='voters')
 
     class Meta:
@@ -32,6 +43,7 @@ class Question(models.Model):
             count_sum += choice.votes
         return count_sum
 
+
 class Choice(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     choice_text = models.CharField(max_length=200)
@@ -46,6 +58,7 @@ class Choice(models.Model):
 
     def get_vote_percentage(self):
         return int((self.votes / self.question.get_total_votes())*10**2)
+
 
 class Vote(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
