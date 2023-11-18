@@ -187,8 +187,8 @@ class FunctionaryRole(models.Model):
     board = models.BooleanField(_('Styrelse'), default=False)
 
     class Meta:
-        verbose_name = _("Funktionärsroll")
-        verbose_name_plural = _("Funktionärsroller")
+        verbose_name = _("Funktionärspost")
+        verbose_name_plural = _("Funktionärsposter")
 
     def __str__(self):
         return self.title
