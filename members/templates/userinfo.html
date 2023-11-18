@@ -1,69 +1,60 @@
 {% extends 'base.html' %}
-
 {% load i18n %}
 {% load static %}
 {% block title %}{% trans 'Användarinformation' %}{% endblock %}
 {% block content %}
     <head>
+        <meta charset="UTF-8">
         <link rel="stylesheet" href="{% static 'members/css/userinfo.css' %}" type="text/css">
     </head>
     <div class="container-md min-vh-100 container-margin-top">
         <div class="container-size">
             <div class="content">
-                {% if msg %}
-                    <h3 style="color: green; text-align: center">{{ msg }}</h3>
-                {% endif %}
-                {% if user.is_authenticated %}
-                <h3> {{user.username}} </h3>
+                <!-- User Information Section -->
+                <h3>{{ user.username }}</h3>
                 <table class="table table-dark table-striped">
                     <tr>
-                        <td>Mail:</td>
-                        <td>{{user.email}}</td>
+                        <td>Email:</td>
+                        <td>{{ user.email }}</td>
                     </tr>
                     <tr>
-                        <td>Firstname:</td>
-                        <td>{{user.first_name}}</td>
+                        <td>Förnamn:</td>
+                        <td>{{ user.first_name }}</td>
                     </tr>
                     <tr>
-                        <td>Lastname:</td>
-                        <td>{{user.last_name}}</td>
+                        <td>Efternamn:</td>
+                        <td>{{ user.last_name }}</td>
                     </tr>
                     <tr>
-                        <td>Phone number:</td>
-                        <td>{{user.phone}}</td>
+                        <td>Telefonnummer:</td>
+                        <td>{{ user.phone }}</td>
                     </tr>
                     <tr>
                         <td>Adress:</td>
-                        <td>{{user.address}}</td>
+                        <td>{{ user.address }}</td>
                     </tr>
                     <tr>
-                        <td>Zip code:</td>
-                        <td>{{user.zip_code}}</td>
+                        <td>Zip kod:</td>
+                        <td>{{ user.zip_code }}</td>
                     </tr>
                     <tr>
-                        <td>City:</td>
-                        <td>{{user.city}}</td>
+                        <td>Stad:</td>
+                        <td>{{ user.city }}</td>
                     </tr>
                     <tr>
-                        <td>Country</td>
-                        <td>{{user.country}}</td>
+                        <td>Land:</td>
+                        <td>{{ user.country }}</td>
                     </tr>
                     <tr>
-                        <td>Membership type:</td>
-                        <td>{{user.get_str_membership_type}}</td>
+                        <td>Medlems typ:</td>
+                        <td>{{ user.get_str_membership_type }}</td>
                     </tr>
-                    <tr>
-                        <td>Is active:</td>
-                        <td>{{user.is_active}}</td>
-                    </tr>
+                    <!-- End of user information fields -->
                 </table>
                 <br>
                 <p>För att ta bort eller ändra din information, kontakta styrelsen på date@abo.fi</p>
-                {% else %}
-                <p>Log in to view info</p>
-                {% endif %}
+                <a href="{% url 'members:functionary' %}" class="custom-button">Funktionärsroller <i class="fas fa-chevron-right"></i></a>
             </div>
         </div>
     </div>
-
- {% endblock %} 
+{% endblock %}
