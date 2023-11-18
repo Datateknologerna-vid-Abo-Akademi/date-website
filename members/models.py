@@ -180,3 +180,30 @@ class AlumniEmailRecipient(models.Model):
     class Meta:
         verbose_name = _("Emailmottagare för ARG")
         verbose_name_plural = _("Emailmottagare för ARG")
+
+
+class FunctionaryRole(models.Model):
+    title = models.CharField(_('Titel'), max_length=200)
+    board = models.BooleanField(_('Styrelse'), default=False)
+
+    class Meta:
+        verbose_name = _("Funktionärspost")
+        verbose_name_plural = _("Funktionärsposter")
+
+    def __str__(self):
+        return self.title
+
+
+class Functionary(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    functionary_role = models.ForeignKey(FunctionaryRole, on_delete=models.CASCADE)
+    year = models.IntegerField(_('Årtal'))
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("Funktionär")
+        verbose_name_plural = _("Funktionärer")
+
+    def __str__(self):
+        return f"{self.member.get_full_name()} {self.functionary_role.title} {self.year}"

@@ -1,0 +1,16 @@
+.btn-link-delete {
+    color: var(--warning-darker);
+}
+
+.btn-link-delete:hover {
+    color: var(--warning);
+}
+
+.card {
+    background-color: transparent;
+    border: 1px solid var(--secondaryColorDarker);
+}
+
+.card-body h5 {
+    color: var(--helpTextLighter);
+}
