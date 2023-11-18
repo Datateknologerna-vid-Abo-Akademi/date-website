@@ -6,7 +6,6 @@ from .models import Functionary, FunctionaryRole
 
 
 def get_functionaries_by_role(functionaries):
-
     functionaries_by_role = defaultdict(list)
 
     for functionary in functionaries:
@@ -20,8 +19,6 @@ def get_current_year():
 
 
 def get_selected_year(request, distinct_years):
-    print(distinct_years)
-
     selected_year = get_current_year()
     all_years = False
 
