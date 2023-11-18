@@ -126,6 +126,8 @@ class SignUpForm(forms.ModelForm):
         help_text=_('detta fält är obligatoriskt'),
         label=_('Lösenord')
     )
+    first_name = forms.CharField(max_length=100, required=True, label=_('Förnamn'))
+    last_name = forms.CharField(max_length=100, required=True, label=_('Efternamn'))
 
     class Meta:
         model = Member
