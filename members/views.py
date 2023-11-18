@@ -32,12 +32,8 @@ class UserinfoView(View):
     @method_decorator(login_required)
     def get(self, request):
         user = request.user
-        functionaries = Functionary.objects.filter(member=user).order_by('-year')
-        form = FunctionaryForm()  # Functionary form instance
         context = {
             "user": user,
-            "functionaries": functionaries,
-            "form": form,  # Adding the form instance to the context
         }
         return render(request, 'userinfo.html', context)
 
