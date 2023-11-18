@@ -21,6 +21,7 @@
     --linkColorLight: rgb(208, 255, 0);
     --linkColorLightHover: rgb(146, 179, 0);
     --warning: rgb(216, 153, 146);
+    --warning-darker: rgb(213, 91, 78);
     --defaultPadding: 20px;
     --defaultRadius: 5px;
 }

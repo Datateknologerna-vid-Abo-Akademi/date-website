@@ -6,7 +6,7 @@ from django.db.models.functions import Lower
 from members.forms import (MemberCreationForm, MemberUpdateForm,
                            SubscriptionPaymentForm, SubscriptionPaymentChoiceField, AlumniSignUpForm)
 from members.models import (Member, Subscription, AlumniSignUp,
-                            SubscriptionPayment, AlumniEmailRecipient)
+                            SubscriptionPayment, AlumniEmailRecipient, FunctionaryRole, Functionary)
 
 admin.site.register(Permission)
 admin.site.register(Subscription)
@@ -94,6 +94,19 @@ class AlumniSignUpAdmin(admin.ModelAdmin):
     ]
     list_display = ('name', 'email', 'signup_date')
     list_filter = ('year_of_admission', 'tfif_membership', 'acknowledge', 'signup_date')
+
+
+@admin.register(Functionary)
+class FunctionaryAdmin(admin.ModelAdmin):
+    list_filter = ('functionary_role', 'year')
+    search_fields = ('member__first_name', 'member__last_name', 'functionary_role__title', 'year')
+    ordering = ['-year', ]
+
+@admin.register(FunctionaryRole)
+class FunctionaryRoleAdmin(admin.ModelAdmin):
+    list_filter = ('board',)
+    search_fields = ('title',)
+    ordering = ['title', ]
 
 
 admin.site.register(AlumniEmailRecipient)
