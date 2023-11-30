@@ -62,6 +62,7 @@ class Event(models.Model):
     image = models.ImageField(_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
     s3_image = PublicFileField(verbose_name=_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
     captcha = models.BooleanField(_('Captcha'), default=False)
+    redirect_link = models.URLField(_('Redirect Link'), blank=True)
 
     class Meta:
         verbose_name = _('evenemang')
