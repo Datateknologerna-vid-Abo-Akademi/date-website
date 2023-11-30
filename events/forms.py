@@ -23,7 +23,6 @@ class EventCreationForm(forms.ModelForm):
     sign_up_members = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
     sign_up_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
     sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    redirect_link = forms.URLField(required=False, label='Redirect Link')
 
     class Meta:
         model = Event
@@ -79,8 +78,6 @@ class EventCreationForm(forms.ModelForm):
     def save(self, commit=True):
         post = super(EventCreationForm, self).save(commit=False)
 
-        post.redirect_link = self.cleaned_data.get('redirect_link', '')
-
         if self.user is None:
             return None
         post.author = self.user
@@ -116,7 +113,6 @@ class EventEditForm(forms.ModelForm):
     sign_up_members = forms.SplitDateTimeField(**sign_up_args)
     sign_up_deadline = forms.SplitDateTimeField(**sign_up_args)
     sign_up_cancelling_deadline = forms.SplitDateTimeField(**sign_up_args)
-    redirect_link = forms.URLField(required=False, label='Redirect Link')
 
     class Meta:
         model = Event
@@ -152,8 +148,6 @@ class EventEditForm(forms.ModelForm):
 
     def save(self, commit=True):
         post = super(EventEditForm, self).save(commit=False)
-
-        post.redirect_link = self.cleaned_data.get('redirect_link', '')
 
         if self.user is None:
             return None

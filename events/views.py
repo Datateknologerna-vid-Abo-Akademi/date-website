@@ -77,10 +77,6 @@ class EventDetailView(DetailView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        # Check if redirect link is specified
-        redirect_link = self.request.POST.get('redirect_link', None)
-        if redirect_link:
-            return redirect(redirect_link)
         # set passcode status to session if passcode is enabled
         if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
             if self.object.passcode == request.POST.get('passcode'):
