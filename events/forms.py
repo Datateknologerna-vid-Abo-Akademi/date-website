@@ -12,7 +12,7 @@ from events.models import Event
 
 logger = logging.getLogger('date')
 
-slug_transtable = str.maketrans("åäö ","aao_")
+slug_transtable = str.maketrans("åäö ", "aao_")
 
 
 class EventCreationForm(forms.ModelForm):
@@ -45,13 +45,13 @@ class EventCreationForm(forms.ModelForm):
             'passcode',
             'price',
             'captcha',
+            'redirect_link',
         )
         if settings.USE_S3:
             fields = temp_fields + ('s3_image',)
         else:
             fields = temp_fields + ('image',)
-    
-    
+
     class Media:
         js = (
             '//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',  # jquery,
@@ -61,15 +61,15 @@ class EventCreationForm(forms.ModelForm):
         slug = self.cleaned_data['slug'].strip()
         if slug == "" and "title" in self.cleaned_data:
             base_slug = self.cleaned_data['title'].lower().translate(slug_transtable)
-            base_slug = re.sub("[^a-zA-Z0-9_]*",'',base_slug)
-            base_slug = re.sub("__+",'_',base_slug)
+            base_slug = re.sub("[^a-zA-Z0-9_]*", '', base_slug)
+            base_slug = re.sub("__+", '_', base_slug)
             slug = base_slug
 
-            collisions = Event.objects.filter(slug = slug)
+            collisions = Event.objects.filter(slug=slug)
             suffix = 1
             while collisions:
-                slug = base_slug+"_"+str(suffix)
-                collisions = Event.objects.filter(slug = slug)
+                slug = base_slug + "_" + str(suffix)
+                collisions = Event.objects.filter(slug=slug)
                 suffix += 1
         # slugify_max actually does a trim down to the size of the underlying database column
         slug = slugify_max(slug, max_length=models.POST_SLUG_MAX_LENGTH)
@@ -105,10 +105,10 @@ class EventEditForm(forms.ModelForm):
     event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
     event_date_end = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
 
-    sign_up_args= {
-            "widget":widgets.AdminSplitDateTime(),
-            "initial":now(),
-            "required":False
+    sign_up_args = {
+        "widget": widgets.AdminSplitDateTime(),
+        "initial": now(),
+        "required": False
     }
     sign_up_others = forms.SplitDateTimeField(**sign_up_args)
     sign_up_members = forms.SplitDateTimeField(**sign_up_args)
@@ -136,12 +136,12 @@ class EventEditForm(forms.ModelForm):
             'passcode',
             'price',
             'captcha',
+            'redirect_link',
         )
         if settings.USE_S3:
             fields = temp_fields + ('s3_image',)
         else:
             fields = temp_fields + ('image',)
-
 
     class Media:
         js = (
@@ -150,6 +150,7 @@ class EventEditForm(forms.ModelForm):
 
     def save(self, commit=True):
         post = super(EventEditForm, self).save(commit=False)
+
         if self.user is None:
             return None
 
