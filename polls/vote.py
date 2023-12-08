@@ -38,7 +38,10 @@ def is_user_authorized_to_vote(question, user):
     if question.voting_options == ANYONE:
         return True
 
-    if question.voting_options == MEMBERS_ONLY and user.is_authenticated:
+    if not user.is_authenticated:
+        return False
+
+    if question.voting_options == MEMBERS_ONLY:
         return True
 
     if question.voting_options == ORDINARY_MEMBERS_ONLY and user.membership_type == ORDINARY_MEMBER:
