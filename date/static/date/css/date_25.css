@@ -1,0 +1,28 @@
+:root {
+    --lightSilver1: #f8f9fa;
+    --lightSilver2: #e9ecef;
+    --lightSilver3: #dee2e6;
+    --lightSilver4: #ced4da;
+    --silver: #adb5bd;
+    --darkSilver1: #6c757d;
+    --darkSilver2: #495057;
+    --darkSilver3: #343a40;
+    --darkSilver4: #212529;
+}
+
+html body {
+    color: var(--lightSilver2);
+    font-family: 'Josefin Sans', sans-serif;
+}
+
+nav, footer {
+    display: none !important;
+}
+
+.event {
+    border: 2px solid var(--lightSilver4);
+    border-radius: 3px;
+    color: var(--lightSilver2);
+    padding: 10px;
+    margin: 10px 0;
+}
