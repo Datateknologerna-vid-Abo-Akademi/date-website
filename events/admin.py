@@ -14,20 +14,16 @@ from events.widgets import PrettyJSONWidget
 logger = logging.getLogger('date')
 
 
-class EventRegistrationFormInline(admin.TabularInline):
+class EventRegistrationFormInline(OrderableAdmin, admin.TabularInline):
     line_numbering = 0
     model = EventRegistrationForm
     fk_name = 'event'
     extra = 0
-    readonly_fields = ('line_number',)
-    fields = ('line_number', 'name', 'type', 'required', 'public_info', 'hide_for_avec', 'choice_list')
+    fields = ('choice_number', 'name', 'type', 'required', 'public_info', 'hide_for_avec', 'choice_list')
     can_delete = True
-
-    def line_number(self, obj):
-        self.line_numbering += 1
-        return self.line_numbering
-
-    line_number.short_description = '#'
+    ordering_field = ('choice_number',)
+    ordering = ['choice_number']
+    ordering_field_hide_input = True
 
 
 class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
