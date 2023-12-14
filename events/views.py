@@ -66,6 +66,10 @@ class EventDetailView(DetailView):
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         show_content = not self.object.members_only or (self.object.members_only and request.user.is_authenticated)
+        # Check if there's a redirect link
+        redirect_link = self.object.redirect_link
+        if redirect_link and show_content:
+            return redirect(redirect_link)
         if not show_content:
             return redirect('/members/login')
         context = self.get_context_data(object=self.object)
@@ -83,7 +87,6 @@ class EventDetailView(DetailView):
             else:
                 return render(self.request, 'events/event_passcode.html',
                               self.get_context_data(passcode_error='invalid passcode'))
-
 
         if self.object.sign_up and (request.user.is_authenticated
                                     and self.object.registration_is_open_members()
