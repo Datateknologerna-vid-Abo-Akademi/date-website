@@ -11,9 +11,19 @@
     <div class="signup-page">
         <div class="members-form big">
             {% if alumni %}
-              <h2>ARG sign up</h2>
+              <h2>ARG Registrering</h2>
+            <p style="width: 110%; margin-left: -5%; margin-right: auto">
+                Efter att du registrerat dig vänligen betala medlemsavgiften på 85€ till:<br>
+                <br>
+                Mottagare: Kemistklubben vid Åbo Akademi rf<br>
+                IBAN: FI38 6601 0001 0479 43<br>
+                BIC: AABAFI22<br>
+                Referens: 5555<br>
+                <br>
+                (Instruktionerna skickas även via e-post efter att du registrerat dig)<br>
+            </p>
             {% else %}
-              <h2>Sign up</h2>
+                <h2>Registrera dig</h2>
             {% endif %}
           <form method="post">
             {% csrf_token %}
@@ -32,12 +42,12 @@
             <p class="consent-form-group">
               <input type="checkbox" name="consent" required/>
               Jag godkänner
-              <a href="http://{{ request.get_host }}/pages/registerbeskrivning/" target="_blank">
+              <a href="https://{{ request.get_host }}/pages/registerbeskrivning/" target="_blank">
                 villkoren <i class="fa fa-external-link" aria-hidden="true"></i>
               </a>
             </p>
             <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}" data-callback="javascriptCallback"></div>
-            <button class="button" type="submit">Sign up</button>
+            <button class="button" type="submit">Registrera dig</button>
           </form>
         </div>
     </div>
