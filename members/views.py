@@ -107,7 +107,7 @@ def activate(request, uidb64, token):
 
 
 def alumni_signup(request):
-    '''Handle signup form and email sending for new alumnis'''
+    """Handle signup form and email sending for new alumnis"""
 
     form = AlumniSignUpForm(request.POST or None)
 
@@ -120,13 +120,13 @@ def alumni_signup(request):
 
         # Mail to the person signing up
         alumni_email = form.cleaned_data['email']
-        alumni_message_subject = "Välkommen till ARG - Betalningsinstruktioner"
+        alumni_message_subject = "Välkommen till ASG - Betalningsinstruktioner"
         alumni_message_content = render_to_string('alumni_signup_email.html')
         final_alumni_email = EmailMessage(alumni_message_subject, alumni_message_content, to=[alumni_email])
 
         # Mail to relevant people
         admin_message_recipients = list(AlumniEmailRecipient.objects.all().values_list('recipient_email', flat=True))
-        admin_message_subject = f"ARG - Ny medlem {form.cleaned_data['name']}"
+        admin_message_subject = f"ASG - Ny medlem {form.cleaned_data['name']}"
         admin_message_content = render_to_string('alumni_signup_email_admin.html', {'alumni': form.cleaned_data, 'alumni_id': alumni.id})
         final_admin_email = EmailMessage(admin_message_subject, admin_message_content, to=admin_message_recipients)
 
