@@ -107,7 +107,7 @@ def activate(request, uidb64, token):
 
 
 def alumni_signup(request):
-    '''Handle signup form and email sending for new alumnis'''
+    """Handle signup form and email sending for new alumnis"""
 
     form = AlumniSignUpForm(request.POST or None)
 
