@@ -98,7 +98,8 @@ class EventAdmin(admin.ModelAdmin):
         context = self.admin_site.each_context(request)
         event = self.get_object(request, event_id)
         context['event'] = event
-        context["form"] = [x.name for x in event.get_registration_form()][::-1]
+        rf = event.get_registration_form()
+        context["form"] = [x.name for x in rf][::-1] if rf else None
         return TemplateResponse(
             request,
             'events/list.html',
