@@ -8,6 +8,9 @@
     --darkSilver2: #495057;
     --darkSilver3: #343a40;
     --darkSilver4: #212529;
+    --loadingColor: var(--silver);
+    /*--loadingErrorColor: var(--darkSilver1);*/
+    --loadingErrorColor: rgba(213, 1, 58, 0.63);
 }
 
 html body {
@@ -19,10 +22,160 @@ nav, footer {
     display: none !important;
 }
 
-.event {
-    border: 2px solid var(--lightSilver4);
-    border-radius: 3px;
-    color: var(--lightSilver2);
-    padding: 10px;
-    margin: 10px 0;
+/*.event {*/
+/*    border: 2px solid var(--lightSilver4);*/
+/*    border-radius: 3px;*/
+/*    color: var(--lightSilver2);*/
+/*    padding: 10px;*/
+/*    margin: 10px 0;*/
+/*}*/
+
+.loading-bar {
+    background-color: var(--darkSilver4);
+    border-radius: var(--defaultRadius);
+    height: 50px;
+    width: 100%;
+    margin: 20px 0;
+    border: 1px solid var(--lightSilver2);
+}
+
+.loading-bar div {
+    height: 100%;
+    display: inline-block;
+}
+
+.bar1 {
+    width: 5%;
+    height: 100%;
+    background-color: var(--loadingColor);
+    border-radius: var(--defaultRadius);
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.bar2 {
+    width: 5%;
+    height: 100%;
+    background-color: var(--loadingColor);
+    border-radius: var(--defaultRadius);
+    animation: fadeIn 1.5s ease-in-out;
+}
+
+.bar3 {
+    width: 5%;
+    height: 100%;
+    background-color: var(--loadingColor);
+    border-radius: var(--defaultRadius);
+    animation: fadeIn 2s ease-in-out;
+}
+
+.bar4 {
+    width: 5%;
+    height: 100%;
+    background-color: var(--loadingColor);
+    border-radius: var(--defaultRadius);
+    animation: fadeIn 2.5s ease-in-out;
+}
+
+.bar5 {
+    width: 5%;
+    height: 100%;
+    background-color: var(--loadingColor);
+    border-radius: var(--defaultRadius);
+    animation: fadeIn 3s ease-in-out;
+}
+
+.bar-error {
+    width: 5%;
+    height: 100%;
+    animation: fadeInQuick 3s ease-in-out;
+}
+
+.bar-6 {
+    width: 100%;
+    height: 100%;
+    background-color: var(--loadingErrorColor);
+    border-radius: var(--defaultRadius);
+    animation: fadeIn 2.5s ease-in-out infinite;
+}
+
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInQuick {
+    0% {
+        opacity: 0;
+    }
+    90% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+#myPath {
+    fill: var(--lightSilver2);
+    animation: draw 3s linear forwards; /* Adjust duration and timing function as needed */
+    stroke: var(--lightSilver1);
+    opacity: 10;
+}
+
+@keyframes draw {
+    0% {
+        opacity: 0;
+        fill: none;
+        stroke-dashoffset: 1000;
+        stroke-dasharray: 5000; /* Change this value to match the length of your path */
+        stroke: var(--silver);
+    }
+    40% {
+        opacity: 10;
+        fill: none;
+        stroke-dashoffset: 2500;
+        stroke-dasharray: 1000; /* Change this value to match the length of your path */
+        stroke: var(--darkSilver2);
+    }
+    60% {
+        stroke-dashoffset: 1000;
+        stroke-dasharray: 2500; /* Change this value to match the length of your path */
+        stroke: var(--lightSilver2);
+    }
+
+    80% {
+        fill: rgba(255,255,255,0);
+        stroke-dashoffset: 500;
+        stroke-dasharray: 500; /* Change this value to match the length of your path */
+        stroke: var(--loadingErrorColor);
+    }
+    100% {
+        opacity: 10;
+        fill: var(--lightSilver2);
+        stroke-dashoffset: 0;
+        stroke-dasharray: 0; /* Change this value to match the length of your path */
+    }
+}
+
+.main-content {
+    animation: fadeIn 3s cubic-bezier(1,0,1,-0.19);
+}
+
+.date {
+    font-size: 5rem;
+    margin-bottom: 0;
+}
+
+.age {
+    font-size: 10rem;
+    margin-bottom: 0;
+}
+
+.countdown {
+    font-size: 3em;
 }
