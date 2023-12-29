@@ -20,12 +20,10 @@ jobs:
         uses: ASzc/change-string-case-action@v2
         with:
           string: ${{ github.repository }}
-      - name: Docker build
-        run: |
-          docker build -t ghcr.io/${{ steps.string.outputs.lowercase }}:${{ github.ref_name }} .
       - name: Docker login
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-      - name: Docker push
+      - name: Docker build
         run: |
-          docker push ghcr.io/${{ steps.string.outputs.lowercase }}:${{ github.ref_name }}
+          docker buildx create --use
+          docker buildx build --push --platform=linux/amd64,linux/arm64 -t ghcr.io/${{ steps.string.outputs.lowercase }}:${{ github.ref_name }} .
