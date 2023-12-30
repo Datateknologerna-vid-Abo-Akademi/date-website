@@ -60,7 +60,10 @@
 <!-- JavaScript for Random Smoke Effect Trigger -->
 <script>
     window.onload = function () {
-        if (Math.floor(Math.random() * 420) === 0) {
+        let date = new Date();
+        if ((date.getHours() === 4 && date.getMinutes() === 20) ||
+            ((date.getDate() === 1 || date.getDate() === 20) &&
+            date.getMonth() === 3 && Math.floor(Math.random() * 42.0) === 0)) {
             document.getElementById('smokeEffect').classList.add('active');
         }
     };
