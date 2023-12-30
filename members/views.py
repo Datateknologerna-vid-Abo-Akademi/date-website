@@ -5,6 +5,7 @@ import os
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.views import PasswordResetView
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
@@ -17,7 +18,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View
 
 from core.utils import validate_captcha, send_email_task
-from members.forms import SignUpForm, AlumniSignUpForm, FunctionaryForm
+from members.forms import SignUpForm, AlumniSignUpForm, FunctionaryForm, CustomPasswordResetForm
 from .functionary import (get_distinct_years, get_functionary_roles, get_selected_year,
                           get_selected_role, get_filtered_functionaries, get_functionaries_by_role)
 from .models import Member, AlumniEmailRecipient, Functionary
@@ -140,6 +141,10 @@ def alumni_signup(request):
         return render(request, 'registration/registration_complete.html', {'alumni': True})
 
     return render(request, 'signup.html', {'form': form, 'alumni': True})
+
+
+class CustomPasswordResetView(PasswordResetView):
+    form_class = CustomPasswordResetForm
 
 
 class FunctionaryView(View):
