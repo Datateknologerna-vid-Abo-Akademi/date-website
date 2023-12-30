@@ -1,12 +1,15 @@
 import logging
-import requests
+from smtplib import SMTPException
 
+import requests
+from celery import shared_task
 from django.conf import settings
+from django.core.mail import send_mail
 
 logger = logging.getLogger("date")
 
-
 VALIDATION_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+
 
 def validate_captcha(response: str) -> bool:
     secret_key = settings.TURNSTILE_SECRET_KEY
@@ -29,3 +32,11 @@ def validate_captcha(response: str) -> bool:
         return False
 
     return res.json().get('success', False)
+
+
+@shared_task
+def send_email_task(*args, **kwargs) -> None:
+    try:
+        send_mail(*args, **kwargs)
+    except SMTPException:
+        print(f"Failed sending email to: {args[3] or kwargs.get('to', '')}")

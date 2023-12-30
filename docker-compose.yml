@@ -44,6 +44,21 @@ services:
     depends_on:
       - db
       - redis
+  celery:
+    restart: always
+    build: .
+    command: celery -A core worker -l info
+    volumes:
+      - .:/code
+    environment:
+      - DJANGO_SETTINGS_MODULE=core.settings
+      - DEBUG=${DATE_DEBUG}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+    depends_on:
+      - web
+      - redis
   redis:
     restart: always
     image: redis:7.0-alpine
