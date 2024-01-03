@@ -69,6 +69,5 @@ def handler500(request, *args, **argv):
 
 
 def date_25(request):
-    events = Event.objects.filter(published=True)
-    context = {'events': events}
+    context = {}
     return render(request, 'date/date_25.html', context)
