@@ -66,3 +66,8 @@ def handler500(request, *args, **argv):
     response = render(request, '500.html', {})
     response.status_code = 404
     return response
+
+
+def date_25(request):
+    context = {}
+    return render(request, 'date/date_25.html', context)
