@@ -121,13 +121,13 @@ nav, footer {
 }
 
 #myPath {
-    fill: var(--lightSilver2);
-    animation: draw 3s linear forwards; /* Adjust duration and timing function as needed */
+    fill: none;
+    animation: draw1 3s linear forwards; /* Adjust duration and timing function as needed */
     stroke: var(--lightSilver1);
-    opacity: 10;
+    opacity: 1;
 }
 
-@keyframes draw {
+@keyframes draw1 {
     0% {
         opacity: 0;
         fill: none;
@@ -136,7 +136,7 @@ nav, footer {
         stroke: var(--silver);
     }
     40% {
-        opacity: 10;
+        opacity: 1;
         fill: none;
         stroke-dashoffset: 2500;
         stroke-dasharray: 1000; /* Change this value to match the length of your path */
@@ -155,20 +155,19 @@ nav, footer {
         stroke: var(--loadingErrorColor);
     }
     100% {
-        opacity: 10;
-        fill: var(--lightSilver2);
+        opacity: 1;
+        fill: var(--lightSilver3);
         stroke-dashoffset: 0;
         stroke-dasharray: 0; /* Change this value to match the length of your path */
     }
 }
 
 .main-content {
-    animation: fadeIn 3s cubic-bezier(1,0,1,-0.19);
+    animation: fadeIn 3s cubic-bezier(1,0,0.95,-0.3);
 }
 
 .date {
     font-size: 5rem;
-    margin-bottom: 0;
 }
 
 .age {
@@ -178,4 +177,95 @@ nav, footer {
 
 .countdown {
     font-size: 3em;
+}
+
+.metallic {
+    margin-bottom: 0;
+    background-size: 110% 150%;
+    background: radial-gradient(ellipse at center, var(--lightSilver2) 5%, var(--darkSilver2) 70%) center center;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.5px;
+}
+
+.card-shine-effect {
+    --shine-deg: 45deg;
+    overflow: hidden;
+    background-color: var(--lightSilver4);
+    background-repeat: no-repeat;
+    background-position: -100% 0, 0 0;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    background-image: linear-gradient(
+    var(--shine-deg),
+    transparent 20%,
+    transparent 40%,
+    var(--lightSilver1) 50%,
+    var(--lightSilver1) 55%,
+    transparent 70%,
+    transparent 100%
+  );
+
+    background-size: 250% 250%, 100% 100%;
+    animation: shine 4s ease infinite; /* Adjust duration and timing function as needed */
+}
+
+@keyframes shine {
+    0% {
+        background-position: -100% 0, 0 0;
+    }
+    50% {
+        background-position: 200%0, 0 0;
+    }
+    100% {
+        background-position: -100% 0, 0 0;
+    }
+}
+
+svg.circuit-path {
+  position: fixed;
+  bottom: 50%;
+  right: 50%;
+  transform: translate(50%, 50%);
+  z-index: -9;
+  opacity: 0.1;
+  height: 200%;
+  width: auto;
+}
+.path {
+  animation: draw 20s infinite;
+  animation-timing-function: linear;
+}
+.path-01 {
+  animation-delay: 0s;
+}
+.path-02 {
+  animation-delay: 1s;
+}
+.path-03 {
+  animation-delay: 2s;
+}
+.path-04 {
+  animation-delay: 3s;
+}
+.path-05 {
+  animation-delay: 4s;
+}
+
+@media screen and (min-width: 768px) {
+  svg.circuit-path {
+    height: auto;
+    width: 200%;
+  }
+}
+
+@keyframes draw {
+  0% {
+  }
+  100% {
+    stroke-dashoffset: 0;
+    stroke-opacity: 1;
+  }
 }
