@@ -11,6 +11,7 @@ from websocket import create_connection
 from websocket._exceptions import WebSocketBadStatusException
 
 from core.utils import validate_captcha
+from members.models import Member
 from staticpages.models import StaticPage, StaticPageNav
 from .forms import PasscodeForm
 from .models import Event, EventAttendees
@@ -90,6 +91,7 @@ class EventDetailView(DetailView):
 
         if self.object.sign_up and (request.user.is_authenticated
                                     and self.object.registration_is_open_members()
+                                    and Member.objects.get(username=request.user.username).get_active_subscription() is not None
                                     or self.object.registration_is_open_others()
                                     or request.user.groups.filter(
                     name="commodore").exists()):  # Temp fix to allow commodore peeps to enter pre-signed up attendees
