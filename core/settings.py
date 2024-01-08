@@ -83,6 +83,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     'date.middleware.LangMiddleware',
+    'date.middleware.HTCPCPMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
