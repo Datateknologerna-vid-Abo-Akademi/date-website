@@ -1,8 +1,8 @@
 import datetime
+from members.models import Member
 import json
 import logging
 from copy import deepcopy
-
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.http import HttpResponseForbidden
@@ -83,6 +83,10 @@ class EventDetailView(DetailView):
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         show_content = not self.object.members_only or (self.object.members_only and request.user.is_authenticated)
+        # Check if there's a redirect link
+        redirect_link = self.object.redirect_link
+        if redirect_link and show_content:
+            return redirect(redirect_link)
         if not show_content:
             return redirect('/members/login')
         context = self.get_context_data(object=self.object)
@@ -96,11 +100,13 @@ class EventDetailView(DetailView):
                 self.request.session['passcode_status'] = self.object.passcode
                 return render(self.request, 'events/detail.html', self.get_context_data())
             else:
-                return render(self.request, 'events/event_passcode.html', self.get_context_data(passcode_error='invalid passcode'))
+                return render(self.request, 'events/event_passcode.html',
+                              self.get_context_data(passcode_error='invalid passcode'))
 
         if self.object.sign_up and (request.user.is_authenticated
-                                                              and self.object.registration_is_open_members()
-                                                              or self.object.registration_is_open_others()):
+                                    and self.object.registration_is_open_members()
+                                    and Member.objects.get(username=request.user.username).get_active_subscription() is not None
+                                    or self.object.registration_is_open_others()):
             form = self.object.make_registration_form().__call__(data=request.POST)
             if self.object.captcha:
                 if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
@@ -143,14 +149,11 @@ class EventDetailView(DetailView):
 def ws_send(request, form, public_info):
     ws_schema = 'ws' if settings.DEVELOP else 'wss'
     url = request.META.get('HTTP_HOST')
-    if 'localhost' in url:
-        url = 'localhost:8000'
     path = ws_schema + '://' + url + '/ws' + request.path
     try:
         ws = create_connection(path)
         ws.send(json.dumps(ws_data(form, public_info)))
         # Send ws again if avec
-        logger.debug(dict(form.cleaned_data))
         if dict(form.cleaned_data).get('avec'):
             newform = deepcopy(form)
             newform.cleaned_data['user'] = dict(newform.cleaned_data).get('avec_user')
