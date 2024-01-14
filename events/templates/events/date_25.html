@@ -6,7 +6,7 @@
 {% block content %}
 
 <head>
-    <link rel="stylesheet" href="{% static 'date/css/date_25.css' %}">
+    <link rel="stylesheet" href="{% static 'events/css/date_25.css' %}">
 </head>
 
 <div class="container min-vh-100">
@@ -31,6 +31,7 @@
                 <h2 class="age card-shine-effect">25</h2>
                 <h2 class="countdown metallic" id="countdown">.</h2>
                 <h3 class="start-date metallic">24.2.2024</h3>
+                <a class="anmalan" href="{% url 'events:detail' 'arsfest' %}">Anmälan</a>
             </div>
             {% include 'events/svg/circuitssvg.html' %}
         </div>
