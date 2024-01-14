@@ -20,13 +20,14 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from events import views as events
 from date import views as date
 
 app_name = 'core'
 
 urlpatterns = [
     path('', date.index, name='index'),
-    path('25', date.date_25, name='date_25'),
+    path('25', events.date_25, name='date_25'),
     path('news/', include('news.urls')),
     path('members/', include('django.contrib.auth.urls')),
     path('members/', include('members.urls')),

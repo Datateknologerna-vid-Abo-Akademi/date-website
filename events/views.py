@@ -165,3 +165,8 @@ def ws_data(form, public_info):
             data[str(info)] = pref[str(info)]
     print(data)
     return {"data": data}
+
+
+def date_25(request):
+    context = {}
+    return render(request, 'events/date_25.html', context)
