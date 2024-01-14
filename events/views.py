@@ -41,7 +41,8 @@ class EventDetailView(DetailView):
     def get_template_names(self):
         template_name = 'events/detail.html'
         logger.debug(self.get_context_data().get('event').title.lower())
-        if self.get_context_data().get('event').title.lower() == 'årsfest':
+        if (self.get_context_data().get('event').title.lower() == 'årsfest' or
+                self.get_context_data().get('event').title.lower() == 'årsfest gäster'):
             template_name = 'events/arsfest.html'
         if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
             template_name = 'events/event_passcode.html'
@@ -165,3 +166,8 @@ def ws_data(form, public_info):
             data[str(info)] = pref[str(info)]
     print(data)
     return {"data": data}
+
+
+def date_25(request):
+    context = {}
+    return render(request, 'events/date_25.html', context)

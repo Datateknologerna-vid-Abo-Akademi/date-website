@@ -7,45 +7,36 @@
 {% block content %}
     <head>
         <link rel="stylesheet" href="{% static 'events/css/arsfest.css' %}">
+        <link rel="stylesheet" href="{% static 'events/css/date_25.css' %}">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
         <script src="{% static 'js/live-attendee-list.js' %}"></script>
-        <style>
-            .background-img{
-                background: url({% static 'images/goldbg.png' %}) no-repeat center center fixed;
-                -webkit-background-size: cover;
-                -moz-background-size: cover;
-                -o-background-size: cover;
-                background-size: cover;
-            }
-        </style>
     </head>
     <div class="background-img">
+    {% include 'events/svg/circuitssvg.html' %}
         <div class="container-md min-vh-100 p-1">
             <div class="container-size">
                 <div class="content header-box">
-                    <div class="square" style="left: 10%; bottom: 0;"></div>
-                    <div class="square" style="left: 15%; bottom: -55%;"></div>
-                    <div class="square" style="left: 40%; bottom: 40%;"></div>
-                    <div class="square" style="left: 50%; bottom: -20%;"></div>
-                    <div class="square" style="left: 60%; bottom: 50%;"></div>
-                    <div class="square" style="left: 80%; bottom: -60%;"></div>
-                    <div class="square" style="left: 90%; bottom: 30%;"></div>
-                    <div class="square" style="left: 95%; bottom: -40%;"></div>
-                    <div class="gold-left">
-                        <img src={% static 'images/goldborderleft.png' %} alt="gold">
+
+                <div class="loading-bar">
+                    <div class="bar1"></div>
+                    <div class="bar2"></div>
+                    <div class="bar3"></div>
+                    <div class="bar4"></div>
+                    <div class="bar5"></div>
+                    <div class="bar-error"><div class="bar-6"></div></div>
+                </div>
+                <div class="row justify-content-center">
+                    <div class="col-md-6 col-8 pentalbin">
+                        {% include 'events/svg/pentalbinsvg.html' %}
                     </div>
-                    <div class="gold-right">
-                        <img src={% static 'images/goldborderright.png' %} alt="gold">
+                </div>
+
+                <div class="main-content mt-4">
+                    <div class="text-center">
+                        <h2 class="age card-shine-effect">DaTe 25</h2>
                     </div>
-                    <div class="gold-left-bottom">
-                        <img src={% static 'images/goldborderleft.png' %} alt="gold">
-                    </div>
-                    <div class="gold-right-bottom">
-                        <img src={% static 'images/goldborderright.png' %} alt="gold">
-                    </div>
-                    <img class="header-logo" src="{% static 'images/albin_gold2.png' %}" alt="albin">
-                    <h1 class="baal-header">DaTe XXIV</h1>
+                </div>
                     <div class="baal-nav">
                         <a class="baal-link" onclick="showPage(this)" href="#/main" data-nav="main">Välkommen</a>
                         {% for page in staticpages %}
@@ -148,26 +139,19 @@
         const mcdrink = new Audio("https://dl.sndup.net/km6b/mcdrink.mp3");
         const auugh = new Audio("https://dl.sndup.net/cx42/auugh.mp3");
 
-        $('.header-logo').click(function () {
+        $('.pentalbin').click(function () {
             counter++;
 
             if (counter == 10) {
-                $('.header-logo').click(function () {
+                $('.pentalbin').click(function () {
                     opendrink.play();
                 });
             }
 
             if (counter == 20) {
-                $('.square').css({
+                $('.age').text("SILLIZ!!");
 
-                    'transform': 'scale(15.01)',
-                    'background-color': 'turquoise',
-                    'color': 'white',
-                });
-
-                $('.baal-header').text("SILLIZ!!");
-
-                $('.header-logo').css({
+                $('.pentalbin').css({
                     'animation': 'spin 3s infinite',
                 })
 
@@ -185,7 +169,7 @@
                     $(this).css('animation', 'shake 1s infinite')
                 });
 
-                $('.header-logo').click(function () {
+                $('.pentalbin').click(function () {
                     mcdrink.play();
                 });
 
@@ -213,7 +197,7 @@
                 $('body').css({
                     'animation': ' shake 1s infinite',
                 });
-                $('.baal-header').text("krapulaAAA");
+                $('.age').text("krapulaAAA");
 
                 $('.background-img').css({
                     'background': "url('https://i.imgur.com/AyB1M56.jpg') center center fixed"
@@ -237,7 +221,7 @@
                     $(this).css('animation', 'shake 1s infinite')
                 });
 
-                $('h1,h2,h4,p,small,.button,#attendees,.header-logo').click(function () {
+                $('h1,h2,h4,p,small,.button,#attendees,.pentalbin').click(function () {
                     auugh.play();
                 });
 
