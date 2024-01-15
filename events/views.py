@@ -83,7 +83,8 @@ class EventDetailView(DetailView):
         if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
             if self.object.passcode == request.POST.get('passcode'):
                 self.request.session['passcode_status'] = self.object.passcode
-                if self.get_context_data().get('event').title.lower() == 'årsfest':
+                if (self.get_context_data().get('event').title.lower() == 'årsfest' or
+                self.get_context_data().get('event').title.lower() == 'årsfest gäster'):
                     return render(self.request, 'events/arsfest.html', self.get_context_data())
                 return render(self.request, 'events/detail.html', self.get_context_data())
             else:
