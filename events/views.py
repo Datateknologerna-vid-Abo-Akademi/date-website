@@ -26,13 +26,11 @@ class IndexView(ListView):
     template_name = 'events/index.html'
 
     def get_context_data(self, **kwargs):
-        context = super(IndexView, self).get_context_data(**kwargs)
-        context['event_list'] = Event.objects.filter(published=True,
-                                                     event_date_end__gte=datetime.date.today()).order_by(
-            'event_date_start')
-        context['past_events'] = Event.objects.filter(published=True,
-                                                      event_date_end__lte=datetime.date.today()).order_by(
-            'event_date_start').reverse()
+        context = super().get_context_data(**kwargs)
+        events = Event.objects.filter(published=True).order_by('event_date_start')
+        today = datetime.date.today()
+        context['event_list'] = events.filter(event_date_end__gte=today)
+        context['past_events'] = events.filter(event_date_end__lte=today).reverse()
         return context
 
 
@@ -40,16 +38,20 @@ class EventDetailView(DetailView):
     model = Event
     template_name = 'events/detail.html'
 
-    def get_template_names(self):
-        template_name = 'events/detail.html'
-        logger.debug(self.get_context_data().get('event').title.lower())
-        if (self.get_context_data().get('event').title.lower() == 'årsfest' or
-                self.get_context_data().get('event').title.lower() == 'årsfest gäster'):
-            template_name = 'events/arsfest.html'
-        if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
-            template_name = 'events/event_passcode.html'
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        response = self.handle_redirection(request)
+        if response:
+            return response
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
 
-        return template_name
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.handle_passcode(request):
+            return self.handle_passcode(request)
+
+        return self.handle_event_signup(request)
 
     def get_context_data(self, **kwargs):
         context = super(EventDetailView, self).get_context_data(**kwargs)
@@ -67,72 +69,20 @@ class EventDetailView(DetailView):
 
         return context
 
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        show_content = not self.object.members_only or (self.object.members_only and request.user.is_authenticated)
-        # Check if there's a redirect link
-        redirect_link = self.object.redirect_link
-        if redirect_link and show_content:
-            return redirect(redirect_link)
-        if not show_content:
-            return redirect('/members/login')
-        context = self.get_context_data(object=self.object)
-        return self.render_to_response(context)
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        # set passcode status to session if passcode is enabled
+    def get_template_names(self):
+        event_title = self.get_context_data().get('event').title.lower()
+        logger.debug(event_title)
+        if event_title in ['årsfest', 'årsfest gäster']:
+            return ['events/arsfest.html']
         if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
-            if self.object.passcode == request.POST.get('passcode'):
-                self.request.session['passcode_status'] = self.object.passcode
-                if (self.get_context_data().get('event').title.lower() == 'årsfest' or
-                self.get_context_data().get('event').title.lower() == 'årsfest gäster'):
-                    return render(self.request, 'events/arsfest.html', self.get_context_data())
-                return render(self.request, 'events/detail.html', self.get_context_data())
-            else:
-                return render(self.request, 'events/event_passcode.html',
-                              self.get_context_data(passcode_error='invalid passcode'))
-
-        if self.object.sign_up and (request.user.is_authenticated
-                                    and self.object.registration_is_open_members()
-                                    and Member.objects.get(username=request.user.username).get_active_subscription() is not None
-                                    or self.object.registration_is_open_others()
-                                    or request.user.groups.filter(
-                    name="commodore").exists()):  # Temp fix to allow commodore peeps to enter pre-signed up attendees
-            form = self.object.make_registration_form().__call__(data=request.POST)
-            if self.object.captcha:
-                if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
-                    return self.form_invalid(form)
-            if form.is_valid():
-                public_info = self.object.get_registration_form_public_info()
-                # Do not send ws data on refresh after initial signup.
-                if not EventAttendees.objects.filter(email=request.POST.get('email'), event=self.object.id).first():
-                    logger.info(f"User {request.user} signed up with name: {request.POST.get('user')}")
-                    if not settings.TEST:
-                        ws_send(request, form, public_info)
-                return self.form_valid(form)
-            return self.form_invalid(form)
-        return HttpResponseForbidden()
+            return ['events/event_passcode.html']
+        return [self.template_name]
 
     def form_valid(self, form):
-        attendee = self.get_object().add_event_attendance(user=form.cleaned_data['user'],
-                                                          email=form.cleaned_data['email'],
-                                                          anonymous=form.cleaned_data['anonymous'],
-                                                          preferences=form.cleaned_data)
+        attendee = self.add_attendance(form.cleaned_data)
         if 'avec' in form.cleaned_data and form.cleaned_data['avec']:
-            avec_data = {'avec_for': attendee}
-            for key in form.cleaned_data:
-                if key.startswith('avec_'):
-                    field_name = key.split('avec_')[1]
-                    value = form.cleaned_data[key]
-                    avec_data[field_name] = value
-            self.get_object().add_event_attendance(user=avec_data['user'], email=avec_data['email'],
-                                                   anonymous=avec_data['anonymous'], preferences=avec_data,
-                                                   avec_for=avec_data['avec_for'])
-        if (self.get_context_data().get('event').title.lower() == 'årsfest' or
-                self.get_context_data().get('event').title.lower() == 'årsfest gäster'):
-            return redirect(f"/events/{self.get_context_data().get('event').slug}/#/anmalda")
-        return redirect(f"/events/{self.get_context_data().get('event').slug}")
+            self.handle_avec_data(form.cleaned_data, attendee)
+        return self.redirect_after_signup()
 
     def form_invalid(self, form):
         if (self.get_context_data().get('event').title.lower() == 'årsfest' or
@@ -140,30 +90,74 @@ class EventDetailView(DetailView):
             return render(self.request, 'events/arsfest.html', self.get_context_data(form=form))
         return render(self.request, self.template_name, self.get_context_data(form=form), status=400)
 
+    def handle_redirection(self, request):
+        show_content = not self.object.members_only or request.user.is_authenticated
+        if self.object.redirect_link and show_content:
+            return redirect(self.object.redirect_link)
+        if not show_content:
+            return redirect('/members/login')
 
-def ws_send(request, form, public_info):
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(f"event_{request.path.split('/')[-2]}",
-                                            {"type": "event_message", **ws_data(form, public_info)})
-    # Send ws again if avec
-    if dict(form.cleaned_data).get('avec'):
-        newform = deepcopy(form)
-        newform.cleaned_data['user'] = dict(newform.cleaned_data).get('avec_user')
-        public_info = ''
-        async_to_sync(channel_layer.group_send)(f"event_{request.path.split('/')[-2]}",
-                                                {"type": "event_message", **ws_data(newform, public_info)})
+    def handle_passcode(self, request):
+        if self.object.passcode and self.object.passcode != request.session.get('passcode_status', False):
+            if self.object.passcode == request.POST.get('passcode'):
+                request.session['passcode_status'] = self.object.passcode
+                return self.render_to_response(self.get_context_data())
+            else:
+                return render(request, 'events/event_passcode.html',
+                              self.get_context_data(passcode_error='invalid passcode'))
+        return None
 
+    def handle_event_signup(self, request):
+        if not self.object.sign_up:
+            return HttpResponseForbidden()
 
-def ws_data(form, public_info):
-    data = {}
-    pref = dict(form.cleaned_data)  # Creates copy of form
+        user_authenticated = request.user.is_authenticated
+        user_member = Member.objects.get(username=request.user.username).get_active_subscription() is not None
+        registration_open_for_members = self.object.registration_is_open_members()
+        registration_open_for_others = self.object.registration_is_open_others()
+        user_in_commodore_group = request.user.groups.filter(name="commodore").exists()
 
-    data['user'] = "Anonymous" if pref['anonymous'] else pref['user']
-    # parse the public info and only send that through websockets.
-    for index, info in enumerate(public_info):
-        if str(info) in pref:
-            data[str(info)] = pref[str(info)]
-    return {"data": data}
+        # Check if user is allowed to sign up
+        if not (user_authenticated and (
+                user_member and registration_open_for_members) or registration_open_for_others or user_in_commodore_group):
+            return HttpResponseForbidden()
+
+        form = self.object.make_registration_form()(data=request.POST)
+
+        # CAPTCHA validation if applicable
+        if self.object.captcha and not validate_captcha(request.POST.get('cf-turnstile-response', '')):
+            return self.form_invalid(form)
+
+        if form.is_valid():
+            return self.process_signup_form(form, request)
+
+        return self.form_invalid(form)
+
+    def process_signup_form(self, form, request):
+        public_info = self.object.get_registration_form_public_info()
+        if not EventAttendees.objects.filter(email=form.cleaned_data['email'], event=self.object.id).first():
+            logger.info(f"User {request.user} signed up with name: {form.cleaned_data['user']}")
+            if not settings.TEST:
+                ws_send(request, form, public_info)
+        return self.form_valid(form)
+
+    def redirect_after_signup(self):
+        event = self.get_context_data().get('event')
+        if event.title.lower() in ['årsfest', 'årsfest gäster']:
+            return redirect(f"/events/{event.slug}/#/anmalda")
+        return redirect(f"/events/{self.get_context_data().get('event').slug}
+
+    def handle_avec_data(self, cleaned_data, attendee):
+        avec_data = {'avec_for': attendee}
+        for key in cleaned_data:
+            if key.startswith('avec_'):
+                field_name = key.split('avec_')[1]
+                value = cleaned_data[key]
+                avec_data[field_name] = value
+        self.add_attendance(avec_data)
+
+    def add_attendance(self, data):
+        return self.get_object().add_event_attendance(**data)
 
 
 def date_25(request):
