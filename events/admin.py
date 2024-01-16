@@ -9,7 +9,7 @@ from django.utils.html import format_html
 
 from events import forms
 from events.models import Event, EventAttendees, EventRegistrationForm
-from events.widgets import PrettyJSONWidget
+from .widgets import PrettyJSONWidget
 
 logger = logging.getLogger('date')
 
@@ -32,9 +32,9 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
     model = EventAttendees
     fk_name = 'event'
     extra = 0
-    list_editable = ('user', 'email', 'preferences')
+    list_editable = ('user', 'email', 'preferences', 'preferences')
     formfield_overrides = {
-        JSONField: {'widget': PrettyJSONWidget()}
+        JSONField: {'widget': PrettyJSONWidget(attrs={'initial': 'parsed'})}
     }
     can_delete = True
     ordering = ['attendee_nr']
@@ -44,6 +44,7 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
         if event and event.sign_up_avec:
             fields.append('avec_for')
         return fields
+
     def get_readonly_fields(self, request, event):
         readonly_fields = ['time_registered']
         return readonly_fields
@@ -53,6 +54,7 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
         if db_field.name == "avec_for":
             kwargs["queryset"] = EventAttendees.objects.filter(event=event_id)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):

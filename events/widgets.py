@@ -1,14 +1,15 @@
 from django.forms import widgets
 
-from core import settings
+from django.conf import settings
 
 
 class PrettyJSONWidget(widgets.Textarea):
 
-    def render(self, name, value, **kwargs):
-        html = super(PrettyJSONWidget, self).render(name, value)
+    def render(self, name, value, attrs=None, **kwargs):
+        html = super(PrettyJSONWidget, self).render(name, value, attrs)
+        start_as = self.attrs.get('initial', None) or 'raw'
 
-        return ('<div class="jsonwidget" data-initial="parsed">' + html + '<div ''class="parsed"></div></div>')
+        return f'<div class="jsonwidget" data-initial="{start_as}"><p><button class="parseraw" type="button">Show parsed</button></p>' + html + '<div class="parsed"></div></div>'
 
     @property
     def media(self):
@@ -19,7 +20,4 @@ class PrettyJSONWidget(widgets.Textarea):
                 'admin/js/jquery.init.js',
                 'prettyjson/prettyjson.js',
             ),
-            css={
-                'all': ('prettyjson/prettyjson.date',)
-            },
         )
