@@ -1,19 +1,23 @@
 import datetime
-import random
-
-from django.shortcuts import render, redirect
-from django.utils import translation
-
 from django.conf import settings
+import random
+from django.shortcuts import render, redirect
+from django.utils import timezone
+from django.utils import translation
+from django.views.decorators.cache import cache_page
+from itertools import chain
+
+from ads.models import AdUrl
+from event_calendar.views import get_calendar, get_date, prev_month, next_month
 from events.models import Event
 from news.models import Post
-from itertools import chain
-from event_calendar.views import get_calendar, get_date, prev_month, next_month
-from ads.models import AdUrl
 from social.models import IgUrl
 
+
+@cache_page(300)  # Cache page for 5 minutes
 def index(request):
-    d = get_date(request.GET.get('month', None))
+    cm = CalendarManager(request)
+    d = cm.date
 
     events = Event.objects.filter(published=True, event_date_end__gte=d).order_by(
         'event_date_start')
@@ -30,12 +34,11 @@ def index(request):
     }
 
     # KK april fools frontpage
-    date = datetime.date(1337,4,1)
+    date = datetime.date(1337, 4, 1)
     date_of_today = datetime.date.today()
-    if date.month == date_of_today.month and date.day == date_of_today.day and random.randint(1,4) == 1:
+    if date.month == date_of_today.month and date.day == date_of_today.day and random.randint(1, 4) == 1:
         return render(request, 'date/april_start.html', context)
     return render(request, 'date/start.html', context)
-    
 
 
 def language(request, lang):
