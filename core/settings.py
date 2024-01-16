@@ -148,6 +148,13 @@ DATABASES = {
     }
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://redis:6379",
+    },
+}
+
 # Custom members model
 AUTH_USER_MODEL = 'members.Member'
 
