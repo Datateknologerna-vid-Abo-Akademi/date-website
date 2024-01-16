@@ -9,6 +9,26 @@ from members.models import Member
 class EventTestCase(TestCase):
     def setUp(self):
         self.member = Member.objects.create(username='Test', password='test', is_superuser=True)
+
+        # Create past and future events for testing
+        self.past_event1 = Event.objects.create(
+            title='Past Event 1',
+            slug='past-event-1',
+            event_date_end=timezone.now() - timezone.timedelta(days=2),
+            author_id=self.member.id
+        )
+        self.past_event2 = Event.objects.create(
+            title='Past Event 2',
+            slug='past-event-2',
+            event_date_end=timezone.now() - timezone.timedelta(days=1),
+            author_id=self.member.id
+        )
+        self.future_event = Event.objects.create(
+            title='Future Event',
+            slug='future-event',
+            event_date_end=timezone.now() + timezone.timedelta(days=1),
+            author_id=self.member.id
+        )
         self.event = Event.objects.create(title='Test event',
                                           slug='test',
                                           author_id=self.member.id,
@@ -95,3 +115,10 @@ class EventTestCase(TestCase):
         response = c.post(reverse('events:detail', args=[event.slug]), {'user': 'person6', 'email': 'person6@test.com'})
         self.assertEqual(response.status_code, 403)
         self.assertEqual(event.get_registrations().count(), 0)
+
+    def test_past_events_order(self):
+        today = timezone.now().date()
+        past_events = Event.objects.filter(event_date_end__lte=today).order_by('-event_date_end')
+        self.assertEqual(len(past_events), 2)
+        self.assertEqual(past_events[0], self.past_event2)
+        self.assertEqual(past_events[1], self.past_event1)

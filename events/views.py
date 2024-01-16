@@ -1,22 +1,20 @@
 import datetime
-import json
 import logging
-from copy import deepcopy
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.conf import settings
 from django.http import HttpResponseForbidden, HttpResponse
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.views.generic import DetailView, ListView
-from websocket import create_connection
-from websocket._exceptions import WebSocketBadStatusException
 
 from core.utils import validate_captcha
 from members.models import Member
 from staticpages.models import StaticPage, StaticPageNav
 from .forms import PasscodeForm
 from .models import Event, EventAttendees
+from .websocket_utils import ws_send
 
 logger = logging.getLogger('date')
 
@@ -48,9 +46,9 @@ class EventDetailView(DetailView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if self.handle_passcode(request):
-            return self.handle_passcode(request)
-
+        passcode_response = self.handle_passcode(request)
+        if passcode_response:
+            return passcode_response
         return self.handle_event_signup(request)
 
     def get_context_data(self, **kwargs):
@@ -62,11 +60,12 @@ class EventDetailView(DetailView):
             context['form'] = form
         else:
             context['form'] = self.object.make_registration_form()
-        baal_staticnav = StaticPageNav.objects.filter(category_name="Årsfest")
-        if len(baal_staticnav) > 0:
-            baal_staticpages = StaticPage.objects.filter(category=baal_staticnav[0].pk)
-            context['staticpages'] = baal_staticpages
-
+        try:
+            baal_staticnav = StaticPageNav.objects.filter(category_name="Årsfest")
+            if baal_staticnav.exists():
+                context['staticpages'] = StaticPage.objects.filter(category=baal_staticnav.first().pk)
+        except Exception as e:
+            logger.error(f"Error fetching static pages: {e}")
         return context
 
     def get_template_names(self):
@@ -85,8 +84,7 @@ class EventDetailView(DetailView):
         return self.redirect_after_signup()
 
     def form_invalid(self, form):
-        if (self.get_context_data().get('event').title.lower() == 'årsfest' or
-                self.get_context_data().get('event').title.lower() == 'årsfest gäster'):
+        if self.get_context_data().get('event').title.lower() in ['årsfest', 'årsfest gäster']:
             return render(self.request, 'events/arsfest.html', self.get_context_data(form=form))
         return render(self.request, self.template_name, self.get_context_data(form=form), status=400)
 
@@ -95,7 +93,7 @@ class EventDetailView(DetailView):
         if self.object.redirect_link and show_content:
             return redirect(self.object.redirect_link)
         if not show_content:
-            return redirect('/members/login')
+            return redirect(reverse('members:login'))
 
     def handle_passcode(self, request):
         if self.object.passcode and self.object.passcode != request.session.get('passcode_status', False):
@@ -125,8 +123,10 @@ class EventDetailView(DetailView):
         form = self.object.make_registration_form()(data=request.POST)
 
         # CAPTCHA validation if applicable
-        if self.object.captcha and not validate_captcha(request.POST.get('cf-turnstile-response', '')):
-            return self.form_invalid(form)
+        if self.object.captcha:
+            captcha_response = request.POST.get('cf-turnstile-response', '')
+            if not validate_captcha(captcha_response):
+                return self.form_invalid(form)
 
         if form.is_valid():
             return self.process_signup_form(form, request)
@@ -149,11 +149,8 @@ class EventDetailView(DetailView):
 
     def handle_avec_data(self, cleaned_data, attendee):
         avec_data = {'avec_for': attendee}
-        for key in cleaned_data:
-            if key.startswith('avec_'):
-                field_name = key.split('avec_')[1]
-                value = cleaned_data[key]
-                avec_data[field_name] = value
+        avec_keys = [key for key in cleaned_data if key.startswith('avec_')]
+        avec_data.update({key.split('avec_')[1]: cleaned_data[key] for key in avec_keys})
         self.add_attendance(avec_data)
 
     def add_attendance(self, data):
