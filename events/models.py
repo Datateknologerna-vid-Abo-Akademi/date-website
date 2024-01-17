@@ -207,6 +207,10 @@ class Event(models.Model):
             return "Ingen Begränsning"
         return self.sign_up_max_participants
 
+    def exclude_indexing(self):
+        grace_period = timedelta(days=1)  # Adjust this to change the grace period
+        return self.event_date_end + grace_period < now()
+
 
 class EventRegistrationForm(models.Model):
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)

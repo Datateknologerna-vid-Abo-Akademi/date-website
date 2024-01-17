@@ -6,6 +6,9 @@
 
 {% block content %}
     <head>
+        {% if event.exclude_indexing %}
+        <meta name="robots" content="noindex">
+        {% endif %}
         <link rel="stylesheet" href="{% static 'events/css/detail.css' %}">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
