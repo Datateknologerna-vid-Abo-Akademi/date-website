@@ -154,8 +154,23 @@ class EventDetailView(DetailView):
         avec_data.update({key.split('avec_')[1]: cleaned_data[key] for key in avec_keys})
         self.add_attendance(avec_data)
 
-    def add_attendance(self, data):
-        return self.get_object().add_event_attendance(**data)
+    def add_attendance(self, form_data):
+        # Extract necessary data from form_data
+        user = form_data.get('user')
+        email = form_data.get('email')
+        anonymous = form_data.get('anonymous', False)
+
+        # Extract avec_for if it's present in form_data
+        avec_for = form_data.get('avec_for')
+
+        # The rest of the form_data can be considered as preferences
+        # Exclude the already extracted keys
+        preferences = {key: value for key, value in form_data.items() if
+                       key not in ['user', 'email', 'anonymous', 'avec_for']}
+
+        # Call add_event_attendance with the extracted data
+        return self.get_object().add_event_attendance(user=user, email=email, anonymous=anonymous,
+                                                      preferences=preferences, avec_for=avec_for)
 
 
 def date_25(request):
