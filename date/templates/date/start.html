@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
+{% load cache %}
 {% block content %}
-
+{% cache 300 main_page_fixed %}
     {% load static %}
     {% load i18n %}
     <head>
@@ -70,7 +71,7 @@
         <section id="news" class="news-events">
             <div id="main" class="main-container">
                 <div class="feed-container">
-                    <h3 class="news-header header-border-bottom mt-3">Nyheter 
+                    <h3 class="news-header header-border-bottom mt-3">Nyheter
                         {% if aa_post %}
                         <div class="aa-img"><a href="{% url 'news:aa_detail' aa_post.slug %}"><img src="{% static 'images/albins-angels.png' %}"/></a></div>
                         {% endif %}
@@ -165,7 +166,7 @@
                                 {% endfor %}
                             </ul>
                         </div>
-                    </div>  
+                    </div>
                 </div>
                 <div class="mobile-events-container">
                     <h3 class="header-border-bottom mt-3">Evenemang</h3>
@@ -240,7 +241,7 @@
                             {% endfor %}
                         </ul>
                     </div>
-                </div>  
+                </div>
             </div>
         </section>
         <section id="reklam" class="text-size">
@@ -256,4 +257,5 @@
         visible: 4
         });
         </script>
+    {% endcache %}
 {% endblock %}
