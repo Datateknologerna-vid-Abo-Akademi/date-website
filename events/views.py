@@ -110,28 +110,29 @@ class EventDetailView(DetailView):
             return HttpResponseForbidden()
 
         user_authenticated = request.user.is_authenticated
-        user_member = Member.objects.get(username=request.user.username).get_active_subscription() is not None
-        registration_open_for_members = self.object.registration_is_open_members()
-        registration_open_for_others = self.object.registration_is_open_others()
-        user_in_commodore_group = request.user.groups.filter(name="commodore").exists()
+        member_obj = Member.objects.filter(username=request.user.username).first()  # Check if user exists
+        user_member = member_obj.get_active_subscription() is not None if member_obj else False
+        open_for_members = self.object.registration_is_open_members()
+        open_for_others = self.object.registration_is_open_others()
+        commodore_group = request.user.groups.filter(name="commodore").exists()
+        # Temp fix to allow commodore peeps to enter pre-signed
 
         # Check if user is allowed to sign up
-        if not (user_authenticated and (
-                user_member and registration_open_for_members) or registration_open_for_others or user_in_commodore_group):
-            return HttpResponseForbidden()
+        if self.object.sign_up and (user_authenticated and open_for_members and
+                                    user_member or open_for_others or commodore_group):
 
-        form = self.object.make_registration_form()(data=request.POST)
+            form = self.object.make_registration_form()(data=request.POST)
 
-        # CAPTCHA validation if applicable
-        if self.object.captcha:
-            captcha_response = request.POST.get('cf-turnstile-response', '')
-            if not validate_captcha(captcha_response):
-                return self.form_invalid(form)
+            # CAPTCHA validation if applicable
+            if self.object.captcha:
+                captcha_response = request.POST.get('cf-turnstile-response', '')
+                if not validate_captcha(captcha_response):
+                    return self.form_invalid(form)
 
-        if form.is_valid():
-            return self.process_signup_form(form, request)
+            if form.is_valid():
+                return self.process_signup_form(form, request)
 
-        return self.form_invalid(form)
+            return self.form_invalid(form)
 
     def process_signup_form(self, form, request):
         public_info = self.object.get_registration_form_public_info()
