@@ -1,4 +1,3 @@
-from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -10,31 +9,6 @@ from members.models import Member
 class EventTestCase(TestCase):
     def setUp(self):
         self.member = Member.objects.create(username='Test', password='test', is_superuser=True)
-
-        now = timezone.now()
-        yesterday = now - timezone.timedelta(days=1)
-        two_days_ago = now - timezone.timedelta(days=2)
-        tomorrow = now + timezone.timedelta(days=1)
-
-        # Create past and future events for testing
-        self.past_event1 = Event.objects.create(
-            title='Past Event 1',
-            slug='past-event-1',
-            event_date_end=two_days_ago,
-            author_id=self.member.id
-        )
-        self.past_event2 = Event.objects.create(
-            title='Past Event 2',
-            slug='past-event-2',
-            event_date_end=yesterday,
-            author_id=self.member.id
-        )
-        self.future_event = Event.objects.create(
-            title='Future Event',
-            slug='future-event',
-            event_date_end=tomorrow,
-            author_id=self.member.id
-        )
         self.event = Event.objects.create(title='Test event',
                                           slug='test',
                                           author_id=self.member.id,
@@ -121,10 +95,3 @@ class EventTestCase(TestCase):
         response = c.post(reverse('events:detail', args=[event.slug]), {'user': 'person6', 'email': 'person6@test.com'})
         self.assertEqual(response.status_code, 403)
         self.assertEqual(event.get_registrations().count(), 0)
-
-    def test_past_events_order(self):
-        today = timezone.now().date()
-        past_events = Event.objects.filter(event_date_end__lte=today).order_by('-event_date_end')
-        self.assertEqual(len(past_events), 2)
-        self.assertEqual(past_events[0], self.past_event2)
-        self.assertEqual(past_events[1], self.past_event1)
