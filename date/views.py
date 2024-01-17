@@ -1,20 +1,18 @@
 import datetime
+from itertools import chain
 
 from django.conf import settings
 from django.shortcuts import redirect, render
-from django.utils import translation
 from django.utils import timezone
-from django.views.decorators.cache import cache_page
+from django.utils import translation
 
+from ads.models import AdUrl
+from event_calendar.views import CalendarManager
 from events.models import Event
 from news.models import Post
-from itertools import chain
-from event_calendar.views import CalendarManager
-from ads.models import AdUrl
 from social.models import IgUrl
 
 
-@cache_page(300)  # Cache page for 5 minutes
 def index(request):
     cm = CalendarManager(request)
     d = cm.date
