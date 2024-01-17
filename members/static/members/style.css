@@ -36,6 +36,31 @@ form{
     padding: 25vh 0 0;
     margin: auto auto 10rem auto;
 }
+
+.change-password-page {
+    color: var(--textColorDark);
+    background-color: var(--secondaryColor);
+    width: 620px;
+    max-width: 90vw;
+    padding: 3em 3.5em;
+    -webkit-box-shadow: 0 0 20px 0 rgba(255,255,255,0.5), 0 5px 5px 0 rgba(200,200,200,0.12);
+            box-shadow: 0 0 20px 0 rgba(255,255,255,0.5), 0 5px 5px 0 rgba(200,200,200,0.12);
+    text-align: left;
+    margin: 20rem auto 10rem auto;
+}
+
+.change-password-success {
+    color: var(--textColorDark);
+    background-color: var(--secondaryColor);
+    width: 620px;
+    max-width: 90vw;
+    padding: 3em 3.5em;
+    -webkit-box-shadow: 0 0 20px 0 rgba(255, 255, 255, 0.5), 0 5px 5px 0 rgba(200, 200, 200, 0.12);
+    box-shadow: 0 0 20px 0 rgba(255, 255, 255, 0.5), 0 5px 5px 0 rgba(200, 200, 200, 0.12);
+    text-align: center;
+    margin: 20rem auto 10rem auto;
+}
+
 .center-box {
     color: var(--textColorDark);
     background-color: var(--secondaryColor);
@@ -147,4 +172,10 @@ form{
     .center-box {
         padding: 2rem 1rem;
     }
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
 }
