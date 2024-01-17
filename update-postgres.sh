@@ -37,7 +37,7 @@ fi
 rm db_backup.bck
 
 # Make sure website is stopped
-docker-compose down && sleep 15 && docker-compose up db -d
+docker-compose down && sleep 15 && docker-compose up -d db
 
 # Wait for db to start
 sleep 15
@@ -73,7 +73,7 @@ DATE_POSTGRESQL_VERSION=$version
 sed -i "s/DATE_POSTGRESQL_VERSION=.*/DATE_POSTGRESQL_VERSION=${DATE_POSTGRESQL_VERSION}/" "$config_file"
 
 # Stat the container with the new version
-docker-compose up db -d && sleep 15
+docker-compose up -d db && sleep 15
 
 # Restore the database dump to new container
 docker-compose exec -T db psql -U postgres -d postgres < ./db_backup.bck
