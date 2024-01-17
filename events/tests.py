@@ -3,12 +3,41 @@ from django.urls import reverse
 from django.utils import timezone
 
 from events.models import Event
-from members.models import Member
+from members.models import Member, ORDINARY_MEMBER, Subscription, SubscriptionPayment
 
 
 class EventTestCase(TestCase):
     def setUp(self):
-        self.member = Member.objects.create(username='Test', password='test', is_superuser=True)
+        self.member = Member.objects.create(
+            username="testuser",
+            email="testuser@example.com",
+            first_name="Test",
+            last_name="User",
+            phone="123456789",
+            address="123 Test Street",
+            zip_code="00000",
+            city="Test City",
+            country="Finland",
+            membership_type=ORDINARY_MEMBER,  # Using one of your defined membership types
+            is_superuser=True
+        )
+
+        subscription = Subscription.objects.create(
+            name="Basic Subscription",
+            does_expire=True,
+            renewal_scale="year",
+            renewal_period=1,
+            price=100.00
+        )
+
+        SubscriptionPayment.objects.create(
+            member=self.member,
+            subscription=subscription,
+            date_paid=timezone.now(),
+            date_expires=timezone.now() + timezone.timedelta(days=365),
+            amount_paid=100.00
+        )
+
         self.event = Event.objects.create(title='Test event',
                                           slug='test',
                                           author_id=self.member.id,
