@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -10,23 +11,28 @@ class EventTestCase(TestCase):
     def setUp(self):
         self.member = Member.objects.create(username='Test', password='test', is_superuser=True)
 
+        now = timezone.now()
+        yesterday = now - timezone.timedelta(days=1)
+        two_days_ago = now - timezone.timedelta(days=2)
+        tomorrow = now + timezone.timedelta(days=1)
+
         # Create past and future events for testing
         self.past_event1 = Event.objects.create(
             title='Past Event 1',
             slug='past-event-1',
-            event_date_end=timezone.now() - timezone.timedelta(days=2),
+            event_date_end=two_days_ago,
             author_id=self.member.id
         )
         self.past_event2 = Event.objects.create(
             title='Past Event 2',
             slug='past-event-2',
-            event_date_end=timezone.now() - timezone.timedelta(days=1),
+            event_date_end=yesterday,
             author_id=self.member.id
         )
         self.future_event = Event.objects.create(
             title='Future Event',
             slug='future-event',
-            event_date_end=timezone.now() + timezone.timedelta(days=1),
+            event_date_end=tomorrow,
             author_id=self.member.id
         )
         self.event = Event.objects.create(title='Test event',
