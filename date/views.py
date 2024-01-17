@@ -1,20 +1,18 @@
 import datetime
 from django.conf import settings
-import random
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils import translation
 from django.views.decorators.cache import cache_page
 from itertools import chain
 
 from ads.models import AdUrl
-from event_calendar.views import get_calendar, get_date, prev_month, next_month
+from event_calendar.views import CalendarManager
 from events.models import Event
 from news.models import Post
 from social.models import IgUrl
 
 
-@cache_page(300)  # Cache page for 5 minutes
 def index(request):
     cm = CalendarManager(request)
     d = cm.date

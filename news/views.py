@@ -1,13 +1,11 @@
-from django.shortcuts import render
 from django.core.paginator import Paginator
-from django.views.decorators.cache import cache_page
+from django.shortcuts import render
 
 from . import models
 
 LATEST_NEWS_POSTS = 10
 
 
-@cache_page(60)  # Cache page for 1 minute
 def index(request):
     latest_news = models.Post.objects.filter(published=True).reverse()
     paginator = Paginator(latest_news, LATEST_NEWS_POSTS)

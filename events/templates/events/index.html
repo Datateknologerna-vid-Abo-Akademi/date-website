@@ -1,9 +1,11 @@
 {% extends 'base.html' %}
+{% load cache %}
 {% load static %}
 {% load i18n %}
 {% block title %}{% trans "KK - Händelser" %}{% endblock %}
 
 {% block content %}
+    {% cache 60 event_index %}
     <head>
         <link rel="stylesheet" href="{% static 'events/css/style.css' %}"type="text/css">
         <link rel="stylesheet" href="{% static 'events/css/event-card.css' %}"type="text/css">
@@ -68,5 +70,5 @@
             </div>
         </div>
     </div>
-      
+      {% endcache %}
 {% endblock %}
