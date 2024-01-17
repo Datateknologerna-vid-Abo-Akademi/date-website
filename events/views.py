@@ -133,6 +133,7 @@ class EventDetailView(DetailView):
                 return self.process_signup_form(form, request)
 
             return self.form_invalid(form)
+        return HttpResponseForbidden()
 
     def process_signup_form(self, form, request):
         public_info = self.object.get_registration_form_public_info()
