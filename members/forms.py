@@ -247,3 +247,17 @@ class FunctionaryForm(forms.ModelForm):
 class FunctionaryFilterForm(forms.Form):
     year = forms.IntegerField(required=False)
     functionary_role = forms.CharField(required=False)
+
+
+class MemberEditForm(forms.ModelForm):
+    email = forms.EmailField(required=True)
+    class Meta:
+        model = Member
+        fields = ['email', 'first_name', 'last_name', 'phone', 'address', 'zip_code', 'city', 'country']
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if not email:
+            raise forms.ValidationError("This field is required.")
+        # Additional custom validation for email can be added here
+        return email
