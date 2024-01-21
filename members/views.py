@@ -18,7 +18,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View
 
 from core.utils import validate_captcha, send_email_task
-from members.forms import SignUpForm, AlumniSignUpForm, FunctionaryForm, MemberEditForm, CustomPasswordResetForm
+from .forms import SignUpForm, AlumniSignUpForm, FunctionaryForm, MemberEditForm, CustomPasswordResetForm
 from .functionary import (get_distinct_years, get_functionary_roles, get_selected_year,
                           get_selected_role, get_filtered_functionaries, get_functionaries_by_role)
 from .models import Member, AlumniEmailRecipient, Functionary

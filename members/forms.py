@@ -52,7 +52,7 @@ class MemberCreationForm(forms.ModelForm):
         return member
 
 
-class MemberUpdateForm(forms.ModelForm):
+class AdminMemberUpdateForm(forms.ModelForm):
     password = ReadOnlyPasswordHashField(label="Lösenord",
                                          help_text=("Raw passwords are not stored, so there is no way to see "
                                                     "this user's password, but you can change the password "
@@ -76,7 +76,7 @@ class MemberUpdateForm(forms.ModelForm):
         )
 
     def save(self, commit=True):
-        member = super(MemberUpdateForm, self).save(commit=False)
+        member = super(AdminMemberUpdateForm, self).save(commit=False)
         password = None
         if password:
             member.set_password(password)
@@ -251,13 +251,7 @@ class FunctionaryFilterForm(forms.Form):
 
 class MemberEditForm(forms.ModelForm):
     email = forms.EmailField(required=True)
+
     class Meta:
         model = Member
         fields = ['email', 'first_name', 'last_name', 'phone', 'address', 'zip_code', 'city', 'country']
-
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if not email:
-            raise forms.ValidationError("This field is required.")
-        # Additional custom validation for email can be added here
-        return email
