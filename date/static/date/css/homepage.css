@@ -7,31 +7,76 @@
 .header {
     color: var(--textColorLight);
     background-color: var(--primaryColor);
-    height: 65vh;
+    margin: 10% 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
 }
 
 .hero-text-box {
     text-align: center;
-    position: absolute;
-    left: 50%;
-    -webkit-transform: translate(-50%, 60%)scale(.7);
-            transform: translate(-50%, 60%)scale(.7);
-    padding-top: 10vh;
-}
-.hero-text-box .text {
-    -webkit-transform: translateX(10px);
-            transform: translateX(10px);
-    -webkit-transform: translateY(50px);
-            transform: translateY(50px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
     -webkit-animation: fadeIn 3s;
-            animation: fadeIn 3s;
+    animation: fadeIn 3s;
+    margin: 0 auto;
+    height: 80%;
+    width: 80%;
+    overflow: hidden;
 }
+
+.hero-text-box .text {
+    color: var(--textColorLight);
+    width: 100%;
+    height: 100%;
+    position: relative;
+    max-width: 100%;
+}
+
+.hero-text-box .text h1 {
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0;
+    font-size: min(7vh, 7vw);
+    font-weight: 400;
+    -webkit-animation: fadeIn 3s;
+    animation: fadeIn 3s;
+}
+
+.hero-text-box .text h3 {
+    display: block;
+    text-align: center;
+    font-size: min(2vh, 2vw);
+    font-weight: 700;
+    letter-spacing: min(1vh, 1vw);
+    -webkit-animation: fadeIn 4.5s ease-in;
+    animation: fadeIn 4.5s ease-in;
+    white-space: nowrap;
+}
+
 .albin {
-    position: absolute;
-    left: 50%;
-    -webkit-transform: translate(-50%, -57%) scale(.3);
-            transform: translate(-50%, -57%) scale(.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: min(35vh , 35vw);
+    height: auto;
+    margin-top: 10px; /* Adjust the margin to bring it closer to the text */
 }
+
+.albin svg {
+    width: 100%;
+    height: 100%;
+}
+
+
+
+
 .hero-text-box path {
     stroke: var(--secondaryColor);
     fill: var(--secondaryColor);
@@ -83,26 +128,6 @@
         fill: rgba(255,255,255,1);
         stroke-dashoffset: 0;
     }
-}
-
-.hero-text-main {
-    text-transform: uppercase;
-    padding-top: 5vh;
-    display: block;
-    margin-bottom: 0;
-    font-size: 8rem;
-    font-weight: 400;
-    -webkit-animation: fadeIn 3s;
-            animation: fadeIn 3s;
-}
-.hero-text-sub {
-    display: block;
-    text-align: center;
-    font-size: 1.8rem;
-    font-weight: 700;
-    letter-spacing: 1.2rem;
-    -webkit-animation: fadeIn 4.5s ease-in;
-            animation: fadeIn 4.5s ease-in;
 }
 
 /*About content*/
@@ -617,64 +642,6 @@ ul#logo-list {
     }
 }
 
-/*Albin size with height*/
-
-@media screen and (max-height: 950px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 60%)scale(.65);
-                transform: translate(-50%, 60%)scale(.65);
-    }
-}
-
-@media screen and (max-height: 850px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 50%)scale(0.55);
-                transform: translate(-50%, 50%)scale(0.55);
-    }
-}
-
-@media screen and (max-height: 750px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 45%)scale(0.50);
-                transform: translate(-50%, 45%)scale(0.50);
-    }
-}
-
-@media screen and (max-height: 700px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 45%)scale(0.45);
-                transform: translate(-50%, 45%)scale(0.45);
-    }
-}
-
-@media screen and (max-height: 650px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 40%)scale(0.40);
-                transform: translate(-50%, 40%)scale(0.40);
-    }
-}
-
-@media screen and (max-height: 600px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 35%)scale(0.35);
-                transform: translate(-50%, 35%)scale(0.35);
-    }
-}
-
-@media screen and (max-height: 550px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 30%)scale(0.30);
-                transform: translate(-50%, 30%)scale(0.30);
-    }
-}
-
-@media screen and (max-height: 500px){
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 20%)scale(0.25);
-                transform: translate(-50%, 20%)scale(0.25);
-    }
-}
-
 /*width responsiveness*/
 
 @media screen and (max-width: 1400px){
@@ -683,101 +650,4 @@ ul#logo-list {
     }
 
 
-}
-
-
-
-@media screen and (max-width: 991px){
-    .main-container{
-        grid-template-columns: 1vw 1fr 1vw;
-        grid-template-areas: 
-          ". events ."
-          ". news ."
-          ". extras ."
-          ". logos ."
-          ". ig-scroll .";   
-    }
-
-    .sidebar-container{
-        display: none;
-    }
-
-    .mobile-events-container{
-        display: block;
-    }
-
-    .mobile-extra-container{
-        display: block;
-    }
-
-    .calendar-container{
-        display: none;
-    }
-
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 65%)scale(0.45);
-                transform: translate(-50%, 65%)scale(0.45);
-    }
-
-    .hero-text-main {
-        font-size: 8rem;
-    }
-
-    .hero-text-sub{
-        font-size: 2rem;
-    }
-
-    .hero-text-box .hero-text-sub {
-        letter-spacing: 1rem;
-    }
-
-}
-
-@media screen and (max-width: 800px) {
-
-    .hero-text-box {
-        -webkit-transform: translate(-50%, 55%)scale(0.40);
-                transform: translate(-50%, 55%)scale(0.40);
-    }
-
-    .hero-text-main {
-        font-size: 6rem;
-    }
-
-    .hero-text-sub{
-        font-size: 3rem;
-    }
-}
-
-@media screen and (max-width: 550px) {
-
-    .calendar-tooltip .tooltiptext {
-        width: 0;
-      }
-    .calendar-tooltip:hover .tooltiptext {
-        visibility: hidden;
-      }
-
-      .hero-text-box {
-        -webkit-transform: translate(-50%, 55%)scale(0.35);
-                transform: translate(-50%, 55%)scale(0.35);
-    }
-
-    .hero-text-box .hero-text-sub {
-        letter-spacing: 1rem;
-    }
-
-    .albin {
-        position: absolute;
-        left: 50%;
-        -webkit-transform: translate(-50%, -60%) scale(.3);
-                transform: translate(-50%, -60%) scale(.3);
-    }
-
-    .aa-img {
-        left: 85%;
-      }
-    .date-25 {
-        left: 80%;
-    }
 }
