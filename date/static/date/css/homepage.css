@@ -184,7 +184,7 @@
 
 div.news-content a{
     display: inline-block;
-    color: var(--linkColor);
+    color: var(--linkColorDark);
 }
 
 div.news-content a:hover{
@@ -500,7 +500,7 @@ div.calendar-container a {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
   color: white !important;
-  background-color: var(--linkColor) !important;
+  background-color: var(--linkColorDark) !important;
 }
 
 .calendar-eventday-popup {
