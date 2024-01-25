@@ -2,9 +2,11 @@ import logging
 
 from dateutil.relativedelta import relativedelta
 from django import forms
-from django.contrib.auth.forms import ReadOnlyPasswordHashField
+from django.contrib.auth.forms import ReadOnlyPasswordHashField, PasswordResetForm
+from django.template import loader
 from django.utils.translation import gettext_lazy as _
 
+from core.utils import send_email_task
 from members.models import (SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH,
                             SUB_RE_SCALE_YEAR, Member, SubscriptionPayment)
 
@@ -78,6 +80,29 @@ class MemberUpdateForm(forms.ModelForm):
         if commit:
             member.update_or_create(pk=member.pk)
         return member
+
+
+class CustomPasswordResetForm(PasswordResetForm):
+
+    def send_mail(
+            self,
+            subject_template_name,
+            email_template_name,
+            context,
+            from_email,
+            to_email,
+            html_email_template_name=None,
+    ):
+        subject = loader.render_to_string(subject_template_name, context)
+        # Email subject *must not* contain newlines
+        subject = "".join(subject.splitlines())
+        body = loader.render_to_string(email_template_name, context)
+
+        if html_email_template_name is not None:
+            html_email = loader.render_to_string(html_email_template_name, context)
+            send_email_task.delay(subject, body, from_email, [to_email], html_message=html_email)
+        else:
+            send_email_task.delay(subject, body, from_email, [to_email])
 
 
 class SubscriptionPaymentForm(forms.ModelForm):

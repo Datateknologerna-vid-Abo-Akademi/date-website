@@ -20,8 +20,6 @@ env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False)
 )
-# reading .env file
-environ.Env.read_env()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -32,16 +30,19 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # SECRET_KEY = '+^%8i1h1@w@920qrt*+&+4=1o$927%3xwjap@xt6pjy&r4g-u5'
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = os.environ.get('SECRET_KEY', '')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', False)
 
 DEVELOP = os.environ.get('DEVELOP', False)
 
-ALLOWED_HOSTS = json.loads(os.environ['ALLOWED_HOSTS'])
+# This gets set only when tests are ran with date-test command
+TEST = os.environ.get('TEST', False)
 
-CSRF_TRUSTED_ORIGINS = json.loads(os.environ['ALLOWED_ORIGINS'])
+ALLOWED_HOSTS = json.loads(os.environ.get('ALLOWED_HOSTS', '[]'))
+
+CSRF_TRUSTED_ORIGINS = json.loads(os.environ.get('ALLOWED_ORIGINS', '[]'))
 
 # Application definition
 
@@ -138,7 +139,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
         'USER': 'postgres',
-        'PASSWORD': os.environ['DB_PASSWORD'],
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST': 'db',
         'PORT': 5432,
     }
@@ -186,7 +187,7 @@ STAFF_GROUPS = [
     'rösträknare'
 
 ]
-STAFF_GROUPS.extend(json.loads(os.environ['EXTRA_STAFF_GROUPS']))
+STAFF_GROUPS.extend(json.loads(os.environ.get('EXTRA_STAFF_GROUPS', '[]')))
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
@@ -239,7 +240,7 @@ CAPTCHA_SITE_KEY = os.environ.get("CF_TURNSTILE_SITE_KEY", "")
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # S3 conf using django storages
-USE_S3 = env('USE_S3')
+USE_S3 = os.environ.get('USE_S3', False)
 
 if USE_S3:
     # aws settings
@@ -269,20 +270,23 @@ LOGIN_URL = '/members/login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-DEFAULT_FROM_EMAIL=os.environ.get('DEFAULT_FROM_EMAIL', 'admin@datateknologerna.org')
-
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 EMAIL_USE_TLS = True
-EMAIL_HOST = env('EMAIL_HOST')
-EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-EMAIL_PORT = env('EMAIL_PORT')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_PORT = 587
 
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', '')
+EMAIL_HOST_RECEIVER = os.environ.get('EMAIL_HOST_RECEIVER', '')
+
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS=3000
 
@@ -326,8 +330,3 @@ LOGGING = {
         }
     }
 }
-"""
-if DEBUG:
-    # make all loggers use the console.
-    for logger in LOGGING['loggers']:
-        LOGGING['loggers'][logger]['handlers'] = ['console']"""

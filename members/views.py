@@ -1,10 +1,12 @@
+import datetime
 import logging
 import os
-import datetime
 
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.views import PasswordResetView
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.mail import EmailMessage
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
@@ -13,9 +15,8 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 
-from core.utils import validate_captcha
-from members.forms import SignUpForm
-
+from core.utils import validate_captcha, send_email_task
+from members.forms import SignUpForm, CustomPasswordResetForm
 from .models import Member
 from .tokens import account_activation_token
 
@@ -23,7 +24,7 @@ logger = logging.getLogger('date')
 
 
 class EditView(View):
-
+    @login_required()
     def get(self, request):
         user = request.user
         return render(request, 'userinfo.html', {"user": user})
@@ -59,7 +60,7 @@ def signup(request):
         form = SignUpForm(request.POST)
 
         if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
-            return render(request, 'signup.html', {'form': form, 'alumni': True})
+            return render(request, 'signup.html', {'form': form, 'alumni': False})
 
         if form.is_valid():
             # Create user
@@ -78,11 +79,8 @@ def signup(request):
                 'token': account_activation_token.make_token(user),
             })
             to_email = os.environ.get('EMAIL_HOST_RECEIVER')
-            email = EmailMessage(
-                mail_subject, message, to=[to_email]
-            )
+            send_email_task.delay(mail_subject, message, settings.DEFAULT_FROM_EMAIL, [to_email])
             logger.info(f"NEW USER: Sending email to {to_email}")
-            email.send()
             return render(request, 'registration/registration_complete.html')
     else:
         form = SignUpForm()
@@ -102,3 +100,7 @@ def activate(request, uidb64, token):
         return render(request, 'userinfo.html', {"user": user, "msg": msg})
     else:
         return HttpResponse('Activation link is invalid!')
+
+
+class CustomPasswordResetView(PasswordResetView):
+    form_class = CustomPasswordResetForm
