@@ -70,4 +70,19 @@
 </script>
 </body>
 {% include 'footer.html' %}
+<!-- JavaScript for opening external links in new tab -->
+<script defer>
+    function setExternalLinksOpenInNewTab() {
+        currentURL = new URL(document.URL)
+        document.querySelectorAll("a").forEach((elem)=>{
+            const linkHref =  new URL(elem.href);
+            if (currentURL.origin !== linkHref.origin){
+                elem.target = "_blank"
+                elem.rel = "noopener noreferrer"
+            }
+        }
+        )
+    }
+    setExternalLinksOpenInNewTab()
+</script>
 </html>
