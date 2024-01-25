@@ -148,8 +148,7 @@ class Picture(models.Model):
             self.image = compress_image(self.image)
         super(Picture, self).save(*args, **kwargs)
     
-    USE_S3 = os.environ['USE_S3']
-    if not USE_S3:
+    if not settings.USE_S3:
         def delete(self, using=None, keep_parents=False):
                 os.remove(os.path.join(settings.MEDIA_ROOT, self.image.name))
                 super(Picture, self).delete(using, keep_parents)

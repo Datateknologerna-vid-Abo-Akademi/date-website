@@ -26,8 +26,8 @@ app_name = 'core'
 urlpatterns = [
     path('', date.index, name='index'),
     path('news/', include('news.urls')),
-    path('members/', include('django.contrib.auth.urls')),
     path('members/', include('members.urls')),
+    path('members/', include('django.contrib.auth.urls')),
     path('archive/', include('archive.urls')),
     path('events/', include('events.urls')),
     path('pages/', include('staticpages.urls')),
