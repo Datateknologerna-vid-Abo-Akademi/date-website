@@ -1,30 +1,35 @@
 import datetime
 import logging
 import os
+
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.views import PasswordResetView
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.mail import EmailMessage
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse
+from django.shortcuts import render
 from django.template.loader import render_to_string
-from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 from django.views import View
-from smtplib import SMTPException
 
-from core.utils import validate_captcha
-from members.forms import SignUpForm, AlumniSignUpForm, FunctionaryForm
-from .functionary import (get_distinct_years, get_functionary_roles, get_selected_year,
-                          get_selected_role, get_filtered_functionaries, get_functionaries_by_role)
-from .models import Member, AlumniEmailRecipient, Functionary
+from core.utils import validate_captcha, send_email_task
+from members.forms import SignUpForm, AlumniSignUpForm
+from .models import Member, AlumniEmailRecipient
+from .forms import CustomPasswordResetForm
 from .tokens import account_activation_token
 
 logger = logging.getLogger('date')
+
+
+class EditView(View):
+    @login_required()
+    def get(self, request):
+        user = request.user
+        return render(request, 'userinfo.html', {"user": user})
 
 
 class UserinfoView(View):
@@ -133,7 +138,6 @@ def alumni_signup(request):
         admin_message_recipients = list(AlumniEmailRecipient.objects.all().values_list('recipient_email', flat=True))
         admin_message_subject = f"ASG - Ny medlem {form.cleaned_data['name']}"
         admin_message_content = render_to_string('alumni_signup_email_admin.html', {'alumni': form.cleaned_data, 'alumni_id': alumni.id})
-        final_admin_email = EmailMessage(admin_message_subject, admin_message_content, to=admin_message_recipients)
 
         # Schedule admin message
         send_email_task.delay(admin_message_subject, admin_message_content, settings.DEFAULT_FROM_EMAIL,

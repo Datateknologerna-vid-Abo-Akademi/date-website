@@ -1,13 +1,13 @@
 import logging
 from dateutil.relativedelta import relativedelta
 from django import forms
-from django.contrib.auth.forms import ReadOnlyPasswordHashField
+from django.contrib.auth.forms import ReadOnlyPasswordHashField, PasswordResetForm
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.utils.translation import gettext_lazy as _
 
 from members.models import (SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH,
-                            SUB_RE_SCALE_YEAR, Member, SubscriptionPayment, AlumniSignUp, Functionary)
+                            SUB_RE_SCALE_YEAR, Member, SubscriptionPayment, AlumniSignUp)
 
 logger = logging.getLogger('date')
 

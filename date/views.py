@@ -1,22 +1,18 @@
 import datetime
 from django.conf import settings
 from django.shortcuts import redirect, render
-from django.utils import timezone
 from django.utils import translation
-from django.views.decorators.cache import cache_page
 from itertools import chain
 
 from ads.models import AdUrl
-from event_calendar.views import CalendarManager
+from event_calendar.views import get_calendar, prev_month, next_month
 from events.models import Event
 from news.models import Post
 from social.models import IgUrl
 
 
 def index(request):
-    cm = CalendarManager(request)
-    d = cm.date
-
+    d = datetime.datetime.now()
     events = Event.objects.filter(published=True, event_date_end__gte=d).order_by(
         'event_date_start')
     news = Post.objects.filter(published=True).reverse()[:2]
