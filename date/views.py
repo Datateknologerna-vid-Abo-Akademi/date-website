@@ -1,4 +1,6 @@
 import datetime
+import random
+
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.utils import translation
