@@ -1,13 +1,13 @@
+import datetime
 import logging
 import os
-import datetime
-from smtplib import SMTPException
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.views import PasswordResetView
 from django.contrib.sites.shortcuts import get_current_site
-from django.core.mail import EmailMessage
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -17,11 +17,10 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 
-from core.utils import validate_captcha
-from members.forms import SignUpForm, AlumniSignUpForm, FunctionaryForm
+from core.utils import validate_captcha, send_email_task
+from members.forms import SignUpForm, AlumniSignUpForm, FunctionaryForm, CustomPasswordResetForm
 from .functionary import (get_distinct_years, get_functionary_roles, get_selected_year,
                           get_selected_role, get_filtered_functionaries, get_functionaries_by_role)
-
 from .models import Member, AlumniEmailRecipient, Functionary
 from .tokens import account_activation_token
 
@@ -68,8 +67,8 @@ def signup(request):
         form = SignUpForm(request.POST)
 
         if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
-            return render(request, 'signup.html', {'form': form, 'alumni': True})
-        
+            return render(request, 'signup.html', {'form': form, 'alumni': False})
+
         if form.is_valid():
             # Create user
             user = form.save(commit=False)
@@ -87,11 +86,8 @@ def signup(request):
                 'token': account_activation_token.make_token(user),
             })
             to_email = os.environ.get('EMAIL_HOST_RECEIVER')
-            email = EmailMessage(
-                mail_subject, message, to=[to_email]
-            )
+            send_email_task.delay(mail_subject, message, settings.DEFAULT_FROM_EMAIL, [to_email])
             logger.info(f"NEW USER: Sending email to {to_email}")
-            email.send()
             return render(request, 'registration/registration_complete.html')
     else:
         form = SignUpForm()
@@ -129,24 +125,27 @@ def alumni_signup(request):
         alumni_email = form.cleaned_data['email']
         alumni_message_subject = "Välkommen till ARG - Betalningsinstruktioner"
         alumni_message_content = render_to_string('alumni_signup_email.html')
-        final_alumni_email = EmailMessage(alumni_message_subject, alumni_message_content, to=[alumni_email])
+        # Send email to alumni
+        send_email_task.delay(alumni_message_subject, alumni_message_content, settings.DEFAULT_FROM_EMAIL,
+                              [alumni_email])
 
         # Mail to relevant people
         admin_message_recipients = list(AlumniEmailRecipient.objects.all().values_list('recipient_email', flat=True))
         admin_message_subject = f"ARG - Ny medlem {form.cleaned_data['name']}"
-        admin_message_content = render_to_string('alumni_signup_email_admin.html', {'alumni': form.cleaned_data, 'alumni_id': alumni.id})
-        final_admin_email = EmailMessage(admin_message_subject, admin_message_content, to=admin_message_recipients)
-
-        # Send mails
-        try:
-            final_alumni_email.send()
-            final_admin_email.send()
-        except SMTPException:
-            logger.error("Failed to send alumni signup email: %s", form.cleaned_data['name'])
+        admin_message_content = render_to_string('alumni_signup_email_admin.html',
+                                                 {'alumni': form.cleaned_data, 'alumni_id': alumni.id})
+        # Schedule admin message
+        send_email_task.delay(admin_message_subject, admin_message_content, settings.DEFAULT_FROM_EMAIL,
+                              admin_message_recipients)
 
         return render(request, 'registration/registration_complete.html', {'alumni': True})
 
     return render(request, 'signup.html', {'form': form, 'alumni': True})
+
+
+class CustomPasswordResetView(PasswordResetView):
+    form_class = CustomPasswordResetForm
+
 
 class FunctionaryView(View):
     template_name = 'functionary.html'

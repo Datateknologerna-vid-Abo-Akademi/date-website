@@ -23,18 +23,6 @@ class EventConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
-    async def receive(self, text_data=None, bytes_data=None):
-        # Receive message
-        text_data_json = json.loads(text_data)
-        msg = text_data_json['data']
-
-        await self.channel_layer.group_send(
-            self.event_group_name, {
-                'type': 'event_message',
-                'data': msg
-            }
-        )
-
     async def event_message(self, event):
         # Send message
         msg = event['data']
