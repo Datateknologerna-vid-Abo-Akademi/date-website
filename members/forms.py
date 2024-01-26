@@ -98,6 +98,8 @@ class CustomPasswordResetForm(PasswordResetForm):
         subject = "".join(subject.splitlines())
         body = loader.render_to_string(email_template_name, context)
 
+        from_email = from_email or settings.DEFAULT_FROM_EMAIL
+
         if html_email_template_name is not None:
             html_email = loader.render_to_string(html_email_template_name, context)
             send_email_task.delay(subject, body, from_email, [to_email], html_message=html_email)

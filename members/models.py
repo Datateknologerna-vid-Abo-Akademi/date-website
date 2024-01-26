@@ -72,7 +72,7 @@ class Member(AbstractBaseUser, PermissionsMixin):
         """
         Sends email to members
         """
-        send_email_task(subject, message, from_email, [self.email], **kwargs)
+        send_email_task.delay(subject, message, from_email, [self.email], **kwargs)
 
     def get_active_subscription(self):
         all_subscriptions = SubscriptionPayment.objects.filter(member=self).exclude(date_expires__lt=timezone.now())
