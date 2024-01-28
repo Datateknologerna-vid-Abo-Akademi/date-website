@@ -170,6 +170,9 @@
             },
             },
             settings: {
+                visibility: {
+                    weekend: false,
+                },
                 selected: {
                     month: new Date().getMonth(),
                     year: new Date().getFullYear(),
@@ -191,32 +194,4 @@
         });
         </script>
     {% endcache %}
-    <script id="custom">
-        // element with id "calendar_json" is populated by django using the "json_script" template function
-        const events = JSON.parse(document.getElementById('calendar_json').textContent);
-
-        addEventListener('DOMContentLoaded', (event) => {
-        // Refer to vanilla calendar documentation for how the configuration works
-        const calendarPopups = new VanillaCalendar('#calendar', {
-            actions:{
-            clickDay(event, date){
-                if(events_json[date[0]] !== undefined){
-                    location.href = events_json[date[0]].link
-                }
-            },
-            },
-            settings: {
-                visibility : {
-                    weekend: false,
-                },
-                selected: {
-                    month: new Date().getMonth(),
-                    year: new Date().getFullYear(),
-                },
-            },
-            popups: events_json
-            })
-        calendarPopups.init();
-        });
-    </script>
 {% endblock %}
