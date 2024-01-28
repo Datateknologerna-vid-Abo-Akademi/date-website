@@ -7,27 +7,39 @@ from django.utils import translation
 from itertools import chain
 
 from ads.models import AdUrl
-from event_calendar.views import get_calendar, prev_month, next_month
 from events.models import Event
 from news.models import Post
 from social.models import IgUrl
 
 
 def index(request):
-    d = datetime.datetime.now()
-    events = Event.objects.filter(published=True, event_date_end__gte=d).order_by(
+    events = Event.objects.filter(published=True, event_date_end__gte=datetime.datetime.now()).order_by(
         'event_date_start')
     news = Post.objects.filter(published=True).reverse()[:2]
+
+    def calendar_format(x):
+        formatstr = "%H:%M"
+        calendar_events_dict = {}
+        for e in x:
+            event_url = "events/" + e.slug
+            event_dict = {e.event_date_start.strftime("%Y-%m-%d") :
+                {
+                "link": event_url,
+                "modifier": "calendar-eventday",
+                 "html": f"<a class='calendar-eventday-popup' id='calendar_link' href='{event_url}'> {e.event_date_start.strftime(formatstr)}<br>{e.title}</a>"
+                 }
+                }
+            calendar_events_dict.update(event_dict)
+        return calendar_events_dict
+
     context = {
-        'events': events,
-        'news': news,
-        'news_events': list(chain(events, news)),
-        'ads': AdUrl.objects.all(),
-        'posts': IgUrl.objects.all(),
-        'calendar': get_calendar(request),
-        'prev_month': prev_month(d),
-        'next_month': next_month(d),
-    }
+            'calendar_events' : calendar_format(events),
+            'events': events,
+            'news': news,
+            'news_events': list(chain(events, news)),
+            'ads': AdUrl.objects.all(),
+            'posts': IgUrl.objects.all(), #'calendar': cm.get_calendar(),
+            }
 
     # KK april fools frontpage
     date = datetime.date(1337, 4, 1)
