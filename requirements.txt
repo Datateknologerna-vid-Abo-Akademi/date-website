@@ -23,6 +23,7 @@ django-tables2
 django-filter
 django-bootstrap3
 django_cleanup
+django-modeltranslation
 daphne
 celery[redis]
 gunicorn
