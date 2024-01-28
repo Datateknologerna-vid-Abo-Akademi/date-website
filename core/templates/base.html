@@ -68,6 +68,17 @@
         }
     };
 </script>
+<script text="javascript" defer>
+    function setExternalLinksOpenInNewTab() {
+        currentURL = new URL(document.URL)
+        document.querySelectorAll("a").forEach((elem)=>{
+            const linkHref =  new URL(elem.href);
+            elem.target = currentURL.origin !== linkHref.origin ? "_blank" : "";
+        }
+        )
+    }
+    setExternalLinksOpenInNewTab()
+</script>
 </body>
 {% include 'footer.html' %}
 <!-- JavaScript for opening external links in new tab -->

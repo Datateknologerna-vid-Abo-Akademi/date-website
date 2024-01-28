@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'polls',
     'ctf',
     'archive.apps.ArchiveConfig',
+    'modeltranslation',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -275,6 +276,12 @@ LOCALE_PATHS = (
 
 LANG_FINNISH = 'fi'
 LANG_SWEDISH = 'sv'
+
+LANGUAGES = (
+    ('sv', ("Svenska")),
+    ('en', ("English")),
+    ('fi', ("Suomi"))
+)
 
 LANGUAGE_CODE = LANG_SWEDISH
 
