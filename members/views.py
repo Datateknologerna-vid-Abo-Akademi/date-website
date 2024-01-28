@@ -26,7 +26,7 @@ logger = logging.getLogger('date')
 
 
 class EditView(View):
-    @login_required()
+    @method_decorator(login_required)
     def get(self, request):
         user = request.user
         return render(request, 'userinfo.html', {"user": user})
