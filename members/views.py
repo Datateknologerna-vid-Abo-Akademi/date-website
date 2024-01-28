@@ -10,6 +10,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
+from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
@@ -24,7 +25,7 @@ logger = logging.getLogger('date')
 
 
 class EditView(View):
-    @login_required()
+    @method_decorator(login_required)
     def get(self, request):
         user = request.user
         return render(request, 'userinfo.html', {"user": user})
