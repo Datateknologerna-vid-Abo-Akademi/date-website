@@ -249,27 +249,28 @@
             visible: 4
         });
         // element with id "calendar_json" is populated by django as defined in views.py context object
-        const events = JSON.parse(document.getElementById('calendar_json').textContent);
+        const events_json = JSON.parse(document.getElementById('calendar_json').textContent);
         addEventListener('DOMContentLoaded', (event) => {
+            Object.entries(events_json).forEach((o)=>{
+                const tempDate = new Date(o[1].eventFullDate);
+                o[1].html += `${tempDate.getHours()}:${tempDate.getMinutes()}</br>${o[1].eventTitle}</a>`
+            })
         // Refer to vanilla calendar documentation for how the configuration works
         const calendarPopups = new VanillaCalendar('#calendar', {
             actions:{
             clickDay(event, date){
-                if(events[date[0]] !== undefined){
-                    location.href = events[date[0]].link
+                if(events_json[date[0]] !== undefined){
+                    location.href = events_json[date[0]].link
                 }
             },
             },
             settings: {
-                visibility : {
-                    weekend: false,
-                },
                 selected: {
                     month: new Date().getMonth(),
                     year: new Date().getFullYear(),
                 },
             },
-            popups: events
+            popups: events_json
             })
         calendarPopups.init();
         });
