@@ -1,39 +1,32 @@
-import json
 import logging
-from websocket._exceptions import WebSocketBadStatusException
-from websocket import create_connection
-from core import settings
+from copy import copy
+
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 logger = logging.getLogger('date')
 
 
 def ws_send(request, form, public_info):
-    ws_schema = 'ws' if settings.DEVELOP else 'wss'
-    url = request.META.get('HTTP_HOST')
-    path = f'{ws_schema}://{url}/ws{request.path}'
-    ws = None
-    try:
-        ws = create_connection(path)
-        ws.send(json.dumps(ws_data(form.cleaned_data, public_info)))
-        if 'avec' in form.cleaned_data:
-            avec_data = form.cleaned_data.copy()
-            avec_user = form.cleaned_data.get('avec_user')
-            if avec_user:
-                avec_data['user'] = avec_user
-                ws.send(json.dumps(ws_data(avec_data, '')))
-    except WebSocketBadStatusException as e:
-        logger.error(f"WebSocket connection error: {e}")
-    finally:
-        if ws:
-            ws.close()
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(f"event_{request.path.split('/')[-2]}",
+                                            {"type": "event_message", **ws_data(form, public_info)})
+    # Send ws again if avec
+    if dict(form.cleaned_data).get('avec'):
+        newform = copy(form)
+        newform.cleaned_data['user'] = dict(newform.cleaned_data).get('avec_user')
+        public_info = ''
+        async_to_sync(channel_layer.group_send)(f"event_{request.path.split('/')[-2]}",
+                                                {"type": "event_message", **ws_data(newform, public_info)})
 
 
-def ws_data(cleaned_data, public_info):
-    data = {'user': "Anonymous" if cleaned_data['anonymous'] else cleaned_data['user']}
+def ws_data(form, public_info):
+    data = {}
+    pref = dict(form.cleaned_data)  # Creates copy of form
 
-    # Parse the public info and only send that through websockets.
-    for info in public_info:
-        if info in cleaned_data:
-            data[info] = cleaned_data[info]
-
+    data['user'] = "Anonymous" if pref['anonymous'] else pref['user']
+    # parse the public info and only send that through websockets.
+    for index, info in enumerate(public_info):
+        if str(info) in pref:
+            data[str(info)] = pref[str(info)]
     return {"data": data}
