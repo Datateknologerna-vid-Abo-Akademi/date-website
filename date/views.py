@@ -7,17 +7,13 @@ from django.utils import timezone
 from django.utils import translation
 
 from ads.models import AdUrl
-from event_calendar.views import CalendarManager
 from events.models import Event
 from news.models import Post
 from social.models import IgUrl
 
 
 def index(request):
-    cm = CalendarManager(request)
-    d = cm.date
-
-    events = Event.objects.filter(published=True, event_date_end__gte=d).order_by(
+    events = Event.objects.filter(published=True, event_date_end__gte=datetime.datetime.now()).order_by(
         'event_date_start')
     news = Post.objects.filter(published=True, albins_angels=False).reverse()[:2]
 
@@ -28,20 +24,31 @@ def index(request):
     if aa_posts and aa_posts[0].published_time > time_since:
         aa_post = aa_posts[0]
 
+    def calendar_format(x):
+        formatstr = "%H:%M"
+        calendar_events_dict = {}
+        for e in x:
+            event_url = "events/" + e.slug
+            event_dict = {e.event_date_start.strftime("%Y-%m-%d") :
+                {
+                "link": event_url,
+                "modifier": "calendar-eventday",
+                 "html": f"<a class='calendar-eventday-popup' id='calendar_link' href='{event_url}'> {e.event_date_start.strftime(formatstr)}<br>{e.title}</a>"
+                 }
+                }
+            calendar_events_dict.update(event_dict)
+        return calendar_events_dict
 
 
     context = {
-        'events': events,
-        'news': news,
-        'news_events': list(chain(events, news)),
-        'ads': AdUrl.objects.all(),
-        'posts': IgUrl.objects.all(),
-        'calendar': cm.get_calendar(),
-        'prev_month': cm.prev_month(),
-        'next_month': cm.next_month(),
-        'curr_month': cm.curr_month_as_string(),
-        'aa_post': aa_post,
-    }
+            'calendar_events' : calendar_format(events),
+            'events': events,
+            'news': news,
+            'news_events': list(chain(events, news)),
+            'ads': AdUrl.objects.all(),
+            'posts': IgUrl.objects.all(), #'calendar': cm.get_calendar(),
+            'aa_post': aa_post,
+            }
 
     return render(request, 'date/start.html', context)
 

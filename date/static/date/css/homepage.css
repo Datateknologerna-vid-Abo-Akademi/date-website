@@ -29,18 +29,18 @@
 
 .scaling-svg-container {
     margin-top: 55px;
-        position: relative; 
-        height: 35vh; 
-        width: 100%; 
+        position: relative;
+        height: 35vh;
+        width: 100%;
         padding: 0;
         /* override this inline for aspect ratio other than square */
    }
 
 .scaling-svg-container svg {
-    position: absolute; 
-    height: 100%; 
-    width: 100%; 
-    left: 0; 
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    left: 0;
     top: 0;
 }
 
@@ -171,7 +171,7 @@
     grid-template-areas: 
       ". news sidebar ."
       ". news sidebar ."
-      ". ig-scroll ig-scroll .";   
+      ". ig-scroll ig-scroll .";
     grid-column-gap: 3vw;
 }
 
@@ -320,7 +320,7 @@ div.news-content a:hover{
 
 .chevron-box {
     margin: auto; 
-    border: 1px solid var(--linkColorSecondary); 
+    border: 1px solid var(--linkColorSecondary);
     border-radius: 5px;
     padding: 5px;
 }
@@ -422,7 +422,9 @@ div.news-content a:hover{
     ". calendar .";
     padding-bottom: 10px;
 }
-
+#calendar{
+    margin-bottom: 1rem;
+}
 .calendar-box{
     grid-area: box;
     border: 2px solid rgb(163, 163, 163);
@@ -481,26 +483,20 @@ div.calendar-container a {
   display: inline-block;
 }
 
-.calendar-tooltip .tooltiptext {
-  visibility: hidden;
-  width: 150px;
-  background-color: var(--primaryColor);
-  color: var(--textColorLight);
-  text-align: center;
-  border-radius: 6px;
-  padding: 5px 0;
-
-  /* Position the tooltip */
-  position: absolute;
-  z-index: 1;
-  bottom: 100%;
-  left: 50%;
-  margin-left: -60px;
+.calendar-eventday {
+  /* Override vanilla calendar default
+   * Dont use this class for anything else*/
+  color: white !important;
+  background-color: var(--linkColorDark) !important;
 }
 
-.calendar-tooltip:hover .tooltiptext {
-  visibility: visible;
+.calendar-eventday-popup {
+  /* Override vanilla calendar default
+   * Dont use this class for anything else*/
+  color: black;
+  font-size: 0.75rem;
 }
+
 /*Calendar end*/
 
 /*logos start*/
