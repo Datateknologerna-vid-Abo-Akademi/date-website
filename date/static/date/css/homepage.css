@@ -596,3 +596,47 @@ div.scroll-content img{
         visibility: hidden;
       }
 }
+
+@media screen and (max-width: 991px){
+    .main-container{
+        grid-template-columns: 1vw 1fr 1vw;
+        grid-template-areas:
+          ". events ."
+          ". news ."
+          ". extras ."
+          ". logos ."
+          ". ig-scroll .";
+    }
+
+    .sidebar-container{
+        display: none;
+    }
+
+    .mobile-events-container{
+        display: block;
+    }
+
+    .mobile-extra-container{
+        display: block;
+    }
+
+    .calendar-container{
+        display: none;
+    }
+
+}
+@media screen and (max-width: 550px) {
+
+    .calendar-tooltip .tooltiptext {
+        width: 0;
+      }
+    .calendar-tooltip:hover .tooltiptext {
+        visibility: hidden;
+      }
+    .aa-img {
+        left: 85%;
+      }
+    .date-25 {
+        left: 80%;
+    }
+}
