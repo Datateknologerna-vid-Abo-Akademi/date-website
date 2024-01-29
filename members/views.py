@@ -5,7 +5,7 @@ import os
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth.views import PasswordResetView
+from django.contrib.auth.views import PasswordChangeView, PasswordResetView
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -150,3 +150,7 @@ def alumni_signup(request):
 
 class CustomPasswordResetView(PasswordResetView):
     form_class = CustomPasswordResetForm
+
+
+class CustomPasswordChangeView(PasswordChangeView):
+    template_name = "registration/password_change_form.html"
