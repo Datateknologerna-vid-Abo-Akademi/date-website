@@ -5,7 +5,7 @@ import os
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth.views import PasswordResetView
+from django.contrib.auth.views import PasswordChangeView, PasswordResetView
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -24,11 +24,14 @@ from .tokens import account_activation_token
 logger = logging.getLogger('date')
 
 
-class EditView(View):
+class UserinfoView(View):
     @method_decorator(login_required)
     def get(self, request):
         user = request.user
-        return render(request, 'userinfo.html', {"user": user})
+        context = {
+            "user": user,
+        }
+        return render(request, 'userinfo.html', context)
 
 
 class CertificateView(View):
@@ -105,3 +108,7 @@ def activate(request, uidb64, token):
 
 class CustomPasswordResetView(PasswordResetView):
     form_class = CustomPasswordResetForm
+
+
+class CustomPasswordChangeView(PasswordChangeView):
+    template_name = "registration/password_change_form.html"
