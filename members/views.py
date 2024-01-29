@@ -5,7 +5,7 @@ import os
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth.views import PasswordResetView
+from django.contrib.auth.views import PasswordChangeView, PasswordResetView
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
@@ -222,3 +222,7 @@ class FunctionariesView(View):
         }
 
         return render(request, 'functionaries.html', context)
+
+
+class CustomPasswordChangeView(PasswordChangeView):
+    template_name = "registration/password_change_form.html"
