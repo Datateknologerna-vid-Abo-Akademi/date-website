@@ -447,7 +447,7 @@ div.news-content a:hover{
     ". box ."
     ". calendar .";
 }
-#calendar{
+.calendar{
     margin-bottom: 1rem;
 }
 .calendar-box{
@@ -455,13 +455,6 @@ div.news-content a:hover{
     border: 2px solid rgb(163, 163, 163);
     border-radius: 5px;
     padding: 3px;
-}
-
-.calendar {
-    grid-area: calendar;
-    width: 100%;
-    margin: auto;
-    font-size: 13px;
 }
 
 .month{
@@ -472,10 +465,6 @@ div.news-content a:hover{
 
 .day {
     border-bottom: 1px solid rgb(190, 190, 190);
-}
-
-.calendar td {
-    padding: 10px 0px 0px 10px;
 }
   
 div.calendar-container a {
@@ -662,19 +651,10 @@ ul#logo-list {
         display: block;
     }
 
-    .calendar-container{
-        display: none;
-    }
 
 }
 @media screen and (max-width: 550px) {
 
-    .calendar-tooltip .tooltiptext {
-        width: 0;
-      }
-    .calendar-tooltip:hover .tooltiptext {
-        visibility: hidden;
-      }
     .aa-img {
         left: 85%;
       }
