@@ -255,7 +255,7 @@ div.news-content a:hover{
     50% { box-shadow:0 0 14px 2px rgb(201, 115, 142);}
     100% { box-shadow:0 0 6px 2px rgb(201, 115, 142);}
 }
-
+e4e1d6b215f74aaf56df300df0ca5d5964974eca
 @keyframes pulse {
     0% { box-shadow:0 0 6px 2px rgb(201, 115, 142); }
     50% { box-shadow:0 0 14px 2px rgb(201, 115, 142); }
@@ -422,7 +422,7 @@ div.news-content a:hover{
     ". calendar .";
     padding-bottom: 10px;
 }
-#calendar{
+.calendar{
     margin-bottom: 1rem;
 }
 .calendar-box{
@@ -430,13 +430,6 @@ div.news-content a:hover{
     border: 2px solid rgb(163, 163, 163);
     border-radius: 5px;
     padding: 3px;
-}
-
-.calendar {
-    grid-area: calendar;
-    width: 100%;
-    margin: auto;
-    font-size: 13px;
 }
 
 .month{
@@ -447,10 +440,6 @@ div.news-content a:hover{
 
 .day {
     border-bottom: 1px solid rgb(190, 190, 190);
-}
-
-.calendar td {
-    padding: 10px 0px 0px 10px;
 }
   
 div.calendar-container a {
@@ -487,7 +476,7 @@ div.calendar-container a {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
   color: white !important;
-  background-color: var(--linkColorDark) !important;
+  background-color: var(--linkColor) !important;
 }
 
 .calendar-eventday-popup {
@@ -577,11 +566,11 @@ div.carousel-logos img{
 @media screen and (max-width: 991px){
     .main-container{
         grid-template-columns: 1vw 1fr 1vw;
-        grid-template-areas: 
+        grid-template-areas:
           ". events ."
           ". news ."
           ". logos ."
-          ". ig-scroll .";   
+          ". ig-scroll .";
     }
 
     .sidebar-container{
@@ -596,9 +585,6 @@ div.carousel-logos img{
         display: block;
     }
 
-    .calendar-container{
-        display: none;
-    }
 
     .hero-text-box {
         -webkit-transform: translate(-50%, 65%)scale(0.45);
@@ -624,6 +610,7 @@ div.carousel-logos img{
         letter-spacing: 1rem;
     }
 }
+
 
 @media screen and (max-width: 550px) {
 
