@@ -4,6 +4,8 @@ import logging
 import os
 from datetime import timedelta
 
+from auditlog.models import AuditlogHistoryField
+from auditlog.registry import auditlog
 from ckeditor.fields import RichTextField
 from django import forms
 from django.conf import settings
@@ -63,6 +65,7 @@ class Event(models.Model):
     s3_image = PublicFileField(verbose_name=_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
     captcha = models.BooleanField(_('Captcha'), default=False)
     redirect_link = models.URLField(_('Redirect Link'), blank=True)
+    history = AuditlogHistoryField()
 
     class Meta:
         verbose_name = _('evenemang')
@@ -282,3 +285,6 @@ class EventAttendees(models.Model):
         if isinstance(self.preferences, list):
             self.preferences = {}
         super(EventAttendees, self).save(*args, **kwargs)
+
+
+auditlog.register(Event)  # KEEP THIS AT THE BOTTOM OF THE FILE

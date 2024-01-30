@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'django_tables2',
     'django_filters',
     'bootstrap3',
+    'auditlog',
     'django_cleanup',  # Should be places last
 ]
 
@@ -82,6 +83,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'auditlog.middleware.AuditlogMiddleware',
 
     'date.middleware.LangMiddleware',
     'date.middleware.HTCPCPMiddleware',
