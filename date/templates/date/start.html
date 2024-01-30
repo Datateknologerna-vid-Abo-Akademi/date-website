@@ -210,7 +210,7 @@
                     <div class="events-container">
                         <h3 class="header-border-bottom mt-3">Evenemang</h3>
                             {{ calendar_events|json_script:"calendar_json" }}
-                        <div id="calendar">
+                        <div class="calendar">
                         </div>
                         <div class="events">
                             <div class="row">
@@ -268,19 +268,8 @@
                 </div>
                 <div class="mobile-events-container">
                     <h3 class="header-border-bottom mt-3">Evenemang</h3>
-                    <div class="calendar-container">
-                        <div class="calendar-box">
-                            <table class="calendar">
-                                    <div class="clearfix">
-                                        <a class="btn left" href="{% url 'index' %}?{{ prev_month }}"><<</a>
-                                        <span>{{ curr_month }}</span>
-                                        <a class="btn right" href="{% url 'index' %}?{{ next_month }}">>></a>
-                                    </div>
-                                {% autoescape off %}
-                                    {{calendar}}
-                                {% endautoescape %}
-                            </table>
-                        </div>
+                    {{ calendar_events|json_script:"calendar_json" }}
+                    <div class="calendar">
                     </div>
                     <div class="events">
                         <div class="row">
@@ -357,29 +346,32 @@
         const events_json = JSON.parse(document.getElementById('calendar_json').textContent);
         Object.entries(events_json).forEach((o)=>{
             const tempDate = new Date(o[1].eventFullDate);
-            o[1].html += `${tempDate.getHours()}:${tempDate.getMinutes()}</br>${o[1].eventTitle}</a>`
-        })
-        // Refer to vanilla calendar documentation for how the configuration works
-        const calendarPopups = new VanillaCalendar('#calendar', {
-            actions:{
-            clickDay(event, date){
-                if(events_json[date[0]] !== undefined){
-                    location.href = events_json[date[0]].link
-                }
-            },
-            },
-            settings: {
-                visibility: {
-                    weekend: false,
+            o[1].html += `${tempDate.getHours()}:${tempDate.getMinutes()}</br>${o[1].eventTitle}</a>`;
+        });
+
+        // Select all elements with class 'calendar' and initialize VanillaCalendar on each
+        document.querySelectorAll('.calendar').forEach(calendarElement => {
+            const calendarPopups = new VanillaCalendar(calendarElement, {
+                actions: {
+                    clickDay(event, date) {
+                        if(events_json[date[0]] !== undefined) {
+                            location.href = events_json[date[0]].link;
+                        }
+                    },
                 },
-                selected: {
-                    month: new Date().getMonth(),
-                    year: new Date().getFullYear(),
+                settings: {
+                    visibility: {
+                        weekend: false,
+                    },
+                    selected: {
+                        month: new Date().getMonth(),
+                        year: new Date().getFullYear(),
+                    },
                 },
-            },
-            popups: events_json
-            })
-        calendarPopups.init();
+                popups: events_json
+            });
+            calendarPopups.init();
+        });
     </script>
     <script>
         async function getJoke() {
