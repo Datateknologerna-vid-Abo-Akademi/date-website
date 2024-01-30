@@ -364,20 +364,14 @@ div.news-content a:hover{
     ". calendar .";
     padding-bottom: 10px;
 }
-
+.calendar{
+    margin-bottom: 1rem;
+}
 .calendar-box{
-    position: relative;
     grid-area: box;
     border: 2px solid rgb(163, 163, 163);
     border-radius: 5px;
     padding: 3px;
-}
-
-.calendar {
-    grid-area: calendar;
-    width: 100%;
-    margin: auto;
-    font-size: 13px;
 }
 
 .month{
@@ -388,10 +382,6 @@ div.news-content a:hover{
 
 .day {
     border-bottom: 1px solid rgb(190, 190, 190);
-}
-
-.calendar td {
-    padding: 10px 0px 0px 10px;
 }
   
 div.calendar-container a {
@@ -431,7 +421,7 @@ div.calendar-container a {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
   color: white !important;
-  background-color: var(--linkColorDark) !important;
+  background-color: var(--linkColor) !important;
 }
 
 .calendar-eventday-popup {
@@ -620,19 +610,11 @@ div.scroll-content img{
         display: block;
     }
 
-    .calendar-container{
-        display: none;
-    }
 
 }
+
 @media screen and (max-width: 550px) {
 
-    .calendar-tooltip .tooltiptext {
-        width: 0;
-      }
-    .calendar-tooltip:hover .tooltiptext {
-        visibility: hidden;
-      }
     .aa-img {
         left: 85%;
       }
