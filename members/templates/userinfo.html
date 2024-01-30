@@ -11,7 +11,7 @@
             <div class="content">
                 <!-- User Information Section -->
                 <h3>{{ user.username }}</h3>
-                <table class="table table-dark table-striped">
+                <table class="table table-striped">
                     <tr>
                         <td>Email:</td>
                         <td>{{ user.email }}</td>
@@ -52,6 +52,7 @@
                 </table>
                 <br>
                 <p>För att ta bort eller ändra din information, kontakta styrelsen på kk@abo.fi</p>
+                <a href="{% url 'members:password_change' %}" class="theme-button">{% trans 'Password change' %}<i class="fas fa-chevron-right"></i></a>
             </div>
         </div>
     </div>
