@@ -258,6 +258,7 @@ class EventAttendees(models.Model):
     anonymous = models.BooleanField(_('Anonymt'), default=False)
     time_registered = models.DateTimeField(_('Registrerad'))
     avec_for = models.ForeignKey("self", verbose_name=_('Avec till'), null=True, blank=True, on_delete=models.SET_NULL)
+    history = AuditlogHistoryField()
 
     class Meta:
         verbose_name = _('deltagare')
@@ -287,4 +288,7 @@ class EventAttendees(models.Model):
         super(EventAttendees, self).save(*args, **kwargs)
 
 
-auditlog.register(Event)  # KEEP THIS AT THE BOTTOM OF THE FILE
+# KEEP THIS AT THE BOTTOM OF THE FILE
+auditlog.register(Event)
+auditlog.register(EventAttendees)
+# KEEP THIS AT THE BOTTOM OF THE FILE

@@ -1,5 +1,7 @@
 import logging
 
+from auditlog.models import AuditlogHistoryField
+from auditlog.registry import auditlog
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
@@ -12,7 +14,6 @@ from core.utils import send_email_task
 from .managers import MemberManager
 
 logger = logging.getLogger('date')
-
 
 FRESHMAN = 1
 ORDINARY_MEMBER = 2
@@ -40,6 +41,7 @@ class Member(AbstractBaseUser, PermissionsMixin):
     membership_type = models.IntegerField(_('Medlemskap'), default=FRESHMAN, choices=MEMBERSHIP_TYPES, blank=False)
     is_active = models.BooleanField(default=True)
     objects = MemberManager()
+    history = AuditlogHistoryField()
 
     USERNAME_FIELD = 'username'
 
@@ -82,13 +84,12 @@ class Member(AbstractBaseUser, PermissionsMixin):
 
     def get_str_membership_type(self):
         membership_types = {
-            1 : 'Gulnäbb',
-            2 : 'Ordinarie medlem',
-            3 : 'Stödjande medlem',
-            4 : 'Senior medlem',
+            1: 'Gulnäbb',
+            2: 'Ordinarie medlem',
+            3: 'Stödjande medlem',
+            4: 'Senior medlem',
         }
         return membership_types[self.membership_type]
-
 
 
 SUB_RE_SCALE_DAY = 'day'
@@ -126,6 +127,7 @@ class SubscriptionPayment(models.Model):
     date_paid = models.DateField(_('Betald'), default=timezone.now, blank=False)
     date_expires = models.DateField(_('Upphör'), default=None, blank=True, null=True)
     amount_paid = models.DecimalField(_('Betald summa'), max_digits=9, decimal_places=2, null=True, blank=True)
+    history = AuditlogHistoryField()
 
     class Meta:
         verbose_name = _('prenumerationsbetalning')
@@ -207,3 +209,7 @@ class Functionary(models.Model):
 
     def __str__(self):
         return f"{self.member.get_full_name()} {self.functionary_role.title} {self.year}"
+
+
+auditlog.register(Member)  # KEEP THIS AT THE BOTTOM OF THE FILE
+auditlog.register(SubscriptionPayment)  # KEEP THIS AT THE BOTTOM OF THE FILE
