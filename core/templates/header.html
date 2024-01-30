@@ -56,7 +56,6 @@
                             {% if page.category|lower == category.category_name|lower %}
                                 {% if user.is_authenticated and page.url == "/members/login/" %}
                                     {% if user.membership_type != 3%}
-                                        <li><a class="dropdown-item" href="https://wiki.datateknologerna.org/">DaTe Wiki</a></li>
                                         <li><a class="dropdown-item" href="https://github.com/Datateknologerna-vid-Abo-Akademi/styrdocs">Styrdocs</a></li>
                                         <li><a class="dropdown-item" href="/archive/pictures/">Bilder</a></li>
                                         <li><a class="dropdown-item" href="/archive/documents/">Dokument</a></li>
