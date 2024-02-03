@@ -132,7 +132,7 @@ class EventDetailView(DetailView):
         if (self.get_context_data().get('event').title.lower() == 'årsfest' or
                 self.get_context_data().get('event').title.lower() == 'årsfest gäster'):
             return redirect(f"/events/{self.get_context_data().get('event').slug}/#/anmalda")
-        return render(self.request, self.template_name, self.get_context_data())
+        return redirect(f"/events/{self.get_context_data().get('event').slug}")
 
     def form_invalid(self, form):
         if (self.get_context_data().get('event').title.lower() == 'årsfest' or
