@@ -20,7 +20,7 @@ class EventTestCase(TestCase):
     def test_attending_event(self):
         c = Client()
         response = c.post(reverse('events:detail', args=[self.event.slug]),
-                          {'user': 'person', 'email': 'person@test.com'})
+                          {'user': 'person', 'email': 'person@test.com'}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
 
@@ -28,7 +28,7 @@ class EventTestCase(TestCase):
         self.assertEqual(self.event.get_registrations().count(), 0)
         c = Client()
         response = c.post(reverse('events:detail', args=[self.event.slug]),
-                          {'user': 'person', 'email': 'person@test.com'})
+                          {'user': 'person', 'email': 'person@test.com'}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
         response = c.post(reverse('events:detail', args=[self.event.slug]),
@@ -42,7 +42,7 @@ class EventTestCase(TestCase):
         self.assertEqual(self.event.get_registrations().count(), 0)
         c = Client()
         response = c.post(reverse('events:detail', args=[self.event.slug]),
-                          {'user': 'person2', 'email': 'person2@test.com'})
+                          {'user': 'person2', 'email': 'person2@test.com'}, follow=True)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
 
