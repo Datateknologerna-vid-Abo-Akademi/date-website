@@ -62,23 +62,41 @@ def flag(request, ctf_slug, flag_slug):
             if form.is_valid():
                 # Check if a input matches the flag
                 flag_input = form.cleaned_data.get('flag')
-                Guess.objects.create(flag=flag, user=request.user, guess=flag_input)
+                correct_bool = False
                 if flag_input:
                     logger.info(f'FLAG: {flag.title} USER: {request.user} INPUT: {flag_input}')
-                    flag = Flag.objects.filter(ctf=ctf, slug=flag_slug, flag=flag_input)
-                    if flag.exists():
-                        request.session['flag_valid'] = True
-                        if user_solved or flag.first().solver:
-                            # User has already solved a flag or flag is already solved
-                            return redirect(request.path)
-                        flag.update(solver=request.user, solved_date=datetime.datetime.now())
-                        logger.info(f'Solver: {flag.first().solver}')
-                        context['flag'] = flag.first()
-                        context['solved'] = True
-                        return redirect(request.path)
+                    flag_query = Flag.objects.filter(ctf=ctf, slug=flag_slug, flag=flag_input)
 
-            request.session['flag_invalid'] = True
-            return redirect(request.path)
+                    if flag_query.exists():
+                        flag_instance = flag_query.first()
+                        request.session['flag_valid'] = True
+                        if user_solved or flag_instance.solver:
+                            # User has already solved a flag or flag is already solved
+                            Guess.objects.create(ctf=ctf, flag=flag_instance, user=request.user, guess=flag_input,
+                                                 correct=True)
+                            return redirect(request.path)
+                        else:
+                            # Flag is correctly guessed for the first time
+                            flag_instance.solver = request.user
+                            flag_instance.solved_date = datetime.datetime.now()
+                            flag_instance.save()
+                            logger.info(f'Solver: {flag_instance.solver}')
+                            context['flag'] = flag_instance
+                            context['solved'] = True
+                            Guess.objects.create(ctf=ctf, flag=flag_instance, user=request.user, guess=flag_input,
+                                                 correct=True)
+                            return redirect(request.path)
+                    else:
+                        # Guess was incorrect or flag does not match
+                        if flag:  # Ensure flag instance is not None before creating Guess
+                            Guess.objects.create(ctf=ctf, flag=flag, user=request.user, guess=flag_input, correct=False)
+                        else:
+                            # Handle the case where no valid flag instance is available
+                            # This could log an error, notify the user, etc., depending on desired behavior
+                            logger.error("Attempted to create a guess with an invalid flag instance.")
+
+                request.session['flag_invalid'] = True
+                return redirect(request.path)
 
         return HttpResponseForbidden()
     # render non post request

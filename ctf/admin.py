@@ -23,6 +23,6 @@ class CtfAdmin(admin.ModelAdmin):
 
 @admin.register(Guess)
 class GuessAdmin(admin.ModelAdmin):
-    list_display = ('user', 'flag', 'guess', 'timestamp')
-    list_filter = ('user', 'flag', 'timestamp')
-    search_fields = ('user__username', 'flag__title', 'guess')
+    list_display = ('ctf', 'flag', 'user', 'guess', 'timestamp', 'correct')
+    list_filter = ('ctf', 'flag', 'user', 'timestamp', 'correct')
+    search_fields = ('ctf__title', 'flag__title', 'user__username', 'guess')

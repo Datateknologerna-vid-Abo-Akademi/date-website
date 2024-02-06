@@ -54,9 +54,11 @@ class Flag(models.Model):
 
 
 class Guess(models.Model):
+    ctf = models.ForeignKey(Ctf, on_delete=models.CASCADE, verbose_name=_('CTF'))
     user = models.ForeignKey(Member, on_delete=models.CASCADE, verbose_name=_('Användare'))
     flag = models.ForeignKey(Flag, on_delete=models.CASCADE, verbose_name=_('Flagga'))
     guess = models.CharField(max_length=200, verbose_name=_('Gissning'))
+    correct = models.BooleanField(default=False, verbose_name=_('Korrekt'))
     timestamp = models.DateTimeField(auto_now_add=True, verbose_name=_('Tid'))
 
     class Meta:
@@ -64,4 +66,4 @@ class Guess(models.Model):
         verbose_name_plural = _('Gissningar')
 
     def __str__(self):
-        return f'{self.flag} - {self.user} - {self.guess}'
+        return f'{self.ctf.title} - {self.flag.title} - {self.user.username} - {self.guess}'
