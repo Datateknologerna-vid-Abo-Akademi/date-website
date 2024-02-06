@@ -63,6 +63,11 @@ class CertificateView(View):
 
 
 def signup(request):
+    # If user has submitted the form show success page
+    if request.session.get("signup_submitted", False):
+        request.session['signup_submitted'] = False
+        return render(request, 'registration/registration_complete.html')
+
     if request.method == 'POST':
         form = SignUpForm(request.POST)
 
@@ -88,7 +93,8 @@ def signup(request):
             to_email = os.environ.get('EMAIL_HOST_RECEIVER')
             send_email_task.delay(mail_subject, message, settings.DEFAULT_FROM_EMAIL, [to_email])
             logger.info(f"NEW USER: Sending email to {to_email}")
-            return render(request, 'registration/registration_complete.html')
+            request.session['signup_submitted'] = True
+            return redirect(request.path)
     else:
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form})
