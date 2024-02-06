@@ -3,7 +3,7 @@ from django.views import generic
 from django.http import HttpResponseForbidden
 
 from .forms import FlagForm
-from .models import Ctf, Flag
+from .models import Ctf, Flag, Guess
 # Create your views here.
 
 import datetime
@@ -62,6 +62,7 @@ def flag(request, ctf_slug, flag_slug):
             if form.is_valid():
                 # Check if a input matches the flag
                 flag_input = form.cleaned_data.get('flag')
+                Guess.objects.create(flag=flag, user=request.user, guess=flag_input)
                 if flag_input:
                     logger.info(f'FLAG: {flag.title} USER: {request.user} INPUT: {flag_input}')
                     flag = Flag.objects.filter(ctf=ctf, slug=flag_slug, flag=flag_input)
