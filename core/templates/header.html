@@ -65,7 +65,7 @@
                                     <li><a class="dropdown-item" href="/members/info/">Min profil</a></li>
                                     <li><a class="dropdown-item" href="/members/cert/">Medlemspass</a></li>
                                     <li><a class="dropdown-item" href="/admin/">Admin</a></li>
-                                    <li><a class="dropdown-item" href="/members/logout/">Logga ut</a></li>
+                                    <li><form action="{% url 'logout' %}" method="post">{% csrf_token %}<button class="dropdown-item">Logga ut</button></form></li>
                                 {% else %}
                                     <li><a class="dropdown-item" href="{{ page.url }}">{{page.title}}</a></li>
                                 {% endif %}
