@@ -149,7 +149,11 @@
         const events_json = JSON.parse(document.getElementById('calendar_json').textContent);
         Object.entries(events_json).forEach((o)=>{
             const tempDate = new Date(o[1].eventFullDate);
-            o[1].html += `${tempDate.getHours()}:${tempDate.getMinutes()}</br>${o[1].eventTitle}</a>`;
+            let hours = tempDate.getHours();
+            let minutes = tempDate.getMinutes();
+            // Ensure minutes are two digits
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            o[1].html += `${hours}:${minutes}</br>${o[1].eventTitle}</a>`;
         });
 
         // Select all elements with class 'calendar' and initialize VanillaCalendar on each
