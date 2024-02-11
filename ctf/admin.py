@@ -1,5 +1,6 @@
 from django.contrib import admin
-from ctf.models import Ctf, Flag
+from .models import Ctf, Flag, Guess
+
 
 # Register your models here.
 
@@ -18,3 +19,10 @@ class CtfAdmin(admin.ModelAdmin):
     inlines = [
         FlagInline,
     ]
+
+
+@admin.register(Guess)
+class GuessAdmin(admin.ModelAdmin):
+    list_display = ('ctf', 'flag', 'user', 'guess', 'timestamp', 'correct')
+    list_filter = ('ctf', 'flag', 'user', 'timestamp', 'correct')
+    search_fields = ('ctf__title', 'flag__title', 'user__username', 'guess')

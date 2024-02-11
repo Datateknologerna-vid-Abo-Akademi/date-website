@@ -1,9 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import generic
 from django.http import HttpResponseForbidden
 
 from .forms import FlagForm
-from .models import Ctf, Flag
+from .models import Ctf, Flag, Guess
 # Create your views here.
 
 import datetime
@@ -41,6 +41,13 @@ def flag(request, ctf_slug, flag_slug):
     form = FlagForm()
     context = {'ctf': ctf, 'flag': flag, 'form': form}
 
+    if request.session.get("flag_valid", False):
+        request.session['flag_valid'] = False
+        return form_valid(request, context)
+    elif request.session.get("flag_invalid", False):
+        request.session['flag_invalid'] = False
+        return form_invalid(request, context)
+
     # Check if user has already solved a flag
     user_solved = False
     for ctf_flag in ctf_flags:
@@ -55,20 +62,41 @@ def flag(request, ctf_slug, flag_slug):
             if form.is_valid():
                 # Check if a input matches the flag
                 flag_input = form.cleaned_data.get('flag')
+                correct_bool = False
                 if flag_input:
                     logger.info(f'FLAG: {flag.title} USER: {request.user} INPUT: {flag_input}')
-                    flag = Flag.objects.filter(ctf=ctf, slug=flag_slug, flag=flag_input)
-                    if flag.exists():
-                        if user_solved or flag.first().solver:
-                            # User has already solved a flag or flag is already solved
-                            return form_valid(request, context)
-                        flag.update(solver=request.user, solved_date=datetime.datetime.now())
-                        logger.info(f'Solver: {flag.first().solver}')
-                        context['flag'] = flag.first()
-                        context['solved'] = True
-                        return form_valid(request, context)
+                    flag_query = Flag.objects.filter(ctf=ctf, slug=flag_slug, flag=flag_input)
 
-            return form_invalid(request, context)
+                    if flag_query.exists():
+                        flag_instance = flag_query.first()
+                        request.session['flag_valid'] = True
+                        if user_solved or flag_instance.solver:
+                            # User has already solved a flag or flag is already solved
+                            Guess.objects.create(ctf=ctf, flag=flag_instance, user=request.user, guess=flag_input,
+                                                 correct=True)
+                            return redirect(request.path)
+                        else:
+                            # Flag is correctly guessed for the first time
+                            flag_instance.solver = request.user
+                            flag_instance.solved_date = datetime.datetime.now()
+                            flag_instance.save()
+                            logger.info(f'Solver: {flag_instance.solver}')
+                            context['flag'] = flag_instance
+                            context['solved'] = True
+                            Guess.objects.create(ctf=ctf, flag=flag_instance, user=request.user, guess=flag_input,
+                                                 correct=True)
+                            return redirect(request.path)
+                    else:
+                        # Guess was incorrect or flag does not match
+                        if flag:  # Ensure flag instance is not None before creating Guess
+                            Guess.objects.create(ctf=ctf, flag=flag, user=request.user, guess=flag_input, correct=False)
+                        else:
+                            # Handle the case where no valid flag instance is available
+                            # This could log an error, notify the user, etc., depending on desired behavior
+                            logger.error("Attempted to create a guess with an invalid flag instance.")
+
+                request.session['flag_invalid'] = True
+                return redirect(request.path)
 
         return HttpResponseForbidden()
     # render non post request
