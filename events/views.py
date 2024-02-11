@@ -76,7 +76,10 @@ class EventDetailView(DetailView):
         return [self.template_name]
 
     def form_valid(self, form):
-        attendee = self.add_attendance(form.cleaned_data)
+        attendee = self.get_object().add_event_attendance(user=form.cleaned_data['user'],
+                                                          email=form.cleaned_data['email'],
+                                                          anonymous=form.cleaned_data['anonymous'],
+                                                          preferences=form.cleaned_data)
         if 'avec' in form.cleaned_data and form.cleaned_data['avec']:
             self.handle_avec_data(form.cleaned_data, attendee)
         return self.redirect_after_signup()
@@ -145,32 +148,18 @@ class EventDetailView(DetailView):
         event = self.get_context_data().get('event')
         if event.title.lower() in ['årsfest', 'årsfest gäster']:
             return redirect(f"/events/{event.slug}/#/anmalda")
-        return redirect(f"/events/{self.get_context_data().get('event').slug}
+        return redirect(f"/events/{self.get_context_data().get('event').slug}")
 
     def handle_avec_data(self, cleaned_data, attendee):
         avec_data = {'avec_for': attendee}
-        avec_keys = [key for key in cleaned_data if key.startswith('avec_')]
-        avec_data.update({key.split('avec_')[1]: cleaned_data[key] for key in avec_keys})
-        self.add_attendance(avec_data)
-
-    def add_attendance(self, form_data):
-        # Extract necessary data from form_data
-        user = form_data.get('user')
-        email = form_data.get('email')
-        anonymous = form_data.get('anonymous', False)
-
-        # Extract avec_for if it's present in form_data
-        avec_for = form_data.get('avec_for')
-
-        # The rest of the form_data can be considered as preferences
-        # Exclude the already extracted keys
-        preferences = {key: value for key, value in form_data.items() if
-                       key not in ['user', 'email', 'anonymous', 'avec_for']}
-
-        # Call add_event_attendance with the extracted data
-        return self.get_object().add_event_attendance(user=user, email=email, anonymous=anonymous,
-                                                      preferences=preferences, avec_for=avec_for)
-
+        for key in cleaned_data:
+            if key.startswith('avec_'):
+                field_name = key.split('avec_')[1]
+                value = cleaned_data[key]
+                avec_data[field_name] = value
+        self.get_object().add_event_attendance(user=avec_data['user'], email=avec_data['email'],
+                                               anonymous=avec_data['anonymous'], preferences=avec_data,
+                                               avec_for=avec_data['avec_for'])
 
 def date_25(request):
     context = {}

@@ -1,8 +1,11 @@
-from django.test import Client, TestCase
+import datetime
+from django.test import Client, TestCase, RequestFactory
 from django.urls import reverse
 from django.utils import timezone
 
+from events.forms import PasscodeForm
 from events.models import Event
+from events.views import EventDetailView
 from members.models import Member, ORDINARY_MEMBER, Subscription, SubscriptionPayment
 
 
@@ -10,6 +13,7 @@ class EventTestCase(TestCase):
     def setUp(self):
         self.member = Member.objects.create(
             username="testuser",
+            password="test",
             email="testuser@example.com",
             first_name="Test",
             last_name="User",
@@ -18,8 +22,8 @@ class EventTestCase(TestCase):
             zip_code="00000",
             city="Test City",
             country="Finland",
-            membership_type=ORDINARY_MEMBER,  # Using one of your defined membership types
-            is_superuser=True
+            membership_type=ORDINARY_MEMBER,
+            is_superuser=False,
         )
 
         subscription = Subscription.objects.create(
@@ -124,3 +128,46 @@ class EventTestCase(TestCase):
         response = c.post(reverse('events:detail', args=[event.slug]), {'user': 'person6', 'email': 'person6@test.com'})
         self.assertEqual(response.status_code, 403)
         self.assertEqual(event.get_registrations().count(), 0)
+
+
+class EventViewTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = Member.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='password123'
+        )
+
+        self.event = Event.objects.create(
+            title="Test Event",
+            slug="test-event-view",
+            author=self.user,
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+            published=True
+        )
+
+    def test_event_detail_view_with_and_without_passcode(self):
+        self.event.passcode = 'secret'
+        self.event.save()
+
+        response = self.client.post(reverse('events:detail', args=[self.event.slug]), {'passcode': 'wrong'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "invalid passcode")
+
+        response_with_passcode = self.client.post(reverse('events:detail', args=[self.event.slug]),
+                                                  {'passcode': 'secret'})
+        self.assertEqual(response_with_passcode.status_code, 200)
+        self.assertNotContains(response_with_passcode, "invalid passcode")
+
+    def test_event_sign_up_deadline_passed(self):
+        # Set the signup deadline in the past
+        self.event.sign_up_deadline = timezone.now() - timezone.timedelta(days=1)
+        self.event.save()
+
+        response = self.client.post(reverse('events:detail', args=[self.event.slug]), {
+            'user': 'Late Attendee',
+            'email': 'lateattendee@example.com'
+        })
+        self.assertNotEqual(response.status_code, 200)  # Expecting a redirect or error response
+

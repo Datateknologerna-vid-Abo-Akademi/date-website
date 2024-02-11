@@ -1,5 +1,5 @@
 import logging
-from copy import copy
+from copy import deepcopy
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -13,7 +13,7 @@ def ws_send(request, form, public_info):
                                             {"type": "event_message", **ws_data(form, public_info)})
     # Send ws again if avec
     if dict(form.cleaned_data).get('avec'):
-        newform = copy(form)
+        newform = deepcopy(form)
         newform.cleaned_data['user'] = dict(newform.cleaned_data).get('avec_user')
         public_info = ''
         async_to_sync(channel_layer.group_send)(f"event_{request.path.split('/')[-2]}",
