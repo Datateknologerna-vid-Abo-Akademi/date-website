@@ -8,8 +8,9 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.views import PasswordChangeView, PasswordResetView
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -17,7 +18,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View
 
 from core.utils import validate_captcha, send_email_task
-from members.forms import SignUpForm, CustomPasswordResetForm
+from members.forms import SignUpForm, CustomPasswordResetForm, MemberEditForm
 from .models import Member
 from .tokens import account_activation_token
 
@@ -28,8 +29,24 @@ class UserinfoView(View):
     @method_decorator(login_required)
     def get(self, request):
         user = request.user
+        form = MemberEditForm(instance=user)  # Initialize form with user instance
         context = {
             "user": user,
+            "form": form,
+        }
+        return render(request, 'userinfo.html', context)
+
+    @method_decorator(login_required)
+    def post(self, request):
+        user = request.user
+        form = MemberEditForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            # Redirect to the same page to display updated info
+            return redirect(reverse('members:info'))  # Replace 'userinfo' with the name of this view in urls.py
+        context = {
+            "user": user,
+            "form": form,
         }
         return render(request, 'userinfo.html', context)
 
@@ -60,6 +77,11 @@ class CertificateView(View):
 
 
 def signup(request):
+    # If user has submitted the form show success page
+    if request.session.get("signup_submitted", False):
+        request.session['signup_submitted'] = False
+        return render(request, 'registration/registration_complete.html')
+
     if request.method == 'POST':
         form = SignUpForm(request.POST)
 
@@ -85,7 +107,8 @@ def signup(request):
             to_email = os.environ.get('EMAIL_HOST_RECEIVER')
             send_email_task.delay(mail_subject, message, settings.DEFAULT_FROM_EMAIL, [to_email])
             logger.info(f"NEW USER: Sending email to {to_email}")
-            return render(request, 'registration/registration_complete.html')
+            request.session['signup_submitted'] = True
+            return redirect(request.path)
     else:
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form})
