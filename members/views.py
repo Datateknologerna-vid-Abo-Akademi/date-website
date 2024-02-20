@@ -18,7 +18,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View
 
 from core.utils import validate_captcha, send_email_task
-from members.forms import SignUpForm, AlumniSignUpForm, FunctionaryForm, CustomPasswordResetForm
+from .forms import SignUpForm, AlumniSignUpForm, FunctionaryForm, MemberEditForm, CustomPasswordResetForm
 from .functionary import (get_distinct_years, get_functionary_roles, get_selected_year,
                           get_selected_role, get_filtered_functionaries, get_functionaries_by_role)
 from .models import Member, AlumniEmailRecipient, Functionary
@@ -31,8 +31,24 @@ class UserinfoView(View):
     @method_decorator(login_required)
     def get(self, request):
         user = request.user
+        form = MemberEditForm(instance=user)  # Initialize form with user instance
         context = {
             "user": user,
+            "form": form,
+        }
+        return render(request, 'userinfo.html', context)
+
+    @method_decorator(login_required)
+    def post(self, request):
+        user = request.user
+        form = MemberEditForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            # Redirect to the same page to display updated info
+            return redirect(reverse('members:info'))  # Replace 'userinfo' with the name of this view in urls.py
+        context = {
+            "user": user,
+            "form": form,
         }
         return render(request, 'userinfo.html', context)
 
