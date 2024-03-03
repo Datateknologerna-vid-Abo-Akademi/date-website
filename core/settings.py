@@ -210,14 +210,6 @@ CKEDITOR_5_CONFIGS = {
     }
 }
 
-# CKEDITOR_5_CONFIGS = {
-#     'default': {
-#         'height': '100%',
-#         'width': '100%',
-#         'toolbarCanCollapse': False,
-#     },
-# }
-
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
