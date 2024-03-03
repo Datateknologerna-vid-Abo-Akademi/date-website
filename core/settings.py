@@ -65,7 +65,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'admin_ordering',
-    'ckeditor',
+    'django_ckeditor_5',
     'channels',
     'storages',
     'django_tables2',
@@ -123,7 +123,7 @@ CHANNEL_LAYERS = {
 }
 #CKEDITOR
 
-CKEDITOR_CONFIGS = {
+CKEDITOR_5_CONFIGS = {
     'default': {
         'height': '100%',
         'width': '100%',
