@@ -124,6 +124,10 @@ CHANNEL_LAYERS = {
 
 customColorPalette = [
     {
+        'color': 'hsl(0, 0%, 0%)',
+        'label': 'Black'
+    },
+    {
         'color': 'hsl(4, 90%, 58%)',
         'label': 'Red'
     },
@@ -149,6 +153,7 @@ customColorPalette = [
     },
 ]
 
+CKEDITOR_5_CUSTOM_CSS = 'css/ckeditor.css'
 CKEDITOR_5_CONFIGS = {
     'default': {
         'toolbar': ['heading', '|', 'bold', 'italic', 'link',
@@ -156,6 +161,7 @@ CKEDITOR_5_CONFIGS = {
 
     },
     'extends': {
+        'language': 'sv',
         'blockToolbar': [
             'paragraph', 'heading1', 'heading2', 'heading3',
             '|',
