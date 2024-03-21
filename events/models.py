@@ -4,7 +4,7 @@ import logging
 import os
 from datetime import timedelta
 
-from ckeditor.fields import RichTextField
+from django_ckeditor_5.fields import CKEditor5Field
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -34,7 +34,7 @@ def upload_to(instance, filename):
 
 class Event(models.Model):
     title = models.CharField(_('Titel'), max_length=255, blank=False)
-    content = RichTextField(_('Innehåll'), blank=True)
+    content = CKEditor5Field(_('Innehåll'), blank=True)
     event_date_start = models.DateTimeField(_('Startdatum'), default=now)
     event_date_end = models.DateTimeField(_('Slutdatum'), default=now)
     sign_up_max_participants = models.IntegerField(_('Maximal antal deltagare'),
