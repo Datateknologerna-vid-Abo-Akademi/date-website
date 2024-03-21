@@ -1,4 +1,5 @@
 import datetime
+from django.contrib import auth
 from django.test import Client, TestCase, RequestFactory
 from django.urls import reverse
 from django.utils import timezone
@@ -7,11 +8,14 @@ from events.forms import PasscodeForm
 from events.models import Event
 from events.views import EventDetailView
 from members.models import Member, ORDINARY_MEMBER, Subscription, SubscriptionPayment
+import logging
+
+logger = logging.getLogger('date')
 
 
 class EventTestCase(TestCase):
     def setUp(self):
-        self.member = Member.objects.create(
+        self.member = Member.objects.create_user(
             username="testuser",
             password="test",
             email="testuser@example.com",
@@ -24,7 +28,10 @@ class EventTestCase(TestCase):
             country="Finland",
             membership_type=ORDINARY_MEMBER,
             is_superuser=False,
+            is_active=True,
         )
+
+
 
         subscription = Subscription.objects.create(
             name="Basic Subscription",
@@ -34,10 +41,10 @@ class EventTestCase(TestCase):
             price=100.00
         )
 
-        SubscriptionPayment.objects.create(
+        self.subpay = SubscriptionPayment.objects.create(
             member=self.member,
             subscription=subscription,
-            date_paid=timezone.now(),
+            date_paid=timezone.now() - timezone.timedelta(days=1),
             date_expires=timezone.now() + timezone.timedelta(days=365),
             amount_paid=100.00
         )
@@ -45,7 +52,7 @@ class EventTestCase(TestCase):
         self.event = Event.objects.create(title='Test event',
                                           slug='test',
                                           author_id=self.member.id,
-                                          sign_up_deadline=(timezone.now()-timezone.timedelta(-1))
+                                          sign_up_deadline=(timezone.now() + timezone.timedelta(1))
                                           )
         self.assertIsNotNone(self.event)
         self.assertTrue(self.event.published)
@@ -129,24 +136,6 @@ class EventTestCase(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertEqual(event.get_registrations().count(), 0)
 
-
-class EventViewTests(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.user = Member.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='password123'
-        )
-
-        self.event = Event.objects.create(
-            title="Test Event",
-            slug="test-event-view",
-            author=self.user,
-            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
-            published=True
-        )
-
     def test_event_detail_view_with_and_without_passcode(self):
         self.event.passcode = 'secret'
         self.event.save()
@@ -160,14 +149,59 @@ class EventViewTests(TestCase):
         self.assertEqual(response_with_passcode.status_code, 200)
         self.assertNotContains(response_with_passcode, "invalid passcode")
 
-    def test_event_sign_up_deadline_passed(self):
-        # Set the signup deadline in the past
-        self.event.sign_up_deadline = timezone.now() - timezone.timedelta(days=1)
-        self.event.save()
+    def test_sign_up_members_with_subscription(self):
+        event = Event.objects.create(
+            title='Test event members with subscription',
+            slug='test_members',
+            author_id=self.member.id,
+            sign_up_members=timezone.now() - timezone.timedelta(days=1),
+            sign_up_others=timezone.now() + timezone.timedelta(days=1),
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1)
+        )
+        c = Client()
+        c.login(username=self.member.username, password='test')
+        response = c.post(reverse('events:detail', args=[event.slug]),
+                          {'user': 'person', 'email': 'person@test.com'}, follow=True)
+        self.assertIsNotNone(event.sign_up_members)
+        self.assertEqual(response.status_code, 200)
 
-        response = self.client.post(reverse('events:detail', args=[self.event.slug]), {
-            'user': 'Late Attendee',
-            'email': 'lateattendee@example.com'
-        })
-        self.assertNotEqual(response.status_code, 200)  # Expecting a redirect or error response
+        # Change the sign_up_members to a date in the past
+        event.sign_up_members = timezone.now() + timezone.timedelta(days=1)
+        event.save()
 
+        response = c.post(reverse('events:detail', args=[event.slug]),
+                          {'user': 'person', 'email': 'person2@test.com'}, follow=True)
+        # The sign up should fail
+        self.assertEqual(response.status_code, 403)
+
+    def test_sign_up_members_before_sign_up_open(self):
+        event = Event.objects.create(
+            title='Test event members before sign up open',
+            slug='test_members_before',
+            author_id=self.member.id,
+            sign_up_members=timezone.now() + timezone.timedelta(days=1),
+            sign_up_others=timezone.now() + timezone.timedelta(days=1),
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1)
+        )
+        c = Client()
+        c.login(username=self.member.username, password='test')
+        response = c.post(reverse('events:detail', args=[event.slug]),
+                          {'user': 'person', 'email': 'person@test.com'})
+        self.assertEqual(response.status_code, 403)
+
+    def test_sign_up_members_without_subscription(self):
+        event = Event.objects.create(
+            title='Test event members without subscription',
+            slug='test_members_without',
+            author_id=self.member.id,
+            sign_up_members=timezone.now() - timezone.timedelta(days=1),
+            sign_up_others=timezone.now() + timezone.timedelta(days=1),
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1)
+        )
+        self.subpay.delete()
+        self.assertIsNotNone(event.sign_up_members)
+        c = Client()
+        c.login(username=self.member.username, password='test')
+        response = c.post(reverse('events:detail', args=[event.slug]),
+                          {'user': 'person', 'email': 'person@test.com'}, follow=True)
+        self.assertEqual(response.status_code, 403)
