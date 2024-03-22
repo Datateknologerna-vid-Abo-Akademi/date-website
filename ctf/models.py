@@ -1,6 +1,6 @@
 import logging
 
-from ckeditor.fields import RichTextField
+from django_ckeditor_5.fields import CKEditor5Field
 from django.db import models
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
@@ -14,7 +14,7 @@ POST_SLUG_MAX_LENGTH = 50
 
 class Ctf(models.Model):
     title = models.CharField(_('Titel'), max_length=255, blank=False)
-    content = RichTextField(_('Innehåll'), blank=True)
+    content = CKEditor5Field(_('Innehåll'), blank=True)
     start_date = models.DateTimeField(_('Startdatum'), default=now)
     end_date = models.DateTimeField(_('Slutdatum'), default=now)
     pub_date = models.DateTimeField(auto_now_add=True)
@@ -42,7 +42,7 @@ class Flag(models.Model):
     title = models.CharField(max_length=200)
     flag = models.CharField(max_length=200)
     solved_date = models.DateTimeField(blank=True, null=True)
-    clues = RichTextField(_('Clue'), blank=True)
+    clues = CKEditor5Field(_('Clue'), blank=True)
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
 
     class Meta:

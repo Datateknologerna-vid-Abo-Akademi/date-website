@@ -52,7 +52,7 @@ class MemberCreationForm(forms.ModelForm):
         return member
 
 
-class MemberUpdateForm(forms.ModelForm):
+class AdminMemberUpdateForm(forms.ModelForm):
     password = ReadOnlyPasswordHashField(label="Lösenord",
                                          help_text=("Raw passwords are not stored, so there is no way to see "
                                                     "this user's password, but you can change the password "
@@ -76,7 +76,7 @@ class MemberUpdateForm(forms.ModelForm):
         )
 
     def save(self, commit=True):
-        member = super(MemberUpdateForm, self).save(commit=False)
+        member = super(AdminMemberUpdateForm, self).save(commit=False)
         password = None
         if password:
             member.set_password(password)
@@ -247,3 +247,12 @@ class FunctionaryForm(forms.ModelForm):
 class FunctionaryFilterForm(forms.Form):
     year = forms.IntegerField(required=False)
     functionary_role = forms.CharField(required=False)
+
+
+class MemberEditForm(forms.ModelForm):
+    first_name = forms.CharField(required=True)
+    last_name = forms.CharField(required=True)
+
+    class Meta:
+        model = Member
+        fields = ['first_name', 'last_name', 'phone', 'address', 'zip_code', 'city', 'country']
