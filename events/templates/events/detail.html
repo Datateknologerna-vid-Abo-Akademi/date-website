@@ -6,7 +6,7 @@
 
 {% block content %}
     <head>
-        {% if event.exclude_indexing %}
+        {% if event.exclude_indexing and not event.in_past_event_list %}
         <meta name="robots" content="noindex">
         {% endif %}
         <link rel="stylesheet" href="{% static 'events/css/detail.css' %}">

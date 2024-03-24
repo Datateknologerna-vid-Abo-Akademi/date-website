@@ -4,6 +4,7 @@ import logging
 import os
 from datetime import timedelta
 
+from django.utils import timezone
 from django_ckeditor_5.fields import CKEditor5Field
 from django import forms
 from django.conf import settings
@@ -208,8 +209,16 @@ class Event(models.Model):
         return self.sign_up_max_participants
 
     def exclude_indexing(self):
-        grace_period = timedelta(days=1)  # Adjust this to change the grace period
+        grace_period = timedelta(days=7)  # Adjust this to change the grace period
         return self.event_date_end + grace_period < now()
+
+    def in_past_event_list(self):
+        today = timezone.now()
+        past_events = Event.objects.filter(event_date_end__lte=today).order_by('-event_date_end')[:5]
+        logger.debug(past_events)
+        logger.debug(self)
+        return self in past_events
+
 
 
 class EventRegistrationForm(models.Model):
