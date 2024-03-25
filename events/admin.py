@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.db.models import JSONField
 from django.shortcuts import render
 from django.template.response import TemplateResponse
+from django_ckeditor_5.widgets import CKEditor5Widget
 from django.urls import reverse, re_path
 from django.utils.html import format_html
 
@@ -64,6 +65,10 @@ class EventAttendeesFormInline(OrderableAdmin, TranslationTabularInline):
             kwargs["queryset"] = EventAttendees.objects.filter(event=event_id)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
+
+# TODO: Get it working with the old EventAdmin code that is commented out below
+# TODO: Improve the admin panel UI for the translatable fields
+# SEE https://django-modeltranslation.readthedocs.io/en/latest/admin.html
 @admin.register(Event)
 class EventAdmin(TranslationAdmin):
     save_on_top = True
