@@ -1,0 +1,918 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-10-10 17:06+0300\n"
+"PO-Revision-Date: 2023-10-10 17:11+0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.3.2\n"
+
+#: archive/models.py:30 archive/models.py:163 events/models.py:145
+#: events/models.py:211 events/models.py:234
+#: events/templates/events/arsfest.html:98
+#: events/templates/events/detail.html:57 members/forms.py:152
+#: members/models.py:106
+msgid "Namn"
+msgstr "Nimi"
+
+#: archive/models.py:33
+msgid "Göm för gulisar"
+msgstr ""
+
+#: archive/models.py:36 archive/models.py:162
+msgid "Samling"
+msgstr ""
+
+#: archive/models.py:37
+msgid "Samlingar"
+msgstr ""
+
+#: archive/models.py:113 archive/templates/archive/index.html:15
+#: archive/templates/archive/picture_index.html:15
+msgid "Bildarkiv"
+msgstr ""
+
+#: archive/models.py:119 archive/templates/archive/document_index.html:17
+msgid "Dokumentarkiv"
+msgstr ""
+
+#: archive/models.py:124 archive/templates/archive/exam_detail.html:7
+#: archive/templates/archive/exam_upload.html:5
+#: archive/templates/archive/exams_index.html:5
+#: archive/templates/archive/exams_index.html:16
+msgid "Tentarkiv"
+msgstr ""
+
+#: archive/models.py:129
+msgid "Offentliga Filer"
+msgstr ""
+
+#: archive/models.py:134 archive/models.py:175
+msgid "Galleri"
+msgstr "Galleria"
+
+#: archive/models.py:139
+msgid "bild"
+msgstr "kuva"
+
+#: archive/models.py:140
+msgid "bilder"
+msgstr "kuvat"
+
+#: archive/models.py:164
+msgid "Filnamn"
+msgstr "Tiedostonimi"
+
+#: archive/models.py:170 archive/models.py:171
+msgid "dokument"
+msgstr ""
+
+#: archive/models.py:176
+msgid "file"
+msgstr ""
+
+#: archive/models.py:179
+msgid "fil"
+msgstr ""
+
+#: archive/models.py:180
+msgid "filer"
+msgstr ""
+
+#: archive/templates/admin/archive/collection/change_list.html:7
+msgid "Städa upp media"
+msgstr ""
+
+#: archive/templates/archive/detail.html:16
+msgid "Publicerats"
+msgstr "Julkaistu"
+
+#: archive/templates/archive/detail.html:20
+#: polls/templates/polls/detail.html:15 polls/templates/polls/results.html:15
+msgid "Tillbaka"
+msgstr "Takaisin"
+
+#: archive/templates/archive/document_index.html:7
+msgid "Dokument arkiv"
+msgstr ""
+
+#: archive/templates/archive/document_index.html:19
+msgid "Ladda upp dokument"
+msgstr ""
+
+#: archive/templates/archive/exam_detail.html:17
+msgid "Lägg till tentamen"
+msgstr ""
+
+#: archive/templates/archive/exams_index.html:15
+msgid "Lägg till arkiv"
+msgstr ""
+
+#: archive/templates/archive/index.html:5
+#: archive/templates/archive/picture_index.html:5
+msgid "Arkiv"
+msgstr "Arkiivi"
+
+#: archive/templates/archive/index.html:17
+msgid "Skapa nytt album"
+msgstr ""
+
+#: archive/templates/archive/index.html:47
+#: archive/templates/archive/picture_index.html:42
+msgid "Inga arkiv hittades..."
+msgstr ""
+
+#: archive/templates/archive/picture_index.html:33
+msgid "Bilder"
+msgstr "Kuvat"
+
+#: archive/templates/archive/upload.html:5
+msgid "Ladda upp bilder"
+msgstr ""
+
+#: core/templates/404.html:21
+msgid "Sidan hittades inte"
+msgstr "Sivua ei löydetty"
+
+#: core/templates/404.html:23 core/templates/500.html:17
+msgid "Till startsidan"
+msgstr ""
+
+#: core/templates/500.html:16
+msgid "Serverfel, försök igen om en stund"
+msgstr "Palvelinvirhe, kokeile uudestaan hetken kuluttua"
+
+#: core/templates/footer.html:41
+msgid ""
+"Styrelsen för Datateknologerna vid Åbo Akademi rf kan kontaktas på följande "
+"sätt."
+msgstr ""
+"Voit ottaa yhteyttä Datateknologerna vid Åbo Akademi rf:n hallitukseen "
+"seuraavin keinoin."
+
+#: core/templates/footer.html:42
+msgid "E-post"
+msgstr "Sähköposti"
+
+#: core/templates/header.html:41 date/templates/date/start.html:213
+msgid "Evenemang"
+msgstr "Tapahtumat"
+
+#: core/templates/header.html:44 date/templates/date/start.html:192
+#: news/templates/news/index.html:5
+msgid "Nyheter"
+msgstr "Uutiset"
+
+#: ctf/models.py:16 events/models.py:39 news/models.py:14
+#: staticpages/models.py:20 staticpages/models.py:37
+msgid "Titel"
+msgstr "Otsikko"
+
+#: ctf/models.py:17 events/models.py:40 news/models.py:15
+#: staticpages/models.py:21
+msgid "Innehåll"
+msgstr "Sisältö"
+
+#: ctf/models.py:18 events/models.py:41
+msgid "Startdatum"
+msgstr "Alkupäivämäärä"
+
+#: ctf/models.py:19 events/models.py:42
+msgid "Slutdatum"
+msgstr "Loppupäivämäärä"
+
+#: ctf/models.py:21 ctf/models.py:46 events/models.py:58 news/models.py:21
+#: staticpages/models.py:24
+msgid "Slug"
+msgstr ""
+
+#: ctf/models.py:22 events/models.py:57 news/models.py:20 polls/models.py:13
+msgid "Publicera"
+msgstr ""
+
+#: ctf/models.py:25 ctf/models.py:26
+msgid "ctf"
+msgstr ""
+
+#: ctf/models.py:45
+msgid "Clue"
+msgstr ""
+
+#: ctf/models.py:49
+msgid "Flag"
+msgstr ""
+
+#: ctf/models.py:50
+msgid "Flags"
+msgstr ""
+
+#: ctf/templates/ctf/detail.html:4 ctf/templates/ctf/flag_detail.html:4
+#: ctf/templates/ctf/index.html:4
+msgid "DaTe - CTF"
+msgstr ""
+
+#: date/templates/date/start.html:170
+msgid "Datateknologerna"
+msgstr ""
+
+#: date/templates/date/start.html:171
+msgid "vid Åbo Akademi rf"
+msgstr ""
+
+#: date/templates/date/start.html:177
+msgid "Om oss"
+msgstr "Meistä"
+
+#: date/templates/date/start.html:180
+msgid ""
+"Datateknologerna vid Åbo Akademi rf är en förening för studerande vid "
+"utbildningsprogrammet i datateknik vid Fakulteten för Naturvetenskaper och "
+"Teknik vid Åbo Akademi, samt för studerande vid övriga tekniskt inriktade "
+"utbildningslinjer i databehandling. Föreningen grundades 1999, närmare "
+"bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare "
+"och stiliga tofsmössor."
+msgstr ""
+"Datateknologerna vid Åbo Akademi rf on yhdistys Åbo Akademin "
+"luonnontieteiden ja teknillisen tiedekunnan tietotekniikan koulutusohjelman "
+"opiskelijoille sekä muiden tietojenkäsittelyn teknisesti suuntautuneiden "
+"koulutuslinjojen opiskelijoille. Yhdistys on perustettu vuonna 1999, "
+"tarkemmin sanottuna 24.8 16:32 Jäsenet tunnistaa mustista tossuistaan ​​ja "
+"tyylikkäistä tupsulakeista."
+
+#: date/templates/date/start.html:203
+msgid "Läs mera"
+msgstr "Lue lisää"
+
+#: date/templates/date/start.html:206
+msgid "Inga nyheter hittades"
+msgstr "Uutisia ei löydetty"
+
+#: date/templates/date/start.html:208
+msgid "Mera nyheter..."
+msgstr "Lisää uutisia..."
+
+#: date/templates/date/start.html:265 date/templates/date/start.html:340
+msgid "Inga aktiva evenemang hittades"
+msgstr "Tapahtumia ei löydetty"
+
+#: date/templates/date/start.html:268 date/templates/date/start.html:343
+msgid "Mera evenemang"
+msgstr "Lisää tapahtumia"
+
+#: date/templates/date/start.html:275
+msgid "Samarbetspartners"
+msgstr "Yhteistyökumppanimme"
+
+#: events/models.py:43
+msgid "Maximal antal deltagare"
+msgstr ""
+
+#: events/models.py:47 events/templates/events/arsfest.html:72
+#: events/templates/events/detail.html:33
+msgid "Anmälning"
+msgstr "Ilmoittautuminen"
+
+#: events/models.py:48
+msgid "Anmälan öppnas (medlemmar)"
+msgstr ""
+
+#: events/models.py:49
+msgid "Anmälan öppnas (övriga)"
+msgstr ""
+
+#: events/models.py:50
+msgid "Anmälningen stängs"
+msgstr ""
+
+#: events/models.py:51
+msgid "Avanmälning"
+msgstr "Ilmoittautuminen"
+
+#: events/models.py:52
+msgid "Avanmälningen stängs"
+msgstr "Ilmoittautuminen sulkeutuu"
+
+#: events/models.py:54 news/models.py:17 staticpages/models.py:22
+msgid "Skapad"
+msgstr "Luotu"
+
+#: events/models.py:55 news/models.py:18
+msgid "Publicerad"
+msgstr "Julkaistu"
+
+#: events/models.py:56 news/models.py:19 staticpages/models.py:23
+msgid "Modifierad"
+msgstr "Muokattu"
+
+#: events/models.py:59
+msgid "Avec"
+msgstr ""
+
+#: events/models.py:60
+msgid "Kräv inloggning för innehåll"
+msgstr ""
+
+#: events/models.py:61
+msgid "Passcode"
+msgstr ""
+
+#: events/models.py:62 events/models.py:63
+msgid "Bakgrundsbild"
+msgstr ""
+
+#: events/models.py:66 events/models.py:67
+msgid "evenemang"
+msgstr "tapahtumat"
+
+#: events/models.py:146
+msgid "Email"
+msgstr ""
+
+#: events/models.py:147 events/models.py:237
+#: events/templates/events/arsfest.html:107
+#: events/templates/events/detail.html:66
+msgid "Anonymt"
+msgstr "Anonyymisesti"
+
+#: events/models.py:201
+msgid "Det finns redan någon anmäld med denna email"
+msgstr ""
+
+#: events/models.py:212
+msgid "Typ"
+msgstr ""
+
+#: events/models.py:215
+msgid "Krävd"
+msgstr ""
+
+#: events/models.py:216
+msgid "Öppen info"
+msgstr ""
+
+#: events/models.py:217
+msgid "Alternativ"
+msgstr ""
+
+#: events/models.py:218
+msgid "Göm för avec"
+msgstr ""
+
+#: events/models.py:221 events/models.py:222
+msgid "Anmälningsfält"
+msgstr ""
+
+#: events/models.py:233
+msgid "#"
+msgstr ""
+
+#: events/models.py:235 members/forms.py:118 members/forms.py:153
+#: members/models.py:32
+msgid "E-postadress"
+msgstr "Sähköpostiosoite"
+
+#: events/models.py:236
+msgid "Svar"
+msgstr "Vastaus"
+
+#: events/models.py:238 events/templates/events/list.html:37
+msgid "Registrerad"
+msgstr ""
+
+#: events/models.py:239 events/templates/events/list.html:35
+msgid "Avec till"
+msgstr ""
+
+#: events/models.py:242 events/models.py:243
+msgid "deltagare"
+msgstr ""
+
+#: events/templates/events/arsfest.html:80
+#: events/templates/events/detail.html:39
+msgid "Anmälningstiden gick ut för"
+msgstr ""
+
+#: events/templates/events/arsfest.html:80
+#: events/templates/events/detail.html:39
+msgid "sedan"
+msgstr ""
+
+#: events/templates/events/arsfest.html:82
+#: events/templates/events/arsfest.html:84
+#: events/templates/events/detail.html:41
+#: events/templates/events/detail.html:43
+msgid "Anmälan öppnas om "
+msgstr "Ilmoittautuminen avautuu"
+
+#: events/templates/events/arsfest.html:90
+#: events/templates/events/detail.html:49
+msgid "Det finns"
+msgstr "Jäljellä"
+
+#: events/templates/events/arsfest.html:92
+#: events/templates/events/detail.html:51
+msgid "Anmälda"
+msgstr "Ilmoittautuneet"
+
+#: events/templates/events/arsfest.html:113
+msgid "Inga anmälda, var den första att anmäla dig!"
+msgstr "Ei ilmoittautuneita, ole ensimmäinen!"
+
+#: events/templates/events/arsfest.html:117
+msgid ""
+"Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta "
+"styrelsen vid behov."
+msgstr ""
+
+#: events/templates/events/detail.html:49
+msgid "platser!"
+msgstr "paikkaa!"
+
+#: events/templates/events/detail.html:72
+msgid "Inga anmälda ännu, var den första!"
+msgstr "Ei ilmoittautuneita, ole ensimmäinen!"
+
+#: events/templates/events/detail.html:76
+msgid ""
+"Deltagarlistan har gömts eftersom det här är ett gammalt evenemang, kontakta "
+"styrelsen vid behov."
+msgstr ""
+
+#: events/templates/events/event_passcode.html:4
+#: events/templates/events/index.html:4
+msgid "DaTe - Händelser"
+msgstr "DaTe - Tapahtumat"
+
+#: events/templates/events/event_passcode.html:22
+msgid "Skicka"
+msgstr "Lähetä"
+
+#: events/templates/events/index.html:16
+msgid "Kommande händelser"
+msgstr "Tulevat tapahtumat"
+
+#: events/templates/events/index.html:55
+msgid "Inga aktiva händelser"
+msgstr "Ei aktiivisia tapahtumia"
+
+#: events/templates/events/index.html:59
+msgid "Tidigare händelser"
+msgstr "Aikaisemmat tapahtumat"
+
+#: events/templates/events/index.html:65
+msgid "Inga tidigare händelser"
+msgstr "Ei aikaisempia tapahtumia"
+
+#: events/templates/events/list.html:19
+msgid "Datum:"
+msgstr "Päivämäärä:"
+
+#: events/templates/events/list.html:66
+msgid "Inga deltagare..."
+msgstr "Ei ilmoittautuneita"
+
+#: events/templates/events/registering.html:8
+msgid "Anmälan stängs om "
+msgstr "Ilmoittaututuminen sulkeutuu"
+
+#: events/templates/events/registering.html:9
+msgid "OBS!"
+msgstr "HUOM!"
+
+#: events/templates/events/registering.html:9
+msgid "Anmälningen är bindande om inget annat meddelas."
+msgstr "Ilmoittautuminen on sitova."
+
+#: events/templates/events/registering.html:10
+msgid ""
+"Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på "
+"förhinder."
+msgstr "Muista peruttaa ilmoituksesi jos et pysty osallistumaan"
+
+#: events/templates/events/registering.html:27
+msgid "Anmäl"
+msgstr "Ilmoittaudu"
+
+#: events/templates/events/registering.html:32
+msgid ""
+"Genom att anmäla dig godkänner du att Datateknologerna vid Åbo Akademi rf "
+"lagrar ditt namn, din e-post samt eventuell annan nödvändig information. "
+"Under anmälningstiden syns den anmäldas namn i listan nedan. Efter "
+"evenemanget sparas informationen för statistiska ändamål och syns endast för "
+"hemsidans administratörer."
+msgstr ""
+"Ilmoittautumalla hyväksyt että Datateknologerna vid Åbo Akademi rf säilyttää "
+"nimesi, sähköpostiosoitteesi sekä muu tarvittava tieto. Ilmoittautumisajan "
+"aikana ilmoittautuneen nimi näkyy alla olevassa listassa. Tapahtuman jälkeen "
+"tieto tallennetaan statistiikkakäytöön ja tieto näkyy ainoastaan verkkosivun "
+"ylläpitäjille."
+
+#: events/templates/events/registering.html:39
+msgid ""
+"Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan "
+"och meddelas om du får plats."
+msgstr ""
+
+#: members/forms.py:117 members/forms.py:118 members/forms.py:124
+#: members/forms.py:152 members/forms.py:153
+msgid "detta fält är obligatoriskt"
+msgstr ""
+
+#: members/forms.py:117 members/models.py:31
+msgid "Användarnamn"
+msgstr "Käyttäjänimi"
+
+#: members/forms.py:125
+msgid "Lösenord"
+msgstr "Salasana"
+
+#: members/forms.py:154 members/models.py:35
+msgid "Telefonnummer"
+msgstr "Puhelinnumero"
+
+#: members/forms.py:155 members/models.py:36
+msgid "Adress"
+msgstr "Osoite"
+
+#: members/forms.py:156
+msgid "Inskrivningsår"
+msgstr "Aloittamisvuosi"
+
+#: members/forms.py:157
+msgid "Arbetsplats"
+msgstr ""
+
+#: members/forms.py:158
+msgid "Arbetsuppgift"
+msgstr ""
+
+#: members/forms.py:159
+msgid "TFiF medlemskap"
+msgstr "TFiF jäsennyys"
+
+#: members/forms.py:160
+msgid "Jag tar gärna emot information om alumnevenemang"
+msgstr ""
+
+#: members/models.py:23
+msgid "Gulnäbb"
+msgstr ""
+
+#: members/models.py:24
+msgid "Ordinarie medlem"
+msgstr "Tavallinen jäsen"
+
+#: members/models.py:25
+msgid "Stödjande medlem"
+msgstr "Tukeva jäsen"
+
+#: members/models.py:26
+msgid "Seniormedlem"
+msgstr "Seniorijäsen"
+
+#: members/models.py:33
+msgid "Förnamn"
+msgstr "Etunimi"
+
+#: members/models.py:34
+msgid "Efternamn"
+msgstr "Sukunimi"
+
+#: members/models.py:37
+msgid "Postkod"
+msgstr "Postinumero"
+
+#: members/models.py:38
+msgid "Postanstalt"
+msgstr ""
+
+#: members/models.py:39
+msgid "Land"
+msgstr "Maa"
+
+#: members/models.py:39
+msgid "Finland"
+msgstr "Suomi"
+
+#: members/models.py:40
+msgid "Medlemskap"
+msgstr "Jäsenyys"
+
+#: members/models.py:47
+msgid "medlem"
+msgstr "jäsen"
+
+#: members/models.py:48
+msgid "medlemmar"
+msgstr "jäsenet"
+
+#: members/models.py:99
+msgid "Dagar"
+msgstr "Päivää"
+
+#: members/models.py:100
+msgid "Månader"
+msgstr "Kuukautta"
+
+#: members/models.py:101
+msgid "År"
+msgstr "Vuotta"
+
+#: members/models.py:107 members/models.py:127
+msgid "Upphör"
+msgstr ""
+
+#: members/models.py:109
+msgid "Förnyelse skala"
+msgstr ""
+
+#: members/models.py:111
+msgid "Förnyelseperiod"
+msgstr ""
+
+#: members/models.py:112
+msgid "Pris"
+msgstr "Hinta"
+
+#: members/models.py:115
+msgid "prenumeration"
+msgstr ""
+
+#: members/models.py:116
+msgid "prenumerationer"
+msgstr ""
+
+#: members/models.py:126
+msgid "Betald"
+msgstr ""
+
+#: members/models.py:128
+msgid "Betald summa"
+msgstr ""
+
+#: members/models.py:131
+msgid "prenumerationsbetalning"
+msgstr ""
+
+#: members/models.py:132
+msgid "prenumerationsbetalningar"
+msgstr ""
+
+#: members/models.py:147
+msgid "Aldrig"
+msgstr ""
+
+#: members/models.py:162
+msgid "Registreringsdatum"
+msgstr "Rekisteröintipäivämäärä"
+
+#: members/models.py:163
+msgid "Processerad"
+msgstr ""
+
+#: members/models.py:166
+msgid "Alumnregistrering"
+msgstr ""
+
+#: members/models.py:167
+msgid "Alumnregistreringar"
+msgstr ""
+
+#: members/models.py:181 members/models.py:182
+msgid "Emailmottagare för ARG"
+msgstr ""
+
+#: members/templates/certificate.html:5
+msgid "Medlemspass"
+msgstr "Jäsenpassi"
+
+#: members/templates/registration/login.html:12
+msgid "Login"
+msgstr "Kirjaudu sisään"
+
+#: members/templates/registration/login.html:18
+msgid "Glömt lösenordet?"
+msgstr "Unohditko salansanasi?"
+
+#: members/templates/registration/login.html:19
+msgid "Registrera dig"
+msgstr "Rekisteröidy"
+
+#: members/templates/registration/password_reset_complete.html:6
+#: members/templates/registration/password_reset_confirm.html:5
+#: members/templates/registration/password_reset_form.html:5
+#: members/templates/registration/password_reset_form.html:12
+msgid "Glömt lösenord"
+msgstr "Unohdin salasanani"
+
+#: members/templates/registration/password_reset_complete.html:14
+msgid "Ditt lösenord har updaterats"
+msgstr "Salasanasi on päivitetty"
+
+#: members/templates/registration/password_reset_complete.html:14
+msgid "Du kan nu logga in som vanligt"
+msgstr "Voit nyt kirjoittautua normaalisti"
+
+#: members/templates/registration/password_reset_complete.html:16
+msgid "Logga in"
+msgstr "Kirjaudu sisään"
+
+#: members/templates/registration/password_reset_confirm.html:14
+#: members/templates/registration/password_reset_confirm.html:18
+msgid "Byt lösenord"
+msgstr "Vaihda salasana"
+
+#: members/templates/registration/password_reset_confirm.html:24
+msgid ""
+"Denna länk är inte giltigt, det kan hända att länken redan använts. Vänligen "
+"fråga efter en ny länk."
+msgstr ""
+
+#: members/templates/registration/password_reset_done.html:13
+msgid ""
+"Vi har skicket instruktionerna till din mail, ifall en användare är "
+"registrerad med denna epost. Du borde få mailet inom kort"
+msgstr ""
+
+#: members/templates/registration/password_reset_done.html:16
+msgid ""
+"Ifall du inte fått något mail. Säkerställ att du angett rätt e-post adress "
+"samt vänligen granska skräpkorgen."
+msgstr ""
+
+#: members/templates/registration/password_reset_done.html:18
+#: members/templates/registration/registration_complete.html:24
+msgid "Gå till Startsidan"
+msgstr "Kotisivulle"
+
+#: members/templates/registration/password_reset_form.html:27
+msgid "Sänd"
+msgstr "Lähetä"
+
+#: members/templates/registration/registration_complete.html:13
+msgid "Styrelsen har blivit notifierad angående din anmälan."
+msgstr "Hallitus on ilmoitettu hakemuksestasi"
+
+#: members/templates/registration/registration_complete.html:17
+msgid ""
+"Kolla e-postadressen du registrerade dig med för ytterligare instruktioner"
+msgstr "Tarkista sähköpostisi saadaaksesi lisää ohjeita"
+
+#: members/templates/registration/registration_complete.html:21
+msgid ""
+"Du kan logga in <strong>efter</strong> att styrelsen har granskat och "
+"godkänt ditt konto."
+msgstr ""
+
+#: members/templates/signup.html:15
+msgid "Sign up"
+msgstr "Rekisteröidy"
+
+#: members/templates/signup.html:33
+msgid "Jag godkänner"
+msgstr "Hyväksyn"
+
+#: members/templates/signup.html:35
+msgid "villkoren"
+msgstr "käyttöehdot"
+
+#: members/templates/userinfo.html:5
+msgid "Användarinformation"
+msgstr "Käyttäjätiedot"
+
+#: members/views.py:97
+msgid "Användare aktiverad"
+msgstr "Käyttäjä aktivoitu"
+
+#: news/models.py:25
+msgid "nyhet"
+msgstr ""
+
+#: news/models.py:26
+msgid "nyheter"
+msgstr "Uutiset"
+
+#: news/templates/news/article.html:18 news/templates/news/author.html:15
+msgid "Skriven "
+msgstr ""
+
+#: news/templates/news/article.html:18
+msgid "av"
+msgstr ""
+
+#: news/templates/news/author.html:15
+msgid " av "
+msgstr ""
+
+#: news/templates/news/author.html:22
+msgid "Inga artiklar hittades..."
+msgstr ""
+
+#: news/templates/news/index.html:39
+msgid "Läs mera..."
+msgstr "Lue lisää..."
+
+#: news/templates/news/index.html:44
+msgid "Inga nyheter hittades..."
+msgstr "Ei uutisia tällä hetkellä"
+
+#: polls/models.py:14
+msgid "Visa resultat"
+msgstr ""
+
+#: polls/models.py:15
+msgid "Avsluta röstande"
+msgstr ""
+
+#: polls/models.py:16
+msgid "Flerval"
+msgstr ""
+
+#: polls/models.py:17
+msgid "Endast medlemmar"
+msgstr ""
+
+#: polls/models.py:18
+msgid "Endast ordinarie medlemmar"
+msgstr ""
+
+#: polls/models.py:19
+msgid "Endast röstberättigade medlemmar"
+msgstr ""
+
+#: polls/models.py:23
+msgid "Fråga"
+msgstr ""
+
+#: polls/models.py:24
+msgid "Frågor"
+msgstr ""
+
+#: polls/models.py:41 polls/models.py:42
+msgid "Val"
+msgstr ""
+
+#: polls/models.py:56 polls/models.py:57
+msgid "Röstare"
+msgstr ""
+
+#: polls/templates/polls/detail.html:4 polls/templates/polls/index.html:4
+#: polls/templates/polls/results.html:4
+msgid "DaTe - Poll"
+msgstr ""
+
+#: polls/templates/polls/index.html:28
+msgid "Det finns inga aktiva omröstningar"
+msgstr ""
+
+#: polls/templates/polls/results.html:18
+msgid "Resultat: "
+msgstr ""
+
+#: polls/templates/polls/results.html:24
+msgid "Totala röster: "
+msgstr ""
+
+#: polls/templates/polls/results.html:26
+msgid "Resultaten är gömda"
+msgstr ""
+
+#: social/models.py:11
+msgid "URL"
+msgstr ""
+
+#: social/models.py:12
+msgid "SHORTCODE"
+msgstr ""
+
+#: staticpages/models.py:13
+msgid "Kategori"
+msgstr ""
+
+#: staticpages/models.py:27
+msgid "Kräv inloggning"
+msgstr ""
+
+#: staticpages/models.py:38
+msgid "Url"
+msgstr ""
+
+#: staticpages/templates/staticpages/staticpage.html:20
+msgid "Logga in för att se den här sidan"
+msgstr ""
+
+#: staticpages/templates/staticpages/staticpageindex.html:4
+#: staticpages/templates/staticpages/staticpageindex.html:13
+msgid "Guider"
+msgstr ""
