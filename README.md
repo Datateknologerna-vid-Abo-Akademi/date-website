@@ -144,6 +144,8 @@ to fix this, run the command `docker compose run web python manage.py update_tra
 
 Django-modeltranslations naturally does not play well with creating translations of external field types.
 
+See https://django-modeltranslation.readthedocs.io/en/latest/installation.html#modeltranslation-custom-fields for more
+
 Example solution:
 
 1. add the field class to settings.py:

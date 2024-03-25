@@ -278,16 +278,14 @@ LOCALE_PATHS = (
     'locale',
 )
 
-LANG_FINNISH = 'fi'
-LANG_SWEDISH = 'sv'
-
+# Dynamic content will fall back on the first language in the list
 LANGUAGES = (
     ('sv', ("Svenska")),
     ('en', ("English")),
     ('fi', ("Suomi"))
 )
 
-LANGUAGE_CODE = LANG_SWEDISH
+LANGUAGE_CODE = 'sv'
 
 TIME_ZONE = 'Europe/Helsinki'
 
