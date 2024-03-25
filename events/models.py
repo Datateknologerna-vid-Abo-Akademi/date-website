@@ -40,22 +40,33 @@ class Event(models.Model):
     event_date_end = models.DateTimeField(_('Slutdatum'), default=now)
     sign_up_max_participants = models.IntegerField(_('Maximal antal deltagare (0 för ingen begränsning)'), default=0)
     sign_up = models.BooleanField(_('Anmälning'), default=True)
-    sign_up_members = models.DateTimeField(_('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=now)
-    sign_up_others = models.DateTimeField(_('Anmälan öppnas (övriga)'), null=True, blank=True, default=now)
-    sign_up_deadline = models.DateTimeField(_('Anmälningen stängs'), null=True, blank=True, default=now)
+    sign_up_members = models.DateTimeField(
+        _('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=now)
+    sign_up_others = models.DateTimeField(
+        _('Anmälan öppnas (övriga)'), null=True, blank=True, default=now)
+    sign_up_deadline = models.DateTimeField(
+        _('Anmälningen stängs'), null=True, blank=True, default=now)
     sign_up_cancelling = models.BooleanField(_('Avanmälning'), default=True)
-    sign_up_cancelling_deadline = models.DateTimeField(_('Avanmälningen stängs'), null=True, blank=True, default=now)
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    sign_up_cancelling_deadline = models.DateTimeField(
+        _('Avanmälningen stängs'), null=True, blank=True, default=now)
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_time = models.DateTimeField(_('Skapad'), default=now)
-    published_time = models.DateTimeField(_('Publicerad'), editable=False, null=True, blank=True)
-    modified_time = models.DateTimeField(_('Modifierad'), editable=False, null=True, blank=True)
+    published_time = models.DateTimeField(
+        _('Publicerad'), editable=False, null=True, blank=True)
+    modified_time = models.DateTimeField(
+        _('Modifierad'), editable=False, null=True, blank=True)
     published = models.BooleanField(_('Publicera'), default=True)
-    slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH, blank=True)
+    slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False,
+                            max_length=POST_SLUG_MAX_LENGTH, blank=True)
     sign_up_avec = models.BooleanField(_('Avec'), default=False)
-    members_only = models.BooleanField(_('Kräv inloggning för innehåll'), default=False)
+    members_only = models.BooleanField(
+        _('Kräv inloggning för innehåll'), default=False)
     passcode = models.CharField(_('Passcode'), max_length=255, blank=True)
-    image = models.ImageField(_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
-    s3_image = PublicFileField(verbose_name=_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
+    image = models.ImageField(
+        _('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
+    s3_image = PublicFileField(verbose_name=_(
+        'Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
     captcha = models.BooleanField(_('Captcha'), default=False)
     redirect_link = models.URLField(_('Redirect Link'), blank=True)
 
@@ -92,7 +103,8 @@ class Event(models.Model):
     def add_event_attendance(self, user, email, anonymous, preferences, avec_for=None):
         if self.sign_up:
             try:
-                registration = EventAttendees.objects.get(email=email, event=self)
+                registration = EventAttendees.objects.get(
+                    email=email, event=self)
             except ObjectDoesNotExist:
                 user_pref = {}
                 if self.get_registration_form():
@@ -151,17 +163,20 @@ class Event(models.Model):
                                                                   choices=list(map(list, zip(choices, choices))),
                                                                   required=question.required)
                     elif question.type == "checkbox":
-                        fields[question.name] = forms.BooleanField(label=question.name, required=question.required)
+                        fields[question.name] = forms.BooleanField(
+                            label=question.name, required=question.required)
                     elif question.type == "text":
                         fields[question.name] = forms.CharField(label=question.name, required=question.required,
                                                                 max_length=255)
             if self.sign_up_avec:
-                fields['avec'] = forms.BooleanField(label='Avec', required=False)
+                fields['avec'] = forms.BooleanField(
+                    label='Avec', required=False)
                 fields['avec_user'] = forms.CharField(label='Namn', max_length=255, required=False,
                                                       widget=forms.TextInput(attrs={'class': "avec-field"}))
                 fields['avec_email'] = forms.EmailField(label='Email', validators=[self.validate_unique_email],
                                                         required=False,
-                                                        widget=forms.TextInput(attrs={'class': "avec-field"}),
+                                                        widget=forms.TextInput(
+                                                            attrs={'class': "avec-field"}),
                                                         max_length=320)
                 fields['avec_anonymous'] = forms.BooleanField(label='Anonymt', required=False, widget=forms
                                                               .CheckboxInput(attrs={'class': "avec-field"}))
@@ -174,7 +189,7 @@ class Event(models.Model):
                                                                                     choices=list(map(list, zip(choices,
                                                                                                                choices))),
                                                                                     required=False, widget=forms.Select(
-                                        attrs={'class': "avec-field"}))
+                                                                                        attrs={'class': "avec-field"}))
                             elif question.type == "checkbox":
                                 fields['avec_' + question.name] = forms.BooleanField(label=question.name,
                                                                                      required=False,
@@ -196,7 +211,8 @@ class Event(models.Model):
         for attendee in attendees:
             if email == attendee.email:
                 logger.debug("SAME EMAIL")
-                raise ValidationError(_("Det finns redan någon anmäld med denna email"))
+                raise ValidationError(
+                    _("Det finns redan någon anmäld med denna email"))
 
     def get_sign_up_max_participants(self):
         if (self.sign_up_max_participants == 0):
@@ -217,11 +233,14 @@ class Event(models.Model):
 
 
 class EventRegistrationForm(models.Model):
-    event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
-    choice_number = models.PositiveSmallIntegerField(_('#'), blank=True, default=0)
+    event = models.ForeignKey(
+        Event, verbose_name='Event', on_delete=models.CASCADE)
+    choice_number = models.PositiveSmallIntegerField(
+        _('#'), blank=True, default=0)
     name = models.CharField(_('Namn'), max_length=255, blank=True)
     type = models.CharField(_('Typ'),
-                            choices=(("text", "Text"), ("select", "Multiple choice"), ("checkbox", "Kryssryta")),
+                            choices=(
+                                ("text", "Text"), ("select", "Multiple choice"), ("checkbox", "Kryssryta")),
                             blank=True, max_length=255, null=True)
     required = models.BooleanField(_('Krävd'), default=False)
     public_info = models.BooleanField(_('Öppen info'), default=False)
@@ -242,7 +261,8 @@ class EventRegistrationForm(models.Model):
         # Only set choice_number if it's the default value (0).
         if self.choice_number == 0:
             # Get the current maximum choice_number for the related event.
-            max_choice_number = EventRegistrationForm.objects.filter(event=self.event).aggregate(Max('choice_number'))['choice_number__max']
+            max_choice_number = EventRegistrationForm.objects.filter(
+                event=self.event).aggregate(Max('choice_number'))['choice_number__max']
 
             if max_choice_number is None:
                 # If there are no records, start from 10.
@@ -255,14 +275,17 @@ class EventRegistrationForm(models.Model):
 
 
 class EventAttendees(models.Model):
-    event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
+    event = models.ForeignKey(
+        Event, verbose_name='Event', on_delete=models.CASCADE)
     attendee_nr = models.PositiveSmallIntegerField(_('#'), blank=True)
     user = models.CharField(_('Namn'), blank=False, max_length=255)
-    email = models.EmailField(_('E-postadress'), blank=False, null=True, unique=False)
+    email = models.EmailField(
+        _('E-postadress'), blank=False, null=True, unique=False)
     preferences = JSONField(_('Svar'), default=list, blank=True)
     anonymous = models.BooleanField(_('Anonymt'), default=False)
     time_registered = models.DateTimeField(_('Registrerad'))
-    avec_for = models.ForeignKey("self", verbose_name=_('Avec till'), null=True, blank=True, on_delete=models.SET_NULL)
+    avec_for = models.ForeignKey("self", verbose_name=_(
+        'Avec till'), null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = _('deltagare')
@@ -281,7 +304,8 @@ class EventAttendees(models.Model):
         if self.attendee_nr is None:
             # attendee_nr increments by 10, e.g 10,20,30,40...
             # this is needed so the admin sorting library will work.
-            self.attendee_nr = (self.event.get_registrations().count() + 1) * 10
+            self.attendee_nr = (
+                self.event.get_registrations().count() + 1) * 10
             # Add ten from highest attendee_nr so signups dont get in weird order after deletions.
             if self.event.get_highest_attendee_nr().get('attendee_nr__max'):
                 self.attendee_nr = self.event.get_highest_attendee_nr().get('attendee_nr__max') + 10

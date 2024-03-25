@@ -2,7 +2,6 @@
 {% load i18n %}
 {% load cache %}
 {% block content %}
-{% cache 300 main_page_fixed %}
     {% load static %}
     <head>
         <meta charset="UTF-8">
@@ -278,5 +277,4 @@
             })
         })
     </script>
-    {% endcache %}
 {% endblock %}

@@ -11,8 +11,7 @@ class LangMiddleware(MiddlewareMixin):
     def process_request(request):
         # Get session cookie in case user has selected language before
         request.LANG = request.COOKIES.get(
-        settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
-
+            settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
         translation.activate(request.LANG)
         request.LANGUAGE_CODE = request.LANG
 
