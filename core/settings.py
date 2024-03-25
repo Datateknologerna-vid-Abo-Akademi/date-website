@@ -208,6 +208,11 @@ CKEDITOR_5_CONFIGS = {
     }
 }
 
+# Make CKEditor5 Work with modeltranslations
+MODELTRANSLATION_CUSTOM_FIELDS = (
+    'django_ckeditor_5.fields.CKEditor5Field',
+)
+
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
