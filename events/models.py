@@ -5,7 +5,6 @@ import os
 from datetime import timedelta
 
 from django.utils import timezone
-from django_ckeditor_5.fields import CKEditor5Field
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -35,7 +34,7 @@ def upload_to(instance, filename):
 
 class Event(models.Model):
     title = models.CharField(_('Titel'), max_length=255, blank=False)
-    content = CKEditor5Field(_('Innehåll'), blank=True)
+    content = models.TextField(_('Innehåll'), blank=True)
     event_date_start = models.DateTimeField(_('Startdatum'), default=now)
     event_date_end = models.DateTimeField(_('Slutdatum'), default=now)
     sign_up_max_participants = models.IntegerField(_('Maximal antal deltagare (0 för ingen begränsning)'), default=0)
@@ -220,16 +219,17 @@ class Event(models.Model):
         return self.sign_up_max_participants
 
     def exclude_indexing(self):
-        grace_period = timedelta(days=7)  # Adjust this to change the grace period
+        # Adjust this to change the grace period
+        grace_period = timedelta(days=7)
         return self.event_date_end + grace_period < now()
 
     def in_past_event_list(self):
         today = timezone.now()
-        past_events = Event.objects.filter(event_date_end__lte=today).order_by('-event_date_end')[:5]
+        past_events = Event.objects.filter(
+            event_date_end__lte=today).order_by('-event_date_end')[:5]
         logger.debug(past_events)
         logger.debug(self)
         return self in past_events
-
 
 
 class EventRegistrationForm(models.Model):

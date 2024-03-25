@@ -140,6 +140,29 @@ class EventTranslationOptions(TranslationOptions):
 In this case, the newly created title_sv will not contain the data from what was previously just "title",
 to fix this, run the command `docker compose run web python manage.py update_translation_fields`
 
+### Using django-modeltranslations for non-standard field-types (eg. CKEditor5 instead of models.TextField)
+
+Django-modeltranslations naturally does not play well with creating translations of external field types.
+
+Example solution:
+
+1. add the field class to settings.py:
+
+```python 
+MODELTRANSLATION_CUSTOM_FIELDS = (
+    'django_ckeditor_5.fields.CKEditor5Field',
+)
+```
+
+2. Change the field model to a standard TextField (or whatever suits your need)
+3. Override the TextField with CKEditor5Field (or the corresponding field types for your case) in admin.py like this:
+
+```python
+    formfield_overrides = {
+        TextField: {'widget': CKEditor5Widget},
+    }
+```
+
 
 ## Updating the database
 
