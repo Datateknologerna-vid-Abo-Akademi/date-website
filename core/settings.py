@@ -20,28 +20,28 @@ env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False)
 )
-# reading .env file
-environ.Env.read_env()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 
 # Quick-date development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # SECRET_KEY = '+^%8i1h1@w@920qrt*+&+4=1o$927%3xwjap@xt6pjy&r4g-u5'
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = os.environ.get('SECRET_KEY', '')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', False)
 
 DEVELOP = os.environ.get('DEVELOP', False)
 
-ALLOWED_HOSTS = json.loads(os.environ['ALLOWED_HOSTS'])
+# This gets set only when tests are ran with date-test command
+TEST = os.environ.get('TEST', False)
 
-CSRF_TRUSTED_ORIGINS = json.loads(os.environ['ALLOWED_ORIGINS'])
+ALLOWED_HOSTS = json.loads(os.environ.get('ALLOWED_HOSTS', '[]'))
+
+CSRF_TRUSTED_ORIGINS = json.loads(os.environ.get('ALLOWED_ORIGINS', '[]'))
 
 # Application definition
 
@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     'events',
     'members',
     'ads',
-    'event_calendar',
     'social',
     'polls',
     'lucia',
@@ -65,7 +64,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'admin_ordering',
-    'ckeditor',
+    'django_ckeditor_5',
     'channels',
     'storages',
     'django_tables2',
@@ -120,14 +119,87 @@ CHANNEL_LAYERS = {
         },
     },
 }
-#CKEDITOR
+# CKEDITOR 5
 
-CKEDITOR_CONFIGS = {
-    'default': {
-        'height': '100%',
-        'width': '100%',
-        'toolbarCanCollapse': False,
+customColorPalette = [
+    {
+        'color': 'hsl(0, 0%, 0%)',
+        'label': 'Black'
     },
+    {
+        'color': 'hsl(4, 90%, 58%)',
+        'label': 'Red'
+    },
+    {
+        'color': 'hsl(340, 82%, 52%)',
+        'label': 'Pink'
+    },
+    {
+        'color': 'hsl(291, 64%, 42%)',
+        'label': 'Purple'
+    },
+    {
+        'color': 'hsl(262, 52%, 47%)',
+        'label': 'Deep Purple'
+    },
+    {
+        'color': 'hsl(231, 48%, 48%)',
+        'label': 'Indigo'
+    },
+    {
+        'color': 'hsl(207, 90%, 54%)',
+        'label': 'Blue'
+    },
+]
+
+CKEDITOR_5_CUSTOM_CSS = 'css/ckeditor.css'
+CKEDITOR_5_CONFIGS = {
+    'default': {
+        'toolbar': ['heading', '|', 'outdent', 'indent', '|', 'bold', 'italic', 'link', 'underline', 'strikethrough',
+                    'code', 'subscript', 'superscript', 'highlight', '|', 'codeBlock', 'sourceEditing', 'insertImage',
+                    'bulletedList', 'numberedList', 'todoList', '|', 'blockQuote', 'imageUpload', '|',
+                    'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', 'mediaEmbed', 'removeFormat',
+                    'insertTable', ],
+        'image': {
+            'toolbar': ['imageTextAlternative', '|', 'imageStyle:alignLeft',
+                        'imageStyle:alignRight', 'imageStyle:alignCenter', 'imageStyle:side', '|'],
+            'styles': [
+                'full',
+                'side',
+                'alignLeft',
+                'alignRight',
+                'alignCenter',
+            ]
+
+        },
+        'table': {
+            'contentToolbar': ['tableColumn', 'tableRow', 'mergeTableCells',
+                               'tableProperties', 'tableCellProperties'],
+            'tableProperties': {
+                'borderColors': customColorPalette,
+                'backgroundColors': customColorPalette
+            },
+            'tableCellProperties': {
+                'borderColors': customColorPalette,
+                'backgroundColors': customColorPalette
+            }
+        },
+        'heading': {
+            'options': [
+                {'model': 'paragraph', 'title': 'Paragraph', 'class': 'ck-heading_paragraph'},
+                {'model': 'heading1', 'view': 'h1', 'title': 'Heading 1', 'class': 'ck-heading_heading1'},
+                {'model': 'heading2', 'view': 'h2', 'title': 'Heading 2', 'class': 'ck-heading_heading2'},
+                {'model': 'heading3', 'view': 'h3', 'title': 'Heading 3', 'class': 'ck-heading_heading3'}
+            ]
+        }
+    },
+    'list': {
+        'properties': {
+            'styles': 'true',
+            'startIndex': 'true',
+            'reversed': 'true',
+        }
+    }
 }
 
 # Database
@@ -138,10 +210,17 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
         'USER': 'postgres',
-        'PASSWORD': os.environ['DB_PASSWORD'],
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST': 'db',
         'PORT': 5432,
     }
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://redis:6379",
+    },
 }
 
 # Custom members model
@@ -166,7 +245,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = (
-    'members.backends.AuthBackend', # disable to skip auth against oldwww.abo.fi
+    'members.backends.AuthBackend',  # disable to skip auth against oldwww.abo.fi
     # 'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -179,7 +258,7 @@ STAFF_GROUPS = [
     'rösträknare'
 
 ]
-STAFF_GROUPS.extend(json.loads(os.environ['EXTRA_STAFF_GROUPS']))
+STAFF_GROUPS.extend(json.loads(os.environ.get('EXTRA_STAFF_GROUPS', '[]')))
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
@@ -207,7 +286,6 @@ DATE_INPUT_FORMATS = ('%d.%m.%Y', '%Y-%m-%d')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
@@ -232,7 +310,7 @@ CAPTCHA_SITE_KEY = os.environ.get("CF_TURNSTILE_SITE_KEY", "")
 # STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # S3 conf using django storages
-USE_S3 = env('USE_S3')
+USE_S3 = os.environ.get('USE_S3', False)
 
 if USE_S3:
     # aws settings
@@ -262,20 +340,26 @@ LOGIN_URL = '/members/login'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-DEFAULT_FROM_EMAIL=os.environ.get('DEFAULT_FROM_EMAIL', 'admin@datateknologerna.org')
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # During development
 
 EMAIL_USE_TLS = True
-EMAIL_HOST = env('EMAIL_HOST')
-EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-EMAIL_PORT = env('EMAIL_PORT')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_PORT = 587
 
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', '')
+EMAIL_HOST_RECEIVER = os.environ.get('EMAIL_HOST_RECEIVER', '')
 
-DATA_UPLOAD_MAX_NUMBER_FIELDS=3000
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 3000
 
 LOGGING = {
     'version': 1,
@@ -317,8 +401,3 @@ LOGGING = {
         }
     }
 }
-"""
-if DEBUG:
-    # make all loggers use the console.
-    for logger in LOGGING['loggers']:
-        LOGGING['loggers'][logger]['handlers'] = ['console']"""

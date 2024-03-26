@@ -1,5 +1,5 @@
-from django.shortcuts import render
 from django.core.paginator import Paginator
+from django.shortcuts import render, get_object_or_404
 
 from . import models
 
@@ -15,14 +15,10 @@ def index(request):
     
 
 def article(request, slug):
-    post = models.Post.objects.get(slug=slug, published=True)
+    post = get_object_or_404(models.Post, slug=slug, published=True)
     return render(request, 'news/article.html', {'article': post})
 
 
 def author(request, author):
     articles = models.Post.objects.filter(author__username__exact=author, published=True).order_by('modified_time')
     return render(request, 'news/author.html', {'articles': articles})
-
-
-def section(request):
-    pass

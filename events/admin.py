@@ -1,3 +1,5 @@
+import logging
+
 from admin_ordering.admin import OrderableAdmin
 from django.contrib import admin
 from django.db.models import JSONField
@@ -6,28 +8,22 @@ from django.urls import reverse, re_path
 from django.utils.html import format_html
 
 from events import forms
-from events.models import Event, EventRegistrationForm, EventAttendees
-from events.widgets import PrettyJSONWidget
-
-import logging
+from events.models import Event, EventAttendees, EventRegistrationForm
+from .widgets import PrettyJSONWidget
 
 logger = logging.getLogger('date')
 
 
-class EventRegistrationFormInline(admin.TabularInline):
+class EventRegistrationFormInline(OrderableAdmin, admin.TabularInline):
     line_numbering = 0
     model = EventRegistrationForm
     fk_name = 'event'
     extra = 0
-    readonly_fields = ('line_number',)
-    fields = ('line_number', 'name', 'type', 'required', 'public_info', 'hide_for_avec', 'choice_list', 'price')
+    fields = ('choice_number', 'name', 'type', 'required', 'public_info', 'hide_for_avec', 'choice_list')
     can_delete = True
-
-    def line_number(self, obj):
-        self.line_numbering += 1
-        return self.line_numbering
-
-    line_number.short_description = '#'
+    ordering_field = ('choice_number',)
+    ordering = ['choice_number']
+    ordering_field_hide_input = True
 
 
 class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
@@ -36,9 +32,9 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
     model = EventAttendees
     fk_name = 'event'
     extra = 0
-    list_editable = ('user', 'email', 'preferences')
+    list_editable = ('user', 'email', 'preferences', 'preferences')
     formfield_overrides = {
-        JSONField: {'widget': PrettyJSONWidget()}
+        JSONField: {'widget': PrettyJSONWidget(attrs={'initial': 'parsed'})}
     }
     can_delete = True
     ordering = ['attendee_nr']
@@ -48,6 +44,7 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
         if event and event.sign_up_avec:
             fields.append('avec_for')
         return fields
+
     def get_readonly_fields(self, request, event):
         readonly_fields = ['time_registered']
         return readonly_fields
@@ -57,6 +54,7 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
         if db_field.name == "avec_for":
             kwargs["queryset"] = EventAttendees.objects.filter(event=event_id)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
@@ -98,8 +96,7 @@ class EventAdmin(admin.ModelAdmin):
         context = self.admin_site.each_context(request)
         event = self.get_object(request, event_id)
         context['event'] = event
-        rf = event.get_registration_form()
-        context["form"] = [x.name for x in rf][::-1] if rf else None
+        context["form"] = [x.name for x in event.get_registration_form()][::-1]
         return TemplateResponse(
             request,
             'events/list.html',

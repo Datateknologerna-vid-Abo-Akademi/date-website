@@ -1,69 +1,119 @@
 {% extends 'base.html' %}
-
 {% load i18n %}
 {% load static %}
 {% block title %}{% trans 'Användarinformation' %}{% endblock %}
 {% block content %}
+    <script>
+    function toggleEdit() {
+    var info = document.getElementById("userInfo");
+    var edit = document.getElementById("editForm");
+    info.style.display = (info.style.display === "none" ? "block" : "none");
+    edit.style.display = (edit.style.display === "none" ? "block" : "none");
+    }
+    </script>
     <head>
         <link rel="stylesheet" href="{% static 'members/css/userinfo.css' %}" type="text/css">
     </head>
     <div class="container-md min-vh-100 container-margin-top">
         <div class="container-size">
             <div class="content">
-                {% if msg %}
-                    <h3 style="color: green; text-align: center">{{ msg }}</h3>
-                {% endif %}
-                {% if user.is_authenticated %}
-                <h3> {{user.username}} </h3>
-                <table class="table table-light table-striped">
-                    <tr>
-                        <td>Mail:</td>
-                        <td>{{user.email}}</td>
-                    </tr>
-                    <tr>
-                        <td>Firstname:</td>
-                        <td>{{user.first_name}}</td>
-                    </tr>
-                    <tr>
-                        <td>Lastname:</td>
-                        <td>{{user.last_name}}</td>
-                    </tr>
-                    <tr>
-                        <td>Phone number:</td>
-                        <td>{{user.phone}}</td>
-                    </tr>
-                    <tr>
-                        <td>Adress:</td>
-                        <td>{{user.address}}</td>
-                    </tr>
-                    <tr>
-                        <td>Zip code:</td>
-                        <td>{{user.zip_code}}</td>
-                    </tr>
-                    <tr>
-                        <td>City:</td>
-                        <td>{{user.city}}</td>
-                    </tr>
-                    <tr>
-                        <td>Country</td>
-                        <td>{{user.country}}</td>
-                    </tr>
-                    <tr>
-                        <td>Membership type:</td>
-                        <td>{{user.get_str_membership_type}}</td>
-                    </tr>
-                    <tr>
-                        <td>Is active:</td>
-                        <td>{{user.is_active}}</td>
-                    </tr>
-                </table>
-                <br>
-                <p>För att ta bort eller ändra din information, kontakta styrelsen på kk@abo.fi</p>
-                {% else %}
-                <p>Log in to view info</p>
-                {% endif %}
+                <!-- User Information Section -->
+                <h3>{{ user.username }}</h3>
+                <div id="userInfo">
+                    <table class="table table-dark table-striped">
+                        <tr>
+                            <td>Email:</td>
+                            <td>{{ user.email }}</td>
+                        </tr>
+                        <tr>
+                            <td>Förnamn:</td>
+                            <td>{{ user.first_name }}</td>
+                        </tr>
+                        <tr>
+                            <td>Efternamn:</td>
+                            <td>{{ user.last_name }}</td>
+                        </tr>
+                        <tr>
+                            <td>Telefonnummer:</td>
+                            <td>{{ user.phone }}</td>
+                        </tr>
+                        <tr>
+                            <td>Adress:</td>
+                            <td>{{ user.address }}</td>
+                        </tr>
+                        <tr>
+                            <td>Zip kod:</td>
+                            <td>{{ user.zip_code }}</td>
+                        </tr>
+                        <tr>
+                            <td>Stad:</td>
+                            <td>{{ user.city }}</td>
+                        </tr>
+                        <tr>
+                            <td>Land:</td>
+                            <td>{{ user.country }}</td>
+                        </tr>
+                        <tr>
+                            <td>Medlems typ:</td>
+                            <td>{{ user.get_str_membership_type }}</td>
+                        </tr>
+                        <!-- End of user information fields -->
+                    </table>
+                    <button onclick="toggleEdit()" class="theme-button">Edit</button>
+                    <br>
+                </div>
+                <div id="editForm" style="display:none;">
+                    <form method="post">
+                        {% csrf_token %}
+                        <table class="table table-dark table-striped">
+                            <tr>
+                                <td>Email:</td>
+                                <td>{{ form.email }}</td>
+                                {% if form.email.errors %}
+                                    <div class="error">{{ form.email.errors.as_text }}</div>
+                                {% endif %}
+                            </tr>
+                            <tr>
+                                <td>Förnamn:</td>
+                                <td>{{ form.first_name }}</td>
+                            </tr>
+                                                    <tr>
+                                <td>Efternamn:</td>
+                                <td>{{ form.last_name }}</td>
+                            </tr>
+                            <tr>
+                                <td>Telefonnummer:</td>
+                                <td>{{ form.phone }}</td>
+                            </tr>
+                            <tr>
+                                <td>Adress:</td>
+                                <td>{{ form.address }}</td>
+                            </tr>
+                            <tr>
+                                <td>Zip kod:</td>
+                                <td>{{ form.zip_code }}</td>
+                            </tr>
+                            <tr>
+                                <td>Stad:</td>
+                                <td>{{ form.city }}</td>
+                            </tr>
+                            <tr>
+                                <td>Land:</td>
+                                <td>{{ form.country }}</td>
+                            </tr>
+                                <td>Medlems typ:</td>
+                                <td>{{ user.get_str_membership_type }}</td>
+                            </tr>
+                        </table>
+                        <button type="submit" class="theme-button">Save</button>
+                        <button type="button" class="theme-button" onclick="toggleEdit()">Cancel</button>
+                    </form>
+
+                </div>
+
+                <a href="{% url 'members:password_change' %}" class="theme-button">{% trans 'Password change' %}<i class="fas fa-chevron-right"></i></a>
+                <p style="margin-top: 5px">För att ändra ditt användarnamn eller e-post, kontakta styrelsen på date@abo.fi</p>
             </div>
         </div>
     </div>
-
- {% endblock %} 
+{% endblock %}
