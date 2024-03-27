@@ -3,6 +3,8 @@ import json
 import logging
 from copy import deepcopy
 
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.conf import settings
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect
@@ -66,6 +68,10 @@ class EventDetailView(DetailView):
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         show_content = not self.object.members_only or (self.object.members_only and request.user.is_authenticated)
+        # Check if there's a redirect link
+        redirect_link = self.object.redirect_link
+        if redirect_link and show_content:
+            return redirect(redirect_link)
         if not show_content:
             return redirect('/members/login')
         context = self.get_context_data(object=self.object)
@@ -127,22 +133,16 @@ class EventDetailView(DetailView):
 
 
 def ws_send(request, form, public_info):
-    ws_schema = 'ws' if settings.DEVELOP else 'wss'
-    url = request.META.get('HTTP_HOST')
-    path = ws_schema + '://' + url + '/ws' + request.path
-    try:
-        ws = create_connection(path)
-        ws.send(json.dumps(ws_data(form, public_info)))
-        # Send ws again if avec
-        if dict(form.cleaned_data).get('avec'):
-            newform = deepcopy(form)
-            newform.cleaned_data['user'] = dict(newform.cleaned_data).get('avec_user')
-            public_info = ''
-            ws.send(json.dumps(ws_data(newform, public_info)))
-        ws.close()
-    except WebSocketBadStatusException:
-        logger.error("Could not create connection for web socket")
-        # Alert Datörer
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(f"event_{request.path.split('/')[-2]}",
+                                            {"type": "event_message", **ws_data(form, public_info)})
+    # Send ws again if avec
+    if dict(form.cleaned_data).get('avec'):
+        newform = deepcopy(form)
+        newform.cleaned_data['user'] = dict(newform.cleaned_data).get('avec_user')
+        public_info = ''
+        async_to_sync(channel_layer.group_send)(f"event_{request.path.split('/')[-2]}",
+                                                {"type": "event_message", **ws_data(newform, public_info)})
 
 
 def ws_data(form, public_info):
@@ -154,5 +154,4 @@ def ws_data(form, public_info):
     for index, info in enumerate(public_info):
         if str(info) in pref:
             data[str(info)] = pref[str(info)]
-    print(data)
     return {"data": data}
