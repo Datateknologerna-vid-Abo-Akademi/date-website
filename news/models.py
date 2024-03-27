@@ -1,6 +1,6 @@
 import logging
 
-from ckeditor.fields import RichTextField
+from django_ckeditor_5.fields import CKEditor5Field
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -12,7 +12,7 @@ POST_SLUG_MAX_LENGTH = 50
 
 class Post(models.Model):
     title = models.CharField(_('Titel'), max_length=255, blank=False)
-    content = RichTextField(_('Innehåll'), blank=True)
+    content = CKEditor5Field(_('Innehåll'), blank=True)
     author = models.ForeignKey('members.Member', on_delete=models.CASCADE)
     created_time = models.DateTimeField(_('Skapad'), default=timezone.now)
     published_time = models.DateTimeField(_('Publicerad'), editable=False, null=True, blank=True)

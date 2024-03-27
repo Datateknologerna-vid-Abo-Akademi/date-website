@@ -13,7 +13,7 @@
         <div class="container-size" style="max-width: 600px;">
             {% if type == 'pictures' %}
                 <h1 class="text-center archive-heading">&nbsp; {% trans "Bildarkiv" %} &nbsp;</h1>
-                {% if request.user|in_group:"fotograf" or request.user|in_group:"styrelse" %}
+                {% if request.user|is_photographer or request.user|is_board %}
                     <h3><a class="button" href="{% url 'archive:upload' %}"> {% trans "Skapa nytt album" %}</a></h3>
                 {% endif %}
             {% endif %}
