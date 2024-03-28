@@ -1,8 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load i18n %}
+{% load cache %}
 
 {% block title %}Nyheter{% endblock %}
+{% cache 60 news_index %}
 {% block content %}
     <head>
         <link rel="stylesheet" href="{% static 'news/css/style.css' %}">
@@ -54,3 +56,4 @@
         </div>
     </div>
 {% endblock %}
+{% endcache %}

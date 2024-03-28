@@ -4,7 +4,7 @@ import logging
 import os
 from datetime import timedelta
 
-from ckeditor.fields import RichTextField
+from django_ckeditor_5.fields import CKEditor5Field
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -37,7 +37,7 @@ def upload_to(instance, filename):
 
 class Event(models.Model):
     title = models.CharField(_('Titel'), max_length=255, blank=False)
-    content = RichTextField(_('Innehåll'), blank=True)
+    content = CKEditor5Field(_('Innehåll'), blank=True)
     event_date_start = models.DateTimeField(_('Startdatum'), default=now)
     event_date_end = models.DateTimeField(_('Slutdatum'), default=now)
     sign_up_max_participants = models.IntegerField(_('Maximal antal deltagare'),
@@ -63,6 +63,7 @@ class Event(models.Model):
     s3_image = PublicFileField(verbose_name=_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
     price = models.DecimalField(_('Pris'), max_digits=10, decimal_places=2, default=0)
     captcha = models.BooleanField(_('Captcha'), default=False)
+    redirect_link = models.URLField(_('Redirect Link'), blank=True)
 
     class Meta:
         verbose_name = _('evenemang')
@@ -137,7 +138,7 @@ class Event(models.Model):
     def get_registration_form(self):
         if EventRegistrationForm.objects.filter(event=self).count() == 0:
             return None
-        return EventRegistrationForm.objects.filter(event=self).order_by('-id')
+        return EventRegistrationForm.objects.filter(event=self).order_by('choice_number')
 
     def get_registration_form_public_info(self):
         return EventRegistrationForm.objects.filter(event=self, public_info=True)
@@ -151,7 +152,7 @@ class Event(models.Model):
                       'email': forms.EmailField(label='Email', validators=[self.validate_unique_email], max_length=320),
                       'anonymous': forms.BooleanField(label='Anonymt', required=False)}
             if self.get_registration_form():
-                for question in reversed(self.get_registration_form()):
+                for question in self.get_registration_form():
                     if question.type == "select":
                         choices = question.choice_list.split(',')
                         fields[question.name] = forms.ChoiceField(label=question.name,
@@ -170,7 +171,7 @@ class Event(models.Model):
                 fields['avec_anonymous'] = forms.BooleanField(label='Anonymt', required=False, widget=forms
                                                               .CheckboxInput(attrs={'class': "avec-field"}))
                 if self.get_registration_form():
-                    for question in reversed(self.get_registration_form()):
+                    for question in self.get_registration_form():
                         if not question.hide_for_avec:
                             if question.type == "select":
                                 choices = question.choice_list.split(',')
@@ -202,6 +203,7 @@ class Event(models.Model):
 
 class EventRegistrationForm(models.Model):
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
+    choice_number = models.PositiveSmallIntegerField(_('#'), blank=True, default=0)
     name = models.CharField(_('Namn'), max_length=255, blank=True)
     type = models.CharField(_('Typ'),
                             choices=(("text", "Text"), ("select", "Multiple choice"), ("checkbox", "Kryssryta")),
@@ -221,6 +223,21 @@ class EventRegistrationForm(models.Model):
 
     def get_choices(self):
         return str(self.choice_list).split(',')
+
+    def save(self, *args, **kwargs):
+        # Only set choice_number if it's the default value (0).
+        if self.choice_number == 0:
+            # Get the current maximum choice_number for the related event.
+            max_choice_number = EventRegistrationForm.objects.filter(event=self.event).aggregate(Max('choice_number'))['choice_number__max']
+
+            if max_choice_number is None:
+                # If there are no records, start from 10.
+                self.choice_number = 10
+            else:
+                # Increment the max choice_number by 10.
+                self.choice_number = max_choice_number + 10
+
+        super(EventRegistrationForm, self).save(*args, **kwargs)
 
 
 class EventAttendees(models.Model):

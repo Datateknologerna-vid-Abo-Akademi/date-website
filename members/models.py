@@ -1,5 +1,4 @@
 import logging
-
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.core.mail import send_mail
@@ -8,9 +7,11 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from core import settings
+from core.utils import send_email_task
 from .managers import MemberManager
 
 logger = logging.getLogger('date')
+
 
 FRESHMAN = 1
 ORDINARY_MEMBER = 2
@@ -71,7 +72,7 @@ class Member(AbstractBaseUser, PermissionsMixin):
         """
         Sends email to members
         """
-        send_mail(subject, message, from_email, [self.email], **kwargs)
+        send_email_task.delay(subject, message, from_email, [self.email], **kwargs)
 
     def get_active_subscription(self):
         all_subscriptions = SubscriptionPayment.objects.filter(member=self).exclude(date_expires__lt=timezone.now())
@@ -144,7 +145,7 @@ class SubscriptionPayment(models.Model):
         if self.date_expires is None:
             return _('Aldrig')
         return self.date_expires
-    
+
 
 class AlumniSignUp(models.Model):
     name = models.CharField(max_length=200)

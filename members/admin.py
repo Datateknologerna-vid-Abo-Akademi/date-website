@@ -3,8 +3,8 @@ from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Permission
 from django.db.models.functions import Lower
 
-from members.forms import (MemberCreationForm, MemberUpdateForm, AlumniSignUpForm,
-                           SubscriptionPaymentForm, SubscriptionPaymentChoiceField)
+from members.forms import (MemberCreationForm, AdminMemberUpdateForm,
+                           SubscriptionPaymentForm, SubscriptionPaymentChoiceField, AlumniSignUpForm)
 from members.models import (Member, Subscription, AlumniSignUp,
                             SubscriptionPayment, AlumniEmailRecipient)
 
@@ -20,13 +20,13 @@ SENIOR_MEMBER = 4
 @admin.register(Member)
 class UserAdmin(auth_admin.UserAdmin):
     fieldsets = (
-        (None, {'fields': MemberUpdateForm.Meta.fields}),
+        (None, {'fields': AdminMemberUpdateForm.Meta.fields}),
     )
     add_fieldsets = (
         (None, {'fields': MemberCreationForm.Meta.fields}),
     )
 
-    form = MemberUpdateForm
+    form = AdminMemberUpdateForm
     add_form = MemberCreationForm
     list_display = ('username', 'first_name', 'last_name', 'email', 'membership_type', 'is_active', 'is_staff')
     list_filter = ('membership_type', 'is_active', 'groups')

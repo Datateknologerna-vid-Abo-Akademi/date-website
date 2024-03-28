@@ -30,6 +30,11 @@ nav{
     border-radius: var(--defaultRadius);
 }
 
+.navbar-nav button:hover {
+    background-color: var(--primaryColorLight);
+    border-radius: var(--defaultRadius);
+}
+
 .navbar-nav {
     margin-right: 30px;
 }
@@ -37,7 +42,7 @@ nav{
 /* display dropdown on hover */
 .dropdown:hover .dropdown-menu {
     display: block;
-    margin-top: 0; 
+    margin-top: 0;
  }
 
 li .dropdown-menu {
