@@ -103,7 +103,7 @@ class EventDetailView(DetailView):
                 return self.render_to_response(self.get_context_data())
             else:
                 return render(request, 'events/event_passcode.html',
-                              self.get_context_data(passcode_error='invalid passcode'))
+                              self.get_context_data(passcode_error='invalid passcode'), status=401)
         return None
 
     def handle_event_signup(self, request):
