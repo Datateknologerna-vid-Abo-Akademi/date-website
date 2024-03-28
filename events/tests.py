@@ -149,8 +149,7 @@ class EventTestCase(TestCase):
         c = Client()
         wrong, right = {'passcode': 'wrong'}, {'passcode': 'secret'}
         incorrect = c.post(reverse('events:detail', args=[self.event.slug]), wrong)
-        self.assertEqual(incorrect.status_code, 200)
-        self.assertContains(incorrect, "invalid passcode")
+        self.assertEqual(incorrect.status_code, 401)
         correct = c.post(reverse('events:detail', args=[self.event.slug]), right)
         self.assertEqual(correct.status_code, 200)
         self.assertNotContains(correct, "invalid passcode")
