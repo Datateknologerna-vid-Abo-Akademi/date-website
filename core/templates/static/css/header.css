@@ -53,6 +53,15 @@ li .dropdown-menu {
 color: var(--textColorLight) !important;
 }
 
+.navbar-nav li button {
+color: var(--textColorLight) !important;
+}
+
+.navbar-nav .dropdown-menu button:hover {
+    background-color: var(--primaryColorLight);
+    border-radius: var(--defaultRadius);
+}
+
 @media (min-width: 1200px){
     .container, .container-lg, .container-md, .container-sm, .container-xl {
         max-width: none;
