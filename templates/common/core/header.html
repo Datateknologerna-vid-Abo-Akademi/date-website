@@ -1,11 +1,11 @@
 {% load static %}
 {% load i18n %}
 <head>
-    <link rel="stylesheet" type="text/css" href="{% static "css/header.css" %}?version=1">
+    <link rel="stylesheet" type="text/css" href="{% static "core/css/header.css" %}?version=1">
 </head>
 <nav class="navbar navbar-expand-lg navbar-light fixed-top">
     <div class="container">
-        <a id="logo" href="{% url 'index' %}"><img class="header-logo" src="/static/images/albin_black.png" alt="Albin"></a>
+        <a id="logo" href="{% url 'index' %}"><img class="header-logo" src="{% static 'core/images/albin_black.png' %}" alt="Albin"></a>
         <button class="btn btn-secondary navbar-toggler border-3 px-2" type="button" data-bs-toggle="offcanvas"
         data-bs-target="#offcanvasExample" aria-controls="offcanvasExample"
         >

@@ -91,8 +91,11 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['core/templates'],
-        'APP_DIRS': True,
+        'DIRS': [
+            'templates/common',
+            'templates/date',
+        ],
+        'APP_DIRS': False,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -291,12 +294,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'core/templates/static'),
-    # os.path.join(BASE_DIR, 'archive/static'),
-    # os.path.join(BASE_DIR, 'date/static'),
-    # os.path.join(BASE_DIR, 'events/static'),
-    # os.path.join(BASE_DIR, 'members/static'),
-    # os.path.join(BASE_DIR, 'news/static'),
+    os.path.join(BASE_DIR, 'static/common'),
+    os.path.join(BASE_DIR, 'static/date'),
 ]
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))

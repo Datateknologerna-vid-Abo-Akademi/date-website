@@ -36,7 +36,7 @@ class UserinfoView(View):
             "user": user,
             "form": form,
         }
-        return render(request, 'userinfo.html', context)
+        return render(request, 'members/userinfo.html', context)
 
     @method_decorator(login_required)
     def post(self, request):
@@ -50,7 +50,7 @@ class UserinfoView(View):
             "user": user,
             "form": form,
         }
-        return render(request, 'userinfo.html', context)
+        return render(request, 'members/userinfo.html', context)
 
 
 class CertificateView(View):
@@ -75,20 +75,20 @@ class CertificateView(View):
             'current_time': current_time,
             'icon': icon,
         }
-        return render(request, 'certificate.html', context)
+        return render(request, 'members/certificate.html', context)
 
 
 def signup(request):
     # If user has submitted the form show success page
     if request.session.get("signup_submitted", False):
         request.session['signup_submitted'] = False
-        return render(request, 'registration/registration_complete.html')
+        return render(request, 'members/registration/registration_complete.html')
 
     if request.method == 'POST':
         form = SignUpForm(request.POST)
 
         if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
-            return render(request, 'signup.html', {'form': form, 'alumni': False})
+            return render(request, 'members/signup.html', {'form': form, 'alumni': False})
 
         if form.is_valid():
             # Create user
@@ -100,7 +100,7 @@ def signup(request):
             current_site = get_current_site(request)
             mail_subject = 'A new account has been created and required your attention.'
             print("Generated token: ", account_activation_token.make_token(user))
-            message = render_to_string('acc_active_email.html', {
+            message = render_to_string('members/acc_active_email.html', {
                 'user': user,
                 'domain': current_site.domain,
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)),  # .decode(),
@@ -113,7 +113,7 @@ def signup(request):
             return redirect(request.path)
     else:
         form = SignUpForm()
-    return render(request, 'signup.html', {'form': form})
+    return render(request, 'members/signup.html', {'form': form})
 
 
 def activate(request, uidb64, token):
@@ -126,7 +126,7 @@ def activate(request, uidb64, token):
         user.is_active = True
         user.save()
         msg = _("Användare aktiverad")
-        return render(request, 'userinfo.html', {"user": user, "msg": msg})
+        return render(request, 'members/userinfo.html', {"user": user, "msg": msg})
     else:
         return HttpResponse('Activation link is invalid!')
 
@@ -138,7 +138,7 @@ def alumni_signup(request):
 
     if request.method == 'POST' and form.is_valid():
         if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
-            return render(request, 'signup.html', {'form': form, 'alumni': True})
+            return render(request, 'members/signup.html', {'form': form, 'alumni': True})
 
         alumni = form.save(commit=False)
         alumni.save()
@@ -146,7 +146,7 @@ def alumni_signup(request):
         # Mail to the person signing up
         alumni_email = form.cleaned_data['email']
         alumni_message_subject = "Välkommen till ARG - Betalningsinstruktioner"
-        alumni_message_content = render_to_string('alumni_signup_email.html')
+        alumni_message_content = render_to_string('members/alumni_signup_email.html')
         # Send email to alumni
         send_email_task.delay(alumni_message_subject, alumni_message_content, settings.DEFAULT_FROM_EMAIL,
                               [alumni_email])
@@ -154,15 +154,15 @@ def alumni_signup(request):
         # Mail to relevant people
         admin_message_recipients = list(AlumniEmailRecipient.objects.all().values_list('recipient_email', flat=True))
         admin_message_subject = f"ARG - Ny medlem {form.cleaned_data['name']}"
-        admin_message_content = render_to_string('alumni_signup_email_admin.html',
+        admin_message_content = render_to_string('members/alumni_signup_email_admin.html',
                                                  {'alumni': form.cleaned_data, 'alumni_id': alumni.id})
         # Schedule admin message
         send_email_task.delay(admin_message_subject, admin_message_content, settings.DEFAULT_FROM_EMAIL,
                               admin_message_recipients)
 
-        return render(request, 'registration/registration_complete.html', {'alumni': True})
+        return render(request, 'members/registration/registration_complete.html', {'alumni': True})
 
-    return render(request, 'signup.html', {'form': form, 'alumni': True})
+    return render(request, 'members/signup.html', {'form': form, 'alumni': True})
 
 
 class CustomPasswordResetView(PasswordResetView):
@@ -170,7 +170,7 @@ class CustomPasswordResetView(PasswordResetView):
 
 
 class FunctionaryView(View):
-    template_name = 'functionary.html'
+    template_name = 'members/functionary.html'
 
     @method_decorator(login_required)
     def get(self, request):
@@ -243,8 +243,8 @@ class FunctionariesView(View):
             "all_years": all_years,
         }
 
-        return render(request, 'functionaries.html', context)
+        return render(request, 'members/functionaries.html', context)
 
 
 class CustomPasswordChangeView(PasswordChangeView):
-    template_name = "registration/password_change_form.html"
+    template_name = "members/registration/password_change_form.html"
