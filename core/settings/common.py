@@ -147,7 +147,8 @@ AUTHENTICATION_BACKENDS = (
 
 def get_staff_groups(default_groups: list):
     """Add extra staff groups from environment variable to default_groups."""
-    return default_groups.extend(json.loads(os.environ.get('EXTRA_STAFF_GROUPS', '[]')))
+    default_groups.extend(json.loads(os.environ.get('EXTRA_STAFF_GROUPS', '[]')))
+    return default_groups
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
@@ -180,7 +181,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 
-PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Cloudflare captcha config
 TURNSTILE_SECRET_KEY = env("CF_TURNSTILE_SECRET_KEY", str, "")

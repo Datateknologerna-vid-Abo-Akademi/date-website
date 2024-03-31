@@ -8,7 +8,7 @@ TEMPLATES = [
             'templates/common',
             'templates/date',
         ],
-        'APP_DIRS': False,
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -20,6 +20,7 @@ TEMPLATES = [
                 'staticpages.context_processors.get_categories',
                 'staticpages.context_processors.get_urls',
                 'core.context_processors.captcha_context',
+                'core.context_processors.apply_content_variables',
             ],
         },
     },
@@ -50,3 +51,21 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static/common'),
     os.path.join(BASE_DIR, 'static/date'),
 ]
+
+
+CONTENT_VARIABLES = {
+    "SITE_URL": "https://datateknologerna.org",
+    "ASSOCIATION_NAME": "Datateknologerna",
+    "ASSOCIATION_NAME_FULL": "Datateknologerna vid Åbo Akademi rf",
+    "ASSOCIATION_NAME_SHORT": "DaTe",
+    "ASSOCIATION_EMAIL": "date@abo.fi",
+    "ASSOCIATION_ADDRESS_L1": "Åbo Akademi, Agora",
+    "ASSOCIATION_ADDRESS_L2": "Vattenborgsvägen 5",
+    "ASSOCIATION_POSTAL_CODE": "20500 Åbo",
+    "SOCIAL_BUTTONS": [
+        ["fa-facebook-f", "https://www.facebook.com/HerrKanin/"],
+        ["fa-instagram", "https://www.instagram.com/datateknologerna/"],
+        ["fa-linkedin-in", "https://www.linkedin.com/company/datateknologerna-vid-%C3%A5bo-akademi-rf/"],
+        ["fa-github", "https://github.com/Datateknologerna-vid-Abo-Akademi"],
+    ],
+}

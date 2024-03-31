@@ -6,7 +6,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from core import settings
+from django.conf import settings
 from core.utils import send_email_task
 
 from .managers import MemberManager
