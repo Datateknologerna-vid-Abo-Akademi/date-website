@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'polls',
     'ctf',
     'archive.apps.ArchiveConfig',
+    'modeltranslation',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -76,14 +77,14 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    "django.middleware.locale.LocaleMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    'date.middleware.LangMiddleware',
     'date.middleware.HTCPCPMiddleware',
+    'date.middleware.LangMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -187,10 +188,14 @@ CKEDITOR_5_CONFIGS = {
         },
         'heading': {
             'options': [
-                {'model': 'paragraph', 'title': 'Paragraph', 'class': 'ck-heading_paragraph'},
-                {'model': 'heading1', 'view': 'h1', 'title': 'Heading 1', 'class': 'ck-heading_heading1'},
-                {'model': 'heading2', 'view': 'h2', 'title': 'Heading 2', 'class': 'ck-heading_heading2'},
-                {'model': 'heading3', 'view': 'h3', 'title': 'Heading 3', 'class': 'ck-heading_heading3'}
+                {'model': 'paragraph', 'title': 'Paragraph',
+                    'class': 'ck-heading_paragraph'},
+                {'model': 'heading1', 'view': 'h1', 'title': 'Heading 1',
+                    'class': 'ck-heading_heading1'},
+                {'model': 'heading2', 'view': 'h2', 'title': 'Heading 2',
+                    'class': 'ck-heading_heading2'},
+                {'model': 'heading3', 'view': 'h3',
+                    'title': 'Heading 3', 'class': 'ck-heading_heading3'}
             ]
         }
     },
@@ -202,6 +207,11 @@ CKEDITOR_5_CONFIGS = {
         }
     }
 }
+
+# Make CKEditor5 Work with modeltranslations
+MODELTRANSLATION_CUSTOM_FIELDS = (
+    'django_ckeditor_5.fields.CKEditor5Field',
+)
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
@@ -268,10 +278,14 @@ LOCALE_PATHS = (
     'locale',
 )
 
-LANG_FINNISH = 'fi'
-LANG_SWEDISH = 'sv'
+# Dynamic content will fall back on the first language in the list
+LANGUAGES = (
+    ('sv', ("Svenska")),
+    ('en', ("English")),
+    ('fi', ("Suomi"))
+)
 
-LANGUAGE_CODE = LANG_SWEDISH
+LANGUAGE_CODE = 'sv'
 
 TIME_ZONE = 'Europe/Helsinki'
 

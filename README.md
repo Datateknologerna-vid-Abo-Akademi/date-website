@@ -106,6 +106,66 @@ To compile the translations to `django.mo`, use the following command
 $ django-admin compilemessages
 ```
 
+### Django modeltranslations (translation of dynamic content)
+
+The library django-modeltranslations was added to allow translating existing dynamic data (eg. events title and description)
+
+If there is ever the need to provide a translated version of an existing field:
+
+1. Add a file called translation.py to the app in question.
+2. Create classes for each of the models for which fields will be translated and register the fields for translation.
+3. Start the django app and apply the new database migration that will be automatically created by django-modeltranslations
+
+Example to illustrate the above:
+
+I want to provide three new fields (title_sv, title_en, title_fi) instead of the title field in Events
+
+- Create the file translation.py under the events directory
+- Create a new class called EventTranslationOptions that inherits from TranslationOptions (provided by django-modeltranslations)
+- In the newly created class you register which fields should be translated by defining a variable called "fields"
+- For the events example: `fields = ('title',)`
+
+From "/events/translation.py":
+```python
+from modeltranslation.translator import register, TranslationOptions
+from events.models import Event, EventAttendees, EventRegistrationForm
+
+
+@register(Event)
+class EventTranslationOptions(TranslationOptions):
+    fields = ('title', 'content',)
+    languages = ('sv', 'en', 'fi')
+```
+
+In this case, the newly created title_sv will not contain the data from what was previously just "title",
+to fix this, run the command `docker compose run web python manage.py update_translation_fields`
+
+### Using django-modeltranslations for non-standard field-types (eg. CKEditor5 instead of models.TextField)
+
+Django-modeltranslations naturally does not play well with creating translations of external field types.
+
+See https://django-modeltranslation.readthedocs.io/en/latest/installation.html#modeltranslation-custom-fields for more
+
+Example solution:
+
+1. add the field class to settings.py:
+
+```python 
+MODELTRANSLATION_CUSTOM_FIELDS = (
+    'django_ckeditor_5.fields.CKEditor5Field',
+)
+```
+
+2. Change the field model to a standard TextField (or whatever suits your need)
+3. Override the TextField with CKEditor5Field (or the corresponding field types for your case) in admin.py like this:
+
+```python
+    formfield_overrides = {
+        TextField: {'widget': CKEditor5Widget},
+    }
+```
+
+
 ## Updating the database
 
 ### Warning

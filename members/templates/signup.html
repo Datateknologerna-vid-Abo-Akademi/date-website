@@ -2,7 +2,7 @@
 
 {% load i18n %}
 {% load static %}
-{% block title %}Sign up{% endblock %}
+{% block title %}{% translate Sign up %}{% endblock %}
 {% block content %}
     <head>
         <link rel="stylesheet" href="{% static 'members/style.css' %}">
@@ -23,7 +23,7 @@
                 (Instruktionerna skickas även via e-post efter att du registrerat dig)<br>
             </p>
             {% else %}
-                <h2>Registrera dig</h2>
+              <h2>{% translate "Sign up" %}</h2>
             {% endif %}
           <form method="post">
             {% csrf_token %}
@@ -41,13 +41,13 @@
             {% endfor %}
             <p class="consent-form-group">
               <input type="checkbox" name="consent" required/>
-              Jag godkänner
+              {% translate "Jag godkänner" %}
               <a href="https://{{ request.get_host }}/pages/registerbeskrivning/" target="_blank">
-                villkoren <i class="fa fa-external-link" aria-hidden="true"></i>
+                {% translate "villkoren" %} <i class="fa fa-external-link" aria-hidden="true"></i>
               </a>
             </p>
             <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}" data-callback="javascriptCallback"></div>
-            <button class="button" type="submit">Registrera dig</button>
+            <button class="button" type="submit">{% translate Registrera dig %}</button>
           </form>
         </div>
     </div>
