@@ -7,6 +7,7 @@ TEMPLATES = [
         'DIRS': [
             'templates/demo',
             'templates/common',
+            'templates/common/members',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
