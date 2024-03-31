@@ -32,7 +32,7 @@ customColorPalette = [
 ]
 
 
-CKEDITOR_5_CUSTOM_CSS = 'css/ckeditor.css'
+CKEDITOR_5_CUSTOM_CSS = 'core/css/ckeditor.css'
 CKEDITOR_5_CONFIGS = {
     'default': {
         'toolbar': ['heading', '|', 'outdent', 'indent', '|', 'bold', 'italic', 'link', 'underline', 'strikethrough',

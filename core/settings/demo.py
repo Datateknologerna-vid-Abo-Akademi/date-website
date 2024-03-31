@@ -5,7 +5,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            'templates/date',
+            'templates/demo',
             'templates/common',
         ],
         'APP_DIRS': True,
@@ -34,31 +34,30 @@ INSTALLED_APPS = get_installed_apps([
     'ads',
     'social',
     'staticpages',
-    'ctf',
 ])
 
-ROOT_URLCONF = 'core.urls.date'
+ROOT_URLCONF = 'core.urls.demo'
 
 STAFF_GROUPS = get_staff_groups([
-        'styrelse',
-        'admin',
-        'fotograf',
-        'rösträknare'
-    ])
+    'styrelse',
+    'admin',
+    'fotograf',
+    'rösträknare'
+])
 
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/date'),
+    os.path.join(BASE_DIR, 'static/demo'),
     os.path.join(BASE_DIR, 'static/common'),
 ]
 
 
 CONTENT_VARIABLES = {
-    "SITE_URL": "https://datateknologerna.org",
-    "ASSOCIATION_NAME": "Datateknologerna",
-    "ASSOCIATION_NAME_FULL": "Datateknologerna vid Åbo Akademi rf",
-    "ASSOCIATION_NAME_SHORT": "DaTe",
-    "ASSOCIATION_EMAIL": "date@abo.fi",
+    "SITE_URL": "https://demo.datateknologerna.org",
+    "ASSOCIATION_NAME": "DaTe demo",
+    "ASSOCIATION_NAME_FULL": "Demo Website",
+    "ASSOCIATION_NAME_SHORT": "Demo",
+    "ASSOCIATION_EMAIL": "demo@datateknologerna.org",
     "ASSOCIATION_ADDRESS_L1": "Åbo Akademi, Agora",
     "ASSOCIATION_ADDRESS_L2": "Vattenborgsvägen 5",
     "ASSOCIATION_POSTAL_CODE": "20500 Åbo",
