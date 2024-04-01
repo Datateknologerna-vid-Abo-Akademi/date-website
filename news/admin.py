@@ -1,12 +1,17 @@
 from django.contrib import admin
 
 from news import forms
-from news.models import Post
+from news.models import Post, Category
+
+
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
 
 
 class PostAdmin(admin.ModelAdmin):
 
-    list_display = ('title', 'author', 'created_time', 'modified_time', 'published', 'albins_angels')
+    list_display = ('title', 'author', 'category', 'created_time', 'modified_time', 'published', 'albins_angels')
     search_fields = ('title', 'author', 'created_time')
 
     def add_view(self, request, form_url='', extra_context=None):
@@ -27,4 +32,5 @@ class PostAdmin(admin.ModelAdmin):
         return form
 
 
+admin.site.register(Category, CategoryAdmin)
 admin.site.register(Post, PostAdmin)

@@ -18,6 +18,7 @@ class PostCreationForm(forms.ModelForm):
         model = Post
         fields = (
             'title',
+            'category',
             'content',
             'published',
             'slug',
@@ -50,6 +51,7 @@ class PostEditForm(forms.ModelForm):
         model = Post
         fields = (
             'title',
+            'category',
             'content',
             'published',
             'slug',
