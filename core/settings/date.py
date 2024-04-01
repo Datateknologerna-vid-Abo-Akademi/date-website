@@ -69,4 +69,8 @@ CONTENT_VARIABLES = {
         ["fa-linkedin-in", "https://www.linkedin.com/company/datateknologerna-vid-%C3%A5bo-akademi-rf/"],
         ["fa-github", "https://github.com/Datateknologerna-vid-Abo-Akademi"],
     ],
+
+    # Alumni
+    "ALUMNI_ASSOCIATION_NAME": "Albins R Gamyler",
+    "ALUMNI_ASSOCIATION_NAME_SHORT": "ARG",
 }
