@@ -47,6 +47,11 @@ ALLOWED_HOSTS = json.loads(env('ALLOWED_HOSTS', str, '[]'))
 CSRF_TRUSTED_ORIGINS = json.loads(env('ALLOWED_ORIGINS', str, '[]'))
 
 
+if not DEVELOP:
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+
+
 def get_installed_apps(proj_apps):
     return [
         'daphne',
@@ -69,6 +74,26 @@ def get_installed_apps(proj_apps):
         'django_cleanup',  # Should be places last
     ]
 
+
+# Common template config
+COMMON_TEMPLATE_DIRS = [
+    'templates/common',
+    'templates/common/members',
+]
+
+
+COMMON_CONTEXT_PROCESSORS = [
+    'django.template.context_processors.debug',
+    'django.template.context_processors.request',
+    'django.template.context_processors.i18n',
+    'django.contrib.auth.context_processors.auth',
+    'django.contrib.messages.context_processors.messages',
+    'staticpages.context_processors.get_pages',
+    'staticpages.context_processors.get_categories',
+    'staticpages.context_processors.get_urls',
+    'core.context_processors.captcha_context',
+    'core.context_processors.apply_content_variables',
+]
 
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -104,18 +129,20 @@ CHANNEL_LAYERS = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
+        'NAME': env('DB_DATABASE', str, 'postgres'),
+        'USER': env('DB_USERNAME', str, 'postgres'),
         'PASSWORD': env('DB_PASSWORD', default=''),
-        'HOST': 'db',
-        'PORT': 5432,
+        'HOST': env('DB_HOST', str, 'db'),
+        'PORT': env('DB_PORT', int, 5432)
     }
 }
+
+CONN_MAX_AGE = 600
 
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://redis:6379",
+        "LOCATION": env("REDIS_SERVER", str, "redis://redis:6379"),
     },
 }
 
