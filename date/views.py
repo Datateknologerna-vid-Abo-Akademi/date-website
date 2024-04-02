@@ -18,11 +18,11 @@ def index(request):
     events = events_old_events_included.filter(
         published=True, event_date_end__gte=datetime.datetime.now())
     news = Post.objects.filter(
-        published=True, albins_angels=False).reverse()[:3]
+        published=True, category__isnull=True).reverse()[:3]
 
     # Show Albins Angels logo if new post in last 10 days
-    aa_posts = Post.objects.filter(published=True, albins_angels=True).order_by(
-        'published_time').reverse()[:1]
+    aa_posts = Post.objects.filter(published=True, category__name="Albins Angels").order_by(
+        'published_time').reverse()[:1]  # TODO Remove this hardcoding or move to different function/file
     time_since = timezone.now() - datetime.timedelta(days=10)
     aa_post = ''
     if aa_posts and aa_posts[0].published_time > time_since:
@@ -55,7 +55,7 @@ def index(request):
         'news_events': list(chain(events, news)),
         'ads': AdUrl.objects.all(),
         'posts': IgUrl.objects.all(),
-        'aa_post': aa_post,
+        'aa_post': aa_post,  # TODO Remove or rename
     }
 
     return render(request, 'date/start.html', context)

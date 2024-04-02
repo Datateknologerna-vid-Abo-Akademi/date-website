@@ -11,6 +11,9 @@
     </head>
     <div class="container-md container-margin-top min-vh-100 p-1">
         <div class="container-size break-words">
+            {% if latest_news_items.0.category.name == "Albins Angels" %}
+                <div class="aa-img"><img src="{% static 'core/images/albins-angels.png' %}"/></div>
+            {% endif %}
             {% for news_item in latest_news_items %}
                 <div class="content overflow-auto">
                     <a href="

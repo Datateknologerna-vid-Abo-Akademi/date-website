@@ -10,6 +10,9 @@
     </head>
     <div class="container-md container-margin-top min-vh-100 p-1">
         <div class="container-size break-words">
+            {% if article.category.name == "Albins Angels" %}
+                <div class="aa-img"><img src="{% static 'core/images/albins-angels.png' %}"/></div>
+            {% endif %}
             <div class="content overflow-auto">
                 <h2>{{ article.title }}</h2>
                 <h4 class="author">{% trans "Skriven " %}{{ article.published_time }} {% trans "av" %}
