@@ -41,11 +41,6 @@
                     {{category.category_name}}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
-                        {% for page in pages %}
-                            {% if page.category|lower == category.category_name|lower %}
-                                <li><a class="dropdown-item" href="{% url 'staticpages:page' page.slug %}">{{page.title}}</a></li>
-                            {% endif %}
-                        {% endfor %}
                         {% for page in urls %}
                             {% if page.category|lower == category.category_name|lower %}
                                 {% if user.is_authenticated and page.url == "/members/login/" %}

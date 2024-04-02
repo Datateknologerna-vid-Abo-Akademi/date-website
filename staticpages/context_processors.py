@@ -1,9 +1,4 @@
-from .models import StaticPage, StaticPageNav, StaticUrl
-
-
-def get_pages(context):
-    pages = StaticPage.objects.all().order_by('dropdown_element')
-    return {'pages': pages}
+from .models import StaticPageNav, StaticUrl
 
 
 def get_categories(context):
