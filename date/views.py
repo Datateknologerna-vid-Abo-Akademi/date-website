@@ -1,24 +1,22 @@
 import datetime
+from itertools import chain
 
 from django.conf import settings
 from django.shortcuts import redirect, render
-from django.utils import translation
 from django.utils import timezone
+from django.utils import translation
 
+from ads.models import AdUrl
 from events.models import Event
 from news.models import Post
-from itertools import chain
-from event_calendar.views import CalendarManager
-from ads.models import AdUrl
 from social.models import IgUrl
 
 
 def index(request):
-    cm = CalendarManager(request)
-    d = cm.date
-
-    events = Event.objects.filter(published=True, event_date_end__gte=d).order_by(
+    events_old_events_included = Event.objects.filter(published=True, event_date_end__gte=(datetime.datetime.now() - datetime.timedelta(days=31))).order_by(
         'event_date_start')
+    events = events_old_events_included.filter(
+        published=True, event_date_end__gte=datetime.datetime.now())
     news = Post.objects.filter(published=True, albins_angels=False).reverse()[:2]
 
     # Show Albins Angels logo if new post in last 10 days
@@ -28,18 +26,33 @@ def index(request):
     if aa_posts and aa_posts[0].published_time > time_since:
         aa_post = aa_posts[0]
 
-
+    def calendar_format(all_events):
+        """ Format events into a dictionary where keys (dates)
+        are mapped to data used by the calendar on the frontend"""
+        calendar_events_dict = {}
+        for event in all_events:
+            event_url = "events/" + event.slug
+            # The rest of the "html" field is set on the client side
+            # since it includes a time that gets localized on the client-side
+            event_dict = {event.event_date_start.strftime("%Y-%m-%d"):
+                          {
+                "link": event_url,
+                "modifier": "calendar-eventday",
+                "eventFullDate": event.event_date_start,
+                "eventTitle": event.title,
+                "html": f"<a class='calendar-eventday-popup' id='calendar_link' href='{event_url}'>"
+            }
+            }
+            calendar_events_dict.update(event_dict)
+        return calendar_events_dict
 
     context = {
+        'calendar_events': calendar_format(events_old_events_included),
         'events': events,
         'news': news,
         'news_events': list(chain(events, news)),
         'ads': AdUrl.objects.all(),
         'posts': IgUrl.objects.all(),
-        'calendar': cm.get_calendar(),
-        'prev_month': cm.prev_month(),
-        'next_month': cm.next_month(),
-        'curr_month': cm.curr_month_as_string(),
         'aa_post': aa_post,
     }
 

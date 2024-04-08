@@ -2,12 +2,12 @@ import logging
 
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
-from django.core.mail import send_mail
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from core import settings
+from core.utils import send_email_task
 
 from .managers import MemberManager
 
@@ -72,7 +72,7 @@ class Member(AbstractBaseUser, PermissionsMixin):
         """
         Sends email to members
         """
-        send_mail(subject, message, from_email, [self.email], **kwargs)
+        send_email_task.delay(subject, message, from_email, [self.email], **kwargs)
 
     def get_active_subscription(self):
         all_subscriptions = SubscriptionPayment.objects.filter(member=self).exclude(date_expires__lt=timezone.now())

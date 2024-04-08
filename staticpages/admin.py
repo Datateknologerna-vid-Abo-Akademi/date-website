@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import StaticPage, StaticPageNav, StaticUrl
 
+
 # Register your models here.
 
 class PageInline(admin.TabularInline):
@@ -9,10 +10,12 @@ class PageInline(admin.TabularInline):
     can_delete = True
     extra = 0
 
+
 class UrlInline(admin.TabularInline):
     model = StaticUrl
     can_delete = True
     extra = 0
+
 
 @admin.register(StaticPageNav)
 class StaticPageNavAdmin(admin.ModelAdmin):
@@ -22,5 +25,6 @@ class StaticPageNavAdmin(admin.ModelAdmin):
         PageInline,
         UrlInline,
     ]
+
 
 admin.site.register(StaticPage)

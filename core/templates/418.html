@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block content %}
+
+    <head>
+        <meta charset="UTF-8">
+        <title>I'm a teapot</title>
+        <link href="{% static 'css/error-view.css' %}" rel="stylesheet">
+    </head>
+
+    <body>
+    <div class="container-soft">
+        <div class="text-wrapper">
+            {% if error_msg %}
+                <h2>{{ error_msg }}</h2>
+            {% else %}
+                <h1>- 418 -</h1>
+                <h3>Jag är en tekokare</h3>
+                <img src="https://albin-storage.fra1.digitaloceanspaces.com/common/assets/teapot.jpeg" width="480" alt="Teapot pouring red liquid">
+                <br><br>
+                <h2>{% trans 'Inget vatten i glöggkokaren, tack' %}</h2>
+            {% endif %}
+            <p><a href="{% url 'index' %}">{% trans 'Till startsidan' %}</a></p>
+        </div>
+    </div>
+
+    </body>
+{% endblock %}
