@@ -1,0 +1,54 @@
+{% extends 'core/base.html' %}
+
+{% load i18n %}
+{% load static %}
+{% block title %}Sign up{% endblock %}
+{% block content %}
+    <head>
+        <link rel="stylesheet" href="{% static 'members/style.css' %}">
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    </head>
+    <div class="signup-page">
+        <div class="members-form big">
+            {% if alumni %}
+              <h2>{{ ALUMNI_ASSOCIATION_NAME_SHORT }} Registrering</h2>
+            <p style="width: 110%; margin-left: -5%; margin-right: auto">
+                Efter att du registrerat dig vänligen betala medlemsavgiften på 85€ till:<br>
+                <br>
+                Mottagare: Kemistklubben vid Åbo Akademi rf<br>
+                IBAN: FI38 6601 0001 0479 43<br>
+                BIC: AABAFI22<br>
+                Referens: 5555<br>
+                <br>
+                (Instruktionerna skickas även via e-post efter att du registrerat dig)<br>
+            </p>
+            {% else %}
+                <h2>Registrera dig</h2>
+            {% endif %}
+          <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+              <p>
+                {{ field.label_tag }}<br>
+                  {% if field.help_text %}
+                      <small>{{ field.help_text }}</small>
+                  {% endif %}
+                  {{ field }}
+                {% for error in field.errors %}
+                  <p style="color: red">{{ error }}</p>
+                {% endfor %}
+              </p>
+            {% endfor %}
+            <p class="consent-form-group">
+              <input type="checkbox" name="consent" required/>
+              Jag godkänner
+              <a href="https://{{ request.get_host }}/pages/registerbeskrivning/" target="_blank">
+                villkoren <i class="fa fa-external-link" aria-hidden="true"></i>
+              </a>
+            </p>
+            <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}" data-callback="javascriptCallback"></div>
+            <button class="button" type="submit">Registrera dig</button>
+          </form>
+        </div>
+    </div>
+{% endblock %}

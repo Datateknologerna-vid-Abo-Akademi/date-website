@@ -11,7 +11,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 class PostAdmin(admin.ModelAdmin):
 
-    list_display = ('title', 'author', 'category', 'created_time', 'modified_time', 'published', 'albins_angels')
+    list_display = ('title', 'author', 'category', 'created_time', 'modified_time', 'published')
     search_fields = ('title', 'author', 'created_time')
 
     def add_view(self, request, form_url='', extra_context=None):

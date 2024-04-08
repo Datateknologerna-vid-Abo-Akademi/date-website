@@ -1,0 +1,72 @@
+{% load i18n %}
+{% load static %}
+
+<head>
+    <link rel="stylesheet" href="{% static 'events/css/form.css' %}">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head>
+
+<p>{% trans "Anmälan stängs om " %}{{ event.sign_up_deadline | timeuntil }}</p>
+<small>{% trans "OBS!" %} {% trans "Anmälningen är bindande om inget annat meddelas." %} <br>
+    {% trans "Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på förhinder." %}</small>
+{% if form.errors %}
+    {% for field in form %}
+        {% for error in field.errors %}
+            <div class="alert alert-danger">
+                <strong>{{ error|escape }}</strong>
+            </div>
+        {% endfor %}
+    {% endfor %}
+    {% for error in form.non_field_errors %}
+        <div class="alert alert-danger">
+            <strong>{{ error|escape }}</strong>
+        </div>
+    {% endfor %}
+{% endif %}
+<form method="post" class="form" id="attend-form">
+    {{ form.as_p }}
+    {% if event.captcha %}
+        <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}" data-callback="javascriptCallback"></div>
+    {% endif %}
+    <button class="button" type="submit">{% trans 'Anmäl' %}</button>
+    {% csrf_token %}
+</form>
+<br>
+<small>
+    Genom att anmäla dig godkänner du att {{ ASSOCIATION_NAME_FULL }} lagrar ditt namn, din e-post samt eventuell annan nödvändig information.
+    Under anmälningstiden syns den anmäldas namn i listan nedan. 
+    Efter evenemanget sparas informationen för statistiska ändamål och syns endast för hemsidans administratörer.
+</small>
+
+{% if event.event_is_full %}
+<p class="warning">Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan och meddelas om du får plats.</p>
+{% endif %}
+
+<script>
+    updateAvecForm();
+    $("#id_avec").click(updateAvecForm);
+
+    $('#attend-form').submit(function(e) {
+        // Validate that email != avec email, since add_event_attendance() prohibits this
+        if ($("#id_avec").is(":checked") && ($('#id_avec_email').val() == $('#id_email').val())) {
+            if (!$('#unique-email-warning').length) {
+                $("#id_avec_email").parent().before('<div class="alert alert-danger" id="unique-email-warning"><strong>Avecs email kan inte vara samma som din!</strong></div>');
+            }
+            e.preventDefault();
+        }
+    });
+
+    function updateAvecForm() {
+        if($("#id_avec").is(":checked")) {
+            $('#attend-form').find('.avec-field').parent().show();
+            $("#id_avec").parent().after('<h4 id="avec_information_header">Avec information<h4>')
+            $('#id_avec_user').prop('required', true)
+            $('#id_avec_email').prop('required', true)
+        } else {
+            $('#attend-form').find('.avec-field').parent().hide();
+            $('#avec_information_header').remove()
+            $('#id_avec_user').prop('required', false)
+            $('#id_avec_email').prop('required', false)
+        }
+    }
+</script>

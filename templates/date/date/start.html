@@ -1,0 +1,261 @@
+{% extends 'core/base.html' %}
+{% load cache %}
+{% block content %}
+{% cache 300 main_page_fixed %}
+    {% load static %}
+    {% load i18n %}
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <link rel="stylesheet" href="{% static 'date/css/homepage.css' %}?{% now "U" %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'date/css/vanilla-calendar.min.css' %}" type="text/css">
+        {% get_current_language as LANGUAGE_CODE %}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/157670/jquery.jcarousellite.min.js"></script>
+        <script src="{% static 'date/js/vanilla-calendar.min.js' %}"></script>
+        <script src="{% static 'date/js/albin.js' %}"></script>
+    </head>
+
+    <div class="container-fluid p-2 min-vh-100">
+        <header class="header">
+            <div class="hero-text-box">
+                <div class="albin">
+                    <div id="albin-svg-container"></div>
+                </div>
+                <div class="text">
+                    <h1>Datateknologerna</h1>
+                    <h3>vid Åbo Akademi rf</h3>
+                </div>
+            </div>
+        </header>
+        <section class="about d-flex align-items-center">
+            <div class="container-size">
+                <h3>Om oss</h3>
+                <div>
+                    <p>Datateknologerna vid Åbo Akademi rf är en förening för studerande vid utbildningsprogrammet i datateknik vid Fakulteten för Naturvetenskaper och Teknik vid Åbo Akademi, samt för studerande vid övriga tekniskt inriktade utbildningslinjer i databehandling. Föreningen grundades 1999, närmare bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare och stiliga tofsmössor.</p>
+                </div>
+            </div>
+        </section>
+        <section id="news" class="news-events">
+            <div id="main" class="main-container">
+                <div class="feed-container">
+                    <h3 class="news-header header-border-bottom mt-3">Nyheter
+                        <div class="date-25"><a href="{% url 'date_25' %}">25</a></div>
+                        {% if aa_post %}
+                        <div class="aa-img"><a href="{% url 'news:detail' aa_post.category.slug aa_post.slug %}"><img src="{% static 'core/images/albins-angels.png' %}"/></a></div>
+                        {% endif %}
+                    </h3>
+                    <div class="news-container">
+                        {% for ne in news%}
+                            <div class="news-content news-box header-border-bottom">
+                                <h3 class="news-title">{{ ne.title }}</h3>
+                                <h5 class="news-date">{{ ne.published_time }}</h5>
+                                <div>{{ ne.content|safe|truncatewords_html:"50"}}</div>
+                                <a class="news-button" href="{% url 'news:detail' ne.slug %}"><i class="fab fa-readme"></i> {% trans 'Läs mera' %}...</a>
+                            </div>
+                            {% empty %}
+                            <h3>{% trans 'Inga nyheter hittades' %}...</h3>
+                        {% endfor %}
+                        <a class="more-news" href="/news/"><i class="far fa-newspaper"></i> Mera nyheter...</a>
+                    </div>
+                </div>
+                <div class="sidebar-container">
+                    <div class="events-container">
+                        <h3 class="header-border-bottom mt-3">Evenemang</h3>
+                            {{ calendar_events|json_script:"calendar_json" }}
+                        <div class="calendar">
+                        </div>
+                        <div class="events">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    {% for ev in events|slice:":4" %}
+                                        <div class="card-group evet-card text-light mb-2">
+                                            <a href="{% url 'events:detail' ev.slug %}" class="card mb-0 p-1">
+                                                <div class="card-body py-1">
+                                                    <div class="row">
+                                                        <div style="margin: auto;" class="col-3">
+                                                            <div>
+                                                                <span class="badge">{{ ev.event_date_start|date:"d" }}</span>
+                                                            </div>
+                                                            <div class="text-color">
+                                                                <small>
+                                                                    {{ ev.event_date_start|date:"M" }}
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                        <div style="margin: auto;" class="col-7">
+                                                            <div class="d-flex flex-column">
+                                                                <small class="list-inline-item">
+                                                                    <i class="fas fa-calendar-check"></i> {{ ev.event_date_start|date:"D"}}
+                                                                    <i class="far fa-clock"></i> {{ev.event_date_start|date:"H:i"}}
+                                                                </small>
+                                                                <h6 class="card-title text-uppercase mt-0">
+                                                                    <strong>{{ ev.title }}</strong>
+                                                                </h6>
+                                                            </div>
+                                                        </div>
+                                                        <div style="margin: auto;" class="col-2">
+                                                            <i class="fas fa-chevron-right fa-lg"></i>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    {% empty %}
+                                        <h6>{% trans 'Inga aktiva evenemang hittades' %}...</h6>
+                                    {% endfor %}
+                                    {% if events|length >= 4 %}
+                                        <a class="more-events-button" href="{% url 'events:index'%}"><i class="far fa-calendar-alt"></i> {% trans 'Mera evenemang' %}...</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="extra-container">
+                        <h3 class="mt-3 header-border-bottom">Annat</h3>
+                        <h5>Trakasseriombud</h5>
+                        <p>Om du upplever trakasserier i samband med Datateknologernas verksamhet, vänligen <a href="{% url "social:harassment" %}">rapportera</a>  detta via hemsidan. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar.</p>
+                            <h5 id="joke-header">Joke</h5>
+                            <p id="joke-string"></p>
+                    </div>
+                </div>
+                <div class="mobile-events-container">
+                    <h3 class="header-border-bottom mt-3">Evenemang</h3>
+                    {{ calendar_events|json_script:"calendar_json" }}
+                    <div class="calendar">
+                    </div>
+                    <div class="events">
+                        <div class="row">
+                            <div class="col-md-12">
+                                {% for ev in events|slice:":4" %}
+                                    <div class="card-group evet-card text-light mb-2">
+                                        <a href="{% url 'events:detail' ev.slug %}" class="card mb-0 p-1">
+                                            <div class="card-body py-1">
+                                                <div class="row">
+                                                    <div style="margin: auto;" class="col-3">
+                                                        <div>
+                                                            <span class="badge">{{ ev.event_date_start|date:"d" }}</span>
+                                                        </div>
+                                                        <div class="text-color">
+                                                            {{ ev.event_date_start|date:"M" }}
+                                                        </div>
+                                                    </div>
+                                                    <div style="margin: auto;" class="col-7">
+                                                        <div class="d-flex flex-column">
+                                                            <small class="list-inline-item">
+                                                                <i class="fas fa-calendar-check"></i> {{ ev.event_date_start|date:"D"}}
+                                                                <i class="far fa-clock"></i> {{ev.event_date_start|date:"H:i"}}
+                                                            </small>
+                                                            <h6 class="card-title text-uppercase mt-0">
+                                                                <strong>{{ ev.title }}</strong>
+                                                            </h6>
+                                                        </div>
+                                                    </div>
+                                                    <div style="margin: auto;" class="col-2">
+                                                        <i class="fas fa-chevron-right fa-lg"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                {% empty %}
+                                    <h6>{% trans 'Inga aktiva evenemang hittades' %}...</h6>
+                                {% endfor %}
+                                {% if events|length >= 4 %}
+                                    <a class="more-events-button" href="{% url 'events:index'%}"><i class="far fa-calendar-alt"></i> {% trans 'Mera evenemang' %}...</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mobile-extra-container">
+                    <h3 class="mt-3 header-border-bottom">Annat</h3>
+                    <h5>Trakasseriombud</h5>
+                    <p>Om du upplever trakasserier i samband med Datateknologernas verksamhet, vänligen <a href="{% url "social:harassment" %}">rapportera</a>  detta via hemsidan. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar.</p>
+                        <h5 id="joke-header">Joke</h5>
+                        <p id="joke-string"></p>
+                </div>
+                <div class="logo-container">
+                    <h3 class="header-border-bottom">Samarbetspartners</h3>
+                        <div class="d-flex flex-wrap justify-content-center align-items-center">
+                            {%for ad in ads%}
+                                <a class="m-2" href="{{ ad.company_url }}">
+                                    <img src="{{ ad.ad_url }}" alt="img">
+                                </a>
+                            {% endfor %}
+                        </div>
+                    <div class="text-center">
+                        <a href="/pages/foretagssamarbete/">Vill du samarbeta med DaTe?</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="reklam" class="text-size">
+        </section>
+    </div>
+
+    <script id="custom" defer>
+        // element with id "calendar_json" is populated by django as defined in views.py context object
+        const events_json = JSON.parse(document.getElementById('calendar_json').textContent);
+        Object.entries(events_json).forEach((o)=>{
+            const tempDate = new Date(o[1].eventFullDate);
+            let hours = tempDate.getHours();
+            let minutes = tempDate.getMinutes();
+            // Ensure minutes are two digits
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            o[1].html += `${hours}:${minutes}</br>${o[1].eventTitle}</a>`;
+        });
+
+        // Select all elements with class 'calendar' and initialize VanillaCalendar on each
+        document.querySelectorAll('.calendar').forEach(calendarElement => {
+            const calendarPopups = new VanillaCalendar(calendarElement, {
+                actions: {
+                    clickDay(event, date) {
+                        if(events_json[date[0]] !== undefined) {
+                            location.href = events_json[date[0]].link;
+                        }
+                    },
+                },
+                settings: {
+                    visibility: {
+                        weekend: false,
+                    },
+                    selected: {
+                        month: new Date().getMonth(),
+                        year: new Date().getFullYear(),
+                    },
+                },
+                popups: events_json
+            });
+            calendarPopups.init();
+        });
+    </script>
+    <script>
+        async function getJoke() {
+            return await fetch("https://icanhazdadjoke.com", {
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                })
+                .then(response => response.json())
+                .then(function(data) {
+                    return data ? data.joke : ""
+                })
+                .catch(function(e) {
+                    document.querySelectorAll("#joke-header")
+                        .forEach(function(elem) {
+                            elem.innerText = "";
+                        });
+                    return ""
+                }) ||
+                "";
+        }
+        getJoke().then((joke) => {
+            document.querySelectorAll("#joke-string").forEach(function(elem) {
+                elem.innerText = joke;
+            })
+        })
+    </script>
+    {% endcache %}
+{% endblock %}

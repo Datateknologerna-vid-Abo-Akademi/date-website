@@ -1,5 +1,3 @@
-import django
-from django.contrib.auth.views import PasswordChangeDoneView, PasswordResetDoneView
 from django.urls import include, path, re_path
 
 from . import views

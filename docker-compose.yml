@@ -23,6 +23,7 @@ services:
       - SECRET_KEY=${DATE_SECRET_KEY}
       - DEBUG=${DATE_DEBUG}
       - DEVELOP=${DATE_DEVELOP}
+      - PROJECT_NAME=${PROJECT_NAME}
       - DB_PASSWORD=${DATE_DB_PASSWORD}
       - USE_S3=${USE_S3}
       - AWS_S3_ENDPOINT_URL=${S3_ENDPOINT_URL}
@@ -51,7 +52,6 @@ services:
     volumes:
       - .:/code
     environment:
-      - DJANGO_SETTINGS_MODULE=core.settings
       - DEBUG=${DATE_DEBUG}
       - EMAIL_HOST=${EMAIL_HOST}
       - EMAIL_HOST_USER=${EMAIL_HOST_USER}

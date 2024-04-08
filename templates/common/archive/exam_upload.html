@@ -1,0 +1,40 @@
+{% extends 'core/base.html' %}
+{% load app_filters %}
+{% load static %}
+{% load i18n %}
+{% block title %}{% trans 'Tentarkiv' %}{% endblock %}
+
+{% block content %}
+<head>
+    <link rel="stylesheet" href="{% static 'archive/css/document.css' %}" type="text/css">
+</head>
+    <div class="container-md min-vh-100 container-margin-top p-1">
+        <div class="container-size" style="max-width: 500px;">
+            <div class="content">
+                <div class="hero-text-box">
+                    <h1>
+                        {% if collection %}
+                            <a href="{% url 'archive:exams_detail' collection.id %}"><i class="fa fa-arrow-left" aria-hidden="true"></i></a> 
+                            {{ collection.title }}
+                        {% else %}
+                            <a href="{% url 'archive:exams' %}"><i class="fa fa-arrow-left" aria-hidden="true"></i></a> 
+                            Tentarkiv
+                        {% endif %}
+                         <i class="fas fa-book-dead"></i>
+                    </h1>
+                    {% if collection %}
+                        <small>❗️ Namnge tenten: "tent DD.MM.YYYY" ❗️</small>
+                    {% else %}
+                        <small>❗️ Namnge arkivet enligt kursnamn. t.ex, Ingengörsmatematik 1 ❗️</small>
+                    {% endif %}
+                </div>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ exam_form.as_p }}
+                    <button type="submit">Upload</button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
