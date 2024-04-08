@@ -13,6 +13,8 @@ POST_SLUG_MAX_LENGTH = 50
 class StaticPageNav(models.Model):
     category_name = models.CharField(_('Kategori'), max_length=255, blank=False)
     nav_element = models.IntegerField(default=0)
+    use_category_url = models.BooleanField(_('Använd kategorins URL'), default=False)
+    url = models.CharField(_('Url'), max_length=200, blank=True)
 
     def __str__(self):
         return self.category_name
