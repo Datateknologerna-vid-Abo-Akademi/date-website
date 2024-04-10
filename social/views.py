@@ -27,7 +27,7 @@ def harassment_form(request):
             harassment_receivers = [receiver.recipient_email for receiver in HarassmentEmailRecipient.objects.all()]
             send_email_task.delay(
                 "Ny trakasserianmälan har inkommit",
-                render_to_string('social/harassment_email.html', {'harassment_id': harassment.id}),
+                render_to_string('social/harassment_admin_email.html', {'harassment_id': harassment.id}),
                 settings.DEFAULT_FROM_EMAIL,
                 harassment_receivers
             )
