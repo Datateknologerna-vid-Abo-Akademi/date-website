@@ -32,5 +32,5 @@ class HTCPCPMiddleware:
         coffe_words = [f"/{x}" for x in ["coffee", "kahvi", "kaffe"]]
         htcpcp_methods = ["BREW", "POST", "BREW", "PROPFIND", "WHEN", "GET"]
         if request.path in coffe_words and request.method in htcpcp_methods:
-            return render(request, template_name="418.html", status=418)
+            return render(request, template_name="core/418.html", status=418)
         return self.get_response(request)

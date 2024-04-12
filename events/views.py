@@ -58,12 +58,6 @@ class EventDetailView(DetailView):
             context['form'] = form
         else:
             context['form'] = self.object.make_registration_form()
-        try:
-            baal_staticnav = StaticPageNav.objects.filter(category_name="Årsfest")
-            if baal_staticnav.exists():
-                context['staticpages'] = StaticPage.objects.filter(category=baal_staticnav.first().pk)
-        except Exception as e:
-            logger.error(f"Error fetching static pages: {e}")
         return context
 
     def get_template_names(self):
