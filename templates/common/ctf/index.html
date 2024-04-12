@@ -1,0 +1,33 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - CTF{% endblock %}
+
+{% block content %}
+
+<head>
+    <link rel="stylesheet" href="{% static 'ctf/css/style.css' %}">
+</head>
+
+<div class="container-md min-vh-100 container-margin-top">
+    <div class="container-size text-center" style="max-width: 500px;">
+        <div class="content">
+            <h3><i class="fas fa-flag"></i> {{ ASSOCIATION_NAME_SHORT }} CTF <i class="fas fa-flag"></i></h3>
+            {% if latest_ctf_list %}
+            <ul class="list-unstyled">
+            {% for ctf in latest_ctf_list %}
+                {% if ctf.published %}
+                <li class="m-1">
+                    <a href="{% url 'ctf:detail' ctf.slug %}">{{ ctf.title }}</a>
+                </li>
+                {% endif %}       
+            {% endfor %}
+            </ul>
+            {% else %}
+                <p>No CTF's are available.</p>
+        {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

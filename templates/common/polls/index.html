@@ -1,0 +1,34 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - {% trans "Poll" %}{% endblock %}
+
+{% block content %}
+
+<head>
+    <link rel="stylesheet" href="{% static 'polls/css/style.css' %}">
+</head>
+
+<div class="container-md min-vh-100 container-margin-top">
+    <div class="container-size text-center" style="max-width: 500px;">
+        <div class="content">
+            <h3>Polls <i class="fas fa-poll"></i></h3>
+            {% if latest_question_list %}
+                <ul class="list-unstyled">
+                {% for question in latest_question_list %}
+                    {% if question.published %}
+                    <li class="m-1">
+                        <a href="{% if question.end_vote %}{% url 'polls:detail' question.id %}results{% else %}{% url 'polls:detail' question.id %}{% endif %}">{{ question.question_text }}</a>
+                    </li>
+                    {% endif %}
+                    
+                {% endfor %}
+                </ul>
+                {% else %}
+                    <p> {% trans "Det finns inga aktiva omröstningar" %}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ article.title }}{% endblock %}
+{% block content %}
+<div class="container-md min-vh-100 container-margin-top">
+    <div class="container-size text-center" style="max-width: 500px;">
+        <div class="content">
+            <h1>{% translate "Tack för att du rapporterade." %}</h1>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -12,6 +12,8 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+proj_name = os.environ.get("PROJECT_NAME", "date")
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', f'core.settings.{proj_name}')
 
 application = get_wsgi_application()

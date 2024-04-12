@@ -1,0 +1,40 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - {% trans "Poll" %}{% endblock %}
+
+{% block content %}
+
+<head>
+    <link rel="stylesheet" href="{% static 'polls/css/style.css' %}">
+</head>
+
+<div class="container-md min-vh-100 container-margin-top">
+    <div class="container-size" style="max-width: 500px;">
+        <div class="content">
+            <a class="mb-2" href="/polls"><i class="fas fa-long-arrow-alt-left"></i> {% trans "Tillbaka" %}</a>
+            <h3>{{ question.question_text }}</h3>
+
+            {% if error_message %}<p class="warning"><strong>{{ error_message }}</strong></p>{% endif %}
+    
+            <form action="{% url 'polls:vote' question.id %}" method="post">
+            {% csrf_token %}
+            {% for choice in question.choice_set.all %}
+                <input type=
+                {% if question.multiple_choice == True %}
+                    "checkbox"
+                {% else %}
+                    "radio"
+                {% endif %}
+                name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}">
+                <label class="p-2" for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label><br>
+            {% endfor %}
+            <input class="btn btn-light" type="submit" value="Rösta">
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}

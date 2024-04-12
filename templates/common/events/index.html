@@ -1,0 +1,74 @@
+{% extends 'core/base.html' %}
+{% load cache %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - {% trans "Händelser" %}{% endblock %}
+
+{% block content %}
+    {% cache 60 event_index %}
+    <head>
+        <link rel="stylesheet" href="{% static 'events/css/style.css' %}"type="text/css">
+        <link rel="stylesheet" href="{% static 'events/css/event-card.css' %}"type="text/css">
+    </head>
+    
+    <div class="container-md min-vh-100 container-margin-top">
+        <div class="container-size break-words">
+            <div class="row">
+                <div class="col-md-12">
+                    <h2 class="text-center"><span>{% trans "Kommande händelser" %}</span></h2>
+                    {% for event in event_list %}
+                        <div class="card-group evet-card text-light mb-2">
+                            <div class="card mb-0 p-1">
+                                <div class="card-body py-1">
+                                    <div class="row">
+                                        <div style="margin: auto;" class="col-4 col-sm-2">
+                                            <div class="display-4">
+                                                <span class="badge">{{ event.event_date_start|date:"d" }}</span>
+                                            </div>
+                                            <div class="display-4 event-date-txt">
+                                                {{ event.event_date_start|date:"M" }}
+                                            </div>
+                                        </div>
+                                        <div class="col-8 col-sm-6">
+                                            <div class="d-flex flex-column">
+                                                <h3 class="card-title text-uppercase mt-0">
+                                                    <strong>{{ event.title }}</strong>                    
+                                                </h3>
+                                                <div class="card-text">
+                                                {{ event.content|safe|striptags|truncatewords_html:"20"}}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="margin: auto;" class="col-6 col-sm-2">
+                                            <ul class="list-group my-0 pl-1">
+                                                <li class="list-inline-item"><i class="far fa-clock"></i> {{event.event_date_start|date:"H:i"}} - {{ event.event_date_end|date:"H:i"}}</li>
+                                                <li class="list-inline-item"><i class="fas fa-calendar-check"></i> {{ event.event_date_start|date:"D"}}</li>
+                                                <li class="list-inline-item"><i class="fas fa-users"></i> {{ event.get_sign_up_max_participants }}</li>
+                                              </ul>
+                                        </div>
+                                        <div style="margin: auto;" class="col-6 col-sm-2 text-center">
+                                            <a class="btn btn-outline-light btn-floating m-1" href="{% url 'events:detail' event.slug %}"><i class="fas fa-chevron-right fa-4x"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <h5 class="text-center">{% trans "Inga aktiva händelser" %}</h5>
+                    {% endfor %}
+                </div>
+                <div class="text-center mt-5">
+                    <h2><span>{% trans "Tidigare händelser" %}</span></h2>
+                    {% for event in past_events|slice:5 %}
+                    <div>
+                        <a class="content-past" href="{% url 'events:detail' event.slug %}"><h4 class="event-title-ended">{{ event.title }}</h4></a>
+                    </div>
+                    {% empty %}
+                        <h5>{% trans "Inga tidigare händelser" %}</h5>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+      {% endcache %}
+{% endblock %}

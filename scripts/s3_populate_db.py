@@ -4,7 +4,7 @@ import sys
 import django
 
 sys.path.append("/code")
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings.date")
 django.setup()
 
 #Rest of the imports

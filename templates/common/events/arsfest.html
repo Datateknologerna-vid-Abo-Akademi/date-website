@@ -1,0 +1,256 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{% load app_filters %}
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block content %}
+    <head>
+        <link rel="stylesheet" href="{% static 'events/css/arsfest.css' %}">
+        <link rel="stylesheet" href="{% static 'events/css/date_25.css' %}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+        <script src="{% static 'js/live-attendee-list.js' %}"></script>
+    </head>
+    <div class="background-img">
+    {% include 'events/svg/circuitssvg.html' %}
+        <div class="container-md min-vh-100 p-1">
+            <div class="container-size">
+                <div class="content header-box">
+
+                <div class="loading-bar">
+                    <div class="bar1"></div>
+                    <div class="bar2"></div>
+                    <div class="bar3"></div>
+                    <div class="bar4"></div>
+                    <div class="bar5"></div>
+                    <div class="bar-error"><div class="bar-6"></div></div>
+                </div>
+                <div class="row justify-content-center">
+                    <div class="col-md-6 col-8 pentalbin">
+                        {% include 'events/svg/pentalbinsvg.html' %}
+                    </div>
+                </div>
+
+                <div class="main-content mt-4">
+                    <div class="text-center">
+                        <h2 class="age card-shine-effect">DaTe 25</h2>
+                    </div>
+                </div>
+                    <div class="baal-nav">
+                        <a class="baal-link" onclick="showPage(this)" href="#/main" data-nav="main">Välkommen</a>
+                        {% for page in staticpages %}
+                            <a class="baal-link" onclick="showPage(this)" href="#/{{ page.slug }}" data-nav="{{ page.slug }}">{{ page.title }}</a>
+                        {% endfor %}
+                        <a class="baal-link" onclick="showPage(this)" href="#/anmalan" data-nav="anmalan">Anmälan</a>
+                        <a class="baal-link" onclick="showPage(this)" href="#/anmalda" data-nav="anmalda">Anmälda</a>
+                    </div>
+                </div>
+                <div class="text-content">
+                    {% for page in staticpages %}
+                        <div id="{{ page.slug }}" class="content baal-content {{ page.slug }} hidden">
+                            <h1>{{ page.title }}</h1>
+                            <p>{{ page.content | safe }}</p>
+                        </div>
+                    {% endfor %}
+                    <div id="main" class="content baal-content main">
+                        <h1 class="header">{{ event.title }}</h1>
+                        <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
+                        <p>{{ event.content | safe }}</p>
+                    </div>
+                </div>
+                <div class="content baal-content anmalan hidden break-words">
+                    <h2 id="sign-up">{% trans "Anmälning" %}</h2>
+                    {% if user|in_group:"commodore" %}
+                        {% include 'events/registering.html' %}
+                    {% elif event.registration_is_open_members and user.is_authenticated %}
+                        {% include 'events/registering.html' %}
+                    {% elif event.registration_is_open_others %}
+                        {% include 'events/registering.html' %}
+                    {% elif event.registation_past_due %}
+                        <h4 id="no-registration">{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }} {% trans 'sedan' %}</h4>
+                    {% elif not event.registation_past_due and user.is_authenticated %}
+                        <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_members | timeuntil }}</p>
+                    {% else %}
+                        <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_others | timeuntil }}</p>
+                    {% endif %}
+                </div>
+                <div id="anmalda" class="content baal-content anmalda hidden">
+                    {% if event|show_attendee_list %}
+                        {% if event.sign_up_max_participants != 0 %}
+                            <p>Det finns {{ event.sign_up_max_participants }} platser!</p>
+                        {% endif %}
+                        <h1>{% trans "Anmälda" %}</h1>
+                        <table id="attendees">
+                            <tr id="attendees-header"
+                                {% if not event.get_registrations %} style="display: none;"
+                                {% endif %}>
+                                    <th>#</th>
+                                    <th>{% trans "Namn" %}</th>
+                                    {% for preference in event.get_registration_form_public_info reversed %}
+                                        <th>{{ preference }}</th>
+                                    {% endfor %}
+                            </tr>
+                            {% for attendee in event.get_registrations %}
+                                <tr {% if forloop.counter > event.sign_up_max_participants and event.sign_up_max_participants != 0 %} class="event-full" {% endif %} >
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{% if not attendee.anonymous %}{{ attendee.user }}{% else %}
+                                        <i>{% trans "Anonymt" %}</i>{% endif %}</td>
+                                    {% for preference in event.get_registration_form_public_info reversed %}
+                                        <td>{{ attendee | get_preference:preference }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% empty %}
+                                <p id="no-attendee">{% trans "Inga anmälda, var den första att anmäla dig!" %}</p>
+                            {% endfor %}
+                        </table>
+                    {% else %}
+                        <h4 id="no-attendee">{% trans 'Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta styrelsen vid behov.' %}</h4>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+
+        $( document ).ready(function() {
+            if(window.location.hash){
+                currentPage()
+            }
+        });
+
+        function showPage(element){
+            $(".baal-content").addClass("hidden");
+            $(`.${element.dataset.nav}`).toggleClass("hidden")
+            let pageHash = window.location.hash.substr(1).replace(/\//g,'');
+        }
+
+        function currentPage(element){
+            $(".baal-content").addClass("hidden");
+            let pageHash = window.location.hash.substr(1).replace(/\//g,'');
+            $(`.${pageHash}`).toggleClass("hidden")
+        }
+
+        /* viggos silly stuff please ignore*/
+        var counter = 0;
+
+        const opendrink = new Audio("https://dl.sndup.net/drjj/opendrink.mp3");
+        const mcdrink = new Audio("https://dl.sndup.net/km6b/mcdrink.mp3");
+        const auugh = new Audio("https://dl.sndup.net/cx42/auugh.mp3");
+
+        $('.pentalbin').click(function () {
+            counter++;
+
+            if (counter == 10) {
+                $('.pentalbin').click(function () {
+                    opendrink.play();
+                });
+            }
+
+            if (counter == 20) {
+                $('.age').text("SILLIZ!!");
+
+                $('.pentalbin').css({
+                    'animation': 'spin 3s infinite',
+                })
+
+                $('.baal-link').css({
+                    'animation': ' shake 3s infinite',
+                    'color': "turquoise"
+                })
+
+                $('h1,h2,h4,p,small,.button,#attendees').css({
+                    'animation': 'shake 5s infinite',
+                    'color': "turquoise"
+                })
+
+                $("h1,h2,h4,p,small,.button,#attendees").hover(function () {
+                    $(this).css('animation', 'shake 1s infinite')
+                });
+
+                $('.pentalbin').click(function () {
+                    mcdrink.play();
+                });
+
+                $('.background-img').css({
+                    'background': "url('https://images.alko.fi/images/cs_srgb,f_auto,t_medium/cdn/700324/original-long-drink-tolkki.jpg') center center fixed"
+                })
+
+                $('.content').css({
+                    'color': "turquoise",
+                    'font-family': 'Comic Sans MS'
+                })
+
+                $(".gold-left,.gold-right,.gold-left-bottom,.gold-right-bottom").remove();
+
+                $(".background-img").append('<audio autoplay loop src="https://dl.sndup.net/hrj5/pour.mp3"></audio>');
+                $(".background-img").append('<audio autoplay src="https://dl.sndup.net/twr9/yt1scom%20-%20Moomin%20Hardbass%20Remix%20Extended.mp3"></audio>');
+            }
+
+            if (counter == 30) {
+                $('.square').css({
+                    'transform': 'scale(35.01)',
+                    'background-color': 'gold',
+                    'color': 'white',
+                });
+                $('body').css({
+                    'animation': ' shake 1s infinite',
+                });
+                $('.age').text("krapulaAAA");
+
+                $('.background-img').css({
+                    'background': "url('https://i.imgur.com/AyB1M56.jpg') center center fixed"
+                })
+
+                $('.square').css({
+                    'animation': ' moveSquare 3s infinite',
+                });
+
+                $('.content').css({
+                    'color': "red",
+                    'font-family': 'Comic Sans MS'
+                })
+
+                $('h1,h2,h4,p,small,.button,#attendees').css({
+                    'animation': ' shake 0.1s infinite',
+                    'color': "red"
+                })
+
+                $("h1,h2,h4,p,small,.button,#attendees").hover(function () {
+                    $(this).css('animation', 'shake 1s infinite')
+                });
+
+                $('h1,h2,h4,p,small,.button,#attendees,.pentalbin').click(function () {
+                    auugh.play();
+                });
+
+                $('.baal-link').css({
+                    'animation': ' shake 0.5s infinite',
+                    'color': "red"
+                })
+
+                $(".background-img").append('<audio autoplay src="https://dl.sndup.net/twr9/yt1scom%20-%20Moomin%20Hardbass%20Remix%20Extended.mp3"></audio>');
+                $(".background-img").append('<audio autoplay loop src="https://dl.sndup.net/pwrr/vom.mp3"></audio>');
+            }
+
+            if (counter == 50) {
+
+                $("audio").remove();
+                $(".background-img").append('<audio autoplay src="https://dl.sndup.net/wmcd/died.mp3"></audio>');
+                $('.content').css({
+                    'display': 'none',
+                });
+                $('body').css({
+                    'animation': ' shake 1s infinite',
+                });
+                $('.background-img').css({
+                    'background': "url('https://i.scdn.co/image/ab67616d0000b273bd05173ef76dfa8a6106570a') no-repeat center center fixed",
+                })
+            }
+        });
+
+        /*im sorry*/
+
+    </script>
+{% endblock %}
