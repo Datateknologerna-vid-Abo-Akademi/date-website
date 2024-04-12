@@ -25,9 +25,13 @@ def harassment_form(request):
             harassment = form.save()  # Save the form data to the Harassment model
             # Send email to all harassment email receivers
             harassment_receivers = [receiver.recipient_email for receiver in HarassmentEmailRecipient.objects.all()]
+            email_ctx = {
+                'harassment': harassment,
+                'harassment_url': f"{settings.CONTENT_VARIABLES['SITE_URL']}/admin/social/harassment/{harassment.id}"
+            }
             send_email_task.delay(
                 "Ny trakasserianmälan har inkommit",
-                render_to_string('social/harassment_admin_email.html', {'harassment_id': harassment.id}),
+                render_to_string('social/harassment_admin_email.html', email_ctx),
                 settings.DEFAULT_FROM_EMAIL,
                 harassment_receivers
             )
