@@ -13,13 +13,14 @@ services:
     networks:
       - internal
   web:
-    build: .
+    image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}
     restart: always
     command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python /code/manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn -w 3 --bind=0.0.0.0 core.wsgi"
     environment:
       - SECRET_KEY=${DATE_SECRET_KEY}
       - DEBUG=${DATE_DEBUG}
       - DEVELOP=${DATE_DEVELOP}
+      - PROJECT_NAME=${PROJECT_NAME}
       - DB_PASSWORD=${DATE_DB_PASSWORD}
       - USE_S3=${USE_S3}
       - AWS_S3_ENDPOINT_URL=${S3_ENDPOINT_URL}
@@ -52,6 +53,7 @@ services:
       - SECRET_KEY=${DATE_SECRET_KEY}
       - DEBUG=${DATE_DEBUG}
       - DEVELOP=${DATE_DEVELOP}
+      - PROJECT_NAME=${PROJECT_NAME}
       - DB_PASSWORD=${DATE_DB_PASSWORD}
       - USE_S3=${USE_S3}
       - AWS_S3_ENDPOINT_URL=${S3_ENDPOINT_URL}
@@ -81,13 +83,12 @@ services:
     image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}
     command: celery -A core worker -l info
     environment:
-      - DJANGO_SETTINGS_MODULE=core.settings
       - DEBUG=${DATE_DEBUG}
       - EMAIL_HOST=${EMAIL_HOST}
       - EMAIL_HOST_USER=${EMAIL_HOST_USER}
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
     depends_on:
-      - web
+      - db
       - redis
     networks:
         - internal
@@ -104,9 +105,12 @@ services:
     ports:
       - ${DATE_DJANGO_PORT}:80
     volumes:
-        - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
       - external
+    depends_on:
+      - web
+      - asgi
 
 volumes:
   date_postgres_data:

@@ -290,7 +290,7 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': True,
         },
         'django_auth_ldap': {
@@ -301,6 +301,11 @@ LOGGING = {
         'date': {
             'handlers': ['console_debug'],
             'level': 'DEBUG',
+            'propagate': True,
+        },
+        'daphne': {
+            'handlers': ['console'],
+            'level': 'INFO',
             'propagate': True,
         }
     }
