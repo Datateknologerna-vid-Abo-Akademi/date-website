@@ -13,8 +13,9 @@ from social.models import IgUrl
 
 
 def index(request):
-    events_old_events_included = Event.objects.filter(published=True, event_date_end__gte=(datetime.datetime.now() - datetime.timedelta(days=31))).order_by(
-        'event_date_start')
+    events_old_events_included = (Event.objects.filter(
+        published=True,
+        event_date_end__gte=(timezone.now() - timezone.timedelta(days=31))).order_by('event_date_start'))
     events = events_old_events_included.filter(
         published=True, event_date_end__gte=datetime.datetime.now())
     news = Post.objects.filter(
@@ -23,7 +24,7 @@ def index(request):
     # Show Albins Angels logo if new post in last 10 days
     aa_posts = Post.objects.filter(published=True, category__name="Albins Angels").order_by(
         'published_time').reverse()[:1]  # TODO Remove this hardcoding or move to different function/file
-    time_since = timezone.now() - datetime.timedelta(days=10)
+    time_since = timezone.now() - timezone.timedelta(days=10)
     aa_post = ''
     if aa_posts and aa_posts[0].published_time > time_since:
         aa_post = aa_posts[0]
