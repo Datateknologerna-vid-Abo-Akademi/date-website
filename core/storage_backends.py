@@ -18,3 +18,7 @@ class PublicMediaStorage(S3Boto3Storage):
     default_acl = 'public-read'
     file_overwrite = False
     querystring_auth = False
+
+
+class PublicCKEditorStorage(PublicMediaStorage):
+    location = settings.PUBLIC_MEDIA_LOCATION + '/ckeditor'
