@@ -16,7 +16,7 @@ import json
 
 import environ
 
-from .dependencies.ckeditor import CKEDITOR_5_CONFIGS, CKEDITOR_5_CUSTOM_CSS  # noqa
+from .dependencies.ckeditor import *  # noqa
 
 
 env = environ.Env(
