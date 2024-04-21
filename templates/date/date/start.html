@@ -41,7 +41,6 @@
             <div id="main" class="main-container">
                 <div class="feed-container">
                     <h3 class="news-header header-border-bottom mt-3">Nyheter
-                        <div class="date-25"><a href="{% url 'date_25' %}">25</a></div>
                         {% if aa_post %}
                         <div class="aa-img"><a href="{% url 'news:detail' aa_post.category.slug aa_post.slug %}"><img src="{% static 'core/images/albins-angels.png' %}"/></a></div>
                         {% endif %}
