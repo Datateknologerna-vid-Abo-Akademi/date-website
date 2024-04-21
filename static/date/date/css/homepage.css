@@ -511,6 +511,10 @@ div.calendar-container a {
   font-size: 0.75rem;
 }
 
+.calendar-eventday-popup:hover {
+    color: var(--linkColorDarkHover);
+}
+
 /*Calendar end*/
 
 /*extras start*/
