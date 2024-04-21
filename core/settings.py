@@ -153,6 +153,7 @@ customColorPalette = [
 ]
 
 CKEDITOR_5_CUSTOM_CSS = 'css/ckeditor.css'
+CKEDITOR_5_FILE_STORAGE = 'core.storage_backends.PublicCKEditorStorage'
 CKEDITOR_5_CONFIGS = {
     'default': {
         'toolbar': ['heading', '|', 'outdent', 'indent', '|', 'bold', 'italic', 'link', 'underline', 'strikethrough',
