@@ -94,7 +94,7 @@ services:
         - internal
   redis:
     restart: always
-    image: redis:7.0-alpine
+    image: valkey/valkey:7.2-alpine
     ports:
       - ${REDIS_PORT}:6379
     networks:
