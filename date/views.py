@@ -17,7 +17,7 @@ def index(request):
         published=True,
         event_date_end__gte=(timezone.now() - timezone.timedelta(days=31))).order_by('event_date_start'))
     events = events_old_events_included.filter(
-        published=True, event_date_end__gte=datetime.datetime.now())
+        published=True, event_date_end__gte=timezone.now())
     news = Post.objects.filter(
         published=True, category__isnull=True).reverse()[:3]
 
