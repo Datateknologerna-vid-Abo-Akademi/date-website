@@ -201,7 +201,8 @@
             const tempDate = new Date(o[1].eventFullDate);
             let hours = tempDate.getHours();
             let minutes = tempDate.getMinutes();
-            // Ensure minutes are two digits
+            // Ensure hours and minutes are displayed with two digits
+            hours = hours < 10 ? '0' + hours : hours;
             minutes = minutes < 10 ? '0' + minutes : minutes;
             o[1].html += `${hours}:${minutes}</br>${o[1].eventTitle}</a>`;
         });
