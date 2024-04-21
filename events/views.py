@@ -5,11 +5,11 @@ from django.conf import settings
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.utils import timezone
 from django.views.generic import DetailView, ListView
 
 from core.utils import validate_captcha
 from members.models import Member
-from staticpages.models import StaticPage, StaticPageNav
 from .forms import PasscodeForm
 from .models import Event, EventAttendees
 from .websocket_utils import ws_send
@@ -24,7 +24,7 @@ class IndexView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         events = Event.objects.filter(published=True).order_by('event_date_start')
-        today = datetime.date.today()
+        today = timezone.now()
         context['event_list'] = events.filter(event_date_end__gte=today)
         context['past_events'] = events.filter(event_date_end__lte=today).reverse()
         return context
