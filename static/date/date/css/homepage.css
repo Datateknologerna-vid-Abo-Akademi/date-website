@@ -699,5 +699,5 @@ ul#logo-list {
 }
 
 .heading-link a:hover{
-    color: var(--primaryColorLighter)
+    color: var(--textColorMedium)
 }
