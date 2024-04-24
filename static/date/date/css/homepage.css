@@ -200,7 +200,7 @@ div.news-content a{
 }
 
 div.news-content a:hover{
-    color: var(--textColorDarkish);
+    color: var(--linkColorDarkHover);
 }
 
 .more-news{
@@ -208,7 +208,7 @@ div.news-content a:hover{
 }
 
 .more-news:hover{
-    color: var(--textColorDarkish);
+    color: var(--linkColorDarkHover);
 }
 
 .news-header{
@@ -336,7 +336,8 @@ div.news-content a:hover{
   
 .evet-card a:hover{
     background-color: inherit;
-    color: var(--textColorDarkish);
+    border-top: 2px solid var(--linkColorDarkHover);
+    color: var(--linkColorDarkHover);
   }
   
 .evet-card a:focus{
@@ -435,7 +436,7 @@ div.news-content a:hover{
 .more-events-button:hover{
     transition: 0.2s;
     scale: 1.01;
-    color: var(--textColorDarkish);
+    color: var(--linkColorDarkHover);
 }
 /*Events end*/
 
@@ -486,6 +487,26 @@ div.calendar-container a {
   box-shadow: 0 0 0 0;
 }
 
+.vanilla-calendar-day__btn_today {
+    color: var(--textColorLight) !important;
+    background-color: #545454 !important;
+}
+
+.vanilla-calendar-day__btn_today:hover {
+    color: var(--textColorLight) !important;
+    background-color: #282828 !important;
+}
+
+.vanilla-calendar-day__btn_selected {
+    color: var(--textColorLight) !important;
+    background-color: #A3A3A3 !important;
+}
+
+.vanilla-calendar-day__btn_selected:hover {
+    color: var(--textColorLight) !important;
+    background-color: #7A7A7A !important;
+}
+
 .clearfix {
   padding: 10px;
   text-align: center;
@@ -504,15 +525,19 @@ div.calendar-container a {
   background-color: var(--linkColorDark) !important;
 }
 
+.calendar-eventday:hover {
+    background-color: var(--linkColorDarkHover) !important;
+}
+
 .calendar-eventday-popup {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
-  color: var(--linkColorDarkHover);
+  color: var(--linkColorDark);
   font-size: 0.75rem;
 }
 
 .calendar-eventday-popup:hover {
-    color: black;
+    color: var(--linkColorDarkHover);
 }
 
 /*Calendar end*/
@@ -564,7 +589,7 @@ ul#logo-list {
 }
 
 .extra-container a:hover, .mobile-extra-container a:hover{
-    color: var(--textColorDarkish);
+    color: var(--linkColorDarkHover);
 }
 
 /*extras end*/
@@ -584,7 +609,7 @@ ul#logo-list {
 }
 
 .logo-container a:hover {
-    color: var(--textColorDarkish);
+    color: var(--linkColorDarkHover);
 }
 
 .logo-container img {
@@ -666,4 +691,13 @@ ul#logo-list {
     .date-25 {
         left: 80%;
     }
+}
+
+/*misc*/
+.heading-link a{
+    color: var(--textColorDark)
+}
+
+.heading-link a:hover{
+    color: var(--textColorMedium)
 }
