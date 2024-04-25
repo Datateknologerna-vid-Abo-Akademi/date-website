@@ -493,17 +493,14 @@ div.calendar-container a {
 }
 
 .vanilla-calendar-day__btn_today:hover {
-    color: var(--textColorLight) !important;
     background-color: #282828 !important;
 }
 
 .vanilla-calendar-day__btn_selected {
-    color: var(--textColorLight) !important;
     background-color: #A3A3A3 !important;
 }
 
 .vanilla-calendar-day__btn_selected:hover {
-    color: var(--textColorLight) !important;
     background-color: #7A7A7A !important;
 }
 
