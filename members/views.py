@@ -54,6 +54,7 @@ class UserinfoView(View):
 
 
 class CertificateView(View):
+    @method_decorator(login_required)
     def get(self, request):
         icons = ['atom', 'asterisk', 'bahai', 'certificate', 'cog', 'compact-disc', 'snowflake']
         user = request.user

@@ -40,6 +40,8 @@
         <section id="news" class="news-events">
             <div id="main" class="main-container">
                 <div class="feed-container">
+                    <h3 class="news-header header-border-bottom mt-3 heading-link"><a href="/news/">Nyheter</a>
+                    </h3>
                     <div class="news-container">
                         {% for ne in news%}
                             <div class="news-content news-box header-border-bottom">
@@ -56,7 +58,7 @@
                 </div>
                 <div class="sidebar-container">
                     <div class="events-container">
-                        <h3 class="header-border-bottom mt-3">Evenemang</h3>
+                        <h3 class="header-border-bottom mt-3 heading-link"><a href="/events/">Evenemang</a></h3>
                             {{ calendar_events|json_script:"calendar_json" }}
                         <div class="calendar">
                         </div>
@@ -108,14 +110,14 @@
                     </div>
                     <div class="extra-container">
                         <h3 class="mt-3 header-border-bottom">Annat</h3>
-                        <h5>Trakasseriombud</h5>
+                        <h5 class="heading-link"><a href="/social/harassment/">Trakasseriombud</a></h5>
                         <p>Om du upplever trakasserier i samband med Demons verksamhet, vänligen <a href="{% url "social:harassment" %}">rapportera</a>  detta via hemsidan. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar.</p>
                             <h5 id="joke-header">Joke</h5>
                             <p id="joke-string"></p>
                     </div>
                 </div>
                 <div class="mobile-events-container">
-                    <h3 class="header-border-bottom mt-3">Evenemang</h3>
+                    <h3 class="header-border-bottom mt-3 heading-link"><a href="/events/">Evenemang</a></h3>
                     {{ calendar_events|json_script:"calendar_json" }}
                     <div class="calendar">
                     </div>
@@ -165,7 +167,7 @@
                 </div>
                 <div class="mobile-extra-container">
                     <h3 class="mt-3 header-border-bottom">Annat</h3>
-                    <h5>Trakasseriombud</h5>
+                    <h5 class="heading-link"><a href="/social/harassment/">Trakasseriombud</a></h5>
                     <p>Om du upplever trakasserier i samband med Demons verksamhet, vänligen <a href="{% url "social:harassment" %}">rapportera</a>  detta via hemsidan. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar.</p>
                         <h5 id="joke-header">Joke</h5>
                         <p id="joke-string"></p>
@@ -196,7 +198,8 @@
             const tempDate = new Date(o[1].eventFullDate);
             let hours = tempDate.getHours();
             let minutes = tempDate.getMinutes();
-            // Ensure minutes are two digits
+            // Ensure hours and minutes are displayed with two digits
+            hours = hours < 10 ? '0' + hours : hours;
             minutes = minutes < 10 ? '0' + minutes : minutes;
             o[1].html += `${hours}:${minutes}</br>${o[1].eventTitle}</a>`;
         });

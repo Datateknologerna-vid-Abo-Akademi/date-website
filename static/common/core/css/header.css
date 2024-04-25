@@ -24,13 +24,13 @@ nav{
     box-shadow: none;
 }
 
-.navbar-nav a:hover, .navbar-nav .dropdown-menu a:hover {
-    background-color: var(--primaryColorLight);
+.navbar-nav a:hover {
+    background-color: var(--navHoverHighlight);
     border-radius: var(--defaultRadius);
 }
 
 .navbar-nav button:hover {
-    background-color: var(--primaryColorLight);
+    background-color: var(--navHoverHighlight);
     border-radius: var(--defaultRadius);
 }
 
@@ -44,8 +44,15 @@ li .dropdown-menu {
     background-color: var(--primaryColorTransparent);
 }
 
-.navbar-nav li a {
-color: var(--textColorLight) !important;
+.navbar-nav li a, .dropdown-item {
+    color: var(--textColorLight) !important;
+    border-radius: var(--defaultRadius);
+}
+
+.navbar-nav li a:active, .dropdown-item:active {
+    color: var(--textColorLightish) !important;
+    border-radius: var(--defaultRadius);
+    background-color: var(--navClickHighlight) !important;
 }
 
 @media (min-width: 1200px){

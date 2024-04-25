@@ -2,26 +2,29 @@
 /* use with var(--color); included in base.html*/
 
 :root {
-    --primaryColor: blue;
-    --primaryColorLight:  lightblue;
-    --primaryColorLighte:turquoise;
-    --primaryColorLighter:turquoise;
-    --primaryColorTransparent: rgba(0,0,0,0.9);
-    --primaryColorTransparenter: rgba(0,0,0,0.8);
+    --primaryColor: #0000FF;
+    --primaryColorLight:  #2020FF;
+    --primaryColorLighte:#3d3dFF;
+    --primaryColorLighter:#5050FF;
+    --primaryColorTransparent: rgba(0,0,255,0.9);
+    --primaryColorTransparenter: rgba(0,0,255,0.8);
     --secondaryColor: #fff;
     --secondaryColorDarker: #eaeaea;
     --textColorLight: #fff;
     --textColorLightish: #eaeaea;
     --textColorDark: #000;
     --textColorDarkish: #202020;
+    --textColorMedium: #606060;
     --helpText: #888;
     --helpTextLighter: rgb(199, 199, 199);
-    --linkColorDark: #3a80c3;
-    --linkColorDarkHover: #3a80c3;
-    --linkColorLight: rgb(208, 255, 0);
-    --linkColorLightHover: rgb(146, 179, 0);
-    --warning: rgb(216, 153, 146);
-    --warning-darker: rgb(213, 91, 78);
+    --linkColorDark: #0080FF;
+    --linkColorDarkHover: #004080;
+    --linkColorLight: rgb(0, 255, 255);
+    --linkColorLightHover: rgb(0, 192, 192);
+    --warning: rgb(255, 0, 0);
+    --warning-darker: rgb(128, 0, 0);
+    --navClickHighlight: rgba(255, 255, 255, 0.25);
+    --navHoverHighlight: rgba(255, 255, 255, 0.15);
     --defaultPadding: 20px;
     --defaultRadius: 5px;
 }
