@@ -63,8 +63,16 @@ class EventDetailView(DetailView):
     def get_template_names(self):
         event_title = self.get_context_data().get('event').title.lower()
         logger.debug(event_title)
-        if event_title in ['årsfest', 'årsfest gäster']:
+        if event_title in ['årsfest', 'årsfest gäster']: # TODO: Selectable template
             return ['events/arsfest.html']
+        elif event_title in ['100 baal']:
+            return ['events/kk100_detail.html']
+        elif event_title in ['baal']:
+            return ['events/baal_detail.html']
+        elif event_title in ['tomtejakt']:
+            return ['events/tomtejakt.html']
+        elif event_title in ['wappmiddag']:
+            return ['events/wappmiddag.html']
         if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
             return ['events/event_passcode.html']
         return [self.template_name]
