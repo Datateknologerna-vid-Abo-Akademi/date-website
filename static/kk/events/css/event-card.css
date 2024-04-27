@@ -1,0 +1,48 @@
+.card {
+    border-radius: var(--defaultRadius);
+  }
+  
+.card .fa-chevron-right{
+    transition: .3s;
+  }
+  
+.card a:hover .fa-chevron-right{
+    transform: translateX(10px);
+  }
+  
+.evet-card > .card .list-inline-item {
+    color: var(--helpText);
+    font-size: 14px;
+  }
+  
+.evet-card > .card .badge {
+    background: var(--primaryColorLighter);
+  }
+  
+.evet-card > .card {
+    background: var(--secondaryColor);
+  }
+
+.card-body a{
+    color: var(--linkColor);
+    border-color: var(--linkColor);
+  }
+  
+.card-body a:active{
+    color: var(--linkColor);
+  }
+  
+.card-body a:hover{
+    background-color: inherit;
+    color: var(--linkSecondaryHover);
+    border-color: var(--linkSecondaryHover);
+  }
+  
+.card-body a:focus{
+    background-color: inherit;
+    box-shadow: none;
+  }
+
+.event-date-txt{
+  white-space: nowrap;
+}
