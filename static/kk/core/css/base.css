@@ -61,7 +61,6 @@ div a:hover{
     color: var(--textColorDarkish);
     padding: var(--defaultPadding);
     border-radius: var(--defaultRadius);
-    overflow: scroll;
 }
 
 /*  BUTTON */
