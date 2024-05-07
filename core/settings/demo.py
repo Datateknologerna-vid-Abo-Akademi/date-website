@@ -59,7 +59,4 @@ CONTENT_VARIABLES = {
         ["fa-linkedin-in", "https://www.linkedin.com/company/datateknologerna-vid-%C3%A5bo-akademi-rf/"],
         ["fa-github", "https://github.com/Datateknologerna-vid-Abo-Akademi"],
     ],
-    "ASSOCIATION_LOGO": "core/images/albin.ico",
-    "ASSOCIATION_HEADER_LOGO": "core/images/albin_black.png",
-    "ASSOCIATION_FOOTER_LOGO": "core/images/albin_black.png",
 }

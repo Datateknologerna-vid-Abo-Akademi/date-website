@@ -58,9 +58,8 @@
                 </div>
                 <div class="sidebar-container">
                     <div class="events-container">
-                        {% for ad in SIDEBAR_ADS %}
-                            <a id="{{ ad.0 }}" href="{{ ad.1 }}"><img class="sidebar-logo-container" src={% static ad.2 %} alt="{{ ad.0 }}"></a>
-                        {% endfor %}
+                        <a id="andritz-logo" href="https://www.andritz.com/group-en"><img class="sidebar-logo-container" src={% static "/core/images/andritzLogo.png" %} alt="Andritz"></a>
+                        <a id="paroc-logo" href="https://www.paroc.fi/"><img class="sidebar-logo-container" src={% static "/core/images/paroc.png" %} alt="Paroc"></a>
                         <h3 class="header-border-bottom mt-3">Evenemang</h3>
                             {{ calendar_events|json_script:"calendar_json" }}
                         <div class="calendar">
