@@ -59,13 +59,6 @@ CONTENT_VARIABLES = {
         ["fa-instagram", "https://www.instagram.com/kemistklubben/"],
         ["fa-linkedin-in", "https://www.linkedin.com/company/kemistklubben-vid-%C3%A5bo-akademi-rf/"],
     ],
-    "SIDEBAR_ADS": [
-        ["andritz-logo", "https://www.andritz.com/group-en", "core/images/andritzLogo.png"],
-        ["paroc-logo", "https://www.paroc.fi/", "core/images/paroc.png"],
-    ],
-    "ASSOCIATION_LOGO": "core/images/kklogo.ico",
-    "ASSOCIATION_HEADER_LOGO": "core/images/stina.png",
-    "ASSOCIATION_FOOTER_LOGO": "core/images/axel.png",
 
     # Alumni
     "ALUMNI_ASSOCIATION_NAME": "Axels och Stinas Gamyler",
