@@ -12,7 +12,7 @@
         <script src="{% static 'js/live-attendee-list.js' %}"></script>
         <style>
             .background-img{
-                background: url("{% static 'core/images/wapp.jpeg' %}") no-repeat center center fixed;
+                background: url("{% if event.image %}{{ event.image.url }}{% elif event.s3_image %}{{ event.s3_image.url }}{% endif %}") no-repeat center center fixed;
                 -webkit-background-size: cover;
                 -moz-background-size: cover;
                 -o-background-size: cover;
