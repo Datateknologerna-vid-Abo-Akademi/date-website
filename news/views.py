@@ -20,7 +20,7 @@ def article(request, slug):
 
 
 def author(request, author):
-    articles = models.Post.objects.filter(author__username__exact=author, published=True).order_by('modified_time')
+    articles = models.Post.objects.filter(author__username__exact=author, published=True).order_by('-published_time')
     return render(request, 'news/author.html', {'articles': articles})
 
 
