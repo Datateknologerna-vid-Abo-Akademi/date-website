@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'core/base.html' %}
 {% load static %}
 {% load i18n %}
 {% block title %}{{page.title}}{% endblock %}
@@ -13,7 +13,7 @@
     <div class="container-content">
         <h1>Lucia - Kemistklubben vid Åbo Akademi</h1>
         <a class="candidates-button" href="{% url 'lucia:candidates' %}"><h2>Kandidaterna</h2></a>
-        <img class="lucia-img" src="{% static 'images/luciapic.png' %}" alt="lucia">
+        <img class="lucia-img" src="{% static 'core/images/luciapic.png' %}" alt="lucia">
         <h1 class="lucia-text">Sankta Lucia, ljusklara hägring,
 
             sprid i vår vinternatt ljus av din fägring.

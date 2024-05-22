@@ -1,0 +1,154 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{% load app_filters %}
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block content %}
+    <head>
+        <link rel="stylesheet" href="{% static 'events/css/kk100.css' %}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+        <script src="{% static 'js/live-attendee-list.js' %}"></script>
+        <style>
+            .twinkling{
+            background:transparent url("{% static 'core/images/twinkling.png' %}") repeat top center;
+            }
+            .stars {
+            background:#030826 url("{% static 'core/images/twinklingstars.png' %}") repeat top center;
+            }
+        </style>
+    </head>
+    <div class="background-img">
+        <div class="container-md min-vh-100 p-1">
+            <div class="stars"></div>
+            <div class="twinkling"></div>
+            <div class="container-size">
+                <div class="content header-box">
+                    <img class="header-logo" src="{% static 'core/images/100logogold.png' %}">
+                    <h1 class="baal-header">100 Kemistbaal</h1>
+                    <div class="baal-nav">
+                        <a class="baal-link" onclick="showPage(this)" href="#/main" data-nav="main">Välkommen</a>
+                        {% for page in staticpages %}
+                            <a class="baal-link" onclick="showPage(this)" href="#/{{ page.slug }}" data-nav="{{ page.slug }}">{{ page.title }}</a>
+                        {% endfor %}
+                        <a class="baal-link" onclick="showPage(this)" href="#/anmalan" data-nav="anmalan">Anmälan</a>
+                        <a class="baal-link" onclick="showPage(this)" href="#/anmalda" data-nav="anmalda">Anmälda</a>
+                    </div>
+                </div>
+                <div class="text-content">
+                    {% for page in staticpages %}
+                        <div id="{{ page.slug }}" class="content baal-content {{ page.slug }} hidden">
+                            <h1>{{ page.title }}</h1>
+                            <p>{{ page.content | safe }}</p>
+                        </div>
+                    {% endfor %}
+                    <div id="main" class="content baal-content main">
+                        <h1 class="header">{{ event.title }}</h1>
+                        <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
+                        <p>{{ event.content | safe }}</p>
+                    </div>
+                </div>
+                <div class="content baal-content anmalan hidden break-words">
+                    <h2 id="sign-up">{% trans "Anmälning" %}</h2>
+                    {% if event.registration_is_open_members and user.is_authenticated %}
+                        {% include 'events/registering.html' %}
+                    {% elif event.registration_is_open_others %}
+                        {% include 'events/registering.html' %}
+                    {% elif event.registation_past_due %}
+                        <h4 id="no-registration">{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }} {% trans 'sedan' %}</h4>
+                    {% elif not event.registation_past_due and user.is_authenticated %}
+                        <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_members | timeuntil }}</p>
+                    {% else %}
+                        <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_others | timeuntil }}</p>
+                    {% endif %}
+                </div>
+                <div id="anmalda" class="content baal-content anmalda hidden">
+                    {% if event|show_attendee_list %}
+                        {% if event.sign_up_max_participants != 0 %}
+                            <p>Det finns {{ event.sign_up_max_participants }} platser!</p>
+                        {% endif %}
+                        <h1>{% trans "Anmälda" %}</h1>
+                        <table id="attendees">
+                            <tr id="attendees-header"
+                                {% if not event.get_registrations %} style="display: none;"
+                                {% endif %}>
+                                    <th>#</th>
+                                    <th>{% trans "Namn" %}</th>
+                                    {% for preference in event.get_registration_form_public_info reversed %}
+                                        <th>{{ preference }}</th>
+                                    {% endfor %}
+                            </tr>
+                            {% for attendee in event.get_registrations %}
+                                <tr {% if forloop.counter > event.sign_up_max_participants and event.sign_up_max_participants != 0 %} class="event-full" {% endif %} >
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{% if not attendee.anonymous %}{{ attendee.user }}{% else %}
+                                        <i>{% trans "Anonymt" %}</i>{% endif %}</td>
+                                    {% for preference in event.get_registration_form_public_info reversed %}
+                                        <td>{{ attendee | get_preference:preference }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% empty %}
+                                <p id="no-attendee">{% trans "Inga anmälda, var den första att anmäla dig!" %}</p>
+                            {% endfor %}
+                        </table>
+                    {% else %}
+                        <h4 id="no-attendee">{% trans 'Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta styrelsen vid behov.' %}</h4>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        $( document ).ready(function() {
+            if(window.location.hash){
+                currentPage()
+            }
+        });
+
+        function showPage(element){
+            $(".baal-content").addClass("hidden");
+            $(`.${element.dataset.nav}`).toggleClass("hidden")
+            let pageHash = window.location.hash.substr(1).replace(/\//g,'');
+        }
+
+        function currentPage(element){
+            $(".baal-content").addClass("hidden");
+            let pageHash = window.location.hash.substr(1).replace(/\//g,'');
+            $(`.${pageHash}`).toggleClass("hidden")
+        }
+
+        // Get the form element
+        const form = document.querySelector('form');
+
+        // Attach an event listener to the form's submit event
+        form.addEventListener('submit', event => {
+          // Select all input elements whose id contains "Årskurs"
+          const inputElements = document.querySelectorAll('input[id*="Årskurs"]');
+
+          // Loop through each input element
+          inputElements.forEach(input => {
+            // Get the input value
+            const inputValue = input.value.trim();
+
+            // Check if the input is filled in
+            if (inputValue) {
+              // Validate the input format
+              if (!/^\d{4}$/.test(inputValue)) {
+                // Display an error message
+                alert(`Input ${inputValue} är inte i YYYY format, t.ex. 2020.`);
+                // Clear the input value
+                input.value = '';
+                // Prevent the form from being submitted
+                event.preventDefault();
+              }
+            }
+          });
+        });
+
+
+
+    </script>
+{% endblock %}
