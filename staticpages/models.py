@@ -41,6 +41,7 @@ class StaticUrl(models.Model):
     url = models.CharField(_('Url'), max_length=200)
     category = models.ForeignKey(StaticPageNav, on_delete=models.CASCADE, blank=True)
     dropdown_element = models.PositiveSmallIntegerField(_('#'), blank=True)
+    logged_in_only = models.BooleanField(_('Visa endast åt inloggade användare'), default=False)
 
     def __str__(self):
         return self.title
