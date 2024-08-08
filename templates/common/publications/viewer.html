@@ -5,115 +5,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Viewer - {{ pdf_file.title }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf_viewer.min.css">
     <link rel="stylesheet" href="{% static 'publications/css/publications.css' %}">
-    <script src="{% static 'publications/pdf.mjs' %}" type="module"></script>
+    <script src="{% static 'publications/js/pdf-viewer.js' %}" type="module"></script>
 </head>
 <body>
     <header>
         <h1>{{ pdf_file.title }}</h1>
     </header>
     <main>
-        <div id="pdf-controls">
-            <button id="prev-page">Previous</button>
-            <span id="page-num"></span> / <span id="page-count"></span>
-            <button id="next-page">Next</button>
-            <input type="number" id="page-input" min="1">
-            <button id="go-to-page">Go</button>
-            <select id="zoom-select">
-                <option value="0.5">50%</option>
-                <option value="1" selected>100%</option>
-                <option value="1.5">150%</option>
-                <option value="2">200%</option>
-            </select>
+        <div class="container">
+            <div id="pdf-controls">
+                <div id="page-navigation">
+                    <button id="prev-page" aria-label="Previous page">&#8592;</button>
+                    <span id="page-num"></span> / <span id="page-count"></span>
+                    <button id="next-page" aria-label="Next page">&#8594;</button>
+                </div>
+                <div class="desktop-only">
+                    <input type="number" id="page-input" min="1">
+                    <button id="go-to-page">Go</button>
+                    <select id="zoom-select">
+                        <option value="0.5">50%</option>
+                        <option value="1" selected>100%</option>
+                        <option value="1.5">150%</option>
+                        <option value="2">200%</option>
+                    </select>
+                </div>
+            </div>
+            <div id="pdf-viewer"></div>
+            <div id="mobile-navigation">
+                <button id="prev-page-mobile" aria-label="Previous page">&#8592;</button>
+                <button id="next-page-mobile" aria-label="Next page">&#8594;</button>
+            </div>
         </div>
-        <div id="pdf-viewer"></div>
     </main>
     <script type="module">
-        import * as pdfjsLib from '{% static "publications/pdf.mjs" %}';
-
-        let pdfDoc = null;
-        let pageNum = 1;
-        let pageRendering = false;
-        let pageNumPending = null;
-        let scale = 1;
-        const pdfUrl = "{{ pdf_url|safe }}";
-        const viewer = document.getElementById('pdf-viewer');
-
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '{% static "publications/pdf.worker.mjs" %}';
-
-        async function renderPage(num) {
-            pageRendering = true;
-            const page = await pdfDoc.getPage(num);
-            const viewport = page.getViewport({scale: scale});
-            const canvas = document.createElement('canvas');
-            canvas.className = 'page-canvas';
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport
-            };
-
-            await page.render(renderContext).promise;
-            pageRendering = false;
-            if (pageNumPending !== null) {
-                renderPage(pageNumPending);
-                pageNumPending = null;
-            }
-
-            viewer.innerHTML = '';
-            viewer.appendChild(canvas);
-            document.getElementById('page-num').textContent = num;
-        }
-
-        function queueRenderPage(num) {
-            if (pageRendering) {
-                pageNumPending = num;
-            } else {
-                renderPage(num);
-            }
-        }
-
-        document.getElementById('prev-page').addEventListener('click', () => {
-            if (pageNum <= 1) return;
-            pageNum--;
-            queueRenderPage(pageNum);
-        });
-
-        document.getElementById('next-page').addEventListener('click', () => {
-            if (pageNum >= pdfDoc.numPages) return;
-            pageNum++;
-            queueRenderPage(pageNum);
-        });
-
-        document.getElementById('go-to-page').addEventListener('click', () => {
-            const input = document.getElementById('page-input');
-            const n = parseInt(input.value);
-            if (n > 0 && n <= pdfDoc.numPages) {
-                pageNum = n;
-                queueRenderPage(pageNum);
-            }
-        });
-
-        document.getElementById('zoom-select').addEventListener('change', (e) => {
-            scale = parseFloat(e.target.value);
-            renderPage(pageNum);
-        });
-
-        async function initPDFViewer() {
-            try {
-                pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
-                document.getElementById('page-count').textContent = pdfDoc.numPages;
-                renderPage(pageNum);
-            } catch (error) {
-                console.error('Error loading PDF:', error);
-                viewer.innerHTML = '<p>Error loading PDF. Please try again later.</p>';
-            }
-        }
-
-        initPDFViewer();
+        import {initPDFViewer} from '{% static "publications/js/publications.js" %}';
+        initPDFViewer("{{ pdf_url|safe }}");
     </script>
 </body>
 </html>
