@@ -8,9 +8,6 @@ on:
     branches:
       - develop
   workflow_dispatch:
-    branches:
-      - develop
-      - master
 
 jobs:
   test:
@@ -19,6 +16,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
 
       - name: Run django unit tests
         run: |
