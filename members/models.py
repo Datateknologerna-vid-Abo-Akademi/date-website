@@ -158,6 +158,7 @@ class AlumniSignUp(models.Model):
     work_title = models.CharField(max_length=200, blank=True)
     tfif_membership = models.CharField(max_length=50, blank=True)
     alumni_newsletter_consent = models.BooleanField(default=False)
+    operation = models.CharField(max_length=200, blank=True)
     # Internal data
     signup_date = models.DateTimeField(_("Registreringsdatum"), auto_now_add=True)
     acknowledge = models.BooleanField(_("Processerad"), default=False)  # For acknowledgement of adding into registry

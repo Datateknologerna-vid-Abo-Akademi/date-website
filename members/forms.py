@@ -178,6 +178,10 @@ class AlumniSignUpForm(forms.ModelForm):
         ('nej', 'Nej'),
         ('vet inte', 'Vet inte')
     )
+    operation_choices = (
+        ('CREATE', 'Registrera mig som ny medlem'),
+        ('UPDATE', 'Uppdatera mina uppgifter'),
+    )
 
     name = forms.CharField(max_length=200, required=True, help_text=_('detta fält är obligatoriskt'), label=_('Namn'))
     email = forms.EmailField(max_length=320, help_text=_('detta fält är obligatoriskt'), label=_('E-postadress'),
@@ -190,10 +194,13 @@ class AlumniSignUpForm(forms.ModelForm):
     tfif_membership = forms.ChoiceField(choices=tfif_choices, label=_('TFiF medlemskap'), required=False)
     alumni_newsletter_consent = forms.BooleanField(label=_('Jag tar gärna emot information om alumnevenemang'),
                                                    required=False)
+    operation = forms.ChoiceField(choices=operation_choices, label=_('Jag vill:'),
+                                  required=True)
 
     class Meta:
         model = AlumniSignUp
         fields = (
+            'operation',
             'name',
             'email',
             'phone_number',
