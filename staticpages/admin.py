@@ -15,7 +15,7 @@ class UrlInline(OrderableAdmin, admin.TabularInline):
     ordering_field = ('dropdown_element',)
     ordering = ['dropdown_element']
     ordering_field_hide_input = True
-    fields = ('dropdown_element', 'title', 'url')
+    fields = ('dropdown_element', 'title', 'url', 'logged_in_only')
 
 
 @admin.register(StaticPageNav)

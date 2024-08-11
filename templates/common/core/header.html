@@ -49,7 +49,7 @@
                                     {% if page.category|lower == category.category_name|lower %}
                                         {% if user.is_authenticated and page.url == "/members/login/" %}
                                             <li><form action="{% url 'logout' %}" method="post">{% csrf_token %}<button class="dropdown-item">Logga ut</button></form></li>
-                                        {% else %}
+                                        {% elif not page.logged_in_only or user.is_authenticated %}
                                             <li><a class="dropdown-item" href="{{ page.url }}">{{page.title}}</a></li>
                                         {% endif %}
                                     {% endif %}
