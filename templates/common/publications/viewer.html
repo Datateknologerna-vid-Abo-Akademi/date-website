@@ -7,7 +7,7 @@
     <title>PDF Viewer - {{ pdf_file.title }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf_viewer.min.css">
     <link rel="stylesheet" href="{% static 'publications/css/publications.css' %}">
-    <script src="{% static 'publications/js/pdf-viewer.js' %}" type="module"></script>
+    <script src="{% static 'publications/js/main.js' %}" type="module"></script>
 </head>
 <body>
     <header>
@@ -22,9 +22,9 @@
                     <button id="next-page" aria-label="Next page">&#8594;</button>
                 </div>
                 <div class="desktop-only">
-                    <input type="number" id="page-input" min="1">
+                    <input type="number" id="page-input" min="1" aria-label="Go to page">
                     <button id="go-to-page">Go</button>
-                    <select id="zoom-select">
+                    <select id="zoom-select" aria-label="Zoom level">
                         <option value="0.5">50%</option>
                         <option value="1" selected>100%</option>
                         <option value="1.5">150%</option>
@@ -32,16 +32,12 @@
                     </select>
                 </div>
             </div>
-            <div id="pdf-viewer"></div>
+            <div id="pdf-viewer" data-pdf-url="{{ pdf_url|safe }}"></div>
             <div id="mobile-navigation">
                 <button id="prev-page-mobile" aria-label="Previous page">&#8592;</button>
                 <button id="next-page-mobile" aria-label="Next page">&#8594;</button>
             </div>
         </div>
     </main>
-    <script type="module">
-        import {initPDFViewer} from '{% static "publications/js/publications.js" %}';
-        initPDFViewer("{{ pdf_url|safe }}");
-    </script>
 </body>
 </html>

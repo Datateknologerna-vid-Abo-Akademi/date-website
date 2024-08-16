@@ -4,5 +4,6 @@ from . import views
 app_name = 'publications'
 
 urlpatterns = [
-    path('view/<int:pk>/', views.pdf_view, name='pdf_view'),
+    path('', views.pdf_list, name='pdf_list'),
+    path('view/<slug:slug>/', views.pdf_view, name='pdf_view'),
 ]
