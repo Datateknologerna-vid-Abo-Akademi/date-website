@@ -1,3 +1,5 @@
+import os
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils.text import slugify
@@ -42,6 +44,8 @@ class PDFFile(models.Model):
         super().save(*args, **kwargs)
 
     def count_pdf_pages(self):
+        if not os.path.exists(self.file.path):
+            return 0
         with pymupdf.open(self.file.path) as pdf:
             return pdf.page_count
 

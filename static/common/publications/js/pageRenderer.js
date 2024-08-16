@@ -44,7 +44,11 @@ async function renderPage(state, pageNumber) {
 }
 
 function shouldRenderTwoPages(state) {
-    return state.pagesPerView === 2 && state.currentPage > 1 && state.currentPage < state.pdfDoc.numPages - 1;
+    // The cover page (page 1) and the last page should never be rendered in two-page view.
+    if (state.currentPage === 1 || state.currentPage >= state.pdfDoc.numPages) {
+        return false;
+    }
+    return state.pagesPerView === 2 && state.currentPage > 1 && state.currentPage < state.pdfDoc.numPages;
 }
 
 function showErrorMessage(message) {
