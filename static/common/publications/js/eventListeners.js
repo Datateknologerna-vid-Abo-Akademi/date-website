@@ -3,18 +3,44 @@ import { updateState, shouldRenderTwoPages } from './pdfViewer.js';
 
 export function setupEventListeners(state) {
     document.getElementById('prev-page').addEventListener('click', () => {
-        if (state.currentPage <= 1) return;
-        const newPage = shouldRenderTwoPages() ? state.currentPage - 2 : state.currentPage - 1;
-        updateState({ currentPage: Math.max(1, newPage) });
-        renderPages(state);
-    });
+    if (state.currentPage <= 1) return;
+
+    let newPage;
+
+    // If currently on the last page in two-page view (6-6), go back to 4-5
+    if (state.currentPage === state.pdfDoc.numPages && shouldRenderTwoPages(state)) {
+        // Jump to the two pages before the last pair
+        newPage = state.currentPage - 2;
+    } else if (shouldRenderTwoPages(state)) {
+        // Regular two-page navigation
+        newPage = state.currentPage - 2;
+    } else {
+        // Standard single-page navigation
+        newPage = state.currentPage - 1;
+    }
+
+    updateState({ currentPage: Math.max(1, newPage) });
+    renderPages(state);
+});
+
+
+
 
     document.getElementById('next-page').addEventListener('click', () => {
-        if (state.currentPage >= state.pdfDoc.numPages) return;
-        const newPage = shouldRenderTwoPages() ? state.currentPage + 2 : state.currentPage + 1;
-        updateState({ currentPage: Math.min(state.pdfDoc.numPages, newPage) });
-        renderPages(state);
-    });
+    if (state.currentPage >= state.pdfDoc.numPages) return;
+
+    let newPage;
+
+    if (shouldRenderTwoPages(state) && state.currentPage === state.pdfDoc.numPages - 2) {
+        newPage = state.pdfDoc.numPages;
+    } else {
+        newPage = shouldRenderTwoPages(state) ? state.currentPage + 2 : state.currentPage + 1;
+    }
+
+    updateState({ currentPage: Math.min(state.pdfDoc.numPages, newPage) });
+    renderPages(state);
+});
+
 
     document.getElementById('go-to-page').addEventListener('click', () => {
         const input = document.getElementById('page-input');

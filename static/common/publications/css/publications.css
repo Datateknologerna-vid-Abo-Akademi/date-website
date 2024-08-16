@@ -141,3 +141,8 @@ main {
         align-items: center;
     }
 }
+
+#pdf-viewer.single-page-view .page-canvas {
+    margin-left: auto;
+    margin-right: auto;
+}
