@@ -1,43 +1,45 @@
+{% extends 'core/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
+{% load i18n %}
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - CTF{% endblock %}
+
+{% block content %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Viewer - {{ pdf_file.title }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf_viewer.min.css">
     <link rel="stylesheet" href="{% static 'publications/css/publications.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css">
     <script src="{% static 'publications/js/main.js' %}" type="module"></script>
 </head>
 <body>
     <header>
         <h1>{{ pdf_file.title }}</h1>
     </header>
-    <main>
-        <div class="container">
-            <div id="pdf-controls">
-                <div id="page-navigation">
-                    <button id="prev-page" aria-label="Previous page">&#8592;</button>
-                    <span id="page-num"></span> / <span id="page-count"></span>
-                    <button id="next-page" aria-label="Next page">&#8594;</button>
-                </div>
-                <div class="desktop-only">
-                    <input type="number" id="page-input" min="1" aria-label="Go to page">
-                    <button id="go-to-page">Go</button>
-                    <select id="zoom-select" aria-label="Zoom level">
-                        <option value="0.5">50%</option>
-                        <option value="1" selected>100%</option>
-                        <option value="1.5">150%</option>
-                        <option value="2">200%</option>
-                    </select>
-                </div>
+    <div class="pdf-container container">
+        <div id="pdf-controls">
+            <div id="page-navigation">
+                <button id="prev-page" aria-label="Previous page"><i class="las la-arrow-left"></i></button>
+                <span id="page-num"></span> / <span id="page-count"></span>
+                <button id="next-page" aria-label="Next page"><i class="las la-arrow-right"></i></button>
             </div>
-            <div id="pdf-viewer" data-pdf-url="{{ pdf_url|safe }}"></div>
-            <div id="mobile-navigation">
-                <button id="prev-page-mobile" aria-label="Previous page">&#8592;</button>
-                <button id="next-page-mobile" aria-label="Next page">&#8594;</button>
+            <div class="desktop-only">
+                <input type="number" id="page-input" min="1" aria-label="Go to page">
+                <button id="go-to-page">Go</button>
+                <select id="zoom-select" aria-label="Zoom level">
+                    <option value="0.5">50%</option>
+                    <option value="1" selected>100%</option>
+                    <option value="1.5">150%</option>
+                    <option value="2">200%</option>
+                </select>
             </div>
         </div>
-    </main>
+        <div id="pdf-viewer" data-pdf-url="{{ pdf_url|safe }}"></div>
+        <div id="mobile-navigation">
+            <button id="prev-page-mobile" aria-label="Previous page"><i class="las la-arrow-left"></i></button>
+            <button id="next-page-mobile" aria-label="Next page"><i class="las la-arrow-right"></i></button>
+        </div>
+    </div>
 </body>
-</html>
+{% endblock %}
