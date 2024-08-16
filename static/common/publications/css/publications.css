@@ -1,3 +1,5 @@
+@import url('https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css');
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -5,14 +7,16 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    background-color: #f0f0f0;
+    background-color: var(--primaryColorLight);
+    color: var(--textColorLight);
 }
 
 header {
-    background-color: #ffffff;
     padding: 1rem;
     text-align: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-top: 2%;
+    color: var(--textColorLightish);
 }
 
 main {
@@ -24,19 +28,30 @@ main {
     padding: 1rem;
 }
 
-.container {
-    max-width: 100%;
-    padding: 0 1rem;
+.pdf-container {
+    max-width: 90%;
+    height: auto;
+    padding: 1rem;
+    background-color: var(--primaryColorLight);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-radius: var(--defaultRadius);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    color: var(--textColorLightish);
+}
+
+h1 {
+    color: var(--textColorLightish);
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
 }
 
 #pdf-controls {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem; /* Reduced gap */
+    gap: 0.75rem; /* Adjusted gap */
     margin-bottom: 1rem;
     width: 100%;
     justify-content: center; /* Center align items */
@@ -46,28 +61,45 @@ main {
 #pdf-controls button,
 #pdf-controls input,
 #pdf-controls select {
-    padding: 0.5rem 0.75rem; /* Slightly reduced padding */
+    padding: 0.5rem 1rem; /* Adjusted padding */
     font-size: 0.9rem; /* Slightly smaller font */
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: #ffffff;
+    border: 1px solid var(--helpText);
+    border-radius: var(--defaultRadius);
+    background-color: var(--primaryColorLight); /* Adjusted background-color */
+    color: var(--textColorLight);
+    transition: background-color 0.3s, color 0.3s;
+    cursor: pointer;
+}
+
+#pdf-controls button:hover,
+#pdf-controls input:focus,
+#pdf-controls select:hover {
+    background-color: var(--primaryColorLighter);
 }
 
 #page-navigation {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 0.25rem; /* Reduced gap */
+    gap: 0.5rem; /* Adjusted gap */
 }
 
 #page-navigation button,
 #mobile-navigation button {
-    padding: 0.5rem 1rem; /* Reduced padding */
-    font-size: 1.2rem; /* Slightly smaller font */
-    background-color: #ffffff;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    padding: 0.5rem 1rem; /* Adjusted padding */
+    font-size: 1rem; /* Adjusted font-size */
+    background-color: var(--linkColorDark);
+    border: none;
+    color: #fff;
+    border-radius: var(--defaultRadius);
     cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+#page-navigation button:hover,
+#mobile-navigation button:hover {
+    background-color: var(--linkColorDarkHover);
+    transform: scale(1.05);
 }
 
 #page-num,
@@ -81,16 +113,18 @@ main {
     align-items: flex-start;
     flex-wrap: wrap;
     gap: 20px;
-    width: 100%; /* Take full width */
+
     min-height: 70vh; /* Minimum height to ensure visibility */
     overflow: auto;
+    padding: 1rem;
 }
 
 .page-canvas {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     max-width: 100%;
     height: auto;
-    min-width: 300px; /* Minimum width for single-page PDFs */
+    border-radius: var(--defaultRadius);
+    margin: 0 auto;
 }
 
 #mobile-navigation {
@@ -115,20 +149,13 @@ main {
 }
 
 @media (min-width: 768px) {
-    #pdf-controls {
-        justify-content: space-between;
-    }
-
     .desktop-only {
         display: flex;
-        gap: 0.5rem; /* Reduced gap */
+        gap: 0.75rem; /* Adjusted gap */
     }
 }
 
 @media (min-width: 1025px) {
-    #pdf-viewer.two-page-view {
-        justify-content: flex-start;
-    }
 
     #pdf-viewer.two-page-view .page-canvas {
         max-width: calc(50% - 10px);
@@ -139,6 +166,9 @@ main {
     #pdf-viewer {
         flex-direction: column;
         align-items: center;
+    }
+    .pdf-container {
+        max-width: 100%;
     }
 }
 
