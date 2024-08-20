@@ -15,7 +15,6 @@ import os
 import json
 
 import environ
-from django.conf.global_settings import STORAGES
 
 from .dependencies.ckeditor import *  # noqa
 
