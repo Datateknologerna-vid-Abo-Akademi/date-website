@@ -2,11 +2,11 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}{{ ASSOCIATION_NAME_SHORT }} - Publications{% endblock %}
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - {% trans "Publications" %}{% endblock %}
 
 {% block content %}
     <head>
-        <title>publications list</title>
+        <title>{% trans "Publications List" %}</title>
         <link rel="stylesheet" href="{% static 'publications/css/list.css' %}">
     </head>
     <body>
@@ -14,6 +14,7 @@
         <header>
             <h1>{% trans "Publications" %}</h1>
         </header>
+
         <div class="pdf-list">
             {% for pdf in page_obj %}
                 <div class="pdf-item">
@@ -38,21 +39,21 @@
 
         {% if page_obj.has_other_pages %}
             <div class="pagination">
-            <span class="step-links">
-                {% if page_obj.has_previous %}
-                    <a href="?page=1">&laquo; {% trans "first" %}</a>
-                    <a href="?page={{ page_obj.previous_page_number }}">{% trans "previous" %}</a>
-                {% endif %}
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo; {% trans "first" %}</a>
+                <a href="?page={{ page_obj.previous_page_number }}">{% trans "previous" %}</a>
+            {% endif %}
 
-                <span class="current">
-                    {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}.
-                </span>
-
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}">{% trans "next" %}</a>
-                    <a href="?page={{ page_obj.paginator.num_pages }}">{% trans "last" %} &raquo;</a>
-                {% endif %}
+            <span class="current">
+                {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}.
             </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">{% trans "next" %}</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">{% trans "last" %} &raquo;</a>
+            {% endif %}
+        </span>
             </div>
         {% endif %}
     </div>

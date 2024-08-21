@@ -3,17 +3,21 @@ from .models import PDFFile
 
 @admin.register(PDFFile)
 class PDFFileAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'publication_date', 'num_pages', 'file_size', 'is_public', 'uploaded_at', 'updated_at')
-    list_filter = ('is_public', 'uploaded_at', 'updated_at', 'publication_date')
+    list_display = ('title', 'author', 'publication_date', 'file_size', 'is_public', 'requires_login', 'uploaded_at', 'updated_at')
+    list_filter = ('is_public', 'requires_login', 'uploaded_at', 'updated_at', 'publication_date')
     search_fields = ('title', 'slug', 'description', 'author')
     prepopulated_fields = {'slug': ('title',)}
-    readonly_fields = ('uploaded_at', 'updated_at', 'file_size', 'num_pages')
+    readonly_fields = ('uploaded_at', 'updated_at', 'file_size')
     fieldsets = (
         (None, {
-            'fields': ('title', 'slug', 'author', 'publication_date', 'description', 'file', 'is_public')
+            'fields': ('title', 'slug', 'author', 'publication_date', 'description', 'file')
+        }),
+        ('Access Control', {
+            'fields': ('is_public', 'requires_login'),
+            'description': 'Control who can access this PDF.'
         }),
         ('File Information', {
-            'fields': ('file_size', 'num_pages'),
+            'fields': ('file_size',),
             'classes': ('collapse',)
         }),
         ('Timestamps', {
