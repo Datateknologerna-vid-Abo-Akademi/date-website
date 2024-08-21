@@ -231,7 +231,7 @@ if USE_S3:
     MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/'
 
     STORAGES = {
-        "default": {
+        "default": {  # TODO allow setting this to local
             "BACKEND": "core.storage_backends.PrivateMediaStorage",
             "OPTIONS": {
                 "bucket_name": AWS_STORAGE_BUCKET_NAME,
@@ -248,6 +248,9 @@ if USE_S3:
                 "custom_domain": False,
                 "location": PUBLIC_MEDIA_LOCATION,
             }
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
 
