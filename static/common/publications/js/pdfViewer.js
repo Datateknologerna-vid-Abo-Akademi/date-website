@@ -48,10 +48,6 @@ export function initPDFViewer(pdfUrl, viewerElement) {
 async function loadPDF(pdfUrl) {
     try {
         const loadingTask = pdfjsLib.getDocument(pdfUrl);
-        loadingTask.onProgress = (progress) => {
-            const percentLoaded = (progress.loaded / progress.total) * 100;
-            updateLoadingProgress(percentLoaded);
-        };
         const pdfDoc = await loadingTask.promise;
         state.updateState({ pdfDoc, isLoading: false });
         renderPages(state);
@@ -60,11 +56,6 @@ async function loadPDF(pdfUrl) {
         showErrorMessage('Failed to load PDF. Please try again later.');
         state.updateState({ isLoading: false });
     }
-}
-
-function updateLoadingProgress(percent) {
-    // Implement loading progress UI update
-    console.log(`Loading PDF: ${percent.toFixed(2)}%`);
 }
 
 function showErrorMessage(message) {

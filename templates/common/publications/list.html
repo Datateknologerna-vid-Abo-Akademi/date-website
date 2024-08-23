@@ -10,27 +10,22 @@
         <link rel="stylesheet" href="{% static 'publications/css/list.css' %}">
     </head>
     <body>
-    <div class="container-margin-top container">
+    <div class="container-margin-top">
         <header>
             <h1>{% trans "Publications" %}</h1>
         </header>
 
-        <div class="pdf-list">
+        <div class="content">
             {% for pdf in page_obj %}
                 <div class="pdf-item">
                     <h2><a href="{% url 'publications:pdf_view' pdf.slug %}">{{ pdf.title }}</a></h2>
                     <p class="pdf-meta">
                         {% if pdf.author %}{% trans "Author" %}: {{ pdf.author }} | {% endif %}
-                        {% if pdf.publication_date %}{% trans "Published" %}: {{ pdf.publication_date }} | {% endif %}
-                        {% trans "Pages" %}: {{ pdf.num_pages }}
+                        {% if pdf.publication_date %}{% trans "Published" %}: {{ pdf.publication_date }} {% endif %}
                     </p>
                     {% if pdf.description %}
                         <p class="pdf-description">{{ pdf.description|truncatewords:30 }}</p>
                     {% endif %}
-                    <p class="pdf-info">
-                        {% trans "File size" %}: {{ pdf.file_size|filesizeformat }} |
-                        {% trans "Uploaded" %}: {{ pdf.uploaded_at|date:"SHORT_DATE_FORMAT" }}
-                    </p>
                 </div>
                 {% empty %}
                 <p>{% trans "No publications available." %}</p>

@@ -2,6 +2,17 @@
     margin-top: 2rem;
 }
 
+header h1 {
+    margin-left: 2vw;
+}
+
+.list-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+
+}
+
 .pdf-item {
     background-color: #f8f9fa;
     border: 1px solid #e9ecef;
@@ -38,6 +49,7 @@
 .pdf-description {
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
+    color: var(--textColorDarkish);
 }
 
 .pagination {

@@ -1,7 +1,11 @@
 import os
+
+
+from celery.worker.strategy import default
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils.text import slugify
+from django.utils import timezone
 from django.conf import settings
 from publications.fields import PublicFileField
 
@@ -17,13 +21,11 @@ class PDFFile(models.Model):
     description = models.TextField(_('Description'), blank=True)
     uploaded_at = models.DateTimeField(_('Uploaded at'), auto_now_add=True)
     updated_at = models.DateTimeField(_('Updated at'), auto_now=True)
-    author = models.CharField(_('Author'), max_length=250, blank=True)
-    publication_date = models.DateField(_('Publication Date'), null=True, blank=True)
-    file_size = models.PositiveIntegerField(_('File Size (bytes)'), editable=False, null=True)
-    is_public = models.BooleanField(_('Public Access'), default=False,
+    publication_date = models.DateField(_('Publication Date'), default=timezone.now, null=True, blank=True)
+    is_public = models.BooleanField(_('Public Access'), default=True,
                                     help_text=_('If checked, this PDF will be visible to everyone.'
                                                 ' If unchecked, it will be hidden from all users.'))
-    requires_login = models.BooleanField(_('Requires Login'), default=True,
+    requires_login = models.BooleanField(_('Requires Login'), default=False,
                                          help_text=_('If checked, users must be logged in to access this PDF'))
 
     class Meta:

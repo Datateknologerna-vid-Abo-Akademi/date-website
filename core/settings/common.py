@@ -216,6 +216,15 @@ CAPTCHA_SITE_KEY = env("CF_TURNSTILE_SITE_KEY", str, "")
 # S3 conf using django storages
 USE_S3 = env('USE_S3', bool, False)
 
+STORAGES = {
+    "default": {
+        "BACKEND": 'django.core.files.storage.FileSystemStorage',
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    }
+}
+
 if USE_S3:
     # aws settings
     AWS_S3_ENDPOINT_URL = env('AWS_S3_ENDPOINT_URL')
@@ -249,15 +258,12 @@ if USE_S3:
                 "location": PUBLIC_MEDIA_LOCATION,
             }
         },
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
     }
 
 else:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
     MEDIA_URL = '/media/'
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
     # Not in use when not using s3 but need to be set in order not to cause errors
     PRIVATE_MEDIA_LOCATION = 'media/private'
     PUBLIC_MEDIA_LOCATION = 'media/public'
