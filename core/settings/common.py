@@ -216,6 +216,15 @@ CAPTCHA_SITE_KEY = env("CF_TURNSTILE_SITE_KEY", str, "")
 # S3 conf using django storages
 USE_S3 = env('USE_S3', bool, False)
 
+STORAGES = {
+    "default": {
+        "BACKEND": 'django.core.files.storage.FileSystemStorage',
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    }
+}
+
 if USE_S3:
     # aws settings
     AWS_S3_ENDPOINT_URL = env('AWS_S3_ENDPOINT_URL')
@@ -229,10 +238,30 @@ if USE_S3:
     PRIVATE_MEDIA_LOCATION = env('PRIVATE_MEDIA_LOCATION')
     PUBLIC_MEDIA_LOCATION = env('PUBLIC_MEDIA_LOCATION')
     MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/'
-    DEFAULT_FILE_STORAGE = 'core.storage_backends.PrivateMediaStorage'
+
+    STORAGES["default"] = {  # TODO allow setting this to local
+        "BACKEND": "core.storage_backends.PrivateMediaStorage",
+        "OPTIONS": {
+            "bucket_name": AWS_STORAGE_BUCKET_NAME,
+            "custom_domain": False,
+            "querystring_auth": AWS_QUERYSTRING_AUTH,
+            "querystring_expire": AWS_QUERYSTRING_EXPIRE,
+            "location": PRIVATE_MEDIA_LOCATION,
+        }
+    }
+    STORAGES["public_media"] = {
+        "BACKEND": "core.storage_backends.PublicMediaStorage",
+        "OPTIONS": {
+            "bucket_name": AWS_STORAGE_BUCKET_NAME,
+            "custom_domain": False,
+            "location": PUBLIC_MEDIA_LOCATION,
+        }
+    }
+
 else:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
     MEDIA_URL = '/media/'
+
     # Not in use when not using s3 but need to be set in order not to cause errors
     PRIVATE_MEDIA_LOCATION = 'media/private'
     PUBLIC_MEDIA_LOCATION = 'media/public'
