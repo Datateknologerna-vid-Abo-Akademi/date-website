@@ -6,13 +6,12 @@
 
 {% block content %}
     <head>
-        <title>{% trans "Publications List" %}</title>
         <link rel="stylesheet" href="{% static 'publications/css/list.css' %}">
     </head>
     <body>
     <div class="container-margin-top">
-        <header>
-            <h1>{% trans "Publications" %}</h1>
+        <header class="text-center">
+            <h1>{% trans "Publikationer" %}</h1>
         </header>
 
         <div class="content">
@@ -20,15 +19,15 @@
                 <div class="pdf-item">
                     <h2><a href="{% url 'publications:pdf_view' pdf.slug %}">{{ pdf.title }}</a></h2>
                     <p class="pdf-meta">
-                        {% if pdf.author %}{% trans "Author" %}: {{ pdf.author }} | {% endif %}
-                        {% if pdf.publication_date %}{% trans "Published" %}: {{ pdf.publication_date }} {% endif %}
+                        {% if pdf.author %}{% trans "Författare" %}: {{ pdf.author }} | {% endif %}
+                        {% if pdf.publication_date %}{% trans "Publicerad" %}: {{ pdf.publication_date }} {% endif %}
                     </p>
                     {% if pdf.description %}
                         <p class="pdf-description">{{ pdf.description|truncatewords:30 }}</p>
                     {% endif %}
                 </div>
                 {% empty %}
-                <p>{% trans "No publications available." %}</p>
+                <p>{% trans "Det finns inga publikationer." %}</p>
             {% endfor %}
         </div>
 

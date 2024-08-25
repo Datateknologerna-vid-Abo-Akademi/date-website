@@ -239,25 +239,23 @@ if USE_S3:
     PUBLIC_MEDIA_LOCATION = env('PUBLIC_MEDIA_LOCATION')
     MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/'
 
-    STORAGES = {
-        "default": {  # TODO allow setting this to local
-            "BACKEND": "core.storage_backends.PrivateMediaStorage",
-            "OPTIONS": {
-                "bucket_name": AWS_STORAGE_BUCKET_NAME,
-                "custom_domain": False,
-                "querystring_auth": AWS_QUERYSTRING_AUTH,
-                "querystring_expire": AWS_QUERYSTRING_EXPIRE,
-                "location": PRIVATE_MEDIA_LOCATION,
-            }
-        },
-        "public_media": {
-            "BACKEND": "core.storage_backends.PublicMediaStorage",
-            "OPTIONS": {
-                "bucket_name": AWS_STORAGE_BUCKET_NAME,
-                "custom_domain": False,
-                "location": PUBLIC_MEDIA_LOCATION,
-            }
-        },
+    STORAGES["default"] = {  # TODO allow setting this to local
+        "BACKEND": "core.storage_backends.PrivateMediaStorage",
+        "OPTIONS": {
+            "bucket_name": AWS_STORAGE_BUCKET_NAME,
+            "custom_domain": False,
+            "querystring_auth": AWS_QUERYSTRING_AUTH,
+            "querystring_expire": AWS_QUERYSTRING_EXPIRE,
+            "location": PRIVATE_MEDIA_LOCATION,
+        }
+    }
+    STORAGES["public_media"] = {
+        "BACKEND": "core.storage_backends.PublicMediaStorage",
+        "OPTIONS": {
+            "bucket_name": AWS_STORAGE_BUCKET_NAME,
+            "custom_domain": False,
+            "location": PUBLIC_MEDIA_LOCATION,
+        }
     }
 
 else:
