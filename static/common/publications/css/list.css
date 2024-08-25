@@ -1,0 +1,88 @@
+.pdf-list {
+    margin-top: 2rem;
+}
+
+header h1 {
+    margin-left: 2vw;
+}
+
+.list-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+
+}
+
+.content {
+    background: var(--primaryColor);
+}
+
+.pdf-item {
+    background-color: var(--primaryColorLight);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    transition: box-shadow 0.3s ease;
+}
+
+.pdf-item:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.pdf-item h2 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.pdf-item h2 a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.pdf-item h2 a:hover {
+    text-decoration: underline;
+}
+
+.pdf-meta, .pdf-info {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.pdf-description {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    color: var(--textColorDarkish);
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.pagination .step-links {
+    display: flex;
+    align-items: center;
+}
+
+.pagination a {
+    color: #007bff;
+    text-decoration: none;
+    padding: 0.5rem 0.75rem;
+    margin: 0 0.25rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+}
+
+.pagination a:hover {
+    background-color: #e9ecef;
+}
+
+.pagination .current {
+    padding: 0.5rem 0.75rem;
+    margin: 0 0.25rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    color: #495057;
+    background-color: #e9ecef;
+}

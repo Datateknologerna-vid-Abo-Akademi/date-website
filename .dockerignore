@@ -4,3 +4,4 @@ media/
 .git/
 .idea/
 .vscode/
+venv/

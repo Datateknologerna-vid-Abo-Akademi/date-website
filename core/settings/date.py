@@ -27,6 +27,7 @@ INSTALLED_APPS = get_installed_apps([
     'social',
     'staticpages',
     'ctf',
+    'publications',
 ])
 
 ROOT_URLCONF = 'core.urls.date'
