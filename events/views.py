@@ -154,7 +154,3 @@ class EventDetailView(DetailView):
         self.get_object().add_event_attendance(user=avec_data['user'], email=avec_data['email'],
                                                anonymous=avec_data['anonymous'], preferences=avec_data,
                                                avec_for=avec_data['avec_for'])
-
-def date_25(request):
-    context = {}
-    return render(request, 'events/date_25.html', context)
