@@ -3,7 +3,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from .forms import HarassmentForm
 from .models import HarassmentEmailRecipient
-from core.utils import send_email_task
+from core.utils import send_email_task, validate_captcha
 
 # Create your views here.
 
@@ -21,7 +21,7 @@ def harassment_form(request):
 
     if request.method == 'POST':
         form = HarassmentForm(request.POST)
-        if form.is_valid():
+        if form.is_valid() and validate_captcha(request.POST.get('cf-turnstile-response')):
             harassment = form.save()  # Save the form data to the Harassment model
             # Send email to all harassment email receivers
             harassment_receivers = [receiver.recipient_email for receiver in HarassmentEmailRecipient.objects.all()]
