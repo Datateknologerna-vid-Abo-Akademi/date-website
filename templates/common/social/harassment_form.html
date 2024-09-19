@@ -4,6 +4,7 @@
 
 {% block title %}{{ article.title }}{% endblock %}
 {% block content %}
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <div class="container-md min-vh-100 container-margin-top">
     <div class="container-size text-center" style="max-width: 1000px;">
         <div class="content">
@@ -29,6 +30,7 @@
                     villkoren <i class="fa fa-external-link" aria-hidden="true"></i>
                   </a>
                 </p>
+                <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}" data-callback="javascriptCallback"></div>
                 <input class="mt-2" type="submit" value="Submit">
             </form>
         </div>
