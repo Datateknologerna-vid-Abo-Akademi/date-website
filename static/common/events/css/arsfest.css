@@ -144,15 +144,6 @@
     transform: scale(1.05);
 }
 
-.pentalbin:hover{
-    transform: scale(1.01);
-}
-
-.pentalbin:active{
-    transform: scale(1.05);
-}
-
-
 .text-content div > *, .anmalan > *, .anmalda > *{
     animation: fadeIn ease 2s;
     -webkit-animation: fadeIn ease 2s;
@@ -244,14 +235,3 @@ tr:hover {
       background-color: var(--opacityColor);
       padding: var(--defaultPadding);
   }
-
-/* date-25 overrides */
-svg.circuit-path {
-  opacity: 0.2 !important;
-}
-
-.age {
-    font-size: 5rem !important;
-}
-
-/* date-25 overrides end*/
