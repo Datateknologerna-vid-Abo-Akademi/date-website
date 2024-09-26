@@ -70,8 +70,8 @@ def flag(request, ctf_slug, flag_slug):
                     if flag_query.exists():
                         flag_instance = flag_query.first()
                         request.session['flag_valid'] = True
-                        if user_solved or flag_instance.solver:
-                            # User has already solved a flag or flag is already solved
+                        if user_solved or flag_instance.solver or ctf.ctf_ended():
+                            # User has already solved a flag or flag is already solved or ctf has ended
                             Guess.objects.create(ctf=ctf, flag=flag_instance, user=request.user, guess=flag_input,
                                                  correct=True)
                             return redirect(request.path)
