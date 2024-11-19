@@ -10,6 +10,20 @@ services:
       - ${DATE_DB_PORT}:5432
     environment:
       - POSTGRES_PASSWORD=${DATE_DB_PASSWORD}
+      - POSTGRES_MAX_CONNECTIONS=1000
+  pgbouncer:
+    image: edoburu/pgbouncer
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=${DATE_DB_PASSWORD}
+      - POOL_MODE=transaction
+      - AUTH_TYPE=scram-sha-256
+      - MAX_CLIENT_CONN=1000
+      - ADMIN_USERS=postgres,admin
   web:
     build: .
     restart: always
@@ -24,6 +38,7 @@ services:
       - DEBUG=${DATE_DEBUG}
       - DEVELOP=${DATE_DEVELOP}
       - PROJECT_NAME=${PROJECT_NAME}
+      - DB_HOST=pgbouncer
       - DB_PASSWORD=${DATE_DB_PASSWORD}
       - USE_S3=${USE_S3}
       - AWS_S3_ENDPOINT_URL=${S3_ENDPOINT_URL}
@@ -43,6 +58,7 @@ services:
       - CF_TURNSTILE_SITE_KEY=${CF_TURNSTILE_SITE_KEY}
       - CF_TURNSTILE_SECRET_KEY=${CF_TURNSTILE_SECRET_KEY}
     depends_on:
+      - pgbouncer
       - db
       - redis
   celery:
