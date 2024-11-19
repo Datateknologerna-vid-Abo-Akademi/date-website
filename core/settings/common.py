@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 # update
 
 import os
+import sys
 import json
 
 import environ
@@ -135,6 +136,11 @@ DATABASES = {
         'PORT': env('DB_PORT', int, 5432)
     }
 }
+
+# Skip pgbouncer for running tests
+if 'test' in sys.argv or 'test_coverage' in sys.argv:
+    DATABASES['default']['HOST'] = 'db'
+    DATABASES['default']['NAME'] = 'test_db'
 
 CONN_MAX_AGE = 600
 
