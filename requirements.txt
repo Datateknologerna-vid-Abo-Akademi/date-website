@@ -9,7 +9,7 @@ pillow
 python-dateutil
 icalendar
 django-ical
-django-admin-ordering==0.16.1
+django-admin-ordering==0.19.1
 whitenoise
 channels
 channels_redis
