@@ -18,11 +18,12 @@ services:
     volumes:
       - .:/code
     ports:
-      - ${DATE_DJANGO_PORT}:8000
+      - ${DATE_DJANGO_PORT}
     environment:
       - SECRET_KEY=${DATE_SECRET_KEY}
       - DEBUG=${DATE_DEBUG}
       - DEVELOP=${DATE_DEVELOP}
+      - PROJECT_NAME=${PROJECT_NAME}
       - DB_PASSWORD=${DATE_DB_PASSWORD}
       - USE_S3=${USE_S3}
       - AWS_S3_ENDPOINT_URL=${S3_ENDPOINT_URL}
@@ -51,7 +52,6 @@ services:
     volumes:
       - .:/code
     environment:
-      - DJANGO_SETTINGS_MODULE=core.settings
       - DEBUG=${DATE_DEBUG}
       - EMAIL_HOST=${EMAIL_HOST}
       - EMAIL_HOST_USER=${EMAIL_HOST_USER}
@@ -61,9 +61,19 @@ services:
       - redis
   redis:
     restart: always
-    image: redis:7.0-alpine
+    image: valkey/valkey:7.2-alpine
     ports:
       - ${REDIS_PORT}:6379
+
+  nginx:
+    restart: always
+    image: nginx:stable
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - web
+    ports:
+      - "${DATE_DJANGO_PORT}:${DATE_DJANGO_PORT}"
 
 volumes:
   date_postgres_data:
