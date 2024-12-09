@@ -1,13 +1,14 @@
 import logging
+
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
-from django.core.mail import send_mail
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from core import settings
+from django.conf import settings
 from core.utils import send_email_task
+
 from .managers import MemberManager
 
 logger = logging.getLogger('date')
@@ -41,7 +42,6 @@ class Member(AbstractBaseUser, PermissionsMixin):
     objects = MemberManager()
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = []
 
     class Meta:
         verbose_name = _('medlem')
@@ -82,12 +82,13 @@ class Member(AbstractBaseUser, PermissionsMixin):
 
     def get_str_membership_type(self):
         membership_types = {
-            1: 'Gulnäbb',
-            2: 'Ordinarie medlem',
-            3: 'Stödjande medlem',
-            4: 'Senior medlem',
+            1 : 'Gulnäbb',
+            2 : 'Ordinarie medlem',
+            3 : 'Stödjande medlem',
+            4 : 'Senior medlem',
         }
         return membership_types[self.membership_type]
+
 
 
 SUB_RE_SCALE_DAY = 'day'
@@ -180,3 +181,30 @@ class AlumniEmailRecipient(models.Model):
     class Meta:
         verbose_name = _("Emailmottagare för ARG")
         verbose_name_plural = _("Emailmottagare för ARG")
+
+
+class FunctionaryRole(models.Model):
+    title = models.CharField(_('Titel'), max_length=200)
+    board = models.BooleanField(_('Styrelse'), default=False)
+
+    class Meta:
+        verbose_name = _("Funktionärspost")
+        verbose_name_plural = _("Funktionärsposter")
+
+    def __str__(self):
+        return self.title
+
+
+class Functionary(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    functionary_role = models.ForeignKey(FunctionaryRole, on_delete=models.CASCADE)
+    year = models.IntegerField(_('Årtal'))
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("Funktionär")
+        verbose_name_plural = _("Funktionärer")
+
+    def __str__(self):
+        return f"{self.member.get_full_name()} {self.functionary_role.title} {self.year}"
