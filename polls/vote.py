@@ -46,6 +46,7 @@ def is_user_authorized_to_vote(question, user):
         return True
 
     if (question.voting_options == VOTE_MEMBERS_ONLY and
+            user.is_authenticated and
             user.membership_type == ORDINARY_MEMBER and
             user.get_active_subscription() is not None):
         return True
