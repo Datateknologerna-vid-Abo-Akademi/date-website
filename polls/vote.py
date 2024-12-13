@@ -4,7 +4,7 @@ from django.db.models import F
 from django.urls import reverse
 
 from members.models import ORDINARY_MEMBER
-from polls.models import MEMBERS_ONLY, ORDINARY_MEMBERS_ONLY, VOTE_MEMBERS_ONLY, ANYONE
+from polls.models import MEMBERS_ONLY, ORDINARY_MEMBERS_ONLY, VOTE_MEMBERS_ONLY, ANYONE, Choice
 
 ERROR_MESSAGES = {
     'not_logged_in': "Logga in för att rösta.",
@@ -18,10 +18,9 @@ ERROR_MESSAGES = {
 
 
 def handle_selected_choices(question, selected_choices, user):
-    with transaction.atomic():
-        for choice in selected_choices:
-            choice.votes = F("votes") + 1
-            choice.save()
+    with (transaction.atomic()):
+        Choice.objects.filter(id__in=selected_choices
+                              ).update(votes=F('votes') + 1)
         if user.is_authenticated:
             question.voters.add(user)
 
