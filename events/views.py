@@ -71,9 +71,18 @@ class EventDetailView(DetailView):
             'tomtejakt': 'events/tomtejakt.html',
             'wappmiddag': 'events/wappmiddag.html'
         }
+        slugmap = {
+            'baal': 'events/baal_detail.html',
+            'tomtejakt': 'events/tomtejakt.html',
+            'wappmiddag': 'events/wappmiddag.html',
+            'arsfest': 'events/arsfest.html',
+        }
+        # Will return a 500 response to client if the template is not found
         if event_title in templates: # TODO: Selectable template
             return templates[event_title]
-        
+        elif (slug := self.get_context_data().get('event').slug) in slugmap:
+            return slugmap[slug]
+
         if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
             return ['events/event_passcode.html']
         return [self.template_name]
