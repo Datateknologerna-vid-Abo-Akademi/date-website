@@ -1,0 +1,208 @@
+html body {
+    background-color: #2d2d2d;
+    font-family: "Helvetica Neue", "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+body {
+    font: normal 82%/200% "Helvetica Neue", "Lucida Grande",Helvetica,Arial,sans-serif;
+    font-style: normal;
+    font-variant-ligatures: normal;
+    font-variant-caps: normal;
+    font-variant-numeric: normal;
+    font-variant-east-asian: normal;
+    font-weight: normal;
+    font-stretch: normal;
+    font-size: 82%;
+    line-height: 200%;
+    font-family: "Helvetica Neue", "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+nav, footer{
+    display: none !important;
+}
+
+.april-container {
+    margin-top: 30px;
+    margin-bottom: 30px;
+    color: black;
+}
+
+.april-container-size {
+    background-color: #dfdfdf;
+    width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.april-header {
+    background: #fff url(https://kemistklubben.abo.fi/images/logo.png) no-repeat right top;
+    height: 180px;
+    margin: 0 auto;
+    padding: 50px 0 0px 20px;
+    font: bold 15px sans-serif;
+}
+
+.april-header .april-bigtext {
+    font: bold 60px sans-serif;
+}
+
+.april-nav {
+    background-color: #4c6250;
+}
+
+.nav-item a:hover {
+    background-color: #7a9c80 !important;
+    border-radius: 0;
+}
+
+.dropdown-menu {
+    background-color: #74947adc !important;
+    font-size: 1em;
+    border-radius: 0;
+}
+
+.dropdown-menu a:hover{
+    border-radius: 0 !important;
+    background-color: #9bc4a3b4 !important;
+}
+
+.april-content-container {
+    color: #444;
+    background-color: #fff;
+    min-height: 60vh;
+    margin: 15px auto 0 auto;
+    font: 15px sans-serif;
+    position: relative;
+    display: grid;
+    grid-template-columns: 7fr 2fr;
+}
+
+
+.april-content-container a {
+    color: blue;
+    text-decoration: underline;
+}
+
+.april-content-container a:hover {
+    color: blue;
+    text-decoration: underline;
+}
+
+.april-main-col {
+    padding: 30px 30px;
+}
+
+.april-news-content {
+    border-bottom: 1px solid gray;
+    padding: 15px 0;
+}
+
+.april-news-content img {
+    max-height: 40vh;
+    max-width: 100%;
+    /* keep img ratio correct */
+    width: auto !important;
+    height: auto !important;
+}
+
+.april-news-text{
+    margin-top: 15px;
+}
+
+.april-more-news {
+    margin-top: 15px;
+}
+
+.april-side-col {
+    border-left: 1px solid gray;
+    padding: 5px;
+}
+
+.april-events {
+    padding: 10px 0;
+}
+
+.april-events a {
+    display: block;
+    margin: 5px 0;
+}
+
+.april-calendar-container{
+    margin-top: 10px;
+}
+
+.april-calendar {
+    text-align: center;
+    border: 1px solid gray;
+}
+
+.april-calendar tr, .april-calendar th, .april-calendar td {
+    border: 1px solid gray;
+}
+
+.april-calendar th {
+    width: 25px;
+}
+
+.tooltiptext {
+    display: none;
+}
+
+/*logos start*/
+
+.logo-container{
+    display: block;
+}
+
+.mobile-logo-container{
+    grid-area: logos;
+    display: none;
+}
+
+.carousel-logos{
+    border-top: solid;
+    border-bottom: solid;
+    border-width: 2px;
+    border-color: rgb(180, 180, 180);
+}
+
+div.carousel-logos {
+    overflow: hidden;
+  }
+
+div.carousel-logos img{
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+}
+
+.company-logo img{
+    max-height: 100px;
+    max-width: 100%;
+    /* keep img ratio correct */
+    width: auto !important;
+    height: auto !important;
+}
+
+/*logos end*/
+
+.april-footer {
+    background-color: #fff;
+    height: 90px;
+    margin: 15px auto 0 auto;
+    font: 15px sans-serif;
+    position: relative;
+}
+
+.righttext {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+}
+
+.lefttext {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+}

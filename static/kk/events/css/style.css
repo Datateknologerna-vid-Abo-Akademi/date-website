@@ -1,0 +1,14 @@
+.content-past {
+    background-color: var(--secondaryColor);
+    padding: 5px;
+    border-radius: var(--defaultRadius);
+    margin: 5px;
+}
+
+.content-past h4 {
+    margin: 0;
+}
+
+.card {
+    color: var(--textColorDark);
+}

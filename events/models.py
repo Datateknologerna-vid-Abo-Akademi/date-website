@@ -23,9 +23,6 @@ logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
 
-EVENT_PARTICIPANT_LIMIT = 250
-
-
 def upload_to(instance, filename):
     filename_base, filename_ext = os.path.splitext(filename)
 
@@ -41,10 +38,7 @@ class Event(models.Model):
     content = CKEditor5Field(_('Innehåll'), blank=True)
     event_date_start = models.DateTimeField(_('Startdatum'), default=now)
     event_date_end = models.DateTimeField(_('Slutdatum'), default=now)
-    sign_up_max_participants = models.IntegerField(_('Maximal antal deltagare'),
-                                                   choices=[(0, u"Ingen begränsning")] + list(
-                                                       zip(range(1, EVENT_PARTICIPANT_LIMIT),
-                                                           range(1, EVENT_PARTICIPANT_LIMIT))), default=0)
+    sign_up_max_participants = models.IntegerField(_('Maximal antal deltagare (0 för ingen begränsning)'), default=0)
     sign_up = models.BooleanField(_('Anmälning'), default=True)
     sign_up_members = models.DateTimeField(_('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=now)
     sign_up_others = models.DateTimeField(_('Anmälan öppnas (övriga)'), null=True, blank=True, default=now)
