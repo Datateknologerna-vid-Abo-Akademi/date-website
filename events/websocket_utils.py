@@ -1,5 +1,6 @@
 import logging
 from copy import deepcopy
+from django.utils.translation import gettext
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -21,12 +22,17 @@ def ws_send(request, form, public_info):
 
 
 def ws_data(form, public_info):
-    data = {}
     pref = dict(form.cleaned_data)  # Creates copy of form
 
-    data['user'] = "Anonymous" if pref['anonymous'] else pref['user']
+    fields = [] # (fieldName, value) tuples
+    anonymous = pref['anonymous']
+
+    fields.append(("user", gettext("Anonymt") if anonymous else pref['user']))
     # parse the public info and only send that through websockets.
-    for index, info in enumerate(public_info):
-        if str(info) in pref:
-            data[str(info)] = pref[str(info)]
-    return {"data": data}
+    # the extra fields are reversed in the details.html template and must be reversed here too
+    for info in reversed(public_info):
+        key = str(info)
+        if key in pref:
+            fields.append(( info.name, str(pref[key]) )) # stringify the field value before sending, for consistency
+    
+    return {"data": { "fields": fields, "anonymous": anonymous }}
