@@ -43,7 +43,6 @@ class EventCreationForm(forms.ModelForm):
             'slug',
             'members_only',
             'passcode',
-            'price',
             'captcha',
             'redirect_link',
         )
@@ -134,7 +133,6 @@ class EventEditForm(forms.ModelForm):
             'slug',
             'members_only',
             'passcode',
-            'price',
             'captcha',
             'redirect_link',
         )
