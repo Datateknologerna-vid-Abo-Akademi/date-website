@@ -15,7 +15,7 @@ services:
   web:
     image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}
     restart: always
-    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python /code/manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn -w 3 --bind=0.0.0.0 core.wsgi"
+    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python /code/manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn -w 3 --max-requests 1000 --max-requests-jitter 100 --bind=0.0.0.0 core.wsgi"
     environment:
       - SECRET_KEY=${DATE_SECRET_KEY}
       - DEBUG=${DATE_DEBUG}
