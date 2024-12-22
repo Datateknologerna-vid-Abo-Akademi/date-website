@@ -20,7 +20,7 @@
                 <!-- User Information Section -->
                 <h3>{{ user.username }}</h3>
                 <div id="userInfo">
-                    <table class="table table-light table-striped">
+                    <table class="table table-body table-striped">
                         <tr>
                             <td>Email:</td>
                             <td>{{ user.email }}</td>
@@ -65,7 +65,7 @@
                 <div id="editForm" style="display:none;">
                     <form method="post">
                         {% csrf_token %}
-                        <table class="table table-light table-striped">
+                        <table class="table table-body table-striped">
                             <tr>
                                 <td>Email:</td>
                                 <td>{{ form.email }}</td>
