@@ -1,7 +1,7 @@
 {% extends 'core/base.html' %}
 {% load cache %}
 {% block content %}
-{% cache 0 main_page_fixed %}
+{% cache 300 main_page_fixed %}
     {% load static %}
     {% load i18n %}
     <head>
