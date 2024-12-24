@@ -117,7 +117,7 @@
                                 {%for ad in ads%}
                                 <li class="company-logo text-center">
                                     <a href="{{ ad.company_url }}">
-                                        <img src="{{ ad.ad_url }}" alt="img">
+                                        <img src="{{ ad.ad_url }}" alt="img" onerror="this.src='/static/core/images/fallback.png'">
                                     </a>
                                 </li>
                                 {% endfor %}
@@ -181,7 +181,7 @@
                             {%for ad in ads%}
                             <li class="company-logo text-center">
                                 <a href="{{ ad.company_url }}">
-                                    <img src="{{ ad.ad_url }}" alt="img">
+                                    <img src="{{ ad.ad_url }}" alt="img" onerror="this.src='/static/core/images/fallback.png'">
                                 </a>
                             </li>
                             {% endfor %}

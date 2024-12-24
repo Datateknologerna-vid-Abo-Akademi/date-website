@@ -180,7 +180,7 @@
                         <div class="d-flex flex-wrap justify-content-center align-items-center">
                             {%for ad in ads%}
                                 <a class="m-2" href="{{ ad.company_url }}">
-                                    <img src="{{ ad.ad_url }}" alt="img">
+                                    <img src="{{ ad.ad_url }}" alt="img" onerror="this.src='/static/core/images/fallback.png'">
                                 </a>
                             {% endfor %}
                         </div>
