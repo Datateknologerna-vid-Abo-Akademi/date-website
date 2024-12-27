@@ -119,8 +119,8 @@
     grid-template-columns: 1fr 850px 350px 1fr;
     grid-template-rows: auto;
     grid-template-areas: 
-      ". news sidebar ."
-      ". news sidebar ."
+      ". news events ."
+      ". news logos ."
       ". ig-scroll ig-scroll .";
     grid-column-gap: 3vw;
 }
@@ -196,11 +196,13 @@ div.news-content a:hover{
 
 /*Sidebar*/
 
-.sidebar-container{
-    grid-area: sidebar;
+.sidebar-logo-container {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 350px;
 }
 
-.sidebar-logo-container {
+.sidebar-logo-container img {
     margin-top: 0.5rem;
     max-width: 100%;
 }
@@ -277,13 +279,8 @@ div.news-content a:hover{
   }
 
 .events-container{
-    display: block;
-}
-
-.mobile-events-container{
     grid-area: events;
-    display: none;
-    margin-bottom: 10px;
+    display: block;
 }
 
 .events{
@@ -429,12 +426,9 @@ div.calendar-container a {
 /*logos start*/
 
 .logo-container{
-    display: block;
-}
-
-.mobile-logo-container{
     grid-area: logos;
-    display: none;
+    display: block;
+    overflow: hidden;
 }
 
 .carousel-logos{
@@ -444,23 +438,19 @@ div.calendar-container a {
     border-color: rgb(180, 180, 180);
 }
 
-div.carousel-logos {
-    overflow: hidden;
-  }
-
-div.carousel-logos img{
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    width: 50%;
+.company-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100px;
+    /* keep img ratio correct */
+    width: auto !important;
 }
 
 .company-logo img{
-    min-height: 100px;
     max-height: 100px;
     max-width: 100%;
     /* keep img ratio correct */
-    width: auto !important;
     height: auto !important;
 }
 
@@ -558,22 +548,9 @@ div.scroll-content img{
         grid-template-areas:
           ". events ."
           ". news ."
-          ". logos."
+          ". logos ."
           ". ig-scroll .";
     }
-
-    .sidebar-container{
-        display: none;
-    }
-
-    .mobile-events-container{
-        display: block;
-    }
-
-    .mobile-logo-container{
-        display: block;
-    }
-
 
 }
 
