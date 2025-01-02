@@ -51,6 +51,12 @@ export function setupEventListeners(state) {
     });
 
     document.getElementById('zoom-select').addEventListener('change', (e) => {
+        // Disable tag after its been used
+        document.getElementById('zoom-select').disabled = true;
+        // Re-enable it after a short delay
+        setTimeout(() => {
+            document.getElementById('zoom-select').disabled = false;
+        }, 100);
         updateState({ scale: parseFloat(e.target.value) });
         renderPages(state);
     });
