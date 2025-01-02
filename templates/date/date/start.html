@@ -59,69 +59,9 @@
                         <a class="more-news" href="/news/"><i class="far fa-newspaper"></i> Mera nyheter...</a>
                     </div>
                 </div>
-                <div class="sidebar-container">
-                    <div class="events-container">
-                        <h3 class="header-border-bottom mt-3 heading-link"><a href="/events/">Evenemang</a></h3>
-                            {{ calendar_events|json_script:"calendar_json" }}
-                        <div class="calendar">
-                        </div>
-                        <div class="events">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    {% for ev in events|slice:":4" %}
-                                        <div class="card-group evet-card text-light mb-2">
-                                            <a href="{% url 'events:detail' ev.slug %}" class="card mb-0 p-1">
-                                                <div class="card-body py-1">
-                                                    <div class="row">
-                                                        <div style="margin: auto;" class="col-3">
-                                                            <div>
-                                                                <span class="badge">{{ ev.event_date_start|date:"d" }}</span>
-                                                            </div>
-                                                            <div class="text-color">
-                                                                <small>
-                                                                    {{ ev.event_date_start|date:"M" }}
-                                                                </small>
-                                                            </div>
-                                                        </div>
-                                                        <div style="margin: auto;" class="col-7">
-                                                            <div class="d-flex flex-column">
-                                                                <small class="list-inline-item">
-                                                                    <i class="fas fa-calendar-check"></i> {{ ev.event_date_start|date:"D"}}
-                                                                    <i class="far fa-clock"></i> {{ev.event_date_start|date:"H:i"}}
-                                                                </small>
-                                                                <h6 class="card-title text-uppercase mt-0">
-                                                                    <strong>{{ ev.title }}</strong>
-                                                                </h6>
-                                                            </div>
-                                                        </div>
-                                                        <div style="margin: auto;" class="col-2">
-                                                            <i class="fas fa-chevron-right fa-lg"></i>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        </div>
-                                    {% empty %}
-                                        <h6>{% trans 'Inga aktiva evenemang hittades' %}...</h6>
-                                    {% endfor %}
-                                    {% if events|length >= 4 %}
-                                        <a class="more-events-button" href="{% url 'events:index'%}"><i class="far fa-calendar-alt"></i> {% trans 'Mera evenemang' %}...</a>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="extra-container">
-                        <h3 class="mt-3 header-border-bottom">Annat</h3>
-                        <h5 class="heading-link"><a href="/social/harassment/">Trakasseriombud</a></h5>
-                        <p>Om du upplever trakasserier i samband med Datateknologernas verksamhet, vänligen <a href="{% url "social:harassment" %}">rapportera</a>  detta via hemsidan. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar.</p>
-                            <h5 id="joke-header">Joke</h5>
-                            <p id="joke-string"></p>
-                    </div>
-                </div>
-                <div class="mobile-events-container">
+                <div class="events-container">
                     <h3 class="header-border-bottom mt-3 heading-link"><a href="/events/">Evenemang</a></h3>
-                    {{ calendar_events|json_script:"calendar_json" }}
+                        {{ calendar_events|json_script:"calendar_json" }}
                     <div class="calendar">
                     </div>
                     <div class="events">
@@ -168,7 +108,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="mobile-extra-container">
+                <div class="extra-container">
                     <h3 class="mt-3 header-border-bottom">Annat</h3>
                     <h5 class="heading-link"><a href="/social/harassment/">Trakasseriombud</a></h5>
                     <p>Om du upplever trakasserier i samband med Datateknologernas verksamhet, vänligen <a href="{% url "social:harassment" %}">rapportera</a>  detta via hemsidan. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar.</p>
@@ -180,7 +120,7 @@
                         <div class="d-flex flex-wrap justify-content-center align-items-center">
                             {%for ad in ads%}
                                 <a class="m-2" href="{{ ad.company_url }}">
-                                    <img src="{{ ad.ad_url }}" alt="img">
+                                    <img src="{{ ad.ad_url }}" alt="img" onerror="this.src='/static/core/images/fallback.png'">
                                 </a>
                             {% endfor %}
                         </div>
