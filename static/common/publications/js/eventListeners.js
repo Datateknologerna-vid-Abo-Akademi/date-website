@@ -7,9 +7,8 @@ export function setupEventListeners(state) {
 
     let newPage;
 
-    // If currently on the last page in two-page view (6-6), go back to 4-5
-    if (state.currentPage === state.pdfDoc.numPages && shouldRenderTwoPages(state)) {
-        // Jump to the two pages before the last pair
+    if (state.currentPage === state.pdfDoc.numPages) {
+        // Jump back two from the last page (the previous pair)
         newPage = state.currentPage - 2;
     } else if (shouldRenderTwoPages(state)) {
         // Regular two-page navigation
