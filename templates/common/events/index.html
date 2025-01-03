@@ -47,7 +47,7 @@
                                               </ul>
                                         </div>
                                         <div style="margin: auto;" class="col-6 col-sm-2 text-center">
-                                            <a class="btn btn-outline-light btn-floating m-1" href="{% url 'events:detail' event.slug %}"><i class="fas fa-chevron-right fa-4x"></i></a>
+                                            <a class="btn btn-outline-light btn-floating m-1" href="{% if event.redirect_link %} {{event.redirect_link}} {% else %} {% url 'events:detail' event.slug %} {% endif %}"><i class="fas fa-chevron-right fa-4x"></i></a>
                                         </div>
                                     </div>
                                 </div>
