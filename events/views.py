@@ -36,9 +36,6 @@ class EventDetailView(DetailView):
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        response = self.handle_redirection(request)
-        if response:
-            return response
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 
@@ -100,13 +97,6 @@ class EventDetailView(DetailView):
         if self.get_context_data().get('event').title.lower() in ['årsfest', 'årsfest gäster']:
             return render(self.request, 'events/arsfest.html', self.get_context_data(form=form))
         return render(self.request, self.template_name, self.get_context_data(form=form), status=400)
-
-    def handle_redirection(self, request):
-        show_content = not self.object.members_only or request.user.is_authenticated
-        if self.object.redirect_link and show_content:
-            return redirect(self.object.redirect_link)
-        if not show_content:
-            return redirect(reverse('members:login'))
 
     def handle_passcode(self, request):
         if self.object.passcode and self.object.passcode != request.session.get('passcode_status', False):
