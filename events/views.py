@@ -36,8 +36,9 @@ class EventDetailView(DetailView):
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if self.object.redirect_link:
-            return HttpResponseForbidden()
+        external_link = self.object.redirect_link
+        if external_link:
+            return redirect(external_link)
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 
