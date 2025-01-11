@@ -27,9 +27,9 @@ app_name = 'core'
 
 urlpatterns = [
     path('', events.IndexView.as_view(), name='index'),
+    path('admin/', wadmin.site.urls),
     path('', include('events.urls')),
     path('pages/', include('staticpages.urls')),
-    path('admin/', admin.site.urls),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
 ]
 

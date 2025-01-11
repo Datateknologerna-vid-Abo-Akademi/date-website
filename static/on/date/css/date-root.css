@@ -2,20 +2,20 @@
 /* use with var(--color); included in base.html*/
 
 :root {
-    --primaryColor: #000;
-    --primaryColorLight:  #202020;
-    --primaryColorLighte:#3d3d3d;
-    --primaryColorLighter:#505050;
+    --primaryColor: #bd52d4;
+    --primaryColorLight: #9e2eb8;
+    --primaryColorLighte: #d799e6;
+    --primaryColorLighter: #d799e6;
     --primaryColorTransparent: rgba(0,0,0,0.9);
     --primaryColorTransparenter: rgba(0,0,0,0.8);
-    --secondaryColor: #fff;
-    --secondaryColorDarker: #eaeaea;
-    --textColorLight: #fff;
-    --textColorLightish: #eaeaea;
+    --secondaryColor: #000;
+    --secondaryColorDarker: #131313;
+    --textColorLight: #000;
+    --textColorLightish: #131313;
     --textColorDark: #000;
     --textColorDarkish: #202020;
     --textColorMedium: #606060;
-    --helpText: #888;
+    --helpText: #222;
     --helpTextLighter: rgb(199, 199, 199);
     --linkColorDark: #3a80c3;
     --linkColorDarkHover: #26547f;
