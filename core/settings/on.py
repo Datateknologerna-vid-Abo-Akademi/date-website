@@ -23,6 +23,7 @@ INSTALLED_APPS = get_installed_apps([
     'news',
     'social',
     'events',
+    'billing',
     'staticpages',
     'archive.apps.ArchiveConfig',
 ])
