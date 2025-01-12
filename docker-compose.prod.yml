@@ -81,7 +81,7 @@ services:
   celery:
     restart: always
     image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}
-    command: celery -A core worker -l info
+    command: celery -A core worker -l info -c 2
     environment:
       - DEBUG=${DATE_DEBUG}
       - EMAIL_HOST=${EMAIL_HOST}

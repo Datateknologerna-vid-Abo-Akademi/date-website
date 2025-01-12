@@ -48,7 +48,7 @@ services:
   celery:
     restart: unless-stopped
     build: .
-    command: celery -A core worker -l info
+    command: celery -A core worker -l info -c 2
     volumes:
       - .:/code
     environment:
