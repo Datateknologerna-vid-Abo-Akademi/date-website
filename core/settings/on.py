@@ -42,12 +42,12 @@ STATICFILES_DIRS = [
 
 CONTENT_VARIABLES = {
     "SITE_URL": "https://demo.datateknologerna.org",
-    "ASSOCIATION_NAME": "ÖN Events",
-    "ASSOCIATION_NAME_FULL": "Österbottniska Nationens evenemang",
+    "ASSOCIATION_NAME": "ÖN Evenemang",
+    "ASSOCIATION_NAME_FULL": "Österbottniska Nationens Årsfestkommité",
     "ASSOCIATION_NAME_SHORT": "ÖN Events",
-    "ASSOCIATION_EMAIL": "on-events@datateknologerna.org",
-    "ASSOCIATION_ADDRESS_L1": "Åbo Akademi, Agora",
-    "ASSOCIATION_ADDRESS_L2": "Vattenborgsvägen 5",
+    "ASSOCIATION_EMAIL": "osterbottniska@albins.app",
+    "ASSOCIATION_ADDRESS_L1": "c/o Kåren",
+    "ASSOCIATION_ADDRESS_L2": "Tavastgatan 22",
     "ASSOCIATION_POSTAL_CODE": "20500 Åbo",
     "SOCIAL_BUTTONS": [
     ],

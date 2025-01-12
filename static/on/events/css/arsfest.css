@@ -3,11 +3,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Amethysta&display=swap');
 
 :root {
-    --opacityColor: #11110ed3;
+    --opacityColor: var(--primaryColor);
     /*--opacityColor: rgba(223, 223, 223, 0.55);*/
     --backdropBlur:  blur(2px);
     --mainArsfestColor: var(--silver);
-    --mainArsfestTextColor: var(--lightSilver2);
+    --mainArsfestTextColor: var(--textColorLightish);
     --mainArsfestButtonHoverColor: var(--darkSilver2);
     --arsfest-font: 'Josefin Sans', sans-serif;
 }
@@ -123,10 +123,10 @@
 }
 
 .baal-nav a{
-    color: var(--mainArsfestTextColor);
+    color: var(--textColorDark);
     margin: 5px;
     padding: 10px;
-    background-color: var(--primaryColor);
+    background-color: var(--primaryColorLighter);
     border-radius: 5px;
     transition: .3s;
     border: 1px solid var(--mainArsfestColor);
@@ -134,7 +134,7 @@
 
 .baal-nav a:hover{
     background-color: var(--mainArsfestButtonHoverColor);
-    color: var(--secondaryColor) !important;
+    color: var(--textColorLightish) !important;
     box-shadow: 0 0 10px var(--mainArsfestColor);
     -webkit-box-shadow: 0 0 10px var(--mainArsfestColor);
     -moz-box-shadow: 0 0 10px var(--mainArsfestColor);
@@ -182,14 +182,14 @@ form input {
 
 form button {
     font-family: var(--arsfest-font) !important;
-    background-color: var(--primaryColor) !important;
-    color: var(--mainArsfestTextColor) !important;
+    background-color: var(--primaryColorLighter) !important;
+    color: var(--textColorDark) !important;
     border: 1px solid var(--mainArsfestColor) !important;
 }
 
 form button:hover {
     background-color: var(--mainArsfestButtonHoverColor) !important;
-    color: var(--secondaryColor) !important;
+    color: var(--textColorLightish) !important;
     box-shadow: 0 0 10px var(--mainArsfestColor) !important;
     -webkit-box-shadow: 0 0 10px var(--mainArsfestColor) !important;
     -moz-box-shadow: 0 0 10px var(--mainArsfestColor) !important;
@@ -236,7 +236,7 @@ tr:hover {
       padding: var(--defaultPadding);
   }
 
-  /* Needed for Viggos easter Greggs */
+/* Needed for Viggos easter Greggs */
 .pentalbin:hover{
     transform: scale(1.01);
 }
