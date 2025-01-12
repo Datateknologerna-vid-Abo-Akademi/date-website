@@ -7,11 +7,28 @@
         <link rel="stylesheet" href="{% static 'events/css/event-card.css' %}"type="text/css">
         <style>
             .background-img{
+                position: relative;
                 background: url({% static "events/img/onbackground.jpg" %}) no-repeat center center fixed;
                 -webkit-background-size: cover;
                 -moz-background-size: cover;
                 -o-background-size: cover;
                 background-size: cover;
+            }
+            .background-img::before{
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                pointer-events: none;
+                z-index: 1;
+            }
+            .background-img > * {
+                position: relative;
+                z-index: 2;
+            }
+
+            .evet-card > .card {
+                background-color: var(--primaryColor);
             }
         </style>
 
@@ -46,7 +63,7 @@
                                     <div class="row">
                                         <div style="margin: auto;" class="col-4 col-sm-2">
                                             <div class="display-4">
-                                                <span class="badge">{{ event.event_date_start|date:"d" }}</span>
+                                                <span class="badge" style="background-color: var(--primaryColorLight);">{{ event.event_date_start|date:"d" }}</span>
                                             </div>
                                             <div class="display-4 event-date-txt">
                                                 {{ event.event_date_start|date:"M" }}
@@ -93,7 +110,9 @@
             </div>
         </div>
     </div>
+    <div style="background-color: #672f6e; opacity: 0.7;">
+        {% include "core/footer.html" %}
+    </div>
     </div>
 
-{% include "core/footer.html" %}
 </html>
