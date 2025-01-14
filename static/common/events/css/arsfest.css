@@ -1,245 +1,387 @@
 /* NEW STUFF */
 
-@import url('https://fonts.googleapis.com/css2?family=Amethysta&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Amethysta&display=swap");
 
 :root {
-    --opacityColor: #11110ed3;
-    /*--opacityColor: rgba(223, 223, 223, 0.55);*/
-    --backdropBlur:  blur(2px);
-    --mainArsfestColor: var(--silver);
-    --mainArsfestTextColor: var(--lightSilver2);
-    --mainArsfestButtonHoverColor: var(--darkSilver2);
-    --arsfest-font: 'Josefin Sans', sans-serif;
+  --opacityColor: #11110ed3;
+  /*--opacityColor: rgba(223, 223, 223, 0.55);*/
+  --backdropBlur: blur(2px);
+  --mainArsfestColor: var(--silver);
+  --mainArsfestTextColor: var(--lightSilver2);
+  --mainArsfestButtonHoverColor: var(--darkSilver2);
+  --arsfest-font: "Josefin Sans", sans-serif;
+  z-index: inherit;
 }
 
-.hidden{
-    display: none !important;
+.hidden {
+  display: none !important;
 }
 
-.container-md{
-    padding-top: 10vh;
-    min-height: 100vh;
-    font-family: var(--arsfest-font);
-    text-align: start;
-    align-content: start;
-    font-weight: bold;
-    background-position: top;
-    border-bottom: 3px solid var(--primaryColor);
+.container-md {
+  padding-top: 10vh;
+  min-height: 100vh;
+  font-family: var(--arsfest-font);
+  text-align: start;
+  align-content: start;
+  font-weight: bold;
+  background-position: top;
+  border-bottom: 3px solid var(--primaryColor);
 }
 
-.content{
-    position: relative;
-    background-color: rgba(0, 0, 0, 0.80);
-    border: 1px solid var(--mainArsfestColor);
-    color: var(--mainArsfestTextColor);
-    font-size: 1em;
+.content {
+  position: relative;
+  background-color: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--mainArsfestColor);
+  color: var(--mainArsfestTextColor);
+  font-size: 1em;
 }
 
-  /* if backdrop support: very transparent and blurred */
-  @supports ((-webkit-backdrop-filter: blur(2em)) or (backdrop-filter: blur(2em))) {
-    .content {
+/* if backdrop support: very transparent and blurred */
+@supports (
+  (-webkit-backdrop-filter: blur(2em)) or (backdrop-filter: blur(2em))
+) {
+  .content {
     background-color: var(--opacityColor);
-      -webkit-backdrop-filter: var(--backdropBlur);
-      backdrop-filter: var(--backdropBlur);
-    }
+    -webkit-backdrop-filter: var(--backdropBlur);
+    backdrop-filter: var(--backdropBlur);
   }
-
-.content a, .baal-content h2, .baal-content h1 {
-    color: var(--mainArsfestTextColor);
 }
 
-.baal-content h2, .baal-content h1 {
-    color: var(--mainArsfestTextColor);
+.content a,
+.ball-content h2,
+.ball-content h1 {
+  color: var(--mainArsfestTextColor);
 }
 
-.baal-content {
-    color: var(--mainArsfestTextColor);
+.ball-content h2,
+.ball-content h1 {
+  color: var(--mainArsfestTextColor);
+}
+
+.ball-content {
+  color: var(--mainArsfestTextColor);
 }
 
 /* fade animations start*/
 @keyframes fadeIn {
-0% {opacity:0;}
-100% {opacity:1;}
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @-moz-keyframes fadeIn {
-0% {opacity:0;}
-100% {opacity:1;}
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @-webkit-keyframes fadeIn {
-0% {opacity:0;}
-100% {opacity:1;}
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @-o-keyframes fadeIn {
-0% {opacity:0;}
-100% {opacity:1;}
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @-ms-keyframes fadeIn {
-0% {opacity:0;}
-100% {opacity:1;}
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 /* fade animations end */
-
 
 /* shake animation start */
 
 @keyframes shake {
-    0% { transform: translate(1px, 1px) rotate(0deg); }
-    10% { transform: translate(-1px, -2px) rotate(-1deg); }
-    20% { transform: translate(-3px, 0px) rotate(1deg); }
-    30% { transform: translate(3px, 2px) rotate(0deg); }
-    40% { transform: translate(1px, -1px) rotate(1deg); }
-    50% { transform: translate(-1px, 2px) rotate(-1deg); }
-    60% { transform: translate(-3px, 1px) rotate(0deg); }
-    70% { transform: translate(3px, 1px) rotate(-1deg); }
-    80% { transform: translate(-1px, -1px) rotate(1deg); }
-    90% { transform: translate(1px, 2px) rotate(0deg); }
-    100% { transform: translate(1px, -2px) rotate(-1deg); }
+  0% {
+    transform: translate(1px, 1px) rotate(0deg);
   }
-
-  /*shake animation end*/
-  
-  /*spin animation start*/
-
-  @keyframes spin {
-    from{transform: rotate(0px);}
-    to{transform: rotate(720deg);}
+  10% {
+    transform: translate(-1px, -2px) rotate(-1deg);
   }
-  
-  /*spin animation end*/
+  20% {
+    transform: translate(-3px, 0px) rotate(1deg);
+  }
+  30% {
+    transform: translate(3px, 2px) rotate(0deg);
+  }
+  40% {
+    transform: translate(1px, -1px) rotate(1deg);
+  }
+  50% {
+    transform: translate(-1px, 2px) rotate(-1deg);
+  }
+  60% {
+    transform: translate(-3px, 1px) rotate(0deg);
+  }
+  70% {
+    transform: translate(3px, 1px) rotate(-1deg);
+  }
+  80% {
+    transform: translate(-1px, -1px) rotate(1deg);
+  }
+  90% {
+    transform: translate(1px, 2px) rotate(0deg);
+  }
+  100% {
+    transform: translate(1px, -2px) rotate(-1deg);
+  }
+}
 
-  
+/*shake animation end*/
+
+/*spin animation start*/
+
+@keyframes spin {
+  from {
+    transform: rotate(0px);
+  }
+  to {
+    transform: rotate(720deg);
+  }
+}
+
+/*spin animation end*/
 
 .header-box {
-    overflow: hidden;
+  overflow: hidden;
 }
 
-.baal-nav{
-    text-align: center;
-    margin: 8px;
+.periodic-table-square {
+  --text-glow-base-color: #ff7833;
+  --text-glow-color: white;
+  width: 230px;
+  height: 230px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.baal-nav a{
-    color: var(--mainArsfestTextColor);
-    margin: 5px;
-    padding: 10px;
-    background-color: var(--primaryColor);
-    border-radius: 5px;
-    transition: .3s;
-    border: 1px solid var(--mainArsfestColor);
+.periodic-table-inner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 200px;
+  height: 200px;
+  position: relative;
+}
+.periodic-table-number-container {
+  position: relative;
+  z-index: 1;
+  top: -10px;
+  left: -57px;
 }
 
-.baal-nav a:hover{
-    background-color: var(--mainArsfestButtonHoverColor);
-    color: var(--secondaryColor) !important;
-    box-shadow: 0 0 10px var(--mainArsfestColor);
-    -webkit-box-shadow: 0 0 10px var(--mainArsfestColor);
-    -moz-box-shadow: 0 0 10px var(--mainArsfestColor);
+.periodic-table-date-container {
+  position: relative;
+  z-index: 1;
+  top: 20px;
+  /* left: 70px; */
 }
 
-.baal-nav a:active{
-    transform: scale(1.05);
+.glowing-text-orange {
+  color: var(--text-glow-base-color);
+  text-shadow: 0 0 7px var(--text-glow-base-color),
+    0 0 10px var(--text-glow-base-color), 0 0 21px var(--text-glow-base-color),
+    0 0 42px var(--text-glow-base-color), 0 0 82px var(--text-glow-color),
+    0 0 92px var(--text-glow-color), 0 0 102px var(--text-glow-color),
+    0 0 151px var(--text-glow-color);
 }
 
-.text-content div > *, .anmalan > *, .anmalda > *{
-    animation: fadeIn ease 2s;
-    -webkit-animation: fadeIn ease 2s;
-    -moz-animation: fadeIn ease 2s;
-    -o-animation: fadeIn ease 2s;
-    -ms-animation: fadeIn ease 2s;
+.periodic-table-date-container > h2 {
+  font-size: 1.1em;
+}
+.periodic-table-inner > h2 {
+  font-size: 3em;
+}
+.card-shine-effect {
+  color: orange;
+  margin: 0px;
 }
 
-.alert-danger, .errorlist, .warning{
-    color: rgb(201, 99, 88) !important;
+.flex-container-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-footer{
-    display: none;
+.lava-container {
+  z-index: 1;
+  position: relative;
 }
 
-.navbar{
-    display: none;
+.lava-container::after {
+  content: "";
+  position: absolute;
+  top: -20px;
+  left: 0;
+  width: 100%;
+  height: calc(100% + 40px);
+  background: radial-gradient(circle at bottom, #ff4500 0%, #ff6347 100%);
+  z-index: -1;
+  opacity: 0.7;
+  filter: blur(20px);
+  transform: translateY(-20px);
+}
+
+.lava-container-bottom::after {
+  top: 20px;
+  height: calc(100% + 20px);
+}
+
+.ball-link {
+  z-index: 3;
+}
+
+.ball-nav {
+  position: relative;
+  text-align: center;
+  margin: 8px;
+}
+
+.ball-nav a {
+  color: var(--mainArsfestTextColor);
+  margin: 5px;
+  padding: 10px;
+  background-color: var(--primaryColor);
+  border-radius: 5px;
+  transition: 0.3s;
+  border: 1px solid var(--mainArsfestColor);
+}
+
+.ball-nav a:hover {
+  background-color: var(--mainArsfestButtonHoverColor);
+  color: var(--secondaryColor) !important;
+  box-shadow: 0 0 10px var(--mainArsfestColor);
+  -webkit-box-shadow: 0 0 10px var(--mainArsfestColor);
+  -moz-box-shadow: 0 0 10px var(--mainArsfestColor);
+}
+
+.ball-nav a:active {
+  transform: scale(1.05);
+}
+
+.text-content div > *,
+.anmalan > *,
+.anmalda > * {
+  animation: fadeIn ease 2s;
+  -webkit-animation: fadeIn ease 2s;
+  -moz-animation: fadeIn ease 2s;
+  -o-animation: fadeIn ease 2s;
+  -ms-animation: fadeIn ease 2s;
+}
+
+.alert-danger,
+.errorlist,
+.warning {
+  color: rgb(201, 99, 88) !important;
+}
+
+footer {
+  display: none;
+}
+
+.navbar {
+  display: none;
 }
 
 form p > * {
-    width: 100%;
+  width: 100%;
 }
 
-form label{
-    font-family: var(--arsfest-font) !important;
+form label {
+  font-family: var(--arsfest-font) !important;
 }
 
-form select{
-    font-family: var(--arsfest-font) !important;
+form select {
+  font-family: var(--arsfest-font) !important;
 }
 
 form input {
-    font-family: var(--arsfest-font) !important;
+  font-family: var(--arsfest-font) !important;
 }
 
 form button {
-    font-family: var(--arsfest-font) !important;
-    background-color: var(--primaryColor) !important;
-    color: var(--mainArsfestTextColor) !important;
-    border: 1px solid var(--mainArsfestColor) !important;
+  font-family: var(--arsfest-font) !important;
+  background-color: var(--primaryColor) !important;
+  color: var(--mainArsfestTextColor) !important;
+  border: 1px solid var(--mainArsfestColor) !important;
 }
 
 form button:hover {
-    background-color: var(--mainArsfestButtonHoverColor) !important;
-    color: var(--secondaryColor) !important;
-    box-shadow: 0 0 10px var(--mainArsfestColor) !important;
-    -webkit-box-shadow: 0 0 10px var(--mainArsfestColor) !important;
-    -moz-box-shadow: 0 0 10px var(--mainArsfestColor) !important;
+  background-color: var(--mainArsfestButtonHoverColor) !important;
+  color: var(--secondaryColor) !important;
+  box-shadow: 0 0 10px var(--mainArsfestColor) !important;
+  -webkit-box-shadow: 0 0 10px var(--mainArsfestColor) !important;
+  -moz-box-shadow: 0 0 10px var(--mainArsfestColor) !important;
 }
 
-form button:active{
-    transform: scale(1.05);
+form button:active {
+  transform: scale(1.05);
 }
 
-.event-full{
-    color: #e4001b;
+.event-full {
+  color: #e4001b;
 }
 
 th {
-    padding-bottom: 1rem;
+  padding-bottom: 1rem;
 }
 
-th, td {
-    text-align: left;
-    padding: 8px;
+th,
+td {
+  text-align: left;
+  padding: 8px;
 }
 tr:hover {
-    transition: 200ms;
-    background-color: var(--mainArsfestButtonHoverColor);
-    color: var(--textColorLight);
+  transition: 200ms;
+  background-color: var(--mainArsfestButtonHoverColor);
+  color: var(--textColorLight);
 }
-  
-  @keyframes glower {
-    0% {
-      background-position: 0 0;
-    }
-    
-    50% {
-      background-position: 400% 0;
-    }
-    
-    100% {
-      background-position: 0 0;
-    }
+
+@keyframes glower {
+  0% {
+    background-position: 0 0;
   }
 
-  .inner {
-      background-color: var(--opacityColor);
-      padding: var(--defaultPadding);
+  50% {
+    background-position: 400% 0;
   }
 
-  /* Needed for Viggos easter Greggs */
-.pentalbin:hover{
-    transform: scale(1.01);
+  100% {
+    background-position: 0 0;
+  }
 }
-.pentalbin:active{
-    transform: scale(1.05);
+
+.inner {
+  background-color: var(--opacityColor);
+  padding: var(--defaultPadding);
+}
+
+/* Needed for Viggos easter Greggs */
+.pentalbin:hover {
+  transform: scale(1.01);
+}
+.pentalbin:active {
+  transform: scale(1.05);
 }
