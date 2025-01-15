@@ -2,9 +2,7 @@ import random
 from enum import Enum
 
 from django.conf import settings
-from django.template import RequestContext
 from django.template.loader import render_to_string
-import luhn
 
 from billing.models import EventInvoice
 from events.models import EventRegistrationForm, EventAttendees
