@@ -26,4 +26,3 @@ django_cleanup
 daphne
 celery[redis]
 gunicorn
-luhn

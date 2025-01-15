@@ -13,6 +13,7 @@ TEMPLATES = [
             'context_processors': [
                 *COMMON_CONTEXT_PROCESSORS,
                 # Add project context processors here
+                "billing.context_processors.billing_context",
             ],
         },
     },
@@ -46,10 +47,16 @@ CONTENT_VARIABLES = {
     "ASSOCIATION_NAME": "ÖN Evenemang",
     "ASSOCIATION_NAME_FULL": "Österbottniska Nationens Årsfestkommité",
     "ASSOCIATION_NAME_SHORT": "ÖN Events",
-    "ASSOCIATION_EMAIL": "osterbottniska@albins.app",
+    "ASSOCIATION_EMAIL": "onarsfest@abo.fi",
     "ASSOCIATION_ADDRESS_L1": "c/o Kåren",
     "ASSOCIATION_ADDRESS_L2": "Tavastgatan 22",
     "ASSOCIATION_POSTAL_CODE": "20500 Åbo",
     "SOCIAL_BUTTONS": [
     ],
+}
+
+BILLING_CONTEXT = {
+    "INVOICE_RECIPIENT": "Österbottniska Nationen vid Åbo Akademi r.f.",
+    "IBAN": "FI35 5670 0820 4600 85",
+    "BIC": "OKOYFIHH",
 }
