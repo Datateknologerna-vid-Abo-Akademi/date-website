@@ -54,6 +54,7 @@ CONTENT_VARIABLES = {
     "ASSOCIATION_ADDRESS_L1": "Åbo Akademi, Aurum",
     "ASSOCIATION_ADDRESS_L2": "Henriksgatan 2",
     "ASSOCIATION_POSTAL_CODE": "20500 Åbo",
+    "ASSOCIATION_OFFICE_HOURS": "Kanslitid Må - To 11:30-13",
     "SOCIAL_BUTTONS": [
         ["fa-facebook-f", "https://www.facebook.com/kemistklubbenvidaboakademi/"],
         ["fa-instagram", "https://www.instagram.com/kemistklubben/"],

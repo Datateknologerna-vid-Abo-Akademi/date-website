@@ -1,0 +1,118 @@
+{% load static %}
+{% load i18n %}
+
+<html lang="sv_FI">
+    <head>
+        <link rel="stylesheet" href="{% static 'events/css/style.css' %}"type="text/css">
+        <link rel="stylesheet" href="{% static 'events/css/event-card.css' %}"type="text/css">
+        <style>
+            .background-img{
+                position: relative;
+                background: url({% static "events/img/onbackground.jpg" %}) no-repeat center center fixed;
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
+            }
+            .background-img::before{
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                pointer-events: none;
+                z-index: 1;
+            }
+            .background-img > * {
+                position: relative;
+                z-index: 2;
+            }
+
+            .evet-card > .card {
+                background-color: var(--primaryColor);
+            }
+        </style>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{% block title %}{{ ASSOCIATION_NAME }}{% endblock %}</title>
+        <link rel="stylesheet" href="{% static 'core/css/base.css' %}">
+        <link rel="stylesheet" href="{% static 'date/css/date-root.css' %}">
+        <link rel="shortcut icon" type="image/png" href="{% static "core/images/logo.ico" %}"/>
+
+        <link href="https://fonts.googleapis.com/css?family=Chakra+Petch" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Josefin+Sans:300,400,400i,600" rel="stylesheet">
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+              integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+        <link rel= "stylesheet" href= "https://maxst.icons8.com/vue-static/landings/line-awesome/font-awesome-line-awesome/css/all.min.css" >
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+    </head>
+
+    {% include "core/header.html" %}
+
+    <div class="background-img">
+    <div class="container-md min-vh-100">
+        <div class="container-size break-words container-margin-top" style="padding-top: 12rem">
+            <div class="row">
+                <div class="col-md-12">
+                    <h2 class="text-center"><span>{% trans "Kommande händelser" %}</span></h2>
+                    {% for event in event_list %}
+                        <div class="card-group evet-card text-light mb-2">
+                            <div class="card mb-0 p-1">
+                                <div class="card-body py-1">
+                                    <div class="row">
+                                        <div style="margin: auto;" class="col-4 col-sm-2">
+                                            <div class="display-4">
+                                                <span class="badge" style="background-color: var(--primaryColorLight);">{{ event.event_date_start|date:"d" }}</span>
+                                            </div>
+                                            <div class="display-4 event-date-txt">
+                                                {{ event.event_date_start|date:"M" }}
+                                            </div>
+                                        </div>
+                                        <div class="col-8 col-sm-6">
+                                            <div class="d-flex flex-column">
+                                                <h3 class="card-title text-uppercase mt-0">
+                                                    <strong>{{ event.title }}</strong>
+                                                </h3>
+                                                <div class="card-text">
+                                                {{ event.content|safe|striptags|truncatewords_html:"20"}}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="margin: auto;" class="col-6 col-sm-2">
+                                            <ul class="list-group my-0 pl-1">
+                                                <li class="list-inline-item"><i class="far fa-clock"></i> {{event.event_date_start|date:"H:i"}} - {{ event.event_date_end|date:"H:i"}}</li>
+                                                <li class="list-inline-item"><i class="fas fa-calendar-check"></i> {{ event.event_date_start|date:"D"}}</li>
+                                                <li class="list-inline-item"><i class="fas fa-users"></i> {{ event.get_sign_up_max_participants }}</li>
+                                              </ul>
+                                        </div>
+                                        <div style="margin: auto;" class="col-6 col-sm-2 text-center">
+                                            <a class="btn btn-outline-light btn-floating m-1" href="{% url 'events:detail' event.slug %}"><i class="fas fa-chevron-right fa-4x"></i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <h5 class="text-center">{% trans "Inga aktiva händelser" %}</h5>
+                    {% endfor %}
+                </div>
+                <div class="text-center mt-5">
+                    <h2><span>{% trans "Tidigare händelser" %}</span></h2>
+                    {% for event in past_events|slice:5 %}
+                    <div>
+                        <a class="content-past" href="{% url 'events:detail' event.slug %}"><h4 class="event-title-ended">{{ event.title }}</h4></a>
+                    </div>
+                    {% empty %}
+                        <h5>{% trans "Inga tidigare händelser" %}</h5>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="background-color: #672f6e; opacity: 0.7;">
+        {% include "core/footer.html" %}
+    </div>
+    </div>
+
+</html>

@@ -10,28 +10,56 @@
     min-height: 45vh;
 }
 
-header .text > *{
+.hero-text-box {
     text-align: center;
-    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 3vh;
+}
+
+.hero-text-box .text {
+    color: var(--textColorLight);
+    width: 100%;
+    height: 100%;
+    position: relative;
+    max-width: 100%;
+}
+
+.hero-text-box .text h1 {
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0;
+    font-size: min(calc(0.96*7vh), 7vw);
+    font-weight: 400;
+    -webkit-animation: fadeIn 3s;
+    animation: fadeIn 3s;
+}
+.hero-text-box .text h3 {
+    display: block;
+    text-align: center;
+    font-size: min(2.5vh, 3.5vw);
+    font-weight: 700;
+    letter-spacing: 0.74em;
+    -webkit-animation: fadeIn 4.5s ease-in;
+    animation: fadeIn 4.5s ease-in;
 }
 
 .scaling-svg-container {
     margin-top: 55px;
-        position: relative;
-        height: 30vh;
-        width: 100%;
-        padding: 0;
-        /* override this inline for aspect ratio other than square */
-   }
-.scaling-svg-container svg {
-    position: absolute;
-    height: 100%;
+    position: relative;
+    height: 30vh;
     width: 100%;
-    left: 0;
-    top: 0;
+    padding: 0;
+    /* override this inline for aspect ratio other than square */
 }
 
-.header path {
+.scaling-svg-container svg {
+    height: 100%;
+    width: 100%;
+}
+
+.hero-text-box path {
     stroke: var(--secondaryColor);
     fill: var(--secondaryColor);
     stroke-dasharray: 25000;
@@ -64,26 +92,6 @@ header .text > *{
     }
 }
 
-.hero-text-main {
-    text-transform: uppercase;
-    padding-top: 5vh;
-    display: block;
-    margin-bottom: 0;
-    font-size: 4rem;
-    font-weight: 400;
-    -webkit-animation: fadeIn 3s;
-            animation: fadeIn 3s;
-}
-.hero-text-sub {
-    display: block;
-    text-align: center;
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: 1.1rem;
-    -webkit-animation: fadeIn 4.5s ease-in;
-            animation: fadeIn 4.5s ease-in;
-}
-
 /*NEWS-EVENTS*/
 
 .news-events {
@@ -111,8 +119,8 @@ header .text > *{
     grid-template-columns: 1fr 850px 350px 1fr;
     grid-template-rows: auto;
     grid-template-areas: 
-      ". news sidebar ."
-      ". news sidebar ."
+      ". news events ."
+      ". news logos ."
       ". ig-scroll ig-scroll .";
     grid-column-gap: 3vw;
 }
@@ -156,7 +164,7 @@ div.news-content a{
 }
 
 div.news-content a:hover{
-    color: var(--textColorDarkish);
+    color: var(--linkSecondaryHover);
 }
 
 .more-news{
@@ -164,28 +172,12 @@ div.news-content a:hover{
 }
 
 .more-news:hover{
-    color: var(--textColorDarkish);
+    color: var(--linkSecondaryHover);
 }
 
 .news-header{
     position: relative;
 }
-
-.kk100-text a{
-    color: #ffbb00 !important;
-}
-
-.kk100-text {
-    background-color:transparent;
-    width:50px;
-    height:35px;
-    text-shadow: 0 0 1px #ff9600;
-    -webkit-animation: pulse 2s linear infinite;
-    animation: pulse 2s linear infinite;
-    position: absolute;
-    left: 90%;
-    bottom: 0%;
-  }
 
 @-webkit-keyframes pulse {
     0% { text-shadow:0 0 1px #ff9600;}
@@ -204,11 +196,13 @@ div.news-content a:hover{
 
 /*Sidebar*/
 
-.sidebar-container{
-    grid-area: sidebar;
+.sidebar-logo-container {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 350px;
 }
 
-.sidebar-logo-container {
+.sidebar-logo-container img {
     margin-top: 0.5rem;
     max-width: 100%;
 }
@@ -252,7 +246,8 @@ div.news-content a:hover{
   
 .evet-card a:hover{
     background-color: inherit;
-    color: var(--textColorDarkish);
+    border-top: 2px solid var(--linkSecondaryHover);
+    color: var(--linkSecondaryHover);
   }
   
 .evet-card a:focus{
@@ -284,13 +279,8 @@ div.news-content a:hover{
   }
 
 .events-container{
-    display: block;
-}
-
-.mobile-events-container{
     grid-area: events;
-    display: none;
-    margin-bottom: 10px;
+    display: block;
 }
 
 .events{
@@ -351,7 +341,7 @@ div.news-content a:hover{
 .more-events-button:hover{
     transition: 0.2s;
     scale: 1.01;
-    color: var(--textColorDarkish);
+    color: var(--linkSecondaryHover);
 }
 /*Events end*/
 
@@ -427,7 +417,7 @@ div.calendar-container a {
 .calendar-eventday-popup {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
-  color: black;
+  color: var(--linkColor);
   font-size: 0.75rem;
 }
 
@@ -436,12 +426,9 @@ div.calendar-container a {
 /*logos start*/
 
 .logo-container{
-    display: block;
-}
-
-.mobile-logo-container{
     grid-area: logos;
-    display: none;
+    display: block;
+    overflow: hidden;
 }
 
 .carousel-logos{
@@ -451,22 +438,19 @@ div.calendar-container a {
     border-color: rgb(180, 180, 180);
 }
 
-div.carousel-logos {
-    overflow: hidden;
-  }
-
-div.carousel-logos img{
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    width: 50%;
+.company-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100px;
+    /* keep img ratio correct */
+    width: auto !important;
 }
 
 .company-logo img{
     max-height: 100px;
     max-width: 100%;
     /* keep img ratio correct */
-    width: auto !important;
     height: auto !important;
 }
 
@@ -562,63 +546,19 @@ div.scroll-content img{
     .main-container{
         grid-template-columns: 1vw 1fr 1vw;
         grid-template-areas:
-          ". news ."
-          ". sidebar ."
-          ". ig-scroll .";
-    }
-    .text .hero-text-main {
-        font-size: 2em;
-    }
-
-    .text .hero-text-sub {
-        font-size: 1em;
-        letter-spacing: 10px;
-    }
-}
-
-
-@media screen and (max-width: 550px) {
-
-    .calendar-tooltip .tooltiptext {
-        width: 0;
-      }
-    .calendar-tooltip:hover .tooltiptext {
-        visibility: hidden;
-      }
-}
-
-@media screen and (max-width: 991px){
-    .main-container{
-        grid-template-columns: 1vw 1fr 1vw;
-        grid-template-areas:
           ". events ."
           ". news ."
-          ". extras ."
           ". logos ."
           ". ig-scroll .";
     }
 
-    .sidebar-container{
-        display: none;
-    }
-
-    .mobile-events-container{
-        display: block;
-    }
-
-    .mobile-extra-container{
-        display: block;
-    }
-
-
 }
 
-@media screen and (max-width: 550px) {
+/*misc*/
+.heading-link a{
+    color: var(--textColorDark)
+}
 
-    .aa-img {
-        left: 85%;
-      }
-    .date-25 {
-        left: 80%;
-    }
+.heading-link a:hover{
+    color: var(--textColorMedium)
 }

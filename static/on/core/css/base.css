@@ -9,7 +9,7 @@ html body{
 }
 
 .content img{
-    max-height: 40vh;
+    max-height: 35vh;
     max-width: 100%;
     /* keep img ratio correct */
     width: auto !important;
@@ -19,14 +19,14 @@ html body{
 
 /* Link colors */
 div a{
-    color: var(--linkColorSecondary);
+    color: var(--linkColorLight);
     display: inline-block;
     text-decoration: none;
 }
 
 div a:hover{
     transition: 0.3s;
-    color: var(--linkSecondaryHover);
+    color: var(--linkColorLightHover);
 }
 /* ---- */
 
@@ -57,8 +57,7 @@ div a:hover{
 
 .content{
     margin: 20px 2vw;
-    background-color: var(--secondaryColor);
-    color: var(--textColorDarkish);
+    background-color: var(--primaryColorLight);
     padding: var(--defaultPadding);
     border-radius: var(--defaultRadius);
 }
@@ -67,7 +66,7 @@ div a:hover{
 .theme-button {
     background-color: var(--primaryColorLighter);
     border: none;
-    color: var(--textColorLight);
+    color: var(--linkColorLight);
     padding: 10px 20px;
     text-align: center;
     font-size: 16px;
@@ -108,18 +107,4 @@ div a:hover{
     transform: translateX(10px);
   }
 
-/* ---- */
-
-/* Basic table colors */
-#table {
-    --bs-table-bg: #f8f9fa;
-    --bs-table-striped-bg: #ecedee;
-    --bs-table-striped-color: #000;
-    --bs-table-active-bg: #dfe0e1;
-    --bs-table-active-color: #000;
-    --bs-table-hover-bg: #e5e6e7;
-    --bs-table-hover-color: #000;
-    color: #000;
-    border-color: #dfe0e1;
-}
 /* ---- */

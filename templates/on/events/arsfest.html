@@ -10,34 +10,33 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
         <script src="{% static 'js/live-attendee-list.js' %}"></script>
-  <style>
-    .background-img {
-      background: url("{% static 'events/img/arsfest26-bg.png' %}") no-repeat
-        center center fixed;
-      -webkit-background-size: cover;
-      -moz-background-size: cover;
-      -o-background-size: cover;
-      background-size: cover;
-    }
-    .periodic-table-square, .periodic-table-inner{
-    background-position: top left;
-    background-size: 50%;
-    background: url("{% static 'events/img/metal-plate-alt.jpg' %}");
-      -webkit-background-size: cover;
-      -moz-background-size: cover;
-      -o-background-size: cover;
-      background-size: cover;
-    }
-    .periodic-table-inner {
-      border: 16px solid transparent;
-    border-image: url("{% static 'events/img/arsfest26-bg-border.png' %}") 30 stretch;
-    }
-  </style>
+        <style>
+            .background-img{
+                position: relative;
+                background: url({% static "events/img/onbackground.jpg" %}) no-repeat center center fixed;
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
+            }
+            .background-img::before{
+                    content: "";
+                    position: absolute;
+                    inset: 0;
+                    background: rgba(0, 0, 0, 0.5);
+                    pointer-events: none;
+                    z-index: 1;
+                }
+                .background-img > * {
+                    position: relative;
+                    z-index: 2;
+                }
+        </style>
     </head>
     <div class="background-img">
         <div class="container-md min-vh-100 p-1">
-            <div class="container-size lava-container lava-container-bottom">
-                <div class="content header-box ">
+            <div class="container-size">
+                <div class="content header-box">
 
                 <div class="row justify-content-center">
                     <div class="col-md-6 col-8">
@@ -45,41 +44,34 @@
                 </div>
 
                 <div class="main-content mt-4">
-                    <div class="text-center flex-container-center">
-                    <div class="periodic-table-square glowing-text-orange">
-                        <div class="periodic-table-inner">
-                        <div class="periodic-table-number-container card-shine-effect">
-                        <h2>26</h2></div>
-                        <h2 class="age card-shine-effect">DaTe</h2>
-                        <div class="periodic-table-date-container card-shine-effect">
-                        <h2>Årsfest 22.2.2025</h2></div>
-                        </div>
-                    </div>
+                    <div class="text-center">
+                        <img style="margin-bottom: 30px" class="pentalbin" src="{% static 'events/img/onlogo.png' %}" alt="ÖNs logo">
+                        <h1 class="age card-shine-effect">{{ event.title }}</h1>
                     </div>
                 </div>
-                    <div class="ball-nav flex-container-center">
-                        <a class="ball-link glowing-text-orange ontop" onclick="showPage(this)" href="#/main" data-nav="main">Välkommen</a>
+                    <div class="baal-nav">
+                        <a class="baal-link" onclick="showPage(this)" href="#/main" data-nav="main">Välkommen</a>
                         {% for page in staticpages %}
-                            <a class="ball-link" onclick="showPage(this)" href="#/{{ page.slug }}" data-nav="{{ page.slug }}">{{ page.title }}</a>
+                            <a class="baal-link" onclick="showPage(this)" href="#/{{ page.slug }}" data-nav="{{ page.slug }}">{{ page.title }}</a>
                         {% endfor %}
-                        <a class="ball-link" onclick="showPage(this)" href="#/anmalan" data-nav="anmalan">Anmälan</a>
-                        <a class="ball-link" onclick="showPage(this)" href="#/anmalda" data-nav="anmalda">Anmälda</a>
+                        <a class="baal-link" onclick="showPage(this)" href="#/anmalan" data-nav="anmalan">Anmälan</a>
+                        <a class="baal-link" onclick="showPage(this)" href="#/anmalda" data-nav="anmalda">Anmälda</a>
                     </div>
                 </div>
-                <div class="text-content lava-container">
+                <div class="text-content">
                     {% for page in staticpages %}
-                        <div id="{{ page.slug }}" class="content ball-content {{ page.slug }} hidden">
+                        <div id="{{ page.slug }}" class="content baal-content {{ page.slug }} hidden">
                             <h1>{{ page.title }}</h1>
                             <p>{{ page.content | safe }}</p>
                         </div>
                     {% endfor %}
-                    <div id="main" class="content ball-content main">
+                    <div id="main" class="content baal-content main">
                         <h1 class="header">{{ event.title }}</h1>
                         <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
                         <p>{{ event.content | safe }}</p>
                     </div>
                 </div>
-                <div class="content ball-content anmalan hidden break-words">
+                <div class="content baal-content anmalan hidden break-words">
                     <h2 id="sign-up">{% trans "Anmälning" %}</h2>
                     {% if user|in_group:"commodore" %}
                         {% include 'events/registering.html' %}
@@ -95,7 +87,7 @@
                         <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_others | timeuntil }}</p>
                     {% endif %}
                 </div>
-                <div id="anmalda" class="content ball-content anmalda hidden">
+                <div id="anmalda" class="content baal-content anmalda hidden">
                     {% if event|show_attendee_list %}
                         {% if event.sign_up_max_participants != 0 %}
                             <p>Det finns {{ event.sign_up_max_participants }} platser!</p>
@@ -141,13 +133,13 @@
         });
 
         function showPage(element){
-            $(".ball-content").addClass("hidden");
+            $(".baal-content").addClass("hidden");
             $(`.${element.dataset.nav}`).toggleClass("hidden")
             let pageHash = window.location.hash.substr(1).replace(/\//g,'');
         }
 
         function currentPage(element){
-            $(".ball-content").addClass("hidden");
+            $(".baal-content").addClass("hidden");
             let pageHash = window.location.hash.substr(1).replace(/\//g,'');
             $(`.${pageHash}`).toggleClass("hidden")
         }
@@ -155,9 +147,9 @@
         /* viggos silly stuff please ignore*/
         var counter = 0;
 
-        const opendrink = new Audio("https://dl.sndup.net/drjj/opendrink.mp3");
-        const mcdrink = new Audio("https://dl.sndup.net/km6b/mcdrink.mp3");
-        const auugh = new Audio("https://dl.sndup.net/cx42/auugh.mp3");
+        const opendrink = new Audio("https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/opendrink.mp3");
+        const mcdrink = new Audio("https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/mcdrink.mp3");
+        const auugh = new Audio("https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/auugh.mp3");
 
         $('.pentalbin').click(function () {
             counter++;
@@ -175,7 +167,7 @@
                     'animation': 'spin 3s infinite',
                 })
 
-                $('.ball-link').css({
+                $('.baal-link').css({
                     'animation': ' shake 3s infinite',
                     'color': "turquoise"
                 })
@@ -204,8 +196,8 @@
 
                 $(".gold-left,.gold-right,.gold-left-bottom,.gold-right-bottom").remove();
 
-                $(".background-img").append('<audio autoplay loop src="https://dl.sndup.net/hrj5/pour.mp3"></audio>');
-                $(".background-img").append('<audio autoplay src="https://dl.sndup.net/twr9/yt1scom%20-%20Moomin%20Hardbass%20Remix%20Extended.mp3"></audio>');
+                $(".background-img").append('<audio autoplay loop src="https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/pour.mp3"></audio>');
+                $(".background-img").append('<audio autoplay src="https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/yt1scom%20-%20Moomin%20Hardbass%20Remix%20Extended.mp3"></audio>');
             }
 
             if (counter == 30) {
@@ -245,24 +237,25 @@
                     auugh.play();
                 });
 
-                $('.ball-link').css({
+                $('.baal-link').css({
                     'animation': ' shake 0.5s infinite',
                     'color': "red"
                 })
 
-                $(".background-img").append('<audio autoplay src="https://dl.sndup.net/twr9/yt1scom%20-%20Moomin%20Hardbass%20Remix%20Extended.mp3"></audio>');
-                $(".background-img").append('<audio autoplay loop src="https://dl.sndup.net/pwrr/vom.mp3"></audio>');
+                $(".background-img").append('<audio autoplay src="https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/yt1scom%20-%20Moomin%20Hardbass%20Remix%20Extended.mp3"></audio>');
+                $(".background-img").append('<audio autoplay loop src="https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/vom.mp3"></audio>');
             }
 
             if (counter == 50) {
 
                 $("audio").remove();
-                $(".background-img").append('<audio autoplay src="https://dl.sndup.net/wmcd/died.mp3"></audio>');
+                $(".background-img").append('<audio autoplay src="https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/died.mp3"></audio>');
                 $('.content').css({
                     'display': 'none',
                 });
                 $('body').css({
                     'animation': ' shake 1s infinite',
+                    'background-color': 'black',
                 });
                 $('.background-img').css({
                     'background': "url('https://i.scdn.co/image/ab67616d0000b273bd05173ef76dfa8a6106570a') no-repeat center center fixed",

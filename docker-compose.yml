@@ -3,7 +3,7 @@ version: '3'
 services:
   db:
     image: postgres:${DATE_POSTGRESQL_VERSION}-alpine
-    restart: always
+    restart: unless-stopped
     volumes:
       - date_postgres_data:/var/lib/postgresql/data/
     ports:
@@ -12,7 +12,7 @@ services:
       - POSTGRES_PASSWORD=${DATE_DB_PASSWORD}
   web:
     build: .
-    restart: always
+    restart: unless-stopped
     #igSheduler startup command (nohup python /code/social/igupdate.py &) &&
     command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python /code/manage.py migrate --noinput && python manage.py collectstatic --noinput &&  python manage.py runserver 0.0.0.0:8000"
     volumes:
@@ -46,9 +46,9 @@ services:
       - db
       - redis
   celery:
-    restart: always
+    restart: unless-stopped
     build: .
-    command: celery -A core worker -l info
+    command: celery -A core worker -l info -c 2
     volumes:
       - .:/code
     environment:
@@ -60,7 +60,7 @@ services:
       - web
       - redis
   redis:
-    restart: always
+    restart: unless-stopped
     image: valkey/valkey:7.2-alpine
     ports:
       - ${REDIS_PORT}:6379

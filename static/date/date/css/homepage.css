@@ -154,8 +154,8 @@
     grid-template-columns: 1fr 850px 350px 1fr;
     grid-template-rows: auto;
     grid-template-areas: 
-      ". news sidebar ."
-      ". news sidebar ."
+      ". news events ."
+      ". news extras ."
       ". ig-scroll ig-scroll ."
       ". logos logos .";
     grid-column-gap: 3vw;
@@ -265,10 +265,6 @@ div.news-content a:hover{
 
 /*Sidebar*/
 
-.sidebar-container{
-    grid-area: sidebar;
-}
-
 /*Event start*/
 
   
@@ -341,13 +337,8 @@ div.news-content a:hover{
   }
 
 .events-container{
-    display: block;
-}
-
-.mobile-events-container{
     grid-area: events;
-    display: none;
-    margin-bottom: 10px;
+    display: block;
 }
 
 .events{
@@ -514,12 +505,8 @@ div.calendar-container a {
 /*extras start*/
 
 .extra-container{
-    display: block;
-}
-
-.mobile-extra-container{
     grid-area: extras;
-    display: none;
+    display: block;
 }
 
 .carousel-logos{
@@ -553,11 +540,11 @@ ul#logo-list {
     height: auto !important;
 }
 
-.extra-container a, .mobile-extra-container a {
+.extra-container a {
     color: var(--linkColorDark);
 }
 
-.extra-container a:hover, .mobile-extra-container a:hover{
+.extra-container a:hover {
     color: var(--linkColorDarkHover);
 }
 
@@ -636,19 +623,6 @@ ul#logo-list {
           ". logos ."
           ". ig-scroll .";
     }
-
-    .sidebar-container{
-        display: none;
-    }
-
-    .mobile-events-container{
-        display: block;
-    }
-
-    .mobile-extra-container{
-        display: block;
-    }
-
 
 }
 

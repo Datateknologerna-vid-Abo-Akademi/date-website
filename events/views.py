@@ -159,8 +159,8 @@ class EventDetailView(DetailView):
     def redirect_after_signup(self):
         event = self.get_context_data().get('event')
         if event.title.lower() in ['årsfest', 'årsfest gäster']:
-            return redirect(f"/events/{event.slug}/#/anmalda")
-        return redirect(f"/events/{self.get_context_data().get('event').slug}")
+            return redirect(f"{reverse('events:detail', args=[event.slug])}#/anmalda")
+        return redirect(reverse('events:detail', args=[event.slug]))
 
     def handle_avec_data(self, cleaned_data, attendee):
         avec_data = {'avec_for': attendee}
