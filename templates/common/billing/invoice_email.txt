@@ -13,7 +13,9 @@ Sista betalningsdag: {{ invoice.due_date }}
 
 Vänligen notera att sista avanmälningsdatum är {{ signup.event.sign_up_cancelling_deadline.date }}. Om du avanmäler dig efter detta datum kommer du att debiteras fullt pris.
 
-Med vänliga hälsningar:
+OBS! Svara inte på detta mail utan frågor och dylikt skall riktas åt {{ ASSOCIATION_EMAIL }}!
+
+Med vänliga hälsningar,
 
 {{ ASSOCIATION_NAME_FULL }}
 {{ ASSOCIATION_EMAIL }}
