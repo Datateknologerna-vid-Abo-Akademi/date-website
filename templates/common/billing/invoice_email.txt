@@ -11,9 +11,12 @@ Referensnummer: {{ invoice.reference_number }}
 Summa: {{ invoice.amount }} {{ invoice.currency }}
 Sista betalningsdag: {{ invoice.due_date }}
 
+Vid betalning bör referensnummer anges.
+
 Vänligen notera att sista avanmälningsdatum är {{ signup.event.sign_up_cancelling_deadline.date }}. Om du avanmäler dig efter detta datum kommer du att debiteras fullt pris.
 
 OBS! Svara inte på detta mail utan frågor och dylikt skall riktas åt {{ ASSOCIATION_EMAIL }}!
+
 
 Med vänliga hälsningar,
 
