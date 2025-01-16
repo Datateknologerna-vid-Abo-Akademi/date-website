@@ -76,6 +76,7 @@ class EventDetailView(DetailView):
             'tomtejakt': 'events/tomtejakt.html',
             'wappmiddag': 'events/wappmiddag.html',
             'arsfest': 'events/arsfest.html',
+            'arsfest_stipendiater': 'events/arsfest.html'
         }
         # Will return a 500 response to client if the template is not found
         if event_title in templates: # TODO: Selectable template
