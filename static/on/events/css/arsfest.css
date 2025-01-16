@@ -54,6 +54,8 @@
 
 .baal-content {
     color: var(--mainArsfestTextColor);
+    box-shadow: 0 0 9px 3px rgba(200, 182, 250, 0.8);
+    border-radius: 6px;
 }
 
 /* fade animations start*/
@@ -114,8 +116,9 @@
   
 
 .header-box {
-    overflow: hidden;
-}
+     box-shadow: 0 0 10px 4px rgba(200, 182, 250, 0.8);
+     border-radius: 6px;
+ }
 
 .baal-nav{
     text-align: center;
@@ -133,7 +136,7 @@
 }
 
 .baal-nav a:hover{
-    background-color: var(--mainArsfestButtonHoverColor);
+    background-color: rgba(157, 9, 182, 0.8);
     color: var(--textColorLightish) !important;
     box-shadow: 0 0 10px var(--mainArsfestColor);
     -webkit-box-shadow: 0 0 10px var(--mainArsfestColor);
@@ -231,6 +234,30 @@ tr:hover {
     }
   }
 
+    .shooting-star {
+        position: absolute;
+        background-color: rgba(255, 255, 255, 0.8);
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        animation: shoot 2s ease-out;
+    }
+
+    /* Animation for shooting stars */
+    @keyframes shoot {
+        0% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1);
+        }
+        70% {
+            opacity: 1;
+            transform: translate(calc(200px * var(--direction-x)), calc(200px * var(--direction-y))) scale(0.7);
+        }
+        100% {
+            opacity: 0;
+            transform: translate(calc(400px * var(--direction-x)), calc(400px * var(--direction-y))) scale(0);
+        }
+    }
+
   .inner {
       background-color: var(--opacityColor);
       padding: var(--defaultPadding);
@@ -243,3 +270,9 @@ tr:hover {
 .pentalbin:active{
     transform: scale(1.05);
 }
+
+.pentalbin {
+    display: inline-block;
+    filter: drop-shadow(0 0 10px rgba(200, 182, 250, 0.8));
+}
+
