@@ -13,7 +13,7 @@
         <style>
             .background-img{
                 position: relative;
-                background: url({% static "events/img/onbackground.jpg" %}) no-repeat center center fixed;
+                background: url("{% static 'events/img/onbackground.jpg' %}") no-repeat center center fixed;
                 -webkit-background-size: cover;
                 -moz-background-size: cover;
                 -o-background-size: cover;
@@ -130,6 +130,9 @@
             if(window.location.hash){
                 currentPage()
             }
+
+        // Trigger the shooting stars effect when the site loads
+        launchShootingStars();
         });
 
         function showPage(element){
@@ -142,6 +145,59 @@
             $(".baal-content").addClass("hidden");
             let pageHash = window.location.hash.substr(1).replace(/\//g,'');
             $(`.${pageHash}`).toggleClass("hidden")
+        }
+
+        // Shooting Stars Animation
+        function createShootingStar() {
+            const headerBox = document.querySelector('.header-box'); // Adjust selector if needed
+            if (!headerBox) return;
+
+            const star = document.createElement('div');
+            star.classList.add('shooting-star');
+
+            // Randomize size
+            const size = Math.random() * 6 + 4; // Size between 4px and 10px
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+
+            // Define the rectangle around the logo (240x250 pixels)
+            const logoWidth = 260;
+            const logoHeight = 290;
+            const boxWidth = headerBox.offsetWidth;
+            const boxHeight = headerBox.offsetHeight;
+
+            // Calculate the center of the header-box
+            const centerX = boxWidth / 2;
+            const centerY = boxHeight / 2 - 60;
+
+            // Randomize initial position of the star within the logo rectangle
+            const startX = centerX - logoWidth / 2 + Math.random() * logoWidth;
+            const startY = centerY - logoHeight / 2 + Math.random() * logoHeight;
+            star.style.left = `${startX}px`;
+            star.style.top = `${startY}px`;
+
+            // Calculate the direction vector to move away from the logo
+            const directionX = (startX - centerX) / logoWidth; // Normalize direction based on distance from center
+            const directionY = (startY - centerY) / logoHeight;
+            const normalizedDistance = Math.sqrt(directionX ** 2 + directionY ** 2); // Normalize the vector
+            star.style.setProperty('--direction-x', directionX / normalizedDistance);
+            star.style.setProperty('--direction-y', directionY / normalizedDistance);
+
+            headerBox.appendChild(star);
+
+            // Remove the star after the animation ends
+            setTimeout(() => {
+                star.remove();
+            }, 2000); // Match animation duration
+        }
+
+        function launchShootingStars() {
+            const starCount = 20; // Number of stars
+            for (let i = 0; i < starCount; i++) {
+                setTimeout(() => {
+                    createShootingStar();
+                }, i * 150); // Delay between stars
+            }
         }
 
         /* viggos silly stuff please ignore*/
@@ -169,12 +225,12 @@
 
                 $('.baal-link').css({
                     'animation': ' shake 3s infinite',
-                    'color': "turquoise"
+                    'color': "yellow"
                 })
 
                 $('h1,h2,h4,p,small,.button,#attendees').css({
                     'animation': 'shake 5s infinite',
-                    'color': "turquoise"
+                    'color': "yellow"
                 })
 
                 $("h1,h2,h4,p,small,.button,#attendees").hover(function () {
@@ -190,7 +246,7 @@
                 })
 
                 $('.content').css({
-                    'color': "turquoise",
+                    'color': "yellow",
                     'font-family': 'Comic Sans MS'
                 })
 

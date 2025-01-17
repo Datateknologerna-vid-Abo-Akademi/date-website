@@ -76,6 +76,7 @@ class EventDetailView(DetailView):
             'tomtejakt': 'events/tomtejakt.html',
             'wappmiddag': 'events/wappmiddag.html',
             'arsfest': 'events/arsfest.html',
+            'arsfest_stipendiater': 'events/arsfest.html'
         }
         # Will return a 500 response to client if the template is not found
         if event_title in templates: # TODO: Selectable template
@@ -92,6 +93,9 @@ class EventDetailView(DetailView):
                                                           email=form.cleaned_data['email'],
                                                           anonymous=form.cleaned_data['anonymous'],
                                                           preferences=form.cleaned_data)
+        if 'billing' in settings.INSTALLED_APPS:
+            from billing.handlers import handle_event_billing
+            handle_event_billing(attendee)
         if 'avec' in form.cleaned_data and form.cleaned_data['avec']:
             self.handle_avec_data(form.cleaned_data, attendee)
         return self.redirect_after_signup()

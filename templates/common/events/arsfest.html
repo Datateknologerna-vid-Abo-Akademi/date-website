@@ -155,15 +155,15 @@
         /* viggos silly stuff please ignore*/
         var counter = 0;
 
-        const opendrink = new Audio("https://dl.sndup.net/drjj/opendrink.mp3");
-        const mcdrink = new Audio("https://dl.sndup.net/km6b/mcdrink.mp3");
-        const auugh = new Audio("https://dl.sndup.net/cx42/auugh.mp3");
+        const opendrink = new Audio("https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/opendrink.mp3");
+        const mcdrink = new Audio("https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/mcdrink.mp3");
+        const auugh = new Audio("https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/auugh.mp3");
 
-        $('.pentalbin').click(function () {
+        $('.periodic-table-square').click(function () {
             counter++;
 
             if (counter == 10) {
-                $('.pentalbin').click(function () {
+                $('.periodic-table-square').click(function () {
                     opendrink.play();
                 });
             }
@@ -171,7 +171,7 @@
             if (counter == 20) {
                 $('.age').text("SILLIZ!!");
 
-                $('.pentalbin').css({
+                $('.periodic-table-square').css({
                     'animation': 'spin 3s infinite',
                 })
 
@@ -189,7 +189,7 @@
                     $(this).css('animation', 'shake 1s infinite')
                 });
 
-                $('.pentalbin').click(function () {
+                $('.periodic-table-square').click(function () {
                     mcdrink.play();
                 });
 
@@ -204,8 +204,8 @@
 
                 $(".gold-left,.gold-right,.gold-left-bottom,.gold-right-bottom").remove();
 
-                $(".background-img").append('<audio autoplay loop src="https://dl.sndup.net/hrj5/pour.mp3"></audio>');
-                $(".background-img").append('<audio autoplay src="https://dl.sndup.net/twr9/yt1scom%20-%20Moomin%20Hardbass%20Remix%20Extended.mp3"></audio>');
+                $(".background-img").append('<audio autoplay loop src="https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/pour.mp3"></audio>');
+                $(".background-img").append('<audio autoplay src="https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/yt1scom%20-%20Moomin%20Hardbass%20Remix%20Extended.mp3"></audio>');
             }
 
             if (counter == 30) {
@@ -241,7 +241,7 @@
                     $(this).css('animation', 'shake 1s infinite')
                 });
 
-                $('h1,h2,h4,p,small,.button,#attendees,.pentalbin').click(function () {
+                $('h1,h2,h4,p,small,.button,#attendees,.periodic-table-square').click(function () {
                     auugh.play();
                 });
 
@@ -250,14 +250,14 @@
                     'color': "red"
                 })
 
-                $(".background-img").append('<audio autoplay src="https://dl.sndup.net/twr9/yt1scom%20-%20Moomin%20Hardbass%20Remix%20Extended.mp3"></audio>');
-                $(".background-img").append('<audio autoplay loop src="https://dl.sndup.net/pwrr/vom.mp3"></audio>');
+                $(".background-img").append('<audio autoplay src="https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/yt1scom%20-%20Moomin%20Hardbass%20Remix%20Extended.mp3"></audio>');
+                $(".background-img").append('<audio autoplay loop src="https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/vom.mp3"></audio>');
             }
 
             if (counter == 50) {
 
                 $("audio").remove();
-                $(".background-img").append('<audio autoplay src="https://dl.sndup.net/wmcd/died.mp3"></audio>');
+                $(".background-img").append('<audio autoplay src="https://date-assets.fra1.cdn.digitaloceanspaces.com/date/event-res/died.mp3"></audio>');
                 $('.content').css({
                     'display': 'none',
                 });
