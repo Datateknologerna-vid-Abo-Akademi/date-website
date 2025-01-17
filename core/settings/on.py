@@ -60,3 +60,8 @@ BILLING_CONTEXT = {
     "IBAN": "FI35 5670 0820 4600 85",
     "BIC": "OKOYFIHH",
 }
+
+
+EXPERIMENTAL_FEATURES = [
+    'event_billing',
+]
