@@ -93,7 +93,7 @@ class EventDetailView(DetailView):
                                                           email=form.cleaned_data['email'],
                                                           anonymous=form.cleaned_data['anonymous'],
                                                           preferences=form.cleaned_data)
-        if 'billing' in settings.INSTALLED_APPS:
+        if "event_billing" in settings.EXPERIMENTAL_FEATURES and 'billing' in settings.INSTALLED_APPS:
             from billing.handlers import handle_event_billing
             handle_event_billing(attendee)
         if 'avec' in form.cleaned_data and form.cleaned_data['avec']:
