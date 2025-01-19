@@ -20,7 +20,7 @@ class EventBillingConfiguration(models.Model):
     due_date = models.DateField()
     integration_type = models.IntegerField()
     price = models.CharField()
-    price_selector = models.CharField()
+    price_selector = models.CharField(blank=True, null=True)
 
     def __str__(self):
         return self.event.title
