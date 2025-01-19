@@ -28,6 +28,8 @@ def handle_event_billing(signup: EventAttendees, retries=2):
             invoice.save()
         except Exception as e:
             print(f"Failed to create invoice for {signup}: {e}")
-            return handle_event_billing(signup, retries=retries-1)
+            if retries:
+                handle_event_billing(signup, retries=retries-1)
+            return
 
         send_event_invoice(signup, invoice)
