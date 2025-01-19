@@ -7,7 +7,10 @@ from .util import BillingIntegrations, generate_reference_number, generate_invoi
 
 def handle_event_billing(signup: EventAttendees, retries=2):
     event = signup.event
-    billing_config = EventBillingConfiguration.objects.get(event=event)
+    try:
+        billing_config = EventBillingConfiguration.objects.get(event=event)
+    except EventBillingConfiguration.DoesNotExist:
+        return
     if not billing_config:
         return
 
@@ -16,6 +19,8 @@ def handle_event_billing(signup: EventAttendees, retries=2):
     if provider == BillingIntegrations.INVOICE:
         invoice_number = generate_invoice_number()
         amount = get_selection_price(event, billing_config.price, billing_config.price_selector, signup.preferences)
+        if not amount:
+            return
         try:
             invoice = EventInvoice(
                 participant=signup,

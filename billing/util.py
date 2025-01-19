@@ -31,8 +31,17 @@ def generate_reference_number(invoice_number: int) -> str:
 def get_selection_price(event, pricing, price_selector, preferences):
     """Get price based on selector"""
     if not price_selector:
-        return float(pricing)
-    options = EventRegistrationForm.objects.get(event=event, name=price_selector).choice_list.split(",")
+        try:
+            return float(pricing)
+        except ValueError:
+            return
+    try:
+        options = EventRegistrationForm.objects.get(event=event, name=price_selector).choice_list.split(",")
+    except EventRegistrationForm.DoesNotExist:
+        try:
+            return float(pricing)
+        except ValueError:
+            return
     pricing_list = pricing.split(",")
     pricelist = [(option, float(pricing_list[i])) for i, option in enumerate(options)]
     for option, price in pricelist:
