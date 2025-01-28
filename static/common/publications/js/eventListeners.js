@@ -7,9 +7,8 @@ export function setupEventListeners(state) {
 
     let newPage;
 
-    // If currently on the last page in two-page view (6-6), go back to 4-5
-    if (state.currentPage === state.pdfDoc.numPages && shouldRenderTwoPages(state)) {
-        // Jump to the two pages before the last pair
+    if (state.currentPage === state.pdfDoc.numPages) {
+        // Jump back two from the last page (the previous pair)
         newPage = state.currentPage - 2;
     } else if (shouldRenderTwoPages(state)) {
         // Regular two-page navigation
@@ -52,6 +51,12 @@ export function setupEventListeners(state) {
     });
 
     document.getElementById('zoom-select').addEventListener('change', (e) => {
+        // Disable tag after its been used
+        document.getElementById('zoom-select').disabled = true;
+        // Re-enable it after a short delay
+        setTimeout(() => {
+            document.getElementById('zoom-select').disabled = false;
+        }, 100);
         updateState({ scale: parseFloat(e.target.value) });
         renderPages(state);
     });
