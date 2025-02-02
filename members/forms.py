@@ -96,6 +96,8 @@ class CustomPasswordResetForm(PasswordResetForm):
             to_email,
             html_email_template_name=None,
     ):
+        context.update(settings.CONTENT_VARIABLES)
+
         subject = loader.render_to_string(subject_template_name, context)
         # Email subject *must not* contain newlines
         subject = "".join(subject.splitlines())
