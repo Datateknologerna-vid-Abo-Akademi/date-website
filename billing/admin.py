@@ -15,7 +15,7 @@ admin.site.register(EventInvoice)
 
 @admin.register(EventBillingConfiguration)
 class EventBillingConfigurationAdmin(admin.ModelAdmin):
-    list_display = ('event', 'due_date', 'integration_type', 'price', 'price_selector', 'account_actions')
+    list_display = ('event', 'due_date', 'integration_type', 'price', 'price_selector', 'ref_export')
     list_filter = ('integration_type',)
     search_fields = ('event__title',)
     ordering = ('event',)
@@ -27,14 +27,14 @@ class EventBillingConfigurationAdmin(admin.ModelAdmin):
         ]
         return my_urls + urls
 
-    def account_actions(self, obj):
+    def ref_export(self, obj):
         return format_html(
             '<a class="button" href={}>Exportera data</a>&nbsp;',
             reverse('admin:billing_ref_numbers', args=[obj.pk])
         )
 
-    account_actions.short_description = 'Referensnummer'
-    account_actions.allow_tags = True
+    ref_export.short_description = 'Exportera data'
+    ref_export.allow_tags = True
 
     def ref_numbers(self, request, conf_id):
         bconfig = self.get_object(request, conf_id)
