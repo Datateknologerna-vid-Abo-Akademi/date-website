@@ -24,15 +24,15 @@ for participant in source_participants:
         target_event.add_event_attendance(
             user= participant.user,
             email=participant.email,
-            anonymous=participant.email,
+            anonymous=participant.anonymous,
             preferences=participant.preferences,
-            avec_for=EventAttendees.objects.filter(event=target_event.id,email=participant.avec_for.email)
+            avec_for=EventAttendees.objects.filter(event=target_event.id, email=participant.avec_for.email).first()
         )
         continue
     target_event.add_event_attendance(
         user= participant.user,
         email=participant.email,
-        anonymous=participant.email,
+        anonymous=participant.anonymous,
         preferences=participant.preferences
     )
     
