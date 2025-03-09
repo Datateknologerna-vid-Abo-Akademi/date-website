@@ -6,7 +6,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from core import settings
+from django.conf import settings
 from core.utils import send_email_task
 
 from .managers import MemberManager
@@ -146,3 +146,65 @@ class SubscriptionPayment(models.Model):
         if self.date_expires is None:
             return _('Aldrig')
         return self.date_expires
+
+
+class AlumniSignUp(models.Model):
+    name = models.CharField(max_length=200)
+    email = models.EmailField(unique=True, max_length=320)
+    phone_number = models.CharField(max_length=20, blank=True)
+    address = models.CharField(max_length=200, blank=True)
+    year_of_admission = models.IntegerField(null=True)
+    employer = models.CharField(max_length=200, blank=True)
+    work_title = models.CharField(max_length=200, blank=True)
+    tfif_membership = models.CharField(max_length=50, blank=True)
+    alumni_newsletter_consent = models.BooleanField(default=False)
+    operation = models.CharField(max_length=200, blank=True)
+    # Internal data
+    signup_date = models.DateTimeField(_("Registreringsdatum"), auto_now_add=True)
+    acknowledge = models.BooleanField(_("Processerad"), default=False)  # For acknowledgement of adding into registry
+
+    class Meta:
+        verbose_name = _("Alumnregistrering")
+        verbose_name_plural = _("Alumnregistreringar")
+        ordering = ('id',)
+
+    def __str__(self):
+        return self.name
+
+
+class AlumniEmailRecipient(models.Model):
+    recipient_email = models.EmailField(max_length=256)
+
+    def __str__(self):
+        return self.recipient_email
+
+    class Meta:
+        verbose_name = _("Emailmottagare för ARG")
+        verbose_name_plural = _("Emailmottagare för ARG")
+
+
+class FunctionaryRole(models.Model):
+    title = models.CharField(_('Titel'), max_length=200)
+    board = models.BooleanField(_('Styrelse'), default=False)
+
+    class Meta:
+        verbose_name = _("Funktionärspost")
+        verbose_name_plural = _("Funktionärsposter")
+
+    def __str__(self):
+        return self.title
+
+
+class Functionary(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    functionary_role = models.ForeignKey(FunctionaryRole, on_delete=models.CASCADE)
+    year = models.IntegerField(_('Årtal'))
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("Funktionär")
+        verbose_name_plural = _("Funktionärer")
+
+    def __str__(self):
+        return f"{self.member.get_full_name()} {self.functionary_role.title} {self.year}"
