@@ -18,10 +18,10 @@ class PostCreationForm(forms.ModelForm):
         model = Post
         fields = (
             'title',
+            'category',
             'content',
             'published',
             'slug',
-            'albins_angels'
         )
 
     def save(self, commit=True):
@@ -50,10 +50,10 @@ class PostEditForm(forms.ModelForm):
         model = Post
         fields = (
             'title',
+            'category',
             'content',
             'published',
             'slug',
-            'albins_angels'
         )
 
     def save(self, commit=True):
