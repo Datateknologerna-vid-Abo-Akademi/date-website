@@ -5,7 +5,7 @@
     <link rel="stylesheet" href="{% static 'events/css/form.css' %}">
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
-<p>{% trans "Anmälan stängs %} {{ event.sign_up_deadline|date:"d.m H:i" }}{% trans ", om " %}{{ event.sign_up_deadline | timeuntil }}</p>
+<p>{% trans "Anmälan stängs %} {{ event.sign_up_deadline }}{% trans ", om " %}{{ event.sign_up_deadline | timeuntil }}</p>
 <small>{% trans "OBS!" %} {% trans "Anmälningen är bindande om inget annat meddelas." %} <br>
     {% trans "Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på förhinder." %}</small>
 {% if form.errors %}
