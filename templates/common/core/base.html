@@ -27,6 +27,20 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
         crossorigin="anonymous"></script>
+
+       
+    <!-- Cookie Banner -->
+{% if not request.COOKIES.cookie_consent %}
+<div id="cookie-banner" style="position: fixed; bottom: 10px; left: 10px; background: #222; color: white; padding: 10px;">
+    <p>This site uses cookies to improve user experience. Cookies are not shared with third parties.</p>
+    <form method="POST" action="{% url 'set_cookie_consent' %}">
+        {% csrf_token %}
+        <button type="submit" name="consent" value="true">Accept</button>
+        <button type="submit" name="consent" value="false">Reject Optional</button>
+    </form>
+</div>
+{% endif %}
+
 </body>
 {% include 'core/footer.html' %}
 <!-- JavaScript for opening external links in new tab -->

@@ -40,6 +40,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     path('publications/', include('publications.urls')),
+    path('set-cookie-consent/', date.set_cookie_consent, name='set_cookie_consent')
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
