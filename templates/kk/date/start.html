@@ -59,10 +59,6 @@
                     </div>
                 </div>
                 <div class="events-container">
-                    <div class="sidebar-logo-container">
-                        <a id="andritz-logo" href="https://www.andritz.com/group-en"><img src={% static "/core/images/andritzLogo.png" %} alt="Andritz"></a>
-                        <a id="paroc-logo" href="https://www.paroc.fi/"><img src={% static "/core/images/paroc.png" %} alt="Paroc"></a>
-                    </div>
                     <h3 class="header-border-bottom mt-3 heading-link"><a href="/events/">Evenemang</a></h3>
                         {{ calendar_events|json_script:"calendar_json" }}
                     <div class="calendar">
