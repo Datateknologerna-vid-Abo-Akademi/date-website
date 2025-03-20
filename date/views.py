@@ -84,3 +84,14 @@ def handler500(request, *args, **argv):
     response = render(request, 'core/500.html', {})
     response.status_code = 404
     return response
+
+def set_cookie_consent(request):
+    response = redirect(request.META.get("HTTP_REFERER", "/")) 
+    consent = request.POST.get("consent")
+
+    if consent == "true":
+        response.set_cookie("cookie_consent", "true", max_age=365*24*60*60) 
+    elif consent == "false":
+        response.set_cookie("cookie_consent", "false", max_age=365*24*60*60)
+
+    return response

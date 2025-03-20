@@ -13,6 +13,7 @@ TEMPLATES = [
             'context_processors': [
                 *COMMON_CONTEXT_PROCESSORS,
                 # Add project context processors here
+                "core.context_processors.cookie_consent",
             ],
         },
     },
