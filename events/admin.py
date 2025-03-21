@@ -105,7 +105,7 @@ class EventAdmin(admin.ModelAdmin):
         )
 
     class Media:
-        js = ('js/eventform.js',)
+        js = ('core/js/eventform.js',)
 
     def get_attendee_count(self, obj):
         return obj.get_registrations().count()
