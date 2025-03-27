@@ -12,7 +12,7 @@
         <link rel="stylesheet" href="{% static 'events/css/detail.css' %}">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
-        <script src="{% static 'js/live-attendee-list.js' %}"></script>
+        <script src="{% static 'core/js/live-attendee-list.js' %}"></script>
         <style>
             .background-img{
                 background: url("{% if event.image %}{{ event.image.url }}{% elif event.s3_image %}{{ event.s3_image.url }}{% endif %}") no-repeat center center fixed;
