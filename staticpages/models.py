@@ -1,14 +1,26 @@
 import logging
+import os
 
 from django_ckeditor_5.fields import CKEditor5Field
 from django.db import models
 from django.utils import timezone
+from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
+
+from archive.fields import PublicFileField
 
 logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
 
+def upload_to(instance, filename):
+    filename_base, filename_ext = os.path.splitext(filename)
+
+    file_location = "pages/{filename}{extension}".format(
+        filename=slugify(filename_base),
+        extension=filename_ext.lower(),
+    )
+    return file_location
 
 class StaticPageNav(models.Model):
     category_name = models.CharField(_('Kategori'), max_length=255, blank=False)
@@ -27,6 +39,8 @@ class StaticPage(models.Model):
     modified_time = models.DateTimeField(_('Modifierad'), editable=False, null=True, blank=True)
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
     members_only = models.BooleanField(_('Kräv inloggning'), default=False)
+    image = models.ImageField(_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
+    s3_image = PublicFileField(verbose_name=_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
 
     def __str__(self):
         return self.title
