@@ -1,0 +1,6 @@
+# Enforce LF endings for all files by default
+* text=auto eol=lf
+
+# Override to CRLF for Windows-specific scripts
+*.bat text eol=crlf
+*.ps1 text eol=crlf
