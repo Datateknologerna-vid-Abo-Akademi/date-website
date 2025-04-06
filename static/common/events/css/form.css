@@ -12,6 +12,10 @@
     align-self: end;
 }
 
+.form p label{
+    word-break: break-all;
+}
+
 .form p input[type=checkbox]{
     width: 20px;
     height: 20px;

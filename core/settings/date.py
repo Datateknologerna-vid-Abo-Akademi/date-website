@@ -65,4 +65,9 @@ CONTENT_VARIABLES = {
     # Alumni
     "ALUMNI_ASSOCIATION_NAME": "Albins R Gamyler",
     "ALUMNI_ASSOCIATION_NAME_SHORT": "ARG",
+
+    # Events
+    "INTERNATIONAL_EVENT_SLUGS": [
+        "teekkarikaste_teknologdop"
+    ],
 }
