@@ -18,7 +18,7 @@ logger = logging.getLogger('date')
 
 
 def user_type(user):
-    return user.membership_type != 3
+    return user.membership_type.permission_profile != 3
 
 
 @user_passes_test(user_type, login_url='/members/login/')
@@ -120,7 +120,8 @@ class FilteredDocumentsListView(UserPassesTestMixin, SingleTableMixin, FilterVie
             return Document.objects.filter(collection__type='Documents')
 
     def test_func(self):
-        return self.request.user.membership_type != 3
+        # TODO: get a member object and check user.is_authenticated
+        return self.request.user.membership_type.permission_profile != 3
 
 
 class FilteredExamsListView(UserPassesTestMixin, SingleTableMixin, FilterView):
@@ -146,14 +147,16 @@ class FilteredExamsListView(UserPassesTestMixin, SingleTableMixin, FilterView):
         return context
 
     def test_func(self):
-        return self.request.user.membership_type != 3
+        # TODO: get a member object and check user.is_authenticated
+        return self.request.user.membership_type.permission_profile != 3
 
 
 @user_passes_test(user_type, login_url='/members/login/')
 def picture_detail(request, year, album):
     collection = Collection.objects.filter(type="Pictures", pub_date__year=year, title=album).order_by(
         '-pub_date').first()
-    if collection.hide_for_gulis and request.user.membership_type == 1:
+    # TODO: get a member object and check user.is_authenticated
+    if collection.hide_for_gulis and request.user.membership_type.permission_profile == 1:
         return render(request, '404.html', {'error_msg': "Gulisar har inte tillgång till detta album!", })
 
     pictures = Picture.objects.filter(collection=collection) if year==2022 else Picture.objects.filter(collection=collection).reverse()
