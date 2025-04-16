@@ -4,16 +4,21 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 def create_default_membership_type(apps, _):
-    from members.models import PERMISSION_PROFILES
-
+    permission_profiles = (
+        (1, _('Gulnäbb')),
+        (2, _('Ordinarie medlem')),
+        (3, _('Stödjande medlem')),
+        (4, _('Seniormedlem')),
+    )
     MembershipType = apps.get_model('members', 'MembershipType')  # noqa
 
-    for profile in PERMISSION_PROFILES:
+    for profile in permission_profiles:
         MembershipType.objects.get_or_create(
             name=profile[1],
             description='',
             permission_profile=profile[0]
         )
+
 
 class Migration(migrations.Migration):
 
