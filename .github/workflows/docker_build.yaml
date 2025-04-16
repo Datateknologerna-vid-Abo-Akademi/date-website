@@ -4,13 +4,13 @@ on:
       - develop
       - master
   workflow_dispatch:
-    branches:
-      - develop
-      - master
   schedule:
     - cron: '0 0 1 * *'
 jobs:
   build:
+    concurrency:
+      group: 'docker-publish-${{ github.ref_name }}'
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

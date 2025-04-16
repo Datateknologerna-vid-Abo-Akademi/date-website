@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from events.models import Event, EventRegistrationForm
-from members.models import Member, ORDINARY_MEMBER, Subscription, SubscriptionPayment
+from members.models import Member, ORDINARY_MEMBER, Subscription, SubscriptionPayment, MembershipType
 
 logger = logging.getLogger('date')
 
@@ -24,7 +24,7 @@ class EventTestCase(TestCase):
             zip_code="00000",
             city="Test City",
             country="Finland",
-            membership_type=ORDINARY_MEMBER,
+            membership_type=MembershipType.objects.get(pk=ORDINARY_MEMBER),
             is_superuser=False,
             is_active=True,
         )
