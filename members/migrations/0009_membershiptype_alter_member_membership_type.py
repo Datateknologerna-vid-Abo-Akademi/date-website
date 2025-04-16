@@ -2,13 +2,15 @@
 
 import django.db.models.deletion
 from django.db import migrations, models
+from django.utils.translation import gettext_lazy
+
 
 def create_default_membership_type(apps, _):
     permission_profiles = (
-        (1, _('Gulnäbb')),
-        (2, _('Ordinarie medlem')),
-        (3, _('Stödjande medlem')),
-        (4, _('Seniormedlem')),
+        (1, gettext_lazy('Gulnäbb')),
+        (2, gettext_lazy('Ordinarie medlem')),
+        (3, gettext_lazy('Stödjande medlem')),
+        (4, gettext_lazy('Seniormedlem')),
     )
     MembershipType = apps.get_model('members', 'MembershipType')  # noqa
 
