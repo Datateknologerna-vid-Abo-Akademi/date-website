@@ -15,7 +15,7 @@
                 {% endif %}
                 {% if user.is_authenticated %}
                     {% if user.get_active_subscription %}
-                        {% if user.membership_type != 3 %}
+                        {% if user.membership_type.permission_profile != 3 %}
                             <div class="validation valid">
                         {% else %}
                             <div class="validation supporting">
