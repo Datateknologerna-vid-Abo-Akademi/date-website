@@ -28,6 +28,8 @@ INSTALLED_APPS = get_installed_apps([
     'staticpages',
     'ctf',
     'publications',
+    'alumni',
+    'billing',
 ])
 
 ROOT_URLCONF = 'core.urls.date'
