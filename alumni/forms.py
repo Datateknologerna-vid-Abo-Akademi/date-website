@@ -33,10 +33,14 @@ class AlumniSignUpForm(forms.Form):
     class Meta:
         fields = (
             'operation',
-            'name',
+            'firstname',
+            'lastname',
             'email',
             'phone_number',
             'address',
+            'zip',
+            'city',
+            'country',
             'year_of_admission',
             'employer',
             'work_title',
