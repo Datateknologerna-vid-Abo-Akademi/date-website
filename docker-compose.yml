@@ -42,6 +42,7 @@ services:
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
       - CF_TURNSTILE_SITE_KEY=${CF_TURNSTILE_SITE_KEY}
       - CF_TURNSTILE_SECRET_KEY=${CF_TURNSTILE_SECRET_KEY}
+      - ALUMNI_SETTINGS=${ALUMNI_SETTINGS}
     depends_on:
       - db
       - redis
@@ -56,6 +57,7 @@ services:
       - EMAIL_HOST=${EMAIL_HOST}
       - EMAIL_HOST_USER=${EMAIL_HOST_USER}
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - ALUMNI_SETTINGS=${ALUMNI_SETTINGS}
     depends_on:
       - web
       - redis

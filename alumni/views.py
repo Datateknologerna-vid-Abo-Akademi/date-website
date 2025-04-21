@@ -1,11 +1,8 @@
 from django.shortcuts import render
-from django.template.loader import render_to_string
-from django.conf import settings
 
-from core.utils import validate_captcha, send_email_task
+from core.utils import validate_captcha
 
 from .forms import AlumniSignUpForm
-from .models import AlumniEmailRecipient
 from .tasks import handle_alumni_signup
 
 
@@ -20,7 +17,7 @@ def alumni_signup(request):
         if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
             return render(request, 'members/signup.html', {'form': form, 'alumni': True})
 
-        handle_alumni_signup.delay(form)
+        handle_alumni_signup.delay(form.cleaned_data)
 
         return render(request, 'members/registration/registration_complete.html', {'alumni': True})
 
