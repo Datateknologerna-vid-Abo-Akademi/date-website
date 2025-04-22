@@ -38,6 +38,7 @@ class Member(AbstractBaseUser, PermissionsMixin):
     city = models.CharField(_('Postanstalt'), max_length=30, blank=True)
     country = models.CharField(_('Land'), max_length=30, default=_('Finland'), blank=True)
     membership_type = models.ForeignKey("members.MembershipType", default=FRESHMAN, blank=False, on_delete=models.CASCADE)
+    year_of_admission = models.IntegerField(_('Inskrivningsår'), blank=True, null=True)
     is_active = models.BooleanField(default=True)
     objects = MemberManager()
 
