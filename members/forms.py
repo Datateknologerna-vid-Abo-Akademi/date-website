@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from dateutil.relativedelta import relativedelta
@@ -18,6 +19,7 @@ logger = logging.getLogger('date')
 
 class MemberCreationForm(forms.ModelForm):
     send_email = forms.BooleanField(required=False)
+    year_of_admission = forms.IntegerField(initial=lambda: datetime.datetime.now().year, required=False, label=_('Inskrivningsår'))
 
     password = forms.CharField(
         widget=forms.PasswordInput(),
@@ -39,6 +41,7 @@ class MemberCreationForm(forms.ModelForm):
             'city',
             'country',
             'membership_type',
+            'year_of_admission',
             'password',
             'groups',
         )
@@ -156,6 +159,7 @@ class SignUpForm(forms.ModelForm):
     )
     first_name = forms.CharField(max_length=100, required=True, label=_('Förnamn'))
     last_name = forms.CharField(max_length=100, required=True, label=_('Efternamn'))
+    year_of_admission = forms.IntegerField(initial=lambda: datetime.datetime.now().year, required=False, label=_('Inskrivningsår'))
 
     class Meta:
         model = Member
@@ -170,6 +174,7 @@ class SignUpForm(forms.ModelForm):
             'city',
             'country',
             'membership_type',
+            'year_of_admission',
             'password'
         )
 
