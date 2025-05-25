@@ -294,6 +294,8 @@ CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 3000
 
+ALUMNI_SETTINGS = os.environ.get("ALUMNI_SETTINGS", '')
+
 LOGGING = {
     'version': 1,
     'formatters': {

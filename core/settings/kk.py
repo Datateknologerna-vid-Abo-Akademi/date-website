@@ -27,6 +27,8 @@ INSTALLED_APPS = get_installed_apps([
     'social',
     'staticpages',
     'lucia',
+    'alumni',
+    'billing',
 ])
 
 ROOT_URLCONF = 'core.urls.kk'
