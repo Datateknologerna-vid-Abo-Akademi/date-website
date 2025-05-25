@@ -10,7 +10,7 @@ from .forms import AlumniSignUpForm
 from .gsuite_adapter import DateSheetsAdapter
 from core.utils import send_email_task
 from billing.util import generate_reference_number, generate_invoice_number
-from .models import AlumniEmailRecipient
+from .models import AlumniEmailRecipient, AlumniUpdateToken
 
 logger = logging.getLogger("date")
 
@@ -23,15 +23,18 @@ except Exception as e:
     logger.error("Error while loading alumni settings: " + str(e))
     ALUMNI_SETTINGS, AUTH, SHEET = {}, {}, ""
 
+MEMBER_SHEET_NAME = "members"  # This should match the actual sheet name in your Google Sheets
+AUDIT_LOG_SHEET_NAME = "audit_log"  # This should match the actual sheet name for audit logs
+
 
 def log_action(operation: str, data: dict):
-    worksheet = "audit_log"
+    worksheet = AUDIT_LOG_SHEET_NAME
     client = DateSheetsAdapter(AUTH, SHEET, worksheet)
     client.append_row([operation, json.dumps(data)])
 
 
 def handle_create(form: dict):
-    worksheet = "members"  # TODO change this
+    worksheet = MEMBER_SHEET_NAME
     client = DateSheetsAdapter(AUTH, SHEET, worksheet)
     print(client)
     try:
@@ -96,7 +99,80 @@ def handle_create(form: dict):
 
 
 def handle_update(form):
-    raise NotImplementedError()
+    worksheet = MEMBER_SHEET_NAME
+    client = DateSheetsAdapter(AUTH, SHEET, worksheet)
+    
+    token = form.get('token')
+    if not token:
+        logger.error("Alumni UPDATE: No token provided")
+        return
+    # Validate token from db
+    try:
+        alumni_token = AlumniUpdateToken.objects.get(token=token)
+        if not alumni_token.is_valid() or alumni_token.email != form['email']:
+            logger.error("Alumni UPDATE: Invalid or expired token")
+            return
+    except AlumniUpdateToken.DoesNotExist:
+        logger.error("Alumni UPDATE: Token does not exist")
+        return
+
+    try:
+        emails = client.get_column_values(client.get_column_by_name("email"))
+        row = emails.index(form['email']) + 1 if form['email'] in emails else None
+        row_data = client.get_row_values(row) if row else None
+        if not (row and row_data):
+            logger.info("Alumni UPDATE: Email not found")
+            return
+
+    except Exception as e:
+        logger.error("Error while fetching alumni row: " + str(e))
+        return
+
+    # Update the row with new data
+    try:
+        client.update_row(row, [            
+            None,  # Member ID is not updated
+            form.get("firstname"),
+            form.get("lastname"),
+            form.get("address"),
+            form.get("zip"),
+            form.get("city"),
+            form.get("country"),
+            form.get("employer"),
+            form.get("work_title"),
+            form.get("phone_number"),
+            None,  # Email is not updated
+            form.get("tfif_membership"),
+            form.get("alumni_newsletter_consent"),
+            form.get("year_of_admission"),
+            None, # Creation time is not updated
+            datetime.datetime.now().isoformat(),
+            None,  # Paid status
+            None,  # Reference
+        ])
+    except Exception as e:
+        logger.error("Error while updating alumni row: " + str(e))
+        return
+    
+    logger.info("Updating alumni log entry")
+    log_action("UPDATE", form)
+
+    # Delete the token after successful update
+    logger.info("Deleting alumni update token")
+    alumni_token.delete()
+
+
+def send_token_email(token: str, email: str):
+    """Send an email with the token to the alumni."""
+    subject = _("Uppdatera dina uppgifter")
+    context = {
+        'token': token,
+        'base_url': settings.CONTENT_VARIABLES.get("SITE_URL", "https://datateknologerna.org"),
+        'alumini_association_name': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_NAME", "Albins R Gamyler"),
+    }
+    message = render_to_string('alumni/alumni_update_token_email.html', context)
+    send_email_task.delay(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+
 
 @shared_task()
 def handle_alumni_signup(form: dict):
@@ -104,5 +180,7 @@ def handle_alumni_signup(form: dict):
     match form["operation"]:
         case "CREATE":
             handle_create(form)
+        case "UPDATE":
+            handle_update(form)
         case _:
             raise NotImplementedError()

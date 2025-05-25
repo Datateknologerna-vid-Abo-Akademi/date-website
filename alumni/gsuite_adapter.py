@@ -26,3 +26,9 @@ class DateSheetsAdapter:
 
     def get_last_row(self):
         return self.sheet.get()[-1]
+    
+    def update_row(self, row: int, data: list):
+        """Update a specific row with new data."""
+        for cell_index, value in enumerate(data, start=1):
+            if value is not None:
+                self.sheet.update_cell(row, cell_index, value)
