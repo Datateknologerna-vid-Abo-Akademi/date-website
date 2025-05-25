@@ -82,7 +82,7 @@ def handle_create(form: dict):
     logger.info("Sending Alumni email")
     alumni_email = form['email']
     alumni_message_subject = "Välkommen till ARG - Betalningsinstruktioner"
-    alumni_message_content = render_to_string('members/alumni_signup_email.html', {"alumni": form})
+    alumni_message_content = render_to_string('members/alumni_signup_email.html', {"alumni": form, "reference": reference})
     # Send email to alumni
     send_email_task.delay(alumni_message_subject, alumni_message_content, settings.DEFAULT_FROM_EMAIL,
                           [alumni_email])

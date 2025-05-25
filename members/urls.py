@@ -19,4 +19,4 @@ urlpatterns = [
 ]
 
 if "alumni" in settings.INSTALLED_APPS:
-    urlpatterns += [path('alumni/signup', django.views.generic.RedirectView.as_view(url='/alumni/signup/', permanent=True), name='alumni_signup'),]
+    urlpatterns += [path('alumn/signup', django.views.generic.RedirectView.as_view(url='/alumni/signup/', permanent=True), name='alumni_signup'),]
