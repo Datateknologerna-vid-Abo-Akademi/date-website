@@ -28,7 +28,7 @@ class AlumniSignUpForm(forms.Form):
     alumni_newsletter_consent = forms.BooleanField(label=_('Jag tar gärna emot information om alumnevenemang'),
                                                    required=False)
     operation = forms.ChoiceField(choices=operation_choices, label=_('Jag vill:'),
-                                  required=True, default='CREATE')
+                                  required=True)
 
     class Meta:
         widgets = {
@@ -56,7 +56,7 @@ class AlumniSignUpForm(forms.Form):
 class AlumniUpdateForm(AlumniSignUpForm):
     token = forms.CharField(max_length=36, required=False, widget=forms.HiddenInput, label=_('Token'))
     operation = forms.ChoiceField(choices=AlumniSignUpForm.operation_choices, label=_('Jag vill:'),
-                                  required=True, default='UPDATE')
+                                  required=True)
 
     class Meta(AlumniSignUpForm.Meta):
         widgets = {
