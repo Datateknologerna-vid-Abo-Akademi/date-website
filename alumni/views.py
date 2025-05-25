@@ -7,7 +7,7 @@ from core.utils import validate_captcha
 from .gsuite_adapter import DateSheetsAdapter
 from .models import AlumniUpdateToken
 from .forms import AlumniSignUpForm, AlumniUpdateForm, AlumniEmailVerificationForm
-from .tasks import handle_alumni_signup, send_token_email, update_alumni_task, AUTH, SHEET, MEMBER_SHEET_NAME
+from .tasks import handle_alumni_signup, send_token_email, AUTH, SHEET, MEMBER_SHEET_NAME
 
 log = logging.getLogger("date")
 
@@ -55,7 +55,7 @@ def alumni_update_form(request, token):
                 return render(request, 'alumni/alumni_update_form.html', {'form': form, 'error': 'Invalid token.'}, status=403)
 
             AlumniUpdateToken.objects.filter(token=form.cleaned_data['token']).delete()
-            update_alumni_task.delay(form.cleaned_data)
+            handle_alumni_signup.delay(form.cleaned_data)
 
             return redirect('alumni:alumni_update_complete')
     return 405
