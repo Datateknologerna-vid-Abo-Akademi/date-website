@@ -28,12 +28,9 @@ class AlumniSignUpForm(forms.Form):
     alumni_newsletter_consent = forms.BooleanField(label=_('Jag tar gärna emot information om alumnevenemang'),
                                                    required=False)
     operation = forms.ChoiceField(choices=operation_choices, label=_('Jag vill:'),
-                                  required=True)
+                                  required=True, initial='CREATE', disabled=True, widget=forms.HiddenInput())
 
     class Meta:
-        widgets = {
-            'operation': forms.HiddenInput(),
-        }
         fields = (
             'operation',
             'firstname',
@@ -50,21 +47,22 @@ class AlumniSignUpForm(forms.Form):
             'tfif_membership',
             'alumni_newsletter_consent',
         )
-        readonly_fields = ('operation',)
 
 
 class AlumniUpdateForm(AlumniSignUpForm):
-    token = forms.CharField(max_length=36, required=False, widget=forms.HiddenInput, label=_('Token'))
-    operation = forms.ChoiceField(choices=AlumniSignUpForm.operation_choices, label=_('Jag vill:'),
-                                  required=True)
+    token = forms.CharField(max_length=50, required=False, label=_('Token'), widget=forms.HiddenInput())
 
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['email'].disabled = True
+        self.fields['operation'].disabled = True
+        self.fields['token'].disabled = True
+        self.fields['operation'].initial = 'UPDATE'
+ 
     class Meta(AlumniSignUpForm.Meta):
-        widgets = {
-            'token': forms.HiddenInput(),
-            'operation': forms.HiddenInput(),
-        }
         fields = AlumniSignUpForm.Meta.fields + ('token',)
-        readonly_fields = ('operation', 'email',)
 
 
 class AlumniEmailVerificationForm(forms.Form):

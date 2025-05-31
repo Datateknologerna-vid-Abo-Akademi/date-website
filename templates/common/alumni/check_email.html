@@ -1,0 +1,24 @@
+{% extends 'core/base.html' %}
+
+{% load static %}
+{% load i18n %}
+
+{% block title %}
+{{ ALUMNI_ASSOCIATION_NAME_SHORT }} - Verifiera din e-postadress
+{% endblock %}
+
+{% block content %}
+
+<head>
+    <link rel="stylesheet" href="{% static 'members/style.css' %}">
+</head>
+
+<div style="padding-top: 1rem;">
+    <div class="center-box">
+        <h1>Verifiera din E-Postaddress</h1>
+
+        <p>Du har nu fått ett e-postmeddelande till din e-post om den finns i registret. Kom ihåg att också kolla skräpposten.</p>
+    </div>
+</div>
+
+{% endblock %}

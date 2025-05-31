@@ -1,0 +1,40 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}
+Verifiera din e-postadress
+{% endblock %}
+
+{% block content %}
+
+
+    <head>
+        <link rel="stylesheet" href="{% static 'members/style.css' %}">
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    </head>
+    <div class="signup-page">
+        <div class="members-form big">
+            <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+              <p>
+                {{ field.label_tag }}<br>
+                  {% if field.help_text %}
+                      <small>{{ field.help_text }}</small>
+                  {% endif %}
+                  {{ field }}
+                {% for error in field.errors %}
+                  <p style="color: red">{{ error }}</p>
+                {% endfor %}
+              </p>
+            {% endfor %}
+            </p>
+            <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}" data-callback="javascriptCallback"></div>
+            <button class="button" type="submit">Registrera dig</button>
+          </form>
+        </div>
+    </div>
+
+{% endblock %}
+

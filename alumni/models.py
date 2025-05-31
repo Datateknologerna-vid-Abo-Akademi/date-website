@@ -31,6 +31,6 @@ class AlumniUpdateToken(models.Model):
         verbose_name_plural = _("Alumni Update Tokens")
 
     def is_valid(self):
-        """Check if the token is not expired. Tokens are valid for 30 minutes."""
-        expiration_time = self.created_at + timezone.timedelta(minutes=30)
+        """Check if the token is not expired. Tokens are valid for 24 hours."""
+        expiration_time = self.created_at + timezone.timedelta(hours=24)
         return timezone.now() < expiration_time

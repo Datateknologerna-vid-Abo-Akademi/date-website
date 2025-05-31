@@ -6,11 +6,12 @@ from celery import shared_task
 from django.conf import settings
 from django.template.loader import render_to_string
 
-from .forms import AlumniSignUpForm
 from .gsuite_adapter import DateSheetsAdapter
 from core.utils import send_email_task
 from billing.util import generate_reference_number, generate_invoice_number
 from .models import AlumniEmailRecipient, AlumniUpdateToken
+
+from django.utils.translation import gettext_lazy as _
 
 logger = logging.getLogger("date")
 
@@ -82,7 +83,9 @@ def handle_create(form: dict):
     logger.info("Sending Alumni email")
     alumni_email = form['email']
     alumni_message_subject = "Välkommen till ARG - Betalningsinstruktioner"
-    alumni_message_content = render_to_string('members/alumni_signup_email.html', {"alumni": form, "reference": reference})
+    alumni_message_content = render_to_string('members/alumni_signup_email.html', {"alumni": form, "reference": reference, 
+        'alumini_association_name': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_NAME", "Albins R Gamyler"),
+    })
     # Send email to alumni
     send_email_task.delay(alumni_message_subject, alumni_message_content, settings.DEFAULT_FROM_EMAIL,
                           [alumni_email])
@@ -162,25 +165,32 @@ def handle_update(form):
     alumni_token.delete()
 
 
+@shared_task()
 def send_token_email(token: str, email: str):
     """Send an email with the token to the alumni."""
+    client = DateSheetsAdapter(AUTH, SHEET, MEMBER_SHEET_NAME)
+    emails = client.get_column_values(client.get_column_by_name("email"))
+    if email not in emails:
+        logger.info(f"Email {email} not found in alumni records. skipping token email.")
+        return
     subject = _("Uppdatera dina uppgifter")
     context = {
-        'token': token,
-        'base_url': settings.CONTENT_VARIABLES.get("SITE_URL", "https://datateknologerna.org"),
-        'alumini_association_name': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_NAME", "Albins R Gamyler"),
+        'TOKEN': token,
+        'SITE_URL': settings.CONTENT_VARIABLES.get("SITE_URL", "https://datateknologerna.org"),
+        'ALUMNI_ASSOCIATION_NAME': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_NAME", "Albins R Gamyler"),
+        'ALUMNI_ASSOCIATION_EMAIL': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_EMAIL")
     }
-    message = render_to_string('alumni/alumni_update_token_email.html', context)
+    message = render_to_string('alumni/update_token_email.html', context)
     send_email_task.delay(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
 
 
 @shared_task()
-def handle_alumni_signup(form: dict):
+def handle_alumni_signup(form: dict, timestamp=None):
     logger.info("Received alumni signup form with operation: " + form['operation'])
     match form["operation"]:
         case "CREATE":
             handle_create(form)
         case "UPDATE":
-            handle_update(form)
+            handle_update(form, timestamp)
         case _:
             raise NotImplementedError()
