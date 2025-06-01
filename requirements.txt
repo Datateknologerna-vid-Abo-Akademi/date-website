@@ -1,4 +1,4 @@
-Django~=5.2
+Django~=4.2
 asgiref
 django-ckeditor-5
 django-ckeditor
