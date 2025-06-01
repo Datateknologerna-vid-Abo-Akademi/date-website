@@ -66,4 +66,5 @@ CONTENT_VARIABLES = {
     # Alumni
     "ALUMNI_ASSOCIATION_NAME": "Axels och Stinas Gamyler",
     "ALUMNI_ASSOCIATION_NAME_SHORT": "ASG",
+    "ALUMNI_ASSOCIATION_EMAIL": "asg@kemistklubben.org",
 }

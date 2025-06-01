@@ -90,6 +90,7 @@ services:
       - EMAIL_HOST_USER=${EMAIL_HOST_USER}
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
       - ALUMNI_SETTINGS=${ALUMNI_SETTINGS}
+      - DB_PASSWORD=${DATE_DB_PASSWORD}
     depends_on:
       - db
       - redis
