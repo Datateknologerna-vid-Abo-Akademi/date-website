@@ -179,3 +179,7 @@ form{
     flex-direction: column;
     margin-bottom: 10px;
 }
+
+p.hidden {
+    display: none;
+}

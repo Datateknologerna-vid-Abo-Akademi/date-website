@@ -59,6 +59,7 @@ services:
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
       - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
       - ALUMNI_SETTINGS=${ALUMNI_SETTINGS}
+      - DB_PASSWORD=${DATE_DB_PASSWORD}
     depends_on:
       - web
       - redis
