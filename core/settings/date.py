@@ -67,6 +67,7 @@ CONTENT_VARIABLES = {
     # Alumni
     "ALUMNI_ASSOCIATION_NAME": "Albins R Gamyler",
     "ALUMNI_ASSOCIATION_NAME_SHORT": "ARG",
+    "ALUMNI_ASSOCIATION_EMAIL": "arg@datateknologerna.org",
 
     # Events
     "INTERNATIONAL_EVENT_SLUGS": [

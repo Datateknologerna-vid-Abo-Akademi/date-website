@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 
 from django.shortcuts import render, redirect
@@ -37,42 +38,49 @@ def alumni_signup(request):
 
 def alumni_update_form(request, token):
     """Render the alumni update form with a token for verification."""
+    # Check if the token is valid
+    try:
+        token = AlumniUpdateToken.objects.get(token=token)
+        assert token.is_valid()
+    except (AlumniUpdateToken.DoesNotExist, AssertionError):
+        log.info(f"Invalid token: {token}")
+        return redirect('alumni:alumni_update')
+    
+    initial_data = {
+        'email': token.email,
+        'token': token.token,
+    }
+
     if request.method == 'GET':
-        # Check if the token is valid
-        try:
-            token = AlumniUpdateToken.objects.get(token=token)
-            assert token.is_valid()
-        except (AlumniUpdateToken.DoesNotExist, AssertionError):
-            log.info(f"Invalid token: {token}")
-            return redirect('alumni:alumni_update_no_token')
-        form = AlumniUpdateForm(token=token)
-        return render(request, 'alumni/alumni_update_form.html', {'form': form})
+        form = AlumniUpdateForm(
+            initial=initial_data)
+        return render(request, 'members/signup.html', {'form': form, 'alumni': True})
     elif request.method == 'POST':
-        form = AlumniUpdateForm(request.POST, token=token)
+        form = AlumniUpdateForm(request.POST, initial=initial_data)
         if form.is_valid():
-            # Process the form data
-            if form.cleaned_data['token'] is None or not AlumniUpdateToken.objects.filter(token=form.cleaned_data['token']).is_valid():
-                return render(request, 'alumni/alumni_update_form.html', {'form': form, 'error': 'Invalid token.'}, status=403)
-
-            AlumniUpdateToken.objects.filter(token=form.cleaned_data['token']).delete()
-            handle_alumni_signup.delay(form.cleaned_data)
-
-            return redirect('alumni:alumni_update_complete')
+            handle_alumni_signup.delay(form.cleaned_data, datetime.now())
+            return render(request, "alumni/update_complete.html")
+        return render(request, 'members/signup.html', {'form': form, 'alumni': True, }, status=400)
     return 405
 
 
-def alumni_update(request):
+
+def alumni_update_verify(request):
     """Handle the alumni update form submission."""
     if request.method == 'POST':
+        if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
+            return render(request, 'alumni/update_verify.html', {'form': form})
+        
         form = AlumniEmailVerificationForm(request.POST)
+
         if form.is_valid():
             token = AlumniUpdateToken(email=form.cleaned_data['email'])
             token.save()
             
             send_token_email.delay(token.token, form.cleaned_data['email'])
 
-            return redirect('alumni:alumni_check_email')
+            return render(request, 'alumni/check_email.html')
     elif request.method == 'GET':
-        form = AlumniUpdateForm()
-        return render(request, 'alumni/alumni_update_form.html', {'form': form})
+        form = AlumniEmailVerificationForm()
+        return render(request, 'alumni/update_verify.html', {'form': form})
     return 405
