@@ -22,3 +22,6 @@ storage
 
 # Database dumps from backup
 *.bck
+
+# CSV files
+*.csv
