@@ -5,6 +5,7 @@ from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import RegexValidator
 
 from django.conf import settings
 from core.utils import send_email_task
@@ -28,7 +29,17 @@ PERMISSION_PROFILES = (
 
 
 class Member(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(_('Användarnamn'), unique=True, max_length=20, blank=False)
+    username_validator = RegexValidator(
+        regex=r'^[a-zA-Z_-]+$',
+        message=_('Enter a valid username consisting only of letters, underscores, and hyphens.'),
+    )
+    username = models.CharField(
+        _('Användarnamn'),
+        unique=True,
+        max_length=20,
+        blank=False,
+        validators=[username_validator],
+    )
     email = models.EmailField(_('E-postadress'), unique=True, blank=True, null=True)
     first_name = models.CharField(_('Förnamn'), max_length=30, blank=True)
     last_name = models.CharField(_('Efternamn'), max_length=30, blank=True)
