@@ -1,10 +1,12 @@
 import logging
+import os
 import re
 
 from django import forms
 from django.contrib.admin import widgets
 from django.utils.timezone import now
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 
 from date.functions import slugify_max
 from events import models
@@ -15,6 +17,24 @@ logger = logging.getLogger('date')
 slug_transtable = str.maketrans("åäö ", "aao_")
 
 
+def event_template_choices():
+    """Return available custom event templates."""
+
+    templates = set()
+    for conf in settings.TEMPLATES:
+        for base in conf.get('DIRS', []):
+            custom_dir = os.path.join(base, 'events', 'custom')
+            if os.path.isdir(custom_dir):
+                for fname in os.listdir(custom_dir):
+                    if fname.endswith('.html'):
+                        templates.add(f'events/custom/{fname}')
+
+    # Always include the default template as a fallback
+    templates.add('events/detail.html')
+
+    return [(t, t) for t in sorted(templates)]
+
+
 class EventCreationForm(forms.ModelForm):
     user = None
     event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
@@ -23,6 +43,12 @@ class EventCreationForm(forms.ModelForm):
     sign_up_members = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
     sign_up_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
     sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    template = forms.ChoiceField(
+        label=_('Template'),
+        choices=event_template_choices(),
+        required=False,
+        initial='events/detail.html',
+    )
 
     class Meta:
         model = Event
@@ -45,6 +71,7 @@ class EventCreationForm(forms.ModelForm):
             'passcode',
             'captcha',
             'redirect_link',
+            'template',
         )
         if settings.USE_S3:
             fields = temp_fields + ('s3_image',)
@@ -113,6 +140,7 @@ class EventEditForm(forms.ModelForm):
     sign_up_members = forms.SplitDateTimeField(**sign_up_args)
     sign_up_deadline = forms.SplitDateTimeField(**sign_up_args)
     sign_up_cancelling_deadline = forms.SplitDateTimeField(**sign_up_args)
+    template = forms.ChoiceField(label=_('Template'), choices=event_template_choices(), required=False, initial='events/detail.html')
 
     class Meta:
         model = Event
@@ -135,6 +163,7 @@ class EventEditForm(forms.ModelForm):
             'passcode',
             'captcha',
             'redirect_link',
+            'template',
         )
         if settings.USE_S3:
             fields = temp_fields + ('s3_image',)
