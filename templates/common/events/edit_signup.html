@@ -1,0 +1,14 @@
+{% extends 'core/base.html' %}
+{% load i18n %}
+{% block title %}{{ attendee.event.title }}{% endblock %}
+{% block content %}
+<div class="container-md container-margin-top">
+  <h2>{% trans 'Uppdatera anm\u00e4lan' %}</h2>
+  <form method="post">
+    {{ form.as_p }}
+    <button class="button" type="submit">{% trans 'Uppdatera' %}</button>
+    <button class="button" type="submit" name="cancel" value="1">{% trans 'Avanm\u00e4l' %}</button>
+    {% csrf_token %}
+  </form>
+</div>
+{% endblock %}

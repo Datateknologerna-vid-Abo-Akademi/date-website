@@ -7,11 +7,13 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import DetailView, ListView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from core.utils import validate_captcha
 from members.models import Member
 from .forms import PasscodeForm
 from .models import Event, EventAttendees
+from .tasks import send_edit_token_email
 from .websocket_utils import ws_send
 
 logger = logging.getLogger('date')
@@ -89,10 +91,14 @@ class EventDetailView(DetailView):
         return [self.template_name]
 
     def form_valid(self, form):
-        attendee = self.get_object().add_event_attendance(user=form.cleaned_data['user'],
-                                                          email=form.cleaned_data['email'],
-                                                          anonymous=form.cleaned_data['anonymous'],
-                                                          preferences=form.cleaned_data)
+        attendee = self.get_object().add_event_attendance(
+            user=form.cleaned_data['user'],
+            email=form.cleaned_data['email'],
+            anonymous=form.cleaned_data['anonymous'],
+            preferences=form.cleaned_data,
+            member=self.request.user if self.request.user.is_authenticated else None,
+        )
+        send_edit_token_email.delay(attendee.id)
         if "event_billing" in settings.EXPERIMENTAL_FEATURES and 'billing' in settings.INSTALLED_APPS:
             from billing.handlers import handle_event_billing
             handle_event_billing(attendee)
@@ -166,6 +172,60 @@ class EventDetailView(DetailView):
                 field_name = key.split('avec_')[1]
                 value = cleaned_data[key]
                 avec_data[field_name] = value
-        self.get_object().add_event_attendance(user=avec_data['user'], email=avec_data['email'],
-                                               anonymous=avec_data['anonymous'], preferences=avec_data,
-                                               avec_for=avec_data['avec_for'])
+        self.get_object().add_event_attendance(
+            user=avec_data['user'],
+            email=avec_data['email'],
+            anonymous=avec_data['anonymous'],
+            preferences=avec_data,
+            member=self.request.user if self.request.user.is_authenticated else None,
+            avec_for=avec_data['avec_for'],
+        )
+
+class EventEditSignupView(DetailView):
+    model = EventAttendees
+    template_name = 'events/edit_signup.html'
+    pk_url_kwarg = 'token'
+
+    def get_object(self, queryset=None):
+        return EventAttendees.objects.get(edit_token=self.kwargs['token'])
+
+    def get(self, request, *args, **kwargs):
+        attendee = self.get_object()
+        event = attendee.event
+        if not event.sign_up_cancelling or (event.sign_up_cancelling_deadline and timezone.now() > event.sign_up_cancelling_deadline):
+            return HttpResponseForbidden()
+        form_class = event.make_registration_form()
+        initial = {'user': attendee.user, 'email': attendee.email, 'anonymous': attendee.anonymous}
+        if isinstance(attendee.preferences, dict):
+            initial.update(attendee.preferences)
+        form = form_class(initial=initial)
+        return render(request, self.template_name, {'form': form, 'attendee': attendee})
+
+    def post(self, request, *args, **kwargs):
+        attendee = self.get_object()
+        event = attendee.event
+        if not event.sign_up_cancelling or (event.sign_up_cancelling_deadline and timezone.now() > event.sign_up_cancelling_deadline):
+            return HttpResponseForbidden()
+        if request.POST.get('cancel'):
+            attendee.delete()
+            return render(request, 'events/edit_cancelled.html')
+        form = event.make_registration_form()(data=request.POST)
+        if form.is_valid():
+            attendee.user = form.cleaned_data['user']
+            attendee.email = form.cleaned_data['email']
+            attendee.anonymous = form.cleaned_data.get('anonymous', False)
+            prefs = form.cleaned_data.copy()
+            for key in ['user', 'email', 'anonymous']:
+                prefs.pop(key, None)
+            attendee.preferences = prefs
+            attendee.save()
+            return render(request, 'events/edit_complete.html')
+        return render(request, self.template_name, {'form': form, 'attendee': attendee}, status=400)
+
+
+class MySignupsView(LoginRequiredMixin, ListView):
+    model = EventAttendees
+    template_name = 'events/my_signups.html'
+
+    def get_queryset(self):
+        return EventAttendees.objects.filter(member=self.request.user).select_related('event')

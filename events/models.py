@@ -2,6 +2,9 @@ from __future__ import unicode_literals
 
 import logging
 import os
+import uuid
+
+from members.models import Member
 from datetime import timedelta
 
 from django.utils import timezone
@@ -89,7 +92,7 @@ class Event(models.Model):
     def get_highest_attendee_nr(self):
         return EventAttendees.objects.filter(event=self).aggregate(Max('attendee_nr'))
 
-    def add_event_attendance(self, user, email, anonymous, preferences, avec_for=None):
+    def add_event_attendance(self, user, email, anonymous, preferences, member=None, avec_for=None):
         if self.sign_up:
             try:
                 registration = EventAttendees.objects.get(email=email, event=self)
@@ -98,10 +101,16 @@ class Event(models.Model):
                 if self.get_registration_form():
                     for item in self.get_registration_form():
                         user_pref[str(item)] = preferences.get(str(item))
-                registration = EventAttendees.objects.create(user=user,
-                                                             event=self, email=email,
-                                                             time_registered=now(), preferences=user_pref,
-                                                             anonymous=anonymous, avec_for=avec_for)
+                registration = EventAttendees.objects.create(
+                    user=user,
+                    event=self,
+                    email=email,
+                    member=member,
+                    time_registered=now(),
+                    preferences=user_pref,
+                    anonymous=anonymous,
+                    avec_for=avec_for,
+                )
                 return registration
 
     def cancel_event_attendance(self, user):
@@ -265,10 +274,12 @@ class EventAttendees(models.Model):
     attendee_nr = models.PositiveSmallIntegerField(_('#'), blank=True)
     user = models.CharField(_('Namn'), blank=False, max_length=255)
     email = models.EmailField(_('E-postadress'), blank=False, null=True, unique=False)
+    member = models.ForeignKey(Member, verbose_name=_('Medlem'), null=True, blank=True, on_delete=models.SET_NULL)
     preferences = JSONField(_('Svar'), default=list, blank=True)
     anonymous = models.BooleanField(_('Anonymt'), default=False)
     time_registered = models.DateTimeField(_('Registrerad'))
     avec_for = models.ForeignKey("self", verbose_name=_('Avec till'), null=True, blank=True, on_delete=models.SET_NULL)
+    edit_token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     class Meta:
         verbose_name = _('deltagare')

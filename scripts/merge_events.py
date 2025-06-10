@@ -22,18 +22,20 @@ source_participants = EventAttendees.objects.filter(event=source_event.id).all()
 for participant in source_participants:
     if participant.avec_for:
         target_event.add_event_attendance(
-            user= participant.user,
+            user=participant.user,
             email=participant.email,
             anonymous=participant.anonymous,
             preferences=participant.preferences,
-            avec_for=EventAttendees.objects.filter(event=target_event.id, email=participant.avec_for.email).first()
+            member=participant.member,
+            avec_for=EventAttendees.objects.filter(event=target_event.id, email=participant.avec_for.email).first(),
         )
         continue
     target_event.add_event_attendance(
-        user= participant.user,
+        user=participant.user,
         email=participant.email,
         anonymous=participant.anonymous,
-        preferences=participant.preferences
+        preferences=participant.preferences,
+        member=participant.member,
     )
     
 
