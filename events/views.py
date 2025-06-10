@@ -4,6 +4,8 @@ import logging
 from django.conf import settings
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect
+from django.template import TemplateDoesNotExist
+from django.template.loader import select_template
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import DetailView, ListView
@@ -61,32 +63,14 @@ class EventDetailView(DetailView):
         return context
 
     def get_template_names(self):
-        event_title = self.get_context_data().get('event').title.lower()
-        logger.debug(event_title)
-        templates = {
-            'årsfest': 'events/arsfest.html',
-            'årsfest gäster': 'events/arsfest.html',
-            '100 baal': 'events/kk100_detail.html',
-            'baal': 'events/baal_detail.html',
-            'tomtejakt': 'events/tomtejakt.html',
-            'wappmiddag': 'events/wappmiddag.html'
-        }
-        slugmap = {
-            'baal': 'events/baal_detail.html',
-            'tomtejakt': 'events/tomtejakt.html',
-            'wappmiddag': 'events/wappmiddag.html',
-            'arsfest': 'events/arsfest.html',
-            'arsfest_stipendiater': 'events/arsfest.html'
-        }
-        # Will return a 500 response to client if the template is not found
-        if event_title in templates: # TODO: Selectable template
-            return templates[event_title]
-        elif (slug := self.get_context_data().get('event').slug) in slugmap:
-            return slugmap[slug]
-
         if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
             return ['events/event_passcode.html']
-        return [self.template_name]
+        template = self.object.template or self.template_name
+        try:
+            select_template([template])
+        except TemplateDoesNotExist:
+            template = self.template_name
+        return [template]
 
     def form_valid(self, form):
         attendee = self.get_object().add_event_attendance(user=form.cleaned_data['user'],
@@ -102,7 +86,7 @@ class EventDetailView(DetailView):
 
     def form_invalid(self, form):
         if self.get_context_data().get('event').title.lower() in ['årsfest', 'årsfest gäster']:
-            return render(self.request, 'events/arsfest.html', self.get_context_data(form=form))
+            return render(self.request, 'events/custom/arsfest.html', self.get_context_data(form=form))
         return render(self.request, self.template_name, self.get_context_data(form=form), status=400)
 
     def handle_passcode(self, request):
