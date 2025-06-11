@@ -23,9 +23,9 @@
                 {% elif event.registation_past_due %}
                     <h4 id="no-registration">{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }} {% trans 'sedan' %}</h4>
                 {% elif not event.registation_past_due and user.is_authenticated %}
-                    <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_members | timeuntil }}</p>
+                    <p>{% trans "Anmälan öppnas" %} {{ event.sign_up_members|date:"j.n H:i" }}, {% trans "om" %} {{ event.sign_up_members | timeuntil }}</p>
                 {% else %}
-                    <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_others | timeuntil }}</p>
+                    <p>{% trans "Anmälan öppnas" %} {{ event.sign_up_others|date:"j.n H:i" }}, {% trans "om" %} {{ event.sign_up_others | timeuntil }}</p>
                 {% endif %}
             </div>
         {% endif %}
