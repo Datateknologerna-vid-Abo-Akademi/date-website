@@ -1,4 +1,5 @@
 import gspread
+import time
 
 class DateSheetsAdapter:
     def __init__(self, service_account: dict, sheet: str, worksheet: str):
@@ -8,8 +9,16 @@ class DateSheetsAdapter:
     def change_sheet(self, sheet: str, worksheet: str):
         self.sheet = self.client.open_by_key(sheet).worksheet(worksheet)
 
-    def append_row(self, data: list):
-        self.sheet.append_row(data)
+    def append_row(self, data: list, retries: int = 5):
+        try:
+            self.sheet.append_row(data)
+        except gspread.exceptions.APIError as e:
+            if retries > 0:
+                time.sleep(min(5 ** (6 - retries), 60))
+                self.append_row(data, retries - 1)
+            else:
+                print(f"Failed to append row after retries: {e}")
+                raise
 
     def get_column_by_name(self, name: str):
         rowvals = self.sheet.row_values(1)
