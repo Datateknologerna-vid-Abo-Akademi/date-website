@@ -2,10 +2,12 @@
 import os
 import sys
 
-proj_name = os.environ.get("PROJECT_NAME")
-if proj_name == "":
-    proj_name = "date"
-    print("PROJECT_NAME not set, defaulting to 'date'")
+proj_name = os.environ.get("PROJECT_NAME") or "date"
+
+# When running the Django test suite we default to the test settings module.
+if "test" in sys.argv and "DJANGO_SETTINGS_MODULE" not in os.environ:
+    proj_name = "test"
+    print("Running tests with core.settings.test")
 
 if __name__ == '__main__':
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', f'core.settings.{proj_name}')

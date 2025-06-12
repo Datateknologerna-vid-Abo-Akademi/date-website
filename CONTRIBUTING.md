@@ -24,6 +24,8 @@ Commit messages need to be short and descriptive. If the commit is a fix to an i
 
 Unittests are done accordingly to Django documentation: [Testing in Django](https://docs.djangoproject.com/en/2.1/topics/testing/)
 
+Running `python manage.py test` automatically uses the `core.settings.test` configuration so that the suite works without external services like Redis or PostgreSQL.
+
 ## Other tests
 
 While developing a feature, make sure it works as intended by testing it manually as well. 
