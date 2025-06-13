@@ -73,6 +73,12 @@ class AdminMemberUpdateForm(forms.ModelForm):
                                                     "this user's password, but you can change the password "
                                                     "using <a href=\"../password/\">this form</a>."))
 
+    username = forms.CharField(
+        max_length=20,
+        validators=[USERNAME_VALIDATOR],
+        label=_('Användarnamn'),
+    )
+
     class Meta:
         model = Member
         fields = (
