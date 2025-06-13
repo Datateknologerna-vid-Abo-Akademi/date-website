@@ -1,0 +1,21 @@
+{% extends 'core/base.html' %}
+{% load i18n %}
+{% block title %}{% trans 'Mina anm\u00e4lningar' %}{% endblock %}
+{% block content %}
+<div class="container-md container-margin-top">
+  <h2>{% trans 'Mina anm\u00e4lningar' %}</h2>
+  {% if object_list %}
+  <ul>
+    {% for attendee in object_list %}
+      <li>
+        {{ attendee.event.title }} -
+        <a href="{% url 'events:edit-signup' attendee.edit_token %}">{% trans 'Uppdatera' %}</a>
+      </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p>{% trans 'Du har inga anm\u00e4lningar.' %}</p>
+  {% endif %}
+  <a href="{% url 'members:info' %}" class="theme-button mt-3">{% trans 'Till kontot' %}</a>
+</div>
+{% endblock %}

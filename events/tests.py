@@ -265,3 +265,38 @@ class EventTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
 
+    def test_edit_signup(self):
+        c = Client()
+        c.post(reverse('events:detail', args=[self.event.slug]), self.content)
+        attendee = self.event.get_registrations().first()
+        self.event.sign_up_cancelling_deadline = timezone.now() + timezone.timedelta(days=1)
+        self.event.save()
+        url = reverse('events:edit-signup', args=[attendee.edit_token])
+        response = c.get(url)
+        self.assertEqual(response.status_code, 200)
+        data = {'user': 'Updated', 'email': 'updated@test.com'}
+        response = c.post(url, data, follow=True)
+        self.assertEqual(response.status_code, 200)
+        attendee.refresh_from_db()
+        self.assertEqual(attendee.user, 'Updated')
+
+    def test_cancel_signup(self):
+        c = Client()
+        c.post(reverse('events:detail', args=[self.event.slug]), self.content)
+        attendee = self.event.get_registrations().first()
+        self.event.sign_up_cancelling_deadline = timezone.now() + timezone.timedelta(days=1)
+        self.event.save()
+        url = reverse('events:edit-signup', args=[attendee.edit_token])
+        response = c.post(url, {'cancel': '1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.event.get_registrations().count(), 0)
+
+    def test_my_signups_view(self):
+        c = Client()
+        member_data = {'user': 'Member User', 'email': self.member.email}
+        c.login(username=self.member.username, password='test')
+        c.post(reverse('events:detail', args=[self.event.slug]), member_data)
+        response = c.get(reverse('events:my-signups'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.event.title)
+

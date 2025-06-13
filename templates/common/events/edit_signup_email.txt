@@ -1,0 +1,10 @@
+Hej,
+
+Du kan uppdatera eller avanm\xe4la dig fr\xe5n {{ EVENT_TITLE }} genom l\xe4nken nedan:
+
+{{ SITE_URL }}/events/edit/{{ TOKEN }}/
+
+Länken fungerar fram tills avanmälningen stänger.
+
+Om du har ett konto kan du också hantera dina anmälningar här:
+{{ SITE_URL }}/events/my/
