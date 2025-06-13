@@ -6,7 +6,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import ReadOnlyPasswordHashField, PasswordResetForm
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, RegexValidator
 from django.template import loader
 from django.utils.translation import gettext_lazy as _
 
@@ -16,10 +16,22 @@ from members.models import (SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH,
 
 logger = logging.getLogger('date')
 
+# Restrict usernames to ASCII letters, underscores, and hyphens
+USERNAME_VALIDATOR = RegexValidator(
+    r'^[a-zA-Z_-]+$',
+    _('Enter a valid username consisting only of letters, underscores, and hyphens.')
+)
+
 
 class MemberCreationForm(forms.ModelForm):
     send_email = forms.BooleanField(required=False)
     year_of_admission = forms.IntegerField(initial=lambda: datetime.datetime.now().year, required=False, label=_('Inskrivningsår'))
+
+    username = forms.CharField(
+        max_length=20,
+        validators=[USERNAME_VALIDATOR],
+        label=_('Användarnamn'),
+    )
 
     password = forms.CharField(
         widget=forms.PasswordInput(),
@@ -149,7 +161,7 @@ class SubscriptionPaymentForm(forms.ModelForm):
 class SignUpForm(forms.ModelForm):
     username = forms.CharField(
         max_length=20,
-        validators=[Member.username_validator],
+        validators=[USERNAME_VALIDATOR],
         help_text=_('detta fält är obligatoriskt'),
         label=_('Användarnamn')
     )
