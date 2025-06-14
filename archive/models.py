@@ -11,11 +11,16 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
 from django.template.defaulttags import register
 from django.urls import reverse
-from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from PIL import Image
 from django.dispatch import receiver
+from date.functions import slugify_max
+import re
+from django.utils.text import slugify
 from .fields import PublicFileField
+
+COLLECTION_SLUG_MAX_LENGTH = 50
+slug_transtable = str.maketrans("åäö ", "aao_")
 
 
 TYPE_CHOICES = (
@@ -28,6 +33,8 @@ TYPE_CHOICES = (
 
 class Collection(models.Model):
     title = models.CharField(_('Namn'), max_length=250)
+    slug = models.SlugField(_('Slug'), max_length=COLLECTION_SLUG_MAX_LENGTH,
+                            unique=True, allow_unicode=False, blank=True)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     pub_date = models.DateTimeField(default=datetime.datetime.now, null=True)
     hide_for_gulis = models.BooleanField(_('Göm för gulisar'), default=False)
@@ -45,6 +52,27 @@ class Collection(models.Model):
 
     def __str__(self):
         return self.title
+
+    def generate_unique_slug(self):
+        base_slug = self.title.lower().translate(slug_transtable)
+        base_slug = re.sub(r"[^a-zA-Z0-9_]*", "", base_slug)
+        base_slug = re.sub(r"__+", "_", base_slug)
+        slug = base_slug
+
+        collisions = Collection.objects.filter(slug=slug)
+        suffix = 1
+        while collisions.exists():
+            slug = f"{base_slug}_{suffix}"
+            collisions = Collection.objects.filter(slug=slug)
+            suffix += 1
+
+        slug = slugify_max(slug, max_length=COLLECTION_SLUG_MAX_LENGTH)
+        return slug
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self.generate_unique_slug()
+        super(Collection, self).save(*args, **kwargs)
 
     def pub_date_pretty(self):
         return self.pub_date.strftime('%b %e %Y')
@@ -66,7 +94,7 @@ def upload_to(instance, filename):
     if instance.collection.type == "Documents":
         file_location = "documents/{year}/{collection}/{filename}{extension}".format(
             year=instance.collection.pub_date.strftime("%Y"),
-            collection=slugify(instance.collection.title),
+            collection=instance.collection.slug,
             filename=slugify(filename_base),
             extension=filename_ext.lower(),
         )
@@ -74,7 +102,7 @@ def upload_to(instance, filename):
     elif instance.collection.type == "Exams":
         file_location = "Exams/{year}/{collection}/{filename}{extension}".format(
             year=instance.collection.pub_date.strftime("%Y"),
-            collection=slugify(instance.collection.title),
+            collection=instance.collection.slug,
             filename=slugify(filename_base),
             extension=filename_ext.lower(),
         )
@@ -82,7 +110,7 @@ def upload_to(instance, filename):
     else:
         file_location = "{year}/{collection}/{filename}{extension}".format(
             year=instance.collection.pub_date.strftime("%Y"),
-            collection=slugify(instance.collection.title),
+            collection=instance.collection.slug,
             filename=slugify(filename_base),
             extension=filename_ext.lower(),
         )

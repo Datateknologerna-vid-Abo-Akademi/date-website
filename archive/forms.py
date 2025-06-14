@@ -1,6 +1,30 @@
 from django import forms
+import re
 
-from .models import Collection, Document, Picture, PublicFile
+from .models import Collection, Document, Picture, PublicFile, slug_transtable, COLLECTION_SLUG_MAX_LENGTH
+from date.functions import slugify_max
+
+
+class SlugCleanMixin:
+    def clean_slug(self):
+        slug = self.cleaned_data.get('slug', '').strip()
+        if slug == "" and "title" in self.cleaned_data:
+            base_slug = self.cleaned_data['title'].lower().translate(slug_transtable)
+            base_slug = re.sub(r"[^a-zA-Z0-9_]*", '', base_slug)
+            base_slug = re.sub(r"__+", '_', base_slug)
+            slug = base_slug
+
+            collisions = Collection.objects.filter(slug=slug)
+            suffix = 1
+            while collisions.exists():
+                slug = f"{base_slug}_{suffix}"
+                collisions = Collection.objects.filter(slug=slug)
+                suffix += 1
+
+        slug = slugify_max(slug, max_length=COLLECTION_SLUG_MAX_LENGTH)
+        return slug
+
+
 
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -35,12 +59,14 @@ class ExamArchiveUploadForm(forms.Form):
     title = forms.CharField()
     
 
-class PictureAdminForm(forms.ModelForm):
+class PictureAdminForm(SlugCleanMixin, forms.ModelForm):
     images = MultipleFileField(label="Ladda upp flera bilder", required=False)
+    title = forms.CharField()
 
     class Meta:
         model = Collection
         fields = '__all__'
+
 
     def save(self, *args, **kwargs):
         collection = super(PictureAdminForm, self).save(*args, **kwargs)
@@ -51,7 +77,7 @@ class PictureAdminForm(forms.ModelForm):
         return collection
 
 
-class DocumentAdminForm(forms.ModelForm):
+class DocumentAdminForm(SlugCleanMixin, forms.ModelForm):
     files = MultipleFileField(label="Ladda upp flera dokument", required=False)
 
     class Meta:
@@ -67,7 +93,7 @@ class DocumentAdminForm(forms.ModelForm):
                 Document.objects.create(collection=collection, document=f, title=f)
         return collection
 
-class PublicAdminForm(forms.ModelForm):
+class PublicAdminForm(SlugCleanMixin, forms.ModelForm):
     files = MultipleFileField(label="Ladda upp flera filer", required=False)
 
     class Meta:
