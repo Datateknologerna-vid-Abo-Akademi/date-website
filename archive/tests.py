@@ -8,6 +8,10 @@ from django.test import TestCase
 from django.utils import timezone
 
 from archive.models import TYPE_CHOICES, Collection, Document, Picture
+from django.urls import reverse
+from members.models import Member
+from archive.forms import PictureUploadForm
+from django.utils.text import slugify
 
 
 def create_collection(title="Test collection", collection_type=None):
@@ -59,6 +63,21 @@ class CollectionTestCase(TestCase):
         self.assertTrue(isinstance(d, Document))
         self.assertEqual(d.__str__(), d.title)
         self.assertEqual(d.collection.type, TYPE_CHOICES[1][1])
+
+
+class PictureFormTestCase(TestCase):
+    def test_slug_generated_from_album(self):
+        form = PictureUploadForm(data={"album": "good/name"})
+        self.assertTrue(form.is_valid())
+        collection = Collection(title=form.cleaned_data["album"])
+        collection.save()
+        self.assertEqual(collection.slug, "goodname")
+
+    def test_upload_invalid_album_returns_400(self):
+        user = Member.objects.create_superuser(username="admin", password="pass")
+        self.client.login(username="admin", password="pass")
+        response = self.client.post(reverse("archive:upload"), {"album": "////"})
+        self.assertEqual(response.status_code, 400)
 
 # Views tests
     # https://realpython.com/testing-in-django-part-1-best-practices-and-examples/#testing-views

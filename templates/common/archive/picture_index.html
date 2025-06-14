@@ -20,7 +20,7 @@
                     {% for collection in collections %}
                         <div class="grid-sizer"></div>
                         <div class="grid-item">
-                            <a href="{% url 'archive:detail' year collection.title %}">
+                            <a href="{% url 'archive:detail' year collection.slug %}">
                                 <div class="card" style="width: 18rem;">
                                     <img class="card-img-top gallery-image" src={{ collection.get_first_picture.image.url }}>
                                     <div class="card-body">
