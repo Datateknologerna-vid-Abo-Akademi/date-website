@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import permission_required, user_passes_test
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.shortcuts import redirect, render
+from django.http import HttpResponseBadRequest
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 
@@ -152,8 +153,8 @@ class FilteredExamsListView(UserPassesTestMixin, SingleTableMixin, FilterView):
 
 
 @user_passes_test(user_type, login_url='/members/login/')
-def picture_detail(request, year, album):
-    collection = Collection.objects.filter(type="Pictures", pub_date__year=year, title=album).order_by(
+def picture_detail(request, year, slug):
+    collection = Collection.objects.filter(type="Pictures", pub_date__year=year, slug=slug).order_by(
         '-pub_date').first()
     # TODO: get a member object and check user.is_authenticated
     if collection.hide_for_gulis and request.user.membership_type.permission_profile == 1:
@@ -174,7 +175,7 @@ def picture_detail(request, year, album):
     context = {
         'type': "pictures",
         'year': year,
-        'album': album,
+        'album': collection.title,
         'collection': collection,
         'pictures': pictures,
     }
@@ -187,13 +188,18 @@ def upload(request):
     if request.method == 'POST':
         form = PictureUploadForm(request.POST)
         if form.is_valid():
+            collection = Collection(title=form.cleaned_data['album'], type='Pictures')
+            slug = collection.generate_unique_slug()
+            if not slug:
+                return HttpResponseBadRequest('Invalid album name')
+            collection.slug = slug
             if request.FILES.getlist('images') is None:
                 return redirect('archive:pictures')
-            collection = Collection(title=form['album'].value(), type='Pictures')
             collection.save()
             for file in request.FILES.getlist('images'):
                 Picture(image=file, collection=collection).save()
-        return redirect('archive:years')
+            return redirect('archive:years')
+        return HttpResponseBadRequest('Invalid album name')
 
     form = PictureUploadForm
     context = {
