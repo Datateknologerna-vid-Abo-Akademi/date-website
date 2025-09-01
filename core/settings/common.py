@@ -130,7 +130,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': env('DB_DATABASE', str, 'postgres'),
         'USER': env('DB_USERNAME', str, 'postgres'),
-        'PASSWORD': env('DB_PASSWORD', default=''),
+        'PASSWORD': env('POSTGRES_PASSWORD', default=''),
         'HOST': env('DB_HOST', str, 'db'),
         'PORT': env('DB_PORT', int, 5432)
     }
@@ -138,12 +138,21 @@ DATABASES = {
 
 CONN_MAX_AGE = 600
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": env("REDIS_SERVER", str, "redis://redis:6379"),
-    },
-}
+CACHES = (
+    {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": env("REDIS_SERVER", str, "redis://redis:6379"),
+        },
+    }
+# Use dummy cache for development
+    if not env("DEVELOP")
+    else {
+        "default": {
+            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        }
+    }
+)
 
 # Custom members model
 AUTH_USER_MODEL = 'members.Member'
