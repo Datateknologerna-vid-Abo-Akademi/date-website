@@ -1,24 +1,18 @@
 services:
   db:
     restart: always
-    expose:
-      - ${DB_PORT}
     ports: !reset []
 
   web:
     image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:${IMG_TAG}
     restart: always
     command: ./web.prod.sh
-    expose:
-      - ${WEB_PORT}
     ports: !reset []
 
   asgi:
     image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:${IMG_TAG}
     restart: always
     command: /bin/bash -c "daphne -b 0.0.0.0 core.routing:application"
-    expose:
-      - ${WEB_PORT}
     env_file:
       - ${ENV_FILE}
     depends_on:
@@ -35,8 +29,6 @@ services:
 
   redis:
     restart: always
-    expose:
-      - ${REDIS_PORT}
     ports: !reset []
     
   nginx:
