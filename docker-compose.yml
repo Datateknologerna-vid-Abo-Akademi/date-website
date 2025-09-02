@@ -18,7 +18,7 @@ services:
   web:
     build: .
     restart: unless-stopped
-    command: ./web.dev.sh
+    command: /bin/bash ./web.dev.sh
     ports:
       - ${DJANGO_PORT}:8000
     env_file:

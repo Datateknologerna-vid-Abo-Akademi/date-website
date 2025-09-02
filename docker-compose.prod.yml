@@ -6,7 +6,7 @@ services:
   web:
     image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:${IMG_TAG}
     restart: always
-    command: ./web.prod.sh
+    command: /bin/bash ./web.prod.sh
     ports: !reset []
 
   asgi:
