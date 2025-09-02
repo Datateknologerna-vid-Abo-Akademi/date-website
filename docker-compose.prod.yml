@@ -35,7 +35,7 @@ services:
     restart: always
     image: nginx:stable-alpine
     ports:
-      - ${WEB_PORT}:80
+      - ${DJANGO_PORT}:80
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:

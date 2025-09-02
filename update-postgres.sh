@@ -28,7 +28,7 @@ fi
 source $config_file
 
 # Check if the required environment variables are set
-if [ -z "$DATE_POSTGRESQL_VERSION" ] || [ -z "$DATE_DB_PORT" ] || [ -z "$DATE_DB_PASSWORD" ] || [ -z "$COMPOSE_PROJECT_NAME" ]; then
+if [ -z "$DATE_POSTGRESQL_VERSION" ] || [ -z "$DB_PORT" ] || [ -z "$POSTGRES_PASSWORD" ] || [ -z "$COMPOSE_PROJECT_NAME" ]; then
   echo "Error: Required environment variables are not set"
   exit 1
 fi
