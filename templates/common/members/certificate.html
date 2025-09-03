@@ -27,6 +27,9 @@
                             </div>
                             <div class="card-body">
                                 <h5>{{ user.get_str_membership_type }} - Aktiv</h5>
+                                {% if user.active_payment %}
+                                    <h6>Giltig till: {{ user.active_payment.date_expires|date:"d.m.Y" }}</h6>
+                                {% endif %}
                                 <h5 class="card-title">{{ user.first_name }} {{ user.last_name }}</h5>
                                 <h6>{{ user.username }}</h6>
                             </div>
