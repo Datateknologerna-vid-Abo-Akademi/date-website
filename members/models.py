@@ -60,6 +60,12 @@ class Member(AbstractBaseUser, PermissionsMixin):
     def full_name(self):
         return self.get_full_name()
 
+    @property
+    def active_payment(self):
+        return self.subscriptionpayment_set.filter(
+            date_expires__gte=timezone.now()
+        ).order_by('-date_expires').first()
+
     def get_full_name(self):
         """
         :return: First and last name with space between
