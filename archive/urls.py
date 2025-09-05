@@ -13,6 +13,7 @@ urlpatterns = [
     # /archive/pictures/<year>/
     path('pictures/<int:year>/', login_required(views.picture_index), name='pictures'),
     # /archive/pictures/<year>/<Collection_id>/
+    path('pictures/id/<int:pk>/', login_required(views.picture_detail), name='picture_detail'),
     path('pictures/<int:year>/<str:album>/', login_required(views.picture_detail), name='detail'),
     # /documents/
     path('documents/', login_required(views.FilteredDocumentsListView.as_view()), name='documents'),
