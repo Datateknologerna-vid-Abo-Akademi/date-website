@@ -5,6 +5,9 @@ import logging
 from celery import shared_task
 from django.conf import settings
 from django.template.loader import render_to_string
+import datetime
+import json
+import logging
 
 from .gsuite_adapter import DateSheetsAdapter
 from core.utils import send_email_task
@@ -38,6 +41,13 @@ def log_error(func):
     return wrapper
 
 
+def format_date_for_sheets(dt=None):
+    """Format date in Finnish format (dd.mm.yyyy) for Google Sheets"""
+    if dt is None:
+        dt = datetime.datetime.now()
+    return dt.strftime("%d.%m.%Y")
+
+
 @log_error
 def log_action(operation: str, data: dict):
     worksheet = AUDIT_LOG_SHEET_NAME
@@ -63,6 +73,7 @@ def handle_create(form: dict):
 
     logger.info("Creating alumni member entry")
     try:
+        current_date = format_date_for_sheets()
         client.append_row([
             member_id,
             data.get("firstname"),
@@ -78,8 +89,8 @@ def handle_create(form: dict):
             data.get("tfif_membership"),
             data.get("alumni_newsletter_consent"),
             data.get("year_of_admission"),
-            datetime.datetime.now().isoformat(),
-            datetime.datetime.now().isoformat(),
+            current_date,  # Creation date in Finnish format
+            current_date,  # Update date in Finnish format
             0,  # Paid status
             reference,
         ])
@@ -163,7 +174,7 @@ def handle_update(form, timestamp=None):
             form.get("alumni_newsletter_consent"),
             form.get("year_of_admission"),
             None, # Creation time is not updated
-            timestamp.isoformat(),  # Update time
+            format_date_for_sheets(timestamp),  # Update time in Finnish format
             None,  # Paid status
             None,  # Reference
         ])
