@@ -105,6 +105,7 @@ MIDDLEWARE = [
 
     'date.middleware.LangMiddleware',
     'date.middleware.HTCPCPMiddleware',
+    'date.middleware.CDNRewriteMiddleware'
 ]
 
 
@@ -343,3 +344,10 @@ LOGGING = {
 }
 
 EXPERIMENTAL_FEATURES = []
+
+
+# CDN settings
+CDN_URL_TRANSFORMATIONS = [
+    ("fra1.digitaloceanspaces.com/albin-storage/", "albin-storage.cdn.datateknologerna.org/"),
+    ("albin-storage.fra1.digitaloceanspaces.com/", "albin-storage.cdn.datateknologerna.org/"),
+]

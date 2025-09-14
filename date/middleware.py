@@ -34,3 +34,25 @@ class HTCPCPMiddleware:
         if request.path in coffe_words and request.method in htcpcp_methods:
             return render(request, template_name="core/418.html", status=418)
         return self.get_response(request)
+
+
+class CDNRewriteMiddleare:
+    """
+    Middleware to rewrite URLs for static and media files to use a CDN if configured.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.cdn_url_transformations = getattr(settings, 'CDN_URL_TRANSFORMATIONS', [])
+
+    def __call__(self, request):
+        response = self.get_response(request)
+
+        for original, new in self.cdn_url_transformations:
+            if original and new:
+                response.content = response.content.replace(
+                    bytes(original, 'utf-8'),
+                    bytes(new, 'utf-8')
+                )
+
+        return response
