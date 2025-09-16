@@ -8,7 +8,7 @@ from django.template.response import TemplateResponse
 from django_ckeditor_5.widgets import CKEditor5Widget
 from django.urls import reverse, re_path
 from django.utils.html import format_html
-from modeltranslation.admin import TranslationAdmin
+from modeltranslation.admin import TranslationAdmin, TabbedTranslationAdmin
 from modeltranslation.admin import TranslationTabularInline
 
 from events import forms
@@ -66,22 +66,53 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
 # TODO: Improve the admin panel UI for the translatable fields
 # SEE https://django-modeltranslation.readthedocs.io/en/latest/admin.html
 @admin.register(Event)
-class EventAdmin(TranslationAdmin):
+class EventAdmin(TabbedTranslationAdmin):
     list_display = (
-        'title', 'created_time', 'event_date_start', 'published', 'get_attendee_count')
+        'title', 'created_time', 'event_date_start', 'published', 'get_attendee_count', 'account_actions')
     ordering = ['-event_date_start']
     search_fields = ('title', 'author__first_name', 'created_time')
     inlines = [
         EventRegistrationFormInline,
         EventAttendeesFormInline]
 
+    def process_list(self, request, event_id, *args, **kwargs):
+        context = self.admin_site.each_context(request)
+        event = self.get_object(request, event_id)
+        context['event'] = event
+        rf = event.get_registration_form()
+        context["form"] = [x.name for x in rf][::-1] if rf else None
+        return TemplateResponse(
+            request,
+            'events/list.html',
+            context
+        )
+
     def get_attendee_count(self, obj):
         return obj.get_registrations().count()
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            re_path(
+                r'^(?P<event_id>.+)/list/$',
+                self.admin_site.admin_view(self.process_list),
+                name="registration_list"
+            ),
+        ]
+        return custom_urls + urls
+
+    def account_actions(self, obj):
+        return format_html(
+            '<a class="button" href="{}">Deltagarlista</a>&nbsp;',
+            reverse('admin:registration_list', args=[obj.pk])
+        )
+    account_actions.short_description = 'Deltagarlista'
+    account_actions.allow_tags = True
 
     get_attendee_count.short_description = 'Anmälda'
 
 # @admin.register(Event)
-# class EventAdmin(admin.ModelAdmin):
+# class EventAdmin(TabbedTranslationAdmin):
 #     save_on_top = True
 #     list_display = (
 #         'get_attendee_count', 'sign_up_max_participants',
@@ -95,11 +126,17 @@ class EventAdmin(TranslationAdmin):
 #         EventRegistrationFormInline,
 #         EventAttendeesFormInline
 #     ]
-    # class Media:
-    #     js = ('core/js/eventform.js',)
-    # 
-    # def get_attendee_count(self, obj):
-    #     return obj.get_registrations().count()
+
+#     formfield_overrides = {
+#         TextField: {'widget': CKEditor5Widget},
+#     }
+
+#     class Media:
+#         js = ('core/js/eventform.js',)
+
+#     def get_attendee_count(self, obj):
+#         return obj.get_registrations().count()
+
 #     def get_urls(self):
 #         urls = super().get_urls()
 #         custom_urls = [
@@ -110,6 +147,7 @@ class EventAdmin(TranslationAdmin):
 #             ),
 #         ]
 #         return custom_urls + urls
+
 #     def account_actions(self, obj):
 #         return format_html(
 #             '<a class="button" href="{}">Deltagarlista</a>&nbsp;',
@@ -117,6 +155,7 @@ class EventAdmin(TranslationAdmin):
 #         )
 #     account_actions.short_description = 'Deltagarlista'
 #     account_actions.allow_tags = True
+
 #     def process_list(self, request, event_id, *args, **kwargs):
 #         context = self.admin_site.each_context(request)
 #         event = self.get_object(request, event_id)
@@ -150,6 +189,3 @@ class EventAdmin(TranslationAdmin):
 
 #         form.user = request.user
 #         return form
-#   formfield_overrides = {
-#   TextField: {'widget': CKEditor5Widget},
-#   }

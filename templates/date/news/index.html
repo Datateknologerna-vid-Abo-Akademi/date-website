@@ -4,7 +4,7 @@
 {% load cache %}
 
 {% block title %}Nyheter{% endblock %}
-{% cache 60 news_index %}
+{% cache 60 news_index LANGUAGE_CODE %}
 {% block content %}
     <head>
         <link rel="stylesheet" href="{% static 'news/css/style.css' %}">

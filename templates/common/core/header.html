@@ -55,30 +55,30 @@
                                     {% endif %}
                                 {% endfor %}
 
-                                <!-- Language picker -->
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Language
-                                    </a>
-                                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
-                                        {% if LANGUAGES|length > 1 %}
-                                            <form action="{% url 'set_lang' %}" method="post">
-                                                {% csrf_token %}
-                                                {% for language in LANGUAGES %}
-                                                    {% if language.0 == "sv" or language.0 == "en" or language.0 == "fi" %}
-                                                        <li><button class="dropdown-item" name="lang" type="submit" value={{language.0}}>{{language.1}}</button></li>
-                                                    {% endif %}
-                                                {% endfor %}
-                                            </form>
-                                        {%endif%}
-                                    </ul>
-                                </li>
-                                <!-- Language picker ends here -->
 
                             </ul>
                     {% endif %}
                     </li>
                 {% endfor %}
+                    <!-- Language picker -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Language
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                            {% if LANGUAGES|length > 1 %}
+                                <form action="{% url 'set_lang' %}" method="post">
+                                    {% csrf_token %}
+                                    {% for language in LANGUAGES %}
+                                        {% if language.0 == "sv" or language.0 == "en" or language.0 == "fi" %}
+                                            <li><button class="dropdown-item" name="lang" type="submit" value={{language.0}}>{{language.1}}</button></li>
+                                        {% endif %}
+                                    {% endfor %}
+                                </form>
+                            {%endif%}
+                        </ul>
+                    </li>
+                    <!-- Language picker ends here -->
             </ul>
         </div>
       </div>
