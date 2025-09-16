@@ -36,7 +36,7 @@ class HTCPCPMiddleware:
         return self.get_response(request)
 
 
-class CDNRewriteMiddleare:
+class CDNRewriteMiddleware:
     """
     Middleware to rewrite URLs for static and media files to use a CDN if configured.
     """
