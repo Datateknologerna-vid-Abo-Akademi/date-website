@@ -2,6 +2,7 @@ from admin_ordering.admin import OrderableAdmin
 from django.contrib import admin
 
 from .models import StaticPage, StaticPageNav, StaticUrl
+from modeltranslation.admin import TranslationAdmin, TabbedTranslationAdmin
 
 
 # Register your models here.
@@ -19,7 +20,7 @@ class UrlInline(OrderableAdmin, admin.TabularInline):
 
 
 @admin.register(StaticPageNav)
-class StaticPageNavAdmin(admin.ModelAdmin):
+class StaticPageNavAdmin(TabbedTranslationAdmin):
     model = StaticPageNav
     save_on_top = True
     inlines = [

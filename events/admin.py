@@ -10,7 +10,7 @@ from django.urls import reverse, re_path
 from django.utils.html import format_html
 
 # Translation and Ordering imports
-from modeltranslation.admin import TranslationAdmin, TranslationTabularInline
+from modeltranslation.admin import TranslationAdmin, TabbedTranslationAdmin, TranslationTabularInline
 from admin_ordering.admin import OrderableAdmin
 
 from events import forms
@@ -70,6 +70,7 @@ class EventAttendeesFormInline(OrderableAdmin, TranslationTabularInline):
 # TODO: Improve the admin panel UI for the translatable fields
 # SEE https://django-modeltranslation.readthedocs.io/en/latest/admin.html
 @admin.register(Event)
+class EventAdmin(TabbedTranslationAdmin):
 class EventAdmin(TranslationAdmin):
     save_on_top = True
     list_display = (
@@ -143,6 +144,25 @@ class EventAdmin(TranslationAdmin):
         if obj.parent:
             return EventAttendees.objects.filter(original_event=obj).count()
         return obj.get_registrations().count()
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            re_path(
+                r'^(?P<event_id>.+)/list/$',
+                self.admin_site.admin_view(self.process_list),
+                name="registration_list"
+            ),
+        ]
+        return custom_urls + urls
+
+    def account_actions(self, obj):
+        return format_html(
+            '<a class="button" href="{}">Deltagarlista</a>&nbsp;',
+            reverse('admin:registration_list', args=[obj.pk])
+        )
+    account_actions.short_description = 'Deltagarlista'
+    account_actions.allow_tags = True
 
     get_attendee_count.short_description = 'Anmälda'
 
