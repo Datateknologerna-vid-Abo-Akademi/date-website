@@ -71,6 +71,8 @@ def get_installed_apps(proj_apps):
         'django_tables2',
         'django_filters',
         'bootstrap3',
+        'rest_framework',
+        'drf_yasg',
         'django_cleanup',  # Should be places last
     ]
 
@@ -291,6 +293,53 @@ EMAIL_HOST_RECEIVER = env('EMAIL_HOST_RECEIVER', str, '')
 # Celery Configuration
 CELERY_BROKER_URL = 'redis://redis:6379/0'
 CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# JWT Authentication Task Settings
+JWT_KEYPAIR_ROTATION_DAYS = env('JWT_KEYPAIR_ROTATION_DAYS', int, 30)  # Rotate keys every 30 days
+JWT_MAX_ACTIVE_KEYPAIRS = env('JWT_MAX_ACTIVE_KEYPAIRS', int, 3)  # Keep max 3 active keypairs
+JWT_KEYPAIR_CLEANUP_DAYS = env('JWT_KEYPAIR_CLEANUP_DAYS', int, 180)  # Clean up old keypairs after 6 months
+
+# Celery Beat Configuration for Periodic Tasks
+CELERY_BEAT_SCHEDULE = {
+    # Clean up expired JWT tokens daily at 2 AM
+    'cleanup-expired-jwt-tokens': {
+        'task': 'jwt_auth.tasks.cleanup_expired_tokens',
+        'schedule': 3600 * 24,  # Run daily (24 hours)
+        'options': {'queue': 'default'}
+    },
+    
+    # Rotate JWT key pairs weekly (every Sunday at 3 AM)
+    'rotate-jwt-keypairs': {
+        'task': 'jwt_auth.tasks.rotate_jwt_keypairs',
+        'schedule': 3600 * 24 * 7,  # Run weekly (7 days)
+        'options': {'queue': 'default'}
+    },
+    
+    # Clean up very old inactive keypairs monthly
+    'cleanup-inactive-keypairs': {
+        'task': 'jwt_auth.tasks.cleanup_inactive_keypairs',
+        'schedule': 3600 * 24 * 30,  # Run monthly (30 days)
+        'options': {'queue': 'default'}
+    },
+    
+    # Generate JWT health report daily at 6 AM
+    'jwt-health-report': {
+        'task': 'jwt_auth.tasks.generate_jwt_health_report',
+        'schedule': 3600 * 24,  # Run daily (24 hours)
+        'options': {'queue': 'default'}
+    },
+    
+    # Initialize JWT scopes (run once at startup, then rarely)
+    'initialize-jwt-scopes': {
+        'task': 'jwt_auth.tasks.initialize_jwt_scopes',
+        'schedule': 3600 * 24 * 7,  # Run weekly to ensure scopes exist
+        'options': {'queue': 'default'}
+    },
+}
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 3000
 
@@ -343,3 +392,59 @@ LOGGING = {
 }
 
 EXPERIMENTAL_FEATURES = []
+
+# JWT Authentication Settings
+JWT_ISSUER = env('JWT_ISSUER', str, 'date-website')
+JWT_AUDIENCE = env('JWT_AUDIENCE', str, 'date-website-api')
+JWT_DEFAULT_EXPIRY_HOURS = env('JWT_DEFAULT_EXPIRY_HOURS', int, 24)
+JWT_MAX_EXPIRY_HOURS = env('JWT_MAX_EXPIRY_HOURS', int, 168)  # 7 days
+
+# Django REST Framework Settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20
+}
+
+# Swagger Settings
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'basic': {
+            'type': 'basic'
+        },
+        'api_key': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization'
+        }
+    },
+    'USE_SESSION_AUTH': True,
+    'JSON_EDITOR': True,
+    'SUPPORTED_SUBMIT_METHODS': [
+        'get',
+        'post',
+        'put',
+        'delete',
+        'patch'
+    ],
+    'OPERATIONS_SORTER': 'alpha',
+    'TAGS_SORTER': 'alpha',
+    'DOC_EXPANSION': 'none',
+    'DEEP_LINKING': True,
+    'SHOW_EXTENSIONS': True,
+    'DEFAULT_MODEL_RENDERING': 'example'
+}

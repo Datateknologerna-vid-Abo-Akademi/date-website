@@ -37,6 +37,7 @@ urlpatterns = [
     path('social/',include('social.urls')),
     path('polls/', include('polls.urls')),
     path('ctf/', include('ctf.urls')),
+    path('api/jwt/', include('jwt_auth.urls')),
     path('admin/', admin.site.urls),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     path('publications/', include('publications.urls')),

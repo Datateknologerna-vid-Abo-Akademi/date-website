@@ -1,0 +1,282 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}JWT Token Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>JWT Token Management</h2>
+    
+    {% if user.is_authenticated %}
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Generate JWT Token</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="generate-token-form">
+                            {% csrf_token %}
+                            <div class="form-group mb-3">
+                                <label for="purpose">Purpose:</label>
+                                <input type="text" id="purpose" name="purpose" class="form-control" value="api_access" required>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label for="expires_in_hours">Expires in hours:</label>
+                                <input type="number" id="expires_in_hours" name="expires_in_hours" class="form-control" value="24" min="1" max="168" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Generate Token</button>
+                        </form>
+                        
+                        <div id="token-result" class="mt-3" style="display: none;">
+                            <h6>Generated Token:</h6>
+                            <div class="form-group">
+                                <textarea id="token-display" class="form-control" rows="8" readonly></textarea>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="copyToken()">Copy Token</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Verify JWT Token</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="verify-token-form">
+                            <div class="form-group mb-3">
+                                <label for="token-to-verify">Token to verify:</label>
+                                <textarea id="token-to-verify" name="token" class="form-control" rows="6" placeholder="Paste JWT token here..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-info">Verify Token</button>
+                        </form>
+                        
+                        <div id="verify-result" class="mt-3" style="display: none;">
+                            <h6>Verification Result:</h6>
+                            <pre id="verify-display" class="bg-light p-2 border"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Your JWT Tokens</h5>
+                        <button type="button" class="btn btn-sm btn-outline-primary float-end" onclick="loadUserTokens()">Refresh</button>
+                    </div>
+                    <div class="card-body">
+                        <div id="user-tokens">
+                            <p>Loading tokens...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Public Keys</h5>
+                        <button type="button" class="btn btn-sm btn-outline-info float-end" onclick="loadPublicKeys()">Refresh</button>
+                    </div>
+                    <div class="card-body">
+                        <div id="public-keys">
+                            <p>Loading public keys...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    {% else %}
+        <div class="alert alert-warning">
+            <h4>Authentication Required</h4>
+            <p>You need to be logged in to manage JWT tokens.</p>
+            <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if user.is_authenticated %}
+        loadUserTokens();
+        loadPublicKeys();
+        
+        // Handle token generation form
+        document.getElementById('generate-token-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            generateToken();
+        });
+        
+        // Handle token verification form
+        document.getElementById('verify-token-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            verifyToken();
+        });
+    {% endif %}
+});
+
+async function generateToken() {
+    const form = document.getElementById('generate-token-form');
+    const formData = new FormData(form);
+    
+    const data = {
+        purpose: formData.get('purpose'),
+        expires_in_hours: parseInt(formData.get('expires_in_hours'))
+    };
+    
+    try {
+        const response = await fetch('/api/jwt/generate/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            document.getElementById('token-display').value = result.token;
+            document.getElementById('token-result').style.display = 'block';
+            loadUserTokens(); // Refresh token list
+        } else {
+            alert('Error generating token: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+async function verifyToken() {
+    const token = document.getElementById('token-to-verify').value.trim();
+    
+    if (!token) {
+        alert('Please enter a token to verify');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/jwt/verify/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ token: token })
+        });
+        
+        const result = await response.json();
+        
+        document.getElementById('verify-display').textContent = JSON.stringify(result, null, 2);
+        document.getElementById('verify-result').style.display = 'block';
+        
+        if (!response.ok) {
+            document.getElementById('verify-display').className = 'bg-danger text-white p-2 border';
+        } else {
+            document.getElementById('verify-display').className = 'bg-success text-white p-2 border';
+        }
+    } catch (error) {
+        document.getElementById('verify-display').textContent = 'Error: ' + error.message;
+        document.getElementById('verify-result').style.display = 'block';
+        document.getElementById('verify-display').className = 'bg-danger text-white p-2 border';
+    }
+}
+
+async function loadUserTokens() {
+    try {
+        const response = await fetch('/api/jwt/tokens/');
+        const result = await response.json();
+        
+        if (response.ok) {
+            const tokensHtml = result.tokens.map(token => `
+                <div class="border p-2 mb-2">
+                    <strong>ID:</strong> ${token.token_id}<br>
+                    <strong>Purpose:</strong> ${token.purpose}<br>
+                    <strong>Issued:</strong> ${new Date(token.issued_at).toLocaleString()}<br>
+                    <strong>Expires:</strong> ${new Date(token.expires_at).toLocaleString()}<br>
+                    <strong>Status:</strong> ${token.is_revoked ? '<span class="text-danger">Revoked</span>' : '<span class="text-success">Active</span>'}
+                    ${!token.is_revoked ? `<button class="btn btn-sm btn-danger float-end" onclick="revokeToken('${token.token_id}')">Revoke</button>` : ''}
+                </div>
+            `).join('');
+            
+            document.getElementById('user-tokens').innerHTML = tokensHtml || '<p>No tokens found.</p>';
+        } else {
+            document.getElementById('user-tokens').innerHTML = '<p class="text-danger">Error loading tokens: ' + (result.error || 'Unknown error') + '</p>';
+        }
+    } catch (error) {
+        document.getElementById('user-tokens').innerHTML = '<p class="text-danger">Error: ' + error.message + '</p>';
+    }
+}
+
+async function loadPublicKeys() {
+    try {
+        const response = await fetch('/api/jwt/keys/');
+        const result = await response.json();
+        
+        if (response.ok) {
+            const keysHtml = result.keys.map(key => `
+                <div class="border p-2 mb-2">
+                    <strong>Key ID:</strong> ${key.kid}<br>
+                    <strong>Algorithm:</strong> ${key.alg}<br>
+                    <strong>Created:</strong> ${new Date(key.created_at).toLocaleString()}<br>
+                    <details>
+                        <summary>Public Key (PEM)</summary>
+                        <pre class="bg-light p-2 mt-2">${key.pem}</pre>
+                    </details>
+                </div>
+            `).join('');
+            
+            document.getElementById('public-keys').innerHTML = keysHtml || '<p>No public keys found.</p>';
+        } else {
+            document.getElementById('public-keys').innerHTML = '<p class="text-danger">Error loading public keys: ' + (result.error || 'Unknown error') + '</p>';
+        }
+    } catch (error) {
+        document.getElementById('public-keys').innerHTML = '<p class="text-danger">Error: ' + error.message + '</p>';
+    }
+}
+
+async function revokeToken(tokenId) {
+    if (!confirm('Are you sure you want to revoke this token?')) {
+        return;
+    }
+    
+    try {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        const response = await fetch('/api/jwt/revoke/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ token_id: tokenId })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            loadUserTokens(); // Refresh token list
+        } else {
+            alert('Error revoking token: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    }
+}
+
+function copyToken() {
+    const tokenDisplay = document.getElementById('token-display');
+    tokenDisplay.select();
+    document.execCommand('copy');
+    alert('Token copied to clipboard!');
+}
+</script>
+{% endblock %}
