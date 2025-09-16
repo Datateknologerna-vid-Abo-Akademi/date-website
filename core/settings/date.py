@@ -30,6 +30,7 @@ INSTALLED_APPS = get_installed_apps([
     'publications',
     'alumni',
     'billing',
+    'jwt_auth',
 ])
 
 ROOT_URLCONF = 'core.urls.date'
