@@ -7,7 +7,7 @@
 .header {
     color: var(--textColorLight);
     background-color: var(--primaryColor);
-    height: 50vh;
+    height: 60vh;
 }
 
 .hero-text-box {
@@ -28,9 +28,9 @@
 }
 
 .scaling-svg-container {
-    margin-top: 55px;
+    margin-top: 5px;
         position: relative;
-        height: 35vh;
+        height: 60vh;
         width: 100%;
         padding: 0;
         /* override this inline for aspect ratio other than square */
