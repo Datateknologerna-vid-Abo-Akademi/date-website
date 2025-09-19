@@ -23,6 +23,7 @@ class EventCreationForm(forms.ModelForm):
     sign_up_members = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
     sign_up_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
     sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    parent = forms.ModelChoiceField(queryset=Event.objects.filter(event_date_end__gte=now()), required=False)
 
     class Meta:
         model = Event
@@ -45,6 +46,7 @@ class EventCreationForm(forms.ModelForm):
             'passcode',
             'captcha',
             'redirect_link',
+            'parent',
         )
         if settings.USE_S3:
             fields = temp_fields + ('s3_image',)
@@ -99,6 +101,7 @@ class EventCreationForm(forms.ModelForm):
 
 
 class EventEditForm(forms.ModelForm):
+
     user = None
 
     event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
@@ -113,6 +116,13 @@ class EventEditForm(forms.ModelForm):
     sign_up_members = forms.SplitDateTimeField(**sign_up_args)
     sign_up_deadline = forms.SplitDateTimeField(**sign_up_args)
     sign_up_cancelling_deadline = forms.SplitDateTimeField(**sign_up_args)
+    parent = forms.ModelChoiceField(queryset=Event.objects.all(), required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'parent' in self.fields:
+            self.fields['parent'].widget.attrs['readonly'] = True
+            self.fields['parent'].widget.attrs['disabled'] = True  # disables selection in most browsers
 
     class Meta:
         model = Event
@@ -135,6 +145,7 @@ class EventEditForm(forms.ModelForm):
             'passcode',
             'captcha',
             'redirect_link',
+            'parent',
         )
         if settings.USE_S3:
             fields = temp_fields + ('s3_image',)

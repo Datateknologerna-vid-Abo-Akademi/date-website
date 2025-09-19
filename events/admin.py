@@ -65,7 +65,7 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
 class EventAdmin(admin.ModelAdmin):
     save_on_top = True
     list_display = (
-        'title', 'created_time', 'event_date_start', 'get_attendee_count', 'sign_up_max_participants', 'published',
+        'title', 'created_time', 'event_date_start', 'get_attendee_count', 'parent', 'published',
         'account_actions')
     search_fields = ('title', 'author__first_name', 'created_time')
     ordering = ['-event_date_start']
