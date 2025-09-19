@@ -58,6 +58,7 @@ class Event(models.Model):
     s3_image = PublicFileField(verbose_name=_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
     captcha = models.BooleanField(_('Captcha'), default=False)
     redirect_link = models.URLField(_('Redirect Link'), blank=True)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children', default=None)
 
     class Meta:
         verbose_name = _('evenemang')
@@ -84,6 +85,8 @@ class Event(models.Model):
         self.save()
 
     def get_registrations(self):
+        if self.parent:
+            return self.parent.get_registrations()
         return EventAttendees.objects.filter(event=self).order_by('attendee_nr')
 
     def get_highest_attendee_nr(self):
@@ -98,10 +101,11 @@ class Event(models.Model):
                 if self.get_registration_form():
                     for item in self.get_registration_form():
                         user_pref[str(item)] = preferences.get(str(item))
+                event = self.parent or self
                 registration = EventAttendees.objects.create(user=user,
-                                                             event=self, email=email,
+                                                             event=event, email=email,
                                                              time_registered=now(), preferences=user_pref,
-                                                             anonymous=anonymous, avec_for=avec_for)
+                                                             anonymous=anonymous, avec_for=avec_for, original_event=self)
                 return registration
 
     def cancel_event_attendance(self, user):
@@ -269,6 +273,7 @@ class EventAttendees(models.Model):
     anonymous = models.BooleanField(_('Anonymt'), default=False)
     time_registered = models.DateTimeField(_('Registrerad'))
     avec_for = models.ForeignKey("self", verbose_name=_('Avec till'), null=True, blank=True, on_delete=models.SET_NULL)
+    original_event = models.ForeignKey(Event, verbose_name=_('Ursprungligt evenemang'), related_name='original_event', null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
         verbose_name = _('deltagare')
