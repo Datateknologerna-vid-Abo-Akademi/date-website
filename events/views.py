@@ -150,7 +150,8 @@ class EventDetailView(DetailView):
         if not EventAttendees.objects.filter(email=form.cleaned_data['email'], event=self.object.id).first():
             logger.info(f"User {request.user} signed up with name: {form.cleaned_data['user']}")
             if not settings.TEST:
-                ws_send(request, form, public_info)
+                slug = self.object.parent.slug if self.object.parent else self.object.slug
+                ws_send(slug, form, public_info)
         return self.form_valid(form)
 
     def redirect_after_signup(self):

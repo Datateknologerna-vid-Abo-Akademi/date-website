@@ -46,12 +46,16 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
     def get_fields(self, request, event):
         fields = ['attendee_nr', 'user', 'email',
                   'anonymous', 'preferences', 'time_registered']
+        if event.children.exists():
+            fields.append('original_event')
         if event and event.sign_up_avec:
             fields.append('avec_for')
         return fields
 
     def get_readonly_fields(self, request, event):
         readonly_fields = ['time_registered']
+        if event.children.exists():
+            readonly_fields.append('original_event')
         return readonly_fields
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -66,7 +70,7 @@ class EventAdmin(admin.ModelAdmin):
     save_on_top = True
     list_display = (
         'title', 'created_time', 'event_date_start', 'get_attendee_count', 'sign_up_max_participants', 'published',
-        'account_actions')
+        'account_actions', 'parent')
     search_fields = ('title', 'author__first_name', 'created_time')
     ordering = ['-event_date_start']
     actions = ['delete_participants']

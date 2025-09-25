@@ -3,7 +3,14 @@ $(function() {
 
     // for HTTPS also use WSS.
     let ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
-    let socket = new WebSocket(ws_scheme + '://' + window.location.host + '/ws' + window.location.pathname);
+
+    let ws_url = ws_scheme + '://' + window.location.host + '/ws' + window.location.pathname;
+
+    if (document.getElementById('attendee-list').dataset.parentSlug) {
+        ws_url = ws_scheme + '://' + window.location.host + '/ws/events/' + document.getElementById('attendee-list').dataset.parentSlug + '/';
+    }
+
+    let socket = new WebSocket(ws_url);
 
     socket.onmessage = function(e) {
         const { fields, anonymous } = JSON.parse(e.data).data;
