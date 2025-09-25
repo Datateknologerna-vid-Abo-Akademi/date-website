@@ -46,7 +46,7 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
     def get_fields(self, request, event):
         fields = ['attendee_nr', 'user', 'email',
                   'anonymous', 'preferences', 'time_registered']
-        if event.children.exists():
+        if event and event.children.exists():
             fields.append('original_event')
         if event and event.sign_up_avec:
             fields.append('avec_for')
@@ -54,7 +54,7 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
 
     def get_readonly_fields(self, request, event):
         readonly_fields = ['time_registered']
-        if event.children.exists():
+        if event and event.children.exists():
             readonly_fields.append('original_event')
         return readonly_fields
 
