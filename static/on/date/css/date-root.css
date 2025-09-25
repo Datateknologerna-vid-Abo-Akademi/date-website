@@ -2,16 +2,16 @@
 /* use with var(--color); included in base.html*/
 
 :root {
-    --primaryColor: #672f6e;
-    --primaryColorLight: #9e2eb8;
-    --primaryColorLighte: #d799e6;
-    --primaryColorLighter: #d799e6;
-    --primaryColorTransparent: rgba(103, 47, 110, 0.9);
-    --primaryColorTransparenter: rgba(0,0,0,0.8);
-    --secondaryColor: #000;
+    --primaryColor: #84030B;
+    --primaryColorLight: #a8131d;
+    --primaryColorLighte: #b52831;
+    --primaryColorLighter: #df5b63;
+    --primaryColorTransparent: rgba(132, 3, 11, 0.7);
+    --primaryColorTransparenter: rgba(132, 3, 11, 0.65);
+    --secondaryColor: #ffc400;
     --secondaryColorDarker: #131313;
-    --textColorLight: #fff;
-    --textColorLightish: #eaeaea;
+    --textColorLight: #faf0dc;
+    --textColorLightish: #faf0dc;
     --textColorDark: #000;
     --textColorDarkish: #202020;
     --textColorMedium: #606060;
@@ -19,8 +19,8 @@
     --helpTextLighter: rgb(199, 199, 199);
     --linkColorDark: #3a80c3;
     --linkColorDarkHover: #26547f;
-    --linkColorLight: rgb(208, 255, 0);
-    --linkColorLightHover: rgb(146, 179, 0);
+    --linkColorLight: #ffc400;
+    --linkColorLightHover: #edc057;
     --warning: rgb(216, 153, 146);
     --warning-darker: rgb(213, 91, 78);
     --navClickHighlight: rgba(255, 255, 255, 0.25);
