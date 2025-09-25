@@ -9,6 +9,8 @@
 <p>{% trans "Anmälan stängs" %} {{ event.sign_up_deadline|date:"j.n H:i" }}, {% trans "om" %} {{ event.sign_up_deadline | timeuntil }}</p>
 <small>{% trans "OBS!" %} {% trans "Anmälningen är bindande om inget annat meddelas." %} <br>
     {% trans "Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på förhinder." %}</small>
+
+{% if not event.parent or not event.event_is_full %}
 {% if form.errors %}
     {% for field in form %}
         {% for error in field.errors %}
@@ -37,8 +39,11 @@
     Under anmälningstiden syns den anmäldas namn i listan nedan. 
     Efter evenemanget sparas informationen för statistiska ändamål och syns endast för hemsidans administratörer.
 </small>
+{% endif %}
 
-{% if event.event_is_full %}
+{% if event.parent and event.event_is_full %}
+<p class="warning">Evenemanget är tyvärr fullt! Vänligen kontakta evenemangets kontaktperson</p>
+{% elif event.event_is_full %}
 <p class="warning">Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan och meddelas om du får plats.</p>
 {% endif %}
 
