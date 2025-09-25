@@ -46,7 +46,7 @@
                             <p>{% trans "Anmälan öppnas" %} {{ event.sign_up_others|date:"j.n H:i" }}, {% trans "om" %} {{ event.sign_up_others | timeuntil }}</p>
                         {% endif %}
                     </div>
-                    <div class="content overflow-auto">
+                    <div id="attendee-list" class="content overflow-auto" data-parent-slug="{{ event.parent.slug|default:'' }}">
                     {% if event|show_attendee_list %}
                         {% if event.sign_up_max_participants != 0 %}
                         <p>Det finns {{ event.sign_up_max_participants }} platser!</p>
