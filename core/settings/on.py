@@ -44,10 +44,10 @@ STATICFILES_DIRS = [
 
 CONTENT_VARIABLES = {
     "SITE_URL": "https://demo.datateknologerna.org",
-    "ASSOCIATION_NAME": "ÖN Evenemang",
-    "ASSOCIATION_NAME_FULL": "Österbottniska Nationens Årsfestkommité",
+    "ASSOCIATION_NAME": "ÖN 100",
+    "ASSOCIATION_NAME_FULL": "Österbottniska Nationens 100-årsjubileumskommitté",
     "ASSOCIATION_NAME_SHORT": "ÖN Events",
-    "ASSOCIATION_EMAIL": "onarsfest@abo.fi",
+    "ASSOCIATION_EMAIL": "on100@abo.fi",
     "ASSOCIATION_ADDRESS_L1": "c/o Kåren",
     "ASSOCIATION_ADDRESS_L2": "Tavastgatan 22",
     "ASSOCIATION_POSTAL_CODE": "20500 Åbo",
