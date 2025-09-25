@@ -8,7 +8,7 @@
         <style>
             .background-img{
                 position: relative;
-                background: url({% static "events/img/onbackground.jpg" %}) no-repeat center center fixed;
+                background: url({% static "events/img/on100background.png" %}) no-repeat center center fixed;
                 -webkit-background-size: cover;
                 -moz-background-size: cover;
                 -o-background-size: cover;
@@ -110,7 +110,7 @@
             </div>
         </div>
     </div>
-    <div style="background-color: #672f6e; opacity: 0.7;">
+    <div style="background-color: var(--primaryColorTransparent);">
         {% include "core/footer.html" %}
     </div>
     </div>
