@@ -7,7 +7,7 @@ $(function() {
     let ws_url = ws_scheme + '://' + window.location.host + '/ws' + window.location.pathname;
 
     if (document.getElementById('attendee-list').dataset.parentSlug) {
-        ws_url = ws_scheme + '://' + window.location.host + '/ws/events/' + document.getElementById('attendee-list').dataset.parentSlug + '/';
+        ws_url = ws_scheme + '://' + window.location.host + '/ws/' + document.getElementById('attendee-list').dataset.parentSlug + '/';
     }
 
     let socket = new WebSocket(ws_url);
