@@ -63,7 +63,7 @@
                                     {% endfor %}
                             </tr>
                             {% for attendee in event.get_registrations %}
-                                <tr {% if forloop.counter > event.sign_up_max_participants and event.sign_up_max_participants != 0 %} class="event-full" {% endif %} >
+                                <tr {% if forloop.counter > event.sign_up_max_participants and event.sign_up_max_participants != 0 and not event.parent %} class="event-full" {% endif %} >
                                     <td>{{ forloop.counter }}</td>
                                     <td>{% if not attendee.anonymous %}{{ attendee.user }}{% else %}
                                         <i>{% trans "Anonymt" %}</i>{% endif %}</td>

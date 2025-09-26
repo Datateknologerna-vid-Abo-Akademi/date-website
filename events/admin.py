@@ -147,6 +147,8 @@ class EventAdmin(admin.ModelAdmin):
         js = ('core/js/eventform.js',)
 
     def get_attendee_count(self, obj):
+        if obj.parent:
+            return EventAttendees.objects.filter(original_event=obj).count()
         return obj.get_registrations().count()
 
     get_attendee_count.short_description = 'Anmälda'

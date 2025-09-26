@@ -102,7 +102,7 @@ class EventDetailView(DetailView):
 
     def form_invalid(self, form):
         if self.get_context_data().get('event').title.lower() in ['årsfest', 'årsfest gäster']:
-            return render(self.request, 'events/arsfest.html', self.get_context_data(form=form))
+            return render(self.request, 'events/arsfest.html', self.get_context_data(form=form), status=400)
         return render(self.request, self.template_name, self.get_context_data(form=form), status=400)
 
     def handle_passcode(self, request):
@@ -132,6 +132,9 @@ class EventDetailView(DetailView):
                                     user_member or open_for_others or commodore_group):
 
             form = self.object.make_registration_form()(data=request.POST)
+
+            if self.object.parent and self.object.event_is_full():
+                return self.form_invalid(form)
 
             # CAPTCHA validation if applicable
             if self.object.captcha:

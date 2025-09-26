@@ -131,6 +131,8 @@ class Event(models.Model):
     def event_is_full(self):
         if self.sign_up_max_participants == 0:
             return False
+        elif self.parent:
+            return EventAttendees.objects.filter(event=self.parent, original_event=self).count() >= self.sign_up_max_participants
         return EventAttendees.objects.filter(event=self).count() >= self.sign_up_max_participants
 
     def get_registration_form(self):
