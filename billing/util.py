@@ -60,3 +60,14 @@ def send_event_invoice(signup: EventAttendees, invoice: EventInvoice):
     }
     content = render_to_string('billing/invoice_email.txt', context)
     send_email_task.delay(f"{signup.event.title} - Betalningsuppgifter", content, settings.DEFAULT_FROM_EMAIL, [signup.email])
+
+
+def send_event_free_confirmation(signup: EventAttendees):
+    """Send confirmation email for free events"""
+    context = {
+        'signup': signup,
+        **settings.BILLING_CONTEXT,
+        **settings.CONTENT_VARIABLES,
+    }
+    content = render_to_string('billing/free_event_confirmation_email.txt', context)
+    send_email_task.delay(f"{signup.event.title} - Bekräftelse", content, settings.DEFAULT_FROM_EMAIL, [signup.email])
