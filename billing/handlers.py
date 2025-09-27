@@ -39,11 +39,11 @@ def handle_event_billing(signup: EventAttendees, retries=2):
             )
             invoice.save()
             
-            # Send email with invoice
-            send_event_invoice(signup, invoice)
         except Exception as e:
             logger.error(f"Failed to create invoice for {signup}: {e}")
             if retries:
                 handle_event_billing(signup, retries=retries-1)
             return
 
+        # Send email with invoice
+        send_event_invoice(signup, invoice)
