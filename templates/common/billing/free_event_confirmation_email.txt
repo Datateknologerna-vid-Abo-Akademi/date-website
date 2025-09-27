@@ -1,0 +1,15 @@
+{{ signup.event.title }} - Betalningsuppgifter
+
+Hej {{ signup.user }},
+
+Du har anmält dig till {{ signup.event.title }}!
+
+Vänligen notera att sista avanmälningsdatum är {{ signup.event.sign_up_cancelling_deadline.date }}.
+
+OBS! Svara inte på detta mail utan frågor och dylikt skall riktas åt {{ ASSOCIATION_EMAIL }}!
+
+
+Med vänliga hälsningar,
+
+{{ ASSOCIATION_NAME_FULL }}
+{{ ASSOCIATION_EMAIL }}
