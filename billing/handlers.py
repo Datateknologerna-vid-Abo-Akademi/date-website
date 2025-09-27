@@ -3,7 +3,7 @@ import logging
 
 from events.models import EventAttendees
 from .models import EventInvoice, EventBillingConfiguration
-from .util import BillingIntegrations, generate_reference_number, generate_invoice_number, get_selection_price, send_event_invoice
+from .util import BillingIntegrations, generate_reference_number, generate_invoice_number, get_selection_price, send_event_invoice, send_event_free_confirmation
 
 
 logger = logging.getLogger('date')
@@ -25,6 +25,8 @@ def handle_event_billing(signup: EventAttendees, retries=2):
         amount = get_selection_price(event, billing_config.price, billing_config.price_selector, signup.preferences)
         logger.debug(f"Generated invoice number {invoice_number} with amount {amount}")
         if not amount:
+            if amount == 0:
+                send_event_free_confirmation(signup)
             return
         try:
             invoice = EventInvoice(
@@ -36,10 +38,12 @@ def handle_event_billing(signup: EventAttendees, retries=2):
                 amount=amount,
             )
             invoice.save()
+            
         except Exception as e:
-            print(f"Failed to create invoice for {signup}: {e}")
+            logger.error(f"Failed to create invoice for {signup}: {e}")
             if retries:
                 handle_event_billing(signup, retries=retries-1)
             return
 
+        # Send email with invoice
         send_event_invoice(signup, invoice)
