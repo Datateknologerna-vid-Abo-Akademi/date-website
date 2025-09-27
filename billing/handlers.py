@@ -27,6 +27,7 @@ def handle_event_billing(signup: EventAttendees, retries=2):
         if not amount:
             if amount == 0:
                 send_event_free_confirmation(signup)
+            return
         try:
             invoice = EventInvoice(
                 participant=signup,
