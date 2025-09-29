@@ -57,7 +57,7 @@ CONTENT_VARIABLES = {
 
 BILLING_CONTEXT = {
     "INVOICE_RECIPIENT": "Österbottniska Nationen vid Åbo Akademi r.f.",
-    "IBAN": "FI35 5670 0820 4600 85",
+    "IBAN": "FI40 5670 0820 4624 20",
     "BIC": "OKOYFIHH",
 }
 
