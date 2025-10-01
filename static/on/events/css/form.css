@@ -1,0 +1,63 @@
+.form p{
+    display: grid;
+    grid-template-columns: 30% 1fr;
+    grid-gap: 5px;
+    box-sizing: border-box;
+}
+
+.form p label, input, select{
+    font-family: 'Josefin Sans', sans-serif;
+    padding: 5px;
+    border-radius: 5px;
+    align-self: end;
+}
+
+.form p label{
+    word-break: normal;
+}
+
+.form p input[type=checkbox]{
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+}
+
+.form > ul.errorlist{
+    display: none;
+}
+
+.button{
+    background-color: var(--primaryColorLighter);
+    border: none;
+    color: var(--textColorLight);
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 16px;
+    border-radius: 5px;
+    font-family: 'Josefin Sans', sans-serif;
+    cursor: pointer;
+}
+
+.button:hover{
+    transition: 0.2s ease;
+    background-color: var(--primaryColorLighte);
+    color: var(--linkColorLightHover);
+}
+
+.button:active{
+    background-color: var(--primaryColorLighter);
+}
+
+.warning{
+    color: var(--warning)
+}
+
+@media only screen and (max-width: 768px) {
+    .form p{
+        display: block;
+    }
+    input, select, label {
+        display: block;
+        width: 100%;
+    }
+}

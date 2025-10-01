@@ -185,14 +185,14 @@ form input {
 
 form button {
     font-family: var(--arsfest-font) !important;
-    background-color: var(--primaryColorLighter) !important;
-    color: var(--textColorDark) !important;
+    background-color: var(--primaryColorLighte) !important;
+    color: var(--textColorLight) !important;
     border: 1px solid var(--mainArsfestColor) !important;
 }
 
 form button:hover {
-    background-color: var(--mainArsfestButtonHoverColor) !important;
-    color: var(--textColorLightish) !important;
+    background-color: rgb(181, 40, 49) !important;
+    color: var(--textColorDark) !important;
     box-shadow: 0 0 10px var(--mainArsfestColor) !important;
     -webkit-box-shadow: 0 0 10px var(--mainArsfestColor) !important;
     -moz-box-shadow: 0 0 10px var(--mainArsfestColor) !important;
