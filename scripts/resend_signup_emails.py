@@ -21,7 +21,7 @@ with open(emails_filename, 'r') as file:
     emails = [row['email_address'] for row in reader]
 
     invoices = EventInvoice.objects.filter(
-        participant__email__in=emails, due_date=datetime.datetime.now()).prefetch_related("participant")
+        participant__email__in=emails, due_date__gte=datetime.datetime.now()).prefetch_related("participant")
     for invoice in invoices:
         send_event_invoice(invoice.participant, invoice)
         time.sleep(1.1)
