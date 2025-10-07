@@ -21,7 +21,6 @@ class PostCreationForm(forms.ModelForm):
             'content',
             'published',
             'slug',
-            'albins_angels'
         )
 
     def save(self, commit=True):
@@ -53,7 +52,6 @@ class PostEditForm(forms.ModelForm):
             'content',
             'published',
             'slug',
-            'albins_angels'
         )
 
     def save(self, commit=True):
