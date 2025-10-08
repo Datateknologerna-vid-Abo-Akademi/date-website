@@ -15,6 +15,7 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from PIL import Image
 from .fields import PublicFileField
+from django.core.exceptions import ValidationError
 
 
 TYPE_CHOICES = (
@@ -52,6 +53,11 @@ class Collection(models.Model):
         dir_location = os.path.join(settings.MEDIA_ROOT, self.title.lower())
         shutil.rmtree(dir_location, ignore_errors=True)
         super(Collection, self).delete(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        if '/' in self.title:
+            raise ValidationError({'Namn': "Snedstreck är inte tillåtet."})
 
     @register.filter
     def get_file_count(self):
