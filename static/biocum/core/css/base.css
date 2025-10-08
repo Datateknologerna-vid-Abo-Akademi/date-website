@@ -1,0 +1,110 @@
+html {
+    scroll-behavior: smooth;
+}
+
+html body{
+    background-color: var(--primaryColor);
+    color: var(--textColorDarkish);
+    font-family: 'Josefin Sans', sans-serif;
+}
+
+.content img{
+    max-height: 35vh;
+    max-width: 100%;
+    /* keep img ratio correct */
+    width: auto !important;
+    height: auto !important;
+    border-radius: var(--defaultRadius);
+}
+
+/* Link colors */
+div a{
+    color: var(--linkColorSecondary);
+    display: inline-block;
+    text-decoration: none;
+}
+
+div a:hover{
+    transition: 0.3s;
+    color: var(--linkSecondaryHover);
+}
+/* ---- */
+
+.break-words{
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+/* TEXT COLORS */
+.help-text{
+    color: var(--helpText);
+}
+
+.warning{
+    color: var(--warning);
+}
+/* ---- */
+
+.container-margin-top {
+    margin-top: 12vh;
+}
+
+.container-size{
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.content{
+    margin: 20px 2vw;
+    background-color: var(--secondaryColor);
+    padding: var(--defaultPadding);
+    border-radius: var(--defaultRadius);
+}
+
+/*  BUTTON */
+.theme-button {
+    background-color: var(--primaryColorLighter);
+    border: none;
+    color: var(--secondaryColor);
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 16px;
+    border-radius: 5px;
+    font-family: 'Josefin Sans', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    /* Additional styles for interactions */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    outline: none; /* Prevents focus outline */
+}
+
+.theme-button:hover {
+    background-color: var(--primaryColorLighte);
+    color: var(--secondaryColor);
+}
+
+.theme-button:active {
+    transform: scale(0.95); /* Adds a slight click effect */
+}
+
+.theme-button:disabled {
+    opacity: 0.6; /* Styles for disabled state */
+    cursor: not-allowed;
+}
+
+/* Additional hover effect */
+.theme-button.alt:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.theme-button .fa-chevron-right{
+    transition: .3s;
+  }
+
+.theme-button:hover .fa-chevron-right{
+    transform: translateX(10px);
+  }
+
+/* ---- */
