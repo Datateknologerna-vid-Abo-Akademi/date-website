@@ -3,6 +3,46 @@
 from django.db import migrations, models
 
 
+def migrate_staticpage_menu_entries(apps, schema_editor):
+    StaticPage = apps.get_model('staticpages', 'StaticPage')
+    StaticUrl = apps.get_model('staticpages', 'StaticUrl')
+
+    for page in StaticPage.objects.exclude(category__isnull=True):
+        category_id = page.category_id
+        if category_id is None:
+            continue
+
+        target_url = f'/pages/{page.slug}/'
+        target_dropdown = page.dropdown_element or 0
+
+        link, created = StaticUrl.objects.get_or_create(
+            category_id=category_id,
+            url=target_url,
+            defaults={
+                'title': page.title,
+                'dropdown_element': target_dropdown,
+                'logged_in_only': page.members_only,
+            },
+        )
+
+        if created:
+            continue
+
+        update_fields = []
+        if link.title != page.title:
+            link.title = page.title
+            update_fields.append('title')
+        if link.dropdown_element != target_dropdown:
+            link.dropdown_element = target_dropdown
+            update_fields.append('dropdown_element')
+        if link.logged_in_only != page.members_only:
+            link.logged_in_only = page.members_only
+            update_fields.append('logged_in_only')
+
+        if update_fields:
+            link.save(update_fields=update_fields)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,14 +50,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='staticpage',
-            name='category',
-        ),
-        migrations.RemoveField(
-            model_name='staticpage',
-            name='dropdown_element',
-        ),
         migrations.AddField(
             model_name='staticpagenav',
             name='url',
@@ -37,5 +69,14 @@ class Migration(migrations.Migration):
             model_name='staticurl',
             name='dropdown_element',
             field=models.PositiveSmallIntegerField(blank=True, verbose_name='#'),
+        ),
+        migrations.RunPython(migrate_staticpage_menu_entries, migrations.RunPython.noop),
+        migrations.RemoveField(
+            model_name='staticpage',
+            name='category',
+        ),
+        migrations.RemoveField(
+            model_name='staticpage',
+            name='dropdown_element',
         ),
     ]
