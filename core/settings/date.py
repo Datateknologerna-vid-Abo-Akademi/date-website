@@ -30,16 +30,17 @@ INSTALLED_APPS = get_installed_apps([
     'publications',
     'alumni',
     'billing',
+    'date_custom',
 ])
 
 ROOT_URLCONF = 'core.urls.date'
 
 STAFF_GROUPS = get_staff_groups([
-        'styrelse',
-        'admin',
-        'fotograf',
-        'rösträknare'
-    ])
+    'styrelse',
+    'admin',
+    'fotograf',
+    'rösträknare'
+])
 
 
 STATICFILES_DIRS = [
