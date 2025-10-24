@@ -6,8 +6,13 @@ from members.models import Member, SUPPORTING_MEMBER, ORDINARY_MEMBER, Membershi
 
 @admin.register(MembershipSignupRequest)
 class MembershipSignupRequestAdmin(admin.ModelAdmin):
-    list_display = ["full_name", "membership_type", "created_by__email"]
+    list_display = ["full_name", "membership_type",
+                    "created_by__email", "created_at"]
+    fields = [field.name for field in MembershipSignupRequest._meta.fields]
     actions = ["promote_member"]
+    list_filter = [
+        "created_at",
+    ]
 
     def has_change_permission(self, request, obj=None):
         return False
