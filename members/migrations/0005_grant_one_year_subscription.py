@@ -62,7 +62,7 @@ def grant_one_year_subscriptions(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('members', '0004_alumniemailrecipient_alumnisignup_functionaryrole_and_more'),
+        ('members', '0004_functionaryrole_membershiptype_and_more'),
     ]
 
     operations = [
