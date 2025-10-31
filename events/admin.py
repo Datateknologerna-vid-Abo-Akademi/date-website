@@ -1,8 +1,11 @@
 import logging
+from django.http import HttpResponseRedirect
+from django.contrib import messages
 
 from admin_ordering.admin import OrderableAdmin
 from django.contrib import admin
 from django.db.models import JSONField
+from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.urls import reverse, re_path
 from django.utils.html import format_html
@@ -19,7 +22,8 @@ class EventRegistrationFormInline(OrderableAdmin, admin.TabularInline):
     model = EventRegistrationForm
     fk_name = 'event'
     extra = 0
-    fields = ('choice_number', 'name', 'type', 'required', 'public_info', 'hide_for_avec', 'choice_list')
+    fields = ('choice_number', 'name', 'type', 'required',
+              'public_info', 'hide_for_avec', 'choice_list')
     can_delete = True
     ordering_field = ('choice_number',)
     ordering = ['choice_number']
@@ -40,13 +44,18 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
     ordering = ['attendee_nr']
 
     def get_fields(self, request, event):
-        fields = ['attendee_nr', 'user', 'email', 'anonymous', 'preferences', 'time_registered']
+        fields = ['attendee_nr', 'user', 'email',
+                  'anonymous', 'preferences', 'time_registered']
+        if event and event.children.exists():
+            fields.append('original_event')
         if event and event.sign_up_avec:
             fields.append('avec_for')
         return fields
 
     def get_readonly_fields(self, request, event):
         readonly_fields = ['time_registered']
+        if event and event.children.exists():
+            readonly_fields.append('original_event')
         return readonly_fields
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -61,9 +70,10 @@ class EventAdmin(admin.ModelAdmin):
     save_on_top = True
     list_display = (
         'title', 'created_time', 'event_date_start', 'get_attendee_count', 'sign_up_max_participants', 'published',
-        'account_actions')
+        'account_actions', 'parent')
     search_fields = ('title', 'author__first_name', 'created_time')
     ordering = ['-event_date_start']
+    actions = ['delete_participants']
 
     form = forms.EventCreationForm
 
@@ -92,6 +102,35 @@ class EventAdmin(admin.ModelAdmin):
     account_actions.short_description = 'Deltagarlista'
     account_actions.allow_tags = True
 
+    @admin.action(description="Delete all attendees for selected events")
+    def delete_participants(self, request, queryset):
+        # Prefetch related EventAttendees for all events in the queryset
+        queryset = queryset.prefetch_related('eventattendees_set')
+
+        # Collect all attendees to be deleted
+        attendees_to_delete = []
+        for event in queryset:
+            attendees_to_delete.extend(event.eventattendees_set.all())
+
+        if 'confirm' in request.POST:
+            # If the user confirms, delete all attendees
+            for attendee in attendees_to_delete:
+                attendee.delete()
+
+            # Add a success message
+            messages.success(
+                request, f"{len(attendees_to_delete)} attendees have been deleted.")
+            return HttpResponseRedirect(request.get_full_path())
+
+        # Render a confirmation page
+        context = {
+            'events': queryset,
+            'attendees': attendees_to_delete,
+            'opts': self.model._meta,
+            'action_checkbox_name': admin.helpers.ACTION_CHECKBOX_NAME,
+        }
+        return render(request, 'admin/events/delete_participants_confirmation.html', context)
+
     def process_list(self, request, event_id, *args, **kwargs):
         context = self.admin_site.each_context(request)
         event = self.get_object(request, event_id)
@@ -105,9 +144,11 @@ class EventAdmin(admin.ModelAdmin):
         )
 
     class Media:
-        js = ('js/eventform.js',)
+        js = ('core/js/eventform.js',)
 
     def get_attendee_count(self, obj):
+        if obj.parent:
+            return EventAttendees.objects.filter(original_event=obj).count()
         return obj.get_registrations().count()
 
     get_attendee_count.short_description = 'Anmälda'

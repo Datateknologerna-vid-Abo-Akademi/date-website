@@ -14,7 +14,6 @@ from django.urls import reverse
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from PIL import Image
-from django.dispatch import receiver
 from .fields import PublicFileField
 
 
@@ -30,6 +29,7 @@ class Collection(models.Model):
     title = models.CharField(_('Namn'), max_length=250)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     pub_date = models.DateTimeField(default=datetime.datetime.now, null=True)
+    hide_for_gulis = models.BooleanField(_('Göm för gulisar'), default=False)
 
     class Meta:
         verbose_name = _('Samling')
@@ -40,7 +40,7 @@ class Collection(models.Model):
             return self.picture_set.first()
 
     def get_absolute_url(self):
-        return reverse('archive:detail', kwargs={'pk': self.pk})
+        return reverse('archive:detail', kwargs={'album': self.title, 'year': self.pub_date.year})
 
     def __str__(self):
         return self.title

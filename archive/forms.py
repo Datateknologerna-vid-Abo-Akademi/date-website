@@ -57,6 +57,7 @@ class DocumentAdminForm(forms.ModelForm):
     class Meta:
         model = Collection
         fields = '__all__'
+        exclude = ('hide_for_gulis',)
 
     def save(self, *args, **kwargs):
         collection = super(DocumentAdminForm, self).save(*args, **kwargs)

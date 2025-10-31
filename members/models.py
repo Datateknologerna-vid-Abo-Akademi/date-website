@@ -6,7 +6,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from core import settings
+from django.conf import settings
 from core.utils import send_email_task
 
 from .managers import MemberManager
@@ -19,7 +19,7 @@ ORDINARY_MEMBER = 2
 SUPPORTING_MEMBER = 3
 SENIOR_MEMBER = 4
 
-MEMBERSHIP_TYPES = (
+PERMISSION_PROFILES = (
     (FRESHMAN, _('Gulnäbb')),
     (ORDINARY_MEMBER, _('Ordinarie medlem')),
     (SUPPORTING_MEMBER, _('Stödjande medlem')),
@@ -37,7 +37,8 @@ class Member(AbstractBaseUser, PermissionsMixin):
     zip_code = models.CharField(_('Postkod'), max_length=5, blank=True)
     city = models.CharField(_('Postanstalt'), max_length=30, blank=True)
     country = models.CharField(_('Land'), max_length=30, default=_('Finland'), blank=True)
-    membership_type = models.IntegerField(_('Medlemskap'), default=FRESHMAN, choices=MEMBERSHIP_TYPES, blank=False)
+    membership_type = models.ForeignKey("members.MembershipType", default=FRESHMAN, blank=False, on_delete=models.CASCADE)
+    year_of_admission = models.IntegerField(_('Inskrivningsår'), blank=True, null=True)
     is_active = models.BooleanField(default=True)
     objects = MemberManager()
 
@@ -58,6 +59,12 @@ class Member(AbstractBaseUser, PermissionsMixin):
     @property
     def full_name(self):
         return self.get_full_name()
+
+    @property
+    def active_payment(self):
+        return self.subscriptionpayment_set.filter(
+            date_expires__gte=timezone.now()
+        ).order_by('-date_expires').first()
 
     def get_full_name(self):
         """
@@ -81,14 +88,21 @@ class Member(AbstractBaseUser, PermissionsMixin):
         return None
 
     def get_str_membership_type(self):
-        membership_types = {
-            1 : 'Gulnäbb',
-            2 : 'Ordinarie medlem',
-            3 : 'Stödjande medlem',
-            4 : 'Senior medlem',
-        }
-        return membership_types[self.membership_type]
+        return self.membership_type.name
 
+
+class MembershipType(models.Model):
+    name = models.CharField(_('Namn'), max_length=200, blank=False)
+    description = models.TextField(_('Beskrivning'), blank=True)
+    permission_profile = models.IntegerField(_('Behörighetsprofil'), choices=PERMISSION_PROFILES, default=FRESHMAN)
+
+    class Meta:
+        verbose_name = _('Medlemskap')
+        verbose_name_plural = _('medlemskapstyper')
+        ordering = ('id',)
+
+    def __str__(self):
+        return self.name
 
 
 SUB_RE_SCALE_DAY = 'day'
@@ -146,3 +160,30 @@ class SubscriptionPayment(models.Model):
         if self.date_expires is None:
             return _('Aldrig')
         return self.date_expires
+
+
+class FunctionaryRole(models.Model):
+    title = models.CharField(_('Titel'), max_length=200)
+    board = models.BooleanField(_('Styrelse'), default=False)
+
+    class Meta:
+        verbose_name = _("Funktionärspost")
+        verbose_name_plural = _("Funktionärsposter")
+
+    def __str__(self):
+        return self.title
+
+
+class Functionary(models.Model):
+    member = models.ForeignKey(Member, on_delete=models.CASCADE)
+    functionary_role = models.ForeignKey(FunctionaryRole, on_delete=models.CASCADE)
+    year = models.IntegerField(_('Årtal'))
+    created_date = models.DateTimeField(auto_now_add=True)
+    modified_date = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("Funktionär")
+        verbose_name_plural = _("Funktionärer")
+
+    def __str__(self):
+        return f"{self.member.get_full_name()} {self.functionary_role.title} {self.year}"
