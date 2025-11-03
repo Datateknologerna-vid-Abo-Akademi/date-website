@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   db:
     image: postgres:${DATE_POSTGRESQL_VERSION}-alpine
@@ -7,62 +5,47 @@ services:
     volumes:
       - date_postgres_data:/var/lib/postgresql/data/
     ports:
-      - ${DATE_DB_PORT}:5432
-    environment:
-      - POSTGRES_PASSWORD=${DATE_DB_PASSWORD}
+      - ${DB_PORT}:5432
+    env_file:
+      - ${ENV_FILE}
+    healthcheck:
+      test: pg_isready -d ${DB_DATABASE} -U ${DB_USERNAME}
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
   web:
     build: .
     restart: unless-stopped
-    #igSheduler startup command (nohup python /code/social/igupdate.py &) &&
-    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python /code/manage.py migrate --noinput && python manage.py collectstatic --noinput &&  python manage.py runserver 0.0.0.0:8000"
-    volumes:
-      - .:/code
+    command: /bin/bash ./web.dev.sh
     ports:
-      - ${DATE_DJANGO_PORT}:8000
-    environment:
-      - SECRET_KEY=${DATE_SECRET_KEY}
-      - DEBUG=${DATE_DEBUG}
-      - DEVELOP=${DATE_DEVELOP}
-      - PROJECT_NAME=${PROJECT_NAME}
-      - DB_PASSWORD=${DATE_DB_PASSWORD}
-      - USE_S3=${USE_S3}
-      - AWS_S3_ENDPOINT_URL=${S3_ENDPOINT_URL}
-      - AWS_ACCESS_KEY_ID=${S3_ACCESS_KEY}
-      - AWS_SECRET_ACCESS_KEY=${S3_SECRET_KEY}
-      - AWS_STORAGE_BUCKET_NAME=${S3_BUCKET_NAME}
-      - PUBLIC_MEDIA_LOCATION=${PUBLIC_MEDIA_LOCATION}
-      - PRIVATE_MEDIA_LOCATION=${PRIVATE_MEDIA_LOCATION}
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
-      - EXTRA_STAFF_GROUPS=${EXTRA_STAFF_GROUPS}
-      - EMAIL_HOST_RECEIVER=${EMAIL_HOST_RECEIVER}
-      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
-      - EMAIL_HOST=${EMAIL_HOST}
-      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
-      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
-      - CF_TURNSTILE_SITE_KEY=${CF_TURNSTILE_SITE_KEY}
-      - CF_TURNSTILE_SECRET_KEY=${CF_TURNSTILE_SECRET_KEY}
-      - ALUMNI_SETTINGS=${ALUMNI_SETTINGS}
+      - ${DJANGO_PORT}:8000
+    env_file:
+      - ${ENV_FILE}
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    develop:
+      watch:
+        - path: "."
+          action: sync
+          target: "/code"
+
   celery:
     restart: unless-stopped
     build: .
     command: celery -A core worker -l info -c 2
     volumes:
       - .:/code
-    environment:
-      - DEBUG=${DATE_DEBUG}
-      - EMAIL_HOST=${EMAIL_HOST}
-      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
-      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
-      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
-      - ALUMNI_SETTINGS=${ALUMNI_SETTINGS}
-      - DB_PASSWORD=${DATE_DB_PASSWORD}
+    env_file:
+      - ${ENV_FILE}
     depends_on:
       - web
       - redis
+
   redis:
     restart: unless-stopped
     image: valkey/valkey:7.2-alpine
@@ -71,8 +54,3 @@ services:
 
 volumes:
   date_postgres_data:
-
-#networks: 
-#  default: 
-#    external: 
-#      name: external-example 

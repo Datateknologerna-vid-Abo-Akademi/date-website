@@ -131,7 +131,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': env('DB_DATABASE', str, 'postgres'),
         'USER': env('DB_USERNAME', str, 'postgres'),
-        'PASSWORD': env('DB_PASSWORD', default=''),
+        'PASSWORD': env('POSTGRES_PASSWORD', default=''),
         'HOST': env('DB_HOST', str, 'db'),
         'PORT': env('DB_PORT', int, 5432)
     }
@@ -139,12 +139,21 @@ DATABASES = {
 
 CONN_MAX_AGE = 600
 
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": env("REDIS_SERVER", str, "redis://redis:6379"),
-    },
-}
+CACHES = (
+    {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": env("REDIS_SERVER", str, "redis://redis:6379"),
+        },
+    }
+# Use dummy cache for development
+    if not env("DEVELOP")
+    else {
+        "default": {
+            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        }
+    }
+)
 
 # Custom members model
 AUTH_USER_MODEL = 'members.Member'
@@ -228,10 +237,10 @@ STORAGES = {
 
 if USE_S3:
     # aws settings
-    AWS_S3_ENDPOINT_URL = env('AWS_S3_ENDPOINT_URL')
-    AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_ENDPOINT_URL = env('S3_ENDPOINT_URL')
+    AWS_ACCESS_KEY_ID = env('S3_ACCESS_KEY')
+    AWS_SECRET_ACCESS_KEY = env('S3_SECRET_KEY')
+    AWS_STORAGE_BUCKET_NAME = env('S3_BUCKET_NAME')
     AWS_QUERYSTRING_AUTH = True
     AWS_QUERYSTRING_EXPIRE = 3600
 
