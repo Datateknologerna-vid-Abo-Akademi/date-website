@@ -62,7 +62,7 @@ If the `date-start` command complains about docker not being found, make sure th
 
 If you want a clean database you can run the 
 `date-migrate`
-command after everything has started correctly. Otherwise continue on to the next step.
+command after everything has started correctly. Otherwise, continue on to the next step.
 
 ### 5. Set up initial test data
 
@@ -96,7 +96,7 @@ The actual language code will be one of
 
 ### Translations
 
-As the the default language is `sv`, 
+As the default language is `sv`, 
 we only need to create translations in the language `fi`.
 
 To generate the translation file, called `django.po`
@@ -116,7 +116,7 @@ To compile the translations to `django.mo`, use the following command
 
 ```bash
 $ django-admin compilemessages
-```
+``` 
 
 ## Updating the database
 
@@ -139,5 +139,4 @@ Run
 ```bash
 ./update-postgres.sh target_version [env_file]
 ```
-after which you have to update your environment variables using
-Run `source env.sh dev` afterwards to reload your development configuration.
+Run `source env.sh dev` afterward to reload your development configuration.
