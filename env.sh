@@ -82,7 +82,7 @@ else
     export COMPOSE_FILE_PATH="docker-compose.yml"
 fi
 
-alias date="docker-compose -f ${COMPOSE_FILE_PATH}"
+alias date="docker-compose -f \"${COMPOSE_FILE_PATH}\""
 alias date-manage="date run web python /code/manage.py"
 alias date-migrate="date-manage migrate --noinput"
 alias date-makemigrations="date-manage makemigrations"
