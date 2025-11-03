@@ -13,7 +13,7 @@ source ../env.sh dev
 COMPOSE_PATH="../${COMPOSE_FILE_PATH:-docker-compose.yml}"
 
 # Shut down any currently running containers
-docker-compose down
+docker-compose -f $COMPOSE_PATH down
 
 # Delete all existing migration files
 find ../ -path "*/migrations/*.py" -not -name "__init__.py" -delete
