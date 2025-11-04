@@ -24,7 +24,7 @@ jobs:
 
       - name: Run django unit tests
         run: |
-          source example.env
+          source env.sh dev
           date-test
 
   ping_test:
@@ -41,7 +41,7 @@ jobs:
 
       - name: Build and run Docker Compose
         run: |
-          source example.env
+          source env.sh dev
           docker-compose up -d
 
       - name: Wait for web container

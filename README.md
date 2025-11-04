@@ -16,23 +16,35 @@ Development happens mainly in the `develop`-branch
 
 ### 2. Create env variables
 
-Create a copy of `example.env` and change `example` to your local username with the following command:
+For development, copy the defaults and adjust them to your needs:
 
 ```bash
-cp example.env $USER.env
+cp .env.example .env
 ```
 
-Eg. `otto.env`
+If you plan to run a production-like setup, create a dedicated file (for example `.env.prod`) based on `.env.example` and adjust it separately, keeping secrets out of version control.
 
-Edit the file you just created to match your setup.
+Edit the files you just created to match your setup.
 
 ### 3. Read env variables
 
 **This must be done every time you start your terminal or edit the profile file!**
 
-In the terminal, navigate to the root of the project, where your `.env` file is located.
+In the terminal, navigate to the root of the project, where the `env.sh` script is located.
 
-Run the command `source $USER.env`
+For the development configuration run (this falls back to `.env` and then `.env.example`):
+
+```bash
+source env.sh dev
+```
+
+To use your production configuration run:
+
+```bash
+source env.sh prod
+```
+
+You can also load a specific file by passing its relative or absolute path (e.g. `source env.sh path/to/custom.env`).
 
 Now you can run all `date-` commands!
 
@@ -50,7 +62,7 @@ If the `date-start` command complains about docker not being found, make sure th
 
 If you want a clean database you can run the 
 `date-migrate`
-command after everything has started correctly. Otherwise continue on to the next step.
+command after everything has started correctly. Otherwise, continue on to the next step.
 
 ### 5. Set up initial test data
 
@@ -84,7 +96,7 @@ The actual language code will be one of
 
 ### Translations
 
-As the the default language is `sv`, 
+As the default language is `sv`, 
 we only need to create translations in the language `fi`.
 
 To generate the translation file, called `django.po`
@@ -104,7 +116,7 @@ To compile the translations to `django.mo`, use the following command
 
 ```bash
 $ django-admin compilemessages
-```
+``` 
 
 ## Updating the database
 
@@ -127,7 +139,4 @@ Run
 ```bash
 ./update-postgres.sh target_version [env_file]
 ```
-after which you have to update your environment variables using
-```bash
-source ${USER}.env
-```
+Run `source env.sh dev` afterward to reload your development configuration.
