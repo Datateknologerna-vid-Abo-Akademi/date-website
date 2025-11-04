@@ -17,8 +17,8 @@ data:
   AWS_STORAGE_BUCKET_NAME: "date-images"
   PUBLIC_MEDIA_LOCATION: "date/public"
   PRIVATE_MEDIA_LOCATION: "date/media"
-  ALLOWED_HOSTS: '["replaceme.com"]'
-  ALLOWED_ORIGINS: '["https://replaceme.com"]'
+  ALLOWED_HOSTS: '["REPLACE-WITH-YOUR-DOMAIN.example.com"]'
+  ALLOWED_ORIGINS: '["https://REPLACE-WITH-YOUR-DOMAIN.example.com"]'
   EXTRA_STAFF_GROUPS: '[]'
   EMAIL_HOST_RECEIVER: "info@datateknologerna.org"
   DEFAULT_FROM_EMAIL: "admin@datateknologerna.org"
