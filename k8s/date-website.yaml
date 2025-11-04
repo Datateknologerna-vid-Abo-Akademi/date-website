@@ -1,0 +1,365 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: date-website
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: date-website-config
+  namespace: date-website
+data:
+  DEBUG: "False"
+  DEVELOP: "False"
+  PROJECT_NAME: "date"
+  USE_S3: ""
+  AWS_S3_ENDPOINT_URL: "http://s3:9000"
+  AWS_STORAGE_BUCKET_NAME: "date-images"
+  PUBLIC_MEDIA_LOCATION: "date/public"
+  PRIVATE_MEDIA_LOCATION: "date/media"
+  ALLOWED_HOSTS: '["example.com"]'
+  ALLOWED_ORIGINS: '["https://example.com"]'
+  EXTRA_STAFF_GROUPS: '[]'
+  EMAIL_HOST_RECEIVER: "info@datateknologerna.org"
+  DEFAULT_FROM_EMAIL: "admin@datateknologerna.org"
+  EMAIL_HOST: "smtp.gmail.com"
+  CF_TURNSTILE_SITE_KEY: ""
+  ALUMNI_SETTINGS: "{}"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: date-website-secrets
+  namespace: date-website
+type: Opaque
+stringData:
+  SECRET_KEY: "replace-me"
+  DB_PASSWORD: "replace-me"
+  POSTGRES_PASSWORD: "replace-me"
+  AWS_ACCESS_KEY_ID: "replace-me"
+  AWS_SECRET_ACCESS_KEY: "replace-me"
+  EMAIL_HOST_USER: "replace-me"
+  EMAIL_HOST_PASSWORD: "replace-me"
+  CF_TURNSTILE_SECRET_KEY: "replace-me"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: date-website-nginx
+  namespace: date-website
+data:
+  default.conf: |-
+    upstream web {
+        server web:8000;
+    }
+
+    upstream ws {
+        server asgi:8000;
+    }
+
+    server {
+        listen 80;
+
+        include /etc/nginx/mime.types;
+
+        location / {
+            proxy_pass http://web/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Host $server_name;
+            client_max_body_size 5000M;
+        }
+
+        location /ws/ {
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_redirect off;
+            proxy_pass http://ws/ws/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Host $server_name;
+        }
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-headless
+  namespace: date-website
+spec:
+  clusterIP: None
+  selector:
+    app: db
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+  namespace: date-website
+spec:
+  serviceName: db-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: date-website-secrets
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: date-website
+spec:
+  selector:
+    app: redis
+  ports:
+    - port: 6379
+      targetPort: 6379
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: date-website
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: valkey/valkey:7.2-alpine
+          ports:
+            - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: date-website
+spec:
+  selector:
+    app: web
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: date-website
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:master
+          imagePullPolicy: Always
+          command:
+            - /bin/bash
+            - -c
+            - ./wait-for-postgres.sh db:5432 && python /code/manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn -w 3 --max-requests 1000 --max-requests-jitter 100 --bind=0.0.0.0 core.wsgi
+          envFrom:
+            - configMapRef:
+                name: date-website-config
+            - secretRef:
+                name: date-website-secrets
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  namespace: date-website
+spec:
+  selector:
+    app: db
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: asgi
+  namespace: date-website
+spec:
+  selector:
+    app: asgi
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asgi
+  namespace: date-website
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: asgi
+  template:
+    metadata:
+      labels:
+        app: asgi
+    spec:
+      containers:
+        - name: asgi
+          image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:master
+          imagePullPolicy: Always
+          command:
+            - /bin/bash
+            - -c
+            - ./wait-for-postgres.sh db:5432 && daphne -b 0.0.0.0 core.routing:application
+          envFrom:
+            - configMapRef:
+                name: date-website-config
+            - secretRef:
+                name: date-website-secrets
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 20
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery
+  namespace: date-website
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: celery
+  template:
+    metadata:
+      labels:
+        app: celery
+    spec:
+      containers:
+        - name: celery
+          image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:master
+          imagePullPolicy: Always
+          command:
+            - celery
+            - -A
+            - core
+            - worker
+            - -l
+            - info
+            - -c
+            - "2"
+          envFrom:
+            - configMapRef:
+                name: date-website-config
+            - secretRef:
+                name: date-website-secrets
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: date-website
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:stable-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: date-website-nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: date-website
+spec:
+  type: LoadBalancer
+  selector:
+    app: nginx
+  ports:
+    - port: 80
+      targetPort: 80
