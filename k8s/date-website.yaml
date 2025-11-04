@@ -12,13 +12,13 @@ data:
   DEBUG: "False"
   DEVELOP: "False"
   PROJECT_NAME: "date"
-  USE_S3: ""
+  USE_S3: "True"  # Has to be true or the media data won't persist in k8s
   AWS_S3_ENDPOINT_URL: "http://s3:9000"
   AWS_STORAGE_BUCKET_NAME: "date-images"
   PUBLIC_MEDIA_LOCATION: "date/public"
   PRIVATE_MEDIA_LOCATION: "date/media"
-  ALLOWED_HOSTS: '["example.com"]'
-  ALLOWED_ORIGINS: '["https://example.com"]'
+  ALLOWED_HOSTS: '["replaceme.com"]'
+  ALLOWED_ORIGINS: '["https://replaceme.com"]'
   EXTRA_STAFF_GROUPS: '[]'
   EMAIL_HOST_RECEIVER: "info@datateknologerna.org"
   DEFAULT_FROM_EMAIL: "admin@datateknologerna.org"
