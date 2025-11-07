@@ -20,7 +20,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from events import views as events
 from date import views as date
 
 app_name = 'core'
@@ -33,10 +32,11 @@ urlpatterns = [
     path('archive/', include('archive.urls')),
     path('events/', include('events.urls')),
     path('pages/', include('staticpages.urls')),
-    path('ads/',include('ads.urls')),
-    path('social/',include('social.urls')),
+    path('ads/', include('ads.urls')),
+    path('social/', include('social.urls')),
     path('polls/', include('polls.urls')),
     path('ctf/', include('ctf.urls')),
+    path('date_custom/', include('date_custom.urls')),
     path('admin/', admin.site.urls),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     path('publications/', include('publications.urls')),
