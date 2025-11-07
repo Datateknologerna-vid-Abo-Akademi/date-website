@@ -68,6 +68,14 @@ Visit http://localhost:8000 or whatever your port is.
 
 The admin page is at http://localhost:8000/admin
 
+## Production deployment
+
+When deploying with `docker-compose.prod.yml`, make sure the external Docker network `web` exists (see the `networks` section in that compose file). If it does not, create it once before starting the stack:
+
+```bash
+docker network create web
+```
+
 ## Internationalization
 
 NOTE: No need to implement yet
