@@ -97,6 +97,8 @@ services:
       - ${REDIS_PORT}:6379
     networks:
       - internal
+    volumes:
+      - redis_data:/data
   nginx:
     restart: always
     image: nginx:stable-alpine
@@ -113,6 +115,7 @@ services:
 
 volumes:
   date_postgres_data:
+  redis_data:
 
 networks:
     internal:

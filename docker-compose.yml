@@ -62,7 +62,10 @@ services:
   redis:
     restart: unless-stopped
     image: valkey/valkey:7.2-alpine
-
+    volumes:
+      - redis_data:/data
+      
 volumes:
   date_postgres_data:
+  redis_data:
 
