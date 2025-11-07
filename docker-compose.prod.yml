@@ -1,13 +1,9 @@
-version: '3'
-
 services:
   db:
     image: postgres:${DATE_POSTGRESQL_VERSION}-alpine
     restart: always
     volumes:
       - date_postgres_data:/var/lib/postgresql/data/
-    ports:
-      - ${DATE_DB_PORT}:5432
     environment:
       - POSTGRES_PASSWORD=${DATE_DB_PASSWORD}
     networks:
@@ -77,7 +73,6 @@ services:
       - redis
     networks:
       - internal
-      - external
   celery:
     restart: always
     image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}
@@ -110,6 +105,7 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
+      - internal
       - web
     depends_on:
       - web
