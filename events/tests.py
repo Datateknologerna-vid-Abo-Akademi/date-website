@@ -1,11 +1,13 @@
 import logging
 from unittest.mock import patch
 
+from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from events.models import Event, EventRegistrationForm
+from core.cache_keys import EVENTS_INDEX_CACHE_KEY
+from events.models import Event, EventAttendees, EventRegistrationForm
 from members.models import Member, ORDINARY_MEMBER, Subscription, SubscriptionPayment, MembershipType
 
 logger = logging.getLogger('date')
@@ -199,6 +201,53 @@ class EventTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], 'https://www.google.com')
 
+    def test_events_index_populates_cache(self):
+        cache.delete(EVENTS_INDEX_CACHE_KEY)
+        response = self.client.get(reverse('events:index'))
+        self.assertEqual(response.status_code, 200)
+        cached = cache.get(EVENTS_INDEX_CACHE_KEY)
+        self.assertIsNotNone(cached)
+        self.assertEqual(cached.status_code, response.status_code)
+
+    def test_attendee_numbering_increments(self):
+        first = EventAttendees.objects.create(
+            event=self.event,
+            user='First',
+            email='first@example.com',
+            time_registered=timezone.now()
+        )
+        second = EventAttendees.objects.create(
+            event=self.event,
+            user='Second',
+            email='second@example.com',
+            time_registered=timezone.now()
+        )
+        first.refresh_from_db()
+        second.refresh_from_db()
+        self.assertEqual(first.attendee_nr, 10)
+        self.assertEqual(second.attendee_nr, 20)
+
+    def test_attendee_numbering_after_gap(self):
+        attendees = []
+        for i in range(3):
+            attendee = EventAttendees.objects.create(
+                event=self.event,
+                user=f'User {i}',
+                email=f'user{i}@example.com',
+                time_registered=timezone.now()
+            )
+            attendee.refresh_from_db()
+            attendees.append(attendee)
+        attendees[1].delete()
+        fourth = EventAttendees.objects.create(
+            event=self.event,
+            user='Fourth',
+            email='fourth@example.com',
+            time_registered=timezone.now()
+        )
+        fourth.refresh_from_db()
+        self.assertEqual(fourth.attendee_nr, attendees[2].attendee_nr + 10)
+
     def test_anonymous_attendance(self):
         c = Client()
         self.content['anonymous'] = 'on'
@@ -264,4 +313,3 @@ class EventTestCase(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
-

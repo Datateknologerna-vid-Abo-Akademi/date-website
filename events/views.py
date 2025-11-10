@@ -2,12 +2,14 @@ import datetime
 import logging
 
 from django.conf import settings
+from django.core.cache import cache
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import DetailView, ListView
 
+from core.cache_keys import EVENTS_INDEX_CACHE_KEY, SHORT_VIEW_CACHE_TIMEOUT
 from core.utils import validate_captcha
 from members.models import Member
 from .forms import PasscodeForm
@@ -28,6 +30,18 @@ class IndexView(ListView):
         context['event_list'] = events.filter(event_date_end__gte=today)
         context['past_events'] = events.filter(event_date_end__lte=today).reverse()
         return context
+
+    def get(self, request, *args, **kwargs):
+        cacheable = request.method == 'GET' and not request.GET
+        if cacheable:
+            cached = cache.get(EVENTS_INDEX_CACHE_KEY)
+            if cached:
+                return cached
+        response = super().get(request, *args, **kwargs)
+        if cacheable:
+            response.render()
+            cache.set(EVENTS_INDEX_CACHE_KEY, response, SHORT_VIEW_CACHE_TIMEOUT)
+        return response
 
 
 class EventDetailView(DetailView):
