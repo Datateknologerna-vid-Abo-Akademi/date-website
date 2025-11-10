@@ -4,8 +4,8 @@
 Manage the informational pages and navigation links that live under the "About", "Föreningen", etc. sections of the site.
 
 ## Key Concepts
-- **Static Page Nav** – top‑level navigation categories (e.g., "Föreningen"). Each category can optionally point visitors straight to a custom URL.
-- **Static Page** – rich‑text content (CKEditor) that lives at `/s/<slug>/`. Pages can be limited to logged‑in members.
+- **Static Page Nav** – top-level navigation categories (e.g., "Föreningen"). Each category can optionally point visitors straight to a custom URL.
+- **Static Page** – rich-text content (CKEditor) that lives at `/s/<slug>/`. Pages can be limited to logged-in members.
 - **Static URL** – manual links that appear under a category’s dropdown (can point anywhere, not just static pages).
 
 ## Manage Navigation Categories
@@ -23,7 +23,7 @@ Manage the informational pages and navigation links that live under the "About",
 2. Click **Add**.
 3. Fill in:
    - **Titel** – shown as page header and used for SEO.
-   - **Slug** – auto‑generated, stays in the final URL. Keep lowercase without spaces.
+   - **Slug** – auto-generated, stays in the final URL. Keep lowercase without spaces.
    - **Innehåll** – write/edit content using the CKEditor toolbar.
    - **Kräv inloggning** – tick if only members may read the page; anonymous visitors will be redirected to the login screen.
 4. Save. The `Modifierad` timestamp updates automatically when you edit later.

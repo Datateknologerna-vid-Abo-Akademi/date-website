@@ -13,4 +13,4 @@
 ## Extending the App
 - To support file uploads instead of external URLs, swap the `ad_url` field for `models.ImageField` and update templates to use `ad_url.url`.
 - If rotation or scheduling is required, add datetime fields (e.g., `start_at`, `end_at`) and filter in `adsIndex` and the home page query.
-- For analytics, add a click‑tracking view that redirects to the external URL after recording a metric, and update templates to point to that view.
+- For analytics, add a click-tracking view that redirects to the external URL after recording a metric, and update templates to point to that view.

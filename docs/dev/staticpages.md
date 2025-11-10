@@ -2,8 +2,8 @@
 
 ## Models
 - `StaticPageNav` stores menu categories. `use_category_url` shortcuts the category click to a custom `url`. `nav_element` defines ordering. 
-- `StaticPage` is the CKEditor‑backed page content. `members_only` gates access, and `slug` is unique (max 50 chars). `update()` stamps `modified_time`.
-- `StaticUrl` represents dropdown entries linked to a `StaticPageNav`. The overridden `save()` auto‑assigns `dropdown_element` in steps of 10 so the admin ordering widget works.
+- `StaticPage` is the CKEditor-backed page content. `members_only` gates access, and `slug` is unique (max 50 chars). `update()` stamps `modified_time`.
+- `StaticUrl` represents dropdown entries linked to a `StaticPageNav`. The overridden `save()` auto-assigns `dropdown_element` in steps of 10 so the admin ordering widget works.
 
 ## Views & Routing
 - `StaticPageView` (`staticpages/views.py`) is the only view. It loads the page by slug, checks `members_only`, and either renders `staticpages/staticpage.html` or redirects unauthenticated users to `/members/login`.

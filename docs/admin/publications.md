@@ -11,7 +11,7 @@ Publish downloadable PDFs (meeting minutes, magazines, etc.) with optional login
 1. Click **Add pdf file**.
 2. Complete the form:
    - **Title** – shown on listings and in the viewer.
-   - **Slug** – leave blank to auto‑generate from the title. This becomes the URL (`/publications/<slug>/`).
+   - **Slug** – leave blank to auto-generate from the title. This becomes the URL (`/publications/<slug>/`).
    - **Publication Date** – used for sorting and filtering.
    - **Description** – short summary shown next to the download button.
    - **File** – upload the PDF (stored under `media/pdfs/<slug>/`).
@@ -20,7 +20,7 @@ Publish downloadable PDFs (meeting minutes, magazines, etc.) with optional login
 3. Save. Upload time stamps are recorded automatically.
 
 ## Edit or Replace a PDF
-- Editing shows read‑only upload timestamps. To swap the actual file, create a new entry (or delete and re‑create) so the file field becomes editable again.
+- Editing shows read-only upload timestamps. To swap the actual file, create a new entry (or delete and re-create) so the file field becomes editable again.
 - Updating metadata (title, description, access flags) is safe and immediate.
 
 ## Review Access Settings
