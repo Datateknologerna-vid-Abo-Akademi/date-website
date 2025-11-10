@@ -1,5 +1,8 @@
 from .date import *  # noqa
 
+# Manifest storage requires collectstatic; use simple storage during tests.
+STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.StaticFilesStorage"
+
 # Use in-memory sqlite database for tests
 DATABASES = {
     'default': {

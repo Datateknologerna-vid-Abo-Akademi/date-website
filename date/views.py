@@ -2,17 +2,24 @@ import datetime
 from itertools import chain
 
 from django.conf import settings
+from django.core.cache import cache
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils import translation
 
 from ads.models import AdUrl
+from core.cache_keys import DATE_INDEX_CACHE_KEY, SHORT_VIEW_CACHE_TIMEOUT
 from events.models import Event
 from news.models import Post
 from social.models import IgUrl
 
 
 def index(request):
+    cacheable = request.method == 'GET' and not request.GET
+    if cacheable:
+        cached = cache.get(DATE_INDEX_CACHE_KEY)
+        if cached:
+            return cached
     events_old_events_included = (Event.objects.filter(
         published=True,
         event_date_end__gte=(timezone.now() - timezone.timedelta(days=31))).order_by('event_date_start'))
@@ -59,7 +66,10 @@ def index(request):
         'aa_post': aa_post,  # TODO Remove or rename
     }
 
-    return render(request, 'date/start.html', context)
+    response = render(request, 'date/start.html', context)
+    if cacheable:
+        cache.set(DATE_INDEX_CACHE_KEY, response, SHORT_VIEW_CACHE_TIMEOUT)
+    return response
 
 
 def language(request, lang):
