@@ -279,7 +279,6 @@ class EventRegistrationWindowTests(TestCase):
         )
 
     def _create_event(self):
-        now = timezone.now()
         return Event.objects.create(
             title="Window Event",
             slug=f"window-event-{Event.objects.count()}",
