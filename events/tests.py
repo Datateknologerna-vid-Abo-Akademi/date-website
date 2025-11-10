@@ -299,7 +299,7 @@ class EventRegistrationWindowTests(TestCase):
 
         event.sign_up_deadline = timezone.now() - timezone.timedelta(minutes=1)
         event.save()
-        self.assertTrue(event.registation_past_due())
+        self.assertTrue(event.registration_past_due())
         self.assertFalse(event.registration_is_open_members())
 
     def test_open_for_others_respects_deadline(self):
