@@ -16,5 +16,5 @@
 
 ## Extending the App
 - To incorporate internal voting instead of external links, relate `Candidate` to a `polls.Question` and expose live vote counts.
-- Add `ordering` or `display_order` fields if marketing requires manual sorting without re‑creating objects.
+- Add `ordering` or `display_order` fields if marketing requires manual sorting without re-creating objects.
 - If file uploads are preferred, switch `img_url` to `ImageField` and configure storage.
