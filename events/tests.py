@@ -1,11 +1,14 @@
 import logging
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
+from django.conf import settings
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from events.models import Event, EventRegistrationForm
+from events.models import Event, EventAttendees, EventRegistrationForm
+from events.websocket_utils import ws_data, ws_send
 from members.models import Member, ORDINARY_MEMBER, Subscription, SubscriptionPayment, MembershipType
 
 logger = logging.getLogger('date')
@@ -265,3 +268,284 @@ class EventTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
 
+
+class EventRegistrationWindowTests(TestCase):
+    def setUp(self):
+        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.author = Member.objects.create_user(
+            username="window-tester",
+            password="pwd",
+            membership_type=self.membership_type,
+        )
+
+    def _create_event(self):
+        now = timezone.now()
+        return Event.objects.create(
+            title="Window Event",
+            slug=f"window-event-{Event.objects.count()}",
+            author=self.author,
+            sign_up_members=None,
+            sign_up_others=None,
+            sign_up_deadline=None,
+        )
+
+    def test_member_registration_window_requires_start_time(self):
+        event = self._create_event()
+        self.assertFalse(event.registration_is_open_members())
+
+        event.sign_up_members = timezone.now() - timezone.timedelta(minutes=1)
+        event.save()
+        self.assertTrue(event.registration_is_open_members())
+
+        event.sign_up_deadline = timezone.now() - timezone.timedelta(minutes=1)
+        event.save()
+        self.assertTrue(event.registation_past_due())
+        self.assertFalse(event.registration_is_open_members())
+
+    def test_open_for_others_respects_deadline(self):
+        event = self._create_event()
+        event.sign_up_others = timezone.now() - timezone.timedelta(minutes=5)
+        event.sign_up_deadline = timezone.now() + timezone.timedelta(days=1)
+        event.save()
+        self.assertTrue(event.registration_is_open_others())
+
+        event.sign_up_deadline = timezone.now() - timezone.timedelta(seconds=1)
+        event.save()
+        self.assertFalse(event.registration_is_open_others())
+
+
+class EventCapacityTests(TestCase):
+    def setUp(self):
+        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.author = Member.objects.create_user(
+            username="capacity-author",
+            password="pwd",
+            membership_type=self.membership_type,
+        )
+
+    def test_child_event_uses_parent_attendance_for_capacity(self):
+        parent = Event.objects.create(
+            title="Parent Event",
+            slug="parent-event",
+            author=self.author,
+            sign_up_max_participants=0,
+        )
+        child = Event.objects.create(
+            title="Child Event",
+            slug="child-event",
+            author=self.author,
+            parent=parent,
+            sign_up_max_participants=1,
+        )
+        EventAttendees.objects.create(
+            event=parent,
+            original_event=child,
+            user="Registered",
+            email="child@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        self.assertTrue(child.event_is_full())
+        self.assertFalse(parent.event_is_full())
+
+
+@override_settings(CONTENT_VARIABLES={**settings.CONTENT_VARIABLES, "INTERNATIONAL_EVENT_SLUGS": ["intl-slug"]})
+class EventFormBuilderTests(TestCase):
+    def setUp(self):
+        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.author = Member.objects.create_user(
+            username="form-author",
+            password="pwd",
+            membership_type=self.membership_type,
+        )
+        self.event = Event.objects.create(
+            title="International Event",
+            slug="intl-slug",
+            author=self.author,
+            sign_up_avec=True,
+        )
+        EventRegistrationForm.objects.create(
+            event=self.event,
+            name="meal",
+            type="select",
+            choice_list="fish,veg",
+            required=True,
+            choice_number=10,
+        )
+        EventRegistrationForm.objects.create(
+            event=self.event,
+            name="notes",
+            type="text",
+            required=False,
+            choice_number=20,
+        )
+        EventRegistrationForm.objects.create(
+            event=self.event,
+            name="hidden",
+            type="checkbox",
+            required=False,
+            hide_for_avec=True,
+            choice_number=30,
+        )
+
+    def test_dynamic_form_contains_expected_fields_and_labels(self):
+        form_class = self.event.make_registration_form()
+        form = form_class()
+
+        expected_order = [
+            "user",
+            "email",
+            "anonymous",
+            "meal",
+            "notes",
+            "hidden",
+            "avec",
+            "avec_user",
+            "avec_email",
+            "avec_anonymous",
+            "avec_meal",
+            "avec_notes",
+        ]
+        self.assertEqual(list(form.base_fields.keys()), expected_order)
+        self.assertEqual(form.base_fields["user"].label, "Nimi/Namn/Name")
+        self.assertEqual(form.base_fields["anonymous"].label, "Anonyymi/Anonym/Anonymous")
+        self.assertNotIn("avec_hidden", form.base_fields)
+
+
+class EventNumberingTests(TestCase):
+    def setUp(self):
+        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.author = Member.objects.create_user(
+            username="number-author",
+            password="pwd",
+            membership_type=self.membership_type,
+        )
+        self.event = Event.objects.create(
+            title="Numbered Event",
+            slug="numbered-event",
+            author=self.author,
+        )
+
+    def test_choice_numbers_increment_by_ten(self):
+        first = EventRegistrationForm.objects.create(event=self.event, name="first")
+        second = EventRegistrationForm.objects.create(event=self.event, name="second")
+        self.assertEqual(first.choice_number, 10)
+        self.assertEqual(second.choice_number, 20)
+
+        first.delete()
+        third = EventRegistrationForm.objects.create(event=self.event, name="third")
+        self.assertEqual(third.choice_number, 30)
+
+    def test_attendee_numbers_and_preferences(self):
+        attendee1 = EventAttendees.objects.create(
+            event=self.event,
+            user="First",
+            email="first@example.com",
+            preferences=[],
+            time_registered=None,
+        )
+        attendee2 = EventAttendees.objects.create(
+            event=self.event,
+            user="Second",
+            email="second@example.com",
+            preferences=[],
+            time_registered=None,
+        )
+        self.assertEqual(attendee1.attendee_nr, 10)
+        self.assertEqual(attendee2.attendee_nr, 20)
+
+        attendee1.delete()
+        attendee3 = EventAttendees.objects.create(
+            event=self.event,
+            user="Third",
+            email="third@example.com",
+            preferences=[],
+            time_registered=None,
+        )
+        self.assertEqual(attendee3.attendee_nr, 30)
+        self.assertEqual(attendee3.preferences, {})
+        self.assertIsNotNone(attendee3.time_registered)
+
+
+class EventTemplateSelectionTests(TestCase):
+    def setUp(self):
+        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.author = Member.objects.create_user(
+            username="template-author",
+            password="pwd",
+            membership_type=self.membership_type,
+        )
+
+    def test_title_based_template_selected(self):
+        event = Event.objects.create(
+            title="Årsfest",
+            slug="arsfest",
+            author=self.author,
+        )
+        response = self.client.get(reverse("events:detail", args=[event.slug]))
+        self.assertTemplateUsed(response, "events/arsfest.html")
+
+    def test_slug_based_template_selected(self):
+        event = Event.objects.create(
+            title="Generic",
+            slug="baal",
+            author=self.author,
+        )
+        response = self.client.get(reverse("events:detail", args=[event.slug]))
+        self.assertTemplateUsed(response, "events/baal_detail.html")
+
+    def test_passcode_template_used_when_locked(self):
+        event = Event.objects.create(
+            title="Secret Event",
+            slug="secret-event",
+            author=self.author,
+            passcode="secret",
+        )
+        response = self.client.get(reverse("events:detail", args=[event.slug]))
+        self.assertTemplateUsed(response, "events/event_passcode.html")
+
+
+class EventWebsocketUtilsTests(TestCase):
+    class PublicInfo:
+        def __init__(self, name):
+            self.name = name
+
+        def __str__(self):
+            return self.name
+
+    def test_ws_send_emits_messages_for_avec_signups(self):
+        form = SimpleNamespace(cleaned_data={
+            "user": "Primary",
+            "email": "primary@example.com",
+            "anonymous": False,
+            "avec": True,
+            "avec_user": "Guest",
+            "avec_email": "guest@example.com",
+            "meal": "veg",
+        })
+        public_info = [self.PublicInfo("meal")]
+        group_send = MagicMock()
+
+        with patch("events.websocket_utils.get_channel_layer", return_value=SimpleNamespace(group_send=group_send)), \
+                patch("events.websocket_utils.async_to_sync", side_effect=lambda func: func):
+            ws_send("event-slug", form, public_info)
+
+        self.assertEqual(group_send.call_count, 2)
+        first_payload = group_send.call_args_list[0].args[1]
+        second_payload = group_send.call_args_list[1].args[1]
+        self.assertEqual(first_payload["data"]["fields"][0], ("user", "Primary"))
+        self.assertEqual(second_payload["data"]["fields"][0], ("user", "Guest"))
+
+    def test_ws_data_masks_anonymous_name_and_filters_public_info(self):
+        form = SimpleNamespace(cleaned_data={
+            "user": "Hidden",
+            "anonymous": True,
+            "allergies": "nuts",
+        })
+        public_info = [self.PublicInfo("allergies")]
+
+        payload = ws_data(form, public_info)
+
+        self.assertEqual(payload["data"]["fields"][0], ("user", "Anonymt"))
+        self.assertEqual(payload["data"]["fields"][1], ("allergies", "nuts"))
