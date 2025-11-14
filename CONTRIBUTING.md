@@ -1,49 +1,61 @@
-# Git
+# Contributing
 
-## General
+Follow the guidelines below to keep reviews straightforwardad and deployments uneventful.
 
-Development happens mainly in `develop` branch.
+## Workflow overview
 
-Releases have their own branches and the latest release is marked as main repository.
+1. **Discuss the change** – open or comment on a GitHub issue if the work is non-trivial so we can align on scope.
+2. **Branch from `develop`** – `main` tracks the live deployment; feature work happens on `develop`.
+3. **Name your branch clearly** – prefer `feature/<short-topic>`, `fix/<issue-number>-<topic>`, `docs/<area>`, or `chore/<task>`. Matching the prefixes already in the history keeps the branch list readable.
+4. **Push and open a pull request into `develop`** – describe the change, list manual/automated tests you ran, and link any relevant docs updates.
+5. **Address review feedback** – rebase or merge `develop` as needed, keeping the branch up to date before merge.
 
-## Features
+## Commit messages
 
-Major additions to the program are regarded as features.
+- Use present-tense, descriptive summaries (50–72 characters). Examples from history: `docs: add admin and dev guides for all apps`, `fix: redis volume mount`.
+- Reference the tracking issue or PR using `(#123)` or `Issue-123:` so GitHub links the work automatically.
+- Group related changes together. Avoid “misc fixes” commits unless it’s truly a cleanup.
 
-Features have their own branches and the branches are named accordingly to the following pattern: `feature/<feature name>`
+## Development environment
 
-## Commits
+Follow the walkthrough in `README.md`. Key reminders:
 
-Commit messages need to be short and descriptive. If the commit is a fix to an issue, the issue number is included in the beginning, as: 
+- Run `source env.sh dev` in every new shell so the `date-*` helper aliases exist.
+- `date-start`/`date-stop` manage the Docker Compose stack.
+- Use `date-manage <command>` for `manage.py` commands and `date-test` for the Django test suite.
+- If you change environment variables, reload them with `source env.sh dev` before restarting services.
 
-    Issue-<number>: <commit message>
+## Testing expectations
 
-# Testing
+- **Automated tests** – `date-test` (or `python manage.py test`) must pass before you open a PR. The command automatically switches to `core.settings.test`, so Redis/PostgreSQL mocks are configured for you.
+- **Targeted runs** – you can narrow tests via labels (`date-test members.tests`). Add new unit tests next to the feature you are touching (models, forms, views, Celery tasks, Channels consumers, etc.).
+- **System checks** – run `date-manage check` to ensure migrations, settings, and URLs are valid.
+- **Manual verification** – exercise the UI path or admin workflow you changed. Mention the manual checks in your PR description.
 
-## Unittests
+## Database & migrations
 
-Unittests are done accordingly to Django documentation: [Testing in Django](https://docs.djangoproject.com/en/2.1/topics/testing/)
+- Generate migrations with `date-makemigrations`, inspect them, then run `date-migrate`.
+- Never rewrite previously merged migrations; add follow-up migrations instead.
+- When a change depends on new fixtures or default data, update `initialdata.json` or add a data migration.
+- Use `scripts/clean-init.sh` to recreate the development database from scratch (wipes all volumes) and rerun `date-createsuperuser` afterward.
 
-Running `python manage.py test` automatically uses the `core.settings.test` configuration so that the suite works without external services like Redis or PostgreSQL.
+## Documentation
 
-## Other tests
+- Keep `README.md`, `docs/index.md`, and the relevant `docs/admin|dev/*.md` guide in sync with your change. GitHub Pages publishes straight from the `docs/` folder on `develop`/`main`.
+- Add inline docstrings for non-obvious helpers, serializers, management commands, or Celery tasks.
+- Update `.env.example`, `CHANGELOG.md`, or the Docker Compose files if your change affects configuration or deployment.
 
-While developing a feature, make sure it works as intended by testing it manually as well. 
+## Deployment considerations
 
-Future testing methods may be added to documentation.
+- Production uses `docker-compose.prod.yml` with the published GHCR image. Changes to Dockerfiles, Compose files, or startup scripts should include instructions in the PR for updating `DATE_IMG_TAG` and recreating services.
+- Only run `update-postgres.sh` for major PostgreSQL upgrades and call this out explicitly in the PR so operators can plan downtime.
 
-# Documentation
+## Pull-request checklist
 
-It is highly encouraged to write descriptions for classes and for functions that are not immediately obvious to the untrained eye.
+- [ ] Branch is based on `develop` and up to date.
+- [ ] Tests (`date-test`) and `date-manage check` pass locally.
+- [ ] Database migrations (if any) are included and documented.
+- [ ] Docs / README / `.env.example` / changelog updated when relevant.
+- [ ] Screenshots or manual test notes are attached for UX changes.
 
-Even other, non-Django files should have some sort of documentation, in case they need to be understood in the future.
-
-## Setup
-
-The setup process needs to be simple and therefore needs to have a proper guide. This is done in the `README.md` in the project root.
-
-# Deployment
-
-The project runs in a container and will be deployed to **Boris**, DaTes new server inside the ÅA network.
-
-The only requirement for other platforms is that they can run Docker.
+Consistent workflows, thorough tests, and timely documentation keep the service reliable. Stick to the checklist above before handing work over for review.
