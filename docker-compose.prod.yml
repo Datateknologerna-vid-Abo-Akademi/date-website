@@ -1,13 +1,9 @@
-version: '3'
-
 services:
   db:
     image: postgres:${DATE_POSTGRESQL_VERSION}-alpine
     restart: always
     volumes:
       - date_postgres_data:/var/lib/postgresql/data/
-    ports:
-      - ${DATE_DB_PORT}:5432
     environment:
       - POSTGRES_PASSWORD=${DATE_DB_PASSWORD}
     networks:
@@ -45,7 +41,6 @@ services:
       - redis
     networks:
       - internal
-      - external
   asgi:
     image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}
     restart: always
@@ -78,7 +73,6 @@ services:
       - redis
     networks:
       - internal
-      - external
   celery:
     restart: always
     image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}
@@ -103,6 +97,8 @@ services:
       - ${REDIS_PORT}:6379
     networks:
       - internal
+    volumes:
+      - redis_data:/data
   nginx:
     restart: always
     image: nginx:stable-alpine
@@ -111,15 +107,18 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
-      - external
+      - internal
+      - web
     depends_on:
       - web
       - asgi
 
 volumes:
   date_postgres_data:
+  redis_data:
 
 networks:
     internal:
-    external:
+    web:
+      external: true
 
