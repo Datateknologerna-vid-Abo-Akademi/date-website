@@ -1,6 +1,7 @@
 *.env
 *.md
 media/
+docs/
 .git/
 .idea/
 .vscode/
