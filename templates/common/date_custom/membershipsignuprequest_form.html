@@ -1,0 +1,50 @@
+
+{% extends 'core/base.html' %}
+
+{% load i18n %}
+{% load static %}
+{% block title %}Membership Signup Request{% endblock %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'members/style.css' %}">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head>
+<body>
+    <div class="signup-page">
+    <div class="members-form big">
+    <form id="signupForm" action="/date_custom/membership_signup_request/" method="post">
+        {% csrf_token %}
+            {% csrf_token %}
+            {% for field in form %}
+              <p>
+                {{ field.label_tag }}<br>
+                  {% if field.help_text %}
+                      <small>{{ field.help_text }}</small>
+                  {% endif %}
+                  {{ field }}
+                {% for error in field.errors %}
+                  <p style="color: red">{{ error }}</p>
+                {% endfor %}
+              </p>
+            {% endfor %}
+            </p>
+            <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}" data-callback="javascriptCallback"></div>
+        <input type="submit" value="Submit">
+        <div id="error-message" class="error"></div>
+    <script defer>
+        const contextData = JSON.parse('{{ user_data|safe }}');
+        Object.keys(contextData).forEach(key => {
+            const field = document.querySelector(`[name="${key}"]`);
+            if (field) {
+                field.value = contextData[key];
+            }
+        });
+    </script>
+
+    </form>
+    </div>
+    </div>
+</body>
+{% endblock %}
