@@ -16,10 +16,10 @@ from members.models import (SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH,
 
 logger = logging.getLogger('date')
 
-# Restrict usernames to ASCII letters, underscores, and hyphens
+# Restrict usernames to ASCII letters, numbers, underscores, and hyphens
 USERNAME_VALIDATOR = RegexValidator(
-    r'^[a-zA-Z_-]+$',
-    _('Enter a valid username consisting only of letters, underscores, and hyphens.')
+    r'^[0-9a-zA-Z_-]+$',
+    _('Enter a valid username consisting only of letters, numbers, underscores, and hyphens.')
 )
 
 

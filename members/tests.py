@@ -11,7 +11,7 @@ class UsernameValidatorTest(TestCase):
 
     def test_member_creation_form_accepts_valid_username(self):
         form = MemberCreationForm(data={
-            'username': 'valid_user',
+            'username': 'valid_user123',
             'email': 'valid@example.com',
             'first_name': 'Valid',
             'last_name': 'User',
