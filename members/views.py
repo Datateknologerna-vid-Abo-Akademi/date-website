@@ -31,7 +31,8 @@ class UserinfoView(View):
     @method_decorator(login_required)
     def get(self, request):
         user = request.user
-        form = MemberEditForm(instance=user)  # Initialize form with user instance
+        # Initialize form with user instance
+        form = MemberEditForm(instance=user)
         context = {
             "user": user,
             "form": form,
@@ -45,7 +46,8 @@ class UserinfoView(View):
         if form.is_valid():
             form.save()
             # Redirect to the same page to display updated info
-            return redirect(reverse('members:info'))  # Replace 'userinfo' with the name of this view in urls.py
+            # Replace 'userinfo' with the name of this view in urls.py
+            return redirect(reverse('members:info'))
         context = {
             "user": user,
             "form": form,
@@ -56,7 +58,8 @@ class UserinfoView(View):
 class CertificateView(View):
     @method_decorator(login_required)
     def get(self, request):
-        icons = ['atom', 'asterisk', 'poo', 'certificate', 'cog', 'compact-disc', 'snowflake']
+        icons = ['atom', 'asterisk', 'poo', 'certificate',
+                 'cog', 'compact-disc', 'snowflake']
         user = request.user
         current_time = datetime.datetime.now()
 
@@ -104,11 +107,13 @@ def signup(request):
             message = render_to_string('members/acc_active_email.html', {
                 'user': user,
                 'domain': current_site.domain,
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)),  # .decode(),
+                # .decode(),
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
                 'token': account_activation_token.make_token(user),
             })
             to_email = os.environ.get('EMAIL_HOST_RECEIVER')
-            send_email_task.delay(mail_subject, message, settings.DEFAULT_FROM_EMAIL, [to_email])
+            send_email_task.delay(mail_subject, message,
+                                  settings.DEFAULT_FROM_EMAIL, [to_email])
             logger.info(f"NEW USER: Sending email to {to_email}")
             request.session['signup_submitted'] = True
             return redirect(request.path)
@@ -121,7 +126,7 @@ def activate(request, uidb64, token):
     try:
         uid = urlsafe_base64_decode(uidb64)
         user = Member.objects.get(pk=uid)
-    except(TypeError, ValueError, OverflowError, Member.DoesNotExist):
+    except (TypeError, ValueError, OverflowError, Member.DoesNotExist):
         user = None
     if user is not None and account_activation_token.check_token(user, token):
         user.is_active = True
@@ -130,7 +135,6 @@ def activate(request, uidb64, token):
         return render(request, 'members/userinfo.html', {"user": user, "msg": msg})
     else:
         return HttpResponse('Activation link is invalid!')
-
 
 
 class CustomPasswordResetView(PasswordResetView):
@@ -143,7 +147,8 @@ class FunctionaryView(View):
     @method_decorator(login_required)
     def get(self, request):
         user = request.user
-        functionaries = Functionary.objects.filter(member=user).order_by('-year')
+        functionaries = Functionary.objects.filter(
+            member=user).order_by('-year')
         form = FunctionaryForm(initial={'member': user})
         context = {
             "user": user,
@@ -167,7 +172,8 @@ class FunctionaryView(View):
             form.save()
         else:
             user = request.user
-            functionaries = Functionary.objects.filter(member=user).order_by('-year')
+            functionaries = Functionary.objects.filter(
+                member=user).order_by('-year')
             context = {
                 "user": user,
                 "functionaries": functionaries,
@@ -178,7 +184,8 @@ class FunctionaryView(View):
 
     def delete_functionary(self, request):
         functionary_id = request.POST.get('functionary_id')
-        functionary = get_object_or_404(Functionary, id=functionary_id, member=request.user)
+        functionary = get_object_or_404(
+            Functionary, id=functionary_id, member=request.user)
         functionary.delete()
         return redirect(reverse('members:functionary'))
 
@@ -189,11 +196,13 @@ class FunctionariesView(View):
         functionary_roles = get_functionary_roles()
 
         selected_year, all_years = get_selected_year(request, distinct_years)
-        selected_role, all_roles = get_selected_role(request, functionary_roles)
+        selected_role, all_roles = get_selected_role(
+            request, functionary_roles)
         board_functionaries = get_filtered_functionaries(
             selected_year, selected_role, True
         )
-        board_functionaries_by_role = get_functionaries_by_role(board_functionaries)
+        board_functionaries_by_role = get_functionaries_by_role(
+            board_functionaries)
 
         other_functionaries = get_filtered_functionaries(
             selected_year, selected_role, False

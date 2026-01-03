@@ -28,7 +28,8 @@ class UserAdmin(auth_admin.UserAdmin):
 
     form = AdminMemberUpdateForm
     add_form = MemberCreationForm
-    list_display = ('username', 'first_name', 'last_name', 'email', 'membership_type', 'is_active', 'is_staff')
+    list_display = ('username', 'first_name', 'last_name',
+                    'email', 'membership_type', 'is_active', 'is_staff')
     list_filter = ('membership_type', 'is_active', 'groups')
     search_fields = ('first_name', 'last_name', 'email')
     ordering = [Lower('username'), ]
@@ -61,6 +62,7 @@ admin.site.register(MembershipType)
 class SubscriptionPaymentAdmin(admin.ModelAdmin):
     form = SubscriptionPaymentForm
     fields = SubscriptionPaymentForm.Meta.fields
+    search_fields = ("full_name",)
     list_display = ('full_name', 'subscription', 'is_active', 'expires')
     list_filter = ('subscription', 'date_expires')
 
@@ -76,7 +78,8 @@ class SubscriptionPaymentAdmin(admin.ModelAdmin):
 @admin.register(Functionary)
 class FunctionaryAdmin(admin.ModelAdmin):
     list_filter = ('functionary_role', 'year')
-    search_fields = ('member__first_name', 'member__last_name', 'functionary_role__title', 'year')
+    search_fields = ('member__first_name', 'member__last_name',
+                     'functionary_role__title', 'year')
     ordering = ['-year', ]
 
 

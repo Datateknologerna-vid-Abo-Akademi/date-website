@@ -25,7 +25,8 @@ USERNAME_VALIDATOR = RegexValidator(
 
 class MemberCreationForm(forms.ModelForm):
     send_email = forms.BooleanField(required=False)
-    year_of_admission = forms.IntegerField(initial=lambda: datetime.datetime.now().year, required=False, label=_('Inskrivningsår'))
+    year_of_admission = forms.IntegerField(initial=lambda: datetime.datetime.now(
+    ).year, required=False, label=_('Inskrivningsår'))
 
     username = forms.CharField(
         max_length=20,
@@ -127,8 +128,10 @@ class CustomPasswordResetForm(PasswordResetForm):
         from_email = from_email or settings.DEFAULT_FROM_EMAIL
 
         if html_email_template_name is not None:
-            html_email = loader.render_to_string(html_email_template_name, context)
-            send_email_task.delay(subject, body, from_email, [to_email], html_message=html_email)
+            html_email = loader.render_to_string(
+                html_email_template_name, context)
+            send_email_task.delay(subject, body, from_email, [
+                                  to_email], html_message=html_email)
         else:
             send_email_task.delay(subject, body, from_email, [to_email])
 
@@ -144,7 +147,8 @@ class SubscriptionPaymentForm(forms.ModelForm):
         )
 
     def save(self, commit=True):
-        subscription_payment = super(SubscriptionPaymentForm, self).save(commit=False)
+        subscription_payment = super(
+            SubscriptionPaymentForm, self).save(commit=False)
         if subscription_payment.subscription.does_expire:
             date_paid = subscription_payment.date_paid
             sub_duration = subscription_payment.subscription.renewal_period
@@ -157,7 +161,8 @@ class SubscriptionPaymentForm(forms.ModelForm):
             elif sub_duration_type == SUB_RE_SCALE_YEAR:
                 delta = relativedelta(years=+sub_duration)
             subscription_payment.date_expires = date_paid + delta
-            logger.debug("Calculated expiry date for subscription: {}".format(subscription_payment.date_expires))
+            logger.debug("Calculated expiry date for subscription: {}".format(
+                subscription_payment.date_expires))
         if commit:
             subscription_payment.update_or_create(pk=subscription_payment.pk)
             logger.debug("SubscriptionPayment saved")
@@ -171,7 +176,8 @@ class SignUpForm(forms.ModelForm):
         help_text=_('detta fält är obligatoriskt'),
         label=_('Användarnamn')
     )
-    email = forms.EmailField(max_length=200, help_text=_('detta fält är obligatoriskt'), label=_('E-postadress'))
+    email = forms.EmailField(max_length=200, help_text=_(
+        'detta fält är obligatoriskt'), label=_('E-postadress'))
     password = forms.CharField(
         widget=forms.PasswordInput(),
         required=True,
@@ -180,9 +186,12 @@ class SignUpForm(forms.ModelForm):
         help_text=_('detta fält är obligatoriskt'),
         label=_('Lösenord')
     )
-    first_name = forms.CharField(max_length=100, required=True, label=_('Förnamn'))
-    last_name = forms.CharField(max_length=100, required=True, label=_('Efternamn'))
-    year_of_admission = forms.IntegerField(initial=lambda: datetime.datetime.now().year, required=False, label=_('Inskrivningsår'))
+    first_name = forms.CharField(
+        max_length=100, required=True, label=_('Förnamn'))
+    last_name = forms.CharField(
+        max_length=100, required=True, label=_('Efternamn'))
+    year_of_admission = forms.IntegerField(initial=lambda: datetime.datetime.now(
+    ).year, required=False, label=_('Inskrivningsår'))
 
     class Meta:
         model = Member
@@ -202,7 +211,6 @@ class SignUpForm(forms.ModelForm):
         )
 
 
-
 class SubscriptionPaymentChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         if not obj.first_name or not obj.last_name:
@@ -215,7 +223,8 @@ class FunctionaryForm(forms.ModelForm):
         label=_('Årtal'),
         validators=[MinValueValidator(1999)],
         help_text=_('Ange ett år i formatet YYYY'),
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'YYYY'})
+        widget=forms.NumberInput(
+            attrs={'class': 'form-control', 'placeholder': 'YYYY'})
     )
 
     def __init__(self, *args, **kwargs):
@@ -226,10 +235,12 @@ class FunctionaryForm(forms.ModelForm):
         cleaned_data = super().clean()
         year = cleaned_data.get('year')
         functionary_role = cleaned_data.get('functionary_role')
-        member = self.member or (self.instance.member if self.instance else None)
+        member = self.member or (
+            self.instance.member if self.instance else None)
 
         if Functionary.objects.filter(year=year, functionary_role=functionary_role, member=member).exists():
-            raise ValidationError("Du har redan lagt till den här funktionärsposten för det året.")
+            raise ValidationError(
+                "Du har redan lagt till den här funktionärsposten för det året.")
 
         return cleaned_data
 
@@ -252,4 +263,5 @@ class MemberEditForm(forms.ModelForm):
 
     class Meta:
         model = Member
-        fields = ['first_name', 'last_name', 'phone', 'address', 'zip_code', 'city', 'country']
+        fields = ['first_name', 'last_name', 'phone',
+                  'address', 'zip_code', 'city', 'country']

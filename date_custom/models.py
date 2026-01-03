@@ -29,6 +29,6 @@ class MembershipSignupRequest(models.Model):
     personal_data_sharing_nonconsent = models.BooleanField(
         _('Mina personuppgifter får inte ges åt andra medlemmar utan mitt samtycke'))
     membership_type = models.CharField(_("Medlemstyp"),
-                                       choices=(("ordinary", "Ordinarie medlem"), ("supporting", "Stödjande medlem")))
+                                       choices=(("ordinary", "Ordinarie medlem"), ("supporting", "Stödjande medlem"), ("exchange", "Utbytesmedlem")))
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey("members.Member", on_delete=models.CASCADE)
