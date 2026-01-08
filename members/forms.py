@@ -62,8 +62,8 @@ class MemberCreationForm(forms.ModelForm):
         member = super(MemberCreationForm, self).save(commit=False)
         member.set_password(self.cleaned_data['password'])
         if commit:
-            member.update_or_create(pk=member.pk)
-            logger.debug("Saved new member:", member)
+            member.save()
+            logger.debug("Saved new member: %s", member)
         return member
 
 
@@ -102,7 +102,7 @@ class AdminMemberUpdateForm(forms.ModelForm):
         if password:
             member.set_password(password)
         if commit:
-            member.update_or_create(pk=member.pk)
+            member.save()
         return member
 
 
@@ -159,7 +159,7 @@ class SubscriptionPaymentForm(forms.ModelForm):
             subscription_payment.date_expires = date_paid + delta
             logger.debug("Calculated expiry date for subscription: {}".format(subscription_payment.date_expires))
         if commit:
-            subscription_payment.update_or_create(pk=subscription_payment.pk)
+            subscription_payment.save()
             logger.debug("SubscriptionPayment saved")
         return subscription_payment
 
