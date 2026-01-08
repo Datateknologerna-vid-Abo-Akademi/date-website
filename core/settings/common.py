@@ -222,9 +222,13 @@ STORAGES = {
         "BACKEND": 'django.core.files.storage.FileSystemStorage',
     },
     "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    }
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
 }
+
+# Make WhiteNoise aggressively cache hashed assets in production while staying live in dev.
+WHITENOISE_MAX_AGE = 60 * 60 * 24 * 365
+WHITENOISE_AUTOREFRESH = DEBUG
 
 if USE_S3:
     # aws settings

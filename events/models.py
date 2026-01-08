@@ -136,9 +136,15 @@ class Event(models.Model):
         return EventAttendees.objects.filter(event=self).count() >= self.sign_up_max_participants
 
     def get_registration_form(self):
-        if EventRegistrationForm.objects.filter(event=self).count() == 0:
-            return None
-        return EventRegistrationForm.objects.filter(event=self).order_by('choice_number')
+        """
+        Return cached registration form definitions ordered by choice_number.
+        Using a per-instance cache avoids re-querying during view rendering and form construction.
+        """
+        if not hasattr(self, '_registration_form_cache'):
+            self._registration_form_cache = list(
+                EventRegistrationForm.objects.filter(event=self).order_by('choice_number')
+            )
+        return self._registration_form_cache
 
     def get_registration_form_public_info(self):
         return EventRegistrationForm.objects.filter(event=self, public_info=True)
@@ -154,8 +160,9 @@ class Event(models.Model):
                 fields['email'] = forms.EmailField(label='Sähköposti/Email', validators=[self.validate_unique_email],
                                                    max_length=320)
                 fields['anonymous'] = forms.BooleanField(label='Anonyymi/Anonym/Anonymous', required=False)
-            if self.get_registration_form():
-                for question in self.get_registration_form():
+            questions = self.get_registration_form() or []
+            if questions:
+                for question in questions:
                     if question.type == "select":
                         choices = question.choice_list.split(',')
                         fields[question.name] = forms.ChoiceField(label=question.name,
@@ -177,8 +184,8 @@ class Event(models.Model):
                                                         max_length=320)
                 fields['avec_anonymous'] = forms.BooleanField(label='Anonymt', required=False, widget=forms
                                                               .CheckboxInput(attrs={'class': "avec-field"}))
-                if self.get_registration_form():
-                    for question in self.get_registration_form():
+                if questions:
+                    for question in questions:
                         if not question.hide_for_avec:
                             if question.type == "select":
                                 choices = question.choice_list.split(',')
@@ -204,11 +211,10 @@ class Event(models.Model):
         return self.event_date_end > now() + timedelta(-1)
 
     def validate_unique_email(self, email):
-        attendees = self.get_registrations()
-        for attendee in attendees:
-            if email == attendee.email:
-                logger.debug("SAME EMAIL")
-                raise ValidationError(_("Det finns redan någon anmäld med denna email"))
+        target_event = self.parent or self
+        if EventAttendees.objects.filter(event=target_event, email=email).exists():
+            logger.debug("SAME EMAIL")
+            raise ValidationError(_("Det finns redan någon anmäld med denna email"))
 
     def get_sign_up_max_participants(self):
         if (self.sign_up_max_participants == 0):
@@ -294,10 +300,10 @@ class EventAttendees(models.Model):
         if self.attendee_nr is None:
             # attendee_nr increments by 10, e.g 10,20,30,40...
             # this is needed so the admin sorting library will work.
-            self.attendee_nr = (self.event.get_registrations().count() + 1) * 10
-            # Add ten from highest attendee_nr so signups dont get in weird order after deletions.
-            if self.event.get_highest_attendee_nr().get('attendee_nr__max'):
-                self.attendee_nr = self.event.get_highest_attendee_nr().get('attendee_nr__max') + 10
+            max_attendee_nr = EventAttendees.objects.filter(event=self.event).aggregate(
+                Max('attendee_nr')
+            )['attendee_nr__max']
+            self.attendee_nr = (max_attendee_nr or 0) + 10
         if self.time_registered is None:
             self.time_registered = now()
         if isinstance(self.preferences, list):

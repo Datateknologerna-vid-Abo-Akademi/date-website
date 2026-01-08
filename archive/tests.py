@@ -1,10 +1,12 @@
 import os
-from PIL import Image
+import shutil
 import tempfile
+
+from PIL import Image
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from archive.models import TYPE_CHOICES, Collection, Document, Picture
@@ -40,8 +42,23 @@ def create_document(title="Test document"):
     return Document.objects.create(collection=collection, title=title, document=test_document)
 
 
+class MediaRootMixin:
+    @classmethod
+    def setUpClass(cls):
+        cls._temp_media_root = tempfile.mkdtemp()
+        cls._media_override = override_settings(MEDIA_ROOT=cls._temp_media_root)
+        cls._media_override.enable()
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        cls._media_override.disable()
+        shutil.rmtree(cls._temp_media_root, ignore_errors=True)
+
+
 # models tests
-class CollectionTestCase(TestCase):
+class CollectionTestCase(MediaRootMixin, TestCase):
     def test_collection_creation(self):
         c = create_collection(collection_type=TYPE_CHOICES[0][1])
         self.assertTrue(isinstance(c, Collection))
@@ -59,8 +76,3 @@ class CollectionTestCase(TestCase):
         self.assertTrue(isinstance(d, Document))
         self.assertEqual(d.__str__(), d.title)
         self.assertEqual(d.collection.type, TYPE_CHOICES[1][1])
-
-# Views tests
-    # https://realpython.com/testing-in-django-part-1-best-practices-and-examples/#testing-views
-# Forms tests
-    # https://realpython.com/testing-in-django-part-1-best-practices-and-examples/#testing-forms
