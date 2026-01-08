@@ -7,9 +7,19 @@
 
     <head>
         <link rel="stylesheet" href="{% static 'staticpages/css/staticpage.css' %}" type="text/css">
+
+        <style>
+            .background-img{
+                background: url("{% if page.image %}{{ page.image.url }}{% elif page.s3_image %}{{ page.s3_image.url }}{% endif %}") no-repeat center center fixed;
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
+            }
+        </style>
     </head>
 
-    <div class="container-md min-vh-100 container-margin-top p-1">
+    <div class="container-md min-vh-100 container-margin-top p-1 background-img">
         <div class="container-size break-words">
             {% if show_content %}
                 <div class="content">
