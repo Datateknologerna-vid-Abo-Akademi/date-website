@@ -65,6 +65,7 @@ class EventDetailView(DetailView):
         logger.debug(event_title)
         templates = {
             'årsfest': 'events/arsfest.html',
+            'årsfest 2026': 'events/arsfest.html',
             'årsfest gäster': 'events/arsfest.html',
             '100 baal': 'events/kk100_detail.html',
             'baal': 'events/baal_detail.html',
@@ -77,6 +78,7 @@ class EventDetailView(DetailView):
             'wappmiddag': 'events/wappmiddag.html',
             'arsfest': 'events/arsfest.html',
             'arsfest_stipendiater': 'events/arsfest.html',
+            'arsfest26': 'events/arsfest.html',
             # ÖN100
             'on100_main': 'events/arsfest.html',
             'on100_student': 'events/arsfest.html',
