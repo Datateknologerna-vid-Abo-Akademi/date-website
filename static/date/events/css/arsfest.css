@@ -56,13 +56,18 @@
   color: var(--mainArsfestTextColor);
 }
 
-.ball-content h2,
-.ball-content h1 {
+.ball-content {
   color: var(--mainArsfestTextColor);
 }
 
-.ball-content {
-  color: var(--mainArsfestTextColor);
+/* fade animations start*/
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 /* fade animations start*/
