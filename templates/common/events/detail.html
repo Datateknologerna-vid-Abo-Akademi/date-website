@@ -11,15 +11,20 @@
         {% endif %}
         <link rel="stylesheet" href="{% static 'events/css/detail.css' %}">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
         <script src="{% static 'core/js/live-attendee-list.js' %}"></script>
         <style>
             .background-img{
-                background: url("{% if event.image %}{{ event.image.url }}{% elif event.s3_image %}{{ event.s3_image.url }}{% endif %}") no-repeat center center fixed;
+                background: url("{% if event.image %}{{ event.image.url }}{% elif event.s3_image %}{{ event.s3_image.url }}{% endif %}") no-repeat center center;
+                background-attachment: fixed;
                 -webkit-background-size: cover;
                 -moz-background-size: cover;
                 -o-background-size: cover;
                 background-size: cover;
+            }
+            @media (max-width: 768px) {
+                .background-img {
+                    background-attachment: scroll;
+                }
             }
         </style>
     </head>
