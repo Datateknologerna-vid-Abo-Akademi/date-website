@@ -43,7 +43,6 @@ def index(request):
                 "modifier": "calendar-eventday",
                 "eventFullDate": event.event_date_start,
                 "eventTitle": event.title,
-                "html": f"<a class='calendar-eventday-popup' id='calendar_link' href='{event_url}'>"
             }
             }
             calendar_events_dict.update(event_dict)
