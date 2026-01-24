@@ -59,7 +59,11 @@ async function loadPDF(pdfUrl) {
 }
 
 function showErrorMessage(message) {
-    state.viewerElement.innerHTML = `<p class="error-message">${message}</p>`;
+    state.viewerElement.innerHTML = '';
+    const p = document.createElement('p');
+    p.className = 'error-message';
+    p.textContent = message;
+    state.viewerElement.appendChild(p);
 }
 
 export function getState() {

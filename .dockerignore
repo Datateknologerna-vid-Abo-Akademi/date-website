@@ -1,7 +1,75 @@
-*.env
-*.md
-media/
+# Git
 .git/
+.gitignore
+.gitattributes
+
+# Environments
+.env
+.env.*
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# IDE
 .idea/
 .vscode/
-venv/
+*.swp
+*.swo
+
+# Docker
+docker-compose.yml
+docker-compose.prod.yml
+.dockerignore
+
+# Documentation
+*.md
+LICENSE
+
+# Testing & Coverage
+.coverage
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# OS
+.DS_Store
+Thumbs.db
