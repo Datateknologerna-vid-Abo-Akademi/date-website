@@ -24,4 +24,80 @@
     --badgeColor: #49796b;
     --defaultPadding: 20px;
     --defaultRadius: 5px;
+
+    /* Added variables for common compatibility */
+    --navHoverHighlight: var(--primaryColorLight);
+    --navClickHighlight: var(--primaryColorLight);
+}
+
+/* Biocum specific overrides to replace separate files */
+
+/* From base.css overrides */
+html body {
+    color: var(--textColorDarkish);
+}
+
+div a {
+    color: var(--linkColorSecondary);
+}
+
+div a:hover {
+    color: var(--linkSecondaryHover);
+}
+
+.content {
+    background-color: var(--secondaryColor);
+}
+
+.theme-button {
+    color: var(--secondaryColor);
+}
+
+.theme-button:hover {
+    color: var(--secondaryColor);
+}
+
+
+/* From footer.css */
+.footer-img {
+    filter: brightness(0) invert(1);
+}
+
+footer {
+    color: var(--textColorLightish);
+    filter: brightness(0) invert(1);
+}
+
+/* From header.css */
+.header-logo{
+    filter: brightness(0) invert(1);
+}
+
+/* From event-card.css */
+.event-card > .card .badge {
+    background: var(--badgeColor) !important;
+}
+
+.event-card > .card {
+    background: var(--secondaryColor) !important;
+    color: var(--textColorDarkish);
+}
+
+.card-body a {
+    color: var(--linkColorSecondary) !important;
+    border-color: var(--linkColorSecondary) !important;
+}
+
+.card-body a:active {
+    color: var(--linkColorSecondary) !important;
+}
+
+.card-body a:hover {
+    color: var(--linkSecondaryHover) !important;
+    border-color: var(--linkSecondaryHover) !important;
+}
+
+/* From style.css */
+.handelser {
+    color: var(--textColorLightish)
 }
