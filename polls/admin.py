@@ -1,9 +1,10 @@
 from django.contrib import admin
+from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 
 from .models import Choice, Question, Vote
 
 
-class ChoiceInline(admin.TabularInline):
+class ChoiceInline(TranslationTabularInline):
     model = Choice
     extra = 0
     readonly_fields = ['votes']
@@ -26,7 +27,7 @@ class VoteInline(admin.TabularInline):
         return obj.user.get_full_name()
 
 
-class QuestionAdmin(admin.ModelAdmin):
+class QuestionAdmin(TabbedTranslationAdmin):
     fieldsets = [
         (None,
          {'fields':

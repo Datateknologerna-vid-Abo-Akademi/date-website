@@ -71,7 +71,6 @@ class EventAttendeesFormInline(OrderableAdmin, TranslationTabularInline):
 # SEE https://django-modeltranslation.readthedocs.io/en/latest/admin.html
 @admin.register(Event)
 class EventAdmin(TabbedTranslationAdmin):
-class EventAdmin(TranslationAdmin):
     save_on_top = True
     list_display = (
         'title', 'created_time', 'event_date_start', 'get_attendee_count', 

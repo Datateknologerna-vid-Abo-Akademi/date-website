@@ -174,7 +174,7 @@ AUTHENTICATION_BACKENDS = (
 
 # Make CKEditor5 Work with modeltranslations
 MODELTRANSLATION_CUSTOM_FIELDS = (
-    'django_ckeditor_5.fields.CKEditor5Field',
+    'CKEditor5Field',
 )
 
 
