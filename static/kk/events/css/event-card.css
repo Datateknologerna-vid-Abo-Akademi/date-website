@@ -16,26 +16,26 @@
   }
   
 .evet-card > .card .badge {
-    background: var(--helpText);
+    background: var(--primaryColorLighter);
   }
   
 .evet-card > .card {
-    background: var(--primaryColorLight);
+    background: var(--secondaryColor);
   }
-  
+
 .card-body a{
-    color: var(--linkColorLight);
-    border-color: var(--linkColorLight);
+    color: var(--linkColor);
+    border-color: var(--linkColor);
   }
   
 .card-body a:active{
-    color: var(--linkColorLight);
+    color: var(--linkColor);
   }
   
 .card-body a:hover{
     background-color: inherit;
-    color: var(--linkColorLightHover);
-    border-color: var(--linkColorLightHover);
+    color: var(--linkSecondaryHover);
+    border-color: var(--linkSecondaryHover);
   }
   
 .card-body a:focus{

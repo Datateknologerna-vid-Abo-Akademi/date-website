@@ -13,7 +13,7 @@
 }
 
 .form p label{
-    word-break: break-all;
+    word-break: normal;
 }
 
 .form p input[type=checkbox]{

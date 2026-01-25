@@ -1,0 +1,19 @@
+body {
+    background-color: black;
+}
+.container-soft{
+    background-color: var(--primaryColor);
+    padding-top: 20vh;
+    min-height: 60vh;
+    color: var(--textColorLight);
+    text-align: center;
+    font-size: 1.9em;
+}
+
+.container-soft h1 {
+    font-size: 4.5em;
+}
+.container-soft a:hover {
+    color: yellow;
+    transition: 0.3s;
+}

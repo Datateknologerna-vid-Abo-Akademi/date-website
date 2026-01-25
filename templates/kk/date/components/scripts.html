@@ -2,16 +2,6 @@
         // element with id "calendar_json" is populated by django as defined in views.py context object
         const calendarScript = document.querySelector('script#calendar_json');
         const events_json = calendarScript ? JSON.parse(calendarScript.textContent) : {};
-        const escapeHTML = (str) => {
-            if (!str) return '';
-            return String(str).replace(/[&<>"']/g, (m) => ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;'
-            }[m]));
-        };
 
         const isValidInternalUrl = (url) => {
             if (typeof url !== 'string' || !url) return false;

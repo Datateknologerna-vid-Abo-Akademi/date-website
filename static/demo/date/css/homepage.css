@@ -284,35 +284,35 @@ div.news-content a:hover{
     transform: translateX(10px);
   }
 
-.event-card > .card .list-inline-item {
+.evet-card > .card .list-inline-item {
     color: var(--helpText);
     font-size: 14px;
   }
 
-.event-card > .card .badge {
+.evet-card > .card .badge {
     background: var(--primaryColorLighter);
   }
 
-.event-card > .card {
+.evet-card > .card {
     background: var(--secondaryColor);
   }
 
-.event-card a{
+.evet-card a{
     color: var(--linkColorDark);
     border-top: 2px solid var(--linkColorDark);
   }
 
-.event-card a:active{
+.evet-card a:active{
     color: var(--linkColorDark);
   }
 
-.event-card a:hover{
+.evet-card a:hover{
     background-color: inherit;
     border-top: 2px solid var(--linkColorDarkHover);
     color: var(--linkColorDarkHover);
   }
 
-.event-card a:focus{
+.evet-card a:focus{
     background-color: inherit;
     box-shadow: none;
   }

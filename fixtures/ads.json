@@ -3,7 +3,7 @@
     "model": "ads.adurl",
     "pk": 1,
     "fields": {
-      "ad_url": "https://via.placeholder.com/300x100?text=Partner+1",
+      "ad_url": "https://albin-storage.cdn.datateknologerna.org/date/public/2021/partner-logos/aa-logo-small.png",
       "company_url": "https://example.com"
     }
   },
@@ -11,7 +11,7 @@
     "model": "ads.adurl",
     "pk": 2,
     "fields": {
-      "ad_url": "https://via.placeholder.com/300x100?text=Partner+2",
+      "ad_url": "https://albin-storage.cdn.datateknologerna.org/date/public/2021/halarsponslogon/tfif-bla-logo-utan-text-digi.png",
       "company_url": "https://example.org"
     }
   }
