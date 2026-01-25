@@ -13,16 +13,21 @@
         };
 
         const isValidInternalUrl = (url) => {
-            if (!url) return false;
-            const lowerUrl = url.trim().toLowerCase();
+            if (typeof url !== 'string' || !url) return false;
+            const trimmedUrl = url.trim();
+            if (trimmedUrl.startsWith('//')) return false;
+
+            const lowerUrl = trimmedUrl.toLowerCase();
             if (lowerUrl.startsWith('javascript:') || lowerUrl.startsWith('data:') || lowerUrl.startsWith('vbscript:')) {
                 return false;
             }
-            if (url.startsWith('/') && !url.startsWith('//')) {
+
+            if (trimmedUrl.startsWith('/') && !trimmedUrl.startsWith('//')) {
                 return true;
             }
+
             try {
-                const urlObj = new URL(url);
+                const urlObj = new URL(trimmedUrl);
                 return urlObj.origin === window.location.origin;
             } catch (e) {
                 return false;
@@ -36,8 +41,9 @@
             // Ensure hours and minutes are displayed with two digits
             hours = hours < 10 ? '0' + hours : hours;
             minutes = minutes < 10 ? '0' + minutes : minutes;
-            const safeUrl = isValidInternalUrl(o[1].link) ? o[1].link : '#';
-            o[1].html = `<a class='calendar-eventday-popup' id='calendar_link' href='${escapeHTML(safeUrl)}'>${hours}:${minutes}</br>${escapeHTML(o[1].eventTitle)}</a>`;
+            const rawUrl = (o[1].link || '').trim();
+            const safeUrl = isValidInternalUrl(rawUrl) ? rawUrl : '#';
+            o[1].html = `<a class="calendar-eventday-popup" id="calendar_link" href="${escapeHTML(safeUrl)}">${hours}:${minutes}</br>${escapeHTML(o[1].eventTitle)}</a>`;
         });
 
         // Select all elements with class 'calendar' and initialize VanillaCalendar on each
@@ -46,7 +52,7 @@
                 actions: {
                     clickDay(event, date) {
                         if(events_json[date[0]] !== undefined) {
-                            const url = events_json[date[0]].link;
+                            const url = (events_json[date[0]].link || '').trim();
                             if (isValidInternalUrl(url)) {
                                 location.href = url;
                             }
