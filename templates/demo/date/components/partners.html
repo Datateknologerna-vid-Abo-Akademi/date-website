@@ -1,0 +1,13 @@
+<div class="logo-container">
+    <h3 class="header-border-bottom">Samarbetspartners</h3>
+        <div class="d-flex flex-wrap justify-content-center align-items-center">
+            {%for ad in ads%}
+                <a class="m-2" href="{{ ad.company_url }}">
+                    <img src="{{ ad.ad_url }}" alt="img">
+                </a>
+            {% endfor %}
+        </div>
+    <div class="text-center">
+        <a href="/pages/foretagssamarbete/">Vill du samarbeta med DaTe?</a>
+    </div>
+</div>

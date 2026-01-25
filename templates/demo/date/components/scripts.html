@@ -108,12 +108,28 @@
     });
 </script>
 <script>
-    $(".carousel-logos").jCarouselLite({
-    circular: true,
-    vertical: true,
-    auto: 1500,
-    speed: 1500,
-    pause: true,
-    visible: 4
-    });
-    </script>
+    async function getJoke() {
+        return await fetch("https://icanhazdadjoke.com", {
+                headers: {
+                    "Accept": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(function(data) {
+                return data ? data.joke : ""
+            })
+            .catch(function(e) {
+                document.querySelectorAll("#joke-header")
+                    .forEach(function(elem) {
+                        elem.innerText = "";
+                    });
+                return ""
+            }) ||
+            "";
+    }
+    getJoke().then((joke) => {
+        document.querySelectorAll("#joke-string").forEach(function(elem) {
+            elem.innerText = joke;
+        })
+    })
+</script>
