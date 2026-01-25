@@ -204,13 +204,31 @@
             }[m]));
         };
 
+        const isValidInternalUrl = (url) => {
+            if (!url) return false;
+            const lowerUrl = url.trim().toLowerCase();
+            if (lowerUrl.startsWith('javascript:') || lowerUrl.startsWith('data:') || lowerUrl.startsWith('vbscript:')) {
+                return false;
+            }
+            if (url.startsWith('/') && !url.startsWith('//')) {
+                return true;
+            }
+            try {
+                const urlObj = new URL(url);
+                return urlObj.origin === window.location.origin;
+            } catch (e) {
+                return false;
+            }
+        };
+
         Object.entries(events_json).forEach((o)=>{
             const tempDate = new Date(o[1].eventFullDate);
             let hours = tempDate.getHours();
             let minutes = tempDate.getMinutes();
             // Ensure minutes are two digits
             minutes = minutes < 10 ? '0' + minutes : minutes;
-            o[1].html = `<a class='calendar-eventday-popup' id='calendar_link' href='${escapeHTML(o[1].link)}'>${hours}:${minutes}</br>${escapeHTML(o[1].eventTitle)}</a>`;
+            const safeUrl = isValidInternalUrl(o[1].link) ? o[1].link : '#';
+            o[1].html = `<a class='calendar-eventday-popup' id='calendar_link' href='${escapeHTML(safeUrl)}'>${hours}:${minutes}</br>${escapeHTML(o[1].eventTitle)}</a>`;
         });
 
         // Select all elements with class 'calendar' and initialize VanillaCalendar on each
@@ -220,7 +238,7 @@
                     clickDay(event, date) {
                         if(events_json[date[0]] !== undefined) {
                             const url = events_json[date[0]].link;
-                            if (url && !url.startsWith('javascript:')) {
+                            if (isValidInternalUrl(url)) {
                                 location.href = url;
                             }
                         }

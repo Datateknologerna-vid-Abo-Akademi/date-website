@@ -3,6 +3,8 @@
 
 *.env
 !*example.env
+env.*
+!.env.example
 
 *.mo
 
