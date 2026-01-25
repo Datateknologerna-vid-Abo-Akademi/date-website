@@ -41,7 +41,7 @@ STAFF_GROUPS = get_staff_groups([
 
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/date'),
+    os.path.join(BASE_DIR, 'static/pulterit'),
     os.path.join(BASE_DIR, 'static/common'),
 ]
 
