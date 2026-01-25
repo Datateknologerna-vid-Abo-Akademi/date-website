@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{% static 'core/css/base.css' %}">
     <link rel="stylesheet" href="{% static 'date/css/date-root.css' %}">
     <link rel="stylesheet" href="{% static 'core/css/cookie-banner.css' %}">
-    <link rel="shortcut icon" type="image/png" href="{% static "core/images/logo.ico" %}"/>
+    <link rel="shortcut icon" type="image/png" href="{% static 'core/images/logo.ico' %}"/>
 
     <link href="https://fonts.googleapis.com/css?family=Chakra+Petch" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Josefin+Sans:300,400,400i,600" rel="stylesheet">
@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <link rel= "stylesheet" href= "https://maxst.icons8.com/vue-static/landings/line-awesome/font-awesome-line-awesome/css/all.min.css" >
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+    {% block extra_head %}{% endblock %}
 </head>
 
 {% include 'core/header.html' %}
@@ -30,8 +31,10 @@
         integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
         crossorigin="anonymous"></script>
 <script src="{% static 'core/js/cookie-banner.js' %}"></script>
-</body>
+{% block footer %}
 {% include 'core/footer.html' %}
+{% endblock %}
+</body>
 <!-- JavaScript for opening external links in new tab -->
 <script defer>
     function setExternalLinksOpenInNewTab() {

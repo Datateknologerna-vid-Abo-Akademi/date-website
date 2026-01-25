@@ -1,0 +1,50 @@
+[
+  {
+    "model": "staticpages.staticpagenav",
+    "pk": 1,
+    "fields": {
+      "category_name": "Föreningen",
+      "nav_element": 0
+    }
+  },
+  {
+    "model": "staticpages.staticpagenav",
+    "pk": 2,
+    "fields": {
+      "category_name": "Medlemmar",
+      "nav_element": 0
+    }
+  },
+  {
+    "model": "staticpages.staticpage",
+    "pk": 1,
+    "fields": {
+      "title": "Om oss",
+      "content": "<h1>Om DaTe</h1><p>Datateknologerna vid Åbo Akademi rf är en studentförening...</p>",
+      "created_time": "2026-01-25T10:00:00Z",
+      "slug": "om-oss",
+      "members_only": false
+    }
+  },
+  {
+    "model": "staticpages.staticpage",
+    "pk": 2,
+    "fields": {
+      "title": "Styrelsen",
+      "content": "<h1>Styrelsen 2026</h1><p>Här är årets styrelse...</p>",
+      "created_time": "2026-01-25T10:00:00Z",
+      "slug": "styrelsen",
+      "members_only": false
+    }
+  },
+  {
+    "model": "staticpages.staticurl",
+    "pk": 1,
+    "fields": {
+      "title": "Logga in",
+      "url": "/members/login/",
+      "category": 2,
+      "dropdown_element": 10
+    }
+  }
+]
