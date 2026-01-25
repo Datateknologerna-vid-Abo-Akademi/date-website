@@ -1,5 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 set -Eeuo pipefail
+
+# Move to the scripts directory to ensure relative paths work
+cd "$(dirname "$0")"
 
 echo "WARNING! This will restore your project to an intial state"
 read -p "Are you sure? y/n " -n 1 -r
@@ -15,9 +18,6 @@ COMPOSE_PATH="../${COMPOSE_FILE_PATH:-docker-compose.yml}"
 # Shut down any currently running containers
 docker-compose -f $COMPOSE_PATH down
 
-# Delete all existing migration files
-find ../ -path "*/migrations/*.py" -not -name "__init__.py" -delete
-
 # Start the database container
 docker-compose -f $COMPOSE_PATH build
 docker-compose -f $COMPOSE_PATH up -d db
@@ -31,12 +31,10 @@ docker-compose exec db psql -U postgres -d temp -c "CREATE DATABASE postgres;"
 docker-compose exec db psql -U postgres -c "DROP DATABASE temp;"
 
 echo "Database cleared."
-echo "Deleting migration files"
 
 # Run migrations on fresh database and load fixture data
-docker-compose -f $COMPOSE_PATH run web python /code/manage.py makemigrations
 docker-compose -f $COMPOSE_PATH run web python /code/manage.py migrate
-docker-compose -f $COMPOSE_PATH run web python /code/manage.py loaddata initialdata.json
+docker-compose -f $COMPOSE_PATH run web ./scripts/load_all_fixtures.sh
 docker-compose down
 
 sleep 2

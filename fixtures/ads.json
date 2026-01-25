@@ -1,0 +1,18 @@
+[
+  {
+    "model": "ads.adurl",
+    "pk": 1,
+    "fields": {
+      "ad_url": "https://via.placeholder.com/300x100?text=Partner+1",
+      "company_url": "https://example.com"
+    }
+  },
+  {
+    "model": "ads.adurl",
+    "pk": 2,
+    "fields": {
+      "ad_url": "https://via.placeholder.com/300x100?text=Partner+2",
+      "company_url": "https://example.org"
+    }
+  }
+]
