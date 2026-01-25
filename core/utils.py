@@ -40,3 +40,5 @@ def send_email_task(*args, **kwargs) -> None:
         send_mail(*args, **kwargs)
     except SMTPException:
         logger.error(f"Failed sending email to: {args[3] or kwargs.get('to', '')}")
+    except Exception as e:
+        logger.error(f"Unexpected error sending email: {e}")
