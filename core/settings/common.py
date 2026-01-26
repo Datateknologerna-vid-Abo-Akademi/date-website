@@ -56,7 +56,8 @@ if not DEVELOP:
 
 def get_installed_apps(proj_apps):
     return [
-        'date',
+        'daphne',
+        'homepage',
         'members',
         *proj_apps,
         'modeltranslation',
@@ -115,16 +116,16 @@ TEMPLATES = [
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'date.middleware.LanguageStateMiddleware',
+    'homepage.middleware.LanguageStateMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'date.middleware.LangMiddleware',
-    'date.middleware.HTCPCPMiddleware',
-    'date.middleware.CDNRewriteMiddleware'
+    'homepage.middleware.LangMiddleware',
+    'homepage.middleware.HTCPCPMiddleware',
+    'homepage.middleware.CDNRewriteMiddleware'
 ]
 
 
@@ -377,7 +378,7 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-        'date': {
+        'homepage': {
             'handlers': ['console_debug'],
             'level': 'DEBUG',
             'propagate': True,

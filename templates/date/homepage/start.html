@@ -1,0 +1,42 @@
+{% extends 'core/base.html' %}
+{% load cache %}
+{% block content %}
+{% cache 300 main_page_fixed %}
+    {% load static %}
+    {% load i18n %}
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <link rel="stylesheet" href="{% static 'homepage/css/layout.css' %}?{% now 'U' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'homepage/css/hero.css' %}?{% now 'U' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'homepage/css/about.css' %}?{% now 'U' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'homepage/css/news.css' %}?{% now 'U' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'homepage/css/events.css' %}?{% now 'U' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'homepage/css/extras.css' %}?{% now 'U' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'homepage/css/partners.css' %}?{% now 'U' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'homepage/css/vanilla-calendar.min.css' %}" type="text/css">
+        {% get_current_language as LANGUAGE_CODE %}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/157670/jquery.jcarousellite.min.js"></script>
+        <script src="{% static 'homepage/js/vanilla-calendar.min.js' %}"></script>
+    </head>
+
+    <div class="container-fluid p-2 min-vh-100">
+        {% include "homepage/components/hero.html" %}
+        {% include "homepage/components/about.html" %}
+        <section id="news" class="news-events">
+            <div id="main" class="main-container">
+                {% include "homepage/components/news.html" %}
+                {% include "homepage/components/events.html" %}
+                {% include "homepage/components/extras.html" %}
+                {% include "homepage/components/partners.html" %}
+            </div>
+        </section>
+        <section id="reklam" class="text-size">
+        </section>
+    </div>
+
+    {% include "homepage/components/scripts.html" %}
+    {% endcache %}
+{% endblock %}
