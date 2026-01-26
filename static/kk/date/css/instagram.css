@@ -1,0 +1,48 @@
+/* Instagram component */
+.ig-scroll {
+    grid-area: ig-scroll;
+    display: grid;
+    grid-template-columns: 0 1fr 0;
+    grid-template-rows: auto;
+    grid-template-areas:
+      ". ig-image .";
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+div.scroll-content img {
+    max-height: 130px;
+}
+
+.scroll-content {
+    grid-area: ig-image;
+    position: relative;
+    overflow: hidden;
+    border-radius: 5px;
+    min-height: 130px;
+}
+
+.images {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 35000px;
+    animation: slideshow 60s linear infinite;
+    transform: translate3d(0, 0, 0);
+}
+
+.scroll-content:hover .images {
+    animation-play-state: paused;
+}
+
+.scroll-content img:hover {
+    box-shadow: 4px 6px 9px 0px rgba(0,0,0,0.5);
+    transition: .2s ease;
+}
+
+@keyframes slideshow {
+    100% {
+        -webkit-transform: translateX(-5%);
+    }
+}

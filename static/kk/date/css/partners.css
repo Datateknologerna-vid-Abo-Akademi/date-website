@@ -1,0 +1,29 @@
+/* Partners/Logos component */
+.logo-container {
+    grid-area: logos;
+    display: block;
+    overflow: hidden;
+}
+
+.carousel-logos {
+    border-top: solid;
+    border-bottom: solid;
+    border-width: 2px;
+    border-color: rgb(180, 180, 180);
+}
+
+.company-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100px;
+    /* keep img ratio correct */
+    width: auto !important;
+}
+
+.company-logo img {
+    max-height: 100px;
+    max-width: 100%;
+    /* keep img ratio correct */
+    height: auto !important;
+}

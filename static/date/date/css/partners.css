@@ -1,0 +1,21 @@
+/* Partners/Logos component */
+.logo-container {
+    grid-area: logos;
+    margin-top: 20px;
+}
+
+.logo-container a {
+    color: var(--linkColorDark);
+    margin-top: 20px;
+}
+
+.logo-container a:hover {
+    color: var(--linkColorDarkHover);
+}
+
+.logo-container img {
+    max-width: 300px;
+    max-height: 200px;
+    width: auto !important;
+    height: auto !important;
+}

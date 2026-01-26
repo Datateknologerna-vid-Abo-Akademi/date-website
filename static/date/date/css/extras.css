@@ -1,0 +1,44 @@
+/* Extras component */
+.extra-container {
+    grid-area: extras;
+    display: block;
+}
+
+.carousel-logos {
+    border-top: solid;
+    border-bottom: solid;
+    border-width: 2px;
+    border-color: rgb(180, 180, 180);
+}
+
+div.carousel-logos {
+    overflow: hidden;
+}
+
+div.carousel-logos img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+}
+
+ul#logo-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.company-logo img {
+    max-height: 100px;
+    max-width: 100%;
+    /* keep img ratio correct */
+    width: auto !important;
+    height: auto !important;
+}
+
+.extra-container a {
+    color: var(--linkColorDark);
+}
+
+.extra-container a:hover {
+    color: var(--linkColorDarkHover);
+}

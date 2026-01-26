@@ -8,10 +8,13 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <link rel="stylesheet" href="{% static 'date/css/homepage.css' %}?{% now 'U' %}" type="text/css">
-        <link rel="stylesheet" href="{% static 'date/css/header.css' %}?{% now 'U' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'date/css/layout.css' %}?{% now 'U' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'date/css/hero.css' %}?{% now 'U' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'date/css/about.css' %}?{% now 'U' %}" type="text/css">
         <link rel="stylesheet" href="{% static 'date/css/news.css' %}?{% now 'U' %}" type="text/css">
         <link rel="stylesheet" href="{% static 'date/css/events.css' %}?{% now 'U' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'date/css/extras.css' %}?{% now 'U' %}" type="text/css">
+        <link rel="stylesheet" href="{% static 'date/css/partners.css' %}?{% now 'U' %}" type="text/css">
         <link rel="stylesheet" href="{% static 'date/css/vanilla-calendar.min.css' %}" type="text/css">
         {% get_current_language as LANGUAGE_CODE %}
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
@@ -20,7 +23,7 @@
     </head>
 
     <div class="container-fluid p-2 min-vh-100">
-        {% include "date/components/header.html" %}
+        {% include "date/components/hero.html" %}
         {% include "date/components/about.html" %}
         <section id="news" class="news-events">
             <div id="main" class="main-container">

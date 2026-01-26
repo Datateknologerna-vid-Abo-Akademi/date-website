@@ -1,6 +1,6 @@
 /* Header */
 
-.header {
+.hero {
     color: var(--textColorLight);
     background-color: var(--primaryColor);
     margin: 10vh 0;
@@ -10,14 +10,14 @@
     flex-direction: column;
 }
 
-.header-content {
+.hero-content {
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-.header-content .header-text {
+.hero-content .hero-text {
     color: var(--textColorLight);
     width: 100%;
     height: 100%;
@@ -25,7 +25,7 @@
     max-width: 100%;
 }
 
-.header-content .header-text .header-title {
+.hero-content .hero-text .hero-title {
     text-transform: uppercase;
     display: block;
     margin-bottom: 0;
@@ -35,7 +35,7 @@
     animation: fadeIn 3s;
 }
 
-.header-content .header-text .header-subtitle {
+.hero-content .hero-text .hero-subtitle {
     display: block;
     text-align: center;
     font-size: min(calc(0.8*2.5vh), 3.5vw);
@@ -46,7 +46,7 @@
     white-space: nowrap;
 }
 
-.header-logo {
+.hero-logo {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -55,12 +55,12 @@
     margin-top: 10px; /* Adjust the margin to bring it closer to the text */
 }
 
-.header-logo svg {
+.hero-logo svg {
     width: 100%;
     height: 100%;
 }
 
-.header-content path {
+.hero-content path {
     stroke: var(--secondaryColor);
     fill: var(--secondaryColor);
     stroke-dasharray: 25000;

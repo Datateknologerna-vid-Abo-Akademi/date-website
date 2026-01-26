@@ -3,6 +3,7 @@
   
 .card {
     border-radius: var(--defaultRadius);
+    color: var(--textColorDark);
   }
   
 .card .fa-chevron-right{
@@ -13,35 +14,35 @@
     transform: translateX(10px);
   }
   
-.evet-card > .card .list-inline-item {
+.event-card > .card .list-inline-item {
     color: var(--helpText);
     font-size: 14px;
   }
   
-.evet-card > .card .badge {
+.event-card > .card .badge {
     background: var(--primaryColorLighter);
   }
   
-.evet-card > .card {
+.event-card > .card {
     background: var(--secondaryColor);
   }
   
-.evet-card a{
+.event-card a{
     color: var(--linkColor);
     border-top: 2px solid var(--linkColor);
   }
   
-.evet-card a:active{
+.event-card a:active{
     color: var(--linkColor);
   }
   
-.evet-card a:hover{
+.event-card a:hover{
     background-color: inherit;
     border-top: 2px solid var(--linkSecondaryHover);
     color: var(--linkSecondaryHover);
   }
   
-.evet-card a:focus{
+.event-card a:focus{
     background-color: inherit;
     box-shadow: none;
   }
