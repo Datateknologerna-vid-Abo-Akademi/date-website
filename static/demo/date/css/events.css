@@ -1,0 +1,43 @@
+/* Sidebar, Events and Calendar */
+
+.sidebar-container{
+    grid-area: sidebar;
+}
+
+.event-card > .card {
+    background: var(--secondaryColor);
+    box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
+    border-radius: var(--defaultRadius);
+}
+
+.event-card a{
+    color: var(--linkColorDark);
+    border-top: 2px solid var(--linkColorDark);
+}
+
+.event-card a:hover{
+    border-top: 2px solid var(--linkColorDarkHover);
+    color: var(--linkColorDarkHover);
+}
+
+.calendar-box{
+    border: 2px solid rgb(163, 163, 163);
+    border-radius: 5px;
+    padding: 3px;
+}
+
+.vanilla-calendar-day__btn_today {
+    color: var(--textColorLight) !important;
+    background-color: #545454 !important;
+}
+
+.calendar-eventday {
+  color: white !important;
+  background-color: var(--linkColorDark) !important;
+}
+
+@media screen and (max-width: 991px){
+    .sidebar-container{
+        display: none;
+    }
+}

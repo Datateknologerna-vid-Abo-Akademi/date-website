@@ -1,7 +1,5 @@
 from .common import *  # noqa
 
-TEMPLATES[0]['DIRS'].insert(1, 'templates/date')
-
 INSTALLED_APPS = get_installed_apps([
     'staticpages',
     'news',

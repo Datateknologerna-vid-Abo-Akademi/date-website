@@ -1,0 +1,28 @@
+/* Partners and Logos */
+
+.logo-container {
+    grid-area: logos;
+    margin-top: 20px;
+}
+
+.logo-container img {
+    max-width: 300px;
+    max-height: 200px;
+    width: auto !important;
+    height: auto !important;
+}
+
+.carousel-logos{
+    border-top: solid;
+    border-bottom: solid;
+    border-width: 2px;
+    border-color: rgb(180, 180, 180);
+    overflow: hidden;
+}
+
+.company-logo img{
+    max-height: 100px;
+    max-width: 100%;
+    width: auto !important;
+    height: auto !important;
+}
