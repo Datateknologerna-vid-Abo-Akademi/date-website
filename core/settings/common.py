@@ -25,6 +25,8 @@ env = environ.Env(
     DEVELOP=(bool, False),
 )
 
+PROJECT_NAME = os.environ.get("PROJECT_NAME", "date")
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -92,6 +94,22 @@ COMMON_CONTEXT_PROCESSORS = [
     'staticpages.context_processors.get_urls',
     'core.context_processors.captcha_context',
     'core.context_processors.apply_content_variables',
+]
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            f'templates/{PROJECT_NAME}',
+            *COMMON_TEMPLATE_DIRS,
+        ],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                *COMMON_CONTEXT_PROCESSORS,
+            ],
+        },
+    },
 ]
 
 MIDDLEWARE = [
@@ -233,7 +251,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-PROJECT_NAME = os.environ.get("PROJECT_NAME", "date")
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Cloudflare captcha config
@@ -296,6 +313,10 @@ else:
 
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, f'static/{PROJECT_NAME}'),
+    os.path.join(BASE_DIR, 'static/common'),
+]
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'index'
