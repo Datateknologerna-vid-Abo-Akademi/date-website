@@ -360,24 +360,24 @@ class LanguageSelectionTests(TestCase):
 
 class HomepageTemplateSelectionTests(TestCase):
     @override_settings(PROJECT_NAME="kk")
-    @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
-    @patch("date.views.random.randrange", return_value=0)
+    @patch("homepage.views.timezone.localdate", return_value=date(2026, 4, 1))
+    @patch("homepage.views.random.randrange", return_value=0)
     def test_kk_uses_april_template_on_april_first_when_roll_matches(self, _randrange, _localdate):
-        self.assertEqual(get_homepage_template_name(), "date/april_start.html")
+        self.assertEqual(get_homepage_template_name(), "homepage/april_start.html")
 
     @override_settings(PROJECT_NAME="kk")
-    @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
-    @patch("date.views.random.randrange", return_value=1)
+    @patch("homepage.views.timezone.localdate", return_value=date(2026, 4, 1))
+    @patch("homepage.views.random.randrange", return_value=1)
     def test_kk_uses_regular_template_on_april_first_when_roll_misses(self, _randrange, _localdate):
-        self.assertEqual(get_homepage_template_name(), "date/start.html")
+        self.assertEqual(get_homepage_template_name(), "homepage/start.html")
 
     @override_settings(PROJECT_NAME="kk")
-    @patch("date.views.timezone.localdate", return_value=date(2026, 4, 2))
+    @patch("homepage.views.timezone.localdate", return_value=date(2026, 4, 2))
     def test_kk_uses_regular_template_outside_april_first(self, _localdate):
-        self.assertEqual(get_homepage_template_name(), "date/start.html")
+        self.assertEqual(get_homepage_template_name(), "homepage/start.html")
 
     @override_settings(PROJECT_NAME="date")
-    @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
-    @patch("date.views.random.randrange", return_value=0)
+    @patch("homepage.views.timezone.localdate", return_value=date(2026, 4, 1))
+    @patch("homepage.views.random.randrange", return_value=0)
     def test_non_kk_never_uses_april_template(self, _randrange, _localdate):
-        self.assertEqual(get_homepage_template_name(), "date/start.html")
+        self.assertEqual(get_homepage_template_name(), "homepage/start.html")

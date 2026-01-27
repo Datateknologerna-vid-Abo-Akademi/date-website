@@ -19,14 +19,14 @@ from social.models import IgUrl
 def get_homepage_template_name():
     """Return the homepage template for the active association."""
     if settings.PROJECT_NAME != 'kk':
-        return 'date/start.html'
+        return 'homepage/start.html'
 
     today = timezone.localdate()
     is_april_first = today.month == 4 and today.day == 1
     if is_april_first and random.randrange(20) == 0:
-        return 'date/april_start.html'
+        return 'homepage/april_start.html'
 
-    return 'date/start.html'
+    return 'homepage/start.html'
 
 
 def index(request):
