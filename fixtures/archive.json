@@ -1,0 +1,59 @@
+[
+  {
+    "model": "archive.collection",
+    "pk": 1,
+    "fields": {
+      "title": "Årsfest 2025",
+      "type": "Pictures",
+      "pub_date": "2025-11-15T18:00:00Z",
+      "hide_for_gulis": false
+    }
+  },
+  {
+    "model": "archive.collection",
+    "pk": 2,
+    "fields": {
+      "title": "Mötesprotokoll 2026",
+      "type": "Documents",
+      "pub_date": "2026-01-01T10:00:00Z",
+      "hide_for_gulis": false
+    }
+  },
+  {
+    "model": "archive.collection",
+    "pk": 3,
+    "fields": {
+      "title": "Grundkurs i programmering",
+      "type": "Exams",
+      "pub_date": "2025-12-15T09:00:00Z",
+      "hide_for_gulis": false
+    }
+  },
+  {
+    "model": "archive.document",
+    "pk": 1,
+    "fields": {
+      "collection": 2,
+      "title": "Januarimöte 2026",
+      "document": "documents/2026/motesprotokoll-2026/januarimote.pdf"
+    }
+  },
+  {
+    "model": "archive.document",
+    "pk": 2,
+    "fields": {
+      "collection": 3,
+      "title": "Tentamen 15.12.2025",
+      "document": "Exams/2025/grundkurs-i-programmering/tenta.pdf"
+    }
+  },
+  {
+    "model": "archive.picture",
+    "pk": 1,
+    "fields": {
+      "collection": 1,
+      "image": "2026/arsfest-2025/test-image.png",
+      "favorite": true
+    }
+  }
+]

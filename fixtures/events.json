@@ -4,7 +4,7 @@
     "pk": 1,
     "fields": {
       "title": "Årsfest 2025",
-      "content": "<p>En fantastisk fest!</p>",
+      "content": "<p>En fantastisk fest som vi alla minns!</p>",
       "event_date_start": "2025-11-15T18:00:00Z",
       "event_date_end": "2025-11-16T04:00:00Z",
       "sign_up": false,
@@ -17,18 +17,36 @@
     "model": "events.event",
     "pk": 2,
     "fields": {
-      "title": "Sitsit i februari",
-      "content": "<p>Välkommen på en rolig sittning!</p>",
+      "title": "Alla hjärtans dags-sitsit",
+      "content": "<p>Välkommen på en rolig sittning för att fira vänskap och kärlek!</p>",
       "event_date_start": "2026-02-14T19:00:00Z",
       "event_date_end": "2026-02-14T23:59:00Z",
       "sign_up": true,
-      "sign_up_max_participants": 60,
-      "sign_up_members": "2026-02-01T12:00:00Z",
-      "sign_up_others": "2026-02-03T12:00:00Z",
-      "sign_up_deadline": "2026-02-10T12:00:00Z",
+      "sign_up_max_participants": 80,
+      "sign_up_members": "2026-01-28T12:00:00Z",
+      "sign_up_others": "2026-01-30T12:00:00Z",
+      "sign_up_deadline": "2026-02-10T23:59:00Z",
       "author": 1,
       "published": true,
-      "slug": "sitsit-februari"
+      "slug": "valentines-sitsit"
+    }
+  },
+  {
+    "model": "events.event",
+    "pk": 3,
+    "fields": {
+      "title": "Spelkväll i Aurum",
+      "content": "<p>Vi spelar brädspel och umgås i de nya lokalerna.</p>",
+      "event_date_start": "2026-02-05T17:00:00Z",
+      "event_date_end": "2026-02-05T21:00:00Z",
+      "sign_up": true,
+      "sign_up_max_participants": 30,
+      "sign_up_members": "2026-01-20T12:00:00Z",
+      "sign_up_others": "2026-01-22T12:00:00Z",
+      "sign_up_deadline": "2026-02-04T12:00:00Z",
+      "author": 1,
+      "published": true,
+      "slug": "spelkvall-aurum"
     }
   },
   {
@@ -37,6 +55,27 @@
     "fields": {
       "event": 2,
       "name": "Specialdieter",
+      "type": "text",
+      "required": false
+    }
+  },
+  {
+    "model": "events.eventregistrationform",
+    "pk": 2,
+    "fields": {
+      "event": 2,
+      "name": "Dryckesval",
+      "type": "select",
+      "choice_list": "Alkohol, Alkoholfritt",
+      "required": true
+    }
+  },
+  {
+    "model": "events.eventregistrationform",
+    "pk": 3,
+    "fields": {
+      "event": 3,
+      "name": "Favoritspel",
       "type": "text",
       "required": false
     }

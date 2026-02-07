@@ -17,12 +17,38 @@
     "pk": 2,
     "fields": {
       "title": "Kommande evenemang i februari",
-      "content": "<p>Håll utkik efter roliga saker som händer i februari!</p>",
+      "content": "<p>Håll utkik efter roliga saker som händer i februari! Vi har planerat både sitsit och spelkvällar.</p>",
       "author": 1,
       "created_time": "2026-01-20T12:00:00Z",
       "published_time": "2026-01-20T12:00:00Z",
       "published": true,
       "slug": "februari-evenemang"
+    }
+  },
+  {
+    "model": "news.post",
+    "pk": 3,
+    "fields": {
+      "title": "Styrelsens hälsning",
+      "content": "<p>Styrelsen 2026 har haft sitt första möte och ser fram emot ett spännande år!</p>",
+      "author": 1,
+      "created_time": "2026-01-25T09:00:00Z",
+      "published_time": "2026-01-25T09:00:00Z",
+      "published": true,
+      "slug": "styrelsens-halsning"
+    }
+  },
+  {
+    "model": "news.post",
+    "pk": 4,
+    "fields": {
+      "title": "Lunchguide för teknologer",
+      "content": "<p>Här är de bästa lunchställena nära Aurum just nu...</p>",
+      "author": 1,
+      "created_time": "2026-01-27T11:00:00Z",
+      "published_time": "2026-01-27T11:00:00Z",
+      "published": true,
+      "slug": "lunchguide"
     }
   }
 ]

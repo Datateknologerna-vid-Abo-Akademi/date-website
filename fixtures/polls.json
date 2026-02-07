@@ -3,9 +3,10 @@
     "model": "polls.question",
     "pk": 1,
     "fields": {
-      "question_text": "Vad vill du ha för mat på nästa sits?",
-      "pub_date": "2026-01-25T10:00:00Z",
-      "published": true
+      "question_text": "Vad vill du ha för program på nästa medlemskväll?",
+      "pub_date": "2026-01-28T10:00:00Z",
+      "published": true,
+      "show_results": true
     }
   },
   {
@@ -13,8 +14,8 @@
     "pk": 1,
     "fields": {
       "question": 1,
-      "choice_text": "Pizza",
-      "votes": 5
+      "choice_text": "Brädspel",
+      "votes": 12
     }
   },
   {
@@ -22,7 +23,44 @@
     "pk": 2,
     "fields": {
       "question": 1,
-      "choice_text": "Tacos",
+      "choice_text": "Filmkväll",
+      "votes": 5
+    }
+  },
+  {
+    "model": "polls.choice",
+    "pk": 3,
+    "fields": {
+      "question": 1,
+      "choice_text": "Programmeringstävling",
+      "votes": 8
+    }
+  },
+  {
+    "model": "polls.question",
+    "pk": 2,
+    "fields": {
+      "question_text": "Borde vi köpa in en ny kaffemaskin?",
+      "pub_date": "2026-01-20T08:00:00Z",
+      "published": true,
+      "show_results": false
+    }
+  },
+  {
+    "model": "polls.choice",
+    "pk": 4,
+    "fields": {
+      "question": 2,
+      "choice_text": "Ja, absolut!",
+      "votes": 25
+    }
+  },
+  {
+    "model": "polls.choice",
+    "pk": 5,
+    "fields": {
+      "question": 2,
+      "choice_text": "Nej, den gamla funkar fint",
       "votes": 3
     }
   }
