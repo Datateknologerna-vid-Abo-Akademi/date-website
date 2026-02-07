@@ -184,5 +184,46 @@
       "category": 5,
       "dropdown_element": 10
     }
+  },
+  {
+    "model": "staticpages.staticurl",
+    "pk": 13,
+    "fields": {
+      "title": "CTF",
+      "url": "/ctf/",
+      "category": 3,
+      "dropdown_element": 30,
+      "logged_in_only": true
+    }
+  },
+  {
+    "model": "staticpages.staticurl",
+    "pk": 14,
+    "fields": {
+      "title": "Publikationer",
+      "url": "/publications/",
+      "category": 5,
+      "dropdown_element": 20
+    }
+  },
+  {
+    "model": "staticpages.staticurl",
+    "pk": 15,
+    "fields": {
+      "title": "Alumniregistrering",
+      "url": "/alumni/signup/",
+      "category": 5,
+      "dropdown_element": 30
+    }
+  },
+  {
+    "model": "staticpages.staticurl",
+    "pk": 16,
+    "fields": {
+      "title": "Trakasserianmälan",
+      "url": "/social/harassment/",
+      "category": 2,
+      "dropdown_element": 40
+    }
   }
 ]

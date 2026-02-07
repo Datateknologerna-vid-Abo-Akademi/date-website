@@ -25,3 +25,6 @@ storage
 
 # CSV files
 *.csv
+
+# Dynamically generated fixtures
+fixtures/dynamic.json

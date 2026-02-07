@@ -1,8 +1,7 @@
 #!/bin/bash
 python manage.py loaddata fixtures/members.json
-python manage.py loaddata fixtures/staticpages.json
-python manage.py loaddata fixtures/news.json
-python manage.py loaddata fixtures/events.json
-python manage.py loaddata fixtures/polls.json
 python manage.py loaddata fixtures/ads.json
-python manage.py loaddata fixtures/archive.json
+
+# Generate and load all dynamic fixtures (news, events, polls, ctf, publications, social, staticpages)
+python scripts/generate_dynamic_fixtures.py
+python manage.py loaddata fixtures/dynamic.json

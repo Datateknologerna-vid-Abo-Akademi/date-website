@@ -1,0 +1,26 @@
+[
+  {
+    "model": "ctf.ctf",
+    "pk": 1,
+    "fields": {
+      "title": "DaTe CTF 2026",
+      "content": "<h1>Välkommen till årets CTF!</h1><p>Hitta flaggorna och lös utmaningarna.</p>",
+      "start_date": "2026-01-01T00:00:00Z",
+      "end_date": "2026-12-31T23:59:59Z",
+      "pub_date": "2026-02-07T12:00:00Z",
+      "slug": "date-ctf-2026",
+      "published": true
+    }
+  },
+  {
+    "model": "ctf.flag",
+    "pk": 1,
+    "fields": {
+      "ctf": 1,
+      "title": "Första utmaningen",
+      "flag": "date{heja_albin}",
+      "clues": "<p>Titta noga på källkoden!</p>",
+      "slug": "first-challenge"
+    }
+  }
+]

@@ -16,7 +16,7 @@ source ../env.sh dev
 COMPOSE_PATH="../${COMPOSE_FILE_PATH:-docker-compose.yml}"
 
 # Shut down any currently running containers
-docker-compose -f $COMPOSE_PATH down
+docker-compose -f $COMPOSE_PATH down --remove-orphans
 
 # Start the database container
 docker-compose -f $COMPOSE_PATH build
@@ -33,9 +33,14 @@ docker-compose exec db psql -U postgres -c "DROP DATABASE temp;"
 echo "Database cleared."
 
 # Run migrations on fresh database and load fixture data
-docker-compose -f $COMPOSE_PATH run web python /code/manage.py migrate
-docker-compose -f $COMPOSE_PATH run web ./scripts/load_all_fixtures.sh
-docker-compose down
+echo "Running migrations and loading fixtures..."
+docker-compose -f $COMPOSE_PATH run --rm web /bin/bash -c "
+    ./wait-for-postgres.sh db:5432 && \
+    python /code/manage.py migrate --noinput && \
+    ./scripts/load_all_fixtures.sh
+"
+
+docker-compose -f $COMPOSE_PATH down --remove-orphans
 
 sleep 2
 
