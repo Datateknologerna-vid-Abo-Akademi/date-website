@@ -2,6 +2,7 @@ import datetime
 from unittest.mock import patch
 
 from django.contrib.auth.tokens import default_token_generator
+from django.conf import settings
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from django.utils.encoding import force_bytes
@@ -55,6 +56,19 @@ class ApiSmokeTests(TestCase):
     def test_member_profile_requires_auth(self):
         response = self.client.get("/api/v1/members/me")
         self.assertEqual(response.status_code, 403)
+
+    def test_session_endpoint_sets_csrf_cookie_when_anonymous(self):
+        response = self.client.get("/api/v1/auth/session")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"]["is_authenticated"], False)
+        self.assertIn(settings.CSRF_COOKIE_NAME, response.cookies)
+
+    def test_session_endpoint_returns_identity_when_authenticated(self):
+        self.client.login(username="tester", password="password123")
+        response = self.client.get("/api/v1/auth/session")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"]["is_authenticated"], True)
+        self.assertEqual(response.json()["data"]["username"], "tester")
 
     def test_member_profile_when_logged_in(self):
         self.client.login(username="tester", password="password123")

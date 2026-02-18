@@ -36,7 +36,7 @@ jobs:
         run: npm run build
 
   backend:
-    name: Backend Static Checks
+    name: Backend Checks
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -54,3 +54,6 @@ jobs:
 
       - name: Compile backend python modules
         run: python -m compileall backend
+
+      - name: Run backend test suites (core + api)
+        run: python backend/manage.py test core.tests api.tests

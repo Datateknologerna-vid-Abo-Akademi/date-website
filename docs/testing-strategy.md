@@ -53,6 +53,7 @@
 - Fast CI (`.github/workflows/ci.yml`)
   - frontend lint/build
   - backend compile check
+  - backend core/api test suites (`python backend/manage.py test core.tests api.tests`)
 - Association QA (`.github/workflows/association-qa.yml`)
   - scheduled/manual full runtime association checks
   - uploads QA markdown report artifact

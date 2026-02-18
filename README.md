@@ -23,7 +23,7 @@ Monorepo with:
 - `.github/workflows/ci.yml`
   - Runs on push and pull requests.
   - Frontend: `npm ci`, `npm run lint`, `npm run build`.
-  - Backend: dependency install + `python -m compileall backend`.
+  - Backend: dependency install + `python -m compileall backend` + `python backend/manage.py test core.tests api.tests`.
 - `.github/workflows/association-qa.yml`
   - Runs nightly and on manual trigger.
   - Executes `python scripts/association_qa.py`.
