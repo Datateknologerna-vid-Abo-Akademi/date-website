@@ -1,12 +1,8 @@
-import { notFound } from "next/navigation";
-
 import { AlumniUpdateRequestForm } from "@/components/alumni/update-request-form";
-import { getSiteMeta } from "@/lib/api/queries";
-import { isModuleEnabled } from "@/lib/modules";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 export default async function AlumniUpdateRequestPage() {
-  const siteMeta = await getSiteMeta();
-  if (!isModuleEnabled(siteMeta, "alumni")) notFound();
+  await ensureModuleEnabled("alumni");
 
   return (
     <div className="page-shell">

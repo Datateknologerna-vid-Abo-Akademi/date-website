@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getCtfEvent, getSession } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface CtfDetailPageProps {
   params: {
@@ -10,6 +11,7 @@ interface CtfDetailPageProps {
 }
 
 export default async function CtfDetailPage({ params }: CtfDetailPageProps) {
+  await ensureModuleEnabled("ctf");
   const session = await getSession();
   if (!session.is_authenticated) {
     return (

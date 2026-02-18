@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { RichContent } from "@/components/rich-content";
 import { getNewsArticle } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface LegacyNewsArticlePageProps {
   params: {
@@ -10,6 +11,7 @@ interface LegacyNewsArticlePageProps {
 }
 
 export default async function LegacyNewsArticlePage({ params }: LegacyNewsArticlePageProps) {
+  await ensureModuleEnabled("news");
   const article = await getNewsArticle(params.slug).catch(() => null);
   if (!article) notFound();
 

@@ -1,8 +1,10 @@
 import Link from "next/link";
 
 import { getSocialOverview } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 export default async function SocialPage() {
+  await ensureModuleEnabled("social");
   const social = await getSocialOverview();
 
   return (

@@ -1,8 +1,10 @@
 import Link from "next/link";
 
 import { getArchiveExamCollections } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 export default async function ArchiveExamsPage() {
+  await ensureModuleEnabled("archive");
   const collections = await getArchiveExamCollections();
   return (
     <div className="page-shell">

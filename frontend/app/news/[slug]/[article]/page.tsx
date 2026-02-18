@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { RichContent } from "@/components/rich-content";
 import { getNewsArticle } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface NewsCategoryArticlePageProps {
   params: {
@@ -11,6 +12,7 @@ interface NewsCategoryArticlePageProps {
 }
 
 export default async function NewsCategoryArticlePage({ params }: NewsCategoryArticlePageProps) {
+  await ensureModuleEnabled("news");
   const article = await getNewsArticle(params.article, params.slug).catch(() => null);
   if (!article) notFound();
 

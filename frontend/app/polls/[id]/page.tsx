@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { PollVoteForm } from "@/components/polls/poll-vote-form";
 import { getPoll } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface PollDetailPageProps {
   params: {
@@ -10,6 +11,7 @@ interface PollDetailPageProps {
 }
 
 export default async function PollDetailPage({ params }: PollDetailPageProps) {
+  await ensureModuleEnabled("polls");
   const pollId = Number(params.id);
   if (Number.isNaN(pollId)) notFound();
 

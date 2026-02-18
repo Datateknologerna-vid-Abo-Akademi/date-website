@@ -1,8 +1,10 @@
 import Link from "next/link";
 
 import { getCtfEvents, getSession } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 export default async function CtfPage() {
+  await ensureModuleEnabled("ctf");
   const session = await getSession();
   if (!session.is_authenticated) {
     return (

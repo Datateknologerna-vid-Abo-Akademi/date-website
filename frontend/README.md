@@ -22,6 +22,7 @@ Use the root-level stack:
 - Module availability per association is exposed via:
   - `meta.site.data.enabled_modules`
   - `meta.site.data.module_capabilities` (preferred)
+- Server-rendered module pages should use capability guards (`frontend/lib/module-guards.ts`) to return 404 when modules are disabled.
 - Association landing route is exposed via:
   - `meta.site.data.default_landing_path`
 - Event detail route includes decoupled passcode/signup flow against:

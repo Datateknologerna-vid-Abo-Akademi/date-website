@@ -1,6 +1,8 @@
 import { HarassmentForm } from "@/components/social/harassment-form";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
-export default function HarassmentPage() {
+export default async function HarassmentPage() {
+  await ensureModuleEnabled("social");
   return (
     <div className="page-shell">
       <section className="hero compact">

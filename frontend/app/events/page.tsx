@@ -1,8 +1,10 @@
 import Link from "next/link";
 
 import { getEvents } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 export default async function EventsPage() {
+  await ensureModuleEnabled("events");
   const events = await getEvents(true);
   return (
     <div className="page-shell">

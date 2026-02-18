@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { getPublication } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface PublicationDetailPageProps {
   params: {
@@ -9,6 +10,7 @@ interface PublicationDetailPageProps {
 }
 
 export default async function PublicationDetailPage({ params }: PublicationDetailPageProps) {
+  await ensureModuleEnabled("publications");
   const publication = await getPublication(params.slug).catch(() => null);
   if (!publication) notFound();
 

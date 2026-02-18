@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getArchiveExamCollection } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface ArchiveExamDetailPageProps {
   params: {
@@ -13,6 +14,7 @@ interface ArchiveExamDetailPageProps {
 }
 
 export default async function ArchiveExamDetailPage({ params, searchParams }: ArchiveExamDetailPageProps) {
+  await ensureModuleEnabled("archive");
   const collectionId = Number(params.id);
   if (Number.isNaN(collectionId)) notFound();
   const page = Number(searchParams.page ?? "1");

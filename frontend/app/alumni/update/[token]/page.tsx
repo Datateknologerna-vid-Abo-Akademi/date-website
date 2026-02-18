@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
 import { AlumniUpdateForm } from "@/components/alumni/update-form";
-import { getAlumniUpdateToken, getSiteMeta } from "@/lib/api/queries";
-import { isModuleEnabled } from "@/lib/modules";
+import { getAlumniUpdateToken } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface AlumniTokenPageProps {
   params: {
@@ -11,8 +11,7 @@ interface AlumniTokenPageProps {
 }
 
 export default async function AlumniTokenPage({ params }: AlumniTokenPageProps) {
-  const siteMeta = await getSiteMeta();
-  if (!isModuleEnabled(siteMeta, "alumni")) notFound();
+  await ensureModuleEnabled("alumni");
 
   const tokenPayload = await getAlumniUpdateToken(params.token).catch(() => null);
   if (!tokenPayload) notFound();

@@ -1,8 +1,10 @@
 import Link from "next/link";
 
 import { getNews } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 export default async function NewsPage() {
+  await ensureModuleEnabled("news");
   const news = await getNews();
   return (
     <div className="page-shell">

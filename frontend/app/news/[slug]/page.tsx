@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { RichContent } from "@/components/rich-content";
 import { getNews, getNewsArticle } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface NewsDetailPageProps {
   params: {
@@ -11,6 +12,7 @@ interface NewsDetailPageProps {
 }
 
 export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
+  await ensureModuleEnabled("news");
   const { slug } = params;
   const article = await getNewsArticle(slug).catch(() => null);
   if (!article) {

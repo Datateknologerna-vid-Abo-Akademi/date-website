@@ -1,12 +1,9 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 
-import { getSiteMeta } from "@/lib/api/queries";
-import { isModuleEnabled } from "@/lib/modules";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 export default async function AlumniPage() {
-  const siteMeta = await getSiteMeta();
-  if (!isModuleEnabled(siteMeta, "alumni")) notFound();
+  await ensureModuleEnabled("alumni");
 
   return (
     <div className="page-shell">

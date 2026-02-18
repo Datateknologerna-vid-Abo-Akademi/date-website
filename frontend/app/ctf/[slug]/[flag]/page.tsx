@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { FlagGuessForm } from "@/components/ctf/flag-guess-form";
 import { RichContent } from "@/components/rich-content";
 import { getCtfFlag, getSession } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface CtfFlagPageProps {
   params: {
@@ -12,6 +13,7 @@ interface CtfFlagPageProps {
 }
 
 export default async function CtfFlagPage({ params }: CtfFlagPageProps) {
+  await ensureModuleEnabled("ctf");
   const session = await getSession();
   if (!session.is_authenticated) {
     return notFound();

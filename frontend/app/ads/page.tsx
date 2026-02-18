@@ -1,6 +1,8 @@
 import { getAds } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 export default async function AdsPage() {
+  await ensureModuleEnabled("ads");
   const ads = await getAds();
 
   return (

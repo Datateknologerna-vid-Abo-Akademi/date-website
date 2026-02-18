@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { getArchivePictureCollectionById } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface ArchivePictureByIdPageProps {
   params: {
@@ -9,6 +10,7 @@ interface ArchivePictureByIdPageProps {
 }
 
 export default async function ArchivePictureByIdPage({ params }: ArchivePictureByIdPageProps) {
+  await ensureModuleEnabled("archive");
   const collectionId = Number(params.id);
   if (Number.isNaN(collectionId)) notFound();
 

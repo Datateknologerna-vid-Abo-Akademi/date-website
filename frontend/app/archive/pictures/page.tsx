@@ -1,8 +1,10 @@
 import Link from "next/link";
 
 import { getArchiveYears } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 export default async function ArchivePicturesPage() {
+  await ensureModuleEnabled("archive");
   const payload = await getArchiveYears();
   const sortedYears = Object.entries(payload.year_albums).sort((a, b) => Number(b[0]) - Number(a[0]));
 

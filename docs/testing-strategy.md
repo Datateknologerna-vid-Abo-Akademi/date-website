@@ -37,6 +37,7 @@
   - event detail and registration
   - association switching by `PROJECT_NAME`
   - module visibility using `module_capabilities`
+  - module route 404 behavior when capabilities disable a module
 
 ## Baseline Commands
 - `npm run lint` (frontend)

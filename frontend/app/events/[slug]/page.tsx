@@ -4,6 +4,7 @@ import { EventAttendeeList } from "@/components/events/event-attendee-list";
 import { EventSignupForm } from "@/components/events/event-signup-form";
 import { RichContent } from "@/components/rich-content";
 import { getEvent, getEventAttendees } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface EventDetailPageProps {
   params: {
@@ -12,6 +13,7 @@ interface EventDetailPageProps {
 }
 
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
+  await ensureModuleEnabled("events");
   const { slug } = params;
   const [event, attendeeData] = await Promise.all([
     getEvent(slug).catch(() => null),

@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getLuciaOverview } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 export default async function LuciaPage() {
+  await ensureModuleEnabled("lucia");
   const overview = await getLuciaOverview().catch(() => null);
   if (!overview) notFound();
 

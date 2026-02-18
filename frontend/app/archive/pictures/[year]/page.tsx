@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getArchivePictureCollectionsByYear } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface ArchivePictureYearPageProps {
   params: {
@@ -10,6 +11,7 @@ interface ArchivePictureYearPageProps {
 }
 
 export default async function ArchivePictureYearPage({ params }: ArchivePictureYearPageProps) {
+  await ensureModuleEnabled("archive");
   const year = Number(params.year);
   if (Number.isNaN(year)) notFound();
 

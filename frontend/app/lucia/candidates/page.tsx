@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 
 import { getLuciaCandidates, getSession } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 export default async function LuciaCandidatesPage() {
+  await ensureModuleEnabled("lucia");
   const session = await getSession();
   if (!session.is_authenticated) {
     return (

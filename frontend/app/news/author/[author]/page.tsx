@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getNews } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface NewsAuthorPageProps {
   params: {
@@ -9,6 +10,7 @@ interface NewsAuthorPageProps {
 }
 
 export default async function NewsAuthorPage({ params }: NewsAuthorPageProps) {
+  await ensureModuleEnabled("news");
   const author = decodeURIComponent(params.author);
   const posts = await getNews(undefined, author);
 

@@ -3,6 +3,7 @@ import Image from "next/image";
 
 import { RichContent } from "@/components/rich-content";
 import { getLuciaCandidate, getSession } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface LuciaCandidatePageProps {
   params: {
@@ -11,6 +12,7 @@ interface LuciaCandidatePageProps {
 }
 
 export default async function LuciaCandidatePage({ params }: LuciaCandidatePageProps) {
+  await ensureModuleEnabled("lucia");
   const session = await getSession();
   if (!session.is_authenticated) notFound();
 

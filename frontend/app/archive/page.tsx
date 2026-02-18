@@ -1,6 +1,11 @@
 import Link from "next/link";
 
-export default function ArchivePage() {
+import { ensureModuleEnabled } from "@/lib/module-guards";
+import { isModuleEnabled } from "@/lib/modules";
+
+export default async function ArchivePage() {
+  const siteMeta = await ensureModuleEnabled("archive");
+  const showPublications = isModuleEnabled(siteMeta, "publications");
   return (
     <div className="page-shell">
       <section className="hero compact">
@@ -13,7 +18,7 @@ export default function ArchivePage() {
           <Link href="/archive/pictures">Pictures</Link>
           <Link href="/archive/documents">Documents</Link>
           <Link href="/archive/exams">Exams</Link>
-          <Link href="/publications">Publications</Link>
+          {showPublications ? <Link href="/publications">Publications</Link> : null}
         </div>
       </section>
     </div>

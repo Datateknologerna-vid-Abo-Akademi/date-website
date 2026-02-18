@@ -81,3 +81,6 @@
 1. Keep current Django pages available during transition.
 2. Cut traffic to Next routes per route group after QA.
 3. Remove unused Django template routes only after parity checks.
+
+## Module Guarding
+- Frontend module routes are guarded using `meta/site` capabilities (`module_capabilities`) to ensure association-safe routing.

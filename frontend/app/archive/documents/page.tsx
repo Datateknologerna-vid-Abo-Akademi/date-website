@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getArchiveDocuments } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface ArchiveDocumentsPageProps {
   searchParams: {
@@ -11,6 +12,7 @@ interface ArchiveDocumentsPageProps {
 }
 
 export default async function ArchiveDocumentsPage({ searchParams }: ArchiveDocumentsPageProps) {
+  await ensureModuleEnabled("archive");
   const page = Number(searchParams.page ?? "1");
   const payload = await getArchiveDocuments(
     searchParams.collection,

@@ -1,8 +1,10 @@
 import Link from "next/link";
 
 import { getPolls } from "@/lib/api/queries";
+import { ensureModuleEnabled } from "@/lib/module-guards";
 
 export default async function PollsPage() {
+  await ensureModuleEnabled("polls");
   const polls = await getPolls();
   return (
     <div className="page-shell">
