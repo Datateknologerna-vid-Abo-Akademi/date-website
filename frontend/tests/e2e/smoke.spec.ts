@@ -11,6 +11,19 @@ type SiteMetaResponse = {
   };
 };
 
+type SessionPayload = {
+  data?: {
+    is_authenticated?: boolean;
+    username?: string;
+  };
+};
+
+function extractCookieValue(setCookieHeader: string, cookieName: string): string {
+  const pattern = new RegExp(`${cookieName}=([^;]+)`);
+  const match = setCookieHeader.match(pattern);
+  return match?.[1] ?? "";
+}
+
 test.describe("decoupled frontend smoke checks", () => {
   test("core routes respond and meta contract is available", async ({ request }) => {
     const metaResponse = await request.get("/api/v1/meta/site");
@@ -41,5 +54,53 @@ test.describe("decoupled frontend smoke checks", () => {
     }
 
     expect(luciaResponse.status()).toBe(404);
+  });
+
+  test("anonymous session endpoint sets csrf cookie", async ({ request }) => {
+    const sessionResponse = await request.get("/api/v1/auth/session");
+    expect(sessionResponse.ok()).toBeTruthy();
+
+    const payload = (await sessionResponse.json()) as SessionPayload;
+    expect(payload.data?.is_authenticated).toBe(false);
+
+    const setCookieHeader = sessionResponse.headers()["set-cookie"] ?? "";
+    expect(setCookieHeader.toLowerCase()).toContain("csrftoken=");
+  });
+
+  test("login updates session state and logout clears it", async ({ request }) => {
+    const username = process.env.PLAYWRIGHT_SMOKE_USERNAME;
+    const password = process.env.PLAYWRIGHT_SMOKE_PASSWORD;
+    test.skip(!username || !password, "Playwright smoke credentials are required.");
+
+    const csrfBootstrapResponse = await request.get("/api/v1/auth/session");
+    expect(csrfBootstrapResponse.ok()).toBeTruthy();
+    const csrfToken = extractCookieValue(csrfBootstrapResponse.headers()["set-cookie"] ?? "", "csrftoken");
+    expect(csrfToken).not.toBe("");
+
+    const loginResponse = await request.post("/api/v1/auth/login", {
+      data: { username, password },
+    });
+    expect(loginResponse.ok()).toBeTruthy();
+
+    const sessionAfterLogin = await request.get("/api/v1/auth/session");
+    expect(sessionAfterLogin.ok()).toBeTruthy();
+    const sessionPayload = (await sessionAfterLogin.json()) as SessionPayload;
+    expect(sessionPayload.data?.is_authenticated).toBe(true);
+    expect(sessionPayload.data?.username).toBe(username);
+    const refreshedCsrfToken =
+      extractCookieValue(sessionAfterLogin.headers()["set-cookie"] ?? "", "csrftoken") || csrfToken;
+
+    const logoutResponse = await request.post("/api/v1/auth/logout", {
+      headers: {
+        "X-CSRFToken": refreshedCsrfToken,
+        Referer: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:8080",
+      },
+    });
+    expect(logoutResponse.ok()).toBeTruthy();
+
+    const sessionAfterLogout = await request.get("/api/v1/auth/session");
+    expect(sessionAfterLogout.ok()).toBeTruthy();
+    const sessionAfterLogoutPayload = (await sessionAfterLogout.json()) as SessionPayload;
+    expect(sessionAfterLogoutPayload.data?.is_authenticated).toBe(false);
   });
 });

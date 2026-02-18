@@ -282,6 +282,83 @@ class ApiSmokeTests(TestCase):
         self.assertEqual(payload["billing"]["invoice"]["amount"], 42.0)
         self.assertEqual(EventInvoice.objects.count(), 1)
 
+    def test_event_signup_requires_passcode_when_event_has_passcode(self):
+        event = Event.objects.create(
+            title="Passcode Event",
+            slug="passcode-event",
+            author=self.member,
+            sign_up=True,
+            published=True,
+            passcode="secret-passcode",
+            sign_up_members=timezone.now() - timezone.timedelta(hours=1),
+            sign_up_others=timezone.now() - timezone.timedelta(hours=1),
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+            event_date_start=timezone.now() + timezone.timedelta(days=1),
+            event_date_end=timezone.now() + timezone.timedelta(days=1, hours=2),
+        )
+
+        response = self.client.post(
+            f"/api/v1/events/{event.slug}/signup",
+            {
+                "user": "Passcode User",
+                "email": "passcode-user@example.com",
+                "anonymous": False,
+            },
+        )
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json()["error"]["code"], "passcode_required")
+
+    def test_event_signup_returns_event_full_for_child_event_capacity(self):
+        parent_event = Event.objects.create(
+            title="Parent Event",
+            slug="parent-event",
+            author=self.member,
+            sign_up=True,
+            published=True,
+            sign_up_members=timezone.now() - timezone.timedelta(hours=1),
+            sign_up_others=timezone.now() - timezone.timedelta(hours=1),
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+            event_date_start=timezone.now() + timezone.timedelta(days=1),
+            event_date_end=timezone.now() + timezone.timedelta(days=1, hours=2),
+        )
+        child_event = Event.objects.create(
+            title="Child Event",
+            slug="child-event",
+            author=self.member,
+            parent=parent_event,
+            sign_up=True,
+            sign_up_max_participants=1,
+            published=True,
+            sign_up_members=timezone.now() - timezone.timedelta(hours=1),
+            sign_up_others=timezone.now() - timezone.timedelta(hours=1),
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+            event_date_start=timezone.now() + timezone.timedelta(days=1),
+            event_date_end=timezone.now() + timezone.timedelta(days=1, hours=2),
+        )
+        EventAttendees.objects.create(
+            event=parent_event,
+            original_event=child_event,
+            attendee_nr=1,
+            user="Existing Attendee",
+            email="existing-attendee@example.com",
+            preferences={},
+            anonymous=False,
+            time_registered=timezone.now(),
+        )
+
+        response = self.client.post(
+            f"/api/v1/events/{child_event.slug}/signup",
+            {
+                "user": "New Attendee",
+                "email": "new-attendee@example.com",
+                "anonymous": False,
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["error"]["code"], "event_full")
+
     def test_event_detail_includes_template_variant(self):
         event = Event.objects.create(
             title="Arsfest",
