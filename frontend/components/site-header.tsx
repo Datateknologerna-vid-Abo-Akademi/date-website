@@ -19,6 +19,8 @@ export function SiteHeader({ siteMeta }: SiteHeaderProps) {
           <Link href="/">Home</Link>
           <Link href="/news">News</Link>
           <Link href="/events">Events</Link>
+          <Link href="/polls">Polls</Link>
+          <Link href="/members">Members</Link>
           {siteMeta.navigation.slice(0, 3).map((navCategory) =>
             navCategory.url ? (
               <a key={navCategory.category_name} href={navCategory.url}>

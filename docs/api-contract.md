@@ -13,6 +13,7 @@ Base path: `/api/v1`
 - `GET /auth/session`
 - `POST /auth/login`
 - `POST /auth/logout`
+- `POST /auth/signup`
 
 ### Home
 - `GET /home`
@@ -36,6 +37,25 @@ Base path: `/api/v1`
 
 ### Static Pages
 - `GET /pages/{slug}`
+
+### Members
+- `GET /members/me`
+- `PATCH /members/me`
+- `GET /members/functionary-roles`
+- `GET /members/functionaries`
+  - Query params:
+    - `year=<YYYY|all>`
+    - `role=<id|title|all>`
+- `GET /members/me/functionaries`
+- `POST /members/me/functionaries`
+- `DELETE /members/me/functionaries/{functionary_id}`
+
+### Polls
+- `GET /polls`
+- `GET /polls/{id}`
+- `GET /polls/{id}/results`
+- `POST /polls/{id}/vote`
+  - JSON body: `{ "choice_ids": number[] }`
 
 ## Notes
 - API uses Django session authentication (`SessionAuthentication`).

@@ -1,9 +1,14 @@
 from itertools import chain
 
 from django.conf import settings
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.sites.shortcuts import get_current_site
 from django.db.models import Q
+from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import permissions, status
 from rest_framework.response import Response
@@ -16,12 +21,21 @@ from social.models import IgUrl
 from staticpages.models import StaticPage, StaticPageNav
 
 from core.utils import validate_captcha
-from members.models import Member
+from members.forms import SignUpForm
+from members.models import Functionary, FunctionaryRole, Member
+from members.tokens import account_activation_token
+from polls.models import Question
+from polls.vote import handle_selected_choices, validate_vote
 from .serializers import (
     EventListSerializer,
+    FunctionaryRoleSerializer,
+    FunctionarySerializer,
     HomeAdSerializer,
     HomeIgPostSerializer,
+    MemberProfileSerializer,
+    MemberProfileUpdateSerializer,
     NewsListSerializer,
+    PollQuestionSerializer,
     SiteMetaSerializer,
     StaticPageSerializer,
 )
@@ -375,3 +389,238 @@ class LogoutApiView(APIView):
     def post(self, request):
         logout(request)
         return Response({"data": {"is_authenticated": False}})
+
+
+class SignupApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        form = SignUpForm(request.data)
+
+        if not validate_captcha(request.data.get("cf-turnstile-response", "")):
+            return Response(
+                {"error": {"code": "captcha_failed", "message": "Captcha validation failed."}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not form.is_valid():
+            return Response(
+                {"error": {"code": "invalid_form", "message": "Invalid signup data.", "details": form.errors}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = form.save(commit=False)
+        user.is_active = False
+        user.password = make_password(form.cleaned_data["password"])
+        user.save()
+
+        current_site = get_current_site(request)
+        message = render_to_string(
+            "members/acc_active_email.html",
+            {
+                "user": user,
+                "domain": current_site.domain,
+                "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                "token": account_activation_token.make_token(user),
+            },
+        )
+        from core.utils import send_email_task
+
+        to_email = settings.EMAIL_HOST_RECEIVER
+        send_email_task.delay(
+            "A new account has been created and required your attention.",
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [to_email],
+        )
+        return Response(
+            {"data": {"registered": True, "username": user.username, "requires_activation": True}},
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class MemberProfileApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        serializer = MemberProfileSerializer(request.user)
+        return Response({"data": serializer.data})
+
+    def patch(self, request):
+        serializer = MemberProfileUpdateSerializer(request.user, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(
+                {"error": {"code": "invalid_form", "message": "Invalid profile data.", "details": serializer.errors}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer.save()
+        return Response({"data": MemberProfileSerializer(request.user).data})
+
+
+class FunctionaryRolesApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        queryset = FunctionaryRole.objects.all().order_by("title")
+        serializer = FunctionaryRoleSerializer(queryset, many=True)
+        return Response({"data": serializer.data})
+
+
+class PublicFunctionariesApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        queryset = Functionary.objects.select_related("member", "functionary_role").order_by("-year", "functionary_role__title")
+
+        year_param = request.query_params.get("year")
+        role_param = request.query_params.get("role")
+
+        if year_param and year_param != "all":
+            try:
+                queryset = queryset.filter(year=int(year_param))
+            except ValueError:
+                return Response(
+                    {"error": {"code": "invalid_year", "message": "Year must be an integer or 'all'."}},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        if role_param and role_param != "all":
+            if role_param.isdigit():
+                queryset = queryset.filter(functionary_role__id=int(role_param))
+            else:
+                queryset = queryset.filter(functionary_role__title=role_param)
+
+        board = queryset.filter(functionary_role__board=True)
+        non_board = queryset.filter(functionary_role__board=False)
+        response = {
+            "board_functionaries_by_role": self._group_by_role(board),
+            "functionaries_by_role": self._group_by_role(non_board),
+            "distinct_years": list(Functionary.objects.values_list("year", flat=True).distinct().order_by("-year")),
+            "roles": FunctionaryRoleSerializer(FunctionaryRole.objects.all().order_by("title"), many=True).data,
+        }
+        return Response({"data": response})
+
+    def _group_by_role(self, queryset):
+        grouped = {}
+        for functionary in queryset:
+            role_title = functionary.functionary_role.title
+            grouped.setdefault(role_title, []).append(FunctionarySerializer(functionary).data)
+        return grouped
+
+
+class MemberFunctionariesApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        queryset = Functionary.objects.filter(member=request.user).select_related("functionary_role", "member").order_by("-year")
+        serializer = FunctionarySerializer(queryset, many=True)
+        return Response({"data": serializer.data})
+
+    def post(self, request):
+        role_id = request.data.get("functionary_role_id")
+        year = request.data.get("year")
+        if role_id is None or year is None:
+            return Response(
+                {"error": {"code": "invalid_form", "message": "Both functionary_role_id and year are required."}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            year = int(year)
+        except (TypeError, ValueError):
+            return Response(
+                {"error": {"code": "invalid_year", "message": "Year must be a valid integer."}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        role = FunctionaryRole.objects.filter(id=role_id).first()
+        if not role:
+            return Response(
+                {"error": {"code": "not_found", "message": "Functionary role not found."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if Functionary.objects.filter(member=request.user, functionary_role=role, year=year).exists():
+            return Response(
+                {"error": {"code": "duplicate", "message": "Functionary role already exists for this year."}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        created = Functionary.objects.create(member=request.user, functionary_role=role, year=year)
+        return Response({"data": FunctionarySerializer(created).data}, status=status.HTTP_201_CREATED)
+
+
+class MemberFunctionaryDetailApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, functionary_id):
+        functionary = Functionary.objects.filter(id=functionary_id, member=request.user).first()
+        if not functionary:
+            return Response(
+                {"error": {"code": "not_found", "message": "Functionary entry not found."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        functionary.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PollListApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        queryset = Question.objects.filter(published=True).order_by("-pub_date")
+        serializer = PollQuestionSerializer(queryset, many=True)
+        return Response({"data": serializer.data})
+
+
+class PollDetailApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, poll_id):
+        question = Question.objects.filter(id=poll_id, published=True).first()
+        if not question:
+            return Response(
+                {"error": {"code": "not_found", "message": "Poll not found."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        serializer = PollQuestionSerializer(question)
+        return Response({"data": serializer.data})
+
+
+class PollVoteApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, poll_id):
+        question = Question.objects.filter(id=poll_id, published=True).first()
+        if not question:
+            return Response(
+                {"error": {"code": "not_found", "message": "Poll not found."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        selected_choices = request.data.get("choice_ids", [])
+        if not isinstance(selected_choices, list):
+            return Response(
+                {"error": {"code": "invalid_form", "message": "choice_ids must be a list."}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            selected_choices = [int(choice_id) for choice_id in set(selected_choices)]
+        except (TypeError, ValueError):
+            return Response(
+                {"error": {"code": "invalid_form", "message": "choice_ids must contain integers."}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if request.user.is_authenticated:
+            user = Member.objects.get(username=request.user.username)
+        else:
+            user = request.user
+
+        error_message = validate_vote(request, question, user, selected_choices)
+        if error_message:
+            return Response(
+                {"error": {"code": "invalid_vote", "message": error_message}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        handle_selected_choices(question, selected_choices, user)
+        serializer = PollQuestionSerializer(question)
+        return Response({"data": serializer.data}, status=status.HTTP_201_CREATED)

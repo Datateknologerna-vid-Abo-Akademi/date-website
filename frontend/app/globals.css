@@ -162,6 +162,95 @@ a {
   border: 1px solid color-mix(in srgb, var(--theme-border) 65%, transparent);
 }
 
+.link-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.2rem;
+}
+
+.form-stack {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.7rem;
+}
+
+.form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: end;
+}
+
+.form-field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.92rem;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  border: 1px solid color-mix(in srgb, var(--theme-border) 75%, transparent);
+  border-radius: 0.55rem;
+  padding: 0.5rem 0.65rem;
+  background: var(--theme-surface);
+}
+
+button {
+  width: fit-content;
+  border: 1px solid color-mix(in srgb, var(--theme-primary) 35%, var(--theme-border));
+  border-radius: 0.55rem;
+  padding: 0.55rem 0.8rem;
+  background: color-mix(in srgb, var(--theme-primary) 12%, var(--theme-surface));
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-error {
+  color: #b91c1c;
+  font-size: 0.9rem;
+}
+
+.form-success {
+  color: #166534;
+  font-size: 0.9rem;
+}
+
+.form-fieldset {
+  border: 1px solid color-mix(in srgb, var(--theme-border) 75%, transparent);
+  border-radius: 0.7rem;
+  padding: 0.8rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.choice-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.row-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
 @media (max-width: 640px) {
   .site-main {
     margin-top: 1rem;

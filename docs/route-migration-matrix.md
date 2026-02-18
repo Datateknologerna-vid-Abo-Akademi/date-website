@@ -7,11 +7,17 @@
 - `/events` -> Next route `frontend/app/events/page.tsx` using `GET /api/v1/events`
 - `/events/{slug}` -> Next route `frontend/app/events/[slug]/page.tsx` using `GET /api/v1/events/{slug}`
 - `/pages/{slug}` -> Next route `frontend/app/pages/[slug]/page.tsx` using `GET /api/v1/pages/{slug}`
+- `/members` -> Next route `frontend/app/members/page.tsx` using `GET /api/v1/auth/session`
+- `/members/login` -> Next route `frontend/app/members/login/page.tsx` using `POST /api/v1/auth/login`
+- `/members/profile` -> Next route `frontend/app/members/profile/page.tsx` using `GET/PATCH /api/v1/members/me`
+- `/members/functionaries` -> Next route `frontend/app/members/functionaries/page.tsx` using
+  `GET /api/v1/members/functionaries`, `GET/POST/DELETE /api/v1/members/me/functionaries*`
+- `/polls` -> Next route `frontend/app/polls/page.tsx` using `GET /api/v1/polls`
+- `/polls/{id}` -> Next route `frontend/app/polls/[id]/page.tsx` using
+  `GET /api/v1/polls/{id}` and `POST /api/v1/polls/{id}/vote`
 
 ## Still Django-Rendered (Pending API + Frontend Migration)
-- `/members/*`
 - `/archive/*`
-- `/polls/*`
 - `/ctf/*`
 - `/publications/*`
 - `/social/*`

@@ -53,6 +53,13 @@ export interface ApiError {
   };
 }
 
+export interface SessionData {
+  is_authenticated: boolean;
+  username?: string;
+  full_name?: string;
+  email?: string;
+}
+
 export interface NewsItem {
   title: string;
   slug: string;
@@ -122,4 +129,60 @@ export interface StaticPage {
   members_only: boolean;
   created_time: string;
   modified_time: string | null;
+}
+
+export interface MemberProfile {
+  username: string;
+  email: string | null;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  address: string;
+  zip_code: string;
+  city: string;
+  country: string;
+  year_of_admission: number | null;
+  membership_type: string;
+  active_subscription: string | null;
+}
+
+export interface FunctionaryRole {
+  id: number;
+  title: string;
+  board: boolean;
+}
+
+export interface FunctionaryItem {
+  id: number;
+  year: number;
+  member_name: string;
+  functionary_role: FunctionaryRole;
+}
+
+export interface PublicFunctionaryPayload {
+  board_functionaries_by_role: Record<string, FunctionaryItem[]>;
+  functionaries_by_role: Record<string, FunctionaryItem[]>;
+  distinct_years: number[];
+  roles: FunctionaryRole[];
+}
+
+export interface PollChoice {
+  id: number;
+  choice_text: string;
+  votes: number;
+  vote_percentage: number;
+}
+
+export interface PollQuestion {
+  id: number;
+  question_text: string;
+  pub_date: string;
+  published: boolean;
+  show_results: boolean;
+  end_vote: boolean;
+  multiple_choice: boolean;
+  required_multiple_choices: number | null;
+  voting_options: number;
+  choices: PollChoice[];
+  total_votes: number;
 }

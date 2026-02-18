@@ -3,7 +3,9 @@ from rest_framework import serializers
 
 from ads.models import AdUrl
 from events.models import Event
+from members.models import Functionary, FunctionaryRole, Member
 from news.models import Post
+from polls.models import Choice, Question
 from social.models import IgUrl
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
 
@@ -150,3 +152,101 @@ class StaticPageSerializer(serializers.ModelSerializer):
     class Meta:
         model = StaticPage
         fields = ["title", "slug", "content", "members_only", "created_time", "modified_time"]
+
+
+class MemberProfileSerializer(serializers.ModelSerializer):
+    membership_type = serializers.CharField(source="membership_type.name", read_only=True)
+    active_subscription = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Member
+        fields = [
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "phone",
+            "address",
+            "zip_code",
+            "city",
+            "country",
+            "year_of_admission",
+            "membership_type",
+            "active_subscription",
+        ]
+        read_only_fields = ["username", "email", "membership_type", "active_subscription"]
+
+    def get_active_subscription(self, obj):
+        subscription = obj.get_active_subscription()
+        return subscription.name if subscription else None
+
+
+class MemberProfileUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Member
+        fields = ["first_name", "last_name", "phone", "address", "zip_code", "city", "country"]
+
+
+class FunctionaryRoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FunctionaryRole
+        fields = ["id", "title", "board"]
+
+
+class FunctionarySerializer(serializers.ModelSerializer):
+    member_name = serializers.SerializerMethodField()
+    functionary_role = FunctionaryRoleSerializer(read_only=True)
+    functionary_role_id = serializers.PrimaryKeyRelatedField(
+        queryset=FunctionaryRole.objects.all(),
+        write_only=True,
+        source="functionary_role",
+        required=False,
+    )
+
+    class Meta:
+        model = Functionary
+        fields = ["id", "year", "member_name", "functionary_role", "functionary_role_id"]
+
+    def get_member_name(self, obj):
+        return obj.member.get_full_name()
+
+
+class PollChoiceSerializer(serializers.ModelSerializer):
+    vote_percentage = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Choice
+        fields = ["id", "choice_text", "votes", "vote_percentage"]
+
+    def get_vote_percentage(self, obj):
+        if obj.question.get_total_votes() == 0:
+            return 0
+        return obj.get_vote_percentage()
+
+
+class PollQuestionSerializer(serializers.ModelSerializer):
+    choices = serializers.SerializerMethodField()
+    total_votes = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Question
+        fields = [
+            "id",
+            "question_text",
+            "pub_date",
+            "published",
+            "show_results",
+            "end_vote",
+            "multiple_choice",
+            "required_multiple_choices",
+            "voting_options",
+            "choices",
+            "total_votes",
+        ]
+
+    def get_choices(self, obj):
+        queryset = Choice.objects.filter(question=obj).order_by("id")
+        return PollChoiceSerializer(queryset, many=True).data
+
+    def get_total_votes(self, obj):
+        return obj.get_total_votes()

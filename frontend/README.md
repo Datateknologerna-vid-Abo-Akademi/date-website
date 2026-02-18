@@ -27,3 +27,9 @@ Use the root-level stack:
 - `/events`
 - `/events/[slug]`
 - `/pages/[slug]`
+- `/members`
+- `/members/login`
+- `/members/profile`
+- `/members/functionaries`
+- `/polls`
+- `/polls/[id]`
