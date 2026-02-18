@@ -1,0 +1,73 @@
+name: Frontend Smoke E2E
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: smoke-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Playwright Smoke (Docker Stack)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright browser
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Start docker stack for smoke tests
+        run: PROJECT_NAME=date docker compose -f docker-compose.yml --env-file .env.example up -d --build db redis backend frontend proxy
+
+      - name: Wait for stack readiness
+        run: |
+          timeout 180 bash -c 'until curl -fsS http://localhost:8080/api/v1/meta/site > /dev/null; do sleep 3; done'
+
+      - name: Run Playwright smoke tests
+        working-directory: frontend
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:8080
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-smoke-report
+          path: frontend/playwright-report/
+          retention-days: 14
+
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-smoke-test-results
+          path: frontend/test-results/
+          retention-days: 14
+
+      - name: Dump docker compose logs
+        if: failure()
+        run: docker compose -f docker-compose.yml --env-file .env.example logs --tail=200
+
+      - name: Shutdown docker stack
+        if: always()
+        run: docker compose -f docker-compose.yml --env-file .env.example down

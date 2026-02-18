@@ -20,6 +20,7 @@
 
 ## Frontend
 - Lint and type checks in CI.
+- Playwright smoke checks in CI against dockerized stack.
 - Route rendering tests for:
   - home
   - news list/detail
@@ -45,6 +46,7 @@
 ## Baseline Commands
 - `npm run lint` (frontend)
 - `npm run build` (frontend)
+- `npm run test:e2e` (frontend Playwright smoke tests; requires running stack and `PLAYWRIGHT_BASE_URL`)
 - `python -m compileall backend` (backend quick syntax check)
 - `python scripts/association_qa.py` (cross-association runtime parity and module-guard checks)
   - uses uncached `meta/site` reads in frontend to avoid stale capability data when switching `PROJECT_NAME`
@@ -54,6 +56,9 @@
   - frontend lint/build
   - backend compile check
   - backend core/api test suites (`python backend/manage.py test core.tests api.tests`)
+- Frontend smoke E2E (`.github/workflows/frontend-smoke.yml`)
+  - dockerized stack boot + Playwright smoke checks
+  - uploads Playwright artifacts
 - Association QA (`.github/workflows/association-qa.yml`)
   - scheduled/manual full runtime association checks
   - uploads QA markdown report artifact

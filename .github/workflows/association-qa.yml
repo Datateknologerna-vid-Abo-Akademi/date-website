@@ -9,6 +9,9 @@ concurrency:
   group: qa-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   qa:
     name: Multi-Association Runtime QA
@@ -34,3 +37,4 @@ jobs:
         with:
           name: association-qa-report
           path: docs/association-qa-report.md
+          retention-days: 14

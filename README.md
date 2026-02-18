@@ -28,6 +28,10 @@ Monorepo with:
   - Runs nightly and on manual trigger.
   - Executes `python scripts/association_qa.py`.
   - Uploads `docs/association-qa-report.md` as a workflow artifact.
+- `.github/workflows/frontend-smoke.yml`
+  - Runs on pull requests and manual trigger.
+  - Boots docker stack and runs Playwright smoke tests against `http://localhost:8080`.
+  - Uploads Playwright HTML report and test results artifacts.
 
 ## Key Docs
 - `docs/architecture.md`
