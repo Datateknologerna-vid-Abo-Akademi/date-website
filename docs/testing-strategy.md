@@ -8,6 +8,10 @@
   - `/api/v1/news*`
   - `/api/v1/events*`
   - `/api/v1/pages/{slug}`
+  - `/api/v1/social*`
+  - `/api/v1/ctf*`
+  - `/api/v1/alumni*`
+  - `/api/v1/lucia*`
   - auth session/login/logout
   - event signup/passcode edge paths
 
@@ -18,6 +22,10 @@
   - news list/detail
   - events list/detail
   - static page detail
+  - social pages
+  - ctf pages
+  - lucia pages
+  - alumni flows
 
 ## End-to-End
 - Validate through proxy URL only (same-domain behavior).
@@ -26,6 +34,7 @@
   - login/session persistence
   - event detail and registration
   - association switching by `PROJECT_NAME`
+  - module visibility using `enabled_modules`
 
 ## Baseline Commands
 - `npm run lint` (frontend)

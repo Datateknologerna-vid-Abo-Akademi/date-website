@@ -21,7 +21,7 @@ logger = logging.getLogger("date")
 
 # Load settings
 try:
-    ALUMNI_SETTINGS = json.loads(settings.ALUMNI_SETTINGS)
+    ALUMNI_SETTINGS = json.loads(settings.ALUMNI_SETTINGS or "{}")
     AUTH, SHEET = ALUMNI_SETTINGS.get("auth", {}), ALUMNI_SETTINGS.get("sheet")
 except Exception as e:
     logger.error("Error while loading alumni settings: " + str(e))

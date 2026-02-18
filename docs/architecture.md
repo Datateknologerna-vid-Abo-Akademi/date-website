@@ -12,6 +12,7 @@
 - Association is still selected in Django via `PROJECT_NAME` (`date`, `kk`, `biocum`, `on`, `demo`).
 - Frontend theme is now runtime-driven through `GET /api/v1/meta/site`.
 - `ASSOCIATION_THEME` env JSON can override per deployment without frontend rebuild.
+- Optional route groups are exposed through `enabled_modules` in the same payload, so frontend navigation and pages stay association-safe.
 
 ## Decoupling Strategy
 - Models remain in Django.

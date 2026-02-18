@@ -10,6 +10,7 @@ Base path: `/api/v1`
 
 ### Meta and Session
 - `GET /meta/site`
+  - Includes `enabled_modules` for association-specific module availability.
 - `GET /auth/session`
 - `POST /auth/login`
 - `POST /auth/logout`
@@ -37,6 +38,36 @@ Base path: `/api/v1`
 
 ### Static Pages
 - `GET /pages/{slug}`
+
+### Ads
+- `GET /ads`
+
+### Social
+- `GET /social`
+- `POST /social/harassment`
+  - JSON body:
+    - `message` (required)
+    - `email` (optional)
+    - `consent` (required boolean)
+    - `cf-turnstile-response` (required when captcha is enabled)
+
+### CTF
+- `GET /ctf` (authenticated)
+- `GET /ctf/{slug}` (authenticated)
+- `GET /ctf/{ctf_slug}/{flag_slug}` (authenticated)
+- `POST /ctf/{ctf_slug}/{flag_slug}/guess` (authenticated)
+  - JSON body: `{ "guess": string }`
+
+### Lucia
+- `GET /lucia`
+- `GET /lucia/candidates` (authenticated)
+- `GET /lucia/candidates/{slug}` (authenticated)
+
+### Alumni
+- `POST /alumni/signup`
+- `POST /alumni/update`
+- `GET /alumni/update/{token}`
+- `POST /alumni/update/{token}`
 
 ### Members
 - `GET /members/me`
@@ -80,3 +111,4 @@ Base path: `/api/v1`
 - API uses Django session authentication (`SessionAuthentication`).
 - CSRF cookie is set via `GET /auth/session`.
 - Event signup endpoint validates the dynamic event form fields and optional captcha.
+- Optional modules (`polls`, `publications`, `ctf`, `lucia`, `alumni`) are exposed per association via `enabled_modules`.

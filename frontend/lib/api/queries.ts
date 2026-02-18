@@ -1,18 +1,26 @@
 import { fetchApi } from "./fetcher";
 import type {
+  AdItem,
+  AlumniUpdateTokenPayload,
   ArchiveCollection,
   ArchiveDocumentsPayload,
   ArchiveExamDetailPayload,
   ArchivePictureDetailPayload,
   ArchiveYearsPayload,
+  CtfDetailPayload,
+  CtfFlagDetailPayload,
+  CtfItem,
   EventItem,
   HomePayload,
+  LuciaCandidate,
+  LuciaOverview,
   MemberProfile,
   NewsItem,
   PaginatedPayload,
   PollQuestion,
   Publication,
   PublicFunctionaryPayload,
+  SocialOverview,
   SessionData,
   SiteMeta,
   StaticPage,
@@ -117,4 +125,40 @@ export async function getPublications(page = 1) {
 
 export async function getPublication(slug: string) {
   return fetchApi<Publication>(`publications/${slug}`, { nextRevalidate: 10 });
+}
+
+export async function getSocialOverview() {
+  return fetchApi<SocialOverview>("social", { nextRevalidate: 300 });
+}
+
+export async function getAds() {
+  return fetchApi<AdItem[]>("ads", { nextRevalidate: 300 });
+}
+
+export async function getCtfEvents() {
+  return fetchApi<CtfItem[]>("ctf", { nextRevalidate: 10 });
+}
+
+export async function getCtfEvent(slug: string) {
+  return fetchApi<CtfDetailPayload>(`ctf/${slug}`, { nextRevalidate: 10 });
+}
+
+export async function getCtfFlag(ctfSlug: string, flagSlug: string) {
+  return fetchApi<CtfFlagDetailPayload>(`ctf/${ctfSlug}/${flagSlug}`, { nextRevalidate: 5 });
+}
+
+export async function getLuciaOverview() {
+  return fetchApi<LuciaOverview>("lucia", { nextRevalidate: 300 });
+}
+
+export async function getLuciaCandidates() {
+  return fetchApi<LuciaCandidate[]>("lucia/candidates", { nextRevalidate: 60 });
+}
+
+export async function getLuciaCandidate(slug: string) {
+  return fetchApi<LuciaCandidate>(`lucia/candidates/${slug}`, { nextRevalidate: 30 });
+}
+
+export async function getAlumniUpdateToken(token: string) {
+  return fetchApi<AlumniUpdateTokenPayload>(`alumni/update/${token}`, { nextRevalidate: 0 });
 }

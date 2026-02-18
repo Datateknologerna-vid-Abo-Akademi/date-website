@@ -19,6 +19,8 @@ Use the root-level stack:
 - Frontend reads from `/api/v1/*`.
 - Runtime site and theme config comes from:
   - `GET /api/v1/meta/site`
+- Module availability per association is exposed via:
+  - `meta.site.data.enabled_modules`
 
 ## Implemented Routes
 - `/`
@@ -42,3 +44,16 @@ Use the root-level stack:
 - `/archive/exams/[id]`
 - `/publications`
 - `/publications/[slug]`
+- `/ads`
+- `/social`
+- `/social/harassment`
+- `/ctf`
+- `/ctf/[slug]`
+- `/ctf/[slug]/[flag]`
+- `/lucia`
+- `/lucia/candidates`
+- `/lucia/candidates/[slug]`
+- `/alumni`
+- `/alumni/signup`
+- `/alumni/update`
+- `/alumni/update/[token]`

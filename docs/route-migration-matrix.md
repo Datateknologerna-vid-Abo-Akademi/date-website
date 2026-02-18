@@ -33,12 +33,28 @@
   `GET /api/v1/publications`
 - `/publications/{slug}` -> Next route `frontend/app/publications/[slug]/page.tsx` using
   `GET /api/v1/publications/{slug}`
+- `/ads` -> Next route `frontend/app/ads/page.tsx` using `GET /api/v1/ads`
+- `/social` -> Next route `frontend/app/social/page.tsx` using `GET /api/v1/social`
+- `/social/harassment` -> Next route `frontend/app/social/harassment/page.tsx` using
+  `POST /api/v1/social/harassment`
+- `/ctf` -> Next route `frontend/app/ctf/page.tsx` using `GET /api/v1/ctf`
+- `/ctf/{slug}` -> Next route `frontend/app/ctf/[slug]/page.tsx` using `GET /api/v1/ctf/{slug}`
+- `/ctf/{slug}/{flag}` -> Next route `frontend/app/ctf/[slug]/[flag]/page.tsx` using
+  `GET /api/v1/ctf/{slug}/{flag}` and `POST /api/v1/ctf/{slug}/{flag}/guess`
+- `/lucia` -> Next route `frontend/app/lucia/page.tsx` using `GET /api/v1/lucia`
+- `/lucia/candidates` -> Next route `frontend/app/lucia/candidates/page.tsx` using
+  `GET /api/v1/lucia/candidates`
+- `/lucia/candidates/{slug}` -> Next route `frontend/app/lucia/candidates/[slug]/page.tsx` using
+  `GET /api/v1/lucia/candidates/{slug}`
+- `/alumni` -> Next route `frontend/app/alumni/page.tsx`
+- `/alumni/signup` -> Next route `frontend/app/alumni/signup/page.tsx` using
+  `POST /api/v1/alumni/signup`
+- `/alumni/update` -> Next route `frontend/app/alumni/update/page.tsx` using
+  `POST /api/v1/alumni/update`
+- `/alumni/update/{token}` -> Next route `frontend/app/alumni/update/[token]/page.tsx` using
+  `GET/POST /api/v1/alumni/update/{token}`
 
 ## Still Django-Rendered (Pending API + Frontend Migration)
-- `/ctf/*`
-- `/social/*`
-- `/alumni/*`
-- `/lucia/*`
 - app-specific custom event templates and some form workflows
 
 ## Rollout Recommendation

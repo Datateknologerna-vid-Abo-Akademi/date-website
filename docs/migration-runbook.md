@@ -24,4 +24,4 @@ Move user-facing rendering from Django templates to Next.js while preserving exi
 ## Risk Areas
 - Session + CSRF in cross-origin setups (avoid by using same-domain proxy).
 - Event signup edge cases (passcodes, parent event capacity, captcha).
-- Per-association differences in installed apps and templates.
+- Per-association differences in installed apps and templates (use `meta.site.data.enabled_modules` in frontend guards).

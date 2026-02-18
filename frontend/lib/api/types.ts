@@ -39,6 +39,7 @@ export interface SiteMeta {
   captcha_site_key: string;
   navigation: SiteNavCategory[];
   feature_flags: string[];
+  enabled_modules: string[];
 }
 
 export interface ApiSuccess<T> {
@@ -68,6 +69,11 @@ export interface NewsItem {
   author_name: string;
   category_name: string | null;
   category_slug: string | null;
+}
+
+export interface AdItem {
+  ad_url: string;
+  company_url: string;
 }
 
 export interface EventItem {
@@ -108,7 +114,7 @@ export interface HomePayload {
     slug: string;
     date: string;
   }>;
-  ads: Array<{ ad_url: string; company_url: string }>;
+  ads: AdItem[];
   instagram_posts: Array<{ url: string; shortcode: string }>;
   aa_post: NewsItem | null;
   calendar_events: Record<
@@ -246,4 +252,70 @@ export interface Publication {
   is_public: boolean;
   requires_login: boolean;
   pdf_url: string;
+}
+
+export interface SocialOverview {
+  social_buttons: [string, string][];
+  harassment_contact_email: string;
+}
+
+export interface CtfItem {
+  title: string;
+  content: string;
+  start_date: string;
+  end_date: string;
+  pub_date: string;
+  slug: string;
+  published: boolean;
+  is_open: boolean;
+  is_ended: boolean;
+}
+
+export interface CtfFlagItem {
+  title: string;
+  slug: string;
+  clues: string;
+  solver_name: string | null;
+  solved_date: string | null;
+  is_solved: boolean;
+}
+
+export interface CtfDetailPayload {
+  ctf: CtfItem;
+  flags: CtfFlagItem[];
+  user_has_solved_any_flag: boolean;
+}
+
+export interface CtfFlagDetailPayload {
+  ctf: CtfItem;
+  flag: CtfFlagItem;
+  user_has_solved_any_flag: boolean;
+  can_submit: boolean;
+}
+
+export interface CtfGuessResult {
+  correct: boolean;
+  first_solve: boolean;
+  flag: CtfFlagItem;
+}
+
+export interface LuciaOverview {
+  title: string;
+  description: string;
+  candidate_count: number;
+}
+
+export interface LuciaCandidate {
+  img_url: string;
+  title: string;
+  content: string;
+  published: boolean;
+  slug: string;
+  poll_url: string;
+}
+
+export interface AlumniUpdateTokenPayload {
+  email: string;
+  token: string;
+  is_valid: boolean;
 }

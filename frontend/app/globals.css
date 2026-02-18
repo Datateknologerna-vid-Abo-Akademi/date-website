@@ -265,6 +265,13 @@ button:disabled {
   border: 1px solid color-mix(in srgb, var(--theme-border) 75%, transparent);
 }
 
+.candidate-image {
+  width: min(100%, 420px);
+  border-radius: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--theme-border) 75%, transparent);
+  margin-bottom: 0.8rem;
+}
+
 .pagination-row {
   display: flex;
   justify-content: space-between;

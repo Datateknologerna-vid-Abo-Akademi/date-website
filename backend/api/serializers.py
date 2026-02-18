@@ -6,8 +6,6 @@ from archive.models import Collection, Document, Picture
 from events.models import Event
 from members.models import Functionary, FunctionaryRole, Member
 from news.models import Post
-from polls.models import Choice, Question
-from publications.models import PDFFile
 from social.models import IgUrl
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
 
@@ -38,6 +36,7 @@ class SiteMetaSerializer(serializers.Serializer):
     captcha_site_key = serializers.CharField()
     navigation = StaticPageNavSerializer(many=True)
     feature_flags = serializers.ListField(child=serializers.CharField())
+    enabled_modules = serializers.ListField(child=serializers.CharField())
 
 
 class HomeAdSerializer(serializers.ModelSerializer):
@@ -214,11 +213,10 @@ class FunctionarySerializer(serializers.ModelSerializer):
 
 
 class PollChoiceSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField()
+    choice_text = serializers.CharField()
+    votes = serializers.IntegerField()
     vote_percentage = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Choice
-        fields = ["id", "choice_text", "votes", "vote_percentage"]
 
     def get_vote_percentage(self, obj):
         if obj.question.get_total_votes() == 0:
@@ -226,28 +224,21 @@ class PollChoiceSerializer(serializers.ModelSerializer):
         return obj.get_vote_percentage()
 
 
-class PollQuestionSerializer(serializers.ModelSerializer):
+class PollQuestionSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    question_text = serializers.CharField()
+    pub_date = serializers.DateTimeField()
+    published = serializers.BooleanField()
+    show_results = serializers.BooleanField()
+    end_vote = serializers.BooleanField()
+    multiple_choice = serializers.BooleanField()
+    required_multiple_choices = serializers.IntegerField(allow_null=True)
+    voting_options = serializers.IntegerField()
     choices = serializers.SerializerMethodField()
     total_votes = serializers.SerializerMethodField()
 
-    class Meta:
-        model = Question
-        fields = [
-            "id",
-            "question_text",
-            "pub_date",
-            "published",
-            "show_results",
-            "end_vote",
-            "multiple_choice",
-            "required_multiple_choices",
-            "voting_options",
-            "choices",
-            "total_votes",
-        ]
-
     def get_choices(self, obj):
-        queryset = Choice.objects.filter(question=obj).order_by("id")
+        queryset = obj.choice_set.order_by("id")
         return PollChoiceSerializer(queryset, many=True).data
 
     def get_total_votes(self, obj):
@@ -290,22 +281,71 @@ class ArchiveDocumentSerializer(serializers.ModelSerializer):
         return obj.document.url
 
 
-class PublicationSerializer(serializers.ModelSerializer):
+class PublicationSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    slug = serializers.CharField()
+    description = serializers.CharField(allow_blank=True)
+    publication_date = serializers.DateField(allow_null=True)
+    uploaded_at = serializers.DateTimeField()
+    updated_at = serializers.DateTimeField()
+    is_public = serializers.BooleanField()
+    requires_login = serializers.BooleanField()
     pdf_url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = PDFFile
-        fields = [
-            "title",
-            "slug",
-            "description",
-            "publication_date",
-            "uploaded_at",
-            "updated_at",
-            "is_public",
-            "requires_login",
-            "pdf_url",
-        ]
 
     def get_pdf_url(self, obj):
         return obj.get_file_url()
+
+
+class SocialOverviewSerializer(serializers.Serializer):
+    social_buttons = serializers.ListField(child=serializers.ListField(child=serializers.CharField()))
+    harassment_contact_email = serializers.CharField(allow_blank=True)
+
+
+class HarassmentReportSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=False, allow_blank=True, allow_null=True)
+    message = serializers.CharField(max_length=1500)
+    consent = serializers.BooleanField(write_only=True)
+
+
+class CtfListSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    content = serializers.CharField(allow_blank=True)
+    start_date = serializers.DateTimeField()
+    end_date = serializers.DateTimeField()
+    pub_date = serializers.DateTimeField()
+    slug = serializers.CharField()
+    published = serializers.BooleanField()
+    is_open = serializers.SerializerMethodField()
+    is_ended = serializers.SerializerMethodField()
+
+    def get_is_open(self, obj):
+        return obj.ctf_is_open()
+
+    def get_is_ended(self, obj):
+        return obj.ctf_ended()
+
+
+class CtfFlagSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    slug = serializers.CharField()
+    clues = serializers.CharField(allow_blank=True)
+    solver_name = serializers.SerializerMethodField()
+    solved_date = serializers.DateTimeField(allow_null=True)
+    is_solved = serializers.SerializerMethodField()
+
+    def get_solver_name(self, obj):
+        if not obj.solver:
+            return None
+        return obj.solver.get_full_name() or obj.solver.username
+
+    def get_is_solved(self, obj):
+        return bool(obj.solver)
+
+
+class LuciaCandidateSerializer(serializers.Serializer):
+    img_url = serializers.URLField(allow_blank=True)
+    title = serializers.CharField()
+    content = serializers.CharField(allow_blank=True)
+    published = serializers.BooleanField()
+    slug = serializers.CharField()
+    poll_url = serializers.URLField(allow_blank=True)

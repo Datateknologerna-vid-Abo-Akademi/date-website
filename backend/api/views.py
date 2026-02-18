@@ -1,5 +1,6 @@
 from itertools import chain
 
+from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login, logout
@@ -19,33 +20,71 @@ from ads.models import AdUrl
 from archive.models import Collection, Document, Picture
 from events.models import Event, EventAttendees
 from news.models import Post
+from social.models import Harassment, HarassmentEmailRecipient
 from social.models import IgUrl
 from staticpages.models import StaticPage, StaticPageNav
 
-from core.utils import validate_captcha
+from core.utils import send_email_task, validate_captcha
 from members.forms import SignUpForm
 from members.models import Functionary, FunctionaryRole, Member, SUPPORTING_MEMBER, FRESHMAN
 from members.tokens import account_activation_token
-from polls.models import Question
-from polls.vote import handle_selected_choices, validate_vote
-from publications.models import PDFFile
 from .serializers import (
     ArchiveCollectionSerializer,
     ArchiveDocumentSerializer,
     ArchivePictureSerializer,
+    CtfFlagSerializer,
+    CtfListSerializer,
     EventListSerializer,
     FunctionaryRoleSerializer,
     FunctionarySerializer,
+    HarassmentReportSerializer,
     HomeAdSerializer,
     HomeIgPostSerializer,
+    LuciaCandidateSerializer,
     MemberProfileSerializer,
     MemberProfileUpdateSerializer,
     NewsListSerializer,
     PollQuestionSerializer,
     PublicationSerializer,
     SiteMetaSerializer,
+    SocialOverviewSerializer,
     StaticPageSerializer,
 )
+
+
+MODULE_APP_MAP = {
+    "polls": "polls",
+    "publications": "publications",
+    "ctf": "ctf",
+    "lucia": "lucia",
+    "alumni": "alumni",
+}
+
+
+def is_module_enabled(module_key):
+    app_label = MODULE_APP_MAP.get(module_key)
+    return app_label is not None and apps.is_installed(app_label)
+
+
+def module_disabled_response(module_key):
+    return Response(
+        {
+            "error": {
+                "code": "feature_disabled",
+                "message": f"The '{module_key}' module is not enabled for this association.",
+            }
+        },
+        status=status.HTTP_404_NOT_FOUND,
+    )
+
+
+def get_optional_model(app_label, model_name):
+    if not apps.is_installed(app_label):
+        return None
+    try:
+        return apps.get_model(app_label, model_name)
+    except LookupError:
+        return None
 
 
 class SiteMetaApiView(APIView):
@@ -61,6 +100,7 @@ class SiteMetaApiView(APIView):
             "captcha_site_key": settings.CAPTCHA_SITE_KEY,
             "navigation": navigation,
             "feature_flags": settings.EXPERIMENTAL_FEATURES,
+            "enabled_modules": sorted([key for key in MODULE_APP_MAP if is_module_enabled(key)]),
         }
         serializer = SiteMetaSerializer(payload)
         return Response({"data": serializer.data})
@@ -354,6 +394,413 @@ class StaticPageApiView(APIView):
         return Response({"data": StaticPageSerializer(page).data})
 
 
+class SocialOverviewApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        social_buttons = settings.CONTENT_VARIABLES.get("SOCIAL_BUTTONS", [])
+        harassment_contact_email = settings.CONTENT_VARIABLES.get("ASSOCIATION_EMAIL", "")
+        payload = SocialOverviewSerializer(
+            {
+                "social_buttons": social_buttons,
+                "harassment_contact_email": harassment_contact_email,
+            }
+        ).data
+        return Response({"data": payload})
+
+
+class AdsListApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        serializer = HomeAdSerializer(AdUrl.objects.all(), many=True)
+        return Response({"data": serializer.data})
+
+
+class HarassmentReportApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = HarassmentReportSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {
+                    "error": {
+                        "code": "invalid_form",
+                        "message": "Invalid harassment report fields.",
+                        "details": serializer.errors,
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not serializer.validated_data.get("consent"):
+            return Response(
+                {"error": {"code": "consent_required", "message": "Consent is required to submit this form."}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not validate_captcha(request.data.get("cf-turnstile-response", "")):
+            return Response(
+                {"error": {"code": "captcha_failed", "message": "Captcha validation failed."}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        harassment = Harassment.objects.create(
+            email=serializer.validated_data.get("email"),
+            message=serializer.validated_data["message"],
+        )
+        harassment_receivers = list(HarassmentEmailRecipient.objects.values_list("recipient_email", flat=True))
+        if harassment_receivers:
+            email_ctx = {
+                "harassment": harassment,
+                "harassment_url": f"{settings.CONTENT_VARIABLES['SITE_URL']}/admin/social/harassment/{harassment.id}",
+            }
+            send_email_task.delay(
+                "Ny trakasserianmälan har inkommit",
+                render_to_string("social/harassment_admin_email.html", email_ctx),
+                settings.DEFAULT_FROM_EMAIL,
+                harassment_receivers,
+            )
+        return Response({"data": {"submitted": True, "id": harassment.id}}, status=status.HTTP_201_CREATED)
+
+
+class CtfModuleMixin:
+    def _get_ctf_models(self):
+        if not is_module_enabled("ctf"):
+            return None, None, None
+        return (
+            get_optional_model("ctf", "Ctf"),
+            get_optional_model("ctf", "Flag"),
+            get_optional_model("ctf", "Guess"),
+        )
+
+    def _get_ctf_or_404(self, slug):
+        Ctf, _, _ = self._get_ctf_models()
+        if Ctf is None:
+            return None
+        return Ctf.objects.filter(slug=slug, published=True).first()
+
+
+class CtfListApiView(APIView, CtfModuleMixin):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        Ctf, _, _ = self._get_ctf_models()
+        if Ctf is None:
+            return module_disabled_response("ctf")
+
+        queryset = Ctf.objects.filter(published=True).order_by("-pub_date")[:5]
+        serializer = CtfListSerializer(queryset, many=True)
+        return Response({"data": serializer.data})
+
+
+class CtfDetailApiView(APIView, CtfModuleMixin):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, slug):
+        ctf = self._get_ctf_or_404(slug)
+        if ctf is None:
+            return Response(
+                {"error": {"code": "not_found", "message": "CTF event not found."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        _, Flag, _ = self._get_ctf_models()
+        if Flag is None:
+            return module_disabled_response("ctf")
+
+        flags = Flag.objects.filter(ctf=ctf).order_by("id")
+        user_has_solved_any_flag = flags.filter(solver=request.user).exists()
+        payload = {
+            "ctf": CtfListSerializer(ctf).data,
+            "flags": CtfFlagSerializer(flags, many=True).data if ctf.ctf_is_open() else [],
+            "user_has_solved_any_flag": user_has_solved_any_flag,
+        }
+        return Response({"data": payload})
+
+
+class CtfFlagDetailApiView(APIView, CtfModuleMixin):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, ctf_slug, flag_slug):
+        ctf = self._get_ctf_or_404(ctf_slug)
+        if ctf is None:
+            return Response(
+                {"error": {"code": "not_found", "message": "CTF event not found."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        _, Flag, _ = self._get_ctf_models()
+        if Flag is None:
+            return module_disabled_response("ctf")
+
+        flag = Flag.objects.filter(ctf=ctf, slug=flag_slug).first()
+        if not flag:
+            return Response(
+                {"error": {"code": "not_found", "message": "Flag not found."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not ctf.ctf_is_open():
+            return Response(
+                {"error": {"code": "forbidden", "message": "This CTF has not opened yet."}},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        payload = {
+            "ctf": CtfListSerializer(ctf).data,
+            "flag": CtfFlagSerializer(flag).data,
+            "user_has_solved_any_flag": Flag.objects.filter(ctf=ctf, solver=request.user).exists(),
+            "can_submit": ctf.published and ctf.ctf_is_open(),
+        }
+        return Response({"data": payload})
+
+
+class CtfFlagGuessApiView(APIView, CtfModuleMixin):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, ctf_slug, flag_slug):
+        ctf = self._get_ctf_or_404(ctf_slug)
+        if ctf is None:
+            return Response(
+                {"error": {"code": "not_found", "message": "CTF event not found."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        _, Flag, Guess = self._get_ctf_models()
+        if Flag is None or Guess is None:
+            return module_disabled_response("ctf")
+
+        flag = Flag.objects.filter(ctf=ctf, slug=flag_slug).first()
+        if not flag:
+            return Response(
+                {"error": {"code": "not_found", "message": "Flag not found."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not ctf.ctf_is_open() or not ctf.published:
+            return Response(
+                {"error": {"code": "forbidden", "message": "CTF submissions are not open."}},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        guess_input = str(request.data.get("guess", "")).strip()
+        if not guess_input:
+            return Response(
+                {"error": {"code": "invalid_form", "message": "A guess is required."}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user_has_solved_any_flag = Flag.objects.filter(ctf=ctf, solver=request.user).exists()
+        matching_flag = Flag.objects.filter(ctf=ctf, slug=flag_slug, flag=guess_input).first()
+        if not matching_flag:
+            Guess.objects.create(ctf=ctf, flag=flag, user=request.user, guess=guess_input, correct=False)
+            return Response(
+                {"error": {"code": "invalid_guess", "message": "Incorrect flag. Please try again."}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        first_solve = not (user_has_solved_any_flag or matching_flag.solver or ctf.ctf_ended())
+        if first_solve:
+            matching_flag.solver = request.user
+            matching_flag.solved_date = timezone.now()
+            matching_flag.save(update_fields=["solver", "solved_date"])
+
+        Guess.objects.create(ctf=ctf, flag=matching_flag, user=request.user, guess=guess_input, correct=True)
+        payload = {
+            "correct": True,
+            "first_solve": first_solve,
+            "flag": CtfFlagSerializer(matching_flag).data,
+        }
+        return Response({"data": payload})
+
+
+class LuciaIndexApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        if not is_module_enabled("lucia"):
+            return module_disabled_response("lucia")
+        Candidate = get_optional_model("lucia", "Candidate")
+        if Candidate is None:
+            return module_disabled_response("lucia")
+
+        payload = {
+            "title": "Lucia",
+            "description": "Lucia candidate presentation and voting portal.",
+            "candidate_count": Candidate.objects.filter(published=True).count(),
+        }
+        return Response({"data": payload})
+
+
+class LuciaCandidatesApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if not is_module_enabled("lucia"):
+            return module_disabled_response("lucia")
+        Candidate = get_optional_model("lucia", "Candidate")
+        if Candidate is None:
+            return module_disabled_response("lucia")
+
+        queryset = Candidate.objects.filter(published=True).order_by("id")
+        serializer = LuciaCandidateSerializer(queryset, many=True)
+        return Response({"data": serializer.data})
+
+
+class LuciaCandidateDetailApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, slug):
+        if not is_module_enabled("lucia"):
+            return module_disabled_response("lucia")
+        Candidate = get_optional_model("lucia", "Candidate")
+        if Candidate is None:
+            return module_disabled_response("lucia")
+
+        candidate = Candidate.objects.filter(slug=slug, published=True).first()
+        if not candidate:
+            return Response(
+                {"error": {"code": "not_found", "message": "Lucia candidate not found."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        serializer = LuciaCandidateSerializer(candidate)
+        return Response({"data": serializer.data})
+
+
+class AlumniSignupApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        if not is_module_enabled("alumni"):
+            return module_disabled_response("alumni")
+        try:
+            from alumni.forms import AlumniSignUpForm
+            from alumni.gsuite_adapter import DateSheetsAdapter
+            from alumni.tasks import AUTH, MEMBER_SHEET_NAME, SHEET, handle_alumni_signup
+        except Exception:
+            return module_disabled_response("alumni")
+
+        form = AlumniSignUpForm(request.data)
+        if not form.is_valid():
+            return Response(
+                {"error": {"code": "invalid_form", "message": "Invalid alumni signup data.", "details": form.errors}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not validate_captcha(request.data.get("cf-turnstile-response", "")):
+            return Response(
+                {"error": {"code": "captcha_failed", "message": "Captcha validation failed."}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if self._email_already_registered(form.cleaned_data["email"], DateSheetsAdapter, AUTH, SHEET, MEMBER_SHEET_NAME):
+            return Response(
+                {"error": {"code": "duplicate_email", "message": "Email already registered."}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        handle_alumni_signup.delay(form.cleaned_data)
+        return Response({"data": {"submitted": True, "operation": "CREATE"}}, status=status.HTTP_201_CREATED)
+
+    def _email_already_registered(self, email, adapter_cls, auth, sheet_key, worksheet_name):
+        if not auth or not sheet_key:
+            return False
+        try:
+            client = adapter_cls(auth, sheet_key, worksheet_name)
+            emails = client.get_column_values(client.get_column_by_name("email"))
+            return email in emails
+        except Exception:
+            return False
+
+
+class AlumniUpdateRequestApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        if not is_module_enabled("alumni"):
+            return module_disabled_response("alumni")
+        try:
+            from alumni.forms import AlumniEmailVerificationForm
+            from alumni.tasks import send_token_email
+        except Exception:
+            return module_disabled_response("alumni")
+
+        AlumniUpdateToken = get_optional_model("alumni", "AlumniUpdateToken")
+        if AlumniUpdateToken is None:
+            return module_disabled_response("alumni")
+
+        form = AlumniEmailVerificationForm(request.data)
+        if not form.is_valid():
+            return Response(
+                {"error": {"code": "invalid_form", "message": "Invalid email.", "details": form.errors}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not validate_captcha(request.data.get("cf-turnstile-response", "")):
+            return Response(
+                {"error": {"code": "captcha_failed", "message": "Captcha validation failed."}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        token = AlumniUpdateToken(email=form.cleaned_data["email"])
+        token.save()
+        send_token_email.delay(str(token.token), form.cleaned_data["email"])
+        return Response({"data": {"submitted": True}}, status=status.HTTP_201_CREATED)
+
+
+class AlumniUpdateTokenApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, token):
+        token_obj = self._get_valid_token(token)
+        if token_obj is None:
+            return Response(
+                {"error": {"code": "invalid_token", "message": "Token is invalid or expired."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response({"data": {"email": token_obj.email, "token": str(token_obj.token), "is_valid": True}})
+
+    def post(self, request, token):
+        if not is_module_enabled("alumni"):
+            return module_disabled_response("alumni")
+        try:
+            from alumni.forms import AlumniUpdateForm
+            from alumni.tasks import handle_alumni_signup
+        except Exception:
+            return module_disabled_response("alumni")
+
+        token_obj = self._get_valid_token(token)
+        if token_obj is None:
+            return Response(
+                {"error": {"code": "invalid_token", "message": "Token is invalid or expired."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        form_data = request.data.copy()
+        form_data["email"] = token_obj.email
+        form_data["token"] = str(token_obj.token)
+        form_data["operation"] = "UPDATE"
+
+        form = AlumniUpdateForm(form_data, initial={"email": token_obj.email, "token": token_obj.token})
+        if not form.is_valid():
+            return Response(
+                {"error": {"code": "invalid_form", "message": "Invalid alumni update data.", "details": form.errors}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        handle_alumni_signup.delay(form.cleaned_data, timezone.now())
+        return Response({"data": {"updated": True}}, status=status.HTTP_201_CREATED)
+
+    def _get_valid_token(self, token):
+        if not is_module_enabled("alumni"):
+            return None
+        AlumniUpdateToken = get_optional_model("alumni", "AlumniUpdateToken")
+        if AlumniUpdateToken is None:
+            return None
+        token_obj = AlumniUpdateToken.objects.filter(token=token).first()
+        if not token_obj:
+            return None
+        if not token_obj.is_valid():
+            return None
+        return token_obj
+
+
 class SessionApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -572,6 +1019,13 @@ class PollListApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        if not is_module_enabled("polls"):
+            return Response({"data": []})
+
+        Question = get_optional_model("polls", "Question")
+        if Question is None:
+            return Response({"data": []})
+
         queryset = Question.objects.filter(published=True).order_by("-pub_date")
         serializer = PollQuestionSerializer(queryset, many=True)
         return Response({"data": serializer.data})
@@ -581,6 +1035,13 @@ class PollDetailApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, poll_id):
+        if not is_module_enabled("polls"):
+            return module_disabled_response("polls")
+
+        Question = get_optional_model("polls", "Question")
+        if Question is None:
+            return module_disabled_response("polls")
+
         question = Question.objects.filter(id=poll_id, published=True).first()
         if not question:
             return Response(
@@ -595,6 +1056,13 @@ class PollVoteApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, poll_id):
+        if not is_module_enabled("polls"):
+            return module_disabled_response("polls")
+
+        Question = get_optional_model("polls", "Question")
+        if Question is None:
+            return module_disabled_response("polls")
+
         question = Question.objects.filter(id=poll_id, published=True).first()
         if not question:
             return Response(
@@ -620,6 +1088,8 @@ class PollVoteApiView(APIView):
             user = Member.objects.get(username=request.user.username)
         else:
             user = request.user
+
+        from polls.vote import handle_selected_choices, validate_vote
 
         error_message = validate_vote(request, question, user, selected_choices)
         if error_message:
@@ -786,6 +1256,13 @@ class PublicationsListApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        if not is_module_enabled("publications"):
+            return Response({"data": {"results": [], "pagination": {"page": 1, "num_pages": 1, "has_next": False, "has_previous": False, "total_items": 0}}})
+
+        PDFFile = get_optional_model("publications", "PDFFile")
+        if PDFFile is None:
+            return module_disabled_response("publications")
+
         queryset = PDFFile.objects.filter(is_public=True)
         if not request.user.is_authenticated:
             queryset = queryset.filter(requires_login=False)
@@ -800,6 +1277,13 @@ class PublicationsDetailApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, slug):
+        if not is_module_enabled("publications"):
+            return module_disabled_response("publications")
+
+        PDFFile = get_optional_model("publications", "PDFFile")
+        if PDFFile is None:
+            return module_disabled_response("publications")
+
         pdf_file = PDFFile.objects.filter(slug=slug).first()
         if not pdf_file:
             return Response(
