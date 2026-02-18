@@ -13,6 +13,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.translation import gettext as _
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import permissions, status
 from rest_framework.response import Response
@@ -28,6 +29,7 @@ from .serializers import (
     ArchivePictureSerializer,
     CtfFlagSerializer,
     CtfListSerializer,
+    EventAttendeeListSerializer,
     EventInvoiceSerializer,
     EventListSerializer,
     EventSignupResultSerializer,
@@ -96,6 +98,41 @@ def get_optional_model(app_label, model_name):
 def get_module_model(module_key, model_name):
     app_label = MODULE_APP_MAP.get(module_key, module_key)
     return get_optional_model(app_label, model_name)
+
+
+EVENT_TEMPLATE_VARIANTS_BY_TITLE = {
+    "årsfest": "arsfest",
+    "årsfest 2026": "arsfest",
+    "årsfest gäster": "arsfest",
+    "100 baal": "kk100",
+    "baal": "baal",
+    "tomtejakt": "tomtejakt",
+    "wappmiddag": "wappmiddag",
+}
+
+EVENT_TEMPLATE_VARIANTS_BY_SLUG = {
+    "baal": "baal",
+    "tomtejakt": "tomtejakt",
+    "wappmiddag": "wappmiddag",
+    "arsfest": "arsfest",
+    "arsfest_stipendiater": "arsfest",
+    "arsfest26": "arsfest",
+    "on100_main": "arsfest",
+    "on100_student": "arsfest",
+    "on100_alumn": "arsfest",
+    "on100_guest": "arsfest",
+    "on100_secret": "arsfest",
+    "on100_stippe": "arsfest",
+}
+
+
+def resolve_event_template_variant(event):
+    title_key = event.title.lower().strip()
+    if title_key in EVENT_TEMPLATE_VARIANTS_BY_TITLE:
+        return EVENT_TEMPLATE_VARIANTS_BY_TITLE[title_key]
+    if event.slug in EVENT_TEMPLATE_VARIANTS_BY_SLUG:
+        return EVENT_TEMPLATE_VARIANTS_BY_SLUG[event.slug]
+    return "default"
 
 
 class SiteMetaApiView(APIView):
@@ -344,6 +381,8 @@ class EventDetailApiView(APIView):
         payload["passcode_verified"] = event.passcode == request.session.get("passcode_status", False)
         payload["registration_count"] = event.get_registrations().count()
         payload["registration_public_fields"] = [field.name for field in event.get_registration_form_public_info()]
+        payload["template_variant"] = resolve_event_template_variant(event)
+        payload["show_attendee_list"] = event.show_attendee_list()
         return Response({"data": payload})
 
 
@@ -521,6 +560,66 @@ class EventSignupApiView(APIView):
         payload["status"] = "invoice_created"
         payload["invoice"] = EventInvoiceSerializer(invoice).data
         return payload
+
+
+class EventAttendeesApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, slug):
+        Event = get_module_model("events", "Event")
+        if Event is None:
+            return module_disabled_response("events")
+
+        event = Event.objects.filter(slug=slug, published=True).first()
+        if not event:
+            return Response(
+                {"error": {"code": "not_found", "message": "Event not found."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if event.members_only and not request.user.is_authenticated:
+            return Response(
+                {"error": {"code": "forbidden", "message": "You need to login to view this event."}},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        public_fields = [field.name for field in event.get_registration_form_public_info()][::-1]
+        payload = {
+            "template_variant": resolve_event_template_variant(event),
+            "show_attendee_list": event.show_attendee_list(),
+            "sign_up_max_participants": event.sign_up_max_participants,
+            "registration_public_fields": public_fields,
+            "attendees": [],
+        }
+        if event.sign_up and payload["show_attendee_list"]:
+            payload["attendees"] = self._serialize_attendees(event, public_fields)
+
+        serializer = EventAttendeeListSerializer(payload)
+        return Response({"data": serializer.data})
+
+    def _serialize_attendees(self, event, public_fields):
+        attendees = []
+        registrations = event.get_registrations()
+        for index, attendee in enumerate(registrations, start=1):
+            attendees.append(
+                {
+                    "position": index,
+                    "display_name": _("Anonymt") if attendee.anonymous else attendee.user,
+                    "anonymous": attendee.anonymous,
+                    "is_waitlist": (
+                        event.sign_up_max_participants != 0
+                        and not event.parent_id
+                        and index > event.sign_up_max_participants
+                    ),
+                    "fields": [
+                        {
+                            "name": field_name,
+                            "value": str(attendee.get_preference(field_name) or ""),
+                        }
+                        for field_name in public_fields
+                    ],
+                }
+            )
+        return attendees
 
 
 class StaticPageApiView(APIView):

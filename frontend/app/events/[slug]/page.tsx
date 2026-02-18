@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 
+import { EventAttendeeList } from "@/components/events/event-attendee-list";
 import { EventSignupForm } from "@/components/events/event-signup-form";
 import { RichContent } from "@/components/rich-content";
-import { getEvent } from "@/lib/api/queries";
+import { getEvent, getEventAttendees } from "@/lib/api/queries";
 
 interface EventDetailPageProps {
   params: {
@@ -12,7 +13,10 @@ interface EventDetailPageProps {
 
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
   const { slug } = params;
-  const event = await getEvent(slug).catch(() => null);
+  const [event, attendeeData] = await Promise.all([
+    getEvent(slug).catch(() => null),
+    getEventAttendees(slug).catch(() => null),
+  ]);
   if (!event) {
     notFound();
   }
@@ -25,6 +29,9 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           {new Date(event.event_date_start).toLocaleString()} -{" "}
           {new Date(event.event_date_end).toLocaleString()}
         </p>
+        {event.template_variant && event.template_variant !== "default" ? (
+          <p className="meta">Template variant: {event.template_variant}</p>
+        ) : null}
       </section>
       <section className="panel">
         {event.redirect_link ? (
@@ -44,6 +51,10 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
         ) : (
           <EventSignupForm event={event} />
         )}
+      </section>
+      <section className="panel">
+        <h2>Attendees</h2>
+        <EventAttendeeList data={attendeeData} />
       </section>
     </div>
   );

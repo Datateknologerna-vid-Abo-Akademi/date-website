@@ -26,6 +26,7 @@ Use the root-level stack:
 - Event detail route includes decoupled passcode/signup flow against:
   - `POST /api/v1/events/{slug}/passcode`
   - `POST /api/v1/events/{slug}/signup` (with billing status in response when enabled)
+  - `GET /api/v1/events/{slug}/attendees` (anonymized attendee list + waitlist markers)
 
 ## Implemented Routes
 - `/`

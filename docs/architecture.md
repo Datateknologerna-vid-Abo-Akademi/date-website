@@ -14,6 +14,7 @@
 - `ASSOCIATION_THEME` env JSON can override per deployment without frontend rebuild.
 - Optional route groups are exposed through `enabled_modules` in the same payload, so frontend navigation and pages stay association-safe.
 - Association-specific landing behavior is controlled by `FRONTEND_DEFAULT_ROUTE` (exposed as `default_landing_path`).
+- Special event rendering behavior is exposed via event `template_variant` instead of Django template routing.
 
 ## Decoupling Strategy
 - Models remain in Django.

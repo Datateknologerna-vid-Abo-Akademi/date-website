@@ -11,7 +11,7 @@ from alumni.models import AlumniUpdateToken
 from archive.models import Collection
 from billing.models import EventBillingConfiguration, EventInvoice
 from ctf.models import Ctf, Flag, Guess
-from events.models import Event
+from events.models import Event, EventAttendees, EventRegistrationForm
 from members.models import MembershipType, Member
 from members.tokens import account_activation_token
 from social.models import Harassment, HarassmentEmailRecipient
@@ -253,3 +253,66 @@ class ApiSmokeTests(TestCase):
         self.assertEqual(payload["billing"]["invoice"]["invoice_number"], 24000099)
         self.assertEqual(payload["billing"]["invoice"]["amount"], 42.0)
         self.assertEqual(EventInvoice.objects.count(), 1)
+
+    def test_event_detail_includes_template_variant(self):
+        event = Event.objects.create(
+            title="Arsfest",
+            slug="arsfest26",
+            author=self.member,
+            sign_up=False,
+            published=True,
+            event_date_start=timezone.now() + timezone.timedelta(days=1),
+            event_date_end=timezone.now() + timezone.timedelta(days=1, hours=2),
+        )
+        response = self.client.get(f"/api/v1/events/{event.slug}")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"]["template_variant"], "arsfest")
+
+    def test_event_attendees_endpoint(self):
+        event = Event.objects.create(
+            title="Open Event",
+            slug="open-event",
+            author=self.member,
+            sign_up=True,
+            published=True,
+            event_date_start=timezone.now() - timezone.timedelta(hours=2),
+            event_date_end=timezone.now() + timezone.timedelta(hours=2),
+            sign_up_max_participants=1,
+        )
+        EventRegistrationForm.objects.create(
+            event=event,
+            choice_number=10,
+            name="allergies",
+            type="text",
+            required=False,
+            public_info=True,
+        )
+        EventAttendees.objects.create(
+            event=event,
+            attendee_nr=10,
+            user="Primary",
+            email="primary@example.com",
+            preferences={"allergies": "nuts"},
+            anonymous=False,
+            time_registered=timezone.now(),
+        )
+        EventAttendees.objects.create(
+            event=event,
+            attendee_nr=20,
+            user="Secondary",
+            email="secondary@example.com",
+            preferences={"allergies": "none"},
+            anonymous=True,
+            time_registered=timezone.now(),
+        )
+
+        response = self.client.get(f"/api/v1/events/{event.slug}/attendees")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()["data"]
+        self.assertEqual(payload["template_variant"], "default")
+        self.assertEqual(payload["show_attendee_list"], True)
+        self.assertEqual(payload["registration_public_fields"], ["allergies"])
+        self.assertEqual(len(payload["attendees"]), 2)
+        self.assertEqual(payload["attendees"][0]["display_name"], "Primary")
+        self.assertEqual(payload["attendees"][1]["display_name"], "Anonymt")
+        self.assertEqual(payload["attendees"][1]["is_waitlist"], True)

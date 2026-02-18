@@ -25,4 +25,5 @@ Move user-facing rendering from Django templates to Next.js while preserving exi
 - Session + CSRF in cross-origin setups (avoid by using same-domain proxy).
 - Event signup edge cases (passcodes, parent event capacity, captcha).
 - Event billing integration edge cases (feature flag + module enabled, invoice generation failures).
+- Special event template parity (handle via API `template_variant` and frontend layout selection).
 - Per-association differences in installed apps and templates (use `meta.site.data.enabled_modules` in frontend guards).

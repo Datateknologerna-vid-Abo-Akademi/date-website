@@ -13,6 +13,7 @@ import type {
   CtfFlagDetailPayload,
   CtfItem,
   EventItem,
+  EventAttendeeListPayload,
   HomePayload,
   LuciaCandidate,
   LuciaOverview,
@@ -58,6 +59,10 @@ export async function getEvents(includePast = false) {
 
 export async function getEvent(slug: string) {
   return fetchApi<EventItem>(`events/${slug}`, { nextRevalidate: 60 });
+}
+
+export async function getEventAttendees(slug: string) {
+  return fetchApi<EventAttendeeListPayload>(`events/${slug}/attendees`, { nextRevalidate: 10 });
 }
 
 export async function getStaticPage(slug: string) {

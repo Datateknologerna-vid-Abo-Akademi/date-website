@@ -143,6 +143,27 @@ class EventSignupResultSerializer(serializers.Serializer):
     billing = EventSignupBillingSerializer()
 
 
+class EventAttendeeFieldSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    value = serializers.CharField(allow_blank=True)
+
+
+class EventAttendeeSerializer(serializers.Serializer):
+    position = serializers.IntegerField()
+    display_name = serializers.CharField()
+    anonymous = serializers.BooleanField()
+    is_waitlist = serializers.BooleanField()
+    fields = EventAttendeeFieldSerializer(many=True)
+
+
+class EventAttendeeListSerializer(serializers.Serializer):
+    template_variant = serializers.CharField()
+    show_attendee_list = serializers.BooleanField()
+    sign_up_max_participants = serializers.IntegerField()
+    registration_public_fields = serializers.ListField(child=serializers.CharField())
+    attendees = EventAttendeeSerializer(many=True)
+
+
 class StaticPageSerializer(serializers.Serializer):
     title = serializers.CharField()
     slug = serializers.CharField()

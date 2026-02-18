@@ -34,6 +34,7 @@ urlpatterns = [
     path("events/<slug:slug>", views.EventDetailApiView.as_view(), name="event-detail"),
     path("events/<slug:slug>/passcode", views.EventPasscodeApiView.as_view(), name="event-passcode"),
     path("events/<slug:slug>/signup", views.EventSignupApiView.as_view(), name="event-signup"),
+    path("events/<slug:slug>/attendees", views.EventAttendeesApiView.as_view(), name="event-attendees"),
     path("pages/<slug:slug>", views.StaticPageApiView.as_view(), name="static-page"),
     path("ctf", views.CtfListApiView.as_view(), name="ctf-list"),
     path("ctf/<slug:slug>", views.CtfDetailApiView.as_view(), name="ctf-detail"),

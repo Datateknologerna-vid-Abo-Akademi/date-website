@@ -280,6 +280,27 @@ button:disabled {
   margin-top: 1rem;
 }
 
+.table-wrap {
+  overflow-x: auto;
+}
+
+.attendee-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 480px;
+}
+
+.attendee-table th,
+.attendee-table td {
+  border-bottom: 1px solid color-mix(in srgb, var(--theme-border) 75%, transparent);
+  text-align: left;
+  padding: 0.55rem 0.45rem;
+}
+
+.attendee-table .is-waitlist {
+  background: color-mix(in srgb, var(--theme-secondary) 10%, transparent);
+}
+
 @media (max-width: 640px) {
   .site-main {
     margin-top: 1rem;

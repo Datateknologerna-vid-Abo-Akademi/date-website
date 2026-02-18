@@ -43,6 +43,15 @@ Base path: `/api/v1`
 - `GET /events/{slug}`
   - Includes:
     - `captcha` (boolean) for signup flow requirements.
+    - `template_variant` for frontend event-layout selection.
+    - `show_attendee_list` for attendee visibility behavior.
+- `GET /events/{slug}/attendees`
+  - Includes:
+    - `template_variant`
+    - `show_attendee_list`
+    - `sign_up_max_participants`
+    - `registration_public_fields`
+    - `attendees` with anonymized display names and waitlist markers.
 - `POST /events/{slug}/passcode`
 - `POST /events/{slug}/signup`
   - Success payload includes:

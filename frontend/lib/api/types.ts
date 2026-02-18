@@ -105,6 +105,9 @@ export interface EventItem {
   passcode_required?: boolean;
   passcode_verified?: boolean;
   registration_count?: number;
+  registration_public_fields?: string[];
+  template_variant?: "default" | "arsfest" | "baal" | "kk100" | "tomtejakt" | "wappmiddag";
+  show_attendee_list?: boolean;
 }
 
 export interface EventInvoice {
@@ -127,6 +130,27 @@ export interface EventSignupResult {
   attendee_email: string;
   event_slug: string;
   billing: EventSignupBilling;
+}
+
+export interface EventAttendeeField {
+  name: string;
+  value: string;
+}
+
+export interface EventAttendee {
+  position: number;
+  display_name: string;
+  anonymous: boolean;
+  is_waitlist: boolean;
+  fields: EventAttendeeField[];
+}
+
+export interface EventAttendeeListPayload {
+  template_variant: string;
+  show_attendee_list: boolean;
+  sign_up_max_participants: number;
+  registration_public_fields: string[];
+  attendees: EventAttendee[];
 }
 
 export interface HomePayload {

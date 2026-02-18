@@ -7,6 +7,7 @@
   - `/api/v1/home`
   - `/api/v1/news*`
   - `/api/v1/events*`
+    - includes `template_variant` mapping and `/events/{slug}/attendees`
   - `/api/v1/pages/{slug}`
   - `/api/v1/social*`
   - `/api/v1/ctf*`
