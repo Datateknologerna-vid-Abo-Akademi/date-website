@@ -1,0 +1,27 @@
+.idea/
+.vscode/
+
+*.env*
+
+*.mo
+
+__pycache__/
+*.py[cod]
+*$py.class
+core/static/
+core/templates/static/admin
+core/templates/static/ckeditor
+
+media
+!media/.gitkeep
+
+#minio storage
+storage
+
+.DS_Store
+
+# Database dumps from backup
+*.bck
+
+# CSV files
+*.csv
