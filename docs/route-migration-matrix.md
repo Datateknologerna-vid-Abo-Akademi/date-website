@@ -15,11 +15,27 @@
 - `/polls` -> Next route `frontend/app/polls/page.tsx` using `GET /api/v1/polls`
 - `/polls/{id}` -> Next route `frontend/app/polls/[id]/page.tsx` using
   `GET /api/v1/polls/{id}` and `POST /api/v1/polls/{id}/vote`
+- `/archive` -> Next route `frontend/app/archive/page.tsx`
+- `/archive/pictures` -> Next route `frontend/app/archive/pictures/page.tsx` using
+  `GET /api/v1/archive/pictures/years`
+- `/archive/pictures/{year}` -> Next route `frontend/app/archive/pictures/[year]/page.tsx` using
+  `GET /api/v1/archive/pictures/{year}`
+- `/archive/pictures/{year}/{album}` -> Next route
+  `frontend/app/archive/pictures/[year]/[album]/page.tsx` using
+  `GET /api/v1/archive/pictures/{year}/{album}`
+- `/archive/documents` -> Next route `frontend/app/archive/documents/page.tsx` using
+  `GET /api/v1/archive/documents`
+- `/archive/exams` -> Next route `frontend/app/archive/exams/page.tsx` using
+  `GET /api/v1/archive/exams`
+- `/archive/exams/{id}` -> Next route `frontend/app/archive/exams/[id]/page.tsx` using
+  `GET /api/v1/archive/exams/{id}`
+- `/publications` -> Next route `frontend/app/publications/page.tsx` using
+  `GET /api/v1/publications`
+- `/publications/{slug}` -> Next route `frontend/app/publications/[slug]/page.tsx` using
+  `GET /api/v1/publications/{slug}`
 
 ## Still Django-Rendered (Pending API + Frontend Migration)
-- `/archive/*`
 - `/ctf/*`
-- `/publications/*`
 - `/social/*`
 - `/alumni/*`
 - `/lucia/*`

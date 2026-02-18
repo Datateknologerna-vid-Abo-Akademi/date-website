@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.paginator import Paginator
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -15,6 +16,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ads.models import AdUrl
+from archive.models import Collection, Document, Picture
 from events.models import Event, EventAttendees
 from news.models import Post
 from social.models import IgUrl
@@ -22,11 +24,15 @@ from staticpages.models import StaticPage, StaticPageNav
 
 from core.utils import validate_captcha
 from members.forms import SignUpForm
-from members.models import Functionary, FunctionaryRole, Member
+from members.models import Functionary, FunctionaryRole, Member, SUPPORTING_MEMBER, FRESHMAN
 from members.tokens import account_activation_token
 from polls.models import Question
 from polls.vote import handle_selected_choices, validate_vote
+from publications.models import PDFFile
 from .serializers import (
+    ArchiveCollectionSerializer,
+    ArchiveDocumentSerializer,
+    ArchivePictureSerializer,
     EventListSerializer,
     FunctionaryRoleSerializer,
     FunctionarySerializer,
@@ -36,6 +42,7 @@ from .serializers import (
     MemberProfileUpdateSerializer,
     NewsListSerializer,
     PollQuestionSerializer,
+    PublicationSerializer,
     SiteMetaSerializer,
     StaticPageSerializer,
 )
@@ -624,3 +631,190 @@ class PollVoteApiView(APIView):
         handle_selected_choices(question, selected_choices, user)
         serializer = PollQuestionSerializer(question)
         return Response({"data": serializer.data}, status=status.HTTP_201_CREATED)
+
+
+class ArchiveAccessMixin:
+    def check_archive_access(self, request):
+        if not request.user.is_authenticated:
+            return Response(
+                {"error": {"code": "unauthenticated", "message": "Login required."}},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        if request.user.membership_type.permission_profile == SUPPORTING_MEMBER:
+            return Response(
+                {"error": {"code": "forbidden", "message": "Access denied for this membership type."}},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return None
+
+    def serialize_paginated(self, queryset, serializer_cls, page, page_size):
+        paginator = Paginator(queryset, page_size)
+        page_obj = paginator.get_page(page)
+        return {
+            "results": serializer_cls(page_obj.object_list, many=True).data,
+            "pagination": {
+                "page": page_obj.number,
+                "num_pages": paginator.num_pages,
+                "has_next": page_obj.has_next(),
+                "has_previous": page_obj.has_previous(),
+                "total_items": paginator.count,
+            },
+        }
+
+
+class ArchiveYearsApiView(APIView, ArchiveAccessMixin):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        auth_error = self.check_archive_access(request)
+        if auth_error:
+            return auth_error
+
+        years = Collection.objects.dates("pub_date", "year").reverse()
+        year_albumcount = {}
+        for year in years:
+            year_albumcount[str(year.year)] = Collection.objects.filter(
+                pub_date__year=year.year,
+                type="Pictures",
+            ).count()
+        return Response({"data": {"year_albums": year_albumcount}})
+
+
+class ArchivePicturesByYearApiView(APIView, ArchiveAccessMixin):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, year):
+        auth_error = self.check_archive_access(request)
+        if auth_error:
+            return auth_error
+
+        collections = Collection.objects.filter(type="Pictures", pub_date__year=year).order_by("-pub_date")
+        return Response({"data": ArchiveCollectionSerializer(collections, many=True).data})
+
+
+class ArchivePictureDetailApiView(APIView, ArchiveAccessMixin):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, year, album):
+        auth_error = self.check_archive_access(request)
+        if auth_error:
+            return auth_error
+
+        collection = Collection.objects.filter(type="Pictures", pub_date__year=year, title=album).order_by("-pub_date").first()
+        if not collection:
+            return Response(
+                {"error": {"code": "not_found", "message": "Picture collection not found."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if collection.hide_for_gulis and request.user.membership_type.permission_profile == FRESHMAN:
+            return Response(
+                {"error": {"code": "forbidden", "message": "This collection is not available for freshmen."}},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        pictures = (
+            Picture.objects.filter(collection=collection)
+            if year == 2022
+            else Picture.objects.filter(collection=collection).reverse()
+        )
+        page = request.query_params.get("page", 1)
+        payload = self.serialize_paginated(pictures, ArchivePictureSerializer, page, 15)
+        payload["collection"] = ArchiveCollectionSerializer(collection).data
+        return Response({"data": payload})
+
+
+class ArchiveDocumentsApiView(APIView, ArchiveAccessMixin):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        auth_error = self.check_archive_access(request)
+        if auth_error:
+            return auth_error
+
+        filter_collection = request.query_params.get("collection", "")
+        filter_title_contains = request.query_params.get("title_contains", "")
+        page = request.query_params.get("page", 1)
+
+        queryset = Document.objects.filter(collection__type="Documents")
+        if filter_collection:
+            queryset = queryset.filter(collection=filter_collection)
+        if filter_title_contains:
+            queryset = queryset.filter(title__contains=filter_title_contains)
+
+        payload = self.serialize_paginated(queryset, ArchiveDocumentSerializer, page, 15)
+        payload["collections"] = ArchiveCollectionSerializer(
+            Collection.objects.filter(type="Documents").order_by("title"),
+            many=True,
+        ).data
+        return Response({"data": payload})
+
+
+class ArchiveExamCollectionsApiView(APIView, ArchiveAccessMixin):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        auth_error = self.check_archive_access(request)
+        if auth_error:
+            return auth_error
+
+        collections = Collection.objects.filter(type="Exams").order_by("title")
+        return Response({"data": ArchiveCollectionSerializer(collections, many=True).data})
+
+
+class ArchiveExamDetailApiView(APIView, ArchiveAccessMixin):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, collection_id):
+        auth_error = self.check_archive_access(request)
+        if auth_error:
+            return auth_error
+
+        collection = Collection.objects.filter(pk=collection_id, type="Exams").first()
+        if not collection:
+            return Response(
+                {"error": {"code": "not_found", "message": "Exam collection not found."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        queryset = Document.objects.filter(collection=collection_id)
+        page = request.query_params.get("page", 1)
+        payload = self.serialize_paginated(queryset, ArchiveDocumentSerializer, page, 15)
+        payload["collection"] = ArchiveCollectionSerializer(collection).data
+        return Response({"data": payload})
+
+
+class PublicationsListApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        queryset = PDFFile.objects.filter(is_public=True)
+        if not request.user.is_authenticated:
+            queryset = queryset.filter(requires_login=False)
+        queryset = queryset.order_by("-publication_date")
+
+        page = request.query_params.get("page", 1)
+        payload = ArchiveAccessMixin().serialize_paginated(queryset, PublicationSerializer, page, 10)
+        return Response({"data": payload})
+
+
+class PublicationsDetailApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, slug):
+        pdf_file = PDFFile.objects.filter(slug=slug).first()
+        if not pdf_file:
+            return Response(
+                {"error": {"code": "not_found", "message": "Publication not found."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not pdf_file.is_public:
+            return Response(
+                {"error": {"code": "forbidden", "message": "You do not have permission to access this publication."}},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        if pdf_file.requires_login and not request.user.is_authenticated:
+            return Response(
+                {"error": {"code": "unauthenticated", "message": "Login required to access this publication."}},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        serializer = PublicationSerializer(pdf_file)
+        return Response({"data": serializer.data})

@@ -2,10 +2,12 @@ from django.conf import settings
 from rest_framework import serializers
 
 from ads.models import AdUrl
+from archive.models import Collection, Document, Picture
 from events.models import Event
 from members.models import Functionary, FunctionaryRole, Member
 from news.models import Post
 from polls.models import Choice, Question
+from publications.models import PDFFile
 from social.models import IgUrl
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
 
@@ -250,3 +252,60 @@ class PollQuestionSerializer(serializers.ModelSerializer):
 
     def get_total_votes(self, obj):
         return obj.get_total_votes()
+
+
+class ArchiveCollectionSerializer(serializers.ModelSerializer):
+    item_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Collection
+        fields = ["id", "title", "type", "pub_date", "hide_for_gulis", "item_count"]
+
+    def get_item_count(self, obj):
+        if obj.type == "Pictures":
+            return Picture.objects.filter(collection=obj).count()
+        return Document.objects.filter(collection=obj).count()
+
+
+class ArchivePictureSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Picture
+        fields = ["id", "image_url", "favorite"]
+
+    def get_image_url(self, obj):
+        return obj.image.url
+
+
+class ArchiveDocumentSerializer(serializers.ModelSerializer):
+    document_url = serializers.SerializerMethodField()
+    collection = ArchiveCollectionSerializer(read_only=True)
+
+    class Meta:
+        model = Document
+        fields = ["id", "title", "document_url", "collection"]
+
+    def get_document_url(self, obj):
+        return obj.document.url
+
+
+class PublicationSerializer(serializers.ModelSerializer):
+    pdf_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PDFFile
+        fields = [
+            "title",
+            "slug",
+            "description",
+            "publication_date",
+            "uploaded_at",
+            "updated_at",
+            "is_public",
+            "requires_login",
+            "pdf_url",
+        ]
+
+    def get_pdf_url(self, obj):
+        return obj.get_file_url()

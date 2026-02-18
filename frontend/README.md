@@ -33,3 +33,12 @@ Use the root-level stack:
 - `/members/functionaries`
 - `/polls`
 - `/polls/[id]`
+- `/archive`
+- `/archive/pictures`
+- `/archive/pictures/[year]`
+- `/archive/pictures/[year]/[album]`
+- `/archive/documents`
+- `/archive/exams`
+- `/archive/exams/[id]`
+- `/publications`
+- `/publications/[slug]`

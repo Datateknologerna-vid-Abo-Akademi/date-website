@@ -1,10 +1,17 @@
 import { fetchApi } from "./fetcher";
 import type {
+  ArchiveCollection,
+  ArchiveDocumentsPayload,
+  ArchiveExamDetailPayload,
+  ArchivePictureDetailPayload,
+  ArchiveYearsPayload,
   EventItem,
   HomePayload,
   MemberProfile,
   NewsItem,
+  PaginatedPayload,
   PollQuestion,
+  Publication,
   PublicFunctionaryPayload,
   SessionData,
   SiteMeta,
@@ -71,4 +78,43 @@ export async function getPolls() {
 
 export async function getPoll(pollId: number) {
   return fetchApi<PollQuestion>(`polls/${pollId}`, { nextRevalidate: 10 });
+}
+
+export async function getArchiveYears() {
+  return fetchApi<ArchiveYearsPayload>("archive/pictures/years", { nextRevalidate: 30 });
+}
+
+export async function getArchivePictureCollectionsByYear(year: number) {
+  return fetchApi<ArchiveCollection[]>(`archive/pictures/${year}`, { nextRevalidate: 30 });
+}
+
+export async function getArchivePictureCollection(year: number, album: string, page = 1) {
+  return fetchApi<ArchivePictureDetailPayload>(
+    `archive/pictures/${year}/${encodeURIComponent(album)}?page=${page}`,
+    { nextRevalidate: 10 },
+  );
+}
+
+export async function getArchiveDocuments(collection?: string, titleContains?: string, page = 1) {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  if (collection) params.set("collection", collection);
+  if (titleContains) params.set("title_contains", titleContains);
+  return fetchApi<ArchiveDocumentsPayload>(`archive/documents?${params.toString()}`, { nextRevalidate: 10 });
+}
+
+export async function getArchiveExamCollections() {
+  return fetchApi<ArchiveCollection[]>("archive/exams", { nextRevalidate: 30 });
+}
+
+export async function getArchiveExamCollection(collectionId: number, page = 1) {
+  return fetchApi<ArchiveExamDetailPayload>(`archive/exams/${collectionId}?page=${page}`, { nextRevalidate: 10 });
+}
+
+export async function getPublications(page = 1) {
+  return fetchApi<PaginatedPayload<Publication>>(`publications?page=${page}`, { nextRevalidate: 30 });
+}
+
+export async function getPublication(slug: string) {
+  return fetchApi<Publication>(`publications/${slug}`, { nextRevalidate: 10 });
 }

@@ -57,6 +57,25 @@ Base path: `/api/v1`
 - `POST /polls/{id}/vote`
   - JSON body: `{ "choice_ids": number[] }`
 
+### Archive
+- `GET /archive/pictures/years`
+- `GET /archive/pictures/{year}`
+- `GET /archive/pictures/{year}/{album}`
+  - Query: `page=<n>`
+- `GET /archive/documents`
+  - Query:
+    - `collection=<id>`
+    - `title_contains=<text>`
+    - `page=<n>`
+- `GET /archive/exams`
+- `GET /archive/exams/{collection_id}`
+  - Query: `page=<n>`
+
+### Publications
+- `GET /publications`
+  - Query: `page=<n>`
+- `GET /publications/{slug}`
+
 ## Notes
 - API uses Django session authentication (`SessionAuthentication`).
 - CSRF cookie is set via `GET /auth/session`.

@@ -43,3 +43,18 @@ class ApiSmokeTests(TestCase):
         response = self.client.get("/api/v1/polls")
         self.assertEqual(response.status_code, 200)
         self.assertIn("data", response.json())
+
+    def test_archive_requires_auth(self):
+        response = self.client.get("/api/v1/archive/pictures/years")
+        self.assertEqual(response.status_code, 401)
+
+    def test_archive_years_when_logged_in(self):
+        self.client.login(username="tester", password="password123")
+        response = self.client.get("/api/v1/archive/pictures/years")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("data", response.json())
+
+    def test_publications_list_endpoint(self):
+        response = self.client.get("/api/v1/publications")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("data", response.json())

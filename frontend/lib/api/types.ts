@@ -186,3 +186,64 @@ export interface PollQuestion {
   choices: PollChoice[];
   total_votes: number;
 }
+
+export interface PaginatedPayload<T> {
+  results: T[];
+  pagination: {
+    page: number;
+    num_pages: number;
+    has_next: boolean;
+    has_previous: boolean;
+    total_items: number;
+  };
+}
+
+export interface ArchiveCollection {
+  id: number;
+  title: string;
+  type: string;
+  pub_date: string;
+  hide_for_gulis: boolean;
+  item_count: number;
+}
+
+export interface ArchivePicture {
+  id: number;
+  image_url: string;
+  favorite: boolean;
+}
+
+export interface ArchiveDocument {
+  id: number;
+  title: string;
+  document_url: string;
+  collection: ArchiveCollection;
+}
+
+export interface ArchiveYearsPayload {
+  year_albums: Record<string, number>;
+}
+
+export interface ArchivePictureDetailPayload extends PaginatedPayload<ArchivePicture> {
+  collection: ArchiveCollection;
+}
+
+export interface ArchiveDocumentsPayload extends PaginatedPayload<ArchiveDocument> {
+  collections: ArchiveCollection[];
+}
+
+export interface ArchiveExamDetailPayload extends PaginatedPayload<ArchiveDocument> {
+  collection: ArchiveCollection;
+}
+
+export interface Publication {
+  title: string;
+  slug: string;
+  description: string;
+  publication_date: string | null;
+  uploaded_at: string;
+  updated_at: string;
+  is_public: boolean;
+  requires_login: boolean;
+  pdf_url: string;
+}
