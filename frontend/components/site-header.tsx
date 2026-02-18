@@ -15,6 +15,12 @@ export function SiteHeader({ siteMeta }: SiteHeaderProps) {
   const showCtf = enabledModules.has("ctf");
   const showLucia = enabledModules.has("lucia");
   const showAlumni = enabledModules.has("alumni");
+  const showNews = enabledModules.has("news");
+  const showEvents = enabledModules.has("events");
+  const showArchive = enabledModules.has("archive");
+  const showSocial = enabledModules.has("social");
+  const showAds = enabledModules.has("ads");
+  const showHome = siteMeta.default_landing_path === "/";
   return (
     <header className="site-header">
       <div className="site-header__inner">
@@ -22,14 +28,14 @@ export function SiteHeader({ siteMeta }: SiteHeaderProps) {
           {associationName}
         </Link>
         <nav className="site-header__nav" aria-label="Main navigation">
-          <Link href="/">Home</Link>
-          <Link href="/news">News</Link>
-          <Link href="/events">Events</Link>
+          {showHome ? <Link href="/">Home</Link> : null}
+          {showNews ? <Link href="/news">News</Link> : null}
+          {showEvents ? <Link href="/events">Events</Link> : null}
           {showPolls ? <Link href="/polls">Polls</Link> : null}
           <Link href="/members">Members</Link>
-          <Link href="/archive">Archive</Link>
-          <Link href="/social">Social</Link>
-          <Link href="/ads">Ads</Link>
+          {showArchive ? <Link href="/archive">Archive</Link> : null}
+          {showSocial ? <Link href="/social">Social</Link> : null}
+          {showAds ? <Link href="/ads">Ads</Link> : null}
           {showPublications ? <Link href="/publications">Publications</Link> : null}
           {showCtf ? <Link href="/ctf">CTF</Link> : null}
           {showLucia ? <Link href="/lucia">Lucia</Link> : null}

@@ -38,6 +38,7 @@ SECRET_KEY = env('SECRET_KEY', str, 'SECRET_KEY')
 DEBUG = env('DEBUG', bool, False)
 
 DEVELOP = env('DEVELOP', bool, False)
+FRONTEND_DEFAULT_ROUTE = env("FRONTEND_DEFAULT_ROUTE", str, "/")
 
 # This gets set only when tests are ran with date-test command
 TEST = env('TEST', bool, False)

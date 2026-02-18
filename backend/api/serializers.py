@@ -1,31 +1,22 @@
 from django.conf import settings
 from rest_framework import serializers
 
-from ads.models import AdUrl
-from archive.models import Collection, Document, Picture
-from events.models import Event
 from members.models import Functionary, FunctionaryRole, Member
-from news.models import Post
-from social.models import IgUrl
-from staticpages.models import StaticPage, StaticPageNav, StaticUrl
 
 
-class StaticUrlSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StaticUrl
-        fields = ["title", "url", "logged_in_only", "dropdown_element"]
+class StaticUrlSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    url = serializers.CharField()
+    logged_in_only = serializers.BooleanField()
+    dropdown_element = serializers.IntegerField()
 
 
-class StaticPageNavSerializer(serializers.ModelSerializer):
-    urls = serializers.SerializerMethodField()
-
-    class Meta:
-        model = StaticPageNav
-        fields = ["category_name", "nav_element", "use_category_url", "url", "urls"]
-
-    def get_urls(self, obj):
-        urls = StaticUrl.objects.filter(category=obj).order_by("dropdown_element")
-        return StaticUrlSerializer(urls, many=True).data
+class StaticPageNavSerializer(serializers.Serializer):
+    category_name = serializers.CharField()
+    nav_element = serializers.IntegerField()
+    use_category_url = serializers.BooleanField()
+    url = serializers.CharField(allow_blank=True)
+    urls = StaticUrlSerializer(many=True)
 
 
 class SiteMetaSerializer(serializers.Serializer):
@@ -37,36 +28,27 @@ class SiteMetaSerializer(serializers.Serializer):
     navigation = StaticPageNavSerializer(many=True)
     feature_flags = serializers.ListField(child=serializers.CharField())
     enabled_modules = serializers.ListField(child=serializers.CharField())
+    default_landing_path = serializers.CharField()
 
 
-class HomeAdSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AdUrl
-        fields = ["ad_url", "company_url"]
+class HomeAdSerializer(serializers.Serializer):
+    ad_url = serializers.CharField()
+    company_url = serializers.CharField(allow_blank=True)
 
 
-class HomeIgPostSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = IgUrl
-        fields = ["url", "shortcode"]
+class HomeIgPostSerializer(serializers.Serializer):
+    url = serializers.CharField()
+    shortcode = serializers.CharField()
 
 
-class NewsListSerializer(serializers.ModelSerializer):
+class NewsListSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    slug = serializers.CharField()
+    content = serializers.CharField(allow_blank=True)
+    published_time = serializers.DateTimeField(allow_null=True)
     author_name = serializers.SerializerMethodField()
     category_name = serializers.SerializerMethodField()
     category_slug = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Post
-        fields = [
-            "title",
-            "slug",
-            "content",
-            "published_time",
-            "author_name",
-            "category_name",
-            "category_slug",
-        ]
 
     def get_author_name(self, obj):
         return obj.author.get_full_name()
@@ -82,34 +64,23 @@ class NewsListSerializer(serializers.ModelSerializer):
         return None
 
 
-class EventListSerializer(serializers.ModelSerializer):
+class EventListSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    slug = serializers.CharField()
+    content = serializers.CharField(allow_blank=True)
+    event_date_start = serializers.DateTimeField()
+    event_date_end = serializers.DateTimeField()
+    members_only = serializers.BooleanField()
+    sign_up = serializers.BooleanField()
+    sign_up_avec = serializers.BooleanField()
+    sign_up_max_participants = serializers.IntegerField()
+    redirect_link = serializers.CharField(allow_blank=True, allow_null=True)
     registration_open_members = serializers.SerializerMethodField()
     registration_open_others = serializers.SerializerMethodField()
     registration_past_due = serializers.SerializerMethodField()
     event_full = serializers.SerializerMethodField()
     sign_up_fields = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Event
-        fields = [
-            "title",
-            "slug",
-            "content",
-            "event_date_start",
-            "event_date_end",
-            "members_only",
-            "sign_up",
-            "sign_up_avec",
-            "sign_up_max_participants",
-            "registration_open_members",
-            "registration_open_others",
-            "registration_past_due",
-            "event_full",
-            "redirect_link",
-            "image_url",
-            "sign_up_fields",
-        ]
 
     def get_registration_open_members(self, obj):
         return obj.registration_is_open_members()
@@ -149,10 +120,13 @@ class EventListSerializer(serializers.ModelSerializer):
         return None
 
 
-class StaticPageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StaticPage
-        fields = ["title", "slug", "content", "members_only", "created_time", "modified_time"]
+class StaticPageSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    slug = serializers.CharField()
+    content = serializers.CharField(allow_blank=True)
+    members_only = serializers.BooleanField()
+    created_time = serializers.DateTimeField()
+    modified_time = serializers.DateTimeField(allow_null=True)
 
 
 class MemberProfileSerializer(serializers.ModelSerializer):
@@ -212,7 +186,7 @@ class FunctionarySerializer(serializers.ModelSerializer):
         return obj.member.get_full_name()
 
 
-class PollChoiceSerializer(serializers.ModelSerializer):
+class PollChoiceSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     choice_text = serializers.CharField()
     votes = serializers.IntegerField()
@@ -245,40 +219,40 @@ class PollQuestionSerializer(serializers.Serializer):
         return obj.get_total_votes()
 
 
-class ArchiveCollectionSerializer(serializers.ModelSerializer):
+class ArchiveCollectionSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    type = serializers.CharField()
+    pub_date = serializers.DateTimeField()
+    hide_for_gulis = serializers.BooleanField()
     item_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Collection
-        fields = ["id", "title", "type", "pub_date", "hide_for_gulis", "item_count"]
 
     def get_item_count(self, obj):
         if obj.type == "Pictures":
-            return Picture.objects.filter(collection=obj).count()
-        return Document.objects.filter(collection=obj).count()
+            return obj.picture_set.count() if hasattr(obj, "picture_set") else 0
+        return obj.document_set.count() if hasattr(obj, "document_set") else 0
 
 
-class ArchivePictureSerializer(serializers.ModelSerializer):
+class ArchivePictureSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    favorite = serializers.BooleanField()
     image_url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Picture
-        fields = ["id", "image_url", "favorite"]
 
     def get_image_url(self, obj):
         return obj.image.url
 
 
-class ArchiveDocumentSerializer(serializers.ModelSerializer):
+class ArchiveDocumentSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
     document_url = serializers.SerializerMethodField()
-    collection = ArchiveCollectionSerializer(read_only=True)
-
-    class Meta:
-        model = Document
-        fields = ["id", "title", "document_url", "collection"]
+    collection = serializers.SerializerMethodField()
 
     def get_document_url(self, obj):
         return obj.document.url
+
+    def get_collection(self, obj):
+        return ArchiveCollectionSerializer(obj.collection).data
 
 
 class PublicationSerializer(serializers.Serializer):

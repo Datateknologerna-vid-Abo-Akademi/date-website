@@ -1,5 +1,3 @@
-from itertools import chain
-
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
@@ -17,14 +15,6 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from ads.models import AdUrl
-from archive.models import Collection, Document, Picture
-from events.models import Event, EventAttendees
-from news.models import Post
-from social.models import Harassment, HarassmentEmailRecipient
-from social.models import IgUrl
-from staticpages.models import StaticPage, StaticPageNav
 
 from core.utils import send_email_task, validate_captcha
 from members.forms import SignUpForm
@@ -55,6 +45,13 @@ from .serializers import (
 
 
 MODULE_APP_MAP = {
+    "ads": "ads",
+    "archive": "archive",
+    "events": "events",
+    "news": "news",
+    "social": "social",
+    "staticpages": "staticpages",
+    "billing": "billing",
     "polls": "polls",
     "publications": "publications",
     "ctf": "ctf",
@@ -89,11 +86,16 @@ def get_optional_model(app_label, model_name):
         return None
 
 
+def get_module_model(module_key, model_name):
+    app_label = MODULE_APP_MAP.get(module_key, module_key)
+    return get_optional_model(app_label, model_name)
+
+
 class SiteMetaApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        navigation = StaticPageNav.objects.all().order_by("nav_element")
+        navigation = self._build_navigation()
         payload = {
             "project_name": settings.PROJECT_NAME,
             "language_code": settings.LANGUAGE_CODE,
@@ -103,35 +105,86 @@ class SiteMetaApiView(APIView):
             "navigation": navigation,
             "feature_flags": settings.EXPERIMENTAL_FEATURES,
             "enabled_modules": sorted([key for key in MODULE_APP_MAP if is_module_enabled(key)]),
+            "default_landing_path": getattr(settings, "FRONTEND_DEFAULT_ROUTE", "/"),
         }
         serializer = SiteMetaSerializer(payload)
         return Response({"data": serializer.data})
+
+    def _build_navigation(self):
+        if not is_module_enabled("staticpages"):
+            return []
+        StaticPageNav = get_module_model("staticpages", "StaticPageNav")
+        StaticUrl = get_module_model("staticpages", "StaticUrl")
+        if StaticPageNav is None or StaticUrl is None:
+            return []
+
+        navigation = []
+        for nav_category in StaticPageNav.objects.all().order_by("nav_element"):
+            urls = [
+                {
+                    "title": url.title,
+                    "url": url.url,
+                    "logged_in_only": url.logged_in_only,
+                    "dropdown_element": url.dropdown_element,
+                }
+                for url in StaticUrl.objects.filter(category=nav_category).order_by("dropdown_element")
+            ]
+            navigation.append(
+                {
+                    "category_name": nav_category.category_name,
+                    "nav_element": nav_category.nav_element,
+                    "use_category_url": nav_category.use_category_url,
+                    "url": nav_category.url,
+                    "urls": urls,
+                }
+            )
+        return navigation
 
 
 class HomeApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        events_old_events_included = Event.objects.filter(
-            published=True,
-            event_date_end__gte=(timezone.now() - timezone.timedelta(days=31)),
-        ).order_by("event_date_start")
-        events = events_old_events_included.filter(published=True, event_date_end__gte=timezone.now())
-        news = Post.objects.filter(published=True, category__isnull=True).order_by("-published_time")[:3]
+        Event = get_module_model("events", "Event")
+        Post = get_module_model("news", "Post")
+        AdUrl = get_module_model("ads", "AdUrl")
+        IgUrl = get_module_model("social", "IgUrl")
 
-        aa_posts = Post.objects.filter(
-            published=True,
-            category__name="Albins Angels",
-        ).order_by("-published_time")[:1]
-        time_since = timezone.now() - timezone.timedelta(days=10)
-        aa_post = aa_posts[0] if aa_posts and aa_posts[0].published_time > time_since else None
+        events_old_events_included = (
+            Event.objects.filter(
+                published=True,
+                event_date_end__gte=(timezone.now() - timezone.timedelta(days=31)),
+            ).order_by("event_date_start")
+            if Event is not None
+            else []
+        )
+        events = (
+            events_old_events_included.filter(published=True, event_date_end__gte=timezone.now())
+            if Event is not None
+            else []
+        )
+        news = (
+            Post.objects.filter(published=True, category__isnull=True).order_by("-published_time")[:3]
+            if Post is not None
+            else []
+        )
+
+        if Post is not None:
+            aa_posts = Post.objects.filter(
+                published=True,
+                category__name="Albins Angels",
+            ).order_by("-published_time")[:1]
+            time_since = timezone.now() - timezone.timedelta(days=10)
+            aa_post = aa_posts[0] if aa_posts and aa_posts[0].published_time > time_since else None
+        else:
+            aa_post = None
 
         response = {
             "events": EventListSerializer(events, many=True).data,
             "news": NewsListSerializer(news, many=True).data,
             "news_events": self._build_news_events(events, news),
-            "ads": HomeAdSerializer(AdUrl.objects.all(), many=True).data,
-            "instagram_posts": HomeIgPostSerializer(IgUrl.objects.all(), many=True).data,
+            "ads": HomeAdSerializer(AdUrl.objects.all(), many=True).data if AdUrl is not None else [],
+            "instagram_posts": HomeIgPostSerializer(IgUrl.objects.all(), many=True).data if IgUrl is not None else [],
             "aa_post": NewsListSerializer(aa_post).data if aa_post else None,
             "calendar_events": self._calendar_format(events_old_events_included),
         }
@@ -153,25 +206,24 @@ class HomeApiView(APIView):
 
     def _build_news_events(self, events, news):
         merged = []
-        for item in chain(events, news):
-            if isinstance(item, Event):
-                merged.append(
-                    {
-                        "kind": "event",
-                        "title": item.title,
-                        "slug": item.slug,
-                        "date": item.event_date_start,
-                    }
-                )
-            else:
-                merged.append(
-                    {
-                        "kind": "news",
-                        "title": item.title,
-                        "slug": item.slug,
-                        "date": item.published_time,
-                    }
-                )
+        for item in events:
+            merged.append(
+                {
+                    "kind": "event",
+                    "title": item.title,
+                    "slug": item.slug,
+                    "date": item.event_date_start,
+                }
+            )
+        for item in news:
+            merged.append(
+                {
+                    "kind": "news",
+                    "title": item.title,
+                    "slug": item.slug,
+                    "date": item.published_time,
+                }
+            )
         return merged
 
 
@@ -179,6 +231,10 @@ class NewsListApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        Post = get_module_model("news", "Post")
+        if Post is None:
+            return Response({"data": []})
+
         category = request.query_params.get("category")
         author = request.query_params.get("author")
         queryset = Post.objects.filter(published=True).order_by("-published_time")
@@ -199,6 +255,8 @@ class NewsFeedApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        if not is_module_enabled("news"):
+            return module_disabled_response("news")
         from news.feed import LatestPosts
 
         return LatestPosts()(request)
@@ -208,6 +266,10 @@ class NewsDetailApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, slug):
+        Post = get_module_model("news", "Post")
+        if Post is None:
+            return module_disabled_response("news")
+
         category = request.query_params.get("category")
         query = Q(slug=slug, published=True)
         if category:
@@ -226,6 +288,10 @@ class EventsListApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        Event = get_module_model("events", "Event")
+        if Event is None:
+            return Response({"data": []})
+
         include_past = request.query_params.get("include_past", "false").lower() == "true"
         queryset = Event.objects.filter(published=True).order_by("event_date_start")
         if not include_past:
@@ -238,6 +304,8 @@ class EventsFeedApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        if not is_module_enabled("events"):
+            return module_disabled_response("events")
         from events.feed import EventFeed
 
         return EventFeed()(request)
@@ -247,6 +315,10 @@ class EventDetailApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, slug):
+        Event = get_module_model("events", "Event")
+        if Event is None:
+            return module_disabled_response("events")
+
         event = Event.objects.filter(slug=slug, published=True).first()
         if not event:
             return Response(
@@ -272,6 +344,10 @@ class EventPasscodeApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, slug):
+        Event = get_module_model("events", "Event")
+        if Event is None:
+            return module_disabled_response("events")
+
         event = Event.objects.filter(slug=slug, published=True).first()
         if not event:
             return Response(
@@ -297,6 +373,11 @@ class EventSignupApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request, slug):
+        Event = get_module_model("events", "Event")
+        EventAttendees = get_module_model("events", "EventAttendees")
+        if Event is None or EventAttendees is None:
+            return module_disabled_response("events")
+
         event = Event.objects.filter(slug=slug, published=True).first()
         if not event:
             return Response(
@@ -399,6 +480,10 @@ class StaticPageApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, slug):
+        StaticPage = get_module_model("staticpages", "StaticPage")
+        if StaticPage is None:
+            return module_disabled_response("staticpages")
+
         page = StaticPage.objects.filter(slug=slug).first()
         if not page:
             return Response(
@@ -433,6 +518,9 @@ class AdsListApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        AdUrl = get_module_model("ads", "AdUrl")
+        if AdUrl is None:
+            return Response({"data": []})
         serializer = HomeAdSerializer(AdUrl.objects.all(), many=True)
         return Response({"data": serializer.data})
 
@@ -441,6 +529,11 @@ class HarassmentReportApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        Harassment = get_module_model("social", "Harassment")
+        HarassmentEmailRecipient = get_module_model("social", "HarassmentEmailRecipient")
+        if Harassment is None or HarassmentEmailRecipient is None:
+            return module_disabled_response("social")
+
         serializer = HarassmentReportSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(
@@ -1272,6 +1365,10 @@ class ArchiveYearsApiView(APIView, ArchiveAccessMixin):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        Collection = get_module_model("archive", "Collection")
+        if Collection is None:
+            return module_disabled_response("archive")
+
         auth_error = self.check_archive_access(request)
         if auth_error:
             return auth_error
@@ -1290,6 +1387,10 @@ class ArchivePicturesByYearApiView(APIView, ArchiveAccessMixin):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, year):
+        Collection = get_module_model("archive", "Collection")
+        if Collection is None:
+            return module_disabled_response("archive")
+
         auth_error = self.check_archive_access(request)
         if auth_error:
             return auth_error
@@ -1302,6 +1403,10 @@ class ArchivePictureCollectionByIdApiView(APIView, ArchiveAccessMixin):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, collection_id):
+        Collection = get_module_model("archive", "Collection")
+        if Collection is None:
+            return module_disabled_response("archive")
+
         auth_error = self.check_archive_access(request)
         if auth_error:
             return auth_error
@@ -1325,6 +1430,11 @@ class ArchivePictureDetailApiView(APIView, ArchiveAccessMixin):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, year, album):
+        Collection = get_module_model("archive", "Collection")
+        Picture = get_module_model("archive", "Picture")
+        if Collection is None or Picture is None:
+            return module_disabled_response("archive")
+
         auth_error = self.check_archive_access(request)
         if auth_error:
             return auth_error
@@ -1356,6 +1466,11 @@ class ArchiveDocumentsApiView(APIView, ArchiveAccessMixin):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        Collection = get_module_model("archive", "Collection")
+        Document = get_module_model("archive", "Document")
+        if Collection is None or Document is None:
+            return module_disabled_response("archive")
+
         auth_error = self.check_archive_access(request)
         if auth_error:
             return auth_error
@@ -1382,6 +1497,10 @@ class ArchiveExamCollectionsApiView(APIView, ArchiveAccessMixin):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        Collection = get_module_model("archive", "Collection")
+        if Collection is None:
+            return module_disabled_response("archive")
+
         auth_error = self.check_archive_access(request)
         if auth_error:
             return auth_error
@@ -1394,6 +1513,11 @@ class ArchiveExamDetailApiView(APIView, ArchiveAccessMixin):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, collection_id):
+        Collection = get_module_model("archive", "Collection")
+        Document = get_module_model("archive", "Document")
+        if Collection is None or Document is None:
+            return module_disabled_response("archive")
+
         auth_error = self.check_archive_access(request)
         if auth_error:
             return auth_error

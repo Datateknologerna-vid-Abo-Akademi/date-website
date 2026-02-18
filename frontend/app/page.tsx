@@ -1,10 +1,16 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { RichContent } from "@/components/rich-content";
 import { getHomeData, getSiteMeta } from "@/lib/api/queries";
 
 export default async function Home() {
-  const [homeData, siteMeta] = await Promise.all([getHomeData(), getSiteMeta()]);
+  const siteMeta = await getSiteMeta();
+  if (siteMeta.default_landing_path && siteMeta.default_landing_path !== "/") {
+    redirect(siteMeta.default_landing_path);
+  }
+
+  const homeData = await getHomeData();
   const associationName =
     (siteMeta.content_variables.ASSOCIATION_NAME as string | undefined) ?? "Association";
   return (

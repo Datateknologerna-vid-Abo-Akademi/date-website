@@ -40,6 +40,7 @@ export interface SiteMeta {
   navigation: SiteNavCategory[];
   feature_flags: string[];
   enabled_modules: string[];
+  default_landing_path: string;
 }
 
 export interface ApiSuccess<T> {

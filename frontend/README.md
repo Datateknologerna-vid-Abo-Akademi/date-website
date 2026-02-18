@@ -21,6 +21,8 @@ Use the root-level stack:
   - `GET /api/v1/meta/site`
 - Module availability per association is exposed via:
   - `meta.site.data.enabled_modules`
+- Association landing route is exposed via:
+  - `meta.site.data.default_landing_path`
 
 ## Implemented Routes
 - `/`

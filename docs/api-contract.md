@@ -10,7 +10,9 @@ Base path: `/api/v1`
 
 ### Meta and Session
 - `GET /meta/site`
-  - Includes `enabled_modules` for association-specific module availability.
+  - Includes:
+    - `enabled_modules` for association-specific module availability.
+    - `default_landing_path` for associations that do not use `/` as homepage.
 - `GET /auth/session`
 - `POST /auth/login`
 - `POST /auth/logout`
@@ -118,4 +120,5 @@ Base path: `/api/v1`
 - API uses Django session authentication (`SessionAuthentication`).
 - CSRF cookie is set via `GET /auth/session`.
 - Event signup endpoint validates the dynamic event form fields and optional captcha.
-- Optional modules (`polls`, `publications`, `ctf`, `lucia`, `alumni`) are exposed per association via `enabled_modules`.
+- Enabled modules are exposed per association via `enabled_modules` (for example `events`, `news`,
+  `archive`, `ads`, `social`, `polls`, `publications`, `ctf`, `lucia`, `alumni`, `billing`).

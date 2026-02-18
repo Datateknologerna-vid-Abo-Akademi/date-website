@@ -30,6 +30,7 @@ INSTALLED_APPS = get_installed_apps([
 ])
 
 ROOT_URLCONF = 'core.urls.on'
+FRONTEND_DEFAULT_ROUTE = "/events"
 
 STAFF_GROUPS = get_staff_groups([
     'admin',

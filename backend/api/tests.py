@@ -30,7 +30,10 @@ class ApiSmokeTests(TestCase):
     def test_meta_site_endpoint(self):
         response = self.client.get("/api/v1/meta/site")
         self.assertEqual(response.status_code, 200)
-        self.assertIn("data", response.json())
+        payload = response.json()
+        self.assertIn("data", payload)
+        self.assertIn("enabled_modules", payload["data"])
+        self.assertIn("default_landing_path", payload["data"])
 
     def test_home_endpoint(self):
         response = self.client.get("/api/v1/home")
