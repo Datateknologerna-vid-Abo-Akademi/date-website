@@ -39,6 +39,8 @@ class ApiSmokeTests(TestCase):
         self.assertIn("module_capabilities", payload["data"])
         self.assertIn("events", payload["data"]["module_capabilities"])
         self.assertIn("enabled", payload["data"]["module_capabilities"]["events"])
+        self.assertIn("label", payload["data"]["module_capabilities"]["events"])
+        self.assertIn("nav_route", payload["data"]["module_capabilities"]["events"])
         self.assertIn("features", payload["data"]["module_capabilities"]["events"])
         self.assertIn("default_landing_path", payload["data"])
 

@@ -22,6 +22,7 @@ Use the root-level stack:
 - Module availability per association is exposed via:
   - `meta.site.data.enabled_modules`
   - `meta.site.data.module_capabilities` (preferred)
+  - `module_capabilities[*].label` and `module_capabilities[*].nav_route` for backend-driven module navigation
 - Server-rendered module pages should use capability guards (`frontend/lib/module-guards.ts`) to return 404 when modules are disabled.
 - Association landing route is exposed via:
   - `meta.site.data.default_landing_path`
@@ -29,6 +30,7 @@ Use the root-level stack:
   - `POST /api/v1/events/{slug}/passcode`
   - `POST /api/v1/events/{slug}/signup` (with billing status in response when enabled)
   - `GET /api/v1/events/{slug}/attendees` (anonymized attendee list + waitlist markers)
+  - Variant-aware event detail styling/sections using `template_variant` and legacy-compatible hash sections
 
 ## Implemented Routes
 - `/`

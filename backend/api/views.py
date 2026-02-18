@@ -70,50 +70,74 @@ MODULE_APP_MAP = {
 
 MODULE_CAPABILITY_SPEC = {
     "ads": {
+        "label": "Ads",
+        "nav_route": "/ads",
         "routes": ["/ads"],
         "features": ["list"],
     },
     "archive": {
+        "label": "Archive",
+        "nav_route": "/archive",
         "routes": ["/archive", "/archive/pictures", "/archive/documents", "/archive/exams"],
         "features": ["pictures", "documents", "exams"],
     },
     "events": {
+        "label": "Events",
+        "nav_route": "/events",
         "routes": ["/events", "/events/{slug}", "/events/feed"],
         "features": ["list", "detail", "feed", "passcode", "signup", "attendees", "template_variants"],
     },
     "news": {
+        "label": "News",
+        "nav_route": "/news",
         "routes": ["/news", "/news/{slug}", "/news/feed"],
         "features": ["list", "detail", "feed", "category_filter", "author_filter"],
     },
     "social": {
+        "label": "Social",
+        "nav_route": "/social",
         "routes": ["/social", "/social/harassment"],
         "features": ["overview", "harassment_reporting"],
     },
     "staticpages": {
+        "label": "Pages",
+        "nav_route": "",
         "routes": ["/pages/{slug}"],
         "features": ["navigation", "page_detail"],
     },
     "billing": {
+        "label": "Billing",
+        "nav_route": "",
         "routes": ["/events/{slug}/signup"],
         "features": ["event_signup_billing"],
     },
     "polls": {
+        "label": "Polls",
+        "nav_route": "/polls",
         "routes": ["/polls", "/polls/{id}"],
         "features": ["list", "detail", "vote", "results"],
     },
     "publications": {
+        "label": "Publications",
+        "nav_route": "/publications",
         "routes": ["/publications", "/publications/{slug}"],
         "features": ["list", "detail"],
     },
     "ctf": {
+        "label": "CTF",
+        "nav_route": "/ctf",
         "routes": ["/ctf", "/ctf/{slug}", "/ctf/{slug}/{flag}"],
         "features": ["list", "detail", "flag_detail", "guess"],
     },
     "lucia": {
+        "label": "Lucia",
+        "nav_route": "/lucia",
         "routes": ["/lucia", "/lucia/candidates", "/lucia/candidates/{slug}"],
         "features": ["overview", "candidates", "candidate_detail"],
     },
     "alumni": {
+        "label": "Alumni",
+        "nav_route": "/alumni",
         "routes": ["/alumni", "/alumni/signup", "/alumni/update", "/alumni/update/{token}"],
         "features": ["signup", "update_request", "update_token"],
     },
@@ -129,7 +153,7 @@ def build_module_capabilities():
     capabilities = {}
     event_billing_enabled = is_module_enabled("billing") and "event_billing" in settings.EXPERIMENTAL_FEATURES
     for module_key in MODULE_APP_MAP:
-        spec = MODULE_CAPABILITY_SPEC.get(module_key, {"routes": [], "features": []})
+        spec = MODULE_CAPABILITY_SPEC.get(module_key, {"label": module_key.title(), "nav_route": "", "routes": [], "features": []})
         enabled = is_module_enabled(module_key)
         features = list(spec["features"])
 
@@ -141,6 +165,8 @@ def build_module_capabilities():
 
         capabilities[module_key] = {
             "enabled": enabled,
+            "label": spec["label"],
+            "nav_route": spec["nav_route"],
             "routes": spec["routes"],
             "features": features if enabled else [],
         }

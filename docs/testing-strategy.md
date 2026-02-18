@@ -5,6 +5,7 @@
 - Unit tests for association settings schema validation.
 - Integration tests for:
   - `/api/v1/meta/site`
+    - includes module capability nav metadata (`label`, `nav_route`)
   - `/api/v1/home`
   - `/api/v1/news*`
   - `/api/v1/events*`
@@ -35,6 +36,8 @@
   - anonymous browsing
   - login/session persistence
   - event detail and registration
+  - event `template_variant` rendering and section navigation (`#/main`, `#/anmalan`, `#/attendee-list`)
+  - default event detail behavior keeps content, signup, and attendees visible without variant tabs
   - association switching by `PROJECT_NAME`
   - module visibility using `module_capabilities`
   - module route 404 behavior when capabilities disable a module

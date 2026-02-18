@@ -301,6 +301,159 @@ button:disabled {
   background: color-mix(in srgb, var(--theme-secondary) 10%, transparent);
 }
 
+.is-hidden {
+  display: none;
+}
+
+.event-variant-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.event-variant-shell .panel {
+  border-width: 1px;
+}
+
+.event-variant-hero {
+  border-width: 1px;
+}
+
+.event-variant-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.event-variant-nav button {
+  border: 1px solid currentColor;
+  background: transparent;
+  padding: 0.5rem 0.85rem;
+}
+
+.event-variant-nav button.is-active {
+  transform: translateY(-1px);
+}
+
+.event-variant--arsfest::before,
+.event-variant--kk100::before,
+.event-variant--baal::before,
+.event-variant--wappmiddag::before,
+.event-variant--tomtejakt::before {
+  content: "";
+  position: absolute;
+  inset: -2rem -1rem;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.event-variant--arsfest::before {
+  background:
+    radial-gradient(circle at 15% 10%, color-mix(in srgb, #ff7833 32%, transparent), transparent 35%),
+    radial-gradient(circle at 90% 0%, color-mix(in srgb, #94a3b8 25%, transparent), transparent 40%);
+}
+
+.event-variant--arsfest .event-variant-hero,
+.event-variant--arsfest .panel {
+  background: color-mix(in srgb, #11110e 82%, var(--theme-surface));
+  color: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.event-variant--arsfest .event-variant-nav button {
+  color: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.event-variant--arsfest .event-variant-nav button.is-active {
+  background: color-mix(in srgb, #334155 55%, transparent);
+}
+
+.event-variant--baal::before {
+  background:
+    linear-gradient(130deg, color-mix(in srgb, #3f2d1f 60%, transparent), transparent 45%),
+    radial-gradient(circle at 85% 10%, color-mix(in srgb, #d4c5a4 22%, transparent), transparent 38%);
+}
+
+.event-variant--baal .event-variant-hero,
+.event-variant--baal .panel {
+  background: color-mix(in srgb, #f7f3ea 90%, var(--theme-surface));
+  border-color: #b59a72;
+}
+
+.event-variant--baal .event-variant-nav button {
+  color: #3f2d1f;
+  border-color: #b59a72;
+}
+
+.event-variant--baal .event-variant-nav button.is-active {
+  background: color-mix(in srgb, #d4c5a4 40%, transparent);
+}
+
+.event-variant--kk100::before {
+  background:
+    radial-gradient(circle at 20% 10%, color-mix(in srgb, #d0af55 22%, transparent), transparent 30%),
+    radial-gradient(circle at 80% 10%, color-mix(in srgb, #f3c26c 20%, transparent), transparent 42%),
+    linear-gradient(180deg, #030826, color-mix(in srgb, #030826 85%, #111827));
+}
+
+.event-variant--kk100 .event-variant-hero,
+.event-variant--kk100 .panel {
+  background: color-mix(in srgb, #030826 82%, var(--theme-surface));
+  color: #f3c26c;
+  border-color: #d0af55;
+}
+
+.event-variant--kk100 .event-variant-nav button {
+  color: #f3c26c;
+  border-color: #d0af55;
+}
+
+.event-variant--kk100 .event-variant-nav button.is-active {
+  background: color-mix(in srgb, #d0af55 24%, transparent);
+}
+
+.event-variant--wappmiddag::before {
+  background:
+    radial-gradient(circle at 20% 10%, color-mix(in srgb, #008b3a 28%, transparent), transparent 35%),
+    radial-gradient(circle at 80% 0%, color-mix(in srgb, #f2ecc6 28%, transparent), transparent 45%);
+}
+
+.event-variant--wappmiddag .event-variant-hero,
+.event-variant--wappmiddag .panel {
+  background: color-mix(in srgb, #f2ecc6 89%, var(--theme-surface));
+  border-color: #006c33;
+}
+
+.event-variant--wappmiddag .event-variant-nav button {
+  color: #084c2f;
+  border-color: #006c33;
+}
+
+.event-variant--wappmiddag .event-variant-nav button.is-active {
+  background: color-mix(in srgb, #006c33 20%, transparent);
+}
+
+.event-variant--tomtejakt::before {
+  background:
+    radial-gradient(circle at 5% 5%, color-mix(in srgb, #00c05a 20%, transparent), transparent 30%),
+    radial-gradient(circle at 95% 5%, color-mix(in srgb, #e096a2 20%, transparent), transparent 40%);
+}
+
+.event-variant--tomtejakt .event-variant-hero,
+.event-variant--tomtejakt .panel {
+  background: color-mix(in srgb, #f2ecc6 88%, var(--theme-surface));
+  border-color: #006c33;
+}
+
+.event-variant--tomtejakt .event-variant-nav button {
+  color: #084c2f;
+  border-color: #006c33;
+}
+
+.event-variant--tomtejakt .event-variant-nav button.is-active {
+  background: color-mix(in srgb, #006c33 18%, transparent);
+}
+
 @media (max-width: 640px) {
   .site-main {
     margin-top: 1rem;

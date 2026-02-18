@@ -13,6 +13,9 @@ Base path: `/api/v1`
   - Includes:
     - `enabled_modules` for association-specific module availability.
     - `module_capabilities` for per-module `enabled`, `routes`, and `features`.
+      - Each module capability also includes:
+        - `label` (display name for navigation)
+        - `nav_route` (preferred top-level route for frontend navigation)
     - `default_landing_path` for associations that do not use `/` as homepage.
 - `GET /auth/session`
 - `POST /auth/login`

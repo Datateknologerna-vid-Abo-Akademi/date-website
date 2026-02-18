@@ -74,8 +74,17 @@
 - `/alumni/update/{token}` -> Next route `frontend/app/alumni/update/[token]/page.tsx` using
   `GET/POST /api/v1/alumni/update/{token}`
 
-## Still Django-Rendered (Pending API + Frontend Migration)
-- app-specific visual styling parity for special event templates (logic now exposed via API `template_variant`)
+## Special Event Parity
+- Variant-aware event detail rendering is now handled in Next.js via `template_variant` with dedicated styles for:
+  - `arsfest`
+  - `baal`
+  - `kk100`
+  - `wappmiddag`
+  - `tomtejakt`
+- Hash compatibility for legacy variant sections is preserved:
+  - `#/main`
+  - `#/anmalan`
+  - `#/attendee-list` (`#/anmalda` alias)
 
 ## Rollout Recommendation
 1. Keep current Django pages available during transition.

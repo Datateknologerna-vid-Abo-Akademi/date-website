@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import type { SiteMeta } from "@/lib/api/types";
-import { isModuleEnabled } from "@/lib/modules";
+import { getModuleNavigation } from "@/lib/modules";
 
 interface SiteHeaderProps {
   siteMeta: SiteMeta;
@@ -10,17 +10,9 @@ interface SiteHeaderProps {
 export function SiteHeader({ siteMeta }: SiteHeaderProps) {
   const associationName =
     (siteMeta.content_variables.ASSOCIATION_NAME_SHORT as string | undefined) ?? "Association";
-  const showPolls = isModuleEnabled(siteMeta, "polls");
-  const showPublications = isModuleEnabled(siteMeta, "publications");
-  const showCtf = isModuleEnabled(siteMeta, "ctf");
-  const showLucia = isModuleEnabled(siteMeta, "lucia");
-  const showAlumni = isModuleEnabled(siteMeta, "alumni");
-  const showNews = isModuleEnabled(siteMeta, "news");
-  const showEvents = isModuleEnabled(siteMeta, "events");
-  const showArchive = isModuleEnabled(siteMeta, "archive");
-  const showSocial = isModuleEnabled(siteMeta, "social");
-  const showAds = isModuleEnabled(siteMeta, "ads");
+  const moduleNav = getModuleNavigation(siteMeta);
   const showHome = siteMeta.default_landing_path === "/";
+
   return (
     <header className="site-header">
       <div className="site-header__inner">
@@ -29,17 +21,12 @@ export function SiteHeader({ siteMeta }: SiteHeaderProps) {
         </Link>
         <nav className="site-header__nav" aria-label="Main navigation">
           {showHome ? <Link href="/">Home</Link> : null}
-          {showNews ? <Link href="/news">News</Link> : null}
-          {showEvents ? <Link href="/events">Events</Link> : null}
-          {showPolls ? <Link href="/polls">Polls</Link> : null}
           <Link href="/members">Members</Link>
-          {showArchive ? <Link href="/archive">Archive</Link> : null}
-          {showSocial ? <Link href="/social">Social</Link> : null}
-          {showAds ? <Link href="/ads">Ads</Link> : null}
-          {showPublications ? <Link href="/publications">Publications</Link> : null}
-          {showCtf ? <Link href="/ctf">CTF</Link> : null}
-          {showLucia ? <Link href="/lucia">Lucia</Link> : null}
-          {showAlumni ? <Link href="/alumni/signup">Alumni</Link> : null}
+          {moduleNav.map((item) => (
+            <Link key={item.moduleKey} href={item.href}>
+              {item.label}
+            </Link>
+          ))}
           {siteMeta.navigation.slice(0, 3).map((navCategory) =>
             navCategory.url ? (
               <a key={navCategory.category_name} href={navCategory.url}>

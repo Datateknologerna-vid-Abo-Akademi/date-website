@@ -33,6 +33,8 @@ export interface SiteNavCategory {
 
 export interface ModuleCapability {
   enabled: boolean;
+  label?: string;
+  nav_route?: string;
   routes: string[];
   features: string[];
 }
