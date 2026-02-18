@@ -6,10 +6,9 @@ from django.utils.deprecation import MiddlewareMixin
 
 
 class LangMiddleware(MiddlewareMixin):
-
     @staticmethod
     def process_request(request):
-        request.LANG = getattr(settings, 'LANGUAGE_CODE', settings.LANGUAGE_CODE)
+        request.LANG = getattr(settings, "LANGUAGE_CODE", settings.LANGUAGE_CODE)
         try:
             pass
             # TODO This is borked as of Django 4.0 but it doesn't seem like it's in use
@@ -43,16 +42,16 @@ class CDNRewriteMiddleware:
 
     def __init__(self, get_response):
         self.get_response = get_response
-        self.cdn_url_transformations = getattr(settings, 'CDN_URL_TRANSFORMATIONS', [])
+        self.cdn_url_transformations = getattr(settings, "CDN_URL_TRANSFORMATIONS", [])
 
     def __call__(self, request):
         response = self.get_response(request)
 
-        for original, new in self.cdn_url_transformations:
-            if original and new:
-                response.content = response.content.replace(
-                    bytes(original, 'utf-8'),
-                    bytes(new, 'utf-8')
-                )
+        if not getattr(response, "streaming", False):
+            for original, new in self.cdn_url_transformations:
+                if original and new:
+                    response.content = response.content.replace(
+                        bytes(original, "utf-8"), bytes(new, "utf-8")
+                    )
 
         return response

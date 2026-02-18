@@ -82,7 +82,7 @@ else
     export COMPOSE_FILE_PATH="docker-compose.yml"
 fi
 
-alias date="docker-compose -f \"${COMPOSE_FILE_PATH}\""
+alias date="docker compose -f \"${COMPOSE_FILE_PATH}\""
 alias date-manage="date run web python /code/manage.py"
 alias date-migrate="date-manage migrate --noinput"
 alias date-makemigrations="date-manage makemigrations"
@@ -94,5 +94,5 @@ alias date-createsuperuser="date-manage createsuperuser"
 alias date-pull="date pull"
 
 date-test() {
-    docker-compose run -e TEST=1 web /bin/bash -c './wait-for-postgres.sh db:5432 && python /code/manage.py test "$@"'
+    docker compose run -e TEST=1 web /bin/bash -c './wait-for-postgres.sh db:5432 && python /code/manage.py test "$@"'
 }
