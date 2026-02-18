@@ -19,6 +19,16 @@ Monorepo with:
 ## Backend-Only Workflow
 `backend/env.sh` is still available for backend-only development.
 
+## CI Workflows
+- `.github/workflows/ci.yml`
+  - Runs on push and pull requests.
+  - Frontend: `npm ci`, `npm run lint`, `npm run build`.
+  - Backend: dependency install + `python -m compileall backend`.
+- `.github/workflows/association-qa.yml`
+  - Runs nightly and on manual trigger.
+  - Executes `python scripts/association_qa.py`.
+  - Uploads `docs/association-qa-report.md` as a workflow artifact.
+
 ## Key Docs
 - `docs/architecture.md`
 - `docs/api-contract.md`

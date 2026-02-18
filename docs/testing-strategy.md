@@ -45,6 +45,14 @@
 ## Baseline Commands
 - `npm run lint` (frontend)
 - `npm run build` (frontend)
-- `python -m compileall api` (backend quick syntax check)
+- `python -m compileall backend` (backend quick syntax check)
 - `python scripts/association_qa.py` (cross-association runtime parity and module-guard checks)
   - uses uncached `meta/site` reads in frontend to avoid stale capability data when switching `PROJECT_NAME`
+
+## CI Mapping
+- Fast CI (`.github/workflows/ci.yml`)
+  - frontend lint/build
+  - backend compile check
+- Association QA (`.github/workflows/association-qa.yml`)
+  - scheduled/manual full runtime association checks
+  - uploads QA markdown report artifact
