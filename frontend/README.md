@@ -21,6 +21,7 @@ Use the root-level stack:
   - `GET /api/v1/meta/site`
 - Module availability per association is exposed via:
   - `meta.site.data.enabled_modules`
+  - `meta.site.data.module_capabilities` (preferred)
 - Association landing route is exposed via:
   - `meta.site.data.default_landing_path`
 - Event detail route includes decoupled passcode/signup flow against:

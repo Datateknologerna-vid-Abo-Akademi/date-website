@@ -12,6 +12,7 @@
   - `association_theme`
   - `navigation`
   - `feature_flags`
+  - `module_capabilities`
 
 ## Theme Override
 - Use `ASSOCIATION_THEME` env var (JSON) for deployment-specific overrides.

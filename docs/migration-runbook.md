@@ -26,4 +26,4 @@ Move user-facing rendering from Django templates to Next.js while preserving exi
 - Event signup edge cases (passcodes, parent event capacity, captcha).
 - Event billing integration edge cases (feature flag + module enabled, invoice generation failures).
 - Special event template parity (handle via API `template_variant` and frontend layout selection).
-- Per-association differences in installed apps and templates (use `meta.site.data.enabled_modules` in frontend guards).
+- Per-association differences in installed apps and templates (use `meta.site.data.module_capabilities` in frontend guards).

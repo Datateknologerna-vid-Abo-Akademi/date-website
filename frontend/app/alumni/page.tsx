@@ -2,10 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getSiteMeta } from "@/lib/api/queries";
+import { isModuleEnabled } from "@/lib/modules";
 
 export default async function AlumniPage() {
   const siteMeta = await getSiteMeta();
-  if (!siteMeta.enabled_modules.includes("alumni")) notFound();
+  if (!isModuleEnabled(siteMeta, "alumni")) notFound();
 
   return (
     <div className="page-shell">

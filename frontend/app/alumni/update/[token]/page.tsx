@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { AlumniUpdateForm } from "@/components/alumni/update-form";
 import { getAlumniUpdateToken, getSiteMeta } from "@/lib/api/queries";
+import { isModuleEnabled } from "@/lib/modules";
 
 interface AlumniTokenPageProps {
   params: {
@@ -11,7 +12,7 @@ interface AlumniTokenPageProps {
 
 export default async function AlumniTokenPage({ params }: AlumniTokenPageProps) {
   const siteMeta = await getSiteMeta();
-  if (!siteMeta.enabled_modules.includes("alumni")) notFound();
+  if (!isModuleEnabled(siteMeta, "alumni")) notFound();
 
   const tokenPayload = await getAlumniUpdateToken(params.token).catch(() => null);
   if (!tokenPayload) notFound();

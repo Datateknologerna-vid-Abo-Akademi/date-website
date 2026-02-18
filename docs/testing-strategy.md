@@ -35,7 +35,7 @@
   - login/session persistence
   - event detail and registration
   - association switching by `PROJECT_NAME`
-  - module visibility using `enabled_modules`
+  - module visibility using `module_capabilities`
 
 ## Baseline Commands
 - `npm run lint` (frontend)

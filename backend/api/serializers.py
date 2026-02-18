@@ -28,6 +28,7 @@ class SiteMetaSerializer(serializers.Serializer):
     navigation = StaticPageNavSerializer(many=True)
     feature_flags = serializers.ListField(child=serializers.CharField())
     enabled_modules = serializers.ListField(child=serializers.CharField())
+    module_capabilities = serializers.DictField(child=serializers.JSONField())
     default_landing_path = serializers.CharField()
 
 

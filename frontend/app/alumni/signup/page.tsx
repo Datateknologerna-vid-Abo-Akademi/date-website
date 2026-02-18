@@ -3,10 +3,11 @@ import { notFound } from "next/navigation";
 
 import { AlumniSignupForm } from "@/components/alumni/signup-form";
 import { getSiteMeta } from "@/lib/api/queries";
+import { isModuleEnabled } from "@/lib/modules";
 
 export default async function AlumniSignupPage() {
   const siteMeta = await getSiteMeta();
-  if (!siteMeta.enabled_modules.includes("alumni")) notFound();
+  if (!isModuleEnabled(siteMeta, "alumni")) notFound();
 
   return (
     <div className="page-shell">

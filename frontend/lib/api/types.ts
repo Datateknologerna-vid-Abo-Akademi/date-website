@@ -31,6 +31,12 @@ export interface SiteNavCategory {
   urls: StaticUrl[];
 }
 
+export interface ModuleCapability {
+  enabled: boolean;
+  routes: string[];
+  features: string[];
+}
+
 export interface SiteMeta {
   project_name: string;
   language_code: string;
@@ -40,6 +46,7 @@ export interface SiteMeta {
   navigation: SiteNavCategory[];
   feature_flags: string[];
   enabled_modules: string[];
+  module_capabilities: Record<string, ModuleCapability>;
   default_landing_path: string;
 }
 

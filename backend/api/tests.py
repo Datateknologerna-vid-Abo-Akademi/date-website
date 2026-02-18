@@ -36,6 +36,10 @@ class ApiSmokeTests(TestCase):
         payload = response.json()
         self.assertIn("data", payload)
         self.assertIn("enabled_modules", payload["data"])
+        self.assertIn("module_capabilities", payload["data"])
+        self.assertIn("events", payload["data"]["module_capabilities"])
+        self.assertIn("enabled", payload["data"]["module_capabilities"]["events"])
+        self.assertIn("features", payload["data"]["module_capabilities"]["events"])
         self.assertIn("default_landing_path", payload["data"])
 
     def test_home_endpoint(self):
@@ -211,6 +215,14 @@ class ApiSmokeTests(TestCase):
     def test_events_feed_endpoint(self):
         response = self.client.get("/api/v1/events/feed")
         self.assertEqual(response.status_code, 200)
+
+    @override_settings(EXPERIMENTAL_FEATURES=["event_billing"])
+    def test_meta_site_capabilities_include_event_billing_feature(self):
+        response = self.client.get("/api/v1/meta/site")
+        self.assertEqual(response.status_code, 200)
+        capabilities = response.json()["data"]["module_capabilities"]
+        self.assertIn("billing_status", capabilities["events"]["features"])
+        self.assertIn("event_signup_billing", capabilities["billing"]["features"])
 
     @override_settings(EXPERIMENTAL_FEATURES=["event_billing"])
     @patch("billing.handlers.generate_invoice_number", return_value=24000099)

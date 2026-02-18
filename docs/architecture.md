@@ -12,7 +12,7 @@
 - Association is still selected in Django via `PROJECT_NAME` (`date`, `kk`, `biocum`, `on`, `demo`).
 - Frontend theme is now runtime-driven through `GET /api/v1/meta/site`.
 - `ASSOCIATION_THEME` env JSON can override per deployment without frontend rebuild.
-- Optional route groups are exposed through `enabled_modules` in the same payload, so frontend navigation and pages stay association-safe.
+- Optional route groups are exposed through `module_capabilities` in the same payload, so frontend navigation and pages stay association-safe.
 - Association-specific landing behavior is controlled by `FRONTEND_DEFAULT_ROUTE` (exposed as `default_landing_path`).
 - Special event rendering behavior is exposed via event `template_variant` instead of Django template routing.
 

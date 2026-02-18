@@ -68,10 +68,83 @@ MODULE_APP_MAP = {
     "alumni": "alumni",
 }
 
+MODULE_CAPABILITY_SPEC = {
+    "ads": {
+        "routes": ["/ads"],
+        "features": ["list"],
+    },
+    "archive": {
+        "routes": ["/archive", "/archive/pictures", "/archive/documents", "/archive/exams"],
+        "features": ["pictures", "documents", "exams"],
+    },
+    "events": {
+        "routes": ["/events", "/events/{slug}", "/events/feed"],
+        "features": ["list", "detail", "feed", "passcode", "signup", "attendees", "template_variants"],
+    },
+    "news": {
+        "routes": ["/news", "/news/{slug}", "/news/feed"],
+        "features": ["list", "detail", "feed", "category_filter", "author_filter"],
+    },
+    "social": {
+        "routes": ["/social", "/social/harassment"],
+        "features": ["overview", "harassment_reporting"],
+    },
+    "staticpages": {
+        "routes": ["/pages/{slug}"],
+        "features": ["navigation", "page_detail"],
+    },
+    "billing": {
+        "routes": ["/events/{slug}/signup"],
+        "features": ["event_signup_billing"],
+    },
+    "polls": {
+        "routes": ["/polls", "/polls/{id}"],
+        "features": ["list", "detail", "vote", "results"],
+    },
+    "publications": {
+        "routes": ["/publications", "/publications/{slug}"],
+        "features": ["list", "detail"],
+    },
+    "ctf": {
+        "routes": ["/ctf", "/ctf/{slug}", "/ctf/{slug}/{flag}"],
+        "features": ["list", "detail", "flag_detail", "guess"],
+    },
+    "lucia": {
+        "routes": ["/lucia", "/lucia/candidates", "/lucia/candidates/{slug}"],
+        "features": ["overview", "candidates", "candidate_detail"],
+    },
+    "alumni": {
+        "routes": ["/alumni", "/alumni/signup", "/alumni/update", "/alumni/update/{token}"],
+        "features": ["signup", "update_request", "update_token"],
+    },
+}
+
 
 def is_module_enabled(module_key):
     app_label = MODULE_APP_MAP.get(module_key)
     return app_label is not None and apps.is_installed(app_label)
+
+
+def build_module_capabilities():
+    capabilities = {}
+    event_billing_enabled = is_module_enabled("billing") and "event_billing" in settings.EXPERIMENTAL_FEATURES
+    for module_key in MODULE_APP_MAP:
+        spec = MODULE_CAPABILITY_SPEC.get(module_key, {"routes": [], "features": []})
+        enabled = is_module_enabled(module_key)
+        features = list(spec["features"])
+
+        if module_key == "events":
+            if event_billing_enabled:
+                features.append("billing_status")
+        if module_key == "billing" and not event_billing_enabled:
+            features = []
+
+        capabilities[module_key] = {
+            "enabled": enabled,
+            "routes": spec["routes"],
+            "features": features if enabled else [],
+        }
+    return capabilities
 
 
 def module_disabled_response(module_key):
@@ -140,6 +213,7 @@ class SiteMetaApiView(APIView):
 
     def get(self, request):
         navigation = self._build_navigation()
+        module_capabilities = build_module_capabilities()
         payload = {
             "project_name": settings.PROJECT_NAME,
             "language_code": settings.LANGUAGE_CODE,
@@ -148,7 +222,8 @@ class SiteMetaApiView(APIView):
             "captcha_site_key": settings.CAPTCHA_SITE_KEY,
             "navigation": navigation,
             "feature_flags": settings.EXPERIMENTAL_FEATURES,
-            "enabled_modules": sorted([key for key in MODULE_APP_MAP if is_module_enabled(key)]),
+            "enabled_modules": sorted([key for key, value in module_capabilities.items() if value["enabled"]]),
+            "module_capabilities": module_capabilities,
             "default_landing_path": getattr(settings, "FRONTEND_DEFAULT_ROUTE", "/"),
         }
         serializer = SiteMetaSerializer(payload)

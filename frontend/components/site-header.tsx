@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type { SiteMeta } from "@/lib/api/types";
+import { isModuleEnabled } from "@/lib/modules";
 
 interface SiteHeaderProps {
   siteMeta: SiteMeta;
@@ -9,17 +10,16 @@ interface SiteHeaderProps {
 export function SiteHeader({ siteMeta }: SiteHeaderProps) {
   const associationName =
     (siteMeta.content_variables.ASSOCIATION_NAME_SHORT as string | undefined) ?? "Association";
-  const enabledModules = new Set(siteMeta.enabled_modules ?? []);
-  const showPolls = enabledModules.has("polls");
-  const showPublications = enabledModules.has("publications");
-  const showCtf = enabledModules.has("ctf");
-  const showLucia = enabledModules.has("lucia");
-  const showAlumni = enabledModules.has("alumni");
-  const showNews = enabledModules.has("news");
-  const showEvents = enabledModules.has("events");
-  const showArchive = enabledModules.has("archive");
-  const showSocial = enabledModules.has("social");
-  const showAds = enabledModules.has("ads");
+  const showPolls = isModuleEnabled(siteMeta, "polls");
+  const showPublications = isModuleEnabled(siteMeta, "publications");
+  const showCtf = isModuleEnabled(siteMeta, "ctf");
+  const showLucia = isModuleEnabled(siteMeta, "lucia");
+  const showAlumni = isModuleEnabled(siteMeta, "alumni");
+  const showNews = isModuleEnabled(siteMeta, "news");
+  const showEvents = isModuleEnabled(siteMeta, "events");
+  const showArchive = isModuleEnabled(siteMeta, "archive");
+  const showSocial = isModuleEnabled(siteMeta, "social");
+  const showAds = isModuleEnabled(siteMeta, "ads");
   const showHome = siteMeta.default_landing_path === "/";
   return (
     <header className="site-header">

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { RichContent } from "@/components/rich-content";
 import { getHomeData, getSiteMeta } from "@/lib/api/queries";
+import { isModuleEnabled } from "@/lib/modules";
 
 export default async function Home() {
   const siteMeta = await getSiteMeta();
@@ -11,6 +12,8 @@ export default async function Home() {
   }
 
   const homeData = await getHomeData();
+  const showNews = isModuleEnabled(siteMeta, "news");
+  const showEvents = isModuleEnabled(siteMeta, "events");
   const associationName =
     (siteMeta.content_variables.ASSOCIATION_NAME as string | undefined) ?? "Association";
   return (
@@ -24,35 +27,41 @@ export default async function Home() {
         </p>
       </section>
 
-      <section className="content-grid">
-        <article className="panel">
-          <h2>Latest News</h2>
-          <ul className="list">
-            {homeData.news.map((item) => (
-              <li key={item.slug}>
-                <Link href={`/news/articles/${item.slug}`}>{item.title}</Link>
-              </li>
-            ))}
-          </ul>
-          <Link href="/news" className="cta-link">
-            Browse all news
-          </Link>
-        </article>
+      {showNews || showEvents ? (
+        <section className="content-grid">
+          {showNews ? (
+            <article className="panel">
+              <h2>Latest News</h2>
+              <ul className="list">
+                {homeData.news.map((item) => (
+                  <li key={item.slug}>
+                    <Link href={`/news/articles/${item.slug}`}>{item.title}</Link>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/news" className="cta-link">
+                Browse all news
+              </Link>
+            </article>
+          ) : null}
 
-        <article className="panel">
-          <h2>Upcoming Events</h2>
-          <ul className="list">
-            {homeData.events.map((item) => (
-              <li key={item.slug}>
-                <Link href={`/events/${item.slug}`}>{item.title}</Link>
-              </li>
-            ))}
-          </ul>
-          <Link href="/events" className="cta-link">
-            Browse all events
-          </Link>
-        </article>
-      </section>
+          {showEvents ? (
+            <article className="panel">
+              <h2>Upcoming Events</h2>
+              <ul className="list">
+                {homeData.events.map((item) => (
+                  <li key={item.slug}>
+                    <Link href={`/events/${item.slug}`}>{item.title}</Link>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/events" className="cta-link">
+                Browse all events
+              </Link>
+            </article>
+          ) : null}
+        </section>
+      ) : null}
 
       {homeData.aa_post ? (
         <section className="panel highlight">
