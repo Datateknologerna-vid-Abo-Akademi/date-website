@@ -26,11 +26,21 @@ Use the root-level stack:
 - `/`
 - `/news`
 - `/news/[slug]`
+- `/news/articles/[slug]`
+- `/news/author/[author]`
+- `/news/[slug]/[article]`
+- `/news/feed` (route handler)
 - `/events`
 - `/events/[slug]`
+- `/events/feed` (route handler)
 - `/pages/[slug]`
 - `/members`
 - `/members/login`
+- `/members/signup`
+- `/members/activate/[uid]/[token]`
+- `/members/password_reset`
+- `/members/reset/[uid]/[token]`
+- `/members/password_change`
 - `/members/profile`
 - `/members/functionaries`
 - `/polls`

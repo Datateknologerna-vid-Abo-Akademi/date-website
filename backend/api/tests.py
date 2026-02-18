@@ -1,11 +1,16 @@
 from unittest.mock import patch
 
+from django.contrib.auth.tokens import default_token_generator
 from django.test import TestCase
 from django.utils import timezone
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 
 from alumni.models import AlumniUpdateToken
+from archive.models import Collection
 from ctf.models import Ctf, Flag, Guess
 from members.models import MembershipType, Member
+from members.tokens import account_activation_token
 from social.models import Harassment, HarassmentEmailRecipient
 
 
@@ -137,3 +142,66 @@ class ApiSmokeTests(TestCase):
         response = self.client.get("/api/v1/lucia")
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()["error"]["code"], "feature_disabled")
+
+    def test_account_activation_endpoint(self):
+        new_user = Member.objects.create(
+            username="inactive-user",
+            email="inactive@example.com",
+            membership_type=self.membership_type,
+            is_active=False,
+        )
+        uid = urlsafe_base64_encode(force_bytes(new_user.pk))
+        token = account_activation_token.make_token(new_user)
+
+        response = self.client.get(f"/api/v1/auth/activate/{uid}/{token}")
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["data"]["activated"])
+        new_user.refresh_from_db()
+        self.assertTrue(new_user.is_active)
+
+    def test_archive_picture_collection_by_id_endpoint(self):
+        collection = Collection.objects.create(
+            title="Winter",
+            type="Pictures",
+            pub_date=timezone.now(),
+        )
+        self.client.login(username="tester", password="password123")
+        response = self.client.get(f"/api/v1/archive/pictures/id/{collection.id}")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["data"]["collection"]["id"], collection.id)
+
+    @patch("api.views.send_email_task.delay")
+    def test_password_reset_and_confirm_flow(self, _mocked_send_email):
+        reset_request = self.client.post("/api/v1/auth/password-reset", {"email": "tester@example.com"})
+        self.assertEqual(reset_request.status_code, 200)
+        self.assertTrue(reset_request.json()["data"]["submitted"])
+
+        uid = urlsafe_base64_encode(force_bytes(self.member.pk))
+        token = default_token_generator.make_token(self.member)
+        reset_confirm = self.client.post(
+            f"/api/v1/auth/password-reset/{uid}/{token}",
+            {"new_password1": "newpass123A", "new_password2": "newpass123A"},
+        )
+        self.assertEqual(reset_confirm.status_code, 200)
+        self.assertTrue(reset_confirm.json()["data"]["password_reset"])
+
+    def test_password_change_when_authenticated(self):
+        self.client.login(username="tester", password="password123")
+        response = self.client.post(
+            "/api/v1/auth/password-change",
+            {
+                "old_password": "password123",
+                "new_password1": "changed123A",
+                "new_password2": "changed123A",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["data"]["password_changed"])
+
+    def test_news_feed_endpoint(self):
+        response = self.client.get("/api/v1/news/feed")
+        self.assertEqual(response.status_code, 200)
+
+    def test_events_feed_endpoint(self):
+        response = self.client.get("/api/v1/events/feed")
+        self.assertEqual(response.status_code, 200)

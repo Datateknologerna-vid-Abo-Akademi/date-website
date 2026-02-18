@@ -18,8 +18,12 @@ export default async function MembersPage() {
       <section className="panel">
         <div className="link-grid">
           {!session.is_authenticated ? <Link href="/members/login">Login</Link> : null}
+          {!session.is_authenticated ? <Link href="/members/signup">Signup</Link> : null}
+          {!session.is_authenticated ? <Link href="/members/password_reset">Reset password</Link> : null}
           <Link href="/members/profile">Profile</Link>
           <Link href="/members/functionaries">Functionaries</Link>
+          <Link href="/members/password_change">Change password</Link>
+          <Link href="/members/cert">Certificate</Link>
           <Link href="/polls">Polls</Link>
         </div>
       </section>

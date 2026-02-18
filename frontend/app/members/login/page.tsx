@@ -26,6 +26,10 @@ export default async function LoginPage() {
       </section>
       <section className="panel">
         <LoginForm />
+        <div className="link-grid">
+          <Link href="/members/signup">Create account</Link>
+          <Link href="/members/password_reset">Forgot password</Link>
+        </div>
       </section>
     </div>
   );

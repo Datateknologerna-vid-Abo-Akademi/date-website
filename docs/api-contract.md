@@ -15,6 +15,10 @@ Base path: `/api/v1`
 - `POST /auth/login`
 - `POST /auth/logout`
 - `POST /auth/signup`
+- `GET /auth/activate/{uidb64}/{token}`
+- `POST /auth/password-reset`
+- `POST /auth/password-reset/{uidb64}/{token}`
+- `POST /auth/password-change`
 
 ### Home
 - `GET /home`
@@ -28,10 +32,12 @@ Base path: `/api/v1`
     - `author=<username>`
 - `GET /news/{slug}`
   - Optional query: `category=<slug>`
+- `GET /news/feed`
 
 ### Events
 - `GET /events`
   - Query: `include_past=true|false`
+- `GET /events/feed`
 - `GET /events/{slug}`
 - `POST /events/{slug}/passcode`
 - `POST /events/{slug}/signup`
@@ -91,6 +97,7 @@ Base path: `/api/v1`
 ### Archive
 - `GET /archive/pictures/years`
 - `GET /archive/pictures/{year}`
+- `GET /archive/pictures/id/{collection_id}`
 - `GET /archive/pictures/{year}/{album}`
   - Query: `page=<n>`
 - `GET /archive/documents`

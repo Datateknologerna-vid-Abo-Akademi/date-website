@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 import { RichContent } from "@/components/rich-content";
-import { getNewsArticle } from "@/lib/api/queries";
+import { getNews, getNewsArticle } from "@/lib/api/queries";
 
 interface NewsDetailPageProps {
   params: {
@@ -13,7 +14,28 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
   const { slug } = params;
   const article = await getNewsArticle(slug).catch(() => null);
   if (!article) {
-    notFound();
+    const categoryPosts = await getNews(slug).catch(() => null);
+    if (!categoryPosts) notFound();
+    return (
+      <div className="page-shell">
+        <section className="hero compact">
+          <p className="eyebrow">News</p>
+          <h1>Category: {slug}</h1>
+        </section>
+        <section className="panel">
+          <ul className="list list--spaced">
+            {categoryPosts.map((post) => (
+              <li key={post.slug}>
+                <h2>
+                  <Link href={`/news/${slug}/${post.slug}`}>{post.title}</Link>
+                </h2>
+                <p className="meta">{post.author_name}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+    );
   }
   return (
     <div className="page-shell">

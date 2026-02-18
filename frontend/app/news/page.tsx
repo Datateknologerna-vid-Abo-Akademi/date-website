@@ -15,7 +15,7 @@ export default async function NewsPage() {
           {news.map((article) => (
             <li key={article.slug}>
               <h2>
-                <Link href={`/news/${article.slug}`}>{article.title}</Link>
+                <Link href={`/news/articles/${article.slug}`}>{article.title}</Link>
               </h2>
               <p className="meta">
                 {article.author_name}

@@ -4,13 +4,15 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.forms import PasswordChangeForm, SetPasswordForm
+from django.contrib.auth.tokens import default_token_generator
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import permissions, status
 from rest_framework.response import Response
@@ -193,6 +195,15 @@ class NewsListApiView(APIView):
         return Response({"data": serializer.data})
 
 
+class NewsFeedApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from news.feed import LatestPosts
+
+        return LatestPosts()(request)
+
+
 class NewsDetailApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -221,6 +232,15 @@ class EventsListApiView(APIView):
             queryset = queryset.filter(event_date_end__gte=timezone.now())
         serializer = EventListSerializer(queryset, many=True)
         return Response({"data": serializer.data})
+
+
+class EventsFeedApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from events.feed import EventFeed
+
+        return EventFeed()(request)
 
 
 class EventDetailApiView(APIView):
@@ -893,6 +913,122 @@ class SignupApiView(APIView):
         )
 
 
+class ActivateApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = Member.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, Member.DoesNotExist):
+            user = None
+
+        if user is not None and account_activation_token.check_token(user, token):
+            user.is_active = True
+            user.save(update_fields=["is_active"])
+            return Response({"data": {"activated": True, "username": user.username}})
+        return Response(
+            {"error": {"code": "invalid_token", "message": "Activation link is invalid."}},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class PasswordResetRequestApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = (request.data.get("email") or "").strip()
+        if not email:
+            return Response(
+                {"error": {"code": "invalid_form", "message": "Email is required."}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = Member.objects.filter(email__iexact=email, is_active=True).first()
+        if user:
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            site_url = settings.CONTENT_VARIABLES.get("SITE_URL", "").rstrip("/")
+            reset_url = f"{site_url}/members/reset/{uid}/{token}"
+            message = (
+                "Du har begärt återställning av lösenord.\n\n"
+                f"Följ denna länk för att byta lösenord:\n{reset_url}\n\n"
+                "Om du inte begärde detta kan du ignorera meddelandet."
+            )
+            send_email_task.delay(
+                "Password reset request",
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+            )
+        return Response({"data": {"submitted": True}})
+
+
+class PasswordResetConfirmApiView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = Member.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, Member.DoesNotExist):
+            user = None
+
+        if user is None or not default_token_generator.check_token(user, token):
+            return Response(
+                {"error": {"code": "invalid_token", "message": "Reset link is invalid."}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        form = SetPasswordForm(
+            user=user,
+            data={
+                "new_password1": request.data.get("new_password1"),
+                "new_password2": request.data.get("new_password2"),
+            },
+        )
+        if not form.is_valid():
+            return Response(
+                {
+                    "error": {
+                        "code": "invalid_form",
+                        "message": "Invalid password fields.",
+                        "details": form.errors,
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        form.save()
+        return Response({"data": {"password_reset": True}})
+
+
+class PasswordChangeApiView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        form = PasswordChangeForm(
+            user=request.user,
+            data={
+                "old_password": request.data.get("old_password"),
+                "new_password1": request.data.get("new_password1"),
+                "new_password2": request.data.get("new_password2"),
+            },
+        )
+        if not form.is_valid():
+            return Response(
+                {
+                    "error": {
+                        "code": "invalid_form",
+                        "message": "Invalid password change fields.",
+                        "details": form.errors,
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        form.save()
+        return Response({"data": {"password_changed": True}})
+
+
 class MemberProfileApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -1160,6 +1296,29 @@ class ArchivePicturesByYearApiView(APIView, ArchiveAccessMixin):
 
         collections = Collection.objects.filter(type="Pictures", pub_date__year=year).order_by("-pub_date")
         return Response({"data": ArchiveCollectionSerializer(collections, many=True).data})
+
+
+class ArchivePictureCollectionByIdApiView(APIView, ArchiveAccessMixin):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, collection_id):
+        auth_error = self.check_archive_access(request)
+        if auth_error:
+            return auth_error
+
+        collection = Collection.objects.filter(pk=collection_id, type="Pictures").first()
+        if not collection:
+            return Response(
+                {"error": {"code": "not_found", "message": "Picture collection not found."}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        payload = {
+            "collection": ArchiveCollectionSerializer(collection).data,
+            "year": collection.pub_date.year,
+            "album": collection.title,
+        }
+        return Response({"data": payload})
 
 
 class ArchivePictureDetailApiView(APIView, ArchiveAccessMixin):

@@ -1,8 +1,10 @@
 import { fetchApi } from "./fetcher";
 import type {
   AdItem,
+  ActivationPayload,
   AlumniUpdateTokenPayload,
   ArchiveCollection,
+  ArchivePictureCollectionByIdPayload,
   ArchiveDocumentsPayload,
   ArchiveExamDetailPayload,
   ArchivePictureDetailPayload,
@@ -34,9 +36,10 @@ export async function getHomeData() {
   return fetchApi<HomePayload>("home", { nextRevalidate: 120 });
 }
 
-export async function getNews(category?: string) {
+export async function getNews(category?: string, author?: string) {
   const params = new URLSearchParams();
   if (category) params.set("category", category);
+  if (author) params.set("author", author);
   const query = params.toString();
   return fetchApi<NewsItem[]>(`news${query ? `?${query}` : ""}`, { nextRevalidate: 120 });
 }
@@ -103,6 +106,12 @@ export async function getArchivePictureCollection(year: number, album: string, p
   );
 }
 
+export async function getArchivePictureCollectionById(collectionId: number) {
+  return fetchApi<ArchivePictureCollectionByIdPayload>(`archive/pictures/id/${collectionId}`, {
+    nextRevalidate: 30,
+  });
+}
+
 export async function getArchiveDocuments(collection?: string, titleContains?: string, page = 1) {
   const params = new URLSearchParams();
   params.set("page", String(page));
@@ -161,4 +170,8 @@ export async function getLuciaCandidate(slug: string) {
 
 export async function getAlumniUpdateToken(token: string) {
   return fetchApi<AlumniUpdateTokenPayload>(`alumni/update/${token}`, { nextRevalidate: 0 });
+}
+
+export async function activateAccount(uid: string, token: string) {
+  return fetchApi<ActivationPayload>(`auth/activate/${uid}/${token}`, { nextRevalidate: 0 });
 }

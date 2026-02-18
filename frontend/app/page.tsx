@@ -24,7 +24,7 @@ export default async function Home() {
           <ul className="list">
             {homeData.news.map((item) => (
               <li key={item.slug}>
-                <Link href={`/news/${item.slug}`}>{item.title}</Link>
+                <Link href={`/news/articles/${item.slug}`}>{item.title}</Link>
               </li>
             ))}
           </ul>

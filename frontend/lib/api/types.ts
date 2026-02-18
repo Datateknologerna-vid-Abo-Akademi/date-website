@@ -234,6 +234,12 @@ export interface ArchivePictureDetailPayload extends PaginatedPayload<ArchivePic
   collection: ArchiveCollection;
 }
 
+export interface ArchivePictureCollectionByIdPayload {
+  collection: ArchiveCollection;
+  year: number;
+  album: string;
+}
+
 export interface ArchiveDocumentsPayload extends PaginatedPayload<ArchiveDocument> {
   collections: ArchiveCollection[];
 }
@@ -318,4 +324,9 @@ export interface AlumniUpdateTokenPayload {
   email: string;
   token: string;
   is_valid: boolean;
+}
+
+export interface ActivationPayload {
+  activated: boolean;
+  username: string;
 }
