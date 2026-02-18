@@ -9,6 +9,9 @@ interface RequestOptions extends RequestInit {
 }
 
 async function getRequestOrigin() {
+  if (process.env.BACKEND_API_ORIGIN) {
+    return process.env.BACKEND_API_ORIGIN;
+  }
   const incomingHeaders = await headers();
   const host = incomingHeaders.get("x-forwarded-host") ?? incomingHeaders.get("host");
   const protocol = incomingHeaders.get("x-forwarded-proto") ?? "http";
@@ -17,6 +20,8 @@ async function getRequestOrigin() {
 }
 
 export async function fetchApi<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const incomingHeaders = await headers();
+  const cookie = incomingHeaders.get("cookie");
   const origin = await getRequestOrigin();
   const url = `${origin}/api/v1/${path.replace(/^\//, "")}`;
 
@@ -24,6 +29,7 @@ export async function fetchApi<T>(path: string, options: RequestOptions = {}): P
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(cookie ? { Cookie: cookie } : {}),
       ...(options.headers ?? {}),
     },
     next: options.nextRevalidate

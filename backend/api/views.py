@@ -11,6 +11,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.translation import gettext as _
@@ -1161,10 +1162,10 @@ class AlumniUpdateTokenApiView(APIView):
         return token_obj
 
 
+@method_decorator(ensure_csrf_cookie, name="dispatch")
 class SessionApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
-    @ensure_csrf_cookie
     def get(self, request):
         if request.user.is_authenticated:
             member = request.user

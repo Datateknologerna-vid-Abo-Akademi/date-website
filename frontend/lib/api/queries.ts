@@ -30,7 +30,7 @@ import type {
 } from "./types";
 
 export async function getSiteMeta() {
-  return fetchApi<SiteMeta>("meta/site", { nextRevalidate: 300 });
+  return fetchApi<SiteMeta>("meta/site", { nextRevalidate: 0 });
 }
 
 export async function getHomeData() {

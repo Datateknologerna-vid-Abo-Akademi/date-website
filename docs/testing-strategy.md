@@ -46,3 +46,5 @@
 - `npm run lint` (frontend)
 - `npm run build` (frontend)
 - `python -m compileall api` (backend quick syntax check)
+- `python scripts/association_qa.py` (cross-association runtime parity and module-guard checks)
+  - uses uncached `meta/site` reads in frontend to avoid stale capability data when switching `PROJECT_NAME`

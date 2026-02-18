@@ -83,3 +83,7 @@ stack-test-backend() {
 stack-test-frontend() {
     stack exec frontend npm run lint "$@"
 }
+
+stack-qa-associations() {
+    python "${SCRIPT_DIR}/scripts/association_qa.py" "$@"
+}

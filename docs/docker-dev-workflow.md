@@ -3,6 +3,7 @@
 ## Quick Start
 1. Copy env template:
    - `cp .env.example .env`
+   - Keep `backend` in `ALLOWED_HOSTS` so server-side frontend API calls to `BACKEND_API_ORIGIN` are accepted.
 2. Load helpers:
    - `source env.sh dev`
 3. Start stack:
@@ -19,6 +20,7 @@
 - `stack-backend-manage createsuperuser`
 - `stack-test-backend`
 - `stack-test-frontend`
+- `stack-qa-associations`
 
 ## Service Topology
 - `proxy` -> entrypoint
