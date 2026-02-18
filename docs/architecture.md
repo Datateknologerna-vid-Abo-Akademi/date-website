@@ -15,6 +15,7 @@
 - Optional route groups are exposed through `module_capabilities` in the same payload, so frontend navigation and pages stay association-safe.
 - Association-specific landing behavior is controlled by `FRONTEND_DEFAULT_ROUTE` (exposed as `default_landing_path`).
 - Special event rendering behavior is exposed via event `template_variant` instead of Django template routing.
+- Association config is validated at startup (theme/content variables/routes/feature consistency). See `docs/association-config-schema.md`.
 
 ## Decoupling Strategy
 - Models remain in Django.

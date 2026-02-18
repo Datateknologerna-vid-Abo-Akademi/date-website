@@ -1,4 +1,5 @@
 from .common import *  # noqa
+from .validation import validate_association_settings
 
 
 TEMPLATES = [
@@ -98,3 +99,6 @@ try:
     }
 except Exception:
     pass
+
+
+validate_association_settings("core.settings.date", globals())

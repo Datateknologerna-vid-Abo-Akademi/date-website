@@ -2,6 +2,7 @@
 
 ## Backend
 - Unit tests for API serializers and response shapes.
+- Unit tests for association settings schema validation.
 - Integration tests for:
   - `/api/v1/meta/site`
   - `/api/v1/home`

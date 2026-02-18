@@ -1,4 +1,5 @@
 from .common import *  # noqa
+from .validation import validate_association_settings
 
 
 TEMPLATES = [
@@ -90,3 +91,6 @@ BILLING_CONTEXT = {
 EXPERIMENTAL_FEATURES = [
     'event_billing',
 ]
+
+
+validate_association_settings("core.settings.on", globals())
