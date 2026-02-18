@@ -87,6 +87,7 @@ export interface EventItem {
   sign_up: boolean;
   sign_up_avec: boolean;
   sign_up_max_participants: number;
+  captcha: boolean;
   registration_open_members: boolean;
   registration_open_others: boolean;
   registration_past_due: boolean;
@@ -104,6 +105,28 @@ export interface EventItem {
   passcode_required?: boolean;
   passcode_verified?: boolean;
   registration_count?: number;
+}
+
+export interface EventInvoice {
+  invoice_number: number;
+  reference_number: string;
+  invoice_date: string;
+  due_date: string;
+  amount: number;
+  currency: string;
+}
+
+export interface EventSignupBilling {
+  enabled: boolean;
+  status: string;
+  invoice: EventInvoice | null;
+}
+
+export interface EventSignupResult {
+  registered: boolean;
+  attendee_email: string;
+  event_slug: string;
+  billing: EventSignupBilling;
 }
 
 export interface HomePayload {

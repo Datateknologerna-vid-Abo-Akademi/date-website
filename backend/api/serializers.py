@@ -74,6 +74,7 @@ class EventListSerializer(serializers.Serializer):
     sign_up = serializers.BooleanField()
     sign_up_avec = serializers.BooleanField()
     sign_up_max_participants = serializers.IntegerField()
+    captcha = serializers.BooleanField()
     redirect_link = serializers.CharField(allow_blank=True, allow_null=True)
     registration_open_members = serializers.SerializerMethodField()
     registration_open_others = serializers.SerializerMethodField()
@@ -118,6 +119,28 @@ class EventListSerializer(serializers.Serializer):
         if obj.image:
             return obj.image.url
         return None
+
+
+class EventInvoiceSerializer(serializers.Serializer):
+    invoice_number = serializers.IntegerField()
+    reference_number = serializers.CharField()
+    invoice_date = serializers.DateField()
+    due_date = serializers.DateField()
+    amount = serializers.FloatField()
+    currency = serializers.CharField()
+
+
+class EventSignupBillingSerializer(serializers.Serializer):
+    enabled = serializers.BooleanField()
+    status = serializers.CharField()
+    invoice = EventInvoiceSerializer(allow_null=True)
+
+
+class EventSignupResultSerializer(serializers.Serializer):
+    registered = serializers.BooleanField()
+    attendee_email = serializers.EmailField()
+    event_slug = serializers.CharField()
+    billing = EventSignupBillingSerializer()
 
 
 class StaticPageSerializer(serializers.Serializer):

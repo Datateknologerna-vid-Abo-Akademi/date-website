@@ -13,7 +13,7 @@
   - `/api/v1/alumni*`
   - `/api/v1/lucia*`
   - auth session/login/logout
-  - event signup/passcode edge paths
+  - event signup/passcode edge paths (including billing invoice payload when `event_billing` is enabled)
 
 ## Frontend
 - Lint and type checks in CI.

@@ -41,8 +41,18 @@ Base path: `/api/v1`
   - Query: `include_past=true|false`
 - `GET /events/feed`
 - `GET /events/{slug}`
+  - Includes:
+    - `captcha` (boolean) for signup flow requirements.
 - `POST /events/{slug}/passcode`
 - `POST /events/{slug}/signup`
+  - Success payload includes:
+    - `registered`
+    - `attendee_email`
+    - `event_slug`
+    - `billing`:
+      - `enabled`
+      - `status` (`disabled`, `not_configured`, `invoice_created`, `no_invoice_generated`, `processing_error`)
+      - `invoice` (nullable object with `invoice_number`, `reference_number`, `invoice_date`, `due_date`, `amount`, `currency`)
 
 ### Static Pages
 - `GET /pages/{slug}`

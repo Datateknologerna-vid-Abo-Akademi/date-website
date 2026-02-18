@@ -1,3 +1,5 @@
+import logging
+
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
@@ -26,7 +28,9 @@ from .serializers import (
     ArchivePictureSerializer,
     CtfFlagSerializer,
     CtfListSerializer,
+    EventInvoiceSerializer,
     EventListSerializer,
+    EventSignupResultSerializer,
     FunctionaryRoleSerializer,
     FunctionarySerializer,
     HarassmentReportSerializer,
@@ -42,6 +46,9 @@ from .serializers import (
     SocialOverviewSerializer,
     StaticPageSerializer,
 )
+
+
+logger = logging.getLogger("date")
 
 
 MODULE_APP_MAP = {
@@ -440,24 +447,27 @@ class EventSignupApiView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        existing_attendee = EventAttendees.objects.filter(email=form.cleaned_data["email"], event=event.id).first()
+        existing_attendee = event.get_registrations().filter(email=form.cleaned_data["email"]).first()
         attendee = existing_attendee or event.add_event_attendance(
             user=form.cleaned_data["user"],
             email=form.cleaned_data["email"],
             anonymous=form.cleaned_data["anonymous"],
             preferences=form.cleaned_data,
         )
-        if "avec" in form.cleaned_data and form.cleaned_data["avec"]:
+        if attendee is not None and "avec" in form.cleaned_data and form.cleaned_data["avec"]:
             self._handle_avec_data(event, form.cleaned_data, attendee)
 
-        return Response(
+        billing_payload = self._process_event_billing(event, attendee)
+        response_payload = EventSignupResultSerializer(
             {
-                "data": {
-                    "registered": True,
-                    "attendee_email": form.cleaned_data["email"],
-                    "event_slug": event.slug,
-                }
-            },
+                "registered": True,
+                "attendee_email": form.cleaned_data["email"],
+                "event_slug": event.slug,
+                "billing": billing_payload,
+            }
+        ).data
+        return Response(
+            {"data": response_payload},
             status=status.HTTP_201_CREATED,
         )
 
@@ -474,6 +484,43 @@ class EventSignupApiView(APIView):
             preferences=avec_data,
             avec_for=avec_data["avec_for"],
         )
+
+    def _process_event_billing(self, event, attendee):
+        billing_enabled = is_module_enabled("billing") and "event_billing" in settings.EXPERIMENTAL_FEATURES
+        payload = {"enabled": billing_enabled, "status": "disabled", "invoice": None}
+        if not billing_enabled:
+            return payload
+        if attendee is None:
+            payload["status"] = "already_registered"
+            return payload
+
+        EventBillingConfiguration = get_module_model("billing", "EventBillingConfiguration")
+        EventInvoice = get_module_model("billing", "EventInvoice")
+        if EventBillingConfiguration is None or EventInvoice is None:
+            return payload
+
+        signup_event = attendee.original_event or attendee.event or event
+        if not EventBillingConfiguration.objects.filter(event=signup_event).exists():
+            payload["status"] = "not_configured"
+            return payload
+
+        from billing.handlers import handle_event_billing
+
+        try:
+            handle_event_billing(attendee)
+        except Exception:
+            logger.exception("Failed to process event billing for attendee=%s event=%s", attendee.id, event.slug)
+            payload["status"] = "processing_error"
+            return payload
+
+        invoice = EventInvoice.objects.filter(participant=attendee).order_by("-id").first()
+        if invoice is None:
+            payload["status"] = "no_invoice_generated"
+            return payload
+
+        payload["status"] = "invoice_created"
+        payload["invoice"] = EventInvoiceSerializer(invoice).data
+        return payload
 
 
 class StaticPageApiView(APIView):

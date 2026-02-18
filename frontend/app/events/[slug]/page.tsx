@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { EventSignupForm } from "@/components/events/event-signup-form";
 import { RichContent } from "@/components/rich-content";
 import { getEvent } from "@/lib/api/queries";
 
@@ -35,6 +36,14 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
           </p>
         ) : null}
         <RichContent html={event.content} />
+      </section>
+      <section className="panel">
+        <h2>Registration</h2>
+        {event.redirect_link ? (
+          <p className="meta">This event uses an external registration link.</p>
+        ) : (
+          <EventSignupForm event={event} />
+        )}
       </section>
     </div>
   );

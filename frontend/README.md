@@ -23,6 +23,9 @@ Use the root-level stack:
   - `meta.site.data.enabled_modules`
 - Association landing route is exposed via:
   - `meta.site.data.default_landing_path`
+- Event detail route includes decoupled passcode/signup flow against:
+  - `POST /api/v1/events/{slug}/passcode`
+  - `POST /api/v1/events/{slug}/signup` (with billing status in response when enabled)
 
 ## Implemented Routes
 - `/`

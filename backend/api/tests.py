@@ -1,14 +1,17 @@
+import datetime
 from unittest.mock import patch
 
 from django.contrib.auth.tokens import default_token_generator
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
 from alumni.models import AlumniUpdateToken
 from archive.models import Collection
+from billing.models import EventBillingConfiguration, EventInvoice
 from ctf.models import Ctf, Flag, Guess
+from events.models import Event
 from members.models import MembershipType, Member
 from members.tokens import account_activation_token
 from social.models import Harassment, HarassmentEmailRecipient
@@ -208,3 +211,45 @@ class ApiSmokeTests(TestCase):
     def test_events_feed_endpoint(self):
         response = self.client.get("/api/v1/events/feed")
         self.assertEqual(response.status_code, 200)
+
+    @override_settings(EXPERIMENTAL_FEATURES=["event_billing"])
+    @patch("billing.handlers.generate_invoice_number", return_value=24000099)
+    @patch("billing.handlers.send_event_invoice")
+    def test_event_signup_returns_billing_invoice_payload(self, _mocked_send_invoice, _mocked_invoice_number):
+        event = Event.objects.create(
+            title="Billing Event",
+            slug="billing-event",
+            author=self.member,
+            sign_up=True,
+            published=True,
+            sign_up_members=timezone.now() - timezone.timedelta(hours=1),
+            sign_up_others=timezone.now() - timezone.timedelta(hours=1),
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+            event_date_start=timezone.now() + timezone.timedelta(days=1),
+            event_date_end=timezone.now() + timezone.timedelta(days=1, hours=2),
+        )
+        EventBillingConfiguration.objects.create(
+            event=event,
+            due_date=datetime.date.today() + datetime.timedelta(days=14),
+            integration_type=1,
+            price="42",
+            price_selector="",
+        )
+
+        response = self.client.post(
+            f"/api/v1/events/{event.slug}/signup",
+            {
+                "user": "Billing User",
+                "email": "billing-user@example.com",
+                "anonymous": False,
+            },
+        )
+
+        self.assertEqual(response.status_code, 201)
+        payload = response.json()["data"]
+        self.assertEqual(payload["event_slug"], event.slug)
+        self.assertEqual(payload["billing"]["enabled"], True)
+        self.assertEqual(payload["billing"]["status"], "invoice_created")
+        self.assertEqual(payload["billing"]["invoice"]["invoice_number"], 24000099)
+        self.assertEqual(payload["billing"]["invoice"]["amount"], 42.0)
+        self.assertEqual(EventInvoice.objects.count(), 1)

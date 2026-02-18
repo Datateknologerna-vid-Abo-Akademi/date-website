@@ -10,6 +10,8 @@
 - `/news/feed` -> Next route handler `frontend/app/news/feed/route.ts` proxying `GET /api/v1/news/feed`
 - `/events` -> Next route `frontend/app/events/page.tsx` using `GET /api/v1/events`
 - `/events/{slug}` -> Next route `frontend/app/events/[slug]/page.tsx` using `GET /api/v1/events/{slug}`
+  - Includes decoupled passcode + signup forms via `POST /api/v1/events/{slug}/passcode` and
+    `POST /api/v1/events/{slug}/signup`
 - `/events/feed` -> Next route handler `frontend/app/events/feed/route.ts` proxying `GET /api/v1/events/feed`
 - `/pages/{slug}` -> Next route `frontend/app/pages/[slug]/page.tsx` using `GET /api/v1/pages/{slug}`
 - `/members` -> Next route `frontend/app/members/page.tsx` using `GET /api/v1/auth/session`
@@ -72,7 +74,7 @@
   `GET/POST /api/v1/alumni/update/{token}`
 
 ## Still Django-Rendered (Pending API + Frontend Migration)
-- app-specific custom event templates and some form workflows
+- app-specific custom event templates
 
 ## Rollout Recommendation
 1. Keep current Django pages available during transition.
