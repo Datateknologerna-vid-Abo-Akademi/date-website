@@ -45,7 +45,7 @@ function variantTitle(variant: EventItem["template_variant"]) {
     case "wappmiddag":
       return "Teknologwappmiddag";
     default:
-      return "Event";
+      return "Händelse";
   }
 }
 
@@ -59,6 +59,7 @@ function formatDateTime(value: string) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Europe/Helsinki",
   });
 }
 
@@ -69,13 +70,13 @@ export function EventVariantDetail({ event, attendeeData }: EventVariantDetailPr
 
   const navItems = useMemo(
     () => [
-      { key: "main" as SectionKey, label: "Valkommen" },
+      { key: "main" as SectionKey, label: "Välkommen" },
       ...variantSections.map((section) => ({
         key: `page:${section.slug}` as SectionKey,
         label: section.title,
       })),
-      { key: "signup" as SectionKey, label: "Anmalan" },
-      { key: "attendees" as SectionKey, label: "Anmalda" },
+      { key: "signup" as SectionKey, label: "Anmälan" },
+      { key: "attendees" as SectionKey, label: "Anmälda" },
     ],
     [variantSections],
   );
@@ -126,69 +127,67 @@ export function EventVariantDetail({ event, attendeeData }: EventVariantDetailPr
   const showAttendees = !isSpecialVariant || activeSection === "attendees";
 
   return (
-    <div className={`page-shell event-detail-page ${isSpecialVariant ? "event-variant-shell" : ""} event-variant--${variant}`}>
+    <div className={`event-detail-page ${isSpecialVariant ? "event-variant-shell" : ""} event-variant--${variant}`}>
       <div
         className={`event-detail-background ${event.image_url ? "has-image" : ""}`}
         style={event.image_url ? { backgroundImage: `url(${event.image_url})` } : undefined}
       >
-        <div className="container-size event-detail-container">
-          <section className={`hero compact event-detail-hero ${isSpecialVariant ? "event-variant-hero" : ""}`}>
-            <p className="eyebrow">{variantTitle(event.template_variant)}</p>
-            <h1>{event.title}</h1>
-            <h4 className="help-text">{formatDateTime(event.event_date_start)}</h4>
-          </section>
+        <div className="container-md min-vh-100 p-1 event-detail-shell">
+          <div className="container-size event-detail-container">
+            <section className={`content event-detail-content ${showMain ? "" : "is-hidden"}`}>
+              {isSpecialVariant ? <h4 className="help-text">{variantTitle(event.template_variant)}</h4> : null}
+              <h2 className="header">{event.title}</h2>
+              <h4 className="help-text">{formatDateTime(event.event_date_start)}</h4>
+              {event.redirect_link ? (
+                <p>
+                  Extern anmälningslänk:{" "}
+                  <a href={event.redirect_link} target="_blank" rel="noreferrer">
+                    {event.redirect_link}
+                  </a>
+                </p>
+              ) : null}
+              <RichContent html={event.content} />
+            </section>
 
-          {isSpecialVariant ? (
-            <nav className="event-variant-nav" aria-label="Event sections">
-              {navItems.map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  className={activeSection === item.key ? "is-active" : ""}
-                  onClick={() => onSectionSelect(item.key)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-          ) : null}
-
-          <section className={`panel event-detail-panel ${showMain ? "" : "is-hidden"}`}>
-            {event.redirect_link ? (
-              <p>
-                External registration link:{" "}
-                <a href={event.redirect_link} target="_blank" rel="noreferrer">
-                  {event.redirect_link}
-                </a>
-              </p>
+            {isSpecialVariant ? (
+              <nav className="event-variant-nav" aria-label="Event sections">
+                {navItems.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className={activeSection === item.key ? "is-active" : ""}
+                    onClick={() => onSectionSelect(item.key)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </nav>
             ) : null}
-            <RichContent html={event.content} />
-          </section>
 
-          {variantSections.map((section) => {
-            const sectionKey = `page:${section.slug}` as SectionKey;
-            const shouldShow = !isSpecialVariant || activeSection === sectionKey;
-            return (
-              <section key={section.slug} className={`panel event-detail-panel ${shouldShow ? "" : "is-hidden"}`}>
-                <h2>{section.title}</h2>
-                <RichContent html={section.content} />
-              </section>
-            );
-          })}
+            {variantSections.map((section) => {
+              const sectionKey = `page:${section.slug}` as SectionKey;
+              const shouldShow = !isSpecialVariant || activeSection === sectionKey;
+              return (
+                <section key={section.slug} className={`content event-detail-content ${shouldShow ? "" : "is-hidden"}`}>
+                  <h2>{section.title}</h2>
+                  <RichContent html={section.content} />
+                </section>
+              );
+            })}
 
-          <section className={`panel event-detail-panel ${showSignup ? "" : "is-hidden"}`}>
-            <h2>Anmalan</h2>
-            {event.redirect_link ? (
-              <p className="meta">This event uses an external registration link.</p>
-            ) : (
-              <EventSignupForm event={event} />
-            )}
-          </section>
+            <section id="sign-up" className={`content event-detail-content ${showSignup ? "" : "is-hidden"}`}>
+              <h2>Anmälning</h2>
+              {event.redirect_link ? (
+                <p className="meta">Detta evenemang använder extern anmälning.</p>
+              ) : (
+                <EventSignupForm event={event} />
+              )}
+            </section>
 
-          <section className={`panel event-detail-panel ${showAttendees ? "" : "is-hidden"}`}>
-            <h2>Anmalda</h2>
-            <EventAttendeeList data={attendeeData} />
-          </section>
+            <section id="attendee-list" className={`content event-detail-content overflow-auto ${showAttendees ? "" : "is-hidden"}`}>
+              <EventAttendeeList data={attendeeData} />
+            </section>
+          </div>
         </div>
       </div>
     </div>

@@ -7,3 +7,5 @@
 frontend/.next/
 frontend/node_modules/
 docs/association-qa-report.md
+.date-active-project
+.tmp.legacy-visual.override.yml

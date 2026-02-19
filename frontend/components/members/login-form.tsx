@@ -5,7 +5,11 @@ import { FormEvent, useState } from "react";
 
 import { mutateApi } from "@/lib/api/client";
 
-export function LoginForm() {
+interface LoginFormProps {
+  redirectTo?: string;
+}
+
+export function LoginForm({ redirectTo = "/members/profile" }: LoginFormProps) {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +26,7 @@ export function LoginForm() {
         path: "auth/login",
         body: { username, password },
       });
-      router.push("/members/profile");
+      router.push(redirectTo);
       router.refresh();
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Login failed");
@@ -32,22 +36,28 @@ export function LoginForm() {
   }
 
   return (
-    <form className="form-stack" onSubmit={onSubmit}>
-      <label className="form-field">
-        <span>Username or email</span>
-        <input value={username} onChange={(event) => setUsername(event.target.value)} required />
-      </label>
-      <label className="form-field">
-        <span>Password</span>
+    <form className="members-login-form" onSubmit={onSubmit}>
+      <p>
+        <label htmlFor="login-username">Username</label>
         <input
+          id="login-username"
+          value={username}
+          onChange={(event) => setUsername(event.target.value)}
+          required
+        />
+      </p>
+      <p>
+        <label htmlFor="login-password">Password</label>
+        <input
+          id="login-password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           type="password"
           required
         />
-      </label>
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Signing in..." : "Sign in"}
+      </p>
+      <button className="button" type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Loggar in..." : "Login"}
       </button>
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
     </form>

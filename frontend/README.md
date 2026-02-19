@@ -16,7 +16,7 @@ Use the root-level stack:
 - `stack-start`
 
 ## Visual Parity Checks
-- Homepage visual regression (hero + events cards):
+- Legacy visual regression (homepage + login + events routes):
   - `npm run test:e2e:visual`
 - Baseline snapshots can be refreshed with:
   - `npm run test:e2e:visual -- --update-snapshots`

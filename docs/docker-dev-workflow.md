@@ -9,6 +9,7 @@
    - `source env.sh dev`
 3. Start stack:
    - `date-start`
+   - Override association quickly: `date-start kk` (or `date-start --project kk`)
 4. Open app:
    - `http://localhost:8080` (or `APP_PORT`)
 
@@ -21,13 +22,44 @@
 - Dev compose also runs Next with `--webpack` for more reliable file watching in containers.
 - After changing this config, restart the frontend container (`date-stop` then `date-start`).
 
+## Troubleshooting
+- Verify association before visual/style QA:
+  - `curl http://localhost:8080/api/v1/meta/site | jq -r '.data.project_name'`
+  - If not expected, switch explicitly: `date-start-detached <association>` and reseed: `date-init-demo <association>`
+- If proxy starts returning `502` after backend recreate:
+  - `docker restart datewebsite-proxy-1`
+  - Cause: stale upstream resolution in running proxy process.
+- If manual `seed_visual_demo --reset` fails with flush errors:
+  - Prefer `date-init-demo <association>` (it handles service/project lifecycle).
+  - If needed, recreate services first, then rerun demo init.
+
 ## Useful Commands
 - `date-start-detached`
+- `date-start-both`
+  - starts decoupled app on `8080` and legacy template backend on `8001` using a generated temporary compose override
+  - supports association override: `date-start-both kk` or `date-start-both --project kk`
+- `date-stop-both`
+- `date-project <association> <compose-args...>`
 - `date-stop`
 - `date-logs`
 - `date-ps`
 - `date-manage migrate`
 - `date-init-demo`
+- Override association for any helper that supports it:
+  - `date-start --project biocum`
+  - `date-start-detached on`
+  - `date-manage --project kk showmigrations`
+  - `date-init-demo demo`
+- `date-init-demo` behavior:
+  - If target association differs from running association, it auto-recreates `backend`, `asgi`, `celery`, `frontend`, and `proxy` for the target.
+  - Reset mode defaults to auto: reset DB on association change (or unknown previous state).
+  - Override reset behavior:
+    - `date-init-demo --no-reset`
+    - `date-init-demo --reset`
+  - Prod safety:
+    - auto-reset is disabled in prod mode
+    - explicit reset requires `date-init-demo --reset --allow-prod-reset`
+    - an additional confirmation is required: type `WIPE` interactively, or pass `--yes` for non-interactive runs
 - `date-manage createsuperuser`
 - `date-test-backend`
 - `date-test-frontend`

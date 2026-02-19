@@ -118,10 +118,10 @@ test.describe("decoupled frontend smoke checks", () => {
     test.skip(!username || !password, "Playwright smoke credentials are required.");
 
     await page.goto("/members/login");
-    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
-    await page.getByLabel("Username or email").fill(username);
+    await expect(page.getByRole("heading", { name: "Login" })).toBeVisible();
+    await page.getByLabel("Username").fill(username);
     await page.getByLabel("Password").fill(password);
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.getByRole("button", { name: "Login" }).click();
 
     await expect(page).toHaveURL(/\/members\/profile$/);
     await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
@@ -135,12 +135,12 @@ test.describe("decoupled frontend smoke checks", () => {
 
     await page.goto(`/events/${eventSlug}`);
     await expect(page.getByRole("heading", { name: "CI Smoke Event" })).toBeVisible();
-    await page.getByLabel("Name").fill("Playwright Smoke");
-    await page.getByLabel("Email").fill(uniqueEmail);
-    await page.getByRole("button", { name: "Register" }).click();
+    await page.getByLabel("Namn").fill("Playwright Smoke");
+    await page.getByLabel("E-post").fill(uniqueEmail);
+    await page.getByRole("button", { name: "Anmäl" }).click();
 
-    await expect(page.getByText("Registration completed.")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Registration summary" })).toBeVisible();
-    await expect(page.getByText(`Email: ${uniqueEmail}`)).toBeVisible();
+    await expect(page.getByText("Anmälning registrerad.")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Anmälningssammanfattning" })).toBeVisible();
+    await expect(page.getByText(`E-post: ${uniqueEmail}`)).toBeVisible();
   });
 });

@@ -6,7 +6,11 @@ type ModuleCapability = {
 
 type SiteMetaResponse = {
   data?: {
+    project_name?: string;
     default_landing_path?: string;
+    association_theme?: {
+      brand?: string;
+    };
     module_capabilities?: Record<string, ModuleCapability>;
   };
 };
@@ -38,10 +42,17 @@ test.describe("legacy template parity", () => {
     const meta = await getSiteMetaData(request);
     const defaultLandingPath = meta.default_landing_path ?? "/";
     test.skip(defaultLandingPath !== "/", "Default landing path is not home route.");
+    const projectName = (meta.project_name ?? "").toLowerCase();
+    const brand = (meta.association_theme?.brand ?? projectName).toLowerCase();
+    const isBiocum = brand === "biocum";
 
     await page.goto("/");
 
-    await expect(page.locator(".home-hero-legacy .hero-text-box")).toBeVisible();
+    if (isBiocum) {
+      await expect(page.locator(".home-hero-legacy.header.wave .text")).toBeVisible();
+    } else {
+      await expect(page.locator(".home-hero-legacy .hero-text-box")).toBeVisible();
+    }
     const animatedLogoCount = await page
       .locator(".home-hero-logo-inline--animated, .home-hero-logo--animated")
       .count();
@@ -67,10 +78,10 @@ test.describe("legacy template parity", () => {
 
     await page.goto("/events");
 
-    await expect(page.locator(".events-index-page .events-index-panel")).toBeVisible();
+    await expect(page.locator(".events-index-page .container-size")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Kommande handelser" })).toBeVisible();
 
-    const upcomingCardCount = await page.locator(".events-index-upcoming .event-card").count();
+    const upcomingCardCount = await page.locator(".events-index-page .event-card").count();
     const emptyUpcomingState = await page.getByText("Inga aktiva handelser").count();
     expect(upcomingCardCount > 0 || emptyUpcomingState > 0).toBeTruthy();
 

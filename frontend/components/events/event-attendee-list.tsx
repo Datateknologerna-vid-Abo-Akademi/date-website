@@ -6,22 +6,24 @@ interface EventAttendeeListProps {
 
 export function EventAttendeeList({ data }: EventAttendeeListProps) {
   if (!data) {
-    return <p className="meta">Attendee list is unavailable right now.</p>;
+    return <h4 id="no-attendee">Deltagarlistan är inte tillgänglig just nu.</h4>;
   }
   if (!data.show_attendee_list) {
-    return <p className="meta">Attendee list is hidden for past events.</p>;
+    return <h4 id="no-attendee">Deltagarlistan är dold för tidigare evenemang.</h4>;
   }
   if (data.attendees.length === 0) {
-    return <p className="meta">No attendees yet.</p>;
+    return <p id="no-attendee">Inga anmälda ännu, var den första!</p>;
   }
 
   return (
     <div className="table-wrap">
-      <table className="attendee-table">
+      {data.sign_up_max_participants !== 0 ? <p>Det finns {data.sign_up_max_participants} platser!</p> : null}
+      <h2>Anmälda</h2>
+      <table className="attendee-table" id="attendees">
         <thead>
-          <tr>
+          <tr id="attendees-header">
             <th>#</th>
-            <th>Name</th>
+            <th>Namn</th>
             {data.registration_public_fields.map((fieldName) => (
               <th key={fieldName}>{fieldName}</th>
             ))}
@@ -39,9 +41,6 @@ export function EventAttendeeList({ data }: EventAttendeeListProps) {
           ))}
         </tbody>
       </table>
-      {data.sign_up_max_participants !== 0 ? (
-        <p className="meta">Capacity: {data.sign_up_max_participants}</p>
-      ) : null}
     </div>
   );
 }

@@ -269,8 +269,8 @@ class Command(BaseCommand):
                 "title": "Om oss",
                 "members_only": False,
                 "content": (
-                    "<p>Detta ar demosida med data for att validera layout, typografi och"
-                    " innehall i den nya frontend implementationen.</p>"
+                    "<p>Detta är demosida med data för att validera layout, typografi och"
+                    " innehåll i den nya frontend implementationen.</p>"
                 ),
             },
             {
@@ -281,17 +281,83 @@ class Command(BaseCommand):
             },
             {
                 "slug": "foretagssamarbete",
-                "title": "Foretagssamarbete",
+                "title": "Företagssamarbete",
                 "members_only": False,
-                "content": "<p>Vi valkomnar samarbeten kring evenemang och rekrytering.</p>",
+                "content": "<p>Vi välkomnar samarbeten kring evenemang och rekrytering.</p>",
             },
             {
                 "slug": "intern-info",
                 "title": "Intern info",
                 "members_only": True,
-                "content": "<p>Denna sida syns endast for inloggade medlemmar.</p>",
+                "content": "<p>Denna sida syns endast för inloggade medlemmar.</p>",
             },
         ]
+
+        if enabled["events"]:
+            page_specs.extend(
+                [
+                    {
+                        "slug": "arsfest-program",
+                        "title": "Program",
+                        "members_only": False,
+                        "content": "<p>Program och tider för årsfesten.</p>",
+                    },
+                    {
+                        "slug": "arsfest-praktisk-info",
+                        "title": "Praktisk info",
+                        "members_only": False,
+                        "content": "<p>Dresscode, bordskarta och övrig information.</p>",
+                    },
+                    {
+                        "slug": "baal-program",
+                        "title": "Program",
+                        "members_only": False,
+                        "content": "<p>Program för balen.</p>",
+                    },
+                    {
+                        "slug": "baal-gastinfo",
+                        "title": "Gästinformation",
+                        "members_only": False,
+                        "content": "<p>Info till medföljande gäster.</p>",
+                    },
+                    {
+                        "slug": "demo-kk100-historik",
+                        "title": "Historik",
+                        "members_only": False,
+                        "content": "<p>Historisk tillbakablick och jubileumsinformation.</p>",
+                    },
+                    {
+                        "slug": "demo-kk100-program",
+                        "title": "Jubileumsprogram",
+                        "members_only": False,
+                        "content": "<p>Jubileumsprogram och tidtabell.</p>",
+                    },
+                    {
+                        "slug": "tomtejakt-regler",
+                        "title": "Regler",
+                        "members_only": False,
+                        "content": "<p>Regler och poängberäkning för tomtejakt.</p>",
+                    },
+                    {
+                        "slug": "tomtejakt-karta",
+                        "title": "Karta",
+                        "members_only": False,
+                        "content": "<p>Karta över kontrollpunkter.</p>",
+                    },
+                    {
+                        "slug": "wappmiddag-info",
+                        "title": "Info",
+                        "members_only": False,
+                        "content": "<p>Information om technologwappmiddagen.</p>",
+                    },
+                    {
+                        "slug": "wappmiddag-meny",
+                        "title": "Meny",
+                        "members_only": False,
+                        "content": "<p>Meny och dryckesalternativ.</p>",
+                    },
+                ]
+            )
 
         for page in page_specs:
             StaticPage.objects.update_or_create(
@@ -329,7 +395,7 @@ class Command(BaseCommand):
             "Foreningen": [
                 ("Om oss", "/pages/om-oss/", False),
                 ("Styrelsen", "/pages/styrelsen/", False),
-                ("Foretagssamarbete", "/pages/foretagssamarbete/", False),
+                ("Företagssamarbete", "/pages/foretagssamarbete/", False),
             ],
             "Medlemmar": [
                 ("Logga in", "/members/login/", False),
@@ -396,19 +462,19 @@ class Command(BaseCommand):
         posts = [
             {
                 "slug": "demo-startvecka-info",
-                "title": "Startveckan ar igang",
+                "title": "Startveckan är igång",
                 "content": (
-                    "<p>Valkommen till en vecka fylld med aktiviteter, introduktion och"
-                    " gemenskap. Vi ses pa campus under flera tillfallen.</p>"
+                    "<p>Välkommen till en vecka fylld med aktiviteter, introduktion och"
+                    " gemenskap. Vi ses på campus under flera tillfällen.</p>"
                 ),
                 "published_time": anchor - timedelta(days=1),
                 "category": None,
             },
             {
                 "slug": "demo-foreningsmote",
-                "title": "Inbjudan till foreningsmote",
+                "title": "Inbjudan till föreningsmöte",
                 "content": (
-                    "<p>Vi samlas for foreningsmote med fokus pa verksamhetsplan,"
+                    "<p>Vi samlas för föreningsmöte med fokus på verksamhetsplan,"
                     " budget och kommande satsningar.</p>"
                 ),
                 "published_time": anchor - timedelta(days=3),
@@ -416,10 +482,10 @@ class Command(BaseCommand):
             },
             {
                 "slug": "demo-foretagspub",
-                "title": "Foretagspub och mingel",
+                "title": "Företagspub och mingel",
                 "content": (
-                    "<p>Traffa samarbetspartners och lar kanna studenter fran olika"
-                    " arskurser under en avslappnad kvall.</p>"
+                    "<p>Träffa samarbetspartners och lär känna studenter från olika"
+                    " årskurser under en avslappnad kväll.</p>"
                 ),
                 "published_time": anchor - timedelta(days=6),
                 "category": None,
@@ -433,8 +499,8 @@ class Command(BaseCommand):
             },
             {
                 "slug": "demo-funktionarsnytt",
-                "title": "Funktionarsnytt for aktiva",
-                "content": "<p>Info om funktionarsarbete, planering och ansvar.</p>",
+                "title": "Funktionärsnytt för aktiva",
+                "content": "<p>Info om funktionärsarbete, planering och ansvar.</p>",
                 "published_time": anchor - timedelta(days=4),
                 "category": updates_category,
             },
@@ -530,6 +596,59 @@ class Command(BaseCommand):
                 "sign_up_max_participants": 0,
             },
             {
+                "slug": "arsfest",
+                "title": "Årsfest 2026",
+                "start": at(15, 18, 0),
+                "end": at(15, 23, 59),
+                "sign_up": True,
+                "members_only": False,
+                "passcode": "",
+                "sign_up_avec": True,
+                "sign_up_max_participants": 120,
+            },
+            {
+                "slug": "baal",
+                "title": "Bal",
+                "start": at(18, 18, 0),
+                "end": at(18, 23, 59),
+                "sign_up": True,
+                "members_only": False,
+                "passcode": "",
+                "sign_up_avec": True,
+                "sign_up_max_participants": 140,
+            },
+            {
+                "slug": "demo-kk100",
+                "title": "100 bal",
+                "start": at(22, 18, 0),
+                "end": at(22, 23, 59),
+                "sign_up": True,
+                "members_only": False,
+                "passcode": "",
+                "sign_up_max_participants": 100,
+            },
+            {
+                "slug": "tomtejakt",
+                "title": "Tomtejakt",
+                "start": at(26, 14, 0),
+                "end": at(26, 19, 0),
+                "sign_up": False,
+                "members_only": False,
+                "passcode": "",
+                "sign_up_max_participants": 0,
+            },
+            {
+                "slug": "wappmiddag",
+                "title": "Wappmiddag",
+                "start": at(30, 17, 0),
+                "end": at(30, 22, 0),
+                "sign_up": True,
+                "members_only": False,
+                "passcode": "",
+                "sign_up_avec": True,
+                "sign_up_max_participants": 90,
+            },
+            {
                 "slug": "demo-recent-past",
                 "title": "Senaste afterwork",
                 "start": at(-6, 18, 0),
@@ -550,7 +669,7 @@ class Command(BaseCommand):
                 defaults={
                     "title": spec["title"],
                     "content": (
-                        "<p>Detta ar ett demosatt evenemang for manuell validering av "
+                        "<p>Detta är ett demosatt evenemang för manuell validering av "
                         "kort, kalender och detaljvyer.</p>"
                     ),
                     "event_date_start": spec["start"],
@@ -779,7 +898,7 @@ class Command(BaseCommand):
             defaults={
                 "img_url": "https://albin-storage.cdn.datateknologerna.org/date/public/2021/partner-logos/aa-logo-small.png",
                 "title": "Demo Kandidat",
-                "content": "<p>Presentation av kandidat for visuell validering.</p>",
+                "content": "<p>Presentation av kandidat för visuell validering.</p>",
                 "published": True,
                 "poll_url": "https://example.com/lucia-vote",
             },
@@ -851,7 +970,9 @@ class Command(BaseCommand):
         defaults = defaults or {}
         instance = model.objects.filter(**lookup).order_by("pk").first()
         if instance is None:
-            return model.objects.create(**lookup, **defaults), True
+            create_data = dict(lookup)
+            create_data.update(defaults)
+            return model.objects.create(**create_data), True
 
         for field_name, value in defaults.items():
             setattr(instance, field_name, value)

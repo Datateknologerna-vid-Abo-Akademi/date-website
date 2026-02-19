@@ -56,6 +56,9 @@ const LEGACY_THEME_TOKENS_BY_BRAND: Record<string, Record<string, string>> = {
     "--helpTextLighter": "rgb(199, 199, 199)",
     "--linkColorDark": "#3a80c3",
     "--linkColorDarkHover": "#26547f",
+    "--linkColor": "rgb(44, 148, 96)",
+    "--linkColorSecondary": "rgb(10, 170, 77)",
+    "--linkSecondaryHover": "#2a693d",
     "--linkColorLight": "rgb(37, 240, 122)",
     "--linkColorLightHover": "rgb(29, 185, 94)",
   },
@@ -74,6 +77,10 @@ const LEGACY_THEME_TOKENS_BY_BRAND: Record<string, Record<string, string>> = {
     "--textColorDarkish": "#202020",
     "--helpText": "rgb(171, 171, 171)",
     "--helpTextLighter": "rgb(199, 199, 199)",
+    "--linkColor": "#49796b",
+    "--linkColorHover": "#225E41",
+    "--linkColorSecondary": "#49796b",
+    "--linkSecondaryHover": "#225E41",
     "--linkColorLight": "#b9efd3",
     "--linkColorLightHover": "#9dd6ba",
   },
@@ -132,7 +139,8 @@ export default async function RootLayout({
   ]);
   const theme = siteMeta.association_theme;
   const palette = theme.palette;
-  const brand = (theme.brand ?? "").toLowerCase();
+  const rawBrand = (theme.brand ?? "").toLowerCase();
+  const brand = rawBrand.replace(/[^a-z0-9-]/g, "");
   const legacyBrandTokens = LEGACY_THEME_TOKENS_BY_BRAND[brand] ?? {};
   const styleVars = {
     "--theme-background": palette.background,
@@ -200,6 +208,7 @@ export default async function RootLayout({
         />
       </head>
       <body
+        className={`association-${brand || "default"}`}
         style={styleVars as CSSProperties}
       >
         <SiteHeader siteMeta={siteMeta} session={session} />

@@ -21,13 +21,13 @@ function buildDynamicDefaults(fields: DynamicField[]) {
 }
 
 function billingStatusLabel(billing: EventSignupBilling) {
-  if (!billing.enabled) return "Billing is not enabled for this event.";
-  if (billing.status === "invoice_created") return "Invoice created and sent by email.";
-  if (billing.status === "not_configured") return "No billing configuration found for this event.";
-  if (billing.status === "no_invoice_generated") return "No invoice generated for this registration.";
-  if (billing.status === "already_registered") return "Registration already exists for this email.";
-  if (billing.status === "processing_error") return "Billing failed after registration. Contact organizers.";
-  return "Billing processed.";
+  if (!billing.enabled) return "Fakturering är inte aktiv för detta evenemang.";
+  if (billing.status === "invoice_created") return "Faktura skapad och skickad via e-post.";
+  if (billing.status === "not_configured") return "Ingen faktureringskonfiguration hittades för evenemanget.";
+  if (billing.status === "no_invoice_generated") return "Ingen faktura skapades för denna anmälning.";
+  if (billing.status === "already_registered") return "En anmälning finns redan för denna e-postadress.";
+  if (billing.status === "processing_error") return "Fakturering misslyckades efter anmälan. Kontakta arrangören.";
+  return "Fakturering behandlad.";
 }
 
 export function EventSignupForm({ event }: EventSignupFormProps) {
@@ -78,7 +78,7 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
               setValues((previous) => ({ ...previous, [field.name]: eventTarget.target.value }))
             }
           >
-            <option value="">Select one</option>
+            <option value="">Välj ett alternativ</option>
             {field.choices.map((choice) => (
               <option key={`${fieldId}-${choice}`} value={choice}>
                 {choice}
@@ -131,10 +131,10 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
       if (response.passcode_verified) {
         setPasscodeVerified(true);
         setPasscode("");
-        setStatusMessage("Passcode verified.");
+        setStatusMessage("Passcode verifierad.");
       }
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Passcode verification failed");
+      setErrorMessage(error instanceof Error ? error.message : "Verifiering av passcode misslyckades");
     } finally {
       setIsSubmittingPasscode(false);
     }
@@ -176,21 +176,21 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
         body: payload,
       });
       setSignupResult(response);
-      setStatusMessage("Registration completed.");
+      setStatusMessage("Anmälning registrerad.");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Signup failed");
+      setErrorMessage(error instanceof Error ? error.message : "Anmälning misslyckades");
     } finally {
       setIsSubmittingSignup(false);
     }
   }
 
   if (!event.sign_up) {
-    return <p className="meta">Signup is disabled for this event.</p>;
+    return <p className="meta">Anmälning är inte aktiv för detta evenemang.</p>;
   }
 
   if (requiresPasscode) {
     return (
-      <form className="form-stack" onSubmit={onSubmitPasscode}>
+      <form className="form event-signup-form" id="passcode-form" onSubmit={onSubmitPasscode}>
         <label className="form-field">
           <span>Passcode</span>
           <input
@@ -199,8 +199,8 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
             required
           />
         </label>
-        <button type="submit" disabled={isSubmittingPasscode}>
-          {isSubmittingPasscode ? "Verifying..." : "Verify passcode"}
+        <button className="button" type="submit" disabled={isSubmittingPasscode}>
+          {isSubmittingPasscode ? "Verifierar..." : "Skicka"}
         </button>
         {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
         {statusMessage ? <p className="form-success">{statusMessage}</p> : null}
@@ -209,19 +209,20 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
   }
 
   if (!signupOpen) {
-    return <p className="meta">Registration is currently closed.</p>;
+    return <p className="meta">Anmälningen är stängd just nu.</p>;
   }
 
   return (
-    <div className="form-stack">
-      <form className="form-stack" onSubmit={onSubmitSignup}>
+    <div className="form-stack event-signup-wrapper">
+      <p className="meta">OBS! Anmälningen är bindande om inget annat meddelas.</p>
+      <form className="form event-signup-form" id="attend-form" onSubmit={onSubmitSignup}>
         <div className="form-grid">
           <label className="form-field">
-            <span>Name</span>
+            <span>Namn</span>
             <input value={name} onChange={(eventTarget) => setName(eventTarget.target.value)} required />
           </label>
           <label className="form-field">
-            <span>Email</span>
+            <span>E-post</span>
             <input
               type="email"
               value={email}
@@ -236,12 +237,12 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
             checked={anonymous}
             onChange={(eventTarget) => setAnonymous(eventTarget.target.checked)}
           />
-          <span>Anonymous in attendee list</span>
+          <span>Anonym i deltagarlistan</span>
         </label>
 
         {event.sign_up_fields.length > 0 ? (
           <fieldset className="form-fieldset">
-            <legend>Registration details</legend>
+            <legend>Anmälningsdetaljer</legend>
             {event.sign_up_fields.map((field) =>
               renderDynamicField(field, dynamicValues, setDynamicValues, "event-"),
             )}
@@ -257,13 +258,13 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
                 checked={withAvec}
                 onChange={(eventTarget) => setWithAvec(eventTarget.target.checked)}
               />
-              <span>Register with avec</span>
+              <span>Anmäl med avec</span>
             </label>
             {withAvec ? (
               <div className="form-stack">
                 <div className="form-grid">
                   <label className="form-field">
-                    <span>Avec name</span>
+                    <span>Avec namn</span>
                     <input
                       value={avecName}
                       onChange={(eventTarget) => setAvecName(eventTarget.target.value)}
@@ -271,7 +272,7 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
                     />
                   </label>
                   <label className="form-field">
-                    <span>Avec email</span>
+                    <span>Avec e-post</span>
                     <input
                       type="email"
                       value={avecEmail}
@@ -286,7 +287,7 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
                     checked={avecAnonymous}
                     onChange={(eventTarget) => setAvecAnonymous(eventTarget.target.checked)}
                   />
-                  <span>Avec anonymous in attendee list</span>
+                  <span>Avec anonym i deltagarlistan</span>
                 </label>
                 {event.sign_up_fields
                   .filter((field) => !field.hide_for_avec)
@@ -302,31 +303,31 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
             <input
               value={captchaToken}
               onChange={(eventTarget) => setCaptchaToken(eventTarget.target.value)}
-              placeholder="Required when captcha is enabled"
+              placeholder="Krävs när captcha är aktiverad"
               required
             />
           </label>
         ) : null}
 
-        <button type="submit" disabled={isSubmittingSignup}>
-          {isSubmittingSignup ? "Registering..." : "Register"}
+        <button className="button" type="submit" disabled={isSubmittingSignup}>
+          {isSubmittingSignup ? "Anmäler..." : "Anmäl"}
         </button>
       </form>
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
       {statusMessage ? <p className="form-success">{statusMessage}</p> : null}
       {signupResult ? (
-        <section className="panel">
-          <h3>Registration summary</h3>
-          <p className="meta">Email: {signupResult.attendee_email}</p>
+        <section className="content event-detail-content">
+          <h3>Anmälningssammanfattning</h3>
+          <p className="meta">E-post: {signupResult.attendee_email}</p>
           <p className="meta">{billingStatusLabel(signupResult.billing)}</p>
           {signupResult.billing.invoice ? (
             <ul className="list">
-              <li>Invoice number: {signupResult.billing.invoice.invoice_number}</li>
-              <li>Reference number: {signupResult.billing.invoice.reference_number}</li>
+              <li>Fakturanummer: {signupResult.billing.invoice.invoice_number}</li>
+              <li>Referensnummer: {signupResult.billing.invoice.reference_number}</li>
               <li>
-                Amount: {signupResult.billing.invoice.amount} {signupResult.billing.invoice.currency}
+                Belopp: {signupResult.billing.invoice.amount} {signupResult.billing.invoice.currency}
               </li>
-              <li>Due date: {signupResult.billing.invoice.due_date}</li>
+              <li>Förfallodatum: {signupResult.billing.invoice.due_date}</li>
             </ul>
           ) : null}
         </section>

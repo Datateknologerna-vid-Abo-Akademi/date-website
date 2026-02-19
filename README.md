@@ -13,10 +13,15 @@ Monorepo with:
    - `source env.sh dev`
 3. Start:
    - `date-start`
+   - Optional association override: `date-start kk` or `date-start --project kk`
 4. Open:
    - `http://localhost:8080`
 5. Optional demo seed (resets DB and creates visual QA data):
    - `date-init-demo`
+   - Optional association override: `date-init-demo kk` or `date-init-demo --project kk`
+   - `date-init-demo <association>` now auto-starts/recreates backend/frontend services for that association before seeding.
+   - Default reset mode is now automatic: DB reset happens when association change is detected (or state is unknown). Use `--no-reset` to keep DB, or `--reset` to force reset.
+   - Prod safety: auto-reset is disabled in prod mode. Explicit reset requires `--reset --allow-prod-reset`, plus confirmation (`type WIPE`) or `--yes` for non-interactive runs.
 
 ## Backend-Only Workflow
 `backend/env.sh` is still available for backend-only development.

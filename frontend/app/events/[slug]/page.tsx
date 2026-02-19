@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { EventVariantDetail } from "@/components/events/event-variant-detail";
+import { ApiRequestError } from "@/lib/api/fetcher";
 import { getEvent, getEventAttendees } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
@@ -13,8 +14,20 @@ interface EventDetailPageProps {
 export default async function EventDetailPage({ params }: EventDetailPageProps) {
   await ensureModuleEnabled("events");
   const { slug } = await params;
+  const eventPath = `/events/${slug}`;
+
+  const isLoginRequiredError = (error: unknown) =>
+    error instanceof ApiRequestError &&
+    error.status === 403 &&
+    (error.code === "forbidden" || error.code === "unauthenticated");
+
   const [event, attendeeData] = await Promise.all([
-    getEvent(slug).catch(() => null),
+    getEvent(slug).catch((error) => {
+      if (isLoginRequiredError(error)) {
+        redirect(`/members/login?next=${encodeURIComponent(eventPath)}`);
+      }
+      return null;
+    }),
     getEventAttendees(slug).catch(() => null),
   ]);
   if (!event) {

@@ -7,12 +7,23 @@ This document describes the dynamic demo-data workflow for manual visual checks 
    - `source env.sh dev`
 2. Start stack:
    - `date-start`
+   - Optional association override: `date-start --project kk`
 3. Seed demo data:
    - `date-init-demo`
+   - Optional association override: `date-init-demo kk`
+   - If association differs from the running stack, `date-init-demo` auto-switches stack services to that association first.
+   - Reset mode defaults to auto:
+     - resets DB on detected association change (or unknown state)
+     - keeps DB when association is unchanged
+   - Use `--no-reset` to keep DB, or `--reset` to force DB reset.
+   - Prod safety:
+     - auto-reset is disabled in prod mode
+     - explicit reset requires `--reset --allow-prod-reset` (or env `DATE_ALLOW_PROD_RESET=1`)
+     - confirmation is required: type `WIPE` interactively, or pass `--yes` for non-interactive usage
 
 `date-init-demo` runs:
 - `date-manage migrate --noinput`
-- `date-manage seed_visual_demo --reset`
+- `date-manage seed_visual_demo` (adds `--reset` automatically when reset mode resolves to reset)
 
 ## Default Credentials
 - Admin:

@@ -8,6 +8,27 @@ interface RequestOptions extends RequestInit {
   nextRevalidate?: number;
 }
 
+export class ApiRequestError extends Error {
+  readonly status: number;
+
+  readonly code?: string;
+
+  readonly details?: Record<string, unknown>;
+
+  constructor(params: {
+    message: string;
+    status: number;
+    code?: string;
+    details?: Record<string, unknown>;
+  }) {
+    super(params.message);
+    this.name = "ApiRequestError";
+    this.status = params.status;
+    this.code = params.code;
+    this.details = params.details;
+  }
+}
+
 async function getRequestOrigin() {
   if (process.env.BACKEND_API_ORIGIN) {
     return process.env.BACKEND_API_ORIGIN;
@@ -40,10 +61,33 @@ export async function fetchApi<T>(path: string, options: RequestOptions = {}): P
     cache: options.nextRevalidate ? undefined : "no-store",
   });
 
-  const payload = (await response.json()) as ApiSuccess<T> | ApiError;
-  if (!response.ok || "error" in payload) {
-    const message = "error" in payload ? payload.error.message : "Request failed";
-    throw new Error(message);
+  let payload: ApiSuccess<T> | ApiError | null = null;
+  try {
+    payload = (await response.json()) as ApiSuccess<T> | ApiError;
+  } catch {
+    payload = null;
+  }
+
+  if (!response.ok) {
+    const errorPayload =
+      payload && "error" in payload
+        ? payload.error
+        : undefined;
+    throw new ApiRequestError({
+      message: errorPayload?.message ?? `Request failed with status ${response.status}.`,
+      status: response.status,
+      code: errorPayload?.code,
+      details: errorPayload?.details,
+    });
+  }
+
+  if (!payload || "error" in payload) {
+    throw new ApiRequestError({
+      message: payload && "error" in payload ? payload.error.message : "Unexpected API response.",
+      status: response.status,
+      code: payload && "error" in payload ? payload.error.code : undefined,
+      details: payload && "error" in payload ? payload.error.details : undefined,
+    });
   }
   return payload.data;
 }

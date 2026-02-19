@@ -18,14 +18,12 @@ export default async function StaticPageDetail({ params }: StaticPageProps) {
     notFound();
   }
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Page</p>
-        <h1>{page.title}</h1>
-      </section>
-      <section className="panel">
-        <RichContent html={page.content} />
-      </section>
+    <div className="container-md min-vh-100 container-margin-top p-1">
+      <div className="container-size break-words">
+        <div className="content">
+          <RichContent html={page.content} />
+        </div>
+      </div>
     </div>
   );
 }
