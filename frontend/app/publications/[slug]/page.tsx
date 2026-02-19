@@ -4,14 +4,15 @@ import { getPublication } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface PublicationDetailPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function PublicationDetailPage({ params }: PublicationDetailPageProps) {
   await ensureModuleEnabled("publications");
-  const publication = await getPublication(params.slug).catch(() => null);
+  const { slug } = await params;
+  const publication = await getPublication(slug).catch(() => null);
   if (!publication) notFound();
 
   return (

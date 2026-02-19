@@ -5,14 +5,15 @@ import { getCtfEvent, getSession } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface CtfDetailPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function CtfDetailPage({ params }: CtfDetailPageProps) {
   await ensureModuleEnabled("ctf");
   const session = await getSession();
+  const { slug } = await params;
   if (!session.is_authenticated) {
     return (
       <div className="page-shell">
@@ -28,7 +29,7 @@ export default async function CtfDetailPage({ params }: CtfDetailPageProps) {
     );
   }
 
-  const payload = await getCtfEvent(params.slug).catch(() => null);
+  const payload = await getCtfEvent(slug).catch(() => null);
   if (!payload) notFound();
 
   return (
@@ -45,7 +46,7 @@ export default async function CtfDetailPage({ params }: CtfDetailPageProps) {
         <ul className="list">
           {payload.flags.map((flag) => (
             <li key={flag.slug} className="row-line">
-              <Link href={`/ctf/${params.slug}/${flag.slug}`}>{flag.title}</Link>
+              <Link href={`/ctf/${slug}/${flag.slug}`}>{flag.title}</Link>
               <span className="meta">{flag.is_solved ? `Solved by ${flag.solver_name}` : "Open"}</span>
             </li>
           ))}

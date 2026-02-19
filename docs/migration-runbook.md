@@ -16,6 +16,7 @@ Move user-facing rendering from Django templates to Next.js while preserving exi
 - Auth/permission behavior parity
 - Form behavior parity (validation + success/error states)
 - Association theme/content variables parity
+- Admin-managed navigation parity (`StaticPageNav` ordering, dropdown ordering, login->logout behavior)
 - Monitoring: error logs, response times, and session behavior
 
 ## Rollback
@@ -30,3 +31,4 @@ Move user-facing rendering from Django templates to Next.js while preserving exi
 - Event billing integration edge cases (feature flag + module enabled, invoice generation failures).
 - Special event template parity is now frontend-driven via API `template_variant`; keep final UX QA per association before disabling legacy routes.
 - Per-association differences in installed apps and templates (use `meta.site.data.module_capabilities` in frontend guards).
+- Next.js route param API changes (Next 16 `params/searchParams` promises) can break dynamic routes if not migrated consistently.

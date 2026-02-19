@@ -4,14 +4,15 @@ import { getPublications } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface PublicationsPageProps {
-  searchParams: {
+  searchParams: Promise<{
     page?: string;
-  };
+  }>;
 }
 
 export default async function PublicationsPage({ searchParams }: PublicationsPageProps) {
   await ensureModuleEnabled("publications");
-  const page = Number(searchParams.page ?? "1");
+  const resolvedSearchParams = await searchParams;
+  const page = Number(resolvedSearchParams.page ?? "1");
   const payload = await getPublications(Number.isNaN(page) ? 1 : page);
 
   return (

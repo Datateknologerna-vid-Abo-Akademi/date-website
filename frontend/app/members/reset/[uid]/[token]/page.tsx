@@ -1,13 +1,15 @@
 import { PasswordResetConfirmForm } from "@/components/members/password-reset-confirm-form";
 
 interface PasswordResetConfirmPageProps {
-  params: {
+  params: Promise<{
     uid: string;
     token: string;
-  };
+  }>;
 }
 
-export default function PasswordResetConfirmPage({ params }: PasswordResetConfirmPageProps) {
+export default async function PasswordResetConfirmPage({ params }: PasswordResetConfirmPageProps) {
+  const { uid, token } = await params;
+
   return (
     <div className="page-shell">
       <section className="hero compact">
@@ -15,7 +17,7 @@ export default function PasswordResetConfirmPage({ params }: PasswordResetConfir
         <h1>Set new password</h1>
       </section>
       <section className="panel">
-        <PasswordResetConfirmForm uid={params.uid} token={params.token} />
+        <PasswordResetConfirmForm uid={uid} token={token} />
       </section>
     </div>
   );

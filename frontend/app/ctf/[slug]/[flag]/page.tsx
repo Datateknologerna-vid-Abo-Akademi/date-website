@@ -6,10 +6,10 @@ import { getCtfFlag, getSession } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface CtfFlagPageProps {
-  params: {
+  params: Promise<{
     slug: string;
     flag: string;
-  };
+  }>;
 }
 
 export default async function CtfFlagPage({ params }: CtfFlagPageProps) {
@@ -18,8 +18,9 @@ export default async function CtfFlagPage({ params }: CtfFlagPageProps) {
   if (!session.is_authenticated) {
     return notFound();
   }
+  const { slug, flag } = await params;
 
-  const payload = await getCtfFlag(params.slug, params.flag).catch(() => null);
+  const payload = await getCtfFlag(slug, flag).catch(() => null);
   if (!payload) notFound();
 
   return (
@@ -37,7 +38,7 @@ export default async function CtfFlagPage({ params }: CtfFlagPageProps) {
         <RichContent html={payload.flag.clues} />
       </section>
       <section className="panel">
-        <FlagGuessForm ctfSlug={params.slug} flagSlug={params.flag} canSubmit={payload.can_submit} />
+        <FlagGuessForm ctfSlug={slug} flagSlug={flag} canSubmit={payload.can_submit} />
       </section>
     </div>
   );

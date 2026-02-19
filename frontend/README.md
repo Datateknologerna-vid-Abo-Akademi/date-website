@@ -15,6 +15,14 @@ Use the root-level stack:
 - `source ../env.sh dev`
 - `stack-start`
 
+## Visual Parity Checks
+- Homepage visual regression (hero + events cards):
+  - `npm run test:e2e:visual`
+- Baseline snapshots can be refreshed with:
+  - `npm run test:e2e:visual -- --update-snapshots`
+- Full legacy-vs-decoupled element compare workflow:
+  - `../docs/playwright-element-compare.md`
+
 ## API Usage
 - Frontend reads from `/api/v1/*`.
 - Runtime site and theme config comes from:

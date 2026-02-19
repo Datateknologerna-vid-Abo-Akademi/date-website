@@ -5,13 +5,13 @@ import { getArchivePictureCollection } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface ArchivePictureDetailPageProps {
-  params: {
+  params: Promise<{
     year: string;
     album: string;
-  };
-  searchParams: {
+  }>;
+  searchParams: Promise<{
     page?: string;
-  };
+  }>;
 }
 
 export default async function ArchivePictureDetailPage({
@@ -19,11 +19,12 @@ export default async function ArchivePictureDetailPage({
   searchParams,
 }: ArchivePictureDetailPageProps) {
   await ensureModuleEnabled("archive");
-  const year = Number(params.year);
+  const [resolvedParams, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const year = Number(resolvedParams.year);
   if (Number.isNaN(year)) notFound();
 
-  const page = Number(searchParams.page ?? "1");
-  const payload = await getArchivePictureCollection(year, params.album, Number.isNaN(page) ? 1 : page).catch(
+  const page = Number(resolvedSearchParams.page ?? "1");
+  const payload = await getArchivePictureCollection(year, resolvedParams.album, Number.isNaN(page) ? 1 : page).catch(
     () => null,
   );
   if (!payload) notFound();

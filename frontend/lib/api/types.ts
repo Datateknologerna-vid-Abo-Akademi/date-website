@@ -117,6 +117,11 @@ export interface EventItem {
   registration_public_fields?: string[];
   template_variant?: "default" | "arsfest" | "baal" | "kk100" | "tomtejakt" | "wappmiddag";
   show_attendee_list?: boolean;
+  variant_sections?: Array<{
+    slug: string;
+    title: string;
+    content: string;
+  }>;
 }
 
 export interface EventInvoice {

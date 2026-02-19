@@ -21,6 +21,7 @@
 ## Frontend
 - Lint and type checks in CI.
 - Playwright smoke checks in CI against dockerized stack.
+- Playwright visual regression for homepage parity (hero + events cards) with snapshot baselines.
 - Route rendering tests for:
   - home
   - news list/detail
@@ -47,9 +48,20 @@
 - `npm run lint` (frontend)
 - `npm run build` (frontend)
 - `npm run test:e2e` (frontend Playwright smoke tests; requires running stack and `PLAYWRIGHT_BASE_URL`)
+- `npm run test:e2e:visual` (frontend visual parity checks against committed snapshots)
 - `python -m compileall backend` (backend quick syntax check)
 - `python scripts/association_qa.py` (cross-association runtime parity and module-guard checks)
   - uses uncached `meta/site` reads in frontend to avoid stale capability data when switching `PROJECT_NAME`
+
+## Homepage Visual Baseline Workflow
+1. Generate baseline snapshots from legacy Django rendering:
+   - run tests against legacy URL with snapshot update enabled
+   - `PLAYWRIGHT_BASE_URL=<legacy-home-origin> npm run test:e2e:visual -- --update-snapshots`
+2. Compare decoupled frontend against that baseline:
+   - `PLAYWRIGHT_BASE_URL=<decoupled-origin> npm run test:e2e:visual`
+3. CI/local fails when homepage visuals drift beyond threshold.
+4. Detailed step-by-step (including temporary legacy backend exposure on `:8001`) is documented in:
+   - `docs/playwright-element-compare.md`
 
 ## CI Mapping
 - Fast CI (`.github/workflows/ci.yml`)

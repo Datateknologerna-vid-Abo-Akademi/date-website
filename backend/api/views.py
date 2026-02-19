@@ -235,6 +235,48 @@ def resolve_event_template_variant(event):
     return "default"
 
 
+def resolve_event_variant_sections(event, user):
+    variant = resolve_event_template_variant(event)
+    if variant == "default":
+        return []
+
+    if not is_module_enabled("staticpages"):
+        return []
+
+    StaticPage = get_module_model("staticpages", "StaticPage")
+    if StaticPage is None:
+        return []
+
+    # Event landing variants can optionally reference static pages by using
+    # slug prefixes tied to the event slug, e.g. "baal-program".
+    prefix_patterns = [f"{event.slug}-", f"{event.slug}_"]
+    slug_filter = Q()
+    for prefix in prefix_patterns:
+        slug_filter |= Q(slug__startswith=prefix)
+
+    queryset = StaticPage.objects.filter(slug_filter).order_by("title")
+    if not user.is_authenticated:
+        queryset = queryset.filter(members_only=False)
+
+    sections = []
+    for page in queryset:
+        clean_slug = page.slug
+        for prefix in prefix_patterns:
+            if clean_slug.startswith(prefix):
+                clean_slug = clean_slug[len(prefix):]
+                break
+        if not clean_slug:
+            clean_slug = page.slug
+        sections.append(
+            {
+                "slug": clean_slug,
+                "title": page.title,
+                "content": page.content,
+            }
+        )
+    return sections
+
+
 class SiteMetaApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -485,6 +527,7 @@ class EventDetailApiView(APIView):
         payload["registration_public_fields"] = [field.name for field in event.get_registration_form_public_info()]
         payload["template_variant"] = resolve_event_template_variant(event)
         payload["show_attendee_list"] = event.show_attendee_list()
+        payload["variant_sections"] = resolve_event_variant_sections(event, request.user)
         return Response({"data": payload})
 
 

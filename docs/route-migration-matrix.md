@@ -93,3 +93,6 @@
 
 ## Module Guarding
 - Frontend module routes are guarded using `meta/site` capabilities (`module_capabilities`) to ensure association-safe routing.
+
+## Runtime Compatibility Note
+- Dynamic app routes are migrated for Next.js 16 semantics where `params` and `searchParams` are promise-based in server components.

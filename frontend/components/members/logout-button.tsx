@@ -5,7 +5,17 @@ import { useState } from "react";
 
 import { mutateApi } from "@/lib/api/client";
 
-export function LogoutButton() {
+interface LogoutButtonProps {
+  className?: string;
+  label?: string;
+  redirectTo?: string;
+}
+
+export function LogoutButton({
+  className,
+  label = "Sign out",
+  redirectTo = "/members/login",
+}: LogoutButtonProps = {}) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -16,7 +26,7 @@ export function LogoutButton() {
         method: "POST",
         path: "auth/logout",
       });
-      router.push("/members/login");
+      router.push(redirectTo);
       router.refresh();
     } finally {
       setIsLoading(false);
@@ -24,8 +34,8 @@ export function LogoutButton() {
   }
 
   return (
-    <button type="button" onClick={onLogout} disabled={isLoading}>
-      {isLoading ? "Signing out..." : "Sign out"}
+    <button type="button" onClick={onLogout} disabled={isLoading} className={className}>
+      {isLoading ? "Signing out..." : label}
     </button>
   );
 }

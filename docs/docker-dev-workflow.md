@@ -12,6 +12,15 @@
 4. Open app:
    - `http://localhost:8080` (or `APP_PORT`)
 
+## Hot Reload Notes
+- Frontend hot reload is expected in dev (`next dev`).
+- On Docker Desktop bind mounts (especially Windows/macOS), file events can be missed.
+- Dev compose now enables polling watchers for frontend:
+  - `WATCHPACK_POLLING=true`
+  - `CHOKIDAR_USEPOLLING=true`
+- Dev compose also runs Next with `--webpack` for more reliable file watching in containers.
+- After changing this config, restart the frontend container (`date-stop` then `date-start`).
+
 ## Useful Commands
 - `date-start-detached`
 - `date-stop`

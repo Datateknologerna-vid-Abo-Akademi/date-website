@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:e2e": "playwright test",
+    "test:e2e:visual": "playwright test tests/e2e/home-visual.spec.ts",
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {

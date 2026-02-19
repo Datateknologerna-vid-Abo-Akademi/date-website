@@ -6,14 +6,14 @@ import { getNews, getNewsArticle } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface NewsDetailPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
   await ensureModuleEnabled("news");
-  const { slug } = params;
+  const { slug } = await params;
   const article = await getNewsArticle(slug).catch(() => null);
   if (!article) {
     const categoryPosts = await getNews(slug).catch(() => null);

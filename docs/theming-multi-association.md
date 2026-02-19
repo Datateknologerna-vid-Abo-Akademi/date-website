@@ -14,6 +14,11 @@
   - `feature_flags`
   - `module_capabilities`
 
+## Legacy Visual Parity Strategy
+- Frontend maps `association_theme.palette` to legacy CSS tokens (`--primaryColor`, `--linkColorLight`, etc.).
+- This keeps the decoupled UI close to previous Django template styling while still using API-driven rendering.
+- Navbar and dropdowns are rendered from admin-managed `navigation` data (same source as legacy templates).
+
 ## Theme Override
 - Use `ASSOCIATION_THEME` env var (JSON) for deployment-specific overrides.
 - Example:

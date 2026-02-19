@@ -42,6 +42,7 @@ Monorepo with:
 - `docs/api-contract.md`
 - `docs/route-migration-matrix.md`
 - `docs/docker-dev-workflow.md`
+- `docs/playwright-element-compare.md`
 - `docs/association-qa-playbook.md`
 - `docs/migration-runbook.md`
 - `docs/theming-multi-association.md`

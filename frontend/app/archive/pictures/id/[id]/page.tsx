@@ -4,14 +4,15 @@ import { getArchivePictureCollectionById } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface ArchivePictureByIdPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function ArchivePictureByIdPage({ params }: ArchivePictureByIdPageProps) {
   await ensureModuleEnabled("archive");
-  const collectionId = Number(params.id);
+  const { id } = await params;
+  const collectionId = Number(id);
   if (Number.isNaN(collectionId)) notFound();
 
   const payload = await getArchivePictureCollectionById(collectionId).catch(() => null);

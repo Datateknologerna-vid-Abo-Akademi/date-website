@@ -2,15 +2,16 @@ import { FunctionaryManager } from "@/components/members/functionary-manager";
 import { getPublicFunctionaries, getSession } from "@/lib/api/queries";
 
 interface FunctionariesPageProps {
-  searchParams: {
+  searchParams: Promise<{
     year?: string;
     role?: string;
-  };
+  }>;
 }
 
 export default async function FunctionariesPage({ searchParams }: FunctionariesPageProps) {
-  const year = searchParams.year;
-  const role = searchParams.role;
+  const resolvedSearchParams = await searchParams;
+  const year = resolvedSearchParams.year;
+  const role = resolvedSearchParams.role;
   const [session, payload] = await Promise.all([getSession(), getPublicFunctionaries(year, role)]);
 
   return (

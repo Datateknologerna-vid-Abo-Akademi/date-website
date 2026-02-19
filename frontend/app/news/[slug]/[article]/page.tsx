@@ -5,15 +5,16 @@ import { getNewsArticle } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface NewsCategoryArticlePageProps {
-  params: {
+  params: Promise<{
     slug: string;
     article: string;
-  };
+  }>;
 }
 
 export default async function NewsCategoryArticlePage({ params }: NewsCategoryArticlePageProps) {
   await ensureModuleEnabled("news");
-  const article = await getNewsArticle(params.article, params.slug).catch(() => null);
+  const { slug, article: articleSlug } = await params;
+  const article = await getNewsArticle(articleSlug, slug).catch(() => null);
   if (!article) notFound();
 
   return (
@@ -21,7 +22,7 @@ export default async function NewsCategoryArticlePage({ params }: NewsCategoryAr
       <section className="hero compact">
         <p className="eyebrow">News</p>
         <h1>{article.title}</h1>
-        <p className="meta">Category: {params.slug}</p>
+        <p className="meta">Category: {slug}</p>
       </section>
       <section className="panel">
         <RichContent html={article.content} />

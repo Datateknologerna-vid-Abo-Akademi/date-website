@@ -5,14 +5,15 @@ import { getArchivePictureCollectionsByYear } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface ArchivePictureYearPageProps {
-  params: {
+  params: Promise<{
     year: string;
-  };
+  }>;
 }
 
 export default async function ArchivePictureYearPage({ params }: ArchivePictureYearPageProps) {
   await ensureModuleEnabled("archive");
-  const year = Number(params.year);
+  const { year: yearParam } = await params;
+  const year = Number(yearParam);
   if (Number.isNaN(year)) notFound();
 
   const collections = await getArchivePictureCollectionsByYear(year).catch(() => null);

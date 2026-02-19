@@ -4,14 +4,15 @@ import { getNews } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface NewsAuthorPageProps {
-  params: {
+  params: Promise<{
     author: string;
-  };
+  }>;
 }
 
 export default async function NewsAuthorPage({ params }: NewsAuthorPageProps) {
   await ensureModuleEnabled("news");
-  const author = decodeURIComponent(params.author);
+  const { author: encodedAuthor } = await params;
+  const author = decodeURIComponent(encodedAuthor);
   const posts = await getNews(undefined, author);
 
   return (

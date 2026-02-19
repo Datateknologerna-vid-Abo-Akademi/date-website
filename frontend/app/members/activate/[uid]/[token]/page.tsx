@@ -1,14 +1,15 @@
 import { activateAccount } from "@/lib/api/queries";
 
 interface ActivationPageProps {
-  params: {
+  params: Promise<{
     uid: string;
     token: string;
-  };
+  }>;
 }
 
 export default async function ActivationPage({ params }: ActivationPageProps) {
-  const result = await activateAccount(params.uid, params.token).catch(() => null);
+  const { uid, token } = await params;
+  const result = await activateAccount(uid, token).catch(() => null);
 
   return (
     <div className="page-shell">

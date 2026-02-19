@@ -167,11 +167,13 @@ services:
       context: ./frontend
       target: dev
     restart: unless-stopped
-    command: npm run dev -- --hostname 0.0.0.0 --port 3000
+    command: npm run dev -- --webpack --hostname 0.0.0.0 --port 3000
     environment:
       NEXT_PUBLIC_APP_ORIGIN: ${NEXT_PUBLIC_APP_ORIGIN}
       BACKEND_API_ORIGIN: ${BACKEND_API_ORIGIN}
       NEXT_TELEMETRY_DISABLED: "1"
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
     depends_on:
       backend:
         condition: service_healthy

@@ -5,14 +5,14 @@ import { getStaticPage } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface StaticPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function StaticPageDetail({ params }: StaticPageProps) {
   await ensureModuleEnabled("staticpages");
-  const { slug } = params;
+  const { slug } = await params;
   const page = await getStaticPage(slug).catch(() => null);
   if (!page) {
     notFound();

@@ -6,17 +6,18 @@ import { getLuciaCandidate, getSession } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface LuciaCandidatePageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function LuciaCandidatePage({ params }: LuciaCandidatePageProps) {
   await ensureModuleEnabled("lucia");
   const session = await getSession();
   if (!session.is_authenticated) notFound();
+  const { slug } = await params;
 
-  const candidate = await getLuciaCandidate(params.slug).catch(() => null);
+  const candidate = await getLuciaCandidate(slug).catch(() => null);
   if (!candidate) notFound();
 
   return (

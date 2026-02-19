@@ -5,14 +5,15 @@ import { getNewsArticle } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface LegacyNewsArticlePageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function LegacyNewsArticlePage({ params }: LegacyNewsArticlePageProps) {
   await ensureModuleEnabled("news");
-  const article = await getNewsArticle(params.slug).catch(() => null);
+  const { slug } = await params;
+  const article = await getNewsArticle(slug).catch(() => null);
   if (!article) notFound();
 
   return (

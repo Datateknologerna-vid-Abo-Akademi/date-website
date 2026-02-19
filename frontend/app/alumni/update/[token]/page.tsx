@@ -5,15 +5,16 @@ import { getAlumniUpdateToken } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface AlumniTokenPageProps {
-  params: {
+  params: Promise<{
     token: string;
-  };
+  }>;
 }
 
 export default async function AlumniTokenPage({ params }: AlumniTokenPageProps) {
   await ensureModuleEnabled("alumni");
+  const { token } = await params;
 
-  const tokenPayload = await getAlumniUpdateToken(params.token).catch(() => null);
+  const tokenPayload = await getAlumniUpdateToken(token).catch(() => null);
   if (!tokenPayload) notFound();
 
   return (
@@ -23,7 +24,7 @@ export default async function AlumniTokenPage({ params }: AlumniTokenPageProps) 
         <h1>Update your alumni information</h1>
       </section>
       <section className="panel">
-        <AlumniUpdateForm email={tokenPayload.email} token={params.token} />
+        <AlumniUpdateForm email={tokenPayload.email} token={token} />
       </section>
     </div>
   );

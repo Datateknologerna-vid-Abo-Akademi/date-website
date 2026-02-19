@@ -5,19 +5,20 @@ import { getArchiveExamCollection } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface ArchiveExamDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
-  searchParams: {
+  }>;
+  searchParams: Promise<{
     page?: string;
-  };
+  }>;
 }
 
 export default async function ArchiveExamDetailPage({ params, searchParams }: ArchiveExamDetailPageProps) {
   await ensureModuleEnabled("archive");
-  const collectionId = Number(params.id);
+  const [resolvedParams, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const collectionId = Number(resolvedParams.id);
   if (Number.isNaN(collectionId)) notFound();
-  const page = Number(searchParams.page ?? "1");
+  const page = Number(resolvedSearchParams.page ?? "1");
   const payload = await getArchiveExamCollection(collectionId, Number.isNaN(page) ? 1 : page).catch(() => null);
   if (!payload) notFound();
 

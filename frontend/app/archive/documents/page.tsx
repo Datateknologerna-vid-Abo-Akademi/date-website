@@ -4,19 +4,20 @@ import { getArchiveDocuments } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface ArchiveDocumentsPageProps {
-  searchParams: {
+  searchParams: Promise<{
     collection?: string;
     title?: string;
     page?: string;
-  };
+  }>;
 }
 
 export default async function ArchiveDocumentsPage({ searchParams }: ArchiveDocumentsPageProps) {
   await ensureModuleEnabled("archive");
-  const page = Number(searchParams.page ?? "1");
+  const resolvedSearchParams = await searchParams;
+  const page = Number(resolvedSearchParams.page ?? "1");
   const payload = await getArchiveDocuments(
-    searchParams.collection,
-    searchParams.title,
+    resolvedSearchParams.collection,
+    resolvedSearchParams.title,
     Number.isNaN(page) ? 1 : page,
   );
 
@@ -30,7 +31,7 @@ export default async function ArchiveDocumentsPage({ searchParams }: ArchiveDocu
         <form className="form-inline" method="get">
           <label className="form-field">
             <span>Collection</span>
-            <select name="collection" defaultValue={searchParams.collection ?? ""}>
+            <select name="collection" defaultValue={resolvedSearchParams.collection ?? ""}>
               <option value="">All</option>
               {payload.collections.map((collection) => (
                 <option key={collection.id} value={collection.id}>
@@ -41,7 +42,7 @@ export default async function ArchiveDocumentsPage({ searchParams }: ArchiveDocu
           </label>
           <label className="form-field">
             <span>Title contains</span>
-            <input name="title" defaultValue={searchParams.title ?? ""} />
+            <input name="title" defaultValue={resolvedSearchParams.title ?? ""} />
           </label>
           <button type="submit">Filter</button>
         </form>
@@ -61,8 +62,8 @@ export default async function ArchiveDocumentsPage({ searchParams }: ArchiveDocu
           {payload.pagination.has_previous ? (
             <Link
               href={`/archive/documents?${new URLSearchParams({
-                ...(searchParams.collection ? { collection: searchParams.collection } : {}),
-                ...(searchParams.title ? { title: searchParams.title } : {}),
+                ...(resolvedSearchParams.collection ? { collection: resolvedSearchParams.collection } : {}),
+                ...(resolvedSearchParams.title ? { title: resolvedSearchParams.title } : {}),
                 page: String(payload.pagination.page - 1),
               }).toString()}`}
             >
@@ -77,8 +78,8 @@ export default async function ArchiveDocumentsPage({ searchParams }: ArchiveDocu
           {payload.pagination.has_next ? (
             <Link
               href={`/archive/documents?${new URLSearchParams({
-                ...(searchParams.collection ? { collection: searchParams.collection } : {}),
-                ...(searchParams.title ? { title: searchParams.title } : {}),
+                ...(resolvedSearchParams.collection ? { collection: resolvedSearchParams.collection } : {}),
+                ...(resolvedSearchParams.title ? { title: resolvedSearchParams.title } : {}),
                 page: String(payload.pagination.page + 1),
               }).toString()}`}
             >
