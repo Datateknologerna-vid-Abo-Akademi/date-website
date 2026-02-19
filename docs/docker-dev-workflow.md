@@ -4,6 +4,7 @@
 1. Copy env template:
    - `cp .env.example .env`
    - Keep `backend` in `ALLOWED_HOSTS` so server-side frontend API calls to `BACKEND_API_ORIGIN` are accepted.
+   - Keep `LEGACY_TEMPLATE_ROUTES_ENABLED=True` in dev unless you explicitly want to test full decoupled cutover behavior.
 2. Load helpers:
    - `source env.sh dev`
 3. Start stack:

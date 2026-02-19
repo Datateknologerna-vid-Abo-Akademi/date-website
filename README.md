@@ -19,6 +19,10 @@ Monorepo with:
 ## Backend-Only Workflow
 `backend/env.sh` is still available for backend-only development.
 
+## Cutover Toggle
+- Set `LEGACY_TEMPLATE_ROUTES_ENABLED=False` to disable legacy Django template route includes after parity sign-off.
+- Keep it `True` during migration if you still need backend-rendered fallback routes.
+
 ## CI Workflows
 - `.github/workflows/ci.yml`
   - Runs on push and pull requests.

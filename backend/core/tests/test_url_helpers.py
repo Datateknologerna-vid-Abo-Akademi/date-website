@@ -1,11 +1,16 @@
 from unittest.mock import patch
 
+from django.http import HttpResponse
 from django.test import SimpleTestCase
+from django.test.client import RequestFactory
 
 from core.urls import helpers
 
 
 class UrlHelpersTests(SimpleTestCase):
+    def setUp(self):
+        self.request_factory = RequestFactory()
+
     def test_app_enabled_matches_plain_and_dotted_names(self):
         with patch.object(helpers.settings, "INSTALLED_APPS", ["members", "archive.apps.ArchiveConfig"]):
             self.assertTrue(helpers.app_enabled("members"))
@@ -34,3 +39,35 @@ class UrlHelpersTests(SimpleTestCase):
         self.assertEqual(len(patterns), 2)
         self.assertEqual(str(patterns[0].pattern), "members/")
         self.assertEqual(str(patterns[1].pattern), "members/")
+
+    def test_optional_include_returns_empty_when_legacy_routes_disabled(self):
+        with patch.object(helpers.settings, "LEGACY_TEMPLATE_ROUTES_ENABLED", False):
+            patterns = helpers.optional_include("news/", "news.urls", "news")
+        self.assertEqual(patterns, [])
+
+    def test_optional_members_includes_returns_empty_when_legacy_routes_disabled(self):
+        with patch.object(helpers.settings, "LEGACY_TEMPLATE_ROUTES_ENABLED", False):
+            patterns = helpers.optional_members_includes(prefix="members/", include_auth_urls=True)
+        self.assertEqual(patterns, [])
+
+    def test_legacy_index_returns_original_view_when_legacy_routes_enabled(self):
+        def sample_view(_request):
+            return HttpResponse("legacy")
+
+        with patch.object(helpers.settings, "LEGACY_TEMPLATE_ROUTES_ENABLED", True):
+            view = helpers.legacy_index(sample_view)
+            response = view(self.request_factory.get("/"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"legacy")
+
+    def test_legacy_index_redirects_when_legacy_routes_disabled(self):
+        def sample_view(_request):
+            return HttpResponse("legacy")
+
+        with patch.object(helpers.settings, "LEGACY_TEMPLATE_ROUTES_ENABLED", False), patch.object(
+            helpers.settings, "FRONTEND_DEFAULT_ROUTE", "/events"
+        ):
+            view = helpers.legacy_index(sample_view)
+            response = view(self.request_factory.get("/"))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers.get("Location"), "/events")

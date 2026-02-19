@@ -16,6 +16,7 @@
 - Preferred module nav labels and routes are exposed in `module_capabilities` (`label`, `nav_route`) so frontend nav is less hardcoded.
 - Association-specific landing behavior is controlled by `FRONTEND_DEFAULT_ROUTE` (exposed as `default_landing_path`).
 - Django route includes for module apps are now assembled through shared helpers in `core.urls.helpers`, so app/plugin toggles in `INSTALLED_APPS` do not require duplicating URL wiring in every association URLConf.
+- Production cutover can disable legacy Django template routes with `LEGACY_TEMPLATE_ROUTES_ENABLED=False` while keeping API/admin and static/media endpoints available.
 - Special event rendering behavior is exposed via event `template_variant` instead of Django template routing.
 - Association config is validated at startup (theme/content variables/routes/feature consistency). See `docs/association-config-schema.md`.
 

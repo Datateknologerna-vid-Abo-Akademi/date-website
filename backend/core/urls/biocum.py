@@ -8,14 +8,14 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from core.urls.helpers import optional_include, optional_members_includes
+from core.urls.helpers import legacy_index, optional_include, optional_members_includes
 from date import views as date
 
 app_name = 'core'
 
 urlpatterns = [
     path('api/v1/', include('api.urls')),
-    path('', date.index, name='index'),
+    path('', legacy_index(date.index), name='index'),
     *optional_include('news/', 'news.urls', 'news'),
     *optional_members_includes(prefix='members/', include_auth_urls=True),
     *optional_include('archive/', 'archive.urls', 'archive'),

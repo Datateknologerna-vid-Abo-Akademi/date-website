@@ -3,7 +3,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from core.urls.helpers import optional_include, optional_members_includes
+from core.urls.helpers import legacy_index, optional_include, optional_members_includes
 from events import views as events
 from date import views as date
 
@@ -11,7 +11,7 @@ app_name = 'core'
 
 urlpatterns = [
     path('api/v1/', include('api.urls')),
-    path('', events.IndexView.as_view(), name='index'),
+    path('', legacy_index(events.IndexView.as_view()), name='index'),
     path('admin/', admin.site.urls),
     *optional_include('', 'events.urls', 'events'),
     *optional_include('pages/', 'staticpages.urls', 'staticpages'),
