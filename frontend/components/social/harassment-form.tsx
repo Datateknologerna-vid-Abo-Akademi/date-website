@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 
 import { mutateApi } from "@/lib/api/client";
 
@@ -9,7 +10,17 @@ interface HarassmentFormResponse {
   id: number;
 }
 
-export function HarassmentForm() {
+interface HarassmentFormProps {
+  captchaSiteKey?: string;
+}
+
+declare global {
+  interface Window {
+    __harassmentTurnstileCallback?: (token: string) => void;
+  }
+}
+
+export function HarassmentForm({ captchaSiteKey }: HarassmentFormProps) {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [consent, setConsent] = useState(false);
@@ -17,6 +28,15 @@ export function HarassmentForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
+
+  useEffect(() => {
+    window.__harassmentTurnstileCallback = (token: string) => setCaptchaToken(token);
+    return () => {
+      if (window.__harassmentTurnstileCallback) {
+        delete window.__harassmentTurnstileCallback;
+      }
+    };
+  }, []);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -39,9 +59,9 @@ export function HarassmentForm() {
       setEmail("");
       setConsent(false);
       setCaptchaToken("");
-      setStatusMessage("Report submitted. Thank you.");
+      setStatusMessage("Anmälan skickad. Tack.");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to submit report");
+      setErrorMessage(error instanceof Error ? error.message : "Kunde inte skicka anmälan.");
     } finally {
       setIsSubmitting(false);
     }
@@ -50,7 +70,7 @@ export function HarassmentForm() {
   return (
     <form className="form-stack" onSubmit={onSubmit}>
       <label className="form-field">
-        <span>Describe the incident</span>
+        <span>Beskrivning av händelsen *</span>
         <textarea
           value={message}
           onChange={(event) => setMessage(event.target.value)}
@@ -60,20 +80,12 @@ export function HarassmentForm() {
         />
       </label>
       <label className="form-field">
-        <span>Email (optional)</span>
+        <span>Ange din e-post om du vill bli kontaktad</span>
         <input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          placeholder="name@example.com"
-        />
-      </label>
-      <label className="form-field">
-        <span>Turnstile token (if required by deployment)</span>
-        <input
-          value={captchaToken}
-          onChange={(event) => setCaptchaToken(event.target.value)}
-          placeholder="Optional in local development"
+          placeholder="namn@example.com"
         />
       </label>
       <label className="choice-line">
@@ -83,10 +95,23 @@ export function HarassmentForm() {
           onChange={(event) => setConsent(event.target.checked)}
           required
         />
-        <span>I agree to the reporting terms.</span>
+        <span>
+          Jag godkänner{" "}
+          <Link href="/pages/registerbeskrivning/" target="_blank">
+            villkoren
+          </Link>
+          .
+        </span>
       </label>
+      {captchaSiteKey ? (
+        <div
+          className="cf-turnstile"
+          data-sitekey={captchaSiteKey}
+          data-callback="__harassmentTurnstileCallback"
+        />
+      ) : null}
       <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Submitting..." : "Submit report"}
+        {isSubmitting ? "Skickar..." : "Skicka"}
       </button>
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
       {statusMessage ? <p className="form-success">{statusMessage}</p> : null}

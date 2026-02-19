@@ -1,123 +1,100 @@
 # Playwright Element Compare Runbook
 
-This runbook documents element-level visual parity checks between:
-- legacy Django-rendered routes (`backend` templates/static)
-- decoupled Next.js routes (`frontend`)
+This runbook covers two visual-parity layers between:
+- legacy Django-rendered routes (`http://localhost:8001`)
+- decoupled Next.js routes (`http://localhost:8080`)
 
-Current visual parity targets:
-- Homepage hero and events under calendar
-- Members login page (`/members/login`)
-- Events index (`/events`)
-- Events detail variants (`/events/[slug]`):
-  - `default`
-  - `arsfest`
-  - `baal`
-  - `kk100`
-  - `tomtejakt`
-  - `wappmiddag`
+Playwright execution is done in a dedicated Docker `e2e` service (not inside the `frontend` app container).
 
-## Source of truth files
-- Homepage spec: `frontend/tests/e2e/home-visual.spec.ts`
-- Route parity spec: `frontend/tests/e2e/legacy-visual.spec.ts`
-- Snapshot folders:
+## Coverage Modes
+- Targeted parity (fast): homepage/login/events targeted checks.
+- Full-route parity (broad): crawls and compares all internal links found for an association, in both `anon` and `member` states.
+
+## Source of Truth Specs
+- `frontend/tests/e2e/home-visual.spec.ts`
+- `frontend/tests/e2e/legacy-visual.spec.ts`
+- `frontend/tests/e2e/legacy-full-parity.spec.ts`
+
+## Snapshot and Artifact Paths
+- Baselines:
   - `frontend/tests/e2e/home-visual.spec.ts-snapshots/`
   - `frontend/tests/e2e/legacy-visual.spec.ts-snapshots/`
-- Report output: `frontend/playwright-report/`
-- Diff artifacts on failure: `frontend/test-results/`
+  - `frontend/tests/e2e/legacy-full-parity.spec.ts-snapshots/`
+- Runtime artifacts:
+  - `frontend/playwright-report/`
+  - `frontend/test-results/`
 
-## What the specs compare
-- `home-visual.spec.ts`
-  - Hero shell (`.header`)
-  - Homepage events list under calendar (`.events-container .events`)
-- `legacy-visual.spec.ts`
-  - Login form card (`.members-login-page .members-form`)
-  - Events index container (`.events-index-page .container-size`)
-  - Events detail container (`.event-detail-page .event-detail-container`) for all required variants
-
-Snapshot filenames include a suffix derived from `GET /api/v1/meta/site` brand/project.
+Keep baseline snapshot folders committed. Keep reports/results gitignored.
 
 ## Prerequisites
-1. Install frontend deps and Playwright browser once:
-   - `cd frontend`
-   - `npm install`
-   - `npx playwright install chromium`
-2. Run stack in dev:
-   - from repo root: `source env.sh dev`
-   - `date-start-detached`
-3. Seed deterministic demo data:
-   - from repo root: `date-init-demo`
+1. `source env.sh dev`
+2. `date-init-demo <association>` (defaults to current project)
+3. `date-start-both <association>` (ensures legacy on `:8001` and decoupled on `:8080`)
 
-Before running any visual check, confirm active association:
+Verify association:
 - `curl http://localhost:8080/api/v1/meta/site | jq -r '.data.project_name'`
-- If needed, switch and reseed explicitly:
-  - `date-start-detached kk`
-  - `date-init-demo kk`
 
-## Capture baseline from legacy Django rendering
-Recommended: expose backend directly on `localhost:8001` and force legacy template routes enabled, then update snapshots from that URL.
+## Full-Route Visual Workflow (Recommended)
+Single command:
+- `date-visual-parity kk`
 
-1. Create temporary compose override file `.tmp.legacy-visual.override.yml` in repo root:
+What it does:
+1. Seeds deterministic demo data.
+2. Starts both frontends (legacy + decoupled).
+3. Runs Playwright from the dedicated `e2e` container.
+4. Updates snapshots from legacy backend service (`http://backend:8000` inside Docker network).
+5. Runs decoupled comparison via proxy service (`http://proxy` inside Docker network).
 
-```yaml
-services:
-  backend:
-    environment:
-      LEGACY_TEMPLATE_ROUTES_ENABLED: "True"
-    ports:
-      - "8001:8000"
+Useful flags:
+- `date-visual-parity kk --no-update-baseline`
+- `date-visual-parity --all`
+- `date-visual-parity kk --no-crawl`
+- `date-visual-parity kk --max-pages 200 --max-depth 3`
+- `date-visual-parity kk --skip-template-check`
+- `date-visual-parity kk --chunk events --auth anon --quick --no-update-baseline`
+- `date-visual-parity kk --chunk members-auth --auth anon --no-update-baseline`
+- `date-visual-parity kk --route-prefix /events --route-prefix /members/login --no-update-baseline`
+
+Chunk names:
+- `core`, `home`, `events`, `members`, `members-auth`, `news`, `pages`, `social`, `alumni`, `archive`, `publications`, `polls`, `ctf`, `lucia`, `ads`
+
+## Manual Full-Route Commands (Docker e2e)
+From repo root:
+
+1. Install deps in `e2e` volume:
+```bash
+docker compose run --rm --no-deps e2e sh -lc "cd /work/frontend && npm ci"
 ```
 
-2. Boot stack with override:
-   - `docker compose -f docker-compose.yml -f .tmp.legacy-visual.override.yml up -d --build`
-3. Verify legacy rendering at `http://localhost:8001/`.
-4. Update visual baseline snapshots from legacy:
-   - `cd frontend`
-   - Prefer direct Playwright invocation (more reliable argument passing in PowerShell):
-   - `PLAYWRIGHT_BASE_URL=http://localhost:8001 npx playwright test tests/e2e/home-visual.spec.ts --update-snapshots`
-   - `legacy-visual.spec.ts` uses decoupled-only selectors and is not valid against raw legacy templates.
-5. Stop override stack and remove temp file:
-   - from repo root: `docker compose -f docker-compose.yml -f .tmp.legacy-visual.override.yml down`
-   - delete `.tmp.legacy-visual.override.yml`
-6. Return to normal stack:
-   - `source env.sh dev`
-   - `date-start-detached`
+2. Capture/update legacy baseline:
+```bash
+docker compose run --rm --no-deps e2e sh -lc "cd /work/frontend && PLAYWRIGHT_BASE_URL=http://backend:8000 PLAYWRIGHT_PARITY_AUTH_MODES=anon,member PLAYWRIGHT_PARITY_ROUTE_CHUNKS=events,members-auth npm run test:e2e:legacy-full-parity -- --update-snapshots"
+```
 
-## Compare decoupled frontend against legacy baseline
-Run the same visual specs against proxy URL:
-- `cd frontend`
+3. Compare decoupled app:
+```bash
+docker compose run --rm --no-deps e2e sh -lc "cd /work/frontend && PLAYWRIGHT_BASE_URL=http://proxy PLAYWRIGHT_PARITY_AUTH_MODES=anon,member PLAYWRIGHT_PARITY_ROUTE_CHUNKS=events,members-auth npm run test:e2e:legacy-full-parity"
+```
+
+## Event Template Override Gate
+`legacy-full-parity.spec.ts` validates template-variant resolution against legacy rules before visual assertions:
+- title-based overrides are checked first
+- slug-based overrides are fallback
+
+This prevents false visual conclusions when the decoupled variant selection logic diverges from legacy behavior.
+
+## Targeted Parity Commands
 - `PLAYWRIGHT_BASE_URL=http://localhost:8080 npm run test:e2e:visual`
-
-Fast iteration examples:
-- Login only:
-  - `PLAYWRIGHT_BASE_URL=http://localhost:8080 npm run test:e2e:visual -- -g "members login form matches approved baseline"`
-- Events index only:
+- Optional filter:
   - `PLAYWRIGHT_BASE_URL=http://localhost:8080 npm run test:e2e:visual -- -g "events index matches approved baseline"`
-- Event detail variants only:
-  - `PLAYWRIGHT_BASE_URL=http://localhost:8080 npm run test:e2e:visual -- -g "event detail variants match approved baselines"`
 
-## Reading failures
-On mismatch:
-- Playwright fails with expected vs actual diff stats.
-- Pixel diffs are written under `frontend/test-results/...-diff.png`.
-- HTML report:
+## Failure Triage
+- Open report:
   - `cd frontend`
   - `npx playwright show-report`
-
-## Updating baseline intentionally
-Only update snapshots when the legacy reference or approved target changed:
-- `PLAYWRIGHT_BASE_URL=<reference-origin> npm run test:e2e:visual -- --update-snapshots`
-
-Do not update baselines from the decoupled app unless explicitly re-baselining.
-
-## Troubleshooting Lessons
-- Association mismatch is the most common false-positive source:
-  - `source env.sh dev` alone does not guarantee the target association.
-  - Always verify `project_name` from `/api/v1/meta/site` before collecting baselines.
-- If backend is recreated and proxy starts returning `502`, restart proxy:
-  - `docker restart datewebsite-proxy-1`
-  - Nginx can keep a stale upstream IP after backend container recreation.
-- `legacy-visual.spec.ts` is for decoupled DOM parity checks, not legacy-template capture.
-- For snapshot updates in PowerShell, prefer `npx playwright test ... --update-snapshots` over `npm run ...` to avoid dropped flags.
-- If demo reseed with reset fails (`Database ... couldn't be flushed`), use helper flow that handles association lifecycle:
-  - `date-init-demo <association>`
-  - If failure persists, recreate services first (`date-start-detached <association>`) then rerun.
+- Check attached manifest in failing test output:
+  - includes crawled route list, source, and variant coverage
+- Common causes:
+  - wrong active association
+  - stale proxy upstream after backend recreation (`docker restart datewebsite-proxy-1`)
+  - baseline updated from wrong origin

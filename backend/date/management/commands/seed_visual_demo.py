@@ -47,7 +47,14 @@ class Command(BaseCommand):
     def handle(self, *args: Any, **options: Any) -> None:
         if options["reset"]:
             self.stdout.write("Flushing database before demo seed...")
-            call_command("flush", interactive=False, verbosity=options.get("verbosity", 1))
+            flush_kwargs = {
+                "interactive": False,
+                "verbosity": options.get("verbosity", 1),
+            }
+            try:
+                call_command("flush", allow_cascade=True, **flush_kwargs)
+            except TypeError:
+                call_command("flush", **flush_kwargs)
 
         anchor = self._resolve_anchor(options.get("base_date"))
         admin_username = options.get("admin_username") or os.environ.get(

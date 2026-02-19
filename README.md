@@ -22,6 +22,10 @@ Monorepo with:
    - `date-init-demo <association>` now auto-starts/recreates backend/frontend services for that association before seeding.
    - Default reset mode is now automatic: DB reset happens when association change is detected (or state is unknown). Use `--no-reset` to keep DB, or `--reset` to force reset.
    - Prod safety: auto-reset is disabled in prod mode. Explicit reset requires `--reset --allow-prod-reset`, plus confirmation (`type WIPE`) or `--yes` for non-interactive runs.
+6. Full legacy-vs-decoupled visual parity (association-aware):
+   - `date-visual-parity kk`
+   - optional: `date-visual-parity --all`
+   - runs Playwright in dedicated `e2e` container
 
 ## Backend-Only Workflow
 `backend/env.sh` is still available for backend-only development.
@@ -51,6 +55,7 @@ Monorepo with:
 - `docs/docker-dev-workflow.md`
 - `docs/demo-bootstrap-data.md`
 - `docs/playwright-element-compare.md`
+- `docs/playwright-full-parity-workflow.md`
 - `docs/association-qa-playbook.md`
 - `docs/migration-runbook.md`
 - `docs/theming-multi-association.md`

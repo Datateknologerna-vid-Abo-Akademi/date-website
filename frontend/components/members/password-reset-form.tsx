@@ -26,10 +26,10 @@ export function PasswordResetForm() {
         path: "auth/password-reset",
         body: { email },
       });
-      setStatusMessage("If the account exists, a reset link has been sent.");
+      setStatusMessage("Om kontot finns har en återställningslänk skickats.");
       setEmail("");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to submit password reset request");
+      setErrorMessage(error instanceof Error ? error.message : "Kunde inte skicka återställningsbegäran.");
     } finally {
       setIsSubmitting(false);
     }
@@ -38,7 +38,7 @@ export function PasswordResetForm() {
   return (
     <form className="form-stack" onSubmit={onSubmit}>
       <label className="form-field">
-        <span>Email</span>
+        <span>E-post</span>
         <input
           type="email"
           value={email}
@@ -47,7 +47,7 @@ export function PasswordResetForm() {
         />
       </label>
       <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Submitting..." : "Send reset link"}
+        {isSubmitting ? "Skickar..." : "Sänd"}
       </button>
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
       {statusMessage ? <p className="form-success">{statusMessage}</p> : null}

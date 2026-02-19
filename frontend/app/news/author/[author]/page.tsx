@@ -1,7 +1,9 @@
 import Link from "next/link";
-
+import { RichContent } from "@/components/rich-content";
 import { getNews } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
+
+import { formatNewsDate } from "../../news-utils";
 
 interface NewsAuthorPageProps {
   params: Promise<{
@@ -16,25 +18,21 @@ export default async function NewsAuthorPage({ params }: NewsAuthorPageProps) {
   const posts = await getNews(undefined, author);
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">News</p>
-        <h1>Author: {author}</h1>
-      </section>
-      <section className="panel">
-        <ul className="list list--spaced">
-          {posts.map((post) => (
-            <li key={post.slug}>
-              <h2>
-                <Link href={`/news/articles/${post.slug}`}>{post.title}</Link>
-              </h2>
-              <p className="meta">
-                {post.published_time ? new Date(post.published_time).toLocaleDateString() : "No date"}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </section>
+    <div className="news-author-page container-md container-margin-top min-vh-100 p-1">
+      <div className="container-size break-words">
+        {posts.map((post) => (
+          <div key={post.slug} className="content overflow-auto">
+            <h1>{post.title}</h1>
+            <h4 className="author">
+              Skriven{" "}
+              {post.published_time ? formatNewsDate(post.published_time) : "okänd tid"} av{" "}
+              <Link href={`/news/author/${encodeURIComponent(author)}`}>{author}</Link>
+            </h4>
+            <RichContent html={post.content} />
+          </div>
+        ))}
+        {posts.length === 0 ? <h1>Inga artiklar hittades...</h1> : null}
+      </div>
     </div>
   );
 }

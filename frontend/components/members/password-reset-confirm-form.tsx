@@ -35,11 +35,11 @@ export function PasswordResetConfirmForm({ uid, token }: PasswordResetConfirmFor
           new_password2: newPassword2,
         },
       });
-      setStatusMessage("Password reset successful.");
+      setStatusMessage("Lösenordet har uppdaterats.");
       setNewPassword1("");
       setNewPassword2("");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to reset password");
+      setErrorMessage(error instanceof Error ? error.message : "Kunde inte byta lösenord.");
     } finally {
       setIsSubmitting(false);
     }
@@ -48,7 +48,7 @@ export function PasswordResetConfirmForm({ uid, token }: PasswordResetConfirmFor
   return (
     <form className="form-stack" onSubmit={onSubmit}>
       <label className="form-field">
-        <span>New password</span>
+        <span>Nytt lösenord</span>
         <input
           type="password"
           value={newPassword1}
@@ -57,7 +57,7 @@ export function PasswordResetConfirmForm({ uid, token }: PasswordResetConfirmFor
         />
       </label>
       <label className="form-field">
-        <span>Repeat new password</span>
+        <span>Upprepa nytt lösenord</span>
         <input
           type="password"
           value={newPassword2}
@@ -66,7 +66,7 @@ export function PasswordResetConfirmForm({ uid, token }: PasswordResetConfirmFor
         />
       </label>
       <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Submitting..." : "Reset password"}
+        {isSubmitting ? "Skickar..." : "Byt lösenord"}
       </button>
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
       {statusMessage ? <p className="form-success">{statusMessage}</p> : null}

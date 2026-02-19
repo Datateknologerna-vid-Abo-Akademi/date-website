@@ -195,6 +195,27 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.58.2-jammy
+    restart: "no"
+    working_dir: /work/frontend
+    command: sleep infinity
+    ipc: host
+    init: true
+    environment:
+      CI: "1"
+    volumes:
+      - ./frontend:/work/frontend
+      - e2e_node_modules:/work/frontend/node_modules
+    depends_on:
+      proxy:
+        condition: service_started
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   proxy:
     image: nginx:1.27.4-alpine
     restart: unless-stopped
@@ -225,3 +246,4 @@ volumes:
   postgres_data:
   redis_data:
   frontend_node_modules:
+  e2e_node_modules:

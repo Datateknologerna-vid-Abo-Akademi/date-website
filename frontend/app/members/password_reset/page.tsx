@@ -2,14 +2,11 @@ import { PasswordResetForm } from "@/components/members/password-reset-form";
 
 export default function PasswordResetPage() {
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Members</p>
-        <h1>Reset password</h1>
-      </section>
-      <section className="panel">
+    <div className="forgot-password-page">
+      <div className="members-form big">
+        <h2>Glömt lösenord</h2>
         <PasswordResetForm />
-      </section>
+      </div>
     </div>
   );
 }

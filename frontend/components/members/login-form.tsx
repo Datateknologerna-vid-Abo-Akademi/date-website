@@ -29,7 +29,7 @@ export function LoginForm({ redirectTo = "/members/profile" }: LoginFormProps) {
       router.push(redirectTo);
       router.refresh();
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Login failed");
+      setErrorMessage(error instanceof Error ? error.message : "Inloggning misslyckades.");
     } finally {
       setIsSubmitting(false);
     }
@@ -38,7 +38,7 @@ export function LoginForm({ redirectTo = "/members/profile" }: LoginFormProps) {
   return (
     <form className="members-login-form" onSubmit={onSubmit}>
       <p>
-        <label htmlFor="login-username">Username</label>
+        <label htmlFor="login-username">Användarnamn</label>
         <input
           id="login-username"
           value={username}
@@ -47,7 +47,7 @@ export function LoginForm({ redirectTo = "/members/profile" }: LoginFormProps) {
         />
       </p>
       <p>
-        <label htmlFor="login-password">Password</label>
+        <label htmlFor="login-password">Lösenord</label>
         <input
           id="login-password"
           value={password}
@@ -57,7 +57,7 @@ export function LoginForm({ redirectTo = "/members/profile" }: LoginFormProps) {
         />
       </p>
       <button className="button" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Loggar in..." : "Login"}
+        {isSubmitting ? "LOGIN..." : "LOGIN"}
       </button>
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
     </form>

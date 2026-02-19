@@ -13,13 +13,17 @@ Next.js App Router frontend for the decoupled website architecture.
 ## Docker
 Use the root-level stack:
 - `source ../env.sh dev`
-- `stack-start`
+- `date-start`
 
 ## Visual Parity Checks
 - Legacy visual regression (homepage + login + events routes):
   - `npm run test:e2e:visual`
 - Baseline snapshots can be refreshed with:
   - `npm run test:e2e:visual -- --update-snapshots`
+- Full association-aware crawl parity (legacy baseline + decoupled compare):
+  - from repo root: `source env.sh dev && date-visual-parity kk`
+  - Playwright runs in dedicated Docker `e2e` service
+  - direct Playwright command: `npm run test:e2e:legacy-full-parity`
 - Full legacy-vs-decoupled element compare workflow:
   - `../docs/playwright-element-compare.md`
 

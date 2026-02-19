@@ -11,14 +11,11 @@ export default async function PasswordResetConfirmPage({ params }: PasswordReset
   const { uid, token } = await params;
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Members</p>
-        <h1>Set new password</h1>
-      </section>
-      <section className="panel">
+    <div className="reset-password-page">
+      <div className="members-form big">
+        <h2>Byt lösenord</h2>
         <PasswordResetConfirmForm uid={uid} token={token} />
-      </section>
+      </div>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import type { CSSProperties } from "react";
 
+import { CookieBanner } from "@/components/cookie-banner";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getSession, getSiteMeta } from "@/lib/api/queries";
@@ -214,6 +215,7 @@ export default async function RootLayout({
         <SiteHeader siteMeta={siteMeta} session={session} />
         <main className="site-main">{children}</main>
         <SiteFooter siteMeta={siteMeta} />
+        <CookieBanner />
         <Script
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
           integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"

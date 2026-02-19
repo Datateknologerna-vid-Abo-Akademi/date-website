@@ -14,6 +14,7 @@
 /coverage
 /playwright-report
 /test-results
+/tests/e2e/legacy-full-parity.spec.ts-snapshots
 
 # next.js
 /.next/

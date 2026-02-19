@@ -55,7 +55,7 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
 
   const requiresPasscode = Boolean(event.passcode_required) && !passcodeVerified;
   const signupOpen = useMemo(() => {
-    if (!event.sign_up || event.event_full || event.registration_past_due) return false;
+    if (!event.sign_up || event.registration_past_due) return false;
     return event.registration_open_members || event.registration_open_others;
   }, [event]);
 
@@ -185,7 +185,7 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
   }
 
   if (!event.sign_up) {
-    return <p className="meta">Anmälning är inte aktiv för detta evenemang.</p>;
+    return <p className="help-text">Anmälning är inte aktiv för detta evenemang.</p>;
   }
 
   if (requiresPasscode) {
@@ -209,7 +209,7 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
   }
 
   if (!signupOpen) {
-    return <p className="meta">Anmälningen är stängd just nu.</p>;
+    return <p className="help-text">Anmälning är inte aktiv för detta evenemang.</p>;
   }
 
   return (

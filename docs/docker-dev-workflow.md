@@ -38,6 +38,11 @@
 - `date-start-both`
   - starts decoupled app on `8080` and legacy template backend on `8001` using a generated temporary compose override
   - supports association override: `date-start-both kk` or `date-start-both --project kk`
+- `date-visual-parity`
+  - full legacy-vs-decoupled Playwright workflow (baseline + compare)
+  - runs Playwright in dedicated `e2e` container (not in frontend app container)
+  - default usage: `date-visual-parity kk`
+  - supports: `--all`, `--no-update-baseline`, `--no-crawl`, `--max-pages`, `--max-depth`, `--skip-template-check`, `--require-all-variants`
 - `date-stop-both`
 - `date-project <association> <compose-args...>`
 - `date-stop`
@@ -64,6 +69,7 @@
 - `date-test-backend`
 - `date-test-frontend`
 - `date-qa-associations`
+- `date-visual-parity`
 
 ## Demo Bootstrap
 - `date-init-demo` runs migrations and then executes `seed_visual_demo --reset`.

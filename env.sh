@@ -81,7 +81,8 @@ for _date_helper_alias in \
     date-backend-shell \
     date-manage \
     date-init-demo \
-    date-frontend-shell
+    date-frontend-shell \
+    date-visual-parity
 do
     unalias "${_date_helper_alias}" 2>/dev/null || true
 done
@@ -439,4 +440,193 @@ date-test-frontend() {
 
 date-qa-associations() {
     python "${SCRIPT_DIR}/scripts/association_qa.py" "$@"
+}
+
+date-visual-parity() {
+    _date_parse_project_arg "$@" || return 1
+    if _date_is_prod_mode; then
+        echo "date-visual-parity is disabled in prod mode." >&2
+        return 1
+    fi
+
+    local run_all=0
+    local update_baseline=1
+    local crawl_enabled=1
+    local verify_template=1
+    local headed=0
+    local auth_modes="anon,member"
+    local max_pages="120"
+    local max_depth="2"
+    local require_variants=0
+    local route_chunks=""
+    local route_prefixes=""
+    local route_exact=""
+    local route_source_prefixes=""
+    local route_regex=""
+    local route_limit=""
+    local arg
+
+    while [ "${#DATE_REMAINING_ARGS[@]}" -gt 0 ]; do
+        arg="${DATE_REMAINING_ARGS[0]}"
+        DATE_REMAINING_ARGS=("${DATE_REMAINING_ARGS[@]:1}")
+        case "$arg" in
+            --all)
+                run_all=1
+                ;;
+            --no-update-baseline)
+                update_baseline=0
+                ;;
+            --no-crawl)
+                crawl_enabled=0
+                ;;
+            --skip-template-check)
+                verify_template=0
+                ;;
+            --headed)
+                headed=1
+                ;;
+            --quick)
+                crawl_enabled=0
+                max_pages="40"
+                max_depth="1"
+                ;;
+            --require-all-variants)
+                require_variants=1
+                ;;
+            --auth)
+                if [ "${#DATE_REMAINING_ARGS[@]}" -eq 0 ]; then
+                    echo "Missing value for --auth (anon|member|both)" >&2
+                    return 1
+                fi
+                case "${DATE_REMAINING_ARGS[0]}" in
+                    anon)
+                        auth_modes="anon"
+                        ;;
+                    member)
+                        auth_modes="member"
+                        ;;
+                    both)
+                        auth_modes="anon,member"
+                        ;;
+                    *)
+                        echo "Invalid value for --auth: ${DATE_REMAINING_ARGS[0]}" >&2
+                        echo "Expected: anon, member, or both" >&2
+                        return 1
+                        ;;
+                esac
+                DATE_REMAINING_ARGS=("${DATE_REMAINING_ARGS[@]:1}")
+                ;;
+            --chunk)
+                if [ "${#DATE_REMAINING_ARGS[@]}" -eq 0 ]; then
+                    echo "Missing value for --chunk" >&2
+                    return 1
+                fi
+                route_chunks="${route_chunks:+${route_chunks},}${DATE_REMAINING_ARGS[0]}"
+                DATE_REMAINING_ARGS=("${DATE_REMAINING_ARGS[@]:1}")
+                ;;
+            --route-prefix)
+                if [ "${#DATE_REMAINING_ARGS[@]}" -eq 0 ]; then
+                    echo "Missing value for --route-prefix" >&2
+                    return 1
+                fi
+                route_prefixes="${route_prefixes:+${route_prefixes},}${DATE_REMAINING_ARGS[0]}"
+                DATE_REMAINING_ARGS=("${DATE_REMAINING_ARGS[@]:1}")
+                ;;
+            --route-exact)
+                if [ "${#DATE_REMAINING_ARGS[@]}" -eq 0 ]; then
+                    echo "Missing value for --route-exact" >&2
+                    return 1
+                fi
+                route_exact="${route_exact:+${route_exact},}${DATE_REMAINING_ARGS[0]}"
+                DATE_REMAINING_ARGS=("${DATE_REMAINING_ARGS[@]:1}")
+                ;;
+            --route-source-prefix)
+                if [ "${#DATE_REMAINING_ARGS[@]}" -eq 0 ]; then
+                    echo "Missing value for --route-source-prefix" >&2
+                    return 1
+                fi
+                route_source_prefixes="${route_source_prefixes:+${route_source_prefixes},}${DATE_REMAINING_ARGS[0]}"
+                DATE_REMAINING_ARGS=("${DATE_REMAINING_ARGS[@]:1}")
+                ;;
+            --route-regex)
+                if [ "${#DATE_REMAINING_ARGS[@]}" -eq 0 ]; then
+                    echo "Missing value for --route-regex" >&2
+                    return 1
+                fi
+                route_regex="${DATE_REMAINING_ARGS[0]}"
+                DATE_REMAINING_ARGS=("${DATE_REMAINING_ARGS[@]:1}")
+                ;;
+            --limit)
+                if [ "${#DATE_REMAINING_ARGS[@]}" -eq 0 ]; then
+                    echo "Missing value for --limit" >&2
+                    return 1
+                fi
+                route_limit="${DATE_REMAINING_ARGS[0]}"
+                DATE_REMAINING_ARGS=("${DATE_REMAINING_ARGS[@]:1}")
+                ;;
+            --list-chunks)
+                cat <<'EOF'
+Available --chunk values:
+  core, home, events, members, members-auth, news, pages, social,
+  alumni, archive, publications, polls, ctf, lucia, ads
+EOF
+                return 0
+                ;;
+            --max-pages)
+                if [ "${#DATE_REMAINING_ARGS[@]}" -eq 0 ]; then
+                    echo "Missing value for --max-pages" >&2
+                    return 1
+                fi
+                max_pages="${DATE_REMAINING_ARGS[0]}"
+                DATE_REMAINING_ARGS=("${DATE_REMAINING_ARGS[@]:1}")
+                ;;
+            --max-depth)
+                if [ "${#DATE_REMAINING_ARGS[@]}" -eq 0 ]; then
+                    echo "Missing value for --max-depth" >&2
+                    return 1
+                fi
+                max_depth="${DATE_REMAINING_ARGS[0]}"
+                DATE_REMAINING_ARGS=("${DATE_REMAINING_ARGS[@]:1}")
+                ;;
+            *)
+                echo "Unknown option for date-visual-parity: ${arg}" >&2
+                echo "Supported: --all --no-update-baseline --no-crawl --skip-template-check --require-all-variants --headed --quick --auth <anon|member|both> --chunk <name> --route-prefix <path> --route-exact <path> --route-source-prefix <src> --route-regex <pattern> --limit <n> --list-chunks --max-pages <n> --max-depth <n>" >&2
+                return 1
+                ;;
+        esac
+    done
+
+    local -a associations
+    if [ "$run_all" -eq 1 ]; then
+        associations=(date kk biocum on demo)
+    else
+        associations=("$(_date_effective_project "$DATE_PROJECT_OVERRIDE")")
+    fi
+
+    local headed_flag=""
+    if [ "$headed" -eq 1 ]; then
+        headed_flag="--headed"
+    fi
+
+    for association in "${associations[@]}"; do
+        echo "=== Playwright legacy parity for association: ${association} ==="
+
+        date-init-demo --project "$association" || return 1
+        date-start-both --project "$association" --force-recreate backend asgi frontend proxy || return 1
+
+        _date_compose_with_legacy "$association" run --rm --no-deps e2e sh -lc \
+            "cd /work/frontend && if [ ! -d node_modules/@playwright/test ]; then npm ci; fi" || return 1
+
+        if [ "$update_baseline" -eq 1 ]; then
+            echo "[${association}] capturing legacy baseline snapshots from backend service"
+            _date_compose_with_legacy "$association" run --rm --no-deps e2e sh -lc \
+                "cd /work/frontend && PLAYWRIGHT_BASE_URL=http://backend:8000 PLAYWRIGHT_PARITY_AUTH_MODES='${auth_modes}' PLAYWRIGHT_PARITY_ENABLE_CRAWL=${crawl_enabled} PLAYWRIGHT_PARITY_MAX_PAGES=${max_pages} PLAYWRIGHT_PARITY_MAX_DEPTH=${max_depth} PLAYWRIGHT_PARITY_VERIFY_TEMPLATE=${verify_template} PLAYWRIGHT_PARITY_REQUIRE_VARIANTS=${require_variants} PLAYWRIGHT_PARITY_ROUTE_CHUNKS='${route_chunks}' PLAYWRIGHT_PARITY_ROUTE_PREFIXES='${route_prefixes}' PLAYWRIGHT_PARITY_ROUTE_EXACT='${route_exact}' PLAYWRIGHT_PARITY_ROUTE_SOURCE_PREFIXES='${route_source_prefixes}' PLAYWRIGHT_PARITY_ROUTE_REGEX='${route_regex}' PLAYWRIGHT_PARITY_ROUTE_LIMIT='${route_limit}' npm run test:e2e:legacy-full-parity -- --update-snapshots ${headed_flag}" || return 1
+        fi
+
+        echo "[${association}] comparing decoupled frontend via proxy service"
+        _date_compose_with_legacy "$association" run --rm --no-deps e2e sh -lc \
+            "cd /work/frontend && PLAYWRIGHT_BASE_URL=http://proxy PLAYWRIGHT_PARITY_AUTH_MODES='${auth_modes}' PLAYWRIGHT_PARITY_ENABLE_CRAWL=${crawl_enabled} PLAYWRIGHT_PARITY_MAX_PAGES=${max_pages} PLAYWRIGHT_PARITY_MAX_DEPTH=${max_depth} PLAYWRIGHT_PARITY_VERIFY_TEMPLATE=${verify_template} PLAYWRIGHT_PARITY_REQUIRE_VARIANTS=${require_variants} PLAYWRIGHT_PARITY_ROUTE_CHUNKS='${route_chunks}' PLAYWRIGHT_PARITY_ROUTE_PREFIXES='${route_prefixes}' PLAYWRIGHT_PARITY_ROUTE_EXACT='${route_exact}' PLAYWRIGHT_PARITY_ROUTE_SOURCE_PREFIXES='${route_source_prefixes}' PLAYWRIGHT_PARITY_ROUTE_REGEX='${route_regex}' PLAYWRIGHT_PARITY_ROUTE_LIMIT='${route_limit}' npm run test:e2e:legacy-full-parity -- ${headed_flag}" || return 1
+    done
+
+    echo "Visual parity workflow complete."
 }

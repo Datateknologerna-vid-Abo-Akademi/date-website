@@ -1,15 +1,22 @@
-import { SignupForm } from "@/components/members/signup-form";
+import Script from "next/script";
 
-export default function MemberSignupPage() {
+import { SignupForm } from "@/components/members/signup-form";
+import { getSiteMeta } from "@/lib/api/queries";
+
+export default async function MemberSignupPage() {
+  const siteMeta = await getSiteMeta();
+  const captchaSiteKey = siteMeta.captcha_site_key || "";
+
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Members</p>
-        <h1>Create account</h1>
-      </section>
-      <section className="panel">
-        <SignupForm />
-      </section>
+    <div className="signup-page">
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        strategy="afterInteractive"
+      />
+      <div className="members-form big">
+        <h2>Registrera dig</h2>
+        <SignupForm captchaSiteKey={captchaSiteKey} />
+      </div>
     </div>
   );
 }

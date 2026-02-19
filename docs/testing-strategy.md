@@ -22,6 +22,7 @@
 - Lint and type checks in CI.
 - Playwright smoke checks in CI against dockerized stack.
 - Playwright visual regression for homepage parity (hero + events cards) with snapshot baselines.
+- Playwright full-route legacy-vs-decoupled visual parity (association-aware crawl, anon/member states, event template override guardrail).
 - Route rendering tests for:
   - home
   - news list/detail
@@ -49,6 +50,7 @@
 - `npm run build` (frontend)
 - `npm run test:e2e` (frontend Playwright smoke tests; requires running stack and `PLAYWRIGHT_BASE_URL`)
 - `npm run test:e2e:visual` (frontend visual parity checks against committed snapshots)
+- `npm run test:e2e:legacy-full-parity` (frontend full-route legacy baseline parity suite)
 - `python -m compileall backend` (backend quick syntax check)
 - `python scripts/association_qa.py` (cross-association runtime parity and module-guard checks)
   - uses uncached `meta/site` reads in frontend to avoid stale capability data when switching `PROJECT_NAME`
