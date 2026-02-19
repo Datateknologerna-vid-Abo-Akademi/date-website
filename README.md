@@ -12,7 +12,7 @@ Monorepo with:
 2. Load helper aliases:
    - `source env.sh dev`
 3. Start:
-   - `stack-start`
+   - `date-start`
 4. Open:
    - `http://localhost:8080`
 

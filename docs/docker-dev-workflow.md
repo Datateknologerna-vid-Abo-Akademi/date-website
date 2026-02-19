@@ -8,20 +8,20 @@
 2. Load helpers:
    - `source env.sh dev`
 3. Start stack:
-   - `stack-start`
+   - `date-start`
 4. Open app:
    - `http://localhost:8080` (or `APP_PORT`)
 
 ## Useful Commands
-- `stack-start-detached`
-- `stack-stop`
-- `stack-logs`
-- `stack-ps`
-- `stack-backend-manage migrate`
-- `stack-backend-manage createsuperuser`
-- `stack-test-backend`
-- `stack-test-frontend`
-- `stack-qa-associations`
+- `date-start-detached`
+- `date-stop`
+- `date-logs`
+- `date-ps`
+- `date-manage migrate`
+- `date-manage createsuperuser`
+- `date-test-backend`
+- `date-test-frontend`
+- `date-qa-associations`
 
 ## Service Topology
 - `proxy` -> entrypoint

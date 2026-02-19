@@ -17,7 +17,7 @@ python scripts/association_qa.py
 If you have loaded helpers via `source env.sh dev`, you can also use:
 
 ```bash
-stack-qa-associations
+date-qa-associations
 ```
 
 ## Output

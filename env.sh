@@ -65,25 +65,25 @@ else
     export COMPOSE_FILE_PATH="docker-compose.yml"
 fi
 
-alias stack="docker compose -f \"${SCRIPT_DIR}/${COMPOSE_FILE_PATH}\""
-alias stack-start="stack up --build"
-alias stack-start-detached="stack up -d --build"
-alias stack-stop="stack down"
-alias stack-logs="stack logs -f"
-alias stack-ps="stack ps"
+alias date="docker compose -f \"${SCRIPT_DIR}/${COMPOSE_FILE_PATH}\""
+alias date-start="date up --build"
+alias date-start-detached="date up -d --build"
+alias date-stop="date down"
+alias date-logs="date logs -f"
+alias date-ps="date ps"
 
-alias stack-backend-shell="stack exec backend sh"
-alias stack-backend-manage="stack exec backend python /code/manage.py"
-alias stack-frontend-shell="stack exec frontend sh"
+alias date-backend-shell="date exec backend sh"
+alias date-manage="date exec backend python /code/manage.py"
+alias date-frontend-shell="date exec frontend sh"
 
-stack-test-backend() {
-    stack exec backend python /code/manage.py test "$@"
+date-test-backend() {
+    date exec backend python /code/manage.py test "$@"
 }
 
-stack-test-frontend() {
-    stack exec frontend npm run lint "$@"
+date-test-frontend() {
+    date exec frontend npm run lint "$@"
 }
 
-stack-qa-associations() {
+date-qa-associations() {
     python "${SCRIPT_DIR}/scripts/association_qa.py" "$@"
 }
