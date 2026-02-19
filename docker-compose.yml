@@ -196,6 +196,8 @@ services:
         condition: service_healthy
       backend:
         condition: service_healthy
+      asgi:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1/healthz > /dev/null || exit 1"]
       interval: 20s

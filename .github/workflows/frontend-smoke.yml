@@ -35,48 +35,25 @@ jobs:
         working-directory: frontend
         run: npx playwright install --with-deps chromium
 
-      - name: Start docker stack for smoke tests
-        run: PROJECT_NAME=date docker compose -f docker-compose.yml --env-file .env.example up -d --build db redis backend frontend proxy
-
-      - name: Wait for stack readiness
+      - name: Run smoke tests for date and on associations
         run: |
-          timeout 180 bash -c 'until curl -fsS http://localhost:8080/api/v1/meta/site > /dev/null; do sleep 3; done'
-
-      - name: Seed smoke test user
-        run: |
-          docker compose -f docker-compose.yml --env-file .env.example exec -T backend python - <<'PY'
-          from members.models import Member, MembershipType
-
-          membership_type, _ = MembershipType.objects.get_or_create(
-              name="CI Smoke",
-              defaults={"permission_profile": 1},
-          )
-          user, _ = Member.objects.get_or_create(
-              username="ci_smoke",
-              defaults={
-                  "email": "ci-smoke@example.com",
-                  "first_name": "CI",
-                  "last_name": "Smoke",
-                  "membership_type": membership_type,
-                  "is_active": True,
-              },
-          )
-          user.email = "ci-smoke@example.com"
-          user.first_name = "CI"
-          user.last_name = "Smoke"
-          user.membership_type = membership_type
-          user.is_active = True
-          user.set_password("ci_smoke_password")
-          user.save()
-          PY
-
-      - name: Run Playwright smoke tests
-        working-directory: frontend
-        env:
-          PLAYWRIGHT_BASE_URL: http://localhost:8080
-          PLAYWRIGHT_SMOKE_USERNAME: ci_smoke
-          PLAYWRIGHT_SMOKE_PASSWORD: ci_smoke_password
-        run: npm run test:e2e
+          set -euo pipefail
+          for association in date on; do
+            echo "=== Running frontend smoke suite for association: ${association} ==="
+            PROJECT_NAME="${association}" docker compose -f docker-compose.yml --env-file .env.example up -d --build db redis backend asgi frontend proxy
+            timeout 180 bash -c 'until curl -fsS http://localhost:8080/api/v1/meta/site > /dev/null; do sleep 3; done'
+            docker compose -f docker-compose.yml --env-file .env.example exec -T backend python /code/manage.py shell -c "from scripts.seed_smoke_data import seed_smoke_data; print(seed_smoke_data())"
+            (
+              cd frontend
+              PLAYWRIGHT_BASE_URL=http://localhost:8080 \
+              PLAYWRIGHT_SMOKE_USERNAME=ci_smoke \
+              PLAYWRIGHT_SMOKE_PASSWORD=ci_smoke_password \
+              PLAYWRIGHT_SMOKE_EVENT_SLUG=ci-smoke-event \
+              PLAYWRIGHT_EXPECT_PROJECT_NAME="${association}" \
+              npm run test:e2e
+            )
+            docker compose -f docker-compose.yml --env-file .env.example down
+          done
 
       - name: Upload Playwright report
         if: always()

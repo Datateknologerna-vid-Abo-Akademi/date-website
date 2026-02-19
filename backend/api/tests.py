@@ -359,6 +359,68 @@ class ApiSmokeTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()["error"]["code"], "event_full")
 
+    @override_settings(EXPERIMENTAL_FEATURES=["event_billing"])
+    @patch("billing.handlers.handle_event_billing", side_effect=RuntimeError("billing failed"))
+    def test_event_signup_returns_processing_error_when_billing_handler_crashes(self, _mocked_billing_handler):
+        event = Event.objects.create(
+            title="Billing Failure Event",
+            slug="billing-failure-event",
+            author=self.member,
+            sign_up=True,
+            published=True,
+            sign_up_members=timezone.now() - timezone.timedelta(hours=1),
+            sign_up_others=timezone.now() - timezone.timedelta(hours=1),
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+            event_date_start=timezone.now() + timezone.timedelta(days=1),
+            event_date_end=timezone.now() + timezone.timedelta(days=1, hours=2),
+        )
+        EventBillingConfiguration.objects.create(
+            event=event,
+            due_date=datetime.date.today() + datetime.timedelta(days=14),
+            integration_type=1,
+            price="42",
+            price_selector="",
+        )
+
+        response = self.client.post(
+            f"/api/v1/events/{event.slug}/signup",
+            {
+                "user": "Billing Failure",
+                "email": "billing-failure@example.com",
+                "anonymous": False,
+            },
+        )
+
+        self.assertEqual(response.status_code, 201)
+        payload = response.json()["data"]
+        self.assertEqual(payload["billing"]["enabled"], True)
+        self.assertEqual(payload["billing"]["status"], "processing_error")
+        self.assertIsNone(payload["billing"]["invoice"])
+        self.assertEqual(EventInvoice.objects.count(), 0)
+
+    def test_events_feed_returns_feature_disabled_payload_when_module_disabled(self):
+        with patch(
+            "api.views.is_module_enabled",
+            side_effect=lambda module_key: False if module_key == "events" else True,
+        ):
+            response = self.client.get("/api/v1/events/feed")
+
+        self.assertEqual(response.status_code, 404)
+        payload = response.json()
+        self.assertEqual(payload["error"]["code"], "feature_disabled")
+        self.assertIn("events", payload["error"]["message"])
+
+    def test_password_change_requires_authentication(self):
+        response = self.client.post(
+            "/api/v1/auth/password-change",
+            {
+                "old_password": "password123",
+                "new_password1": "changed123A",
+                "new_password2": "changed123A",
+            },
+        )
+        self.assertEqual(response.status_code, 403)
+
     def test_event_detail_includes_template_variant(self):
         event = Event.objects.create(
             title="Arsfest",

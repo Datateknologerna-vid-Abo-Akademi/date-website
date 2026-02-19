@@ -1,0 +1,83 @@
+name: Release Images
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Override tag (optional, defaults to git tag or sha)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Build and publish backend/frontend images
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image_suffix: backend
+            context: ./backend
+            dockerfile: ./backend/Dockerfile
+            target: ""
+          - image_suffix: frontend
+            context: ./frontend
+            dockerfile: ./frontend/Dockerfile
+            target: runtime
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Normalize image identifiers
+        id: meta
+        shell: bash
+        run: |
+          repo_lc="${GITHUB_REPOSITORY,,}"
+          ref_tag="${GITHUB_REF_NAME,,}"
+          input_tag="${{ inputs.tag }}"
+          if [ -n "${input_tag}" ]; then
+            final_tag="${input_tag,,}"
+          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            final_tag="${ref_tag}"
+          else
+            final_tag="${GITHUB_SHA::12}"
+          fi
+          echo "repo_lc=${repo_lc}" >> "$GITHUB_OUTPUT"
+          echo "tag=${final_tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
+          push: true
+          provenance: false
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/${{ steps.meta.outputs.repo_lc }}/${{ matrix.image_suffix }}:${{ steps.meta.outputs.tag }}
+            ghcr.io/${{ steps.meta.outputs.repo_lc }}/${{ matrix.image_suffix }}:latest

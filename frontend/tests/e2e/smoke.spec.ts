@@ -6,6 +6,7 @@ type ModuleCapability = {
 
 type SiteMetaResponse = {
   data?: {
+    project_name?: string;
     default_landing_path?: string;
     module_capabilities?: Record<string, ModuleCapability>;
   };
@@ -30,11 +31,18 @@ test.describe("decoupled frontend smoke checks", () => {
     expect(metaResponse.ok()).toBeTruthy();
 
     const metaPayload = (await metaResponse.json()) as SiteMetaResponse;
+    const expectedProjectName = process.env.PLAYWRIGHT_EXPECT_PROJECT_NAME;
+    if (expectedProjectName) {
+      expect(metaPayload.data?.project_name).toBe(expectedProjectName);
+    }
     const landingPath = metaPayload.data?.default_landing_path ?? "/";
     expect(landingPath.startsWith("/")).toBeTruthy();
 
     const rootResponse = await request.get("/");
     expect(rootResponse.status()).toBeLessThan(500);
+
+    const landingResponse = await request.get(landingPath);
+    expect(landingResponse.status()).toBeLessThan(500);
 
     const eventsResponse = await request.get("/events");
     expect(eventsResponse.status()).toBeLessThan(500);
@@ -102,5 +110,37 @@ test.describe("decoupled frontend smoke checks", () => {
     expect(sessionAfterLogout.ok()).toBeTruthy();
     const sessionAfterLogoutPayload = (await sessionAfterLogout.json()) as SessionPayload;
     expect(sessionAfterLogoutPayload.data?.is_authenticated).toBe(false);
+  });
+
+  test("members login page supports browser sign-in and sign-out", async ({ page }) => {
+    const username = process.env.PLAYWRIGHT_SMOKE_USERNAME;
+    const password = process.env.PLAYWRIGHT_SMOKE_PASSWORD;
+    test.skip(!username || !password, "Playwright smoke credentials are required.");
+
+    await page.goto("/members/login");
+    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+    await page.getByLabel("Username or email").fill(username);
+    await page.getByLabel("Password").fill(password);
+    await page.getByRole("button", { name: "Sign in" }).click();
+
+    await expect(page).toHaveURL(/\/members\/profile$/);
+    await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+    await page.getByRole("button", { name: "Sign out" }).click();
+    await expect(page).toHaveURL(/\/members\/login$/);
+  });
+
+  test("event detail page supports signup flow for open event", async ({ page }) => {
+    const eventSlug = process.env.PLAYWRIGHT_SMOKE_EVENT_SLUG ?? "ci-smoke-event";
+    const uniqueEmail = `playwright-smoke-${Date.now()}@example.com`;
+
+    await page.goto(`/events/${eventSlug}`);
+    await expect(page.getByRole("heading", { name: "CI Smoke Event" })).toBeVisible();
+    await page.getByLabel("Name").fill("Playwright Smoke");
+    await page.getByLabel("Email").fill(uniqueEmail);
+    await page.getByRole("button", { name: "Register" }).click();
+
+    await expect(page.getByText("Registration completed.")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Registration summary" })).toBeVisible();
+    await expect(page.getByText(`Email: ${uniqueEmail}`)).toBeVisible();
   });
 });

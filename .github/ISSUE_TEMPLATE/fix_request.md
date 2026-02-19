@@ -11,11 +11,9 @@ assignees: ''
 
 Consider creating a bug report. You can also describe why it should be a fix and not a bug.
 
-
 **Describe the solution you'd like**
 
 A clear and concise description of what you want to happen.
-
 
 **Additional context**
 

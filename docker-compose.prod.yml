@@ -28,6 +28,7 @@ services:
       start_period: 10s
 
   backend:
+    image: ${BACKEND_IMAGE:-datewebsite-backend:latest}
     build:
       context: ./backend
     restart: unless-stopped
@@ -65,6 +66,7 @@ services:
         condition: service_healthy
 
   asgi:
+    image: ${BACKEND_IMAGE:-datewebsite-backend:latest}
     build:
       context: ./backend
     restart: unless-stopped
@@ -90,6 +92,7 @@ services:
         condition: service_healthy
 
   celery:
+    image: ${BACKEND_IMAGE:-datewebsite-backend:latest}
     build:
       context: ./backend
     restart: unless-stopped
@@ -116,6 +119,7 @@ services:
         condition: service_healthy
 
   frontend:
+    image: ${FRONTEND_IMAGE:-datewebsite-frontend:latest}
     build:
       context: ./frontend
       target: runtime
@@ -135,6 +139,8 @@ services:
       frontend:
         condition: service_started
       backend:
+        condition: service_started
+      asgi:
         condition: service_started
     ports:
       - ${APP_PORT}:80
