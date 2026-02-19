@@ -1,7 +1,4 @@
 import logging
-
-from django.shortcuts import render
-from django.utils import timezone
 from django.views.generic import ListView
 from .models import Room
 
@@ -15,7 +12,6 @@ class IndexView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        rooms = Room.objects.order_by('booking_date_start')
-        #todo decide when reservation not visible
+        rooms = Room.objects.order_by('name')
         context['room_list'] = rooms
         return context
