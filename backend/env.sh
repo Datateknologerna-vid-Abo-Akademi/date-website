@@ -85,6 +85,7 @@ fi
 alias date="docker-compose -f \"${COMPOSE_FILE_PATH}\""
 alias date-manage="date run web python /code/manage.py"
 alias date-migrate="date-manage migrate --noinput"
+alias date-init-demo="date-manage migrate --noinput && date-manage seed_visual_demo --reset"
 alias date-makemigrations="date-manage makemigrations"
 alias date-collectstatic="date-manage collectstatic"
 alias date-stop="date down"

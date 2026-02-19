@@ -70,6 +70,15 @@ command after everything has started correctly. Otherwise, continue on to the ne
 
 **This will completely delete and recreate the database (all existing data will be lost)**
 
+Recommended (dynamic demo data + default admin login):
+
+```bash
+date-init-demo
+```
+
+This command runs migrations, flushes data, and seeds app-aware demo content for enabled modules.
+Default admin credentials after seeding: `admin` / `admin`.
+
 If you want initial development data run the script `clean-init.sh` in the folder `scripts/`.
 
 If you get an `illegal option error` in your shell, use `/bin/bash clean-init.sh` to run the script instead.

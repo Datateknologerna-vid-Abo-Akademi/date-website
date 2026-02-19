@@ -289,7 +289,7 @@ export default async function Home() {
                       <div key={item.slug} className="news-content news-box header-border-bottom">
                         <h3 className="news-title">{item.title}</h3>
                         <h5 className="news-date">{formatDate(item.published_time)}</h5>
-                        <p>{toPreviewText(item.content, 50)}</p>
+                        <div className="news-preview">{toPreviewText(item.content, 50)}</div>
                         <Link className="news-button" href={`/news/articles/${item.slug}`}>
                           <i className="fab fa-readme" /> Läs mera...
                         </Link>
@@ -347,36 +347,36 @@ export default async function Home() {
                     </h5>
                     <p>
                       Om du upplever trakasserier i samband med Datateknologernas verksamhet, vänligen{" "}
-                      <Link href="/social/harassment">rapportera</Link> detta via hemsidan.
+                      <Link href="/social/harassment/">rapportera</Link> detta via hemsidan. Vi tar alla former av trakasserier
+                      på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla
+                      medlemmar.
                     </p>
                     <HomeJoke />
                   </div>
                 ) : null}
 
-                {partnerAds.length > 0 ? (
-                  isDateLikeBrand ? (
-                    <div className="logo-container">
-                      <h3 className="header-border-bottom">Samarbetspartners</h3>
-                      <div className="d-flex flex-wrap justify-content-center align-items-center">
-                        {partnerAds.map((ad, index) => (
-                          ad.company_url ? (
-                            <a key={`${ad.ad_url}-${index}`} className="m-2" href={ad.company_url} target="_blank" rel="noreferrer">
-                              <img src={ad.ad_url} alt="img" />
-                            </a>
-                          ) : (
-                            <span key={`${ad.ad_url}-${index}`} className="m-2 d-inline-block">
-                              <img src={ad.ad_url} alt="img" />
-                            </span>
-                          )
-                        ))}
-                      </div>
-                      <div className="text-center">
-                        <Link href="/pages/foretagssamarbete/">Vill du samarbeta med DaTe?</Link>
-                      </div>
+                {isDateLikeBrand ? (
+                  <div className="logo-container">
+                    <h3 className="header-border-bottom">Samarbetspartners</h3>
+                    <div className="d-flex flex-wrap justify-content-center align-items-center">
+                      {partnerAds.map((ad, index) => (
+                        ad.company_url ? (
+                          <a key={`${ad.ad_url}-${index}`} className="m-2" href={ad.company_url} target="_blank" rel="noreferrer">
+                            <img src={ad.ad_url} alt="img" />
+                          </a>
+                        ) : (
+                          <span key={`${ad.ad_url}-${index}`} className="m-2 d-inline-block">
+                            <img src={ad.ad_url} alt="img" />
+                          </span>
+                        )
+                      ))}
                     </div>
-                  ) : (
-                    <LegacyPartnerCarousel ads={partnerAds} mobile={false} />
-                  )
+                    <div className="text-center">
+                      <Link href="/pages/foretagssamarbete/">Vill du samarbeta med DaTe?</Link>
+                    </div>
+                  </div>
+                ) : partnerAds.length > 0 ? (
+                  <LegacyPartnerCarousel ads={partnerAds} mobile={false} />
                 ) : null}
 
                 {showInstagram ? (

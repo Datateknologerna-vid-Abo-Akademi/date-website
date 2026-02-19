@@ -626,7 +626,7 @@ div a:hover {
 }
 
 .home-page .container-size {
-  max-width: 860px;
+  max-width: 800px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -709,7 +709,7 @@ div a:hover {
 .home-page .about p,
 .home-page .news-content p,
 .home-page .extra-container p {
-  text-align: center;
+  text-align: left;
 }
 
 .home-page div.news-content a,
@@ -798,8 +798,8 @@ div a:hover {
 }
 
 .home-page .header-border-bottom {
-  border-bottom: solid;
-  border-width: 2px;
+  border-style: none none solid none;
+  border-width: 0 0 2px 0;
   border-color: var(--helpTextLighter);
 }
 

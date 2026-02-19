@@ -15,6 +15,8 @@ Monorepo with:
    - `date-start`
 4. Open:
    - `http://localhost:8080`
+5. Optional demo seed (resets DB and creates visual QA data):
+   - `date-init-demo`
 
 ## Backend-Only Workflow
 `backend/env.sh` is still available for backend-only development.
@@ -42,6 +44,7 @@ Monorepo with:
 - `docs/api-contract.md`
 - `docs/route-migration-matrix.md`
 - `docs/docker-dev-workflow.md`
+- `docs/demo-bootstrap-data.md`
 - `docs/playwright-element-compare.md`
 - `docs/association-qa-playbook.md`
 - `docs/migration-runbook.md`

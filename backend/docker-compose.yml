@@ -39,6 +39,9 @@ services:
       - CF_TURNSTILE_SITE_KEY=${CF_TURNSTILE_SITE_KEY}
       - CF_TURNSTILE_SECRET_KEY=${CF_TURNSTILE_SECRET_KEY}
       - ALUMNI_SETTINGS=${ALUMNI_SETTINGS}
+      - DATE_DEMO_ADMIN_USERNAME=${DATE_DEMO_ADMIN_USERNAME}
+      - DATE_DEMO_ADMIN_PASSWORD=${DATE_DEMO_ADMIN_PASSWORD}
+      - DATE_DEMO_MEMBER_PASSWORD=${DATE_DEMO_MEMBER_PASSWORD}
     depends_on:
       - db
       - redis
@@ -68,4 +71,3 @@ services:
 volumes:
   date_postgres_data:
   redis_data:
-

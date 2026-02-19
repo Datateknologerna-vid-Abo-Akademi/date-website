@@ -27,10 +27,17 @@
 - `date-logs`
 - `date-ps`
 - `date-manage migrate`
+- `date-init-demo`
 - `date-manage createsuperuser`
 - `date-test-backend`
 - `date-test-frontend`
 - `date-qa-associations`
+
+## Demo Bootstrap
+- `date-init-demo` runs migrations and then executes `seed_visual_demo --reset`.
+- This flow is app-aware: it only seeds data for apps enabled in the current association settings.
+- Default credentials after seed: `admin` / `admin`.
+- For details and overrides, see `docs/demo-bootstrap-data.md`.
 
 ## Service Topology
 - `proxy` -> entrypoint

@@ -74,6 +74,7 @@ alias date-ps="date ps"
 
 alias date-backend-shell="date exec backend sh"
 alias date-manage="date exec backend python /code/manage.py"
+alias date-init-demo="date-manage migrate --noinput && date-manage seed_visual_demo --reset"
 alias date-frontend-shell="date exec frontend sh"
 
 date-test-backend() {
