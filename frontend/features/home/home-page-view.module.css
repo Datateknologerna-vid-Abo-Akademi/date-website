@@ -1,0 +1,189 @@
+.root {
+  color: var(--textColorLightish);
+}
+
+.shell {
+  padding: 0.5rem;
+  min-height: 100vh;
+}
+
+.about {
+  background-color: var(--secondaryColor);
+  color: var(--textColorDark);
+  min-height: 35vh;
+  border-radius: var(--defaultRadius);
+  padding: 20px;
+}
+
+.containerSize {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.newsEvents {
+  color: var(--textColorDark);
+  margin-top: 2vh;
+  background: linear-gradient(180deg, var(--secondaryColorDarker) 0%, var(--secondaryColor) 100%);
+  min-height: 100vh;
+  word-break: break-word;
+  hyphens: auto;
+  border-radius: 5px;
+}
+
+.mainContainer {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 850px) minmax(0, 350px) 1fr;
+  grid-template-rows: auto;
+  grid-template-areas:
+    ". news events ."
+    ". news extras ."
+    ". ig-scroll ig-scroll ."
+    ". logos logos .";
+  column-gap: 3vw;
+}
+
+.brandKk .mainContainer {
+  grid-template-areas:
+    ". news events ."
+    ". news logos ."
+    ". ig-scroll ig-scroll .";
+}
+
+.brandBiocum .mainContainer {
+  grid-template-areas:
+    ". news sidebar ."
+    ". news sidebar ."
+    ". ig-scroll ig-scroll .";
+}
+
+.textSize {
+  font-weight: bold;
+}
+
+.sidebarContainer {
+  grid-area: sidebar;
+}
+
+.mobileBlocks {
+  display: none;
+}
+
+.mobileEventsContainer {
+  grid-area: events;
+  display: none;
+  margin-bottom: 10px;
+}
+
+.extraContainer {
+  grid-area: extras;
+  display: block;
+}
+
+.logoContainer {
+  grid-area: logos;
+  display: block;
+}
+
+.logoContainerDateDemo {
+  margin-top: 20px;
+}
+
+.logoContainerDateDemo img {
+  max-width: 300px;
+  max-height: 200px;
+  width: auto !important;
+  height: auto !important;
+}
+
+.igScroll {
+  grid-area: ig-scroll;
+  display: grid;
+  grid-template-columns: 0 1fr 0;
+  grid-template-rows: auto;
+  grid-template-areas: ". ig-image .";
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.scrollContent {
+  grid-area: ig-image;
+  position: relative;
+  overflow: hidden;
+  border-radius: 5px;
+  min-height: 130px;
+}
+
+.scrollContent img {
+  max-height: 130px;
+}
+
+.images {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 35000px;
+  animation: home-slideshow 60s linear infinite;
+  transform: translate3d(0, 0, 0);
+}
+
+.scrollContent:hover .images {
+  animation-play-state: paused;
+}
+
+.scrollContent img:hover {
+  box-shadow: 4px 6px 9px 0 rgba(0, 0, 0, 0.5);
+  transition: 0.2s ease;
+}
+
+@keyframes home-slideshow {
+  100% {
+    transform: translateX(-5%);
+  }
+}
+
+@media screen and (max-width: 1400px) {
+  .mainContainer {
+    grid-template-columns: 5vw minmax(0, 5fr) minmax(0, 2fr) 5vw;
+  }
+}
+
+@media screen and (max-width: 991px) {
+  .mainContainer {
+    grid-template-columns: 1vw minmax(0, 1fr) 1vw;
+    grid-template-areas:
+      ". events ."
+      ". news ."
+      ". extras ."
+      ". logos ."
+      ". ig-scroll .";
+  }
+
+  .brandKk .mainContainer,
+  .brandBiocum .mainContainer {
+    grid-template-areas:
+      ". events ."
+      ". news ."
+      ". logos ."
+      ". ig-scroll .";
+  }
+
+  .brandBiocum .sidebarContainer {
+    display: none;
+  }
+
+  .brandBiocum .mobileBlocks {
+    display: block;
+  }
+
+  .brandBiocum .mobileEventsContainer {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .images {
+    animation: none !important;
+  }
+}

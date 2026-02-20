@@ -1,0 +1,24 @@
+.tableWrap {
+  width: 100%;
+}
+
+.attendeeTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.attendeeTable th,
+.attendeeTable td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 0;
+}
+
+.attendeesHeader th {
+  padding-bottom: 1rem;
+}
+
+.attendeeTable tbody tr:hover {
+  transition: 200ms;
+  background-color: var(--primaryColorLighter);
+}

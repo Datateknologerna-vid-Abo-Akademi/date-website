@@ -1,0 +1,33 @@
+.root {
+  margin-top: 3rem;
+  background: transparent;
+  border-top: none;
+  max-width: min(980px, calc(100% - 2.5rem));
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.footerImage {
+  max-height: 200px;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: inline-block;
+}
+
+.socialSection {
+  margin: 25px;
+}
+
+.row {
+  justify-content: center;
+}
+
+@media (max-width: 576px) {
+  .root {
+    max-width: calc(100% - 1.25rem);
+  }
+}

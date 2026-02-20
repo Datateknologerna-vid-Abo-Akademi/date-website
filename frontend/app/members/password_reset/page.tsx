@@ -1,12 +1,10 @@
 import { PasswordResetForm } from "@/components/members/password-reset-form";
+import { AuthShell } from "@/components/ui/auth-shell";
 
 export default function PasswordResetPage() {
   return (
-    <div className="forgot-password-page">
-      <div className="members-form big">
-        <h2>Glömt lösenord</h2>
+    <AuthShell title="Glömt lösenord">
         <PasswordResetForm />
-      </div>
-    </div>
+    </AuthShell>
   );
 }

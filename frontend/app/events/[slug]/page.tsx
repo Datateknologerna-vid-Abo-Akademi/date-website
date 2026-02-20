@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { EventVariantDetail } from "@/components/events/event-variant-detail";
 import { ApiRequestError } from "@/lib/api/fetcher";
-import { getEvent, getEventAttendees } from "@/lib/api/queries";
+import { getEvent, getEventAttendees, getSiteMeta } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface EventDetailPageProps {
@@ -21,7 +21,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
     error.status === 403 &&
     (error.code === "forbidden" || error.code === "unauthenticated");
 
-  const [event, attendeeData] = await Promise.all([
+  const [event, attendeeData, siteMeta] = await Promise.all([
     getEvent(slug).catch((error) => {
       if (isLoginRequiredError(error)) {
         redirect(`/members/login?next=${encodeURIComponent(eventPath)}`);
@@ -29,6 +29,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       return null;
     }),
     getEventAttendees(slug).catch(() => null),
+    getSiteMeta().catch(() => null),
   ]);
   if (!event) {
     notFound();
@@ -36,5 +37,11 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   if (event.redirect_link) {
     redirect(event.redirect_link);
   }
-  return <EventVariantDetail event={event} attendeeData={attendeeData} />;
+  return (
+    <EventVariantDetail
+      event={event}
+      attendeeData={attendeeData}
+      projectName={siteMeta?.project_name}
+    />
+  );
 }

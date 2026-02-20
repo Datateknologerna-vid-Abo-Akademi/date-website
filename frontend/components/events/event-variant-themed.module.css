@@ -1,0 +1,289 @@
+.pageRoot {
+  position: relative;
+  isolation: isolate;
+}
+
+.container {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.content {
+  margin: 20px 2vw;
+  border-radius: var(--defaultRadius);
+  padding: var(--defaultPadding);
+}
+
+.headerBox {
+  overflow: hidden;
+}
+
+.nav {
+  text-align: center;
+  margin: 8px;
+}
+
+.navLink {
+  margin: 5px;
+  padding: 10px;
+  border-radius: 5px;
+  transition: 0.3s;
+  display: inline-block;
+}
+
+.navLinkActive {
+  transform: translateY(-1px);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.variantArsfest :global(.event-detail-background) {
+  background-color: var(--primaryColor);
+}
+
+.variantArsfest .content {
+  background-color: rgba(17, 17, 14, 0.83);
+  border: 1px solid color-mix(in srgb, var(--helpTextLighter) 92%, transparent);
+  color: var(--textColorLightish);
+}
+
+.variantArsfest .content a {
+  color: var(--textColorLightish);
+}
+
+.variantArsfest .content a:hover {
+  color: var(--secondaryColor);
+}
+
+.mainContent {
+  margin-top: 1.5rem;
+}
+
+.periodicTableSquare {
+  --text-glow-base-color: #ff7833;
+  --text-glow-color: white;
+  width: 230px;
+  height: 230px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+}
+
+.periodicTableInner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 200px;
+  height: 200px;
+  position: relative;
+}
+
+.periodicTableNumberContainer {
+  position: relative;
+  top: -10px;
+  left: -57px;
+}
+
+.periodicTableDateContainer {
+  position: relative;
+  top: 20px;
+}
+
+.periodicTableDateContainer > h2 {
+  font-size: 1.1em;
+}
+
+.periodicTableInner > h2 {
+  font-size: 3em;
+}
+
+.cardShineEffect {
+  color: orange;
+  margin: 0;
+}
+
+.glowingTextOrange {
+  color: var(--text-glow-base-color);
+  text-shadow:
+    0 0 7px var(--text-glow-base-color),
+    0 0 10px var(--text-glow-base-color),
+    0 0 21px var(--text-glow-base-color),
+    0 0 42px var(--text-glow-base-color),
+    0 0 82px var(--text-glow-color),
+    0 0 92px var(--text-glow-color),
+    0 0 102px var(--text-glow-color),
+    0 0 151px var(--text-glow-color);
+}
+
+.flexCenter {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lavaContainer {
+  z-index: 1;
+  position: relative;
+}
+
+.lavaContainer::after {
+  content: "";
+  position: absolute;
+  top: -20px;
+  left: 0;
+  width: 100%;
+  height: calc(100% + 40px);
+  background: radial-gradient(circle at bottom, #ff4500 0%, #ff6347 100%);
+  z-index: -1;
+  opacity: 0.7;
+  filter: blur(20px);
+  transform: translateY(-20px);
+}
+
+.lavaContainerBottom::after {
+  top: 20px;
+  height: calc(100% + 20px);
+}
+
+.ballLink {
+  color: var(--textColorLightish);
+  background-color: var(--primaryColor);
+  border: 1px solid color-mix(in srgb, var(--helpTextLighter) 92%, transparent);
+}
+
+.ballLink:hover {
+  background-color: color-mix(in srgb, var(--helpText) 35%, var(--primaryColor));
+  color: var(--secondaryColor) !important;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--helpTextLighter) 92%, transparent);
+}
+
+.variantBaal .content,
+.variantWappmiddag .content {
+  background-color: rgba(235, 235, 235, 0.7);
+  border-top: 2px solid var(--primaryColor);
+  color: var(--textColorDark);
+  font-size: 1.1em;
+}
+
+.variantBaal .content a,
+.variantWappmiddag .content a {
+  color: rgb(255, 255, 255);
+}
+
+.variantBaal .content a:hover,
+.variantWappmiddag .content a:hover {
+  border-radius: 5px;
+  background-color: var(--secondaryColor);
+  color: var(--textColorDark);
+}
+
+.variantBaal,
+.variantWappmiddag {
+  font-weight: bold;
+}
+
+.variantBaal :global(form label),
+.variantBaal :global(form select),
+.variantBaal :global(form input),
+.variantBaal :global(form button) {
+  font-family: "Josefin Slab", serif !important;
+}
+
+.variantWappmiddag :global(form label),
+.variantWappmiddag :global(form select),
+.variantWappmiddag :global(form input),
+.variantWappmiddag :global(form button) {
+  font-family: "Comfortaa", cursive !important;
+}
+
+.headerLogo {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+  max-height: 15vh !important;
+}
+
+.baalHeader {
+  text-align: center;
+}
+
+.variantBaal .baalHeader {
+  font-style: italic;
+}
+
+.variantWappmiddag .headerBox {
+  position: relative;
+  overflow: hidden;
+}
+
+.balloon {
+  position: absolute;
+  width: 100px !important;
+  height: 120px !important;
+  transition: 0.3s;
+}
+
+.balloonRight {
+  right: 15px;
+}
+
+.balloonLeft {
+  transform: scaleX(-1);
+}
+
+.wappmiddagHeaderLogo {
+  width: 110px;
+  height: 150px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  transform: scale(1.2);
+}
+
+.baalLink {
+  background-color: #d4c5a4;
+  color: var(--textColorLight);
+  border: 0;
+  box-shadow: 1px 1px 5px 0 rgb(32, 32, 32);
+}
+
+.baalLink:hover {
+  background-color: var(--secondaryColor);
+  color: var(--textColorDark) !important;
+}
+
+.variantKk100 :global(.event-detail-background) {
+  background-color: #030826;
+}
+
+.variantKk100 .content {
+  background: rgba(3, 8, 38, 0.8);
+  color: #f3c26c;
+  border: 1px solid #f3c26c;
+}
+
+.variantKk100 .baalLink {
+  border: 1px solid #d0af55;
+  background-color: #030826;
+  color: #d0af55;
+}
+
+.variantKk100 .baalLink:hover {
+  background-color: #d0af55;
+  color: #030826 !important;
+}
+
+.variantKk100 .content a {
+  color: #f3c26c;
+}
+
+.variantKk100 .content a:hover {
+  color: #030826;
+  background: #f3c26c;
+  border-radius: 5px;
+}

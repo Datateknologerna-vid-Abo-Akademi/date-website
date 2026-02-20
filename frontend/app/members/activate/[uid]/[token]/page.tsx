@@ -1,4 +1,5 @@
 import { activateAccount } from "@/lib/api/queries";
+import styles from "@/features/members/members-page.module.css";
 
 interface ActivationPageProps {
   params: Promise<{
@@ -12,9 +13,9 @@ export default async function ActivationPage({ params }: ActivationPageProps) {
   const result = await activateAccount(uid, token).catch(() => null);
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Members</p>
+    <div className={styles.shell}>
+      <section className={styles.hero}>
+        <p className={styles.eyebrow}>Members</p>
         <h1>{result ? "Account activated" : "Activation failed"}</h1>
         <p>
           {result

@@ -1,6 +1,7 @@
 import Script from "next/script";
 
 import { SignupForm } from "@/components/members/signup-form";
+import { AuthShell } from "@/components/ui/auth-shell";
 import { getSiteMeta } from "@/lib/api/queries";
 
 export default async function MemberSignupPage() {
@@ -8,15 +9,14 @@ export default async function MemberSignupPage() {
   const captchaSiteKey = siteMeta.captcha_site_key || "";
 
   return (
-    <div className="signup-page">
+    <>
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
         strategy="afterInteractive"
       />
-      <div className="members-form big">
-        <h2>Registrera dig</h2>
+      <AuthShell title="Registrera dig">
         <SignupForm captchaSiteKey={captchaSiteKey} />
-      </div>
-    </div>
+      </AuthShell>
+    </>
   );
 }

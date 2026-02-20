@@ -1,0 +1,133 @@
+.root {
+  position: relative;
+  z-index: 1040;
+}
+
+.navbar {
+  background-color: var(--primaryColorTransparent);
+  backdrop-filter: blur(4px);
+}
+
+.navContainer {
+  max-width: min(1240px, calc(100% - 2.5rem));
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0;
+}
+
+.brandLink {
+  padding: 0;
+  margin-right: 0.75rem;
+}
+
+.brandLogo {
+  display: block;
+  max-height: 45px;
+  width: auto;
+  object-fit: contain;
+}
+
+.navbar :global(.container-lg),
+.navbar :global(.container-md),
+.navbar :global(.container-sm),
+.navbar :global(.container-xl) {
+  max-width: min(1240px, calc(100% - 2.5rem));
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0;
+}
+
+.offcanvas {
+  background-color: var(--primaryColorTransparenter);
+}
+
+.navbar :global(.navbar-nav a),
+.navbar :global(.dropdown-item) {
+  color: var(--textColorLight) !important;
+  border-radius: var(--defaultRadius);
+}
+
+.navbar :global(.navbar-nav a:hover),
+.navbar :global(.navbar-nav button:hover) {
+  background-color: var(--navHoverHighlight);
+  color: var(--textColorLight) !important;
+}
+
+.navbar :global(.navbar-nav li a:active),
+.navbar :global(.dropdown-item:active) {
+  color: var(--textColorLightish) !important;
+  background-color: var(--navClickHighlight) !important;
+}
+
+.navbar :global(.dropdown-menu) {
+  background-color: var(--primaryColorTransparent);
+}
+
+.navbar :global(.dropdown:hover .dropdown-menu) {
+  display: block;
+  margin-top: 0;
+}
+
+.navbar :global(.navbar-toggler) {
+  color: var(--textColorLight) !important;
+  border: none !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.navbar :global(.navbar-toggler:active) {
+  color: var(--linkColorLight) !important;
+}
+
+.navbar :global(.navbar-toggler:hover),
+.navbar :global(.navbar-toggler:focus) {
+  background-color: transparent !important;
+}
+
+.logoutButton {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--textColorLight);
+  border-radius: var(--defaultRadius);
+  padding: 0.25rem 1rem;
+}
+
+.logoutButton:hover {
+  background-color: var(--navHoverHighlight);
+}
+
+@media (min-width: 992px) {
+  .offcanvas {
+    visibility: visible;
+    position: relative;
+    background: none;
+    border: none;
+    justify-content: end;
+    transform: none;
+  }
+}
+
+@media (max-width: 992px) {
+  .offcanvas {
+    width: 250px !important;
+  }
+
+  .navbar :global(.offcanvas-start-lg) {
+    top: 0;
+    left: 0;
+    border-right: 1px solid rgba(0, 0, 0, 0.2);
+    transform: translateX(-100%);
+  }
+}
+
+@media (max-width: 576px) {
+  .navContainer {
+    max-width: calc(100% - 1.25rem);
+  }
+
+  .brandLogo {
+    max-height: 38px;
+  }
+}

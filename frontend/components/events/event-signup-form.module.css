@@ -1,0 +1,47 @@
+.signupForm {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.signupWrapper {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.signupForm :global(.form-grid) {
+  grid-template-columns: 1fr;
+}
+
+.signupForm :global(.form-field input),
+.signupForm :global(.form-field select) {
+  font-family: "Josefin Sans", sans-serif;
+  border-radius: 5px;
+  border: 1px solid color-mix(in srgb, var(--textColorDark) 24%, transparent);
+  padding: 0.5rem;
+  background: var(--secondaryColor);
+  color: var(--textColorDark);
+}
+
+.signupForm :global(.button) {
+  background-color: var(--primaryColorLighter);
+  border: none;
+  color: var(--textColorLight);
+  padding: 10px 20px;
+  border-radius: 5px;
+}
+
+.signupForm :global(.button:hover) {
+  background-color: var(--primaryColorLighte);
+  color: var(--linkColorLightHover);
+}
+
+.fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.summarySection {
+  border-top: 1px solid color-mix(in srgb, var(--helpText) 30%, transparent);
+  padding-top: 0.5rem;
+}

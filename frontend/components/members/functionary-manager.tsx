@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { getApiClient, mutateApi } from "@/lib/api/client";
 import type { FunctionaryItem, FunctionaryRole } from "@/lib/api/types";
+import styles from "./functionary-manager.module.css";
 
 interface FunctionaryManagerProps {
   initialYear: number;
@@ -70,8 +71,8 @@ export function FunctionaryManager({ initialYear }: FunctionaryManagerProps) {
   }
 
   return (
-    <div className="form-stack">
-      <form className="form-inline" onSubmit={onCreate}>
+    <div className={styles.container}>
+      <form className={styles.actions} onSubmit={onCreate}>
         <label className="form-field">
           <span>Role</span>
           <select
@@ -96,9 +97,9 @@ export function FunctionaryManager({ initialYear }: FunctionaryManagerProps) {
       </form>
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
       {statusMessage ? <p className="form-success">{statusMessage}</p> : null}
-      <ul className="list list--spaced">
+      <ul className={styles.list}>
         {myFunctionaries.map((functionary) => (
-          <li key={functionary.id} className="row-line">
+          <li key={functionary.id} className={styles.row}>
             <span>
               {functionary.year} - {functionary.functionary_role.title}
             </span>

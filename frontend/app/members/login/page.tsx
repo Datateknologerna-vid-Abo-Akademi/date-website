@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { LoginForm } from "@/components/members/login-form";
+import { AuthShell } from "@/components/ui/auth-shell";
 import { getSession } from "@/lib/api/queries";
 
 interface LoginPageProps {
@@ -21,30 +22,26 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const session = await getSession();
   if (session.is_authenticated) {
     return (
-      <div className="members-login-page center-box">
-        <h2>Redan inloggad</h2>
+      <AuthShell title="Redan inloggad">
         <p>
           Du är redan inloggad.
         </p>
         <p>
           Fortsätt till <Link href={redirectTarget}>din profil</Link>.
         </p>
-      </div>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="members-login-page login-page">
-      <div className="members-form">
-        <h2>Login</h2>
-        <LoginForm redirectTo={redirectTarget} />
-        <Link href="/members/password_reset">
-          <p>Glömt lösenordet?</p>
-        </Link>
-        <Link href="/members/signup">
-          <p>Registrera dig</p>
-        </Link>
-      </div>
-    </div>
+    <AuthShell title="Login" narrow>
+      <LoginForm redirectTo={redirectTarget} />
+      <Link href="/members/password_reset">
+        <p>Glömt lösenordet?</p>
+      </Link>
+      <Link href="/members/signup">
+        <p>Registrera dig</p>
+      </Link>
+    </AuthShell>
   );
 }

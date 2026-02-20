@@ -86,7 +86,7 @@ test.describe("legacy route visual regression", () => {
     await page.goto("/members/login", { waitUntil: "networkidle" });
     await stabilizeVisuals(page);
 
-    const loginForm = page.locator(".members-login-page .members-form").first();
+    const loginForm = page.getByTestId("auth-shell-card").first();
     await expect(loginForm).toBeVisible();
     await expect(loginForm).toHaveScreenshot(`members-login-${snapshotSuffix(meta)}.png`, {
       animations: "disabled",

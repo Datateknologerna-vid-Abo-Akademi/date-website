@@ -1,0 +1,118 @@
+.eventsContainer {
+  grid-area: events;
+  display: block;
+}
+
+.events {
+  display: grid;
+  row-gap: 10px;
+}
+
+.eventCard :global(.card) {
+  border-radius: var(--defaultRadius);
+  background: var(--secondaryColor);
+  box-shadow: 3px 3px 5px 0 rgba(133, 133, 133, 1);
+  transition: all 0.2s;
+}
+
+.eventCard :global(.card):hover {
+  transform: scale(1.01);
+}
+
+.eventCard :global(.fa-chevron-right) {
+  transition: 0.3s;
+}
+
+.eventCard :global(.card):hover :global(.fa-chevron-right) {
+  transform: translateX(10px);
+}
+
+.textColor {
+  color: var(--textColorDark);
+}
+
+.moreEventsButton {
+  color: var(--linkColorDark);
+}
+
+.moreEventsButton:hover {
+  color: var(--linkColorDarkHover);
+}
+
+.eventCard > :global(a.card) {
+  color: var(--linkColorDark);
+  border-top: 2px solid var(--linkColorDark);
+}
+
+.eventCard > :global(a.card):hover {
+  color: var(--linkColorDarkHover);
+  border-top-color: var(--linkColorDarkHover);
+}
+
+.logoContainer {
+  grid-area: logos;
+  display: block;
+}
+
+.mobileLogoContainer {
+  grid-area: logos;
+  display: none;
+}
+
+.carouselLogos {
+  border-top: solid;
+  border-bottom: solid;
+  border-width: 2px;
+  border-color: rgb(180, 180, 180);
+  overflow: hidden;
+  max-height: 430px;
+}
+
+.logoCarouselTrack {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.companyLogo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+  width: auto !important;
+}
+
+.companyLogo :global(img) {
+  max-height: 100px;
+  max-width: 100%;
+  width: auto !important;
+  height: auto !important;
+}
+
+:global([data-association="kk"]) .logoCarouselTrack,
+:global([data-association="biocum"]) .logoCarouselTrack {
+  animation: home-logo-vertical-scroll 16s linear infinite;
+}
+
+:global([data-association="kk"]) .carouselLogos:hover .logoCarouselTrack,
+:global([data-association="biocum"]) .carouselLogos:hover .logoCarouselTrack {
+  animation-play-state: paused;
+}
+
+@keyframes home-logo-vertical-scroll {
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+@media screen and (max-width: 991px) {
+  :global([data-association="biocum"]) .mobileLogoContainer {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logoCarouselTrack {
+    animation: none !important;
+  }
+}

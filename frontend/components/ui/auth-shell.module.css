@@ -1,0 +1,71 @@
+.page {
+  width: min(480px, 90vw);
+  margin: auto auto 10rem;
+  padding-top: 25vh;
+}
+
+.pageNarrow {
+  width: min(360px, 90vw);
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  background-color: var(--secondaryColor);
+  color: var(--textColorDark);
+  max-width: 90vw;
+  padding: 4em 4.5em;
+  text-align: center;
+  box-shadow:
+    0 0 20px 0 rgba(255, 255, 255, 0.5),
+    0 5px 5px 0 rgba(200, 200, 200, 0.12);
+}
+
+.card :global(a) {
+  color: var(--textColorDark);
+}
+
+.card :global(a:hover) {
+  color: var(--textColorDarkish);
+}
+
+.card :global(input) {
+  outline: 0;
+  background-color: var(--secondaryColorDarker);
+  border: 0;
+  margin: 0 0 15px;
+  padding: 15px;
+  box-sizing: border-box;
+  color: var(--textColorDark);
+}
+
+.card :global(input:not([type="checkbox"])),
+.card :global(select) {
+  width: 100%;
+}
+
+.card :global(select) {
+  border: 0;
+  margin: 0 0 15px;
+  padding: 15px;
+}
+
+.card :global(button) {
+  font-family: "Josefin Sans", sans-serif;
+  text-transform: uppercase;
+  outline: 0;
+  background: #4caf50;
+  width: 100%;
+  border: 0;
+  padding: 15px;
+  color: var(--textColorLight);
+  font-size: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.card :global(button:hover),
+.card :global(button:active),
+.card :global(button:focus) {
+  background: #43a047;
+}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LogoutButton } from "@/components/members/logout-button";
 import type { SessionData, SiteMeta } from "@/lib/api/types";
 import { getModuleNavigation } from "@/lib/modules";
+import styles from "@/components/site-header.module.css";
 
 interface SiteHeaderProps {
   siteMeta: SiteMeta;
@@ -49,14 +50,14 @@ export function SiteHeader({ siteMeta, session }: SiteHeaderProps) {
   const homeHref = showHome ? "/" : siteMeta.default_landing_path || "/";
 
   return (
-    <header className="site-header legacy-site-header">
-      <nav className="navbar navbar-expand-lg navbar-light fixed-top legacy-navbar">
-        <div className="container">
-          <Link id="logo" href={homeHref} className="navbar-brand">
+    <header className={`site-header legacy-site-header ${styles.root}`}>
+      <nav className={`navbar navbar-expand-lg navbar-light fixed-top legacy-navbar ${styles.navbar}`}>
+        <div className={`container ${styles.navContainer}`}>
+          <Link id="logo" href={homeHref} className={`navbar-brand ${styles.brandLink}`}>
             <img
               src="/static/core/images/headerlogo.png"
               alt={associationShortName}
-              className="header-logo"
+              className={`header-logo ${styles.brandLogo}`}
             />
           </Link>
           <button
@@ -70,7 +71,7 @@ export function SiteHeader({ siteMeta, session }: SiteHeaderProps) {
             <i className="bi bi-list fa-2x" />
           </button>
           <div
-            className="offcanvas offcanvas-start-lg"
+            className={`offcanvas offcanvas-start-lg ${styles.offcanvas}`}
             tabIndex={-1}
             id="legacyNavOffcanvas"
             aria-labelledby="legacyNavOffcanvasLabel"
@@ -131,7 +132,7 @@ export function SiteHeader({ siteMeta, session }: SiteHeaderProps) {
                               if (session.is_authenticated && isLoginRoute(item.url)) {
                                 return (
                                   <li key={`${category.category_name}-${item.dropdown_element}-logout`}>
-                                    <LogoutButton className="dropdown-item site-header__logout-button" label="Logga ut" />
+                                    <LogoutButton className={`dropdown-item site-header__logout-button ${styles.logoutButton}`} label="Logga ut" />
                                   </li>
                                 );
                               }

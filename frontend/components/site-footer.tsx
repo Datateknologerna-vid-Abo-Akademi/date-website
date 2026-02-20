@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import type { SiteMeta } from "@/lib/api/types";
+import styles from "@/components/site-footer.module.css";
 
 interface SiteFooterProps {
   siteMeta: SiteMeta;
@@ -33,9 +34,9 @@ export function SiteFooter({ siteMeta }: SiteFooterProps) {
     (variables.ASSOCIATION_NAME_SHORT as string | undefined) ?? "Association";
 
   return (
-    <footer className="container site-footer legacy-site-footer">
+    <footer className={`container site-footer legacy-site-footer ${styles.root}`}>
       <hr />
-      <section className="col text-center">
+      <section className={`col text-center ${styles.socialSection}`}>
         {socialButtons.map(([iconClass, href]) => (
           <a
             key={`${iconClass}-${href}`}
@@ -50,10 +51,10 @@ export function SiteFooter({ siteMeta }: SiteFooterProps) {
           </a>
         ))}
       </section>
-      <div className="row align-middle align-items-center justify-content-center">
+      <div className={`row align-middle align-items-center justify-content-center ${styles.row}`}>
         <div className="col-4 text-center">
           <img
-            className="footer-img img-fluid"
+            className={`footer-img img-fluid ${styles.footerImage}`}
             alt={`${associationShortName} footer logo`}
             src="/static/core/images/footerlogo.png"
           />

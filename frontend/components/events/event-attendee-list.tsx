@@ -1,4 +1,5 @@
 import type { EventAttendeeListPayload } from "@/lib/api/types";
+import styles from "./event-attendee-list.module.css";
 
 interface EventAttendeeListProps {
   data: EventAttendeeListPayload | null;
@@ -21,7 +22,7 @@ export function EventAttendeeList({ data, useVariantTemplateCopy = false }: Even
 
   if (data.attendees.length === 0) {
     return (
-      <div className="table-wrap">
+      <div className={styles.tableWrap}>
         {data.sign_up_max_participants !== 0 ? <p>Det finns {data.sign_up_max_participants} platser!</p> : null}
         {headingTag === "h1" ? <h1>{headingText}</h1> : <h2>{headingText}</h2>}
         <p id="no-attendee">{emptyText}</p>
@@ -30,12 +31,12 @@ export function EventAttendeeList({ data, useVariantTemplateCopy = false }: Even
   }
 
   return (
-    <div className="table-wrap">
+    <div className={styles.tableWrap}>
       {data.sign_up_max_participants !== 0 ? <p>Det finns {data.sign_up_max_participants} platser!</p> : null}
       {headingTag === "h1" ? <h1>{headingText}</h1> : <h2>{headingText}</h2>}
-      <table className="attendee-table" id="attendees">
+      <table className={styles.attendeeTable} id="attendees">
         <thead>
-          <tr id="attendees-header">
+          <tr id="attendees-header" className={styles.attendeesHeader}>
             <th>#</th>
             <th>Namn</th>
             {data.registration_public_fields.map((fieldName) => (

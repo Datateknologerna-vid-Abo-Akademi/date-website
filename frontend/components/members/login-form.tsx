@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 import { mutateApi } from "@/lib/api/client";
+import styles from "./login-form.module.css";
 
 interface LoginFormProps {
   redirectTo?: string;
@@ -36,7 +37,7 @@ export function LoginForm({ redirectTo = "/members/profile" }: LoginFormProps) {
   }
 
   return (
-    <form className="members-login-form" onSubmit={onSubmit}>
+    <form className={styles.form} onSubmit={onSubmit}>
       <p>
         <label htmlFor="login-username">Användarnamn</label>
         <input

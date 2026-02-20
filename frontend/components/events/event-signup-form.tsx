@@ -4,6 +4,7 @@ import { Dispatch, FormEvent, SetStateAction, useMemo, useState } from "react";
 
 import { mutateApi } from "@/lib/api/client";
 import type { EventItem, EventSignupBilling, EventSignupResult } from "@/lib/api/types";
+import styles from "./event-signup-form.module.css";
 
 interface EventSignupFormProps {
   event: EventItem;
@@ -190,7 +191,7 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
 
   if (requiresPasscode) {
     return (
-      <form className="form event-signup-form" id="passcode-form" onSubmit={onSubmitPasscode}>
+      <form className={`form ${styles.signupForm}`} id="passcode-form" onSubmit={onSubmitPasscode}>
         <label className="form-field">
           <span>Passcode</span>
           <input
@@ -213,9 +214,9 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
   }
 
   return (
-    <div className="form-stack event-signup-wrapper">
+    <div className={`form-stack ${styles.signupWrapper}`}>
       <p className="meta">OBS! Anmälningen är bindande om inget annat meddelas.</p>
-      <form className="form event-signup-form" id="attend-form" onSubmit={onSubmitSignup}>
+      <form className={`form ${styles.signupForm}`} id="attend-form" onSubmit={onSubmitSignup}>
         <div className="form-grid">
           <label className="form-field">
             <span>Namn</span>
@@ -241,7 +242,7 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
         </label>
 
         {event.sign_up_fields.length > 0 ? (
-          <fieldset className="form-fieldset">
+          <fieldset className={styles.fieldset}>
             <legend>Anmälningsdetaljer</legend>
             {event.sign_up_fields.map((field) =>
               renderDynamicField(field, dynamicValues, setDynamicValues, "event-"),
@@ -250,7 +251,7 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
         ) : null}
 
         {event.sign_up_avec ? (
-          <fieldset className="form-fieldset">
+          <fieldset className={styles.fieldset}>
             <legend>Avec</legend>
             <label className="choice-line">
               <input
@@ -316,7 +317,7 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
       {statusMessage ? <p className="form-success">{statusMessage}</p> : null}
       {signupResult ? (
-        <section className="content event-detail-content">
+        <section className={styles.summarySection}>
           <h3>Anmälningssammanfattning</h3>
           <p className="meta">E-post: {signupResult.attendee_email}</p>
           <p className="meta">{billingStatusLabel(signupResult.billing)}</p>

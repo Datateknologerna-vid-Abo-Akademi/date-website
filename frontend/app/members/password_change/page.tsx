@@ -1,16 +1,17 @@
 import { PasswordChangeForm } from "@/components/members/password-change-form";
+import styles from "@/features/members/members-page.module.css";
 import { getSession } from "@/lib/api/queries";
 
 export default async function PasswordChangePage() {
   const session = await getSession();
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Members</p>
+    <div className={styles.shell}>
+      <section className={styles.hero}>
+        <p className={styles.eyebrow}>Members</p>
         <h1>Change password</h1>
       </section>
-      <section className="panel">
+      <section className={styles.panel}>
         {session.is_authenticated ? (
           <PasswordChangeForm />
         ) : (

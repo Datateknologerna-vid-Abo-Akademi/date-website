@@ -72,16 +72,6 @@ nextjs-portal {
   }
 }
 
-@media (max-width: 576px) {
-  .legacy-navbar .container {
-    max-width: calc(100% - 1.25rem);
-  }
-
-  .legacy-site-footer.container {
-    max-width: calc(100% - 1.25rem);
-  }
-}
-
 @media (max-width: 768px) {
   .event-detail-page .event-detail-background.has-image {
     background-attachment: scroll;

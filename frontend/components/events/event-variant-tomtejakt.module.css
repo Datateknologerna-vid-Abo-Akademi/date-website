@@ -1,0 +1,172 @@
+.pageRoot {
+  position: relative;
+  isolation: isolate;
+}
+
+.container {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.content {
+  margin: 20px 2vw;
+  border-radius: var(--defaultRadius);
+  padding: var(--defaultPadding);
+  background: #f2ecc6;
+  color: #292929;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.background {
+  background: #f2ecc6;
+  color: #292929;
+}
+
+.pageRoot :global(form label),
+.pageRoot :global(form select),
+.pageRoot :global(form input),
+.pageRoot :global(form button) {
+  font-family: "Mountains of Christmas", cursive !important;
+}
+
+.header {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.icon,
+.text {
+  vertical-align: middle;
+  display: inline-block;
+}
+
+.header .text {
+  font-size: 40px;
+  text-shadow: 1px 1px 2px rgb(0 0 0);
+}
+
+.sittingElf img {
+  width: 100px;
+  height: 100px;
+  filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%);
+  animation: tomteElfWiggle 10s linear infinite;
+}
+
+.tree img {
+  width: 500px;
+  height: 500px;
+  display: block;
+  margin: auto;
+  filter:
+    invert(92%) sepia(15%) saturate(475%) hue-rotate(353deg) brightness(104%) contrast(90%)
+    drop-shadow(2px -2px 2px rgb(0 0 0));
+  animation: tomteTreeShadow 5s linear infinite;
+  transition: 1s;
+}
+
+.elf img {
+  position: absolute;
+  left: 70%;
+  top: 50%;
+  width: 100px;
+  height: 100px;
+  display: block;
+  margin: auto;
+  animation: tomteElfWalk 15s ease-in-out infinite;
+}
+
+.content a {
+  color: var(--linkColorSecondary, #006c33);
+}
+
+.content a:hover {
+  color: var(--linkSecondaryHover, #019b49);
+}
+
+@keyframes tomteElfWalk {
+  0% {
+    opacity: 0;
+    left: 70%;
+    transform: rotate(0deg);
+  }
+  20% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.5;
+    left: 60%;
+    transform: rotate(-25deg);
+  }
+  40% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+    left: 50%;
+    transform: rotate(0deg);
+  }
+  60% {
+    opacity: 0;
+  }
+  75% {
+    opacity: 0.5;
+    left: 40%;
+    transform: rotate(25deg);
+  }
+  90% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+    left: 20%;
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes tomteElfWiggle {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(10deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+  75% {
+    transform: rotate(-10deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes tomteTreeShadow {
+  0% {
+    filter:
+      invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%)
+      drop-shadow(2px -2px 2px #006c33);
+  }
+  25% {
+    filter:
+      invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%)
+      drop-shadow(2px -2px 6px #009947);
+  }
+  50% {
+    filter:
+      invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%)
+      drop-shadow(2px -2px 14px #00c05a);
+  }
+  75% {
+    filter:
+      invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%)
+      drop-shadow(2px -2px 6px #009947);
+  }
+  100% {
+    filter:
+      invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%)
+      drop-shadow(2px -2px 2px #006c33);
+  }
+}

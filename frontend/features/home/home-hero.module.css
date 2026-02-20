@@ -1,0 +1,325 @@
+.header {
+  color: var(--textColorLight);
+  background-color: var(--primaryColor);
+  margin: 10vh 0;
+  min-height: 45vh;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  border-radius: var(--defaultRadius);
+}
+
+.heroTextBox {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.text {
+  color: var(--textColorLight);
+  width: 100%;
+  height: 100%;
+  position: relative;
+  max-width: 100%;
+}
+
+.title {
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0;
+  font-size: min(calc(0.8 * 7vh), 7vw);
+  font-weight: 400;
+  animation: home-fade-in 3s;
+}
+
+.subtitle {
+  display: block;
+  text-align: center;
+  font-size: min(calc(0.8 * 2.5vh), 3.5vw);
+  font-weight: 700;
+  letter-spacing: min(1vh, 1vw);
+  animation: home-fade-in 4.5s ease-in;
+  white-space: nowrap;
+}
+
+.albin,
+.logoWrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: min(31.5vh, 47vw);
+  height: auto;
+  margin-top: 10px;
+}
+
+.logo {
+  width: 100%;
+  height: auto;
+}
+
+.logoInline {
+  width: 100%;
+  line-height: 0;
+}
+
+.logoInline svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.logoAnimated {
+  clip-path: inset(0 100% 0 0);
+  opacity: 0;
+  animation: home-logo-trace 3.2s cubic-bezier(0, 0.18, 0.64, 0.1) forwards;
+}
+
+.scalingSvgContainer {
+  margin-top: 55px;
+  position: relative;
+  height: 30vh;
+  width: 100%;
+  padding: 0;
+}
+
+.scalingSvgContainer svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pathAnim path {
+  stroke: var(--secondaryColor);
+  fill: var(--secondaryColor);
+  stroke-dasharray: 25000;
+  opacity: 10;
+  animation: home-stroke-draw-date 3s cubic-bezier(0, 0.18, 0.64, 0.1);
+}
+
+.brandKk .header {
+  margin: 0;
+}
+
+.brandKk .heroTextBox {
+  padding-bottom: 3vh;
+}
+
+.brandKk .scalingSvgContainer.logoWrap {
+  width: min(31.5vh, 47vw);
+  max-width: 360px;
+  height: min(30vh, 280px);
+}
+
+.brandKk .logoInline {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.brandKk .title {
+  font-size: min(calc(0.96 * 7vh), 7vw);
+  font-weight: 400;
+}
+
+.brandKk .subtitle {
+  font-size: min(2.5vh, 3.5vw);
+  letter-spacing: 0.74em;
+}
+
+.brandKk .pathAnim path {
+  fill-rule: evenodd;
+  animation: home-stroke-draw-brand 3.5s cubic-bezier(0, 0.18, 0.5, 0.1);
+}
+
+.brandBiocum .header {
+  height: 50vh;
+  min-height: 50vh;
+  margin: 0;
+  position: relative;
+}
+
+.brandBiocum .scalingSvgContainer {
+  margin-top: 55px;
+  position: relative;
+  height: 35vh;
+  width: 100%;
+  padding: 0;
+}
+
+.brandBiocum .scalingSvgContainer svg {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  left: 0;
+  top: 0;
+}
+
+.brandBiocum .pathAnim path {
+  fill-rule: evenodd;
+  animation: home-stroke-draw-biocum 3.5s cubic-bezier(0, 0.18, 0.5, 0.1);
+}
+
+.brandBiocum .text {
+  transform: translateY(50px);
+  animation: home-fade-in 3s;
+  text-align: center;
+}
+
+.heroTextMain {
+  text-transform: uppercase;
+  padding-top: 5vh;
+  display: block;
+  padding: 0;
+  margin-bottom: 0;
+  font-size: 4rem;
+  font-weight: 400;
+  animation: home-fade-in 4.5s ease-in;
+  text-align: center;
+}
+
+.heroTextSub {
+  display: block;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.5rem;
+  animation: home-fade-in 4.75s ease-in;
+}
+
+@keyframes home-logo-trace {
+  0% {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  45% {
+    opacity: 1;
+    clip-path: inset(0 40% 0 0);
+  }
+  100% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes home-stroke-draw-date {
+  0% {
+    opacity: 0;
+    fill: none;
+    stroke-dashoffset: 25000;
+  }
+  40% {
+    opacity: 10;
+    fill: none;
+    stroke-dashoffset: 15000;
+  }
+  80% {
+    fill: rgba(255, 255, 255, 0);
+  }
+  100% {
+    opacity: 10;
+    fill: rgba(255, 255, 255, 1);
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes home-stroke-draw-brand {
+  1% {
+    opacity: 0;
+    fill: none;
+    stroke-dashoffset: 25000;
+  }
+  40% {
+    opacity: 10;
+    fill: none;
+    stroke-dashoffset: 24500;
+  }
+  80% {
+    fill: rgba(255, 255, 255, 0);
+    stroke-dashoffset: 23500;
+  }
+  100% {
+    opacity: 10;
+    fill: rgba(255, 255, 255, 1);
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes home-stroke-draw-biocum {
+  0% {
+    opacity: 0;
+    fill: none;
+    stroke-dashoffset: 25000;
+  }
+  40% {
+    opacity: 10;
+    fill: none;
+    stroke-dashoffset: 24500;
+  }
+  80% {
+    fill: rgba(255, 255, 255, 0);
+    stroke-dashoffset: 23250;
+  }
+  100% {
+    opacity: 10;
+    fill: rgba(255, 255, 255, 1);
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes home-fade-in {
+  from {
+    opacity: 0;
+  }
+  60% {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media screen and (max-width: 991px) {
+  .brandBiocum .header {
+    min-height: 45vh;
+  }
+
+  .heroTextMain {
+    font-size: 3rem;
+  }
+
+  .heroTextSub {
+    font-size: 1.5rem;
+    letter-spacing: 1rem;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .brandBiocum .header {
+    min-height: 40vh;
+  }
+
+  .heroTextMain {
+    font-size: 3rem;
+  }
+
+  .heroTextSub {
+    font-size: 1.5rem;
+    letter-spacing: 1rem;
+  }
+}
+
+@media screen and (max-width: 550px) {
+  .heroTextSub {
+    letter-spacing: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logoAnimated,
+  .pathAnim path,
+  .title,
+  .subtitle,
+  .heroTextMain,
+  .heroTextSub {
+    animation: none !important;
+  }
+}

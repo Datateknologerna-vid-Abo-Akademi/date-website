@@ -50,10 +50,6 @@
   color: var(--linkColorLightHover);
 }
 
-.legacy-panel {
-  box-shadow: 0 6px 14px -12px rgba(0, 0, 0, 0.5);
-}
-
 .panel.highlight {
   border-color: var(--secondaryColor);
 }
@@ -507,33 +503,4 @@
   margin-top: 1rem;
 }
 
-.table-wrap {
-  overflow-x: auto;
-}
-
-.attendee-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 480px;
-}
-
-.attendee-table th,
-.attendee-table td {
-  border-bottom: 1px solid color-mix(in srgb, var(--theme-border) 75%, transparent);
-  text-align: left;
-  padding: 0.55rem 0.45rem;
-}
-
-.attendee-table .is-waitlist {
-  background: color-mix(in srgb, var(--theme-secondary) 10%, transparent);
-}
-
-.is-hidden {
-  display: none;
-}
-
-.event-variant-shell {
-  position: relative;
-  isolation: isolate;
-}
 

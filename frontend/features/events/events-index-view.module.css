@@ -1,0 +1,76 @@
+.root {
+  text-align: left;
+}
+
+.eventCard :global(.card) {
+  border-radius: var(--defaultRadius);
+  color: var(--textColorLightish);
+  background: var(--primaryColorLight);
+  border: 0;
+  box-shadow: none;
+}
+
+.eventCard :global(.event-date-txt) {
+  white-space: nowrap;
+}
+
+.eventCard :global(.list-inline-item) {
+  color: var(--helpText);
+  font-size: 14px;
+}
+
+.eventCard :global(.badge) {
+  background: var(--helpText);
+}
+
+:global(.association-kk) .eventCard :global(.card) {
+  background: var(--secondaryColor);
+  color: var(--textColorDark);
+}
+
+:global(.association-kk) .eventCard :global(.badge) {
+  background: var(--primaryColorLighter);
+  color: var(--textColorLight);
+}
+
+:global(.association-kk) .eventCard :global(.btn) {
+  color: var(--linkColor, var(--linkColorDark));
+  border-color: var(--linkColor, var(--linkColorDark));
+}
+
+:global(.association-kk) .eventCard :global(.btn:hover) {
+  color: var(--linkSecondaryHover, var(--linkColorDarkHover));
+  border-color: var(--linkSecondaryHover, var(--linkColorDarkHover));
+}
+
+.eventCard :global(.btn) {
+  color: var(--linkColorLight);
+  border-color: var(--linkColorLight);
+}
+
+.eventCard :global(.btn:hover) {
+  background-color: transparent;
+  color: var(--linkColorLightHover);
+  border-color: var(--linkColorLightHover);
+}
+
+.eventCard :global(.fa-chevron-right) {
+  transition: 0.3s;
+}
+
+.eventCard:hover :global(.fa-chevron-right) {
+  transform: translateX(10px);
+}
+
+.contentPast {
+  background-color: var(--secondaryColor);
+  padding: 5px;
+  border-radius: var(--defaultRadius);
+  margin: 5px;
+  display: inline-block;
+  color: var(--textColorDark);
+}
+
+.contentPast :global(h4) {
+  margin: 0;
+}
