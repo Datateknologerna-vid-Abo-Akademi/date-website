@@ -400,7 +400,7 @@ class ApiSmokeTests(TestCase):
 
     def test_events_feed_returns_feature_disabled_payload_when_module_disabled(self):
         with patch(
-            "api.views.is_module_enabled",
+            "api.views.utils.is_module_enabled",
             side_effect=lambda module_key: False if module_key == "events" else True,
         ):
             response = self.client.get("/api/v1/events/feed")

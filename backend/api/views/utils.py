@@ -176,16 +176,20 @@ def build_module_capabilities():
     return capabilities
 
 
-def module_disabled_response(module_key):
-    return Response(
-        {
+from rest_framework.exceptions import APIException
+
+class FeatureDisabledException(APIException):
+    status_code = status.HTTP_404_NOT_FOUND
+    default_code = 'feature_disabled'
+
+    def __init__(self, module_key):
+        detail = {
             "error": {
                 "code": "feature_disabled",
                 "message": f"The '{module_key}' module is not enabled for this association.",
             }
-        },
-        status=status.HTTP_404_NOT_FOUND,
-    )
+        }
+        super().__init__(detail)
 
 
 def get_optional_model(app_label, model_name):
@@ -210,10 +214,10 @@ class ModuleConfigMixin:
     """
     module_key = None
 
-    def dispatch(self, request, *args, **kwargs):
+    def initial(self, request, *args, **kwargs):
         if self.module_key and not is_module_enabled(self.module_key):
-            return module_disabled_response(self.module_key)
-        return super().dispatch(request, *args, **kwargs)
+            raise FeatureDisabledException(self.module_key)
+        super().initial(request, *args, **kwargs)
         
     def get_module_models(self, *model_names):
         """Returns a single model or a tuple of models for the view's configured module."""
