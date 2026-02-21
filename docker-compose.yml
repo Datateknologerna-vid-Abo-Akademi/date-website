@@ -42,7 +42,7 @@ services:
       context: ./backend
     restart: unless-stopped
     command: >
-      /bin/bash -c "./wait-for-postgres.sh -t 60 db:5432 && python /code/manage.py migrate --noinput && python /code/manage.py runserver 0.0.0.0:8000"
+      /bin/bash -c "bash wait-for-postgres.sh -t 60 db:5432 && python /code/manage.py migrate --noinput && python /code/manage.py runserver 0.0.0.0:8000"
     environment:
       SECRET_KEY: ${DATE_SECRET_KEY}
       DEBUG: ${DATE_DEBUG}
@@ -101,7 +101,7 @@ services:
       context: ./backend
     restart: unless-stopped
     command: >
-      /bin/bash -c "./wait-for-postgres.sh -t 60 db:5432 && daphne -b 0.0.0.0 -p 8001 core.routing:application"
+      /bin/bash -c "bash wait-for-postgres.sh -t 60 db:5432 && daphne -b 0.0.0.0 -p 8001 core.routing:application"
     environment:
       SECRET_KEY: ${DATE_SECRET_KEY}
       DEBUG: ${DATE_DEBUG}
