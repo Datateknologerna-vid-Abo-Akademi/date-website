@@ -3,14 +3,20 @@ from __future__ import annotations
 from django.utils import timezone
 
 from events.models import Event
-from members.models import Member, MembershipType
+from members.models import Member, MembershipType, ORDINARY_MEMBER
 
 
 def seed_smoke_data() -> dict[str, str]:
-    membership_type, _ = MembershipType.objects.get_or_create(
-        name="CI Smoke",
-        defaults={"permission_profile": 1},
-    )
+    # Prefer an existing membership type to avoid sequence-related PK collisions
+    # in databases loaded from fixtures with explicit primary keys.
+    membership_type = MembershipType.objects.filter(name="CI Smoke").first()
+    if membership_type is None:
+        membership_type = MembershipType.objects.filter(pk=ORDINARY_MEMBER).first()
+    if membership_type is None:
+        membership_type, _ = MembershipType.objects.update_or_create(
+            pk=9999,
+            defaults={"name": "CI Smoke", "permission_profile": ORDINARY_MEMBER},
+        )
 
     user, _ = Member.objects.get_or_create(
         username="ci_smoke",

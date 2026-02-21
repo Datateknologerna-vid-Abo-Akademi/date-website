@@ -86,6 +86,10 @@ test.describe("decoupled frontend smoke checks", () => {
     expect(csrfToken).not.toBe("");
 
     const loginResponse = await request.post("/api/v1/auth/login", {
+      headers: {
+        "X-CSRFToken": csrfToken,
+        Referer: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:8080",
+      },
       data: { username, password },
     });
     expect(loginResponse.ok()).toBeTruthy();
@@ -119,9 +123,9 @@ test.describe("decoupled frontend smoke checks", () => {
 
     await page.goto("/members/login");
     await expect(page.getByRole("heading", { name: "Login" })).toBeVisible();
-    await page.getByLabel("Username").fill(username);
-    await page.getByLabel("Password").fill(password);
-    await page.getByRole("button", { name: "Login" }).click();
+    await page.getByLabel("Användarnamn").fill(username);
+    await page.getByLabel("Lösenord").fill(password);
+    await page.getByRole("button", { name: /login/i }).click();
 
     await expect(page).toHaveURL(/\/members\/profile$/);
     await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
