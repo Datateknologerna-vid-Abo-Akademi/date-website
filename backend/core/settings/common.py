@@ -48,9 +48,9 @@ LEGACY_TEMPLATE_ROUTES_ENABLED = env("LEGACY_TEMPLATE_ROUTES_ENABLED", bool, Tru
 # This gets set only when tests are ran with date-test command
 TEST = env('TEST', bool, False)
 
-ALLOWED_HOSTS = json.loads(env('ALLOWED_HOSTS', str, '[]'))
+ALLOWED_HOSTS = json.loads(env('ALLOWED_HOSTS', str, '[]').strip(' "\''))
 
-CSRF_TRUSTED_ORIGINS = json.loads(env('ALLOWED_ORIGINS', str, '[]'))
+CSRF_TRUSTED_ORIGINS = json.loads(env('ALLOWED_ORIGINS', str, '[]').strip(' "\''))
 
 
 if not DEVELOP:
@@ -196,7 +196,8 @@ AUTHENTICATION_BACKENDS = (
 
 def get_staff_groups(default_groups: list):
     """Add extra staff groups from environment variable to default_groups."""
-    default_groups.extend(json.loads(os.environ.get('EXTRA_STAFF_GROUPS', '[]')))
+    extra_staff = os.environ.get('EXTRA_STAFF_GROUPS', '[]').strip(' "\'')
+    default_groups.extend(json.loads(extra_staff))
     return default_groups
 
 # Internationalization
@@ -317,7 +318,7 @@ CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 30000  # large value for large events
 
-ALUMNI_SETTINGS = os.environ.get("ALUMNI_SETTINGS", '')
+ALUMNI_SETTINGS = os.environ.get("ALUMNI_SETTINGS", '').strip(' "\'')
 
 LOGGING = {
     'version': 1,
@@ -384,9 +385,10 @@ ASSOCIATION_THEME = {
 }
 
 try:
+    theme_env = os.environ.get("ASSOCIATION_THEME", "{}").strip(' "\'')
     ASSOCIATION_THEME = {
         **ASSOCIATION_THEME,
-        **json.loads(os.environ.get("ASSOCIATION_THEME", "{}")),
+        **json.loads(theme_env),
     }
 except Exception:
     pass

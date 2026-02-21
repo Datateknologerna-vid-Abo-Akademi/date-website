@@ -93,9 +93,10 @@ ASSOCIATION_THEME = {
 }
 
 try:
+    theme_env = os.environ.get("ASSOCIATION_THEME", "{}").strip(' "\'')
     ASSOCIATION_THEME = {
         **ASSOCIATION_THEME,
-        **json.loads(os.environ.get("ASSOCIATION_THEME", "{}")),
+        **json.loads(theme_env),
     }
 except Exception:
     pass
