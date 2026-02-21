@@ -1,0 +1,37 @@
+body.association-kk {
+    /* Legacy Theme Tokens */
+    --primaryColor: rgb(10, 140, 65);
+    --primaryColorLight: #2a693d;
+    --primaryColorLighte: #3b8b53;
+    --primaryColorLighter: rgb(10, 170, 77);
+    --primaryColorTransparent: rgba(10, 140, 65, 0.9);
+    --primaryColorTransparenter: rgba(10, 140, 65, 0.8);
+    --secondaryColor: #ffffff;
+    --secondaryColorDarker: #e0e0e0;
+    --textColorLight: #ffffff;
+    --textColorLightish: #eaeaea;
+    --textColorDark: #000000;
+    --textColorDarkish: #202020;
+    --textColorMedium: #606060;
+    --helpText: #888888;
+    --helpTextLighter: rgb(199, 199, 199);
+    --linkColorDark: #3a80c3;
+    --linkColorDarkHover: #26547f;
+    --linkColor: rgb(44, 148, 96);
+    --linkColorSecondary: rgb(10, 170, 77);
+    --linkSecondaryHover: #2a693d;
+    --linkColorLight: rgb(37, 240, 122);
+    --linkColorLightHover: rgb(29, 185, 94);
+
+    /* Semantic Layout Mappings */
+    --theme-background: var(--primaryColor);
+    --theme-content-bg: var(--secondaryColor);
+    --theme-content-text: var(--textColorDarkish);
+    --theme-content-link: var(--linkColorSecondary, var(--linkColorDark));
+    --theme-content-link-hover: var(--linkSecondaryHover, var(--linkColorDarkHover));
+    --theme-hero-text-color: var(--textColorDarkish);
+    --theme-panel-link: var(--linkColorSecondary, var(--linkColorDark));
+    --theme-panel-link-hover: var(--linkSecondaryHover, var(--linkColorDarkHover));
+    --theme-button-primary: var(--primaryColorLighter);
+    --theme-button-primary-hover: color-mix(in srgb, var(--primaryColorLighter) 78%, black 22%);
+}

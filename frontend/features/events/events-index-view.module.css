@@ -4,8 +4,8 @@
 
 .eventCard :global(.card) {
   border-radius: var(--defaultRadius);
-  color: var(--textColorLightish);
-  background: var(--primaryColorLight);
+  color: var(--theme-content-text);
+  background: var(--theme-content-bg);
   border: 0;
   box-shadow: none;
 }
@@ -20,58 +20,21 @@
 }
 
 .eventCard :global(.badge) {
-  background: var(--helpText);
-}
-
-:global(.association-kk) .eventCard :global(.card) {
-  background: var(--secondaryColor);
-  color: var(--textColorDark);
-}
-
-:global(.association-kk) .eventCard :global(.badge) {
   background: var(--primaryColorLighter);
   color: var(--textColorLight);
 }
 
-:global(.association-kk) .eventCard :global(.btn) {
-  color: var(--linkColor, var(--linkColorDark));
-  border-color: var(--linkColor, var(--linkColorDark));
-}
 
-:global(.association-kk) .eventCard :global(.btn:hover) {
-  color: var(--linkSecondaryHover, var(--linkColorDarkHover));
-  border-color: var(--linkSecondaryHover, var(--linkColorDarkHover));
-}
-
-:global(.association-biocum) .eventCard :global(.card) {
-  background: var(--secondaryColor);
-  color: var(--textColorDark);
-}
-
-:global(.association-biocum) .eventCard :global(.badge) {
-  background: var(--primaryColorLighter);
-  color: var(--textColorLight);
-}
-
-:global(.association-biocum) .eventCard :global(.btn) {
-  color: var(--linkColor);
-  border-color: var(--linkColor);
-}
-
-:global(.association-biocum) .eventCard :global(.btn:hover) {
-  color: var(--linkColorHover);
-  border-color: var(--linkColorHover);
-}
 
 .eventCard :global(.btn) {
-  color: var(--linkColorLight);
-  border-color: var(--linkColorLight);
+  color: var(--theme-button-primary);
+  border-color: var(--theme-button-primary);
 }
 
 .eventCard :global(.btn:hover) {
   background-color: transparent;
-  color: var(--linkColorLightHover);
-  border-color: var(--linkColorLightHover);
+  color: var(--theme-button-primary-hover);
+  border-color: var(--theme-button-primary-hover);
 }
 
 .eventCard :global(.fa-chevron-right) {

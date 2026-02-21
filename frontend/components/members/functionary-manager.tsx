@@ -3,7 +3,8 @@
 import { FormEvent, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { getApiClient, mutateApi } from "@/lib/api/client";
+import { apiClient } from "@/lib/api/openapi-client";
+import { addFunctionaryRole, deleteFunctionaryRole } from "@/lib/api/mutations";
 import type { FunctionaryItem, FunctionaryRole } from "@/lib/api/types";
 import styles from "./functionary-manager.module.css";
 
@@ -18,12 +19,20 @@ export function FunctionaryManager({ initialYear }: FunctionaryManagerProps) {
 
   const { data: myFunctionaries = [], isLoading: loadingFunctionaries } = useQuery({
     queryKey: ["functionaries"],
-    queryFn: () => getApiClient<FunctionaryItem[]>("members/me/functionaries"),
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/members/me/functionaries");
+      if (error) throw new Error((error as { message?: string }).message || "Error");
+      return data as unknown as FunctionaryItem[];
+    },
   });
 
   const { data: roles = [], isLoading: loadingRoles } = useQuery({
     queryKey: ["functionary-roles"],
-    queryFn: () => getApiClient<FunctionaryRole[]>("members/functionary-roles"),
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/members/functionary-roles");
+      if (error) throw new Error((error as { message?: string }).message || "Error");
+      return data as unknown as FunctionaryRole[];
+    },
   });
 
   const hasRoles = useMemo(() => roles.length > 0, [roles]);
@@ -31,23 +40,17 @@ export function FunctionaryManager({ initialYear }: FunctionaryManagerProps) {
   const addMutation = useMutation({
     mutationFn: async () => {
       if (roleId === "") throw new Error("Please select a role");
-      return mutateApi<FunctionaryItem>({
-        method: "POST",
-        path: "members/me/functionaries",
-        body: { functionary_role_id: roleId, year },
-      });
+      return addFunctionaryRole(roleId as number, year);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["functionaries"] });
+      setRoleId("");
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      return mutateApi<void>({
-        method: "DELETE",
-        path: `members/me/functionaries/${id}`,
-      });
+      return deleteFunctionaryRole(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["functionaries"] });

@@ -2,37 +2,29 @@
 
 import { FormEvent, useState } from "react";
 
-import { mutateApi } from "@/lib/api/client";
+import { useMutation } from "@tanstack/react-query";
 
-interface PasswordResetResponse {
-  submitted: boolean;
-}
+import { resetPassword } from "@/lib/api/mutations";
 
 export function PasswordResetForm() {
   const [email, setEmail] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [statusMessage, setStatusMessage] = useState("");
+  const mutation = useMutation({
+    mutationFn: resetPassword,
+    onSuccess: () => {
+      setStatusMessage("Om kontot finns har en återställningslänk skickats.");
+      setEmail("");
+    },
+    onError: (error) => {
+      setErrorMessage(error instanceof Error ? error.message : "Kunde inte skicka återställningsbegäran.");
+    },
+  });
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage("");
     setStatusMessage("");
-    setIsSubmitting(true);
 
-    try {
-      await mutateApi<PasswordResetResponse>({
-        method: "POST",
-        path: "auth/password-reset",
-        body: { email },
-      });
-      setStatusMessage("Om kontot finns har en återställningslänk skickats.");
-      setEmail("");
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Kunde inte skicka återställningsbegäran.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    mutation.mutate({ email });
   }
 
   return (
@@ -46,8 +38,8 @@ export function PasswordResetForm() {
           required
         />
       </label>
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Skickar..." : "Sänd"}
+      <button type="submit" disabled={mutation.isPending}>
+        {mutation.isPending ? "Skickar..." : "Sänd"}
       </button>
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
       {statusMessage ? <p className="form-success">{statusMessage}</p> : null}

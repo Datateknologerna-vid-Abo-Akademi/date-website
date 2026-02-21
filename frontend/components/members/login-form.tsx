@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
-import { mutateApi } from "@/lib/api/client";
+import { useMutation } from "@tanstack/react-query";
+
+import { loginUser } from "@/lib/api/mutations";
 import styles from "./login-form.module.css";
 
 interface LoginFormProps {
@@ -14,26 +16,17 @@ export function LoginForm({ redirectTo = "/members/profile" }: LoginFormProps) {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const mutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: () => {
+      router.push(redirectTo);
+      router.refresh();
+    },
+  });
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setErrorMessage("");
-    setIsSubmitting(true);
-    try {
-      await mutateApi<{ is_authenticated: boolean; username: string }>({
-        method: "POST",
-        path: "auth/login",
-        body: { username, password },
-      });
-      router.push(redirectTo);
-      router.refresh();
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Inloggning misslyckades.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    mutation.mutate({ username, password });
   }
 
   return (
@@ -57,10 +50,10 @@ export function LoginForm({ redirectTo = "/members/profile" }: LoginFormProps) {
           required
         />
       </p>
-      <button className="button" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "LOGIN..." : "LOGIN"}
+      <button className="button" type="submit" disabled={mutation.isPending}>
+        {mutation.isPending ? "LOGIN..." : "LOGIN"}
       </button>
-      {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
+      {mutation.error ? <p className="form-error">{mutation.error.message}</p> : null}
     </form>
   );
 }

@@ -45,10 +45,10 @@
 }
 
 html body {
-  background-color: var(--primaryColor);
+  background-color: var(--theme-background);
   background-image: none;
   color: var(--textColorLightish);
-  font-family: "Josefin Sans", sans-serif;
+  font-family: var(--font-josefin), "Josefin Sans", sans-serif;
   min-height: 100vh;
   margin: 0;
 }
@@ -70,8 +70,8 @@ html body {
 
 .content {
   margin: 20px 2vw;
-  background-color: var(--primaryColorLight);
-  color: var(--textColorLightish);
+  background-color: var(--theme-content-bg);
+  color: var(--theme-content-text);
   padding: var(--defaultPadding);
   border-radius: var(--defaultRadius);
 }
@@ -84,20 +84,12 @@ html body {
   border-radius: var(--defaultRadius);
 }
 
-.association-kk .content,
-.association-biocum .content {
-  background-color: var(--secondaryColor);
-  color: var(--textColorDarkish);
+.content a {
+  color: var(--theme-content-link);
 }
 
-.association-kk .content a,
-.association-biocum .content a {
-  color: var(--linkColorSecondary, var(--linkColor, var(--linkColorDark)));
-}
-
-.association-kk .content a:hover,
-.association-biocum .content a:hover {
-  color: var(--linkSecondaryHover, var(--linkColorDarkHover));
+.content a:hover {
+  color: var(--theme-content-link-hover);
 }
 
 h1,
@@ -108,14 +100,14 @@ h4 {
 }
 
 div a {
-  color: var(--legacy-link-light);
+  color: var(--theme-content-link);
   display: inline-block;
   text-decoration: none;
 }
 
 div a:hover {
   transition: 0.3s;
-  color: var(--legacy-link-light-hover);
+  color: var(--theme-content-link-hover);
 }
 
 .legacy-container {

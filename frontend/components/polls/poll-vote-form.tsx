@@ -2,7 +2,9 @@
 
 import { FormEvent, useState } from "react";
 
-import { mutateApi } from "@/lib/api/client";
+import { useMutation } from "@tanstack/react-query";
+
+import { votePoll } from "@/lib/api/mutations";
 import type { PollQuestion } from "@/lib/api/types";
 import formStyles from "@/components/ui/form-primitives.module.css";
 import listStyles from "@/components/ui/list-primitives.module.css";
@@ -30,22 +32,25 @@ export function PollVoteForm({ initialPoll }: PollVoteFormProps) {
     );
   }
 
+  const mutation = useMutation({
+    mutationFn: (variables: { pollId: number; choiceIds: number[] }) =>
+      votePoll(variables.pollId, variables.choiceIds),
+    onSuccess: (updatedPoll: unknown) => {
+      setPoll(updatedPoll);
+      setSelectedChoices([]);
+      setStatusMessage("Vote recorded.");
+    },
+    onError: (error) => {
+      setErrorMessage(error instanceof Error ? error.message : "Vote failed");
+    },
+  });
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage("");
     setStatusMessage("");
-    try {
-      const updatedPoll = await mutateApi<PollQuestion>({
-        method: "POST",
-        path: `polls/${poll.id}/vote`,
-        body: { choice_ids: selectedChoices },
-      });
-      setPoll(updatedPoll);
-      setSelectedChoices([]);
-      setStatusMessage("Vote recorded.");
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Vote failed");
-    }
+
+    mutation.mutate({ pollId: poll.id, choiceIds: selectedChoices });
   }
 
   return (
@@ -65,7 +70,9 @@ export function PollVoteForm({ initialPoll }: PollVoteFormProps) {
             </label>
           ))}
         </fieldset>
-        <button type="submit">Submit vote</button>
+        <button type="submit" disabled={mutation.isPending}>
+          {mutation.isPending ? "Submitting..." : "Submit vote"}
+        </button>
       </form>
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
       {statusMessage ? <p className="form-success">{statusMessage}</p> : null}

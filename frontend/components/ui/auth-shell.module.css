@@ -51,7 +51,7 @@
 }
 
 .card :global(button) {
-  font-family: "Josefin Sans", sans-serif;
+  font-family: var(--font-josefin), "Josefin Sans", sans-serif;
   text-transform: uppercase;
   outline: 0;
   background: #4caf50;

@@ -2,8 +2,10 @@
 
 import { Dispatch, FormEvent, SetStateAction, useMemo, useState } from "react";
 
+import { useMutation } from "@tanstack/react-query";
+
 import listStyles from "@/components/ui/list-primitives.module.css";
-import { mutateApi } from "@/lib/api/client";
+import { signupEvent, verifyEventPasscode } from "@/lib/api/mutations";
 import type { EventItem, EventSignupBilling, EventSignupResult } from "@/lib/api/types";
 import styles from "./event-signup-form.module.css";
 
@@ -49,11 +51,37 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
   const [avecDynamicValues, setAvecDynamicValues] = useState<Record<string, DynamicValue>>(
     () => buildDynamicDefaults(event.sign_up_fields.filter((field) => !field.hide_for_avec)),
   );
-  const [isSubmittingPasscode, setIsSubmittingPasscode] = useState(false);
-  const [isSubmittingSignup, setIsSubmittingSignup] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [signupResult, setSignupResult] = useState<EventSignupResult | null>(null);
+
+  const passcodeMutation = useMutation({
+    mutationFn: (variables: { eventSlug: string; passcode: string }) =>
+      verifyEventPasscode(variables.eventSlug, variables.passcode),
+    onSuccess: (data: unknown) => {
+      const typedData = data as { passcode_verified?: boolean };
+      if (typedData?.passcode_verified) {
+        setPasscodeVerified(true);
+        setPasscode("");
+        setStatusMessage("Passcode verifierad.");
+      }
+    },
+    onError: (error) => {
+      setErrorMessage(error instanceof Error ? error.message : "Verifiering av passcode misslyckades");
+    },
+  });
+
+  const signupMutation = useMutation({
+    mutationFn: (variables: { eventSlug: string; payload: Record<string, unknown> }) =>
+      signupEvent(variables.eventSlug, variables.payload),
+    onSuccess: (data: unknown) => {
+      setSignupResult(data as EventSignupResult);
+      setStatusMessage("Anmälning registrerad.");
+    },
+    onError: (error) => {
+      setErrorMessage(error instanceof Error ? error.message : "Anmälning misslyckades");
+    },
+  });
 
   const requiresPasscode = Boolean(event.passcode_required) && !passcodeVerified;
   const signupOpen = useMemo(() => {
@@ -123,30 +151,13 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
     formEvent.preventDefault();
     setErrorMessage("");
     setStatusMessage("");
-    setIsSubmittingPasscode(true);
-    try {
-      const response = await mutateApi<{ passcode_verified: boolean }>({
-        method: "POST",
-        path: `events/${event.slug}/passcode`,
-        body: { passcode },
-      });
-      if (response.passcode_verified) {
-        setPasscodeVerified(true);
-        setPasscode("");
-        setStatusMessage("Passcode verifierad.");
-      }
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Verifiering av passcode misslyckades");
-    } finally {
-      setIsSubmittingPasscode(false);
-    }
+    passcodeMutation.mutate({ eventSlug: event.slug, passcode });
   }
 
   async function onSubmitSignup(formEvent: FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();
     setErrorMessage("");
     setStatusMessage("");
-    setIsSubmittingSignup(true);
 
     const payload: Record<string, DynamicValue> = {
       user: name,
@@ -171,19 +182,7 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
       payload["cf-turnstile-response"] = captchaToken;
     }
 
-    try {
-      const response = await mutateApi<EventSignupResult>({
-        method: "POST",
-        path: `events/${event.slug}/signup`,
-        body: payload,
-      });
-      setSignupResult(response);
-      setStatusMessage("Anmälning registrerad.");
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Anmälning misslyckades");
-    } finally {
-      setIsSubmittingSignup(false);
-    }
+    signupMutation.mutate({ eventSlug: event.slug, payload });
   }
 
   if (!event.sign_up) {
@@ -201,8 +200,8 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
             required
           />
         </label>
-        <button className="button" type="submit" disabled={isSubmittingPasscode}>
-          {isSubmittingPasscode ? "Verifierar..." : "Skicka"}
+        <button className="button" type="submit" disabled={passcodeMutation.isPending}>
+          {passcodeMutation.isPending ? "Verifierar..." : "Skicka"}
         </button>
         {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
         {statusMessage ? <p className="form-success">{statusMessage}</p> : null}
@@ -311,8 +310,8 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
           </label>
         ) : null}
 
-        <button className="button" type="submit" disabled={isSubmittingSignup}>
-          {isSubmittingSignup ? "Anmäler..." : "Anmäl"}
+        <button className="button" type="submit" disabled={signupMutation.isPending}>
+          {signupMutation.isPending ? "Anmäler..." : "Anmäl"}
         </button>
       </form>
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}

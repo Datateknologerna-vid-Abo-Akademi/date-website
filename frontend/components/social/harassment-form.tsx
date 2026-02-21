@@ -6,10 +6,6 @@ import Link from "next/link";
 import { mutateApi } from "@/lib/api/client";
 import formStyles from "@/components/ui/form-primitives.module.css";
 
-interface HarassmentFormResponse {
-  submitted: boolean;
-  id: number;
-}
 
 interface HarassmentFormProps {
   captchaSiteKey?: string;

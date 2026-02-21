@@ -43,14 +43,14 @@
   column-gap: 3vw;
 }
 
-.brandKk .mainContainer {
+:global(.association-kk) .mainContainer {
   grid-template-areas:
     ". news events ."
     ". news logos ."
     ". ig-scroll ig-scroll .";
 }
 
-.brandBiocum .mainContainer {
+:global(.association-biocum) .mainContainer {
   grid-template-areas:
     ". news sidebar ."
     ". news sidebar ."
@@ -160,8 +160,8 @@
       ". ig-scroll .";
   }
 
-  .brandKk .mainContainer,
-  .brandBiocum .mainContainer {
+  :global(.association-kk) .mainContainer,
+  :global(.association-biocum) .mainContainer {
     grid-template-areas:
       ". events ."
       ". news ."
@@ -169,15 +169,15 @@
       ". ig-scroll .";
   }
 
-  .brandBiocum .sidebarContainer {
+  :global(.association-biocum) .sidebarContainer {
     display: none;
   }
 
-  .brandBiocum .mobileBlocks {
+  :global(.association-biocum) .mobileBlocks {
     display: block;
   }
 
-  .brandBiocum .mobileEventsContainer {
+  :global(.association-biocum) .mobileEventsContainer {
     display: block;
   }
 }

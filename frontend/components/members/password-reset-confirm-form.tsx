@@ -2,11 +2,10 @@
 
 import { FormEvent, useState } from "react";
 
-import { mutateApi } from "@/lib/api/client";
+import { useMutation } from "@tanstack/react-query";
 
-interface PasswordResetConfirmResponse {
-  password_reset: boolean;
-}
+import { PasswordResetConfirmPayload, confirmPasswordReset } from "@/lib/api/mutations";
+
 
 interface PasswordResetConfirmFormProps {
   uid: string;
@@ -16,33 +15,34 @@ interface PasswordResetConfirmFormProps {
 export function PasswordResetConfirmForm({ uid, token }: PasswordResetConfirmFormProps) {
   const [newPassword1, setNewPassword1] = useState("");
   const [newPassword2, setNewPassword2] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
+  const mutation = useMutation({
+    mutationFn: (variables: { uid: string; token: string; payload: PasswordResetConfirmPayload }) =>
+      confirmPasswordReset(variables.uid, variables.token, variables.payload),
+    onSuccess: () => {
+      setStatusMessage("Lösenordet har uppdaterats.");
+      setNewPassword1("");
+      setNewPassword2("");
+    },
+    onError: (error) => {
+      setErrorMessage(error instanceof Error ? error.message : "Kunde inte byta lösenord.");
+    },
+  });
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage("");
     setStatusMessage("");
-    setIsSubmitting(true);
 
-    try {
-      await mutateApi<PasswordResetConfirmResponse>({
-        method: "POST",
-        path: `auth/password-reset/${uid}/${token}`,
-        body: {
-          new_password1: newPassword1,
-          new_password2: newPassword2,
-        },
-      });
-      setStatusMessage("Lösenordet har uppdaterats.");
-      setNewPassword1("");
-      setNewPassword2("");
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Kunde inte byta lösenord.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    mutation.mutate({
+      uid,
+      token,
+      payload: {
+        new_password1: newPassword1,
+        new_password2: newPassword2,
+      },
+    });
   }
 
   return (
@@ -65,8 +65,8 @@ export function PasswordResetConfirmForm({ uid, token }: PasswordResetConfirmFor
           required
         />
       </label>
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Skickar..." : "Byt lösenord"}
+      <button type="submit" disabled={mutation.isPending}>
+        {mutation.isPending ? "Skickar..." : "Byt lösenord"}
       </button>
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
       {statusMessage ? <p className="form-success">{statusMessage}</p> : null}

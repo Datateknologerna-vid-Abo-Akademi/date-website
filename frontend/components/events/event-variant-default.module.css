@@ -1,9 +1,10 @@
 .pageRoot .detailContent {
   margin: 20px 2vw;
-  background-color: var(--primaryColorLight);
+  background-color: var(--theme-content-bg);
   padding: var(--defaultPadding);
   border-radius: var(--defaultRadius);
-  color: var(--textColorLightish);
+  color: var(--theme-content-text);
+  border: 1px solid color-mix(in srgb, var(--theme-content-text) 12%, transparent);
 }
 
 .pageRoot .detailContent h2,
@@ -12,26 +13,9 @@
 }
 
 .pageRoot .detailContent a {
-  color: var(--linkColorLight);
+  color: var(--theme-content-link);
 }
 
 .pageRoot .detailContent a:hover {
-  color: var(--linkColorLightHover);
-}
-
-:global(.association-kk) .pageRoot .detailContent,
-:global(.association-biocum) .pageRoot .detailContent {
-  background-color: var(--secondaryColor);
-  color: var(--textColorDarkish);
-  border: 1px solid color-mix(in srgb, var(--textColorDark) 12%, transparent);
-}
-
-:global(.association-kk) .pageRoot .detailContent a,
-:global(.association-biocum) .pageRoot .detailContent a {
-  color: var(--linkColorSecondary, var(--linkColor, var(--linkColorDark)));
-}
-
-:global(.association-kk) .pageRoot .detailContent a:hover,
-:global(.association-biocum) .pageRoot .detailContent a:hover {
-  color: var(--linkSecondaryHover, var(--linkColorDarkHover));
+  color: var(--theme-content-link-hover);
 }

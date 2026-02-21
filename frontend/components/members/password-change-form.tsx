@@ -4,9 +4,6 @@ import { FormEvent, useState } from "react";
 
 import { mutateApi } from "@/lib/api/client";
 
-interface PasswordChangeResponse {
-  password_changed: boolean;
-}
 
 export function PasswordChangeForm() {
   const [oldPassword, setOldPassword] = useState("");

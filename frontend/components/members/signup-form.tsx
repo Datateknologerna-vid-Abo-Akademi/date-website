@@ -3,13 +3,9 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 
-import { mutateApi } from "@/lib/api/client";
+import { useMutation } from "@tanstack/react-query";
 
-interface SignupResponse {
-  registered: boolean;
-  username: string;
-  requires_activation: boolean;
-}
+import { signupUser } from "@/lib/api/mutations";
 
 interface SignupState {
   username: string;
@@ -43,7 +39,6 @@ declare global {
 
 export function SignupForm({ captchaSiteKey }: SignupFormProps) {
   const [formState, setFormState] = useState<SignupState>(initialState);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
 
@@ -62,38 +57,35 @@ export function SignupForm({ captchaSiteKey }: SignupFormProps) {
     setFormState((previous) => ({ ...previous, [field]: value }));
   }
 
+  const mutation = useMutation({
+    mutationFn: signupUser,
+    onSuccess: () => {
+      setFormState(initialState);
+      setStatusMessage("Registreringen mottogs. Ett admin-konto behöver aktivera användaren.");
+    },
+    onError: (error) => {
+      setErrorMessage(error instanceof Error ? error.message : "Kunde inte registrera kontot.");
+    },
+  });
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage("");
     setStatusMessage("");
-    setIsSubmitting(true);
 
     if (!formState.consent) {
       setErrorMessage("Du måste godkänna villkoren.");
-      setIsSubmitting(false);
       return;
     }
 
-    try {
-      await mutateApi<SignupResponse>({
-        method: "POST",
-        path: "auth/signup",
-        body: {
-          username: formState.username,
-          email: formState.email,
-          first_name: formState.first_name,
-          last_name: formState.last_name,
-          password: formState.password,
-          "cf-turnstile-response": formState.captchaToken,
-        },
-      });
-      setFormState(initialState);
-      setStatusMessage("Registreringen mottogs. Ett admin-konto behöver aktivera användaren.");
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Kunde inte registrera kontot.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    mutation.mutate({
+      username: formState.username,
+      email: formState.email,
+      first_name: formState.first_name,
+      last_name: formState.last_name,
+      password: formState.password,
+      "cf-turnstile-response": formState.captchaToken,
+    });
   }
 
   return (
@@ -162,8 +154,8 @@ export function SignupForm({ captchaSiteKey }: SignupFormProps) {
           data-callback="__signupTurnstileCallback"
         />
       ) : null}
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Skickar..." : "Registrera dig"}
+      <button type="submit" disabled={mutation.isPending}>
+        {mutation.isPending ? "Skickar..." : "Registrera dig"}
       </button>
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
       {statusMessage ? <p className="form-success">{statusMessage}</p> : null}

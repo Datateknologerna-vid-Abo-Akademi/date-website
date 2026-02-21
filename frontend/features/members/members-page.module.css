@@ -9,11 +9,11 @@
 
 .hero {
   margin: 20px 2vw;
-  background: var(--primaryColorLight);
+  background: var(--theme-content-bg);
   border: 0;
   border-radius: var(--defaultRadius);
   padding: 1.1rem 1.2rem;
-  color: var(--textColorLightish);
+  color: var(--theme-content-text);
 }
 
 .hero h1 {
@@ -26,25 +26,25 @@
 
 .panel {
   margin: 20px 2vw;
-  background: var(--primaryColorLight);
+  background: var(--theme-content-bg);
   border: 0;
   border-radius: var(--defaultRadius);
   padding: var(--defaultPadding);
-  color: var(--textColorLightish);
+  color: var(--theme-content-text);
 }
 
 .panel h1,
 .panel h2,
 .panel h3 {
-  color: var(--textColorLightish);
+  color: var(--theme-hero-text-color);
 }
 
 .panel a {
-  color: var(--linkColorLight);
+  color: var(--theme-panel-link);
 }
 
 .panel a:hover {
-  color: var(--linkColorLightHover);
+  color: var(--theme-panel-link-hover);
 }
 
 .eyebrow {
@@ -90,30 +90,4 @@
   flex-wrap: wrap;
   gap: 0.8rem;
   align-items: end;
-}
-
-:global(.association-kk) .hero,
-:global(.association-kk) .panel {
-  background: var(--secondaryColor);
-  color: var(--textColorDarkish);
-  border: 0;
-}
-
-:global(.association-kk) .hero h1,
-:global(.association-kk) .hero h2,
-:global(.association-kk) .hero h3,
-:global(.association-kk) .panel h1,
-:global(.association-kk) .panel h2,
-:global(.association-kk) .panel h3 {
-  color: var(--textColorDarkish);
-}
-
-:global(.association-kk) .panel a,
-:global(.association-kk) .hero a {
-  color: var(--linkColorSecondary, var(--linkColor, var(--linkColorDark)));
-}
-
-:global(.association-kk) .panel a:hover,
-:global(.association-kk) .hero a:hover {
-  color: var(--linkSecondaryHover, var(--linkColorDarkHover));
 }

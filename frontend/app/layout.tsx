@@ -1,19 +1,30 @@
 import type { Metadata } from "next";
+import { Chakra_Petch, Josefin_Sans } from "next/font/google";
 import Script from "next/script";
-import type { CSSProperties } from "react";
 
 import { CookieBanner } from "@/components/cookie-banner";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { getSession, getSiteMeta } from "@/lib/api/queries";
-import {
-  buildThemeStyleVars,
-  normalizeAssociationBrand,
-  resolveUiProfile,
-} from "@/lib/theme/runtime-theme";
+import { normalizeAssociationBrand } from "@/lib/theme/runtime-theme";
 
 import Providers from "./providers";
 import "./globals.css";
+
+const chakraPetch = Chakra_Petch({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-chakra",
+});
+
+const josefinSans = Josefin_Sans({
+  weight: ["300", "400", "600"],
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-josefin",
+});
 
 export async function generateMetadata(): Promise<Metadata> {
   const siteMeta = await getSiteMeta().catch(() => null);
@@ -50,20 +61,10 @@ export default async function RootLayout({
   ]);
   const theme = siteMeta.association_theme;
   const brand = normalizeAssociationBrand(theme.brand ?? "");
-  const styleVars = buildThemeStyleVars(theme, brand);
-  const uiProfile = resolveUiProfile(brand);
 
   return (
     <html lang={siteMeta.language_code}>
       <head>
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css?family=Chakra+Petch"
-        />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css?family=Josefin+Sans:300,400,400i,600"
-        />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
@@ -80,10 +81,8 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`association-${brand || "default"}`}
+        className={`association-${brand || "default"} ${josefinSans.variable} ${chakraPetch.variable}`}
         data-association={brand || "default"}
-        data-ui-profile={uiProfile}
-        style={styleVars as CSSProperties}
       >
         <Providers>
           <SiteHeader siteMeta={siteMeta} session={session} />

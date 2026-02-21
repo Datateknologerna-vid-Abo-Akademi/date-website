@@ -1,42 +1,22 @@
 .panel {
   margin: 20px 2vw;
-  background: var(--primaryColorLight);
+  background: var(--theme-content-bg);
   border: 0;
   border-radius: var(--defaultRadius);
   padding: var(--defaultPadding);
-  color: var(--textColorLightish);
+  color: var(--theme-content-text);
 }
 
 .panel h1,
 .panel h2,
 .panel h3 {
-  color: var(--textColorLightish);
+  color: var(--theme-hero-text-color);
 }
 
 .panel a {
-  color: var(--linkColorLight);
+  color: var(--theme-panel-link);
 }
 
 .panel a:hover {
-  color: var(--linkColorLightHover);
-}
-
-:global(.association-kk) .panel {
-  background: var(--secondaryColor);
-  color: var(--textColorDarkish);
-  border: 0;
-}
-
-:global(.association-kk) .panel h1,
-:global(.association-kk) .panel h2,
-:global(.association-kk) .panel h3 {
-  color: var(--textColorDarkish);
-}
-
-:global(.association-kk) .panel a {
-  color: var(--linkColorSecondary, var(--linkColor, var(--linkColorDark)));
-}
-
-:global(.association-kk) .panel a:hover {
-  color: var(--linkSecondaryHover, var(--linkColorDarkHover));
+  color: var(--theme-panel-link-hover);
 }

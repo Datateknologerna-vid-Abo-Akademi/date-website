@@ -14,7 +14,7 @@
 
 .signupForm :global(.form-field input),
 .signupForm :global(.form-field select) {
-  font-family: "Josefin Sans", sans-serif;
+  font-family: var(--font-josefin), "Josefin Sans", sans-serif;
   border-radius: 5px;
   border: 1px solid color-mix(in srgb, var(--textColorDark) 24%, transparent);
   padding: 0.5rem;

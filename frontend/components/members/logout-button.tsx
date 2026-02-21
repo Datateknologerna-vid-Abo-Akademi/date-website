@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 
-import { mutateApi } from "@/lib/api/client";
+import { logoutUser } from "@/lib/api/mutations";
 
 interface LogoutButtonProps {
   className?: string;
@@ -17,25 +17,21 @@ export function LogoutButton({
   redirectTo = "/members/login",
 }: LogoutButtonProps = {}) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-
-  async function onLogout() {
-    setIsLoading(true);
-    try {
-      await mutateApi<{ is_authenticated: boolean }>({
-        method: "POST",
-        path: "auth/logout",
-      });
+  const mutation = useMutation({
+    mutationFn: logoutUser,
+    onSuccess: () => {
       router.push(redirectTo);
       router.refresh();
-    } finally {
-      setIsLoading(false);
-    }
+    },
+  });
+
+  async function onLogout() {
+    mutation.mutate();
   }
 
   return (
-    <button type="button" onClick={onLogout} disabled={isLoading} className={className}>
-      {isLoading ? "Signing out..." : label}
+    <button type="button" onClick={onLogout} disabled={mutation.isPending} className={className}>
+      {mutation.isPending ? "Signing out..." : label}
     </button>
   );
 }

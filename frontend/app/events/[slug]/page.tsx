@@ -1,8 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import { EventVariantDetail } from "@/components/events/event-variant-detail";
-import { ApiRequestError } from "@/lib/api/fetcher";
-import { getEvent, getEventAttendees, getSiteMeta } from "@/lib/api/queries";
+import { getEvent, getEventAttendees, getSiteMeta, ApiRequestError } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 interface EventDetailPageProps {
