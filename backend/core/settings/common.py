@@ -28,6 +28,10 @@ env = environ.Env(
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+
+def template_path(*parts):
+    return os.path.join(BASE_DIR, *parts)
+
 # Quick-date development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
@@ -82,8 +86,8 @@ def get_installed_apps(proj_apps):
 
 # Common template config
 COMMON_TEMPLATE_DIRS = [
-    'templates/common',
-    'templates/common/members',
+    template_path('templates', 'common'),
+    template_path('templates', 'common', 'members'),
 ]
 
 

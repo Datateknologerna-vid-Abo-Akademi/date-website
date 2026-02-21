@@ -6,7 +6,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            'templates/kk',
+            template_path('templates', 'kk'),
             *COMMON_TEMPLATE_DIRS,
         ],
         'APP_DIRS': True,

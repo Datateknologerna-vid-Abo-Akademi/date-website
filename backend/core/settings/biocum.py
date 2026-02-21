@@ -6,8 +6,8 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            'templates/biocum',
-            'templates/date',
+            template_path('templates', 'biocum'),
+            template_path('templates', 'date'),
             *COMMON_TEMPLATE_DIRS,
         ],
         'APP_DIRS': True,
