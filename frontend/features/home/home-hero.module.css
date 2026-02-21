@@ -96,7 +96,7 @@
   animation: home-stroke-draw-date 3s cubic-bezier(0, 0.18, 0.64, 0.1);
 }
 
-.brandKk .header {
+.brandKk.header {
   margin: 0;
 }
 
@@ -125,24 +125,34 @@
   letter-spacing: 0.74em;
 }
 
-.brandKk .pathAnim path {
+.brandKk.pathAnim path {
   fill-rule: evenodd;
   animation: home-stroke-draw-brand 3.5s cubic-bezier(0, 0.18, 0.5, 0.1);
 }
 
-.brandBiocum .header {
+.brandBiocum.header {
   height: 50vh;
   min-height: 50vh;
   margin: 0;
   position: relative;
+  display: block;
+  /* Overrides general flex layout to restore legacy block sizing */
+  justify-content: unset;
+  flex-direction: unset;
+  border-radius: 0;
 }
 
 .brandBiocum .scalingSvgContainer {
-  margin-top: 55px;
+  margin-top: 15px;
   position: relative;
   height: 35vh;
   width: 100%;
   padding: 0;
+}
+
+.brandBiocum .scalingSvgContainer.logoWrap {
+  width: 100%;
+  max-width: none;
 }
 
 .brandBiocum .scalingSvgContainer svg {
@@ -153,22 +163,25 @@
   top: 0;
 }
 
-.brandBiocum .pathAnim path {
+.brandBiocum.pathAnim path {
   fill-rule: evenodd;
   animation: home-stroke-draw-biocum 3.5s cubic-bezier(0, 0.18, 0.5, 0.1);
+  stroke: #ffffff;
+  fill: #ffffff;
 }
 
 .brandBiocum .text {
-  transform: translateY(50px);
+  height: auto;
+  position: static;
   animation: home-fade-in 3s;
   text-align: center;
+  margin-top: -5vh;
 }
 
 .heroTextMain {
   text-transform: uppercase;
   padding-top: 5vh;
   display: block;
-  padding: 0;
   margin-bottom: 0;
   font-size: 4rem;
   font-weight: 400;
@@ -190,10 +203,12 @@
     opacity: 0;
     clip-path: inset(0 100% 0 0);
   }
+
   45% {
     opacity: 1;
     clip-path: inset(0 40% 0 0);
   }
+
   100% {
     opacity: 1;
     clip-path: inset(0 0 0 0);
@@ -206,14 +221,17 @@
     fill: none;
     stroke-dashoffset: 25000;
   }
+
   40% {
     opacity: 10;
     fill: none;
     stroke-dashoffset: 15000;
   }
+
   80% {
     fill: rgba(255, 255, 255, 0);
   }
+
   100% {
     opacity: 10;
     fill: rgba(255, 255, 255, 1);
@@ -227,15 +245,18 @@
     fill: none;
     stroke-dashoffset: 25000;
   }
+
   40% {
     opacity: 10;
     fill: none;
     stroke-dashoffset: 24500;
   }
+
   80% {
     fill: rgba(255, 255, 255, 0);
     stroke-dashoffset: 23500;
   }
+
   100% {
     opacity: 10;
     fill: rgba(255, 255, 255, 1);
@@ -249,15 +270,18 @@
     fill: none;
     stroke-dashoffset: 25000;
   }
+
   40% {
     opacity: 10;
     fill: none;
     stroke-dashoffset: 24500;
   }
+
   80% {
     fill: rgba(255, 255, 255, 0);
     stroke-dashoffset: 23250;
   }
+
   100% {
     opacity: 10;
     fill: rgba(255, 255, 255, 1);
@@ -269,16 +293,18 @@
   from {
     opacity: 0;
   }
+
   60% {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
 
 @media screen and (max-width: 991px) {
-  .brandBiocum .header {
+  .brandBiocum.header {
     min-height: 45vh;
   }
 
@@ -293,7 +319,7 @@
 }
 
 @media screen and (max-width: 800px) {
-  .brandBiocum .header {
+  .brandBiocum.header {
     min-height: 40vh;
   }
 
@@ -314,6 +340,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .logoAnimated,
   .pathAnim path,
   .title,

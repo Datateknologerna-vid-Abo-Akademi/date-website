@@ -1,0 +1,8 @@
+.association-kk .meta {
+  color: var(--helpText);
+}
+
+.meta {
+  color: var(--helpTextLighter);
+  font-size: 0.92rem;
+}

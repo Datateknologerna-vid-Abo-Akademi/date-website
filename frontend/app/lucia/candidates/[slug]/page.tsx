@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 
 import { RichContent } from "@/components/rich-content";
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 import { getLuciaCandidate, getSession } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
@@ -21,12 +22,9 @@ export default async function LuciaCandidatePage({ params }: LuciaCandidatePageP
   if (!candidate) notFound();
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Lucia Candidate</p>
-        <h1>{candidate.title}</h1>
-      </section>
-      <section className="panel">
+    <PageShell>
+      <PageHero eyebrow="Lucia Candidate" title={candidate.title} />
+      <PagePanel>
         {candidate.img_url ? (
           <Image
             src={candidate.img_url}
@@ -41,7 +39,7 @@ export default async function LuciaCandidatePage({ params }: LuciaCandidatePageP
         <a href={candidate.poll_url} target="_blank" rel="noreferrer">
           Vote for candidate
         </a>
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

@@ -2,6 +2,7 @@
 
 import { Dispatch, FormEvent, SetStateAction, useMemo, useState } from "react";
 
+import listStyles from "@/components/ui/list-primitives.module.css";
 import { mutateApi } from "@/lib/api/client";
 import type { EventItem, EventSignupBilling, EventSignupResult } from "@/lib/api/types";
 import styles from "./event-signup-form.module.css";
@@ -322,7 +323,7 @@ export function EventSignupForm({ event }: EventSignupFormProps) {
           <p className="meta">E-post: {signupResult.attendee_email}</p>
           <p className="meta">{billingStatusLabel(signupResult.billing)}</p>
           {signupResult.billing.invoice ? (
-            <ul className="list">
+            <ul className={listStyles.list}>
               <li>Fakturanummer: {signupResult.billing.invoice.invoice_number}</li>
               <li>Referensnummer: {signupResult.billing.invoice.reference_number}</li>
               <li>

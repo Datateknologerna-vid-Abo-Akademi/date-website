@@ -8,14 +8,14 @@
 .home-page .more-news,
 .home-page .extra-container a,
 .home-page .logo-container a {
-  color: var(--linkColorDark);
+  color: var(--linkColor);
 }
 
 .home-page div.news-content a:hover,
 .home-page .more-news:hover,
 .home-page .extra-container a:hover,
 .home-page .logo-container a:hover {
-  color: var(--linkColorDarkHover);
+  color: var(--linkColorHover);
 }
 
 .home-page .header-border-bottom {
@@ -38,19 +38,18 @@
 
 .home-page .calendar-eventday {
   color: white !important;
-  background-color: var(--linkColorDark) !important;
+  background-color: var(--linkColor) !important;
 }
 
 .home-page .calendar-eventday:hover {
-  background-color: var(--linkColorDarkHover) !important;
+  background-color: var(--linkColorHover) !important;
 }
 
 .home-page .calendar-eventday-popup {
-  color: var(--linkColorDark);
+  color: var(--linkColor);
   font-size: 0.75rem;
 }
 
 .home-page .calendar-eventday-popup:hover {
-  color: var(--linkColorDarkHover);
+  color: var(--linkColorHover);
 }
-

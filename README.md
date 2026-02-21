@@ -48,6 +48,12 @@ Monorepo with:
   - Boots docker stack and runs Playwright smoke tests against `http://localhost:8080`.
   - Uploads Playwright HTML report and test results artifacts.
 
+## Playwright Test Modes
+- `npm run test:e2e`: required smoke suite only (CI gate).
+- `npm run test:e2e:all`: all e2e specs (visual/parity suites are skipped unless enabled).
+- `PLAYWRIGHT_ENABLE_VISUAL=1 npm run test:e2e:visual`: run visual suites.
+- `PLAYWRIGHT_ENABLE_PARITY=1 npm run test:e2e:parity`: run legacy parity suites.
+
 ## Key Docs
 - `docs/architecture.md`
 - `docs/api-contract.md`

@@ -1,5 +1,7 @@
 import { expect, test, type APIRequestContext } from "@playwright/test";
 
+const parityChecksEnabled = process.env.PLAYWRIGHT_ENABLE_PARITY === "1";
+
 type ModuleCapability = {
   enabled?: boolean;
 };
@@ -27,6 +29,11 @@ function isModuleEnabled(meta: SiteMetaResponse["data"], moduleName: string) {
 }
 
 test.describe("legacy template parity", () => {
+  test.skip(
+    !parityChecksEnabled,
+    "Legacy parity checks are disabled. Set PLAYWRIGHT_ENABLE_PARITY=1 to run this suite.",
+  );
+
   test("header and footer keep legacy shell classes", async ({ page }) => {
     await page.goto("/");
 

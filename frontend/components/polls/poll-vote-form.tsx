@@ -4,6 +4,8 @@ import { FormEvent, useState } from "react";
 
 import { mutateApi } from "@/lib/api/client";
 import type { PollQuestion } from "@/lib/api/types";
+import formStyles from "@/components/ui/form-primitives.module.css";
+import listStyles from "@/components/ui/list-primitives.module.css";
 
 interface PollVoteFormProps {
   initialPoll: PollQuestion;
@@ -47,12 +49,12 @@ export function PollVoteForm({ initialPoll }: PollVoteFormProps) {
   }
 
   return (
-    <div className="form-stack">
-      <form className="form-stack" onSubmit={onSubmit}>
-        <fieldset className="form-fieldset">
+    <div className={formStyles.stack}>
+      <form className={formStyles.stack} onSubmit={onSubmit}>
+        <fieldset className={formStyles.fieldset}>
           <legend>{poll.question_text}</legend>
           {poll.choices.map((choice) => (
-            <label key={choice.id} className="choice-line">
+            <label key={choice.id} className={formStyles.choiceLine}>
               <input
                 type={isMultiple ? "checkbox" : "radio"}
                 name={`poll-${poll.id}`}
@@ -70,7 +72,7 @@ export function PollVoteForm({ initialPoll }: PollVoteFormProps) {
       {poll.show_results || statusMessage ? (
         <div>
           <h3>Results ({poll.total_votes} votes)</h3>
-          <ul className="list">
+          <ul className={listStyles.list}>
             {poll.choices.map((choice) => (
               <li key={choice.id}>
                 {choice.choice_text}: {choice.votes} ({choice.vote_percentage}%)

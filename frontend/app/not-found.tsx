@@ -1,16 +1,16 @@
 import Link from "next/link";
 
+import { PageHero, PageShell } from "@/components/ui/page-shell";
+
 export default function NotFound() {
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">404</p>
-        <h1>Page not found</h1>
+    <PageShell>
+      <PageHero eyebrow="404" title="Page not found">
         <p>The requested resource does not exist in the decoupled frontend route set.</p>
-        <Link href="/" className="cta-link">
-          Return home
-        </Link>
-      </section>
-    </div>
+        <p>
+          <Link href="/">Return home</Link>
+        </p>
+      </PageHero>
+    </PageShell>
   );
 }

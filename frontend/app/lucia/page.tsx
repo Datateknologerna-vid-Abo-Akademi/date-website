@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 import { getLuciaOverview } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
@@ -10,16 +11,13 @@ export default async function LuciaPage() {
   if (!overview) notFound();
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Lucia</p>
-        <h1>{overview.title}</h1>
+    <PageShell>
+      <PageHero eyebrow="Lucia" title={overview.title} meta={`Published candidates: ${overview.candidate_count}`}>
         <p>{overview.description}</p>
-        <p className="meta">Published candidates: {overview.candidate_count}</p>
-      </section>
-      <section className="panel">
+      </PageHero>
+      <PagePanel>
         <Link href="/lucia/candidates">View candidates</Link>
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

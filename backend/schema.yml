@@ -1,0 +1,1269 @@
+openapi: 3.0.3
+info:
+  title: DATE Website API
+  version: 1.0.0
+  description: De-coupled API for the DATE website
+paths:
+  /api/v1/ads:
+    get:
+      operationId: v1_ads_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/alumni/signup:
+    post:
+      operationId: v1_alumni_signup_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/alumni/update:
+    post:
+      operationId: v1_alumni_update_request_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/alumni/update/{token}:
+    get:
+      operationId: v1_alumni_update_retrieve
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+    post:
+      operationId: v1_alumni_update_token_create
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/archive/documents:
+    get:
+      operationId: v1_archive_documents_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/archive/exams:
+    get:
+      operationId: v1_archive_exams_retrieve_collections
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/archive/exams/{collection_id}:
+    get:
+      operationId: v1_archive_exams_retrieve_detail
+      parameters:
+      - in: path
+        name: collection_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/archive/pictures/{year}:
+    get:
+      operationId: v1_archive_pictures_retrieve_by_year
+      parameters:
+      - in: path
+        name: year
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/archive/pictures/{year}/{album}:
+    get:
+      operationId: v1_archive_pictures_retrieve_detail
+      parameters:
+      - in: path
+        name: album
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: year
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/archive/pictures/id/{collection_id}:
+    get:
+      operationId: v1_archive_pictures_id_retrieve
+      parameters:
+      - in: path
+        name: collection_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/archive/pictures/years:
+    get:
+      operationId: v1_archive_pictures_years_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/auth/activate/{uidb64}/{token}:
+    get:
+      operationId: v1_auth_activate_retrieve
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: uidb64
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/auth/login:
+    post:
+      operationId: v1_auth_login_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/auth/logout:
+    post:
+      operationId: v1_auth_logout_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/auth/password-change:
+    post:
+      operationId: v1_auth_password_change_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/auth/password-reset:
+    post:
+      operationId: v1_auth_password_reset_request
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/auth/password-reset/{uidb64}/{token}:
+    post:
+      operationId: v1_auth_password_reset_confirm
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: uidb64
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/auth/session:
+    get:
+      operationId: v1_auth_session_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/auth/signup:
+    post:
+      operationId: v1_auth_signup_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/ctf:
+    get:
+      operationId: v1_ctf_retrieve_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/ctf/{ctf_slug}/{flag_slug}:
+    get:
+      operationId: v1_ctf_retrieve
+      parameters:
+      - in: path
+        name: ctf_slug
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: flag_slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/ctf/{ctf_slug}/{flag_slug}/guess:
+    post:
+      operationId: v1_ctf_guess_create
+      parameters:
+      - in: path
+        name: ctf_slug
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: flag_slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/ctf/{slug}:
+    get:
+      operationId: v1_ctf_retrieve_detail
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/events:
+    get:
+      operationId: v1_events_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventList'
+          description: ''
+  /api/v1/events/{slug}:
+    get:
+      operationId: v1_events_retrieve
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/events/{slug}/attendees:
+    get:
+      operationId: v1_events_attendees_retrieve
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/events/{slug}/passcode:
+    post:
+      operationId: v1_events_passcode_create
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/events/{slug}/signup:
+    post:
+      operationId: v1_events_signup_create
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/events/feed:
+    get:
+      operationId: v1_events_feed_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/home:
+    get:
+      operationId: v1_home_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomeResponse'
+          description: ''
+  /api/v1/lucia:
+    get:
+      operationId: v1_lucia_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/lucia/candidates:
+    get:
+      operationId: v1_lucia_candidates_retrieve_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/lucia/candidates/{slug}:
+    get:
+      operationId: v1_lucia_candidates_retrieve_detail
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/members/functionaries:
+    get:
+      operationId: v1_members_functionaries_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/members/functionary-roles:
+    get:
+      operationId: v1_members_functionary_roles_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/members/me:
+    get:
+      operationId: v1_members_me_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+    patch:
+      operationId: v1_members_me_partial_update
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/members/me/functionaries:
+    get:
+      operationId: v1_members_me_functionaries_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+    post:
+      operationId: v1_members_me_functionaries_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/members/me/functionaries/{functionary_id}:
+    delete:
+      operationId: v1_members_me_functionaries_destroy
+      parameters:
+      - in: path
+        name: functionary_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/meta/site:
+    get:
+      operationId: v1_meta_site_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteMeta'
+          description: ''
+  /api/v1/news:
+    get:
+      operationId: v1_news_retrieve_list
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/news/{slug}:
+    get:
+      operationId: v1_news_retrieve_detail
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/news/feed:
+    get:
+      operationId: v1_news_feed_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/pages/{slug}:
+    get:
+      operationId: v1_pages_retrieve
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/polls:
+    get:
+      operationId: v1_polls_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/polls/{poll_id}:
+    get:
+      operationId: v1_polls_retrieve_by_id
+      parameters:
+      - in: path
+        name: poll_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/polls/{poll_id}/vote:
+    post:
+      operationId: v1_polls_vote_create
+      parameters:
+      - in: path
+        name: poll_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/publications:
+    get:
+      operationId: v1_publications_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/publications/{slug}:
+    get:
+      operationId: v1_publications_retrieve_by_slug
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/social:
+    get:
+      operationId: v1_social_retrieve
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+  /api/v1/social/harassment:
+    post:
+      operationId: v1_social_harassment_create
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema: {}
+          application/x-www-form-urlencoded:
+            schema: {}
+          multipart/form-data:
+            schema: {}
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+components:
+  schemas:
+    EventList:
+      type: object
+      properties:
+        title:
+          type: string
+        slug:
+          type: string
+        content:
+          type: string
+        event_date_start:
+          type: string
+          format: date-time
+        event_date_end:
+          type: string
+          format: date-time
+        members_only:
+          type: boolean
+        sign_up:
+          type: boolean
+        sign_up_avec:
+          type: boolean
+        sign_up_max_participants:
+          type: integer
+        captcha:
+          type: boolean
+        redirect_link:
+          type: string
+          nullable: true
+        registration_open_members:
+          type: boolean
+          readOnly: true
+        registration_open_others:
+          type: boolean
+          readOnly: true
+        registration_past_due:
+          type: boolean
+          readOnly: true
+        event_full:
+          type: boolean
+          readOnly: true
+        sign_up_fields:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        image_url:
+          type: string
+          nullable: true
+          readOnly: true
+      required:
+      - captcha
+      - content
+      - event_date_end
+      - event_date_start
+      - event_full
+      - image_url
+      - members_only
+      - redirect_link
+      - registration_open_members
+      - registration_open_others
+      - registration_past_due
+      - sign_up
+      - sign_up_avec
+      - sign_up_fields
+      - sign_up_max_participants
+      - slug
+      - title
+    HomeAd:
+      type: object
+      properties:
+        ad_url:
+          type: string
+        company_url:
+          type: string
+      required:
+      - ad_url
+      - company_url
+    HomeIgPost:
+      type: object
+      properties:
+        url:
+          type: string
+        shortcode:
+          type: string
+      required:
+      - shortcode
+      - url
+    HomeResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventList'
+        news:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewsList'
+        news_events:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        ads:
+          type: array
+          items:
+            $ref: '#/components/schemas/HomeAd'
+        instagram_posts:
+          type: array
+          items:
+            $ref: '#/components/schemas/HomeIgPost'
+        aa_post:
+          allOf:
+          - $ref: '#/components/schemas/NewsList'
+          nullable: true
+        calendar_events:
+          type: object
+          additionalProperties: {}
+      required:
+      - aa_post
+      - ads
+      - calendar_events
+      - events
+      - instagram_posts
+      - news
+      - news_events
+    NewsList:
+      type: object
+      properties:
+        title:
+          type: string
+        slug:
+          type: string
+        content:
+          type: string
+        published_time:
+          type: string
+          format: date-time
+          nullable: true
+        author_name:
+          type: string
+          readOnly: true
+        category_name:
+          type: string
+          readOnly: true
+        category_slug:
+          type: string
+          readOnly: true
+      required:
+      - author_name
+      - category_name
+      - category_slug
+      - content
+      - published_time
+      - slug
+      - title
+    SiteMeta:
+      type: object
+      properties:
+        project_name:
+          type: string
+        language_code:
+          type: string
+        content_variables:
+          type: object
+          additionalProperties: {}
+        association_theme:
+          type: object
+          additionalProperties: {}
+        captcha_site_key:
+          type: string
+        navigation:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaticPageNav'
+        feature_flags:
+          type: array
+          items:
+            type: string
+        enabled_modules:
+          type: array
+          items:
+            type: string
+        module_capabilities:
+          type: object
+          additionalProperties: {}
+        default_landing_path:
+          type: string
+      required:
+      - association_theme
+      - captcha_site_key
+      - content_variables
+      - default_landing_path
+      - enabled_modules
+      - feature_flags
+      - language_code
+      - module_capabilities
+      - navigation
+      - project_name
+    StaticPageNav:
+      type: object
+      properties:
+        category_name:
+          type: string
+        nav_element:
+          type: integer
+        use_category_url:
+          type: boolean
+        url:
+          type: string
+        urls:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaticUrl'
+      required:
+      - category_name
+      - nav_element
+      - url
+      - urls
+      - use_category_url
+    StaticUrl:
+      type: object
+      properties:
+        title:
+          type: string
+        url:
+          type: string
+        logged_in_only:
+          type: boolean
+        dropdown_element:
+          type: integer
+      required:
+      - dropdown_element
+      - logged_in_only
+      - title
+      - url
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

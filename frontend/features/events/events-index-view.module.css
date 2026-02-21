@@ -43,6 +43,26 @@
   border-color: var(--linkSecondaryHover, var(--linkColorDarkHover));
 }
 
+:global(.association-biocum) .eventCard :global(.card) {
+  background: var(--secondaryColor);
+  color: var(--textColorDark);
+}
+
+:global(.association-biocum) .eventCard :global(.badge) {
+  background: var(--primaryColorLighter);
+  color: var(--textColorLight);
+}
+
+:global(.association-biocum) .eventCard :global(.btn) {
+  color: var(--linkColor);
+  border-color: var(--linkColor);
+}
+
+:global(.association-biocum) .eventCard :global(.btn:hover) {
+  color: var(--linkColorHover);
+  border-color: var(--linkColorHover);
+}
+
 .eventCard :global(.btn) {
   color: var(--linkColorLight);
   border-color: var(--linkColorLight);
@@ -68,7 +88,11 @@
   border-radius: var(--defaultRadius);
   margin: 5px;
   display: inline-block;
-  color: var(--textColorDark);
+  color: var(--linkColor);
+}
+
+.contentPast:hover {
+  color: var(--linkColorHover);
 }
 
 .contentPast :global(h4) {

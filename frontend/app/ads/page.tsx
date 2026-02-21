@@ -1,18 +1,17 @@
 import { getAds } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
+import listStyles from "@/components/ui/list-primitives.module.css";
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 
 export default async function AdsPage() {
   await ensureModuleEnabled("ads");
   const ads = await getAds();
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Ads</p>
-        <h1>Sponsors and Partners</h1>
-      </section>
-      <section className="panel">
-        <ul className="list list--spaced">
+    <PageShell>
+      <PageHero eyebrow="Ads" title="Sponsors and Partners" />
+      <PagePanel>
+        <ul className={listStyles.listSpaced}>
           {ads.map((ad) => (
             <li key={ad.ad_url}>
               <a href={ad.company_url || ad.ad_url} target="_blank" rel="noreferrer">
@@ -22,7 +21,7 @@ export default async function AdsPage() {
             </li>
           ))}
         </ul>
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

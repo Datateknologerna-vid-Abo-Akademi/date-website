@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { AlumniUpdateForm } from "@/components/alumni/update-form";
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 import { getAlumniUpdateToken } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
@@ -18,14 +19,11 @@ export default async function AlumniTokenPage({ params }: AlumniTokenPageProps) 
   if (!tokenPayload) notFound();
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Alumni</p>
-        <h1>Update your alumni information</h1>
-      </section>
-      <section className="panel">
+    <PageShell>
+      <PageHero eyebrow="Alumni" title="Update your alumni information" />
+      <PagePanel>
         <AlumniUpdateForm email={tokenPayload.email} token={token} />
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

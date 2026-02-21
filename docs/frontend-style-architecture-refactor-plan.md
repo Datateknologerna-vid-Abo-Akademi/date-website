@@ -42,6 +42,26 @@ Last updated: 2026-02-20
 - Move heavy presentation logic to feature components.
 - Split variant-heavy event detail rendering into variant-specific components with a registry.
 
+## Global CSS Budget
+- `frontend/app/styles/base.css`
+  - Allowed: tokens, reset, root/body defaults, app-frame (`site-main`/container-level),
+    and truly cross-cutting utility classes that are not domain-specific.
+  - Disallowed: route/domain surface classes (`page-shell`, `hero`, `panel`, etc.).
+- `frontend/app/styles/shared.css`
+  - Replaced by split concern files:
+    - `frontend/app/styles/shared-text.css`
+    - `frontend/app/styles/rich-content.css`
+    - `frontend/app/styles/legacy-forms.css`
+    - `frontend/app/styles/news.css`
+    - `frontend/app/styles/legacy-media.css`
+  - Allowed: rich-content/CKEditor rendering contract and minimal cross-domain helpers
+    still consumed by multiple features.
+  - Disallowed: shell/layout/surface classes and feature-specific utility grids/lists/forms.
+- `frontend/app/styles/events.css`
+  - Allowed: event-route global behavior only (background/shell behaviors shared across variants,
+    route-level body/header/footer interactions).
+  - Disallowed: component-local form/table/card styling that can be scoped to event modules.
+
 ## Phased Plan
 
 ### Phase 0: Baseline and Guardrails
@@ -206,3 +226,55 @@ Last updated: 2026-02-20
     - `.attendee-table*`
     - `.is-hidden`
     - `.event-variant-shell`
+- Final maintainability pass started:
+  - Added reusable page/layout/form/list UI primitives:
+    - `frontend/components/ui/page-shell.tsx`
+    - `frontend/components/ui/page-shell.module.css`
+    - `frontend/components/ui/content-panel.tsx`
+    - `frontend/components/ui/content-panel.module.css`
+    - `frontend/components/ui/form-primitives.module.css`
+    - `frontend/components/ui/list-primitives.module.css`
+  - Migrated route surfaces to primitives for:
+    - `ctf`, `polls`, `archive`, `ads`, `publications`, `social`, `alumni`
+  - Migrated domain form/list-heavy components to UI primitives:
+    - `frontend/components/ctf/flag-guess-form.tsx`
+    - `frontend/components/polls/poll-vote-form.tsx`
+    - `frontend/components/social/harassment-form.tsx`
+    - `frontend/components/alumni/signup-form.tsx`
+    - `frontend/components/alumni/update-form.tsx`
+    - `frontend/components/alumni/update-request-form.tsx`
+  - Removed additional now-unused shared global selectors from
+    `frontend/app/styles/shared.css`:
+    - `.list--spaced`
+    - `.link-grid`
+    - `.form-inline`
+    - `.row-line`
+    - `.role-grid`
+    - `.social-harassment-page .content form`
+    - `.pagination-row`
+- Final maintainability pass continued:
+  - Migrated remaining global-class route holdouts to shared page primitives:
+    - `frontend/app/lucia/page.tsx`
+    - `frontend/app/lucia/candidates/page.tsx`
+    - `frontend/app/lucia/candidates/[slug]/page.tsx`
+    - `frontend/app/not-found.tsx`
+  - Migrated one remaining global list utility usage in events:
+    - `frontend/components/events/event-signup-form.tsx` now uses
+      `frontend/components/ui/list-primitives.module.css` (`listStyles.list`).
+  - Split former shared global file into concern-based files:
+    - `frontend/app/styles/shared-text.css`
+    - `frontend/app/styles/rich-content.css`
+    - `frontend/app/styles/legacy-forms.css`
+    - `frontend/app/styles/news.css`
+    - `frontend/app/styles/legacy-media.css`
+    - Updated imports in `frontend/app/globals.css`
+  - Removed obsolete global shell/surface selectors:
+    - `frontend/app/styles/base.css`: `.page-shell` block
+    - prior shared-global blocks (before split):
+      - `.hero*`
+      - `.panel*`
+      - `.eyebrow`
+      - `.content-grid`
+      - `.cta-link`
+      - `.home-entry-link*`
+      - `.sr-only`

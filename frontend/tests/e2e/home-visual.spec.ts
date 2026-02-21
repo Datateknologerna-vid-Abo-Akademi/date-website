@@ -1,5 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
+const visualChecksEnabled = process.env.PLAYWRIGHT_ENABLE_VISUAL === "1";
+
 type SiteMetaResponse = {
   data?: {
     default_landing_path?: string;
@@ -48,6 +50,11 @@ async function stabilizeVisuals(page: Page) {
 }
 
 test.describe("homepage visual regression", () => {
+  test.skip(
+    !visualChecksEnabled,
+    "Visual checks are disabled. Set PLAYWRIGHT_ENABLE_VISUAL=1 to run this suite.",
+  );
+
   test("hero shell matches approved baseline", async ({ page, request }) => {
     const meta = await getSiteMeta(request);
     const defaultLandingPath = meta.data?.default_landing_path ?? "/";

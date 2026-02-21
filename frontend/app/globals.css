@@ -4,6 +4,10 @@
 
 @import "./styles/base.css";
 @import "./styles/home.css";
-@import "./styles/shared.css";
+@import "./styles/shared-text.css";
+@import "./styles/rich-content.css";
+@import "./styles/legacy-forms.css";
+@import "./styles/news.css";
+@import "./styles/legacy-media.css";
 @import "./styles/events.css";
 @import "./styles/cookie-banner.css";

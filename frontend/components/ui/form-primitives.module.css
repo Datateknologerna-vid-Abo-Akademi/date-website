@@ -1,0 +1,66 @@
+.stack {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.7rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.92rem;
+}
+
+.field input,
+.field select,
+.field textarea {
+  border: 1px solid color-mix(in srgb, var(--textColorDark) 24%, transparent);
+  border-radius: 5px;
+  padding: 0.5rem 0.65rem;
+  background: var(--secondaryColor);
+  color: var(--textColorDark);
+}
+
+.stack button {
+  width: fit-content;
+  border: 1px solid var(--primaryColorLighter);
+  border-radius: 0.55rem;
+  padding: 0.55rem 0.8rem;
+  background: var(--primaryColorLighter);
+  color: var(--linkColorLight);
+}
+
+.stack button:hover {
+  color: var(--linkColorLightHover);
+  background: var(--primaryColorLighte);
+}
+
+.stack button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fieldset {
+  border: 1px solid color-mix(in srgb, var(--theme-border) 75%, transparent);
+  border-radius: 0.7rem;
+  padding: 0.8rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.choiceLine {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inlineActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  align-items: end;
+}

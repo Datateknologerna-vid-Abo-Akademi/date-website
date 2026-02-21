@@ -2,6 +2,9 @@ import Link from "next/link";
 
 import { getArchiveDocuments } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
+import formStyles from "@/components/ui/form-primitives.module.css";
+import listStyles from "@/components/ui/list-primitives.module.css";
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 
 interface ArchiveDocumentsPageProps {
   searchParams: Promise<{
@@ -22,14 +25,11 @@ export default async function ArchiveDocumentsPage({ searchParams }: ArchiveDocu
   );
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Archive</p>
-        <h1>Documents</h1>
-      </section>
-      <section className="panel">
-        <form className="form-inline" method="get">
-          <label className="form-field">
+    <PageShell>
+      <PageHero eyebrow="Archive" title="Documents" />
+      <PagePanel>
+        <form className={formStyles.inlineActions} method="get">
+          <label className={formStyles.field}>
             <span>Collection</span>
             <select name="collection" defaultValue={resolvedSearchParams.collection ?? ""}>
               <option value="">All</option>
@@ -40,15 +40,15 @@ export default async function ArchiveDocumentsPage({ searchParams }: ArchiveDocu
               ))}
             </select>
           </label>
-          <label className="form-field">
+          <label className={formStyles.field}>
             <span>Title contains</span>
             <input name="title" defaultValue={resolvedSearchParams.title ?? ""} />
           </label>
           <button type="submit">Filter</button>
         </form>
-      </section>
-      <section className="panel">
-        <ul className="list list--spaced">
+      </PagePanel>
+      <PagePanel>
+        <ul className={listStyles.listSpaced}>
           {payload.results.map((document) => (
             <li key={document.id}>
               <a href={document.document_url} target="_blank" rel="noreferrer">
@@ -58,7 +58,7 @@ export default async function ArchiveDocumentsPage({ searchParams }: ArchiveDocu
             </li>
           ))}
         </ul>
-        <div className="pagination-row">
+        <div className={listStyles.paginationRow}>
           {payload.pagination.has_previous ? (
             <Link
               href={`/archive/documents?${new URLSearchParams({
@@ -89,7 +89,7 @@ export default async function ArchiveDocumentsPage({ searchParams }: ArchiveDocu
             <span />
           )}
         </div>
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

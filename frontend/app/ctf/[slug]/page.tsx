@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import listStyles from "@/components/ui/list-primitives.module.css";
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 import { getCtfEvent, getSession } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
@@ -16,16 +18,14 @@ export default async function CtfDetailPage({ params }: CtfDetailPageProps) {
   const { slug } = await params;
   if (!session.is_authenticated) {
     return (
-      <div className="page-shell">
-        <section className="hero compact">
-          <p className="eyebrow">CTF</p>
-          <h1>Sign in required</h1>
+      <PageShell>
+        <PageHero eyebrow="CTF" title="Sign in required">
           <p>You need to sign in to view this CTF event.</p>
-        </section>
-        <section className="panel">
+        </PageHero>
+        <PagePanel>
           <Link href="/members/login">Sign in</Link>
-        </section>
-      </div>
+        </PagePanel>
+      </PageShell>
     );
   }
 
@@ -33,25 +33,23 @@ export default async function CtfDetailPage({ params }: CtfDetailPageProps) {
   if (!payload) notFound();
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">CTF</p>
-        <h1>{payload.ctf.title}</h1>
-        <p className="meta">
-          {new Date(payload.ctf.start_date).toLocaleString()} - {new Date(payload.ctf.end_date).toLocaleString()}
-        </p>
-      </section>
-      <section className="panel">
+    <PageShell>
+      <PageHero
+        eyebrow="CTF"
+        title={payload.ctf.title}
+        meta={`${new Date(payload.ctf.start_date).toLocaleString()} - ${new Date(payload.ctf.end_date).toLocaleString()}`}
+      />
+      <PagePanel>
         <p>{payload.user_has_solved_any_flag ? "You have solved at least one flag." : "No solved flags yet."}</p>
-        <ul className="list">
+        <ul className={listStyles.list}>
           {payload.flags.map((flag) => (
-            <li key={flag.slug} className="row-line">
+            <li key={flag.slug} className={listStyles.rowLine}>
               <Link href={`/ctf/${slug}/${flag.slug}`}>{flag.title}</Link>
               <span className="meta">{flag.is_solved ? `Solved by ${flag.solver_name}` : "Open"}</span>
             </li>
           ))}
         </ul>
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

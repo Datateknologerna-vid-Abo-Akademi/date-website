@@ -113,8 +113,8 @@ test.describe("decoupled frontend smoke checks", () => {
   });
 
   test("members login page supports browser sign-in and sign-out", async ({ page }) => {
-    const username = process.env.PLAYWRIGHT_SMOKE_USERNAME;
-    const password = process.env.PLAYWRIGHT_SMOKE_PASSWORD;
+    const username = process.env.PLAYWRIGHT_SMOKE_USERNAME ?? "";
+    const password = process.env.PLAYWRIGHT_SMOKE_PASSWORD ?? "";
     test.skip(!username || !password, "Playwright smoke credentials are required.");
 
     await page.goto("/members/login");
@@ -137,10 +137,17 @@ test.describe("decoupled frontend smoke checks", () => {
     await expect(page.getByRole("heading", { name: "CI Smoke Event" })).toBeVisible();
     await page.getByLabel("Namn").fill("Playwright Smoke");
     await page.getByLabel("E-post").fill(uniqueEmail);
+    const signupResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes(`/api/v1/events/${eventSlug}/signup`) &&
+        response.request().method() === "POST",
+    );
     await page.getByRole("button", { name: "Anmäl" }).click();
+    const signupResponse = await signupResponsePromise;
+    expect(signupResponse.ok()).toBeTruthy();
 
-    await expect(page.getByText("Anmälning registrerad.")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Anmälningssammanfattning" })).toBeVisible();
+    await expect(page.getByText("Anmälning registrerad.")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("heading", { name: "Anmälningssammanfattning" })).toBeVisible({ timeout: 15000 });
     await expect(page.getByText(`E-post: ${uniqueEmail}`)).toBeVisible();
   });
 });

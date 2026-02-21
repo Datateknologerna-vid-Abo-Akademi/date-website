@@ -1,22 +1,21 @@
 import Link from "next/link";
 
 import { ensureModuleEnabled } from "@/lib/module-guards";
+import listStyles from "@/components/ui/list-primitives.module.css";
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 
 export default async function AlumniPage() {
   await ensureModuleEnabled("alumni");
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Alumni</p>
-        <h1>Alumni Portal</h1>
-      </section>
-      <section className="panel">
-        <div className="link-grid">
+    <PageShell>
+      <PageHero eyebrow="Alumni" title="Alumni Portal" />
+      <PagePanel>
+        <div className={listStyles.linkGrid}>
           <Link href="/alumni/signup">Register</Link>
           <Link href="/alumni/update">Request update token</Link>
         </div>
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

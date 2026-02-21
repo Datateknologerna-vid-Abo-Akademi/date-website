@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
         source: "/media/:path*",
         destination: `${backendOrigin}/media/:path*`,
       },
+      {
+        source: "/static/:path*",
+        destination: `${backendOrigin}/static/:path*`,
+      },
+      {
+        source: "/favicon.ico",
+        destination: `${backendOrigin}/static/core/images/logo.ico`,
+      },
     ];
   },
 };

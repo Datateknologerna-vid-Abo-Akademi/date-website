@@ -101,7 +101,7 @@ export interface EventItem {
   registration_open_others: boolean;
   registration_past_due: boolean;
   event_full: boolean;
-  redirect_link: string;
+  redirect_link: string | null;
   image_url: string | null;
   sign_up_fields: Array<{
     name: string;

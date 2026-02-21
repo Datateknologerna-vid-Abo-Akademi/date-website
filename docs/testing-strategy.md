@@ -48,9 +48,11 @@
 ## Baseline Commands
 - `npm run lint` (frontend)
 - `npm run build` (frontend)
-- `npm run test:e2e` (frontend Playwright smoke tests; requires running stack and `PLAYWRIGHT_BASE_URL`)
-- `npm run test:e2e:visual` (frontend visual parity checks against committed snapshots)
-- `npm run test:e2e:legacy-full-parity` (frontend full-route legacy baseline parity suite)
+- `npm run test:e2e` (frontend required Playwright smoke suite only; requires running stack and `PLAYWRIGHT_BASE_URL`)
+- `npm run test:e2e:all` (frontend full Playwright suite)
+- `PLAYWRIGHT_ENABLE_VISUAL=1 npm run test:e2e:visual` (optional visual parity checks against committed snapshots)
+- `PLAYWRIGHT_ENABLE_PARITY=1 npm run test:e2e:parity` (optional legacy parity checks)
+- `PLAYWRIGHT_ENABLE_PARITY=1 npm run test:e2e:legacy-full-parity` (optional full-route legacy baseline parity suite)
 - `python -m compileall backend` (backend quick syntax check)
 - `python scripts/association_qa.py` (cross-association runtime parity and module-guard checks)
   - uses uncached `meta/site` reads in frontend to avoid stale capability data when switching `PROJECT_NAME`

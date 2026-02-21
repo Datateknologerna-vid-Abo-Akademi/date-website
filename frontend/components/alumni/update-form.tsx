@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 
 import { mutateApi } from "@/lib/api/client";
+import formStyles from "@/components/ui/form-primitives.module.css";
 
 interface AlumniUpdateFormProps {
   email: string;
@@ -77,20 +78,20 @@ export function AlumniUpdateForm({ email, token }: AlumniUpdateFormProps) {
   }
 
   return (
-    <form className="form-stack" onSubmit={onSubmit}>
-      <label className="form-field">
+    <form className={formStyles.stack} onSubmit={onSubmit}>
+      <label className={formStyles.field}>
         <span>Email</span>
         <input value={email} disabled />
       </label>
-      <div className="form-grid">
-        <label className="form-field">
+      <div className={formStyles.grid}>
+        <label className={formStyles.field}>
           <span>First name</span>
           <input
             value={formState.firstname}
             onChange={(event) => updateField("firstname", event.target.value)}
           />
         </label>
-        <label className="form-field">
+        <label className={formStyles.field}>
           <span>Last name</span>
           <input
             value={formState.lastname}
@@ -98,15 +99,15 @@ export function AlumniUpdateForm({ email, token }: AlumniUpdateFormProps) {
           />
         </label>
       </div>
-      <div className="form-grid">
-        <label className="form-field">
+      <div className={formStyles.grid}>
+        <label className={formStyles.field}>
           <span>Phone</span>
           <input
             value={formState.phone_number}
             onChange={(event) => updateField("phone_number", event.target.value)}
           />
         </label>
-        <label className="form-field">
+        <label className={formStyles.field}>
           <span>Year of admission</span>
           <input
             value={formState.year_of_admission}
@@ -114,36 +115,36 @@ export function AlumniUpdateForm({ email, token }: AlumniUpdateFormProps) {
           />
         </label>
       </div>
-      <label className="form-field">
+      <label className={formStyles.field}>
         <span>Address</span>
         <input
           value={formState.address}
           onChange={(event) => updateField("address", event.target.value)}
         />
       </label>
-      <div className="form-grid">
-        <label className="form-field">
+      <div className={formStyles.grid}>
+        <label className={formStyles.field}>
           <span>Zip</span>
           <input value={formState.zip} onChange={(event) => updateField("zip", event.target.value)} />
         </label>
-        <label className="form-field">
+        <label className={formStyles.field}>
           <span>City</span>
           <input value={formState.city} onChange={(event) => updateField("city", event.target.value)} />
         </label>
       </div>
-      <label className="form-field">
+      <label className={formStyles.field}>
         <span>Country</span>
         <input value={formState.country} onChange={(event) => updateField("country", event.target.value)} />
       </label>
-      <div className="form-grid">
-        <label className="form-field">
+      <div className={formStyles.grid}>
+        <label className={formStyles.field}>
           <span>Employer</span>
           <input
             value={formState.employer}
             onChange={(event) => updateField("employer", event.target.value)}
           />
         </label>
-        <label className="form-field">
+        <label className={formStyles.field}>
           <span>Work title</span>
           <input
             value={formState.work_title}
@@ -151,7 +152,7 @@ export function AlumniUpdateForm({ email, token }: AlumniUpdateFormProps) {
           />
         </label>
       </div>
-      <label className="form-field">
+      <label className={formStyles.field}>
         <span>TFiF membership</span>
         <select
           value={formState.tfif_membership}
@@ -162,7 +163,7 @@ export function AlumniUpdateForm({ email, token }: AlumniUpdateFormProps) {
           <option value="vet inte">Vet inte</option>
         </select>
       </label>
-      <label className="choice-line">
+      <label className={formStyles.choiceLine}>
         <input
           type="checkbox"
           checked={formState.alumni_newsletter_consent}

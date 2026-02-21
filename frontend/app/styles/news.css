@@ -1,0 +1,13 @@
+.news-index-page .content h2 {
+  margin: 0 0 0.35rem;
+}
+
+.news-index-page .more-button {
+  margin: 0.8rem 0 0;
+  font-weight: 600;
+}
+
+.news-article-page .author,
+.news-author-page .author {
+  color: var(--helpText);
+}

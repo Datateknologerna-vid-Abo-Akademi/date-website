@@ -32,21 +32,21 @@
 }
 
 .moreEventsButton {
-  color: var(--linkColorDark);
+  color: var(--linkColor);
 }
 
 .moreEventsButton:hover {
-  color: var(--linkColorDarkHover);
+  color: var(--linkColorHover);
 }
 
-.eventCard > :global(a.card) {
-  color: var(--linkColorDark);
-  border-top: 2px solid var(--linkColorDark);
+.eventCard> :global(a.card) {
+  color: var(--linkColor);
+  border-top: 2px solid var(--linkColor);
 }
 
-.eventCard > :global(a.card):hover {
-  color: var(--linkColorDarkHover);
-  border-top-color: var(--linkColorDarkHover);
+.eventCard> :global(a.card):hover {
+  color: var(--linkColorHover);
+  border-top-color: var(--linkColorHover);
 }
 
 .logoContainer {

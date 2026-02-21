@@ -1,0 +1,83 @@
+.shell {
+  width: 100%;
+  max-width: 800px;
+  margin: 12vh auto 0;
+  min-height: calc(100vh - 12vh);
+  padding: 0 0.25rem 1rem;
+  display: block;
+}
+
+.hero {
+  margin: 20px 2vw;
+  background: var(--primaryColorLight);
+  border: 0;
+  border-radius: var(--defaultRadius);
+  padding: 1.1rem 1.2rem;
+  color: var(--textColorLightish);
+}
+
+.hero h1 {
+  margin: 0;
+}
+
+.hero p {
+  margin-bottom: 0;
+}
+
+.eyebrow {
+  display: none;
+}
+
+.meta {
+  color: var(--helpTextLighter);
+  font-size: 0.92rem;
+}
+
+.panel {
+  margin: 20px 2vw;
+  background: var(--primaryColorLight);
+  border: 0;
+  border-radius: var(--defaultRadius);
+  padding: var(--defaultPadding);
+  color: var(--textColorLightish);
+}
+
+.panel h1,
+.panel h2,
+.panel h3 {
+  color: var(--textColorLightish);
+}
+
+.panel a {
+  color: var(--linkColorLight);
+}
+
+.panel a:hover {
+  color: var(--linkColorLightHover);
+}
+
+:global(.association-kk) .hero,
+:global(.association-kk) .panel {
+  background: var(--secondaryColor);
+  color: var(--textColorDarkish);
+  border: 0;
+}
+
+:global(.association-kk) .hero h1,
+:global(.association-kk) .hero h2,
+:global(.association-kk) .hero h3,
+:global(.association-kk) .panel h1,
+:global(.association-kk) .panel h2,
+:global(.association-kk) .panel h3 {
+  color: var(--textColorDarkish);
+}
+
+:global(.association-kk) .panel a,
+:global(.association-kk) .hero a {
+  color: var(--linkColorSecondary, var(--linkColor, var(--linkColorDark)));
+}
+
+:global(.association-kk) .panel a:hover,
+:global(.association-kk) .hero a:hover {
+  color: var(--linkSecondaryHover, var(--linkColorDarkHover));
+}

@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 
 import { mutateApi } from "@/lib/api/client";
+import formStyles from "@/components/ui/form-primitives.module.css";
 
 interface HarassmentFormResponse {
   submitted: boolean;
@@ -68,8 +69,8 @@ export function HarassmentForm({ captchaSiteKey }: HarassmentFormProps) {
   }
 
   return (
-    <form className="form-stack" onSubmit={onSubmit}>
-      <label className="form-field">
+    <form className={formStyles.stack} onSubmit={onSubmit}>
+      <label className={formStyles.field}>
         <span>Beskrivning av händelsen *</span>
         <textarea
           value={message}
@@ -79,7 +80,7 @@ export function HarassmentForm({ captchaSiteKey }: HarassmentFormProps) {
           required
         />
       </label>
-      <label className="form-field">
+      <label className={formStyles.field}>
         <span>Ange din e-post om du vill bli kontaktad</span>
         <input
           type="email"
@@ -88,7 +89,7 @@ export function HarassmentForm({ captchaSiteKey }: HarassmentFormProps) {
           placeholder="namn@example.com"
         />
       </label>
-      <label className="choice-line">
+      <label className={formStyles.choiceLine}>
         <input
           type="checkbox"
           checked={consent}

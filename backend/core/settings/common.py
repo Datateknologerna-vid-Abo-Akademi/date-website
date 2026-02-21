@@ -75,6 +75,7 @@ def get_installed_apps(proj_apps):
         'django_filters',
         'bootstrap3',
         'rest_framework',
+        'drf_spectacular',
         'django_cleanup',  # Should be places last
     ]
 
@@ -393,6 +394,15 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'DATE Website API',
+    'DESCRIPTION': 'De-coupled API for the DATE website',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'WARN_OVERRIDE': 'WARNING',
 }
 
 

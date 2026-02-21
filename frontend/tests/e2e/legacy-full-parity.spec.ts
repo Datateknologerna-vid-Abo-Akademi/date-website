@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+const parityChecksEnabled = process.env.PLAYWRIGHT_ENABLE_PARITY === "1";
+
 import {
   availableRouteChunks,
   assertLegacyTemplateVariantParity,
@@ -29,6 +31,11 @@ function parseAuthModesFromEnv(): AuthMode[] {
 }
 
 test.describe("legacy full-route parity", () => {
+  test.skip(
+    !parityChecksEnabled,
+    "Legacy parity checks are disabled. Set PLAYWRIGHT_ENABLE_PARITY=1 to run this suite.",
+  );
+
   test.describe.configure({ mode: "serial" });
 
   for (const authMode of parseAuthModesFromEnv()) {

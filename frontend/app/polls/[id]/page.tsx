@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { PollVoteForm } from "@/components/polls/poll-vote-form";
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 import { getPoll } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
@@ -20,14 +21,11 @@ export default async function PollDetailPage({ params }: PollDetailPageProps) {
   if (!poll) notFound();
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Poll</p>
-        <h1>{poll.question_text}</h1>
-      </section>
-      <section className="panel">
+    <PageShell>
+      <PageHero eyebrow="Poll" title={poll.question_text} />
+      <PagePanel>
         <PollVoteForm initialPoll={poll} />
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

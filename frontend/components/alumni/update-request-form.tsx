@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 
 import { mutateApi } from "@/lib/api/client";
+import formStyles from "@/components/ui/form-primitives.module.css";
 
 interface AlumniUpdateRequestResponse {
   submitted: boolean;
@@ -41,8 +42,8 @@ export function AlumniUpdateRequestForm() {
   }
 
   return (
-    <form className="form-stack" onSubmit={onSubmit}>
-      <label className="form-field">
+    <form className={formStyles.stack} onSubmit={onSubmit}>
+      <label className={formStyles.field}>
         <span>Email</span>
         <input
           type="email"
@@ -51,7 +52,7 @@ export function AlumniUpdateRequestForm() {
           required
         />
       </label>
-      <label className="form-field">
+      <label className={formStyles.field}>
         <span>Turnstile token (if required by deployment)</span>
         <input
           value={captchaToken}

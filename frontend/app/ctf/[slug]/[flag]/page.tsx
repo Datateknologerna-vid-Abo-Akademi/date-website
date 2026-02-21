@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { FlagGuessForm } from "@/components/ctf/flag-guess-form";
 import { RichContent } from "@/components/rich-content";
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 import { getCtfFlag, getSession } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
@@ -24,22 +25,18 @@ export default async function CtfFlagPage({ params }: CtfFlagPageProps) {
   if (!payload) notFound();
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">CTF Flag</p>
-        <h1>{payload.flag.title}</h1>
-        <p className="meta">
-          {payload.flag.is_solved
-            ? `Solved by ${payload.flag.solver_name}`
-            : "Unsolved"}
-        </p>
-      </section>
-      <section className="panel">
+    <PageShell>
+      <PageHero
+        eyebrow="CTF Flag"
+        title={payload.flag.title}
+        meta={payload.flag.is_solved ? `Solved by ${payload.flag.solver_name}` : "Unsolved"}
+      />
+      <PagePanel>
         <RichContent html={payload.flag.clues} />
-      </section>
-      <section className="panel">
+      </PagePanel>
+      <PagePanel>
         <FlagGuessForm ctfSlug={slug} flagSlug={flag} canSubmit={payload.can_submit} />
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

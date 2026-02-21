@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import listStyles from "@/components/ui/list-primitives.module.css";
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 import { getArchiveExamCollection } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
@@ -23,13 +25,10 @@ export default async function ArchiveExamDetailPage({ params, searchParams }: Ar
   if (!payload) notFound();
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Archive</p>
-        <h1>{payload.collection.title}</h1>
-      </section>
-      <section className="panel">
-        <ul className="list list--spaced">
+    <PageShell>
+      <PageHero eyebrow="Archive" title={payload.collection.title} />
+      <PagePanel>
+        <ul className={listStyles.listSpaced}>
           {payload.results.map((document) => (
             <li key={document.id}>
               <a href={document.document_url} target="_blank" rel="noreferrer">
@@ -38,7 +37,7 @@ export default async function ArchiveExamDetailPage({ params, searchParams }: Ar
             </li>
           ))}
         </ul>
-        <div className="pagination-row">
+        <div className={listStyles.paginationRow}>
           {payload.pagination.has_previous ? (
             <Link href={`/archive/exams/${collectionId}?page=${payload.pagination.page - 1}`}>Previous</Link>
           ) : (
@@ -53,7 +52,7 @@ export default async function ArchiveExamDetailPage({ params, searchParams }: Ar
             <span />
           )}
         </div>
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

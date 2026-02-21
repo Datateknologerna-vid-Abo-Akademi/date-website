@@ -1,18 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const COOKIE_STORAGE_KEY = "cookiesAccepted";
 
 export function CookieBanner() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const storedValue = window.localStorage.getItem(COOKIE_STORAGE_KEY);
-    if (storedValue === null) {
-      setVisible(true);
+  const [visible, setVisible] = useState<boolean>(() => {
+    if (typeof window === "undefined") {
+      return false;
     }
-  }, []);
+    return window.localStorage.getItem(COOKIE_STORAGE_KEY) === null;
+  });
 
   function onChoice(value: "true" | "false") {
     window.localStorage.setItem(COOKIE_STORAGE_KEY, value);

@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { getApiClient, mutateApi } from "@/lib/api/client";
 import type { FunctionaryItem, FunctionaryRole } from "@/lib/api/types";
@@ -11,63 +12,55 @@ interface FunctionaryManagerProps {
 }
 
 export function FunctionaryManager({ initialYear }: FunctionaryManagerProps) {
-  const [myFunctionaries, setMyFunctionaries] = useState<FunctionaryItem[]>([]);
-  const [roles, setRoles] = useState<FunctionaryRole[]>([]);
+  const queryClient = useQueryClient();
   const [roleId, setRoleId] = useState<number | "">("");
   const [year, setYear] = useState(initialYear);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [statusMessage, setStatusMessage] = useState("");
+
+  const { data: myFunctionaries = [], isLoading: loadingFunctionaries } = useQuery({
+    queryKey: ["functionaries"],
+    queryFn: () => getApiClient<FunctionaryItem[]>("members/me/functionaries"),
+  });
+
+  const { data: roles = [], isLoading: loadingRoles } = useQuery({
+    queryKey: ["functionary-roles"],
+    queryFn: () => getApiClient<FunctionaryRole[]>("members/functionary-roles"),
+  });
 
   const hasRoles = useMemo(() => roles.length > 0, [roles]);
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [currentFunctionaries, availableRoles] = await Promise.all([
-          getApiClient<FunctionaryItem[]>("members/me/functionaries"),
-          getApiClient<FunctionaryRole[]>("members/functionary-roles"),
-        ]);
-        setMyFunctionaries(currentFunctionaries);
-        setRoles(availableRoles);
-        if (availableRoles.length > 0) setRoleId(availableRoles[0].id);
-      } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : "Failed loading functionaries");
-      }
-    }
-    void loadData();
-  }, []);
-
-  async function onCreate(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setErrorMessage("");
-    setStatusMessage("");
-    if (roleId === "") return;
-    try {
-      const created = await mutateApi<FunctionaryItem>({
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      if (roleId === "") throw new Error("Please select a role");
+      return mutateApi<FunctionaryItem>({
         method: "POST",
         path: "members/me/functionaries",
         body: { functionary_role_id: roleId, year },
       });
-      setMyFunctionaries((previous) => [created, ...previous]);
-      setStatusMessage("Functionary role added.");
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to add functionary role");
-    }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["functionaries"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return mutateApi<void>({
+        method: "DELETE",
+        path: `members/me/functionaries/${id}`,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["functionaries"] });
+    },
+  });
+
+  async function onCreate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    addMutation.mutate();
   }
 
   async function onDelete(functionaryId: number) {
-    setErrorMessage("");
-    setStatusMessage("");
-    try {
-      await mutateApi<void>({
-        method: "DELETE",
-        path: `members/me/functionaries/${functionaryId}`,
-      });
-      setMyFunctionaries((previous) => previous.filter((item) => item.id !== functionaryId));
-      setStatusMessage("Functionary role removed.");
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to remove functionary role");
-    }
+    deleteMutation.mutate(functionaryId);
   }
 
   return (
@@ -78,7 +71,7 @@ export function FunctionaryManager({ initialYear }: FunctionaryManagerProps) {
           <select
             value={roleId}
             onChange={(event) => setRoleId(event.target.value ? Number(event.target.value) : "")}
-            disabled={!hasRoles}
+            disabled={!hasRoles || loadingRoles || addMutation.isPending}
           >
             {roles.map((role) => (
               <option key={role.id} value={role.id}>
@@ -89,22 +82,25 @@ export function FunctionaryManager({ initialYear }: FunctionaryManagerProps) {
         </label>
         <label className="form-field">
           <span>Year</span>
-          <input type="number" value={year} onChange={(event) => setYear(Number(event.target.value))} />
+          <input type="number" value={year} onChange={(event) => setYear(Number(event.target.value))} disabled={addMutation.isPending} />
         </label>
-        <button type="submit" disabled={!hasRoles}>
-          Add role
+        <button type="submit" disabled={!hasRoles || addMutation.isPending}>
+          {addMutation.isPending ? "Adding..." : "Add role"}
         </button>
       </form>
-      {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
-      {statusMessage ? <p className="form-success">{statusMessage}</p> : null}
+      {addMutation.error || deleteMutation.error ? <p className="form-error">{(addMutation.error || deleteMutation.error)?.message}</p> : null}
+      {addMutation.isSuccess && !addMutation.isPending ? <p className="form-success">Functionary role added.</p> : null}
+      {deleteMutation.isSuccess && !deleteMutation.isPending ? <p className="form-success">Functionary role removed.</p> : null}
+
+      {loadingFunctionaries ? <p>Loading functionaries...</p> : null}
       <ul className={styles.list}>
         {myFunctionaries.map((functionary) => (
           <li key={functionary.id} className={styles.row}>
             <span>
               {functionary.year} - {functionary.functionary_role.title}
             </span>
-            <button type="button" onClick={() => onDelete(functionary.id)}>
-              Delete
+            <button type="button" onClick={() => onDelete(functionary.id)} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending && deleteMutation.variables === functionary.id ? "Deleting..." : "Delete"}
             </button>
           </li>
         ))}

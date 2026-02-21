@@ -2,18 +2,17 @@ import Link from "next/link";
 
 import { getArchiveExamCollections } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
+import listStyles from "@/components/ui/list-primitives.module.css";
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 
 export default async function ArchiveExamsPage() {
   await ensureModuleEnabled("archive");
   const collections = await getArchiveExamCollections();
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Archive</p>
-        <h1>Exam Collections</h1>
-      </section>
-      <section className="panel">
-        <ul className="list list--spaced">
+    <PageShell>
+      <PageHero eyebrow="Archive" title="Exam Collections" />
+      <PagePanel>
+        <ul className={listStyles.listSpaced}>
           {collections.map((collection) => (
             <li key={collection.id}>
               <Link href={`/archive/exams/${collection.id}`}>
@@ -22,7 +21,7 @@ export default async function ArchiveExamsPage() {
             </li>
           ))}
         </ul>
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

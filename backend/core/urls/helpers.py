@@ -1,3 +1,5 @@
+from importlib import import_module
+
 from django.conf import settings
 from django.urls import include, path
 from django.views.generic import RedirectView
@@ -20,6 +22,12 @@ def optional_include(prefix: str, urlconf: str, app_label: str):
         return []
     if not app_enabled(app_label):
         return []
+    try:
+        import_module(urlconf)
+    except ModuleNotFoundError as exc:
+        if exc.name == urlconf:
+            return []
+        raise
     return [path(prefix, include(urlconf))]
 
 

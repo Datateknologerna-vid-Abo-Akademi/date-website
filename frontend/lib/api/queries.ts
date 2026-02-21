@@ -1,4 +1,5 @@
-import { fetchApi } from "./fetcher";
+import { fetchApi, ApiRequestError } from "./fetcher";
+import { apiClient } from "./openapi-client";
 import type {
   AdItem,
   ActivationPayload,
@@ -29,12 +30,48 @@ import type {
   StaticPage,
 } from "./types";
 
-export async function getSiteMeta() {
-  return fetchApi<SiteMeta>("meta/site", { nextRevalidate: 0 });
+type ApiErrorPayload = {
+  message?: string;
+  details?: Record<string, unknown>;
+  code?: string;
+};
+
+function isApiErrorPayload(value: unknown): value is ApiErrorPayload {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  const candidate = value as Record<string, unknown>;
+  const validMessage = candidate.message === undefined || typeof candidate.message === "string";
+  const validDetails = candidate.details === undefined || (typeof candidate.details === "object" && candidate.details !== null);
+  const validCode = candidate.code === undefined || typeof candidate.code === "string";
+  return validMessage && validDetails && validCode;
 }
 
-export async function getHomeData() {
-  return fetchApi<HomePayload>("home", { nextRevalidate: 120 });
+// Helper to unwrap standard openapi-fetch { data, error } responses
+// It assumes they have already been unwrapped from Django's {"data": ...} by openapi-client fetch wrapper.
+async function unwrap<T>(promise: Promise<{ data?: T; error?: unknown }>): Promise<T> {
+  const { data, error } = await promise;
+  if (error) {
+    const parsedError = isApiErrorPayload(error) ? error : {};
+    throw new ApiRequestError({
+      message: parsedError.message || "API Error",
+      status: 400,
+      details: parsedError.details,
+      code: parsedError.code,
+    });
+  }
+  if (!data) throw new Error("No data returned");
+  return data;
+}
+
+export async function getSiteMeta(): Promise<SiteMeta> {
+  const data = await unwrap(apiClient.GET("/api/v1/meta/site", { next: { revalidate: 0 } }));
+  return data as unknown as SiteMeta;
+}
+
+export async function getHomeData(): Promise<HomePayload> {
+  const data = await unwrap(apiClient.GET("/api/v1/home", { next: { revalidate: 120 } }));
+  return data as unknown as HomePayload;
 }
 
 export async function getNews(category?: string, author?: string) {
@@ -52,12 +89,13 @@ export async function getNewsArticle(slug: string, category?: string) {
   return fetchApi<NewsItem>(`news/${slug}${query ? `?${query}` : ""}`, { nextRevalidate: 120 });
 }
 
-export async function getEvents(includePast = false) {
-  const query = includePast ? "?include_past=true" : "";
-  return fetchApi<EventItem[]>(`events${query}`, { nextRevalidate: 120 });
+export async function getEvents(includePast = false): Promise<EventItem[]> {
+  const includePastQuery = includePast ? "true" : "false";
+  return fetchApi<EventItem[]>(`events?include_past=${includePastQuery}`, { nextRevalidate: 120 });
 }
 
 export async function getEvent(slug: string) {
+  // We didn't type EventDetail in backend yet, so fallback to generic
   return fetchApi<EventItem>(`events/${slug}`, { nextRevalidate: 60 });
 }
 

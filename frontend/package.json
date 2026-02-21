@@ -7,13 +7,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test tests/e2e/smoke.spec.ts",
+    "test:e2e:all": "playwright test",
     "test:e2e:visual": "playwright test tests/e2e/home-visual.spec.ts tests/e2e/legacy-visual.spec.ts",
+    "test:e2e:parity": "playwright test tests/e2e/legacy-parity.spec.ts tests/e2e/legacy-full-parity.spec.ts",
     "test:e2e:legacy-full-parity": "playwright test tests/e2e/legacy-full-parity.spec.ts",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "typegen": "openapi-typescript ../backend/schema.yml -o lib/api/schema.d.ts"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.21",
     "next": "16.1.6",
+    "openapi-fetch": "^0.17.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
@@ -25,6 +30,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "openapi-typescript": "^7.13.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

@@ -132,6 +132,7 @@ const EXCLUDED_PATH_PREFIXES = [
   "/static/",
   "/events/feed",
   "/news/feed",
+  "/ads",
 ];
 
 const EXCLUDED_PATH_EXACT = new Set([
@@ -603,6 +604,11 @@ export async function ensureAuthenticatedContext(page: Page) {
 }
 
 export async function stabilizePageForVisual(page: Page) {
+  await page.evaluate(() => {
+    window.localStorage.setItem("cookiesAccepted", "true");
+    const banner = document.getElementById("cookie-banner");
+    if (banner) banner.style.display = "none";
+  });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.addStyleTag({
     content: `

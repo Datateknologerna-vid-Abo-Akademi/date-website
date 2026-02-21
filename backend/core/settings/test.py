@@ -22,3 +22,6 @@ CACHES = {
 }
 
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
+
+# Keep legacy route helpers deterministic in tests regardless of local .env.
+LEGACY_TEMPLATE_ROUTES_ENABLED = True

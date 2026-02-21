@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
+import listStyles from "@/components/ui/list-primitives.module.css";
 import { getCtfEvents, getSession } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
@@ -8,40 +10,33 @@ export default async function CtfPage() {
   const session = await getSession();
   if (!session.is_authenticated) {
     return (
-      <div className="page-shell">
-        <section className="hero compact">
-          <p className="eyebrow">CTF</p>
-          <h1>Capture The Flag</h1>
+      <PageShell>
+        <PageHero eyebrow="CTF" title="Capture The Flag">
           <p>You need to sign in to view CTF events.</p>
-        </section>
-        <section className="panel">
+        </PageHero>
+        <PagePanel>
           <Link href="/members/login">Sign in</Link>
-        </section>
-      </div>
+        </PagePanel>
+      </PageShell>
     );
   }
 
   const ctfEvents = await getCtfEvents().catch(() => null);
   if (!ctfEvents) {
     return (
-      <div className="page-shell">
-        <section className="hero compact">
-          <p className="eyebrow">CTF</p>
-          <h1>Not available</h1>
+      <PageShell>
+        <PageHero eyebrow="CTF" title="Not available">
           <p>This association does not currently enable CTF.</p>
-        </section>
-      </div>
+        </PageHero>
+      </PageShell>
     );
   }
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">CTF</p>
-        <h1>Capture The Flag</h1>
-      </section>
-      <section className="panel">
-        <ul className="list list--spaced">
+    <PageShell>
+      <PageHero eyebrow="CTF" title="Capture The Flag" />
+      <PagePanel>
+        <ul className={listStyles.listSpaced}>
           {ctfEvents.map((ctf) => (
             <li key={ctf.slug}>
               <h2>
@@ -53,7 +48,7 @@ export default async function CtfPage() {
             </li>
           ))}
         </ul>
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

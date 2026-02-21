@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { getPublications } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
+import listStyles from "@/components/ui/list-primitives.module.css";
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 
 interface PublicationsPageProps {
   searchParams: Promise<{
@@ -16,13 +18,10 @@ export default async function PublicationsPage({ searchParams }: PublicationsPag
   const payload = await getPublications(Number.isNaN(page) ? 1 : page);
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Publications</p>
-        <h1>Publication Library</h1>
-      </section>
-      <section className="panel">
-        <ul className="list list--spaced">
+    <PageShell>
+      <PageHero eyebrow="Publications" title="Publication Library" />
+      <PagePanel>
+        <ul className={listStyles.listSpaced}>
           {payload.results.map((publication) => (
             <li key={publication.slug}>
               <h2>
@@ -36,7 +35,7 @@ export default async function PublicationsPage({ searchParams }: PublicationsPag
             </li>
           ))}
         </ul>
-        <div className="pagination-row">
+        <div className={listStyles.paginationRow}>
           {payload.pagination.has_previous ? (
             <Link href={`/publications?page=${payload.pagination.page - 1}`}>Previous</Link>
           ) : (
@@ -51,7 +50,7 @@ export default async function PublicationsPage({ searchParams }: PublicationsPag
             <span />
           )}
         </div>
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

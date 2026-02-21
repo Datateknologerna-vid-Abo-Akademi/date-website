@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 
 import { mutateApi } from "@/lib/api/client";
 import type { CtfGuessResult } from "@/lib/api/types";
+import formStyles from "@/components/ui/form-primitives.module.css";
 
 interface FlagGuessFormProps {
   ctfSlug: string;
@@ -43,8 +44,8 @@ export function FlagGuessForm({ ctfSlug, flagSlug, canSubmit }: FlagGuessFormPro
   }
 
   return (
-    <form className="form-stack" onSubmit={onSubmit}>
-      <label className="form-field">
+    <form className={formStyles.stack} onSubmit={onSubmit}>
+      <label className={formStyles.field}>
         <span>Flag guess</span>
         <input
           value={guess}

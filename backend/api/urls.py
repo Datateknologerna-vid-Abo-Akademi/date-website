@@ -58,7 +58,6 @@ urlpatterns = [
     ),
     path("polls", views.PollListApiView.as_view(), name="polls-list"),
     path("polls/<int:poll_id>", views.PollDetailApiView.as_view(), name="polls-detail"),
-    path("polls/<int:poll_id>/results", views.PollDetailApiView.as_view(), name="polls-results"),
     path("polls/<int:poll_id>/vote", views.PollVoteApiView.as_view(), name="polls-vote"),
     path("archive/pictures/years", views.ArchiveYearsApiView.as_view(), name="archive-years"),
     path("archive/pictures/<int:year>", views.ArchivePicturesByYearApiView.as_view(), name="archive-pictures-by-year"),

@@ -29,7 +29,7 @@ export function HomeHero({
   if (isBiocumBrand) {
     return (
       <header className={`${styles.header} header wave home-hero-legacy ${rootClassName}`}>
-        <div className={`${styles.scalingSvgContainer} scaling-svg-container home-hero-logo-wrap ${styles.logoWrap}`}>
+        <div className={`${styles.scalingSvgContainer} scaling-svg-container home-hero-logo-wrap`}>
           {inlineHeroLogo ? (
             <div
               className={`home-hero-logo-inline home-hero-logo-inline--animated ${styles.logoInline}`}

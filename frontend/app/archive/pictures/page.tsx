@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { getArchiveYears } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
+import listStyles from "@/components/ui/list-primitives.module.css";
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 
 export default async function ArchivePicturesPage() {
   await ensureModuleEnabled("archive");
@@ -9,13 +11,10 @@ export default async function ArchivePicturesPage() {
   const sortedYears = Object.entries(payload.year_albums).sort((a, b) => Number(b[0]) - Number(a[0]));
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Archive</p>
-        <h1>Picture Years</h1>
-      </section>
-      <section className="panel">
-        <ul className="list list--spaced">
+    <PageShell>
+      <PageHero eyebrow="Archive" title="Picture Years" />
+      <PagePanel>
+        <ul className={listStyles.listSpaced}>
           {sortedYears.map(([year, albumCount]) => (
             <li key={year}>
               <Link href={`/archive/pictures/${year}`}>
@@ -24,7 +23,7 @@ export default async function ArchivePicturesPage() {
             </li>
           ))}
         </ul>
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

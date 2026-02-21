@@ -1,0 +1,10 @@
+.shell {
+  min-height: 100vh;
+  padding-top: 12vh;
+}
+
+.inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  text-align: center;
+}

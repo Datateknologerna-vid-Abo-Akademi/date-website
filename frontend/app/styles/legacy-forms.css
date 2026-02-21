@@ -1,0 +1,72 @@
+.form-stack {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.7rem;
+}
+
+.form-field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.92rem;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  border: 1px solid color-mix(in srgb, var(--textColorDark) 24%, transparent);
+  border-radius: 5px;
+  padding: 0.5rem 0.65rem;
+  background: var(--secondaryColor);
+  color: var(--textColorDark);
+}
+
+.form-stack button,
+.event-variant-nav button {
+  width: fit-content;
+  border: 1px solid var(--primaryColorLighter);
+  border-radius: 0.55rem;
+  padding: 0.55rem 0.8rem;
+  background: var(--primaryColorLighter);
+  color: var(--linkColorLight);
+}
+
+.form-stack button:hover,
+.event-variant-nav button:hover {
+  color: var(--linkColorLightHover);
+  background: var(--primaryColorLighte);
+}
+
+.form-stack button:disabled,
+.event-variant-nav button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-error {
+  color: #b91c1c;
+  font-size: 0.9rem;
+}
+
+.form-success {
+  color: #166534;
+  font-size: 0.9rem;
+}
+
+.form-fieldset {
+  border: 1px solid color-mix(in srgb, var(--theme-border) 75%, transparent);
+  border-radius: 0.7rem;
+  padding: 0.8rem;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.choice-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

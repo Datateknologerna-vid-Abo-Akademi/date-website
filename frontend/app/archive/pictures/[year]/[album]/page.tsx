@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 import { getArchivePictureCollection } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
@@ -30,12 +31,9 @@ export default async function ArchivePictureDetailPage({
   if (!payload) notFound();
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Archive</p>
-        <h1>{payload.collection.title}</h1>
-      </section>
-      <section className="panel">
+    <PageShell>
+      <PageHero eyebrow="Archive" title={payload.collection.title} />
+      <PagePanel>
         <div className="gallery-grid">
           {payload.results.map((picture) => (
             <Image
@@ -50,7 +48,7 @@ export default async function ArchivePictureDetailPage({
         <p className="meta">
           Page {payload.pagination.page} / {payload.pagination.num_pages}
         </p>
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

@@ -12,12 +12,29 @@ import {
   resolveUiProfile,
 } from "@/lib/theme/runtime-theme";
 
+import Providers from "./providers";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "Association Portal",
-  description: "Decoupled frontend for association sites",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const siteMeta = await getSiteMeta().catch(() => null);
+  const associationName =
+    (((siteMeta?.content_variables as Record<string, unknown>)?.ASSOCIATION_NAME) as string | undefined) ?? "Association Portal";
+
+  return {
+    title: {
+      template: `%s - ${associationName}`,
+      default: associationName,
+    },
+    description: `Decoupled frontend for ${associationName}`,
+    icons: [
+      {
+        rel: "shortcut icon",
+        type: "image/png",
+        url: "/static/core/images/logo.ico",
+      },
+    ],
+  };
+}
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -68,10 +85,12 @@ export default async function RootLayout({
         data-ui-profile={uiProfile}
         style={styleVars as CSSProperties}
       >
-        <SiteHeader siteMeta={siteMeta} session={session} />
-        <main className="site-main">{children}</main>
-        <SiteFooter siteMeta={siteMeta} />
-        <CookieBanner />
+        <Providers>
+          <SiteHeader siteMeta={siteMeta} session={session} />
+          <main className="site-main">{children}</main>
+          <SiteFooter siteMeta={siteMeta} />
+          <CookieBanner />
+        </Providers>
         <Script
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
           integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"

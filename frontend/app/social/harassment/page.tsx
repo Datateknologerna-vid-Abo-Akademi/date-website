@@ -1,8 +1,10 @@
 import Script from "next/script";
 
 import { HarassmentForm } from "@/components/social/harassment-form";
+import { ContentPanel } from "@/components/ui/content-panel";
 import { getSiteMeta } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
+import styles from "@/features/social/harassment-page.module.css";
 
 function getContentVariable(contentVariables: Record<string, unknown>, key: string, fallback: string) {
   const value = contentVariables[key];
@@ -22,13 +24,13 @@ export default async function HarassmentPage() {
   const captchaSiteKey = siteMeta.captcha_site_key || "";
 
   return (
-    <div className="social-harassment-page container-md min-vh-100 container-margin-top">
+    <div className={styles.shell}>
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
         strategy="afterInteractive"
       />
-      <div className="container-size text-center" style={{ maxWidth: "1000px" }}>
-        <div className="content">
+      <div className={styles.inner}>
+        <ContentPanel>
           <h1>Rapportera trakasserier och eventuella brister med jämlikhetsplanen</h1>
           <p>
             Du kan rapportera trakasserier och brister i jämlikhetsplanen antingen anonymt eller
@@ -42,7 +44,7 @@ export default async function HarassmentPage() {
             så önskas.
           </p>
           <HarassmentForm captchaSiteKey={captchaSiteKey} />
-        </div>
+        </ContentPanel>
       </div>
     </div>
   );

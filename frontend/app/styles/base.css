@@ -151,17 +151,7 @@ div a:hover {
   max-height: 45px;
 }
 
-.page-shell {
-  width: 100%;
-  max-width: 800px;
-  margin: 12vh auto 0;
-  min-height: calc(100vh - 12vh);
-  padding: 0 0.25rem 1rem;
-  display: block;
+.association-biocum .header-logo,
+.association-biocum .footer-img {
+  filter: brightness(0) invert(1);
 }
-
-.page-shell > .hero,
-.page-shell > .panel {
-  margin: 20px 2vw;
-}
-

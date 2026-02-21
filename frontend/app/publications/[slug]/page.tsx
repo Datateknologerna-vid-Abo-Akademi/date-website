@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 import { getPublication } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
@@ -16,24 +17,24 @@ export default async function PublicationDetailPage({ params }: PublicationDetai
   if (!publication) notFound();
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Publications</p>
-        <h1>{publication.title}</h1>
-        <p className="meta">
-          {publication.publication_date
+    <PageShell>
+      <PageHero
+        eyebrow="Publications"
+        title={publication.title}
+        meta={
+          publication.publication_date
             ? new Date(publication.publication_date).toLocaleDateString()
-            : "No publication date"}
-        </p>
-      </section>
-      <section className="panel">
+            : "No publication date"
+        }
+      />
+      <PagePanel>
         {publication.description ? <p>{publication.description}</p> : null}
         <p>
           <a href={publication.pdf_url} target="_blank" rel="noreferrer">
             Open PDF
           </a>
         </p>
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

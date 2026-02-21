@@ -1,25 +1,24 @@
 import Link from "next/link";
 
 import { AlumniSignupForm } from "@/components/alumni/signup-form";
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 import { ensureModuleEnabled } from "@/lib/module-guards";
 
 export default async function AlumniSignupPage() {
   await ensureModuleEnabled("alumni");
 
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Alumni</p>
-        <h1>Alumni Registration</h1>
+    <PageShell>
+      <PageHero eyebrow="Alumni" title="Alumni Registration">
         <p>Register as alumni or request profile update.</p>
-      </section>
-      <section className="panel">
+      </PageHero>
+      <PagePanel>
         <AlumniSignupForm />
-      </section>
-      <section className="panel">
+      </PagePanel>
+      <PagePanel>
         <p>Already in the alumni register?</p>
         <Link href="/alumni/update">Request update token</Link>
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

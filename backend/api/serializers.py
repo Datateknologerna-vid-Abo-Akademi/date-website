@@ -2,6 +2,7 @@ from django.conf import settings
 from rest_framework import serializers
 
 from members.models import Functionary, FunctionaryRole, Member
+from drf_spectacular.utils import extend_schema_field
 
 
 class StaticUrlSerializer(serializers.Serializer):
@@ -51,14 +52,17 @@ class NewsListSerializer(serializers.Serializer):
     category_name = serializers.SerializerMethodField()
     category_slug = serializers.SerializerMethodField()
 
+    @extend_schema_field(serializers.CharField())
     def get_author_name(self, obj):
         return obj.author.get_full_name()
 
+    @extend_schema_field(serializers.CharField())
     def get_category_name(self, obj):
         if obj.category:
             return obj.category.name
         return None
 
+    @extend_schema_field(serializers.CharField())
     def get_category_slug(self, obj):
         if obj.category:
             return obj.category.slug
@@ -84,18 +88,23 @@ class EventListSerializer(serializers.Serializer):
     sign_up_fields = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()
 
+    @extend_schema_field(serializers.BooleanField())
     def get_registration_open_members(self, obj):
         return obj.registration_is_open_members()
 
+    @extend_schema_field(serializers.BooleanField())
     def get_registration_open_others(self, obj):
         return obj.registration_is_open_others()
 
+    @extend_schema_field(serializers.BooleanField())
     def get_registration_past_due(self, obj):
         return obj.registration_past_due()
 
+    @extend_schema_field(serializers.BooleanField())
     def get_event_full(self, obj):
         return obj.event_is_full()
 
+    @extend_schema_field(serializers.ListField(child=serializers.DictField()))
     def get_sign_up_fields(self, obj):
         fields = obj.get_registration_form()
         if not fields:
@@ -114,6 +123,7 @@ class EventListSerializer(serializers.Serializer):
             )
         return response
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_image_url(self, obj):
         if settings.USE_S3 and obj.s3_image:
             return obj.s3_image.url

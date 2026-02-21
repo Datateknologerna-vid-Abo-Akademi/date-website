@@ -2,18 +2,17 @@ import Link from "next/link";
 
 import { getPolls } from "@/lib/api/queries";
 import { ensureModuleEnabled } from "@/lib/module-guards";
+import listStyles from "@/components/ui/list-primitives.module.css";
+import { PageHero, PagePanel, PageShell } from "@/components/ui/page-shell";
 
 export default async function PollsPage() {
   await ensureModuleEnabled("polls");
   const polls = await getPolls();
   return (
-    <div className="page-shell">
-      <section className="hero compact">
-        <p className="eyebrow">Polls</p>
-        <h1>Active Polls</h1>
-      </section>
-      <section className="panel">
-        <ul className="list list--spaced">
+    <PageShell>
+      <PageHero eyebrow="Polls" title="Active Polls" />
+      <PagePanel>
+        <ul className={listStyles.listSpaced}>
           {polls.map((poll) => (
             <li key={poll.id}>
               <h2>
@@ -23,7 +22,7 @@ export default async function PollsPage() {
             </li>
           ))}
         </ul>
-      </section>
-    </div>
+      </PagePanel>
+    </PageShell>
   );
 }

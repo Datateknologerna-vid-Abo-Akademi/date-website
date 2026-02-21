@@ -8,7 +8,7 @@ This pass standardizes remaining domains onto feature-scoped modules and shrinks
 - In scope:
   - `ctf`, `polls`, `archive`, `ads`, `publications`, `social`, `alumni` route surfaces
   - shared layout/form/list primitives
-  - global CSS reduction (`base.css`, `shared.css`, `events.css`)
+  - global CSS reduction (`base.css`, `rich-content.css`, `legacy-forms.css`, `events.css`)
 - Out of scope:
   - new feature work
   - visual redesign
@@ -23,8 +23,11 @@ This pass standardizes remaining domains onto feature-scoped modules and shrinks
    - reset
    - app-shell frame
    - minimal global element defaults
-5. Keep `app/styles/shared.css` only for:
-   - rich-content CKEditor rendering defaults (temporary global contract)
+5. Keep split global layers in `app/styles/` by concern:
+   - `shared-text.css` for minimal cross-cutting text helpers (`.meta`)
+   - `rich-content.css` for CKEditor rendering defaults
+   - `legacy-forms.css` for temporary cross-domain form utility compatibility
+   - `news.css` and `legacy-media.css` until those domains are fully module-scoped
 6. Keep `app/styles/events.css` only for:
    - truly route-global behavior that cannot be localized yet (temporary)
 7. No new broad selectors like `div a`, `body:has(...)`, or domain-specific globals unless explicitly documented.
@@ -61,7 +64,7 @@ This pass standardizes remaining domains onto feature-scoped modules and shrinks
    - Replace `form-stack/form-grid/form-field/...` and `list--spaced/row-line/...`.
    - Use UI primitive classes imported as module tokens.
 4. Reduce globals.
-   - Remove migrated selectors from `shared.css` and `base.css` immediately after each domain migration.
+   - Remove migrated selectors from split global layers and `base.css` immediately after each domain migration.
    - Keep rich-content global layer intact for CKEditor compatibility.
 5. Events global tail cleanup.
    - Re-assess `events.css` remaining selectors.
@@ -82,7 +85,7 @@ This pass standardizes remaining domains onto feature-scoped modules and shrinks
 3. Structural checks (must pass):
    - No `members.css`.
    - No domain-specific selectors in `base.css`.
-   - `shared.css` contains only approved global layers (rich-content + minimal cross-cutting primitives if still needed).
+   - split global files contain only approved layers (rich-content + minimal cross-cutting primitives if still needed).
 4. Usage checks:
    - `rg` confirms no leftover legacy utility-class usage in migrated domains.
 
@@ -91,3 +94,51 @@ This pass standardizes remaining domains onto feature-scoped modules and shrinks
 2. Existing visual parity is preserved; any visual differences are regressions unless explicitly accepted.
 3. Bootstrap remains for navbar/offcanvas until a separate UI framework removal plan.
 4. CKEditor-rendered content remains globally styled until a separate rich-content isolation pass.
+
+## Progress Notes (Current)
+- Added shared UI primitives:
+  - `frontend/components/ui/page-shell.tsx`
+  - `frontend/components/ui/page-shell.module.css`
+  - `frontend/components/ui/content-panel.tsx`
+  - `frontend/components/ui/content-panel.module.css`
+  - `frontend/components/ui/form-primitives.module.css`
+  - `frontend/components/ui/list-primitives.module.css`
+- Migrated route surfaces in scope to `PageShell`/`PageHero`/`PagePanel`:
+  - `ctf`, `polls`, `archive`, `ads`, `publications`, `social`, `alumni`
+- Migrated in-scope forms/components to form/list primitives:
+  - `components/ctf/flag-guess-form.tsx`
+  - `components/polls/poll-vote-form.tsx`
+  - `components/social/harassment-form.tsx`
+  - `components/alumni/signup-form.tsx`
+  - `components/alumni/update-form.tsx`
+  - `components/alumni/update-request-form.tsx`
+- Cleanup completed for now:
+  - Removed unused selectors from previous shared global layer:
+    - `.list--spaced`
+    - `.link-grid`
+    - `.form-inline`
+    - `.row-line`
+    - `.role-grid`
+    - `.social-harassment-page .content form`
+    - `.pagination-row`
+- Additional migration/cleanup completed:
+  - Migrated remaining `lucia` route surfaces and `frontend/app/not-found.tsx`
+    from global `page-shell/hero/panel` classes to `PageShell` primitives.
+  - Migrated `frontend/components/events/event-signup-form.tsx` invoice list
+    from global `.list` to `list-primitives` (`listStyles.list`).
+  - Split former `frontend/app/styles/shared.css` into concern-based files:
+    - `frontend/app/styles/shared-text.css`
+    - `frontend/app/styles/rich-content.css`
+    - `frontend/app/styles/legacy-forms.css`
+    - `frontend/app/styles/news.css`
+    - `frontend/app/styles/legacy-media.css`
+  - Removed obsolete global shell/surface utility blocks from:
+    - `frontend/app/styles/base.css` (`.page-shell` and child selectors)
+    - split shared global layers (removed from prior `shared.css` before split):
+      - `.hero*`
+      - `.panel*`
+      - `.eyebrow`
+      - `.content-grid`
+      - `.cta-link`
+      - `.home-entry-link*`
+      - `.sr-only`
