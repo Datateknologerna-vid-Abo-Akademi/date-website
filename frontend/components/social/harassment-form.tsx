@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 
-import { mutateApi } from "@/lib/api/client";
+import { submitHarassment } from "@/lib/api/mutations";
 import formStyles from "@/components/ui/form-primitives.module.css";
 
 
@@ -42,15 +42,11 @@ export function HarassmentForm({ captchaSiteKey }: HarassmentFormProps) {
     setIsSubmitting(true);
 
     try {
-      await mutateApi<HarassmentFormResponse>({
-        method: "POST",
-        path: "social/harassment",
-        body: {
-          email,
-          message,
-          consent,
-          "cf-turnstile-response": captchaToken,
-        },
+      await submitHarassment({
+        email,
+        message,
+        consent,
+        "cf-turnstile-response": captchaToken,
       });
       setMessage("");
       setEmail("");

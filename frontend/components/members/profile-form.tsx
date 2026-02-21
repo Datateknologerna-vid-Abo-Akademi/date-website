@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 
-import { mutateApi } from "@/lib/api/client";
+import { updateProfile } from "@/lib/api/mutations";
 import type { MemberProfile } from "@/lib/api/types";
 
 interface ProfileFormProps {
@@ -48,11 +48,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     setStatusMessage("");
     setIsSaving(true);
     try {
-      await mutateApi<MemberProfile>({
-        method: "PATCH",
-        path: "members/me",
-        body: formState,
-      });
+      await updateProfile(formState);
       setStatusMessage("Profile updated.");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Unable to update profile");

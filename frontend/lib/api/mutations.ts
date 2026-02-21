@@ -4,11 +4,11 @@ import { ApiRequestError } from "./queries";
 export async function unwrapMutation<T>(promise: Promise<{ data?: T; error?: unknown }>): Promise<T> {
     const { data, error } = await promise;
     if (error) {
-        const errObj = (error as Record<string, unknown>) || ({} as Record<string, unknown>);
+        const errObj = (error as { message?: string; detail?: string; code?: string; details?: unknown }) || {};
         throw new ApiRequestError({
-            message: (errObj.message as string) || (errObj.detail as string) || "API Error",
+            message: errObj.message || errObj.detail || "API Error",
             status: 400,
-            details: errObj.details || errObj,
+            details: (errObj.details as Record<string, unknown>) || (error as Record<string, unknown>) || {},
             code: (errObj.code as string) || "unknown_error",
         });
     }
@@ -53,7 +53,8 @@ export async function confirmPasswordReset(uid: string, token: string, payload: 
 
 // -- PROFILE & FUNCTIONARY MUTATIONS --
 
-export type ProfileUpdatePayload = Record<string, unknown>;
+import type { MemberProfile } from "./types";
+export type ProfileUpdatePayload = Partial<MemberProfile>;
 export async function updateProfile(payload: ProfileUpdatePayload) {
     return unwrapMutation(apiClient.PATCH("/api/v1/members/me", { body: payload }));
 }
@@ -103,8 +104,9 @@ export async function submitHarassment(payload: Record<string, unknown>) {
     return unwrapMutation(apiClient.POST("/api/v1/social/harassment", { body: payload }));
 }
 
-export async function votePoll(pollId: number, choiceIds: number[]) {
-    return unwrapMutation(
+import type { PollQuestion } from "./types";
+export async function votePoll(pollId: number, choiceIds: number[]): Promise<PollQuestion> {
+    return unwrapMutation<PollQuestion>(
         // @ts-expect-error fallback path signature
         apiClient.POST("/api/v1/polls/{id}/vote", {
             params: { path: { id: pollId } },

@@ -8,6 +8,8 @@ import { resetPassword } from "@/lib/api/mutations";
 
 export function PasswordResetForm() {
   const [email, setEmail] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
   const mutation = useMutation({
     mutationFn: resetPassword,
     onSuccess: () => {

@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: ${DATE_DB_PASSWORD}
       POSTGRES_DB: postgres
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,7 +24,7 @@ services:
     image: valkey/valkey:7.2-alpine
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -42,9 +42,7 @@ services:
       context: ./backend
     restart: unless-stopped
     command: >
-      /bin/bash -c "./wait-for-postgres.sh db:5432 &&
-      python /code/manage.py migrate --noinput &&
-      python /code/manage.py runserver 0.0.0.0:8000"
+      /bin/bash -c "./wait-for-postgres.sh -t 60 db:5432 && python /code/manage.py migrate --noinput && python /code/manage.py runserver 0.0.0.0:8000"
     environment:
       SECRET_KEY: ${DATE_SECRET_KEY}
       DEBUG: ${DATE_DEBUG}
@@ -85,11 +83,11 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8000/api/v1/meta/site > /dev/null || exit 1"]
+      test: [ "CMD-SHELL", "wget -q -O - http://127.0.0.1:8000/api/v1/meta/site > /dev/null || exit 1" ]
       interval: 20s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 60s
     volumes:
       - ./backend:/code
     logging:
@@ -103,8 +101,7 @@ services:
       context: ./backend
     restart: unless-stopped
     command: >
-      /bin/bash -c "./wait-for-postgres.sh db:5432 &&
-      daphne -b 0.0.0.0 -p 8001 core.routing:application"
+      /bin/bash -c "./wait-for-postgres.sh -t 60 db:5432 && daphne -b 0.0.0.0 -p 8001 core.routing:application"
     environment:
       SECRET_KEY: ${DATE_SECRET_KEY}
       DEBUG: ${DATE_DEBUG}
@@ -181,7 +178,7 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/healthz > /dev/null || exit 1"]
+      test: [ "CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/healthz > /dev/null || exit 1" ]
       interval: 20s
       timeout: 5s
       retries: 5
@@ -229,7 +226,7 @@ services:
       asgi:
         condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1/healthz > /dev/null || exit 1"]
+      test: [ "CMD-SHELL", "wget -q -O - http://127.0.0.1/healthz > /dev/null || exit 1" ]
       interval: 20s
       timeout: 5s
       retries: 5

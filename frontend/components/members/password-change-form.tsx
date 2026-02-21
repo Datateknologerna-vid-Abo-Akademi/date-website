@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 
-import { mutateApi } from "@/lib/api/client";
+import { changePassword } from "@/lib/api/mutations";
 
 
 export function PasswordChangeForm() {
@@ -20,14 +20,10 @@ export function PasswordChangeForm() {
     setIsSubmitting(true);
 
     try {
-      await mutateApi<PasswordChangeResponse>({
-        method: "POST",
-        path: "auth/password-change",
-        body: {
-          old_password: oldPassword,
-          new_password1: newPassword1,
-          new_password2: newPassword2,
-        },
+      await changePassword({
+        old_password: oldPassword,
+        new_password1: newPassword1,
+        new_password2: newPassword2,
       });
       setStatusMessage("Password changed.");
       setOldPassword("");

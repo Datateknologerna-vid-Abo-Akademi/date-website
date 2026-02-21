@@ -35,7 +35,7 @@ export function PollVoteForm({ initialPoll }: PollVoteFormProps) {
   const mutation = useMutation({
     mutationFn: (variables: { pollId: number; choiceIds: number[] }) =>
       votePoll(variables.pollId, variables.choiceIds),
-    onSuccess: (updatedPoll: unknown) => {
+    onSuccess: (updatedPoll: PollQuestion) => {
       setPoll(updatedPoll);
       setSelectedChoices([]);
       setStatusMessage("Vote recorded.");
