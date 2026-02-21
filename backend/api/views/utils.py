@@ -202,6 +202,29 @@ def get_module_model(module_key, model_name):
     return get_optional_model(app_label, model_name)
 
 
+class ModuleConfigMixin:
+    """
+    A DRY abstraction for Django Rest Framework API views that belong to specific optional modules.
+    Set the `module_key` class variable to automatically enforce the `is_module_enabled` check 
+    upon dispatch, preventing boilerplate feature checks across the system.
+    """
+    module_key = None
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.module_key and not is_module_enabled(self.module_key):
+            return module_disabled_response(self.module_key)
+        return super().dispatch(request, *args, **kwargs)
+        
+    def get_module_models(self, *model_names):
+        """Returns a single model or a tuple of models for the view's configured module."""
+        if not self.module_key:
+            raise ValueError("ModuleConfigMixin requires `module_key` to be set on the class to fetch models.")
+        models = [get_module_model(self.module_key, name) for name in model_names]
+        if len(models) == 1:
+            return models[0]
+        return tuple(models)
+
+
 EVENT_TEMPLATE_VARIANTS_BY_TITLE = {
     "årsfest": "arsfest",
     "årsfest 2026": "arsfest",

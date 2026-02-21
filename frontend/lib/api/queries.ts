@@ -1,4 +1,26 @@
-import { fetchApi, ApiRequestError } from "./fetcher";
+export class ApiRequestError extends Error {
+  public status: number;
+  public code?: string;
+  public details?: Record<string, unknown>;
+
+  constructor({
+    message,
+    status,
+    code,
+    details,
+  }: {
+    message: string;
+    status: number;
+    code?: string;
+    details?: Record<string, unknown>;
+  }) {
+    super(message);
+    this.name = "ApiRequestError";
+    this.status = status;
+    this.code = code;
+    this.details = details;
+  }
+}
 import { apiClient } from "./openapi-client";
 import type {
   AdItem,
@@ -75,146 +97,260 @@ export async function getHomeData(): Promise<HomePayload> {
 }
 
 export async function getNews(category?: string, author?: string) {
-  const params = new URLSearchParams();
-  if (category) params.set("category", category);
-  if (author) params.set("author", author);
-  const query = params.toString();
-  return fetchApi<NewsItem[]>(`news${query ? `?${query}` : ""}`, { nextRevalidate: 120 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/news", {
+      // @ts-expect-error fallback query
+      params: { query: { category, author } },
+      next: { revalidate: 120 },
+    }),
+  );
+  return data as unknown as NewsItem[];
 }
 
 export async function getNewsArticle(slug: string, category?: string) {
-  const params = new URLSearchParams();
-  if (category) params.set("category", category);
-  const query = params.toString();
-  return fetchApi<NewsItem>(`news/${slug}${query ? `?${query}` : ""}`, { nextRevalidate: 120 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/news/{slug}", {
+      // @ts-expect-error fallback query
+      params: { path: { slug }, query: { category } },
+      next: { revalidate: 120 },
+    }),
+  );
+  return data as unknown as NewsItem;
 }
 
 export async function getEvents(includePast = false): Promise<EventItem[]> {
   const includePastQuery = includePast ? "true" : "false";
-  return fetchApi<EventItem[]>(`events?include_past=${includePastQuery}`, { nextRevalidate: 120 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/events", {
+      // @ts-expect-error fallback query
+      params: { query: { include_past: includePastQuery } },
+      next: { revalidate: 120 },
+    }),
+  );
+  return data as unknown as EventItem[];
 }
 
 export async function getEvent(slug: string) {
-  // We didn't type EventDetail in backend yet, so fallback to generic
-  return fetchApi<EventItem>(`events/${slug}`, { nextRevalidate: 60 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/events/{slug}", {
+      params: { path: { slug } },
+      next: { revalidate: 60 },
+    }),
+  );
+  return data as unknown as EventItem;
 }
 
 export async function getEventAttendees(slug: string) {
-  return fetchApi<EventAttendeeListPayload>(`events/${slug}/attendees`, { nextRevalidate: 10 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/events/{slug}/attendees", {
+      params: { path: { slug } },
+      next: { revalidate: 10 },
+    }),
+  );
+  return data as unknown as EventAttendeeListPayload;
 }
 
 export async function getStaticPage(slug: string) {
-  return fetchApi<StaticPage>(`pages/${slug}`, { nextRevalidate: 300 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/pages/{slug}", {
+      params: { path: { slug } },
+      next: { revalidate: 300 },
+    }),
+  );
+  return data as unknown as StaticPage;
 }
 
 export async function getSession() {
-  return fetchApi<SessionData>("auth/session", { nextRevalidate: 0 });
+  const data = await unwrap(apiClient.GET("/api/v1/auth/session", { next: { revalidate: 0 } }));
+  return data as unknown as SessionData;
 }
 
 export async function getMemberProfile() {
-  return fetchApi<MemberProfile>("members/me", { nextRevalidate: 0 });
+  const data = await unwrap(apiClient.GET("/api/v1/members/me", { next: { revalidate: 0 } }));
+  return data as unknown as MemberProfile;
 }
 
 export async function getPublicFunctionaries(year?: string, role?: string) {
-  const params = new URLSearchParams();
-  if (year) params.set("year", year);
-  if (role) params.set("role", role);
-  const query = params.toString();
-  return fetchApi<PublicFunctionaryPayload>(
-    `members/functionaries${query ? `?${query}` : ""}`,
-    { nextRevalidate: 60 },
+  const data = await unwrap(
+    apiClient.GET("/api/v1/members/functionaries", {
+      // @ts-expect-error fallback query
+      params: { query: { year, role } },
+      next: { revalidate: 60 },
+    }),
   );
+  return data as unknown as PublicFunctionaryPayload;
 }
 
 export async function getPolls() {
-  return fetchApi<PollQuestion[]>("polls", { nextRevalidate: 60 });
+  const data = await unwrap(apiClient.GET("/api/v1/polls", { next: { revalidate: 60 } }));
+  return data as unknown as PollQuestion[];
 }
 
 export async function getPoll(pollId: number) {
-  return fetchApi<PollQuestion>(`polls/${pollId}`, { nextRevalidate: 10 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/polls/{poll_id}", {
+      params: { path: { poll_id: pollId } },
+      next: { revalidate: 10 },
+    }),
+  );
+  return data as unknown as PollQuestion;
 }
 
 export async function getArchiveYears() {
-  return fetchApi<ArchiveYearsPayload>("archive/pictures/years", { nextRevalidate: 30 });
+  const data = await unwrap(apiClient.GET("/api/v1/archive/pictures/years", { next: { revalidate: 30 } }));
+  return data as unknown as ArchiveYearsPayload;
 }
 
 export async function getArchivePictureCollectionsByYear(year: number) {
-  return fetchApi<ArchiveCollection[]>(`archive/pictures/${year}`, { nextRevalidate: 30 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/archive/pictures/{year}", {
+      params: { path: { year } },
+      next: { revalidate: 30 },
+    }),
+  );
+  return data as unknown as ArchiveCollection[];
 }
 
 export async function getArchivePictureCollection(year: number, album: string, page = 1) {
-  return fetchApi<ArchivePictureDetailPayload>(
-    `archive/pictures/${year}/${encodeURIComponent(album)}?page=${page}`,
-    { nextRevalidate: 10 },
+  const data = await unwrap(
+    apiClient.GET("/api/v1/archive/pictures/{year}/{album}", {
+      // @ts-expect-error fallback query
+      params: { path: { year, album }, query: { page } },
+      next: { revalidate: 10 },
+    }),
   );
+  return data as unknown as ArchivePictureDetailPayload;
 }
 
 export async function getArchivePictureCollectionById(collectionId: number) {
-  return fetchApi<ArchivePictureCollectionByIdPayload>(`archive/pictures/id/${collectionId}`, {
-    nextRevalidate: 30,
-  });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/archive/pictures/id/{collection_id}", {
+      params: { path: { collection_id: collectionId } },
+      next: { revalidate: 30 },
+    }),
+  );
+  return data as unknown as ArchivePictureCollectionByIdPayload;
 }
 
 export async function getArchiveDocuments(collection?: string, titleContains?: string, page = 1) {
-  const params = new URLSearchParams();
-  params.set("page", String(page));
-  if (collection) params.set("collection", collection);
-  if (titleContains) params.set("title_contains", titleContains);
-  return fetchApi<ArchiveDocumentsPayload>(`archive/documents?${params.toString()}`, { nextRevalidate: 10 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/archive/documents", {
+      // @ts-expect-error fallback query
+      params: { query: { page, collection, title_contains: titleContains } },
+      next: { revalidate: 10 },
+    }),
+  );
+  return data as unknown as ArchiveDocumentsPayload;
 }
 
 export async function getArchiveExamCollections() {
-  return fetchApi<ArchiveCollection[]>("archive/exams", { nextRevalidate: 30 });
+  const data = await unwrap(apiClient.GET("/api/v1/archive/exams", { next: { revalidate: 30 } }));
+  return data as unknown as ArchiveCollection[];
 }
 
 export async function getArchiveExamCollection(collectionId: number, page = 1) {
-  return fetchApi<ArchiveExamDetailPayload>(`archive/exams/${collectionId}?page=${page}`, { nextRevalidate: 10 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/archive/exams/{collection_id}", {
+      // @ts-expect-error fallback query if needed
+      params: { path: { collection_id: collectionId }, query: { page } },
+      next: { revalidate: 10 },
+    }),
+  );
+  return data as unknown as ArchiveExamDetailPayload;
 }
 
 export async function getPublications(page = 1) {
-  return fetchApi<PaginatedPayload<Publication>>(`publications?page=${page}`, { nextRevalidate: 30 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/publications", {
+      // @ts-expect-error fallback query
+      params: { query: { page } },
+      next: { revalidate: 30 },
+    }),
+  );
+  return data as unknown as PaginatedPayload<Publication>;
 }
 
 export async function getPublication(slug: string) {
-  return fetchApi<Publication>(`publications/${slug}`, { nextRevalidate: 10 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/publications/{slug}", {
+      params: { path: { slug } },
+      next: { revalidate: 10 },
+    }),
+  );
+  return data as unknown as Publication;
 }
 
 export async function getSocialOverview() {
-  return fetchApi<SocialOverview>("social", { nextRevalidate: 300 });
+  const data = await unwrap(apiClient.GET("/api/v1/social", { next: { revalidate: 300 } }));
+  return data as unknown as SocialOverview;
 }
 
 export async function getAds() {
-  return fetchApi<AdItem[]>("ads", { nextRevalidate: 300 });
+  const data = await unwrap(apiClient.GET("/api/v1/ads", { next: { revalidate: 300 } }));
+  return data as unknown as AdItem[];
 }
 
 export async function getCtfEvents() {
-  return fetchApi<CtfItem[]>("ctf", { nextRevalidate: 10 });
+  const data = await unwrap(apiClient.GET("/api/v1/ctf", { next: { revalidate: 10 } }));
+  return data as unknown as CtfItem[];
 }
 
 export async function getCtfEvent(slug: string) {
-  return fetchApi<CtfDetailPayload>(`ctf/${slug}`, { nextRevalidate: 10 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/ctf/{slug}", {
+      params: { path: { slug } },
+      next: { revalidate: 10 },
+    }),
+  );
+  return data as unknown as CtfDetailPayload;
 }
 
 export async function getCtfFlag(ctfSlug: string, flagSlug: string) {
-  return fetchApi<CtfFlagDetailPayload>(`ctf/${ctfSlug}/${flagSlug}`, { nextRevalidate: 5 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/ctf/{ctf_slug}/{flag_slug}", {
+      params: { path: { ctf_slug: ctfSlug, flag_slug: flagSlug } },
+      next: { revalidate: 5 },
+    }),
+  );
+  return data as unknown as CtfFlagDetailPayload;
 }
 
 export async function getLuciaOverview() {
-  return fetchApi<LuciaOverview>("lucia", { nextRevalidate: 300 });
+  const data = await unwrap(apiClient.GET("/api/v1/lucia", { next: { revalidate: 300 } }));
+  return data as unknown as LuciaOverview;
 }
 
 export async function getLuciaCandidates() {
-  return fetchApi<LuciaCandidate[]>("lucia/candidates", { nextRevalidate: 60 });
+  const data = await unwrap(apiClient.GET("/api/v1/lucia/candidates", { next: { revalidate: 60 } }));
+  return data as unknown as LuciaCandidate[];
 }
 
 export async function getLuciaCandidate(slug: string) {
-  return fetchApi<LuciaCandidate>(`lucia/candidates/${slug}`, { nextRevalidate: 30 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/lucia/candidates/{slug}", {
+      params: { path: { slug } },
+      next: { revalidate: 30 },
+    }),
+  );
+  return data as unknown as LuciaCandidate;
 }
 
 export async function getAlumniUpdateToken(token: string) {
-  return fetchApi<AlumniUpdateTokenPayload>(`alumni/update/${token}`, { nextRevalidate: 0 });
+  const data = await unwrap(
+    apiClient.GET("/api/v1/alumni/update/{token}", {
+      params: { path: { token } },
+      next: { revalidate: 0 },
+    }),
+  );
+  return data as unknown as AlumniUpdateTokenPayload;
 }
 
 export async function activateAccount(uid: string, token: string) {
-  return fetchApi<ActivationPayload>(`auth/activate/${uid}/${token}`, { nextRevalidate: 0 });
+  const data = await unwrap(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    apiClient.GET(`/api/v1/auth/activate/${uid}/${token}` as any, {
+      next: { revalidate: 0 },
+    }),
+  );
+  return data as unknown as ActivationPayload;
 }

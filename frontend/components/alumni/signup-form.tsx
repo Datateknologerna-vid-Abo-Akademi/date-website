@@ -2,13 +2,10 @@
 
 import { FormEvent, useState } from "react";
 
-import { mutateApi } from "@/lib/api/client";
-import formStyles from "@/components/ui/form-primitives.module.css";
+import { useMutation } from "@tanstack/react-query";
 
-interface AlumniSignupResponse {
-  submitted: boolean;
-  operation: string;
-}
+import { signupAlumni } from "@/lib/api/mutations";
+import formStyles from "@/components/ui/form-primitives.module.css";
 
 interface AlumniSignupState {
   firstname: string;
@@ -48,9 +45,18 @@ const initialState: AlumniSignupState = {
 
 export function AlumniSignupForm() {
   const [formState, setFormState] = useState<AlumniSignupState>(initialState);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
+  const mutation = useMutation({
+    mutationFn: signupAlumni,
+    onSuccess: () => {
+      setFormState(initialState);
+      setStatusMessage("Registration submitted. You will receive follow-up by email.");
+    },
+    onError: (error) => {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to submit registration");
+    },
+  });
 
   function updateField<K extends keyof AlumniSignupState>(field: K, value: AlumniSignupState[K]) {
     setFormState((previous) => ({ ...previous, [field]: value }));
@@ -60,38 +66,25 @@ export function AlumniSignupForm() {
     event.preventDefault();
     setErrorMessage("");
     setStatusMessage("");
-    setIsSubmitting(true);
 
-    try {
-      await mutateApi<AlumniSignupResponse>({
-        method: "POST",
-        path: "alumni/signup",
-        body: {
-          operation: "CREATE",
-          firstname: formState.firstname,
-          lastname: formState.lastname,
-          email: formState.email,
-          phone_number: formState.phone_number,
-          address: formState.address,
-          zip: formState.zip,
-          city: formState.city,
-          country: formState.country,
-          year_of_admission: formState.year_of_admission,
-          employer: formState.employer,
-          work_title: formState.work_title,
-          tfif_membership: formState.tfif_membership,
-          alumni_newsletter_consent: formState.alumni_newsletter_consent,
-          consent: formState.consent,
-          "cf-turnstile-response": formState.captcha,
-        },
-      });
-      setFormState(initialState);
-      setStatusMessage("Registration submitted. You will receive follow-up by email.");
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to submit registration");
-    } finally {
-      setIsSubmitting(false);
-    }
+    mutation.mutate({
+      operation: "CREATE",
+      firstname: formState.firstname,
+      lastname: formState.lastname,
+      email: formState.email,
+      phone_number: formState.phone_number,
+      address: formState.address,
+      zip: formState.zip,
+      city: formState.city,
+      country: formState.country,
+      year_of_admission: formState.year_of_admission,
+      employer: formState.employer,
+      work_title: formState.work_title,
+      tfif_membership: formState.tfif_membership,
+      alumni_newsletter_consent: formState.alumni_newsletter_consent,
+      consent: formState.consent,
+      "cf-turnstile-response": formState.captcha,
+    });
   }
 
   return (
@@ -212,8 +205,8 @@ export function AlumniSignupForm() {
         />
         <span>I agree to the registration terms.</span>
       </label>
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Submitting..." : "Submit registration"}
+      <button type="submit" disabled={mutation.isPending}>
+        {mutation.isPending ? "Submitting..." : "Submit application"}
       </button>
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
       {statusMessage ? <p className="form-success">{statusMessage}</p> : null}

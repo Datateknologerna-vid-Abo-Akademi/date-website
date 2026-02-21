@@ -307,14 +307,13 @@ class HomeApiView(APIView):
 
 
 
-class StaticPageApiView(APIView):
+class StaticPageApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "staticpages"
 
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request, slug):
-        StaticPage = get_module_model("staticpages", "StaticPage")
-        if StaticPage is None:
-            return module_disabled_response("staticpages")
+        StaticPage = self.get_module_models("StaticPage")
 
         page = StaticPage.objects.filter(slug=slug).first()
         if not page:

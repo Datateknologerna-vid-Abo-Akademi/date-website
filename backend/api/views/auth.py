@@ -149,6 +149,21 @@ MODULE_CAPABILITY_SPEC = {
 
 
 from .utils import *
+
+ErrorResponseSchema = inline_serializer(
+    name="ApiErrorResponse",
+    fields={
+        "error": inline_serializer(
+            name="ApiErrorDetails",
+            fields={
+                "code": serializers.CharField(required=False),
+                "message": serializers.CharField(required=False),
+                "details": serializers.DictField(child=serializers.CharField(), required=False),
+            },
+        )
+    },
+)
+
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class SessionApiView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -174,7 +189,7 @@ class SessionApiView(APIView):
 class LoginApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
-    @extend_schema(responses={200: OpenApiTypes.ANY}, request=OpenApiTypes.ANY)
+    @extend_schema(responses={200: OpenApiTypes.ANY, 401: ErrorResponseSchema}, request=OpenApiTypes.ANY)
     def post(self, request):
         username = request.data.get("username", "")
         password = request.data.get("password", "")
@@ -192,7 +207,7 @@ class LoginApiView(APIView):
 class LogoutApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
-    @extend_schema(responses={200: OpenApiTypes.ANY}, request=OpenApiTypes.ANY)
+    @extend_schema(responses={200: OpenApiTypes.ANY, 400: ErrorResponseSchema, 401: ErrorResponseSchema}, request=OpenApiTypes.ANY)
     def post(self, request):
         logout(request)
         return Response({"data": {"is_authenticated": False}})
@@ -202,7 +217,7 @@ class LogoutApiView(APIView):
 class SignupApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
-    @extend_schema(responses={200: OpenApiTypes.ANY}, request=OpenApiTypes.ANY)
+    @extend_schema(responses={200: OpenApiTypes.ANY, 201: OpenApiTypes.ANY, 400: ErrorResponseSchema}, request=OpenApiTypes.ANY)
     def post(self, request):
         form = SignUpForm(request.data)
 
@@ -252,7 +267,7 @@ class SignupApiView(APIView):
 class ActivateApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
-    @extend_schema(responses={200: OpenApiTypes.ANY})
+    @extend_schema(responses={200: OpenApiTypes.ANY, 400: ErrorResponseSchema})
     def get(self, request, uidb64, token):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
@@ -275,7 +290,7 @@ class PasswordResetRequestApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @extend_schema(operation_id="v1_auth_password_reset_request")
-    @extend_schema(responses={200: OpenApiTypes.ANY}, request=OpenApiTypes.ANY)
+    @extend_schema(responses={200: OpenApiTypes.ANY, 400: ErrorResponseSchema}, request=OpenApiTypes.ANY)
     def post(self, request):
         email = (request.data.get("email") or "").strip()
         if not email:
@@ -309,7 +324,7 @@ class PasswordResetConfirmApiView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @extend_schema(operation_id="v1_auth_password_reset_confirm")
-    @extend_schema(responses={200: OpenApiTypes.ANY}, request=OpenApiTypes.ANY)
+    @extend_schema(responses={200: OpenApiTypes.ANY, 400: ErrorResponseSchema}, request=OpenApiTypes.ANY)
     def post(self, request, uidb64, token):
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
@@ -349,7 +364,7 @@ class PasswordResetConfirmApiView(APIView):
 class PasswordChangeApiView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    @extend_schema(responses={200: OpenApiTypes.ANY}, request=OpenApiTypes.ANY)
+    @extend_schema(responses={200: OpenApiTypes.ANY, 400: ErrorResponseSchema}, request=OpenApiTypes.ANY)
     def post(self, request):
         form = PasswordChangeForm(
             user=request.user,

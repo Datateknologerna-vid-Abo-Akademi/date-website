@@ -11,7 +11,28 @@ export const getRequestOrigin = () => {
 
 // Custom fetch to unwrap Django's { "data": ... } response
 const unwrapDjangoResponse = async (url: RequestInfo | URL, init?: RequestInit) => {
-  const response = await fetch(url, init);
+  const method = init?.method?.toUpperCase() ?? "GET";
+
+  const newInit: RequestInit = {
+    ...init,
+    credentials: "include", // Ensure session cookies are sent
+  };
+
+  // Attach CSRF tokens for mutations in the browser
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method) && typeof document !== "undefined") {
+    // Ensure the browser has a valid session cookie for CSRF
+    await fetch("/api/v1/auth/session", { method: "GET", credentials: "include" });
+    const match = document.cookie.match(/(^| )csrftoken=([^;]+)/);
+    const csrfToken = match ? decodeURIComponent(match[2]) : "";
+    if (csrfToken) {
+      newInit.headers = {
+        ...newInit.headers,
+        "X-CSRFToken": csrfToken,
+      };
+    }
+  }
+
+  const response = await fetch(url, newInit);
 
   if (response.status === 204) {
     return response;
@@ -44,7 +65,6 @@ const unwrapDjangoResponse = async (url: RequestInfo | URL, init?: RequestInit) 
     return response; // Not JSON probably
   }
 };
-
 export const apiClient = createClient<paths>({
   baseUrl: `${getRequestOrigin()}`,
   fetch: unwrapDjangoResponse,

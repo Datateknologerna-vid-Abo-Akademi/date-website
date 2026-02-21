@@ -150,14 +150,13 @@ MODULE_CAPABILITY_SPEC = {
 
 from .utils import *
 
-class AdsListApiView(APIView):
+class AdsListApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "ads"
 
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request):
-        AdUrl = get_module_model("ads", "AdUrl")
-        if AdUrl is None:
-            return Response({"data": []})
+        AdUrl = self.get_module_models("AdUrl")
         serializer = HomeAdSerializer(AdUrl.objects.all(), many=True)
         return Response({"data": serializer.data})
 
@@ -180,15 +179,13 @@ class SocialOverviewApiView(APIView):
 
 
 
-class HarassmentReportApiView(APIView):
+class HarassmentReportApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "social"
 
     @extend_schema(responses={200: OpenApiTypes.ANY}, request=OpenApiTypes.ANY)
     def post(self, request):
-        Harassment = get_module_model("social", "Harassment")
-        HarassmentEmailRecipient = get_module_model("social", "HarassmentEmailRecipient")
-        if Harassment is None or HarassmentEmailRecipient is None:
-            return module_disabled_response("social")
+        Harassment, HarassmentEmailRecipient = self.get_module_models("Harassment", "HarassmentEmailRecipient")
 
         serializer = HarassmentReportSerializer(data=request.data)
         if not serializer.is_valid():

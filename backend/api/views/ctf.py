@@ -150,20 +150,14 @@ MODULE_CAPABILITY_SPEC = {
 
 from .utils import *
 
-class CtfModuleMixin:
+class CtfModuleMixin(ModuleConfigMixin):
+    module_key = "ctf"
+
     def _get_ctf_models(self):
-        if not is_module_enabled("ctf"):
-            return None, None, None
-        return (
-            get_optional_model("ctf", "Ctf"),
-            get_optional_model("ctf", "Flag"),
-            get_optional_model("ctf", "Guess"),
-        )
+        return self.get_module_models("Ctf", "Flag", "Guess")
 
     def _get_ctf_or_404(self, slug):
         Ctf, _, _ = self._get_ctf_models()
-        if Ctf is None:
-            return None
         return Ctf.objects.filter(slug=slug, published=True).first()
 
 
@@ -177,8 +171,6 @@ class CtfListApiView(APIView, CtfModuleMixin):
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request):
         Ctf, _, _ = self._get_ctf_models()
-        if Ctf is None:
-            return module_disabled_response("ctf")
 
         queryset = Ctf.objects.filter(published=True).order_by("-pub_date")[:5]
         serializer = CtfListSerializer(queryset, many=True)
@@ -200,8 +192,6 @@ class CtfDetailApiView(APIView, CtfModuleMixin):
             )
 
         _, Flag, _ = self._get_ctf_models()
-        if Flag is None:
-            return module_disabled_response("ctf")
 
         flags = Flag.objects.filter(ctf=ctf).order_by("id")
         user_has_solved_any_flag = flags.filter(solver=request.user).exists()
@@ -227,8 +217,6 @@ class CtfFlagDetailApiView(APIView, CtfModuleMixin):
             )
 
         _, Flag, _ = self._get_ctf_models()
-        if Flag is None:
-            return module_disabled_response("ctf")
 
         flag = Flag.objects.filter(ctf=ctf, slug=flag_slug).first()
         if not flag:
@@ -265,8 +253,6 @@ class CtfFlagGuessApiView(APIView, CtfModuleMixin):
             )
 
         _, Flag, Guess = self._get_ctf_models()
-        if Flag is None or Guess is None:
-            return module_disabled_response("ctf")
 
         flag = Flag.objects.filter(ctf=ctf, slug=flag_slug).first()
         if not flag:

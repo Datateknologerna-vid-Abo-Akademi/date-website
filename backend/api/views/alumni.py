@@ -150,13 +150,12 @@ MODULE_CAPABILITY_SPEC = {
 
 from .utils import *
 
-class AlumniSignupApiView(APIView):
+class AlumniSignupApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "alumni"
 
     @extend_schema(responses={200: OpenApiTypes.ANY}, request=OpenApiTypes.ANY)
     def post(self, request):
-        if not is_module_enabled("alumni"):
-            return module_disabled_response("alumni")
         try:
             from alumni.forms import AlumniSignUpForm
             from alumni.gsuite_adapter import DateSheetsAdapter
@@ -197,23 +196,20 @@ class AlumniSignupApiView(APIView):
 
 
 
-class AlumniUpdateRequestApiView(APIView):
+class AlumniUpdateRequestApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "alumni"
 
     @extend_schema(operation_id="v1_alumni_update_request_create")
     @extend_schema(responses={200: OpenApiTypes.ANY}, request=OpenApiTypes.ANY)
     def post(self, request):
-        if not is_module_enabled("alumni"):
-            return module_disabled_response("alumni")
         try:
             from alumni.forms import AlumniEmailVerificationForm
             from alumni.tasks import send_token_email
         except Exception:
             return module_disabled_response("alumni")
 
-        AlumniUpdateToken = get_optional_model("alumni", "AlumniUpdateToken")
-        if AlumniUpdateToken is None:
-            return module_disabled_response("alumni")
+        AlumniUpdateToken = self.get_module_models("AlumniUpdateToken")
 
         form = AlumniEmailVerificationForm(request.data)
         if not form.is_valid():
@@ -234,8 +230,9 @@ class AlumniUpdateRequestApiView(APIView):
 
 
 
-class AlumniUpdateTokenApiView(APIView):
+class AlumniUpdateTokenApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "alumni"
 
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request, token):
@@ -250,8 +247,6 @@ class AlumniUpdateTokenApiView(APIView):
     @extend_schema(operation_id="v1_alumni_update_token_create")
     @extend_schema(responses={200: OpenApiTypes.ANY}, request=OpenApiTypes.ANY)
     def post(self, request, token):
-        if not is_module_enabled("alumni"):
-            return module_disabled_response("alumni")
         try:
             from alumni.forms import AlumniUpdateForm
             from alumni.tasks import handle_alumni_signup
@@ -281,11 +276,7 @@ class AlumniUpdateTokenApiView(APIView):
         return Response({"data": {"updated": True}}, status=status.HTTP_201_CREATED)
 
     def _get_valid_token(self, token):
-        if not is_module_enabled("alumni"):
-            return None
-        AlumniUpdateToken = get_optional_model("alumni", "AlumniUpdateToken")
-        if AlumniUpdateToken is None:
-            return None
+        AlumniUpdateToken = self.get_module_models("AlumniUpdateToken")
         token_obj = AlumniUpdateToken.objects.filter(token=token).first()
         if not token_obj:
             return None

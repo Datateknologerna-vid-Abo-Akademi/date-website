@@ -263,6 +263,12 @@ paths:
             application/json:
               schema: {}
           description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
   /api/v1/auth/login:
     post:
       operationId: v1_auth_login_create
@@ -284,6 +290,12 @@ paths:
           content:
             application/json:
               schema: {}
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
   /api/v1/auth/logout:
     post:
@@ -307,6 +319,18 @@ paths:
             application/json:
               schema: {}
           description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+          description: ''
   /api/v1/auth/password-change:
     post:
       operationId: v1_auth_password_change_create
@@ -327,6 +351,12 @@ paths:
           content:
             application/json:
               schema: {}
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
   /api/v1/auth/password-reset:
     post:
@@ -349,6 +379,12 @@ paths:
           content:
             application/json:
               schema: {}
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
   /api/v1/auth/password-reset/{uidb64}/{token}:
     post:
@@ -382,6 +418,12 @@ paths:
           content:
             application/json:
               schema: {}
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
   /api/v1/auth/session:
     get:
@@ -418,6 +460,17 @@ paths:
           content:
             application/json:
               schema: {}
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema: {}
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
           description: ''
   /api/v1/ctf:
     get:
@@ -1025,6 +1078,24 @@ paths:
           description: ''
 components:
   schemas:
+    ApiErrorDetails:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties:
+            type: string
+    ApiErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/ApiErrorDetails'
+      required:
+      - error
     EventList:
       type: object
       properties:

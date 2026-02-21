@@ -150,13 +150,14 @@ MODULE_CAPABILITY_SPEC = {
 
 from .utils import *
 
-class NewsListApiView(APIView):
+class NewsListApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "news"
 
     @extend_schema(operation_id="v1_news_retrieve_list")
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request):
-        Post = get_module_model("news", "Post")
+        Post = self.get_module_models("Post")
         if Post is None:
             return Response({"data": []})
 
@@ -177,28 +178,26 @@ class NewsListApiView(APIView):
 
 
 
-class NewsFeedApiView(APIView):
+class NewsFeedApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "news"
 
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request):
-        if not is_module_enabled("news"):
-            return module_disabled_response("news")
         from news.feed import LatestPosts
 
         return LatestPosts()(request)
 
 
 
-class NewsDetailApiView(APIView):
+class NewsDetailApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "news"
 
     @extend_schema(operation_id="v1_news_retrieve_detail")
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request, slug):
-        Post = get_module_model("news", "Post")
-        if Post is None:
-            return module_disabled_response("news")
+        Post = self.get_module_models("Post")
 
         category = request.query_params.get("category")
         query = Q(slug=slug, published=True)

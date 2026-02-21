@@ -808,6 +808,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ApiErrorDetails: {
+            code?: string;
+            message?: string;
+            details?: {
+                [key: string]: string;
+            };
+        };
+        ApiErrorResponse: {
+            error: components["schemas"]["ApiErrorDetails"];
+        };
         EventList: {
             title: string;
             slug: string;
@@ -1181,6 +1191,14 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
         };
     };
     v1_auth_login_create: {
@@ -1204,6 +1222,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -1231,6 +1257,22 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
         };
     };
     v1_auth_password_change_create: {
@@ -1256,6 +1298,14 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
+                };
+            };
         };
     };
     v1_auth_password_reset_request: {
@@ -1279,6 +1329,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -1307,6 +1365,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };
@@ -1351,6 +1417,22 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorResponse"];
                 };
             };
         };

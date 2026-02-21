@@ -150,30 +150,13 @@ MODULE_CAPABILITY_SPEC = {
 
 from .utils import *
 
-class PublicationsListApiView(APIView):
+class PublicationsListApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "publications"
 
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request):
-        if not is_module_enabled("publications"):
-            return Response(
-                {
-                    "data": {
-                        "results": [],
-                        "pagination": {
-                            "page": 1,
-                            "num_pages": 1,
-                            "has_next": False,
-                            "has_previous": False,
-                            "total_items": 0,
-                        },
-                    }
-                }
-            )
-
-        PDFFile = get_optional_model("publications", "PDFFile")
-        if PDFFile is None:
-            return module_disabled_response("publications")
+        PDFFile = self.get_module_models("PDFFile")
 
         queryset = PDFFile.objects.filter(is_public=True)
         if not request.user.is_authenticated:
@@ -197,18 +180,14 @@ class PublicationsListApiView(APIView):
 
 
 
-class PublicationsDetailApiView(APIView):
+class PublicationsDetailApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "publications"
 
     @extend_schema(operation_id="v1_publications_retrieve_by_slug")
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request, slug):
-        if not is_module_enabled("publications"):
-            return module_disabled_response("publications")
-
-        PDFFile = get_optional_model("publications", "PDFFile")
-        if PDFFile is None:
-            return module_disabled_response("publications")
+        PDFFile = self.get_module_models("PDFFile")
 
         pdf_file = PDFFile.objects.filter(slug=slug).first()
         if not pdf_file:

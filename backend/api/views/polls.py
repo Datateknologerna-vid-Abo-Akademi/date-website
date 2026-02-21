@@ -150,17 +150,13 @@ MODULE_CAPABILITY_SPEC = {
 
 from .utils import *
 
-class PollListApiView(APIView):
+class PollListApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "polls"
 
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request):
-        if not is_module_enabled("polls"):
-            return Response({"data": []})
-
-        Question = get_optional_model("polls", "Question")
-        if Question is None:
-            return Response({"data": []})
+        Question = self.get_module_models("Question")
 
         queryset = Question.objects.filter(published=True).order_by("-pub_date")
         serializer = PollQuestionSerializer(queryset, many=True)
@@ -168,18 +164,14 @@ class PollListApiView(APIView):
 
 
 
-class PollDetailApiView(APIView):
+class PollDetailApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "polls"
 
     @extend_schema(operation_id="v1_polls_retrieve_by_id")
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request, poll_id):
-        if not is_module_enabled("polls"):
-            return module_disabled_response("polls")
-
-        Question = get_optional_model("polls", "Question")
-        if Question is None:
-            return module_disabled_response("polls")
+        Question = self.get_module_models("Question")
 
         question = Question.objects.filter(id=poll_id, published=True).first()
         if not question:
@@ -192,17 +184,13 @@ class PollDetailApiView(APIView):
 
 
 
-class PollVoteApiView(APIView):
+class PollVoteApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "polls"
 
     @extend_schema(responses={200: OpenApiTypes.ANY}, request=OpenApiTypes.ANY)
     def post(self, request, poll_id):
-        if not is_module_enabled("polls"):
-            return module_disabled_response("polls")
-
-        Question = get_optional_model("polls", "Question")
-        if Question is None:
-            return module_disabled_response("polls")
+        Question = self.get_module_models("Question")
 
         question = Question.objects.filter(id=poll_id, published=True).first()
         if not question:

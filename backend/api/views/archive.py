@@ -182,14 +182,13 @@ class ArchiveAccessMixin:
 
 
 
-class ArchiveYearsApiView(APIView, ArchiveAccessMixin):
+class ArchiveYearsApiView(APIView, ArchiveAccessMixin, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "archive"
 
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request):
-        Collection = get_module_model("archive", "Collection")
-        if Collection is None:
-            return module_disabled_response("archive")
+        Collection = self.get_module_models("Collection")
 
         auth_error = self.check_archive_access(request)
         if auth_error:
@@ -206,15 +205,14 @@ class ArchiveYearsApiView(APIView, ArchiveAccessMixin):
 
 
 
-class ArchivePicturesByYearApiView(APIView, ArchiveAccessMixin):
+class ArchivePicturesByYearApiView(APIView, ArchiveAccessMixin, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "archive"
 
     @extend_schema(operation_id="v1_archive_pictures_retrieve_by_year")
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request, year):
-        Collection = get_module_model("archive", "Collection")
-        if Collection is None:
-            return module_disabled_response("archive")
+        Collection = self.get_module_models("Collection")
 
         auth_error = self.check_archive_access(request)
         if auth_error:
@@ -225,14 +223,13 @@ class ArchivePicturesByYearApiView(APIView, ArchiveAccessMixin):
 
 
 
-class ArchivePictureCollectionByIdApiView(APIView, ArchiveAccessMixin):
+class ArchivePictureCollectionByIdApiView(APIView, ArchiveAccessMixin, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "archive"
 
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request, collection_id):
-        Collection = get_module_model("archive", "Collection")
-        if Collection is None:
-            return module_disabled_response("archive")
+        Collection = self.get_module_models("Collection")
 
         auth_error = self.check_archive_access(request)
         if auth_error:
@@ -254,16 +251,14 @@ class ArchivePictureCollectionByIdApiView(APIView, ArchiveAccessMixin):
 
 
 
-class ArchivePictureDetailApiView(APIView, ArchiveAccessMixin):
+class ArchivePictureDetailApiView(APIView, ArchiveAccessMixin, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "archive"
 
     @extend_schema(operation_id="v1_archive_pictures_retrieve_detail")
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request, year, album):
-        Collection = get_module_model("archive", "Collection")
-        Picture = get_module_model("archive", "Picture")
-        if Collection is None or Picture is None:
-            return module_disabled_response("archive")
+        Collection, Picture = self.get_module_models("Collection", "Picture")
 
         auth_error = self.check_archive_access(request)
         if auth_error:
@@ -293,15 +288,13 @@ class ArchivePictureDetailApiView(APIView, ArchiveAccessMixin):
 
 
 
-class ArchiveDocumentsApiView(APIView, ArchiveAccessMixin):
+class ArchiveDocumentsApiView(APIView, ArchiveAccessMixin, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "archive"
 
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request):
-        Collection = get_module_model("archive", "Collection")
-        Document = get_module_model("archive", "Document")
-        if Collection is None or Document is None:
-            return module_disabled_response("archive")
+        Collection, Document = self.get_module_models("Collection", "Document")
 
         auth_error = self.check_archive_access(request)
         if auth_error:
@@ -326,15 +319,14 @@ class ArchiveDocumentsApiView(APIView, ArchiveAccessMixin):
 
 
 
-class ArchiveExamCollectionsApiView(APIView, ArchiveAccessMixin):
+class ArchiveExamCollectionsApiView(APIView, ArchiveAccessMixin, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "archive"
 
     @extend_schema(operation_id="v1_archive_exams_retrieve_collections")
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request):
-        Collection = get_module_model("archive", "Collection")
-        if Collection is None:
-            return module_disabled_response("archive")
+        Collection = self.get_module_models("Collection")
 
         auth_error = self.check_archive_access(request)
         if auth_error:
@@ -345,16 +337,14 @@ class ArchiveExamCollectionsApiView(APIView, ArchiveAccessMixin):
 
 
 
-class ArchiveExamDetailApiView(APIView, ArchiveAccessMixin):
+class ArchiveExamDetailApiView(APIView, ArchiveAccessMixin, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "archive"
 
     @extend_schema(operation_id="v1_archive_exams_retrieve_detail")
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request, collection_id):
-        Collection = get_module_model("archive", "Collection")
-        Document = get_module_model("archive", "Document")
-        if Collection is None or Document is None:
-            return module_disabled_response("archive")
+        Collection, Document = self.get_module_models("Collection", "Document")
 
         auth_error = self.check_archive_access(request)
         if auth_error:

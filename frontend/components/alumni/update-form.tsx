@@ -2,7 +2,9 @@
 
 import { FormEvent, useState } from "react";
 
-import { mutateApi } from "@/lib/api/client";
+import { useMutation } from "@tanstack/react-query";
+
+import { updateAlumni } from "@/lib/api/mutations";
 import formStyles from "@/components/ui/form-primitives.module.css";
 
 interface AlumniUpdateFormProps {
@@ -10,9 +12,6 @@ interface AlumniUpdateFormProps {
   token: string;
 }
 
-interface AlumniUpdateResponse {
-  updated: boolean;
-}
 
 interface AlumniUpdateState {
   firstname: string;
@@ -46,9 +45,19 @@ const initialState: AlumniUpdateState = {
 
 export function AlumniUpdateForm({ email, token }: AlumniUpdateFormProps) {
   const [formState, setFormState] = useState<AlumniUpdateState>(initialState);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
+  const mutation = useMutation({
+    mutationFn: (variables: { token: string; payload: Record<string, unknown> }) =>
+      updateAlumni(variables.token, variables.payload),
+    onSuccess: () => {
+      setStatusMessage("Your alumni information has been queued for update.");
+      setFormState(initialState);
+    },
+    onError: (error) => {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to update alumni information");
+    },
+  });
 
   function updateField<K extends keyof AlumniUpdateState>(field: K, value: AlumniUpdateState[K]) {
     setFormState((previous) => ({ ...previous, [field]: value }));
@@ -58,23 +67,11 @@ export function AlumniUpdateForm({ email, token }: AlumniUpdateFormProps) {
     event.preventDefault();
     setErrorMessage("");
     setStatusMessage("");
-    setIsSubmitting(true);
 
-    try {
-      await mutateApi<AlumniUpdateResponse>({
-        method: "POST",
-        path: `alumni/update/${token}`,
-        body: {
-          ...formState,
-        },
-      });
-      setStatusMessage("Your alumni information has been queued for update.");
-      setFormState(initialState);
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Unable to update alumni information");
-    } finally {
-      setIsSubmitting(false);
-    }
+    mutation.mutate({
+      token,
+      payload: { ...formState },
+    });
   }
 
   return (
@@ -171,8 +168,8 @@ export function AlumniUpdateForm({ email, token }: AlumniUpdateFormProps) {
         />
         <span>I want alumni event updates.</span>
       </label>
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Submitting..." : "Submit update"}
+      <button type="submit" disabled={mutation.isPending}>
+        {mutation.isPending ? "Submitting..." : "Submit changes"}
       </button>
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
       {statusMessage ? <p className="form-success">{statusMessage}</p> : null}

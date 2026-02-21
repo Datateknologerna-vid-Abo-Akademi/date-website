@@ -150,14 +150,13 @@ MODULE_CAPABILITY_SPEC = {
 
 from .utils import *
 
-class EventsListApiView(APIView):
+class EventsListApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "events"
 
     @extend_schema(responses={200: EventListSerializer(many=True)})
     def get(self, request):
-        Event = get_module_model("events", "Event")
-        if Event is None:
-            return Response({"data": []})
+        Event = self.get_module_models("Event")
 
         include_past = request.query_params.get("include_past", "false").lower() == "true"
         queryset = Event.objects.filter(published=True).order_by("event_date_start")
@@ -168,30 +167,26 @@ class EventsListApiView(APIView):
 
 
 
-class EventsFeedApiView(APIView):
+class EventsFeedApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "events"
 
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request):
         # Keep module-guard patch compatibility with historical api.views namespace.
-        from api import views as api_views
-
-        if not api_views.is_module_enabled("events"):
-            return api_views.module_disabled_response("events")
         from events.feed import EventFeed
 
         return EventFeed()(request)
 
 
 
-class EventDetailApiView(APIView):
+class EventDetailApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "events"
 
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request, slug):
-        Event = get_module_model("events", "Event")
-        if Event is None:
-            return module_disabled_response("events")
+        Event = self.get_module_models("Event")
 
         event = Event.objects.filter(slug=slug, published=True).first()
         if not event:
@@ -218,14 +213,13 @@ class EventDetailApiView(APIView):
 
 
 
-class EventPasscodeApiView(APIView):
+class EventPasscodeApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "events"
 
     @extend_schema(responses={200: OpenApiTypes.ANY}, request=OpenApiTypes.ANY)
     def post(self, request, slug):
-        Event = get_module_model("events", "Event")
-        if Event is None:
-            return module_disabled_response("events")
+        Event = self.get_module_models("Event")
 
         event = Event.objects.filter(slug=slug, published=True).first()
         if not event:
@@ -249,15 +243,13 @@ class EventPasscodeApiView(APIView):
 
 
 
-class EventSignupApiView(APIView):
+class EventSignupApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "events"
 
     @extend_schema(responses={200: OpenApiTypes.ANY}, request=OpenApiTypes.ANY)
     def post(self, request, slug):
-        Event = get_module_model("events", "Event")
-        EventAttendees = get_module_model("events", "EventAttendees")
-        if Event is None or EventAttendees is None:
-            return module_disabled_response("events")
+        Event, EventAttendees = self.get_module_models("Event", "EventAttendees")
 
         event = Event.objects.filter(slug=slug, published=True).first()
         if not event:
@@ -398,14 +390,13 @@ class EventSignupApiView(APIView):
 
 
 
-class EventAttendeesApiView(APIView):
+class EventAttendeesApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "events"
 
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request, slug):
-        Event = get_module_model("events", "Event")
-        if Event is None:
-            return module_disabled_response("events")
+        Event = self.get_module_models("Event")
 
         event = Event.objects.filter(slug=slug, published=True).first()
         if not event:

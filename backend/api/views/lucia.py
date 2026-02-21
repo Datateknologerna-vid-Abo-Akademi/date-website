@@ -150,16 +150,13 @@ MODULE_CAPABILITY_SPEC = {
 
 from .utils import *
 
-class LuciaIndexApiView(APIView):
+class LuciaIndexApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.AllowAny]
+    module_key = "lucia"
 
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request):
-        if not is_module_enabled("lucia"):
-            return module_disabled_response("lucia")
-        Candidate = get_optional_model("lucia", "Candidate")
-        if Candidate is None:
-            return module_disabled_response("lucia")
+        Candidate = self.get_module_models("Candidate")
 
         payload = {
             "title": "Lucia",
@@ -170,17 +167,14 @@ class LuciaIndexApiView(APIView):
 
 
 
-class LuciaCandidatesApiView(APIView):
+class LuciaCandidatesApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.IsAuthenticated]
+    module_key = "lucia"
 
     @extend_schema(operation_id="v1_lucia_candidates_retrieve_list")
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request):
-        if not is_module_enabled("lucia"):
-            return module_disabled_response("lucia")
-        Candidate = get_optional_model("lucia", "Candidate")
-        if Candidate is None:
-            return module_disabled_response("lucia")
+        Candidate = self.get_module_models("Candidate")
 
         queryset = Candidate.objects.filter(published=True).order_by("id")
         serializer = LuciaCandidateSerializer(queryset, many=True)
@@ -188,17 +182,14 @@ class LuciaCandidatesApiView(APIView):
 
 
 
-class LuciaCandidateDetailApiView(APIView):
+class LuciaCandidateDetailApiView(APIView, ModuleConfigMixin):
     permission_classes = [permissions.IsAuthenticated]
+    module_key = "lucia"
 
     @extend_schema(operation_id="v1_lucia_candidates_retrieve_detail")
     @extend_schema(responses={200: OpenApiTypes.ANY})
     def get(self, request, slug):
-        if not is_module_enabled("lucia"):
-            return module_disabled_response("lucia")
-        Candidate = get_optional_model("lucia", "Candidate")
-        if Candidate is None:
-            return module_disabled_response("lucia")
+        Candidate = self.get_module_models("Candidate")
 
         candidate = Candidate.objects.filter(slug=slug, published=True).first()
         if not candidate:
