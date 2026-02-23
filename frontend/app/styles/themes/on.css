@@ -19,16 +19,24 @@ body.association-on {
     --linkColorDarkHover: #26547f;
     --linkColorLight: #ffc400;
     --linkColorLightHover: #edc057;
+    --linkColor: var(--linkColorLight);
+    --linkColorHover: var(--linkColorLightHover);
+    --warning: rgb(216, 153, 146);
+    --warning-darker: rgb(213, 91, 78);
+    --navClickHighlight: rgba(255, 255, 255, 0.25);
+    --navHoverHighlight: rgba(255, 255, 255, 0.15);
+    --defaultPadding: 20px;
+    --defaultRadius: 5px;
 
     /* Semantic Layout Mappings */
     --theme-background: var(--primaryColor);
     --theme-content-bg: var(--secondaryColor);
     --theme-content-text: var(--textColorDarkish);
-    --theme-content-link: var(--linkColorSecondary, var(--linkColorDark));
-    --theme-content-link-hover: var(--linkSecondaryHover, var(--linkColorDarkHover));
+    --theme-content-link: var(--linkColorLight);
+    --theme-content-link-hover: var(--linkColorLightHover);
     --theme-hero-text-color: var(--textColorDarkish);
-    --theme-panel-link: var(--linkColorSecondary, var(--linkColorDark));
-    --theme-panel-link-hover: var(--linkSecondaryHover, var(--linkColorDarkHover));
+    --theme-panel-link: var(--linkColorLight);
+    --theme-panel-link-hover: var(--linkColorLightHover);
     --theme-button-primary: var(--primaryColorLighter);
     --theme-button-primary-hover: color-mix(in srgb, var(--primaryColorLighter) 78%, black 22%);
 }

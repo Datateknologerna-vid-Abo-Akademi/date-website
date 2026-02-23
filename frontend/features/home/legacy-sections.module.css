@@ -15,6 +15,11 @@
   transition: all 0.2s;
 }
 
+.eventCard :global(.badge) {
+  background: var(--primaryColorLighter);
+  color: var(--textColorLight);
+}
+
 .eventCard :global(.card):hover {
   transform: scale(1.01);
 }

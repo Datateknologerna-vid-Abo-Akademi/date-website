@@ -1,0 +1,41 @@
+html body {
+  background-color: var(--theme-background);
+  background-image: none;
+  color: var(--textColorLightish);
+  font-family: var(--font-josefin), "Josefin Sans", sans-serif;
+  min-height: 100vh;
+  margin: 0;
+}
+
+.legacy-container {
+  width: min(1180px, calc(100% - 2rem));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.site-main {
+  width: min(1280px, calc(100% - 1rem));
+  margin: 5.5rem auto 3rem;
+}
+
+.site-main:has(> .home-page) {
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.site-main:has(> .events-index-page),
+.site-main:has(> .event-detail-page),
+.site-main:has(> [data-testid="auth-shell"]) {
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.site-main:has(> [data-testid="auth-shell"]) {
+  margin-top: 0;
+}
+
+.header-logo {
+  max-height: 45px;
+}

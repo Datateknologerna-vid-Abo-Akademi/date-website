@@ -27,6 +27,8 @@
   --linkColorDarkHover: #26547f;
   --linkColorLight: rgb(208, 255, 0);
   --linkColorLightHover: rgb(146, 179, 0);
+  --linkColor: var(--linkColorLight);
+  --linkColorHover: var(--linkColorLightHover);
   --warning: rgb(216, 153, 146);
   --warning-darker: rgb(213, 91, 78);
   --navClickHighlight: rgba(255, 255, 255, 0.25);
@@ -44,15 +46,6 @@
   --legacy-text-muted: var(--helpTextLighter);
 }
 
-html body {
-  background-color: var(--theme-background);
-  background-image: none;
-  color: var(--textColorLightish);
-  font-family: var(--font-josefin), "Josefin Sans", sans-serif;
-  min-height: 100vh;
-  margin: 0;
-}
-
 .break-words {
   word-break: break-all;
   word-break: break-word;
@@ -68,82 +61,9 @@ html body {
   margin: 0 auto;
 }
 
-.content {
-  margin: 20px 2vw;
-  background-color: var(--theme-content-bg);
-  color: var(--theme-content-text);
-  padding: var(--defaultPadding);
-  border-radius: var(--defaultRadius);
-}
-
-.content img {
-  max-height: 35vh;
-  max-width: 100%;
-  width: auto !important;
-  height: auto !important;
-  border-radius: var(--defaultRadius);
-}
-
-.content a {
-  color: var(--theme-content-link);
-}
-
-.content a:hover {
-  color: var(--theme-content-link-hover);
-}
-
 h1,
 h2,
 h3,
 h4 {
   font-family: inherit;
-}
-
-div a {
-  color: var(--theme-content-link);
-  display: inline-block;
-  text-decoration: none;
-}
-
-div a:hover {
-  transition: 0.3s;
-  color: var(--theme-content-link-hover);
-}
-
-.legacy-container {
-  width: min(1180px, calc(100% - 2rem));
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.site-main {
-  width: min(1280px, calc(100% - 1rem));
-  margin: 5.5rem auto 3rem;
-}
-
-.site-main:has(> .home-page) {
-  width: 100%;
-  margin-left: 0;
-  margin-right: 0;
-}
-
-.site-main:has(> .events-index-page),
-.site-main:has(> .event-detail-page),
-.site-main:has(> [data-testid="auth-shell"]) {
-  width: 100%;
-  margin-left: 0;
-  margin-right: 0;
-}
-
-.site-main:has(> [data-testid="auth-shell"]) {
-  margin-top: 0;
-}
-
-.header-logo {
-  max-height: 45px;
-}
-
-.association-biocum .header-logo,
-.association-biocum .footer-img {
-  filter: brightness(0) invert(1);
 }

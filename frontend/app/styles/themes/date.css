@@ -19,16 +19,24 @@ body.association-date {
     --linkColorDarkHover: #26547f;
     --linkColorLight: rgb(208, 255, 0);
     --linkColorLightHover: rgb(146, 179, 0);
+    --linkColor: var(--linkColorDark);
+    --linkColorHover: var(--linkColorDarkHover);
+    --warning: rgb(216, 153, 146);
+    --warning-darker: rgb(213, 91, 78);
+    --navClickHighlight: rgba(255, 255, 255, 0.25);
+    --navHoverHighlight: rgba(255, 255, 255, 0.15);
+    --defaultPadding: 20px;
+    --defaultRadius: 5px;
 
     /* Semantic Layout Mappings */
     --theme-background: var(--primaryColor);
     --theme-content-bg: var(--primaryColorLight);
     --theme-content-text: var(--textColorLightish);
-    --theme-content-link: var(--secondaryColor);
-    --theme-content-link-hover: color-mix(in srgb, var(--secondaryColor) 78%, white 22%);
+    --theme-content-link: var(--linkColorLight);
+    --theme-content-link-hover: var(--linkColorLightHover);
     --theme-hero-text-color: var(--textColorLightish);
-    --theme-panel-link: var(--secondaryColor);
-    --theme-panel-link-hover: color-mix(in srgb, var(--secondaryColor) 78%, white 22%);
+    --theme-panel-link: var(--linkColorLight);
+    --theme-panel-link-hover: var(--linkColorLightHover);
     --theme-button-primary: var(--primaryColorLighter);
     --theme-button-primary-hover: color-mix(in srgb, var(--primaryColorLighter) 78%, white 22%);
 }

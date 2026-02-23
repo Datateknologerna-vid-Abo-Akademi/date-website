@@ -15,21 +15,25 @@ body.association-biocum {
     --helpText: rgb(171, 171, 171);
     --helpTextLighter: rgb(199, 199, 199);
     --linkColor: #49796b;
-    --linkColorHover: #225E41;
+    --linkColorHover: var(--linkSecondaryHover);
     --linkColorSecondary: #49796b;
     --linkSecondaryHover: #225E41;
     --linkColorLight: #b9efd3;
     --linkColorLightHover: #9dd6ba;
+    --warning: rgb(216, 153, 146);
+    --badgeColor: #49796b;
+    --defaultPadding: 20px;
+    --defaultRadius: 5px;
 
     /* Semantic Layout Mappings */
     --theme-background: var(--primaryColor);
     --theme-content-bg: var(--secondaryColor);
     --theme-content-text: var(--textColorDarkish);
-    --theme-content-link: var(--linkColorSecondary, var(--linkColorDark));
-    --theme-content-link-hover: var(--linkSecondaryHover, var(--linkColorDarkHover));
+    --theme-content-link: var(--linkColorSecondary);
+    --theme-content-link-hover: var(--linkSecondaryHover);
     --theme-hero-text-color: var(--textColorDarkish);
-    --theme-panel-link: var(--linkColorSecondary, var(--linkColorDark));
-    --theme-panel-link-hover: var(--linkSecondaryHover, var(--linkColorDarkHover));
+    --theme-panel-link: var(--linkColorSecondary);
+    --theme-panel-link-hover: var(--linkSecondaryHover);
     --theme-button-primary: var(--primaryColorLighter);
     --theme-button-primary-hover: color-mix(in srgb, var(--primaryColorLighter) 78%, black 22%);
 }

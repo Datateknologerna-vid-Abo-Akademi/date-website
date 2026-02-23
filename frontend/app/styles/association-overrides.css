@@ -1,0 +1,4 @@
+.association-biocum .header-logo,
+.association-biocum .footer-img {
+  filter: brightness(0) invert(1);
+}
