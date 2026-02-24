@@ -1,0 +1,11 @@
+{# TODO make proper template #}
+
+<h1>Attendance events</h1>
+
+<ul>
+    {% for e in object_list %}
+        <li><a href="{{ e.slug }}">{{ e }}</a></li>
+    {% empty %}
+        <li>No events :(</li>
+    {% endfor %}
+</ul>
