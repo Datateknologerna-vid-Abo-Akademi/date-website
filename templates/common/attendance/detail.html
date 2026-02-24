@@ -1,0 +1,49 @@
+{# TODO make proper template #}
+
+<h1>{{ object.title }}</h1>
+<h3>{{ object.description }}</h3>
+<p>Start: {{ object.start_datetime }}</p>
+<p>End: {{ object.end_datetime|default:"-" }}</p>
+<p>Secret: {{ object.secret }}</p>
+
+{% if user.is_authenticated %}
+<p>You are
+    {% if is_present %}
+    present
+    {% else %}
+    not present
+    {% endif %}
+</p>
+{% endif %}
+
+
+<h2>Present attendees:</h2>
+<ul>
+{% for a in object.present_attendees %}
+<li>{{a}}</li>
+{% endfor %}
+</ul>
+
+
+{% if error_message %}
+<p>Error: {{ error_message }}</p>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    {% if not user.is_authenticated %}
+        <p>You are not logged in. If you do not have an account fill in your name below. If you have an account please log in.</p>
+        <input type="text" name="non_member_name" value="" placeholder="Name">
+    {% endif %}
+    <input type="text" name="secret" value="" placeholder="Event secret">
+    <button type="submit" name="type" value="0" {% if user.is_authenticated and is_present %} disabled {% endif %}>Enter</button>
+    <button type="submit" name="type" value="1" {% if user.is_authenticated and not is_present %} disabled {% endif %}>Leave</button>
+</form>
+
+{# This should probably only be visible for admins #}
+<h2>Attendance changes</h2>
+<ul>
+{% for c in object.attendance_changes.all %}
+<li>{{ c.attendee }} {{ c.get_type_display.lower }} at {{ c.timestamp }}</li>
+{% endfor %}
+</ul>
