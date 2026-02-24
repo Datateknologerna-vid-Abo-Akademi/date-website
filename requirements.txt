@@ -27,3 +27,5 @@ daphne
 celery[redis]
 gunicorn
 gspread
+django-stubs[compatible_mypy]
+django-stubs-ext
