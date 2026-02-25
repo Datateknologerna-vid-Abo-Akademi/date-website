@@ -48,6 +48,7 @@ export function SiteHeader({ siteMeta, session }: SiteHeaderProps) {
   const showFallbackNav = !hasAdminNavigation && !staticPagesEnabled;
   const showHome = siteMeta.default_landing_path === "/";
   const homeHref = showHome ? "/" : siteMeta.default_landing_path || "/";
+  const headerLogoSrc = siteMeta.branding?.logo_header_url || "/static/core/images/headerlogo.png";
 
   return (
     <header className={`site-header legacy-site-header ${styles.root}`}>
@@ -55,7 +56,7 @@ export function SiteHeader({ siteMeta, session }: SiteHeaderProps) {
         <div className={`container ${styles.navContainer}`}>
           <Link id="logo" href={homeHref} className={`navbar-brand ${styles.brandLink}`}>
             <img
-              src="/static/core/images/headerlogo.png"
+              src={headerLogoSrc}
               alt={associationShortName}
               className={`header-logo ${styles.brandLogo}`}
             />

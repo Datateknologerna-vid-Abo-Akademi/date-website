@@ -7,11 +7,26 @@ class SiteMetaApiView(APIView):
     def get(self, request):
         navigation = self._build_navigation()
         module_capabilities = build_module_capabilities()
+        tenant_slug = getattr(request, "tenant_slug", settings.PROJECT_NAME)
+        tenant_default_locale = getattr(settings, "TENANT_DEFAULT_LOCALES", {}).get(
+            tenant_slug, settings.LANGUAGE_CODE
+        )
         payload = {
+            "tenant": {
+                "slug": tenant_slug,
+                "source": getattr(request, "tenant_resolution_source", "default"),
+                "host": getattr(request, "tenant_resolution_host", ""),
+            },
             "project_name": settings.PROJECT_NAME,
-            "language_code": settings.LANGUAGE_CODE,
+            "language_code": getattr(request, "LANGUAGE_CODE", settings.LANGUAGE_CODE),
+            "default_locale": tenant_default_locale,
+            "enabled_locales": getattr(settings, "SUPPORTED_API_LOCALES", [settings.LANGUAGE_CODE]),
             "content_variables": settings.CONTENT_VARIABLES,
             "association_theme": settings.ASSOCIATION_THEME,
+            "branding": {
+                "logo_header_url": settings.CONTENT_VARIABLES.get("LOGO_HEADER_URL", "/static/core/images/headerlogo.png"),
+                "logo_footer_url": settings.CONTENT_VARIABLES.get("LOGO_FOOTER_URL", "/static/core/images/footerlogo.png"),
+            },
             "captcha_site_key": settings.CAPTCHA_SITE_KEY,
             "navigation": navigation,
             "feature_flags": settings.EXPERIMENTAL_FEATURES,

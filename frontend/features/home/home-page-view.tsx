@@ -162,7 +162,7 @@ export function HomePageView({
                       )}
                     </div>
                     <div className="text-center">
-                      <Link href="/pages/foretagssamarbete/">Vill du samarbeta med DaTe?</Link>
+                      <Link href="/p/foretagssamarbete/">Vill du samarbeta med DaTe?</Link>
                     </div>
                   </div>
                 ) : partnerAds.length > 0 ? (

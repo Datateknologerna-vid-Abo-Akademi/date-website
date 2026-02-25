@@ -11,6 +11,9 @@ Base path: `/api/v1`
 ### Meta and Session
 - `GET /meta/site`
   - Includes:
+    - `tenant` (`slug`, `source`, `host`) resolved from forwarded host context.
+    - `language_code`, `default_locale`, `enabled_locales`.
+    - `branding` (`logo_header_url`, `logo_footer_url`).
     - `enabled_modules` for association-specific module availability.
     - `module_capabilities` for per-module `enabled`, `routes`, and `features`.
       - Each module capability also includes:

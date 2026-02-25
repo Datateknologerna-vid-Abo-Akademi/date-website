@@ -90,7 +90,7 @@ export function HarassmentForm({ captchaSiteKey }: HarassmentFormProps) {
         />
         <span>
           Jag godkänner{" "}
-          <Link href="/pages/registerbeskrivning/" target="_blank">
+          <Link href="/p/registerbeskrivning/" target="_blank">
             villkoren
           </Link>
           .

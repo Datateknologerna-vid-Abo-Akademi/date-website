@@ -21,10 +21,14 @@ class StaticPageNavSerializer(serializers.Serializer):
 
 
 class SiteMetaSerializer(serializers.Serializer):
+    tenant = serializers.DictField()
     project_name = serializers.CharField()
     language_code = serializers.CharField()
+    default_locale = serializers.CharField()
+    enabled_locales = serializers.ListField(child=serializers.CharField())
     content_variables = serializers.DictField()
     association_theme = serializers.DictField()
+    branding = serializers.DictField()
     captcha_site_key = serializers.CharField()
     navigation = StaticPageNavSerializer(many=True)
     feature_flags = serializers.ListField(child=serializers.CharField())

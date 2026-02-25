@@ -9,6 +9,36 @@ export const getRequestOrigin = () => {
   return process.env.BACKEND_API_ORIGIN ?? process.env.NEXT_PUBLIC_APP_ORIGIN ?? "http://localhost:3000";
 };
 
+interface ServerRequestContext {
+  cookieHeader: string;
+  tenantSlug: string;
+  locale: string;
+  forwardedHost: string;
+  forwardedProto: string;
+}
+
+async function getServerRequestContext(): Promise<ServerRequestContext | null> {
+  if (typeof window !== "undefined") return null;
+
+  const { headers } = await import("next/headers");
+  const incomingHeaders = await headers();
+
+  return {
+    cookieHeader: incomingHeaders.get("cookie") ?? "",
+    tenantSlug: incomingHeaders.get("x-tenant-slug") ?? "",
+    locale: incomingHeaders.get("x-locale") ?? "",
+    forwardedHost:
+      incomingHeaders.get("x-forwarded-host") ?? incomingHeaders.get("host") ?? "",
+    forwardedProto: incomingHeaders.get("x-forwarded-proto") ?? "http",
+  };
+}
+
+function hasAuthModeSession(headers: HeadersInit | undefined): boolean {
+  if (!headers) return false;
+  const normalized = new Headers(headers);
+  return normalized.get("X-Auth-Mode")?.toLowerCase() === "session";
+}
+
 // Custom fetch to unwrap Django's { "data": ... } response
 const unwrapDjangoResponse = async (url: RequestInfo | URL, init?: RequestInit) => {
   const method = init?.method?.toUpperCase() ?? "GET";
@@ -17,6 +47,31 @@ const unwrapDjangoResponse = async (url: RequestInfo | URL, init?: RequestInit) 
     ...init,
     credentials: "include", // Ensure session cookies are sent
   };
+
+  const serverContext = await getServerRequestContext();
+  if (serverContext) {
+    const mergedHeaders = new Headers(newInit.headers);
+
+    if (serverContext.cookieHeader) {
+      mergedHeaders.set("Cookie", serverContext.cookieHeader);
+      // Any request carrying user cookies must bypass fetch cache to avoid response bleed.
+      newInit.cache = "no-store";
+      (newInit as RequestInit & { next?: { revalidate?: number } }).next = { revalidate: 0 };
+    }
+
+    if (serverContext.tenantSlug) mergedHeaders.set("X-Tenant-Slug", serverContext.tenantSlug);
+    if (serverContext.locale) mergedHeaders.set("X-Locale", serverContext.locale);
+    if (serverContext.locale) mergedHeaders.set("Accept-Language", serverContext.locale);
+    if (serverContext.forwardedHost) mergedHeaders.set("X-Forwarded-Host", serverContext.forwardedHost);
+    if (serverContext.forwardedProto) mergedHeaders.set("X-Forwarded-Proto", serverContext.forwardedProto);
+
+    newInit.headers = mergedHeaders;
+  }
+
+  if (hasAuthModeSession(newInit.headers)) {
+    newInit.cache = "no-store";
+    (newInit as RequestInit & { next?: { revalidate?: number } }).next = { revalidate: 0 };
+  }
 
   // Attach CSRF tokens for mutations in the browser
   if (["POST", "PUT", "PATCH", "DELETE"].includes(method) && typeof document !== "undefined") {

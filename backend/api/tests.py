@@ -36,6 +36,7 @@ class ApiSmokeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertIn("data", payload)
+        self.assertIn("tenant", payload["data"])
         self.assertIn("enabled_modules", payload["data"])
         self.assertIn("module_capabilities", payload["data"])
         self.assertIn("events", payload["data"]["module_capabilities"])
@@ -44,6 +45,23 @@ class ApiSmokeTests(TestCase):
         self.assertIn("nav_route", payload["data"]["module_capabilities"]["events"])
         self.assertIn("features", payload["data"]["module_capabilities"]["events"])
         self.assertIn("default_landing_path", payload["data"])
+        self.assertIn("default_locale", payload["data"])
+        self.assertIn("enabled_locales", payload["data"])
+        self.assertIn("branding", payload["data"])
+
+    @override_settings(TENANT_HOST_MAP={"kk.local": "kk"}, TENANT_DEFAULT_LOCALES={"kk": "fi"})
+    def test_meta_site_resolves_tenant_and_locale_from_forwarded_host_and_headers(self):
+        response = self.client.get(
+            "/api/v1/meta/site",
+            HTTP_X_FORWARDED_HOST="kk.local:8080",
+            HTTP_ACCEPT_LANGUAGE="fi-FI,fi;q=0.9,sv;q=0.8",
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()["data"]
+        self.assertEqual(payload["tenant"]["slug"], "kk")
+        self.assertEqual(payload["tenant"]["source"], "x-forwarded-host")
+        self.assertEqual(payload["default_locale"], "fi")
+        self.assertEqual(payload["language_code"], "fi")
 
     def test_home_endpoint(self):
         response = self.client.get("/api/v1/home")

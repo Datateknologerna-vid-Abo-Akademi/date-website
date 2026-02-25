@@ -86,6 +86,14 @@ async function unwrap<T>(promise: Promise<{ data?: T; error?: unknown }>): Promi
   return data;
 }
 
+const SESSION_REQUEST_OPTIONS = {
+  cache: "no-store" as const,
+  next: { revalidate: 0 },
+  headers: {
+    "X-Auth-Mode": "session",
+  },
+};
+
 export async function getSiteMeta(): Promise<SiteMeta> {
   const data = await unwrap(apiClient.GET("/api/v1/meta/site", { next: { revalidate: 0 } }));
   return data as unknown as SiteMeta;
@@ -161,12 +169,12 @@ export async function getStaticPage(slug: string) {
 }
 
 export async function getSession() {
-  const data = await unwrap(apiClient.GET("/api/v1/auth/session", { next: { revalidate: 0 } }));
+  const data = await unwrap(apiClient.GET("/api/v1/auth/session", SESSION_REQUEST_OPTIONS));
   return data as unknown as SessionData;
 }
 
 export async function getMemberProfile() {
-  const data = await unwrap(apiClient.GET("/api/v1/members/me", { next: { revalidate: 0 } }));
+  const data = await unwrap(apiClient.GET("/api/v1/members/me", SESSION_REQUEST_OPTIONS));
   return data as unknown as MemberProfile;
 }
 
@@ -197,7 +205,7 @@ export async function getPoll(pollId: number) {
 }
 
 export async function getArchiveYears() {
-  const data = await unwrap(apiClient.GET("/api/v1/archive/pictures/years", { next: { revalidate: 30 } }));
+  const data = await unwrap(apiClient.GET("/api/v1/archive/pictures/years", SESSION_REQUEST_OPTIONS));
   return data as unknown as ArchiveYearsPayload;
 }
 
@@ -205,7 +213,7 @@ export async function getArchivePictureCollectionsByYear(year: number) {
   const data = await unwrap(
     apiClient.GET("/api/v1/archive/pictures/{year}", {
       params: { path: { year } },
-      next: { revalidate: 30 },
+      ...SESSION_REQUEST_OPTIONS,
     }),
   );
   return data as unknown as ArchiveCollection[];
@@ -216,7 +224,7 @@ export async function getArchivePictureCollection(year: number, album: string, p
     apiClient.GET("/api/v1/archive/pictures/{year}/{album}", {
       // @ts-expect-error fallback query
       params: { path: { year, album }, query: { page } },
-      next: { revalidate: 10 },
+      ...SESSION_REQUEST_OPTIONS,
     }),
   );
   return data as unknown as ArchivePictureDetailPayload;
@@ -226,7 +234,7 @@ export async function getArchivePictureCollectionById(collectionId: number) {
   const data = await unwrap(
     apiClient.GET("/api/v1/archive/pictures/id/{collection_id}", {
       params: { path: { collection_id: collectionId } },
-      next: { revalidate: 30 },
+      ...SESSION_REQUEST_OPTIONS,
     }),
   );
   return data as unknown as ArchivePictureCollectionByIdPayload;
@@ -237,14 +245,14 @@ export async function getArchiveDocuments(collection?: string, titleContains?: s
     apiClient.GET("/api/v1/archive/documents", {
       // @ts-expect-error fallback query
       params: { query: { page, collection, title_contains: titleContains } },
-      next: { revalidate: 10 },
+      ...SESSION_REQUEST_OPTIONS,
     }),
   );
   return data as unknown as ArchiveDocumentsPayload;
 }
 
 export async function getArchiveExamCollections() {
-  const data = await unwrap(apiClient.GET("/api/v1/archive/exams", { next: { revalidate: 30 } }));
+  const data = await unwrap(apiClient.GET("/api/v1/archive/exams", SESSION_REQUEST_OPTIONS));
   return data as unknown as ArchiveCollection[];
 }
 
@@ -253,7 +261,7 @@ export async function getArchiveExamCollection(collectionId: number, page = 1) {
     apiClient.GET("/api/v1/archive/exams/{collection_id}", {
       // @ts-expect-error fallback query if needed
       params: { path: { collection_id: collectionId }, query: { page } },
-      next: { revalidate: 10 },
+      ...SESSION_REQUEST_OPTIONS,
     }),
   );
   return data as unknown as ArchiveExamDetailPayload;
@@ -291,7 +299,7 @@ export async function getAds() {
 }
 
 export async function getCtfEvents() {
-  const data = await unwrap(apiClient.GET("/api/v1/ctf", { next: { revalidate: 10 } }));
+  const data = await unwrap(apiClient.GET("/api/v1/ctf", SESSION_REQUEST_OPTIONS));
   return data as unknown as CtfItem[];
 }
 
@@ -299,7 +307,7 @@ export async function getCtfEvent(slug: string) {
   const data = await unwrap(
     apiClient.GET("/api/v1/ctf/{slug}", {
       params: { path: { slug } },
-      next: { revalidate: 10 },
+      ...SESSION_REQUEST_OPTIONS,
     }),
   );
   return data as unknown as CtfDetailPayload;
@@ -309,7 +317,7 @@ export async function getCtfFlag(ctfSlug: string, flagSlug: string) {
   const data = await unwrap(
     apiClient.GET("/api/v1/ctf/{ctf_slug}/{flag_slug}", {
       params: { path: { ctf_slug: ctfSlug, flag_slug: flagSlug } },
-      next: { revalidate: 5 },
+      ...SESSION_REQUEST_OPTIONS,
     }),
   );
   return data as unknown as CtfFlagDetailPayload;
@@ -321,7 +329,7 @@ export async function getLuciaOverview() {
 }
 
 export async function getLuciaCandidates() {
-  const data = await unwrap(apiClient.GET("/api/v1/lucia/candidates", { next: { revalidate: 60 } }));
+  const data = await unwrap(apiClient.GET("/api/v1/lucia/candidates", SESSION_REQUEST_OPTIONS));
   return data as unknown as LuciaCandidate[];
 }
 
@@ -329,7 +337,7 @@ export async function getLuciaCandidate(slug: string) {
   const data = await unwrap(
     apiClient.GET("/api/v1/lucia/candidates/{slug}", {
       params: { path: { slug } },
-      next: { revalidate: 30 },
+      ...SESSION_REQUEST_OPTIONS,
     }),
   );
   return data as unknown as LuciaCandidate;

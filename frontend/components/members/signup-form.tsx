@@ -141,7 +141,7 @@ export function SignupForm({ captchaSiteKey }: SignupFormProps) {
         />
         <span>
           Jag godkänner{" "}
-          <Link href="/pages/registerbeskrivning/" target="_blank">
+          <Link href="/p/registerbeskrivning/" target="_blank">
             villkoren
           </Link>
           .

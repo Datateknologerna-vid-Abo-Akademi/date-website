@@ -9,10 +9,7 @@ import {
   KK_HERO_LOGO_SVG,
 } from "@/lib/legacy-hero-logos";
 import { isModuleEnabled } from "@/lib/modules";
-
-function getHeroLogoSrc() {
-  return "/static/core/images/headerlogo.png";
-}
+import { resolveTenantHomeConfig } from "@/lib/tenants";
 
 const INLINE_HERO_LOGOS: Record<string, string> = {
   date: DATE_HERO_LOGO_SVG,
@@ -35,9 +32,10 @@ export default async function Home() {
   const associationFullName =
     (siteMeta.content_variables.ASSOCIATION_NAME_FULL as string | undefined) ?? "";
   const brand = (siteMeta.association_theme.brand ?? "").toLowerCase();
+  const homeConfig = resolveTenantHomeConfig(brand);
   const aboutText = getAboutText(brand);
   const heroSubtitle = getHeroSubtitle(brand, associationName, associationFullName);
-  const heroLogo = getHeroLogoSrc();
+  const heroLogo = siteMeta.branding?.logo_header_url || "/static/core/images/headerlogo.png";
   const inlineHeroLogo = INLINE_HERO_LOGOS[brand] || "";
 
   return (
@@ -49,8 +47,8 @@ export default async function Home() {
       heroLogo={heroLogo}
       inlineHeroLogo={inlineHeroLogo}
       aboutText={aboutText}
-      showNews={showNews}
-      showEvents={showEvents}
+      showNews={showNews && homeConfig.showNews}
+      showEvents={showEvents && homeConfig.showEvents}
     />
   );
 }

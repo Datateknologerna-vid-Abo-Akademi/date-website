@@ -32,6 +32,7 @@ export function SiteFooter({ siteMeta }: SiteFooterProps) {
     (variables.ASSOCIATION_NAME_FULL as string | undefined) ?? "Association";
   const associationShortName =
     (variables.ASSOCIATION_NAME_SHORT as string | undefined) ?? "Association";
+  const footerLogoSrc = siteMeta.branding?.logo_footer_url || "/static/core/images/footerlogo.png";
 
   return (
     <footer className={`container site-footer legacy-site-footer ${styles.root}`}>
@@ -53,11 +54,11 @@ export function SiteFooter({ siteMeta }: SiteFooterProps) {
       </section>
       <div className={`row align-middle align-items-center justify-content-center ${styles.row}`}>
         <div className="col-4 text-center">
-          <img
-            className={`footer-img img-fluid ${styles.footerImage}`}
-            alt={`${associationShortName} footer logo`}
-            src="/static/core/images/footerlogo.png"
-          />
+            <img
+              className={`footer-img img-fluid ${styles.footerImage}`}
+              alt={`${associationShortName} footer logo`}
+              src={footerLogoSrc}
+            />
         </div>
         <div className="col-4">
           <p>

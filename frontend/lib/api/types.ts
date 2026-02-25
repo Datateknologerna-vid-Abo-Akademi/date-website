@@ -40,10 +40,21 @@ export interface ModuleCapability {
 }
 
 export interface SiteMeta {
+  tenant: {
+    slug: string;
+    source: string;
+    host: string;
+  };
   project_name: string;
   language_code: string;
+  default_locale: string;
+  enabled_locales: string[];
   content_variables: Record<string, unknown>;
   association_theme: AssociationTheme;
+  branding: {
+    logo_header_url: string;
+    logo_footer_url: string;
+  };
   captcha_site_key: string;
   navigation: SiteNavCategory[];
   feature_flags: string[];

@@ -44,6 +44,8 @@ DEBUG = env('DEBUG', bool, False)
 DEVELOP = env('DEVELOP', bool, False)
 FRONTEND_DEFAULT_ROUTE = env("FRONTEND_DEFAULT_ROUTE", str, "/")
 LEGACY_TEMPLATE_ROUTES_ENABLED = env("LEGACY_TEMPLATE_ROUTES_ENABLED", bool, True)
+TRUST_X_FORWARDED_HOST = env("TRUST_X_FORWARDED_HOST", bool, True)
+ALLOW_DIRECT_HOST_TENANT_FALLBACK = env("ALLOW_DIRECT_HOST_TENANT_FALLBACK", bool, DEBUG)
 
 # This gets set only when tests are ran with date-test command
 TEST = env('TEST', bool, False)
@@ -107,6 +109,8 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'date.middleware.TenantContextMiddleware',
+    'date.middleware.LocaleResolutionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -212,6 +216,11 @@ LANG_FINNISH = 'fi'
 LANG_SWEDISH = 'sv'
 
 LANGUAGE_CODE = LANG_SWEDISH
+SUPPORTED_API_LOCALES = [LANG_SWEDISH, LANG_FINNISH]
+LANGUAGES = (
+    (LANG_SWEDISH, "Swedish"),
+    (LANG_FINNISH, "Finnish"),
+)
 
 TIME_ZONE = 'Europe/Helsinki'
 
@@ -232,6 +241,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME", "date")
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+try:
+    TENANT_HOST_MAP = json.loads(env("TENANT_HOST_MAP", str, "{}").strip(' "\''))
+    if not isinstance(TENANT_HOST_MAP, dict):
+        TENANT_HOST_MAP = {}
+except Exception:
+    TENANT_HOST_MAP = {}
+
+try:
+    TENANT_DEFAULT_LOCALES = json.loads(
+        env("TENANT_DEFAULT_LOCALES", str, "{}").strip(' "\'')
+    )
+    if not isinstance(TENANT_DEFAULT_LOCALES, dict):
+        TENANT_DEFAULT_LOCALES = {}
+except Exception:
+    TENANT_DEFAULT_LOCALES = {}
 
 # Cloudflare captcha config
 TURNSTILE_SECRET_KEY = env("CF_TURNSTILE_SECRET_KEY", str, "")

@@ -55,7 +55,8 @@ Use the root-level stack:
 - `/events`
 - `/events/[slug]`
 - `/events/feed` (route handler)
-- `/pages/[slug]`
+- `/p/[slug]`
+- `/pages/[slug]` (legacy redirect to `/p/[slug]`)
 - `/members`
 - `/members/login`
 - `/members/signup`
