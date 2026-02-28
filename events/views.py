@@ -67,6 +67,7 @@ class EventDetailView(DetailView):
             'årsfest': 'events/arsfest.html',
             'årsfest 2026': 'events/arsfest.html',
             'årsfest gäster': 'events/arsfest.html',
+            'biologica vii': 'events/arsfest.html',
             '100 baal': 'events/kk100_detail.html',
             'baal': 'events/baal_detail.html',
             'tomtejakt': 'events/tomtejakt.html',
@@ -111,7 +112,7 @@ class EventDetailView(DetailView):
         return self.redirect_after_signup()
 
     def form_invalid(self, form):
-        if self.get_context_data().get('event').title.lower() in ['årsfest', 'årsfest gäster']:
+        if self.get_context_data().get('event').title.lower() in ['årsfest', 'årsfest gäster', 'biologica vii']:
             return render(self.request, 'events/arsfest.html', self.get_context_data(form=form), status=400)
         return render(self.request, self.template_name, self.get_context_data(form=form), status=400)
 
@@ -169,7 +170,7 @@ class EventDetailView(DetailView):
 
     def redirect_after_signup(self):
         event = self.get_context_data().get('event')
-        if event.title.lower() in ['årsfest', 'årsfest gäster']:
+        if event.title.lower() in ['årsfest', 'årsfest gäster', 'biologica vii']:
             return redirect(f"{reverse('events:detail', args=[event.slug])}#/anmalda")
         elif event.title.lower() in ['österbottniska nationens 100-årsjubileum'] or 'ön100' in event.title.lower():
             return redirect(f"{reverse('events:detail', args=[event.slug])}#/attendee-list")
