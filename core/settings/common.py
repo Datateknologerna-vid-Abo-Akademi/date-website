@@ -139,12 +139,25 @@ DATABASES = {
 
 CONN_MAX_AGE = 600
 
-CACHES = {
+# Caches
+# https://docs.djangoproject.com/en/5.2/topics/cache/
+
+# https://docs.djangoproject.com/en/5.2/topics/cache/#dummy-caching-for-development
+DUMMY_CACHE = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+    }
+}
+
+# https://docs.djangoproject.com/en/5.2/topics/cache/#redis
+REDIS_CACHE = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": env("REDIS_SERVER", str, "redis://redis:6379"),
     },
 }
+
+CACHES = DUMMY_CACHE if env("DEVELOP") else REDIS_CACHE
 
 # Custom members model
 AUTH_USER_MODEL = 'members.Member'
