@@ -137,7 +137,14 @@ jobs:
       - name: Check HTTP response
         run: |
           set -euo pipefail
-          curl --retry 12 --retry-delay 2 --retry-connrefused --max-time 10 -sSf http://localhost:8000 >/dev/null
+          for attempt in $(seq 1 30); do
+            if curl --retry 2 --retry-delay 1 --retry-connrefused --retry-all-errors --max-time 8 -sSf http://localhost:8000 >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Web endpoint did not become stable in time."
+          exit 1
 
       - name: Print Docker diagnostics on failure
         if: failure()
