@@ -16,6 +16,33 @@ from .websocket_utils import ws_send
 
 logger = logging.getLogger('date')
 
+EVENT_TEMPLATES_BY_TITLE = {
+    'årsfest': 'events/arsfest.html',
+    'årsfest 2026': 'events/arsfest.html',
+    'årsfest gäster': 'events/arsfest.html',
+    'biologica vii': 'events/arsfest.html',
+    '100 baal': 'events/kk100_detail.html',
+    'baal': 'events/baal_detail.html',
+    'tomtejakt': 'events/tomtejakt.html',
+    'wappmiddag': 'events/wappmiddag.html',
+}
+
+EVENT_TEMPLATES_BY_SLUG = {
+    'baal': 'events/baal_detail.html',
+    'tomtejakt': 'events/tomtejakt.html',
+    'wappmiddag': 'events/wappmiddag.html',
+    'arsfest': 'events/arsfest.html',
+    'arsfest_stipendiater': 'events/arsfest.html',
+    'arsfest26': 'events/arsfest.html',
+    # ÖN100
+    'on100_main': 'events/arsfest.html',
+    'on100_student': 'events/arsfest.html',
+    'on100_alumn': 'events/arsfest.html',
+    'on100_guest': 'events/arsfest.html',
+    'on100_secret': 'events/arsfest.html',
+    'on100_stippe': 'events/arsfest.html',
+}
+
 
 class IndexView(ListView):
     model = Event
@@ -33,6 +60,12 @@ class IndexView(ListView):
 class EventDetailView(DetailView):
     model = Event
     template_name = 'events/detail.html'
+
+    def _get_resolved_template(self, event):
+        title_template = EVENT_TEMPLATES_BY_TITLE.get(event.title.lower())
+        if title_template:
+            return title_template
+        return EVENT_TEMPLATES_BY_SLUG.get(event.slug)
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -61,37 +94,13 @@ class EventDetailView(DetailView):
         return context
 
     def get_template_names(self):
-        event_title = self.get_context_data().get('event').title.lower()
+        event = self.get_context_data().get('event')
+        event_title = event.title.lower()
         logger.debug(event_title)
-        templates = {
-            'årsfest': 'events/arsfest.html',
-            'årsfest 2026': 'events/arsfest.html',
-            'årsfest gäster': 'events/arsfest.html',
-            '100 baal': 'events/kk100_detail.html',
-            'baal': 'events/baal_detail.html',
-            'tomtejakt': 'events/tomtejakt.html',
-            'wappmiddag': 'events/wappmiddag.html'
-        }
-        slugmap = {
-            'baal': 'events/baal_detail.html',
-            'tomtejakt': 'events/tomtejakt.html',
-            'wappmiddag': 'events/wappmiddag.html',
-            'arsfest': 'events/arsfest.html',
-            'arsfest_stipendiater': 'events/arsfest.html',
-            'arsfest26': 'events/arsfest.html',
-            # ÖN100
-            'on100_main': 'events/arsfest.html',
-            'on100_student': 'events/arsfest.html',
-            'on100_alumn': 'events/arsfest.html',
-            'on100_guest': 'events/arsfest.html',
-            'on100_secret': 'events/arsfest.html',
-            'on100_stippe': 'events/arsfest.html',
-        }
         # Will return a 500 response to client if the template is not found
-        if event_title in templates: # TODO: Selectable template
-            return templates[event_title]
-        elif (slug := self.get_context_data().get('event').slug) in slugmap:
-            return slugmap[slug]
+        resolved_template = self._get_resolved_template(event)
+        if resolved_template:  # TODO: Selectable template
+            return resolved_template
 
         if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
             return ['events/event_passcode.html']
@@ -111,7 +120,8 @@ class EventDetailView(DetailView):
         return self.redirect_after_signup()
 
     def form_invalid(self, form):
-        if self.get_context_data().get('event').title.lower() in ['årsfest', 'årsfest gäster']:
+        event = self.get_context_data().get('event')
+        if self._get_resolved_template(event) == 'events/arsfest.html':
             return render(self.request, 'events/arsfest.html', self.get_context_data(form=form), status=400)
         return render(self.request, self.template_name, self.get_context_data(form=form), status=400)
 
@@ -169,8 +179,8 @@ class EventDetailView(DetailView):
 
     def redirect_after_signup(self):
         event = self.get_context_data().get('event')
-        if event.title.lower() in ['årsfest', 'årsfest gäster']:
-            return redirect(f"{reverse('events:detail', args=[event.slug])}#/anmalda")
+        if self._get_resolved_template(event) == 'events/arsfest.html':
+            return redirect(f"{reverse('events:detail', args=[event.slug])}#/attendee-list")
         elif event.title.lower() in ['österbottniska nationens 100-årsjubileum'] or 'ön100' in event.title.lower():
             return redirect(f"{reverse('events:detail', args=[event.slug])}#/attendee-list")
         return redirect(reverse('events:detail', args=[event.slug]))
