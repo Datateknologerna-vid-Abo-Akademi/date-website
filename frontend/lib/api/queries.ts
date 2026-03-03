@@ -95,12 +95,12 @@ const SESSION_REQUEST_OPTIONS = {
 };
 
 export async function getSiteMeta(): Promise<SiteMeta> {
-  const data = await unwrap(apiClient.GET("/api/v1/meta/site", { next: { revalidate: 0 } }));
+  const data = await unwrap(apiClient.GET("/api/v1/meta/site", { cache: "no-store", next: { revalidate: 0 } }));
   return data as unknown as SiteMeta;
 }
 
 export async function getHomeData(): Promise<HomePayload> {
-  const data = await unwrap(apiClient.GET("/api/v1/home", { next: { revalidate: 120 } }));
+  const data = await unwrap(apiClient.GET("/api/v1/home", { cache: "no-store", next: { revalidate: 0 } }));
   return data as unknown as HomePayload;
 }
 

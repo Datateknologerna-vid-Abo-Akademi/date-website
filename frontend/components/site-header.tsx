@@ -15,20 +15,28 @@ function isInternalRoute(url: string) {
   return url.startsWith("/") && !url.startsWith("//");
 }
 
+function normalizeNavUrl(url: string) {
+  if (url.startsWith("/pages/")) {
+    return `/p/${url.slice("/pages/".length)}`;
+  }
+  return url;
+}
+
 function isLoginRoute(url: string) {
   return url === "/members/login" || url === "/members/login/";
 }
 
 function renderNavLink(url: string, label: string, className = "nav-link") {
-  if (isInternalRoute(url)) {
+  const normalizedUrl = normalizeNavUrl(url);
+  if (isInternalRoute(normalizedUrl)) {
     return (
-      <Link href={url} className={className}>
+      <Link href={normalizedUrl} className={className}>
         {label}
       </Link>
     );
   }
   return (
-    <a href={url} className={className} target="_blank" rel="noreferrer">
+    <a href={normalizedUrl} className={className} target="_blank" rel="noreferrer">
       {label}
     </a>
   );

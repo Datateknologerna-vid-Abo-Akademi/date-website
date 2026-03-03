@@ -65,7 +65,7 @@
    - `PLAYWRIGHT_BASE_URL=<decoupled-origin> npm run test:e2e:visual`
 3. CI/local fails when homepage visuals drift beyond threshold.
 4. Detailed step-by-step (including temporary legacy backend exposure on `:8001`) is documented in:
-   - `docs/playwright-element-compare.md`
+   - `playwright-element-compare.md`
 
 ## CI Mapping
 - Fast CI (`.github/workflows/ci.yml`)

@@ -18,6 +18,9 @@ const INLINE_HERO_LOGOS: Record<string, string> = {
   biocum: BIOCUM_HERO_LOGO_SVG,
 };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function Home() {
   const siteMeta = await getSiteMeta();
   if (siteMeta.default_landing_path && siteMeta.default_landing_path !== "/") {

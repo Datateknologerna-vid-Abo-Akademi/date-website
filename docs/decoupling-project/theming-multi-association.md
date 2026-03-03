@@ -32,4 +32,4 @@
 ## Compatibility
 - Existing per-association Django settings (`date.py`, `kk.py`, etc.) still define defaults.
 - Runtime override merges into those defaults.
-- Merged config is validated at startup (see `docs/association-config-schema.md`).
+- Merged config is validated at startup (see `association-config-schema.md`).

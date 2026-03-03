@@ -1,0 +1,293 @@
+services:
+  backend_date:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    command: >
+      /bin/bash -c "bash wait-for-postgres.sh -t 60 db:5432 && python /code/manage.py migrate --noinput && python /code/manage.py runserver 0.0.0.0:8000"
+    environment:
+      SECRET_KEY: ${DATE_SECRET_KEY}
+      DEBUG: ${DATE_DEBUG}
+      DEVELOP: ${DATE_DEVELOP}
+      PROJECT_NAME: date
+      FRONTEND_DEFAULT_ROUTE: /
+      LEGACY_TEMPLATE_ROUTES_ENABLED: ${LEGACY_TEMPLATE_ROUTES_ENABLED}
+      DB_USERNAME: postgres
+      DB_PASSWORD: ${DATE_DB_PASSWORD}
+      DB_DATABASE: ${MULTI_ASSOC_DB_DATE:-date_date}
+      DB_HOST: db
+      DB_PORT: 5432
+      USE_S3: ${USE_S3}
+      AWS_S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
+      AWS_STORAGE_BUCKET_NAME: ${S3_BUCKET_NAME}
+      PUBLIC_MEDIA_LOCATION: ${PUBLIC_MEDIA_LOCATION}
+      PRIVATE_MEDIA_LOCATION: ${PRIVATE_MEDIA_LOCATION}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      EXTRA_STAFF_GROUPS: ${EXTRA_STAFF_GROUPS}
+      EMAIL_HOST_RECEIVER: ${EMAIL_HOST_RECEIVER}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      CF_TURNSTILE_SITE_KEY: ${CF_TURNSTILE_SITE_KEY}
+      CF_TURNSTILE_SECRET_KEY: ${CF_TURNSTILE_SECRET_KEY}
+      ALUMNI_SETTINGS: ${ALUMNI_SETTINGS}
+      DATE_DEMO_ADMIN_USERNAME: ${DATE_DEMO_ADMIN_USERNAME}
+      DATE_DEMO_ADMIN_PASSWORD: ${DATE_DEMO_ADMIN_PASSWORD}
+      DATE_DEMO_MEMBER_PASSWORD: ${DATE_DEMO_MEMBER_PASSWORD}
+      REDIS_SERVER: redis://redis:6379
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q -O - http://127.0.0.1:8000/api/v1/meta/site > /dev/null || exit 1" ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - ./backend:/code
+
+  backend_kk:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    command: >
+      /bin/bash -c "bash wait-for-postgres.sh -t 60 db:5432 && python /code/manage.py migrate --noinput && python /code/manage.py runserver 0.0.0.0:8000"
+    environment:
+      SECRET_KEY: ${DATE_SECRET_KEY}
+      DEBUG: ${DATE_DEBUG}
+      DEVELOP: ${DATE_DEVELOP}
+      PROJECT_NAME: kk
+      FRONTEND_DEFAULT_ROUTE: /
+      LEGACY_TEMPLATE_ROUTES_ENABLED: ${LEGACY_TEMPLATE_ROUTES_ENABLED}
+      DB_USERNAME: postgres
+      DB_PASSWORD: ${DATE_DB_PASSWORD}
+      DB_DATABASE: ${MULTI_ASSOC_DB_KK:-date_kk}
+      DB_HOST: db
+      DB_PORT: 5432
+      USE_S3: ${USE_S3}
+      AWS_S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
+      AWS_STORAGE_BUCKET_NAME: ${S3_BUCKET_NAME}
+      PUBLIC_MEDIA_LOCATION: ${PUBLIC_MEDIA_LOCATION}
+      PRIVATE_MEDIA_LOCATION: ${PRIVATE_MEDIA_LOCATION}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      EXTRA_STAFF_GROUPS: ${EXTRA_STAFF_GROUPS}
+      EMAIL_HOST_RECEIVER: ${EMAIL_HOST_RECEIVER}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      CF_TURNSTILE_SITE_KEY: ${CF_TURNSTILE_SITE_KEY}
+      CF_TURNSTILE_SECRET_KEY: ${CF_TURNSTILE_SECRET_KEY}
+      ALUMNI_SETTINGS: ${ALUMNI_SETTINGS}
+      DATE_DEMO_ADMIN_USERNAME: ${DATE_DEMO_ADMIN_USERNAME}
+      DATE_DEMO_ADMIN_PASSWORD: ${DATE_DEMO_ADMIN_PASSWORD}
+      DATE_DEMO_MEMBER_PASSWORD: ${DATE_DEMO_MEMBER_PASSWORD}
+      REDIS_SERVER: redis://redis:6379
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q -O - http://127.0.0.1:8000/api/v1/meta/site > /dev/null || exit 1" ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - ./backend:/code
+
+  backend_biocum:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    command: >
+      /bin/bash -c "bash wait-for-postgres.sh -t 60 db:5432 && python /code/manage.py migrate --noinput && python /code/manage.py runserver 0.0.0.0:8000"
+    environment:
+      SECRET_KEY: ${DATE_SECRET_KEY}
+      DEBUG: ${DATE_DEBUG}
+      DEVELOP: ${DATE_DEVELOP}
+      PROJECT_NAME: biocum
+      FRONTEND_DEFAULT_ROUTE: /
+      LEGACY_TEMPLATE_ROUTES_ENABLED: ${LEGACY_TEMPLATE_ROUTES_ENABLED}
+      DB_USERNAME: postgres
+      DB_PASSWORD: ${DATE_DB_PASSWORD}
+      DB_DATABASE: ${MULTI_ASSOC_DB_BIOCUM:-date_biocum}
+      DB_HOST: db
+      DB_PORT: 5432
+      USE_S3: ${USE_S3}
+      AWS_S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
+      AWS_STORAGE_BUCKET_NAME: ${S3_BUCKET_NAME}
+      PUBLIC_MEDIA_LOCATION: ${PUBLIC_MEDIA_LOCATION}
+      PRIVATE_MEDIA_LOCATION: ${PRIVATE_MEDIA_LOCATION}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      EXTRA_STAFF_GROUPS: ${EXTRA_STAFF_GROUPS}
+      EMAIL_HOST_RECEIVER: ${EMAIL_HOST_RECEIVER}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      CF_TURNSTILE_SITE_KEY: ${CF_TURNSTILE_SITE_KEY}
+      CF_TURNSTILE_SECRET_KEY: ${CF_TURNSTILE_SECRET_KEY}
+      ALUMNI_SETTINGS: ${ALUMNI_SETTINGS}
+      DATE_DEMO_ADMIN_USERNAME: ${DATE_DEMO_ADMIN_USERNAME}
+      DATE_DEMO_ADMIN_PASSWORD: ${DATE_DEMO_ADMIN_PASSWORD}
+      DATE_DEMO_MEMBER_PASSWORD: ${DATE_DEMO_MEMBER_PASSWORD}
+      REDIS_SERVER: redis://redis:6379
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q -O - http://127.0.0.1:8000/api/v1/meta/site > /dev/null || exit 1" ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - ./backend:/code
+
+  backend_on:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    command: >
+      /bin/bash -c "bash wait-for-postgres.sh -t 60 db:5432 && python /code/manage.py migrate --noinput && python /code/manage.py runserver 0.0.0.0:8000"
+    environment:
+      SECRET_KEY: ${DATE_SECRET_KEY}
+      DEBUG: ${DATE_DEBUG}
+      DEVELOP: ${DATE_DEVELOP}
+      PROJECT_NAME: on
+      FRONTEND_DEFAULT_ROUTE: /events
+      LEGACY_TEMPLATE_ROUTES_ENABLED: ${LEGACY_TEMPLATE_ROUTES_ENABLED}
+      DB_USERNAME: postgres
+      DB_PASSWORD: ${DATE_DB_PASSWORD}
+      DB_DATABASE: ${MULTI_ASSOC_DB_ON:-date_on}
+      DB_HOST: db
+      DB_PORT: 5432
+      USE_S3: ${USE_S3}
+      AWS_S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
+      AWS_STORAGE_BUCKET_NAME: ${S3_BUCKET_NAME}
+      PUBLIC_MEDIA_LOCATION: ${PUBLIC_MEDIA_LOCATION}
+      PRIVATE_MEDIA_LOCATION: ${PRIVATE_MEDIA_LOCATION}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      EXTRA_STAFF_GROUPS: ${EXTRA_STAFF_GROUPS}
+      EMAIL_HOST_RECEIVER: ${EMAIL_HOST_RECEIVER}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      CF_TURNSTILE_SITE_KEY: ${CF_TURNSTILE_SITE_KEY}
+      CF_TURNSTILE_SECRET_KEY: ${CF_TURNSTILE_SECRET_KEY}
+      ALUMNI_SETTINGS: ${ALUMNI_SETTINGS}
+      DATE_DEMO_ADMIN_USERNAME: ${DATE_DEMO_ADMIN_USERNAME}
+      DATE_DEMO_ADMIN_PASSWORD: ${DATE_DEMO_ADMIN_PASSWORD}
+      DATE_DEMO_MEMBER_PASSWORD: ${DATE_DEMO_MEMBER_PASSWORD}
+      REDIS_SERVER: redis://redis:6379
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q -O - http://127.0.0.1:8000/api/v1/meta/site > /dev/null || exit 1" ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - ./backend:/code
+
+  backend_demo:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    command: >
+      /bin/bash -c "bash wait-for-postgres.sh -t 60 db:5432 && python /code/manage.py migrate --noinput && python /code/manage.py runserver 0.0.0.0:8000"
+    environment:
+      SECRET_KEY: ${DATE_SECRET_KEY}
+      DEBUG: ${DATE_DEBUG}
+      DEVELOP: ${DATE_DEVELOP}
+      PROJECT_NAME: demo
+      FRONTEND_DEFAULT_ROUTE: /
+      LEGACY_TEMPLATE_ROUTES_ENABLED: ${LEGACY_TEMPLATE_ROUTES_ENABLED}
+      DB_USERNAME: postgres
+      DB_PASSWORD: ${DATE_DB_PASSWORD}
+      DB_DATABASE: ${MULTI_ASSOC_DB_DEMO:-date_demo}
+      DB_HOST: db
+      DB_PORT: 5432
+      USE_S3: ${USE_S3}
+      AWS_S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
+      AWS_STORAGE_BUCKET_NAME: ${S3_BUCKET_NAME}
+      PUBLIC_MEDIA_LOCATION: ${PUBLIC_MEDIA_LOCATION}
+      PRIVATE_MEDIA_LOCATION: ${PRIVATE_MEDIA_LOCATION}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      EXTRA_STAFF_GROUPS: ${EXTRA_STAFF_GROUPS}
+      EMAIL_HOST_RECEIVER: ${EMAIL_HOST_RECEIVER}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      CF_TURNSTILE_SITE_KEY: ${CF_TURNSTILE_SITE_KEY}
+      CF_TURNSTILE_SECRET_KEY: ${CF_TURNSTILE_SECRET_KEY}
+      ALUMNI_SETTINGS: ${ALUMNI_SETTINGS}
+      DATE_DEMO_ADMIN_USERNAME: ${DATE_DEMO_ADMIN_USERNAME}
+      DATE_DEMO_ADMIN_PASSWORD: ${DATE_DEMO_ADMIN_PASSWORD}
+      DATE_DEMO_MEMBER_PASSWORD: ${DATE_DEMO_MEMBER_PASSWORD}
+      REDIS_SERVER: redis://redis:6379
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -q -O - http://127.0.0.1:8000/api/v1/meta/site > /dev/null || exit 1" ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - ./backend:/code
+
+  frontend:
+    environment:
+      BACKEND_API_ORIGIN: ${MULTI_ASSOC_BACKEND_ORIGIN:-http://proxy}
+
+  proxy:
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend_date:
+        condition: service_healthy
+      backend_kk:
+        condition: service_healthy
+      backend_biocum:
+        condition: service_healthy
+      backend_on:
+        condition: service_healthy
+      backend_demo:
+        condition: service_healthy
+      asgi:
+        condition: service_started
+    volumes:
+      - ./infra/nginx/dev.multi-assoc.conf:/etc/nginx/conf.d/default.conf:ro

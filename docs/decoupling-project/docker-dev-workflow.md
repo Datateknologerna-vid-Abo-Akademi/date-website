@@ -10,6 +10,14 @@
 3. Start stack:
    - `date-start`
    - Override association quickly: `date-start kk` (or `date-start --project kk`)
+   - Multi-association host-routing mode (single frontend + separate backends):
+     - `date-start-multi`
+     - open:
+       - `http://date.lvh.me:8080`
+       - `http://kk.lvh.me:8080`
+       - `http://biocum.lvh.me:8080`
+       - `http://on.lvh.me:8080`
+       - `http://demo.lvh.me:8080`
 4. Open app:
    - `http://localhost:8080` (or `APP_PORT`)
 
@@ -46,6 +54,8 @@
 - `date-stop-both`
 - `date-project <association> <compose-args...>`
 - `date-stop`
+- `date-start-multi`
+- `date-stop-multi`
 - `date-logs`
 - `date-ps`
 - `date-manage migrate`
@@ -69,13 +79,14 @@
 - `date-test-backend`
 - `date-test-frontend`
 - `date-qa-associations`
+- `date-qa-hosts`
 - `date-visual-parity`
 
 ## Demo Bootstrap
 - `date-init-demo` runs migrations and then executes `seed_visual_demo --reset`.
 - This flow is app-aware: it only seeds data for apps enabled in the current association settings.
 - Default credentials after seed: `admin` / `admin`.
-- For details and overrides, see `docs/demo-bootstrap-data.md`.
+- For details and overrides, see `demo-bootstrap-data.md`.
 
 ## Service Topology
 - `proxy` -> entrypoint
@@ -85,6 +96,17 @@
 - `celery` -> workers
 - `db` -> PostgreSQL
 - `redis` -> broker/cache/channel layer
+
+## Multi-Association Dev Topology
+- Compose override: `docker-compose.multi-assoc.yml`
+- Nginx config: `infra/nginx/dev.multi-assoc.conf`
+- Host routing:
+  - `date.lvh.me` -> `backend_date`
+  - `kk.lvh.me` -> `backend_kk`
+  - `biocum.lvh.me` -> `backend_biocum`
+  - `on.lvh.me` -> `backend_on`
+  - `demo.lvh.me` -> `backend_demo`
+- Frontend SSR API origin in this mode defaults to `MULTI_ASSOC_BACKEND_ORIGIN` (`http://proxy`) so server-side fetches preserve host-based backend routing.
 
 ## Best-Practice Defaults Applied
 - Version-pinned base images

@@ -72,16 +72,21 @@ DATE_LEGACY_OVERRIDE_FILE="${SCRIPT_DIR}/.tmp.legacy-visual.override.yml"
 for _date_helper_alias in \
     date \
     date-start \
+    date-start-multi \
     date-start-both \
     date-start-detached \
     date-stop-both \
     date-stop \
+    date-stop-multi \
     date-logs \
     date-ps \
     date-backend-shell \
     date-manage \
     date-init-demo \
+    date-init-demo-multi \
     date-frontend-shell \
+    date-qa-associations \
+    date-qa-hosts \
     date-visual-parity
 do
     unalias "${_date_helper_alias}" 2>/dev/null || true
@@ -256,6 +261,18 @@ date-start() {
         _date_set_recorded_project "$target_project"
 }
 
+date-start-multi() {
+    if _date_is_prod_mode; then
+        echo "date-start-multi is currently supported for dev mode only." >&2
+        return 1
+    fi
+    _date_ensure_multi_assoc_databases || return 1
+    docker compose -f "${DATE_COMPOSE_FILE}" -f "${SCRIPT_DIR}/docker-compose.multi-assoc.yml" up --build \
+        backend_date backend_kk backend_biocum backend_on backend_demo \
+        asgi celery frontend proxy e2e \
+        "$@"
+}
+
 date-start-both() {
     _date_parse_project_arg "$@" || return 1
     if _date_is_prod_mode; then
@@ -293,6 +310,14 @@ date-stop-both() {
 date-stop() {
     _date_parse_project_arg "$@" || return 1
     _date_compose "$DATE_PROJECT_OVERRIDE" down "${DATE_REMAINING_ARGS[@]}"
+}
+
+date-stop-multi() {
+    if _date_is_prod_mode; then
+        echo "date-stop-multi is currently supported for dev mode only." >&2
+        return 1
+    fi
+    docker compose -f "${DATE_COMPOSE_FILE}" -f "${SCRIPT_DIR}/docker-compose.multi-assoc.yml" down "$@"
 }
 
 date-logs() {
@@ -425,6 +450,52 @@ date-init-demo() {
     fi
 }
 
+date-init-demo-multi() {
+    if _date_is_prod_mode; then
+        echo "date-init-demo-multi is currently supported for dev mode only." >&2
+        return 1
+    fi
+
+    local -a seed_args=("$@")
+    local -a associations=(date kk biocum on demo)
+    local -a backend_services=(backend_date backend_kk backend_biocum backend_on backend_demo)
+    local assoc
+    local svc
+    local var_name
+    local db_name
+
+    _date_ensure_multi_assoc_databases || return 1
+    docker compose -f "${DATE_COMPOSE_FILE}" -f "${SCRIPT_DIR}/docker-compose.multi-assoc.yml" up -d --build \
+        "${backend_services[@]}" asgi celery frontend proxy || return 1
+
+    for svc in "${backend_services[@]}"; do
+        echo "Migrating + seeding ${svc}..."
+        docker compose -f "${DATE_COMPOSE_FILE}" -f "${SCRIPT_DIR}/docker-compose.multi-assoc.yml" exec -T "$svc" \
+            python /code/manage.py migrate --noinput || return 1
+        docker compose -f "${DATE_COMPOSE_FILE}" -f "${SCRIPT_DIR}/docker-compose.multi-assoc.yml" exec -T "$svc" \
+            python /code/manage.py seed_visual_demo --reset "${seed_args[@]}" || return 1
+    done
+
+    echo "Multi-association demo seed complete."
+}
+
+_date_ensure_multi_assoc_databases() {
+    local -a associations=(date kk biocum on demo)
+    local assoc
+    local var_name
+    local db_name
+
+    docker compose -f "${DATE_COMPOSE_FILE}" -f "${SCRIPT_DIR}/docker-compose.multi-assoc.yml" up -d --build db redis || return 1
+
+    for assoc in "${associations[@]}"; do
+        var_name="MULTI_ASSOC_DB_${assoc^^}"
+        db_name="${!var_name:-date_${assoc}}"
+        echo "Ensuring database exists for ${assoc}: ${db_name}"
+        docker compose -f "${DATE_COMPOSE_FILE}" -f "${SCRIPT_DIR}/docker-compose.multi-assoc.yml" exec -T db \
+            sh -lc "if [ \"\$(psql -U postgres -d postgres -tAc \"SELECT 1 FROM pg_database WHERE datname='${db_name}'\")\" != \"1\" ]; then psql -U postgres -d postgres -v ON_ERROR_STOP=1 -c \"CREATE DATABASE \\\"${db_name}\\\"\"; fi" || return 1
+    done
+}
+
 date-frontend-shell() {
     _date_parse_project_arg "$@" || return 1
     _date_compose "$DATE_PROJECT_OVERRIDE" exec frontend sh "${DATE_REMAINING_ARGS[@]}"
@@ -440,6 +511,10 @@ date-test-frontend() {
 
 date-qa-associations() {
     python "${SCRIPT_DIR}/scripts/association_qa.py" "$@"
+}
+
+date-qa-hosts() {
+    python "${SCRIPT_DIR}/scripts/multi_host_qa.py" "$@"
 }
 
 date-visual-parity() {

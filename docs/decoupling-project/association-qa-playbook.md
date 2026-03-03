@@ -20,10 +20,25 @@ If you have loaded helpers via `source env.sh dev`, you can also use:
 date-qa-associations
 ```
 
+## Multi-Host Command (Shared Frontend + Separate Backends)
+When running `date-start-multi`, validate host routing directly:
+
+```bash
+python scripts/multi_host_qa.py
+```
+
+If you have loaded helpers via `source env.sh dev`, you can also use:
+
+```bash
+date-qa-hosts
+```
+
 ## Output
 - Markdown report is written to:
   - `docs/association-qa-report.md`
 - Non-zero exit code means at least one hard failure was detected.
+- Multi-host checks write:
+  - `docs/multi-host-qa-report.md`
 
 ## Options
 - `--associations date kk biocum on demo`

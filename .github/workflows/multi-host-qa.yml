@@ -1,0 +1,48 @@
+name: Multi-Host QA
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *"
+
+concurrency:
+  group: qa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    name: Host-Routed Multi-Backend QA
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_BUILDKIT: "1"
+      COMPOSE_DOCKER_CLI_BUILD: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Start multi-backend stack
+        run: docker compose -f docker-compose.yml -f docker-compose.multi-assoc.yml up -d --build db redis backend_date backend_kk backend_biocum backend_on backend_demo asgi celery frontend proxy
+
+      - name: Run host QA
+        run: python scripts/multi_host_qa.py
+
+      - name: Upload multi-host QA report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: multi-host-qa-report
+          path: docs/multi-host-qa-report.md
+          retention-days: 14
+
+      - name: Teardown
+        if: always()
+        run: docker compose -f docker-compose.yml -f docker-compose.multi-assoc.yml down
+
