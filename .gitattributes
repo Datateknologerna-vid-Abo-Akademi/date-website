@@ -1,0 +1,6 @@
+# Enforce LF endings for text files by default (important for shell scripts on Linux containers)
+* text=auto eol=lf
+
+# Windows-native scripts
+*.bat text eol=crlf
+*.ps1 text eol=crlf
