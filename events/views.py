@@ -17,31 +17,49 @@ from .websocket_utils import ws_send
 
 logger = logging.getLogger('date')
 
-EVENT_TEMPLATES_BY_TITLE = {
+EVENT_TEMPLATES_BY_TITLE_COMMON = {
     'årsfest': 'events/arsfest.html',
     'årsfest 2026': 'events/arsfest.html',
     'årsfest gäster': 'events/arsfest.html',
-    'biologica vii': 'events/arsfest.html',
-    '100 baal': 'events/kk100_detail.html',
-    'baal': 'events/baal_detail.html',
     'tomtejakt': 'events/tomtejakt.html',
     'wappmiddag': 'events/wappmiddag.html',
 }
 
-EVENT_TEMPLATES_BY_SLUG = {
-    'baal': 'events/baal_detail.html',
+EVENT_TEMPLATES_BY_SLUG_COMMON = {
     'tomtejakt': 'events/tomtejakt.html',
     'wappmiddag': 'events/wappmiddag.html',
     'arsfest': 'events/arsfest.html',
     'arsfest_stipendiater': 'events/arsfest.html',
     'arsfest26': 'events/arsfest.html',
-    # ÖN100
-    'on100_main': 'events/arsfest.html',
-    'on100_student': 'events/arsfest.html',
-    'on100_alumn': 'events/arsfest.html',
-    'on100_guest': 'events/arsfest.html',
-    'on100_secret': 'events/arsfest.html',
-    'on100_stippe': 'events/arsfest.html',
+}
+
+EVENT_TEMPLATES_BY_PROJECT = {
+    'biocum': {
+        'titles': {
+            'biologica vii': 'events/arsfest.html',
+        },
+        'slugs': {},
+    },
+    'kk': {
+        'titles': {
+            '100 baal': 'events/kk100_detail.html',
+            'baal': 'events/baal_detail.html',
+        },
+        'slugs': {
+            'baal': 'events/baal_detail.html',
+        },
+    },
+    'on': {
+        'titles': {},
+        'slugs': {
+            'on100_main': 'events/arsfest.html',
+            'on100_student': 'events/arsfest.html',
+            'on100_alumn': 'events/arsfest.html',
+            'on100_guest': 'events/arsfest.html',
+            'on100_secret': 'events/arsfest.html',
+            'on100_stippe': 'events/arsfest.html',
+        },
+    },
 }
 
 
@@ -64,10 +82,20 @@ class EventDetailView(DetailView):
     PASSCODE_SESSION_KEY = 'event_passcode_status'
 
     def _get_resolved_template(self, event):
-        title_template = EVENT_TEMPLATES_BY_TITLE.get(event.title.lower())
+        project_name = settings.PROJECT_NAME
+        project_templates = EVENT_TEMPLATES_BY_PROJECT.get(project_name, {})
+        project_title_templates = project_templates.get('titles', {})
+        project_slug_templates = project_templates.get('slugs', {})
+
+        title_template = EVENT_TEMPLATES_BY_TITLE_COMMON.get(event.title.lower())
+        if not title_template:
+            title_template = project_title_templates.get(event.title.lower())
         if title_template:
             return title_template
-        return EVENT_TEMPLATES_BY_SLUG.get(event.slug)
+        return (
+            EVENT_TEMPLATES_BY_SLUG_COMMON.get(event.slug)
+            or project_slug_templates.get(event.slug)
+        )
 
     def _requires_member_login(self, request):
         return self.object.members_only and not request.user.is_authenticated
