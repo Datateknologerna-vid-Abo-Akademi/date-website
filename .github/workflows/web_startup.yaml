@@ -137,8 +137,10 @@ jobs:
       - name: Check HTTP response
         run: |
           set -euo pipefail
-          for attempt in $(seq 1 30); do
-            if curl --retry 2 --retry-delay 1 --retry-connrefused --retry-all-errors --max-time 8 -sSf http://localhost:8000 >/dev/null; then
+          # The app is typically reachable ~12s after container is "running".
+          sleep 10
+          for attempt in $(seq 1 15); do
+            if curl --retry 1 --retry-delay 1 --retry-connrefused --retry-all-errors --max-time 8 -sSf http://localhost:8000 >/dev/null 2>&1; then
               exit 0
             fi
             sleep 2
