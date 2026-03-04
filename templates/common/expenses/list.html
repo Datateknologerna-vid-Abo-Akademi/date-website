@@ -1,0 +1,57 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Expense Claims{% endblock %}
+
+{% block content %}
+<div class="container container-margin-top">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Expense Claims</h2>
+        <a href="{% url 'expenses:create' %}" class="btn btn-primary">Submit new claim</a>
+    </div>
+
+    {% if claims %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Recipient</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    {% if request.user.is_staff %}<th>Submitted by</th>{% endif %}
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for claim in claims %}
+                <tr>
+                    <td>{{ claim.pk }}</td>
+                    <td>{{ claim.recipient_name }}</td>
+                    <td>{{ claim.description|truncatechars:60 }}</td>
+                    <td>{{ claim.amount }} EUR</td>
+                    <td>{{ claim.get_payment_method_display }}</td>
+                    <td>
+                        {% if claim.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% elif claim.status == 'approved' %}
+                            <span class="badge bg-success">Approved</span>
+                        {% else %}
+                            <span class="badge bg-danger">Rejected</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ claim.submitted_at|date:"d.m.Y" }}</td>
+                    {% if request.user.is_staff %}<td>{{ claim.submitted_by }}</td>{% endif %}
+                    <td><a href="{% url 'expenses:detail' claim.pk %}">View</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No expense claims found.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Submit Expense Claim{% endblock %}
+
+{% block content %}
+<div class="container container-margin-top">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2>Submit Expense Claim</h2>
+            <form method="post" enctype="multipart/form-data" class="mt-3">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                        {{ field.label }}{% if field.field.required %} <span class="text-danger">*</span>{% endif %}
+                    </label>
+                    {{ field }}
+                    {% if field.name == 'receipts' %}
+                    <div class="form-text">You can select multiple files at once.</div>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <div class="form-text">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                </div>
+                {% endif %}
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Submit claim</button>
+                    <a href="{% url 'expenses:list' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
