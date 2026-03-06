@@ -14,6 +14,7 @@ if [ -f /.dockerenv ]; then
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/scripts/lib/date_env.sh"
 
 version=$1
 requested_mode=${2:-prod}
@@ -23,77 +24,8 @@ if [ -z "$version" ]; then
   exit 1
 fi
 
-resolve_env_file() {
-  local mode="$1"
-  local -a candidates=()
-
-  case "$mode" in
-    dev)
-      candidates=(
-        "${SCRIPT_DIR}/.env"
-        "${SCRIPT_DIR}/.env.example"
-      )
-      ;;
-    prod)
-      candidates=(
-        "${SCRIPT_DIR}/.env.prod"
-        "${SCRIPT_DIR}/.env"
-        "${SCRIPT_DIR}/.env.example"
-      )
-      ;;
-    *)
-      if [ -f "$mode" ]; then
-        echo "$mode"
-        return 0
-      elif [ -f "${SCRIPT_DIR}/$mode" ]; then
-        echo "${SCRIPT_DIR}/$mode"
-        return 0
-      else
-        echo "Environment file '$mode' not found" >&2
-        return 1
-      fi
-      ;;
-  esac
-
-  for candidate in "${candidates[@]}"; do
-    if [ -f "$candidate" ]; then
-      echo "$candidate"
-      return 0
-    fi
-  done
-
-  echo "No suitable environment file found for mode '$mode'" >&2
-  return 1
-}
-
-resolve_env_mode() {
-  local mode="$1"
-  local config_path="$2"
-  local config_name
-  config_name="$(basename "$config_path")"
-
-  case "$mode" in
-    prod|dev)
-      echo "$mode"
-      ;;
-    *)
-      case "$config_name" in
-        .env.prod)
-          echo "prod"
-          ;;
-        .env)
-          echo "dev"
-          ;;
-        *)
-          echo "custom"
-          ;;
-      esac
-      ;;
-  esac
-}
-
-config_file="$(resolve_env_file "$requested_mode")"
-resolved_mode="$(resolve_env_mode "$requested_mode" "$config_file")"
+config_file="$(date_resolve_env_file "$SCRIPT_DIR" "$requested_mode")"
+resolved_mode="$(date_resolve_env_mode "$requested_mode" "$config_file")"
 
 if [ "$config_file" = "${SCRIPT_DIR}/.env.example" ]; then
   echo "Resolved environment file is ${config_file}, which is not writable for upgrades."
@@ -105,19 +37,9 @@ set -a
 source "$config_file"
 set +a
 
-case "$resolved_mode" in
-  prod)
-    DATE_DEVELOP="False"
-    ;;
-  dev)
-    DATE_DEVELOP="${DATE_DEVELOP:-True}"
-    ;;
-esac
+date_apply_env_mode "$resolved_mode"
 
-compose_file="docker-compose.yml"
-if [ "${DATE_DEVELOP:-True}" = "False" ]; then
-  compose_file="docker-compose.prod.yml"
-fi
+compose_file="$(date_resolve_compose_file)"
 
 compose_path="${SCRIPT_DIR}/${compose_file}"
 
@@ -133,6 +55,22 @@ fi
 
 db_name="${DB_DATABASE:-postgres}"
 db_user="${DB_USERNAME:-postgres}"
+env_backup_file="$(mktemp)"
+cp "$config_file" "$env_backup_file"
+env_version_updated=0
+upgrade_completed=0
+
+cleanup() {
+  local exit_code=$?
+  if [ "$upgrade_completed" -ne 1 ] && [ "$env_version_updated" -eq 1 ]; then
+    cp "$env_backup_file" "$config_file"
+    echo "Upgrade failed; restored original DATE_POSTGRESQL_VERSION in $config_file"
+  fi
+  rm -f "$env_backup_file"
+  exit "$exit_code"
+}
+
+trap cleanup EXIT
 
 backup_output="$("${SCRIPT_DIR}/scripts/backup_postgres.sh" "$config_file")"
 echo "$backup_output"
@@ -171,12 +109,24 @@ docker_compose down --volumes && sleep 15
 # Update the PostgreSQL image version in the env file
 DATE_POSTGRESQL_VERSION=$version
 sed -i "s/DATE_POSTGRESQL_VERSION=.*/DATE_POSTGRESQL_VERSION=${DATE_POSTGRESQL_VERSION}/" "$config_file"
+env_version_updated=1
 
 # Stat the container with the new version
 docker_compose up -d db && sleep 15
 
 # Restore the database dump to new container
 docker_compose exec -T db psql -U "$db_user" -d "$db_name" < "$backup_dump_path"
+
+echo "Validating restored database"
+docker_compose exec -T db psql -v ON_ERROR_STOP=1 -U "$db_user" -d "$db_name" -c "SELECT 1;" >/dev/null
+
+restored_table_count="$(docker_compose exec -T db psql -U "$db_user" -d "$db_name" -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'")"
+if ! [[ "$restored_table_count" =~ ^[0-9]+$ ]] || [ "$restored_table_count" -eq 0 ]; then
+  echo "Restore validation failed: no public tables found after restore"
+  exit 1
+fi
+
+upgrade_completed=1
 
 # Stop container
 docker_compose down

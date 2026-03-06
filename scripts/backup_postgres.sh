@@ -9,6 +9,7 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+source "${PROJECT_ROOT}/scripts/lib/date_env.sh"
 
 requested_mode="${1:-prod}"
 output_dir="${2:-${PROJECT_ROOT}/backups}"
@@ -17,77 +18,8 @@ if [[ "$output_dir" != /* ]]; then
   output_dir="${PROJECT_ROOT}/$output_dir"
 fi
 
-resolve_env_file() {
-  local mode="$1"
-  local -a candidates=()
-
-  case "$mode" in
-    dev)
-      candidates=(
-        "${PROJECT_ROOT}/.env"
-        "${PROJECT_ROOT}/.env.example"
-      )
-      ;;
-    prod)
-      candidates=(
-        "${PROJECT_ROOT}/.env.prod"
-        "${PROJECT_ROOT}/.env"
-        "${PROJECT_ROOT}/.env.example"
-      )
-      ;;
-    *)
-      if [ -f "$mode" ]; then
-        echo "$mode"
-        return 0
-      elif [ -f "${PROJECT_ROOT}/$mode" ]; then
-        echo "${PROJECT_ROOT}/$mode"
-        return 0
-      else
-        echo "Environment file '$mode' not found" >&2
-        return 1
-      fi
-      ;;
-  esac
-
-  for candidate in "${candidates[@]}"; do
-    if [ -f "$candidate" ]; then
-      echo "$candidate"
-      return 0
-    fi
-  done
-
-  echo "No suitable environment file found for mode '$mode'" >&2
-  return 1
-}
-
-resolve_env_mode() {
-  local mode="$1"
-  local config_path="$2"
-  local config_name
-  config_name="$(basename "$config_path")"
-
-  case "$mode" in
-    prod|dev)
-      echo "$mode"
-      ;;
-    *)
-      case "$config_name" in
-        .env.prod)
-          echo "prod"
-          ;;
-        .env)
-          echo "dev"
-          ;;
-        *)
-          echo "custom"
-          ;;
-      esac
-      ;;
-  esac
-}
-
-config_file="$(resolve_env_file "$requested_mode")"
-resolved_mode="$(resolve_env_mode "$requested_mode" "$config_file")"
+config_file="$(date_resolve_env_file "$PROJECT_ROOT" "$requested_mode")"
+resolved_mode="$(date_resolve_env_mode "$requested_mode" "$config_file")"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "docker is required but was not found in PATH"
@@ -98,19 +30,9 @@ set -a
 source "$config_file"
 set +a
 
-case "$resolved_mode" in
-  prod)
-    DATE_DEVELOP="False"
-    ;;
-  dev)
-    DATE_DEVELOP="${DATE_DEVELOP:-True}"
-    ;;
-esac
+date_apply_env_mode "$resolved_mode"
 
-compose_file="docker-compose.yml"
-if [ "${DATE_DEVELOP:-True}" = "False" ]; then
-  compose_file="docker-compose.prod.yml"
-fi
+compose_file="$(date_resolve_compose_file)"
 
 compose_path="${PROJECT_ROOT}/${compose_file}"
 if [ ! -f "$compose_path" ]; then
@@ -139,8 +61,24 @@ docker_compose() {
   docker compose -f "$compose_path" "$@"
 }
 
-echo "Starting ${db_service} service using ${compose_file}"
-docker_compose up -d "$db_service" >/dev/null
+db_started_by_script=0
+db_container_id="$(docker_compose ps -q "$db_service" 2>/dev/null || true)"
+if [ -n "$db_container_id" ] && [ "$(docker inspect -f '{{.State.Running}}' "$db_container_id" 2>/dev/null || true)" = "true" ]; then
+  echo "${db_service} is already running, reusing existing container"
+else
+  echo "Starting ${db_service} service using ${compose_file}"
+  docker_compose up -d "$db_service" >/dev/null
+  db_started_by_script=1
+fi
+
+cleanup() {
+  if [ "$db_started_by_script" -eq 1 ]; then
+    echo "Stopping ${db_service} service started for backup"
+    docker_compose stop "$db_service" >/dev/null || true
+  fi
+}
+
+trap cleanup EXIT
 
 echo "Waiting for PostgreSQL to accept connections"
 ready=0
@@ -161,7 +99,7 @@ postgres_version="$(docker_compose exec -T "$db_service" psql -U "$db_user" -d "
 postgres_major_version="${postgres_version%%.*}"
 
 echo "Creating dump at $dump_file"
-if ! docker_compose exec -T "$db_service" pg_dump -U "$db_user" "$db_name" > "$dump_file"; then
+if ! docker_compose exec -T "$db_service" pg_dump --no-owner --no-privileges -U "$db_user" "$db_name" > "$dump_file"; then
   rm -f "$dump_file"
   echo "Database dump failed"
   exit 1
@@ -173,21 +111,28 @@ if [ ! -s "$dump_file" ]; then
   exit 1
 fi
 
-python - "$manifest_file" "$project_name" "$project_label" "$timestamp" "$(basename "$dump_file")" "$db_service" "$db_name" "$db_user" "$postgres_version" "$postgres_major_version" <<'PY'
+python - "$manifest_file" "$dump_file" "$project_name" "$project_label" "$timestamp" "$(basename "$dump_file")" "$db_service" "$db_name" "$db_user" "$postgres_version" "$postgres_major_version" <<'PY'
+import hashlib
 import json
 import sys
 from pathlib import Path
 
 manifest_path = Path(sys.argv[1])
-project_name = sys.argv[2]
-project_label = sys.argv[3]
-timestamp = sys.argv[4]
-dump_filename = sys.argv[5]
-db_service = sys.argv[6]
-db_name = sys.argv[7]
-db_user = sys.argv[8]
-postgres_version = sys.argv[9]
-postgres_major_version = sys.argv[10]
+dump_path = Path(sys.argv[2])
+project_name = sys.argv[3]
+project_label = sys.argv[4]
+timestamp = sys.argv[5]
+dump_filename = sys.argv[6]
+db_service = sys.argv[7]
+db_name = sys.argv[8]
+db_user = sys.argv[9]
+postgres_version = sys.argv[10]
+postgres_major_version = sys.argv[11]
+
+digest = hashlib.sha256()
+with dump_path.open("rb") as dump_file:
+    for chunk in iter(lambda: dump_file.read(1024 * 1024), b""):
+        digest.update(chunk)
 
 manifest = {
     "project_name": project_name,
@@ -200,6 +145,7 @@ manifest = {
     "database_user": db_user,
     "postgres_version": postgres_version,
     "postgres_major_version": postgres_major_version,
+    "dump_sha256": digest.hexdigest(),
 }
 
 if project_label:
