@@ -1437,7 +1437,7 @@ msgstr ""
 
 #: templates/date/date/components/extras.html:10
 msgid "Joke"
-msgstr "Vitsi"
+msgstr "Joke"
 
 #: templates/date/date/components/header.html:8
 msgid "Datateknologerna"

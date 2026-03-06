@@ -924,7 +924,7 @@ msgstr "Ladda upp bilder"
 
 #: templates/common/core/404.html:10
 msgid "Page not found"
-msgstr "Page not found"
+msgstr "Sidan hittades inte"
 
 #: templates/common/core/404.html:21
 msgid "Sidan hittades inte"
@@ -937,7 +937,7 @@ msgstr "Till startsidan"
 
 #: templates/common/core/418.html:10
 msgid "I'm a teapot"
-msgstr "I'm a teapot"
+msgstr "Jag är en tekokare"
 
 #: templates/common/core/418.html:21
 msgid "Jag är en tekokare"
@@ -949,7 +949,7 @@ msgstr "Inget vatten i glöggkokaren, tack"
 
 #: templates/common/core/500.html:9
 msgid "Server error"
-msgstr "Server error"
+msgstr "Serverfel"
 
 #: templates/common/core/500.html:16
 msgid "Serverfel, försök igen om en stund"
@@ -966,7 +966,7 @@ msgstr "E-post"
 
 #: templates/common/core/footer.html:39
 msgid "Address"
-msgstr "Address"
+msgstr "Adress"
 
 #: templates/common/core/header.html:51
 msgid "Logga ut"
@@ -974,7 +974,7 @@ msgstr "Logga ut"
 
 #: templates/common/core/header.html:66
 msgid "Language"
-msgstr "Language"
+msgstr "Språk"
 
 #: templates/common/events/arsfest.html:105
 #: templates/common/events/detail.html:57

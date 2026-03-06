@@ -1,9 +1,13 @@
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.admin.models import LogEntry, ADDITION
 from django.conf import settings
+from django.core.cache import cache
+from django.utils import translation
+
+from date.views import handler500
 
 
 class AuditLogTestCase(TestCase):
@@ -39,6 +43,10 @@ class AuditLogTestCase(TestCase):
 
 
 class LanguageSelectionTests(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        cache.clear()
+
     def test_set_language_persists_cookie(self):
         response = self.client.post(
             reverse("set_lang"),
@@ -62,8 +70,30 @@ class LanguageSelectionTests(TestCase):
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "fi")
         self.assertContains(response, "Kieli")
 
-    def test_404_page_renders_in_selected_language(self):
+    def test_homepage_preserves_swedish_shared_labels_and_fixed_terms(self):
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "sv"
+        response = self.client.get(reverse("index"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "sv")
+        self.assertContains(response, "Språk")
+        self.assertContains(response, "Adress")
+        self.assertContains(response, "Joke")
+
+    def test_404_page_renders_in_selected_english_language(self):
         self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
         response = self.client.get("/this-page-does-not-exist/")
         self.assertEqual(response.status_code, 404)
         self.assertContains(response, "Page not found", status_code=404)
+
+    def test_404_page_renders_in_selected_swedish_language(self):
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "sv"
+        response = self.client.get("/this-page-does-not-exist/")
+        self.assertEqual(response.status_code, 404)
+        self.assertContains(response, "Sidan hittades inte", status_code=404)
+
+    def test_500_page_renders_in_selected_swedish_language(self):
+        request = self.factory.get("/")
+        with translation.override("sv"):
+            response = handler500(request)
+        self.assertEqual(response.status_code, 500)
+        self.assertContains(response, "Serverfel", status_code=500)

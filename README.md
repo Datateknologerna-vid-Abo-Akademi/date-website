@@ -90,32 +90,47 @@ docker network create web
 
 ## Internationalization
 
-NOTE: No need to implement yet
-
-Locales (stupidly called language codes) used in this project
+Locales used in this project
 
 - sv (default)
+- en
 - fi
 
 The actual language code will be one of
 
 - sv
+- en
 - fi
+
+### Translation scope
+
+Swedish site copy should match the established wording from `develop` unless there is an explicit content decision to change it.
+
+Use these rules when updating translations:
+
+- Keep shared UI labels translated per locale, for example `Language`, `Address`, and error page titles.
+- Keep proper names and intentional fixed labels unchanged across locales when that reflects the intended site copy.
+- Treat Swedish as the source of truth for existing association wording and only introduce new translations where the text is meant to vary by language.
+
+Current fixed terms that should not be translated just because they are user-facing:
+
+- `Datateknologerna`
+- `vid Åbo Akademi rf`
+- `Joke`
 
 ### Translations
 
-As the default language is `sv`, 
-we only need to create translations in the language `fi`.
+As the default language is `sv`, Swedish copy should be reviewed against the site itself when strings are extracted into locale files.
 
 To generate the translation file, called `django.po`
 is done by executing the following command **in the root directory of the project**
 
 ```bash
-$ django-admin makemessages -l fi
+$ django-admin makemessages -l en -l fi -l sv
 ```
 
 This creates/updates the `django.po` 
-in `date-website/locale/fi/LC_MESSAGES`.
+in `date-website/locale/<language>/LC_MESSAGES`.
 
 Add translations to the empty fields or use a third party translation software,
 such as `Poedit`.
