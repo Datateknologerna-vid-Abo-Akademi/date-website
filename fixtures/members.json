@@ -3,6 +3,7 @@
     "model": "members.member",
     "pk": 1,
     "fields": {
+      "password": "pbkdf2_sha256$216000$Pza41nldCcBB$s7ab3C1Ayvk67O89/3n8r4AZN5Qv8zWBMB39uRkGkYQ=",
       "username": "admin",
       "email": "admin@example.com",
       "first_name": "Admin",
@@ -16,6 +17,7 @@
     "model": "members.member",
     "pk": 2,
     "fields": {
+      "password": "pbkdf2_sha256$216000$Pza41nldCcBB$s7ab3C1Ayvk67O89/3n8r4AZN5Qv8zWBMB39uRkGkYQ=",
       "username": "freshman",
       "email": "freshman@example.com",
       "first_name": "Freddy",
@@ -28,6 +30,7 @@
     "model": "members.member",
     "pk": 3,
     "fields": {
+      "password": "pbkdf2_sha256$216000$Pza41nldCcBB$s7ab3C1Ayvk67O89/3n8r4AZN5Qv8zWBMB39uRkGkYQ=",
       "username": "member",
       "email": "member@example.com",
       "first_name": "Molly",

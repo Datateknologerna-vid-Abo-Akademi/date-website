@@ -24,7 +24,13 @@ COMPOSE_PATH="$PROJECT_DIR/${COMPOSE_FILE_PATH:-docker-compose.yml}"
 
 validate_fixtures() {
     echo "Validating fixtures..."
-    local fixtures=("fixtures/members.json" "fixtures/ads.json" "scripts/generate_dynamic_fixtures.py")
+    local fixtures=(
+        "fixtures/members.json"
+        "fixtures/ads.json"
+        "scripts/generate_dynamic_fixtures.py"
+        "scripts/assets/dummy.svg"
+        "scripts/assets/dummy.pdf"
+    )
     for f in "${fixtures[@]}"; do
         if [[ ! -f "$PROJECT_DIR/$f" ]]; then
             echo "ERROR: Missing required fixture: $f"

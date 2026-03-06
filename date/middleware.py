@@ -8,7 +8,7 @@ from django.utils.deprecation import MiddlewareMixin
 class LangMiddleware(MiddlewareMixin):
     @staticmethod
     def process_request(request):
-        request.LANG = getattr(settings, "LANGUAGE_CODE", settings.LANGUAGE_CODE)
+        request.LANG = settings.LANGUAGE_CODE
         try:
             pass
             # TODO This is borked as of Django 4.0 but it doesn't seem like it's in use
@@ -53,5 +53,6 @@ class CDNRewriteMiddleware:
                     response.content = response.content.replace(
                         bytes(original, "utf-8"), bytes(new, "utf-8")
                     )
+        # Streaming responses do not expose a mutable `.content` buffer here.
 
         return response

@@ -1,10 +1,16 @@
 import json
 import os
-import urllib.request
+import shutil
 from datetime import datetime, timedelta, timezone
 
-TEST_IMAGE_URL = "https://picsum.photos/800/600.jpg"
-TEST_PDF_URL = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
+ASSET_DIR = os.path.join(SCRIPT_DIR, "assets")
+TEST_IMAGE_SOURCE = os.path.join(ASSET_DIR, "dummy.svg")
+TEST_PDF_SOURCE = os.path.join(ASSET_DIR, "dummy.pdf")
+TEST_IMAGE_PATH = os.path.join(PROJECT_DIR, "media", "archive", "test", "dummy.svg")
+TEST_PDF_PATH = os.path.join(PROJECT_DIR, "media", "pdfs", "test", "dummy.pdf")
+OUTPUT_FIXTURE_PATH = os.path.join(PROJECT_DIR, "fixtures", "dynamic.json")
 
 
 def dt(days=0, hours=0, minutes=0):
@@ -19,29 +25,23 @@ def d(days=0):
     return (datetime.now(timezone.utc) + timedelta(days=days)).strftime("%Y-%m-%d")
 
 
-def download_file(url, path):
-    """Download a file from URL to the specified path."""
-    try:
-        with urllib.request.urlopen(url, timeout=30) as response:
-            with open(path, "wb") as f:
-                f.write(response.read())
-        print(f"Downloaded: {url} -> {path}")
-        return True
-    except Exception as e:
-        print(f"Failed to download {url}: {e}")
-        return False
+def ensure_sample_file(source_path, target_path):
+    """Copy a checked-in sample file into media so fixture paths always resolve."""
+    if not os.path.exists(source_path):
+        raise FileNotFoundError(f"Missing sample asset: {source_path}")
+
+    if not os.path.exists(target_path):
+        shutil.copyfile(source_path, target_path)
+        print(f"Copied: {source_path} -> {target_path}")
 
 
 def generate():
     # Ensure media directories exist for test files
-    os.makedirs("media/archive/test", exist_ok=True)
-    os.makedirs("media/pdfs/test", exist_ok=True)
+    os.makedirs(os.path.dirname(TEST_IMAGE_PATH), exist_ok=True)
+    os.makedirs(os.path.dirname(TEST_PDF_PATH), exist_ok=True)
 
-    # Download test files if they don't exist
-    if not os.path.exists("media/archive/test/dummy.jpg"):
-        download_file(TEST_IMAGE_URL, "media/archive/test/dummy.jpg")
-    if not os.path.exists("media/pdfs/test/dummy.pdf"):
-        download_file(TEST_PDF_URL, "media/pdfs/test/dummy.pdf")
+    ensure_sample_file(TEST_IMAGE_SOURCE, TEST_IMAGE_PATH)
+    ensure_sample_file(TEST_PDF_SOURCE, TEST_PDF_PATH)
 
     data = []
 
@@ -345,7 +345,7 @@ def generate():
                 "pk": i,
                 "fields": {
                     "collection": 1,
-                    "image": "archive/test/dummy.jpg",
+                    "image": "archive/test/dummy.svg",
                     "favorite": (i == 1),
                 },
             }
@@ -400,9 +400,9 @@ def generate():
         }
     )
 
-    with open("fixtures/dynamic.json", "w", encoding="utf-8") as f:
+    with open(OUTPUT_FIXTURE_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
-    print("Successfully generated fixtures/dynamic.json with dynamic dates.")
+    print(f"Successfully generated {OUTPUT_FIXTURE_PATH} with dynamic dates.")
 
 
 if __name__ == "__main__":

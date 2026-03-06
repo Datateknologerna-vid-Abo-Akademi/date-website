@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#111827" />
+  <rect x="40" y="40" width="720" height="520" rx="24" fill="#f59e0b" />
+  <text
+    x="400"
+    y="280"
+    text-anchor="middle"
+    font-family="Arial, sans-serif"
+    font-size="64"
+    font-weight="700"
+    fill="#111827"
+  >
+    DaTe
+  </text>
+  <text
+    x="400"
+    y="350"
+    text-anchor="middle"
+    font-family="Arial, sans-serif"
+    font-size="28"
+    fill="#111827"
+  >
+    Fixture image
+  </text>
+</svg>
