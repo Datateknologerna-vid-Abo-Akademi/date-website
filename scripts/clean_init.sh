@@ -68,8 +68,8 @@ fi
 echo "Shutting down containers..."
 docker compose -f "$COMPOSE_PATH" down --remove-orphans
 
-echo "Starting database container..."
-docker compose -f "$COMPOSE_PATH" build db
+echo "Building required images and starting database container..."
+docker compose -f "$COMPOSE_PATH" build db web
 docker compose -f "$COMPOSE_PATH" up -d db
 
 wait_for_db
