@@ -5,9 +5,7 @@
 {% load localized_time %}
 {% block title %}{{ event.title }}{% endblock %}
 
-{% block content %}
-
-<head>
+{% block extra_head %}
     <link rel="stylesheet" href="{% static 'events/css/arsfest.css' %}">
     <script
         src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
@@ -28,7 +26,9 @@
             }
         }
     </style>
-</head>
+{% endblock %}
+
+{% block content %}
 <div class="background-img">
     <div class="container-md min-vh-100 p-1">
         <div class="container-size lava-container lava-container-bottom">
@@ -47,15 +47,15 @@
                     </div>
                 </div>
                 <h1 class="age" style="font-size:64px; text-align:center;">Biologica VII</h1>
-                <div class="ball-nav flex-container-center">
-                    <a class="ball-link glowing-text-orange ontop" onclick="showPage(this)" href="#/main"
+                <div class="ball-nav flex-container-center" data-tabbed-nav data-tab-content-class="ball-content">
+                    <a class="ball-link glowing-text-orange ontop" href="#/main"
                         data-nav="main">Välkommen</a>
                     {% for page in staticpages %}
-                    <a class="ball-link" onclick="showPage(this)" href="#/{{ page.slug }}" data-nav="{{ page.slug }}">{{
+                    <a class="ball-link" href="#/{{ page.slug }}" data-nav="{{ page.slug }}">{{
                         page.title }}</a>
                     {% endfor %}
-                    <a class="ball-link" onclick="showPage(this)" href="#/anmalan" data-nav="anmalan">Anmälan</a>
-                    <a class="ball-link" onclick="showPage(this)" href="#/attendee-list"
+                    <a class="ball-link" href="#/anmalan" data-nav="anmalan">Anmälan</a>
+                    <a class="ball-link" href="#/attendee-list"
                         data-nav="attendee-list">Anmälda</a>
                 </div>
             </div>
@@ -72,78 +72,11 @@
                     <p>{{ event.content|safe }}</p>
                 </div>
             </div>
-            <div class="content ball-content anmalan hidden break-words">
-                <h2 id="sign-up">{% trans "Anmälning" %}</h2>
-                {% if user|in_group:"commodore" %}
-                {% include 'events/registering.html' %}
-                {% elif event.registration_is_open_members and user.is_authenticated %}
-                {% include 'events/registering.html' %}
-                {% elif event.registration_is_open_others %}
-                {% include 'events/registering.html' %}
-                {% elif event.registation_past_due %}
-                <h4 id="no-registration">{% trans "Anmälningstiden gick ut" %} {{ event.sign_up_deadline|localized_timesince_ago }}</h4>
-                {% elif not event.registation_past_due and user.is_authenticated %}
-                <p>{% trans "Anmälan öppnas" %} {{ event.sign_up_members|date:"j.n H:i" }}, {{ event.sign_up_members|localized_timeuntil }}</p>
-                {% else %}
-                <p>{% trans "Anmälan öppnas" %} {{ event.sign_up_others|date:"j.n H:i" }}, {{ event.sign_up_others|localized_timeuntil }}</p>
-                {% endif %}
-            </div>
-            <div id="attendee-list" class="content ball-content attendee-list hidden"
-                data-parent-slug="{{ event.parent.slug|default:'' }}">
-                {% if event|show_attendee_list %}
-                {% if event.sign_up_max_participants != 0 %}
-                <p>{{ event.remaining_places|localized_remaining_places }}</p>
-                {% endif %}
-                <h1>{% trans "Anmälda" %}</h1>
-                <table id="attendees">
-                    <tr id="attendees-header" {% if not event.get_registrations %} style="display: none;" {% endif %}>
-                        <th>#</th>
-                        <th>{% trans "Namn" %}</th>
-                        {% for preference in event.get_registration_form_public_info reversed %}
-                        <th>{{ preference }}</th>
-                        {% endfor %}
-                    </tr>
-                    {% for attendee in event.get_registrations %}
-                    <tr {% if forloop.counter > event.sign_up_max_participants and event.sign_up_max_participants != 0 %}
-                        class="event-full" {% endif %} >
-                        <td>{{ forloop.counter }}</td>
-                        <td>{% if not attendee.anonymous %}{{ attendee.user }}{% else %}
-                            <i>{% trans "Anonymt" %}</i>{% endif %}
-                        </td>
-                        {% for preference in event.get_registration_form_public_info reversed %}
-                        <td>{{ attendee|get_preference:preference }}</td>
-                        {% endfor %}
-                    </tr>
-                    {% empty %}
-                    <p id="no-attendee">{% trans "Inga anmälda, var den första att anmäla dig!" %}</p>
-                    {% endfor %}
-                </table>
-                {% else %}
-                <h4 id="no-attendee">{% trans 'Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta styrelsen vid behov.' %}</h4>
-                {% endif %}
-            </div>
+            {% include "events/partials/tabbed_signup.html" with content_class="ball-content" include_commodore=1 %}
+            {% include "events/partials/tabbed_attendee_list.html" with content_class="ball-content" strict_parent_capacity=0 %}
         </div>
     </div>
 </div>
 
-<script>
-
-    $(document).ready(function () {
-        if (window.location.hash) {
-            currentPage()
-        }
-    });
-
-    function showPage(element) {
-        $(".ball-content").addClass("hidden");
-        $(`.${element.dataset.nav}`).toggleClass("hidden")
-        let pageHash = window.location.hash.substr(1).replace(/\//g, '');
-    }
-
-    function currentPage(element) {
-        $(".ball-content").addClass("hidden");
-        let pageHash = window.location.hash.substr(1).replace(/\//g, '');
-        $(`.${pageHash}`).toggleClass("hidden")
-    }
-</script>
+<script src="{% static 'events/js/tabbed-event.js' %}"></script>
 {% endblock %}
