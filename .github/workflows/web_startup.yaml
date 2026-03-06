@@ -101,6 +101,7 @@ jobs:
         if: steps.prebuilt.outputs.compose_file == 'docker-compose.yml'
         run: |
           set -euo pipefail
+          source env.sh dev
           docker-compose build web celery
 
       - name: Run django unit tests
