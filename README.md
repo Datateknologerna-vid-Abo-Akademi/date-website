@@ -126,6 +126,37 @@ To compile the translations to `django.mo`, use the following command
 $ django-admin compilemessages
 ``` 
 
+## Database backups
+
+Use the dedicated backup script for routine PostgreSQL backups:
+
+```bash
+./scripts/backup_postgres.sh [dev|prod|path/to/env] [output_dir]
+```
+
+If no env argument is provided, the script resolves `prod`, which checks `.env.prod`, then `.env`, then `.env.example`.
+Like `env.sh`, you can also pass `dev` or a specific env file path.
+If no `output_dir` is provided, backups are written to `./backups`.
+
+Each run creates two timestamped files that a collector script can scan across many similar repos:
+
+- `backups/<project>-<timestamp>.sql`
+- `backups/<project>-<timestamp>.json`
+
+The JSON manifest contains a stable machine-readable contract:
+
+- `project_name`
+- `project_label` when `PROJECT_NAME` is set
+- `created_at_utc`
+- `dump_filename`
+- `dump_format`
+- `database_engine`
+- `database_service`
+- `database_name`
+- `database_user`
+- `postgres_version`
+- `postgres_major_version`
+
 ## Updating the database
 
 ### Warning
@@ -145,6 +176,11 @@ Run
 #### Make sure `DATE_POSTGRESQL_VERSION` is set to the CURRENT version before running the following command
 
 ```bash
-./update-postgres.sh target_version [env_file]
+./update-postgres.sh target_version [dev|prod|path/to/env]
 ```
+
+The upgrade helper now calls `./scripts/backup_postgres.sh` first and reuses the generated SQL dump during restore.
+If no env argument is provided, it resolves `prod` first using the same lookup order as `env.sh`.
+For upgrades, the resolved env file must be writable; the script will not modify `.env.example`.
+
 Run `source env.sh dev` afterward to reload your development configuration.
