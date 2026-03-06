@@ -17,20 +17,20 @@
     </head>
 
     <div class="container-fluid p-2 min-vh-100">
-        {% include "date/date/components/header.html" %}
-        {% include "date/date/components/about.html" %}
+        {% include "date/components/header.html" %}
+        {% include "date/components/about.html" %}
         <section id="news" class="news-events">
             <div id="main" class="main-container">
-                {% include "date/date/components/news.html" %}
-                {% include "date/date/components/events.html" %}
-                {% include "date/date/components/extras.html" %}
-                {% include "date/date/components/partners.html" %}
+                {% include "date/components/news.html" %}
+                {% include "date/components/events.html" %}
+                {% include "date/components/extras.html" %}
+                {% include "date/components/partners.html" %}
             </div>
         </section>
         <section id="reklam" class="text-size">
         </section>
     </div>
 
-    {% include "date/date/components/scripts.html" %}
+    {% include "date/components/scripts.html" %}
     {% endcache %}
 {% endblock %}

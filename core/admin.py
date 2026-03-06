@@ -1,13 +1,8 @@
 from django.contrib import admin
-from django.utils import translation
 
 
 class FixedLanguageAdminSite(admin.AdminSite):
-    def each_context(self, request):
-        # Force swedish as admin panel language
-        translation.activate('sv')
-        request.LANGUAGE_CODE = 'sv'
-        return super().each_context(request)
+    """Mirror the default admin site while preserving normal locale resolution."""
 
 
 admin_site = FixedLanguageAdminSite()

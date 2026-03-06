@@ -2,7 +2,7 @@
 
 {% load i18n %}
 {% load static %}
-{% block title %}{% translate Sign up %}{% endblock %}
+{% block title %}{% trans "Sign up" %}{% endblock %}
 {% block content %}
     <head>
         <link rel="stylesheet" href="{% static 'members/style.css' %}">
@@ -50,7 +50,7 @@
               </a>
             </p>
             <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}" data-callback="javascriptCallback"></div>
-            <button class="button" type="submit">{% translate Registrera dig %}</button>
+            <button class="button" type="submit">{% trans "Registrera dig" %}</button>
           </form>
         </div>
     </div>

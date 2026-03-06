@@ -28,13 +28,15 @@
         <div class="col-4">
             <p>
                 <br>
-                Styrelsen för {{ ASSOCIATION_NAME_FULL }} kan kontaktas på följande sätt.<br><br>
+                {% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}
+                Styrelsen för {{ association_name }} kan kontaktas på följande sätt.
+                {% endblocktranslate %}<br><br>
                 {% trans 'E-post' %}:
                 {{ ASSOCIATION_EMAIL }}
                 <br>
                 {{ ASSOCIATION_OFFICE_HOURS }}
             </p>
-            <p> Adress: <br>
+            <p>{% trans "Address" %}: <br>
                 {{ ASSOCIATION_ADDRESS_L1 }}<br>
                 {{ ASSOCIATION_ADDRESS_L2 }}<br>
                 {{ ASSOCIATION_POSTAL_CODE }}

@@ -25,6 +25,8 @@ jobs:
       - name: Run django unit tests
         run: |
           source env.sh dev
+          docker-compose run --rm --no-deps web python scripts/validate_translations.py
+          docker-compose run --rm --no-deps web python manage.py compilemessages
           date-test
 
   ping_test:
