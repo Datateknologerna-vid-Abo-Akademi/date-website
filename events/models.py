@@ -159,6 +159,12 @@ class Event(models.Model):
             fields = {'user': forms.CharField(label=_('Namn'), max_length=255),
                       'email': forms.EmailField(label=_('Email'), validators=[self.validate_unique_email], max_length=320),
                       'anonymous': forms.BooleanField(label=_('Anonymt'), required=False)}
+            if self.slug in settings.CONTENT_VARIABLES.get('INTERNATIONAL_EVENT_SLUGS', []):
+                fields['user'] = forms.CharField(label='Nimi/Namn/Name', max_length=255)
+                fields['email'] = forms.EmailField(label='Sahkoposti/E-post/Email',
+                                                   validators=[self.validate_unique_email],
+                                                   max_length=320)
+                fields['anonymous'] = forms.BooleanField(label='Anonyymi/Anonym/Anonymous', required=False)
             if self.get_registration_form():
                 for question in self.get_registration_form():
                     if question.type == "select":
