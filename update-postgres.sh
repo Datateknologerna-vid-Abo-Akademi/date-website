@@ -16,7 +16,7 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/scripts/lib/date_env.sh"
 
-version=$1
+version="${1:-}"
 requested_mode=${2:-prod}
 
 if [ -z "$version" ]; then
@@ -48,7 +48,7 @@ docker_compose() {
 }
 
 # Check if the required environment variables are set
-if [ -z "$DATE_POSTGRESQL_VERSION" ] || [ -z "$DATE_DB_PORT" ] || [ -z "$DATE_DB_PASSWORD" ] || [ -z "$COMPOSE_PROJECT_NAME" ]; then
+if [ -z "${DATE_POSTGRESQL_VERSION:-}" ] || [ -z "${DATE_DB_PORT:-}" ] || [ -z "${DATE_DB_PASSWORD:-}" ] || [ -z "${COMPOSE_PROJECT_NAME:-}" ]; then
   echo "Error: Required environment variables are not set"
   exit 1
 fi
@@ -90,7 +90,11 @@ sleep 15
 
 # Check if the container is stopped
 db_container_id="$(docker_compose ps -q db)"
-if [ -z "$db_container_id" ] || [ -z "$(docker ps -q --no-trunc | grep "$db_container_id")" ]; then
+db_running="false"
+if [ -n "$db_container_id" ]; then
+  db_running="$(docker inspect -f '{{.State.Running}}' "$db_container_id" 2>/dev/null || true)"
+fi
+if [ -z "$db_container_id" ] || [ "$db_running" != "true" ]; then
   echo "The container failed to start, This is probably because of wrong postgres version"
   exit 1
 fi
