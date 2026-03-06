@@ -1,0 +1,18 @@
+{% load i18n %}
+<div class="feed-container">
+    <h3 class="news-header header-border-bottom mt-3 heading-link"><a href="/news/">Nyheter</a>
+    </h3>
+    <div class="news-container">
+        {% for ne in news%}
+            <div class="news-content news-box header-border-bottom">
+                <h3 class="news-title">{{ ne.title }}</h3>
+                <h5 class="news-date">{{ ne.published_time }}</h5>
+                <div>{{ ne.content|safe|truncatewords_html:"50"}}</div>
+                <a class="news-button" href="{% url 'news:detail' ne.slug %}"><i class="fab fa-readme"></i> {% trans 'Läs mera' %}...</a>
+            </div>
+            {% empty %}
+            <h3>{% trans 'Inga nyheter hittades' %}...</h3>
+        {% endfor %}
+        <a class="more-news" href="/news/"><i class="far fa-newspaper"></i> Mera nyheter...</a>
+    </div>
+</div>

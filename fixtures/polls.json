@@ -1,0 +1,29 @@
+[
+  {
+    "model": "polls.question",
+    "pk": 1,
+    "fields": {
+      "question_text": "Vad vill du ha för mat på nästa sits?",
+      "pub_date": "2026-01-25T10:00:00Z",
+      "published": true
+    }
+  },
+  {
+    "model": "polls.choice",
+    "pk": 1,
+    "fields": {
+      "question": 1,
+      "choice_text": "Pizza",
+      "votes": 5
+    }
+  },
+  {
+    "model": "polls.choice",
+    "pk": 2,
+    "fields": {
+      "question": 1,
+      "choice_text": "Tacos",
+      "votes": 3
+    }
+  }
+]

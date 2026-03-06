@@ -36,7 +36,7 @@ def index(request):
         are mapped to data used by the calendar on the frontend"""
         calendar_events_dict = {}
         for event in all_events:
-            event_url = "events/" + event.slug
+            event_url = "/events/" + event.slug
             # The rest of the "html" field is set on the client side
             # since it includes a time that gets localized on the client-side
             event_dict = {event.event_date_start.strftime("%Y-%m-%d"):
@@ -45,7 +45,6 @@ def index(request):
                 "modifier": "calendar-eventday",
                 "eventFullDate": event.event_date_start,
                 "eventTitle": event.title,
-                "html": f"<a class='calendar-eventday-popup' id='calendar_link' href='{event_url}'>"
             }
             }
             calendar_events_dict.update(event_dict)
