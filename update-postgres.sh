@@ -66,7 +66,34 @@ resolve_env_file() {
   return 1
 }
 
+resolve_env_mode() {
+  local mode="$1"
+  local config_path="$2"
+  local config_name
+  config_name="$(basename "$config_path")"
+
+  case "$mode" in
+    prod|dev)
+      echo "$mode"
+      ;;
+    *)
+      case "$config_name" in
+        .env.prod)
+          echo "prod"
+          ;;
+        .env)
+          echo "dev"
+          ;;
+        *)
+          echo "custom"
+          ;;
+      esac
+      ;;
+  esac
+}
+
 config_file="$(resolve_env_file "$requested_mode")"
+resolved_mode="$(resolve_env_mode "$requested_mode" "$config_file")"
 
 if [ "$config_file" = "${SCRIPT_DIR}/.env.example" ]; then
   echo "Resolved environment file is ${config_file}, which is not writable for upgrades."
@@ -78,7 +105,7 @@ set -a
 source "$config_file"
 set +a
 
-case "$requested_mode" in
+case "$resolved_mode" in
   prod)
     DATE_DEVELOP="False"
     ;;
