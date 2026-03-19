@@ -47,7 +47,7 @@ msgstr "Osoite"
 #: alumni/forms.py:21
 #| msgid "Telefonnummer"
 msgid "Postnummer"
-msgstr "Puhelinnumero"
+msgstr "Postinumero"
 
 #: alumni/forms.py:22 members/models.py:38
 msgid "Postanstalt"
@@ -89,7 +89,7 @@ msgstr "Tunniste"
 #: alumni/forms.py:78
 #| msgid "E-postadress"
 msgid "Ange din e-postadress"
-msgstr "Sähköpostiosoite"
+msgstr "Anna sähköpostiosoitteesi"
 
 #: alumni/models.py:17 alumni/models.py:18
 msgid "Emailmottagare för ÅAATK"
@@ -398,7 +398,7 @@ msgstr "Avekkina"
 #: events/models.py:300
 #| msgid "Mera evenemang"
 msgid "Ursprungligt evenemang"
-msgstr "Lisää tapahtumia"
+msgstr "Alkuperäinen tapahtuma"
 
 #: events/models.py:303 events/models.py:304
 msgid "deltagare"
@@ -484,7 +484,7 @@ msgstr "jäsenet"
 #: members/models.py:96
 #| msgid "Inskrivningsår"
 msgid "Beskrivning"
-msgstr "Aloittamisvuosi"
+msgstr "Kuvaus"
 
 #: members/models.py:97
 msgid "Behörighetsprofil"
@@ -497,7 +497,7 @@ msgstr "Jäsenyys"
 #: members/models.py:101
 #| msgid "Medlemskap"
 msgid "medlemskapstyper"
-msgstr "Jäsenyys"
+msgstr "Jäsenyystyypit"
 
 #: members/models.py:113
 msgid "Dagar"
@@ -1052,7 +1052,7 @@ msgstr "Ei ilmoittautuneita"
 #: templates/common/events/registering.html:9
 #| msgid "Anmälan stängs om "
 msgid "Anmälan stängs"
-msgstr "Ilmoittaututuminen sulkeutuu"
+msgstr "Ilmoittautuminen sulkeutuu"
 
 #: templates/common/events/registering.html:10
 msgid "OBS!"

@@ -48,7 +48,7 @@ msgstr "Address"
 #: alumni/forms.py:21
 #| msgid "Telefonnummer"
 msgid "Postnummer"
-msgstr "Phone number"
+msgstr "Postal code"
 
 #: alumni/forms.py:22 members/models.py:38
 msgid "Postanstalt"
@@ -90,12 +90,12 @@ msgstr "Token"
 #: alumni/forms.py:78
 #| msgid "E-postadress"
 msgid "Ange din e-postadress"
-msgstr "Email address"
+msgstr "Enter your email address"
 
 #: alumni/models.py:17 alumni/models.py:18
 #| msgid "Emailmottagare för ARG"
 msgid "Emailmottagare för ÅAATK"
-msgstr "Email recipient for ARG"
+msgstr "Email recipient for ÅAATK"
 
 #: alumni/models.py:30
 msgid "Alumni Update Token"
@@ -400,7 +400,7 @@ msgstr "Plus-one for"
 #: events/models.py:300
 #| msgid "Mera evenemang"
 msgid "Ursprungligt evenemang"
-msgstr "More events"
+msgstr "Original event"
 
 #: events/models.py:303 events/models.py:304
 msgid "deltagare"
@@ -486,7 +486,7 @@ msgstr "members"
 #: members/models.py:96
 #| msgid "Inskrivningsår"
 msgid "Beskrivning"
-msgstr "Year studies started"
+msgstr "Description"
 
 #: members/models.py:97
 msgid "Behörighetsprofil"
@@ -499,7 +499,7 @@ msgstr "Membership"
 #: members/models.py:101
 #| msgid "Medlemskap"
 msgid "medlemskapstyper"
-msgstr "Membership"
+msgstr "Membership types"
 
 #: members/models.py:113
 msgid "Dagar"
@@ -819,7 +819,7 @@ msgstr "ago"
 #: templates/on/events/arsfest.html:85 templates/on/events/arsfest.html:87
 #| msgid "Anmälan öppnas om "
 msgid "Anmälan öppnas"
-msgstr "Registration opens in "
+msgstr "Registration opens"
 
 #: templates/biocum/events/arsfest.html:85
 #: templates/biocum/events/arsfest.html:87
@@ -1046,7 +1046,7 @@ msgstr "No attendees..."
 #: templates/common/events/registering.html:9
 #| msgid "Anmälan stängs om "
 msgid "Anmälan stängs"
-msgstr "Registration closes in"
+msgstr "Registration closes"
 
 #: templates/common/events/registering.html:10
 msgid "OBS!"
