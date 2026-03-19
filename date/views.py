@@ -68,7 +68,7 @@ def set_language(request):
 
     # persist the language preference using a cookie
     translation.activate(user_language)
-    origin = request.META.get('HTTP_REFERER')
+    origin = request.META.get('HTTP_REFERER') or '/'
     response = redirect(origin)
     response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user_language)
     return response

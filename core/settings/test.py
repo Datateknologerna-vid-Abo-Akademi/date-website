@@ -1,4 +1,8 @@
 from .date import *  # noqa
+from core.translation_compiler import ensure_compiled_translations
+
+
+ensure_compiled_translations()
 
 # Use in-memory sqlite database for tests
 DATABASES = {

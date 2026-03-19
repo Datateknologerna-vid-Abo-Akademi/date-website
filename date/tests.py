@@ -55,6 +55,16 @@ class LanguageSelectionTests(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.cookies[settings.LANGUAGE_COOKIE_NAME].value, "fi")
+        self.assertEqual(response["Location"], reverse("index"))
+
+    def test_set_language_falls_back_to_homepage_without_referer(self):
+        response = self.client.post(
+            reverse("set_lang"),
+            {"lang": "sv"},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], reverse("index"))
+        self.assertEqual(response.cookies[settings.LANGUAGE_COOKIE_NAME].value, "sv")
 
     def test_homepage_renders_language_switcher_in_english(self):
         self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
