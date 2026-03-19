@@ -16,30 +16,30 @@ source ../env.sh dev
 COMPOSE_PATH="../${COMPOSE_FILE_PATH:-docker-compose.yml}"
 
 # Shut down any currently running containers
-docker-compose -f $COMPOSE_PATH down
+docker compose -f $COMPOSE_PATH down
 
 # Start the database container
-docker-compose -f $COMPOSE_PATH build
-docker-compose -f $COMPOSE_PATH up -d db
+docker compose -f $COMPOSE_PATH build
+docker compose -f $COMPOSE_PATH up -d db
 
 sleep 2
 
 # Connect to a temporary database to delete and recreate the postgres database
-docker-compose exec db psql -U postgres -c "CREATE DATABASE temp;"
-docker-compose exec db psql -U postgres -d temp -c "DROP DATABASE postgres;"
-docker-compose exec db psql -U postgres -d temp -c "CREATE DATABASE postgres;"
-docker-compose exec db psql -U postgres -c "DROP DATABASE temp;"
+docker compose exec db psql -U postgres -c "CREATE DATABASE temp;"
+docker compose exec db psql -U postgres -d temp -c "DROP DATABASE postgres;"
+docker compose exec db psql -U postgres -d temp -c "CREATE DATABASE postgres;"
+docker compose exec db psql -U postgres -c "DROP DATABASE temp;"
 
 echo "Database cleared."
 
 # Run migrations on fresh database and load fixture data
-docker-compose -f $COMPOSE_PATH run web python /code/manage.py migrate
-docker-compose -f $COMPOSE_PATH run web ./scripts/load_all_fixtures.sh
-docker-compose down
+docker compose -f $COMPOSE_PATH run web python /code/manage.py migrate
+docker compose -f $COMPOSE_PATH run web ./scripts/load_all_fixtures.sh
+docker compose down
 
 sleep 2
 
 # (optional) start website
-# docker-compose up -d
+# docker compose up -d
 
 echo "All migrations and data cleared, initial website data loaded."
