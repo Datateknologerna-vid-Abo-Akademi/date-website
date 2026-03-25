@@ -1,8 +1,12 @@
 import io
+import logging
+import textwrap
 
 from celery import shared_task
 from django.core.files.base import ContentFile
 from django.utils import timezone
+
+logger = logging.getLogger('date')
 
 
 @shared_task
@@ -16,7 +20,10 @@ def generate_expense_pdf(expense_id):
     from django.conf import settings as django_settings
     from .models import ExpenseClaim
 
-    expense = ExpenseClaim.objects.prefetch_related('receipts').get(pk=expense_id)
+    try:
+        expense = ExpenseClaim.objects.prefetch_related('receipts').get(pk=expense_id)
+    except ExpenseClaim.DoesNotExist:
+        return
 
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
@@ -47,7 +54,10 @@ def generate_expense_pdf(expense_id):
     # Claim details
     draw_line(f'Inlämningsdatum: {expense.submitted_at.strftime("%d.%m.%Y")}')
     draw_line(f'Mottagare: {expense.recipient_name}')
-    draw_line(f'Beskrivning: {expense.description}')
+    desc_lines = textwrap.wrap(expense.description, width=75) or ['']
+    draw_line(f'Beskrivning: {desc_lines[0]}')
+    for extra in desc_lines[1:]:
+        draw_line(f'    {extra}')
     draw_line(f'Belopp: {expense.amount} EUR')
     draw_line(f'Betalningssätt: {expense.get_payment_method_display()}')
     if expense.payment_method == ExpenseClaim.PAYMENT_BANK:
@@ -93,9 +103,8 @@ def generate_expense_pdf(expense_id):
     # Read all receipt data once and detect type by attempting PDF parse
     receipt_data = []
     for receipt in receipts:
-        receipt.file.open('rb')
-        data = receipt.file.read()
-        receipt.file.close()
+        with receipt.file.open('rb') as fh:
+            data = fh.read()
         try:
             PdfReader(io.BytesIO(data))
             is_pdf = True
@@ -136,7 +145,9 @@ def generate_expense_pdf(expense_id):
         try:
             writer.append(PdfReader(io.BytesIO(data)))
         except Exception:
-            pass
+            logger.exception('Could not append PDF receipt %s for expense %s', receipt.pk, expense_id)
+            writer.add_blank_page()
+            # Placeholder page already added; content loss noted in log
 
     out = io.BytesIO()
     writer.write(out)

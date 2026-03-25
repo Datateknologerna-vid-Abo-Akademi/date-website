@@ -1,11 +1,16 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db import transaction
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ExpenseClaimForm
 from .models import ExpenseClaim, ExpenseReceipt
 from .tasks import generate_expense_pdf
+
+logger = logging.getLogger('date')
 
 
 @login_required
@@ -22,12 +27,13 @@ def expense_create(request):
     if request.method == 'POST':
         form = ExpenseClaimForm(request.POST, request.FILES)
         if form.is_valid():
-            claim = form.save(commit=False)
-            claim.submitted_by = request.user
-            claim.save()
-            for f in form.cleaned_data['receipts']:
-                ExpenseReceipt.objects.create(claim=claim, file=f)
-            generate_expense_pdf.delay(claim.pk)
+            with transaction.atomic():
+                claim = form.save(commit=False)
+                claim.submitted_by = request.user
+                claim.save()
+                for f in form.cleaned_data['receipts']:
+                    ExpenseReceipt.objects.create(claim=claim, file=f)
+                transaction.on_commit(lambda: generate_expense_pdf.delay(claim.pk))
             return redirect('expenses:detail', pk=claim.pk)
     else:
         form = ExpenseClaimForm()
@@ -42,7 +48,36 @@ def expense_detail(request, pk):
     return render(request, 'expenses/detail.html', {'claim': claim})
 
 
-@user_passes_test(lambda u: u.is_staff)
+@login_required
+def receipt_file(request, pk):
+    receipt = get_object_or_404(ExpenseReceipt, pk=pk)
+    claim = receipt.claim
+    if claim.submitted_by != request.user and not request.user.is_staff:
+        raise Http404
+    if getattr(settings, 'USE_S3', False):
+        return redirect(receipt.file.url)
+    try:
+        data = receipt.file.read()
+        name = receipt.file.name.lower()
+        if name.endswith('.pdf'):
+            content_type = 'application/pdf'
+        elif name.endswith(('.jpg', '.jpeg')):
+            content_type = 'image/jpeg'
+        elif name.endswith('.png'):
+            content_type = 'image/png'
+        elif name.endswith('.gif'):
+            content_type = 'image/gif'
+        elif name.endswith('.webp'):
+            content_type = 'image/webp'
+        else:
+            content_type = 'application/octet-stream'
+        return HttpResponse(data, content_type=content_type)
+    except Exception:
+        logger.exception('Could not retrieve receipt %s', pk)
+        return HttpResponse('Could not retrieve receipt.', status=500)
+
+
+@user_passes_test(lambda u: u.is_staff, raise_exception=True)
 def download_pdf(request, pk):
     claim = get_object_or_404(ExpenseClaim, pk=pk)
     if not claim.pdf:
@@ -56,4 +91,5 @@ def download_pdf(request, pk):
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
     except Exception:
+        logger.exception('Could not retrieve PDF for expense claim %s', pk)
         return HttpResponse('Could not retrieve PDF.', status=500)

@@ -59,8 +59,8 @@
                 <dd class="col-sm-8">
                     <div class="d-flex flex-wrap gap-2">
                         {% for receipt in receipts %}
-                        <a href="{{ receipt.file.url }}" target="_blank" rel="noopener">
-                            <img src="{{ receipt.file.url }}" alt="Kvitto {{ forloop.counter }}" style="max-height: 120px; max-width: 180px; object-fit: cover; border: 1px solid #dee2e6; border-radius: 4px;">
+                        <a href="{% url 'expenses:receipt' receipt.pk %}" target="_blank" rel="noopener">
+                            <img src="{% url 'expenses:receipt' receipt.pk %}" alt="Kvitto {{ forloop.counter }}" style="max-height: 120px; max-width: 180px; object-fit: cover; border: 1px solid #dee2e6; border-radius: 4px;">
                         </a>
                         {% endfor %}
                     </div>

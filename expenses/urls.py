@@ -9,4 +9,5 @@ urlpatterns = [
     path('new/', views.expense_create, name='create'),
     path('<int:pk>/', views.expense_detail, name='detail'),
     path('<int:pk>/pdf/', views.download_pdf, name='pdf'),
+    path('receipt/<int:pk>/', views.receipt_file, name='receipt'),
 ]
