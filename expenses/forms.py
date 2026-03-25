@@ -1,3 +1,5 @@
+import io
+
 from django import forms
 
 from .models import ExpenseClaim
@@ -18,6 +20,9 @@ class MultipleReceiptField(forms.FileField):
         }))
         super().__init__(*args, **kwargs)
 
+    IMAGE_TYPES = {'image/jpeg', 'image/png', 'image/gif', 'image/webp'}
+    PDF_TYPE = 'application/pdf'
+
     def clean(self, data, initial=None):
         if not isinstance(data, (list, tuple)):
             data = [data] if data else []
@@ -30,6 +35,20 @@ class MultipleReceiptField(forms.FileField):
             f = super().clean(f, initial)
             if f.content_type not in self.ALLOWED_TYPES:
                 raise forms.ValidationError('Endast bilder (JPEG, PNG, GIF, WebP) och PDF-filer är tillåtna.')
+            file_data = f.read()
+            f.seek(0)
+            if f.content_type in self.IMAGE_TYPES:
+                try:
+                    from PIL import Image
+                    Image.open(io.BytesIO(file_data)).verify()
+                except Exception:
+                    raise forms.ValidationError('Ogiltig bildfil.')
+            elif f.content_type == self.PDF_TYPE:
+                try:
+                    from pypdf import PdfReader
+                    PdfReader(io.BytesIO(file_data))
+                except Exception:
+                    raise forms.ValidationError('Ogiltig PDF-fil.')
             files.append(f)
         return files
 
