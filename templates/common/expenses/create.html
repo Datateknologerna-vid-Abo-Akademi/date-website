@@ -1,12 +1,12 @@
 {% extends 'core/base.html' %}
 
-{% block title %}Submit Expense Claim{% endblock %}
+{% block title %}Skicka in kostnadsersättning{% endblock %}
 
 {% block content %}
 <div class="container container-margin-top">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <h2>Submit Expense Claim</h2>
+            <h2>Skicka in kostnadsersättning</h2>
             <form method="post" enctype="multipart/form-data" class="mt-3">
                 {% csrf_token %}
                 {% for field in form %}
@@ -16,7 +16,7 @@
                     </label>
                     {{ field }}
                     {% if field.name == 'receipts' %}
-                    <div class="form-text">You can select multiple files at once.</div>
+                    <div class="form-text">Du kan välja flera filer samtidigt.</div>
                     {% endif %}
                     {% if field.help_text %}
                     <div class="form-text">{{ field.help_text }}</div>
@@ -32,8 +32,8 @@
                 </div>
                 {% endif %}
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">Submit claim</button>
-                    <a href="{% url 'expenses:list' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Skicka in</button>
+                    <a href="{% url 'expenses:list' %}" class="btn btn-secondary">Avbryt</a>
                 </div>
             </form>
         </div>

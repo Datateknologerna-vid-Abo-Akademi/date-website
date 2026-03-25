@@ -17,7 +17,7 @@ def pdf_upload_to(instance, filename):
 class ExpenseClaim(models.Model):
     PAYMENT_CASH = 'cash'
     PAYMENT_BANK = 'bank'
-    PAYMENT_CHOICES = [('cash', 'Cash'), ('bank', 'Bank transfer')]
+    PAYMENT_CHOICES = [('cash', 'Kontant'), ('bank', 'Banköverföring')]
 
     STATUS_PENDING = 'pending'
     STATUS_APPROVED = 'approved'
@@ -52,7 +52,7 @@ class ExpenseClaim(models.Model):
 
 class ExpenseReceipt(models.Model):
     claim = models.ForeignKey(ExpenseClaim, on_delete=CASCADE, related_name='receipts')
-    file = models.ImageField(upload_to=receipt_upload_to)
+    file = models.FileField(upload_to=receipt_upload_to)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

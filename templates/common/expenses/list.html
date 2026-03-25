@@ -1,27 +1,29 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
-{% block title %}Expense Claims{% endblock %}
+{% block title %}Kostnadsersättningar{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="{% static 'expenses/css/expenses.css' %}">
 <div class="container container-margin-top">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Expense Claims</h2>
-        <a href="{% url 'expenses:create' %}" class="btn btn-primary">Submit new claim</a>
+        <h2>Kostnadsersättningar</h2>
+        <a href="{% url 'expenses:create' %}" class="btn btn-primary">Skicka in ny kostnadsersättning</a>
     </div>
 
     {% if claims %}
     <div class="table-responsive">
-        <table class="table table-hover">
+        <table id="table" class="table table-hover">
             <thead class="table-dark">
                 <tr>
                     <th>#</th>
-                    <th>Recipient</th>
-                    <th>Description</th>
-                    <th>Amount</th>
-                    <th>Payment</th>
+                    <th>Mottagare</th>
+                    <th>Beskrivning</th>
+                    <th>Belopp</th>
+                    <th>Betalning</th>
                     <th>Status</th>
-                    <th>Submitted</th>
-                    {% if request.user.is_staff %}<th>Submitted by</th>{% endif %}
+                    <th>Inskickad</th>
+                    {% if request.user.is_staff %}<th>Inskickad av</th>{% endif %}
                     <th></th>
                 </tr>
             </thead>
@@ -35,23 +37,23 @@
                     <td>{{ claim.get_payment_method_display }}</td>
                     <td>
                         {% if claim.status == 'pending' %}
-                            <span class="badge bg-warning text-dark">Pending</span>
+                            <span class="badge bg-warning text-dark">Väntar</span>
                         {% elif claim.status == 'approved' %}
-                            <span class="badge bg-success">Approved</span>
+                            <span class="badge bg-success">Godkänd</span>
                         {% else %}
-                            <span class="badge bg-danger">Rejected</span>
+                            <span class="badge bg-danger">Nekad</span>
                         {% endif %}
                     </td>
                     <td>{{ claim.submitted_at|date:"d.m.Y" }}</td>
                     {% if request.user.is_staff %}<td>{{ claim.submitted_by }}</td>{% endif %}
-                    <td><a href="{% url 'expenses:detail' claim.pk %}">View</a></td>
+                    <td><a href="{% url 'expenses:detail' claim.pk %}" class="btn btn-outline-primary btn-sm">Visa</a></td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
     {% else %}
-    <p class="text-muted">No expense claims found.</p>
+    <p class="text-muted">Inga kostnadsersättningar hittades.</p>
     {% endif %}
 </div>
 {% endblock %}

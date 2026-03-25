@@ -1,0 +1,6 @@
+#table {
+    --bs-table-striped-color: var(--textColorLightish);
+    --bs-table-active-color: var(--textColorLightish);
+    --bs-table-hover-color: var(--textColorLightish);
+    color: var(--textColorLightish);
+}
