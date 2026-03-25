@@ -1,8 +1,9 @@
 import logging
 
 from django.conf import settings
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -77,8 +78,10 @@ def receipt_file(request, pk):
         return HttpResponse('Could not retrieve receipt.', status=500)
 
 
-@user_passes_test(lambda u: u.is_staff, raise_exception=True)
+@login_required
 def download_pdf(request, pk):
+    if not request.user.is_staff:
+        raise PermissionDenied
     claim = get_object_or_404(ExpenseClaim, pk=pk)
     if not claim.pdf:
         return HttpResponse('PDF not yet generated.', status=404)
