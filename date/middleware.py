@@ -48,11 +48,12 @@ class CDNRewriteMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
 
-        for original, new in self.cdn_url_transformations:
-            if original and new:
-                response.content = response.content.replace(
-                    bytes(original, 'utf-8'),
-                    bytes(new, 'utf-8')
-                )
+        if self.cdn_url_transformations and not response.streaming:
+            for original, new in self.cdn_url_transformations:
+                if original and new:
+                    response.content = response.content.replace(
+                        bytes(original, 'utf-8'),
+                        bytes(new, 'utf-8')
+                    )
 
         return response
