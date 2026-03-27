@@ -100,48 +100,40 @@ def generate_expense_pdf(expense_id):
     c.drawString(label_x, y, 'Datum:')
     c.line(line_x, y - 0.1 * cm, line_x + line_length, y - 0.1 * cm)
 
-    # Read all receipt data once and detect type by attempting PDF parse
-    receipt_data = []
+    # First pass: embed image receipts as canvas pages; collect PDF receipt objects for later
+    pdf_receipts = []
+    image_num = 0
     for receipt in receipts:
         with receipt.file.open('rb') as fh:
             data = fh.read()
         try:
             PdfReader(io.BytesIO(data))
-            is_pdf = True
+            pdf_receipts.append(receipt)
         except Exception:
-            is_pdf = False
-        receipt_data.append((receipt, data, is_pdf))
-
-    # Image receipts embedded as full pages in the reportlab canvas
-    image_num = 0
-    for receipt, data, is_pdf in receipt_data:
-        if is_pdf:
-            continue
-        image_num += 1
-        c.showPage()
-        try:
-            img_reader = ImageReader(io.BytesIO(data))
-            usable_width = width - 2 * margin
-            usable_height = height - 2 * margin
-            c.setFont('Helvetica-Bold', 12)
-            c.drawString(margin, height - margin, f'Kvitto {image_num}')
-            c.drawImage(img_reader, margin, margin, width=usable_width, height=usable_height - 1 * cm,
-                        preserveAspectRatio=True, anchor='n', mask='auto')
-        except Exception:
-            c.setFont('Helvetica', 11)
-            c.drawString(margin, height / 2, f'Kvitto {image_num}: [kunde inte bädda in bild]')
+            # Not a PDF — treat as image
+            image_num += 1
+            c.showPage()
+            try:
+                img_reader = ImageReader(io.BytesIO(data))
+                usable_width = width - 2 * margin
+                usable_height = height - 2 * margin
+                c.setFont('Helvetica-Bold', 12)
+                c.drawString(margin, height - margin, f'Kvitto {image_num}')
+                c.drawImage(img_reader, margin, margin, width=usable_width, height=usable_height - 1 * cm,
+                            preserveAspectRatio=True, anchor='n', mask='auto')
+            except Exception:
+                c.setFont('Helvetica', 11)
+                c.drawString(margin, height / 2, f'Kvitto {image_num}: [kunde inte bädda in bild]')
 
     c.save()
 
-    # Merge with pypdf: main doc (with image pages) + PDF receipts appended
+    # Merge with pypdf: main doc (with image pages) + PDF receipts appended one at a time
     writer = PdfWriter()
     writer.append(PdfReader(io.BytesIO(buffer.getvalue())))
 
-    pdf_num = image_num
-    for receipt, data, is_pdf in receipt_data:
-        if not is_pdf:
-            continue
-        pdf_num += 1
+    for receipt in pdf_receipts:
+        with receipt.file.open('rb') as fh:
+            data = fh.read()
         try:
             writer.append(PdfReader(io.BytesIO(data)))
         except Exception:

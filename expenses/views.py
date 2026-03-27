@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.core.exceptions import PermissionDenied
-from django.http import Http404, HttpResponse
+from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import ExpenseClaimForm
@@ -58,7 +58,6 @@ def receipt_file(request, pk):
     if getattr(settings, 'USE_S3', False):
         return redirect(receipt.file.url)
     try:
-        data = receipt.file.read()
         name = receipt.file.name.lower()
         if name.endswith('.pdf'):
             content_type = 'application/pdf'
@@ -72,7 +71,7 @@ def receipt_file(request, pk):
             content_type = 'image/webp'
         else:
             content_type = 'application/octet-stream'
-        return HttpResponse(data, content_type=content_type)
+        return FileResponse(receipt.file.open('rb'), content_type=content_type)
     except Exception:
         logger.exception('Could not retrieve receipt %s', pk)
         return HttpResponse('Could not retrieve receipt.', status=500)
@@ -89,10 +88,7 @@ def download_pdf(request, pk):
         if getattr(settings, 'USE_S3', False):
             return redirect(claim.pdf.url)
         filename = claim.pdf.name.split('/')[-1]
-        pdf_bytes = claim.pdf.read()
-        response = HttpResponse(pdf_bytes, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        return response
+        return FileResponse(claim.pdf.open('rb'), content_type='application/pdf', as_attachment=True, filename=filename)
     except Exception:
         logger.exception('Could not retrieve PDF for expense claim %s', pk)
         return HttpResponse('Could not retrieve PDF.', status=500)
