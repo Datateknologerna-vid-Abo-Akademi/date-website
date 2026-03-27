@@ -1,0 +1,62 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Kostnadsersättningar{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'expenses/css/expenses.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container container-margin-top">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Kostnadsersättningar</h2>
+        <a href="{% url 'expenses:create' %}" class="btn btn-primary">Skicka in ny kostnadsersättning</a>
+    </div>
+
+    {% if claims %}
+    <div class="table-responsive">
+        <table id="table" class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Mottagare</th>
+                    <th>Beskrivning</th>
+                    <th>Belopp</th>
+                    <th>Betalning</th>
+                    <th>Status</th>
+                    <th>Inskickad</th>
+                    {% if request.user.is_staff %}<th>Inskickad av</th>{% endif %}
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for claim in claims %}
+                <tr>
+                    <td>{{ claim.pk }}</td>
+                    <td>{{ claim.recipient_name }}</td>
+                    <td>{{ claim.description|truncatechars:60 }}</td>
+                    <td>{{ claim.amount }} EUR</td>
+                    <td>{{ claim.get_payment_method_display }}</td>
+                    <td>
+                        {% if claim.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">Väntar</span>
+                        {% elif claim.status == 'approved' %}
+                            <span class="badge bg-success">Godkänd</span>
+                        {% else %}
+                            <span class="badge bg-danger">Nekad</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ claim.submitted_at|date:"d.m.Y" }}</td>
+                    {% if request.user.is_staff %}<td>{{ claim.submitted_by }}</td>{% endif %}
+                    <td><a href="{% url 'expenses:detail' claim.pk %}" class="btn btn-outline-primary btn-sm">Visa</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">Inga kostnadsersättningar hittades.</p>
+    {% endif %}
+</div>
+{% endblock %}

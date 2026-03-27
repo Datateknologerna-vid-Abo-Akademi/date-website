@@ -27,3 +27,6 @@ daphne
 celery[redis]
 gunicorn
 gspread
+reportlab
+pypdf
+schwifty
