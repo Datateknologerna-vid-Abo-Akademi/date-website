@@ -84,6 +84,14 @@ class ExpenseClaimForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         if cleaned_data.get('payment_method') == ExpenseClaim.PAYMENT_BANK:
-            if not cleaned_data.get('bank_account'):
+            bank_account = cleaned_data.get('bank_account', '').strip()
+            if not bank_account:
                 self.add_error('bank_account', 'Bankkontonummer (IBAN) krävs för banköverföring.')
+            else:
+                try:
+                    from schwifty import IBAN
+                    iban = IBAN(bank_account)
+                    cleaned_data['bank_account'] = iban.formatted
+                except ValueError:
+                    self.add_error('bank_account', 'Ogiltigt IBAN-nummer.')
         return cleaned_data
