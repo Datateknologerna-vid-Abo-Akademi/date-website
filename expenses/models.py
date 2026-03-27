@@ -1,17 +1,23 @@
+import uuid
 from datetime import date
 
 from django.db import models
 from django.db.models import CASCADE, SET_NULL
 
 
+def _uuid_name(filename):
+    ext = filename.rsplit('.', 1)[-1] if '.' in filename else ''
+    return f'{uuid.uuid4().hex}.{ext}' if ext else uuid.uuid4().hex
+
+
 def receipt_upload_to(instance, filename):
     year = date.today().year
-    return f'expenses/receipts/{year}/{filename}'
+    return f'expenses/receipts/{year}/{_uuid_name(filename)}'
 
 
 def pdf_upload_to(instance, filename):
     year = instance.submitted_at.year if instance.submitted_at else date.today().year
-    return f'expenses/pdfs/{year}/{filename}'
+    return f'expenses/pdfs/{year}/{_uuid_name(filename)}'
 
 
 class ExpenseClaim(models.Model):
