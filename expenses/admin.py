@@ -49,7 +49,7 @@ class ExpenseClaimAdmin(admin.ModelAdmin):
     def mark_approved(self, request, queryset):
         queryset.update(
             status=ExpenseClaim.STATUS_APPROVED,
-            approved_by=request.user,
+            approved_by_id=request.user.pk,
             approved_at=timezone.now().date(),
         )
         self.message_user(request, f'{queryset.count()} utlägg markerade som godkända.')
@@ -58,7 +58,7 @@ class ExpenseClaimAdmin(admin.ModelAdmin):
     def mark_rejected(self, request, queryset):
         queryset.update(
             status=ExpenseClaim.STATUS_REJECTED,
-            approved_by=request.user,
+            approved_by_id=request.user.pk,
             approved_at=timezone.now().date(),
         )
         self.message_user(request, f'{queryset.count()} utlägg markerade som nekade.')

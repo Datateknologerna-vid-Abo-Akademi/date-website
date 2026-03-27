@@ -11,6 +11,7 @@ class MultipleFileInput(forms.FileInput):
 
 class MultipleReceiptField(forms.FileField):
     ALLOWED_TYPES = ('image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf')
+    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('widget', MultipleFileInput(attrs={
@@ -33,6 +34,8 @@ class MultipleReceiptField(forms.FileField):
         files = []
         for f in data:
             f = super().clean(f, initial)
+            if f.size > self.MAX_FILE_SIZE:
+                raise forms.ValidationError(f'Varje fil får vara max {self.MAX_FILE_SIZE // (1024 * 1024)} MB.')
             if f.content_type not in self.ALLOWED_TYPES:
                 raise forms.ValidationError('Endast bilder (JPEG, PNG, GIF, WebP) och PDF-filer är tillåtna.')
             file_data = f.read()

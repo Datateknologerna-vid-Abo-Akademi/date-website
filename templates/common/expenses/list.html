@@ -3,8 +3,11 @@
 
 {% block title %}Kostnadsersättningar{% endblock %}
 
-{% block content %}
+{% block extra_head %}
 <link rel="stylesheet" href="{% static 'expenses/css/expenses.css' %}">
+{% endblock %}
+
+{% block content %}
 <div class="container container-margin-top">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Kostnadsersättningar</h2>
