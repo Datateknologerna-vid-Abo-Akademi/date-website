@@ -29,3 +29,7 @@ backups/
 
 # Dynamically generated fixtures
 fixtures/dynamic.json
+
+# Generated bootstrap assets
+media/archive/test/
+media/pdfs/test/

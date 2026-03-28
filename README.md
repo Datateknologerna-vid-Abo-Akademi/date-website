@@ -68,11 +68,33 @@ command after everything has started correctly. Otherwise, continue on to the ne
 
 **This will completely delete and recreate the database (all existing data will be lost)**
 
-If you want initial development data run the script `clean-init.sh` in the folder `scripts/`.
+If you want initial development data, run:
 
-If you get an `illegal option error` in your shell, use `/bin/bash clean-init.sh` to run the script instead.
+```bash
+date-cleaninit
+```
 
-After this you can re-run the date-createsuperuser.
+This command:
+
+- loads the development env through `env.sh`
+- recreates the database from scratch
+- loads the fixture data set used for local development
+- generates the temporary sample media files needed by those fixtures
+- resets the `admin`, `freshman`, and `member` user passwords to `admin`
+
+If your shell does not expose aliases, you can run the script directly with:
+
+```bash
+./scripts/clean_init.sh
+```
+
+or:
+
+```bash
+/bin/bash ./scripts/clean_init.sh
+```
+
+After this, you can log in to `/admin` with the generated `admin` user or create another superuser with `date-createsuperuser`.
 
 ### 6. Try out the server
 

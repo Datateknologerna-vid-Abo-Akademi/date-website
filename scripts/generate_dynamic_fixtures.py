@@ -1,16 +1,26 @@
 import json
 import os
-import shutil
+from base64 import b64decode
 from datetime import datetime, timedelta, timezone
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
-ASSET_DIR = os.path.join(SCRIPT_DIR, "assets")
-TEST_IMAGE_SOURCE = os.path.join(ASSET_DIR, "dummy.svg")
-TEST_PDF_SOURCE = os.path.join(ASSET_DIR, "dummy.pdf")
 TEST_IMAGE_PATH = os.path.join(PROJECT_DIR, "media", "archive", "test", "dummy.svg")
 TEST_PDF_PATH = os.path.join(PROJECT_DIR, "media", "pdfs", "test", "dummy.pdf")
 OUTPUT_FIXTURE_PATH = os.path.join(PROJECT_DIR, "fixtures", "dynamic.json")
+
+TEST_IMAGE_CONTENT = """<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#e7eef7"/>
+  <rect x="48" y="48" width="704" height="504" rx="24" fill="#ffffff" stroke="#9fb3c8" stroke-width="4"/>
+  <circle cx="220" cy="220" r="72" fill="#7fb3d5"/>
+  <path d="M170 420c32-78 78-132 132-132 60 0 111 48 150 132" fill="#d6eaf8"/>
+  <text x="400" y="500" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" fill="#355c7d">DaTe Dummy Image</text>
+</svg>
+"""
+
+TEST_PDF_BYTES = b64decode(
+    "JVBERi0xLjQKJcOkw7zDtsOfCjEgMCBvYmoKPDwKL1R5cGUgL0NhdGFsb2cKL1BhZ2VzIDIgMCBSCj4+CmVuZG9iagoyIDAgb2JqCjw8Ci9UeXBlIC9QYWdlcwovS2lkcyBbMyAwIFJdCi9Db3VudCAxCj4+CmVuZG9iagozIDAgb2JqCjw8Ci9UeXBlIC9QYWdlCi9QYXJlbnQgMiAwIFIKL01lZGlhQm94IFswIDAgMzAwIDE0NF0KL0NvbnRlbnRzIDQgMCBSCi9SZXNvdXJjZXMgPDwKL0ZvbnQgPDwKL0YxIDUgMCBSCj4+Cj4+Cj4+CmVuZG9iago0IDAgb2JqCjw8Ci9MZW5ndGggNTQKPj4Kc3RyZWFtCkJUCi9GMSAxOCBUZgoxOCA5NiBUZAooRGFUZSBEdW1teSBQREYpIFRqCkVUCmVuZHN0cmVhbQplbmRvYmoKNSAwIG9iago8PAovVHlwZSAvRm9udAovU3VidHlwZSAvVHlwZTEKL0Jhc2VGb250IC9IZWx2ZXRpY2EKPj4KZW5kb2JqCnhyZWYKMCA2CjAwMDAwMDAwMDAgNjU1MzUgZiAKMDAwMDAwMDE1IDAwMDAwIG4gCjAwMDAwMDA2NCAwMDAwMCBuIAowMDAwMDAxMjEgMDAwMDAgbiAKMDAwMDAwMDI0NyAwMDAwMCBuIAowMDAwMDAzNTEgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA2Ci9Sb290IDEgMCBSCj4+CnN0YXJ0eHJlZgo0MjAKJSVFT0YK"
+)
 
 
 def dt(days=0, hours=0, minutes=0):
@@ -25,14 +35,16 @@ def d(days=0):
     return (datetime.now(timezone.utc) + timedelta(days=days)).strftime("%Y-%m-%d")
 
 
-def ensure_sample_file(source_path, target_path):
-    """Copy a checked-in sample file into media so fixture paths always resolve."""
-    if not os.path.exists(source_path):
-        raise FileNotFoundError(f"Missing sample asset: {source_path}")
+def ensure_sample_file(target_path, content, binary=False):
+    """Create a deterministic sample asset so fixture paths always resolve."""
+    if os.path.exists(target_path):
+        return
 
-    if not os.path.exists(target_path):
-        shutil.copyfile(source_path, target_path)
-        print(f"Copied: {source_path} -> {target_path}")
+    mode = "wb" if binary else "w"
+    kwargs = {} if binary else {"encoding": "utf-8"}
+    with open(target_path, mode, **kwargs) as file_obj:
+        file_obj.write(content)
+    print(f"Generated sample asset: {target_path}")
 
 
 def generate():
@@ -40,8 +52,8 @@ def generate():
     os.makedirs(os.path.dirname(TEST_IMAGE_PATH), exist_ok=True)
     os.makedirs(os.path.dirname(TEST_PDF_PATH), exist_ok=True)
 
-    ensure_sample_file(TEST_IMAGE_SOURCE, TEST_IMAGE_PATH)
-    ensure_sample_file(TEST_PDF_SOURCE, TEST_PDF_PATH)
+    ensure_sample_file(TEST_IMAGE_PATH, TEST_IMAGE_CONTENT)
+    ensure_sample_file(TEST_PDF_PATH, TEST_PDF_BYTES, binary=True)
 
     data = []
 

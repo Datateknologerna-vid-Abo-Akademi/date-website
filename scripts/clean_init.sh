@@ -28,8 +28,6 @@ validate_fixtures() {
         "fixtures/members.json"
         "fixtures/ads.json"
         "scripts/generate_dynamic_fixtures.py"
-        "scripts/assets/dummy.svg"
-        "scripts/assets/dummy.pdf"
     )
     for f in "${fixtures[@]}"; do
         if [[ ! -f "$PROJECT_DIR/$f" ]]; then
