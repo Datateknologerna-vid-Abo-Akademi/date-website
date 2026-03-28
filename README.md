@@ -110,6 +110,9 @@ When deploying with `docker-compose.prod.yml`, make sure the external Docker net
 docker network create web
 ```
 
+Set `DATE_IMG_TAG` in your production env file to the release image you want to run, for example `v1.2.3`.
+Release-tagged builds also publish `v1.2` and `v1` aliases, while branch builds continue to publish branch tags such as `master` and `develop`.
+
 ## Internationalization
 
 NOTE: No need to implement yet

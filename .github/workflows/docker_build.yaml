@@ -48,14 +48,41 @@ jobs:
           done
           echo "GHCR login failed after 3 attempts."
           exit 1
+      - name: Compute image tags
+        id: tags
+        shell: bash
+        env:
+          IMAGE_REPO: ghcr.io/${{ steps.image.outputs.repo_lower }}
+        run: |
+          set -euo pipefail
+
+          TAGS=("${IMAGE_REPO}:${GITHUB_SHA}")
+
+          if [ "${GITHUB_REF_TYPE}" = "branch" ]; then
+            TAGS+=("${IMAGE_REPO}:${GITHUB_REF_NAME}")
+          fi
+
+          if [[ "${GITHUB_REF_TYPE}" = "tag" && "${GITHUB_REF_NAME}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            MAJOR="${BASH_REMATCH[1]}"
+            MINOR="${BASH_REMATCH[2]}"
+            TAGS+=(
+              "${IMAGE_REPO}:${GITHUB_REF_NAME}"
+              "${IMAGE_REPO}:v${MAJOR}.${MINOR}"
+              "${IMAGE_REPO}:v${MAJOR}"
+            )
+          fi
+
+          {
+            echo "value<<EOF"
+            printf '%s\n' "${TAGS[@]}"
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: |
-            ghcr.io/${{ steps.image.outputs.repo_lower }}:${{ github.ref_name }}
-            ghcr.io/${{ steps.image.outputs.repo_lower }}:${{ github.sha }}
+          tags: ${{ steps.tags.outputs.value }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
