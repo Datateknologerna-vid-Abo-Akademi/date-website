@@ -1,0 +1,131 @@
+name: Propose and create release tag
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  propose_release:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.version.outputs.should_release }}
+      last_tag: ${{ steps.version.outputs.last_tag }}
+      bump: ${{ steps.version.outputs.bump }}
+      next_tag: ${{ steps.version.outputs.next_tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Compute next SemVer tag
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ "${GITHUB_REF}" != "refs/heads/master" ]; then
+            echo "Release tagging is only allowed from master."
+            echo "should_release=false" >> "${GITHUB_OUTPUT}"
+            echo "last_tag=none" >> "${GITHUB_OUTPUT}"
+            echo "bump=none" >> "${GITHUB_OUTPUT}"
+            echo "next_tag=none" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          if git describe --tags --exact-match --match 'v[0-9]*.[0-9]*.[0-9]*' >/dev/null 2>&1; then
+            EXISTING_TAG="$(git describe --tags --exact-match --match 'v[0-9]*.[0-9]*.[0-9]*')"
+            echo "Head commit already has release tag: ${EXISTING_TAG}"
+            echo "should_release=false" >> "${GITHUB_OUTPUT}"
+            echo "last_tag=${EXISTING_TAG}" >> "${GITHUB_OUTPUT}"
+            echo "bump=none" >> "${GITHUB_OUTPUT}"
+            echo "next_tag=${EXISTING_TAG}" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          LAST_TAG="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1 || true)"
+          if [ -z "${LAST_TAG}" ]; then
+            LAST_TAG="v0.0.0"
+            COMMITS="$(git log --format=%B)"
+          else
+            COMMITS="$(git log --format=%B "${LAST_TAG}..HEAD")"
+          fi
+
+          BUMP="patch"
+          if echo "${COMMITS}" | grep -Eqi 'BREAKING CHANGE|^[a-zA-Z]+(\([^)]+\))?!:'; then
+            BUMP="major"
+          elif echo "${COMMITS}" | grep -Eqi '^feat(\([^)]+\))?:'; then
+            BUMP="minor"
+          fi
+
+          VERSION="${LAST_TAG#v}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION}"
+
+          case "${BUMP}" in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+
+          NEXT_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "should_release=true" >> "${GITHUB_OUTPUT}"
+          echo "last_tag=${LAST_TAG}" >> "${GITHUB_OUTPUT}"
+          echo "bump=${BUMP}" >> "${GITHUB_OUTPUT}"
+          echo "next_tag=${NEXT_TAG}" >> "${GITHUB_OUTPUT}"
+
+      - name: Release summary
+        shell: bash
+        run: |
+          {
+            echo "## Release proposal"
+            echo "- Last tag: \`${{ steps.version.outputs.last_tag }}\`"
+            echo "- Suggested bump: \`${{ steps.version.outputs.bump }}\`"
+            echo "- Next tag: \`${{ steps.version.outputs.next_tag }}\`"
+            echo "- Should create release tag: \`${{ steps.version.outputs.should_release }}\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  create_release_tag:
+    needs: propose_release
+    if: needs.propose_release.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: release-approval
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Create and push tag
+        env:
+          NEXT_TAG: ${{ needs.propose_release.outputs.next_tag }}
+          LAST_TAG: ${{ needs.propose_release.outputs.last_tag }}
+          BUMP: ${{ needs.propose_release.outputs.bump }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${NEXT_TAG}" >/dev/null 2>&1; then
+            echo "Tag ${NEXT_TAG} already exists on origin, skipping."
+            exit 0
+          fi
+
+          git config user.name "date-website-ci-bot"
+          git config user.email "date-website-ci-bot@users.noreply.github.com"
+
+          git tag -a "${NEXT_TAG}" -m "Release ${NEXT_TAG}" -m "Automated ${BUMP} bump from ${LAST_TAG}"
+          git push origin "${NEXT_TAG}"
