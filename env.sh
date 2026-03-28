@@ -2,6 +2,7 @@
 # shellcheck disable=SC1091
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/scripts/lib/date_env.sh"
 DEFAULT_MODE="dev"
 REQUESTED_MODE="${1:-$DEFAULT_MODE}"
 
@@ -10,77 +11,18 @@ if [ -n "${2:-}" ]; then
     return 1 2>/dev/null || exit 1
 fi
 
-resolve_env_file() {
-    local mode="$1"
-    local -a candidates=()
-
-    case "$mode" in
-        dev)
-            candidates=(
-                "${SCRIPT_DIR}/.env"
-                "${SCRIPT_DIR}/.env.example"
-            )
-            ;;
-        prod)
-            candidates=(
-                "${SCRIPT_DIR}/.env.prod"
-                "${SCRIPT_DIR}/.env"
-                "${SCRIPT_DIR}/.env.example"
-            )
-            ;;
-        *)
-            if [ -f "$mode" ]; then
-                echo "$mode"
-                return 0
-            elif [ -f "${SCRIPT_DIR}/$mode" ]; then
-                echo "${SCRIPT_DIR}/$mode"
-                return 0
-            else
-                echo "Environment file '$mode' not found" >&2
-                return 1
-            fi
-            ;;
-    esac
-
-    for candidate in "${candidates[@]}"; do
-        if [ -f "$candidate" ]; then
-            echo "$candidate"
-            return 0
-        fi
-    done
-
-    echo "No suitable environment file found for mode '$mode'" >&2
-    return 1
-}
-
-ENV_FILE="$(resolve_env_file "$REQUESTED_MODE")" || {
+ENV_FILE="$(date_resolve_env_file "$SCRIPT_DIR" "$REQUESTED_MODE")" || {
     return 1 2>/dev/null || exit 1
 }
-
-case "$REQUESTED_MODE" in
-    dev|prod)
-        ENV_MODE="$REQUESTED_MODE"
-        ;;
-    *)
-        ENV_MODE="custom"
-        ;;
-esac
+ENV_MODE="$(date_resolve_env_mode "$REQUESTED_MODE" "$ENV_FILE")"
 
 set -a
 . "${ENV_FILE}"
 set +a
 
-if [ "$ENV_MODE" = "prod" ]; then
-    export DATE_DEVELOP="False"
-elif [ "$ENV_MODE" = "dev" ]; then
-    export DATE_DEVELOP="${DATE_DEVELOP:-True}"
-fi
+date_apply_env_mode "$ENV_MODE"
 
-if [ "${DATE_DEVELOP:-True}" = "False" ]; then
-    export COMPOSE_FILE_PATH="docker-compose.prod.yml"
-else
-    export COMPOSE_FILE_PATH="docker-compose.yml"
-fi
+export COMPOSE_FILE_PATH="$(date_resolve_compose_file)"
 
 alias date="docker compose -f \"${COMPOSE_FILE_PATH}\""
 alias date-manage="date run web python /code/manage.py"
