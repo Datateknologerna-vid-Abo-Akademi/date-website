@@ -50,7 +50,7 @@ jobs:
 
           LAST_TAG="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n 1 || true)"
           if [ -z "${LAST_TAG}" ]; then
-            LAST_TAG="v0.0.0"
+            LAST_TAG="none"
             COMMITS="$(git log --format=%B)"
           else
             COMMITS="$(git log --format=%B "${LAST_TAG}..HEAD")"
@@ -63,25 +63,29 @@ jobs:
             BUMP="minor"
           fi
 
-          VERSION="${LAST_TAG#v}"
-          IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION}"
+          if [ "${LAST_TAG}" = "none" ]; then
+            NEXT_TAG="v1.0.0"
+          else
+            VERSION="${LAST_TAG#v}"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION}"
 
-          case "${BUMP}" in
-            major)
-              MAJOR=$((MAJOR + 1))
-              MINOR=0
-              PATCH=0
-              ;;
-            minor)
-              MINOR=$((MINOR + 1))
-              PATCH=0
-              ;;
-            patch)
-              PATCH=$((PATCH + 1))
-              ;;
-          esac
+            case "${BUMP}" in
+              major)
+                MAJOR=$((MAJOR + 1))
+                MINOR=0
+                PATCH=0
+                ;;
+              minor)
+                MINOR=$((MINOR + 1))
+                PATCH=0
+                ;;
+              patch)
+                PATCH=$((PATCH + 1))
+                ;;
+            esac
 
-          NEXT_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+            NEXT_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
           echo "should_release=true" >> "${GITHUB_OUTPUT}"
           echo "last_tag=${LAST_TAG}" >> "${GITHUB_OUTPUT}"
           echo "bump=${BUMP}" >> "${GITHUB_OUTPUT}"
