@@ -1,11 +1,25 @@
-{# TODO make proper template #}
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{# TODO i18n #}
 
-<h1>Attendance events</h1>
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - Attendance{% endblock %}
 
-<ul>
-    {% for e in object_list %}
-        <li><a href="{{ e.slug }}">{{ e }}</a></li>
-    {% empty %}
-        <li>No events :(</li>
-    {% endfor %}
-</ul>
+{% block content %}
+
+<div class="container-md min-vh-100 container-margin-top d-flex justify-content-center">
+    <div class ="container-size text-center">
+        <div class="content" style="width: fit-content">
+            <h3>Attendance events <i class="fas fa-users"></i></h3>
+            <ul class="list-unstyled">
+                {% for e in object_list %}
+                    <li class="m-1"><a href="{{ e.slug }}">{{ e }}</a></li>
+                {% empty %}
+                    <li>No events :(</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
