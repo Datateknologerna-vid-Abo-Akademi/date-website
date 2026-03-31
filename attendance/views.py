@@ -4,6 +4,8 @@ from django.http import HttpRequest
 from django.views.generic import View, ListView
 from django.views.generic.detail import SingleObjectMixin
 from django.utils.translation import gettext_lazy as _
+from django.utils.timezone import now
+from django.db.models import Q
 
 
 from . import forms
@@ -13,6 +15,9 @@ from .models import AttendanceChange, AttendanceEvent, NonMemberAttendee, Attend
 class AttendanceEventsView(ListView):
     model = AttendanceEvent
     template_name = "attendance/index.html"
+
+    def get_queryset(self):
+        return self.model.objects.filter(Q(end_datetime__isnull=True) | Q(end_datetime__gte=now()))
 
 
 class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[AttendanceEvent], View):
@@ -37,13 +42,17 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
         if self.request.user.is_authenticated:
             ctx["is_present"] = self.object.is_attendee_present(self.request.user)
 
+            if self.request.user.is_staff or self.object.was_attendee_present(self.request.user):
+                # only present if the user reasonably already knows or could know the secret
+                ctx["secret"] = self.object.secret
+
         return ctx
 
-    def _bad_request(self, request, error_message):
-        return render(request, self.template_name, self.get_ctx(error_message=error_message), status=403)
+    def _bad_request(self, request, **kwargs):
+        return render(request, self.template_name, self.get_ctx(**kwargs), status=403)
 
-    def _conflict(self, request, error_message):
-        return render(request, self.template_name, self.get_ctx(error_message=error_message), status=409)
+    def _conflict(self, request, **kwargs):
+        return render(request, self.template_name, self.get_ctx(**kwargs), status=409)
 
 
     def get(self, request: HttpRequest, *args, **kwargs):
@@ -58,16 +67,16 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
 
         form = forms.AttendanceChangeForm(request.POST)
         if not form.is_valid():
-            return self._bad_request(request, f"invalid form: {form.errors}")
+            return self._bad_request(request, generic_error=f"Invalid form: {form.errors}")
 
         if form.cleaned_data["secret"] != self.object.secret:
-            return self._bad_request(request, "invalid secret")
+            return self._bad_request(request, secret_error="Invalid secret")
 
         non_member_name: str = form.cleaned_data["non_member_name"]
         type: AttendanceChange.Type = form.cleaned_data["type"]
 
         if request.user.is_anonymous and len(non_member_name) == 0:
-            return self._bad_request(request, "must specify name if not logged in")
+            return self._bad_request(request, name_error="Name must be specified if you are not logged in")
 
 
         # This could theoretically end up in a situation where another request gets through and
@@ -84,11 +93,11 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
         match type:
             case AttendanceChange.Type.ENTER:
                 if self.object.is_attendee_present(attendee):
-                    return self._conflict(request, "cannot enter an event where you are already present")
+                    return self._conflict(request, generic_error="Cannot enter an event where you are already present")
 
             case AttendanceChange.Type.LEAVE:
                 if not self.object.is_attendee_present(attendee):
-                    return self._conflict(request, "cannot leave an event where you are not present")
+                    return self._conflict(request, generic_error="Cannot leave an event where you are not present")
 
             case unhandled:
                 raise Exception(f"unhandled AttendanceChange.Type {unhandled}")

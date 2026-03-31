@@ -3,7 +3,7 @@ from typing import cast, Any
 from datetime import datetime
 
 from django.db import models
-from django.db.models import constraints, Q, F
+from django.db.models import constraints, Q, F, QuerySet
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
@@ -43,7 +43,7 @@ class AttendanceEvent(models.Model):
         return f"{self.title}"
 
     @property
-    def attendance_changes(self):
+    def attendance_changes(self) -> QuerySet[AttendanceChange, AttendanceChange]:
         """
         Returns a QuerySet of all AttendanceChanges that apply to this event
         """
@@ -85,6 +85,23 @@ class AttendanceEvent(models.Model):
 
         try:
             return self.attendance_changes.filter(**filters).latest().type == AttendanceChange.Type.ENTER
+        except AttendanceChange.DoesNotExist:
+            return False
+
+    def was_attendee_present(self, attendee: Attendee):
+        """
+        Returns whether or not the given attendee has ever been present during this event
+        """
+
+        filters: dict[str, Any] = {}
+
+        if isinstance(attendee, Member):
+            filters["user"] = attendee
+        else:
+            filters["non_member"] = attendee
+
+        try:
+            return any(x.type == AttendanceChange.Type.ENTER for x in self.attendance_changes.filter(**filters))
         except AttendanceChange.DoesNotExist:
             return False
 
