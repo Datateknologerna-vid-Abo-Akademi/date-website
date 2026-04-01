@@ -32,6 +32,7 @@ urlpatterns = [
     path('pages/', include('staticpages.urls')),
     path('users/', include('members.urls')),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
+    path('set_lang/', date.set_language, name="set_lang"),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

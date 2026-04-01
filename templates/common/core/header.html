@@ -61,7 +61,7 @@
                     </li>
                 {% endfor %}
                     <!-- Language picker -->
-                    {% if LANGUAGES|length > 1 %}
+                    {% if ENABLE_LANGUAGE_FEATURES and LANGUAGES|length > 1 %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         {% trans "Language" %}
