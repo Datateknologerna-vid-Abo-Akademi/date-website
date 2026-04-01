@@ -1,11 +1,11 @@
 import datetime
+import random
 from itertools import chain
 
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils import translation
-from django.utils import timezone
 from django.http import HttpResponse
 from .language_utils import resolve_language
 
@@ -13,6 +13,19 @@ from ads.models import AdUrl
 from events.models import Event
 from news.models import Post
 from social.models import IgUrl
+
+
+def get_homepage_template_name():
+    """Return the homepage template for the active association."""
+    if settings.PROJECT_NAME != 'kk':
+        return 'date/start.html'
+
+    today = timezone.localdate()
+    is_april_first = today.month == 4 and today.day == 1
+    if is_april_first and random.randrange(20) == 0:
+        return 'date/april_start.html'
+
+    return 'date/start.html'
 
 
 def index(request):
@@ -61,7 +74,7 @@ def index(request):
         'aa_post': aa_post,  # TODO Remove or rename
     }
 
-    return render(request, 'date/start.html', context)
+    return render(request, get_homepage_template_name(), context)
 
 
 def set_language(request):

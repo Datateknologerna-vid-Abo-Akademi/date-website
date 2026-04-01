@@ -1,13 +1,17 @@
-from django.test import RequestFactory, TestCase, override_settings
-from django.urls import reverse
+from datetime import date
+from unittest.mock import patch
+
+from django.conf import settings
+from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.admin.models import LogEntry, ADDITION
-from django.conf import settings
 from django.core.cache import cache
+from django.test import RequestFactory, TestCase
+from django.test.utils import override_settings
+from django.urls import reverse
 from django.utils import translation
 
-from date.views import handler500
+from date.views import get_homepage_template_name, handler500
 
 
 class AuditLogTestCase(TestCase):
@@ -149,3 +153,28 @@ class LanguageSelectionTests(TestCase):
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "sv")
         self.assertNotContains(response, 'action="/set_lang/"')
         self.assertNotContains(response, 'name="lang"')
+
+
+class HomepageTemplateSelectionTests(TestCase):
+    @override_settings(PROJECT_NAME="kk")
+    @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
+    @patch("date.views.random.randrange", return_value=0)
+    def test_kk_uses_april_template_on_april_first_when_roll_matches(self, _randrange, _localdate):
+        self.assertEqual(get_homepage_template_name(), "date/april_start.html")
+
+    @override_settings(PROJECT_NAME="kk")
+    @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
+    @patch("date.views.random.randrange", return_value=1)
+    def test_kk_uses_regular_template_on_april_first_when_roll_misses(self, _randrange, _localdate):
+        self.assertEqual(get_homepage_template_name(), "date/start.html")
+
+    @override_settings(PROJECT_NAME="kk")
+    @patch("date.views.timezone.localdate", return_value=date(2026, 4, 2))
+    def test_kk_uses_regular_template_outside_april_first(self, _localdate):
+        self.assertEqual(get_homepage_template_name(), "date/start.html")
+
+    @override_settings(PROJECT_NAME="date")
+    @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
+    @patch("date.views.random.randrange", return_value=0)
+    def test_non_kk_never_uses_april_template(self, _randrange, _localdate):
+        self.assertEqual(get_homepage_template_name(), "date/start.html")
