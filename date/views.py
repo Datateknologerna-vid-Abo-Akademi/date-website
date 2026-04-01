@@ -6,7 +6,6 @@ from django.conf import settings
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.utils import translation
-from django.http import HttpResponse
 from .language_utils import resolve_language
 
 from ads.models import AdUrl

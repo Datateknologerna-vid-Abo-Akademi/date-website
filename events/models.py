@@ -161,7 +161,7 @@ class Event(models.Model):
                       'anonymous': forms.BooleanField(label=_('Anonymt'), required=False)}
             if self.slug in settings.CONTENT_VARIABLES.get('INTERNATIONAL_EVENT_SLUGS', []):
                 fields['user'] = forms.CharField(label='Nimi/Namn/Name', max_length=255)
-                fields['email'] = forms.EmailField(label='Sahkoposti/E-post/Email',
+                fields['email'] = forms.EmailField(label='Sähköposti/E-post/Email',
                                                    validators=[self.validate_unique_email],
                                                    max_length=320)
                 fields['anonymous'] = forms.BooleanField(label='Anonyymi/Anonym/Anonymous', required=False)

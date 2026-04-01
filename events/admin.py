@@ -149,25 +149,6 @@ class EventAdmin(EventTranslationAdminBase):
             return EventAttendees.objects.filter(original_event=obj).count()
         return obj.get_registrations().count()
 
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            re_path(
-                r'^(?P<event_id>.+)/list/$',
-                self.admin_site.admin_view(self.process_list),
-                name="registration_list"
-            ),
-        ]
-        return custom_urls + urls
-
-    def account_actions(self, obj):
-        return format_html(
-            '<a class="button" href="{}">Deltagarlista</a>&nbsp;',
-            reverse('admin:registration_list', args=[obj.pk])
-        )
-    account_actions.short_description = 'Deltagarlista'
-    account_actions.allow_tags = True
-
     get_attendee_count.short_description = 'Anmälda'
 
     def add_view(self, request, form_url='', extra_context=None):

@@ -102,7 +102,7 @@
                 <div id="attendee-list" class="content ball-content attendee-list hidden" data-parent-slug="{{ event.parent.slug|default:'' }}">
                     {% if event|show_attendee_list %}
                         {% if event.sign_up_max_participants != 0 %}
-                            <p>{% translate "Det finns" %} {{ event.sign_up_max_participants }} { % translate "platser!" %}</p>
+                            <p>{% translate "Det finns" %} {{ event.sign_up_max_participants }} {% translate "platser!" %}</p>
                         {% endif %}
                         <h1>{% trans "Anmälda" %}</h1>
                         <table id="attendees">

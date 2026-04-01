@@ -212,7 +212,7 @@ Example solution:
 
 ```python 
 MODELTRANSLATION_CUSTOM_FIELDS = (
-    'django_ckeditor_5.fields.CKEditor5Field',
+    'CKEditor5Field',
 )
 ```
 
