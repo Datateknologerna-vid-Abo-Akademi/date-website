@@ -1,10 +1,5 @@
 from .common import *  # noqa
 
-ENABLE_LANGUAGE_FEATURES = True
-LANGUAGES = ALL_LANGUAGES if ENABLE_LANGUAGE_FEATURES else tuple(
-    language for language in ALL_LANGUAGES if language[0] == LANGUAGE_CODE
-)
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
