@@ -1,5 +1,13 @@
-FROM python:3.14-alpine
-RUN apk add --no-cache gcc musl-dev libffi-dev libldap libsasl libressl bash gettext
+FROM python:3.12-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    build-essential \
+    libffi-dev \
+    libldap2-dev \
+    libsasl2-dev \
+    gettext \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 RUN mkdir /code
