@@ -58,6 +58,23 @@
                     {% endif %}
                     </li>
                 {% endfor %}
+                <!-- Language picker -->
+                {% if ENABLE_LANGUAGE_FEATURES and LANGUAGES|length > 1 %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    {% trans "Language" %}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                        <form action="{% url 'set_lang' %}" method="post">
+                            {% csrf_token %}
+                            {% for language in LANGUAGES %}
+                                <li><button class="dropdown-item" name="lang" type="submit" value="{{ language.0 }}">{{ language.1 }}</button></li>
+                            {% endfor %}
+                        </form>
+                    </ul>
+                </li>
+                {% endif %}
+                <!-- Language picker ends here -->
             </ul>
         </div>
       </div>

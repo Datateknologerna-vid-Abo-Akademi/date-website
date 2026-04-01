@@ -67,27 +67,28 @@
 .hero-text-box path {
     stroke: var(--secondaryColor);
     fill: var(--secondaryColor);
-    stroke-dasharray: 11144;
+    stroke-dasharray: 25000;
     opacity: 10;
-    -webkit-animation: animate 3s cubic-bezier(0,.18,.64,.1);
-            animation: animate 3s cubic-bezier(0,.18,.64,.1);
+    fill-rule: evenodd;
+    -webkit-animation: animate 3.5s cubic-bezier(0,.18,.50,.1);
+            animation: animate 3.5s cubic-bezier(0,.18,.50,.1);
 }
 
 /* Albin animation */
 @-webkit-keyframes animate {
-    0% {
+    1% {
         opacity: 0;
         fill: none;
-        stroke-dashoffset: 11144;
+        stroke-dashoffset: 25000;
     }
     40% {
         opacity: 10;
         fill: none;
-        stroke-dashoffset: 5000;
+        stroke-dashoffset: 24500;
     }
     80% {
         fill: rgba(255,255,255,0);
-
+        stroke-dashoffset: 23500;
     }
     100% {
         opacity: 10;
@@ -96,19 +97,19 @@
     }
 }
 @keyframes animate {
-    0% {
+    1% {
         opacity: 0;
         fill: none;
-        stroke-dashoffset: 11144;
+        stroke-dashoffset: 25000;
     }
     40% {
         opacity: 10;
         fill: none;
-        stroke-dashoffset: 5000;
+        stroke-dashoffset: 24500;
     }
     80% {
         fill: rgba(255,255,255,0);
-
+        stroke-dashoffset: 23500;
     }
     100% {
         opacity: 10;
