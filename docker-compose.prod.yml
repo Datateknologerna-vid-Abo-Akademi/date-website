@@ -17,6 +17,7 @@ services:
       - DEBUG=${DATE_DEBUG}
       - DEVELOP=${DATE_DEVELOP}
       - PROJECT_NAME=${PROJECT_NAME}
+      - ENABLE_LANGUAGE_FEATURES=${ENABLE_LANGUAGE_FEATURES}
       - DB_PASSWORD=${DATE_DB_PASSWORD}
       - USE_S3=${USE_S3}
       - AWS_S3_ENDPOINT_URL=${S3_ENDPOINT_URL}
@@ -50,6 +51,7 @@ services:
       - DEBUG=${DATE_DEBUG}
       - DEVELOP=${DATE_DEVELOP}
       - PROJECT_NAME=${PROJECT_NAME}
+      - ENABLE_LANGUAGE_FEATURES=${ENABLE_LANGUAGE_FEATURES}
       - DB_PASSWORD=${DATE_DB_PASSWORD}
       - USE_S3=${USE_S3}
       - AWS_S3_ENDPOINT_URL=${S3_ENDPOINT_URL}
@@ -79,6 +81,7 @@ services:
     command: celery -A core worker -l info -c 2
     environment:
       - DEBUG=${DATE_DEBUG}
+      - ENABLE_LANGUAGE_FEATURES=${ENABLE_LANGUAGE_FEATURES}
       - EMAIL_HOST=${EMAIL_HOST}
       - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
       - EMAIL_HOST_USER=${EMAIL_HOST_USER}
@@ -121,4 +124,3 @@ networks:
     internal:
     web:
       external: true
-
