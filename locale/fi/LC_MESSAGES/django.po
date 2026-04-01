@@ -971,7 +971,7 @@ msgstr "Palvelinvirhe, kokeile uudestaan hetken kuluttua"
 #| "sätt."
 msgid "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
 msgstr ""
-"%(association_name)s:n hallitukseen saa yhteyden seuraavilla tavoilla."
+"%(association_name)s:n hallitukseen voi ottaa yhteyttä seuraavalla tavalla."
 
 #: templates/common/core/footer.html:34
 msgid "E-post"

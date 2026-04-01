@@ -1,6 +1,6 @@
 {% load static i18n %}
 <div class="feed-container">
-    <h3 class="news-header header-border-bottom mt-3">Nyheter
+    <h3 class="news-header header-border-bottom mt-3">{% trans "Nyheter" %}
     </h3>
     <div class="news-container">
         {% for ne in news%}
@@ -13,6 +13,6 @@
             {% empty %}
             <h3>{% trans 'Inga nyheter hittades' %}...</h3>
         {% endfor %}
-        <a class="more-news" href="/news/"><i class="far fa-newspaper"></i> Mera nyheter...</a>
+        <a class="more-news" href="/news/"><i class="far fa-newspaper"></i> {% trans "Mera nyheter" %}...</a>
     </div>
 </div>

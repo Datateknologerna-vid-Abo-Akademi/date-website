@@ -71,12 +71,12 @@
                             {% empty %}
                             <h3>{% trans 'inga nyheter hittades' %}...</h3>
                         {% endfor %}
-                        <a class="april-more-news" href="/news/">Mera nyheter...</a>
+                        <a class="april-more-news" href="/news/">{% trans "Mera nyheter" %}...</a>
                     </div>
                 </div>
                 <div class="april-side-col">
                     <div class='box div_style'>
-                        <img class='jep' src='https://kemistklubben.abo.fi/images/date.png' alt='Evenemang' width='16' height='16' /> Evenemang 
+                        <img class='jep' src='https://kemistklubben.abo.fi/images/date.png' alt='{% trans "Evenemang" %}' width='16' height='16' /> {% trans "Evenemang" %}
                     </div>
                     <div class="april-events">
                         {% for ev in events|slice:":4" %}
@@ -98,7 +98,7 @@
                         </div>
                     </div>
                     <div class="logo-container">
-                        <div class="mt-3">Samarbetspartners</div>
+                        <div class="mt-3">{% trans "Samarbetspartners" %}</div>
                         <div class="carousel-logos">
                             <ul>
                                 {%for ad in ads%}
