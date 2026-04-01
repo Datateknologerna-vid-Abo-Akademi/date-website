@@ -2,13 +2,13 @@ from admin_ordering.admin import OrderableAdmin
 from django.contrib import admin
 
 from .models import StaticPage, StaticPageNav, StaticUrl
-from modeltranslation.admin import TranslationAdmin, TabbedTranslationAdmin
+from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 
 
 # Register your models here.
 
 
-class UrlInline(OrderableAdmin, admin.TabularInline):
+class UrlInline(OrderableAdmin, TranslationTabularInline):
     model = StaticUrl
     can_delete = True
     extra = 0

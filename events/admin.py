@@ -166,17 +166,17 @@ class EventAdmin(TabbedTranslationAdmin):
     get_attendee_count.short_description = 'Anmälda'
 
     def add_view(self, request, form_url='', extra_context=None):
-        self.fields = forms.EventCreationForm.Meta.fields
         return super().add_view(request, form_url, extra_context)
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
-        self.fields = forms.EventEditForm.Meta.fields
         return super().change_view(request, object_id, form_url, extra_context)
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         if obj is None:
-            form = forms.EventCreationForm
+            kwargs['form'] = forms.EventCreationForm
         else:
-            form = forms.EventEditForm
+            kwargs['form'] = forms.EventEditForm
+
+        form = super().get_form(request, obj, change=change, **kwargs)
         form.user = request.user
         return form
