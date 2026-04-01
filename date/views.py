@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.utils import translation
 from django.utils import timezone
 from django.http import HttpResponse
+from .language_utils import resolve_language
 
 from ads.models import AdUrl
 from events.models import Event
@@ -64,7 +65,7 @@ def index(request):
 
 
 def set_language(request):
-    user_language = request.POST.get("lang")
+    user_language = resolve_language(request.POST.get("lang"))
 
     # persist the language preference using a cookie
     translation.activate(user_language)

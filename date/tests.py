@@ -1,4 +1,4 @@
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -40,6 +40,23 @@ class AuditLogTestCase(TestCase):
         response = self.client.get(reverse("admin:admin_logentry_changelist"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "en")
+
+    def test_admin_shows_language_switcher_when_enabled(self):
+        self.client.login(username="admin", password="pass")
+        response = self.client.get(reverse("admin:admin_logentry_changelist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="admin-language-switcher"')
+        self.assertContains(response, 'action="/set_lang/"')
+
+    @override_settings(
+        ENABLE_LANGUAGE_FEATURES=False,
+        LANGUAGES=(("sv", "Svenska"),),
+    )
+    def test_admin_hides_language_switcher_when_disabled(self):
+        self.client.login(username="admin", password="pass")
+        response = self.client.get(reverse("admin:admin_logentry_changelist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'id="admin-language-switcher"')
 
 
 class LanguageSelectionTests(TestCase):
@@ -107,3 +124,28 @@ class LanguageSelectionTests(TestCase):
             response = handler500(request)
         self.assertEqual(response.status_code, 500)
         self.assertContains(response, "Serverfel", status_code=500)
+
+    @override_settings(
+        ENABLE_LANGUAGE_FEATURES=False,
+        LANGUAGES=(("sv", "Svenska"),),
+    )
+    def test_set_language_falls_back_to_default_when_language_features_disabled(self):
+        response = self.client.post(
+            reverse("set_lang"),
+            {"lang": "en"},
+            HTTP_REFERER=reverse("index"),
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.cookies[settings.LANGUAGE_COOKIE_NAME].value, "sv")
+
+    @override_settings(
+        ENABLE_LANGUAGE_FEATURES=False,
+        LANGUAGES=(("sv", "Svenska"),),
+    )
+    def test_homepage_hides_language_switcher_when_language_features_disabled(self):
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
+        response = self.client.get(reverse("index"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "sv")
+        self.assertNotContains(response, 'action="/set_lang/"')
+        self.assertNotContains(response, 'name="lang"')

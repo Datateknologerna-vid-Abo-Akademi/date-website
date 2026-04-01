@@ -2,6 +2,7 @@ import logging
 from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.contrib import admin
+from django.conf import settings
 from django.db.models import JSONField
 from django.shortcuts import render
 from django.template.response import TemplateResponse
@@ -19,7 +20,11 @@ from .widgets import PrettyJSONWidget
 
 logger = logging.getLogger('date')
 
-class EventRegistrationFormInline(OrderableAdmin, TranslationTabularInline):
+EventTranslationInlineBase = TranslationTabularInline if settings.ENABLE_LANGUAGE_FEATURES else admin.TabularInline
+EventTranslationAdminBase = TabbedTranslationAdmin if settings.ENABLE_LANGUAGE_FEATURES else admin.ModelAdmin
+
+
+class EventRegistrationFormInline(OrderableAdmin, EventTranslationInlineBase):
     line_numbering = 0
     model = EventRegistrationForm
     fk_name = 'event'
@@ -31,7 +36,7 @@ class EventRegistrationFormInline(OrderableAdmin, TranslationTabularInline):
     ordering = ['choice_number']
     ordering_field_hide_input = True
 
-class EventAttendeesFormInline(OrderableAdmin, TranslationTabularInline):
+class EventAttendeesFormInline(OrderableAdmin, EventTranslationInlineBase):
     ordering_field = 'attendee_nr'
     ordering_field_hide_input = True
     model = EventAttendees
@@ -70,7 +75,7 @@ class EventAttendeesFormInline(OrderableAdmin, TranslationTabularInline):
 # TODO: Improve the admin panel UI for the translatable fields
 # SEE https://django-modeltranslation.readthedocs.io/en/latest/admin.html
 @admin.register(Event)
-class EventAdmin(TabbedTranslationAdmin):
+class EventAdmin(EventTranslationAdminBase):
     save_on_top = True
     list_display = (
         'title', 'created_time', 'event_date_start', 'get_attendee_count', 

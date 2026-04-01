@@ -1,16 +1,19 @@
+from django.conf import settings
 from django.contrib import admin
 from modeltranslation.admin import TabbedTranslationAdmin
 
 from news import forms
 from news.models import Post, Category
 
+NewsTranslationAdminBase = TabbedTranslationAdmin if settings.ENABLE_LANGUAGE_FEATURES else admin.ModelAdmin
 
-class CategoryAdmin(TabbedTranslationAdmin):
+
+class CategoryAdmin(NewsTranslationAdminBase):
     list_display = ('name',)
     search_fields = ('name',)
 
 
-class PostAdmin(TabbedTranslationAdmin):
+class PostAdmin(NewsTranslationAdminBase):
 
     fieldsets = [
         (None, {'fields': ['title', 'category', 'content', 'published', 'slug']}),

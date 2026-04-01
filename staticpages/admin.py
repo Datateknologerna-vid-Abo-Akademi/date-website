@@ -1,14 +1,18 @@
 from admin_ordering.admin import OrderableAdmin
+from django.conf import settings
 from django.contrib import admin
 
 from .models import StaticPage, StaticPageNav, StaticUrl
 from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 
+StaticPageTranslationInlineBase = TranslationTabularInline if settings.ENABLE_LANGUAGE_FEATURES else admin.TabularInline
+StaticPageTranslationAdminBase = TabbedTranslationAdmin if settings.ENABLE_LANGUAGE_FEATURES else admin.ModelAdmin
+
 
 # Register your models here.
 
 
-class UrlInline(OrderableAdmin, TranslationTabularInline):
+class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
     model = StaticUrl
     can_delete = True
     extra = 0
@@ -20,7 +24,7 @@ class UrlInline(OrderableAdmin, TranslationTabularInline):
 
 
 @admin.register(StaticPageNav)
-class StaticPageNavAdmin(TabbedTranslationAdmin):
+class StaticPageNavAdmin(StaticPageTranslationAdminBase):
     model = StaticPageNav
     save_on_top = True
     inlines = [

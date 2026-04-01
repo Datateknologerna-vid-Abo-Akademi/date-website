@@ -203,13 +203,17 @@ LOCALE_PATHS = (
     'locale',
 )
 
-LANGUAGES = (
+ALL_LANGUAGES = (
     ('sv', ("Svenska")),
     ('en', ("English")),
     ('fi', ("Suomi"))
 )
 
 LANGUAGE_CODE = 'sv'
+ENABLE_LANGUAGE_FEATURES = env('ENABLE_LANGUAGE_FEATURES', bool, False)
+LANGUAGES = ALL_LANGUAGES if ENABLE_LANGUAGE_FEATURES else (
+    tuple(language for language in ALL_LANGUAGES if language[0] == LANGUAGE_CODE)
+)
 
 TIME_ZONE = 'Europe/Helsinki'
 

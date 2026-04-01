@@ -3,14 +3,16 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import translation
 from django.utils.deprecation import MiddlewareMixin
+from .language_utils import resolve_language
 
 
 class LangMiddleware(MiddlewareMixin):
     @staticmethod
     def process_request(request):
         # Get session cookie in case user has selected language before
-        request.LANG = request.COOKIES.get(
-            settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
+        request.LANG = resolve_language(
+            request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
+        )
         translation.activate(request.LANG)
         request.LANGUAGE_CODE = request.LANG
 
