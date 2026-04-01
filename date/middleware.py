@@ -3,22 +3,16 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import translation
 from django.utils.deprecation import MiddlewareMixin
+from .language_utils import resolve_language
 
 
 class LangMiddleware(MiddlewareMixin):
     @staticmethod
     def process_request(request):
-        request.LANG = settings.LANGUAGE_CODE
-        try:
-            pass
-            # TODO This is borked as of Django 4.0 but it doesn't seem like it's in use
-            # See: https://stackoverflow.com/questions/2605384/how-to-explicitly-set-django-language-in-django-session
-            # lang = request.session[translation.LANGUAGE_SESSION_KEY]
-            # if lang in [settings.LANG_SWEDISH, settings.LANG_FINNISH] and lang is not None:
-            #    request.LANG = lang
-        except KeyError:
-            pass
-
+        # Get session cookie in case user has selected language before
+        request.LANG = resolve_language(
+            request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
+        )
         translation.activate(request.LANG)
         request.LANGUAGE_CODE = request.LANG
 

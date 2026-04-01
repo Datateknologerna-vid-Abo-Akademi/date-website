@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libffi-dev \
     libldap2-dev \
     libsasl2-dev \
+    gettext \
     libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 ENV PYTHONUNBUFFERED 1
@@ -16,3 +17,4 @@ ADD requirements.txt /code/
 RUN pip install -r requirements.txt
 
 ADD . /code/
+RUN python manage.py compilemessages

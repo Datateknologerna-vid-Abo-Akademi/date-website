@@ -23,6 +23,7 @@ django-tables2
 django-filter
 django-bootstrap3
 django_cleanup
+django-modeltranslation
 daphne==4.2.1
 autobahn==25.12.2
 Twisted==25.5.0

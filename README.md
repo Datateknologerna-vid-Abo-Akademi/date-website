@@ -115,32 +115,47 @@ Release-tagged builds also publish `v1.2` and `v1` aliases, while branch builds 
 
 ## Internationalization
 
-NOTE: No need to implement yet
-
-Locales (stupidly called language codes) used in this project
+Locales used in this project
 
 - sv (default)
+- en
 - fi
 
 The actual language code will be one of
 
 - sv
+- en
 - fi
+
+### Translation scope
+
+Swedish site copy should match the established wording from `develop` unless there is an explicit content decision to change it.
+
+Use these rules when updating translations:
+
+- Keep shared UI labels translated per locale, for example `Language`, `Address`, and error page titles.
+- Keep proper names and intentional fixed labels unchanged across locales when that reflects the intended site copy.
+- Treat Swedish as the source of truth for existing association wording and only introduce new translations where the text is meant to vary by language.
+
+Current fixed terms that should not be translated just because they are user-facing:
+
+- `Datateknologerna`
+- `vid Åbo Akademi rf`
+- `Joke`
 
 ### Translations
 
-As the default language is `sv`, 
-we only need to create translations in the language `fi`.
+As the default language is `sv`, Swedish copy should be reviewed against the site itself when strings are extracted into locale files.
 
 To generate the translation file, called `django.po`
 is done by executing the following command **in the root directory of the project**
 
 ```bash
-$ django-admin makemessages -l fi
+$ django-admin makemessages -l en -l fi -l sv
 ```
 
 This creates/updates the `django.po` 
-in `date-website/locale/fi/LC_MESSAGES`.
+in `date-website/locale/<language>/LC_MESSAGES`.
 
 Add translations to the empty fields or use a third party translation software,
 such as `Poedit`.
@@ -150,6 +165,65 @@ To compile the translations to `django.mo`, use the following command
 ```bash
 $ django-admin compilemessages
 ``` 
+
+### Django modeltranslations (translation of dynamic content)
+
+The library django-modeltranslations was added to allow translating existing dynamic data (eg. events title and description)
+
+If there is ever the need to provide a translated version of an existing field:
+
+1. Add a file called translation.py to the app in question.
+2. Create classes for each of the models for which fields will be translated and register the fields for translation.
+3. Start the django app and apply the new database migration that will be automatically created by django-modeltranslations
+
+Example to illustrate the above:
+
+I want to provide three new fields (title_sv, title_en, title_fi) instead of the title field in Events
+
+- Create the file translation.py under the events directory
+- Create a new class called EventTranslationOptions that inherits from TranslationOptions (provided by django-modeltranslations)
+- In the newly created class you register which fields should be translated by defining a variable called "fields"
+- For the events example: `fields = ('title',)`
+
+From "/events/translation.py":
+```python
+from modeltranslation.translator import register, TranslationOptions
+from events.models import Event, EventAttendees, EventRegistrationForm
+
+
+@register(Event)
+class EventTranslationOptions(TranslationOptions):
+    fields = ('title', 'content',)
+    languages = ('sv', 'en', 'fi')
+```
+
+In this case, the newly created title_sv will not contain the data from what was previously just "title",
+to fix this, run the command `docker compose run web python manage.py update_translation_fields`
+
+### Using django-modeltranslations for non-standard field-types (eg. CKEditor5 instead of models.TextField)
+
+Django-modeltranslations naturally does not play well with creating translations of external field types.
+
+See https://django-modeltranslation.readthedocs.io/en/latest/installation.html#modeltranslation-custom-fields for more
+
+Example solution:
+
+1. add the field class to settings.py:
+
+```python 
+MODELTRANSLATION_CUSTOM_FIELDS = (
+    'CKEditor5Field',
+)
+```
+
+2. Change the field model to a standard TextField (or whatever suits your need)
+3. Override the TextField with CKEditor5Field (or the corresponding field types for your case) in admin.py like this:
+
+```python
+    formfield_overrides = {
+        TextField: {'widget': CKEditor5Widget},
+    }
+```
 
 ## Database backups
 
