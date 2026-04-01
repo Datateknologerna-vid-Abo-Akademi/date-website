@@ -41,6 +41,23 @@ class AuditLogTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "en")
 
+    def test_admin_shows_language_switcher_when_enabled(self):
+        self.client.login(username="admin", password="pass")
+        response = self.client.get(reverse("admin:admin_logentry_changelist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="admin-language-switcher"')
+        self.assertContains(response, 'action="/set_lang/"')
+
+    @override_settings(
+        ENABLE_LANGUAGE_FEATURES=False,
+        LANGUAGES=(("sv", "Svenska"),),
+    )
+    def test_admin_hides_language_switcher_when_disabled(self):
+        self.client.login(username="admin", password="pass")
+        response = self.client.get(reverse("admin:admin_logentry_changelist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'id="admin-language-switcher"')
+
 
 class LanguageSelectionTests(TestCase):
     def setUp(self):
