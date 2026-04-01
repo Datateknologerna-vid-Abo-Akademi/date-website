@@ -1,14 +1,18 @@
 import logging
 from django.http import HttpResponseRedirect
 from django.contrib import messages
-
-from admin_ordering.admin import OrderableAdmin
 from django.contrib import admin
+from django.conf import settings
 from django.db.models import JSONField
 from django.shortcuts import render
 from django.template.response import TemplateResponse
+from django_ckeditor_5.widgets import CKEditor5Widget
 from django.urls import reverse, re_path
 from django.utils.html import format_html
+
+# Translation and Ordering imports
+from modeltranslation.admin import TranslationAdmin, TabbedTranslationAdmin, TranslationTabularInline
+from admin_ordering.admin import OrderableAdmin
 
 from events import forms
 from events.models import Event, EventAttendees, EventRegistrationForm
@@ -16,8 +20,11 @@ from .widgets import PrettyJSONWidget
 
 logger = logging.getLogger('date')
 
+EventTranslationInlineBase = TranslationTabularInline if settings.ENABLE_LANGUAGE_FEATURES else admin.TabularInline
+EventTranslationAdminBase = TabbedTranslationAdmin if settings.ENABLE_LANGUAGE_FEATURES else admin.ModelAdmin
 
-class EventRegistrationFormInline(OrderableAdmin, admin.TabularInline):
+
+class EventRegistrationFormInline(OrderableAdmin, EventTranslationInlineBase):
     line_numbering = 0
     model = EventRegistrationForm
     fk_name = 'event'
@@ -29,14 +36,13 @@ class EventRegistrationFormInline(OrderableAdmin, admin.TabularInline):
     ordering = ['choice_number']
     ordering_field_hide_input = True
 
-
-class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
+class EventAttendeesFormInline(OrderableAdmin, EventTranslationInlineBase):
     ordering_field = 'attendee_nr'
     ordering_field_hide_input = True
     model = EventAttendees
     fk_name = 'event'
     extra = 0
-    list_editable = ('user', 'email', 'preferences', 'preferences')
+    list_editable = ('user', 'email', 'preferences')
     formfield_overrides = {
         JSONField: {'widget': PrettyJSONWidget(attrs={'initial': 'parsed'})}
     }
@@ -65,12 +71,16 @@ class EventAttendeesFormInline(OrderableAdmin, admin.TabularInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+# TODO: Get it working with the old EventAdmin code that is commented out below
+# TODO: Improve the admin panel UI for the translatable fields
+# SEE https://django-modeltranslation.readthedocs.io/en/latest/admin.html
 @admin.register(Event)
-class EventAdmin(admin.ModelAdmin):
+class EventAdmin(EventTranslationAdminBase):
     save_on_top = True
     list_display = (
-        'title', 'created_time', 'event_date_start', 'get_attendee_count', 'sign_up_max_participants', 'published',
-        'account_actions', 'parent')
+        'title', 'created_time', 'event_date_start', 'get_attendee_count', 
+        'sign_up_max_participants', 'published', 'account_actions', 'parent'
+    )
     search_fields = ('title', 'author__first_name', 'created_time')
     ordering = ['-event_date_start']
     actions = ['delete_participants']
@@ -104,25 +114,17 @@ class EventAdmin(admin.ModelAdmin):
 
     @admin.action(description="Delete all attendees for selected events")
     def delete_participants(self, request, queryset):
-        # Prefetch related EventAttendees for all events in the queryset
         queryset = queryset.prefetch_related('eventattendees_set')
-
-        # Collect all attendees to be deleted
         attendees_to_delete = []
         for event in queryset:
             attendees_to_delete.extend(event.eventattendees_set.all())
 
         if 'confirm' in request.POST:
-            # If the user confirms, delete all attendees
             for attendee in attendees_to_delete:
                 attendee.delete()
-
-            # Add a success message
-            messages.success(
-                request, f"{len(attendees_to_delete)} attendees have been deleted.")
+            messages.success(request, f"{len(attendees_to_delete)} attendees deleted.")
             return HttpResponseRedirect(request.get_full_path())
 
-        # Render a confirmation page
         context = {
             'events': queryset,
             'attendees': attendees_to_delete,
@@ -137,11 +139,7 @@ class EventAdmin(admin.ModelAdmin):
         context['event'] = event
         rf = event.get_registration_form()
         context["form"] = [x.name for x in rf][::-1] if rf else None
-        return TemplateResponse(
-            request,
-            'events/list.html',
-            context
-        )
+        return TemplateResponse(request, 'events/list.html', context)
 
     class Media:
         js = ('core/js/eventform.js',)
@@ -154,18 +152,17 @@ class EventAdmin(admin.ModelAdmin):
     get_attendee_count.short_description = 'Anmälda'
 
     def add_view(self, request, form_url='', extra_context=None):
-        self.fields = forms.EventCreationForm.Meta.fields
-        return super(EventAdmin, self).add_view(request, form_url, extra_context)
+        return super().add_view(request, form_url, extra_context)
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
-        self.fields = forms.EventEditForm.Meta.fields
-        return super(EventAdmin, self).change_view(request, object_id, form_url, extra_context)
+        return super().change_view(request, object_id, form_url, extra_context)
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         if obj is None:
-            form = forms.EventCreationForm
+            kwargs['form'] = forms.EventCreationForm
         else:
-            form = forms.EventEditForm
+            kwargs['form'] = forms.EventEditForm
 
+        form = super().get_form(request, obj, change=change, **kwargs)
         form.user = request.user
         return form

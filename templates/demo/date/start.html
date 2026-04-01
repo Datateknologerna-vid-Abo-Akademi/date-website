@@ -1,9 +1,9 @@
 {% extends 'core/base.html' %}
+{% load i18n %}
 {% load cache %}
 {% block content %}
-{% cache 300 main_page_fixed %}
     {% load static %}
-    {% load i18n %}
+    {% cache 300 main_page_fixed LANGUAGE_CODE %}
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,23 +17,23 @@
     </head>
 
     <div class="container-fluid p-2 min-vh-100">
-        {% include "date/components/header.html" %}
-        {% include "date/components/about.html" %}
+        {% include "demo/date/components/header.html" %}
+        {% include "demo/date/components/about.html" %}
         <section id="news" class="news-events">
             <div id="main" class="main-container">
-                {% include "date/components/news.html" %}
+                {% include "demo/date/components/news.html" %}
                 <div class="sidebar-container">
-                    {% include "date/components/events.html" %}
-                    {% include "date/components/extras.html" %}
+                    {% include "demo/date/components/events.html" %}
+                    {% include "demo/date/components/extras.html" %}
                 </div>
-                {% include "date/components/mobile.html" %}
-                {% include "date/components/partners.html" %}
+                {% include "demo/date/components/mobile.html" %}
+                {% include "demo/date/components/partners.html" %}
             </div>
         </section>
         <section id="reklam" class="text-size">
         </section>
     </div>
 
-    {% include "date/components/scripts.html" %}
+    {% include "demo/date/components/scripts.html" %}
     {% endcache %}
 {% endblock %}

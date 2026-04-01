@@ -1,9 +1,14 @@
+from django.conf import settings
 from django.contrib import admin
+from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 
 from .models import Choice, Question, Vote
 
+PollTranslationInlineBase = TranslationTabularInline if settings.ENABLE_LANGUAGE_FEATURES else admin.TabularInline
+PollTranslationAdminBase = TabbedTranslationAdmin if settings.ENABLE_LANGUAGE_FEATURES else admin.ModelAdmin
 
-class ChoiceInline(admin.TabularInline):
+
+class ChoiceInline(PollTranslationInlineBase):
     model = Choice
     extra = 0
     readonly_fields = ['votes']
@@ -26,7 +31,7 @@ class VoteInline(admin.TabularInline):
         return obj.user.get_full_name()
 
 
-class QuestionAdmin(admin.ModelAdmin):
+class QuestionAdmin(PollTranslationAdminBase):
     fieldsets = [
         (None,
          {'fields':

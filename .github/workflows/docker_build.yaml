@@ -1,29 +1,88 @@
+name: Build and publish Docker image
+
 on:
   push:
     branches:
       - develop
       - master
+    tags:
+      - 'v*.*.*'
   workflow_dispatch:
   schedule:
     - cron: '0 0 1 * *'
+
+permissions:
+  contents: read
+  packages: write
 jobs:
   build:
     concurrency:
       group: 'docker-publish-${{ github.ref_name }}'
       cancel-in-progress: true
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-      - name: Convert github.repo to lower
-        id: string
-        uses: ASzc/change-string-case-action@v6
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Compute image repository
+        id: image
+        run: |
+          echo "repo_lower=${GITHUB_REPOSITORY,,}" >> "${GITHUB_OUTPUT}"
+      - name: Docker login with retry
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin; then
+              exit 0
+            fi
+            if [ "${attempt}" -lt 3 ]; then
+              sleep $((attempt * 5))
+            fi
+          done
+          echo "GHCR login failed after 3 attempts."
+          exit 1
+      - name: Compute image tags
+        id: tags
+        shell: bash
+        env:
+          IMAGE_REPO: ghcr.io/${{ steps.image.outputs.repo_lower }}
+        run: |
+          set -euo pipefail
+
+          TAGS=("${IMAGE_REPO}:${GITHUB_SHA}")
+
+          if [ "${GITHUB_REF_TYPE}" = "branch" ]; then
+            TAGS+=("${IMAGE_REPO}:${GITHUB_REF_NAME}")
+          fi
+
+          if [[ "${GITHUB_REF_TYPE}" = "tag" && "${GITHUB_REF_NAME}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            MAJOR="${BASH_REMATCH[1]}"
+            MINOR="${BASH_REMATCH[2]}"
+            TAGS+=(
+              "${IMAGE_REPO}:${GITHUB_REF_NAME}"
+              "${IMAGE_REPO}:v${MAJOR}.${MINOR}"
+              "${IMAGE_REPO}:v${MAJOR}"
+            )
+          fi
+
+          {
+            echo "value<<EOF"
+            printf '%s\n' "${TAGS[@]}"
+            echo "EOF"
+          } >> "${GITHUB_OUTPUT}"
+      - name: Build and push image
+        uses: docker/build-push-action@v6
         with:
-          string: ${{ github.repository }}
-      - name: Docker login
-        run: |
-          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-      - name: Docker build
-        run: |
-          docker buildx create --use
-          docker buildx build --push --platform=linux/amd64,linux/arm64 -t ghcr.io/${{ steps.string.outputs.lowercase }}:${{ github.ref_name }} .
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.tags.outputs.value }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

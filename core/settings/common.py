@@ -54,10 +54,10 @@ if not DEVELOP:
 
 def get_installed_apps(proj_apps):
     return [
-        'daphne',
         'date',
         'members',
         *proj_apps,
+        'modeltranslation',
         'django.contrib.admin',
         'django.contrib.auth',
         'django.contrib.contenttypes',
@@ -97,12 +97,12 @@ COMMON_CONTEXT_PROCESSORS = [
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
     'date.middleware.LangMiddleware',
     'date.middleware.HTCPCPMiddleware',
     'date.middleware.CDNRewriteMiddleware'
@@ -139,12 +139,25 @@ DATABASES = {
 
 CONN_MAX_AGE = 600
 
-CACHES = {
+# Caches
+# https://docs.djangoproject.com/en/5.2/topics/cache/
+
+# https://docs.djangoproject.com/en/5.2/topics/cache/#dummy-caching-for-development
+DUMMY_CACHE = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+    }
+}
+
+# https://docs.djangoproject.com/en/5.2/topics/cache/#redis
+REDIS_CACHE = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": env("REDIS_SERVER", str, "redis://redis:6379"),
     },
 }
+
+CACHES = DUMMY_CACHE if env("DEVELOP") else REDIS_CACHE
 
 # Custom members model
 AUTH_USER_MODEL = 'members.Member'
@@ -171,6 +184,11 @@ AUTHENTICATION_BACKENDS = (
     'members.backends.AuthBackend',
 )
 
+# Make CKEditor5 Work with modeltranslations
+MODELTRANSLATION_CUSTOM_FIELDS = (
+    'CKEditor5Field',
+)
+
 
 def get_staff_groups(default_groups: list):
     """Add extra staff groups from environment variable to default_groups."""
@@ -185,10 +203,17 @@ LOCALE_PATHS = (
     'locale',
 )
 
-LANG_FINNISH = 'fi'
-LANG_SWEDISH = 'sv'
+ALL_LANGUAGES = (
+    ('sv', ("Svenska")),
+    ('en', ("English")),
+    ('fi', ("Suomi"))
+)
 
-LANGUAGE_CODE = LANG_SWEDISH
+LANGUAGE_CODE = 'sv'
+ENABLE_LANGUAGE_FEATURES = env('ENABLE_LANGUAGE_FEATURES', bool, False)
+LANGUAGES = ALL_LANGUAGES if ENABLE_LANGUAGE_FEATURES else (
+    tuple(language for language in ALL_LANGUAGES if language[0] == LANGUAGE_CODE)
+)
 
 TIME_ZONE = 'Europe/Helsinki'
 
