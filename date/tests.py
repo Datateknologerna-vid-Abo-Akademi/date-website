@@ -14,9 +14,9 @@ from django.utils import translation
 from date.views import get_homepage_template_name, handler500
 
 
-def localized_reverse(name, language_code, **kwargs):
+def localized_reverse(name, language_code, *args, **kwargs):
     with translation.override(language_code):
-        return reverse(name, **kwargs)
+        return reverse(name, args=args or None, kwargs=kwargs or None)
 
 
 class AuditLogTestCase(TestCase):

@@ -6,17 +6,10 @@ from django.utils.deprecation import MiddlewareMixin
 from .language_utils import resolve_language
 
 
-class LangMiddleware(MiddlewareMixin):
+class LanguageStateMiddleware(MiddlewareMixin):
     @staticmethod
     def process_request(request):
         request._previous_language = translation.get_language()
-        # Let Django's LocaleMiddleware resolve language from the URL first.
-        request.LANG = resolve_language(
-            getattr(request, "LANGUAGE_CODE", None)
-            or request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
-        )
-        translation.activate(request.LANG)
-        request.LANGUAGE_CODE = request.LANG
 
     @staticmethod
     def process_response(request, response):
@@ -26,6 +19,18 @@ class LangMiddleware(MiddlewareMixin):
         else:
             translation.deactivate()
         return response
+
+
+class LangMiddleware(MiddlewareMixin):
+    @staticmethod
+    def process_request(request):
+        # Let Django's LocaleMiddleware resolve language from the URL first.
+        request.LANG = resolve_language(
+            getattr(request, "LANGUAGE_CODE", None)
+            or request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
+        )
+        translation.activate(request.LANG)
+        request.LANGUAGE_CODE = request.LANG
 
 
 class HTCPCPMiddleware:
