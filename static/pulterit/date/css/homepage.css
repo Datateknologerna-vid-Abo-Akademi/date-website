@@ -2,16 +2,32 @@
 
 /* Main */
 
+.pulterit-homepage-shell {
+    padding: 0;
+}
+
 /* Header */
 
 .header {
     color: var(--textColorLight);
-    background-color: var(--primaryColor);
-    margin: 10vh 0;
-    min-height: 45vh;
+    background: linear-gradient(180deg, var(--primaryColor) 0%, #c8c8c5 100%);
+    margin: 0;
+    padding: clamp(48px, 8vh, 88px) 0;
+    min-height: 52vh;
     display: flex;
     justify-content: center;
     flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.header::before {
+    content: "";
+    position: absolute;
+    inset: -20% -14%;
+    background:
+        radial-gradient(circle at center, rgba(68, 68, 68, 0.26) 0%, rgba(96, 96, 96, 0.14) 24%, rgba(120, 120, 120, 0.06) 48%, rgba(120, 120, 120, 0) 78%);
+    pointer-events: none;
 }
 
 .hero-text-box {
@@ -19,103 +35,41 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-}
-
-.hero-text-box .text {
-    color: var(--textColorLight);
-    width: 100%;
-    height: 100%;
+    padding: clamp(16px, 2vw, 24px);
     position: relative;
-    max-width: 100%;
+    z-index: 1;
 }
 
-.hero-text-box .text h1 {
-    text-transform: uppercase;
-    display: block;
-    margin-bottom: 0;
-    font-size: min(calc(0.8*7vh), 7vw);
-    font-weight: 400;
-    -webkit-animation: fadeIn 3s;
-    animation: fadeIn 3s;
-}
-
-.hero-text-box .text h3 {
-    display: block;
-    text-align: center;
-    font-size: min(calc(0.8*2.5vh), 3.5vw);
-    font-weight: 700;
-    letter-spacing: min(1vh, 1vw);
-    -webkit-animation: fadeIn 4.5s ease-in;
-    animation: fadeIn 4.5s ease-in;
-    white-space: nowrap;
+.hero-logo-shell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(18px, 3vw, 36px);
 }
 
 .albin {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: min(31.5vh , 47vw);
+    width: min(48vh, 56vw);
     height: auto;
-    margin-top: 10px; /* Adjust the margin to bring it closer to the text */
+    filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.16));
 }
 
 .albin svg {
     width: 100%;
-    height: 100%;
+    height: auto;
 }
 
-.hero-text-box path {
-    stroke: var(--secondaryColor);
-    fill: var(--secondaryColor);
+.albin .drawing-path {
+    stroke: rgba(255, 255, 255, 0.92);
+    fill: rgba(255, 255, 255, 1);
     stroke-dasharray: 25000;
     opacity: 10;
     fill-rule: evenodd;
     -webkit-animation: animate 3.5s cubic-bezier(0,.18,.50,.1);
-            animation: animate 3.5s cubic-bezier(0,.18,.50,.1);
-}
-
-/* Albin animation */
-@-webkit-keyframes animate {
-    1% {
-        opacity: 0;
-        fill: none;
-        stroke-dashoffset: 25000;
-    }
-    40% {
-        opacity: 10;
-        fill: none;
-        stroke-dashoffset: 24500;
-    }
-    80% {
-        fill: rgba(255,255,255,0);
-        stroke-dashoffset: 23500;
-    }
-    100% {
-        opacity: 10;
-        fill: rgba(255,255,255,1);
-        stroke-dashoffset: 0;
-    }
-}
-@keyframes animate {
-    1% {
-        opacity: 0;
-        fill: none;
-        stroke-dashoffset: 25000;
-    }
-    40% {
-        opacity: 10;
-        fill: none;
-        stroke-dashoffset: 24500;
-    }
-    80% {
-        fill: rgba(255,255,255,0);
-        stroke-dashoffset: 23500;
-    }
-    100% {
-        opacity: 10;
-        fill: rgba(255,255,255,1);
-        stroke-dashoffset: 0;
-    }
+    animation: animate 3.5s cubic-bezier(0,.18,.50,.1);
 }
 
 /*About content*/
@@ -132,7 +86,7 @@
 
 .news-events {
     color: var(--textColorDark);
-    margin-top: 2vh;
+    margin-top: 0;
     background: linear-gradient(180deg, var(--secondaryColorDarker) 0%, var(--secondaryColor) 100%);
     min-height: 100vh;
     word-break: break-all;
@@ -197,19 +151,19 @@
 
 div.news-content a{
     display: inline-block;
-    color: var(--linkColorDark);
+    color: var(--linkColor);
 }
 
 div.news-content a:hover{
-    color: var(--linkColorDarkHover);
+    color: var(--linkSecondaryHover);
 }
 
 .more-news{
-    color: var(--linkColorDark);
+    color: var(--linkColor);
 }
 
 .more-news:hover{
-    color: var(--linkColorDarkHover);
+    color: var(--linkSecondaryHover);
 }
 
 .news-header{
@@ -260,42 +214,43 @@ div.news-content a:hover{
     transform: translateX(10px);
   }
   
-.evet-card > .card .list-inline-item {
+.event-card > .card .list-inline-item {
     color: var(--helpText);
     font-size: 14px;
   }
   
-.evet-card > .card .badge {
-    background: var(--primaryColorLighter);
-  }
+.event-card > .card .badge {
+    background: #6d6d69;
+    color: var(--secondaryColor);
+}
   
-.evet-card > .card {
+.event-card > .card {
     background: var(--secondaryColor);
   }
   
-.evet-card a{
-    color: var(--linkColorDark);
-    border-top: 2px solid var(--linkColorDark);
+.event-card a{
+    color: var(--linkColor);
+    border-top: 2px solid var(--linkColor);
   }
   
-.evet-card a:active{
-    color: var(--linkColorDark);
+.event-card a:active{
+    color: var(--linkColor);
   }
   
-.evet-card a:hover{
+.event-card a:hover{
     background-color: inherit;
-    border-top: 2px solid var(--linkColorDarkHover);
-    color: var(--linkColorDarkHover);
+    border-top: 2px solid var(--linkSecondaryHover);
+    color: var(--linkSecondaryHover);
   }
   
-.evet-card a:focus{
+.event-card a:focus{
     background-color: inherit;
     box-shadow: none;
   }
 
 .chevron-box {
     margin: auto; 
-    border: 1px solid var(--linkColorDark);
+    border: 1px solid var(--linkColorSecondary);
     border-radius: 5px;
     padding: 5px;
 }
@@ -336,7 +291,7 @@ div.news-content a:hover{
     -webkit-transition: all 0.2s;
 	-moz-transition: all 0.2s;
     transition: all 0.2s;
-    border-top: var(--linkColorDark) solid 2pt;
+    border-top: var(--linkColor) solid 2pt;
     box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
     display: grid;
     grid-template-columns: 3fr 1fr;
@@ -373,13 +328,13 @@ div.news-content a:hover{
 
 .more-events-button{
     display: inline-block;
-    color: var(--linkColorDark)
+    color: var(--linkColor)
 }
 
 .more-events-button:hover{
     transition: 0.2s;
     scale: 1.01;
-    color: var(--linkColorDarkHover);
+    color: var(--linkSecondaryHover);
 }
 /*Events end*/
 
@@ -396,7 +351,7 @@ div.news-content a:hover{
 }
 .calendar-box{
     grid-area: box;
-    border: 2px solid rgb(163, 163, 163);
+    border: 2px solid #a0a09e;
     border-radius: 5px;
     padding: 3px;
 }
@@ -412,7 +367,7 @@ div.news-content a:hover{
 }
   
 div.calendar-container a {
-    color: var(--linkColorDark);
+    color: var(--linkColor);
 }
 
 .left {
@@ -462,22 +417,22 @@ div.calendar-container a {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
   color: white !important;
-  background-color: var(--linkColorDark) !important;
+  background-color: var(--linkColor) !important;
 }
 
 .calendar-eventday:hover {
-    background-color: var(--linkColorDarkHover) !important;
+    background-color: var(--linkSecondaryHover) !important;
 }
 
 .calendar-eventday-popup {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
-  color: var(--linkColorDark);
+  color: var(--linkColor);
   font-size: 0.75rem;
 }
 
 .calendar-eventday-popup:hover {
-    color: var(--linkColorDarkHover);
+    color: var(--linkSecondaryHover);
 }
 
 /*Calendar end*/
@@ -521,11 +476,11 @@ ul#logo-list {
 }
 
 .extra-container a {
-    color: var(--linkColorDark);
+    color: var(--linkColor);
 }
 
 .extra-container a:hover {
-    color: var(--linkColorDarkHover);
+    color: var(--linkSecondaryHover);
 }
 
 /*extras end*/
@@ -540,12 +495,12 @@ ul#logo-list {
 }
 
 .logo-container a {
-    color: var(--linkColorDark);
+    color: var(--linkColor);
     margin-top: 20px;
 }
 
 .logo-container a:hover {
-    color: var(--linkColorDarkHover);
+    color: var(--linkSecondaryHover);
 }
 
 .logo-container img {
@@ -558,6 +513,50 @@ ul#logo-list {
 /*Logos end*/
 
 /* Generic animations*/
+
+@-webkit-keyframes animate {
+    1% {
+        opacity: 0;
+        fill: none;
+        stroke-dashoffset: 25000;
+    }
+    40% {
+        opacity: 10;
+        fill: none;
+        stroke-dashoffset: 24500;
+    }
+    80% {
+        fill: rgba(255, 255, 255, 0);
+        stroke-dashoffset: 23500;
+    }
+    100% {
+        opacity: 10;
+        fill: rgba(255, 255, 255, 1);
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes animate {
+    1% {
+        opacity: 0;
+        fill: none;
+        stroke-dashoffset: 25000;
+    }
+    40% {
+        opacity: 10;
+        fill: none;
+        stroke-dashoffset: 24500;
+    }
+    80% {
+        fill: rgba(255, 255, 255, 0);
+        stroke-dashoffset: 23500;
+    }
+    100% {
+        opacity: 10;
+        fill: rgba(255, 255, 255, 1);
+        stroke-dashoffset: 0;
+    }
+}
 
 @-webkit-keyframes fadeIn {
     from {
@@ -594,6 +593,11 @@ ul#logo-list {
 }
 
 @media screen and (max-width: 991px){
+    .header {
+        min-height: 44vh;
+        padding: clamp(36px, 6vh, 56px) 0;
+    }
+
     .main-container{
         grid-template-columns: 1vw 1fr 1vw;
         grid-template-areas:
@@ -602,6 +606,10 @@ ul#logo-list {
           ". extras ."
           ". logos ."
           ". ig-scroll .";
+    }
+
+    .albin {
+        width: min(42vh, 76vw);
     }
 
 }
@@ -614,3 +622,42 @@ ul#logo-list {
 .heading-link a:hover{
     color: var(--textColorMedium)
 }
+
+/* Vanilla calendar contrast overrides */
+.vanilla-calendar-month,
+.vanilla-calendar-year {
+    color: var(--textColorDarkish) !important;
+}
+
+.vanilla-calendar-month:hover,
+.vanilla-calendar-year:hover {
+    color: var(--primaryColorLighter) !important;
+}
+
+.vanilla-calendar-arrow::before,
+.vanilla-calendar-arrow::after {
+    background-color: var(--textColorMedium) !important;
+}
+
+.vanilla-calendar-arrow:hover::before,
+.vanilla-calendar-arrow:hover::after {
+    background-color: var(--textColorDarkish) !important;
+}
+
+.vanilla-calendar-day__btn_today {
+    color: var(--textColorLight) !important;
+    background-color: #545454 !important;
+}
+
+.vanilla-calendar-day__btn_today:hover {
+    background-color: #282828 !important;
+}
+
+.vanilla-calendar-day__btn_selected {
+    background-color: #A3A3A3 !important;
+}
+
+.vanilla-calendar-day__btn_selected:hover {
+    background-color: #7A7A7A !important;
+}
+

@@ -30,7 +30,17 @@
                                             {% else %}
                                                 <h3>{{ collection.title }}</h3>
                                             {% endif %}
-                                            <p><i class="far fa-calendar-alt"></i> {{ collection.pub_date_pretty }}<span id="picture-count"> <i class="far fa-images"></i> {{ collection.get_file_count }} {% trans 'Bilder' %}</span></p>
+                                            <p>
+                                                <i class="far fa-calendar-alt"></i> {{ collection.pub_date_pretty }}
+                                                <span id="picture-count">
+                                                    <i class="far fa-images"></i>
+                                                    {% blocktranslate count picture_count=collection.get_file_count trimmed %}
+                                                        {{ picture_count }} Bild
+                                                    {% plural %}
+                                                        {{ picture_count }} Bilder
+                                                    {% endblocktranslate %}
+                                                </span>
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -57,4 +67,3 @@
     });
       </script>
 {% endblock %}
-

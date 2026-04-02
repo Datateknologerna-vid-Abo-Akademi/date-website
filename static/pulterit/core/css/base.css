@@ -4,7 +4,7 @@ html {
 
 html body{
     background-color: var(--primaryColor);
-    color: var(--textColorLightish);
+    color: var(--textColorDarkish);
     font-family: 'Josefin Sans', sans-serif;
 }
 
@@ -19,14 +19,14 @@ html body{
 
 /* Link colors */
 div a{
-    color: var(--linkColorLight);
+    color: var(--linkColorSecondary);
     display: inline-block;
     text-decoration: none;
 }
 
 div a:hover{
     transition: 0.3s;
-    color: var(--linkColorLightHover);
+    color: var(--linkSecondaryHover);
 }
 /* ---- */
 
@@ -57,7 +57,8 @@ div a:hover{
 
 .content{
     margin: 20px 2vw;
-    background-color: var(--primaryColorLight);
+    background-color: var(--secondaryColor);
+    color: var(--textColorDarkish);
     padding: var(--defaultPadding);
     border-radius: var(--defaultRadius);
 }
@@ -66,7 +67,7 @@ div a:hover{
 .theme-button {
     background-color: var(--primaryColorLighter);
     border: none;
-    color: var(--linkColorLight);
+    color: var(--secondaryColor);
     padding: 10px 20px;
     text-align: center;
     font-size: 16px;
@@ -81,7 +82,7 @@ div a:hover{
 
 .theme-button:hover {
     background-color: var(--primaryColorLighte);
-    color: var(--linkColorLightHover);
+    color: var(--secondaryColor);
 }
 
 .theme-button:active {
@@ -109,16 +110,75 @@ div a:hover{
 
 /* ---- */
 
+.pulterit-footer {
+    position: relative;
+    margin-top: 0;
+    padding: 0;
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+}
+
+.pulterit-footer-shell {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(20px, 3vw, 32px);
+    background:
+        radial-gradient(circle at center, rgba(52, 52, 52, 0.28) 0%, rgba(82, 82, 82, 0.16) 28%, rgba(110, 110, 110, 0.06) 52%, rgba(120, 120, 120, 0) 82%),
+        linear-gradient(180deg, rgba(208, 208, 206, 0) 0%, rgba(208, 208, 206, 0.12) 18%, rgba(208, 208, 206, 0.08) 100%);
+    color: var(--textColorLight);
+}
+
+.pulterit-footer-shell > hr,
+.pulterit-footer-shell > section,
+.pulterit-footer-shell > .row,
+.pulterit-footer-shell > .text-center {
+    width: min(100% - 2rem, 1320px);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.pulterit-footer-shell hr {
+    position: relative;
+    z-index: 1;
+    margin-top: 0;
+    border-color: rgba(255, 255, 255, 0.18);
+    opacity: 0.35;
+}
+
+.pulterit-footer-shell p,
+.pulterit-footer-shell div,
+.pulterit-footer-shell span,
+.pulterit-footer-shell small {
+    color: inherit;
+}
+
+.pulterit-footer-shell a {
+    color: var(--textColorLight);
+}
+
+.pulterit-footer-shell a:hover {
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.pulterit-footer-shell section,
+.pulterit-footer-shell .row,
+.pulterit-footer-shell .text-center {
+    position: relative;
+    z-index: 1;
+}
+
 /* Basic table colors */
 #table {
-    --bs-table-bg: #212529;
-    --bs-table-striped-bg: #2c3034;
-    --bs-table-striped-color: #fff;
-    --bs-table-active-bg: #373b3e;
-    --bs-table-active-color: #fff;
-    --bs-table-hover-bg: #323539;
-    --bs-table-hover-color: #fff;
-    color: #fff;
-    border-color: #373b3e;
+    --bs-table-bg: #f8f8f8;
+    --bs-table-striped-bg: #ececeb;
+    --bs-table-striped-color: #202020;
+    --bs-table-active-bg: #e1e1df;
+    --bs-table-active-color: #202020;
+    --bs-table-hover-bg: #e7e7e5;
+    --bs-table-hover-color: #202020;
+    color: #202020;
+    border-color: #d9d9d7;
 }
 /* ---- */
