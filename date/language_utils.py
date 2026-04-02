@@ -32,4 +32,21 @@ def localize_url(url, language_code):
     if not remainder.startswith("/"):
         remainder = f"/{remainder}"
 
+    if target_language == settings.LANGUAGE_CODE:
+        return remainder
     return f"/{target_language}{remainder}"
+
+
+def strip_language_prefix(url):
+    if not url:
+        return url
+    if "://" in url or url.startswith(("#", "mailto:", "tel:", "javascript:")):
+        return url
+    normalized = url if url.startswith("/") else f"/{url}"
+    lang = get_language_from_path(normalized)
+    if lang:
+        remainder = normalized[len(f"/{lang}"):] or "/"
+        if not remainder.startswith("/"):
+            remainder = f"/{remainder}"
+        return remainder
+    return normalized

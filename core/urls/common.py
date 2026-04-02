@@ -9,6 +9,6 @@ def build_urlpatterns(*localized_patterns):
         *i18n_patterns(
             *localized_patterns,
             path("set_lang/", date_views.set_language, name="set_lang"),
-            prefix_default_language=True,
+            prefix_default_language=False,
         ),
     ]

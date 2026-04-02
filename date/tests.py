@@ -80,7 +80,7 @@ class LanguageSelectionTests(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.cookies[settings.LANGUAGE_COOKIE_NAME].value, "fi")
-        self.assertEqual(response["Location"], localized_reverse("index", "fi"))
+        self.assertEqual(response["Location"], "/")
 
     def test_set_language_falls_back_to_homepage_without_referer(self):
         response = self.client.post(
@@ -88,7 +88,7 @@ class LanguageSelectionTests(TestCase):
             {"lang": "sv"},
         )
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response["Location"], localized_reverse("index", "sv"))
+        self.assertEqual(response["Location"], "/")
         self.assertEqual(response.cookies[settings.LANGUAGE_COOKIE_NAME].value, "sv")
 
     def test_homepage_renders_language_switcher_in_english_path(self):
@@ -117,7 +117,7 @@ class LanguageSelectionTests(TestCase):
         self.assertContains(response, "Page not found", status_code=404)
 
     def test_404_page_renders_in_selected_swedish_language_path(self):
-        response = self.client.get("/sv/this-page-does-not-exist/")
+        response = self.client.get("/this-page-does-not-exist/")
         self.assertEqual(response.status_code, 404)
         self.assertContains(response, "Sidan hittades inte", status_code=404)
 
