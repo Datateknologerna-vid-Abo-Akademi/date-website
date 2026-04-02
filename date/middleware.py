@@ -9,6 +9,7 @@ from .language_utils import resolve_language
 class LangMiddleware(MiddlewareMixin):
     @staticmethod
     def process_request(request):
+        request._previous_language = translation.get_language()
         # Let Django's LocaleMiddleware resolve language from the URL first.
         request.LANG = resolve_language(
             getattr(request, "LANGUAGE_CODE", None)
@@ -16,6 +17,15 @@ class LangMiddleware(MiddlewareMixin):
         )
         translation.activate(request.LANG)
         request.LANGUAGE_CODE = request.LANG
+
+    @staticmethod
+    def process_response(request, response):
+        previous_language = getattr(request, "_previous_language", None)
+        if previous_language:
+            translation.activate(previous_language)
+        else:
+            translation.deactivate()
+        return response
 
 
 class HTCPCPMiddleware:

@@ -128,6 +128,13 @@ class LanguageSelectionTests(TestCase):
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "en")
         self.assertContains(response, "Language")
 
+    def test_request_language_does_not_leak_after_response(self):
+        with translation.override("sv"):
+            response = self.client.get(localized_reverse("index", "fi"))
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "fi")
+            self.assertEqual(translation.get_language(), "sv")
+
     def test_500_page_renders_in_selected_swedish_language(self):
         request = self.factory.get("/")
         with translation.override("sv"):
