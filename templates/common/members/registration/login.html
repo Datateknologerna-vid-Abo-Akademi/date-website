@@ -16,7 +16,9 @@
             <button class="button" type="submit">{% trans 'Login' %}</button>
         </form>
             <a href="{% url 'password_reset' %}"><p>{% trans 'Glömt lösenordet?' %}</p></a>
+            {% if MEMBERS_SIGNUP_ENABLED %}
             <a href="{% url 'members:signup' %}"><p>{% trans 'Registrera dig' %}</p></a>
+            {% endif %}
     </div>
 </div>
 {% endblock %}
