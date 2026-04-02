@@ -1,18 +1,31 @@
-import datetime
+import random
 from itertools import chain
+from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils import translation
-from django.utils import timezone
-from django.http import HttpResponse
-from .language_utils import resolve_language
+from .language_utils import localize_url, resolve_language
 
 from ads.models import AdUrl
 from events.models import Event
 from news.models import Post
 from social.models import IgUrl
+
+
+def get_homepage_template_name():
+    """Return the homepage template for the active association."""
+    if settings.PROJECT_NAME != 'kk':
+        return 'date/start.html'
+
+    today = timezone.localdate()
+    is_april_first = today.month == 4 and today.day == 1
+    if is_april_first and random.randrange(20) == 0:
+        return 'date/april_start.html'
+
+    return 'date/start.html'
 
 
 def index(request):
@@ -37,7 +50,7 @@ def index(request):
         are mapped to data used by the calendar on the frontend"""
         calendar_events_dict = {}
         for event in all_events:
-            event_url = "/events/" + event.slug
+            event_url = reverse("events:detail", kwargs={"slug": event.slug})
             # The rest of the "html" field is set on the client side
             # since it includes a time that gets localized on the client-side
             event_dict = {event.event_date_start.strftime("%Y-%m-%d"):
@@ -61,7 +74,7 @@ def index(request):
         'aa_post': aa_post,  # TODO Remove or rename
     }
 
-    return render(request, 'date/start.html', context)
+    return render(request, get_homepage_template_name(), context)
 
 
 def set_language(request):
@@ -69,8 +82,17 @@ def set_language(request):
 
     # persist the language preference using a cookie
     translation.activate(user_language)
-    origin = request.META.get('HTTP_REFERER') or '/'
-    response = redirect(origin)
+    origin = request.META.get('HTTP_REFERER')
+    if origin:
+        parsed_origin = urlsplit(origin)
+        localized_path = localize_url(parsed_origin.path, user_language)
+        redirect_target = urlunsplit(
+            ("", "", localized_path, parsed_origin.query, parsed_origin.fragment)
+        )
+    else:
+        redirect_target = reverse("index")
+
+    response = redirect(redirect_target)
     response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user_language)
     return response
 

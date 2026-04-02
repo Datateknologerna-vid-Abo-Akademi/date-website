@@ -1,13 +1,22 @@
-from django.test import RequestFactory, TestCase, override_settings
-from django.urls import reverse
+from datetime import date
+from unittest.mock import patch
+
+from django.conf import settings
+from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.admin.models import LogEntry, ADDITION
-from django.conf import settings
 from django.core.cache import cache
+from django.test import RequestFactory, TestCase
+from django.test.utils import override_settings
+from django.urls import reverse
 from django.utils import translation
 
-from date.views import handler500
+from date.views import get_homepage_template_name, handler500
+
+
+def localized_reverse(name, language_code, **kwargs):
+    with translation.override(language_code):
+        return reverse(name, **kwargs)
 
 
 class AuditLogTestCase(TestCase):
@@ -34,19 +43,18 @@ class AuditLogTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "created user")
 
-    def test_admin_respects_english_language_cookie(self):
+    def test_admin_respects_english_language_path(self):
         self.client.login(username="admin", password="pass")
-        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
-        response = self.client.get(reverse("admin:admin_logentry_changelist"))
+        response = self.client.get(localized_reverse("admin:admin_logentry_changelist", "en"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "en")
 
     def test_admin_shows_language_switcher_when_enabled(self):
         self.client.login(username="admin", password="pass")
-        response = self.client.get(reverse("admin:admin_logentry_changelist"))
+        response = self.client.get(localized_reverse("admin:admin_logentry_changelist", "en"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'id="admin-language-switcher"')
-        self.assertContains(response, 'action="/set_lang/"')
+        self.assertContains(response, f'action="{localized_reverse("set_lang", "en")}"')
 
     @override_settings(
         ENABLE_LANGUAGE_FEATURES=False,
@@ -66,57 +74,59 @@ class LanguageSelectionTests(TestCase):
 
     def test_set_language_persists_cookie(self):
         response = self.client.post(
-            reverse("set_lang"),
+            localized_reverse("set_lang", "sv"),
             {"lang": "fi"},
-            HTTP_REFERER=reverse("index"),
+            HTTP_REFERER=localized_reverse("index", "sv"),
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.cookies[settings.LANGUAGE_COOKIE_NAME].value, "fi")
-        self.assertEqual(response["Location"], reverse("index"))
+        self.assertEqual(response["Location"], localized_reverse("index", "fi"))
 
     def test_set_language_falls_back_to_homepage_without_referer(self):
         response = self.client.post(
-            reverse("set_lang"),
+            localized_reverse("set_lang", "sv"),
             {"lang": "sv"},
         )
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response["Location"], reverse("index"))
+        self.assertEqual(response["Location"], localized_reverse("index", "sv"))
         self.assertEqual(response.cookies[settings.LANGUAGE_COOKIE_NAME].value, "sv")
 
-    def test_homepage_renders_language_switcher_in_english(self):
-        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
-        response = self.client.get(reverse("index"))
+    def test_homepage_renders_language_switcher_in_english_path(self):
+        response = self.client.get(localized_reverse("index", "en"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "en")
         self.assertContains(response, "Language")
 
-    def test_homepage_renders_language_switcher_in_finnish(self):
-        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "fi"
-        response = self.client.get(reverse("index"))
+    def test_homepage_renders_language_switcher_in_finnish_path(self):
+        response = self.client.get(localized_reverse("index", "fi"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "fi")
         self.assertContains(response, "Kieli")
 
-    def test_homepage_preserves_swedish_shared_labels_and_fixed_terms(self):
-        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "sv"
-        response = self.client.get(reverse("index"))
+    def test_homepage_preserves_swedish_shared_labels_and_fixed_terms_on_swedish_path(self):
+        response = self.client.get(localized_reverse("index", "sv"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "sv")
         self.assertContains(response, "Språk")
         self.assertContains(response, "Adress")
         self.assertContains(response, "Joke")
 
-    def test_404_page_renders_in_selected_english_language(self):
-        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
-        response = self.client.get("/this-page-does-not-exist/")
+    def test_404_page_renders_in_selected_english_language_path(self):
+        response = self.client.get("/en/this-page-does-not-exist/")
         self.assertEqual(response.status_code, 404)
         self.assertContains(response, "Page not found", status_code=404)
 
-    def test_404_page_renders_in_selected_swedish_language(self):
-        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "sv"
-        response = self.client.get("/this-page-does-not-exist/")
+    def test_404_page_renders_in_selected_swedish_language_path(self):
+        response = self.client.get("/sv/this-page-does-not-exist/")
         self.assertEqual(response.status_code, 404)
         self.assertContains(response, "Sidan hittades inte", status_code=404)
+
+    def test_path_language_takes_precedence_over_cookie(self):
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "fi"
+        response = self.client.get(localized_reverse("index", "en"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "en")
+        self.assertContains(response, "Language")
 
     def test_500_page_renders_in_selected_swedish_language(self):
         request = self.factory.get("/")
@@ -131,9 +141,9 @@ class LanguageSelectionTests(TestCase):
     )
     def test_set_language_falls_back_to_default_when_language_features_disabled(self):
         response = self.client.post(
-            reverse("set_lang"),
+            localized_reverse("set_lang", "sv"),
             {"lang": "en"},
-            HTTP_REFERER=reverse("index"),
+            HTTP_REFERER=localized_reverse("index", "sv"),
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.cookies[settings.LANGUAGE_COOKIE_NAME].value, "sv")
@@ -144,8 +154,33 @@ class LanguageSelectionTests(TestCase):
     )
     def test_homepage_hides_language_switcher_when_language_features_disabled(self):
         self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
-        response = self.client.get(reverse("index"))
+        response = self.client.get(localized_reverse("index", "sv"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "sv")
-        self.assertNotContains(response, 'action="/set_lang/"')
+        self.assertNotContains(response, 'action="')
         self.assertNotContains(response, 'name="lang"')
+
+
+class HomepageTemplateSelectionTests(TestCase):
+    @override_settings(PROJECT_NAME="kk")
+    @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
+    @patch("date.views.random.randrange", return_value=0)
+    def test_kk_uses_april_template_on_april_first_when_roll_matches(self, _randrange, _localdate):
+        self.assertEqual(get_homepage_template_name(), "date/april_start.html")
+
+    @override_settings(PROJECT_NAME="kk")
+    @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
+    @patch("date.views.random.randrange", return_value=1)
+    def test_kk_uses_regular_template_on_april_first_when_roll_misses(self, _randrange, _localdate):
+        self.assertEqual(get_homepage_template_name(), "date/start.html")
+
+    @override_settings(PROJECT_NAME="kk")
+    @patch("date.views.timezone.localdate", return_value=date(2026, 4, 2))
+    def test_kk_uses_regular_template_outside_april_first(self, _localdate):
+        self.assertEqual(get_homepage_template_name(), "date/start.html")
+
+    @override_settings(PROJECT_NAME="date")
+    @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
+    @patch("date.views.random.randrange", return_value=0)
+    def test_non_kk_never_uses_april_template(self, _randrange, _localdate):
+        self.assertEqual(get_homepage_template_name(), "date/start.html")

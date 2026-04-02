@@ -9,9 +9,10 @@ from .language_utils import resolve_language
 class LangMiddleware(MiddlewareMixin):
     @staticmethod
     def process_request(request):
-        # Get session cookie in case user has selected language before
+        # Let Django's LocaleMiddleware resolve language from the URL first.
         request.LANG = resolve_language(
-            request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
+            getattr(request, "LANGUAGE_CODE", None)
+            or request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
         )
         translation.activate(request.LANG)
         request.LANGUAGE_CODE = request.LANG
