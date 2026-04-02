@@ -13,7 +13,7 @@ Publish and organize news articles that appear on the home page and `/news/` lis
 1. Open **News › Posts**.
 2. Click **Add post**.
 3. Complete the form:
-   - **Titel** – headline.
+   - **Titel** – headline. If translation features are enabled, fill the translated title/content tabs as needed.
    - **Kategori** – optional; un-categorized posts show on the home page by default.
    - **Innehåll** – CKEditor field for body text, images, embeds.
    - **Publicera** – uncheck to keep as draft.
@@ -33,3 +33,4 @@ Publish and organize news articles that appear on the home page and `/news/` lis
 - For Albins Angels highlights, set the category to "Albins Angels"; the home page automatically surfaces the newest post from that category if it’s < 10 days old.
 - Use descriptive slugs (e.g., `styrelseval-2024`) to keep permalinks readable.
 - Add the author info in the body if needed; the template already shows the Member assigned in the admin form.
+- If multilingual content is enabled, preview the post in Swedish and at least one translated locale after saving.

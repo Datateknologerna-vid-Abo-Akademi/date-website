@@ -5,7 +5,7 @@ Manage the informational pages and navigation links that live under the "About",
 
 ## Key Concepts
 - **Static Page Nav** – top-level navigation categories (e.g., "Föreningen"). Each category can optionally point visitors straight to a custom URL.
-- **Static Page** – rich-text content (CKEditor) that lives at `/s/<slug>/`. Pages can be limited to logged-in members.
+- **Static Page** – rich-text content (CKEditor) that lives at `/pages/<slug>/`. Pages can be limited to logged-in members.
 - **Static URL** – manual links that appear under a category’s dropdown (can point anywhere, not just static pages).
 
 ## Manage Navigation Categories
@@ -31,12 +31,13 @@ Manage the informational pages and navigation links that live under the "About",
 ## Add Dropdown Links (Static URLs)
 1. Inside a category edit page, use the inline table:
    - **Titel** – link text.
-   - **Url** – destination (can be `/s/<slug>/`, `/members/...`, or an external site).
+   - **Url** – destination (can be `/pages/<slug>/`, `/members/...`, or an external site).
    - **Visa endast åt inloggade användare** – hide the link from anonymous visitors.
    - **#** – ordering token; increments of 10 keep the list tidy.
 2. Save the category to persist link changes.
 
 ## Tips for Editors
-- If a page should be linked from navigation, create the Static Page first, copy its slug, then create a Static URL entry that points to `/s/<slug>/`.
+- If a page should be linked from navigation, create the Static Page first, copy its slug, then create a Static URL entry that points to `/pages/<slug>/`.
+- If translation features are enabled, category names and link labels can have per-language values. Check the translated fields before publishing multilingual navigation changes.
 - Use the preview icon in CKEditor to check layout before publishing.
 - Keep `members_only` pages organized; add “(endast medlemmar)” to their titles so visitors know why they might need to log in.

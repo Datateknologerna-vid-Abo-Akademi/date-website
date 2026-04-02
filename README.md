@@ -1,6 +1,6 @@
 # DaTe Website 2.0
 
-DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.fi)'s public site, membership tools, alumni portal, polls, and other seasonal apps. The stack is Django 5.2 running on Python 3.13 inside Docker Compose with Celery workers, Channels/Daphne, PostgreSQL, Valkey (Redis compatible), and S3-compatible storage.
+DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.fi)'s public site, membership tools, alumni portal, polls, and a handful of seasonal or one-off apps. The stack is Django 5.2 running on Python 3.13 inside Docker Compose with Celery workers, Channels/Daphne, PostgreSQL, Valkey (Redis compatible), and S3-compatible storage.
 
 > Active development happens on `develop`. The `main` branch mirrors production releases, so branch off `develop` when you start new work.
 
@@ -29,9 +29,41 @@ open http://localhost:8000      # admin lives at /admin
 
 Prefer SSH? Add your key to GitHub following their [SSH setup guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account), then clone with `git clone git@github.com:datateknologerna-vid-abo-akademi/date-website.git`.
 
-Need sample content? Run `scripts/clean-init.sh` to wipe the dev database and load the fixtures from `initialdata.json`. The script must be executed with Bash (`/bin/bash scripts/clean-init.sh`) if your shell complains about `illegal option`.
+Need sample content? Run `date-cleaninit` (or `/bin/bash ./scripts/clean_init.sh`) to wipe the dev database, reload the fixture set, generate sample media, and reset the default local user passwords. It is the quickest way to get back to a known-good local setup.
 
 Working on features that touch S3-compatible storage? Run a local [MinIO](https://min.io/) container and point `S3_ENDPOINT_URL`, `S3_ACCESS_KEY`, and `S3_SECRET_KEY` in `.env` to it. This keeps uploads, ACLs, and presigned URLs testable without external dependencies.
+
+## Platform notes
+
+The main workflow in this README is Linux-first. On Windows and macOS, the easiest path is still to follow the same Bash-based commands and only adapt the host-specific pieces below.
+
+### Windows (WSL 2)
+
+- Use WSL 2 with Ubuntu or Debian, and run the repo from inside the Linux filesystem rather than from `C:\...`.
+- Install Docker Desktop and enable WSL integration for your distro so `docker compose` works directly inside WSL.
+- Open the project in your editor through WSL if possible. This avoids line-ending, path, and permission oddities.
+- Run the same commands as the Linux quick start from your WSL shell:
+
+```bash
+cd ~/code/date-website
+source env.sh dev
+date-start-detached
+```
+
+- To open the site from WSL, use `explorer.exe http://localhost:8000` or open the URL manually in your browser.
+- If a script behaves strangely, first confirm it is being run by Bash inside WSL and not by PowerShell or `cmd.exe`.
+
+### macOS
+
+- Install Docker Desktop for Mac so `docker compose` is available.
+- Use Terminal, iTerm2, or another shell that can run Bash-compatible commands. `zsh` is fine; `source env.sh dev` still works.
+- The rest of the workflow is the same as Linux: clone the repo, copy `.env.example`, source `env.sh`, and use the `date-*` aliases.
+- The `open http://localhost:8000` command from the quick start already works on macOS.
+
+### Linux
+
+- The quick start above is written for Linux shells directly.
+- If Docker requires `sudo`, fix your Docker group membership first rather than rewriting the commands with `sudo`.
 
 ## Environment configuration & helper aliases
 
@@ -40,6 +72,12 @@ Working on features that touch S3-compatible storage? Run a local [MinIO](https:
 - `source env.sh dev` uses `.env` (falling back to `.env.example`) and sets `DATE_DEVELOP=True`, which in turn selects `docker-compose.yml`.
 - `source env.sh prod` prefers `.env.prod`, flips `DATE_DEVELOP=False`, and switches aliases to `docker-compose.prod.yml`.
 - `source env.sh path/to/custom.env` lets you provide an explicit file (relative or absolute path).
+
+Important environment flags:
+
+- `PROJECT_NAME` selects the active association/site variant (`date`, `kk`, `biocum`, `demo`, `on`, ...).
+- `ENABLE_LANGUAGE_FEATURES=True` enables the localized URL prefixes, language switcher, and translated admin tabs. When omitted or false, the project runs Swedish-only.
+- `USE_S3` toggles whether uploads use local disk storage or the configured S3-compatible backend.
 
 The script exports `COMPOSE_FILE_PATH` and defines the `date-*` aliases used throughout this README:
 
@@ -51,8 +89,11 @@ The script exports `COMPOSE_FILE_PATH` and defines the `date-*` aliases used thr
 | `date-makemigrations`, `date-migrate`, `date-collectstatic`, `date-createsuperuser` | Convenience wrappers around common `manage.py` commands. |
 | `date-test [labels]` | Execute the Django test suite using the isolated `core.settings.test` configuration. |
 | `date-pull` | Pull the defined Docker images. |
+| `date-cleaninit` | Reset local data and reload the development fixtures plus generated sample media. |
 
 Reload `env.sh` whenever you edit the `.env` files so the aliases pick up your changes.
+
+Once that is loaded, the `date-*` commands are the normal way to work with the project.
 
 ## Database, migrations, and seed data
 
@@ -61,6 +102,8 @@ Reload `env.sh` whenever you edit the `.env` files so the aliases pick up your c
 - If your shell does not expose aliases, run `/bin/bash ./scripts/clean_init.sh` directly.
 - To inspect data manually, open a shell in the container: `docker compose run --rm web python manage.py shell`.
 - Re-run `date-createsuperuser` after resetting the database so you keep admin access.
+
+The fixture reset flow uses `scripts/load_all_fixtures.sh` and `scripts/generate_dynamic_fixtures.py`, so treat generated media and sample content as disposable local data rather than checked-in source material.
 
 ## Tests & QA
 
@@ -74,11 +117,16 @@ date-test members.tests     # run a specific module
 date-manage check           # static checks (migrations, settings sanity)
 ```
 
-Manually verify user-facing flows (forms, Celery tasks, Channels endpoints) when implementing a feature; many branches in the git history pair automated tests with quick manual smoke tests.
+Manually verify user-facing flows (forms, Celery tasks, Channels endpoints) when implementing a feature; a lot of work in this repo still benefits from a quick human smoke test after the automated checks pass.
+
+If you touch translations, templates, or language-aware navigation, also smoke-test both the default Swedish site and one prefixed locale such as `/en/...` with `ENABLE_LANGUAGE_FEATURES=True`.
 
 ## Documentation & app guides
 
-The `docs/` directory contains both developer notes (`docs/dev/*.md`) and content-editor guides (`docs/admin/*.md`). The folder is published via GitHub Pages, so any Markdown file you update on `develop` is deployed automatically after merging. Keep the relevant guide in sync whenever you touch an app such as `events`, `lucia`, or `members`.
+The `docs/` directory contains both developer notes (`docs/dev/*.md`) and content-editor guides (`docs/admin/*.md`). The folder is published via GitHub Pages, so any Markdown file you update on `develop` is deployed automatically after merging. If you change behavior in an app such as `events`, `lucia`, or `members`, update the matching guide in the same branch while the details are still fresh.
+
+Use [docs/index.md](docs/index.md) as the landing page for the published documentation site. Update it when you add a new app guide or rename an existing one.
+For translation architecture and workflow, see [docs/dev/translations.md](docs/dev/translations.md).
 
 ## Deployment (`docker-compose.prod.yml`)
 
@@ -93,6 +141,8 @@ The production stack relies on the published container image at `ghcr.io/datatek
 4. Deploy: `docker compose -f docker-compose.prod.yml up -d`.
 
 The stack brings up the `web` (Gunicorn), `asgi` (Daphne/Channels), `celery`, `db`, `redis`, and `nginx` services. Rolling deploys usually build a new GHCR image in CI, update `DATE_IMG_TAG`, then restart `web`, `asgi`, and `celery`.
+
+`docker-compose.prod.yml` also reads `ENABLE_LANGUAGE_FEATURES`, so language-prefixed routes must be enabled explicitly in production if you want multilingual public/admin behavior.
 
 ## Updating PostgreSQL volumes
 
@@ -126,7 +176,7 @@ The actual language code will be one of
 
 ### Translation scope
 
-Swedish site copy should match the established wording from `develop` unless there is an explicit content decision to change it.
+Swedish site copy should match the established wording from `develop` unless there is an explicit content decision to change it. In practice, Swedish is the source of truth for the site's established voice.
 
 Use these rules when updating translations:
 
@@ -143,6 +193,8 @@ Current fixed terms that should not be translated just because they are user-fac
 ### Translations
 
 As the default language is `sv`, Swedish copy should be reviewed against the site itself when strings are extracted into locale files.
+
+The project now supports language-prefixed routes through Django `i18n_patterns` plus helper utilities in `date/language_utils.py`. When linking to internal pages from templates or stored nav items, prefer Django URL reversing or the `localized_url` template filter so the current language prefix is preserved.
 
 To generate the translation file, called `django.po`
 is done by executing the following command **in the root directory of the project**
