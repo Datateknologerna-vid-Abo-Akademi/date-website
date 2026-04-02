@@ -6,12 +6,28 @@ from django.utils.deprecation import MiddlewareMixin
 from .language_utils import resolve_language
 
 
+class LanguageStateMiddleware(MiddlewareMixin):
+    @staticmethod
+    def process_request(request):
+        request._previous_language = translation.get_language()
+
+    @staticmethod
+    def process_response(request, response):
+        previous_language = getattr(request, "_previous_language", None)
+        if previous_language:
+            translation.activate(previous_language)
+        else:
+            translation.deactivate()
+        return response
+
+
 class LangMiddleware(MiddlewareMixin):
     @staticmethod
     def process_request(request):
-        # Get session cookie in case user has selected language before
+        # Let Django's LocaleMiddleware resolve language from the URL first.
         request.LANG = resolve_language(
-            request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
+            getattr(request, "LANGUAGE_CODE", None)
+            or request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
         )
         translation.activate(request.LANG)
         request.LANGUAGE_CODE = request.LANG

@@ -1,6 +1,7 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% load i18n %}
+{% load localized_urls %}
 {% load app_filters %}
 {% block title %}{{ event.title }}{% endblock %}
 
@@ -58,11 +59,11 @@
                 <div class="figure-imgs row">
                     <div class="col-sm d-flex justify-content-center align-items-center flex-column">
                         <img  src={% static "core/images/axelstinagold.png" %} alt="studerande" class="img-fluid">
-                        <a href="/events/100_baal_studeranden" class="anmalan-link">Anmälan Studerande</a>
+                        <a href="{{ '/events/100_baal_studeranden/'|localized_url }}" class="anmalan-link">Anmälan Studerande</a>
                     </div>
                     <div class="col-sm d-flex justify-content-center align-items-center flex-column">
                         <img src={% static "core/images/doktorprofessorgold.png" %} alt="alumner" class="img-fluid">
-                        <a href="/events/100_baal_alumner" class="anmalan-link">Anmälan Alumner</a>
+                        <a href="{{ '/events/100_baal_alumner/'|localized_url }}" class="anmalan-link">Anmälan Alumner</a>
                     </div>
                 </div>
             </div>

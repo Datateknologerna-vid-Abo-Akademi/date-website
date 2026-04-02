@@ -1,49 +1,14 @@
-# Git
+# Contributing
 
-## General
+Keep it simple.
 
-Development happens mainly in `develop` branch.
+- Branch from `develop`. The `master` branch tracks production.
+- Open a pull request into `develop`.
+- Have the pull request reviewed and accepted by someone else before it is merged.
+- Run the relevant tests and checks for your change.
+- Update docs or config examples if your change affects them.
+- **Squash merge into `develop`**. A feature, fix, docs change, or cleanup branch should normally land as one commit on `develop`.
 
-Releases have their own branches and the latest release is marked as main repository.
+That last point is the important one: branch history can be messy, but the history on `develop` should stay clean and readable.
 
-## Features
-
-Major additions to the program are regarded as features.
-
-Features have their own branches and the branches are named accordingly to the following pattern: `feature/<feature name>`
-
-## Commits
-
-Commit messages need to be short and descriptive. If the commit is a fix to an issue, the issue number is included in the beginning, as: 
-
-    Issue-<number>: <commit message>
-
-# Testing
-
-## Unittests
-
-Unittests are done accordingly to Django documentation: [Testing in Django](https://docs.djangoproject.com/en/2.1/topics/testing/)
-
-Running `python manage.py test` automatically uses the `core.settings.test` configuration so that the suite works without external services like Redis or PostgreSQL.
-
-## Other tests
-
-While developing a feature, make sure it works as intended by testing it manually as well. 
-
-Future testing methods may be added to documentation.
-
-# Documentation
-
-It is highly encouraged to write descriptions for classes and for functions that are not immediately obvious to the untrained eye.
-
-Even other, non-Django files should have some sort of documentation, in case they need to be understood in the future.
-
-## Setup
-
-The setup process needs to be simple and therefore needs to have a proper guide. This is done in the `README.md` in the project root.
-
-# Deployment
-
-The project runs in a container and will be deployed to **Boris**, DaTes new server inside the ÅA network.
-
-The only requirement for other platforms is that they can run Docker.
+For local setup and project workflow, see `README.md`.

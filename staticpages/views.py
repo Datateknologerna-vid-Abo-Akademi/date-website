@@ -1,4 +1,5 @@
-from django.shortcuts import redirect, render, get_object_or_404
+from django.contrib.auth.views import redirect_to_login
+from django.shortcuts import render, get_object_or_404
 from django.views import View
 
 import staticpages.models
@@ -12,4 +13,4 @@ class StaticPageView(View):
         if show_content:
             return render(request, 'staticpages/staticpage.html', {'page': page, 'show_content': show_content})
         else:
-            return redirect('/members/login')
+            return redirect_to_login(request.get_full_path())

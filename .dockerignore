@@ -55,6 +55,7 @@ docker-compose.prod.yml
 # Documentation
 *.md
 LICENSE
+docs/
 
 # Testing & Coverage
 .coverage
