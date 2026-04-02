@@ -6,8 +6,8 @@
 }
 
 .form p label,
-input,
-select {
+.form p input,
+.form p select {
     font-family: 'Josefin Sans', sans-serif;
     padding: 5px;
     border-radius: 5px;
@@ -59,9 +59,9 @@ select {
         display: block;
     }
 
-    input,
-    select,
-    label {
+    .form p input,
+    .form p select,
+    .form p label {
         display: block;
         width: 100%;
     }

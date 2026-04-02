@@ -66,7 +66,7 @@
     stroke: rgba(255, 255, 255, 0.92);
     fill: rgba(255, 255, 255, 1);
     stroke-dasharray: 25000;
-    opacity: 10;
+    opacity: 1;
     fill-rule: evenodd;
     -webkit-animation: animate 3.5s cubic-bezier(0,.18,.50,.1);
     animation: animate 3.5s cubic-bezier(0,.18,.50,.1);
@@ -521,7 +521,7 @@ ul#logo-list {
         stroke-dashoffset: 25000;
     }
     40% {
-        opacity: 10;
+        opacity: 1;
         fill: none;
         stroke-dashoffset: 24500;
     }
@@ -530,7 +530,7 @@ ul#logo-list {
         stroke-dashoffset: 23500;
     }
     100% {
-        opacity: 10;
+        opacity: 1;
         fill: rgba(255, 255, 255, 1);
         stroke-dashoffset: 0;
     }
@@ -543,7 +543,7 @@ ul#logo-list {
         stroke-dashoffset: 25000;
     }
     40% {
-        opacity: 10;
+        opacity: 1;
         fill: none;
         stroke-dashoffset: 24500;
     }
@@ -552,7 +552,7 @@ ul#logo-list {
         stroke-dashoffset: 23500;
     }
     100% {
-        opacity: 10;
+        opacity: 1;
         fill: rgba(255, 255, 255, 1);
         stroke-dashoffset: 0;
     }
@@ -660,4 +660,3 @@ ul#logo-list {
 .vanilla-calendar-day__btn_selected:hover {
     background-color: #7A7A7A !important;
 }
-

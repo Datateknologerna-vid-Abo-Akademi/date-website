@@ -3,11 +3,11 @@
 {% load i18n %}
 
 {% block title %}{{ article.title }}{% endblock %}
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'news/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'news/css/article.css' %}">
+{% endblock %}
 {% block content %}
-    <head>
-        <link rel="stylesheet" href="{% static 'news/css/style.css' %}">
-        <link rel="stylesheet" href="{% static 'news/css/article.css' %}">
-    </head>
     <div class="container-md container-margin-top min-vh-100 p-1">
         <div class="container-size break-words">
             {% if article.category.name == "Albins Angels" %}

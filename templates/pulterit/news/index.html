@@ -4,11 +4,11 @@
 {% load cache %}
 
 {% block title %}Nyheter{% endblock %}
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'news/css/style.css' %}">
+{% endblock %}
 {% cache 60 news_index_date %}
 {% block content %}
-    <head>
-        <link rel="stylesheet" href="{% static 'news/css/style.css' %}">
-    </head>
     <div class="container-md container-margin-top min-vh-100 p-1">
         <div class="container-size break-words">
             {% if latest_news_items.0.category.name == "Albins Angels" %}

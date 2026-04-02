@@ -3,9 +3,15 @@
     <h3 class="header-border-bottom">{% trans "Samarbetspartners" %}</h3>
         <div class="d-flex flex-wrap justify-content-center align-items-center">
             {%for ad in ads%}
+                {% if ad.company_url %}
                 <a class="m-2" href="{{ ad.company_url }}">
-                    <img src="{{ ad.ad_url }}" alt="img" onerror="this.src='/static/core/images/fallback.png'">
+                    <img src="{{ ad.ad_url }}" alt="{% trans 'Partner logo' %}" onerror="this.src='/static/core/images/fallback.png'">
                 </a>
+                {% else %}
+                <span class="m-2">
+                    <img src="{{ ad.ad_url }}" alt="{% trans 'Partner logo' %}" onerror="this.src='/static/core/images/fallback.png'">
+                </span>
+                {% endif %}
             {% endfor %}
         </div>
 </div>

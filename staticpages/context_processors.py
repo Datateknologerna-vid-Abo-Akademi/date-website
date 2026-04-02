@@ -3,30 +3,25 @@ from django.conf import settings
 from .models import StaticPageNav, StaticUrl
 
 
-def _is_enabled_url(url: str) -> bool:
+def _filtered_urls_queryset():
+    queryset = StaticUrl.objects.select_related('category').order_by('dropdown_element')
     if getattr(settings, 'ARCHIVE_ENABLED', True):
-        return True
-
-    return not url.startswith('/archive/')
+        return queryset
+    return queryset.exclude(url__startswith='/archive/')
 
 
 def get_categories(context):
-    filtered_urls = [
-        url for url in StaticUrl.objects.select_related('category').all()
-        if _is_enabled_url(url.url)
-    ]
-    visible_category_ids = {url.category_id for url in filtered_urls}
+    filtered_urls = _filtered_urls_queryset()
+    visible_category_ids = set(filtered_urls.values_list('category_id', flat=True))
+    categories = StaticPageNav.objects.all().order_by('nav_element')
+    if not getattr(settings, 'ARCHIVE_ENABLED', True):
+        categories = categories.exclude(use_category_url=True, url__startswith='/archive/')
     categories = [
-        category for category in StaticPageNav.objects.all().order_by('nav_element')
-        if (category.use_category_url and _is_enabled_url(category.url))
-        or (not category.use_category_url and category.id in visible_category_ids)
+        category for category in categories
+        if category.use_category_url or category.id in visible_category_ids
     ]
     return {'categories': categories}
 
 
 def get_urls(context):
-    urls = [
-        url for url in StaticUrl.objects.all().order_by('dropdown_element')
-        if _is_enabled_url(url.url)
-    ]
-    return {'urls': urls}
+    return {'urls': _filtered_urls_queryset()}
