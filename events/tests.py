@@ -5,7 +5,8 @@ from unittest.mock import MagicMock, patch
 from django.conf import settings
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
+from django.utils.translation import gettext
 
 from events.models import Event, EventAttendees, EventRegistrationForm
 from events.websocket_utils import ws_data, ws_send
@@ -235,7 +236,9 @@ class EventTestCase(TestCase):
         c.post(reverse('events:detail', args=[self.event.slug]), self.content)
         details = c.get(reverse('events:detail', args=[self.event.slug]))
         self.assertEqual(self.event.get_registrations().last().anonymous, True)
-        self.assertContains(details, '<i>Anonymt</i>', count=1)
+        with translation.override(details.wsgi_request.LANGUAGE_CODE):
+            anonymous_label = gettext("Anonymt")
+        self.assertContains(details, f'<i>{anonymous_label}</i>', count=1)
 
     def test_custom_fields(self):
         EventRegistrationForm(event=self.event, choice_number=1, name='field1',
@@ -640,7 +643,10 @@ class EventWebsocketUtilsTests(TestCase):
         })
         public_info = [self.PublicInfo("allergies")]
 
-        payload = ws_data(form, public_info)
+        with translation.override("fi"):
+            payload = ws_data(form, public_info)
 
-        self.assertEqual(payload["data"]["fields"][0], ("user", "Anonymt"))
+        with translation.override("fi"):
+            anonymous_label = gettext("Anonymt")
+        self.assertEqual(payload["data"]["fields"][0], ("user", anonymous_label))
         self.assertEqual(payload["data"]["fields"][1], ("allergies", "nuts"))

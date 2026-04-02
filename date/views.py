@@ -7,7 +7,11 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils import translation
+<<<<<<< HEAD
 from .language_utils import localize_url, resolve_language
+=======
+from .language_utils import resolve_language, strip_language_prefix
+>>>>>>> develop
 
 from ads.models import AdUrl
 from events.models import Event
@@ -85,9 +89,15 @@ def set_language(request):
     origin = request.META.get('HTTP_REFERER')
     if origin:
         parsed_origin = urlsplit(origin)
+<<<<<<< HEAD
         localized_path = localize_url(parsed_origin.path, user_language)
         redirect_target = urlunsplit(
             ("", "", localized_path, parsed_origin.query, parsed_origin.fragment)
+=======
+        bare_path = strip_language_prefix(parsed_origin.path)
+        redirect_target = urlunsplit(
+            ("", "", bare_path, parsed_origin.query, parsed_origin.fragment)
+>>>>>>> develop
         )
     else:
         redirect_target = reverse("index")

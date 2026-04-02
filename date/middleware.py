@@ -3,17 +3,39 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import translation
 from django.utils.deprecation import MiddlewareMixin
+from django.utils.translation import get_language_from_request
 from .language_utils import resolve_language
+
+
+class LanguageStateMiddleware(MiddlewareMixin):
+    @staticmethod
+    def process_request(request):
+        request._previous_language = translation.get_language()
+
+    @staticmethod
+    def process_response(request, response):
+        previous_language = getattr(request, "_previous_language", None)
+        if previous_language:
+            translation.activate(previous_language)
+        else:
+            translation.deactivate()
+        return response
 
 
 class LangMiddleware(MiddlewareMixin):
     @staticmethod
     def process_request(request):
+<<<<<<< HEAD
         # Let Django's LocaleMiddleware resolve language from the URL first.
         request.LANG = resolve_language(
             getattr(request, "LANGUAGE_CODE", None)
             or request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME, settings.LANGUAGE_CODE)
         )
+=======
+        # No URL-based language prefixes — resolve from cookie then Accept-Language header.
+        lang = get_language_from_request(request, check_path=False)
+        request.LANG = resolve_language(lang)
+>>>>>>> develop
         translation.activate(request.LANG)
         request.LANGUAGE_CODE = request.LANG
 
