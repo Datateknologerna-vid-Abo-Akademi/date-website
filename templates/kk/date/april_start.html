@@ -3,6 +3,7 @@
 
     {% load static %}
     {% load i18n %}
+    {% load localized_urls %}
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,7 +23,7 @@
                 <br>
                 <small style="color: red;">Det har skett ett fel, vänligen meddela styrelsen på kk@abo.fi</small>
                 <div style="text-align: right; position: relative; z-index: 1; margin: 9px; color: #000; font-size: 12px;">
-                    <a href="/members/login" style="color: #000; text-decoration: underline;">Logga in</a>
+                    <a href="{% url 'login' %}" style="color: #000; text-decoration: underline;">Logga in</a>
                 </div>
             </div>
             <div class="april-nav">
@@ -34,6 +35,7 @@
                             {{category.category_name}}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                                {% url 'login' as login_url %}
                                 {% for page in pages %}
                                     {% if page.category|lower == category.category_name|lower %}
                                         <li><a class="dropdown-item" href="{% url 'staticpages:page' page.slug %}">{{page.title}}</a></li>
@@ -41,15 +43,15 @@
                                 {% endfor %}
                                 {% for page in urls %}
                                     {% if page.category|lower == category.category_name|lower %}
-                                        {% if user.is_authenticated and page.url == "/members/login/" %}
-                                            <li><a class="dropdown-item" href="/archive/pictures/">Bilder</a></li>
-                                            <li><a class="dropdown-item" href="/archive/documents/">Dokument</a></li>
-                                            <li><a class="dropdown-item" href="/members/info/">Min profil</a></li>
-                                            <li><a class="dropdown-item" href="/members/cert/">Medlemspass</a></li>
-                                            <li><a class="dropdown-item" href="/admin/">Admin</a></li>
-                                            <li><a class="dropdown-item" href="/members/logout/">Logga ut</a></li>
+                                        {% if user.is_authenticated and page.url|localized_url == login_url %}
+                                            <li><a class="dropdown-item" href="{{ '/archive/pictures/'|localized_url }}">Bilder</a></li>
+                                            <li><a class="dropdown-item" href="{{ '/archive/documents/'|localized_url }}">Dokument</a></li>
+                                            <li><a class="dropdown-item" href="{{ '/members/info/'|localized_url }}">Min profil</a></li>
+                                            <li><a class="dropdown-item" href="{{ '/members/cert/'|localized_url }}">Medlemspass</a></li>
+                                            <li><a class="dropdown-item" href="{{ '/admin/'|localized_url }}">Admin</a></li>
+                                            <li><a class="dropdown-item" href="{% url 'logout' %}">Logga ut</a></li>
                                         {% else %}
-                                            <li><a class="dropdown-item" href="{{ page.url }}">{{page.title}}</a></li>
+                                            <li><a class="dropdown-item" href="{{ page.url|localized_url }}">{{page.title}}</a></li>
                                         {% endif %}
                                     {% endif %}
                                 {% endfor %}
@@ -71,7 +73,7 @@
                             {% empty %}
                             <h3>{% trans 'inga nyheter hittades' %}...</h3>
                         {% endfor %}
-                        <a class="april-more-news" href="/news/">Mera nyheter...</a>
+                        <a class="april-more-news" href="{{ '/news/'|localized_url }}">Mera nyheter...</a>
                     </div>
                 </div>
                 <div class="april-side-col">
