@@ -31,7 +31,6 @@ urlpatterns = build_urlpatterns(
     path('news/', include('news.urls')),
     path('members/', include('members.urls')),
     path('members/', include('django.contrib.auth.urls')),
-    path('archive/', include('archive.urls')),
     path('events/', include('events.urls')),
     path('pages/', include('staticpages.urls')),
     path('ads/',include('ads.urls')),
@@ -41,6 +40,9 @@ urlpatterns = build_urlpatterns(
     path('ckeditor5/', include('django_ckeditor_5.urls')),
     path('publications/', include('publications.urls')),
 )
+
+if getattr(settings, 'ARCHIVE_ENABLED', True):
+    urlpatterns[0].url_patterns.insert(4, path('archive/', include('archive.urls')))
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

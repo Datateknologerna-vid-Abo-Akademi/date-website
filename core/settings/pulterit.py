@@ -31,6 +31,7 @@ INSTALLED_APPS = get_installed_apps([
 ])
 
 ROOT_URLCONF = 'core.urls.pulterit'
+ARCHIVE_ENABLED = False
 
 STAFF_GROUPS = get_staff_groups([
         'styrelse',
