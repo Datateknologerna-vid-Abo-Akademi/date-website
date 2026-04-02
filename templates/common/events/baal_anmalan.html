@@ -1,6 +1,6 @@
 {% extends 'core/base.html' %}
 {% load static %}
-{% load i18n %}
+{% load i18n localized_urls %}
 {% load app_filters %}
 {% block title %}{{ event.title }}{% endblock %}
 
@@ -14,7 +14,7 @@
         <div class="container-size">
             {% if event.sign_up %}
             <div id="anmalan" class="content baal-content anmalan">
-                <div class="baal-nav"><a class="baal-link" href="/events/baal/">Tillbaka</a></div>
+                <div class="baal-nav"><a class="baal-link" href="{{ '/events/baal/'|localized_url }}">Tillbaka</a></div>
                 <h2 id="sign-up">{% trans "Kemistbaal Anmälning" %}</h2>
                 {% if event.registration_is_open_members and user.is_authenticated %}
                     {% include 'events/registering.html' %}

@@ -7,7 +7,7 @@
 
     <head>
         <meta charset="UTF-8">
-        <title>I'm a teapot</title>
+        <title>{% trans "I'm a teapot" %}</title>
         <link href="{% static 'core/css/error-view.css' %}" rel="stylesheet">
     </head>
 
@@ -18,7 +18,7 @@
                 <h2>{{ error_msg }}</h2>
             {% else %}
                 <h1>- 418 -</h1>
-                <h3>Jag är en tekokare</h3>
+                <h3>{% trans "Jag är en tekokare" %}</h3>
                 <img src="https://albin-storage.fra1.digitaloceanspaces.com/common/assets/teapot.jpeg" width="480" alt="Teapot pouring red liquid">
                 <br><br>
                 <h2>{% trans 'Inget vatten i glöggkokaren, tack' %}</h2>

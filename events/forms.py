@@ -120,9 +120,21 @@ class EventEditForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if 'parent' in self.fields:
-            self.fields['parent'].widget.attrs['readonly'] = True
-            self.fields['parent'].widget.attrs['disabled'] = True  # disables selection in most browsers
+        # exclude the current instance from parent choices so an event cannot be its own parent
+        try:
+            if getattr(self, 'instance', None) and getattr(self.instance, 'pk', None):
+                # limit parent choices to future events and exclude self
+                self.fields['parent'].queryset = Event.objects.filter(
+                    event_date_end__gte=now()
+                ).exclude(pk=self.instance.pk)
+            else:
+                # creation: only future events
+                self.fields['parent'].queryset = Event.objects.filter(
+                    event_date_end__gte=now()
+                )
+        except Exception:
+            # defensive: if fields not yet set or parent missing, ignore
+            pass
 
     class Meta:
         model = Event

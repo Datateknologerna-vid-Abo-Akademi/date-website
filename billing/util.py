@@ -1,4 +1,5 @@
 import random
+import json
 from enum import Enum
 
 from django.conf import settings
@@ -70,4 +71,18 @@ def send_event_free_confirmation(signup: EventAttendees):
         **settings.CONTENT_VARIABLES,
     }
     content = render_to_string('billing/free_event_confirmation_email.txt', context)
+    send_email_task.delay(f"{signup.event.title} - Bekräftelse", content, settings.DEFAULT_FROM_EMAIL, [signup.email])
+
+
+def send_confirmation_email(signup: EventAttendees, billing_data: EventInvoice =None, template='events/emails/confirmation_email.txt'):
+    """Send confirmation email to participant"""
+
+    context = {
+        'signup': signup,
+        'billing_data': billing_data,
+        'event': signup.event,
+        **settings.BILLING_CONTEXT,
+        **settings.CONTENT_VARIABLES,
+    }
+    content = render_to_string(template, context)
     send_email_task.delay(f"{signup.event.title} - Bekräftelse", content, settings.DEFAULT_FROM_EMAIL, [signup.email])

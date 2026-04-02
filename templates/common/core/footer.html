@@ -23,18 +23,20 @@
     <!-- Section: Social media -->
     <div class="row align-middle align-items-center">
         <div class="col-4 text-center ">
-            <img class="footer-img img-fluid" alt="Footer Logo" src="{% static "core/images/footerlogo.png" %}">
+            <img class="footer-img img-fluid" alt="Footer Logo" src="{% static 'core/images/footerlogo.png' %}">
         </div>
         <div class="col-4">
             <p>
                 <br>
-                Styrelsen för {{ ASSOCIATION_NAME_FULL }} kan kontaktas på följande sätt.<br><br>
+                {% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}
+                Styrelsen för {{ association_name }} kan kontaktas på följande sätt.
+                {% endblocktranslate %}<br><br>
                 {% trans 'E-post' %}:
                 {{ ASSOCIATION_EMAIL }}
                 <br>
                 {{ ASSOCIATION_OFFICE_HOURS }}
             </p>
-            <p> Adress: <br>
+            <p>{% trans "Address" %}: <br>
                 {{ ASSOCIATION_ADDRESS_L1 }}<br>
                 {{ ASSOCIATION_ADDRESS_L2 }}<br>
                 {{ ASSOCIATION_POSTAL_CODE }}
@@ -42,6 +44,7 @@
         </div>
     </div>
     <!-- Copyright -->
+    {% block extra_footer %}{% endblock %}
     <div class="text-center p-3">
         &copy {% now "Y" %}
     </div>

@@ -4,53 +4,166 @@ on:
   pull_request:
     branches:
       - develop
+    paths:
+      - '**/*.py'
+      - '**/*.html'
+      - '**/*.js'
+      - '**/*.css'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'docker-compose.prod.yml'
+      - 'requirements.txt'
+      - '.env.example'
+      - 'env.sh'
+      - '.github/workflows/web_startup.yaml'
   push:
     branches:
       - develop
+    paths:
+      - '**/*.py'
+      - '**/*.html'
+      - '**/*.js'
+      - '**/*.css'
+      - 'Dockerfile'
+      - 'docker-compose.yml'
+      - 'docker-compose.prod.yml'
+      - 'requirements.txt'
+      - '.env.example'
+      - 'env.sh'
+      - '.github/workflows/web_startup.yaml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: 'web-startup-${{ github.ref }}'
+  cancel-in-progress: true
+
 jobs:
-  test:
+  test_and_ping:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
-      - name: Install Docker Compose
+      - name: Ensure docker-compose command exists
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
+          set -euo pipefail
+          if ! command -v docker-compose >/dev/null 2>&1; then
+            printf '#!/usr/bin/env bash\ndocker compose "$@"\n' | sudo tee /usr/local/bin/docker-compose >/dev/null
+            sudo chmod +x /usr/local/bin/docker-compose
+          fi
+          docker-compose version
+
+      - name: Try to use prebuilt image
+        id: prebuilt
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          REPO_LOWER="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
+          CI_IMAGE="ghcr.io/${REPO_LOWER}:${GITHUB_SHA}"
+
+          logged_in=0
+          for attempt in 1 2 3; do
+            if echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin; then
+              logged_in=1
+              break
+            fi
+            if [ "${attempt}" -lt 3 ]; then
+              sleep $((attempt * 5))
+            fi
+          done
+
+          if [ "${logged_in}" -eq 1 ]; then
+            for attempt in 1 2 3; do
+              if docker pull "${CI_IMAGE}"; then
+                printf 'services:\n  web:\n    image: %s\n  celery:\n    image: %s\n' "${CI_IMAGE}" "${CI_IMAGE}" > docker-compose.ci.yml
+                echo "compose_file=docker-compose.yml:docker-compose.ci.yml" >> "${GITHUB_OUTPUT}"
+                exit 0
+              fi
+              if [ "${attempt}" -lt 3 ]; then
+                sleep $((attempt * 5))
+              fi
+            done
+          fi
+
+          echo "compose_file=docker-compose.yml" >> "${GITHUB_OUTPUT}"
+
+      - name: Build image when prebuilt image is unavailable
+        if: steps.prebuilt.outputs.compose_file == 'docker-compose.yml'
+        run: |
+          set -euo pipefail
+          source env.sh dev
+          docker-compose build web celery
 
       - name: Run django unit tests
         run: |
+          set -euo pipefail
           source env.sh dev
+          export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
+          docker-compose run --rm --no-deps web python scripts/validate_translations.py
+          docker-compose run --rm --no-deps web python manage.py compilemessages
           date-test
-
-  ping_test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Install Docker Compose
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
 
       - name: Build and run Docker Compose
         run: |
+          set -euo pipefail
           source env.sh dev
+          export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           docker-compose up -d
 
       - name: Wait for web container
         run: |
-          sleep 20
+          set -euo pipefail
+          source env.sh dev
+          export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
+          for i in $(seq 1 30); do
+            if [ "$(docker-compose ps -q web | wc -l)" -eq 1 ] && \
+               [ "$(docker inspect -f '{{.State.Running}}' "$(docker-compose ps -q web)")" = "true" ]; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Web container did not become healthy in time."
+          docker-compose ps
+          docker-compose logs --tail=200 web
+          exit 1
 
       - name: Check HTTP response
         run: |
-          if ! curl -sSf http://localhost:8000 >/dev/null; then
-            echo "Failed to get HTTP response. Exiting..."
-            exit 1
-          fi
+          set -euo pipefail
+          # The app is typically reachable ~12s after container is "running".
+          sleep 10
+          for attempt in $(seq 1 15); do
+            if curl --retry 1 --retry-delay 1 --retry-connrefused --retry-all-errors --max-time 8 -sSf http://localhost:8000 >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Web endpoint did not become stable in time."
+          exit 1
+
+      - name: Print Docker diagnostics on failure
+        if: failure()
+        run: |
+          set -euo pipefail
+          source env.sh dev
+          export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
+          docker-compose ps
+          docker-compose logs --tail=200 web db redis
+
+      - name: Tear down containers
+        if: always()
+        run: |
+          set -euo pipefail
+          source env.sh dev
+          export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
+          docker-compose down -v

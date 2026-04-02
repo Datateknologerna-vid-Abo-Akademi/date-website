@@ -57,7 +57,8 @@ Reload `env.sh` whenever you edit the `.env` files so the aliases pick up your c
 ## Database, migrations, and seed data
 
 - Use `date-makemigrations` and `date-migrate` for schema changes. Commit the generated migration files; do not rewrite published migrations.
-- `scripts/clean-init.sh` drops and recreates the development database volumes, then loads `initialdata.json`. **All local data will be deleted.**
+- `date-cleaninit` (alias for `./scripts/clean_init.sh`) drops and recreates the development database volumes, loads the local fixture set, generates sample media, and resets the `admin`, `freshman`, and `member` passwords to `admin`. **All local data will be deleted.**
+- If your shell does not expose aliases, run `/bin/bash ./scripts/clean_init.sh` directly.
 - To inspect data manually, open a shell in the container: `docker compose run --rm web python manage.py shell`.
 - Re-run `date-createsuperuser` after resetting the database so you keep admin access.
 
@@ -106,8 +107,179 @@ For minor upgrades, change `DATE_POSTGRESQL_VERSION` and recreate the containers
 ## Troubleshooting
 
 - `date-start` fails with "docker: permission denied": add your user to the `docker` group (`sudo usermod -aG docker $USER`) and reopen the terminal.
-- Shell complains about `clean-init.sh`: run it explicitly with Bash (`/bin/bash scripts/clean-init.sh`).
+- Shell complains about `clean_init.sh`: run it explicitly with Bash (`/bin/bash scripts/clean_init.sh`).
 - Services restarted but settings not updated: ensure you re-run `source env.sh dev|prod` after editing `.env` files so `COMPOSE_FILE_PATH` and aliases refresh.
+
+## Internationalization
+
+Locales used in this project
+
+- sv (default)
+- en
+- fi
+
+The actual language code will be one of
+
+- sv
+- en
+- fi
+
+### Translation scope
+
+Swedish site copy should match the established wording from `develop` unless there is an explicit content decision to change it.
+
+Use these rules when updating translations:
+
+- Keep shared UI labels translated per locale, for example `Language`, `Address`, and error page titles.
+- Keep proper names and intentional fixed labels unchanged across locales when that reflects the intended site copy.
+- Treat Swedish as the source of truth for existing association wording and only introduce new translations where the text is meant to vary by language.
+
+Current fixed terms that should not be translated just because they are user-facing:
+
+- `Datateknologerna`
+- `vid Åbo Akademi rf`
+- `Joke`
+
+### Translations
+
+As the default language is `sv`, Swedish copy should be reviewed against the site itself when strings are extracted into locale files.
+
+To generate the translation file, called `django.po`
+is done by executing the following command **in the root directory of the project**
+
+```bash
+$ django-admin makemessages -l en -l fi -l sv
+```
+
+This creates/updates the `django.po` 
+in `date-website/locale/<language>/LC_MESSAGES`.
+
+Add translations to the empty fields or use a third party translation software,
+such as `Poedit`.
+
+To compile the translations to `django.mo`, use the following command
+
+```bash
+$ django-admin compilemessages
+``` 
+
+### Django modeltranslations (translation of dynamic content)
+
+The library django-modeltranslations was added to allow translating existing dynamic data (eg. events title and description)
+
+If there is ever the need to provide a translated version of an existing field:
+
+1. Add a file called translation.py to the app in question.
+2. Create classes for each of the models for which fields will be translated and register the fields for translation.
+3. Start the django app and apply the new database migration that will be automatically created by django-modeltranslations
+
+Example to illustrate the above:
+
+I want to provide three new fields (title_sv, title_en, title_fi) instead of the title field in Events
+
+- Create the file translation.py under the events directory
+- Create a new class called EventTranslationOptions that inherits from TranslationOptions (provided by django-modeltranslations)
+- In the newly created class you register which fields should be translated by defining a variable called "fields"
+- For the events example: `fields = ('title',)`
+
+From "/events/translation.py":
+```python
+from modeltranslation.translator import register, TranslationOptions
+from events.models import Event, EventAttendees, EventRegistrationForm
+
+
+@register(Event)
+class EventTranslationOptions(TranslationOptions):
+    fields = ('title', 'content',)
+    languages = ('sv', 'en', 'fi')
+```
+
+In this case, the newly created title_sv will not contain the data from what was previously just "title",
+to fix this, run the command `docker compose run web python manage.py update_translation_fields`
+
+### Using django-modeltranslations for non-standard field-types (eg. CKEditor5 instead of models.TextField)
+
+Django-modeltranslations naturally does not play well with creating translations of external field types.
+
+See https://django-modeltranslation.readthedocs.io/en/latest/installation.html#modeltranslation-custom-fields for more
+
+Example solution:
+
+1. add the field class to settings.py:
+
+```python 
+MODELTRANSLATION_CUSTOM_FIELDS = (
+    'CKEditor5Field',
+)
+```
+
+2. Change the field model to a standard TextField (or whatever suits your need)
+3. Override the TextField with CKEditor5Field (or the corresponding field types for your case) in admin.py like this:
+
+```python
+    formfield_overrides = {
+        TextField: {'widget': CKEditor5Widget},
+    }
+```
+
+## Database backups
+
+Use the dedicated backup script for routine PostgreSQL backups:
+
+```bash
+./scripts/backup_postgres.sh [dev|prod|path/to/env] [output_dir]
+```
+
+If no env argument is provided, the script resolves `prod`, which checks `.env.prod`, then `.env`, then `.env.example`.
+Like `env.sh`, you can also pass `dev` or a specific env file path.
+If no `output_dir` is provided, backups are written to `./backups`.
+
+Each run creates two timestamped files that a collector script can scan across many similar repos:
+
+- `backups/<project>-<timestamp>.sql`
+- `backups/<project>-<timestamp>.json`
+
+The JSON manifest contains a stable machine-readable contract:
+
+- `project_name`
+- `project_label` when `PROJECT_NAME` is set
+- `created_at_utc`
+- `dump_filename`
+- `dump_format`
+- `database_engine`
+- `database_service`
+- `database_name`
+- `database_user`
+- `postgres_version`
+- `postgres_major_version`
+
+## Updating the database
+
+### Warning
+
+##### Only use the script for major version upgrades
+For minor version upgrades change the `DATE_POSTGRESQL_VERSION` environment variable.
+
+This script will wipe out __ALL__ data from the volume \
+MAKE SURE YOU HAVE PROPER BACKUPS BEFORE ATTEMPTING THIS
+
+If the dump command fails all data may be lost.
+
+### How to upgrade major version
+
+Run
+
+#### Make sure `DATE_POSTGRESQL_VERSION` is set to the CURRENT version before running the following command
+
+```bash
+./update-postgres.sh target_version [dev|prod|path/to/env]
+```
+
+The upgrade helper now calls `./scripts/backup_postgres.sh` first and reuses the generated SQL dump during restore.
+If no env argument is provided, it resolves `prod` first using the same lookup order as `env.sh`.
+For upgrades, the resolved env file must be writable; the script will not modify `.env.example`.
+
+Run `source env.sh dev` afterward to reload your development configuration.
 
 ## License
 

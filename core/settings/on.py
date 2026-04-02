@@ -1,6 +1,5 @@
 from .common import *  # noqa
 
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -56,7 +55,7 @@ CONTENT_VARIABLES = {
 }
 
 BILLING_CONTEXT = {
-    "INVOICE_RECIPIENT": "Österbottniska Nationen vid Åbo Akademi r.f.",
+    "INVOICE_RECIPIENT": "Österbottniska Nationen vid Åbo Akademi rf",
     "IBAN": "FI40 5670 0820 4624 20",
     "BIC": "OKOYFIHH",
 }
