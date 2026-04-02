@@ -13,11 +13,11 @@
         <section class="col text-center">
         
             {% for btn in SOCIAL_BUTTONS %}
-          
+                {% if btn.1 %}
                 <a class="btn btn-outline-light btn-floating m-1" href="{{ btn.1 }}" role="button"
                     ><i class="fab {{ btn.0 }}"></i
                 ></a>
-                
+                {% endif %}
             {% endfor %}
             
         </section>

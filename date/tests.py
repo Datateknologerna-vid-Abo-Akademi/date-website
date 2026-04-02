@@ -340,6 +340,23 @@ class LanguageSelectionTests(TestCase):
             rendered = template.render(Context({"value": 80}))
         self.assertEqual(rendered, "Det finns 80 platser!")
 
+    def test_footer_skips_social_buttons_without_urls(self):
+        template = Template("{% include 'core/footer.html' %}")
+        rendered = template.render(Context({
+            "SOCIAL_BUTTONS": [
+                ["fa-facebook-f", "https://example.com/facebook"],
+                ["fa-github", ""],
+            ],
+            "ASSOCIATION_NAME_FULL": "Test Association",
+            "ASSOCIATION_EMAIL": "test@example.com",
+            "ASSOCIATION_ADDRESS_L1": "Line 1",
+            "ASSOCIATION_ADDRESS_L2": "Line 2",
+            "ASSOCIATION_POSTAL_CODE": "12345",
+            "ASSOCIATION_OFFICE_HOURS": "",
+        }))
+        self.assertIn("https://example.com/facebook", rendered)
+        self.assertNotIn('href=""', rendered)
+
 
 class HomepageTemplateSelectionTests(TestCase):
     @override_settings(PROJECT_NAME="kk")

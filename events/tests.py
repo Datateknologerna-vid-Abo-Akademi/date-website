@@ -487,6 +487,47 @@ class EventCapacityTests(TestCase):
         self.assertTrue(child.event_is_full())
         self.assertFalse(parent.event_is_full())
 
+    def test_remaining_places_subtracts_existing_registrations(self):
+        event = Event.objects.create(
+            title="Limited Event",
+            slug="limited-event",
+            author=self.author,
+            sign_up_max_participants=3,
+        )
+        EventAttendees.objects.create(
+            event=event,
+            user="Registered",
+            email="registered@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        self.assertEqual(event.remaining_places(), 2)
+
+    def test_child_event_remaining_places_uses_parent_attendance(self):
+        parent = Event.objects.create(
+            title="Parent Capacity Event",
+            slug="parent-capacity-event",
+            author=self.author,
+        )
+        child = Event.objects.create(
+            title="Child Capacity Event",
+            slug="child-capacity-event",
+            author=self.author,
+            parent=parent,
+            sign_up_max_participants=2,
+        )
+        EventAttendees.objects.create(
+            event=parent,
+            original_event=child,
+            user="Registered",
+            email="child-capacity@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        self.assertEqual(child.remaining_places(), 1)
+
 
 @override_settings(CONTENT_VARIABLES={**settings.CONTENT_VARIABLES, "INTERNATIONAL_EVENT_SLUGS": ["intl-slug"]})
 class EventFormBuilderTests(TestCase):
