@@ -6,7 +6,7 @@ Use the sections below to jump to either editor-facing instructions or implement
 
 ## Start Here
 
-- Working on local setup, Docker, migrations, translations, or deployments? Start with the repository [README](../README.md).
+- Working on local setup, Docker, migrations, translations, or deployments? Start with the repository root `README.md`.
 - Editing content in Django admin? Use the `Admin & Content Editors` guides below.
 - Changing code, templates, models, or routing? Use the `Developers` guides below.
 - Adding a new app or major feature? Update both the relevant app guide and this index so the published docs stay navigable.

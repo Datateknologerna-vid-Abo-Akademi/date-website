@@ -14,7 +14,7 @@ Swedish (`sv`) is the default language. English (`en`) and Finnish (`fi`) become
 
 - Default language: `sv`
 - Optional languages: `en`, `fi`
-- Settings source: [`core/settings/common.py`](../../../core/settings/common.py)
+- Settings source: `core/settings/common.py`
 
 Important settings:
 
@@ -63,10 +63,10 @@ Static UI strings are not enough for this project because editors need translate
 
 The project registers translated fields in these files:
 
-- [`events/translation.py`](../../../events/translation.py)
-- [`news/translation.py`](../../../news/translation.py)
-- [`polls/translation.py`](../../../polls/translation.py)
-- [`staticpages/translation.py`](../../../staticpages/translation.py)
+- `events/translation.py`
+- `news/translation.py`
+- `polls/translation.py`
+- `staticpages/translation.py`
 
 Examples of translated model fields:
 
@@ -117,7 +117,7 @@ Without that backfill step, old content may exist only in the original field and
 
 This project uses CKEditor5-backed content in places that are also translated. `django-modeltranslation` needs custom-field support enabled for that to work cleanly.
 
-The setting already exists in [`core/settings/common.py`](../../../core/settings/common.py):
+The setting already exists in `core/settings/common.py`:
 
 ```python
 MODELTRANSLATION_CUSTOM_FIELDS = (
@@ -133,11 +133,11 @@ Routing and language state are handled by Django plus a few project-specific hel
 
 Key files:
 
-- [`core/urls/common.py`](../../../core/urls/common.py)
-- [`date/views.py`](../../../date/views.py)
-- [`date/middleware.py`](../../../date/middleware.py)
-- [`date/language_utils.py`](../../../date/language_utils.py)
-- [`staticpages/templatetags/localized_urls.py`](../../../staticpages/templatetags/localized_urls.py)
+- `core/urls/common.py`
+- `date/views.py`
+- `date/middleware.py`
+- `date/language_utils.py`
+- `staticpages/templatetags/localized_urls.py`
 
 How it works:
 
@@ -193,11 +193,11 @@ When disabled:
 
 Relevant files:
 
-- [`events/admin.py`](../../../events/admin.py)
-- [`news/admin.py`](../../../news/admin.py)
-- [`polls/admin.py`](../../../polls/admin.py)
-- [`staticpages/admin.py`](../../../staticpages/admin.py)
-- [`templates/common/admin/base_site.html`](../../../templates/common/admin/base_site.html)
+- `events/admin.py`
+- `news/admin.py`
+- `polls/admin.py`
+- `staticpages/admin.py`
+- `templates/common/admin/base_site.html`
 
 ## Tests and Local Development
 
@@ -205,9 +205,9 @@ The test settings explicitly enable language features and ensure locale files ar
 
 Relevant files:
 
-- [`core/settings/test.py`](../../../core/settings/test.py)
-- [`core/translation_compiler.py`](../../../core/translation_compiler.py)
-- [`date/tests.py`](../../../date/tests.py)
+- `core/settings/test.py`
+- `core/translation_compiler.py`
+- `date/tests.py`
 
 `core.translation_compiler.ensure_compiled_translations()` exists so tests can run without depending on an external `compilemessages` binary at test time.
 
