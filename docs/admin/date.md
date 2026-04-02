@@ -12,7 +12,7 @@ The `date` app powers the front page (`/`) and language switcher. There are no d
 
 ## Editor Checklist
 1. Before big announcements, verify that Events, News, Ads, and Social entries are up to date. The front page simply mirrors those tables.
-2. If language features are enabled in the current environment, use the language dropdown on the site to confirm translations look correct. The selected language is stored in a cookie and reflected in locale-prefixed URLs such as `/en/...` and `/fi/...`.
+2. If language features are enabled in the current environment, use the language dropdown on the site to confirm translations look correct. The selected language is stored in a cookie while the public page stays on the same unprefixed URL.
 3. Custom error pages (`/404`, `/500`) live in `templates/core`. Content updates require developer help.
 
 ## No Direct Admin Models
