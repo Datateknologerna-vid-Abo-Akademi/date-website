@@ -127,7 +127,7 @@ MODELTRANSLATION_CUSTOM_FIELDS = (
 
 If you introduce another non-standard field type that should be translated, update that setting and verify the admin/widget behavior.
 
-## Layer 3: Language Selection and URL Prefixes
+## Layer 3: Language Selection and Canonical URLs
 
 Routing and language state are handled by Django plus a few project-specific helpers.
 
@@ -141,16 +141,15 @@ Key files:
 
 How it works:
 
-- shared route builders use Django `i18n_patterns`
-- requests can resolve to `/sv/...`, `/en/...`, or `/fi/...`
+- shared route builders expose canonical unprefixed URLs
 - `set_language` stores the user's choice in Django's language cookie
-- `LangMiddleware` activates the language resolved from the URL or cookie
-- `localize_url()` rewrites internal paths so links stay in the active locale
+- `LangMiddleware` activates the language resolved from the cookie or `Accept-Language` header
+- `localize_url()` normalizes internal paths to the canonical unprefixed form
 
 Precedence rules:
 
-1. Path prefix wins, for example `/en/news/`
-2. Language cookie is used when the path does not already specify a language
+1. Language cookie wins when present
+2. `Accept-Language` is used when no supported cookie value is set
 3. The project falls back to Swedish
 
 ## Linking Correctly in Templates and Stored URLs
@@ -224,10 +223,10 @@ That script fails if a required locale catalog is missing, contains fuzzy entrie
 When you change translation behavior, cover at least these cases:
 
 - the selected language renders the expected page copy
-- URL prefixes override the language cookie
-- the language switcher redirects back to the localized version of the current page
+- the language cookie overrides the `Accept-Language` header
+- the language switcher redirects back to the same canonical unprefixed page
 - admin language controls appear only when language features are enabled
-- stored internal URLs remain localized through `localized_url`
+- stored internal URLs remain canonical through `localized_url`
 
 ## Recommended Workflow
 
@@ -237,7 +236,7 @@ When you change translation behavior, cover at least these cases:
 2. Run `django-admin makemessages -l sv -l en -l fi`.
 3. Edit the `.po` files.
 4. Run `django-admin compilemessages`.
-5. Smoke-test pages in Swedish and at least one prefixed locale.
+5. Smoke-test pages in Swedish and at least one non-default language on the same unprefixed URL.
 
 ### Translating existing model content
 
@@ -251,7 +250,7 @@ When you change translation behavior, cover at least these cases:
 
 1. Store internal paths as relative URLs when possible, for example `/news/`.
 2. Render them through `localized_url`.
-3. Verify switching from `/sv/...` to `/en/...` rewrites the target path correctly.
+3. Verify switching languages keeps the target on the same canonical unprefixed path.
 
 ## Common Pitfalls
 

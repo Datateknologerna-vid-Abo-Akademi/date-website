@@ -10,7 +10,7 @@ Multilingual editing is available only when `ENABLE_LANGUAGE_FEATURES=True` in t
 
 When enabled:
 
-- the public site can use `/sv/...`, `/en/...`, and `/fi/...` URLs
+- the public site can switch between Swedish, English, and Finnish on the same unprefixed URLs
 - the admin shows a language switcher
 - supported models expose translated tabs or translated inline fields
 
@@ -55,7 +55,7 @@ After editing translated content:
    - internal navigation still points to the same page in the selected language
    - untranslated proper names remain intentionally unchanged
 
-If the page URL contains a language prefix such as `/en/...`, keep previewing within that prefixed route so you are seeing the correct locale.
+The page URL normally stays unchanged while you switch languages. Confirm the visible copy changes even though the path remains the same.
 
 ## Navigation and Static Links
 
