@@ -3,22 +3,31 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import translation
 from django.utils.deprecation import MiddlewareMixin
+from django.utils.translation import get_language_from_request
+from .language_utils import resolve_language
+
+
+class LanguageStateMiddleware(MiddlewareMixin):
+    @staticmethod
+    def process_request(request):
+        request._previous_language = translation.get_language()
+
+    @staticmethod
+    def process_response(request, response):
+        previous_language = getattr(request, "_previous_language", None)
+        if previous_language:
+            translation.activate(previous_language)
+        else:
+            translation.deactivate()
+        return response
 
 
 class LangMiddleware(MiddlewareMixin):
     @staticmethod
     def process_request(request):
-        request.LANG = settings.LANGUAGE_CODE
-        try:
-            pass
-            # TODO This is borked as of Django 4.0 but it doesn't seem like it's in use
-            # See: https://stackoverflow.com/questions/2605384/how-to-explicitly-set-django-language-in-django-session
-            # lang = request.session[translation.LANGUAGE_SESSION_KEY]
-            # if lang in [settings.LANG_SWEDISH, settings.LANG_FINNISH] and lang is not None:
-            #    request.LANG = lang
-        except KeyError:
-            pass
-
+        # No URL-based language prefixes — resolve from cookie then Accept-Language header.
+        lang = get_language_from_request(request, check_path=False)
+        request.LANG = resolve_language(lang)
         translation.activate(request.LANG)
         request.LANGUAGE_CODE = request.LANG
 

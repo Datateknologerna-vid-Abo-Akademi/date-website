@@ -5,11 +5,14 @@ from unittest.mock import MagicMock, patch
 from django.conf import settings
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
+from django.utils.translation import gettext
 
 from events.models import Event, EventAttendees, EventRegistrationForm
 from events.websocket_utils import ws_data, ws_send
 from members.models import Member, ORDINARY_MEMBER, Subscription, SubscriptionPayment, MembershipType
+from news.models import Category, Post
+from staticpages.models import StaticPageNav, StaticUrl
 
 logger = logging.getLogger('date')
 
@@ -233,7 +236,9 @@ class EventTestCase(TestCase):
         c.post(reverse('events:detail', args=[self.event.slug]), self.content)
         details = c.get(reverse('events:detail', args=[self.event.slug]))
         self.assertEqual(self.event.get_registrations().last().anonymous, True)
-        self.assertContains(details, '<i>Anonymt</i>', count=1)
+        with translation.override(details.wsgi_request.LANGUAGE_CODE):
+            anonymous_label = gettext("Anonymt")
+        self.assertContains(details, f'<i>{anonymous_label}</i>', count=1)
 
     def test_custom_fields(self):
         EventRegistrationForm(event=self.event, choice_number=1, name='field1',
@@ -336,6 +341,75 @@ class EventRegistrationWindowTests(TestCase):
         event.sign_up_deadline = timezone.now() - timezone.timedelta(seconds=1)
         event.save()
         self.assertFalse(event.registration_is_open_others())
+
+
+class EventAdminTests(TestCase):
+    def setUp(self):
+        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.admin_user = Member.objects.create_superuser(
+            username="event-admin",
+            password="pwd",
+            email="admin@example.com",
+            membership_type=self.membership_type,
+        )
+        self.event = Event.objects.create(
+            title="Admin Event",
+            slug="admin-event",
+            author=self.admin_user,
+        )
+
+    def test_change_page_renders_with_translation_fields(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="title_sv"')
+        self.assertContains(response, 'name="title_en"')
+        self.assertContains(response, 'name="title_fi"')
+
+
+class TranslationAdminRegressionTests(TestCase):
+    def setUp(self):
+        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.admin_user = Member.objects.create_superuser(
+            username="translation-admin",
+            password="pwd",
+            email="translation-admin@example.com",
+            membership_type=self.membership_type,
+        )
+
+    def test_news_change_page_renders_translation_fields(self):
+        category = Category.objects.create(name="News Category", slug="news-category")
+        post = Post.objects.create(
+            title="Translated Post",
+            slug="translated-post",
+            author=self.admin_user,
+            category=category,
+        )
+
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("admin:news_post_change", args=[post.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="title_sv"')
+        self.assertContains(response, 'name="content_sv"')
+
+    def test_staticpage_nav_inline_renders_translation_fields(self):
+        nav = StaticPageNav.objects.create(category_name="Menu")
+        StaticUrl.objects.create(
+            category=nav,
+            title="Link",
+            url="/example",
+            dropdown_element=10,
+        )
+
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("admin:staticpages_staticpagenav_change", args=[nav.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="staticurl_set-0-title_sv"')
+        self.assertContains(response, 'name="staticurl_set-0-title_en"')
+        self.assertContains(response, 'name="staticurl_set-0-title_fi"')
 
 
 class EventCapacityTests(TestCase):
@@ -569,7 +643,10 @@ class EventWebsocketUtilsTests(TestCase):
         })
         public_info = [self.PublicInfo("allergies")]
 
-        payload = ws_data(form, public_info)
+        with translation.override("fi"):
+            payload = ws_data(form, public_info)
 
-        self.assertEqual(payload["data"]["fields"][0], ("user", "Anonymt"))
+        with translation.override("fi"):
+            anonymous_label = gettext("Anonymt")
+        self.assertEqual(payload["data"]["fields"][0], ("user", anonymous_label))
         self.assertEqual(payload["data"]["fields"][1], ("allergies", "nuts"))

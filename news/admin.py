@@ -1,33 +1,33 @@
+from django.conf import settings
 from django.contrib import admin
+from modeltranslation.admin import TabbedTranslationAdmin
 
 from news import forms
 from news.models import Post, Category
 
+NewsTranslationAdminBase = TabbedTranslationAdmin if settings.ENABLE_LANGUAGE_FEATURES else admin.ModelAdmin
 
-class CategoryAdmin(admin.ModelAdmin):
+
+class CategoryAdmin(NewsTranslationAdminBase):
     list_display = ('name',)
     search_fields = ('name',)
 
 
-class PostAdmin(admin.ModelAdmin):
+class PostAdmin(NewsTranslationAdminBase):
 
+    fieldsets = [
+        (None, {'fields': ['title', 'category', 'content', 'published', 'slug']}),
+    ]
     list_display = ('title', 'author', 'category', 'created_time', 'modified_time', 'published')
     search_fields = ('title', 'author', 'created_time')
 
-    def add_view(self, request, form_url='', extra_context=None):
-        self.fields = forms.PostCreationForm.Meta.fields
-        return super(PostAdmin, self).add_view(request, form_url, extra_context)
-
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        self.fields = forms.PostEditForm.Meta.fields
-        return super(PostAdmin, self).change_view(request, object_id, form_url, extra_context)
-
     def get_form(self, request, obj=None, change=False, **kwargs):
         if obj is None:
-            form = forms.PostCreationForm
+            kwargs['form'] = forms.PostCreationForm
         else:
-            form = forms.PostEditForm
+            kwargs['form'] = forms.PostEditForm
 
+        form = super().get_form(request, obj, change=change, **kwargs)
         form.user = request.user
         return form
 

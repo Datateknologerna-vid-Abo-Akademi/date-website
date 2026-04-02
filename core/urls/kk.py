@@ -20,12 +20,12 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from events import views as events
 from date import views as date
+from core.urls.common import build_urlpatterns
 
 app_name = 'core'
 
-urlpatterns = [
+urlpatterns = build_urlpatterns(
     path('', date.index, name='index'),
     path('news/', include('news.urls')),
     path('members/', include('members.urls')),
@@ -40,7 +40,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     path('alumni/', include('alumni.urls')),
-]
+)
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

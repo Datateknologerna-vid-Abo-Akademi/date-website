@@ -3,8 +3,8 @@
 {% load i18n %}
 {% load cache %}
 
-{% block title %}Nyheter{% endblock %}
-{% cache 60 news_index %}
+{% block title %}{% translate "Nyheter" %}{% endblock %}
+{% cache 60 news_index LANGUAGE_CODE %}
 {% block content %}
     <head>
         <link rel="stylesheet" href="{% static 'news/css/style.css' %}">

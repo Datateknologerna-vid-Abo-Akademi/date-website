@@ -13,7 +13,7 @@
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
-            <button class="button" type="submit">Login</button>
+            <button class="button" type="submit">{% trans 'Login' %}</button>
         </form>
             <a href="{% url 'password_reset' %}"><p>{% trans 'Glömt lösenordet?' %}</p></a>
             <a href="{% url 'members:signup' %}"><p>{% trans 'Registrera dig' %}</p></a>

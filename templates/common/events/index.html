@@ -5,7 +5,7 @@
 {% block title %}{{ ASSOCIATION_NAME_SHORT }} - {% trans "Händelser" %}{% endblock %}
 
 {% block content %}
-    {% cache 60 event_index %}
+    {% cache 60 event_index LANGUAGE_CODE %}
     <head>
         <link rel="stylesheet" href="{% static 'events/css/style.css' %}"type="text/css">
         <link rel="stylesheet" href="{% static 'events/css/event-card.css' %}"type="text/css">

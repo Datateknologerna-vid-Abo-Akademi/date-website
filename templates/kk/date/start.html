@@ -1,9 +1,9 @@
 {% extends 'core/base.html' %}
 {% load cache %}
+{% load i18n %}
 {% block content %}
-{% cache 300 main_page_fixed %}
+{% cache 300 main_page_fixed LANGUAGE_CODE %}
     {% load static %}
-    {% load i18n %}
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">

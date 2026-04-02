@@ -17,15 +17,15 @@ Including another URLconf
 
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib import admin
 from django.urls import include, path
 
-from events import views as events
 from date import views as date
+from core.admin import admin_site
+from core.urls.common import build_urlpatterns
 
 app_name = 'core'
 
-urlpatterns = [
+urlpatterns = build_urlpatterns(
     path('', date.index, name='index'),
     path('news/', include('news.urls')),
     path('members/', include('members.urls')),
@@ -33,15 +33,15 @@ urlpatterns = [
     path('archive/', include('archive.urls')),
     path('events/', include('events.urls')),
     path('pages/', include('staticpages.urls')),
-    path('ads/',include('ads.urls')),
-    path('social/',include('social.urls')),
+    path('ads/', include('ads.urls')),
+    path('social/', include('social.urls')),
     path('polls/', include('polls.urls')),
     path('ctf/', include('ctf.urls')),
-    path('admin/', admin.site.urls),
+    path('admin/', admin_site.urls),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     path('publications/', include('publications.urls')),
     path('alumni/', include('alumni.urls')),
-]
+)
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -1,6 +1,6 @@
-{% load static i18n %}
+{% load static i18n localized_urls %}
 <div class="events-container">
-    <h3 class="header-border-bottom mt-3 heading-link"><a href="/events/">Evenemang</a></h3>
+    <h3 class="header-border-bottom mt-3 heading-link"><a href="{{ '/events/'|localized_url }}">{% trans "Evenemang" %}</a></h3>
         {{ calendar_events|json_script:"calendar_json" }}
     <div class="calendar">
     </div>

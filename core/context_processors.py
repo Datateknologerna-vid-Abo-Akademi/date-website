@@ -6,4 +6,7 @@ def captcha_context(_):
 
 
 def apply_content_variables(_):
-    return settings.CONTENT_VARIABLES
+    return {
+        **settings.CONTENT_VARIABLES,
+        "ENABLE_LANGUAGE_FEATURES": settings.ENABLE_LANGUAGE_FEATURES,
+    }

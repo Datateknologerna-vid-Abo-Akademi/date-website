@@ -22,17 +22,18 @@ from django.urls import include, path
 
 from events import views as events
 from date import views as date
+from core.urls.common import build_urlpatterns
 
 app_name = 'core'
 
-urlpatterns = [
+urlpatterns = build_urlpatterns(
     path('', events.IndexView.as_view(), name='index'),
     path('admin/', admin.site.urls),
     path('', include('events.urls')),
     path('pages/', include('staticpages.urls')),
     path('users/', include('members.urls')),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
-]
+)
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

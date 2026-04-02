@@ -54,7 +54,7 @@
                     <div id="attendee-list" class="content overflow-auto" data-parent-slug="{{ event.parent.slug|default:'' }}">
                     {% if event|show_attendee_list %}
                         {% if event.sign_up_max_participants != 0 %}
-                        <p>Det finns {{ event.sign_up_max_participants }} platser!</p>
+                        <p>{% translate "Det finns" %} {{ event.sign_up_max_participants }} {% translate "platser!" %}</p>
                         {% endif %}
                         <h2>{% trans "Anmälda" %}</h2>
                         <table class="" id="attendees">

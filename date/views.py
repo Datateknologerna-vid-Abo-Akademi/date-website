@@ -1,11 +1,14 @@
 import datetime
 import random
 from itertools import chain
+from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.utils import translation
+from .language_utils import resolve_language, strip_language_prefix
 
 from ads.models import AdUrl
 from events.models import Event
@@ -48,7 +51,7 @@ def index(request):
         are mapped to data used by the calendar on the frontend"""
         calendar_events_dict = {}
         for event in all_events:
-            event_url = "/events/" + event.slug
+            event_url = reverse("events:detail", kwargs={"slug": event.slug})
             # The rest of the "html" field is set on the client side
             # since it includes a time that gets localized on the client-side
             event_dict = {event.event_date_start.strftime("%Y-%m-%d"):
@@ -75,16 +78,24 @@ def index(request):
     return render(request, get_homepage_template_name(), context)
 
 
-def language(request, lang):
-    if str(lang).lower() == 'fi':
-        lang = settings.LANG_FINNISH
-    else:
-        lang = settings.LANG_SWEDISH
-    translation.activate(lang)
-    # TODO Replace LANGUAGE_SESSION_KEY with something that works in django 4.0
-    # request.session[translation.LANGUAGE_SESSION_KEY] = lang
+def set_language(request):
+    user_language = resolve_language(request.POST.get("lang"))
+
+    # persist the language preference using a cookie
+    translation.activate(user_language)
     origin = request.META.get('HTTP_REFERER')
-    return redirect(origin)
+    if origin:
+        parsed_origin = urlsplit(origin)
+        bare_path = strip_language_prefix(parsed_origin.path)
+        redirect_target = urlunsplit(
+            ("", "", bare_path, parsed_origin.query, parsed_origin.fragment)
+        )
+    else:
+        redirect_target = reverse("index")
+
+    response = redirect(redirect_target)
+    response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user_language)
+    return response
 
 
 def handler404(request, *args, **argv):
@@ -95,5 +106,5 @@ def handler404(request, *args, **argv):
 
 def handler500(request, *args, **argv):
     response = render(request, 'core/500.html', {})
-    response.status_code = 404
+    response.status_code = 500
     return response
