@@ -1,5 +1,6 @@
 {% load static %}
 {% load i18n %}
+{% load localized_urls %}
 <head>
     <link rel="stylesheet" type="text/css" href="{% static 'core/css/header.css' %}?version=1">
 </head>
@@ -38,19 +39,20 @@
                 {% for category in categories %}
                     {% if category.use_category_url %}
                         <li class="nav-item">
-                            <a class="nav-link" aria-current="page" href="{{category.url}}">{{category.category_name}}</a>
+                            <a class="nav-link" aria-current="page" href="{{ category.url|localized_url }}">{{category.category_name}}</a>
                     {% else %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             {{category.category_name}}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                                {% url 'login' as login_url %}
                                 {% for page in urls %}
                                     {% if page.category|lower == category.category_name|lower %}
-                                        {% if user.is_authenticated and page.url == "/members/login/" %}
-                                            <li><form action="{% url 'logout' %}" method="post">{% csrf_token %}<button class="dropdown-item">Logga ut</button></form></li>
+                                        {% if user.is_authenticated and page.url|localized_url == login_url %}
+                                            <li><form action="{% url 'logout' %}" method="post">{% csrf_token %}<button class="dropdown-item">{% translate "Logga ut" %}</button></form></li>
                                         {% elif not page.logged_in_only or user.is_authenticated %}
-                                            <li><a class="dropdown-item" href="{{ page.url }}">{{page.title}}</a></li>
+                                            <li><a class="dropdown-item" href="{{ page.url|localized_url }}">{{page.title}}</a></li>
                                         {% endif %}
                                     {% endif %}
                                 {% endfor %}
