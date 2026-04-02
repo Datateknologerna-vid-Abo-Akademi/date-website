@@ -14,7 +14,7 @@ Use the sections below to jump to either editor-facing instructions or implement
 ## Project-wide Notes
 
 - The project can run multiple association/site variants via `PROJECT_NAME`.
-- Language-prefixed routes and the language switcher are controlled by `ENABLE_LANGUAGE_FEATURES`.
+- Language switching and multilingual content are controlled by `ENABLE_LANGUAGE_FEATURES`.
 - The public docs are meant to complement the README, not replace it. Keep operational commands in the README and app-specific behavior in these guides.
 
 ## Admin & Content Editors

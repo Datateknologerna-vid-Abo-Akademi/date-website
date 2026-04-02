@@ -76,7 +76,7 @@ date-start-detached
 Important environment flags:
 
 - `PROJECT_NAME` selects the active association/site variant (`date`, `kk`, `biocum`, `demo`, `on`, ...).
-- `ENABLE_LANGUAGE_FEATURES=True` enables the localized URL prefixes, language switcher, and translated admin tabs. When omitted or false, the project runs Swedish-only.
+- `ENABLE_LANGUAGE_FEATURES=True` enables the language switcher, translated admin tabs, and runtime selection between Swedish, English, and Finnish on unprefixed URLs. When omitted or false, the project runs Swedish-only.
 - `USE_S3` toggles whether uploads use local disk storage or the configured S3-compatible backend.
 
 The script exports `COMPOSE_FILE_PATH` and defines the `date-*` aliases used throughout this README:
@@ -119,7 +119,7 @@ date-manage check           # static checks (migrations, settings sanity)
 
 Manually verify user-facing flows (forms, Celery tasks, Channels endpoints) when implementing a feature; a lot of work in this repo still benefits from a quick human smoke test after the automated checks pass.
 
-If you touch translations, templates, or language-aware navigation, also smoke-test both the default Swedish site and one prefixed locale such as `/en/...` with `ENABLE_LANGUAGE_FEATURES=True`.
+If you touch translations, templates, or language-aware navigation, also smoke-test the default Swedish site plus at least one non-default language selected through the language switcher or `Accept-Language` header with `ENABLE_LANGUAGE_FEATURES=True`.
 
 ## Documentation & app guides
 
@@ -142,7 +142,7 @@ The production stack relies on the published container image at `ghcr.io/datatek
 
 The stack brings up the `web` (Gunicorn), `asgi` (Daphne/Channels), `celery`, `db`, `redis`, and `nginx` services. Rolling deploys usually build a new GHCR image in CI, update `DATE_IMG_TAG`, then restart `web`, `asgi`, and `celery`.
 
-`docker-compose.prod.yml` also reads `ENABLE_LANGUAGE_FEATURES`, so language-prefixed routes must be enabled explicitly in production if you want multilingual public/admin behavior.
+`docker-compose.prod.yml` also reads `ENABLE_LANGUAGE_FEATURES`, so multilingual public/admin behavior must be enabled explicitly in production if you want language switching outside Swedish.
 
 ## Updating PostgreSQL volumes
 
@@ -194,7 +194,7 @@ Current fixed terms that should not be translated just because they are user-fac
 
 As the default language is `sv`, Swedish copy should be reviewed against the site itself when strings are extracted into locale files.
 
-The project now supports language-prefixed routes through Django `i18n_patterns` plus helper utilities in `date/language_utils.py`. When linking to internal pages from templates or stored nav items, prefer Django URL reversing or the `localized_url` template filter so the current language prefix is preserved.
+The project uses unprefixed public URLs. Language is resolved from the language cookie first, then the `Accept-Language` header, and finally the default `sv`. When linking to internal pages from templates or stored nav items, prefer Django URL reversing or the `localized_url` template filter so links stay on the canonical unprefixed path.
 
 To generate the translation file, called `django.po`
 is done by executing the following command **in the root directory of the project**

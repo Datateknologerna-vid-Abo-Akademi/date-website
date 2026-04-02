@@ -8,7 +8,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils import translation
-from .language_utils import localize_url, resolve_language, strip_language_prefix
+from .language_utils import resolve_language, strip_language_prefix
 
 from ads.models import AdUrl
 from events.models import Event

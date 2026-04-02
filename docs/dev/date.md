@@ -18,11 +18,11 @@
 
 ## Language Handling
 - `set_language(request)` reads `POST["lang"]`, normalizes it through `date.language_utils.resolve_language()`, stores the choice in Django's language cookie, and redirects back to the referrer.
-- If the referrer points to an internal page, `date.language_utils.localize_url()` rewrites the path so the redirect keeps or replaces the active language prefix correctly.
+- If the referrer points to an internal page, `date.language_utils.strip_language_prefix()` rewrites the path back to the canonical unprefixed URL before redirecting.
 - `date/middleware.py` contains the project-specific language middleware:
   - `LanguageStateMiddleware` restores the previous translation state after each request.
-  - `LangMiddleware` activates the language resolved by Django's `LocaleMiddleware` or the language cookie.
-- Shared URL configuration uses Django `i18n_patterns`, so public routes can appear as `/sv/...`, `/en/...`, and `/fi/...` when `ENABLE_LANGUAGE_FEATURES=True`.
+  - `LangMiddleware` activates the language resolved from the cookie, then `Accept-Language`, while ignoring URL path prefixes.
+- Shared URL configuration uses canonical unprefixed public routes such as `/`, `/news/`, and `/events/` even when `ENABLE_LANGUAGE_FEATURES=True`.
 
 ## Error Views
 - `handler404`/`handler500` render templates in `templates/core/` to avoid exposing stack traces in production.
@@ -34,5 +34,5 @@
 ## Extending
 - If more widgets are added to the home page, keep the aggregation work inside `index()` minimal; heavy data should be fetched via dedicated services or cached.
 - Consider moving the calendar formatting to a serializer to simplify testing.
-- When changing language-aware redirects or prefixed routes, test both direct URL visits and redirects from the language switcher.
+- When changing language-aware redirects, test both direct unprefixed URL visits and redirects from the language switcher.
 - Add tests in `date/tests.py` for homepage context selection, language switching, and calendar formatting behavior.
