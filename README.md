@@ -2,7 +2,7 @@
 
 DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.fi)'s public site, membership tools, alumni portal, polls, and a handful of seasonal or one-off apps. The stack is Django 5.2 running on Python 3.13 inside Docker Compose with Celery workers, Channels/Daphne, PostgreSQL, Valkey (Redis compatible), and S3-compatible storage.
 
-> Active development happens on `develop`. The `main` branch mirrors production releases, so branch off `develop` when you start new work.
+> Active development happens on `develop`. The `master` branch mirrors production releases, so branch off `develop` when you start new work.
 
 
 ## Requirements

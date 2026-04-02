@@ -56,8 +56,8 @@ Use the sections below to jump to either editor-facing instructions or implement
 
 ## Maintenance
 
-- Keep app guides focused on responsibilities, data model expectations, important admin behavior, and extension gotchas.
-- When routing, language handling, or deployment behavior changes, update the README and any affected development guide in the same branch.
-- If a guide becomes mostly obsolete, rewrite it instead of layering more historical notes on top.
+- Try to keep app guides focused on responsibilities, data model expectations, important admin behavior, and extension gotchas.
+- When routing, language handling, or deployment behavior changes, it usually helps to update the README and any affected development guide in the same branch.
+- If a guide becomes mostly obsolete, a rewrite is usually clearer than layering more historical notes on top.
 
 Need to add or update a guide? Create or edit the Markdown file in the appropriate subfolder, then commit and push. GitHub Pages will redeploy automatically.
