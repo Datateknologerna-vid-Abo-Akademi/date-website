@@ -35,7 +35,7 @@ Use Django's normal i18n system for strings that live in code or templates.
 
 Typical sources:
 
-- template strings wrapped in `{% trans %}` or `{% blocktrans %}`
+- template strings wrapped in <code>&#123;% trans %&#125;</code> or <code>&#123;% blocktrans %&#125;</code>
 - Python strings wrapped in `gettext`, `gettext_lazy`, or `_()`
 - model field labels and admin labels
 
@@ -158,16 +158,18 @@ Precedence rules:
 For internal links:
 
 - prefer `reverse(...)` in Python
-- prefer `{% url %}` in templates
+- prefer <code>&#123;% url %&#125;</code> in templates
 - use the `localized_url` template filter for internal paths stored in the database or hardcoded as plain strings
 
 Examples:
 
+{% raw %}
 ```django
 <a href="{% url 'events:index' %}">...</a>
 <a href="{{ '/news/'|localized_url }}">...</a>
 <a href="{{ page.url|localized_url }}">{{ page.title }}</a>
 ```
+{% endraw %}
 
 For external links:
 
