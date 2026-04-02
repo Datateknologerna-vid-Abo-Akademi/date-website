@@ -1,0 +1,45 @@
+table {
+    border-collapse: collapse;
+}
+
+.background-img .content {
+    background-color: var(--secondaryColor);
+    color: var(--textColorDarkish);
+}
+
+.background-img .content a {
+    color: var(--linkColorSecondary);
+}
+
+.background-img .content a:hover {
+    color: var(--linkSecondaryHover);
+}
+
+.event-full {
+    color: var(--helpText);
+}
+
+th {
+    padding-bottom: 1rem;
+}
+
+th,
+td {
+    text-align: left;
+    padding: 8px;
+}
+
+th:first-child,
+td:first-child {
+    border-radius: var(--defaultRadius) 0 0 var(--defaultRadius);
+}
+
+th:last-child,
+td:last-child {
+    border-radius: 0 var(--defaultRadius) var(--defaultRadius) 0;
+}
+
+tr:hover {
+    transition: 200ms;
+    background-color: var(--secondaryColorDarker);
+}

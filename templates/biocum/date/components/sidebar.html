@@ -1,7 +1,7 @@
 {% load static i18n %}
 <div class="sidebar-container">
     <div class="events-container">
-        <h3 class="header-border-bottom mt-3">Evenemang</h3>
+        <h3 class="header-border-bottom mt-3">{% trans "Evenemang" %}</h3>
             {{ calendar_events|json_script:"calendar_json" }}
         <div class="calendar">
         </div>
@@ -52,7 +52,7 @@
         </div>
     </div>
     <div class="logo-container">
-        <h3 class="mt-3">Samarbetspartners</h3>
+        <h3 class="mt-3">{% trans "Samarbetspartners" %}</h3>
         <div class="carousel-logos">
             <ul>
                 {%for ad in ads%}

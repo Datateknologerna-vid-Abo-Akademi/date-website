@@ -19,9 +19,19 @@
                 <ul class="list-unstyled">
                 {% if question.show_results %}
                     {% for choice in question.choice_set.all %}
-                        <li>{{ choice.choice_text }}: {{ choice.votes }} vote{{ choice.votes|pluralize }} -- {{ choice.get_vote_percentage }}%</li>
+                        <li>
+                            {% blocktranslate count vote_count=choice.votes with choice_text=choice.choice_text vote_percentage=choice.get_vote_percentage trimmed %}
+                                {{ choice_text }}: {{ vote_count }} vote -- {{ vote_percentage }}%
+                            {% plural %}
+                                {{ choice_text }}: {{ vote_count }} votes -- {{ vote_percentage }}%
+                            {% endblocktranslate %}
+                        </li>
                     {% endfor %}
-                    <p class="mt-2"> {% trans "Totala röster: "%} {{ question.get_total_votes }} </p>
+                    <p class="mt-2">
+                        {% blocktranslate with total_votes=question.get_total_votes trimmed %}
+                            Totala röster: {{ total_votes }}
+                        {% endblocktranslate %}
+                    </p>
                 {% else %}
                     <p>{% trans "Resultaten är gömda" %}</p>
                 {% endif %}

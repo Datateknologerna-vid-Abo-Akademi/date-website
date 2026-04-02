@@ -1,0 +1,184 @@
+html {
+    scroll-behavior: smooth;
+}
+
+html body{
+    background-color: var(--primaryColor);
+    color: var(--textColorDarkish);
+    font-family: 'Josefin Sans', sans-serif;
+}
+
+.content img{
+    max-height: 35vh;
+    max-width: 100%;
+    /* keep img ratio correct */
+    width: auto !important;
+    height: auto !important;
+    border-radius: var(--defaultRadius);
+}
+
+/* Link colors */
+div a{
+    color: var(--linkColorSecondary);
+    display: inline-block;
+    text-decoration: none;
+}
+
+div a:hover{
+    transition: 0.3s;
+    color: var(--linkSecondaryHover);
+}
+/* ---- */
+
+.break-words{
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+/* TEXT COLORS */
+.help-text{
+    color: var(--helpText);
+}
+
+.warning{
+    color: var(--warning);
+}
+/* ---- */
+
+.container-margin-top {
+    margin-top: 12vh;
+}
+
+.container-size{
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.content{
+    margin: 20px 2vw;
+    background-color: var(--secondaryColor);
+    color: var(--textColorDarkish);
+    padding: var(--defaultPadding);
+    border-radius: var(--defaultRadius);
+}
+
+/*  BUTTON */
+.theme-button {
+    background-color: var(--primaryColorLighter);
+    border: none;
+    color: var(--secondaryColor);
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 16px;
+    border-radius: 5px;
+    font-family: 'Josefin Sans', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    /* Additional styles for interactions */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    outline: none; /* Prevents focus outline */
+}
+
+.theme-button:hover {
+    background-color: var(--primaryColorLighte);
+    color: var(--secondaryColor);
+}
+
+.theme-button:active {
+    transform: scale(0.95); /* Adds a slight click effect */
+}
+
+.theme-button:disabled {
+    opacity: 0.6; /* Styles for disabled state */
+    cursor: not-allowed;
+}
+
+/* Additional hover effect */
+.theme-button.alt:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.theme-button .fa-chevron-right{
+    transition: .3s;
+  }
+
+.theme-button:hover .fa-chevron-right{
+    transform: translateX(10px);
+  }
+
+/* ---- */
+
+.pulterit-footer {
+    position: relative;
+    margin-top: 0;
+    padding: 0;
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+}
+
+.pulterit-footer-shell {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(20px, 3vw, 32px);
+    background:
+        radial-gradient(circle at center, rgba(52, 52, 52, 0.28) 0%, rgba(82, 82, 82, 0.16) 28%, rgba(110, 110, 110, 0.06) 52%, rgba(120, 120, 120, 0) 82%),
+        linear-gradient(180deg, rgba(208, 208, 206, 0) 0%, rgba(208, 208, 206, 0.12) 18%, rgba(208, 208, 206, 0.08) 100%);
+    color: var(--textColorLight);
+}
+
+.pulterit-footer-shell > hr,
+.pulterit-footer-shell > section,
+.pulterit-footer-shell > .row,
+.pulterit-footer-shell > .text-center {
+    width: min(100% - 2rem, 1320px);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.pulterit-footer-shell hr {
+    position: relative;
+    z-index: 1;
+    margin-top: 0;
+    border-color: rgba(255, 255, 255, 0.18);
+    opacity: 0.35;
+}
+
+.pulterit-footer-shell p,
+.pulterit-footer-shell div,
+.pulterit-footer-shell span,
+.pulterit-footer-shell small {
+    color: inherit;
+}
+
+.pulterit-footer-shell a {
+    color: var(--textColorLight);
+}
+
+.pulterit-footer-shell a:hover {
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.pulterit-footer-shell section,
+.pulterit-footer-shell .row,
+.pulterit-footer-shell .text-center {
+    position: relative;
+    z-index: 1;
+}
+
+/* Basic table colors */
+#table {
+    --bs-table-bg: #f8f8f8;
+    --bs-table-striped-bg: #ececeb;
+    --bs-table-striped-color: #202020;
+    --bs-table-active-bg: #e1e1df;
+    --bs-table-active-color: #202020;
+    --bs-table-hover-bg: #e7e7e5;
+    --bs-table-hover-color: #202020;
+    color: #202020;
+    border-color: #d9d9d7;
+}
+/* ---- */
