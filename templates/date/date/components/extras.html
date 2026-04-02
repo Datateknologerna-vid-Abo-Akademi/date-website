@@ -1,7 +1,7 @@
-{% load i18n %}
+{% load i18n localized_urls %}
 <div class="extra-container">
     <h3 class="mt-3 header-border-bottom">{% trans "Annat" %}</h3>
-    <h5 class="heading-link"><a href="/social/harassment/">{% trans "Trakasseriombud" %}</a></h5>
+    <h5 class="heading-link"><a href="{{ '/social/harassment/'|localized_url }}">{% trans "Trakasseriombud" %}</a></h5>
     <p>
         {% trans "Om du upplever trakasserier i samband med Datateknologernas verksamhet, vänligen" %}
         <a href="{% url 'social:harassment' %}">{% trans "rapportera" %}</a>

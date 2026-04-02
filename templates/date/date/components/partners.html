@@ -1,4 +1,4 @@
-{% load static i18n %}
+{% load static i18n localized_urls %}
 <div class="logo-container">
     <h3 class="header-border-bottom">{% trans "Samarbetspartners" %}</h3>
         <div class="d-flex flex-wrap justify-content-center align-items-center">
@@ -9,6 +9,6 @@
             {% endfor %}
         </div>
     <div class="text-center">
-        <a href="/pages/foretagssamarbete/">{% trans "Vill du samarbeta med DaTe?" %}</a>
+        <a href="{{ '/pages/foretagssamarbete/'|localized_url }}">{% trans "Vill du samarbeta med DaTe?" %}</a>
     </div>
 </div>
