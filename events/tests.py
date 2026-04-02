@@ -185,6 +185,8 @@ class EventTestCase(TestCase):
         self.assertNotContains(correct, "invalid passcode")
 
     def test_passcode_unlock_is_scoped_per_event(self):
+        self.event.passcode = 'secret'
+        self.event.save()
         other_event = Event.objects.create(
             title='Other secret event',
             slug='other-secret-event',
