@@ -190,7 +190,7 @@ AUTHENTICATION_BACKENDS = (
     'members.backends.AuthBackend',
 )
 
-LOGIN_URL = 'login'
+LOGIN_URL = 'members:login'
 LOGIN_REDIRECT_URL = 'members:info'
 
 # Make CKEditor5 Work with modeltranslations
@@ -306,7 +306,7 @@ STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
 STATIC_URL = '/static/'
 
 LOGOUT_REDIRECT_URL = 'index'
-OTP_LOGIN_URL = 'login'
+OTP_LOGIN_URL = 'members:login'
 
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

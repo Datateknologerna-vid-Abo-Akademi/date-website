@@ -23,7 +23,7 @@
                 <br>
                 <small style="color: red;">Det har skett ett fel, vänligen meddela styrelsen på kk@abo.fi</small>
                 <div style="text-align: right; position: relative; z-index: 1; margin: 9px; color: #000; font-size: 12px;">
-                    <a href="{% url 'login' %}" style="color: #000; text-decoration: underline;">Logga in</a>
+                    <a href="{% url 'members:login' %}" style="color: #000; text-decoration: underline;">Logga in</a>
                 </div>
             </div>
             <div class="april-nav">
@@ -35,7 +35,7 @@
                             {{category.category_name}}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
-                                {% url 'login' as login_url %}
+                                {% url 'members:login' as login_url %}
                                 {% for page in pages %}
                                     {% if page.category|lower == category.category_name|lower %}
                                         <li><a class="dropdown-item" href="{% url 'staticpages:page' page.slug %}">{{page.title}}</a></li>
@@ -50,7 +50,7 @@
                                             <li><a class="dropdown-item" href="{{ '/members/cert/'|localized_url }}">Medlemspass</a></li>
                                             <li><a class="dropdown-item" href="{{ '/admin/'|localized_url }}">Admin</a></li>
                                             <li>
-                                                <form action="{% url 'logout' %}" method="post">
+                                                <form action="{% url 'members:logout' %}" method="post">
                                                     {% csrf_token %}
                                                     <button class="dropdown-item">Logga ut</button>
                                                 </form>

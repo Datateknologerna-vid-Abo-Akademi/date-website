@@ -1,5 +1,6 @@
 import time
 from unittest.mock import patch
+from unittest.mock import patch as mock_patch
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import AnonymousUser
@@ -9,13 +10,14 @@ from django.utils import timezone
 from django_otp import DEVICE_ID_SESSION_KEY
 from django_otp.oath import TOTP
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from two_factor.forms import TOTPDeviceForm
 
 from members.forms import (FunctionaryForm, MemberCreationForm, SignUpForm,
                            SubscriptionPaymentForm)
 from members.functionary import get_selected_role, get_selected_year
 from members.models import (Functionary, FunctionaryRole, Member,
                             MembershipType, ORDINARY_MEMBER, Subscription)
-from members.two_factor import StrictTOTPDeviceForm
+from members.two_factor import MemberSetupView, StrictTOTPDeviceForm
 
 
 class UsernameValidatorTest(TestCase):
@@ -284,10 +286,10 @@ class TwoFactorIntegrationTests(TestCase):
 
     def test_login_route_supports_email_then_requires_token(self):
         device = TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
-        response = self.client.get(reverse('login'))
+        response = self.client.get(reverse('members:login'))
         prefix = self._wizard_prefix(response)
 
-        response = self.client.post(reverse('login'), data={
+        response = self.client.post(reverse('members:login'), data={
             f'{prefix}-current_step': 'auth',
             'auth-username': self.member.email,
             'auth-password': 'secret12345',
@@ -297,7 +299,7 @@ class TwoFactorIntegrationTests(TestCase):
         self.assertEqual(response.context['wizard']['steps'].current, 'token')
 
         prefix = self._wizard_prefix(response)
-        response = self.client.post(reverse('login'), data={
+        response = self.client.post(reverse('members:login'), data={
             f'{prefix}-current_step': 'token',
             'token-otp_token': self._totp_token(device),
         })
@@ -317,6 +319,13 @@ class TwoFactorIntegrationTests(TestCase):
         self.assertTrue(form.is_valid(), form.errors)
         device = form.save()
         self.assertEqual(device.tolerance, 1)
+
+    def test_setup_view_uses_strict_totp_form_for_generator_method(self):
+        view = MemberSetupView()
+        with mock_patch('members.two_factor.SetupView.get_form_list', return_value={'generator': TOTPDeviceForm, 'welcome': object}):
+            form_list = view.get_form_list()
+
+        self.assertIs(form_list['generator'], StrictTOTPDeviceForm)
 
     def test_profile_page_shows_2fa_state(self):
         self.client.force_login(self.member, backend='members.backends.AuthBackend')
@@ -356,10 +365,10 @@ class TwoFactorIntegrationTests(TestCase):
             password='secret12345',
             membership_type=self.membership_type,
         )
-        response = self.client.get(f"{reverse('login')}?next={reverse('admin:index')}")
+        response = self.client.get(f"{reverse('members:login')}?next={reverse('admin:index')}")
         prefix = self._wizard_prefix(response)
 
-        response = self.client.post(f"{reverse('login')}?next={reverse('admin:index')}", data={
+        response = self.client.post(f"{reverse('members:login')}?next={reverse('admin:index')}", data={
             f'{prefix}-current_step': 'auth',
             'auth-username': admin_user.email,
             'auth-password': 'secret12345',

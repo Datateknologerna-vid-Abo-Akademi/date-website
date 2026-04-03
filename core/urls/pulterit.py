@@ -14,7 +14,6 @@ urlpatterns = build_urlpatterns(
     path('', date.index, name='index'),
     path('news/', include('news.urls')),
     path('members/', include('members.urls')),
-    path('members/', include('members.auth_urls')),
     path('members/two-factor/', include(('members.two_factor_urls', 'two_factor'), namespace='two_factor')),
     path('events/', include('events.urls')),
     path('pages/', include('staticpages.urls')),

@@ -1,6 +1,5 @@
 import logging
 
-from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
@@ -69,6 +68,12 @@ class MemberLoginView(LoginView):
 
 class MemberSetupView(SetupView):
     template_name = 'two_factor/core/setup.html'
+
+    def get_form_list(self):
+        form_list = super().get_form_list()
+        if form_list.get('generator') is TOTPDeviceForm:
+            form_list['generator'] = StrictTOTPDeviceForm
+        return form_list
 
     def done(self, form_list, **kwargs):
         try:

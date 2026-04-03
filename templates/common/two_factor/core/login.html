@@ -43,7 +43,7 @@
         {% endif %}
 
         {% if wizard.steps.current == 'auth' %}
-            <a href="{% url 'password_reset' %}"><p>{% trans 'Forgot your password?' %}</p></a>
+            <a href="{% url 'members:password_reset' %}"><p>{% trans 'Forgot your password?' %}</p></a>
             {% if MEMBERS_SIGNUP_ENABLED %}
                 <a href="{% url 'members:signup' %}"><p>{% trans 'Register' %}</p></a>
             {% endif %}

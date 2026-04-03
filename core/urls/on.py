@@ -32,7 +32,6 @@ urlpatterns = build_urlpatterns(
     path('', include('events.urls')),
     path('pages/', include('staticpages.urls')),
     path('users/', include('members.urls')),
-    path('users/', include('members.auth_urls')),
     path('users/two-factor/', include(('members.two_factor_urls', 'two_factor'), namespace='two_factor')),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
 )
