@@ -22,7 +22,6 @@ from .forms import SignUpForm, FunctionaryForm, MemberEditForm, CustomPasswordRe
 from .functionary import (get_distinct_years, get_functionary_roles, get_selected_year,
                           get_selected_role, get_filtered_functionaries, get_functionaries_by_role)
 from .models import Member, Functionary
-from .two_factor import member_has_2fa
 from .tokens import account_activation_token
 
 logger = logging.getLogger('date')
@@ -36,7 +35,6 @@ class UserinfoView(View):
         context = {
             "user": user,
             "form": form,
-            "two_factor_enabled": member_has_2fa(user),
         }
         return render(request, 'members/userinfo.html', context)
 
@@ -51,7 +49,6 @@ class UserinfoView(View):
         context = {
             "user": user,
             "form": form,
-            "two_factor_enabled": member_has_2fa(user),
         }
         return render(request, 'members/userinfo.html', context)
 

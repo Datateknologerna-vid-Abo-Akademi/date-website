@@ -49,12 +49,7 @@
                                             <li><a class="dropdown-item" href="{{ '/members/info/'|localized_url }}">Min profil</a></li>
                                             <li><a class="dropdown-item" href="{{ '/members/cert/'|localized_url }}">Medlemspass</a></li>
                                             <li><a class="dropdown-item" href="{{ '/admin/'|localized_url }}">Admin</a></li>
-                                            <li>
-                                                <form action="{% url 'logout' %}" method="post">
-                                                    {% csrf_token %}
-                                                    <button class="dropdown-item">Logga ut</button>
-                                                </form>
-                                            </li>
+                                            <li><a class="dropdown-item" href="{% url 'logout' %}">Logga ut</a></li>
                                         {% else %}
                                             <li><a class="dropdown-item" href="{{ page.url|localized_url }}">{{page.title}}</a></li>
                                         {% endif %}
