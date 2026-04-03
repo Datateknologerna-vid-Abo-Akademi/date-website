@@ -1,5 +1,5 @@
 {% extends 'core/base.html' %}
-{% load app_filters %}
+{% load shared_filters %}
 {% load static %}
 {% load i18n %}
 {% block title %}{% trans "Ladda upp bilder" %}{% endblock %}
@@ -17,4 +17,3 @@
         <p><a href="{% url 'archive:years' %}">Return</a></p>
     </div>
 {% endblock %}
-
