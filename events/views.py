@@ -2,6 +2,7 @@ import datetime
 import logging
 
 from django.conf import settings
+from django.contrib.auth.views import redirect_to_login
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -60,6 +61,7 @@ class IndexView(ListView):
 class EventDetailView(DetailView):
     model = Event
     template_name = 'events/detail.html'
+    PASSCODE_SESSION_KEY = 'event_passcode_status'
 
     def _get_resolved_template(self, event):
         title_template = EVENT_TEMPLATES_BY_TITLE.get(event.title.lower())
@@ -67,8 +69,17 @@ class EventDetailView(DetailView):
             return title_template
         return EVENT_TEMPLATES_BY_SLUG.get(event.slug)
 
+    def _requires_member_login(self, request):
+        return self.object.members_only and not request.user.is_authenticated
+
+    def _has_valid_passcode_session(self, request):
+        passcode_status = request.session.get(self.PASSCODE_SESSION_KEY, {})
+        return bool(passcode_status.get(str(self.object.pk)))
+
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
+        if self._requires_member_login(request):
+            return redirect_to_login(request.get_full_path())
         external_link = self.object.redirect_link
         if external_link:
             return redirect(external_link)
@@ -77,6 +88,8 @@ class EventDetailView(DetailView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        if self._requires_member_login(request):
+            return redirect_to_login(request.get_full_path())
         passcode_response = self.handle_passcode(request)
         if passcode_response:
             return passcode_response
@@ -85,7 +98,7 @@ class EventDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super(EventDetailView, self).get_context_data(**kwargs)
         form = kwargs.pop('form', None)
-        if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
+        if self.object.passcode and not self._has_valid_passcode_session(self.request):
             form = PasscodeForm
         if form:
             context['form'] = form
@@ -102,7 +115,7 @@ class EventDetailView(DetailView):
         if resolved_template:  # TODO: Selectable template
             return resolved_template
 
-        if self.object.passcode and self.object.passcode != self.request.session.get('passcode_status', False):
+        if self.object.passcode and not self._has_valid_passcode_session(self.request):
             return ['events/event_passcode.html']
         return [self.template_name]
 
@@ -126,9 +139,11 @@ class EventDetailView(DetailView):
         return render(self.request, self.template_name, self.get_context_data(form=form), status=400)
 
     def handle_passcode(self, request):
-        if self.object.passcode and self.object.passcode != request.session.get('passcode_status', False):
+        if self.object.passcode and not self._has_valid_passcode_session(request):
             if self.object.passcode == request.POST.get('passcode'):
-                request.session['passcode_status'] = self.object.passcode
+                passcode_status = request.session.get(self.PASSCODE_SESSION_KEY, {})
+                passcode_status[str(self.object.pk)] = True
+                request.session[self.PASSCODE_SESSION_KEY] = passcode_status
                 return self.render_to_response(self.get_context_data())
             else:
                 return render(request, 'events/event_passcode.html',

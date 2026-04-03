@@ -146,6 +146,15 @@ class Event(models.Model):
             return EventAttendees.objects.filter(event=self.parent, original_event=self).count() >= self.sign_up_max_participants
         return EventAttendees.objects.filter(event=self).count() >= self.sign_up_max_participants
 
+    def remaining_places(self):
+        if self.sign_up_max_participants == 0:
+            return 0
+        if self.parent:
+            registrations = EventAttendees.objects.filter(event=self.parent, original_event=self).count()
+        else:
+            registrations = EventAttendees.objects.filter(event=self).count()
+        return max(self.sign_up_max_participants - registrations, 0)
+
     def get_registration_form(self):
         if EventRegistrationForm.objects.filter(event=self).count() == 0:
             return None

@@ -15,10 +15,15 @@
             {% endif %}
             <div class="content overflow-auto">
                 <h2>{{ article.title }}</h2>
-                <h4 class="author">{% trans "Skriven " %}{{ article.published_time }} {% trans "av" %}
+                <h4 class="author">
+                    {% blocktranslate with published_time=article.published_time trimmed %}
+                        Skriven {{ published_time }} av
+                    {% endblocktranslate %}
                     <a href="{% url 'news:author' article.author %}">
                         {% if article.author.get_full_name != " " %}{{ article.author.get_full_name }}{% else %}
-                            {{ article.author }}{% endif %}</a></h4>
+                            {{ article.author }}{% endif %}
+                    </a>
+                </h4>
                 {{ article.content | safe }}
             </div>
         </div>

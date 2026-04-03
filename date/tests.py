@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from unittest.mock import patch
 
 from django.conf import settings
@@ -6,9 +6,11 @@ from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
+from django.template import Context, Template
 from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 from django.urls import reverse
+from django.utils import timezone
 from django.utils import translation
 
 from date.language_utils import localize_url, strip_language_prefix
@@ -289,6 +291,71 @@ class LanguageSelectionTests(TestCase):
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "sv")
         self.assertNotContains(response, 'action="')
         self.assertNotContains(response, 'name="lang"')
+
+    def test_localized_timeuntil_filter_uses_finnish_word_order(self):
+        template = Template("{% load localized_time %}{{ value|localized_timeuntil }}")
+        value = timezone.now() + timedelta(minutes=1)
+        with translation.override("fi"):
+            rendered = template.render(Context({"value": value}))
+        self.assertTrue(rendered.endswith(" kuluttua"))
+        self.assertIn("minuutin", rendered)
+
+    def test_localized_timeuntil_filter_uses_finnish_genitive_for_zero_minutes(self):
+        template = Template("{% load localized_time %}{{ value|localized_timeuntil }}")
+        value = timezone.now() + timedelta(seconds=30)
+        with translation.override("fi"):
+            rendered = template.render(Context({"value": value}))
+        self.assertEqual(rendered, "0 minuutin kuluttua")
+
+    def test_localized_timeuntil_filter_uses_swedish_word_order(self):
+        template = Template("{% load localized_time %}{{ value|localized_timeuntil }}")
+        value = timezone.now() + timedelta(minutes=1)
+        with translation.override("sv"):
+            rendered = template.render(Context({"value": value}))
+        self.assertTrue(rendered.startswith("om "))
+
+    def test_localized_timesince_ago_filter_uses_finnish_word_order(self):
+        template = Template("{% load localized_time %}{{ value|localized_timesince_ago }}")
+        value = timezone.now() - timedelta(minutes=1)
+        with translation.override("fi"):
+            rendered = template.render(Context({"value": value}))
+        self.assertTrue(rendered.endswith(" sitten"))
+
+    def test_localized_timesince_ago_filter_uses_english_word_order(self):
+        template = Template("{% load localized_time %}{{ value|localized_timesince_ago }}")
+        value = timezone.now() - timedelta(minutes=1)
+        with translation.override("en"):
+            rendered = template.render(Context({"value": value}))
+        self.assertTrue(rendered.endswith(" ago"))
+
+    def test_localized_remaining_places_filter_uses_finnish_word_order(self):
+        template = Template("{% load localized_time %}{{ value|localized_remaining_places }}")
+        with translation.override("fi"):
+            rendered = template.render(Context({"value": 80}))
+        self.assertEqual(rendered, "80 paikkaa jäljellä!")
+
+    def test_localized_remaining_places_filter_uses_swedish_word_order(self):
+        template = Template("{% load localized_time %}{{ value|localized_remaining_places }}")
+        with translation.override("sv"):
+            rendered = template.render(Context({"value": 80}))
+        self.assertEqual(rendered, "Det finns 80 platser!")
+
+    def test_footer_skips_social_buttons_without_urls(self):
+        template = Template("{% include 'core/footer.html' %}")
+        rendered = template.render(Context({
+            "SOCIAL_BUTTONS": [
+                ["fa-facebook-f", "https://example.com/facebook"],
+                ["fa-github", ""],
+            ],
+            "ASSOCIATION_NAME_FULL": "Test Association",
+            "ASSOCIATION_EMAIL": "test@example.com",
+            "ASSOCIATION_ADDRESS_L1": "Line 1",
+            "ASSOCIATION_ADDRESS_L2": "Line 2",
+            "ASSOCIATION_POSTAL_CODE": "12345",
+            "ASSOCIATION_OFFICE_HOURS": "",
+        }))
+        self.assertIn("https://example.com/facebook", rendered)
+        self.assertNotIn('href=""', rendered)
 
 
 class HomepageTemplateSelectionTests(TestCase):

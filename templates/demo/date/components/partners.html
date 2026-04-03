@@ -1,6 +1,6 @@
-{% load localized_urls %}
+{% load i18n localized_urls %}
 <div class="logo-container">
-    <h3 class="header-border-bottom">Samarbetspartners</h3>
+    <h3 class="header-border-bottom">{% trans "Samarbetspartners" %}</h3>
         <div class="d-flex flex-wrap justify-content-center align-items-center">
             {%for ad in ads%}
                 <a class="m-2" href="{{ ad.company_url }}">
@@ -9,6 +9,6 @@
             {% endfor %}
         </div>
     <div class="text-center">
-        <a href="{{ '/pages/foretagssamarbete/'|localized_url }}">Vill du samarbeta med DaTe?</a>
+        <a href="{{ '/pages/foretagssamarbete/'|localized_url }}">{% trans "Vill du samarbeta med DaTe?" %}</a>
     </div>
 </div>

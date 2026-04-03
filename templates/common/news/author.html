@@ -12,10 +12,15 @@
             {% for article in articles %}
                 <div class="content overflow-auto">
                     <h1>{{ article.title }}</h1>
-                    <h4>{% trans "Skriven " %}{{ article.published_time }}{% trans " av " %}
+                    <h4>
+                        {% blocktranslate with published_time=article.published_time trimmed %}
+                            Skriven {{ published_time }} av
+                        {% endblocktranslate %}
                         <a href="{% url 'news:author' article.author %}">
                             {% if article.author.get_full_name != " " %}{{ article.author.get_full_name }}{% else %}
-                                {{ article.author }}{% endif %}</a></h4>
+                                {{ article.author }}{% endif %}
+                        </a>
+                    </h4>
                     {{ article.content | safe }}
                 </div>
                 {% empty %}

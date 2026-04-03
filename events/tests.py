@@ -135,6 +135,30 @@ class EventTestCase(TestCase):
         response = c.get(reverse('events:detail', args=['no-such-event']))
         self.assertEqual(response.status_code, 404)
 
+    def test_members_only_event_redirects_anonymous_user_to_login(self):
+        self.event.members_only = True
+        self.event.save()
+
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('login'), response.headers['Location'])
+
+    def test_members_only_event_allows_authenticated_user(self):
+        self.event.members_only = True
+        self.event.save()
+        self.client.login(username=self.member.username, password='test')
+
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
+        self.assertEqual(response.status_code, 200)
+
+    def test_members_only_event_signup_redirects_anonymous_user_to_login(self):
+        self.event.members_only = True
+        self.event.save()
+
+        response = self.client.post(reverse('events:detail', args=[self.event.slug]), self.content)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('login'), response.headers['Location'])
+
     def test_get_events_index(self):
         c = Client()
         response = c.get(reverse('events:index'))
@@ -159,6 +183,24 @@ class EventTestCase(TestCase):
         correct = c.post(reverse('events:detail', args=[self.event.slug]), right)
         self.assertEqual(correct.status_code, 200)
         self.assertNotContains(correct, "invalid passcode")
+
+    def test_passcode_unlock_is_scoped_per_event(self):
+        self.event.passcode = 'secret'
+        self.event.save()
+        other_event = Event.objects.create(
+            title='Other secret event',
+            slug='other-secret-event',
+            author_id=self.member.id,
+            sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
+            passcode='secret',
+        )
+        c = Client()
+
+        unlocked = c.post(reverse('events:detail', args=[self.event.slug]), {'passcode': 'secret'})
+        self.assertEqual(unlocked.status_code, 200)
+
+        other_response = c.get(reverse('events:detail', args=[other_event.slug]))
+        self.assertTemplateUsed(other_response, "events/event_passcode.html")
 
     def test_sign_up_members_before_sign_up_open(self):
         self.event.sign_up_members = timezone.now() + timezone.timedelta(days=1)
@@ -446,6 +488,47 @@ class EventCapacityTests(TestCase):
 
         self.assertTrue(child.event_is_full())
         self.assertFalse(parent.event_is_full())
+
+    def test_remaining_places_subtracts_existing_registrations(self):
+        event = Event.objects.create(
+            title="Limited Event",
+            slug="limited-event",
+            author=self.author,
+            sign_up_max_participants=3,
+        )
+        EventAttendees.objects.create(
+            event=event,
+            user="Registered",
+            email="registered@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        self.assertEqual(event.remaining_places(), 2)
+
+    def test_child_event_remaining_places_uses_parent_attendance(self):
+        parent = Event.objects.create(
+            title="Parent Capacity Event",
+            slug="parent-capacity-event",
+            author=self.author,
+        )
+        child = Event.objects.create(
+            title="Child Capacity Event",
+            slug="child-capacity-event",
+            author=self.author,
+            parent=parent,
+            sign_up_max_participants=2,
+        )
+        EventAttendees.objects.create(
+            event=parent,
+            original_event=child,
+            user="Registered",
+            email="child-capacity@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        self.assertEqual(child.remaining_places(), 1)
 
 
 @override_settings(CONTENT_VARIABLES={**settings.CONTENT_VARIABLES, "INTERNATIONAL_EVENT_SLUGS": ["intl-slug"]})
