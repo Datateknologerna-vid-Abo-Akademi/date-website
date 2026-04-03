@@ -36,7 +36,7 @@
                     </div>
                 </div>
 
-                <div id="userInfo">
+                <div id="userInfo"{% if form.errors %} style="display:none;"{% endif %}>
                     <table id="table" class="table table-striped profile-table">
                         <tr><td>{% trans 'Email:' %}</td><td>{{ user.email|default:"-" }}</td></tr>
                         <tr><td>{% trans 'First name:' %}</td><td>{{ user.first_name|default:"-" }}</td></tr>
@@ -53,17 +53,20 @@
                     </div>
                 </div>
 
-                <div id="editForm" style="display:none;">
+                <div id="editForm"{% if not form.errors %} style="display:none;"{% endif %}>
                     <form method="post">
                         {% csrf_token %}
+                        {% if form.non_field_errors %}
+                            <div class="error">{{ form.non_field_errors }}</div>
+                        {% endif %}
                         <table id="table" class="table table-striped profile-table">
-                            <tr><td>{% trans 'First name:' %}</td><td>{{ form.first_name }}</td></tr>
-                            <tr><td>{% trans 'Last name:' %}</td><td>{{ form.last_name }}</td></tr>
-                            <tr><td>{% trans 'Phone number:' %}</td><td>{{ form.phone }}</td></tr>
-                            <tr><td>{% trans 'Address:' %}</td><td>{{ form.address }}</td></tr>
-                            <tr><td>{% trans 'Zip code:' %}</td><td>{{ form.zip_code }}</td></tr>
-                            <tr><td>{% trans 'City:' %}</td><td>{{ form.city }}</td></tr>
-                            <tr><td>{% trans 'Country:' %}</td><td>{{ form.country }}</td></tr>
+                            <tr><td>{% trans 'First name:' %}</td><td>{{ form.first_name }}{{ form.first_name.errors }}</td></tr>
+                            <tr><td>{% trans 'Last name:' %}</td><td>{{ form.last_name }}{{ form.last_name.errors }}</td></tr>
+                            <tr><td>{% trans 'Phone number:' %}</td><td>{{ form.phone }}{{ form.phone.errors }}</td></tr>
+                            <tr><td>{% trans 'Address:' %}</td><td>{{ form.address }}{{ form.address.errors }}</td></tr>
+                            <tr><td>{% trans 'Zip code:' %}</td><td>{{ form.zip_code }}{{ form.zip_code.errors }}</td></tr>
+                            <tr><td>{% trans 'City:' %}</td><td>{{ form.city }}{{ form.city.errors }}</td></tr>
+                            <tr><td>{% trans 'Country:' %}</td><td>{{ form.country }}{{ form.country.errors }}</td></tr>
                             <tr><td>{% trans 'Membership type:' %}</td><td>{{ user.get_str_membership_type|default:"-" }}</td></tr>
                         </table>
                         <div class="profile-toolbar">

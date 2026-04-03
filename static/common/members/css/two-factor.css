@@ -59,14 +59,55 @@
     margin-top: 1.25rem;
 }
 
+.two-factor-actions a.theme-button,
+.two-factor-inline-form a.theme-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--linkColorLight);
+}
+
+.two-factor-confirm {
+    margin-top: 1.5rem;
+}
+
+.two-factor-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.two-factor-checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--primaryColorLighter);
+}
+
+.two-factor-actions .theme-button {
+    min-width: 140px;
+}
+
+.two-factor-danger {
+    min-width: 220px;
+}
+
 .two-factor-secondary {
     background-color: var(--primaryColorLight);
-    color: var(--textColorLightish);
 }
 
 .two-factor-secondary:hover,
 .two-factor-secondary:focus {
     background-color: var(--primaryColorLighte);
+}
+
+.two-factor-actions a.two-factor-secondary:hover,
+.two-factor-actions a.two-factor-secondary:focus,
+.two-factor-inline-form a.two-factor-secondary:hover,
+.two-factor-inline-form a.two-factor-secondary:focus {
     color: var(--linkColorLightHover);
 }
 

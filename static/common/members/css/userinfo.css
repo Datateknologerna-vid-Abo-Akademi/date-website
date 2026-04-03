@@ -199,7 +199,12 @@ div a:hover {
 
 .secondary-action {
     background-color: var(--primaryColorLight);
-    color: var(--textColorLightish);
+    color: var(--linkColorLight);
+}
+
+.secondary-action:hover,
+.secondary-action:focus {
+    color: var(--linkColorLightHover);
 }
 
 .profile-actions {

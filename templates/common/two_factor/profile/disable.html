@@ -8,9 +8,20 @@
 
         <form method="post">
             {% csrf_token %}
-            {{ form.as_p }}
+            {% if form.non_field_errors %}
+                <div class="two-factor-errors">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <div class="two-factor-confirm">
+                <label for="{{ form.understand.id_for_label }}" class="two-factor-checkbox-label">
+                    {{ form.understand }}
+                    <span>{{ form.understand.label }}</span>
+                </label>
+                {% if form.understand.errors %}
+                    <div class="two-factor-errors">{{ form.understand.errors }}</div>
+                {% endif %}
+            </div>
             <div class="two-factor-actions">
-                <button type="submit" class="theme-button">{% trans "Disable" %}</button>
+                <button type="submit" class="theme-button two-factor-danger">{% trans "Disable" %}</button>
                 <a href="{% url 'members:info' %}" class="theme-button two-factor-secondary">{% trans "Cancel" %}</a>
             </div>
         </form>

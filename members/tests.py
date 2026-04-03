@@ -321,7 +321,7 @@ class TwoFactorIntegrationTests(TestCase):
     def test_profile_page_shows_2fa_state(self):
         self.client.force_login(self.member, backend='members.backends.AuthBackend')
         response = self.client.get(reverse('members:info'))
-        self.assertContains(response, 'Two-factor authentication')
+        self.assertContains(response, reverse('two_factor:setup'))
 
         TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
         response = self.client.get(reverse('members:info'))
@@ -348,3 +348,52 @@ class TwoFactorIntegrationTests(TestCase):
 
         response = self.client.get(reverse('admin:index'))
         self.assertEqual(response.status_code, 200)
+
+    def test_admin_login_allows_staff_without_registered_2fa(self):
+        admin_user = Member.objects.create_superuser(
+            username='adminplain',
+            email='adminplain@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+        )
+        response = self.client.get(f"{reverse('login')}?next={reverse('admin:index')}")
+        prefix = self._wizard_prefix(response)
+
+        response = self.client.post(f"{reverse('login')}?next={reverse('admin:index')}", data={
+            f'{prefix}-current_step': 'auth',
+            'auth-username': admin_user.email,
+            'auth-password': 'secret12345',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], reverse('admin:index'))
+
+    def test_setup_complete_redirects_to_saved_next_target(self):
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+        device = TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
+        session = self.client.session
+        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
+        session['next'] = reverse('admin:index')
+        session.save()
+
+        response = self.client.get(reverse('two_factor:setup_complete'))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], reverse('admin:index'))
+
+    def test_invalid_profile_post_keeps_editor_open_with_errors(self):
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+        response = self.client.post(reverse('members:info'), data={
+            'first_name': '',
+            'last_name': self.member.last_name,
+            'phone': self.member.phone,
+            'address': self.member.address,
+            'zip_code': self.member.zip_code,
+            'city': self.member.city,
+            'country': self.member.country,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id_first_name_error', html=False)
+        self.assertContains(response, 'id="userInfo" style="display:none;"', html=False)
+        self.assertNotContains(response, 'id="editForm" style="display:none;"', html=False)

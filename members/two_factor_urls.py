@@ -6,6 +6,7 @@ from .two_factor import (
     MemberDisableView,
     MemberQRGeneratorView,
     MemberSetupView,
+    MemberSetupCompleteView,
     TwoFactorProfileRedirectView,
 )
 
@@ -15,7 +16,7 @@ urlpatterns = [
     path('', TwoFactorProfileRedirectView.as_view(), name='profile'),
     path('setup/', MemberSetupView.as_view(), name='setup'),
     path('qrcode/', MemberQRGeneratorView.as_view(), name='qr'),
-    path('setup/complete/', RedirectView.as_view(pattern_name='members:info', permanent=False), name='setup_complete'),
+    path('setup/complete/', MemberSetupCompleteView.as_view(), name='setup_complete'),
     path('backup/tokens/', MemberBackupTokensView.as_view(), name='backup_tokens'),
     path('disable/', MemberDisableView.as_view(), name='disable'),
 ]

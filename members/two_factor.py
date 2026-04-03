@@ -2,14 +2,23 @@ import logging
 
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
+from django.urls import resolve, reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 import django_otp
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.forms import AuthenticationTokenForm, BackupTokenForm, TOTPDeviceForm
-from two_factor.views import BackupTokensView, DisableView, LoginView, QRGeneratorView, SetupView
+from two_factor.views import (
+    BackupTokensView,
+    DisableView,
+    LoginView,
+    QRGeneratorView,
+    SetupCompleteView,
+    SetupView,
+)
+from two_factor.views.mixins import OTPRequiredMixin
 
 logger = logging.getLogger('date')
 
@@ -40,10 +49,26 @@ class MemberLoginView(LoginView):
         (LoginView.BACKUP_STEP, BackupTokenForm),
     )
 
+    def done(self, form_list, **kwargs):
+        response = super().done(form_list, **kwargs)
+        redirect_to = self.get_success_url()
+        target = self.request.GET.get(self.redirect_field_name)
+
+        if getattr(self.get_user(), 'otp_device', None) or not target or not OTPRequiredMixin.is_otp_view(target):
+            return response
+
+        resolver_match = resolve(target)
+        admin_site = getattr(resolver_match.func, 'admin_site', None)
+        if admin_site and self.request.user.is_active and self.request.user.is_staff and not member_has_2fa(self.request.user):
+            return HttpResponseRedirect(redirect_to)
+
+        if target:
+            self.request.session['next'] = redirect_to
+        return redirect('two_factor:setup')
+
 
 class MemberSetupView(SetupView):
     template_name = 'two_factor/core/setup.html'
-    success_url = 'members:info'
 
     def done(self, form_list, **kwargs):
         try:
@@ -75,6 +100,13 @@ class MemberBackupTokensView(BackupTokensView):
 
 class MemberQRGeneratorView(QRGeneratorView):
     pass
+
+
+class MemberSetupCompleteView(SetupCompleteView):
+    def get(self, request, *args, **kwargs):
+        if request.session.get('next'):
+            return redirect(request.session.get('next'))
+        return redirect('members:info')
 
 
 class TwoFactorProfileRedirectView(RedirectView):

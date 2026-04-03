@@ -1575,6 +1575,72 @@ msgstr "Jos sinulla on lisäkysymyksiä, ota yhteyttä hallitukseen."
 msgid "Mvh,"
 msgstr "Ystävällisin terveisin,"
 
+#: templates/common/members/userinfo.html:5
+msgid "Member profile"
+msgstr "Jäsenprofiili"
+
+#: templates/common/members/userinfo.html:30
+#: templates/common/members/userinfo.html:85
+msgid "Two-factor authentication"
+msgstr "Kaksivaiheinen tunnistautuminen"
+
+#: templates/common/members/userinfo.html:32
+msgid "Enabled"
+msgstr "Käytössä"
+
+#: templates/common/members/userinfo.html:34
+msgid "Not enabled"
+msgstr "Ei käytössä"
+
+#: templates/common/members/userinfo.html:42
+#: templates/common/members/userinfo.html:63
+msgid "First name:"
+msgstr "Etunimi:"
+
+#: templates/common/members/userinfo.html:43
+#: templates/common/members/userinfo.html:64
+msgid "Last name:"
+msgstr "Sukunimi:"
+
+#: templates/common/members/userinfo.html:44
+#: templates/common/members/userinfo.html:65
+msgid "Phone number:"
+msgstr "Puhelinnumero:"
+
+#: templates/common/members/userinfo.html:45
+#: templates/common/members/userinfo.html:66
+msgid "Address:"
+msgstr "Osoite:"
+
+#: templates/common/members/userinfo.html:46
+#: templates/common/members/userinfo.html:67
+msgid "Zip code:"
+msgstr "Postinumero:"
+
+#: templates/common/members/userinfo.html:47
+#: templates/common/members/userinfo.html:68
+msgid "City:"
+msgstr "Kaupunki:"
+
+#: templates/common/members/userinfo.html:48
+#: templates/common/members/userinfo.html:69
+msgid "Country:"
+msgstr "Maa:"
+
+#: templates/common/members/userinfo.html:49
+#: templates/common/members/userinfo.html:70
+msgid "Membership type:"
+msgstr "Jäsentyyppi:"
+
+#: templates/common/members/userinfo.html:87
+msgid "Positions of trust"
+msgstr "Luottamustehtävät"
+
+#: templates/common/members/userinfo.html:91
+#, python-format
+msgid "To change your username or email address, contact the board at %(ASSOCIATION_EMAIL)s"
+msgstr "Jos haluat vaihtaa käyttäjätunnuksesi tai sähköpostiosoitteesi, ota yhteyttä hallitukseen osoitteessa %(ASSOCIATION_EMAIL)s"
+
 #: templates/common/two_factor/_wizard_actions.html:6
 msgid "Continue"
 msgstr "Jatka"

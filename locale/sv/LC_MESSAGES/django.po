@@ -1130,7 +1130,7 @@ msgstr "Your password was changed."
 #: templates/common/members/registration/password_change_form.html:11
 #: templates/common/members/userinfo.html:114
 msgid "Password change"
-msgstr "Password change"
+msgstr "Byt lösenord"
 
 #: templates/common/members/registration/password_change_form.html:12
 msgid ""
@@ -1482,6 +1482,84 @@ msgstr "Om ytterligare frågor uppstår, vänligen kontakta styrelsen."
 #: templates/common/members/registration/password_reset_email.html:13
 msgid "Mvh,"
 msgstr "Mvh,"
+
+#: templates/common/members/userinfo.html:5
+msgid "Member profile"
+msgstr "Medlemsprofil"
+
+#: templates/common/members/userinfo.html:30
+#: templates/common/members/userinfo.html:85
+msgid "Two-factor authentication"
+msgstr "Tvåfaktorsautentisering"
+
+#: templates/common/members/userinfo.html:32
+msgid "Enabled"
+msgstr "Aktiverad"
+
+#: templates/common/members/userinfo.html:34
+msgid "Not enabled"
+msgstr "Inte aktiverad"
+
+#: templates/common/members/userinfo.html:42
+#: templates/common/members/userinfo.html:63
+msgid "First name:"
+msgstr "Förnamn:"
+
+#: templates/common/members/userinfo.html:43
+#: templates/common/members/userinfo.html:64
+msgid "Last name:"
+msgstr "Efternamn:"
+
+#: templates/common/members/userinfo.html:44
+#: templates/common/members/userinfo.html:65
+msgid "Phone number:"
+msgstr "Telefonnummer:"
+
+#: templates/common/members/userinfo.html:45
+#: templates/common/members/userinfo.html:66
+msgid "Address:"
+msgstr "Adress:"
+
+#: templates/common/members/userinfo.html:46
+#: templates/common/members/userinfo.html:67
+msgid "Zip code:"
+msgstr "Postkod:"
+
+#: templates/common/members/userinfo.html:47
+#: templates/common/members/userinfo.html:68
+msgid "City:"
+msgstr "Stad:"
+
+#: templates/common/members/userinfo.html:48
+#: templates/common/members/userinfo.html:69
+msgid "Country:"
+msgstr "Land:"
+
+#: templates/common/members/userinfo.html:49
+#: templates/common/members/userinfo.html:70
+msgid "Membership type:"
+msgstr "Medlemstyp:"
+
+#: templates/common/members/userinfo.html:52
+msgid "Edit"
+msgstr "Redigera"
+
+#: templates/common/members/userinfo.html:73
+msgid "Save"
+msgstr "Spara"
+
+#: templates/common/members/userinfo.html:74
+msgid "Cancel"
+msgstr "Avbryt"
+
+#: templates/common/members/userinfo.html:87
+msgid "Positions of trust"
+msgstr "Funktionärsposter"
+
+#: templates/common/members/userinfo.html:91
+#, python-format
+msgid "To change your username or email address, contact the board at %(ASSOCIATION_EMAIL)s"
+msgstr "För att ändra ditt användarnamn eller din e-postadress, kontakta styrelsen på %(ASSOCIATION_EMAIL)s"
 
 #: templates/common/two_factor/_wizard_actions.html:6
 msgid "Continue"
