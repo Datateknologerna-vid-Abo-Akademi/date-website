@@ -7,6 +7,10 @@ from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from members.constants import (
+    TWO_FACTOR_SETUP_SESSION_KEY,
+    TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY,
+)
 from members.forms import (FunctionaryForm, MemberCreationForm, SignUpForm,
                            SubscriptionPaymentForm)
 from members.functionary import get_selected_role, get_selected_year
@@ -279,7 +283,7 @@ class TwoFactorFlowTests(TestCase):
     def _mark_two_factor_verified(self, user=None):
         user = user or self.user
         session = self.client.session
-        session["two_factor_verified_user_id"] = user.pk
+        session[TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY] = user.pk
         session.save()
 
     def test_login_without_two_factor_redirects_directly_to_profile(self):
@@ -289,7 +293,7 @@ class TwoFactorFlowTests(TestCase):
         )
         self.assertRedirects(response, reverse("members:info"), fetch_redirect_response=False)
         self.assertEqual(int(self.client.session["_auth_user_id"]), self.user.pk)
-        self.assertNotIn("two_factor_verified_user_id", self.client.session)
+        self.assertNotIn(TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY, self.client.session)
 
     def test_enabled_two_factor_user_is_redirected_to_verification(self):
         self._enable_two_factor()
@@ -330,7 +334,7 @@ class TwoFactorFlowTests(TestCase):
             {"token": token, "next": reverse("members:info")},
         )
         self.assertRedirects(response, reverse("members:info"))
-        self.assertEqual(self.client.session["two_factor_verified_user_id"], self.user.pk)
+        self.assertEqual(self.client.session[TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY], self.user.pk)
 
         profile_response = self.client.get(reverse("members:info"))
         self.assertEqual(profile_response.status_code, 200)
@@ -348,7 +352,7 @@ class TwoFactorFlowTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Felaktig verifieringskod")
-        self.assertNotIn("two_factor_verified_user_id", self.client.session)
+        self.assertNotIn(TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY, self.client.session)
 
     def test_user_can_enable_two_factor_after_confirming_token(self):
         self.client.force_login(self.user)
@@ -359,7 +363,7 @@ class TwoFactorFlowTests(TestCase):
         )
         self.assertRedirects(response, reverse("members:two_factor_settings"))
 
-        setup_secret = self.client.session["two_factor_setup_secret"]
+        setup_secret = self.client.session[TWO_FACTOR_SETUP_SESSION_KEY]
         token = pyotp.TOTP(setup_secret).now()
         confirm_response = self.client.post(
             reverse("members:two_factor_settings"),
@@ -369,8 +373,8 @@ class TwoFactorFlowTests(TestCase):
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.has_2fa_enabled)
-        self.assertEqual(self.client.session["two_factor_verified_user_id"], self.user.pk)
-        self.assertNotIn("two_factor_setup_secret", self.client.session)
+        self.assertEqual(self.client.session[TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY], self.user.pk)
+        self.assertNotIn(TWO_FACTOR_SETUP_SESSION_KEY, self.client.session)
 
     def test_user_can_disable_two_factor_with_password_and_token(self):
         secret = self._enable_two_factor()
@@ -385,7 +389,7 @@ class TwoFactorFlowTests(TestCase):
 
         self.user.refresh_from_db()
         self.assertFalse(self.user.has_2fa_enabled)
-        self.assertNotIn("two_factor_verified_user_id", self.client.session)
+        self.assertNotIn(TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY, self.client.session)
 
     def test_force_login_clears_existing_two_factor_session_state(self):
         self._enable_two_factor()
@@ -399,7 +403,7 @@ class TwoFactorFlowTests(TestCase):
         )
         self.client.force_login(other_user)
 
-        self.assertNotIn("two_factor_verified_user_id", self.client.session)
+        self.assertNotIn(TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY, self.client.session)
 
     def test_admin_requires_two_factor_after_login(self):
         self._enable_two_factor(
@@ -421,3 +425,19 @@ class TwoFactorFlowTests(TestCase):
             f"{reverse('members:two_factor_verify')}?next={reverse('admin:index')}",
             fetch_redirect_response=False,
         )
+
+    def test_admin_logout_is_exempt_from_two_factor_redirect(self):
+        self._enable_two_factor(
+            Member.objects.create_superuser(
+                username="adminlogout",
+                password=self.password,
+                email="adminlogout@example.com",
+            )
+        )
+        self.client.post(
+            reverse("admin:login"),
+            {"username": "adminlogout", "password": self.password},
+        )
+
+        response = self.client.post(reverse("admin:logout"))
+        self.assertEqual(response.status_code, 302)

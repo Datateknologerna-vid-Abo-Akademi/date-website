@@ -22,6 +22,10 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View
 
 from core.utils import validate_captcha, send_email_task
+from .constants import (
+    TWO_FACTOR_SETUP_SESSION_KEY,
+    TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY,
+)
 from .forms import (
     SignUpForm,
     FunctionaryForm,
@@ -42,9 +46,6 @@ from .two_factor import (
 from .tokens import account_activation_token
 
 logger = logging.getLogger('date')
-
-
-TWO_FACTOR_SETUP_SESSION_KEY = "two_factor_setup_secret"
 
 
 class UserinfoView(View):
@@ -170,7 +171,7 @@ class TwoFactorVerifyView(View):
     def get(self, request):
         if not request.user.has_2fa_enabled:
             return redirect(self._get_safe_redirect_url(request) or reverse("members:info"))
-        if request.session.get("two_factor_verified_user_id") == request.user.pk:
+        if request.session.get(TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY) == request.user.pk:
             return redirect(self._get_safe_redirect_url(request) or reverse("members:info"))
 
         context = {
@@ -189,7 +190,7 @@ class TwoFactorVerifyView(View):
         if form.is_valid():
             token = form.cleaned_data["token"]
             if verify_two_factor_token(request.user.two_factor_secret, token):
-                request.session["two_factor_verified_user_id"] = request.user.pk
+                request.session[TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY] = request.user.pk
                 messages.success(request, _("Tvåfaktorsautentisering bekräftad."))
                 return redirect(next_url or reverse("members:info"))
             form.add_error("token", _("Felaktig verifieringskod."))
@@ -253,7 +254,7 @@ class TwoFactorSettingsView(View):
                 request.user.two_factor_secret = setup_secret
                 request.user.two_factor_enabled_at = timezone.now()
                 request.user.save(update_fields=["two_factor_secret", "two_factor_enabled_at"])
-                request.session["two_factor_verified_user_id"] = request.user.pk
+                request.session[TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY] = request.user.pk
                 request.session.pop(TWO_FACTOR_SETUP_SESSION_KEY, None)
                 messages.success(request, _("Tvåfaktorsautentisering aktiverades."))
                 return redirect(reverse("members:two_factor_settings"))
@@ -276,7 +277,7 @@ class TwoFactorSettingsView(View):
                 request.user.two_factor_secret = ""
                 request.user.two_factor_enabled_at = None
                 request.user.save(update_fields=["two_factor_secret", "two_factor_enabled_at"])
-                request.session.pop("two_factor_verified_user_id", None)
+                request.session.pop(TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY, None)
                 messages.success(request, _("Tvåfaktorsautentisering stängdes av."))
                 return redirect(reverse("members:two_factor_settings"))
 

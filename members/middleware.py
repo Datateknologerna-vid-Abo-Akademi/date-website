@@ -1,7 +1,9 @@
 from urllib.parse import urlencode
 
 from django.shortcuts import redirect
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
+
+from .constants import TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY
 
 
 class TwoFactorRequiredMiddleware:
@@ -20,14 +22,16 @@ class TwoFactorRequiredMiddleware:
             return False
         if not getattr(user, "has_2fa_enabled", False):
             return False
-        if request.session.get("two_factor_verified_user_id") == user.pk:
+        if request.session.get(TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY) == user.pk:
             return False
 
         verify_path = reverse("members:two_factor_verify")
-        exempt_paths = {
-            verify_path,
-            reverse("logout"),
-        }
+        exempt_paths = {verify_path}
+        for url_name in ("members:logout", "admin:logout", "logout"):
+            try:
+                exempt_paths.add(reverse(url_name))
+            except NoReverseMatch:
+                continue
         if request.path in exempt_paths:
             return False
         return True

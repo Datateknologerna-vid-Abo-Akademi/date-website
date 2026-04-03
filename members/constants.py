@@ -1,0 +1,2 @@
+TWO_FACTOR_SETUP_SESSION_KEY = "two_factor_setup_secret"
+TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY = "two_factor_verified_user_id"

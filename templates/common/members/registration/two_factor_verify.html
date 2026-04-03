@@ -2,10 +2,10 @@
 {% load i18n %}
 {% load static %}
 {% block title %}{% trans 'Tvåfaktorsautentisering' %}{% endblock %}
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'members/style.css' %}">
+{% endblock %}
 {% block content %}
-    <head>
-        <link rel="stylesheet" href="{% static 'members/style.css' %}">
-    </head>
     <div class="login-page">
         <div class="members-form">
             <h2>{% trans 'Bekräfta inloggning' %}</h2>
