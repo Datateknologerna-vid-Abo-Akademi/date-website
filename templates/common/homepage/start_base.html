@@ -1,12 +1,15 @@
 {% extends 'core/base.html' %}
 {% load cache %}
+{% load i18n %}
 
 {% block extra_head %}
+    {% include "homepage/components/head_styles.html" %}
     {% block homepage_head %}{% endblock %}
 {% endblock %}
 
 {% block content %}
-    {% cache 300 main_page_fixed %}
+    {% get_current_language as LANGUAGE_CODE %}
+    {% cache 300 main_page_fixed LANGUAGE_CODE %}
         <div class="container-fluid p-2 min-vh-100">
             {% block homepage_sections %}{% endblock %}
             <section id="reklam" class="text-size">

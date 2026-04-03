@@ -1,59 +1,40 @@
-/*Event start*/
-
-  
-.card {
-    border-radius: var(--defaultRadius);
-  }
-  
-.card .fa-chevron-right{
-    transition: .3s;
-  }
-  
-.card a:hover .fa-chevron-right{
-    transform: translateX(10px);
-  }
-  
 .event-card > .card .list-inline-item {
     color: var(--helpText);
     font-size: 14px;
-  }
+}
   
 .event-card > .card .badge {
     background: var(--badgeColor);
-  }
+}
   
 .event-card > .card {
     background: var(--secondaryColor);
-  }
+}
   
-.event-card a{
+.event-card a {
     color: var(--linkColor);
     border-top: 2px solid var(--linkColor);
-  }
+}
   
-.event-card a:active{
+.event-card a:active {
     color: var(--linkColor);
-  }
+}
   
-.event-card a:hover{
+.event-card a:hover {
     background-color: inherit;
     color: var(--textColorDarkish);
-  }
+}
   
-.event-card a:focus{
+.event-card a:focus {
     background-color: inherit;
     box-shadow: none;
-  }
+}
 
 .chevron-box {
     margin: auto; 
     border: 1px solid var(--linkColorSecondary);
     border-radius: 5px;
     padding: 5px;
-}
-
-.text-color {
-    color: var(--textColorDark);
 }
 
 .card {
@@ -68,36 +49,17 @@
     transform: translateX(10px);
   }
 
-.events-container{
-    display: block;
-}
-
 .mobile-events-container{
     grid-area: events;
     display: none;
     margin-bottom: 10px;
 }
 
-.events{
-    display: grid;
-    grid-row-gap: 10px;
-}
-
 .event-box{
-    display: grid;
-    /*background-color: var(--primaryColorLighter);*/
     background-color: var(--secondaryColor);
     color: var(--textColorDark);
-    text-align: left;
-    padding: 1px;
-    -webkit-transition: all 0.2s;
-	-moz-transition: all 0.2s;
-    transition: all 0.2s;
     border-top: var(--linkColor) solid 2pt;
     box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
-    display: grid;
-    grid-template-columns: 3fr 1fr;
-    border-radius: 5px;
 }
 
 .event-box:hover {
@@ -106,111 +68,46 @@
 
 }
 
-.event-title{
-    padding-top: 5px;
-    margin: 5px;
-    /*background-color: #c43628;*/
-    border-radius: 3px;
-    padding: 5px;
-    
-}
-
-.event-date{
-    padding-top: 5px;
-    padding-left: 5px;
+.event-date {
     border-left: 1px solid var(--primaryColorLight);
-    margin: 5px;
 }
 
-.header-border-bottom{
-    border-bottom: solid;
-    border-width: 2px;
+.header-border-bottom {
     border-color: var(--helpTextLighter);
 }
 
-.more-events-button{
+.more-events-button {
     display: inline-block;
-    color: var(--linkColor)
+    color: var(--linkColor);
 }
 
-.more-events-button:hover{
+.more-events-button:hover {
     transition: 0.2s;
     scale: 1.01;
     color: var(--textColorDarkish);
 }
-/*Events end*/
 
-/*Calendar*/
-.calendar-container{
-    display: grid;
-    grid-template-columns: 0 1fr 0;
-    grid-template-areas: 
-    ". box ."
-    ". calendar .";
+.calendar-container {
     padding-bottom: 10px;
 }
-.calendar{
-    margin-bottom: 1rem;
-}
-.calendar-box{
+
+.calendar-box {
     grid-area: box;
     border: 2px solid rgb(163, 163, 163);
     border-radius: 5px;
     padding: 3px;
-}
-
-.month{
-    padding-top: 10px;
-    margin: 0;
-    text-align: center;
-}
-
-.day {
-    border-bottom: 1px solid rgb(190, 190, 190);
 }
   
 div.calendar-container a {
     color: var(--linkColor);
 }
 
-.left {
-  float: left;
-}
-
-.right {
-  float: right;
-}
-
-.cal-btn {
-  outline: none;
-  color: var(--textColorDark);
-  background-color: transparent;
-  box-shadow: 0 0 0 0;
-}
-
-.clearfix {
-  padding: 10px;
-  text-align: center;
-}
-
-/* Calendar tooltip */
-.calendar-tooltip {
-  position: relative;
-  display: inline-block;
-}
-
 .calendar-eventday {
-  /* Override vanilla calendar default
-   * Dont use this class for anything else*/
-  color: white !important;
-  background-color: var(--linkColor) !important;
+    color: white !important;
+    background-color: var(--linkColor) !important;
 }
 
 .calendar-eventday-popup {
-  /* Override vanilla calendar default
-   * Dont use this class for anything else*/
-  color: black;
-  font-size: 0.75rem;
+    color: black;
+    font-size: 0.75rem;
 }
-
-/*Calendar end*/

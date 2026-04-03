@@ -13,8 +13,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils import translation
 
-from date.language_utils import localize_url, strip_language_prefix
-from date.views import get_homepage_template_name, handler500
+from homepage.language_utils import localize_url, strip_language_prefix
+from homepage.views import get_homepage_template_name, handler500
 
 
 def localized_reverse(name, language_code, *args, **kwargs):
@@ -233,6 +233,18 @@ class LanguageSelectionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "fi")
         self.assertContains(response, "Kieli")
+
+    def test_homepage_cache_varies_by_language(self):
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
+        english = self.client.get("/")
+        self.assertEqual(english.status_code, 200)
+        self.assertContains(english, "Language")
+
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "fi"
+        finnish = self.client.get("/")
+        self.assertEqual(finnish.status_code, 200)
+        self.assertContains(finnish, "Kieli")
+        self.assertNotContains(finnish, ">Language<")
 
     def test_homepage_preserves_swedish_labels_by_default(self):
         response = self.client.get("/")

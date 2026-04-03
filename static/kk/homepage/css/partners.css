@@ -1,6 +1,4 @@
-/* Partners/Logos component */
 .logo-container {
-    grid-area: logos;
     display: block;
     overflow: hidden;
 }
@@ -22,8 +20,5 @@
 }
 
 .company-logo img {
-    max-height: 100px;
-    max-width: 100%;
-    /* keep img ratio correct */
     height: auto !important;
 }

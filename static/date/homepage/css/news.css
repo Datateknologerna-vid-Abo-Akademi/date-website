@@ -1,77 +1,22 @@
-/*NEWS-EVENTS*/
-
 .news-events {
-    color: var(--textColorDark);
-    margin-top: 2vh;
     background: linear-gradient(180deg, var(--secondaryColorDarker) 0%, var(--secondaryColor) 100%);
-    min-height: 100vh;
-    word-break: break-all;
-    word-break: break-word;
-    hyphens: auto;
-    border-radius: 5px;
 }
 
-.section-title p{
-    text-align: center;
-    font-weight: 500;
-    line-height: 2.2;
-    color: #878787;
-}
-
-/*News start*/
-
-.text-size{
-    font-weight: bold;
-}
-
-.feed-container{
-    grid-area: news;
-}
-
-.news-container{
-    display: grid;
-    grid-row-gap: 1vh;
-    padding-bottom: 10px;
-}
-
-.news-box{
-    background-color: var(--secondaryColor);
-    padding: 10px;
-    border-radius: 5px;
-}
-
-.news-content img{
-    max-height: 30vh;
-    max-width: 100%;
-    /* keep img ratio correct */
-    width: auto !important;
-    height: auto !important;
-    border-radius: 3px;
-}
-
-.news-date{
-    color: var(--helpText);
-}
-
-div.news-content a{
+div.news-content a {
     display: inline-block;
     color: var(--linkColorDark);
 }
 
-div.news-content a:hover{
+div.news-content a:hover {
     color: var(--linkColorDarkHover);
 }
 
-.more-news{
+.more-news {
     color: var(--linkColorDark);
 }
 
-.more-news:hover{
+.more-news:hover {
     color: var(--linkColorDarkHover);
-}
-
-.news-header{
-    position: relative;
 }
 
 @keyframes shine {
@@ -97,13 +42,12 @@ div.news-content a:hover{
     position: absolute;
     left: 95%;
     bottom: 0%;
-  }
+}
 
-
-.aa-img img{
+.aa-img img {
     max-width: 100%;
     border-radius: 20px;
-    -webkit-filter: saturate(45%); /* Safari 6.0 - 9.0 */
+    -webkit-filter: saturate(45%);
     filter: saturate(45%);
 }
 

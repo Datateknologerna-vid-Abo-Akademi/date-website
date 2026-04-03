@@ -1,0 +1,54 @@
+/* Shared homepage news/feed structure. Associations own branding, link colors, and decorative badges. */
+
+.news-events {
+    color: var(--textColorDark);
+    margin-top: 2vh;
+    min-height: 100vh;
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+    border-radius: var(--defaultRadius);
+}
+
+.section-title p {
+    text-align: center;
+    font-weight: 500;
+    line-height: 2.2;
+    color: #878787;
+}
+
+.text-size {
+    font-weight: bold;
+}
+
+.feed-container {
+    grid-area: news;
+}
+
+.news-container {
+    display: grid;
+    grid-row-gap: 1vh;
+    padding-bottom: 10px;
+}
+
+.news-box {
+    background-color: var(--secondaryColor);
+    padding: 10px;
+    border-radius: var(--defaultRadius);
+}
+
+.news-content img {
+    max-height: 30vh;
+    max-width: 100%;
+    width: auto !important;
+    height: auto !important;
+    border-radius: 3px;
+}
+
+.news-date {
+    color: var(--helpText);
+}
+
+.news-header {
+    position: relative;
+}

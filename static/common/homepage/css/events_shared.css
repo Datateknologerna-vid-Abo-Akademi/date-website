@@ -1,0 +1,102 @@
+/* Shared homepage event and calendar structure. Associations own palette and section-specific emphasis. */
+
+.card {
+    border-radius: var(--defaultRadius);
+}
+
+.card .fa-chevron-right {
+    transition: 0.3s;
+}
+
+.card a:hover .fa-chevron-right,
+.card:hover .fa-chevron-right {
+    transform: translateX(10px);
+}
+
+.events-container {
+    grid-area: events;
+    display: block;
+}
+
+.events {
+    display: grid;
+    grid-row-gap: 10px;
+}
+
+.text-color {
+    color: var(--textColorDark);
+}
+
+.event-box {
+    display: grid;
+    grid-template-columns: 3fr 1fr;
+    text-align: left;
+    padding: 1px;
+    border-radius: var(--defaultRadius);
+    -webkit-transition: all 0.2s;
+    -moz-transition: all 0.2s;
+    transition: all 0.2s;
+}
+
+.event-title {
+    margin: 5px;
+    padding: 5px;
+    padding-top: 5px;
+    border-radius: 3px;
+}
+
+.event-date {
+    margin: 5px;
+    padding-top: 5px;
+    padding-left: 5px;
+}
+
+.header-border-bottom {
+    border-bottom: solid 2px;
+}
+
+.calendar-container {
+    display: grid;
+    grid-template-columns: 0 1fr 0;
+    grid-template-areas:
+        ". box ."
+        ". calendar .";
+}
+
+.calendar {
+    margin-bottom: 1rem;
+}
+
+.month {
+    padding-top: 10px;
+    margin: 0;
+    text-align: center;
+}
+
+.day {
+    border-bottom: 1px solid rgb(190, 190, 190);
+}
+
+.left {
+    float: left;
+}
+
+.right {
+    float: right;
+}
+
+.cal-btn {
+    outline: none;
+    background-color: transparent;
+    box-shadow: 0 0 0 0;
+}
+
+.clearfix {
+    padding: 10px;
+    text-align: center;
+}
+
+.calendar-tooltip {
+    position: relative;
+    display: inline-block;
+}

@@ -73,8 +73,8 @@
                         <p>{{ event.content | safe }}</p>
                     </div>
                 </div>
-                {% include "events/partials/tabbed_signup.html" with content_class="baal-content" include_commodore=1 %}
-                {% include "events/partials/tabbed_attendee_list.html" with content_class="baal-content" strict_parent_capacity=1 %}
+                {% include "events/partials/tabbed_signup.html" with content_class="baal-content" signup_state_partial="events/partials/tabbed_signup_state_commodore.html" %}
+                {% include "events/partials/tabbed_attendee_list.html" with content_class="baal-content" attendee_list_partial="events/partials/tabbed_attendee_list_content_parent_capacity.html" %}
             </div>
         </div>
     </div>

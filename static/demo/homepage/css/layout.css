@@ -1,26 +1,13 @@
-/* Main grid and layout responsiveness */
-
 .main-container{
-    display: grid;
-    grid-template-columns: 1fr 850px 350px 1fr;
-    grid-template-rows: auto;
     grid-template-areas: 
       ". news sidebar ."
       ". news sidebar ."
       ". ig-scroll ig-scroll ."
       ". logos logos .";
-    grid-column-gap: 3vw;
-}
-
-@media screen and (max-width: 1400px){
-    .main-container{
-        grid-template-columns: 5vw 5fr 2fr 5vw;
-    }
 }
 
 @media screen and (max-width: 991px){
     .main-container{
-        grid-template-columns: 1vw 1fr 1vw;
         grid-template-areas:
           ". events ."
           ". news ."

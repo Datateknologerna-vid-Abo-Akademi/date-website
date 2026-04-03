@@ -1,51 +1,16 @@
-/* Layout and Grid */
 .main-container {
-    display: grid;
-    grid-template-columns: 1fr 850px 350px 1fr;
-    grid-template-rows: auto;
     grid-template-areas: 
       ". news events ."
       ". news logos ."
       ". ig-scroll ig-scroll .";
-    grid-column-gap: 3vw;
-}
-
-/* Generic animations */
-@-webkit-keyframes fadeIn {
-    from { opacity: 0; }
-    60% { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    60% { opacity: 0; }
-    to { opacity: 1; }
-}
-
-/* Width responsiveness */
-@media screen and (max-width: 1400px){
-    .main-container{
-        grid-template-columns: 5vw 5fr 2fr 5vw;
-    }
 }
 
 @media screen and (max-width: 991px){
     .main-container{
-        grid-template-columns: 1vw 1fr 1vw;
         grid-template-areas:
           ". events ."
           ". news ."
           ". logos ."
           ". ig-scroll .";
     }
-}
-
-/* Misc */
-.heading-link a {
-    color: var(--textColorDark);
-}
-
-.heading-link a:hover {
-    color: var(--textColorMedium);
 }
