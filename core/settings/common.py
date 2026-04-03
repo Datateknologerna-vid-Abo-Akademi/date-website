@@ -54,7 +54,7 @@ if not DEVELOP:
 
 def get_installed_apps(proj_apps):
     return [
-        'date',
+        'date.apps.CoreConfig',
         'members',
         *proj_apps,
         'modeltranslation',
