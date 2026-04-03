@@ -145,25 +145,29 @@ class AlumniViewRegressionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         mock_handle_alumni_signup.assert_called_once()
         payload = mock_handle_alumni_signup.call_args.args[0]
+        timestamp = mock_handle_alumni_signup.call_args.args[1]
         self.assertEqual(payload["operation"], "UPDATE")
         self.assertEqual(payload["email"], "ada@example.com")
         self.assertEqual(str(payload["token"]), str(token.token))
         self.assertEqual(payload["city"], "Turku")
+        self.assertIsInstance(timestamp, str)
 
     @patch("alumni.views.send_token_email.delay")
     @patch("alumni.views.validate_captcha", return_value=True)
     def test_update_verify_post_creates_token_and_sends_email(self, _mock_validate_captcha, mock_send_token_email):
-        response = self.client.post(
-            reverse("alumni:alumni_update"),
-            {
-                "email": "ada@example.com",
-                "cf-turnstile-response": "test-token",
-            },
-        )
+        with self.captureOnCommitCallbacks(execute=True) as callbacks:
+            response = self.client.post(
+                reverse("alumni:alumni_update"),
+                {
+                    "email": "ada@example.com",
+                    "cf-turnstile-response": "test-token",
+                },
+            )
 
         self.assertEqual(response.status_code, 200)
         token = AlumniUpdateToken.objects.get(email="ada@example.com")
-        mock_send_token_email.assert_called_once_with(token.token, "ada@example.com")
+        self.assertEqual(len(callbacks), 1)
+        mock_send_token_email.assert_called_once_with(str(token.token), "ada@example.com")
 
 
 class AlumniTaskRegressionTests(TestCase):
