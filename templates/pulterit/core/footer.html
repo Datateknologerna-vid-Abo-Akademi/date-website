@@ -1,51 +1,13 @@
+{% extends "common/core/footer.html" %}
 {% load static %}
-{%  load i18n %}
+{% load i18n %}
 
-<footer class="container pulterit-footer">
-    <div class="pulterit-footer-shell">
-        <hr>
-        <!-- Grid container -->
-        <!-- Section: Social media -->
-        <section class="col text-center">
-        
-            {% for btn in SOCIAL_BUTTONS %}
-                {% if btn.1 %}
-                <a class="btn btn-outline-light btn-floating m-1" href="{{ btn.1 }}" role="button"
-                    ><i class="fab {{ btn.0 }}"></i
-                ></a>
-                {% endif %}
-            {% endfor %}
-            
-        </section>
-        <!-- Section: Social media -->
-        <div class="row align-middle align-items-center pulterit-footer-content">
-            <div class="col-12 col-md-4 text-center pulterit-footer-brand">
-                <img class="footer-img img-fluid" alt="{{ ASSOCIATION_NAME }} logo" src="{% static 'core/images/pulterit-white.svg' %}">
-            </div>
-            <div class="col-12 col-md-4 pulterit-footer-copy">
-                <p>
-                    {% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}
-                    Styrelsen för {{ association_name }} kan kontaktas på följande sätt.
-                    {% endblocktranslate %}
-                </p>
-                <p>
-                    {% trans 'E-post' %}:<br>
-                    {{ ASSOCIATION_EMAIL }}<br>
-                    {{ ASSOCIATION_OFFICE_HOURS }}
-                </p>
-                <p>{% trans "Address" %}:<br>
-                    {{ ASSOCIATION_ADDRESS_L1 }}<br>
-                    {{ ASSOCIATION_ADDRESS_L2 }}<br>
-                    {{ ASSOCIATION_POSTAL_CODE }}
-                </p>
-            </div>
-        </div>
-        <!-- Copyright -->
-        {% block extra_footer %}{% endblock %}
-        <div class="text-center p-3">
-            &copy {% now "Y" %}
-        </div>
-        <!-- Copyright -->
-        <!-- Grid container -->
-    </div>
-</footer>
+{% block footer_class_suffix %} pulterit-footer{% endblock %}
+{% block footer_shell_class_suffix %} pulterit-footer-shell{% endblock %}
+{% block footer_content_class_suffix %} pulterit-footer-content{% endblock %}
+{% block footer_brand_class_suffix %} pulterit-footer-brand{% endblock %}
+{% block footer_copy_class_suffix %} pulterit-footer-copy{% endblock %}
+
+{% block footer_logo %}
+<img class="footer-img img-fluid" alt="{% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}{{ association_name }} logo{% endblocktranslate %}" src="{% static 'core/images/pulterit-white.svg' %}">
+{% endblock %}
