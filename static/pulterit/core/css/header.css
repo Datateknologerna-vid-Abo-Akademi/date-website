@@ -44,6 +44,17 @@ li .dropdown-menu {
     background-color: var(--primaryColorTransparent);
 }
 
+.navbar-nav .dropdown-menu {
+    margin-top: 0.35rem;
+    background-color: rgba(70, 70, 68, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+}
+
+.navbar-nav .dropdown-toggle.show {
+    background-color: rgba(255, 255, 255, 0.14);
+}
+
 .navbar-nav li a, .dropdown-item {
     color: var(--textColorLight) !important;
     border-radius: var(--defaultRadius);
@@ -73,8 +84,10 @@ li .dropdown-menu {
 }
 
 @media (max-width : 992px) {
-    .offcanvas {
+    .navbar .offcanvas {
         width: 250px !important;
+        background-color: var(--primaryColorTransparenter) !important;
+        color: var(--textColorLight) !important;
     }
     .offcanvas-start-lg {
         top: 0;
@@ -82,8 +95,52 @@ li .dropdown-menu {
         border-right: 1px solid rgba(0, 0, 0, .2);
         transform: translateX(-100%);
     }
+
+    .navbar .offcanvas .offcanvas-title,
+    .navbar .offcanvas .nav-link,
+    .navbar .offcanvas .dropdown-item {
+        color: var(--textColorLight) !important;
+    }
+
+    .navbar .offcanvas .dropdown-menu {
+        background-color: rgba(70, 70, 68, 0.96) !important;
+    }
 }
 
 .header-logo{
     max-height: 45px;
+}
+
+@media (max-width: 991.98px) {
+    .pulterit-mobile-language-switcher {
+        margin-top: 0.5rem;
+        padding-top: 0.35rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .pulterit-mobile-language-switcher__title {
+        color: var(--textColorLightish) !important;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        opacity: 1 !important;
+    }
+
+    .pulterit-mobile-language-switcher__form {
+        gap: 0.4rem !important;
+    }
+
+    .pulterit-mobile-language-switcher__option {
+        color: var(--textColorDarkish) !important;
+        background-color: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        font-weight: 600;
+    }
+
+    .pulterit-mobile-language-switcher__option:hover,
+    .pulterit-mobile-language-switcher__option:focus,
+    .pulterit-mobile-language-switcher__option:active {
+        color: var(--textColorDark) !important;
+        background-color: rgba(255, 255, 255, 0.96) !important;
+        border-color: rgba(255, 255, 255, 0.4);
+    }
 }
