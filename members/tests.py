@@ -1,21 +1,21 @@
+import time
 from unittest.mock import patch
 
-import pyotp
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import AnonymousUser
 from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
+from django_otp import DEVICE_ID_SESSION_KEY
+from django_otp.oath import TOTP
+from django_otp.plugins.otp_totp.models import TOTPDevice
 
-from members.constants import (
-    TWO_FACTOR_SETUP_SESSION_KEY,
-    TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY,
-)
 from members.forms import (FunctionaryForm, MemberCreationForm, SignUpForm,
                            SubscriptionPaymentForm)
 from members.functionary import get_selected_role, get_selected_year
 from members.models import (Functionary, FunctionaryRole, Member,
                             MembershipType, ORDINARY_MEMBER, Subscription)
+from members.two_factor import StrictTOTPDeviceForm
 
 
 class UsernameValidatorTest(TestCase):
@@ -261,201 +261,89 @@ class FunctionaryHelperTests(TestCase):
         self.assertFalse(all_roles)
 
 
-class TwoFactorFlowTests(TestCase):
+class TwoFactorIntegrationTests(TestCase):
     def setUp(self):
+        self.client = Client()
         self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
-        self.password = "secret12345"
-        self.user = Member.objects.create_user(
-            username="twofactor",
-            email="twofactor@example.com",
-            password=self.password,
+        self.member = Member.objects.create_user(
+            username='otpuser',
+            email='otp@example.com',
+            password='secret12345',
             membership_type=self.membership_type,
+            first_name='Otp',
+            last_name='User',
         )
 
-    def _enable_two_factor(self, user=None):
-        user = user or self.user
-        secret = pyotp.random_base32()
-        user.two_factor_secret = secret
-        user.two_factor_enabled_at = timezone.now()
-        user.save(update_fields=["two_factor_secret", "two_factor_enabled_at"])
-        return secret
+    def _totp_token(self, device, timestamp=None):
+        totp = TOTP(device.bin_key, device.step, device.t0, device.digits, device.drift)
+        totp.time = timestamp or time.time()
+        return str(totp.token()).zfill(device.digits)
 
-    def _mark_two_factor_verified(self, user=None):
-        user = user or self.user
+    def _wizard_prefix(self, response):
+        return response.context['wizard']['management_form'].prefix
+
+    def test_login_route_supports_email_then_requires_token(self):
+        device = TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
+        response = self.client.get(reverse('login'))
+        prefix = self._wizard_prefix(response)
+
+        response = self.client.post(reverse('login'), data={
+            f'{prefix}-current_step': 'auth',
+            'auth-username': self.member.email,
+            'auth-password': 'secret12345',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['wizard']['steps'].current, 'token')
+
+        prefix = self._wizard_prefix(response)
+        response = self.client.post(reverse('login'), data={
+            f'{prefix}-current_step': 'token',
+            'token-otp_token': self._totp_token(device),
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], reverse('members:info'))
+
+    def test_strict_totp_form_saves_zero_tolerance_device(self):
+        form_key = '3132333435363738393031323334353637383930'
+        current_token = TOTP(bytes.fromhex(form_key)).token()
+        form = StrictTOTPDeviceForm(
+            key=form_key,
+            user=self.member,
+            data={'token': current_token},
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        device = form.save()
+        self.assertEqual(device.tolerance, 0)
+
+    def test_profile_page_shows_2fa_state(self):
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+        response = self.client.get(reverse('members:info'))
+        self.assertContains(response, 'Enable two-factor authentication')
+
+        TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
+        response = self.client.get(reverse('members:info'))
+        self.assertContains(response, 'Disable two-factor authentication')
+
+    def test_admin_requires_verified_device(self):
+        admin_user = Member.objects.create_superuser(
+            username='adminotp',
+            email='adminotp@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+        )
+        device = TOTPDevice.objects.create(user=admin_user, confirmed=True, name='default')
+
+        self.client.force_login(admin_user, backend='members.backends.AuthBackend')
+        response = self.client.get(reverse('admin:index'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('admin:login'), response.headers['Location'])
+
         session = self.client.session
-        session[TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY] = user.pk
+        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
         session.save()
 
-    def test_login_without_two_factor_redirects_directly_to_profile(self):
-        response = self.client.post(
-            reverse("members:login"),
-            {"username": self.user.username, "password": self.password},
-        )
-        self.assertRedirects(response, reverse("members:info"), fetch_redirect_response=False)
-        self.assertEqual(int(self.client.session["_auth_user_id"]), self.user.pk)
-        self.assertNotIn(TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY, self.client.session)
-
-    def test_enabled_two_factor_user_is_redirected_to_verification(self):
-        self._enable_two_factor()
-        response = self.client.post(
-            reverse("members:login"),
-            {"username": self.user.username, "password": self.password},
-        )
-        self.assertRedirects(response, reverse("members:info"), fetch_redirect_response=False)
-
-        follow_up = self.client.get(reverse("members:info"))
-        self.assertRedirects(
-            follow_up,
-            f"{reverse('members:two_factor_verify')}?next={reverse('members:info')}",
-            fetch_redirect_response=False,
-        )
-
-    def test_login_preserves_next_parameter(self):
-        login_url = f"{reverse('members:login')}?next=/events/"
-        response = self.client.get(login_url)
-        self.assertContains(response, 'name="next" value="/events/"')
-
-        post_response = self.client.post(
-            login_url,
-            {"username": self.user.username, "password": self.password, "next": "/events/"},
-        )
-        self.assertRedirects(post_response, "/events/", fetch_redirect_response=False)
-
-    def test_two_factor_verification_completes_login(self):
-        secret = self._enable_two_factor()
-        self.client.post(
-            reverse("members:login"),
-            {"username": self.user.username, "password": self.password},
-        )
-
-        token = pyotp.TOTP(secret).now()
-        response = self.client.post(
-            reverse("members:two_factor_verify"),
-            {"token": token, "next": reverse("members:info")},
-        )
-        self.assertRedirects(response, reverse("members:info"))
-        self.assertEqual(self.client.session[TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY], self.user.pk)
-
-        profile_response = self.client.get(reverse("members:info"))
-        self.assertEqual(profile_response.status_code, 200)
-
-    def test_invalid_two_factor_code_keeps_user_unverified(self):
-        self._enable_two_factor()
-        self.client.post(
-            reverse("members:login"),
-            {"username": self.user.username, "password": self.password},
-        )
-
-        response = self.client.post(
-            reverse("members:two_factor_verify"),
-            {"token": "000000", "next": reverse("members:info")},
-        )
+        response = self.client.get(reverse('admin:index'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Felaktig verifieringskod")
-        self.assertNotIn(TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY, self.client.session)
-
-    def test_previous_totp_window_is_rejected(self):
-        secret = self._enable_two_factor()
-        self.client.post(
-            reverse("members:login"),
-            {"username": self.user.username, "password": self.password},
-        )
-
-        now = timezone.now().timestamp()
-        expired_token = pyotp.TOTP(secret).at(now - 30)
-        response = self.client.post(
-            reverse("members:two_factor_verify"),
-            {"token": expired_token, "next": reverse("members:info")},
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Felaktig verifieringskod")
-        self.assertNotIn(TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY, self.client.session)
-
-    def test_user_can_enable_two_factor_after_confirming_token(self):
-        self.client.force_login(self.user)
-
-        response = self.client.post(
-            reverse("members:two_factor_settings"),
-            {"action": "start_setup"},
-        )
-        self.assertRedirects(response, reverse("members:two_factor_settings"))
-
-        setup_secret = self.client.session[TWO_FACTOR_SETUP_SESSION_KEY]
-        token = pyotp.TOTP(setup_secret).now()
-        confirm_response = self.client.post(
-            reverse("members:two_factor_settings"),
-            {"action": "confirm_setup", "token": token},
-        )
-        self.assertRedirects(confirm_response, reverse("members:info"))
-
-        self.user.refresh_from_db()
-        self.assertTrue(self.user.has_2fa_enabled)
-        self.assertEqual(self.client.session[TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY], self.user.pk)
-        self.assertNotIn(TWO_FACTOR_SETUP_SESSION_KEY, self.client.session)
-
-    def test_user_can_disable_two_factor_with_password_and_token(self):
-        secret = self._enable_two_factor()
-        self.client.force_login(self.user)
-        self._mark_two_factor_verified()
-
-        response = self.client.post(
-            reverse("members:two_factor_settings"),
-            {"action": "disable", "password": self.password, "token": pyotp.TOTP(secret).now()},
-        )
-        self.assertRedirects(response, reverse("members:info"))
-
-        self.user.refresh_from_db()
-        self.assertFalse(self.user.has_2fa_enabled)
-        self.assertNotIn(TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY, self.client.session)
-
-    def test_force_login_clears_existing_two_factor_session_state(self):
-        self._enable_two_factor()
-        self._mark_two_factor_verified()
-
-        other_user = Member.objects.create_user(
-            username="other-twofactor",
-            email="other@example.com",
-            password=self.password,
-            membership_type=self.membership_type,
-        )
-        self.client.force_login(other_user)
-
-        self.assertNotIn(TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY, self.client.session)
-
-    def test_admin_requires_two_factor_after_login(self):
-        self._enable_two_factor(
-            Member.objects.create_superuser(
-                username="admin2fa",
-                password=self.password,
-                email="admin2fa@example.com",
-            )
-        )
-        response = self.client.post(
-            reverse("admin:login"),
-            {"username": "admin2fa", "password": self.password},
-        )
-        self.assertEqual(response.status_code, 302)
-
-        admin_response = self.client.get(reverse("admin:index"))
-        self.assertRedirects(
-            admin_response,
-            f"{reverse('members:two_factor_verify')}?next={reverse('admin:index')}",
-            fetch_redirect_response=False,
-        )
-
-    def test_admin_logout_is_exempt_from_two_factor_redirect(self):
-        self._enable_two_factor(
-            Member.objects.create_superuser(
-                username="adminlogout",
-                password=self.password,
-                email="adminlogout@example.com",
-            )
-        )
-        self.client.post(
-            reverse("admin:login"),
-            {"username": "adminlogout", "password": self.password},
-        )
-
-        response = self.client.post(reverse("admin:logout"))
-        self.assertEqual(response.status_code, 302)

@@ -2,10 +2,10 @@
 
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib import admin
 from django.urls import include, path
 
 from date import views as date
+from core.admin import admin_site
 from core.urls.common import build_urlpatterns
 
 app_name = 'core'
@@ -14,13 +14,14 @@ urlpatterns = build_urlpatterns(
     path('', date.index, name='index'),
     path('news/', include('news.urls')),
     path('members/', include('members.urls')),
-    path('members/', include('django.contrib.auth.urls')),
+    path('members/', include('members.auth_urls')),
+    path('members/two-factor/', include(('members.two_factor_urls', 'two_factor'), namespace='two_factor')),
     path('events/', include('events.urls')),
     path('pages/', include('staticpages.urls')),
     path('ads/', include('ads.urls')),
     path('social/', include('social.urls')),
     path('polls/', include('polls.urls')),
-    path('admin/', admin.site.urls),
+    path('admin/', admin_site.urls),
     path('ckeditor5/', include('django_ckeditor_5.urls')),
     path('publications/', include('publications.urls')),
 )

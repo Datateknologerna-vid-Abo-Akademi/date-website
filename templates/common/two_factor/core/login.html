@@ -1,0 +1,52 @@
+{% extends "two_factor/_base_focus.html" %}
+{% load i18n %}
+{% load two_factor_tags %}
+
+{% block two_factor_content %}
+    <div class="members-form two-factor-card">
+        <h2>{% trans "Login" %}</h2>
+
+        {% if wizard.steps.current == 'auth' %}
+            <p>{% trans "Enter your username or email address and password." %}</p>
+        {% elif wizard.steps.current == 'token' %}
+            <p>{{ device|as_verbose_action }}</p>
+        {% elif wizard.steps.current == 'backup' %}
+            <p>{% trans "Enter one of your backup tokens to continue." %}</p>
+        {% endif %}
+
+        <form action="" method="post">
+            {% csrf_token %}
+            {% include "two_factor/_wizard_forms.html" %}
+            <input type="submit" value="" hidden>
+
+            {% if other_devices %}
+                <div class="two-factor-alt-methods">
+                    <p>{% trans "Use another authentication method:" %}</p>
+                    {% for other in other_devices %}
+                        <button name="challenge_device" value="{{ other.persistent_id }}" class="theme-button two-factor-secondary" type="submit">
+                            {{ other|as_action }}
+                        </button>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% include "two_factor/_wizard_actions.html" %}
+        </form>
+
+        {% if backup_tokens %}
+            <form action="" method="post" class="two-factor-inline-form">
+                {% csrf_token %}
+                <button name="wizard_goto_step" type="submit" value="backup" class="theme-button two-factor-secondary">
+                    {% trans "Use backup token" %}
+                </button>
+            </form>
+        {% endif %}
+
+        {% if wizard.steps.current == 'auth' %}
+            <a href="{% url 'password_reset' %}"><p>{% trans 'Forgot your password?' %}</p></a>
+            {% if MEMBERS_SIGNUP_ENABLED %}
+                <a href="{% url 'members:signup' %}"><p>{% trans 'Register' %}</p></a>
+            {% endif %}
+        {% endif %}
+    </div>
+{% endblock %}

@@ -15,7 +15,6 @@ import os
 import json
 
 import environ
-from django.urls import reverse_lazy
 
 from .dependencies.ckeditor import *  # noqa
 
@@ -65,6 +64,10 @@ def get_installed_apps(proj_apps):
         'django.contrib.sessions',
         'django.contrib.messages',
         'django.contrib.staticfiles',
+        'django_otp',
+        'django_otp.plugins.otp_static',
+        'django_otp.plugins.otp_totp',
+        'two_factor',
         'admin_ordering',
         'django_ckeditor_5',
         'channels',
@@ -103,7 +106,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'members.middleware.TwoFactorRequiredMiddleware',
+    'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'date.middleware.LangMiddleware',
@@ -187,8 +190,8 @@ AUTHENTICATION_BACKENDS = (
     'members.backends.AuthBackend',
 )
 
-LOGIN_URL = reverse_lazy("members:login")
-LOGIN_REDIRECT_URL = reverse_lazy("members:info")
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'members:info'
 
 # Make CKEditor5 Work with modeltranslations
 MODELTRANSLATION_CUSTOM_FIELDS = (
@@ -240,7 +243,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME", "date")
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-TWO_FACTOR_ISSUER_NAME = env("TWO_FACTOR_ISSUER_NAME", str, PROJECT_NAME.upper())
 
 # Cloudflare captcha config
 TURNSTILE_SECRET_KEY = env("CF_TURNSTILE_SECRET_KEY", str, "")
@@ -304,6 +306,7 @@ STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
 STATIC_URL = '/static/'
 
 LOGOUT_REDIRECT_URL = 'index'
+OTP_LOGIN_URL = 'login'
 
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
