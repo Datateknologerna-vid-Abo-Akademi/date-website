@@ -24,7 +24,7 @@ class AlumniUpdateToken(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.token
+        return str(self.token)
 
     class Meta:
         verbose_name = _("Alumni Update Token")
