@@ -369,7 +369,7 @@ class TwoFactorFlowTests(TestCase):
             reverse("members:two_factor_settings"),
             {"action": "confirm_setup", "token": token},
         )
-        self.assertRedirects(confirm_response, reverse("members:two_factor_settings"))
+        self.assertRedirects(confirm_response, reverse("members:info"))
 
         self.user.refresh_from_db()
         self.assertTrue(self.user.has_2fa_enabled)
@@ -385,7 +385,7 @@ class TwoFactorFlowTests(TestCase):
             reverse("members:two_factor_settings"),
             {"action": "disable", "password": self.password, "token": pyotp.TOTP(secret).now()},
         )
-        self.assertRedirects(response, reverse("members:two_factor_settings"))
+        self.assertRedirects(response, reverse("members:info"))
 
         self.user.refresh_from_db()
         self.assertFalse(self.user.has_2fa_enabled)

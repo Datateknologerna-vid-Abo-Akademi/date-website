@@ -28,17 +28,23 @@ class UserAdmin(auth_admin.UserAdmin):
 
     form = AdminMemberUpdateForm
     add_form = MemberCreationForm
-    list_display = ('username', 'first_name', 'last_name', 'email', 'membership_type', 'is_active', 'is_staff')
+    list_display = ('username', 'first_name', 'last_name', 'email', 'membership_type', 'is_active', 'is_staff', 'two_factor_enabled')
     list_filter = ('membership_type', 'is_active', 'groups')
     search_fields = ('first_name', 'last_name', 'email')
     ordering = [Lower('username'), ]
-    readonly_fields = ('last_login',)
+    readonly_fields = ('last_login', 'two_factor_enabled')
     actions = ['activate_user', 'deactivate_user']
 
     def is_staff(self, obj):
         return obj.is_staff
 
     is_staff.boolean = True
+
+    def two_factor_enabled(self, obj):
+        return obj.has_2fa_enabled
+
+    two_factor_enabled.boolean = True
+    two_factor_enabled.short_description = "2FA"
 
     def activate_user(self, request, queryset):
         queryset.update(is_active=True)

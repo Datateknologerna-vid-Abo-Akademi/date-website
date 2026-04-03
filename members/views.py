@@ -191,7 +191,6 @@ class TwoFactorVerifyView(View):
             token = form.cleaned_data["token"]
             if verify_two_factor_token(request.user.two_factor_secret, token):
                 request.session[TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY] = request.user.pk
-                messages.success(request, _("Tvåfaktorsautentisering bekräftad."))
                 return redirect(next_url or reverse("members:info"))
             form.add_error("token", _("Felaktig verifieringskod."))
 
@@ -257,7 +256,7 @@ class TwoFactorSettingsView(View):
                 request.session[TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY] = request.user.pk
                 request.session.pop(TWO_FACTOR_SETUP_SESSION_KEY, None)
                 messages.success(request, _("Tvåfaktorsautentisering aktiverades."))
-                return redirect(reverse("members:two_factor_settings"))
+                return redirect(reverse("members:info"))
             form.add_error("token", _("Felaktig verifieringskod."))
 
         return render(
@@ -279,7 +278,7 @@ class TwoFactorSettingsView(View):
                 request.user.save(update_fields=["two_factor_secret", "two_factor_enabled_at"])
                 request.session.pop(TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY, None)
                 messages.success(request, _("Tvåfaktorsautentisering stängdes av."))
-                return redirect(reverse("members:two_factor_settings"))
+                return redirect(reverse("members:info"))
 
         return render(
             request,
