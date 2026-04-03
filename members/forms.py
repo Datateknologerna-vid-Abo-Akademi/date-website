@@ -253,3 +253,25 @@ class MemberEditForm(forms.ModelForm):
     class Meta:
         model = Member
         fields = ['first_name', 'last_name', 'phone', 'address', 'zip_code', 'city', 'country']
+
+
+class TwoFactorTokenForm(forms.Form):
+    token = forms.CharField(
+        label=_('Verifieringskod'),
+        max_length=7,
+        min_length=6,
+        widget=forms.TextInput(attrs={'autocomplete': 'one-time-code', 'inputmode': 'numeric'}),
+    )
+
+
+class TwoFactorDisableForm(forms.Form):
+    password = forms.CharField(
+        label=_('Nuvarande lösenord'),
+        widget=forms.PasswordInput(attrs={'autocomplete': 'current-password'}),
+    )
+    token = forms.CharField(
+        label=_('Verifieringskod'),
+        max_length=7,
+        min_length=6,
+        widget=forms.TextInput(attrs={'autocomplete': 'one-time-code', 'inputmode': 'numeric'}),
+    )

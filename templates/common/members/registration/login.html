@@ -13,6 +13,9 @@
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
+            {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
             <button class="button" type="submit">{% trans 'Login' %}</button>
         </form>
             <a href="{% url 'password_reset' %}"><p>{% trans 'Glömt lösenordet?' %}</p></a>

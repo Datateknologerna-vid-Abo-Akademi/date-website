@@ -57,6 +57,10 @@
                             <td>Medlems typ:</td>
                             <td>{{ user.get_str_membership_type }}</td>
                         </tr>
+                        <tr>
+                            <td>Tvåfaktorsautentisering:</td>
+                            <td>{% if two_factor_enabled %}{% trans 'Aktiverad' %}{% else %}{% trans 'Inte aktiverad' %}{% endif %}</td>
+                        </tr>
                         <!-- End of user information fields -->
                     </table>
                     <button onclick="toggleEdit()" class="theme-button">Edit</button>
@@ -112,6 +116,7 @@
                 </div>
 
                 <a href="{% url 'members:password_change' %}" class="theme-button">{% trans 'Password change' %}<i class="fas fa-chevron-right"></i></a>
+                <a href="{% url 'members:two_factor_settings' %}" class="theme-button" style="margin-top: 5px;">{% trans 'Tvåfaktorsautentisering' %} <i class="fas fa-chevron-right"></i></a>
                 <a href="{% url 'members:functionary' %}" class="theme-button" style="margin-top: 5px;">Funktionärsposter <i class="fas fa-chevron-right"></i></a>
                 <p style="margin-top: 5px">För att ändra ditt användarnamn eller e-post, kontakta styrelsen på {{ ASSOCIATION_EMAIL }}</p>
             </div>

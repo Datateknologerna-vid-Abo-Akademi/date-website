@@ -3,7 +3,9 @@ import logging
 import os
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.views import PasswordChangeView, PasswordResetView
 from django.contrib.sites.shortcuts import get_current_site
@@ -11,20 +13,38 @@ from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 
 from core.utils import validate_captcha, send_email_task
-from .forms import SignUpForm, FunctionaryForm, MemberEditForm, CustomPasswordResetForm
+from .forms import (
+    SignUpForm,
+    FunctionaryForm,
+    MemberEditForm,
+    CustomPasswordResetForm,
+    TwoFactorDisableForm,
+    TwoFactorTokenForm,
+)
 from .functionary import (get_distinct_years, get_functionary_roles, get_selected_year,
                           get_selected_role, get_filtered_functionaries, get_functionaries_by_role)
 from .models import Member, Functionary
+from .two_factor import (
+    build_qr_code_data_uri,
+    build_totp_provisioning_uri,
+    generate_two_factor_secret,
+    verify_two_factor_token,
+)
 from .tokens import account_activation_token
 
 logger = logging.getLogger('date')
+
+
+TWO_FACTOR_SETUP_SESSION_KEY = "two_factor_setup_secret"
 
 
 class UserinfoView(View):
@@ -35,6 +55,7 @@ class UserinfoView(View):
         context = {
             "user": user,
             "form": form,
+            "two_factor_enabled": user.has_2fa_enabled,
         }
         return render(request, 'members/userinfo.html', context)
 
@@ -49,6 +70,7 @@ class UserinfoView(View):
         context = {
             "user": user,
             "form": form,
+            "two_factor_enabled": user.has_2fa_enabled,
         }
         return render(request, 'members/userinfo.html', context)
 
@@ -135,6 +157,147 @@ def activate(request, uidb64, token):
 
 class CustomPasswordResetView(PasswordResetView):
     form_class = CustomPasswordResetForm
+
+
+class CustomLoginView(LoginView):
+    template_name = "members/registration/login.html"
+
+
+class TwoFactorVerifyView(View):
+    template_name = "members/registration/two_factor_verify.html"
+
+    @method_decorator(login_required)
+    def get(self, request):
+        if not request.user.has_2fa_enabled:
+            return redirect(self._get_safe_redirect_url(request) or reverse("members:info"))
+        if request.session.get("two_factor_verified_user_id") == request.user.pk:
+            return redirect(self._get_safe_redirect_url(request) or reverse("members:info"))
+
+        context = {
+            "form": TwoFactorTokenForm(),
+            "next_url": self._get_safe_redirect_url(request),
+        }
+        return render(request, self.template_name, context)
+
+    @method_decorator(login_required)
+    def post(self, request):
+        if not request.user.has_2fa_enabled:
+            return redirect(reverse("members:info"))
+
+        form = TwoFactorTokenForm(request.POST)
+        next_url = self._get_safe_redirect_url(request)
+        if form.is_valid():
+            token = form.cleaned_data["token"]
+            if verify_two_factor_token(request.user.two_factor_secret, token):
+                request.session["two_factor_verified_user_id"] = request.user.pk
+                messages.success(request, _("Tvåfaktorsautentisering bekräftad."))
+                return redirect(next_url or reverse("members:info"))
+            form.add_error("token", _("Felaktig verifieringskod."))
+
+        context = {
+            "form": form,
+            "next_url": next_url,
+        }
+        return render(request, self.template_name, context)
+
+    def _get_safe_redirect_url(self, request):
+        next_url = request.POST.get("next") or request.GET.get("next")
+        if next_url and url_has_allowed_host_and_scheme(
+            next_url,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        ):
+            return next_url
+        return None
+
+
+class TwoFactorSettingsView(View):
+    template_name = "members/two_factor_settings.html"
+
+    @method_decorator(login_required)
+    def get(self, request):
+        return render(request, self.template_name, self._get_context(request))
+
+    @method_decorator(login_required)
+    def post(self, request):
+        action = request.POST.get("action")
+        if action == "start_setup":
+            if request.user.has_2fa_enabled:
+                messages.info(request, _("Tvåfaktorsautentisering är redan aktiverad."))
+            else:
+                request.session[TWO_FACTOR_SETUP_SESSION_KEY] = generate_two_factor_secret()
+            return redirect(reverse("members:two_factor_settings"))
+
+        if action == "cancel_setup":
+            request.session.pop(TWO_FACTOR_SETUP_SESSION_KEY, None)
+            return redirect(reverse("members:two_factor_settings"))
+
+        if action == "confirm_setup":
+            return self._confirm_setup(request)
+
+        if action == "disable":
+            return self._disable_two_factor(request)
+
+        return redirect(reverse("members:two_factor_settings"))
+
+    def _confirm_setup(self, request):
+        form = TwoFactorTokenForm(request.POST)
+        setup_secret = request.session.get(TWO_FACTOR_SETUP_SESSION_KEY)
+        if not setup_secret:
+            messages.error(request, _("Ingen tvåfaktorskonfiguration väntar på bekräftelse."))
+            return redirect(reverse("members:two_factor_settings"))
+
+        if form.is_valid():
+            token = form.cleaned_data["token"]
+            if verify_two_factor_token(setup_secret, token):
+                request.user.two_factor_secret = setup_secret
+                request.user.two_factor_enabled_at = timezone.now()
+                request.user.save(update_fields=["two_factor_secret", "two_factor_enabled_at"])
+                request.session["two_factor_verified_user_id"] = request.user.pk
+                request.session.pop(TWO_FACTOR_SETUP_SESSION_KEY, None)
+                messages.success(request, _("Tvåfaktorsautentisering aktiverades."))
+                return redirect(reverse("members:two_factor_settings"))
+            form.add_error("token", _("Felaktig verifieringskod."))
+
+        return render(
+            request,
+            self.template_name,
+            self._get_context(request, setup_form=form),
+        )
+
+    def _disable_two_factor(self, request):
+        form = TwoFactorDisableForm(request.POST)
+        if form.is_valid():
+            if not request.user.check_password(form.cleaned_data["password"]):
+                form.add_error("password", _("Fel lösenord."))
+            elif not verify_two_factor_token(request.user.two_factor_secret, form.cleaned_data["token"]):
+                form.add_error("token", _("Felaktig verifieringskod."))
+            else:
+                request.user.two_factor_secret = ""
+                request.user.two_factor_enabled_at = None
+                request.user.save(update_fields=["two_factor_secret", "two_factor_enabled_at"])
+                request.session.pop("two_factor_verified_user_id", None)
+                messages.success(request, _("Tvåfaktorsautentisering stängdes av."))
+                return redirect(reverse("members:two_factor_settings"))
+
+        return render(
+            request,
+            self.template_name,
+            self._get_context(request, disable_form=form),
+        )
+
+    def _get_context(self, request, setup_form=None, disable_form=None):
+        setup_secret = request.session.get(TWO_FACTOR_SETUP_SESSION_KEY, "")
+        provisioning_uri = build_totp_provisioning_uri(request.user, setup_secret) if setup_secret else ""
+        context = {
+            "disable_form": disable_form or TwoFactorDisableForm(),
+            "is_pending_setup": bool(setup_secret),
+            "qr_code_data_uri": build_qr_code_data_uri(provisioning_uri) if provisioning_uri else "",
+            "setup_form": setup_form or TwoFactorTokenForm(),
+            "setup_secret": setup_secret,
+            "two_factor_enabled": request.user.has_2fa_enabled,
+        }
+        return context
 
 
 class FunctionaryView(View):

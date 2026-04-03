@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+import pyotp
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import AnonymousUser
 from django.test import Client, RequestFactory, TestCase
@@ -254,3 +255,155 @@ class FunctionaryHelperTests(TestCase):
         selected, all_roles = get_selected_role(request, roles)
         self.assertIsNone(selected)
         self.assertFalse(all_roles)
+
+
+class TwoFactorFlowTests(TestCase):
+    def setUp(self):
+        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.password = "secret12345"
+        self.user = Member.objects.create_user(
+            username="twofactor",
+            email="twofactor@example.com",
+            password=self.password,
+            membership_type=self.membership_type,
+        )
+
+    def _enable_two_factor(self, user=None):
+        user = user or self.user
+        secret = pyotp.random_base32()
+        user.two_factor_secret = secret
+        user.two_factor_enabled_at = timezone.now()
+        user.save(update_fields=["two_factor_secret", "two_factor_enabled_at"])
+        return secret
+
+    def _mark_two_factor_verified(self, user=None):
+        user = user or self.user
+        session = self.client.session
+        session["two_factor_verified_user_id"] = user.pk
+        session.save()
+
+    def test_login_without_two_factor_redirects_directly_to_profile(self):
+        response = self.client.post(
+            reverse("members:login"),
+            {"username": self.user.username, "password": self.password},
+        )
+        self.assertRedirects(response, reverse("members:info"), fetch_redirect_response=False)
+        self.assertEqual(int(self.client.session["_auth_user_id"]), self.user.pk)
+        self.assertNotIn("two_factor_verified_user_id", self.client.session)
+
+    def test_enabled_two_factor_user_is_redirected_to_verification(self):
+        self._enable_two_factor()
+        response = self.client.post(
+            reverse("members:login"),
+            {"username": self.user.username, "password": self.password},
+        )
+        self.assertRedirects(response, reverse("members:info"), fetch_redirect_response=False)
+
+        follow_up = self.client.get(reverse("members:info"))
+        self.assertRedirects(
+            follow_up,
+            f"{reverse('members:two_factor_verify')}?next={reverse('members:info')}",
+            fetch_redirect_response=False,
+        )
+
+    def test_login_preserves_next_parameter(self):
+        login_url = f"{reverse('members:login')}?next=/events/"
+        response = self.client.get(login_url)
+        self.assertContains(response, 'name="next" value="/events/"')
+
+        post_response = self.client.post(
+            login_url,
+            {"username": self.user.username, "password": self.password, "next": "/events/"},
+        )
+        self.assertRedirects(post_response, "/events/", fetch_redirect_response=False)
+
+    def test_two_factor_verification_completes_login(self):
+        secret = self._enable_two_factor()
+        self.client.post(
+            reverse("members:login"),
+            {"username": self.user.username, "password": self.password},
+        )
+
+        token = pyotp.TOTP(secret).now()
+        response = self.client.post(
+            reverse("members:two_factor_verify"),
+            {"token": token, "next": reverse("members:info")},
+        )
+        self.assertRedirects(response, reverse("members:info"))
+        self.assertEqual(self.client.session["two_factor_verified_user_id"], self.user.pk)
+
+        profile_response = self.client.get(reverse("members:info"))
+        self.assertEqual(profile_response.status_code, 200)
+
+    def test_invalid_two_factor_code_keeps_user_unverified(self):
+        self._enable_two_factor()
+        self.client.post(
+            reverse("members:login"),
+            {"username": self.user.username, "password": self.password},
+        )
+
+        response = self.client.post(
+            reverse("members:two_factor_verify"),
+            {"token": "000000", "next": reverse("members:info")},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Felaktig verifieringskod")
+        self.assertNotIn("two_factor_verified_user_id", self.client.session)
+
+    def test_user_can_enable_two_factor_after_confirming_token(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(
+            reverse("members:two_factor_settings"),
+            {"action": "start_setup"},
+        )
+        self.assertRedirects(response, reverse("members:two_factor_settings"))
+
+        setup_secret = self.client.session["two_factor_setup_secret"]
+        token = pyotp.TOTP(setup_secret).now()
+        confirm_response = self.client.post(
+            reverse("members:two_factor_settings"),
+            {"action": "confirm_setup", "token": token},
+        )
+        self.assertRedirects(confirm_response, reverse("members:two_factor_settings"))
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.has_2fa_enabled)
+        self.assertEqual(self.client.session["two_factor_verified_user_id"], self.user.pk)
+        self.assertNotIn("two_factor_setup_secret", self.client.session)
+
+    def test_user_can_disable_two_factor_with_password_and_token(self):
+        secret = self._enable_two_factor()
+        self.client.force_login(self.user)
+        self._mark_two_factor_verified()
+
+        response = self.client.post(
+            reverse("members:two_factor_settings"),
+            {"action": "disable", "password": self.password, "token": pyotp.TOTP(secret).now()},
+        )
+        self.assertRedirects(response, reverse("members:two_factor_settings"))
+
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.has_2fa_enabled)
+        self.assertNotIn("two_factor_verified_user_id", self.client.session)
+
+    def test_admin_requires_two_factor_after_login(self):
+        self._enable_two_factor(
+            Member.objects.create_superuser(
+                username="admin2fa",
+                password=self.password,
+                email="admin2fa@example.com",
+            )
+        )
+        response = self.client.post(
+            reverse("admin:login"),
+            {"username": "admin2fa", "password": self.password},
+        )
+        self.assertEqual(response.status_code, 302)
+
+        admin_response = self.client.get(reverse("admin:index"))
+        self.assertRedirects(
+            admin_response,
+            f"{reverse('members:two_factor_verify')}?next={reverse('admin:index')}",
+            fetch_redirect_response=False,
+        )

@@ -1,0 +1,18 @@
+from django.contrib.auth.signals import user_logged_in, user_logged_out
+from django.dispatch import receiver
+
+
+@receiver(user_logged_in)
+def reset_two_factor_verification(sender, request, user, **kwargs):
+    if request is None:
+        return
+    request.session.pop("two_factor_verified_user_id", None)
+    request.session.pop("two_factor_setup_secret", None)
+
+
+@receiver(user_logged_out)
+def clear_two_factor_verification(sender, request, user, **kwargs):
+    if request is None:
+        return
+    request.session.pop("two_factor_verified_user_id", None)
+    request.session.pop("two_factor_setup_secret", None)

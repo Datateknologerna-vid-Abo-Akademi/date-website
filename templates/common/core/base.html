@@ -27,6 +27,15 @@
 
 {% include 'core/header.html' %}
 <body>
+{% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+            <div class="alert {% if 'error' in message.tags %}alert-danger{% elif 'success' in message.tags %}alert-success{% elif 'warning' in message.tags %}alert-warning{% else %}alert-info{% endif %}" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
 {% block content %}
     <!-- content from other pages -->
 {% endblock %}

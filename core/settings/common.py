@@ -15,6 +15,7 @@ import os
 import json
 
 import environ
+from django.urls import reverse_lazy
 
 from .dependencies.ckeditor import *  # noqa
 
@@ -102,6 +103,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'members.middleware.TwoFactorRequiredMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'date.middleware.LangMiddleware',
@@ -185,6 +187,9 @@ AUTHENTICATION_BACKENDS = (
     'members.backends.AuthBackend',
 )
 
+LOGIN_URL = reverse_lazy("members:login")
+LOGIN_REDIRECT_URL = reverse_lazy("members:info")
+
 # Make CKEditor5 Work with modeltranslations
 MODELTRANSLATION_CUSTOM_FIELDS = (
     'CKEditor5Field',
@@ -235,6 +240,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 PROJECT_NAME = os.environ.get("PROJECT_NAME", "date")
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TWO_FACTOR_ISSUER_NAME = env("TWO_FACTOR_ISSUER_NAME", str, PROJECT_NAME.upper())
 
 # Cloudflare captcha config
 TURNSTILE_SECRET_KEY = env("CF_TURNSTILE_SECRET_KEY", str, "")
@@ -297,8 +303,8 @@ else:
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
 STATIC_URL = '/static/'
 
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'index'
+LOGIN_URL = 'members:login'
+LOGIN_REDIRECT_URL = 'members:info'
 LOGOUT_REDIRECT_URL = 'index'
 
 if DEBUG:

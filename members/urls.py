@@ -8,7 +8,10 @@ app_name = 'members'
 
 urlpatterns = [
     path('activate/<uidb64>/<token>/', views.activate, name='activate'),
+    path('login/', views.CustomLoginView.as_view(), name='login'),
     path('password_reset/', views.CustomPasswordResetView.as_view(), name='password_reset'),
+    path('2fa/', views.TwoFactorSettingsView.as_view(), name='two_factor_settings'),
+    path('2fa/verify/', views.TwoFactorVerifyView.as_view(), name='two_factor_verify'),
     re_path('^', include('django.contrib.auth.urls')),
     path('password_change/', views.CustomPasswordChangeView.as_view(), name='custom_password_change'),
     path('info/', views.UserinfoView.as_view(), name='info'),
