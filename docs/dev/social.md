@@ -9,7 +9,7 @@
 - `HarassmentForm` is a simple `ModelForm` that adds Bootstrap classes. No captcha field is defined in the form; the view reads `cf-turnstile-response` directly from `request.POST`.
 - `social.views.harassment_form` handles GET/POST:
   - Checks a session flag (`harass_submitted`) to show the success page once and then reset it.
-  - On POST + valid captcha, saves the form, emails recipients via `core.utils.send_email_task`, sets the session flag, and redirects to self (PRG pattern).
+  - On POST + valid captcha, saves the form, schedules the notification email after commit via `core.utils.enqueue_task_on_commit()`, sets the session flag, and redirects to self (PRG pattern).
 - `socialIndex` currently renders a placeholder template.
 
 ## Email Template
@@ -19,7 +19,7 @@
 - All models registered with default `ModelAdmin` for quick CRUD. Consider adding filters/search if the list grows.
 
 ## Integrations
-- Email sending relies on Celery (`send_email_task.delay`). Ensure the worker is running; otherwise submissions will queue indefinitely.
+- Email sending relies on Celery. The view defers enqueueing until the harassment report transaction commits, so the worker never sees a job for a report that failed to save.
 - `settings.CONTENT_VARIABLES['SITE_URL']` must be configured so the email includes a correct absolute link.
 
 ## Extending

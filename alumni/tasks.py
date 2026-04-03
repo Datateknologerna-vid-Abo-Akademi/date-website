@@ -34,6 +34,14 @@ def format_date_for_sheets(dt=None):
     return dt.strftime("%d.%m.%Y")
 
 
+def normalize_timestamp(timestamp):
+    if timestamp is None:
+        return None
+    if isinstance(timestamp, str):
+        return datetime.datetime.fromisoformat(timestamp)
+    return timestamp
+
+
 def get_sheet_client(worksheet):
     auth, sheet = get_alumni_sheet_config()
     return DateSheetsAdapter(auth, sheet, worksheet)
@@ -115,6 +123,7 @@ def handle_create(form: dict):
 
 @log_error
 def handle_update(form, timestamp=None):
+    timestamp = normalize_timestamp(timestamp)
     if not timestamp:
         timestamp = datetime.datetime.now()
     worksheet = MEMBER_SHEET_NAME

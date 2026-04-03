@@ -32,7 +32,7 @@ class EventRegistrationFormInline(OrderableAdmin, EventTranslationInlineBase):
     fields = ('choice_number', 'name', 'type', 'required',
               'public_info', 'hide_for_avec', 'choice_list')
     can_delete = True
-    ordering_field = ('choice_number',)
+    ordering_field = 'choice_number'
     ordering = ['choice_number']
     ordering_field_hide_input = True
 
@@ -110,7 +110,6 @@ class EventAdmin(EventTranslationAdminBase):
         )
 
     account_actions.short_description = 'Deltagarlista'
-    account_actions.allow_tags = True
 
     @admin.action(description="Delete all attendees for selected events")
     def delete_participants(self, request, queryset):

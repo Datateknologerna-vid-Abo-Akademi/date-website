@@ -187,14 +187,23 @@ class SignupViewTests(TestCase):
     @patch('members.views.send_email_task')
     @patch('members.views.validate_captcha', return_value=True)
     def test_signup_creates_inactive_user_and_sets_session_flag(self, mock_captcha, mock_send_email):
-        response = self.client.post(reverse('members:signup'), data=self.payload)
+        with self.captureOnCommitCallbacks(execute=True) as callbacks:
+            response = self.client.post(reverse('members:signup'), data=self.payload)
+
         self.assertEqual(response.status_code, 302)
         user = Member.objects.get(username='newuser')
         self.assertFalse(user.is_active)
         self.assertTrue(user.check_password('supersecret'))
         self.assertTrue(self.client.session['signup_submitted'])
         mock_captcha.assert_called_once()
+        self.assertEqual(len(callbacks), 1)
         mock_send_email.delay.assert_called_once()
+
+
+class MembersAuthUrlTests(TestCase):
+    def test_members_namespace_exposes_login_and_password_change_routes(self):
+        self.assertEqual(reverse('members:login'), '/members/login/')
+        self.assertEqual(reverse('members:password_change'), '/members/password_change/')
 
 
 class FunctionaryHelperTests(TestCase):

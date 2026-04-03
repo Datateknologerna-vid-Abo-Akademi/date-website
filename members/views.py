@@ -17,7 +17,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 
-from core.utils import validate_captcha, send_email_task
+from core.utils import enqueue_task_on_commit, send_email_task, validate_captcha
 from .forms import SignUpForm, FunctionaryForm, MemberEditForm, CustomPasswordResetForm
 from .functionary import (get_distinct_years, get_functionary_roles, get_selected_year,
                           get_selected_role, get_filtered_functionaries, get_functionaries_by_role)
@@ -108,7 +108,13 @@ def signup(request):
                 'token': account_activation_token.make_token(user),
             })
             to_email = os.environ.get('EMAIL_HOST_RECEIVER')
-            send_email_task.delay(mail_subject, message, settings.DEFAULT_FROM_EMAIL, [to_email])
+            enqueue_task_on_commit(
+                send_email_task,
+                mail_subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [to_email],
+            )
             logger.info(f"NEW USER: Sending email to {to_email}")
             request.session['signup_submitted'] = True
             return redirect(request.path)

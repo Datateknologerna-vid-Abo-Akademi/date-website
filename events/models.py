@@ -271,6 +271,7 @@ class EventRegistrationForm(models.Model):
     class Meta:
         verbose_name = _('Anmälningsfält')
         verbose_name_plural = _('Anmälningsfält')
+        ordering = ['choice_number']
 
     def __str__(self):
         return str(self.name)
@@ -311,7 +312,7 @@ class EventAttendees(models.Model):
     class Meta:
         verbose_name = _('deltagare')
         verbose_name_plural = _('deltagare')
-        ordering = ['time_registered', ]
+        ordering = ['attendee_nr']
         unique_together = ('event', 'email')
 
     def __str__(self):

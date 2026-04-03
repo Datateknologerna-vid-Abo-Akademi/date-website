@@ -1,6 +1,7 @@
 import django.views.generic
 from django.conf import settings
-from django.urls import include, path, re_path
+from django.contrib.auth import views as auth_views
+from django.urls import path, re_path
 
 from . import views
 
@@ -8,9 +9,10 @@ app_name = 'members'
 
 urlpatterns = [
     path('activate/<uidb64>/<token>/', views.activate, name='activate'),
+    path('login/', auth_views.LoginView.as_view(), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('password_reset/', views.CustomPasswordResetView.as_view(), name='password_reset'),
-    re_path('^', include('django.contrib.auth.urls')),
-    path('password_change/', views.CustomPasswordChangeView.as_view(), name='custom_password_change'),
+    path('password_change/', views.CustomPasswordChangeView.as_view(), name='password_change'),
     path('info/', views.UserinfoView.as_view(), name='info'),
     path('cert/', views.CertificateView.as_view(), name='certificate'),
     path('funktionar/', views.FunctionaryView.as_view(), name='functionary'),

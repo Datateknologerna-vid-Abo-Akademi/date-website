@@ -54,11 +54,11 @@ if not DEVELOP:
 
 def get_installed_apps(proj_apps):
     return [
-        'date',
+        'date.apps.CoreConfig',
         'members',
         *proj_apps,
         'modeltranslation',
-        'django.contrib.admin',
+        'date.apps.DateAdminConfig',
         'django.contrib.auth',
         'django.contrib.contenttypes',
         'django.contrib.sessions',
@@ -219,8 +219,6 @@ LANGUAGES = ALL_LANGUAGES if ENABLE_LANGUAGE_FEATURES else (
 TIME_ZONE = 'Europe/Helsinki'
 
 USE_I18N = True
-
-USE_L10N = True
 
 USE_TZ = True
 

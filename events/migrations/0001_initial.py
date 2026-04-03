@@ -2,7 +2,6 @@
 import datetime
 
 import ckeditor.fields
-import django.contrib.postgres.fields.jsonb
 import django.db.models.deletion
 import django.utils.timezone
 from django.conf import settings
@@ -54,7 +53,8 @@ class Migration(migrations.Migration):
                 ('attendee_nr', models.PositiveSmallIntegerField(verbose_name='#')),
                 ('user', models.CharField(max_length=255, verbose_name='Namn')),
                 ('email', models.EmailField(max_length=254, null=True, verbose_name='E-postadress')),
-                ('preferences', django.contrib.postgres.fields.jsonb.JSONField(blank=True, default=list, verbose_name='Svar')),
+                ('preferences', models.JSONField(blank=True, default=list, verbose_name='Svar')),
+
                 ('anonymous', models.BooleanField(default=False, verbose_name='Anonymt')),
                 ('time_registered', models.DateTimeField(verbose_name='Registrerad')),
                 ('event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='events.Event', verbose_name='Event')),
