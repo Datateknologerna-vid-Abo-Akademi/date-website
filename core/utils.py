@@ -5,6 +5,7 @@ import requests
 from celery import shared_task
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db import transaction
 
 logger = logging.getLogger("date")
 
@@ -32,6 +33,10 @@ def validate_captcha(response: str) -> bool:
         return False
 
     return res.json().get('success', False)
+
+
+def enqueue_task_on_commit(task, *args, **kwargs) -> None:
+    transaction.on_commit(lambda: task.delay(*args, **kwargs))
 
 
 @shared_task

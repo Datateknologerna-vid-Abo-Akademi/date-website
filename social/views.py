@@ -3,7 +3,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from .forms import HarassmentForm
 from .models import HarassmentEmailRecipient
-from core.utils import send_email_task, validate_captcha
+from core.utils import enqueue_task_on_commit, send_email_task, validate_captcha
 
 # Create your views here.
 
@@ -29,11 +29,12 @@ def harassment_form(request):
                 'harassment': harassment,
                 'harassment_url': f"{settings.CONTENT_VARIABLES['SITE_URL']}/admin/social/harassment/{harassment.id}"
             }
-            send_email_task.delay(
+            enqueue_task_on_commit(
+                send_email_task,
                 "Ny trakasserianmälan har inkommit",
                 render_to_string('social/harassment_admin_email.html', email_ctx),
                 settings.DEFAULT_FROM_EMAIL,
-                harassment_receivers
+                harassment_receivers,
             )
             request.session['harass_submitted'] = True
             # Redirect to a success page or perform other actions
