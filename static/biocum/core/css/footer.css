@@ -16,7 +16,15 @@
 }
 
 footer section {
-    margin: 25px;
+    margin: 25px 0;
+}
+
+.association-footer-social {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 footer {

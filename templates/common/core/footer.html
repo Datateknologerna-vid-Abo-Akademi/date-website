@@ -5,12 +5,12 @@
     <link rel="stylesheet" href="{% static 'core/css/footer.css' %}">
 </head>
 
-<footer class="container association-footer">
-    <div class="association-footer-shell">
+<footer class="container association-footer{% block footer_class_suffix %}{% endblock %}">
+    <div class="association-footer-shell{% block footer_shell_class_suffix %}{% endblock %}">
         <hr>
         <!-- Grid container -->
         <!-- Section: Social media -->
-        <section class="col text-center association-footer-social">
+        <section class="col text-center association-footer-social{% block footer_social_class_suffix %}{% endblock %}">
 
             {% for btn in SOCIAL_BUTTONS %}
                 {% if btn.1 %}
@@ -22,11 +22,13 @@
 
         </section>
         <!-- Section: Social media -->
-        <div class="row align-middle align-items-center association-footer-content">
-            <div class="col-12 col-md-4 text-center association-footer-brand">
+        <div class="row align-middle align-items-center association-footer-content{% block footer_content_class_suffix %}{% endblock %}">
+            <div class="col-12 col-md-4 text-center association-footer-brand{% block footer_brand_class_suffix %}{% endblock %}">
+                {% block footer_logo %}
                 <img class="footer-img img-fluid" alt="{% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}{{ association_name }} logo{% endblocktranslate %}" src="{% static 'core/images/footerlogo.png' %}">
+                {% endblock %}
             </div>
-            <div class="col-12 col-md-4 association-footer-copy">
+            <div class="col-12 col-md-4 association-footer-copy{% block footer_copy_class_suffix %}{% endblock %}">
                 <p>
                     {% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}
                     Styrelsen för {{ association_name }} kan kontaktas på följande sätt.
