@@ -8,7 +8,8 @@ from core.utils import validate_captcha
 from .gsuite_adapter import DateSheetsAdapter
 from .models import AlumniUpdateToken
 from .forms import AlumniSignUpForm, AlumniUpdateForm, AlumniEmailVerificationForm
-from .tasks import handle_alumni_signup, send_token_email, AUTH, SHEET, MEMBER_SHEET_NAME
+from .tasks import handle_alumni_signup, send_token_email
+from .config import MEMBER_SHEET_NAME, get_alumni_sheet_config
 
 log = logging.getLogger("date")
 
@@ -23,7 +24,8 @@ def alumni_signup(request):
         if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
             return render(request, 'members/signup.html', {'form': form, 'alumni': True})
 
-        client = DateSheetsAdapter(AUTH, SHEET, MEMBER_SHEET_NAME)
+        auth, sheet = get_alumni_sheet_config()
+        client = DateSheetsAdapter(auth, sheet, MEMBER_SHEET_NAME)
         
         if form.cleaned_data["email"] in client.get_column_values(client.get_column_by_name("email")):
             log.info("Alumni CREATE: Email already registered")

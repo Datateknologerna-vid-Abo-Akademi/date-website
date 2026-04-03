@@ -5,30 +5,16 @@ import logging
 from celery import shared_task
 from django.conf import settings
 from django.template.loader import render_to_string
-import datetime
-import json
-import logging
 
 from .gsuite_adapter import DateSheetsAdapter
 from core.utils import send_email_task
 from billing.util import generate_reference_number, generate_invoice_number
 from .models import AlumniEmailRecipient, AlumniUpdateToken
+from .config import AUDIT_LOG_SHEET_NAME, MEMBER_SHEET_NAME, get_alumni_sheet_config
 
 from django.utils.translation import gettext_lazy as _
 
 logger = logging.getLogger("date")
-
-
-# Load settings
-try:
-    ALUMNI_SETTINGS = json.loads(settings.ALUMNI_SETTINGS)
-    AUTH, SHEET = ALUMNI_SETTINGS.get("auth", {}), ALUMNI_SETTINGS.get("sheet")
-except Exception as e:
-    logger.error("Error while loading alumni settings: " + str(e))
-    ALUMNI_SETTINGS, AUTH, SHEET = {}, {}, ""
-
-MEMBER_SHEET_NAME = "members"  # This should match the actual sheet name in your Google Sheets
-AUDIT_LOG_SHEET_NAME = "audit_log"  # This should match the actual sheet name for audit logs
 
 
 def log_error(func):
@@ -48,16 +34,21 @@ def format_date_for_sheets(dt=None):
     return dt.strftime("%d.%m.%Y")
 
 
+def get_sheet_client(worksheet):
+    auth, sheet = get_alumni_sheet_config()
+    return DateSheetsAdapter(auth, sheet, worksheet)
+
+
 @log_error
 def log_action(operation: str, data: dict):
     worksheet = AUDIT_LOG_SHEET_NAME
-    client = DateSheetsAdapter(AUTH, SHEET, worksheet)
+    client = get_sheet_client(worksheet)
     client.append_row([operation, json.dumps(data)])
 
 
 def handle_create(form: dict):
     worksheet = MEMBER_SHEET_NAME
-    client = DateSheetsAdapter(AUTH, SHEET, worksheet)
+    client = get_sheet_client(worksheet)
     print(client)
     try:
         member_id = int(client.get_last_row()[0]) + 1
@@ -128,7 +119,7 @@ def handle_update(form, timestamp=None):
     if not timestamp:
         timestamp = datetime.datetime.now()
     worksheet = MEMBER_SHEET_NAME
-    client = DateSheetsAdapter(AUTH, SHEET, worksheet)
+    client = get_sheet_client(worksheet)
     
     token = form.get('token')
     if not token:
@@ -193,7 +184,7 @@ def handle_update(form, timestamp=None):
 @shared_task()
 def send_token_email(token: str, email: str):
     """Send an email with the token to the alumni."""
-    client = DateSheetsAdapter(AUTH, SHEET, MEMBER_SHEET_NAME)
+    client = get_sheet_client(MEMBER_SHEET_NAME)
     emails = client.get_column_values(client.get_column_by_name("email"))
     if email not in emails:
         logger.info(f"Email {email} not found in alumni records. skipping token email.")
