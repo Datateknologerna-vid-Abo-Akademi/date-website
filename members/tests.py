@@ -321,11 +321,12 @@ class TwoFactorIntegrationTests(TestCase):
     def test_profile_page_shows_2fa_state(self):
         self.client.force_login(self.member, backend='members.backends.AuthBackend')
         response = self.client.get(reverse('members:info'))
-        self.assertContains(response, 'Enable two-factor authentication')
+        self.assertContains(response, 'Two-factor authentication')
 
         TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
         response = self.client.get(reverse('members:info'))
-        self.assertContains(response, 'Disable two-factor authentication')
+        self.assertContains(response, reverse('two_factor:disable'))
+        self.assertContains(response, reverse('two_factor:backup_tokens'))
 
     def test_admin_requires_verified_device(self):
         admin_user = Member.objects.create_superuser(

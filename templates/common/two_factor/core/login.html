@@ -3,7 +3,7 @@
 {% load two_factor_tags %}
 
 {% block two_factor_content %}
-    <div class="members-form two-factor-card">
+    <div class="members-form two-factor-card two-factor-card-login">
         <h2>{% trans "Login" %}</h2>
 
         {% if wizard.steps.current == 'auth' %}

@@ -1,8 +1,10 @@
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
+import django_otp
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.forms import AuthenticationTokenForm, BackupTokenForm, TOTPDeviceForm
 from two_factor.views import BackupTokensView, DisableView, LoginView, QRGeneratorView, SetupView
@@ -39,11 +41,26 @@ class MemberSetupView(SetupView):
     template_name = 'two_factor/core/setup.html'
     success_url = 'members:info'
 
-    def get_form_list(self):
-        form_list = super().get_form_list()
-        if 'generator' in form_list:
-            form_list['generator'] = StrictTOTPDeviceForm
-        return form_list
+    def done(self, form_list, **kwargs):
+        try:
+            del self.request.session[self.session_key_name]
+        except KeyError:
+            pass
+
+        method = self.get_method()
+        if method.code == 'generator':
+            form = [form for form in form_list if isinstance(form, TOTPDeviceForm)][0]
+            device = form.save()
+            if device.tolerance != 0:
+                device.tolerance = 0
+                device.save(update_fields=['tolerance'])
+        else:
+            device = self.get_device()
+            device.confirmed = True
+            device.save()
+
+        django_otp.login(self.request, device)
+        return redirect(self.get_success_url())
 
 
 class MemberDisableView(DisableView):

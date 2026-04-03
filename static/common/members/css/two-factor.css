@@ -9,8 +9,17 @@
 }
 
 .two-factor-card {
-    width: min(680px, 100%);
     text-align: left;
+}
+
+.two-factor-card-login {
+    width: 360px;
+    max-width: 90vw;
+}
+
+.two-factor-card-panel {
+    width: 620px;
+    max-width: 90vw;
 }
 
 .two-factor-card h2 {
@@ -51,12 +60,14 @@
 }
 
 .two-factor-secondary {
-    background: #5c5c5c;
+    background-color: var(--primaryColorLight);
+    color: var(--textColorLightish);
 }
 
 .two-factor-secondary:hover,
 .two-factor-secondary:focus {
-    background: #717171;
+    background-color: var(--primaryColorLighte);
+    color: var(--linkColorLightHover);
 }
 
 .two-factor-alt-methods {
@@ -76,8 +87,9 @@
     display: flex;
     justify-content: center;
     padding: 1rem;
-    background: #fff;
-    border-radius: 0.75rem;
+    background-color: var(--secondaryColor);
+    border: 1px solid var(--secondaryColorDarker);
+    border-radius: var(--defaultRadius);
     margin: 1rem 0;
 }
 
@@ -94,8 +106,9 @@
 .two-factor-secret {
     display: block;
     padding: 0.9rem 1rem;
-    background: rgba(0, 0, 0, 0.2);
+    background-color: var(--secondaryColorDarker);
     color: var(--textColorDark);
+    border-radius: var(--defaultRadius);
     overflow-wrap: anywhere;
 }
 
@@ -109,8 +122,8 @@
 .two-factor-token-list code {
     display: block;
     padding: 0.75rem;
-    background: rgba(0, 0, 0, 0.2);
+    background-color: var(--secondaryColorDarker);
     color: var(--textColorDark);
     text-align: center;
-    border-radius: 0.5rem;
+    border-radius: var(--defaultRadius);
 }

@@ -2,7 +2,7 @@
 {% load i18n %}
 
 {% block two_factor_content %}
-    <div class="members-form two-factor-card two-factor-setup">
+    <div class="members-form two-factor-card two-factor-card-panel two-factor-setup">
         <h2>{% trans "Two-factor authentication" %}</h2>
 
         {% if wizard.steps.current == 'welcome' %}
