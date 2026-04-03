@@ -2,11 +2,11 @@
 
 <div class="two-factor-actions">
     {% if wizard.steps.prev %}
-        <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}" class="theme-button two-factor-secondary">
+        <button name="wizard_goto_step" type="submit" value="{{ wizard.steps.prev }}" class="btn btn-secondary">
             {% trans "Back" %}
         </button>
     {% endif %}
-    <button type="submit" class="theme-button">
+    <button type="submit" class="btn btn-primary">
         {% trans "Continue" %}
     </button>
 </div>

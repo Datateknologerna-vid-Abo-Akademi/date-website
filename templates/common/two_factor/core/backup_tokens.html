@@ -17,11 +17,7 @@
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
-            <button type="submit" class="theme-button">{% trans "Generate new backup tokens" %}</button>
+            <button type="submit" class="btn btn-primary">{% trans "Generate new backup tokens" %}</button>
         </form>
-
-        <div class="two-factor-actions">
-            <a href="{% url 'members:info' %}" class="theme-button two-factor-secondary">{% trans "Back to profile" %}</a>
-        </div>
     </div>
 {% endblock %}

@@ -1,70 +1,9 @@
-html {
-    scroll-behavior: smooth;
-}
-
-html body {
-    background-color: var(--primaryColor);
-    color: var(--textColorLightish);
-    font-family: 'Josefin Sans', sans-serif;
-}
-
-.content img {
-    max-height: 35vh;
-    max-width: 100%;
-    width: auto !important;
-    height: auto !important;
-    border-radius: var(--defaultRadius);
-}
-
-div a {
-    color: var(--linkColorLight);
-    display: inline-block;
-    text-decoration: none;
-}
-
-div a:hover {
-    transition: 0.3s;
-    color: var(--linkColorLightHover);
-}
-
-.break-words {
-    word-break: break-all;
-    word-break: break-word;
-    hyphens: auto;
-}
-
-.help-text {
-    color: var(--helpText);
-}
-
-.warning {
-    color: var(--warning);
-}
-
-.container-margin-top {
-    margin-top: 12vh;
-}
-
-.container-size {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.content {
-    margin: 20px 2vw;
-    background-color: var(--primaryColorLight);
-    padding: var(--defaultPadding);
-    border-radius: var(--defaultRadius);
-}
-
 .profile-page {
     max-width: 920px;
 }
 
 .profile-card {
     padding: 24px;
-    border: 1px solid var(--primaryColorLighter);
-    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
 }
 
 .profile-header {
@@ -125,44 +64,7 @@ div a:hover {
     color: var(--textColorLightish);
 }
 
-.theme-button {
-    background-color: var(--primaryColorLighter);
-    border: none;
-    color: var(--linkColorLight);
-    padding: 10px 20px;
-    text-align: center;
-    font-size: 16px;
-    border-radius: 5px;
-    font-family: 'Josefin Sans', sans-serif;
-    cursor: pointer;
-    transition: background-color 0.3s, color 0.3s;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    outline: none;
-}
-
-.theme-button:hover {
-    background-color: var(--primaryColorLighte);
-    color: var(--linkColorLightHover);
-}
-
-.theme-button:active {
-    transform: scale(0.95);
-}
-
-.theme-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.theme-button .fa-chevron-right {
-    transition: .3s;
-}
-
-.theme-button:hover .fa-chevron-right {
-    transform: translateX(10px);
-}
-
-#table {
+.profile-table {
     --bs-table-bg: var(--primaryColor);
     --bs-table-striped-bg: var(--primaryColorLight);
     --bs-table-striped-color: var(--textColorLight);
@@ -172,9 +74,6 @@ div a:hover {
     --bs-table-hover-color: var(--textColorLight);
     color: var(--textColorLight);
     border-color: var(--primaryColorLighter);
-}
-
-.profile-table {
     margin: 0;
     border-radius: 10px;
     overflow: hidden;
@@ -197,14 +96,18 @@ div a:hover {
     margin-top: 16px;
 }
 
+.profile-toolbar .theme-button,
+.profile-action.theme-button {
+    text-decoration: none;
+}
+
 .secondary-action {
     background-color: var(--primaryColorLight);
-    color: var(--linkColorLight);
 }
 
 .secondary-action:hover,
 .secondary-action:focus {
-    color: var(--linkColorLightHover);
+    text-decoration: none;
 }
 
 .profile-actions {
@@ -229,9 +132,9 @@ div a:hover {
     line-height: 1.5;
 }
 
-input[type="text"],
-input[type="email"],
-input[type="number"] {
+#editForm input[type="text"],
+#editForm input[type="email"],
+#editForm input[type="number"] {
     width: 100%;
     padding: 10px 12px;
     color: var(--textColorLight);

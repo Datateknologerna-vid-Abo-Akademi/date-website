@@ -88,11 +88,11 @@ form{
   color:blue !important;
 }
 
-.members-form a {
+.members-form a:not(.theme-button) {
   color: var(--textColorDark);
 } 
 
-.members-form a:hover {
+.members-form a:not(.theme-button):hover {
   color: var(--textColorDarkish);
 } 
 

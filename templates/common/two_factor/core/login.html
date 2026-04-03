@@ -23,7 +23,7 @@
                 <div class="two-factor-alt-methods">
                     <p>{% trans "Use another authentication method:" %}</p>
                     {% for other in other_devices %}
-                        <button name="challenge_device" value="{{ other.persistent_id }}" class="theme-button two-factor-secondary" type="submit">
+                        <button name="challenge_device" value="{{ other.persistent_id }}" class="btn btn-secondary" type="submit">
                             {{ other|as_action }}
                         </button>
                     {% endfor %}
@@ -36,7 +36,7 @@
         {% if backup_tokens %}
             <form action="" method="post" class="two-factor-inline-form">
                 {% csrf_token %}
-                <button name="wizard_goto_step" type="submit" value="backup" class="theme-button two-factor-secondary">
+                <button name="wizard_goto_step" type="submit" value="backup" class="btn btn-secondary">
                     {% trans "Use backup token" %}
                 </button>
             </form>

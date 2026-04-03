@@ -109,8 +109,9 @@ class MemberQRGeneratorView(QRGeneratorView):
 
 class MemberSetupCompleteView(SetupCompleteView):
     def get(self, request, *args, **kwargs):
-        if request.session.get('next'):
-            return redirect(request.session.get('next'))
+        next_target = request.session.pop('next', None)
+        if next_target:
+            return redirect(next_target)
         return redirect('members:info')
 
 

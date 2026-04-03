@@ -389,6 +389,7 @@ class TwoFactorIntegrationTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], reverse('admin:index'))
+        self.assertNotIn('next', self.client.session)
 
     def test_invalid_profile_post_keeps_editor_open_with_errors(self):
         self.client.force_login(self.member, backend='members.backends.AuthBackend')
