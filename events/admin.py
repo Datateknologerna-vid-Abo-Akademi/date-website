@@ -110,7 +110,6 @@ class EventAdmin(EventTranslationAdminBase):
         )
 
     account_actions.short_description = 'Deltagarlista'
-    account_actions.allow_tags = True
 
     @admin.action(description="Delete all attendees for selected events")
     def delete_participants(self, request, queryset):
