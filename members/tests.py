@@ -208,6 +208,12 @@ class SignupViewTests(TestCase):
         mock_send_email.delay.assert_called_once()
 
 
+class MembersAuthUrlTests(TestCase):
+    def test_members_namespace_exposes_login_and_password_change_routes(self):
+        self.assertEqual(reverse('members:login'), '/members/login/')
+        self.assertEqual(reverse('members:password_change'), '/members/password_change/')
+
+
 class FunctionaryHelperTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
