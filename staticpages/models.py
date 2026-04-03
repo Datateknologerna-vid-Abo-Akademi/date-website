@@ -49,6 +49,9 @@ class StaticUrl(models.Model):
     def __str__(self):
         return self.title
 
+    class Meta:
+        ordering = ['dropdown_element']
+
     def save(self, *args, **kwargs):
         if self.dropdown_element is None:
             max_number = StaticPageNav.objects.filter(category_name=self.category).aggregate(models.Max('dropdown_element'))['dropdown_element__max']
