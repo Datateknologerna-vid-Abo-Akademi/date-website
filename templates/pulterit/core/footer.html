@@ -18,22 +18,22 @@
             
         </section>
         <!-- Section: Social media -->
-        <div class="row align-middle align-items-center">
-            <div class="col-4 text-center ">
-                <img class="footer-img img-fluid" alt="{{ ASSOCIATION_NAME }} logo" src="{% static 'core/images/pulterit-white-wo-text.svg' %}">
+        <div class="row align-middle align-items-center pulterit-footer-content">
+            <div class="col-12 col-md-4 text-center pulterit-footer-brand">
+                <img class="footer-img img-fluid" alt="{{ ASSOCIATION_NAME }} logo" src="{% static 'core/images/pulterit-white.svg' %}">
             </div>
-            <div class="col-4">
+            <div class="col-12 col-md-4 pulterit-footer-copy">
                 <p>
-                    <br>
                     {% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}
                     Styrelsen för {{ association_name }} kan kontaktas på följande sätt.
-                    {% endblocktranslate %}<br><br>
-                    {% trans 'E-post' %}:
-                    {{ ASSOCIATION_EMAIL }}
-                    <br>
+                    {% endblocktranslate %}
+                </p>
+                <p>
+                    {% trans 'E-post' %}:<br>
+                    {{ ASSOCIATION_EMAIL }}<br>
                     {{ ASSOCIATION_OFFICE_HOURS }}
                 </p>
-                <p>{% trans "Address" %}: <br>
+                <p>{% trans "Address" %}:<br>
                     {{ ASSOCIATION_ADDRESS_L1 }}<br>
                     {{ ASSOCIATION_ADDRESS_L2 }}<br>
                     {{ ASSOCIATION_POSTAL_CODE }}
