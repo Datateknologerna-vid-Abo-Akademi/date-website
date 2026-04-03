@@ -59,7 +59,7 @@ def get_installed_apps(proj_apps):
         'members.apps.MemberConfig',
         *proj_apps,
         'modeltranslation',
-        'django.contrib.admin',
+        'date.apps.DateAdminConfig',
         'django.contrib.auth',
         'django.contrib.contenttypes',
         'django.contrib.sessions',

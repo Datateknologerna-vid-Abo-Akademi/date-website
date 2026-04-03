@@ -34,7 +34,6 @@ class EventBillingConfigurationAdmin(admin.ModelAdmin):
         )
 
     ref_export.short_description = 'Exportera data'
-    ref_export.allow_tags = True
 
     def ref_numbers(self, request, conf_id):
         bconfig = self.get_object(request, conf_id)

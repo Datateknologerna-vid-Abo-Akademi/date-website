@@ -25,7 +25,4 @@ class FixedLanguageAdminSite(AdminSiteOTPRequiredMixin, admin.AdminSite):
         return request.user.is_verified() or not has_totp
 
 
-admin_site = FixedLanguageAdminSite()
-
-for model, model_admin in admin.site._registry.items():
-    admin_site._registry[model] = model_admin.__class__(model, admin_site)
+admin_site = admin.site
