@@ -1,16 +1,23 @@
+import time
 from unittest.mock import patch
+from unittest.mock import patch as mock_patch
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import AnonymousUser
 from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
+from django_otp import DEVICE_ID_SESSION_KEY
+from django_otp.oath import TOTP
+from django_otp.plugins.otp_totp.models import TOTPDevice
+from two_factor.forms import TOTPDeviceForm
 
 from members.forms import (FunctionaryForm, MemberCreationForm, SignUpForm,
                            SubscriptionPaymentForm)
 from members.functionary import get_selected_role, get_selected_year
 from members.models import (Functionary, FunctionaryRole, Member,
                             MembershipType, ORDINARY_MEMBER, Subscription)
+from members.two_factor import MemberSetupView, StrictTOTPDeviceForm
 
 
 class UsernameValidatorTest(TestCase):
@@ -254,3 +261,149 @@ class FunctionaryHelperTests(TestCase):
         selected, all_roles = get_selected_role(request, roles)
         self.assertIsNone(selected)
         self.assertFalse(all_roles)
+
+
+class TwoFactorIntegrationTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.member = Member.objects.create_user(
+            username='otpuser',
+            email='otp@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+            first_name='Otp',
+            last_name='User',
+        )
+
+    def _totp_token(self, device, timestamp=None):
+        totp = TOTP(device.bin_key, device.step, device.t0, device.digits, device.drift)
+        totp.time = timestamp or time.time()
+        return str(totp.token()).zfill(device.digits)
+
+    def _wizard_prefix(self, response):
+        return response.context['wizard']['management_form'].prefix
+
+    def test_login_route_supports_email_then_requires_token(self):
+        device = TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
+        response = self.client.get(reverse('members:login'))
+        prefix = self._wizard_prefix(response)
+
+        response = self.client.post(reverse('members:login'), data={
+            f'{prefix}-current_step': 'auth',
+            'auth-username': self.member.email,
+            'auth-password': 'secret12345',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['wizard']['steps'].current, 'token')
+
+        prefix = self._wizard_prefix(response)
+        response = self.client.post(reverse('members:login'), data={
+            f'{prefix}-current_step': 'token',
+            'token-otp_token': self._totp_token(device),
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], reverse('members:info'))
+
+    def test_strict_totp_form_saves_device_with_one_step_tolerance(self):
+        form_key = '3132333435363738393031323334353637383930'
+        current_token = TOTP(bytes.fromhex(form_key)).token()
+        form = StrictTOTPDeviceForm(
+            key=form_key,
+            user=self.member,
+            data={'token': current_token},
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        device = form.save()
+        self.assertEqual(device.tolerance, 1)
+
+    def test_setup_view_uses_strict_totp_form_for_generator_method(self):
+        view = MemberSetupView()
+        with mock_patch('members.two_factor.SetupView.get_form_list', return_value={'generator': TOTPDeviceForm, 'welcome': object}):
+            form_list = view.get_form_list()
+
+        self.assertIs(form_list['generator'], StrictTOTPDeviceForm)
+
+    def test_profile_page_shows_2fa_state(self):
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+        response = self.client.get(reverse('members:info'))
+        self.assertContains(response, reverse('two_factor:setup'))
+
+        TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
+        response = self.client.get(reverse('members:info'))
+        self.assertContains(response, reverse('two_factor:disable'))
+        self.assertContains(response, reverse('two_factor:backup_tokens'))
+
+    def test_admin_requires_verified_device(self):
+        admin_user = Member.objects.create_superuser(
+            username='adminotp',
+            email='adminotp@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+        )
+        device = TOTPDevice.objects.create(user=admin_user, confirmed=True, name='default')
+
+        self.client.force_login(admin_user, backend='members.backends.AuthBackend')
+        response = self.client.get(reverse('admin:index'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('admin:login'), response.headers['Location'])
+
+        session = self.client.session
+        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
+        session.save()
+
+        response = self.client.get(reverse('admin:index'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_admin_login_allows_staff_without_registered_2fa(self):
+        admin_user = Member.objects.create_superuser(
+            username='adminplain',
+            email='adminplain@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+        )
+        response = self.client.get(f"{reverse('members:login')}?next={reverse('admin:index')}")
+        prefix = self._wizard_prefix(response)
+
+        response = self.client.post(f"{reverse('members:login')}?next={reverse('admin:index')}", data={
+            f'{prefix}-current_step': 'auth',
+            'auth-username': admin_user.email,
+            'auth-password': 'secret12345',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], reverse('admin:index'))
+
+    def test_setup_complete_redirects_to_saved_next_target(self):
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+        device = TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
+        session = self.client.session
+        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
+        session['next'] = reverse('admin:index')
+        session.save()
+
+        response = self.client.get(reverse('two_factor:setup_complete'))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], reverse('admin:index'))
+        self.assertNotIn('next', self.client.session)
+
+    def test_invalid_profile_post_keeps_editor_open_with_errors(self):
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+        response = self.client.post(reverse('members:info'), data={
+            'first_name': '',
+            'last_name': self.member.last_name,
+            'phone': self.member.phone,
+            'address': self.member.address,
+            'zip_code': self.member.zip_code,
+            'city': self.member.city,
+            'country': self.member.country,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id_first_name_error', html=False)
+        self.assertContains(response, 'id="userInfo" style="display:none;"', html=False)
+        self.assertNotContains(response, 'id="editForm" style="display:none;"', html=False)

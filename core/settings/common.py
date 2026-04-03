@@ -55,7 +55,7 @@ if not DEVELOP:
 def get_installed_apps(proj_apps):
     return [
         'date',
-        'members',
+        'members.apps.MemberConfig',
         *proj_apps,
         'modeltranslation',
         'django.contrib.admin',
@@ -64,6 +64,10 @@ def get_installed_apps(proj_apps):
         'django.contrib.sessions',
         'django.contrib.messages',
         'django.contrib.staticfiles',
+        'django_otp',
+        'django_otp.plugins.otp_static',
+        'django_otp.plugins.otp_totp',
+        'two_factor',
         'admin_ordering',
         'django_ckeditor_5',
         'channels',
@@ -102,6 +106,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'date.middleware.LangMiddleware',
@@ -184,6 +189,9 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTHENTICATION_BACKENDS = (
     'members.backends.AuthBackend',
 )
+
+LOGIN_URL = 'members:login'
+LOGIN_REDIRECT_URL = 'members:info'
 
 # Make CKEditor5 Work with modeltranslations
 MODELTRANSLATION_CUSTOM_FIELDS = (
@@ -297,9 +305,8 @@ else:
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
 STATIC_URL = '/static/'
 
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'index'
 LOGOUT_REDIRECT_URL = 'index'
+OTP_LOGIN_URL = 'members:login'
 
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

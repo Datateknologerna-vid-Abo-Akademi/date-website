@@ -1,0 +1,174 @@
+.profile-page {
+    max-width: 920px;
+}
+
+.profile-card {
+    padding: 24px;
+}
+
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.profile-eyebrow {
+    margin: 0 0 6px;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--helpText);
+}
+
+.profile-title {
+    margin: 0;
+    font-size: 2rem;
+    color: var(--textColorLight);
+}
+
+.profile-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    background-color: var(--primaryColor);
+    border: 1px solid var(--primaryColorLighter);
+    border-radius: var(--defaultRadius);
+}
+
+.status-label {
+    color: var(--textColorLightish);
+    font-weight: 600;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 7px 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border-radius: var(--defaultRadius);
+}
+
+.status-badge-enabled {
+    background-color: var(--primaryColorLighter);
+    color: var(--linkColorLight);
+}
+
+.status-badge-disabled {
+    background-color: var(--primaryColorLight);
+    color: var(--textColorLightish);
+}
+
+.profile-table {
+    --bs-table-bg: var(--primaryColor);
+    --bs-table-striped-bg: var(--primaryColorLight);
+    --bs-table-striped-color: var(--textColorLight);
+    --bs-table-active-bg: var(--primaryColorLighter);
+    --bs-table-active-color: var(--textColorLight);
+    --bs-table-hover-bg: var(--primaryColorLighte);
+    --bs-table-hover-color: var(--textColorLight);
+    color: var(--textColorLight);
+    border-color: var(--primaryColorLighter);
+    margin: 0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.profile-table td {
+    padding: 14px 16px;
+    vertical-align: middle;
+}
+
+.profile-table td:first-child {
+    width: 42%;
+    font-weight: 700;
+    color: var(--textColorLightish);
+}
+
+.profile-toolbar {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.profile-toolbar .theme-button,
+.profile-action.theme-button {
+    text-decoration: none;
+}
+
+.secondary-action {
+    background-color: var(--primaryColorLight);
+}
+
+.secondary-action:hover,
+.secondary-action:focus {
+    text-decoration: none;
+}
+
+.profile-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.profile-action {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    min-height: 54px;
+    width: 100%;
+}
+
+.profile-help {
+    margin: 18px 0 0;
+    color: var(--helpText);
+    line-height: 1.5;
+}
+
+#editForm input[type="text"],
+#editForm input[type="email"],
+#editForm input[type="number"] {
+    width: 100%;
+    padding: 10px 12px;
+    color: var(--textColorLight);
+    background-color: var(--primaryColor);
+    border: 1px solid var(--primaryColorLighter);
+    border-radius: var(--defaultRadius);
+}
+
+@media (max-width: 767.98px) {
+    .profile-card {
+        padding: 18px;
+    }
+
+    .profile-header {
+        flex-direction: column;
+    }
+
+    .profile-title {
+        font-size: 1.7rem;
+    }
+
+    .profile-table td {
+        padding: 12px;
+    }
+
+    .profile-table td:first-child {
+        width: 40%;
+    }
+
+    .profile-toolbar {
+        flex-direction: column;
+    }
+
+    .profile-actions {
+        grid-template-columns: 1fr;
+    }
+}
