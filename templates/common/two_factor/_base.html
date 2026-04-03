@@ -1,0 +1,18 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'members/style.css' %}">
+    <link rel="stylesheet" href="{% static 'members/css/two-factor.css' %}">
+    {% block extra_media %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+    <div class="two-factor-page">
+        {% block content_wrapper %}
+            <div class="two-factor-shell">
+                {% block two_factor_content %}{% endblock %}
+            </div>
+        {% endblock %}
+    </div>
+{% endblock %}

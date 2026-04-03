@@ -1,0 +1,18 @@
+{% extends "two_factor/_base_focus.html" %}
+{% load i18n %}
+
+{% block two_factor_content %}
+    <div class="members-form two-factor-card">
+        <h2>{% trans "Disable two-factor authentication" %}</h2>
+        <p>{% trans "This removes the extra verification step from your account." %}</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="two-factor-actions">
+                <button type="submit" class="theme-button">{% trans "Disable" %}</button>
+                <a href="{% url 'members:info' %}" class="theme-button two-factor-secondary">{% trans "Cancel" %}</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

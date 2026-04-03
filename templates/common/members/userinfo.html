@@ -1,120 +1,91 @@
 {% extends 'core/base.html' %}
 {% load i18n %}
 {% load static %}
-{% block title %}{% trans 'Användarinformation' %}{% endblock %}
+
+{% block title %}{% trans 'Member profile' %}{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'members/css/userinfo.css' %}" type="text/css">
+{% endblock %}
+
 {% block content %}
     <script>
     function toggleEdit() {
-    var info = document.getElementById("userInfo");
-    var edit = document.getElementById("editForm");
-    info.style.display = (info.style.display === "none" ? "block" : "none");
-    edit.style.display = (edit.style.display === "none" ? "block" : "none");
+        const info = document.getElementById("userInfo");
+        const edit = document.getElementById("editForm");
+        info.style.display = (info.style.display === "none" ? "block" : "none");
+        edit.style.display = (edit.style.display === "none" ? "block" : "none");
     }
     </script>
-    <head>
-        <link rel="stylesheet" href="{% static 'members/css/userinfo.css' %}" type="text/css">
-    </head>
-    <div class="container-md min-vh-100 container-margin-top">
-        <div class="container-size">
-            <div class="content">
-                <!-- User Information Section -->
-                <h3>{{ user.username }}</h3>
-                <div id="userInfo">
-                    <table id="table" class="table table-striped">
-                        <tr>
-                            <td>Email:</td>
-                            <td>{{ user.email }}</td>
-                        </tr>
-                        <tr>
-                            <td>Förnamn:</td>
-                            <td>{{ user.first_name }}</td>
-                        </tr>
-                        <tr>
-                            <td>Efternamn:</td>
-                            <td>{{ user.last_name }}</td>
-                        </tr>
-                        <tr>
-                            <td>Telefonnummer:</td>
-                            <td>{{ user.phone }}</td>
-                        </tr>
-                        <tr>
-                            <td>Adress:</td>
-                            <td>{{ user.address }}</td>
-                        </tr>
-                        <tr>
-                            <td>Zip kod:</td>
-                            <td>{{ user.zip_code }}</td>
-                        </tr>
-                        <tr>
-                            <td>Stad:</td>
-                            <td>{{ user.city }}</td>
-                        </tr>
-                        <tr>
-                            <td>Land:</td>
-                            <td>{{ user.country }}</td>
-                        </tr>
-                        <tr>
-                            <td>Medlems typ:</td>
-                            <td>{{ user.get_str_membership_type }}</td>
-                        </tr>
-                        <!-- End of user information fields -->
-                    </table>
-                    <button onclick="toggleEdit()" class="theme-button">Edit</button>
-                    <br>
-                </div>
-                <div id="editForm" style="display:none;">
-                    <form method="post">
-                        {% csrf_token %}
-                        <table id="table" class="table table-striped">
-                            <tr>
-                                <td>Email:</td>
-                                <td>{{ form.email }}</td>
-                                {% if form.email.errors %}
-                                    <div class="error">{{ form.email.errors.as_text }}</div>
-                                {% endif %}
-                            </tr>
-                            <tr>
-                                <td>Förnamn:</td>
-                                <td>{{ form.first_name }}</td>
-                            </tr>
-                                                    <tr>
-                                <td>Efternamn:</td>
-                                <td>{{ form.last_name }}</td>
-                            </tr>
-                            <tr>
-                                <td>Telefonnummer:</td>
-                                <td>{{ form.phone }}</td>
-                            </tr>
-                            <tr>
-                                <td>Adress:</td>
-                                <td>{{ form.address }}</td>
-                            </tr>
-                            <tr>
-                                <td>Zip kod:</td>
-                                <td>{{ form.zip_code }}</td>
-                            </tr>
-                            <tr>
-                                <td>Stad:</td>
-                                <td>{{ form.city }}</td>
-                            </tr>
-                            <tr>
-                                <td>Land:</td>
-                                <td>{{ form.country }}</td>
-                            </tr>
-                                <td>Medlems typ:</td>
-                                <td>{{ user.get_str_membership_type }}</td>
-                            </tr>
-                        </table>
-                        <button type="submit" class="theme-button">Save</button>
-                        <button type="button" class="theme-button" onclick="toggleEdit()">Cancel</button>
-                    </form>
 
+    <div class="profile-page container-margin-top">
+        <section class="profile-card">
+            <div class="profile-header">
+                <div>
+                    <p class="profile-eyebrow">{% trans 'Member profile' %}</p>
+                    <h1 class="profile-name">{{ user.username }}</h1>
                 </div>
-
-                <a href="{% url 'members:password_change' %}" class="theme-button">{% trans 'Password change' %}<i class="fas fa-chevron-right"></i></a>
-                <a href="{% url 'members:functionary' %}" class="theme-button" style="margin-top: 5px;">Funktionärsposter <i class="fas fa-chevron-right"></i></a>
-                <p style="margin-top: 5px">För att ändra ditt användarnamn eller e-post, kontakta styrelsen på {{ ASSOCIATION_EMAIL }}</p>
+                <div class="security-status">
+                    <span class="security-label">{% trans 'Two-factor authentication' %}</span>
+                    <span class="security-pill {% if two_factor_enabled %}is-active{% else %}is-inactive{% endif %}">
+                        {% if two_factor_enabled %}
+                            {% trans 'Enabled' %}
+                        {% else %}
+                            {% trans 'Not enabled' %}
+                        {% endif %}
+                    </span>
+                </div>
             </div>
-        </div>
+
+            <div id="userInfo">
+                <table class="table profile-table">
+                    <tr><th>{% trans 'Email' %}</th><td>{{ user.email|default:"-" }}</td></tr>
+                    <tr><th>{% trans 'First name' %}</th><td>{{ user.first_name|default:"-" }}</td></tr>
+                    <tr><th>{% trans 'Last name' %}</th><td>{{ user.last_name|default:"-" }}</td></tr>
+                    <tr><th>{% trans 'Phone number' %}</th><td>{{ user.phone|default:"-" }}</td></tr>
+                    <tr><th>{% trans 'Address' %}</th><td>{{ user.address|default:"-" }}</td></tr>
+                    <tr><th>{% trans 'Zip code' %}</th><td>{{ user.zip_code|default:"-" }}</td></tr>
+                    <tr><th>{% trans 'City' %}</th><td>{{ user.city|default:"-" }}</td></tr>
+                    <tr><th>{% trans 'Country' %}</th><td>{{ user.country|default:"-" }}</td></tr>
+                    <tr><th>{% trans 'Membership type' %}</th><td>{{ user.get_str_membership_type|default:"-" }}</td></tr>
+                </table>
+
+                <div class="action-row">
+                    <button onclick="toggleEdit()" class="theme-button profile-button" type="button">{% trans 'Edit' %}</button>
+                    <a href="{% url 'members:password_change' %}" class="theme-button profile-button">{% trans 'Password change' %}</a>
+                    {% if two_factor_enabled %}
+                        <a href="{% url 'two_factor:disable' %}" class="theme-button profile-button">{% trans 'Disable two-factor authentication' %}</a>
+                        <a href="{% url 'two_factor:backup_tokens' %}" class="theme-button profile-button">{% trans 'Backup tokens' %}</a>
+                    {% else %}
+                        <a href="{% url 'two_factor:setup' %}" class="theme-button profile-button">{% trans 'Enable two-factor authentication' %}</a>
+                    {% endif %}
+                    <a href="{% url 'members:functionary' %}" class="theme-button profile-button">{% trans 'Positions of trust' %}</a>
+                </div>
+            </div>
+
+            <div id="editForm" style="display:none;">
+                <form method="post">
+                    {% csrf_token %}
+                    <table class="table profile-table">
+                        <tr><th>{% trans 'First name' %}</th><td>{{ form.first_name }}</td></tr>
+                        <tr><th>{% trans 'Last name' %}</th><td>{{ form.last_name }}</td></tr>
+                        <tr><th>{% trans 'Phone number' %}</th><td>{{ form.phone }}</td></tr>
+                        <tr><th>{% trans 'Address' %}</th><td>{{ form.address }}</td></tr>
+                        <tr><th>{% trans 'Zip code' %}</th><td>{{ form.zip_code }}</td></tr>
+                        <tr><th>{% trans 'City' %}</th><td>{{ form.city }}</td></tr>
+                        <tr><th>{% trans 'Country' %}</th><td>{{ form.country }}</td></tr>
+                        <tr><th>{% trans 'Membership type' %}</th><td>{{ user.get_str_membership_type|default:"-" }}</td></tr>
+                    </table>
+                    <div class="action-row">
+                        <button type="submit" class="theme-button profile-button">{% trans 'Save' %}</button>
+                        <button type="button" class="theme-button profile-button" onclick="toggleEdit()">{% trans 'Cancel' %}</button>
+                    </div>
+                </form>
+            </div>
+
+            <p class="profile-help">
+                {% blocktrans %}To change your username or email address, contact the board at {{ ASSOCIATION_EMAIL }}.{% endblocktrans %}
+            </p>
+        </section>
     </div>
 {% endblock %}

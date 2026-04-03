@@ -1,0 +1,149 @@
+.profile-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 7rem 1.25rem 4rem;
+}
+
+.profile-card {
+    width: min(960px, 100%);
+    background-color: var(--secondaryColor);
+    color: var(--textColorDark);
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 0 20px 0 rgba(255,255,255,0.18), 0 5px 5px 0 rgba(200,200,200,0.08);
+}
+
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.profile-eyebrow {
+    margin: 0 0 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--textColorDarkish);
+}
+
+.profile-name {
+    margin: 0;
+    font-size: 3rem;
+    line-height: 1;
+}
+
+.security-status {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.75rem;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.security-label {
+    font-weight: 600;
+}
+
+.security-pill {
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.security-pill.is-active {
+    background: #27ae60;
+    color: #fff;
+}
+
+.security-pill.is-inactive {
+    background: #6c757d;
+    color: #fff;
+}
+
+.profile-table {
+    margin-bottom: 1.5rem;
+    color: var(--textColorDark);
+}
+
+.profile-table th,
+.profile-table td {
+    padding: 1rem 0.9rem;
+    border-color: rgba(255, 255, 255, 0.06);
+    background-color: var(--secondaryColorDarker);
+}
+
+.profile-table tr:nth-child(odd) th,
+.profile-table tr:nth-child(odd) td {
+    background-color: #303338;
+}
+
+.profile-table th {
+    width: 42%;
+    font-weight: 700;
+}
+
+.profile-table input,
+.profile-table select {
+    width: 100%;
+    border: 0;
+    padding: 0.75rem;
+    background-color: rgba(0, 0, 0, 0.18);
+    color: var(--textColorDark);
+}
+
+.action-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.profile-button {
+    width: auto;
+    min-width: 180px;
+    text-align: center;
+    text-decoration: none;
+}
+
+.profile-help {
+    margin-top: 1.25rem;
+    color: var(--textColorDarkish);
+}
+
+@media screen and (max-width: 768px) {
+    .profile-card {
+        padding: 1.25rem;
+    }
+
+    .profile-header {
+        flex-direction: column;
+    }
+
+    .profile-name {
+        font-size: 2.25rem;
+    }
+
+    .security-status,
+    .profile-button {
+        width: 100%;
+    }
+
+    .profile-table th,
+    .profile-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .profile-table th {
+        padding-bottom: 0.35rem;
+    }
+
+    .profile-table td {
+        padding-top: 0;
+    }
+}
