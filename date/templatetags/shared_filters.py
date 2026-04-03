@@ -1,5 +1,4 @@
 from django import template
-from django.contrib.auth.models import Group
 
 register = template.Library()
 
@@ -15,49 +14,26 @@ def divide(value, arg):
 
 @register.filter(name='in_group')
 def in_group(user, group_name):
-    try:
-        group = Group.objects.get(name=group_name)
-        return group in user.groups.all()
-    except Group.DoesNotExist:
-        print("ERROR, No group", group_name)
+    if not getattr(user, 'is_authenticated', False):
         return False
+    return user.groups.filter(name=group_name).exists()
 
 
 @register.filter(name='is_photographer')
 def is_photographer(user):
-    try:
-        group = Group.objects.get(name='fotograf')
-        return group in user.groups.all()
-    except Group.DoesNotExist:
-        print("ERROR, No group", 'fotograf')
-        return False
+    return in_group(user, 'fotograf')
 
 
 @register.filter(name='is_board')
 def is_board(user):
-    try:
-        group = Group.objects.get(name='styrelse')
-        return group in user.groups.all()
-    except Group.DoesNotExist:
-        print("ERROR, No group", 'styrelse')
-        return False
+    return in_group(user, 'styrelse')
 
 
 @register.filter(name='is_admin')
 def is_admin(user):
-    try:
-        group = Group.objects.get(name='admin')
-        return group in user.groups.all()
-    except Group.DoesNotExist:
-        print("ERROR, No group", 'admin')
-        return False
+    return in_group(user, 'admin')
 
 
 @register.filter(name='is_counter')
 def is_counter(user):
-    try:
-        group = Group.objects.get(name='rösträknare')
-        return group in user.groups.all()
-    except Group.DoesNotExist:
-        print("ERROR, No group", 'rösträknare')
-        return False
+    return in_group(user, 'rösträknare')
