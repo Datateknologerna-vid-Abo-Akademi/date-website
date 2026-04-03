@@ -169,6 +169,60 @@ div a:hover{
     z-index: 1;
 }
 
+.pulterit-footer-content {
+    row-gap: 1.5rem;
+}
+
+.pulterit-footer-copy p {
+    margin-bottom: 1.25rem;
+}
+
+.pulterit-footer-copy p:last-child {
+    margin-bottom: 0;
+}
+
+@media (max-width: 767.98px) {
+    .pulterit-footer-shell {
+        padding: 1.5rem 1rem 1.75rem;
+    }
+
+    .pulterit-footer-shell > hr,
+    .pulterit-footer-shell > section,
+    .pulterit-footer-shell > .row,
+    .pulterit-footer-shell > .text-center {
+        width: min(100% - 1rem, 36rem);
+    }
+
+    .pulterit-footer-shell section {
+        margin-top: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .pulterit-footer-content {
+        text-align: center;
+        row-gap: 1.75rem;
+    }
+
+    .pulterit-footer-brand {
+        margin-bottom: 0.25rem;
+    }
+
+    .pulterit-footer-brand .footer-img {
+        max-height: 120px;
+    }
+
+    .pulterit-footer-copy {
+        max-width: 22rem;
+        margin: 0 auto;
+    }
+
+    .pulterit-footer-copy p {
+        margin-bottom: 1rem;
+        line-height: 1.45;
+    }
+
+}
+
 /* Basic table colors */
 #table {
     --bs-table-bg: #f8f8f8;
