@@ -1541,10 +1541,6 @@ msgstr "Tallenna"
 msgid "Cancel"
 msgstr "Peruuta"
 
-#: templates/common/members/userinfo.html:133
-msgid "Funktionärsposter"
-msgstr "Toimihenkilötehtävät"
-
 #: templates/common/members/userinfo.html:136
 #, python-format
 msgid "För att ändra ditt användarnamn eller e-post, kontakta styrelsen på %(ASSOCIATION_EMAIL)s"
