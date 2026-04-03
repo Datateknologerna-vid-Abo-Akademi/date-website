@@ -1,0 +1,40 @@
+/* Shared homepage layout primitives. Association files own grid areas and special breakpoints. */
+
+.main-container {
+    display: grid;
+    grid-template-rows: auto;
+    grid-template-columns: 1fr 850px 350px 1fr;
+    grid-column-gap: 3vw;
+}
+
+.heading-link a {
+    color: var(--textColorDark);
+}
+
+.heading-link a:hover {
+    color: var(--textColorMedium);
+}
+
+@-webkit-keyframes fadeIn {
+    from { opacity: 0; }
+    60% { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    60% { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media screen and (max-width: 1400px) {
+    .main-container {
+        grid-template-columns: 5vw 5fr 2fr 5vw;
+    }
+}
+
+@media screen and (max-width: 991px) {
+    .main-container {
+        grid-template-columns: 1vw 1fr 1vw;
+    }
+}

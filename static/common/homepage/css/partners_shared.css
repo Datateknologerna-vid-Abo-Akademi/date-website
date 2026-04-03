@@ -1,0 +1,29 @@
+/* Shared homepage partner/logo structure. Associations own borders, links, and placement tweaks. */
+
+.logo-container {
+    grid-area: logos;
+    margin-top: 20px;
+}
+
+.carousel-logos {
+    overflow: hidden;
+}
+
+.company-logo img {
+    max-height: 100px;
+    max-width: 100%;
+    width: auto !important;
+    height: auto !important;
+}
+
+.logo-container img {
+    max-width: 300px;
+    max-height: 200px;
+    width: auto !important;
+    height: auto !important;
+}
+
+ul#logo-list {
+    list-style-type: none;
+    padding: 0;
+}

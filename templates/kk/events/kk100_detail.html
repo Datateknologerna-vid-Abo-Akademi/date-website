@@ -1,0 +1,94 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{% load shared_filters %}
+{% load localized_time %}
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'events/css/kk100.css' %}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+    <script src="{% static 'core/js/live-attendee-list.js' %}"></script>
+    <style>
+            .twinkling{
+            background:transparent url("{% static 'core/images/twinkling.png' %}") repeat top center;
+            }
+            .stars {
+            background:#030826 url("{% static 'core/images/twinklingstars.png' %}") repeat top center;
+            }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="background-img">
+        <div class="container-md min-vh-100 p-1">
+            <div class="stars"></div>
+            <div class="twinkling"></div>
+            <div class="container-size">
+                <div class="content header-box">
+                    <img class="header-logo" src="{% static 'core/images/100logogold.png' %}">
+                    <h1 class="baal-header">100 Kemistbaal</h1>
+                    <div class="baal-nav" data-tabbed-nav data-tab-content-class="baal-content">
+                        <a class="baal-link" href="#/main" data-nav="main">Välkommen</a>
+                        {% for page in staticpages %}
+                            <a class="baal-link" href="#/{{ page.slug }}" data-nav="{{ page.slug }}">{{ page.title }}</a>
+                        {% endfor %}
+                        <a class="baal-link" href="#/anmalan" data-nav="anmalan">Anmälan</a>
+                        <a class="baal-link" href="#/attendee-list" data-nav="attendee-list">Anmälda</a>
+                    </div>
+                </div>
+                <div class="text-content">
+                    {% for page in staticpages %}
+                        <div id="{{ page.slug }}" class="content baal-content {{ page.slug }} hidden">
+                            <h1>{{ page.title }}</h1>
+                            <p>{{ page.content | safe }}</p>
+                        </div>
+                    {% endfor %}
+                    <div id="main" class="content baal-content main">
+                        <h1 class="header">{{ event.title }}</h1>
+                        <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
+                        <p>{{ event.content | safe }}</p>
+                    </div>
+                </div>
+                {% include "events/partials/tabbed_signup.html" with content_class="baal-content" %}
+                {% include "events/partials/tabbed_attendee_list.html" with content_class="baal-content" %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        // Get the form element
+        const form = document.querySelector('form');
+
+        // Attach an event listener to the form's submit event
+        form.addEventListener('submit', event => {
+          // Select all input elements whose id contains "Årskurs"
+          const inputElements = document.querySelectorAll('input[id*="Årskurs"]');
+
+          // Loop through each input element
+          inputElements.forEach(input => {
+            // Get the input value
+            const inputValue = input.value.trim();
+
+            // Check if the input is filled in
+            if (inputValue) {
+              // Validate the input format
+              if (!/^\d{4}$/.test(inputValue)) {
+                // Display an error message
+                alert(`Input ${inputValue} är inte i YYYY format, t.ex. 2020.`);
+                // Clear the input value
+                input.value = '';
+                // Prevent the form from being submitted
+                event.preventDefault();
+              }
+            }
+          });
+        });
+
+
+
+    </script>
+    <script src="{% static 'events/js/tabbed-event.js' %}"></script>
+{% endblock %}

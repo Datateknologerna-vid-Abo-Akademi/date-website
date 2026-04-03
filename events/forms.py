@@ -6,7 +6,7 @@ from django.contrib.admin import widgets
 from django.utils.timezone import now
 from django.conf import settings
 
-from date.functions import slugify_max
+from homepage.functions import slugify_max
 from events import models
 from events.models import Event
 

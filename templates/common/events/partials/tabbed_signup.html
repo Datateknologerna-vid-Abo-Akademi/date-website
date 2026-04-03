@@ -1,0 +1,5 @@
+{% load i18n %}
+<div class="content {{ content_class }} anmalan hidden break-words">
+    <h2 id="sign-up">{% trans "Anmälning" %}</h2>
+    {% include signup_state_partial|default:"events/partials/tabbed_signup_state.html" %}
+</div>

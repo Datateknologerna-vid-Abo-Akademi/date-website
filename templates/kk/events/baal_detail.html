@@ -1,0 +1,60 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{% load shared_filters %}
+{% load localized_time %}
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{% static 'events/css/baal.css' %}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+    <script src="{% static 'core/js/live-attendee-list.js' %}"></script>
+    <style>
+            .background-img{
+                background: url("{% if event.image %}{{ event.image.url }}{% elif event.s3_image %}{{ event.s3_image.url }}{% endif %}") no-repeat center center fixed;
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
+            }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="background-img">
+        <div class="container-md min-vh-100 p-1">
+            <div class="container-size">
+                <div class="content header-box">
+                    <img class="header-logo" src="{% static 'core/images/HQKK_2.png' %}">
+                    <h1 class="baal-header">CII Kemistbaal</h1>
+                    <div class="baal-nav" data-tabbed-nav data-tab-content-class="baal-content">
+                        <a class="baal-link" href="#/main" data-nav="main">Välkommen</a>
+                        {% for page in staticpages %}
+                            <a class="baal-link" href="#/{{ page.slug }}" data-nav="{{ page.slug }}">{{ page.title }}</a>
+                        {% endfor %}
+                        <a class="baal-link" href="#/anmalan" data-nav="anmalan">Anmälan</a>
+                        <a class="baal-link" href="#/attendee-list" data-nav="attendee-list">Anmälda</a>
+                    </div>
+                </div>
+                <div class="text-content">
+                    {% for page in staticpages %}
+                        <div id="{{ page.slug }}" class="content baal-content {{ page.slug }} hidden">
+                            <h1>{{ page.title }}</h1>
+                            <p>{{ page.content | safe }}</p>
+                        </div>
+                    {% endfor %}
+                    <div id="main" class="content baal-content main">
+                        <h1 class="header">{{ event.title }}</h1>
+                        <h4>{{ event.event_date_start|date:"l d b Y H:i" }}</h4>
+                        <p>{{ event.content | safe }}</p>
+                    </div>
+                </div>
+                {% include "events/partials/tabbed_signup.html" with content_class="baal-content" %}
+                {% include "events/partials/tabbed_attendee_list.html" with content_class="baal-content" %}
+            </div>
+        </div>
+    </div>
+    
+    <script src="{% static 'events/js/tabbed-event.js' %}"></script>
+{% endblock %}

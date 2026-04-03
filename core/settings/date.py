@@ -1,22 +1,5 @@
 from .common import *  # noqa
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            'templates/date',
-            *COMMON_TEMPLATE_DIRS,
-        ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                *COMMON_CONTEXT_PROCESSORS,
-                # Add project context processors here
-            ],
-        },
-    },
-]
-
 INSTALLED_APPS = get_installed_apps([
     'news',
     'archive.apps.ArchiveConfig',
@@ -39,12 +22,6 @@ STAFF_GROUPS = get_staff_groups([
         'fotograf',
         'rösträknare'
     ])
-
-
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/date'),
-    os.path.join(BASE_DIR, 'static/common'),
-]
 
 
 CONTENT_VARIABLES = {

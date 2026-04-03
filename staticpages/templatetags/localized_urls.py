@@ -1,7 +1,7 @@
 from django import template
 from django.utils.translation import get_language
 
-from date.language_utils import localize_url
+from homepage.language_utils import localize_url
 
 register = template.Library()
 

@@ -1,0 +1,4 @@
+/* Sidebar component */
+.sidebar-container {
+    grid-area: sidebar;
+}

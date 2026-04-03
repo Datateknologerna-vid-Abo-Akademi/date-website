@@ -1,0 +1,3 @@
+<div id="attendee-list" class="content {{ content_class }} attendee-list hidden" data-parent-slug="{{ event.parent.slug|default:'' }}">
+    {% include attendee_list_partial|default:"events/partials/tabbed_attendee_list_content.html" %}
+</div>

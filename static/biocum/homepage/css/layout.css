@@ -1,0 +1,37 @@
+.main-container {
+    grid-template-areas: 
+      ". news sidebar ."
+      ". news sidebar ."
+      ". ig-scroll ig-scroll .";
+}
+
+@media screen and (max-width: 991px){
+    .main-container{
+        grid-template-areas:
+          ". events ."
+          ". news ."
+          ". logos ."
+          ". ig-scroll .";
+    }
+
+    .sidebar-container{
+        display: none;
+    }
+
+    .mobile-events-container{
+        display: block;
+    }
+
+    .mobile-logo-container{
+        display: block;
+    }
+}
+
+@media screen and (max-width: 550px) {
+    .calendar-tooltip .tooltiptext {
+        width: 0;
+    }
+    .calendar-tooltip:hover .tooltiptext {
+        visibility: hidden;
+    }
+}

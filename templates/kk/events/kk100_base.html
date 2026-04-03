@@ -1,0 +1,32 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{% load app_filters %}
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block content %}
+    <head>
+        <link rel="stylesheet" href="{% static 'events/css/kk100.css' %}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+        <script src="{% static 'core/js/live-attendee-list.js' %}"></script>
+    </head>
+    <div class="background-img">
+        <div class="container-md min-vh-100">
+        <div class="stars"></div>
+        <div class="twinkling"></div>
+            
+            {% block kk_svg_container %}
+            <div class="scaling-svg-container">
+                {% include "events/svg/kk100_logo.html" %}
+            </div>
+            {% endblock %}
+
+            {% block kk_main_text %}
+            {% endblock %}
+            
+          </div>
+    </div>
+    {% block kk_scripts %}
+    {% endblock %}
+{% endblock %}

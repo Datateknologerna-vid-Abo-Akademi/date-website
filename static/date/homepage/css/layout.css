@@ -1,0 +1,24 @@
+.main-container {
+    grid-template-areas: 
+      ". news events ."
+      ". news extras ."
+      ". ig-scroll ig-scroll ."
+      ". logos logos .";
+}
+
+@media screen and (max-width: 991px){
+    .main-container{
+        grid-template-areas:
+          ". events ."
+          ". news ."
+          ". extras ."
+          ". logos ."
+          ". ig-scroll .";
+    }
+}
+
+@media screen and (max-width: 550px) {
+    .aa-img {
+        left: 85%;
+    }
+}

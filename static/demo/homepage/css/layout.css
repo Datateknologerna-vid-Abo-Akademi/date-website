@@ -1,0 +1,18 @@
+.main-container{
+    grid-template-areas: 
+      ". news sidebar ."
+      ". news sidebar ."
+      ". ig-scroll ig-scroll ."
+      ". logos logos .";
+}
+
+@media screen and (max-width: 991px){
+    .main-container{
+        grid-template-areas:
+          ". events ."
+          ". news ."
+          ". extras ."
+          ". logos ."
+          ". ig-scroll .";
+    }
+}

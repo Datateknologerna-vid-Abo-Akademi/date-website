@@ -1,0 +1,8 @@
+.logo-container a {
+    color: var(--linkColorDark);
+    margin-top: 20px;
+}
+
+.logo-container a:hover {
+    color: var(--linkColorDarkHover);
+}

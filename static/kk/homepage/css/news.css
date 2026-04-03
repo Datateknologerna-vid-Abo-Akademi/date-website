@@ -1,0 +1,32 @@
+.news-events {
+    background: linear-gradient(180deg, var(--secondaryColor) 0%, rgb(214, 231, 214) 100%);
+}
+
+div.news-content a {
+    display: inline-block;
+    color: var(--linkColor);
+}
+
+div.news-content a:hover {
+    color: var(--linkSecondaryHover);
+}
+
+.more-news {
+    color: var(--linkColor);
+}
+
+.more-news:hover {
+    color: var(--linkSecondaryHover);
+}
+
+@-webkit-keyframes pulse {
+    0% { text-shadow:0 0 1px #ff9600;}
+    50% { text-shadow:0 0 6px #ff9600;}
+    100% { text-shadow:0 0 1px #ff9600;}
+}
+
+@keyframes pulse {
+    0% { text-shadow:0 0 1px #ff9600; }
+    50% { text-shadow:0 0 6px #ff9600; }
+    100% { text-shadow:0 0 1px #ff9600; }
+}

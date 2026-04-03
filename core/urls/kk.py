@@ -20,13 +20,13 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from date import views as date
+from homepage import views as homepage
 from core.urls.common import build_urlpatterns
 
 app_name = 'core'
 
 urlpatterns = build_urlpatterns(
-    path('', date.index, name='index'),
+    path('', homepage.index, name='index'),
     path('news/', include('news.urls')),
     path('members/', include('members.urls')),
     path('members/', include('django.contrib.auth.urls')),
@@ -45,5 +45,5 @@ urlpatterns = build_urlpatterns(
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-handler404 = date.handler404
-handler500 = date.handler500
+handler404 = homepage.handler404
+handler500 = homepage.handler500

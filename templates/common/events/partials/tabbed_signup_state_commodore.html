@@ -1,0 +1,16 @@
+{% load i18n %}
+{% load app_filters %}
+{% load localized_time %}
+{% if user|in_group:"commodore" %}
+    {% include 'events/registering.html' %}
+{% elif event.registration_is_open_members and user.is_authenticated %}
+    {% include 'events/registering.html' %}
+{% elif event.registration_is_open_others %}
+    {% include 'events/registering.html' %}
+{% elif event.registation_past_due %}
+    <h4 id="no-registration">{% trans "Anmälningstiden gick ut" %} {{ event.sign_up_deadline|localized_timesince_ago }}</h4>
+{% elif not event.registation_past_due and user.is_authenticated %}
+    <p>{% trans "Anmälan öppnas" %} {{ event.sign_up_members|date:"j.n H:i" }}, {{ event.sign_up_members|localized_timeuntil }}</p>
+{% else %}
+    <p>{% trans "Anmälan öppnas" %} {{ event.sign_up_others|date:"j.n H:i" }}, {{ event.sign_up_others|localized_timeuntil }}</p>
+{% endif %}

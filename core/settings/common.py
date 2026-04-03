@@ -25,6 +25,8 @@ env = environ.Env(
     DEVELOP=(bool, False),
 )
 
+PROJECT_NAME = os.environ.get("PROJECT_NAME", "date")
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -54,7 +56,8 @@ if not DEVELOP:
 
 def get_installed_apps(proj_apps):
     return [
-        'date',
+        'daphne',
+        'homepage',
         'members',
         *proj_apps,
         'modeltranslation',
@@ -94,19 +97,35 @@ COMMON_CONTEXT_PROCESSORS = [
     'core.context_processors.apply_content_variables',
 ]
 
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            f'templates/{PROJECT_NAME}',
+            *COMMON_TEMPLATE_DIRS,
+        ],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                *COMMON_CONTEXT_PROCESSORS,
+            ],
+        },
+    },
+]
+
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'date.middleware.LanguageStateMiddleware',
+    'homepage.middleware.LanguageStateMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'date.middleware.LangMiddleware',
-    'date.middleware.HTCPCPMiddleware',
-    'date.middleware.CDNRewriteMiddleware'
+    'homepage.middleware.LangMiddleware',
+    'homepage.middleware.HTCPCPMiddleware',
+    'homepage.middleware.CDNRewriteMiddleware'
 ]
 
 
@@ -233,7 +252,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-PROJECT_NAME = os.environ.get("PROJECT_NAME", "date")
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Cloudflare captcha config
@@ -296,6 +314,10 @@ else:
 
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, f'static/{PROJECT_NAME}'),
+    os.path.join(BASE_DIR, 'static/common'),
+]
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'index'
@@ -356,7 +378,7 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-        'date': {
+        'homepage': {
             'handlers': ['console_debug'],
             'level': 'DEBUG',
             'propagate': True,

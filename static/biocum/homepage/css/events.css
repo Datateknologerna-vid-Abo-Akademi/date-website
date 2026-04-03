@@ -1,0 +1,113 @@
+.event-card > .card .list-inline-item {
+    color: var(--helpText);
+    font-size: 14px;
+}
+  
+.event-card > .card .badge {
+    background: var(--badgeColor);
+}
+  
+.event-card > .card {
+    background: var(--secondaryColor);
+}
+  
+.event-card a {
+    color: var(--linkColor);
+    border-top: 2px solid var(--linkColor);
+}
+  
+.event-card a:active {
+    color: var(--linkColor);
+}
+  
+.event-card a:hover {
+    background-color: inherit;
+    color: var(--textColorDarkish);
+}
+  
+.event-card a:focus {
+    background-color: inherit;
+    box-shadow: none;
+}
+
+.chevron-box {
+    margin: auto; 
+    border: 1px solid var(--linkColorSecondary);
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.card {
+    box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
+}
+
+.card:hover {
+    transform: scale(1.01);
+}
+
+.card:hover .fa-chevron-right{
+    transform: translateX(10px);
+  }
+
+.mobile-events-container{
+    grid-area: events;
+    display: none;
+    margin-bottom: 10px;
+}
+
+.event-box{
+    background-color: var(--secondaryColor);
+    color: var(--textColorDark);
+    border-top: var(--linkColor) solid 2pt;
+    box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
+}
+
+.event-box:hover {
+    color: var(--textColorLight);
+    background-color: var(--primaryColorLighter);
+
+}
+
+.event-date {
+    border-left: 1px solid var(--primaryColorLight);
+}
+
+.header-border-bottom {
+    border-color: var(--helpTextLighter);
+}
+
+.more-events-button {
+    display: inline-block;
+    color: var(--linkColor);
+}
+
+.more-events-button:hover {
+    transition: 0.2s;
+    scale: 1.01;
+    color: var(--textColorDarkish);
+}
+
+.calendar-container {
+    padding-bottom: 10px;
+}
+
+.calendar-box {
+    grid-area: box;
+    border: 2px solid rgb(163, 163, 163);
+    border-radius: 5px;
+    padding: 3px;
+}
+  
+div.calendar-container a {
+    color: var(--linkColor);
+}
+
+.calendar-eventday {
+    color: white !important;
+    background-color: var(--linkColor) !important;
+}
+
+.calendar-eventday-popup {
+    color: black;
+    font-size: 0.75rem;
+}

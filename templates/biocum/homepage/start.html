@@ -1,0 +1,28 @@
+{% extends 'homepage/start_base.html' %}
+{% load static %}
+
+{% block homepage_head %}
+    <link rel="stylesheet" href="{% static 'homepage/css/layout.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'homepage/css/hero.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'homepage/css/about.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'homepage/css/news.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'homepage/css/events.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'homepage/css/sidebar.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'homepage/css/partners.css' %}" type="text/css">
+    {% include "homepage/components/head_assets.html" %}
+{% endblock %}
+
+{% block homepage_sections %}
+    {% include "homepage/components/hero.html" %}
+    <section id="news" class="news-events">
+        <div id="main" class="main-container">
+            {% include "homepage/components/news.html" %}
+            {% include "homepage/components/sidebar.html" %}
+            {% include "homepage/components/mobile.html" %}
+        </div>
+    </section>
+{% endblock %}
+
+{% block homepage_scripts %}
+    {% include "homepage/components/scripts.html" %}
+{% endblock %}

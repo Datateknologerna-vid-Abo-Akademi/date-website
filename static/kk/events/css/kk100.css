@@ -247,10 +247,12 @@ display:block;
 
 .stars {
 z-index:-150;
+background:#030826 url("../../../core/images/twinklingstars.png") repeat top center;
 }
 
 .twinkling{
 z-index:-149;
+background:transparent url("../../../core/images/twinkling.png") repeat top center;
 
 -moz-animation:move-twink-back 200s linear infinite;
 -ms-animation:move-twink-back 200s linear infinite;

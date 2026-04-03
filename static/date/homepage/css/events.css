@@ -1,0 +1,129 @@
+.event-card > .card .list-inline-item {
+    color: var(--helpText);
+    font-size: 14px;
+}
+  
+.event-card > .card .badge {
+    background: var(--primaryColorLighter);
+}
+  
+.event-card > .card {
+    background: var(--secondaryColor);
+}
+  
+.event-card a {
+    color: var(--linkColorDark);
+    border-top: 2px solid var(--linkColorDark);
+}
+  
+.event-card a:active {
+    color: var(--linkColorDark);
+}
+  
+.event-card a:hover {
+    background-color: inherit;
+    border-top: 2px solid var(--linkColorDarkHover);
+    color: var(--linkColorDarkHover);
+}
+  
+.event-card a:focus {
+    background-color: inherit;
+    box-shadow: none;
+}
+
+.chevron-box {
+    margin: auto; 
+    border: 1px solid var(--linkColorDark);
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.card {
+    box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
+}
+
+.card:hover {
+    transform: scale(1.01);
+}
+
+.card:hover .fa-chevron-right{
+    transform: translateX(10px);
+  }
+
+.event-box{
+    background-color: var(--secondaryColor);
+    color: var(--textColorDark);
+    border-top: var(--linkColorDark) solid 2pt;
+    box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
+}
+
+.event-box:hover {
+    color: var(--textColorLight);
+    background-color: var(--primaryColorLighter);
+
+}
+
+.event-date {
+    border-left: 1px solid var(--primaryColorLight);
+}
+
+.header-border-bottom {
+    border-color: var(--helpTextLighter);
+}
+
+.more-events-button {
+    display: inline-block;
+    color: var(--linkColorDark);
+}
+
+.more-events-button:hover {
+    transition: 0.2s;
+    scale: 1.01;
+    color: var(--linkColorDarkHover);
+}
+
+.calendar-box {
+    grid-area: box;
+    border: 2px solid rgb(163, 163, 163);
+    border-radius: 5px;
+    padding: 3px;
+}
+
+div.calendar-container a {
+    color: var(--linkColorDark);
+}
+
+.vanilla-calendar-day__btn_today {
+    color: var(--textColorLight) !important;
+    background-color: #545454 !important;
+}
+
+.vanilla-calendar-day__btn_today:hover {
+    background-color: #282828 !important;
+}
+
+.vanilla-calendar-day__btn_selected {
+    background-color: #A3A3A3 !important;
+}
+
+.vanilla-calendar-day__btn_selected:hover {
+    background-color: #7A7A7A !important;
+}
+
+.calendar-eventday {
+    color: white !important;
+    background-color: var(--linkColorDark) !important;
+}
+
+.calendar-eventday:hover {
+    background-color: var(--linkColorDarkHover) !important;
+}
+
+.calendar-eventday-popup {
+    color: var(--linkColorDark);
+    font-size: 0.75rem;
+}
+
+.calendar-eventday-popup:hover {
+    color: var(--linkColorDarkHover);
+}

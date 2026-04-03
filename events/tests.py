@@ -247,6 +247,7 @@ class EventTestCase(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], 'https://www.google.com')
 
+    @override_settings(PROJECT_NAME='biocum')
     def test_biologica_vii_signup_redirects_to_attendee_fragment(self):
         biologica_event = Event.objects.create(
             title='Biologica VII',
@@ -258,6 +259,18 @@ class EventTestCase(TestCase):
         response = c.post(reverse('events:detail', args=[biologica_event.slug]), self.content)
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.headers['Location'].endswith('#/attendee-list'))
+
+    def test_biologica_vii_signup_default_project_no_attendee_fragment(self):
+        biologica_event = Event.objects.create(
+            title='Biologica VII',
+            slug='biologica-vii-default',
+            author_id=self.member.id,
+            sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
+        )
+        c = Client()
+        response = c.post(reverse('events:detail', args=[biologica_event.slug]), self.content)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(response.headers['Location'].endswith('#/attendee-list'))
 
     def test_arsfest_2026_invalid_signup_uses_arsfest_template(self):
         arsfest_2026 = Event.objects.create(
@@ -670,11 +683,11 @@ class EventTemplateSelectionTests(TestCase):
     def test_slug_based_template_selected(self):
         event = Event.objects.create(
             title="Generic",
-            slug="baal",
+            slug="arsfest26",
             author=self.author,
         )
         response = self.client.get(reverse("events:detail", args=[event.slug]))
-        self.assertTemplateUsed(response, "events/baal_detail.html")
+        self.assertTemplateUsed(response, "events/arsfest.html")
 
     def test_passcode_template_used_when_locked(self):
         event = Event.objects.create(

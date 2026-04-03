@@ -1,0 +1,8 @@
+/* About component */
+.about { 
+    background-color: var(--secondaryColor);
+    color: var(--textColorDark);
+    min-height: 35vh;
+    border-radius: var(--defaultRadius);
+    padding: 20px;
+}

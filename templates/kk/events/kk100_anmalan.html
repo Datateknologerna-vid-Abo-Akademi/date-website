@@ -1,0 +1,26 @@
+{% extends 'kk/events/kk100_base.html' %}
+{% load static %}
+{% load localized_urls %}
+
+{% block kk_svg_container %}
+<div class="scaling-svg-container-anmalan">
+    {% include "events/svg/kk100_logo.html" %}
+</div>
+{% endblock %}
+
+{% block kk_main_text %}
+<div class="main-text-anmalan d-flex align-items-center justify-content-center flex-column min-vh-100 glow">
+    <span class="bigtext">KEMISTKLUBBEN</span>
+    <span class="big100">100</span>
+    <div class="figure-imgs row">
+        <div class="col-sm d-flex justify-content-center align-items-center flex-column">
+            <img src={% static "core/images/axelstinagold.png" %} alt="studerande" class="img-fluid">
+            <a href="{{ '/events/100_baal_studeranden/'|localized_url }}" class="anmalan-link">Anmälan Studerande</a>
+        </div>
+        <div class="col-sm d-flex justify-content-center align-items-center flex-column">
+            <img src={% static "core/images/doktorprofessorgold.png" %} alt="alumner" class="img-fluid">
+            <a href="{{ '/events/100_baal_alumner/'|localized_url }}" class="anmalan-link">Anmälan Alumner</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
