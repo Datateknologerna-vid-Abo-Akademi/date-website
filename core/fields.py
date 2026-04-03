@@ -6,7 +6,6 @@ from core.storage_backends import PublicMediaStorage
 
 class PublicFileField(models.FileField):
     def __init__(self, verbose_name=None, name=None, upload_to='', storage=None, **kwargs):
-        storage = None
-        if hasattr(settings, 'PUBLIC_MEDIA_LOCATION'):
+        if storage is None and getattr(settings, 'USE_S3', False):
             storage = PublicMediaStorage()
         super().__init__(verbose_name, name, upload_to, storage, **kwargs)

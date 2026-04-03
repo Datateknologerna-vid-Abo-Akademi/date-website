@@ -49,7 +49,6 @@ def log_action(operation: str, data: dict):
 def handle_create(form: dict):
     worksheet = MEMBER_SHEET_NAME
     client = get_sheet_client(worksheet)
-    print(client)
     try:
         member_id = int(client.get_last_row()[0]) + 1
     except ValueError:
