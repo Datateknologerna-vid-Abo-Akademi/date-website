@@ -305,7 +305,7 @@ class TwoFactorIntegrationTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], reverse('members:info'))
 
-    def test_strict_totp_form_saves_zero_tolerance_device(self):
+    def test_strict_totp_form_saves_device_with_one_step_tolerance(self):
         form_key = '3132333435363738393031323334353637383930'
         current_token = TOTP(bytes.fromhex(form_key)).token()
         form = StrictTOTPDeviceForm(
@@ -316,7 +316,7 @@ class TwoFactorIntegrationTests(TestCase):
 
         self.assertTrue(form.is_valid(), form.errors)
         device = form.save()
-        self.assertEqual(device.tolerance, 0)
+        self.assertEqual(device.tolerance, 1)
 
     def test_profile_page_shows_2fa_state(self):
         self.client.force_login(self.member, backend='members.backends.AuthBackend')

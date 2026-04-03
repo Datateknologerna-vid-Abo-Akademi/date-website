@@ -1,3 +1,5 @@
+import logging
+
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import redirect
@@ -8,6 +10,8 @@ import django_otp
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.forms import AuthenticationTokenForm, BackupTokenForm, TOTPDeviceForm
 from two_factor.views import BackupTokensView, DisableView, LoginView, QRGeneratorView, SetupView
+
+logger = logging.getLogger('date')
 
 
 def member_has_2fa(user):
@@ -25,7 +29,7 @@ class UsernameOrEmailAuthenticationForm(AuthenticationForm):
 class StrictTOTPDeviceForm(TOTPDeviceForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.tolerance = 0
+        self.tolerance = 1
 
 
 class MemberLoginView(LoginView):
@@ -45,15 +49,12 @@ class MemberSetupView(SetupView):
         try:
             del self.request.session[self.session_key_name]
         except KeyError:
-            pass
+            logger.warning('2FA setup session key missing on done(); session may have expired')
 
         method = self.get_method()
         if method.code == 'generator':
             form = [form for form in form_list if isinstance(form, TOTPDeviceForm)][0]
             device = form.save()
-            if device.tolerance != 0:
-                device.tolerance = 0
-                device.save(update_fields=['tolerance'])
         else:
             device = self.get_device()
             device.confirmed = True

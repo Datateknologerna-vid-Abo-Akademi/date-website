@@ -10,6 +10,8 @@ class FixedLanguageAdminSite(AdminSiteOTPRequiredMixin, admin.AdminSite):
         if not admin.AdminSite.has_permission(self, request):
             return False
 
+        # Allow access when the user has no 2FA device registered (2FA is optional).
+        # When a device exists the user must have completed OTP verification this session.
         has_totp = TOTPDevice.objects.filter(user=request.user, confirmed=True).exists()
         return request.user.is_verified() or not has_totp
 
