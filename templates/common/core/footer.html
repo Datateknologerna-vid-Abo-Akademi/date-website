@@ -14,7 +14,7 @@
 
             {% for btn in SOCIAL_BUTTONS %}
                 {% if btn.1 %}
-                <a class="btn btn-outline-light btn-floating m-1" href="{{ btn.1 }}" role="button"
+                <a class="btn btn-outline-light btn-floating" href="{{ btn.1 }}" role="button"
                     ><i class="fab {{ btn.0 }}"></i
                 ></a>
                 {% endif %}
@@ -24,7 +24,7 @@
         <!-- Section: Social media -->
         <div class="row align-middle align-items-center association-footer-content">
             <div class="col-12 col-md-4 text-center association-footer-brand">
-                <img class="footer-img img-fluid" alt="Footer Logo" src="{% static 'core/images/footerlogo.png' %}">
+                <img class="footer-img img-fluid" alt="{% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}{{ association_name }} logo{% endblocktranslate %}" src="{% static 'core/images/footerlogo.png' %}">
             </div>
             <div class="col-12 col-md-4 association-footer-copy">
                 <p>
