@@ -566,7 +566,7 @@ msgstr "Toimihenkilöpesti"
 #: members/models.py:171 templates/common/members/functionaries.html:4
 #: templates/common/members/functionary.html:4
 msgid "Funktionärsposter"
-msgstr "Toimihenkilöpestejä"
+msgstr "Toimihenkilötehtävät"
 
 #: members/models.py:185
 msgid "Funktionär"
@@ -1466,6 +1466,89 @@ msgstr "Uutisia ei löydetty"
 #: templates/kk/date/april_start.html:87
 msgid "inga aktiva evenemang hittades"
 msgstr "Tapahtumia ei löydetty"
+
+#: templates/common/members/userinfo.html:18
+msgid "Medlemsprofil"
+msgstr "Jäsenprofiili"
+
+#: templates/common/members/userinfo.html:22
+#: templates/common/members/userinfo.html:132
+msgid "Tvåfaktorsautentisering"
+msgstr "Kaksivaiheinen tunnistautuminen"
+
+#: templates/common/members/userinfo.html:24
+msgid "Aktiverad"
+msgstr "Käytössä"
+
+#: templates/common/members/userinfo.html:26
+msgid "Inte aktiverad"
+msgstr "Ei käytössä"
+
+#: templates/common/members/userinfo.html:31
+#: templates/common/members/userinfo.html:77
+msgid "Email:"
+msgstr "Sähköposti:"
+
+#: templates/common/members/userinfo.html:35
+#: templates/common/members/userinfo.html:84
+msgid "Förnamn:"
+msgstr "Etunimi:"
+
+#: templates/common/members/userinfo.html:39
+#: templates/common/members/userinfo.html:88
+msgid "Efternamn:"
+msgstr "Sukunimi:"
+
+#: templates/common/members/userinfo.html:43
+#: templates/common/members/userinfo.html:92
+msgid "Telefonnummer:"
+msgstr "Puhelinnumero:"
+
+#: templates/common/members/userinfo.html:47
+#: templates/common/members/userinfo.html:96
+msgid "Adress:"
+msgstr "Osoite:"
+
+#: templates/common/members/userinfo.html:51
+#: templates/common/members/userinfo.html:100
+msgid "Zip kod:"
+msgstr "Postinumero:"
+
+#: templates/common/members/userinfo.html:55
+#: templates/common/members/userinfo.html:104
+msgid "Stad:"
+msgstr "Kaupunki:"
+
+#: templates/common/members/userinfo.html:59
+#: templates/common/members/userinfo.html:108
+msgid "Land:"
+msgstr "Maa:"
+
+#: templates/common/members/userinfo.html:63
+#: templates/common/members/userinfo.html:112
+msgid "Medlems typ:"
+msgstr "Jäsentyyppi:"
+
+#: templates/common/members/userinfo.html:69
+msgid "Edit"
+msgstr "Muokkaa"
+
+#: templates/common/members/userinfo.html:117
+msgid "Save"
+msgstr "Tallenna"
+
+#: templates/common/members/userinfo.html:118
+msgid "Cancel"
+msgstr "Peruuta"
+
+#: templates/common/members/userinfo.html:133
+msgid "Funktionärsposter"
+msgstr "Toimihenkilötehtävät"
+
+#: templates/common/members/userinfo.html:136
+#, python-format
+msgid "För att ändra ditt användarnamn eller e-post, kontakta styrelsen på %(ASSOCIATION_EMAIL)s"
+msgstr "Jos haluat vaihtaa käyttäjätunnuksesi tai sähköpostiosoitteesi, ota yhteyttä hallitukseen osoitteessa %(ASSOCIATION_EMAIL)s"
 
 #~ msgid "Registreringsdatum"
 #~ msgstr "Rekisteröintipäivämäärä"

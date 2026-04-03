@@ -19,7 +19,7 @@ def verify_two_factor_token(secret, token):
     if not secret or len(normalized_token) != 6:
         return False
     totp = pyotp.TOTP(secret)
-    return totp.verify(normalized_token, valid_window=1)
+    return totp.verify(normalized_token, valid_window=0)
 
 
 def build_totp_provisioning_uri(user, secret):

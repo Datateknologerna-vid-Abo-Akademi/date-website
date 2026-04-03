@@ -354,6 +354,24 @@ class TwoFactorFlowTests(TestCase):
         self.assertContains(response, "Felaktig verifieringskod")
         self.assertNotIn(TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY, self.client.session)
 
+    def test_previous_totp_window_is_rejected(self):
+        secret = self._enable_two_factor()
+        self.client.post(
+            reverse("members:login"),
+            {"username": self.user.username, "password": self.password},
+        )
+
+        now = timezone.now().timestamp()
+        expired_token = pyotp.TOTP(secret).at(now - 30)
+        response = self.client.post(
+            reverse("members:two_factor_verify"),
+            {"token": expired_token, "next": reverse("members:info")},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Felaktig verifieringskod")
+        self.assertNotIn(TWO_FACTOR_VERIFIED_USER_ID_SESSION_KEY, self.client.session)
+
     def test_user_can_enable_two_factor_after_confirming_token(self):
         self.client.force_login(self.user)
 

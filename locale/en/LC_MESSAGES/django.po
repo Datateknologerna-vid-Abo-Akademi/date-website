@@ -1460,6 +1460,85 @@ msgstr "no news found"
 msgid "inga aktiva evenemang hittades"
 msgstr "no active events found"
 
+#: templates/common/members/userinfo.html:18
+msgid "Medlemsprofil"
+msgstr "Member profile"
+
+#: templates/common/members/userinfo.html:22
+#: templates/common/members/userinfo.html:132
+msgid "Tvåfaktorsautentisering"
+msgstr "Two-factor authentication"
+
+#: templates/common/members/userinfo.html:24
+msgid "Aktiverad"
+msgstr "Enabled"
+
+#: templates/common/members/userinfo.html:26
+msgid "Inte aktiverad"
+msgstr "Not enabled"
+
+#: templates/common/members/userinfo.html:31
+#: templates/common/members/userinfo.html:77
+msgid "Email:"
+msgstr "Email:"
+
+#: templates/common/members/userinfo.html:35
+#: templates/common/members/userinfo.html:84
+msgid "Förnamn:"
+msgstr "First name:"
+
+#: templates/common/members/userinfo.html:39
+#: templates/common/members/userinfo.html:88
+msgid "Efternamn:"
+msgstr "Last name:"
+
+#: templates/common/members/userinfo.html:43
+#: templates/common/members/userinfo.html:92
+msgid "Telefonnummer:"
+msgstr "Phone number:"
+
+#: templates/common/members/userinfo.html:47
+#: templates/common/members/userinfo.html:96
+msgid "Adress:"
+msgstr "Address:"
+
+#: templates/common/members/userinfo.html:51
+#: templates/common/members/userinfo.html:100
+msgid "Zip kod:"
+msgstr "ZIP code:"
+
+#: templates/common/members/userinfo.html:55
+#: templates/common/members/userinfo.html:104
+msgid "Stad:"
+msgstr "City:"
+
+#: templates/common/members/userinfo.html:59
+#: templates/common/members/userinfo.html:108
+msgid "Land:"
+msgstr "Country:"
+
+#: templates/common/members/userinfo.html:63
+#: templates/common/members/userinfo.html:112
+msgid "Medlems typ:"
+msgstr "Membership type:"
+
+#: templates/common/members/userinfo.html:69
+msgid "Edit"
+msgstr "Edit"
+
+#: templates/common/members/userinfo.html:117
+msgid "Save"
+msgstr "Save"
+
+#: templates/common/members/userinfo.html:118
+msgid "Cancel"
+msgstr "Cancel"
+
+#: templates/common/members/userinfo.html:136
+#, python-format
+msgid "För att ändra ditt användarnamn eller e-post, kontakta styrelsen på %(ASSOCIATION_EMAIL)s"
+msgstr "To change your username or email address, contact the board at %(ASSOCIATION_EMAIL)s"
+
 #~ msgid "Registreringsdatum"
 #~ msgstr "Registration date"
 
