@@ -23,9 +23,8 @@
                     <p><strong>{% trans 'Manuell nyckel:' %}</strong> <code>{{ setup_secret }}</code></p>
                     <form method="post">
                         {% csrf_token %}
-                        <input type="hidden" name="action" value="confirm_setup">
                         {{ setup_form.as_p }}
-                        <button type="submit" class="theme-button">{% trans 'Aktivera 2FA' %}</button>
+                        <button type="submit" class="theme-button" name="action" value="confirm_setup">{% trans 'Aktivera 2FA' %}</button>
                         <button type="submit" class="theme-button" name="action" value="cancel_setup">{% trans 'Avbryt' %}</button>
                     </form>
                 {% else %}

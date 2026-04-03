@@ -56,7 +56,7 @@ if not DEVELOP:
 def get_installed_apps(proj_apps):
     return [
         'date',
-        'members',
+        'members.apps.MemberConfig',
         *proj_apps,
         'modeltranslation',
         'django.contrib.admin',
@@ -303,8 +303,6 @@ else:
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
 STATIC_URL = '/static/'
 
-LOGIN_URL = 'members:login'
-LOGIN_REDIRECT_URL = 'members:info'
 LOGOUT_REDIRECT_URL = 'index'
 
 if DEBUG:

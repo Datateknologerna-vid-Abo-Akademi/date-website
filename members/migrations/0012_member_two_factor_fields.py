@@ -18,6 +18,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='member',
             name='two_factor_secret',
-            field=models.CharField(blank=True, max_length=64, verbose_name='2FA-hemlighet'),
+            field=models.CharField(blank=True, editable=False, max_length=64, verbose_name='2FA-hemlighet'),
         ),
     ]

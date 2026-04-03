@@ -39,7 +39,7 @@ class Member(AbstractBaseUser, PermissionsMixin):
     country = models.CharField(_('Land'), max_length=30, default=_('Finland'), blank=True)
     membership_type = models.ForeignKey("members.MembershipType", default=FRESHMAN, blank=False, on_delete=models.CASCADE)
     year_of_admission = models.IntegerField(_('Inskrivningsår'), blank=True, null=True)
-    two_factor_secret = models.CharField(_('2FA-hemlighet'), max_length=64, blank=True)
+    two_factor_secret = models.CharField(_('2FA-hemlighet'), max_length=64, blank=True, editable=False)
     two_factor_enabled_at = models.DateTimeField(_('2FA aktiverad'), blank=True, null=True)
     is_active = models.BooleanField(default=True)
     objects = MemberManager()

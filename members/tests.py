@@ -387,6 +387,20 @@ class TwoFactorFlowTests(TestCase):
         self.assertFalse(self.user.has_2fa_enabled)
         self.assertNotIn("two_factor_verified_user_id", self.client.session)
 
+    def test_force_login_clears_existing_two_factor_session_state(self):
+        self._enable_two_factor()
+        self._mark_two_factor_verified()
+
+        other_user = Member.objects.create_user(
+            username="other-twofactor",
+            email="other@example.com",
+            password=self.password,
+            membership_type=self.membership_type,
+        )
+        self.client.force_login(other_user)
+
+        self.assertNotIn("two_factor_verified_user_id", self.client.session)
+
     def test_admin_requires_two_factor_after_login(self):
         self._enable_two_factor(
             Member.objects.create_superuser(
