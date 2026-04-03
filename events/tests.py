@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.translation import gettext
 
+from events import forms as event_forms
 from events.models import Event, EventAttendees, EventRegistrationForm
 from events.websocket_utils import ws_data, ws_send
 from members.models import Member, ORDINARY_MEMBER, Subscription, SubscriptionPayment, MembershipType
@@ -408,6 +409,19 @@ class EventAdminTests(TestCase):
         self.assertContains(response, 'name="title_sv"')
         self.assertContains(response, 'name="title_en"')
         self.assertContains(response, 'name="title_fi"')
+
+    def test_admin_forms_assume_https_for_redirect_links(self):
+        creation_form = event_forms.EventCreationForm()
+        edit_form = event_forms.EventEditForm(instance=self.event)
+
+        self.assertEqual(
+            creation_form.fields["redirect_link"].clean("example.com"),
+            "https://example.com",
+        )
+        self.assertEqual(
+            edit_form.fields["redirect_link"].clean("example.com"),
+            "https://example.com",
+        )
 
 
 class TranslationAdminRegressionTests(TestCase):

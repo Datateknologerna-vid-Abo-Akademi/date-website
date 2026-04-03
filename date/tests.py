@@ -4,7 +4,6 @@ from unittest.mock import patch
 from django.conf import settings
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.template import Context, Template
 from django.test import RequestFactory, TestCase
@@ -29,14 +28,13 @@ class AuditLogTestCase(TestCase):
             password="pass",
             email="admin@example.com",
         )
-        ct = ContentType.objects.get_for_model(get_user_model())
-        LogEntry.objects.log_action(
+        queryset = get_user_model().objects.filter(pk=self.user.pk)
+        LogEntry.objects.log_actions(
             user_id=self.user.pk,
-            content_type_id=ct.pk,
-            object_id=self.user.pk,
-            object_repr=str(self.user),
+            queryset=queryset,
             action_flag=ADDITION,
             change_message="created user",
+            single_object=True,
         )
 
     def test_audit_log_accessible(self):

@@ -17,7 +17,7 @@ class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
     can_delete = True
     extra = 0
     line_numbering = 0
-    ordering_field = ('dropdown_element',)
+    ordering_field = 'dropdown_element'
     ordering = ['dropdown_element']
     ordering_field_hide_input = True
     fields = ('dropdown_element', 'title', 'url', 'logged_in_only')

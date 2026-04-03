@@ -17,6 +17,7 @@ slug_transtable = str.maketrans("åäö ", "aao_")
 
 class EventCreationForm(forms.ModelForm):
     user = None
+    redirect_link = forms.URLField(required=False, assume_scheme="https")
     event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
     event_date_end = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
     sign_up_others = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
@@ -103,6 +104,7 @@ class EventCreationForm(forms.ModelForm):
 class EventEditForm(forms.ModelForm):
 
     user = None
+    redirect_link = forms.URLField(required=False, assume_scheme="https")
 
     event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
     event_date_end = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())

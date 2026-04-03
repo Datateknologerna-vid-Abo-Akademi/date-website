@@ -1,4 +1,4 @@
-Django~=5.2
+Django~=6.0
 asgiref
 django-ckeditor-5
 django-ckeditor
@@ -9,7 +9,7 @@ pillow
 python-dateutil
 icalendar
 django-ical
-django-admin-ordering==0.16.1
+django-admin-ordering==0.20.0
 whitenoise
 channels==4.3.2
 channels_redis==4.3.0
