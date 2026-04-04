@@ -38,6 +38,7 @@ urlpatterns = build_urlpatterns(
     path('polls/', include('polls.urls')),
     path('ctf/', include('ctf.urls')),
     path('admin/', admin_site.urls),
+    path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     path('publications/', include('publications.urls')),
     path('alumni/', include('alumni.urls')),

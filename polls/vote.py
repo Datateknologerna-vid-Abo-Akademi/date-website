@@ -3,7 +3,6 @@ from django.shortcuts import render, HttpResponseRedirect
 from django.db.models import F
 from django.urls import reverse
 
-from members.models import ORDINARY_MEMBER
 from polls.models import MEMBERS_ONLY, ORDINARY_MEMBERS_ONLY, VOTE_MEMBERS_ONLY, ANYONE, Choice
 
 ERROR_MESSAGES = {
@@ -43,11 +42,11 @@ def is_user_authorized_to_vote(question, user):
     if question.voting_options == MEMBERS_ONLY:
         return True
 
-    if question.voting_options == ORDINARY_MEMBERS_ONLY and user.membership_type.permission_profile == ORDINARY_MEMBER:
+    if question.voting_options == ORDINARY_MEMBERS_ONLY and user.has_feature_permission('polls.vote'):
         return True
 
     if (question.voting_options == VOTE_MEMBERS_ONLY and
-            user.membership_type.permission_profile == ORDINARY_MEMBER and
+            user.has_feature_permission('polls.vote') and
             user.get_active_subscription() is not None):
         return True
 
