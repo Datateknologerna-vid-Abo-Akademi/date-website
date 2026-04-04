@@ -153,7 +153,6 @@ class FilteredExamsListView(UserPassesTestMixin, SingleTableMixin, FilterView):
 def picture_detail(request, year, album):
     collection = Collection.objects.filter(type="Pictures", pub_date__year=year, title=album).order_by(
         '-pub_date').first()
-    # TODO: get a member object and check user.is_authenticated
     if collection.hide_for_gulis and not request.user.has_feature_permission('archive.view_restricted'):
         return render(request, '404.html', {'error_msg': "Gulisar har inte tillgång till detta album!", })
 
