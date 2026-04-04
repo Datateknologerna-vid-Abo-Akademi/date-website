@@ -73,7 +73,7 @@ def get_installed_apps(proj_apps):
         'bootstrap3',
         'oauth2_provider',
         'rest_framework',
-        'django_cleanup',  # Should be places last
+        'django_cleanup',  # Should be placed last
     ]
 
 
@@ -384,16 +384,20 @@ CDN_URL_TRANSFORMATIONS = [
 # Keys are loaded from DB at startup (members/apps.py MemberConfig.ready()).
 # AppConfig.ready() overwrites OIDC_RSA_PRIVATE_KEY and OIDC_RSA_PRIVATE_KEYS_INACTIVE.
 OAUTH2_PROVIDER = {
-    'ACCESS_TOKEN_GENERATOR': 'oauth2_provider.generators.JWTAccessTokenGenerator',
+    # ACCESS_TOKEN_GENERATOR is intentionally left at the default (oauthlib opaque tokens).
+    # JWT tokens are enabled per-Application by setting algorithm=RS256 in admin.
+    # get_additional_claims() in MemberOAuth2Validator injects permissions into those JWTs.
     'OIDC_ENABLED': True,
-    'OIDC_RSA_PRIVATE_KEY': '',           # patched at startup from DB
-    'OIDC_RSA_PRIVATE_KEYS_INACTIVE': [], # patched at startup from DB
+    'OIDC_RSA_PRIVATE_KEY': '',           # patched at startup from DB by MemberConfig.ready()
+    'OIDC_RSA_PRIVATE_KEYS_INACTIVE': [], # patched at startup from DB by MemberConfig.ready()
     'OAUTH2_VALIDATOR_CLASS': 'members.oauth.MemberOAuth2Validator',
     'SCOPES': {
         'openid':  'OpenID Connect',
         'profile': 'User profile',
         'email':   'Email address',
         'upload':  'Upload pictures to archive',
+        'polls':   'Vote in polls',
+        'events':  'Register for events',
     },
     'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
     'REFRESH_TOKEN_EXPIRE_SECONDS': 86400,

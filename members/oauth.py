@@ -49,7 +49,8 @@ class MemberOAuth2Validator(OAuth2Validator):
             })
             if user.membership_type:
                 claims['membership_type'] = user.membership_type.get_permission_profile_display()
-            all_perms = user.feature_permission_codenames
-            if all_perms:
-                claims['permissions'] = all_perms
+            scopes = set(getattr(request, 'scopes', []))
+            permissions = _scoped_permissions(user, scopes)
+            if permissions:
+                claims['permissions'] = permissions
         return claims

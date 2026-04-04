@@ -94,7 +94,7 @@ class Member(AbstractBaseUser, PermissionsMixin):
         if not self.membership_type_id:
             return False
         return MembershipTypePermission.objects.filter(
-            membership_type=self.membership_type,
+            membership_type_id=self.membership_type_id,
             feature__codename=codename,
         ).exists()
 
@@ -103,7 +103,7 @@ class Member(AbstractBaseUser, PermissionsMixin):
         if not self.membership_type_id:
             return []
         return list(
-            MembershipTypePermission.objects.filter(membership_type=self.membership_type)
+            MembershipTypePermission.objects.filter(membership_type_id=self.membership_type_id)
             .values_list('feature__codename', flat=True)
         )
 

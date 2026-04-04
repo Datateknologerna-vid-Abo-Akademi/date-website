@@ -7,7 +7,8 @@ from unittest.mock import patch
 from django.utils import timezone
 
 from members.models import (Member, MembershipType, ORDINARY_MEMBER,
-                            Subscription, SubscriptionPayment)
+                            Subscription, SubscriptionPayment,
+                            Feature, MembershipTypePermission)
 from .models import Question, Choice
 from . import views
 from .vote import (ANYONE, MEMBERS_ONLY, ORDINARY_MEMBERS_ONLY,
@@ -68,6 +69,9 @@ class AuthorizationLogicTests(TestCase):
         self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
         self.member = Member.objects.create_user(username="auth", password="pwd", membership_type=self.membership_type)
         self.question = Question.objects.create(question_text="Auth question")
+        # Grant polls.vote to the ordinary member type so feature permission checks pass
+        feature, _ = Feature.objects.get_or_create(codename='polls.vote', defaults={'name': 'Rösta i omröstningar'})
+        MembershipTypePermission.objects.get_or_create(membership_type=self.membership_type, feature=feature)
 
     def test_anyone_allows_anonymous_users(self):
         self.question.voting_options = ANYONE

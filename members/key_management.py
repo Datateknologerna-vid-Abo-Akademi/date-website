@@ -1,7 +1,10 @@
+import logging
 import secrets
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+
+logger = logging.getLogger('date')
 
 
 def generate_rsa_key() -> tuple:
@@ -19,25 +22,31 @@ def generate_rsa_key() -> tuple:
 def ensure_signing_key() -> None:
     """
     Called from AppConfig.ready(). Auto-creates a signing key if none exists.
-    Gracefully handles the case where migrations haven't run yet.
+    Uses select_for_update inside a transaction to prevent duplicate creation
+    on concurrent startup (e.g. multiple Docker replicas).
+    Gracefully handles DB-not-ready during the initial migration run.
     """
     try:
+        from django.db import transaction
         from .models import SigningKey
-        if not SigningKey.objects.filter(is_active=True).exists():
-            pem, kid = generate_rsa_key()
-            SigningKey.objects.create(kid=kid, private_key_pem=pem, is_active=True)
+        with transaction.atomic():
+            if not SigningKey.objects.select_for_update().filter(is_active=True).exists():
+                pem, kid = generate_rsa_key()
+                SigningKey.objects.create(kid=kid, private_key_pem=pem, is_active=True)
     except Exception:
-        # DB not ready (first migration run, test setup, etc.) — silently skip
+        # Expected during initial migration when the table doesn't exist yet.
+        # Any other failure is logged below via patch_dot_settings.
         pass
 
 
 def patch_dot_settings() -> None:
     """
     Load signing keys from DB and patch OAUTH2_PROVIDER so DOT uses them.
-    OIDC_RSA_PRIVATE_KEY         = active key (used to sign new tokens)
-    OIDC_RSA_PRIVATE_KEYS_INACTIVE = inactive keys (kept in JWKS for verification)
+    OIDC_RSA_PRIVATE_KEY           = active key (signs new tokens)
+    OIDC_RSA_PRIVATE_KEYS_INACTIVE = retired keys (kept in JWKS so old tokens remain verifiable)
     Called from AppConfig.ready() after ensure_signing_key().
     """
+    from django.db import OperationalError, ProgrammingError
     try:
         from django.conf import settings
         from .models import SigningKey
@@ -48,5 +57,8 @@ def patch_dot_settings() -> None:
         if active:
             settings.OAUTH2_PROVIDER['OIDC_RSA_PRIVATE_KEY'] = active.private_key_pem
             settings.OAUTH2_PROVIDER['OIDC_RSA_PRIVATE_KEYS_INACTIVE'] = inactive
-    except Exception:
+    except (OperationalError, ProgrammingError):
+        # Table doesn't exist yet (pre-migration). Safe to ignore.
         pass
+    except Exception:
+        logger.exception('Unexpected error loading OIDC signing keys from DB')
