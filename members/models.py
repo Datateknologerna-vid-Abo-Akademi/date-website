@@ -90,6 +90,23 @@ class Member(AbstractBaseUser, PermissionsMixin):
     def get_str_membership_type(self):
         return self.membership_type.name
 
+    def has_feature_permission(self, codename: str) -> bool:
+        if not self.membership_type_id:
+            return False
+        return MembershipTypePermission.objects.filter(
+            membership_type=self.membership_type,
+            feature__codename=codename,
+        ).exists()
+
+    @property
+    def feature_permission_codenames(self) -> list:
+        if not self.membership_type_id:
+            return []
+        return list(
+            MembershipTypePermission.objects.filter(membership_type=self.membership_type)
+            .values_list('feature__codename', flat=True)
+        )
+
 
 class MembershipType(models.Model):
     name = models.CharField(_('Namn'), max_length=200, blank=False)
@@ -103,6 +120,54 @@ class MembershipType(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Feature(models.Model):
+    """A named capability that can be granted to a MembershipType."""
+    codename = models.CharField(_('Kodnamn'), max_length=100, unique=True)
+    name = models.CharField(_('Namn'), max_length=200)
+
+    class Meta:
+        verbose_name = _('Funktion')
+        verbose_name_plural = _('Funktioner')
+
+    def __str__(self):
+        return self.codename
+
+
+class MembershipTypePermission(models.Model):
+    """Maps a MembershipType to a Feature it is allowed to access."""
+    membership_type = models.ForeignKey(
+        MembershipType, on_delete=models.CASCADE,
+        related_name='feature_permissions', verbose_name=_('Medlemskapstyp'),
+    )
+    feature = models.ForeignKey(
+        Feature, on_delete=models.CASCADE, verbose_name=_('Funktion'),
+    )
+
+    class Meta:
+        unique_together = ('membership_type', 'feature')
+        verbose_name = _('Behörighet')
+        verbose_name_plural = _('Behörigheter')
+
+    def __str__(self):
+        return f'{self.membership_type} → {self.feature.codename}'
+
+
+class SigningKey(models.Model):
+    """RSA signing keys for JWT/OIDC. Auto-generated; managed via rotate_signing_key command."""
+    kid = models.CharField(max_length=64, unique=True)
+    private_key_pem = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = _('Signeringsnyckel')
+        verbose_name_plural = _('Signeringsnycklar')
+
+    def __str__(self):
+        status = 'aktiv' if self.is_active else 'inaktiv'
+        return f'{self.kid} ({status}, {self.created_at.date()})'
 
 
 SUB_RE_SCALE_DAY = 'day'
