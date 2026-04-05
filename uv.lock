@@ -400,7 +400,6 @@ dependencies = [
     { name = "django" },
     { name = "django-admin-ordering" },
     { name = "django-bootstrap3" },
-    { name = "django-ckeditor" },
     { name = "django-ckeditor-5" },
     { name = "django-cleanup" },
     { name = "django-environ" },
@@ -434,7 +433,6 @@ requires-dist = [
     { name = "django", specifier = "~=5.2" },
     { name = "django-admin-ordering", specifier = "==0.16.1" },
     { name = "django-bootstrap3" },
-    { name = "django-ckeditor" },
     { name = "django-ckeditor-5" },
     { name = "django-cleanup" },
     { name = "django-environ" },
@@ -496,19 +494,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/f7/71/289b22cc19292e9a035a5a89277ef40ac3072b3bc52b12b00dadfbd9a3ba/django_bootstrap3-26.1.tar.gz", hash = "sha256:c437ec3bf19d9ef0b7554664b4dbea27c73fbd9927f8c7aa20559c68d38e8eea", size = 41832, upload-time = "2026-01-03T11:51:25.404Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9c/2d/c00d368d32d153b998a22b167b20db038f2f7d469d5d08f23256d8037518/django_bootstrap3-26.1-py3-none-any.whl", hash = "sha256:657201127b6c09f69d0ca60e944a32593fb6132923a9d1293bc6bfaacdb1a4ba", size = 24232, upload-time = "2026-01-03T11:51:24.335Z" },
-]
-
-[[package]]
-name = "django-ckeditor"
-version = "6.7.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "django" },
-    { name = "django-js-asset" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/15/6e/7923d3932bcdc6df7deea3d0cc31552144444130e5a2bef669e88c4e8141/django_ckeditor-6.7.3.tar.gz", hash = "sha256:889fd80ee7d368e3c5b828c8dabf8907d56bcad6bf5881f3898416df4f2adfe7", size = 1726851, upload-time = "2025-06-06T10:16:35.748Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d2/03/b2095f13b571ab78b2a3f55d30e2b3f126b3f4f350391037c37c418f7c2f/django_ckeditor-6.7.3-py3-none-any.whl", hash = "sha256:09771c9b8fb33b84bd2767dfc891a24b7fbdb0120910a7ec65b763a4ae6807bb", size = 2455696, upload-time = "2025-06-06T10:16:40.05Z" },
 ]
 
 [[package]]
