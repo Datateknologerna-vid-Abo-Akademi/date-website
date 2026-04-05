@@ -4,7 +4,7 @@
 .gitattributes
 
 # Environments
-.env
+*.env
 .env.*
 .venv/
 venv/
@@ -56,6 +56,10 @@ docker-compose.prod.yml
 *.md
 LICENSE
 docs/
+
+# Local tooling
+nginx.conf
+.claude/
 
 # Testing & Coverage
 .coverage
