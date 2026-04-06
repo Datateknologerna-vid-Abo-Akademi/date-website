@@ -1,0 +1,38 @@
+[project]
+name = "date-website"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "Django~=5.2",
+    "asgiref",
+    "django-ckeditor-5",
+    "requests",
+    "django-environ",
+    "psycopg2-binary",
+    "pillow",
+    "python-dateutil",
+    "icalendar",
+    "django-ical",
+    "django-admin-ordering==0.16.1",
+    "whitenoise",
+    "channels",
+    "channels-redis",
+    "websocket-client",
+    "six",
+    "instaloader",
+    "schedule",
+    "boto3",
+    "django-storages",
+    "django-tables2",
+    "django-filter",
+    "django-bootstrap3",
+    "django-cleanup",
+    "django-modeltranslation",
+    "daphne",
+    "celery[redis]",
+    "gunicorn",
+    "gspread",
+]
+
+[dependency-groups]
+dev = []

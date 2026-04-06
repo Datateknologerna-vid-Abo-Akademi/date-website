@@ -54,6 +54,7 @@ if not DEVELOP:
 
 def get_installed_apps(proj_apps):
     return [
+        'daphne',
         'date',
         'members',
         *proj_apps,
