@@ -3,6 +3,7 @@ import logging
 from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.urls import resolve, reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
@@ -57,8 +58,7 @@ class MemberLoginView(LoginView):
             return response
 
         resolver_match = resolve(target)
-        admin_site = getattr(resolver_match.func, 'admin_site', None)
-        if admin_site and self.request.user.is_active and self.request.user.is_staff and not member_has_2fa(self.request.user):
+        if resolver_match.namespace == 'admin' and self.request.user.is_active and self.request.user.is_staff and not member_has_2fa(self.request.user):
             return HttpResponseRedirect(redirect_to)
 
         if target:
@@ -110,7 +110,9 @@ class MemberQRGeneratorView(QRGeneratorView):
 class MemberSetupCompleteView(SetupCompleteView):
     def get(self, request, *args, **kwargs):
         next_target = request.session.pop('next', None)
-        if next_target:
+        # The value comes from get_success_url() during login, but validate it
+        # before redirecting in case the session is tampered with.
+        if next_target and url_has_allowed_host_and_scheme(next_target, allowed_hosts={request.get_host()}):
             return redirect(next_target)
         return redirect('members:info')
 

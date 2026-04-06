@@ -1,6 +1,5 @@
 import time
 from unittest.mock import patch
-from unittest.mock import patch as mock_patch
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import AnonymousUser
@@ -322,7 +321,7 @@ class TwoFactorIntegrationTests(TestCase):
 
     def test_setup_view_uses_strict_totp_form_for_generator_method(self):
         view = MemberSetupView()
-        with mock_patch('members.two_factor.SetupView.get_form_list', return_value={'generator': TOTPDeviceForm, 'welcome': object}):
+        with patch('members.two_factor.SetupView.get_form_list', return_value={'generator': TOTPDeviceForm, 'welcome': object}):
             form_list = view.get_form_list()
 
         self.assertIs(form_list['generator'], StrictTOTPDeviceForm)
@@ -389,6 +388,20 @@ class TwoFactorIntegrationTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], reverse('admin:index'))
+        self.assertNotIn('next', self.client.session)
+
+    def test_setup_complete_ignores_external_redirect_target(self):
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+        device = TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
+        session = self.client.session
+        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
+        session['next'] = 'https://evil.example/phish'
+        session.save()
+
+        response = self.client.get(reverse('two_factor:setup_complete'))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], reverse('members:info'))
         self.assertNotIn('next', self.client.session)
 
     def test_invalid_profile_post_keeps_editor_open_with_errors(self):
