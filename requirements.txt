@@ -24,6 +24,8 @@ django-filter
 django-bootstrap3
 django_cleanup
 django-modeltranslation
+django-otp
+django-two-factor-auth
 daphne
 celery[redis]
 gunicorn

@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Permission
+from django.db.models import Exists, OuterRef
 from django.db.models.functions import Lower
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
@@ -41,8 +42,13 @@ class UserAdmin(auth_admin.UserAdmin):
 
     is_staff.boolean = True
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        confirmed_devices = TOTPDevice.objects.filter(user=OuterRef('pk'), confirmed=True)
+        return queryset.annotate(_has_two_factor=Exists(confirmed_devices))
+
     def has_two_factor(self, obj):
-        return TOTPDevice.objects.filter(user=obj, confirmed=True).exists()
+        return obj._has_two_factor
 
     has_two_factor.boolean = True
     has_two_factor.short_description = "2FA"
