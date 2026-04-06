@@ -5,6 +5,7 @@
 
 {% block title %}Nyheter{% endblock %}
 {% block extra_head %}
+    {{ block.super }}
     <link rel="stylesheet" href="{% static 'news/css/style.css' %}">
 {% endblock %}
 {% cache 60 news_index_date %}

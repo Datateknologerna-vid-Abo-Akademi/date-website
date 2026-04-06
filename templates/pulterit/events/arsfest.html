@@ -5,6 +5,7 @@
 {% load localized_time %}
 {% block title %}{{ event.title }}{% endblock %}
 {% block extra_head %}
+    {{ block.super }}
     <link rel="stylesheet" href="{% static 'events/css/arsfest.css' %}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"
             integrity="sha384-FtJyC+/3fgtPbqlacLHdGwBrmPjKoYBsiqNF5/BEprsnIXB4xtXLCJRx7Xx+TWKP"
