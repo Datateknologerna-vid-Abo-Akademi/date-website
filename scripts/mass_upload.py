@@ -13,6 +13,7 @@ import logging
 import boto3
 import datetime
 import pytz
+from botocore.config import Config
 
 from django.conf import settings
 from archive.models import Collection
@@ -27,7 +28,8 @@ def s3_config():
     return boto3.client('s3',
                         endpoint_url=settings.AWS_S3_ENDPOINT_URL,
                         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
+                        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                        config=Config(signature_version='s3v4'))
 
 
 client = s3_config()
