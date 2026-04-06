@@ -3,7 +3,7 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.contrib import admin
 from django.conf import settings
-from django.db.models import JSONField
+from django.db.models import JSONField, TextField
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django_ckeditor_5.widgets import CKEditor5Widget
@@ -11,7 +11,7 @@ from django.urls import reverse, re_path
 from django.utils.html import format_html
 
 # Translation and Ordering imports
-from modeltranslation.admin import TranslationAdmin, TabbedTranslationAdmin, TranslationTabularInline
+from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 from admin_ordering.admin import OrderableAdmin
 
 from events import forms
@@ -77,6 +77,9 @@ class EventAttendeesFormInline(OrderableAdmin, EventTranslationInlineBase):
 @admin.register(Event)
 class EventAdmin(EventTranslationAdminBase):
     save_on_top = True
+    formfield_overrides = {
+        TextField: {'widget': CKEditor5Widget},
+    }
     list_display = (
         'title', 'created_time', 'event_date_start', 'get_attendee_count', 
         'sign_up_max_participants', 'published', 'account_actions', 'parent'
