@@ -4,6 +4,7 @@
 
 {% block title %}{{ article.title }}{% endblock %}
 {% block extra_head %}
+    {{ block.super }}
     <link rel="stylesheet" href="{% static 'news/css/style.css' %}">
     <link rel="stylesheet" href="{% static 'news/css/article.css' %}">
 {% endblock %}
