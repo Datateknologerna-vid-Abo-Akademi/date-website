@@ -36,8 +36,8 @@ class UsernameOrEmailAuthenticationForm(AuthenticationForm):
 
 
 class StrictTOTPDeviceForm(TOTPDeviceForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, key, user, *args, **kwargs):
+        super().__init__(key, user, *args, **kwargs)
         self.tolerance = 1
 
 
