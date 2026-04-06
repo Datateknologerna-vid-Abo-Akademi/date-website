@@ -1,5 +1,11 @@
 from modeltranslation.translator import register, TranslationOptions
-from staticpages.models import StaticPageNav, StaticUrl
+from staticpages.models import StaticPage, StaticPageNav, StaticUrl
+
+
+@register(StaticPage)
+class StaticPageTranslationOptions(TranslationOptions):
+    fields = ('title', 'content',)
+    languages = ('sv', 'en', 'fi')
 
 
 @register(StaticPageNav)

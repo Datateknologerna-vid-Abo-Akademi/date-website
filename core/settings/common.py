@@ -54,6 +54,7 @@ if not DEVELOP:
 
 def get_installed_apps(proj_apps):
     return [
+        'daphne',
         'date',
         'members.apps.MemberConfig',
         *proj_apps,
@@ -266,6 +267,7 @@ if USE_S3:
     AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_SIGNATURE_VERSION = "s3v4"
     AWS_QUERYSTRING_AUTH = True
     AWS_QUERYSTRING_EXPIRE = 3600
 

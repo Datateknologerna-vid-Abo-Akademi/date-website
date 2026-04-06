@@ -1,6 +1,8 @@
 from admin_ordering.admin import OrderableAdmin
 from django.conf import settings
 from django.contrib import admin
+from django.db.models import TextField
+from django_ckeditor_5.widgets import CKEditor5Widget
 
 from .models import StaticPage, StaticPageNav, StaticUrl
 from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
@@ -33,6 +35,9 @@ class StaticPageNavAdmin(StaticPageTranslationAdminBase):
 
 
 @admin.register(StaticPage)
-class StaticPageAdmin(admin.ModelAdmin):
+class StaticPageAdmin(StaticPageTranslationAdminBase):
     model = StaticPage
+    formfield_overrides = {
+        TextField: {'widget': CKEditor5Widget},
+    }
     list_display = ('title', 'slug', 'members_only')

@@ -11,8 +11,8 @@ icalendar
 django-ical
 django-admin-ordering==0.16.1
 whitenoise
-channels==4.3.2
-channels_redis==4.3.0
+channels
+channels_redis
 websocket_client
 six
 instaloader
@@ -24,11 +24,7 @@ django-filter
 django-bootstrap3
 django_cleanup
 django-modeltranslation
-django-two-factor-auth
-daphne==4.2.1
-autobahn==25.12.2
-Twisted==25.5.0
-zope.interface==8.2
+daphne
 celery[redis]
 gunicorn
 gspread

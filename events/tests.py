@@ -3,16 +3,19 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from django.conf import settings
+from django.contrib import admin
 from django.test import Client, TestCase, override_settings
+from django.test.client import RequestFactory
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.translation import gettext
+from django_ckeditor_5.widgets import CKEditor5Widget
 
 from events.models import Event, EventAttendees, EventRegistrationForm
 from events.websocket_utils import ws_data, ws_send
 from members.models import Member, ORDINARY_MEMBER, Subscription, SubscriptionPayment, MembershipType
 from news.models import Category, Post
-from staticpages.models import StaticPageNav, StaticUrl
+from staticpages.models import StaticPage, StaticPageNav, StaticUrl
 
 logger = logging.getLogger('date')
 
@@ -419,6 +422,7 @@ class TranslationAdminRegressionTests(TestCase):
             email="translation-admin@example.com",
             membership_type=self.membership_type,
         )
+        self.request_factory = RequestFactory()
 
     def test_news_change_page_renders_translation_fields(self):
         category = Category.objects.create(name="News Category", slug="news-category")
@@ -436,6 +440,38 @@ class TranslationAdminRegressionTests(TestCase):
         self.assertContains(response, 'name="title_sv"')
         self.assertContains(response, 'name="content_sv"')
 
+    def test_news_translation_form_uses_ckeditor_widget_for_content_fields(self):
+        category = Category.objects.create(name="Widget Category", slug="widget-category")
+        post = Post.objects.create(
+            title="Widget Post",
+            slug="widget-post",
+            author=self.admin_user,
+            category=category,
+        )
+        request = self.request_factory.get(reverse("admin:news_post_change", args=[post.pk]))
+        request.user = self.admin_user
+
+        form_class = admin.site._registry[Post].get_form(request, obj=post)
+
+        self.assertIsInstance(form_class.base_fields["content_sv"].widget, CKEditor5Widget)
+        self.assertIsInstance(form_class.base_fields["content_en"].widget, CKEditor5Widget)
+        self.assertIsInstance(form_class.base_fields["content_fi"].widget, CKEditor5Widget)
+
+    def test_event_translation_form_uses_ckeditor_widget_for_content_fields(self):
+        event = Event.objects.create(
+            title="Widget Event",
+            slug="widget-event",
+            author=self.admin_user,
+        )
+        request = self.request_factory.get(reverse("admin:events_event_change", args=[event.pk]))
+        request.user = self.admin_user
+
+        form_class = admin.site._registry[Event].get_form(request, obj=event)
+
+        self.assertIsInstance(form_class.base_fields["content_sv"].widget, CKEditor5Widget)
+        self.assertIsInstance(form_class.base_fields["content_en"].widget, CKEditor5Widget)
+        self.assertIsInstance(form_class.base_fields["content_fi"].widget, CKEditor5Widget)
+
     def test_staticpage_nav_inline_renders_translation_fields(self):
         nav = StaticPageNav.objects.create(category_name="Menu")
         StaticUrl.objects.create(
@@ -452,6 +488,33 @@ class TranslationAdminRegressionTests(TestCase):
         self.assertContains(response, 'name="staticurl_set-0-title_sv"')
         self.assertContains(response, 'name="staticurl_set-0-title_en"')
         self.assertContains(response, 'name="staticurl_set-0-title_fi"')
+
+    def test_staticpage_change_page_renders_translation_fields(self):
+        page = StaticPage.objects.create(
+            title="About",
+            slug="about",
+        )
+
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("admin:staticpages_staticpage_change", args=[page.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="title_sv"')
+        self.assertContains(response, 'name="content_sv"')
+
+    def test_staticpage_translation_form_uses_ckeditor_widget_for_content_fields(self):
+        page = StaticPage.objects.create(
+            title="Widget Page",
+            slug="widget-page",
+        )
+        request = self.request_factory.get(reverse("admin:staticpages_staticpage_change", args=[page.pk]))
+        request.user = self.admin_user
+
+        form_class = admin.site._registry[StaticPage].get_form(request, obj=page)
+
+        self.assertIsInstance(form_class.base_fields["content_sv"].widget, CKEditor5Widget)
+        self.assertIsInstance(form_class.base_fields["content_en"].widget, CKEditor5Widget)
+        self.assertIsInstance(form_class.base_fields["content_fi"].widget, CKEditor5Widget)
 
 
 class EventCapacityTests(TestCase):
