@@ -2,7 +2,7 @@
 
 {% load i18n %}
 {% load static %}
-{% block title %}Log in{% endblock %}
+{% block title %}{% trans 'Login' %}{% endblock %}
 {% block content %}
     <head>
         <link rel="stylesheet" href="{% static 'members/style.css' %}">
@@ -13,9 +13,12 @@
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
+            {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+            {% endif %}
             <button class="button" type="submit">{% trans 'Login' %}</button>
         </form>
-            <a href="{% url 'password_reset' %}"><p>{% trans 'Glömt lösenordet?' %}</p></a>
+            <a href="{% url 'members:password_reset' %}"><p>{% trans 'Glömt lösenordet?' %}</p></a>
             {% if MEMBERS_SIGNUP_ENABLED %}
             <a href="{% url 'members:signup' %}"><p>{% trans 'Registrera dig' %}</p></a>
             {% endif %}

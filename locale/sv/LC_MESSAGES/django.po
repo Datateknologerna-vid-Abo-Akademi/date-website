@@ -1130,7 +1130,7 @@ msgstr "Your password was changed."
 #: templates/common/members/registration/password_change_form.html:11
 #: templates/common/members/userinfo.html:114
 msgid "Password change"
-msgstr "Password change"
+msgstr "Byt lösenord"
 
 #: templates/common/members/registration/password_change_form.html:12
 msgid ""
@@ -1453,3 +1453,182 @@ msgstr "inga nyheter hittades"
 #: templates/kk/date/april_start.html:87
 msgid "inga aktiva evenemang hittades"
 msgstr "inga aktiva evenemang hittades"
+
+#: templates/common/members/registration/password_reset_done.html:5
+msgid "Password reset - Email sent"
+msgstr "Återställning av lösenord - e-post skickad"
+
+#: templates/common/members/registration/registration_complete.html:5
+msgid "Registration completed"
+msgstr "Registrering slutförd"
+
+#: templates/common/members/registration/password_reset_email.html:3
+#, python-format
+msgid "För att inleda lösenordsåterställningen för kontot %(username)s,"
+msgstr "För att inleda lösenordsåterställningen för kontot %(username)s,"
+
+#: templates/common/members/registration/password_reset_email.html:4
+msgid "klicka på länken nedan:"
+msgstr "klicka på länken nedan:"
+
+#: templates/common/members/registration/password_reset_email.html:8
+msgid "Ifall det inte går att klicka på länken, vänligen kopiera och klistra in länken i din webbläsare."
+msgstr "Ifall det inte går att klicka på länken, vänligen kopiera och klistra in länken i din webbläsare."
+
+#: templates/common/members/registration/password_reset_email.html:10
+msgid "Om ytterligare frågor uppstår, vänligen kontakta styrelsen."
+msgstr "Om ytterligare frågor uppstår, vänligen kontakta styrelsen."
+
+#: templates/common/members/registration/password_reset_email.html:13
+msgid "Mvh,"
+msgstr "Mvh,"
+
+#: templates/common/members/userinfo.html:5
+msgid "Member profile"
+msgstr "Medlemsprofil"
+
+#: templates/common/members/userinfo.html:30
+#: templates/common/members/userinfo.html:85
+msgid "Two-factor authentication"
+msgstr "Tvåfaktorsautentisering"
+
+#: templates/common/members/userinfo.html:32
+msgid "Enabled"
+msgstr "Aktiverad"
+
+#: templates/common/members/userinfo.html:34
+msgid "Not enabled"
+msgstr "Inte aktiverad"
+
+#: templates/common/members/userinfo.html:42
+#: templates/common/members/userinfo.html:63
+msgid "First name:"
+msgstr "Förnamn:"
+
+#: templates/common/members/userinfo.html:43
+#: templates/common/members/userinfo.html:64
+msgid "Last name:"
+msgstr "Efternamn:"
+
+#: templates/common/members/userinfo.html:44
+#: templates/common/members/userinfo.html:65
+msgid "Phone number:"
+msgstr "Telefonnummer:"
+
+#: templates/common/members/userinfo.html:45
+#: templates/common/members/userinfo.html:66
+msgid "Address:"
+msgstr "Adress:"
+
+#: templates/common/members/userinfo.html:46
+#: templates/common/members/userinfo.html:67
+msgid "Zip code:"
+msgstr "Postkod:"
+
+#: templates/common/members/userinfo.html:47
+#: templates/common/members/userinfo.html:68
+msgid "City:"
+msgstr "Stad:"
+
+#: templates/common/members/userinfo.html:48
+#: templates/common/members/userinfo.html:69
+msgid "Country:"
+msgstr "Land:"
+
+#: templates/common/members/userinfo.html:49
+#: templates/common/members/userinfo.html:70
+msgid "Membership type:"
+msgstr "Medlemstyp:"
+
+#: templates/common/members/userinfo.html:52
+msgid "Edit"
+msgstr "Redigera"
+
+#: templates/common/members/userinfo.html:73
+msgid "Save"
+msgstr "Spara"
+
+#: templates/common/members/userinfo.html:74
+msgid "Cancel"
+msgstr "Avbryt"
+
+#: templates/common/members/userinfo.html:87
+msgid "Positions of trust"
+msgstr "Funktionärsposter"
+
+#: templates/common/members/userinfo.html:91
+#, python-format
+msgid "To change your username or email address, contact the board at %(ASSOCIATION_EMAIL)s"
+msgstr "För att ändra ditt användarnamn eller din e-postadress, kontakta styrelsen på %(ASSOCIATION_EMAIL)s"
+
+#: templates/common/two_factor/_wizard_actions.html:6
+msgid "Continue"
+msgstr "Fortsätt"
+
+#: templates/common/two_factor/core/login.html:10
+msgid "Enter your username or email address and password."
+msgstr "Ange ditt användarnamn eller din e-postadress och ditt lösenord."
+
+#: templates/common/two_factor/core/login.html:14
+msgid "Enter one of your backup tokens to continue."
+msgstr "Ange en av dina reservkoder för att fortsätta."
+
+#: templates/common/two_factor/core/login.html:24
+msgid "Use another authentication method:"
+msgstr "Använd en annan autentiseringsmetod:"
+
+#: templates/common/two_factor/core/login.html:40
+msgid "Use backup token"
+msgstr "Använd reservkod"
+
+#: templates/common/two_factor/core/setup.html:9
+msgid "Add an authenticator app to protect your account with a second login step."
+msgstr "Lägg till en autentiseringsapp för att skydda ditt konto med ett andra inloggningssteg."
+
+#: templates/common/two_factor/core/setup.html:11
+msgid "Choose how you want to verify login attempts."
+msgstr "Välj hur du vill verifiera inloggningsförsök."
+
+#: templates/common/two_factor/core/setup.html:13
+msgid "Scan this QR code with your authenticator app, or enter the secret manually."
+msgstr "Skanna den här QR-koden med din autentiseringsapp eller ange hemligheten manuellt."
+
+#: templates/common/two_factor/core/setup.html:15
+msgid "QR code for authenticator app setup"
+msgstr "QR-kod för att ställa in autentiseringsappen"
+
+#: templates/common/two_factor/core/setup.html:17
+msgid "Secret key"
+msgstr "Hemlig nyckel"
+
+#: templates/common/two_factor/core/setup.html:19
+msgid "Then enter the code generated by your app."
+msgstr "Ange sedan koden som genereras av din app."
+
+#: templates/common/two_factor/core/backup_tokens.html:6
+msgid "Backup tokens"
+msgstr "Reservkoder"
+
+#: templates/common/two_factor/core/backup_tokens.html:7
+msgid "Generate backup tokens to keep access if your authenticator app is unavailable."
+msgstr "Generera reservkoder för att behålla åtkomsten om din autentiseringsapp inte är tillgänglig."
+
+#: templates/common/two_factor/core/backup_tokens.html:20
+msgid "Generate new backup tokens"
+msgstr "Generera nya reservkoder"
+
+#: templates/common/two_factor/core/backup_tokens.html:24
+msgid "Back to profile"
+msgstr "Tillbaka till profilen"
+
+#: templates/common/two_factor/profile/disable.html:6
+msgid "Disable two-factor authentication"
+msgstr "Stäng av tvåfaktorsautentisering"
+
+#: templates/common/two_factor/profile/disable.html:7
+msgid "This removes the extra verification step from your account."
+msgstr "Detta tar bort det extra verifieringssteget från ditt konto."
+
+#: templates/common/two_factor/profile/disable.html:13
+msgid "Disable"
+msgstr "Stäng av"

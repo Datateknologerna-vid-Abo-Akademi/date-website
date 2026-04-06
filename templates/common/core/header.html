@@ -46,11 +46,11 @@
                             {{category.category_name}}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
-                                {% url 'login' as login_url %}
+                                {% url 'members:login' as login_url %}
                                 {% for page in urls %}
                                     {% if page.category|lower == category.category_name|lower %}
                                         {% if user.is_authenticated and page.url|localized_url == login_url %}
-                                            <li><form action="{% url 'logout' %}" method="post">{% csrf_token %}<button class="dropdown-item">{% translate "Logga ut" %}</button></form></li>
+                                            <li><form action="{% url 'members:logout' %}" method="post">{% csrf_token %}<button class="dropdown-item">{% translate "Logga ut" %}</button></form></li>
                                         {% elif not page.logged_in_only or user.is_authenticated %}
                                             <li><a class="dropdown-item" href="{{ page.url|localized_url }}">{{page.title}}</a></li>
                                         {% endif %}

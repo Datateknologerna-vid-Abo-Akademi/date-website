@@ -144,7 +144,7 @@ class EventTestCase(TestCase):
 
         response = self.client.get(reverse('events:detail', args=[self.event.slug]))
         self.assertEqual(response.status_code, 302)
-        self.assertIn(reverse('login'), response.headers['Location'])
+        self.assertIn(reverse('members:login'), response.headers['Location'])
 
     def test_members_only_event_allows_authenticated_user(self):
         self.event.members_only = True
@@ -160,7 +160,7 @@ class EventTestCase(TestCase):
 
         response = self.client.post(reverse('events:detail', args=[self.event.slug]), self.content)
         self.assertEqual(response.status_code, 302)
-        self.assertIn(reverse('login'), response.headers['Location'])
+        self.assertIn(reverse('members:login'), response.headers['Location'])
 
     def test_get_events_index(self):
         c = Client()

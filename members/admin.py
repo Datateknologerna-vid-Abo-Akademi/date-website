@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Permission
+from django.db.models import Exists, OuterRef
 from django.db.models.functions import Lower
+from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from members.forms import (MemberCreationForm, AdminMemberUpdateForm,
                            SubscriptionPaymentForm, SubscriptionPaymentChoiceField)
@@ -28,17 +30,28 @@ class UserAdmin(auth_admin.UserAdmin):
 
     form = AdminMemberUpdateForm
     add_form = MemberCreationForm
-    list_display = ('username', 'first_name', 'last_name', 'email', 'membership_type', 'is_active', 'is_staff')
+    list_display = ('username', 'first_name', 'last_name', 'email', 'membership_type', 'is_active', 'is_staff', 'has_two_factor')
     list_filter = ('membership_type', 'is_active', 'groups')
     search_fields = ('first_name', 'last_name', 'email')
     ordering = [Lower('username'), ]
-    readonly_fields = ('last_login',)
+    readonly_fields = ('last_login', 'has_two_factor')
     actions = ['activate_user', 'deactivate_user']
 
     def is_staff(self, obj):
         return obj.is_staff
 
     is_staff.boolean = True
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        confirmed_devices = TOTPDevice.objects.filter(user=OuterRef('pk'), confirmed=True)
+        return queryset.annotate(_has_two_factor=Exists(confirmed_devices))
+
+    def has_two_factor(self, obj):
+        return obj._has_two_factor
+
+    has_two_factor.boolean = True
+    has_two_factor.short_description = "2FA"
 
     def activate_user(self, request, queryset):
         queryset.update(is_active=True)

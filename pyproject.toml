@@ -28,6 +28,8 @@ dependencies = [
     "django-bootstrap3",
     "django-cleanup",
     "django-modeltranslation",
+    "django-otp",
+    "django-two-factor-auth",
     "daphne",
     "celery[redis]",
     "gunicorn",
