@@ -1108,6 +1108,10 @@ msgstr "Är du säker på att du vill ta bort posten?"
 msgid "Login"
 msgstr "Login"
 
+#: members/two_factor.py
+msgid "Username or email"
+msgstr "Användarnamn eller e-post"
+
 #: templates/common/members/registration/login.html:18
 msgid "Glömt lösenordet?"
 msgstr "Glömt lösenordet?"
