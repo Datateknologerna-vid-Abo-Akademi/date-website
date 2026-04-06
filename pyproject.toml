@@ -13,7 +13,7 @@ dependencies = [
     "python-dateutil",
     "icalendar",
     "django-ical",
-    "django-admin-ordering==0.16.1",
+    "django-admin-ordering==0.20.0",
     "whitenoise",
     "channels",
     "channels-redis",
