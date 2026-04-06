@@ -1,4 +1,5 @@
 import time
+from inspect import signature
 from unittest.mock import patch
 
 from dateutil.relativedelta import relativedelta
@@ -325,6 +326,26 @@ class TwoFactorIntegrationTests(TestCase):
             form_list = view.get_form_list()
 
         self.assertIs(form_list['generator'], StrictTOTPDeviceForm)
+
+    def test_setup_route_renders_strict_totp_form(self):
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+
+        response = self.client.get(reverse('two_factor:setup'))
+        prefix = self._wizard_prefix(response)
+
+        response = self.client.post(reverse('two_factor:setup'), data={
+            f'{prefix}-current_step': 'welcome',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['wizard']['steps'].current, 'generator')
+        self.assertIsInstance(response.context['wizard']['form'], StrictTOTPDeviceForm)
+
+    def test_strict_totp_form_signature_supports_setup_view_kwargs(self):
+        form_parameters = signature(StrictTOTPDeviceForm).parameters
+
+        self.assertIn('key', form_parameters)
+        self.assertIn('user', form_parameters)
 
     def test_profile_page_shows_2fa_state(self):
         self.client.force_login(self.member, backend='members.backends.AuthBackend')
