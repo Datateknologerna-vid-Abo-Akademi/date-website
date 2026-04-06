@@ -49,6 +49,7 @@ STATICFILES_DIRS = [
 
 CONTENT_VARIABLES = {
     "SITE_URL": "https://datateknologerna.org",
+
     "ASSOCIATION_NAME": "Datateknologerna",
     "ASSOCIATION_NAME_FULL": "Datateknologerna vid Åbo Akademi rf",
     "ASSOCIATION_NAME_SHORT": "DaTe",
@@ -72,4 +73,9 @@ CONTENT_VARIABLES = {
     "INTERNATIONAL_EVENT_SLUGS": [
         "teekkarikaste_teknologdop"
     ],
+}
+
+OAUTH2_PROVIDER = {
+    **OAUTH2_PROVIDER,
+    'OIDC_ISS_ENDPOINT': CONTENT_VARIABLES['SITE_URL'],
 }

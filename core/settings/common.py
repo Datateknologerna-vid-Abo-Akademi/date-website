@@ -72,7 +72,9 @@ def get_installed_apps(proj_apps):
         'django_tables2',
         'django_filters',
         'bootstrap3',
-        'django_cleanup',  # Should be places last
+        'oauth2_provider',
+        'rest_framework',
+        'django_cleanup',  # Should be placed last
     ]
 
 
@@ -379,3 +381,40 @@ CDN_URL_TRANSFORMATIONS = [
     ("fra1.digitaloceanspaces.com/albin-storage/", "albin-storage.cdn.datateknologerna.org/"),
     ("albin-storage.fra1.digitaloceanspaces.com/", "albin-storage.cdn.datateknologerna.org/"),
 ]
+
+# ── OAuth2 / OIDC ────────────────────────────────────────────────────────────
+# Keys are loaded from DB at startup (members/apps.py MemberConfig.ready()).
+# AppConfig.ready() overwrites OIDC_RSA_PRIVATE_KEY and OIDC_RSA_PRIVATE_KEYS_INACTIVE.
+OAUTH2_PROVIDER = {
+    # ACCESS_TOKEN_GENERATOR is intentionally left at the default (oauthlib opaque tokens).
+    # JWT tokens are enabled per-Application by setting algorithm=RS256 in admin.
+    # get_additional_claims() in MemberOAuth2Validator injects permissions into those JWTs.
+    'OIDC_ENABLED': True,
+    'OIDC_RSA_PRIVATE_KEY': '',           # patched at startup from DB by MemberConfig.ready()
+    'OIDC_RSA_PRIVATE_KEYS_INACTIVE': [], # patched at startup from DB by MemberConfig.ready()
+    'OAUTH2_VALIDATOR_CLASS': 'members.oauth.MemberOAuth2Validator',
+    'SCOPES': {
+        'openid':  'OpenID Connect',
+        'profile': 'User profile',
+        'email':   'Email address',
+        'upload':  'Upload pictures to archive',
+        'polls':   'Vote in polls',
+        'events':  'Register for events',
+    },
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 86400,
+}
+
+# ── Django REST Framework ─────────────────────────────────────────────────────
+REST_FRAMEWORK = {
+    # API endpoints use Bearer JWT only. Browser/template views keep session auth unchanged.
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+}

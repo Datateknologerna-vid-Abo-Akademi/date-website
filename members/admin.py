@@ -6,7 +6,8 @@ from django.db.models.functions import Lower
 from members.forms import (MemberCreationForm, AdminMemberUpdateForm,
                            SubscriptionPaymentForm, SubscriptionPaymentChoiceField)
 from members.models import (Member, Subscription,
-                            SubscriptionPayment, FunctionaryRole, Functionary, MembershipType)
+                            SubscriptionPayment, FunctionaryRole, Functionary, MembershipType,
+                            Feature, MembershipTypePermission, SigningKey)
 
 admin.site.register(Permission)
 admin.site.register(Subscription)
@@ -85,3 +86,24 @@ class FunctionaryRoleAdmin(admin.ModelAdmin):
     list_filter = ('board',)
     search_fields = ('title',)
     ordering = ['title', ]
+
+
+@admin.register(Feature)
+class FeatureAdmin(admin.ModelAdmin):
+    list_display = ('codename', 'name')
+    search_fields = ('codename', 'name')
+    ordering = ('codename',)
+
+
+@admin.register(MembershipTypePermission)
+class MembershipTypePermissionAdmin(admin.ModelAdmin):
+    list_display = ('membership_type', 'feature')
+    list_filter = ('membership_type', 'feature')
+
+
+@admin.register(SigningKey)
+class SigningKeyAdmin(admin.ModelAdmin):
+    list_display = ('kid', 'is_active', 'created_at')
+    list_filter = ('is_active',)
+    readonly_fields = ('kid', 'created_at')
+    exclude = ('private_key_pem',)  # never expose the private key in admin UI
