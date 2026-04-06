@@ -1,5 +1,7 @@
 from django.conf import settings
 from django.contrib import admin
+from django.db.models import TextField
+from django_ckeditor_5.widgets import CKEditor5Widget
 from modeltranslation.admin import TabbedTranslationAdmin
 
 from news import forms
@@ -14,6 +16,9 @@ class CategoryAdmin(NewsTranslationAdminBase):
 
 
 class PostAdmin(NewsTranslationAdminBase):
+    formfield_overrides = {
+        TextField: {'widget': CKEditor5Widget},
+    }
 
     fieldsets = [
         (None, {'fields': ['title', 'category', 'content', 'published', 'slug']}),
