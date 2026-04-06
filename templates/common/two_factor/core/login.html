@@ -6,9 +6,7 @@
     <div class="members-form two-factor-card two-factor-card-login">
         <h2>{% trans "Login" %}</h2>
 
-        {% if wizard.steps.current == 'auth' %}
-            <p>{% trans "Enter your username or email address and password." %}</p>
-        {% elif wizard.steps.current == 'token' %}
+        {% if wizard.steps.current == 'token' %}
             <p>{{ device|as_verbose_action }}</p>
         {% elif wizard.steps.current == 'backup' %}
             <p>{% trans "Enter one of your backup tokens to continue." %}</p>
@@ -23,7 +21,7 @@
                 <div class="two-factor-alt-methods">
                     <p>{% trans "Use another authentication method:" %}</p>
                     {% for other in other_devices %}
-                        <button name="challenge_device" value="{{ other.persistent_id }}" class="btn btn-secondary" type="submit">
+                        <button name="challenge_device" value="{{ other.persistent_id }}" class="two-factor-secondary" type="submit">
                             {{ other|as_action }}
                         </button>
                     {% endfor %}
@@ -36,16 +34,16 @@
         {% if backup_tokens %}
             <form action="" method="post" class="two-factor-inline-form">
                 {% csrf_token %}
-                <button name="wizard_goto_step" type="submit" value="backup" class="btn btn-secondary">
+                <button name="wizard_goto_step" type="submit" value="backup" class="two-factor-secondary">
                     {% trans "Use backup token" %}
                 </button>
             </form>
         {% endif %}
 
         {% if wizard.steps.current == 'auth' %}
-            <a href="{% url 'members:password_reset' %}"><p>{% trans 'Forgot your password?' %}</p></a>
+            <a href="{% url 'members:password_reset' %}"><p>{% trans 'Glömt lösenordet?' %}</p></a>
             {% if MEMBERS_SIGNUP_ENABLED %}
-                <a href="{% url 'members:signup' %}"><p>{% trans 'Register' %}</p></a>
+                <a href="{% url 'members:signup' %}"><p>{% trans 'Registrera dig' %}</p></a>
             {% endif %}
         {% endif %}
     </div>

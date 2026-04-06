@@ -1,6 +1,6 @@
 .two-factor-page {
     min-height: 100vh;
-    padding: 7rem 1rem 4rem;
+    padding: 25vh 1rem 10rem;
 }
 
 .two-factor-shell {
@@ -15,6 +15,7 @@
 .two-factor-card-login {
     width: 360px;
     max-width: 90vw;
+    text-align: center;
 }
 
 .two-factor-card-panel {
@@ -59,29 +60,20 @@
     margin-top: 1.25rem;
 }
 
-.two-factor-card .btn {
+.two-factor-secondary {
+    background-color: var(--primaryColorLight);
+    color: var(--textColorLightish);
     width: auto;
-    padding: 0.65rem 1rem;
-    font-size: 0.95rem;
 }
 
-.two-factor-card .btn-primary {
-    background-color: var(--bs-primary, #0d6efd);
-    border-color: var(--bs-primary, #0d6efd);
-    color: #fff;
+.two-factor-secondary:hover,
+.two-factor-secondary:focus {
+    background-color: var(--primaryColorLighte);
+    color: var(--linkColorLightHover);
 }
 
-.two-factor-card .btn-primary:hover,
-.two-factor-card .btn-primary:focus,
-.two-factor-card .btn-primary:active {
-    background-color: var(--bs-btn-hover-bg, #0b5ed7);
-    border-color: var(--bs-btn-hover-border-color, #0a58ca);
-    color: #fff;
-}
-
-.two-factor-actions .btn,
-.two-factor-inline-form .btn,
-.two-factor-alt-methods .btn {
+.two-factor-actions a.theme-button,
+.two-factor-inline-form a.theme-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -107,18 +99,12 @@
     accent-color: var(--primaryColorLighter);
 }
 
-.two-factor-actions .btn,
-.two-factor-inline-form .btn,
-.two-factor-alt-methods .btn {
-    min-width: 120px;
-}
-
 .two-factor-alt-methods {
     margin-top: 1rem;
 }
 
-.two-factor-alt-methods .btn,
-.two-factor-inline-form .btn {
+.two-factor-alt-methods .two-factor-secondary,
+.two-factor-inline-form .two-factor-secondary {
     margin-top: 0.75rem;
 }
 
