@@ -15,4 +15,4 @@ COPY --from=builder /opt/venv /opt/venv
 RUN mkdir /code
 WORKDIR /code
 ADD . /code/
-RUN python manage.py compilemessages
+RUN python manage.py compilemessages -l en -l fi -l sv

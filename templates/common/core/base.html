@@ -10,8 +10,6 @@
     <link rel="stylesheet" href="{% static 'core/css/base.css' %}">
     <link rel="stylesheet" href="{% static 'date/css/date-root.css' %}">
     <link rel="stylesheet" href="{% static 'core/css/cookie-banner.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'core/css/header.css' %}?version=1">
-    <link rel="stylesheet" href="{% static 'core/css/footer.css' %}">
     {% block favicon %}
     <link rel="shortcut icon" type="image/png" href="{% static 'core/images/logo.ico' %}"/>
     {% endblock %}
@@ -25,6 +23,8 @@
     <link rel= "stylesheet" href= "https://maxst.icons8.com/vue-static/landings/line-awesome/font-awesome-line-awesome/css/all.min.css" >
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
     {% block extra_head %}{% endblock %}
+    <link rel="stylesheet" type="text/css" href="{% static 'core/css/header.css' %}?version=1">
+    <link rel="stylesheet" href="{% static 'core/css/footer.css' %}">
 </head>
 
 {% include 'core/header.html' %}
