@@ -26,44 +26,43 @@
                     <table class="table table-striped">
                         <tr>
                             <td>Email:</td>
-                            <td>{{ user.email }}</td>
+                            <td>{{ user.email|default:"-" }}</td>
                         </tr>
                         <tr>
                             <td>Förnamn:</td>
-                            <td>{{ user.first_name }}</td>
+                            <td>{{ user.first_name|default:"-" }}</td>
                         </tr>
                         <tr>
                             <td>Efternamn:</td>
-                            <td>{{ user.last_name }}</td>
+                            <td>{{ user.last_name|default:"-" }}</td>
                         </tr>
                         <tr>
                             <td>Telefonnummer:</td>
-                            <td>{{ user.phone }}</td>
+                            <td>{{ user.phone|default:"-" }}</td>
                         </tr>
                         <tr>
                             <td>Adress:</td>
-                            <td>{{ user.address }}</td>
+                            <td>{{ user.address|default:"-" }}</td>
                         </tr>
                         <tr>
                             <td>Zip kod:</td>
-                            <td>{{ user.zip_code }}</td>
+                            <td>{{ user.zip_code|default:"-" }}</td>
                         </tr>
                         <tr>
                             <td>Stad:</td>
-                            <td>{{ user.city }}</td>
+                            <td>{{ user.city|default:"-" }}</td>
                         </tr>
                         <tr>
                             <td>Land:</td>
-                            <td>{{ user.country }}</td>
+                            <td>{{ user.country|default:"-" }}</td>
                         </tr>
                         <tr>
                             <td>Medlems typ:</td>
-                            <td>{{ user.get_str_membership_type }}</td>
+                            <td>{{ user.get_str_membership_type|default:"-" }}</td>
                         </tr>
-                        <!-- End of user information fields -->
                     </table>
                     <div class="d-flex flex-column gap-2 mt-2">
-                        <button onclick="toggleEdit()" class="theme-button">{% trans 'Edit' %}</button>
+                        <button type="button" onclick="toggleEdit()" class="theme-button">{% trans 'Edit' %}</button>
                     </div>
                 </div>
                 <div id="editForm"{% if not form.errors %} style="display:none;"{% endif %}>
@@ -130,10 +129,10 @@
                         </div>
                     {% endif %}
                     <div class="col-6">
-                        <a href="{% url 'members:functionary' %}" class="theme-button d-block">Funktionärsposter <i class="fas fa-chevron-right"></i></a>
+                        <a href="{% url 'members:functionary' %}" class="theme-button d-block">{% trans 'Positions of trust' %}<i class="fas fa-chevron-right"></i></a>
                     </div>
                 </div>
-                <p class="mt-2">För att ändra ditt användarnamn eller e-post, kontakta styrelsen på {{ ASSOCIATION_EMAIL }}</p>
+                <p class="mt-2">{% blocktrans %}To change your username or email address, contact the board at {{ ASSOCIATION_EMAIL }}{% endblocktrans %}</p>
             </div>
         </div>
     </div>

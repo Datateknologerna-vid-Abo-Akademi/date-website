@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django_otp import DEVICE_ID_SESSION_KEY
 from django_otp.oath import TOTP
+from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.forms import TOTPDeviceForm
 
@@ -424,6 +425,37 @@ class TwoFactorIntegrationTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], reverse('members:info'))
         self.assertNotIn('next', self.client.session)
+
+    def test_disable_two_factor_removes_all_devices_for_selected_members(self):
+        other = Member.objects.create_user(
+            username='otheruser',
+            email='other@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+        )
+        totp = TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
+        static = StaticDevice.objects.create(user=self.member, confirmed=True, name='backup')
+        totp_other = TOTPDevice.objects.create(user=other, confirmed=True, name='default')
+
+        admin_user = Member.objects.create_superuser(
+            username='admintest',
+            email='admintest@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+        )
+        self.client.force_login(admin_user, backend='members.backends.AuthBackend')
+
+        self.client.post(
+            reverse('admin:members_member_changelist'),
+            {
+                'action': 'disable_two_factor',
+                '_selected_action': [self.member.pk],
+            },
+        )
+
+        self.assertFalse(TOTPDevice.objects.filter(pk=totp.pk).exists())
+        self.assertFalse(StaticDevice.objects.filter(pk=static.pk).exists())
+        self.assertTrue(TOTPDevice.objects.filter(pk=totp_other.pk).exists())
 
     def test_invalid_profile_post_keeps_editor_open_with_errors(self):
         self.client.force_login(self.member, backend='members.backends.AuthBackend')
