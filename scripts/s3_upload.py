@@ -7,7 +7,6 @@ import boto3
 import datetime
 import requests
 import pytz
-from botocore.config import Config
 
 AWS_S3_ENDPOINT_URL = os.environ['AWS_S3_ENDPOINT_URL']
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
@@ -20,8 +19,7 @@ def s3_config():
     return boto3.client('s3',
             endpoint_url=AWS_S3_ENDPOINT_URL,
             aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-            config=Config(signature_version='s3v4'))
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 
 print("STARTING IMAGE UPLOADER")
 
