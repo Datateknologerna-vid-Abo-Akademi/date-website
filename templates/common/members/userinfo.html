@@ -114,22 +114,22 @@
 
                 <div class="row g-2 mt-1">
                     <div class="col-6">
-                        <a href="{% url 'members:password_change' %}" class="theme-button d-block">{% trans 'Password change' %}<i class="fas fa-chevron-right"></i></a>
+                        <a href="{% url 'members:password_change' %}" class="theme-button d-block h-100">{% trans 'Password change' %}<i class="fas fa-chevron-right"></i></a>
                     </div>
                     {% if two_factor_enabled %}
                         <div class="col-6">
-                            <a href="{% url 'two_factor:disable' %}" class="theme-button d-block">{% trans 'Disable two-factor authentication' %}<i class="fas fa-chevron-right"></i></a>
+                            <a href="{% url 'two_factor:disable' %}" class="theme-button d-block h-100">{% trans 'Disable two-factor authentication' %}<i class="fas fa-chevron-right"></i></a>
                         </div>
                         <div class="col-6">
-                            <a href="{% url 'two_factor:backup_tokens' %}" class="theme-button d-block">{% trans 'Backup tokens' %}<i class="fas fa-chevron-right"></i></a>
+                            <a href="{% url 'two_factor:backup_tokens' %}" class="theme-button d-block h-100">{% trans 'Backup tokens' %}<i class="fas fa-chevron-right"></i></a>
                         </div>
                     {% else %}
                         <div class="col-6">
-                            <a href="{% url 'two_factor:setup' %}" class="theme-button d-block">{% trans 'Two-factor authentication' %}<i class="fas fa-chevron-right"></i></a>
+                            <a href="{% url 'two_factor:setup' %}" class="theme-button d-block h-100">{% trans 'Two-factor authentication' %}<i class="fas fa-chevron-right"></i></a>
                         </div>
                     {% endif %}
                     <div class="col-6">
-                        <a href="{% url 'members:functionary' %}" class="theme-button d-block">{% trans 'Positions of trust' %}<i class="fas fa-chevron-right"></i></a>
+                        <a href="{% url 'members:functionary' %}" class="theme-button d-block h-100">{% trans 'Positions of trust' %}<i class="fas fa-chevron-right"></i></a>
                     </div>
                 </div>
                 <p class="mt-2">{% blocktrans %}To change your username or email address, contact the board at {{ ASSOCIATION_EMAIL }}{% endblocktrans %}</p>

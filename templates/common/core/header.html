@@ -66,12 +66,14 @@
                         {% trans "Language" %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
-                            <form action="{% url 'set_lang' %}" method="post">
-                                {% csrf_token %}
-                                {% for language in LANGUAGES %}
-                                    <li><button class="dropdown-item" name="lang" type="submit" value="{{ language.0 }}">{{ language.1 }}</button></li>
-                                {% endfor %}
-                            </form>
+                            {% for language in LANGUAGES %}
+                                <li>
+                                    <form action="{% url 'set_lang' %}" method="post" style="display:contents">
+                                        {% csrf_token %}
+                                        <button class="dropdown-item" name="lang" type="submit" value="{{ language.0 }}">{{ language.1 }}</button>
+                                    </form>
+                                </li>
+                            {% endfor %}
                         </ul>
                     </li>
                     {% endif %}

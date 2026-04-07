@@ -52,6 +52,43 @@ It loads:
 
 Treat the generated fixture output as disposable development data.
 
+## Multi-Association Dev Stack
+
+### `docker-compose.dev-all.yml` / `date-all-*` aliases
+
+Use this when you need to run all associations simultaneously for style comparison or cross-association testing.
+
+Each association gets its own web container on a dedicated port, sharing one PostgreSQL database and one Redis instance:
+
+| Association | URL                   |
+|-------------|-----------------------|
+| biocum      | http://localhost:8001 |
+| date        | http://localhost:8002 |
+| kk          | http://localhost:8003 |
+| on          | http://localhost:8004 |
+| pulterit    | http://localhost:8005 |
+
+The database is exposed on host port `5433` to avoid conflicting with the regular dev stack on `5432`.
+
+#### Aliases (after `source env.sh`)
+
+```bash
+date-all-start       # build and start all containers
+date-all-stop        # tear everything down
+date-all-cleaninit   # reset to fixture data against the dev-all stack
+```
+
+#### How it works
+
+An `init` container runs once on startup — it waits for PostgreSQL, then runs `migrate`, `collectstatic`, and `compilemessages` using `PROJECT_NAME=date`. All web containers wait for `init` to complete before accepting requests.
+
+The `web` service (port 8002) is named `web` specifically so `clean_init.sh` can target it when running `date-all-cleaninit`.
+
+#### Notes
+
+- Static files are collected once by `init` at startup. If you change CSS or JS, restart with `date-all-start` to pick up the changes.
+- The `date-all-cleaninit` alias passes `COMPOSE_FILE_PATH=docker-compose.dev-all.yml` before sourcing `env.sh`, which `clean_init.sh` preserves to avoid being overridden.
+
 ## Backups and Database Upgrades
 
 ### `scripts/backup_postgres.sh`
