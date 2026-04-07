@@ -224,7 +224,7 @@ div a:hover{
 }
 
 /* Basic table colors */
-#table {
+table.table {
     --bs-table-bg: #f8f8f8;
     --bs-table-striped-bg: #ececeb;
     --bs-table-striped-color: #202020;

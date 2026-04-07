@@ -36,6 +36,11 @@ alias date-start-detached="date-pull; date up -d --build"
 alias date-createsuperuser="date-manage createsuperuser"
 alias date-pull="date pull"
 
+alias date-all="docker compose -f \"${SCRIPT_DIR}/docker-compose.dev-all.yml\""
+alias date-all-start="date-all up --build"
+alias date-all-stop="date-all down"
+alias date-all-cleaninit="COMPOSE_FILE_PATH=\"docker-compose.dev-all.yml\" \"${SCRIPT_DIR}/scripts/clean_init.sh\""
+
 date-test() {
     docker compose run -e TEST=1 web /bin/bash -c './wait-for-postgres.sh db:5432 && python /code/manage.py test "$@"'
 }

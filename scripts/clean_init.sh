@@ -19,7 +19,12 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     DELETE_MEDIA=true
 fi
 
+# Preserve any caller-supplied COMPOSE_FILE_PATH before env.sh overwrites it.
+_COMPOSE_FILE_PATH_OVERRIDE="${COMPOSE_FILE_PATH:-}"
 source "$PROJECT_DIR/env.sh" dev
+if [ -n "$_COMPOSE_FILE_PATH_OVERRIDE" ]; then
+    COMPOSE_FILE_PATH="$_COMPOSE_FILE_PATH_OVERRIDE"
+fi
 COMPOSE_PATH="$PROJECT_DIR/${COMPOSE_FILE_PATH:-docker-compose.yml}"
 
 validate_fixtures() {

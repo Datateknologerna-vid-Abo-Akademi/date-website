@@ -3,6 +3,7 @@ from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Permission
 from django.db.models import Exists, OuterRef
 from django.db.models.functions import Lower
+from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from members.forms import (MemberCreationForm, AdminMemberUpdateForm,
@@ -12,6 +13,36 @@ from members.models import (Member, Subscription,
 
 admin.site.register(Permission)
 admin.site.register(Subscription)
+
+
+class TOTPDeviceInline(admin.TabularInline):
+    model = TOTPDevice
+    extra = 0
+    max_num = 0
+    can_delete = True
+    fields = ('name', 'created_at', 'last_used_at')
+    readonly_fields = ('name', 'created_at', 'last_used_at')
+    verbose_name = "2FA device"
+    verbose_name_plural = "2FA devices"
+
+
+class StaticDeviceInline(admin.TabularInline):
+    model = StaticDevice
+    extra = 0
+    max_num = 0
+    can_delete = True
+    fields = ('name', 'token_count')
+    readonly_fields = ('name', 'token_count')
+    verbose_name = "Backup token device"
+    verbose_name_plural = "Backup token devices"
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('token_set')
+
+    def token_count(self, obj):
+        return len(obj.token_set.all())
+
+    token_count.short_description = "Tokens remaining"
 
 FRESHMAN = 1
 ORDINARY_MEMBER = 2
@@ -35,7 +66,8 @@ class UserAdmin(auth_admin.UserAdmin):
     search_fields = ('first_name', 'last_name', 'email')
     ordering = [Lower('username'), ]
     readonly_fields = ('last_login', 'has_two_factor')
-    actions = ['activate_user', 'deactivate_user']
+    inlines = [TOTPDeviceInline, StaticDeviceInline]
+    actions = ['activate_user', 'deactivate_user', 'disable_two_factor']
 
     def is_staff(self, obj):
         return obj.is_staff
@@ -62,6 +94,16 @@ class UserAdmin(auth_admin.UserAdmin):
         queryset.update(is_active=False)
 
     deactivate_user.short_description = "Deaktivera användare"
+
+    def disable_two_factor(self, request, queryset):
+        totp_qs = TOTPDevice.objects.filter(user__in=queryset)
+        static_qs = StaticDevice.objects.filter(user__in=queryset)
+        total = totp_qs.count() + static_qs.count()
+        totp_qs.delete()
+        static_qs.delete()
+        self.message_user(request, f"2FA inaktiverat för valda medlemmar: {total} enhet(er) borttagna.")
+
+    disable_two_factor.short_description = "Inaktivera 2FA"
 
     def sorter_username(self, queryset):
         return Member.objects.all().order_by(Lower('username')).values_list('username', flat=True)

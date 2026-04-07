@@ -1,8 +1,7 @@
 {% extends 'core/base.html' %}
 {% load i18n %}
 {% load static %}
-
-{% block title %}{% trans 'Member profile' %}{% endblock %}
+{% block title %}{% trans 'Användarinformation' %}{% endblock %}
 
 {% block extra_head %}
     {{ block.super }}
@@ -12,85 +11,128 @@
 {% block content %}
     <script>
     function toggleEdit() {
-        const info = document.getElementById("userInfo");
-        const edit = document.getElementById("editForm");
-        info.style.display = (info.style.display === "none" ? "block" : "none");
-        edit.style.display = (edit.style.display === "none" ? "block" : "none");
+    var info = document.getElementById("userInfo");
+    var edit = document.getElementById("editForm");
+    info.style.display = (info.style.display === "none" ? "block" : "none");
+    edit.style.display = (edit.style.display === "none" ? "block" : "none");
     }
     </script>
-
     <div class="container-md min-vh-100 container-margin-top">
-        <div class="container-size profile-page">
-            <div class="content profile-card">
-                <div class="profile-header">
-                    <div>
-                        <p class="profile-eyebrow">{% trans 'Member profile' %}</p>
-                        <h3 class="profile-title">{{ user.username }}</h3>
-                    </div>
-                    <div class="profile-status">
-                        <span class="status-label">{% trans 'Two-factor authentication' %}</span>
-                        {% if two_factor_enabled %}
-                            <span class="status-badge status-badge-enabled">{% trans 'Enabled' %}</span>
-                        {% else %}
-                            <span class="status-badge status-badge-disabled">{% trans 'Not enabled' %}</span>
-                        {% endif %}
-                    </div>
-                </div>
-
+        <div class="container-size">
+            <div class="content">
+                <!-- User Information Section -->
+                <h3>{{ user.username }}</h3>
                 <div id="userInfo"{% if form.errors %} style="display:none;"{% endif %}>
-                    <table class="table table-striped profile-table">
-                        <tr><td>{% trans 'Email:' %}</td><td>{{ user.email|default:"-" }}</td></tr>
-                        <tr><td>{% trans 'First name:' %}</td><td>{{ user.first_name|default:"-" }}</td></tr>
-                        <tr><td>{% trans 'Last name:' %}</td><td>{{ user.last_name|default:"-" }}</td></tr>
-                        <tr><td>{% trans 'Phone number:' %}</td><td>{{ user.phone|default:"-" }}</td></tr>
-                        <tr><td>{% trans 'Address:' %}</td><td>{{ user.address|default:"-" }}</td></tr>
-                        <tr><td>{% trans 'Zip code:' %}</td><td>{{ user.zip_code|default:"-" }}</td></tr>
-                        <tr><td>{% trans 'City:' %}</td><td>{{ user.city|default:"-" }}</td></tr>
-                        <tr><td>{% trans 'Country:' %}</td><td>{{ user.country|default:"-" }}</td></tr>
-                        <tr><td>{% trans 'Membership type:' %}</td><td>{{ user.get_str_membership_type|default:"-" }}</td></tr>
+                    <table class="table table-striped">
+                        <tr>
+                            <td>Email:</td>
+                            <td>{{ user.email|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Förnamn:</td>
+                            <td>{{ user.first_name|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Efternamn:</td>
+                            <td>{{ user.last_name|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Telefonnummer:</td>
+                            <td>{{ user.phone|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Adress:</td>
+                            <td>{{ user.address|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Zip kod:</td>
+                            <td>{{ user.zip_code|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Stad:</td>
+                            <td>{{ user.city|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Land:</td>
+                            <td>{{ user.country|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td>Medlems typ:</td>
+                            <td>{{ user.get_str_membership_type|default:"-" }}</td>
+                        </tr>
                     </table>
-                    <div class="profile-toolbar">
-                        <button onclick="toggleEdit()" class="theme-button" type="button">{% trans 'Edit' %}</button>
+                    <div class="d-flex flex-column gap-2 mt-2">
+                        <button type="button" onclick="toggleEdit()" class="theme-button">{% trans 'Edit' %}</button>
                     </div>
                 </div>
-
                 <div id="editForm"{% if not form.errors %} style="display:none;"{% endif %}>
                     <form method="post">
                         {% csrf_token %}
                         {% if form.non_field_errors %}
                             <div class="error">{{ form.non_field_errors }}</div>
                         {% endif %}
-                        <table class="table table-striped profile-table">
-                            <tr><td>{% trans 'First name:' %}</td><td>{{ form.first_name }}{{ form.first_name.errors }}</td></tr>
-                            <tr><td>{% trans 'Last name:' %}</td><td>{{ form.last_name }}{{ form.last_name.errors }}</td></tr>
-                            <tr><td>{% trans 'Phone number:' %}</td><td>{{ form.phone }}{{ form.phone.errors }}</td></tr>
-                            <tr><td>{% trans 'Address:' %}</td><td>{{ form.address }}{{ form.address.errors }}</td></tr>
-                            <tr><td>{% trans 'Zip code:' %}</td><td>{{ form.zip_code }}{{ form.zip_code.errors }}</td></tr>
-                            <tr><td>{% trans 'City:' %}</td><td>{{ form.city }}{{ form.city.errors }}</td></tr>
-                            <tr><td>{% trans 'Country:' %}</td><td>{{ form.country }}{{ form.country.errors }}</td></tr>
-                            <tr><td>{% trans 'Membership type:' %}</td><td>{{ user.get_str_membership_type|default:"-" }}</td></tr>
+                        <table class="table table-striped">
+                            <tr>
+                                <td>Förnamn:</td>
+                                <td>{{ form.first_name }}{% if form.first_name.errors %}<div class="error">{{ form.first_name.errors }}</div>{% endif %}</td>
+                            </tr>
+                            <tr>
+                                <td>Efternamn:</td>
+                                <td>{{ form.last_name }}{% if form.last_name.errors %}<div class="error">{{ form.last_name.errors }}</div>{% endif %}</td>
+                            </tr>
+                            <tr>
+                                <td>Telefonnummer:</td>
+                                <td>{{ form.phone }}{% if form.phone.errors %}<div class="error">{{ form.phone.errors }}</div>{% endif %}</td>
+                            </tr>
+                            <tr>
+                                <td>Adress:</td>
+                                <td>{{ form.address }}{% if form.address.errors %}<div class="error">{{ form.address.errors }}</div>{% endif %}</td>
+                            </tr>
+                            <tr>
+                                <td>Zip kod:</td>
+                                <td>{{ form.zip_code }}{% if form.zip_code.errors %}<div class="error">{{ form.zip_code.errors }}</div>{% endif %}</td>
+                            </tr>
+                            <tr>
+                                <td>Stad:</td>
+                                <td>{{ form.city }}{% if form.city.errors %}<div class="error">{{ form.city.errors }}</div>{% endif %}</td>
+                            </tr>
+                            <tr>
+                                <td>Land:</td>
+                                <td>{{ form.country }}{% if form.country.errors %}<div class="error">{{ form.country.errors }}</div>{% endif %}</td>
+                            </tr>
+                            <tr>
+                                <td>Medlems typ:</td>
+                                <td>{{ user.get_str_membership_type }}</td>
+                            </tr>
                         </table>
-                        <div class="profile-toolbar">
+                        <div class="d-flex gap-2 mt-2">
                             <button type="submit" class="theme-button">{% trans 'Save' %}</button>
-                            <button type="button" class="theme-button secondary-action" onclick="toggleEdit()">{% trans 'Cancel' %}</button>
+                            <button type="button" class="theme-button" onclick="toggleEdit()">{% trans 'Cancel' %}</button>
                         </div>
                     </form>
                 </div>
 
-                <div class="profile-actions">
-                    <a href="{% url 'members:password_change' %}" class="theme-button profile-action">{% trans 'Password change' %}<i class="fas fa-chevron-right"></i></a>
+                <div class="row g-2 mt-1">
+                    <div class="col-6">
+                        <a href="{% url 'members:password_change' %}" class="theme-button d-block">{% trans 'Password change' %}<i class="fas fa-chevron-right"></i></a>
+                    </div>
                     {% if two_factor_enabled %}
-                        <a href="{% url 'two_factor:disable' %}" class="theme-button profile-action">{% trans 'Disable two-factor authentication' %}<i class="fas fa-chevron-right"></i></a>
-                        <a href="{% url 'two_factor:backup_tokens' %}" class="theme-button profile-action">{% trans 'Backup tokens' %}<i class="fas fa-chevron-right"></i></a>
+                        <div class="col-6">
+                            <a href="{% url 'two_factor:disable' %}" class="theme-button d-block">{% trans 'Disable two-factor authentication' %}<i class="fas fa-chevron-right"></i></a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'two_factor:backup_tokens' %}" class="theme-button d-block">{% trans 'Backup tokens' %}<i class="fas fa-chevron-right"></i></a>
+                        </div>
                     {% else %}
-                        <a href="{% url 'two_factor:setup' %}" class="theme-button profile-action">{% trans 'Two-factor authentication' %}<i class="fas fa-chevron-right"></i></a>
+                        <div class="col-6">
+                            <a href="{% url 'two_factor:setup' %}" class="theme-button d-block">{% trans 'Two-factor authentication' %}<i class="fas fa-chevron-right"></i></a>
+                        </div>
                     {% endif %}
-                    <a href="{% url 'members:functionary' %}" class="theme-button profile-action">{% trans 'Positions of trust' %}<i class="fas fa-chevron-right"></i></a>
+                    <div class="col-6">
+                        <a href="{% url 'members:functionary' %}" class="theme-button d-block">{% trans 'Positions of trust' %}<i class="fas fa-chevron-right"></i></a>
+                    </div>
                 </div>
-
-                <p class="profile-help">
-                    {% blocktrans %}To change your username or email address, contact the board at {{ ASSOCIATION_EMAIL }}{% endblocktrans %}
-                </p>
+                <p class="mt-2">{% blocktrans %}To change your username or email address, contact the board at {{ ASSOCIATION_EMAIL }}{% endblocktrans %}</p>
             </div>
         </div>
     </div>
