@@ -8,6 +8,7 @@ Use this together with:
 
 - `charts/date-website/values-hetzner.yaml` for the Hetzner k3s baseline
 - `charts/date-website/values-backblaze-b2.example.yaml` for B2 media and PostgreSQL backup storage
+- `charts/date-website/values-kk.example.yaml`, `charts/date-website/values-biocum.example.yaml`, or `charts/date-website/values-pulterit.example.yaml` for association-specific overrides
 - `README.md` for local development and Docker Compose workflows
 
 ## Cluster Shape
@@ -50,6 +51,59 @@ The chart deploys:
 - optional migration Job
 
 For the current single-worker setup, `values-hetzner.yaml` keeps `web.migrateOnStartup: true` and disables the migration Job. If the web deployment is scaled above one replica, move migrations out of web startup and into a controlled migration step.
+
+## Multiple Associations
+
+Run one Helm release per association. Do not route `date`, `kk`, `biocum`, and `pulterit` through the same release, because each release needs its own `PROJECT_NAME`, Django URL configuration, static/template paths, hosts, media prefixes, database, and backup prefix.
+
+Examples:
+
+```bash
+helm upgrade --install date charts/date-website \
+  --namespace date \
+  --create-namespace \
+  -f charts/date-website/values-hetzner.yaml \
+  -f charts/date-website/values-backblaze-b2.example.yaml \
+  --set secret.existingSecret=date-website-prod-secrets \
+  --set image.tag='<release-tag>'
+```
+
+```bash
+helm upgrade --install kk charts/date-website \
+  --namespace kk \
+  --create-namespace \
+  -f charts/date-website/values-hetzner.yaml \
+  -f charts/date-website/values-backblaze-b2.example.yaml \
+  -f charts/date-website/values-kk.example.yaml \
+  --set secret.existingSecret=kk-website-prod-secrets \
+  --set image.tag='<release-tag>'
+```
+
+```bash
+helm upgrade --install biocum charts/date-website \
+  --namespace biocum \
+  --create-namespace \
+  -f charts/date-website/values-hetzner.yaml \
+  -f charts/date-website/values-backblaze-b2.example.yaml \
+  -f charts/date-website/values-biocum.example.yaml \
+  --set secret.existingSecret=biocum-website-prod-secrets \
+  --set image.tag='<release-tag>'
+```
+
+```bash
+helm upgrade --install pulterit charts/date-website \
+  --namespace pulterit \
+  --create-namespace \
+  -f charts/date-website/values-hetzner.yaml \
+  -f charts/date-website/values-backblaze-b2.example.yaml \
+  -f charts/date-website/values-pulterit.example.yaml \
+  --set secret.existingSecret=pulterit-website-prod-secrets \
+  --set image.tag='<release-tag>'
+```
+
+Each release should have separate `django.projectName`, `django.allowedHosts`, `django.allowedOrigins`, `ingress.hosts`, media bucket names or prefixes, backup bucket name or prefix, and Kubernetes Secret. Keeping separate namespaces is optional, but it makes secrets, PVCs, and operational commands harder to mix up.
+
+If several associations share one B2 bucket, keep unique media locations such as `date/media`, `kk/media`, `biocum/media`, and `pulterit/media`. If they use separate B2 buckets, still keep distinct backup prefixes such as `date-website/postgresql`, `kk-website/postgresql`, `biocum-website/postgresql`, and `pulterit-website/postgresql`.
 
 ## Backblaze B2 Object Storage
 
@@ -131,6 +185,8 @@ helm upgrade --install date-website charts/date-website \
 ```
 
 Set `image.tag` to a release tag or pinned image tag. Avoid deploying `master` by accident in production.
+
+For KK, Biologica, or Pulterit, layer the matching association values file after the B2 values file so the association-specific hosts, `PROJECT_NAME`, media paths, and backup prefix override the default `date` example.
 
 ## Verify
 
