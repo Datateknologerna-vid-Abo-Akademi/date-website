@@ -1,13 +1,15 @@
 from django.contrib import admin
+from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.admin import AdminSiteOTPRequiredMixin
 
-# Remove the standalone TOTPDevice admin registered by django_otp — devices
+# Remove standalone OTP device admins registered by django_otp — devices
 # are managed through the Member inline instead.
-try:
-    admin.site.unregister(TOTPDevice)
-except admin.sites.NotRegistered:
-    pass
+for _model in (TOTPDevice, StaticDevice):
+    try:
+        admin.site.unregister(_model)
+    except admin.sites.NotRegistered:
+        pass
 
 
 class FixedLanguageAdminSite(AdminSiteOTPRequiredMixin, admin.AdminSite):
