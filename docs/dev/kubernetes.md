@@ -188,6 +188,7 @@ The backup CronJob currently installs `aws-cli` at runtime when object-storage u
 ## Operational Notes
 
 - This one-control-plane, one-worker setup is not highly available. If the worker or its Hetzner volume is unavailable, the app and database are unavailable.
+- `values-hetzner.yaml` resource requests are based on observed Docker production usage: web is the largest process at roughly 300-450Mi, Celery sits around 250Mi, ASGI around 90Mi, and idle Postgres/Redis are much smaller. Revisit requests after sustained Kubernetes traffic, especially after larger event registrations or admin uploads.
 - Redis persistence is disabled in `values-hetzner.yaml` to avoid a separate 10Gi Hetzner volume for cache and broker data. This means queued Celery tasks can be lost if Redis restarts.
 - Use B2 for media before scaling web replicas. Local media on a single ReadWriteOnce PVC is simpler but limits scaling and failover.
 - Keep the PostgreSQL volume on `hcloud-volumes`. B2 backups protect against bad migrations and volume corruption, but they do not remove the need to monitor and test restores.
