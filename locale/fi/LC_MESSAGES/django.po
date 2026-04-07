@@ -1582,7 +1582,7 @@ msgstr "Jäsenprofiili"
 #: templates/common/members/userinfo.html:30
 #: templates/common/members/userinfo.html:85
 msgid "Two-factor authentication"
-msgstr "Kaksivaiheinen tunnistautuminen"
+msgstr "Ota 2FA käyttöön"
 
 #: templates/common/members/userinfo.html:32
 msgid "Enabled"
@@ -1640,6 +1640,10 @@ msgstr "Luottamustehtävät"
 #, python-format
 msgid "To change your username or email address, contact the board at %(ASSOCIATION_EMAIL)s"
 msgstr "Jos haluat vaihtaa käyttäjätunnuksesi tai sähköpostiosoitteesi, ota yhteyttä hallitukseen osoitteessa %(ASSOCIATION_EMAIL)s"
+
+#: members/two_factor.py
+msgid "Username or email"
+msgstr "Käyttäjänimi tai sähköposti"
 
 #: templates/common/two_factor/_wizard_actions.html:6
 msgid "Continue"
@@ -1703,7 +1707,7 @@ msgstr "Takaisin profiiliin"
 
 #: templates/common/two_factor/profile/disable.html:6
 msgid "Disable two-factor authentication"
-msgstr "Poista kaksivaiheinen tunnistautuminen käytöstä"
+msgstr "Poista 2FA käytöstä"
 
 #: templates/common/two_factor/profile/disable.html:7
 msgid "This removes the extra verification step from your account."
