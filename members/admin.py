@@ -3,6 +3,7 @@ from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Permission
 from django.db.models import Exists, OuterRef
 from django.db.models.functions import Lower
+from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from members.forms import (MemberCreationForm, AdminMemberUpdateForm,
@@ -75,8 +76,9 @@ class UserAdmin(auth_admin.UserAdmin):
     deactivate_user.short_description = "Deaktivera användare"
 
     def disable_two_factor(self, request, queryset):
-        deleted, _ = TOTPDevice.objects.filter(user__in=queryset).delete()
-        self.message_user(request, f"2FA disabled for {deleted} device(s).")
+        totp_deleted, _ = TOTPDevice.objects.filter(user__in=queryset).delete()
+        static_deleted, _ = StaticDevice.objects.filter(user__in=queryset).delete()
+        self.message_user(request, f"2FA disabled: {totp_deleted} TOTP device(s), {static_deleted} static device(s) removed.")
 
     disable_two_factor.short_description = "Inaktivera 2FA"
 
