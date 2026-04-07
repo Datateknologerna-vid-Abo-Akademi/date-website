@@ -433,7 +433,7 @@ requires-dist = [
     { name = "channels-redis" },
     { name = "daphne" },
     { name = "django", specifier = "~=5.2" },
-    { name = "django-admin-ordering", specifier = "==0.16.1" },
+    { name = "django-admin-ordering", specifier = "==0.20.0" },
     { name = "django-bootstrap3" },
     { name = "django-ckeditor-5" },
     { name = "django-cleanup" },
@@ -478,14 +478,14 @@ wheels = [
 
 [[package]]
 name = "django-admin-ordering"
-version = "0.16.1"
+version = "0.20.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django-js-asset" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3b/d8/15ff7c46f5fe417180b80f0ad8150facbf8f860b48a7d62c3f9a533d8d7b/django_admin_ordering-0.16.1.tar.gz", hash = "sha256:1ec37781e228cd43ec221d8a75972ea4e8d8b7af3f0e13a7e5950de41f70af39", size = 20184, upload-time = "2022-10-21T15:50:29.661Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8d/32/bb1b4c7d4b304445dd74d2fa5157cbc62d4749cbe6de540783b7ef709cb5/django_admin_ordering-0.20.0.tar.gz", hash = "sha256:3ee59d053a6acda02c3083d6e6fde1c9d26504f7aaea76eea59e8671d498c2dc", size = 18525, upload-time = "2024-11-26T13:49:20.947Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b3/9b/67ec426b42628c226aab66f023a842b8d32ea82b83ecaae44a67b50f4626/django_admin_ordering-0.16.1-py3-none-any.whl", hash = "sha256:b15aaacfef91a2fdf3028a807b65d29a58d5e422cd80b20bcb07b7709c95385c", size = 20185, upload-time = "2022-10-21T15:50:28.06Z" },
+    { url = "https://files.pythonhosted.org/packages/21/90/d0df2ffeff72b72236551954d8610056999f4346e750774164ad65715fd6/django_admin_ordering-0.20.0-py3-none-any.whl", hash = "sha256:3de409ac1b672a7b171943cd4a1c0dac5c1bc5347e4ad975d87df3a73b2a365a", size = 22277, upload-time = "2024-11-26T13:49:22.278Z" },
 ]
 
 [[package]]
