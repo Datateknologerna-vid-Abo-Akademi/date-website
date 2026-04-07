@@ -269,6 +269,15 @@ if USE_S3:
     AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
     AWS_QUERYSTRING_AUTH = True
     AWS_QUERYSTRING_EXPIRE = 3600
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
+    # Force path-style addressing so presigned URLs use the same host as the endpoint URL.
+    # Without this, boto3 generates virtual-hosted URLs (bucket.endpoint/key) which produce
+    # SignatureDoesNotMatch errors on DigitalOcean Spaces because the signed host differs
+    # from the path-style endpoint URL used everywhere else.
+    AWS_S3_ADDRESSING_STYLE = 'path'
+    # Set to False for providers that don't support per-object ACLs (e.g. Backblaze B2).
+    # DigitalOcean Spaces supports ACLs so this can remain True there.
+    S3_USE_ACL = env('S3_USE_ACL', bool, True)
 
     # s3 public media settings
     PRIVATE_MEDIA_LOCATION = env('PRIVATE_MEDIA_LOCATION')
@@ -278,6 +287,7 @@ if USE_S3:
     STORAGES["default"] = {  # TODO allow setting this to local
         "BACKEND": "core.storage_backends.PrivateMediaStorage",
         "OPTIONS": {
+            "endpoint_url": AWS_S3_ENDPOINT_URL,
             "bucket_name": AWS_STORAGE_BUCKET_NAME,
             "custom_domain": False,
             "querystring_auth": AWS_QUERYSTRING_AUTH,
@@ -288,6 +298,7 @@ if USE_S3:
     STORAGES["public_media"] = {
         "BACKEND": "core.storage_backends.PublicMediaStorage",
         "OPTIONS": {
+            "endpoint_url": AWS_S3_ENDPOINT_URL,
             "bucket_name": AWS_STORAGE_BUCKET_NAME,
             "custom_domain": False,
             "location": PUBLIC_MEDIA_LOCATION,
@@ -381,7 +392,10 @@ EXPERIMENTAL_FEATURES = []
 
 
 # CDN settings
-CDN_URL_TRANSFORMATIONS = [
-    ("fra1.digitaloceanspaces.com/albin-storage/", "albin-storage.cdn.datateknologerna.org/"),
-    ("albin-storage.fra1.digitaloceanspaces.com/", "albin-storage.cdn.datateknologerna.org/"),
-]
+# S3_CDN_ORIGIN: the origin hostname+bucket path as it appears in S3 URLs, e.g.
+#   DigitalOcean: "fra1.digitaloceanspaces.com/albin-storage/"
+#   Backblaze B2: "s3.us-west-004.backblazeb2.com/my-bucket/"
+# S3_CDN_DOMAIN: the CDN hostname to rewrite to, e.g. "assets.cdn.datateknologerna.org/"
+_cdn_origin = env('S3_CDN_ORIGIN', str, '')
+_cdn_domain = env('S3_CDN_DOMAIN', str, '')
+CDN_URL_TRANSFORMATIONS = [(_cdn_origin, _cdn_domain)] if _cdn_origin and _cdn_domain else []
