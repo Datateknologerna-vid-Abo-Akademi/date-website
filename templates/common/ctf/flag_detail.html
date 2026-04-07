@@ -3,11 +3,13 @@
 {% load i18n %}
 {% block title %}{{ ASSOCIATION_NAME_SHORT }} - CTF{% endblock %}
 
+{% block extra_head %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'ctf/css/style.css' %}">
+{% endblock %}
+
 {% block content %}
 
-<head>
-    <link rel="stylesheet" href="{% static 'ctf/css/style.css' %}">
-</head>
 
 <div class="container-md min-vh-100 container-margin-top">
     <div class="container-size text-center" style="max-width: 500px;">

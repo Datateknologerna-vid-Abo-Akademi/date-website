@@ -2,10 +2,8 @@
 {% load static %}
 {% load localized_time %}
 
-<head>
-    <link rel="stylesheet" href="{% static 'events/css/form.css' %}">
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-</head>
+<link rel="stylesheet" href="{% static 'events/css/form.css' %}">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
 <p>{% trans "Anmälan stängs" %} {{ event.sign_up_deadline|date:"j.n H:i" }}, {{ event.sign_up_deadline|localized_timeuntil }}</p>
 <small>{% trans "OBS!" %} {% trans "Anmälningen är bindande om inget annat meddelas." %} <br>

@@ -4,8 +4,8 @@
 {% load shared_filters %}
 {% block title %}{{ event.title }}{% endblock %}
 
-{% block content %}
-    <head>
+{% block extra_head %}
+    {{ block.super }}
         <link rel="stylesheet" href="{% static 'events/css/kk100.css' %}">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
@@ -26,7 +26,9 @@
             background:#030826 url("{% static 'core/images/twinklingstars.png' %}") repeat top center;
             }
         </style>
-    </head>
+{% endblock %}
+
+{% block content %}
     <div class="background-img">
         <div class="container-md min-vh-100">
         <div class="stars"></div>

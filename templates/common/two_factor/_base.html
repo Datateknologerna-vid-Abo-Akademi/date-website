@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block extra_head %}
+    {{ block.super }}
     <link rel="stylesheet" href="{% static 'members/style.css' %}">
     <link rel="stylesheet" href="{% static 'members/css/two-factor.css' %}">
     {% block extra_media %}{% endblock %}

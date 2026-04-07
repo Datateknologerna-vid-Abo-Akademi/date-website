@@ -3,13 +3,15 @@
 {% load i18n %}
 {% block title %}{{ event.title }}{% endblock %}
 
-{% block content %}
-
-    <head>
+{% block extra_head %}
+    {{ block.super }}
         <meta charset="UTF-8">
         <title>{% trans "I'm a teapot" %}</title>
         <link href="{% static 'core/css/error-view.css' %}" rel="stylesheet">
-    </head>
+{% endblock %}
+
+{% block content %}
+
 
     <body>
     <div class="container-soft">

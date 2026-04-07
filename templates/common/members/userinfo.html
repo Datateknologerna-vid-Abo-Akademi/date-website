@@ -5,6 +5,7 @@
 {% block title %}{% trans 'Member profile' %}{% endblock %}
 
 {% block extra_head %}
+    {{ block.super }}
     <link rel="stylesheet" href="{% static 'members/css/userinfo.css' %}" type="text/css">
 {% endblock %}
 

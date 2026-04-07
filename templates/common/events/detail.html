@@ -5,8 +5,8 @@
 {% load localized_time %}
 {% block title %}{{ event.title }}{% endblock %}
 
-{% block content %}
-    <head>
+{% block extra_head %}
+    {{ block.super }}
         {% if event.exclude_indexing and not event.in_past_event_list %}
         <meta name="robots" content="noindex">
         {% endif %}
@@ -28,7 +28,9 @@
                 }
             }
         </style>
-    </head>
+{% endblock %}
+
+{% block content %}
     <div class="background-img">
         <div class="container-md min-vh-100 p-1">
             <div class="container-size" style="margin-top: 13vh">

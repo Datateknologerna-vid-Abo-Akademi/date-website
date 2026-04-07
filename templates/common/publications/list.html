@@ -4,10 +4,12 @@
 
 {% block title %}{{ ASSOCIATION_NAME_SHORT }} - {% trans "Publications" %}{% endblock %}
 
-{% block content %}
-    <head>
+{% block extra_head %}
+    {{ block.super }}
         <link rel="stylesheet" href="{% static 'publications/css/list.css' %}">
-    </head>
+{% endblock %}
+
+{% block content %}
     <body>
     <div class="container-margin-top">
         <header class="text-center">

@@ -5,8 +5,8 @@
 {% load localized_time %}
 {% block title %}{{ event.title }}{% endblock %}
 
-{% block content %}
-    <head>
+{% block extra_head %}
+    {{ block.super }}
         <link rel="stylesheet" href="{% static 'events/css/arsfest.css' %}">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
@@ -33,7 +33,9 @@
                     z-index: 2;
                 }
         </style>
-    </head>
+{% endblock %}
+
+{% block content %}
     <div class="background-img">
         <div class="container-md min-vh-100 p-1">
             <div class="container-size">
