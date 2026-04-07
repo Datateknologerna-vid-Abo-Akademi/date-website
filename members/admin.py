@@ -36,8 +36,11 @@ class StaticDeviceInline(admin.TabularInline):
     verbose_name = "Backup token device"
     verbose_name_plural = "Backup token devices"
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('token_set')
+
     def token_count(self, obj):
-        return obj.token_set.count()
+        return len(obj.token_set.all())
 
     token_count.short_description = "Tokens remaining"
 

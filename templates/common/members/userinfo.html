@@ -62,8 +62,9 @@
                         </tr>
                         <!-- End of user information fields -->
                     </table>
-                    <button onclick="toggleEdit()" class="theme-button">Edit</button>
-                    <br>
+                    <div class="d-flex flex-column gap-2 mt-2">
+                        <button onclick="toggleEdit()" class="theme-button">{% trans 'Edit' %}</button>
+                    </div>
                 </div>
                 <div id="editForm"{% if not form.errors %} style="display:none;"{% endif %}>
                     <form method="post">
@@ -74,52 +75,65 @@
                         <table class="table table-striped">
                             <tr>
                                 <td>Förnamn:</td>
-                                <td>{{ form.first_name }}{% if form.first_name.errors %}<div class="error">{{ form.first_name.errors.as_text }}</div>{% endif %}</td>
+                                <td>{{ form.first_name }}{% if form.first_name.errors %}<div class="error">{{ form.first_name.errors }}</div>{% endif %}</td>
                             </tr>
                             <tr>
                                 <td>Efternamn:</td>
-                                <td>{{ form.last_name }}{% if form.last_name.errors %}<div class="error">{{ form.last_name.errors.as_text }}</div>{% endif %}</td>
+                                <td>{{ form.last_name }}{% if form.last_name.errors %}<div class="error">{{ form.last_name.errors }}</div>{% endif %}</td>
                             </tr>
                             <tr>
                                 <td>Telefonnummer:</td>
-                                <td>{{ form.phone }}{% if form.phone.errors %}<div class="error">{{ form.phone.errors.as_text }}</div>{% endif %}</td>
+                                <td>{{ form.phone }}{% if form.phone.errors %}<div class="error">{{ form.phone.errors }}</div>{% endif %}</td>
                             </tr>
                             <tr>
                                 <td>Adress:</td>
-                                <td>{{ form.address }}{% if form.address.errors %}<div class="error">{{ form.address.errors.as_text }}</div>{% endif %}</td>
+                                <td>{{ form.address }}{% if form.address.errors %}<div class="error">{{ form.address.errors }}</div>{% endif %}</td>
                             </tr>
                             <tr>
                                 <td>Zip kod:</td>
-                                <td>{{ form.zip_code }}{% if form.zip_code.errors %}<div class="error">{{ form.zip_code.errors.as_text }}</div>{% endif %}</td>
+                                <td>{{ form.zip_code }}{% if form.zip_code.errors %}<div class="error">{{ form.zip_code.errors }}</div>{% endif %}</td>
                             </tr>
                             <tr>
                                 <td>Stad:</td>
-                                <td>{{ form.city }}{% if form.city.errors %}<div class="error">{{ form.city.errors.as_text }}</div>{% endif %}</td>
+                                <td>{{ form.city }}{% if form.city.errors %}<div class="error">{{ form.city.errors }}</div>{% endif %}</td>
                             </tr>
                             <tr>
                                 <td>Land:</td>
-                                <td>{{ form.country }}{% if form.country.errors %}<div class="error">{{ form.country.errors.as_text }}</div>{% endif %}</td>
+                                <td>{{ form.country }}{% if form.country.errors %}<div class="error">{{ form.country.errors }}</div>{% endif %}</td>
                             </tr>
                             <tr>
                                 <td>Medlems typ:</td>
                                 <td>{{ user.get_str_membership_type }}</td>
                             </tr>
                         </table>
-                        <button type="submit" class="theme-button">Save</button>
-                        <button type="button" class="theme-button" onclick="toggleEdit()">Cancel</button>
+                        <div class="d-flex gap-2 mt-2">
+                            <button type="submit" class="theme-button">{% trans 'Save' %}</button>
+                            <button type="button" class="theme-button" onclick="toggleEdit()">{% trans 'Cancel' %}</button>
+                        </div>
                     </form>
-
                 </div>
 
-                <a href="{% url 'members:password_change' %}" class="theme-button">{% trans 'Password change' %}<i class="fas fa-chevron-right"></i></a>
-                {% if two_factor_enabled %}
-                    <a href="{% url 'two_factor:disable' %}" class="theme-button" style="margin-top: 5px;">{% trans 'Disable two-factor authentication' %}<i class="fas fa-chevron-right"></i></a>
-                    <a href="{% url 'two_factor:backup_tokens' %}" class="theme-button" style="margin-top: 5px;">{% trans 'Backup tokens' %}<i class="fas fa-chevron-right"></i></a>
-                {% else %}
-                    <a href="{% url 'two_factor:setup' %}" class="theme-button" style="margin-top: 5px;">{% trans 'Two-factor authentication' %}<i class="fas fa-chevron-right"></i></a>
-                {% endif %}
-                <a href="{% url 'members:functionary' %}" class="theme-button" style="margin-top: 5px;">Funktionärsposter <i class="fas fa-chevron-right"></i></a>
-                <p style="margin-top: 5px">För att ändra ditt användarnamn eller e-post, kontakta styrelsen på {{ ASSOCIATION_EMAIL }}</p>
+                <div class="row g-2 mt-1">
+                    <div class="col-6">
+                        <a href="{% url 'members:password_change' %}" class="theme-button d-block">{% trans 'Password change' %}<i class="fas fa-chevron-right"></i></a>
+                    </div>
+                    {% if two_factor_enabled %}
+                        <div class="col-6">
+                            <a href="{% url 'two_factor:disable' %}" class="theme-button d-block">{% trans 'Disable two-factor authentication' %}<i class="fas fa-chevron-right"></i></a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'two_factor:backup_tokens' %}" class="theme-button d-block">{% trans 'Backup tokens' %}<i class="fas fa-chevron-right"></i></a>
+                        </div>
+                    {% else %}
+                        <div class="col-6">
+                            <a href="{% url 'two_factor:setup' %}" class="theme-button d-block">{% trans 'Two-factor authentication' %}<i class="fas fa-chevron-right"></i></a>
+                        </div>
+                    {% endif %}
+                    <div class="col-6">
+                        <a href="{% url 'members:functionary' %}" class="theme-button d-block">Funktionärsposter <i class="fas fa-chevron-right"></i></a>
+                    </div>
+                </div>
+                <p class="mt-2">För att ändra ditt användarnamn eller e-post, kontakta styrelsen på {{ ASSOCIATION_EMAIL }}</p>
             </div>
         </div>
     </div>
