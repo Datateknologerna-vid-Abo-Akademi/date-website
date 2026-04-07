@@ -93,10 +93,12 @@ class UserAdmin(auth_admin.UserAdmin):
     deactivate_user.short_description = "Deaktivera användare"
 
     def disable_two_factor(self, request, queryset):
-        totp_deleted, _ = TOTPDevice.objects.filter(user__in=queryset).delete()
-        static_deleted, _ = StaticDevice.objects.filter(user__in=queryset).delete()
-        total = totp_deleted + static_deleted
-        self.message_user(request, f"2FA disabled for selected member(s): {total} device(s) removed.")
+        totp_qs = TOTPDevice.objects.filter(user__in=queryset)
+        static_qs = StaticDevice.objects.filter(user__in=queryset)
+        total = totp_qs.count() + static_qs.count()
+        totp_qs.delete()
+        static_qs.delete()
+        self.message_user(request, f"2FA inaktiverat för valda medlemmar: {total} enhet(er) borttagna.")
 
     disable_two_factor.short_description = "Inaktivera 2FA"
 

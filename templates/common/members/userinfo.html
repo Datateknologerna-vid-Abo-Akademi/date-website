@@ -23,7 +23,7 @@
                 <!-- User Information Section -->
                 <h3>{{ user.username }}</h3>
                 <div id="userInfo"{% if form.errors %} style="display:none;"{% endif %}>
-                    <table id="table" class="table table-striped">
+                    <table class="table table-striped">
                         <tr>
                             <td>Email:</td>
                             <td>{{ user.email }}</td>
@@ -71,41 +71,34 @@
                         {% if form.non_field_errors %}
                             <div class="error">{{ form.non_field_errors }}</div>
                         {% endif %}
-                        <table id="table" class="table table-striped">
-                            <tr>
-                                <td>Email:</td>
-                                <td>{{ form.email }}</td>
-                                {% if form.email.errors %}
-                                    <div class="error">{{ form.email.errors.as_text }}</div>
-                                {% endif %}
-                            </tr>
+                        <table class="table table-striped">
                             <tr>
                                 <td>Förnamn:</td>
-                                <td>{{ form.first_name }}</td>
+                                <td>{{ form.first_name }}{% if form.first_name.errors %}<div class="error">{{ form.first_name.errors.as_text }}</div>{% endif %}</td>
                             </tr>
                             <tr>
                                 <td>Efternamn:</td>
-                                <td>{{ form.last_name }}</td>
+                                <td>{{ form.last_name }}{% if form.last_name.errors %}<div class="error">{{ form.last_name.errors.as_text }}</div>{% endif %}</td>
                             </tr>
                             <tr>
                                 <td>Telefonnummer:</td>
-                                <td>{{ form.phone }}</td>
+                                <td>{{ form.phone }}{% if form.phone.errors %}<div class="error">{{ form.phone.errors.as_text }}</div>{% endif %}</td>
                             </tr>
                             <tr>
                                 <td>Adress:</td>
-                                <td>{{ form.address }}</td>
+                                <td>{{ form.address }}{% if form.address.errors %}<div class="error">{{ form.address.errors.as_text }}</div>{% endif %}</td>
                             </tr>
                             <tr>
                                 <td>Zip kod:</td>
-                                <td>{{ form.zip_code }}</td>
+                                <td>{{ form.zip_code }}{% if form.zip_code.errors %}<div class="error">{{ form.zip_code.errors.as_text }}</div>{% endif %}</td>
                             </tr>
                             <tr>
                                 <td>Stad:</td>
-                                <td>{{ form.city }}</td>
+                                <td>{{ form.city }}{% if form.city.errors %}<div class="error">{{ form.city.errors.as_text }}</div>{% endif %}</td>
                             </tr>
                             <tr>
                                 <td>Land:</td>
-                                <td>{{ form.country }}</td>
+                                <td>{{ form.country }}{% if form.country.errors %}<div class="error">{{ form.country.errors.as_text }}</div>{% endif %}</td>
                             </tr>
                             <tr>
                                 <td>Medlems typ:</td>
