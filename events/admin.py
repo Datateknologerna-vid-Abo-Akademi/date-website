@@ -32,7 +32,7 @@ class EventRegistrationFormInline(OrderableAdmin, EventTranslationInlineBase):
     fields = ('choice_number', 'name', 'type', 'required',
               'public_info', 'hide_for_avec', 'choice_list')
     can_delete = True
-    ordering_field = ('choice_number',)
+    ordering_field = 'choice_number'
     ordering = ['choice_number']
     ordering_field_hide_input = True
 
@@ -145,7 +145,10 @@ class EventAdmin(EventTranslationAdminBase):
         return TemplateResponse(request, 'events/list.html', context)
 
     class Media:
-        js = ('core/js/eventform.js',)
+        js = (
+            'admin/js/jquery.init.js',
+            'core/js/eventform.js',
+        )
 
     def get_attendee_count(self, obj):
         if obj.parent:
