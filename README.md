@@ -144,6 +144,26 @@ The stack brings up the `web` (Gunicorn), `asgi` (Daphne/Channels), `celery`, `d
 
 `docker-compose.prod.yml` also reads `ENABLE_LANGUAGE_FEATURES`, so multilingual public/admin behavior must be enabled explicitly in production if you want language switching outside Swedish.
 
+## Deployment (`k3s` / Helm)
+
+The Kubernetes deployment path uses the Helm chart in `charts/date-website/`. The current target is k3s on Hetzner Cloud with Traefik ingress, `hcloud-volumes` for PostgreSQL, and Backblaze B2 through the S3-compatible API for media and PostgreSQL backups.
+
+Use these values files together:
+
+```bash
+helm upgrade --install date-website charts/date-website \
+  --namespace date-website \
+  --create-namespace \
+  -f charts/date-website/values-hetzner.yaml \
+  -f charts/date-website/values-backblaze-b2.example.yaml \
+  --set secret.existingSecret=date-website-prod-secrets \
+  --set image.tag='<release-tag>'
+```
+
+Do not commit real production bucket names, app keys, or Django secrets in values files. Create a Kubernetes Secret first and pass it through `secret.existingSecret`.
+
+For the full operator notes, required Secret keys, B2 bucket model, backup CronJob behavior, and smoke checks, see [docs/dev/kubernetes.md](docs/dev/kubernetes.md).
+
 ## Updating PostgreSQL volumes
 
 Only use `update-postgres.sh` for **major** PostgreSQL version upgrades. The script wipes the `date_postgres_data` volume after creating a dump, so back up before running it.

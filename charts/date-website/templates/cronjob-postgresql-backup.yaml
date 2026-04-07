@@ -1,0 +1,130 @@
+{{- if .Values.backups.enabled -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "date-website.fullname" . }}-postgresql-backup
+  labels:
+    {{- include "date-website.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql-backup
+spec:
+  schedule: {{ .Values.backups.schedule | quote }}
+  concurrencyPolicy: {{ .Values.backups.concurrencyPolicy }}
+  successfulJobsHistoryLimit: {{ .Values.backups.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.backups.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .Values.backups.backoffLimit }}
+      {{- if .Values.backups.ttlSecondsAfterFinished }}
+      ttlSecondsAfterFinished: {{ .Values.backups.ttlSecondsAfterFinished }}
+      {{- end }}
+      template:
+        metadata:
+          labels:
+            {{- include "date-website.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: postgresql-backup
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: {{ include "date-website.serviceAccountName" . }}
+          automountServiceAccountToken: false
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backups.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backups.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.backups.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: postgresql-backup
+              image: "{{ .Values.backups.image.repository }}:{{ .Values.backups.image.tag }}"
+              imagePullPolicy: {{ .Values.backups.image.pullPolicy }}
+              command:
+                - /bin/sh
+                - -c
+              args:
+                - |
+                  set -eu
+                  timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+                  tmp="/backups/${PGDATABASE}-${timestamp}.sql"
+                  out="${tmp}.gz"
+                  pg_dump --no-owner --no-privileges --file="${tmp}"
+                  gzip "${tmp}"
+                  {{- if .Values.backups.objectStorage.enabled }}
+                  {{- if .Values.backups.objectStorage.installAwsCli }}
+                  if ! command -v aws >/dev/null 2>&1; then
+                    apk add --no-cache aws-cli
+                  fi
+                  {{- end }}
+                  object_name="$(basename "${out}")"
+                  object_prefix="${OBJECT_STORAGE_PREFIX%/}"
+                  if [ -n "${object_prefix}" ]; then
+                    object_name="${object_prefix}/${object_name}"
+                  fi
+                  aws s3 cp "${out}" "s3://${OBJECT_STORAGE_BUCKET}/${object_name}" --endpoint-url="${OBJECT_STORAGE_ENDPOINT_URL}"
+                  {{- end }}
+                  find /backups -type f -name "${PGDATABASE}-*.sql.gz" -mtime +{{ .Values.backups.retentionDays }} -delete
+                  ls -lh "${out}"
+              env:
+                - name: PGHOST
+                  value: {{ include "date-website.dbHost" . | quote }}
+                - name: PGPORT
+                  value: {{ include "date-website.dbPort" . | quote }}
+                - name: PGDATABASE
+                  value: {{ .Values.database.name | quote }}
+                - name: PGUSER
+                  value: {{ .Values.database.username | quote }}
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "date-website.secretName" . }}
+                      key: DB_PASSWORD
+                {{- if .Values.backups.objectStorage.enabled }}
+                - name: OBJECT_STORAGE_ENDPOINT_URL
+                  value: {{ required "backups.objectStorage.endpointUrl is required when backups.objectStorage.enabled=true" .Values.backups.objectStorage.endpointUrl | quote }}
+                - name: OBJECT_STORAGE_BUCKET
+                  value: {{ required "backups.objectStorage.bucketName is required when backups.objectStorage.enabled=true" .Values.backups.objectStorage.bucketName | quote }}
+                - name: OBJECT_STORAGE_PREFIX
+                  value: {{ .Values.backups.objectStorage.prefix | quote }}
+                - name: AWS_DEFAULT_REGION
+                  value: {{ required "backups.objectStorage.regionName or media.s3.regionName is required when backups.objectStorage.enabled=true" (coalesce .Values.backups.objectStorage.regionName .Values.media.s3.regionName) | quote }}
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "date-website.secretName" . }}
+                      key: OBJECT_STORAGE_ACCESS_KEY_ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "date-website.secretName" . }}
+                      key: OBJECT_STORAGE_SECRET_ACCESS_KEY
+                - name: AWS_EC2_METADATA_DISABLED
+                  value: "true"
+                {{- end }}
+              volumeMounts:
+                - name: backups
+                  mountPath: /backups
+              {{- with .Values.securityContext }}
+              securityContext:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with .Values.backups.resources }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+          volumes:
+            - name: backups
+              {{- if .Values.backups.persistence.enabled }}
+              persistentVolumeClaim:
+                claimName: {{ include "date-website.backupsPvcName" . }}
+              {{- else }}
+              emptyDir: {}
+              {{- end }}
+{{- end }}

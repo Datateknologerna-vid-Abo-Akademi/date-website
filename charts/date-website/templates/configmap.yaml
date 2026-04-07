@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "date-website.fullname" . }}
+  labels:
+    {{- include "date-website.labels" . | nindent 4 }}
+data:
+  PROJECT_NAME: {{ .Values.django.projectName | quote }}
+  DEBUG: {{ .Values.django.debug | quote }}
+  DEVELOP: {{ .Values.django.develop | quote }}
+  ENABLE_LANGUAGE_FEATURES: {{ .Values.django.enableLanguageFeatures | quote }}
+  ALLOWED_HOSTS: {{ .Values.django.allowedHosts | toJson | quote }}
+  ALLOWED_ORIGINS: {{ .Values.django.allowedOrigins | toJson | quote }}
+  USE_X_FORWARDED_HOST: {{ .Values.django.useXForwardedHost | quote }}
+  TRUST_X_FORWARDED_PROTO: {{ .Values.django.trustXForwardedProto | quote }}
+  EXTRA_STAFF_GROUPS: {{ .Values.django.extraStaffGroups | toJson | quote }}
+  ALUMNI_SETTINGS: {{ .Values.django.alumniSettings | quote }}
+  DB_DATABASE: {{ .Values.database.name | quote }}
+  DB_USERNAME: {{ .Values.database.username | quote }}
+  DB_HOST: {{ include "date-website.dbHost" . | quote }}
+  DB_PORT: {{ include "date-website.dbPort" . | quote }}
+  REDIS_SERVER: {{ include "date-website.redisUrl" . | quote }}
+  CELERY_BROKER_URL: {{ printf "%s/0" (include "date-website.redisUrl" .) | quote }}
+  CELERY_RESULT_BACKEND: {{ printf "%s/0" (include "date-website.redisUrl" .) | quote }}
+  USE_S3: {{ .Values.media.s3.enabled | quote }}
+  AWS_S3_ENDPOINT_URL: {{ .Values.media.s3.endpointUrl | quote }}
+  AWS_S3_REGION_NAME: {{ .Values.media.s3.regionName | quote }}
+  AWS_S3_SIGNATURE_VERSION: {{ .Values.media.s3.signatureVersion | quote }}
+  AWS_S3_ADDRESSING_STYLE: {{ .Values.media.s3.addressingStyle | quote }}
+  AWS_STORAGE_BUCKET_NAME: {{ .Values.media.s3.bucketName | quote }}
+  AWS_PRIVATE_STORAGE_BUCKET_NAME: {{ default .Values.media.s3.bucketName .Values.media.s3.privateBucketName | quote }}
+  AWS_PUBLIC_STORAGE_BUCKET_NAME: {{ default .Values.media.s3.bucketName .Values.media.s3.publicBucketName | quote }}
+  PRIVATE_MEDIA_LOCATION: {{ .Values.media.s3.privateLocation | quote }}
+  PUBLIC_MEDIA_LOCATION: {{ .Values.media.s3.publicLocation | quote }}
+  EMAIL_HOST_RECEIVER: {{ .Values.email.hostReceiver | quote }}
+  DEFAULT_FROM_EMAIL: {{ .Values.email.defaultFrom | quote }}
+  EMAIL_HOST: {{ .Values.email.host | quote }}
+  CF_TURNSTILE_SITE_KEY: {{ .Values.django.turnstile.siteKey | quote }}
+  {{- range $key, $value := .Values.extraEnv }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}

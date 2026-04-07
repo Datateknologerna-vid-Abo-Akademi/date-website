@@ -1,0 +1,74 @@
+ingress:
+  className: traefik
+
+web:
+  replicaCount: 1
+  migrateOnStartup: true
+  resources:
+    requests:
+      cpu: 150m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+asgi:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+celery:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 150m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+migrations:
+  job:
+    enabled: false
+
+postgresql:
+  persistence:
+    storageClass: hcloud-volumes
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 2Gi
+
+backups:
+  enabled: true
+  schedule: "17 2 * * *"
+  retentionDays: 14
+  persistence:
+    storageClass: hcloud-volumes
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+redis:
+  persistence:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+media:
+  persistence:
+    storageClass: hcloud-volumes
+    size: 10Gi

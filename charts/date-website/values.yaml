@@ -1,0 +1,195 @@
+image:
+  repository: ghcr.io/datateknologerna-vid-abo-akademi/date-website
+  tag: master
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podSecurityContext: {}
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+secret:
+  existingSecret: ""
+
+django:
+  projectName: date
+  secretKey: change-me
+  debug: false
+  develop: false
+  enableLanguageFeatures: false
+  allowedHosts:
+    - datateknologerna.org
+  allowedOrigins:
+    - https://datateknologerna.org
+  useXForwardedHost: true
+  trustXForwardedProto: true
+  extraStaffGroups: []
+  alumniSettings: "{}"
+  turnstile:
+    siteKey: ""
+    secretKey: ""
+
+database:
+  name: postgres
+  username: postgres
+  password: change-me
+  external:
+    host: ""
+    port: 5432
+
+postgresql:
+  enabled: true
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  image:
+    repository: postgres
+    tag: "16-alpine"
+    pullPolicy: IfNotPresent
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+  resources: {}
+
+backups:
+  enabled: false
+  schedule: "17 2 * * *"
+  retentionDays: 14
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 86400
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  image:
+    repository: postgres
+    tag: "16-alpine"
+    pullPolicy: IfNotPresent
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+  objectStorage:
+    enabled: false
+    endpointUrl: ""
+    regionName: ""
+    bucketName: ""
+    prefix: "date-website/postgresql"
+    accessKeyId: ""
+    secretAccessKey: ""
+    installAwsCli: true
+  resources: {}
+
+redis:
+  enabled: true
+  externalUrl: ""
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  image:
+    repository: valkey/valkey
+    tag: "7.2-alpine"
+    pullPolicy: IfNotPresent
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+  resources: {}
+
+media:
+  s3:
+    enabled: false
+    endpointUrl: ""
+    regionName: ""
+    signatureVersion: "s3v4"
+    addressingStyle: "path"
+    accessKeyId: ""
+    secretAccessKey: ""
+    bucketName: ""
+    privateBucketName: ""
+    publicBucketName: ""
+    privateLocation: "date/media"
+    publicLocation: "date/public"
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 5Gi
+
+email:
+  hostReceiver: info@datateknologerna.org
+  defaultFrom: admin@datateknologerna.org
+  host: smtp.gmail.com
+  username: ""
+  password: ""
+
+web:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8000
+  gunicorn:
+    workers: 3
+    maxRequests: 1000
+    maxRequestsJitter: 100
+  migrateOnStartup: true
+  collectstaticOnStartup: true
+  resources: {}
+
+asgi:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8000
+  resources: {}
+
+celery:
+  replicaCount: 1
+  concurrency: 2
+  logLevel: info
+  resources: {}
+
+migrations:
+  job:
+    enabled: false
+    hook: post-install,post-upgrade
+    hookDeletePolicy: before-hook-creation,hook-succeeded
+    backoffLimit: 3
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations: {}
+  hosts:
+    - host: datateknologerna.org
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+extraEnv: {}

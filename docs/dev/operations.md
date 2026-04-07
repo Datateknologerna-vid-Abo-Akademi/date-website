@@ -112,6 +112,8 @@ Behavior:
 
 Use this before risky schema or infrastructure work, and especially before any major PostgreSQL version upgrade.
 
+For Kubernetes deployments, the Helm chart provides a PostgreSQL backup CronJob that can upload compressed dumps to Backblaze B2. See [Kubernetes and k3s Deployment Notes](kubernetes.md) for the k3s backup workflow.
+
 ### `update-postgres.sh`
 
 Use this only for major PostgreSQL version upgrades.

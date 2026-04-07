@@ -22,6 +22,18 @@ def localized_reverse(name, language_code, *args, **kwargs):
         return reverse(name, args=args or None, kwargs=kwargs or None)
 
 
+class HealthCheckTests(TestCase):
+    def test_healthz_does_not_require_dependencies(self):
+        response = self.client.get(reverse("healthz"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ok"})
+
+    def test_readyz_checks_runtime_dependencies(self):
+        response = self.client.get(reverse("readyz"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ok"})
+
+
 class AuditLogTestCase(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_superuser(

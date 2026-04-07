@@ -48,6 +48,7 @@ Use the sections below to jump to either editor-facing instructions or implement
 - [Members Development Notes](dev/members.md)
 - [News Development Notes](dev/news.md)
 - [Operations & Maintenance Notes](dev/operations.md)
+- [Kubernetes and k3s Deployment Notes](dev/kubernetes.md)
 - [Polls Development Notes](dev/polls.md)
 - [Publications Development Notes](dev/publications.md)
 - [Social Development Notes](dev/social.md)

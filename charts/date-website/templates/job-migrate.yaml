@@ -1,0 +1,60 @@
+{{- if .Values.migrations.job.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "date-website.fullname" . }}-migrate
+  labels:
+    {{- include "date-website.labels" . | nindent 4 }}
+    app.kubernetes.io/component: migrate
+  annotations:
+    "helm.sh/hook": {{ .Values.migrations.job.hook | quote }}
+    "helm.sh/hook-delete-policy": {{ .Values.migrations.job.hookDeletePolicy | quote }}
+spec:
+  backoffLimit: {{ .Values.migrations.job.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        {{- include "date-website.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: migrate
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "date-website.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+              set -e
+              ./wait-for-postgres.sh "${DB_HOST}:${DB_PORT}"
+              python /code/manage.py migrate --noinput
+          envFrom:
+            - configMapRef:
+                name: {{ include "date-website.fullname" . }}
+            - secretRef:
+                name: {{ include "date-website.secretName" . }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}

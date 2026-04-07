@@ -1,0 +1,26 @@
+# Example values for Backblaze B2's S3-compatible API.
+# Override endpointUrl/regionName/bucket names for your B2 region and buckets.
+
+media:
+  s3:
+    enabled: true
+    endpointUrl: "https://s3.us-west-000.backblazeb2.com"
+    regionName: "us-west-000"
+    signatureVersion: "s3v4"
+    addressingStyle: "path"
+    bucketName: "date-website-media"
+    privateBucketName: "date-website-private"
+    publicBucketName: "date-website-public"
+    privateLocation: "date/media"
+    publicLocation: "date/public"
+
+backups:
+  persistence:
+    enabled: false
+  objectStorage:
+    enabled: true
+    endpointUrl: "https://s3.us-west-000.backblazeb2.com"
+    regionName: "us-west-000"
+    bucketName: "date-website-backups"
+    prefix: "date-website/postgresql"
+    installAwsCli: true

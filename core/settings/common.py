@@ -51,6 +51,10 @@ if not DEVELOP:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
 
+USE_X_FORWARDED_HOST = env('USE_X_FORWARDED_HOST', bool, False)
+if env('TRUST_X_FORWARDED_PROTO', bool, False):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 def get_installed_apps(proj_apps):
     return [
@@ -120,11 +124,16 @@ WSGI_APPLICATION = 'core.wsgi.application'
 ASGI_APPLICATION = 'core.routing.application'
 
 
+REDIS_SERVER = env("REDIS_SERVER", str, "redis://redis:6379")
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", str, "redis://redis:6379/0")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", str, CELERY_BROKER_URL)
+
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('redis', 6379)],
+            "hosts": [REDIS_SERVER],
         },
     },
 }
@@ -160,7 +169,7 @@ DUMMY_CACHE = {
 REDIS_CACHE = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": env("REDIS_SERVER", str, "redis://redis:6379"),
+        "LOCATION": REDIS_SERVER,
     },
 }
 
@@ -267,31 +276,49 @@ if USE_S3:
     AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
+    AWS_PRIVATE_STORAGE_BUCKET_NAME = env('AWS_PRIVATE_STORAGE_BUCKET_NAME', str, '') or AWS_STORAGE_BUCKET_NAME
+    AWS_PUBLIC_STORAGE_BUCKET_NAME = env('AWS_PUBLIC_STORAGE_BUCKET_NAME', str, '') or AWS_STORAGE_BUCKET_NAME
+    AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME', str, None)
+    AWS_S3_SIGNATURE_VERSION = env('AWS_S3_SIGNATURE_VERSION', str, None)
+    AWS_S3_ADDRESSING_STYLE = env('AWS_S3_ADDRESSING_STYLE', str, None)
     AWS_QUERYSTRING_AUTH = True
     AWS_QUERYSTRING_EXPIRE = 3600
 
     # s3 public media settings
     PRIVATE_MEDIA_LOCATION = env('PRIVATE_MEDIA_LOCATION')
     PUBLIC_MEDIA_LOCATION = env('PUBLIC_MEDIA_LOCATION')
-    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/'
+    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_PRIVATE_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/'
+
+    def get_s3_storage_options(bucket_name, location, querystring_auth):
+        options = {
+            "bucket_name": bucket_name,
+            "custom_domain": False,
+            "location": location,
+            "querystring_auth": querystring_auth,
+        }
+        if AWS_S3_REGION_NAME:
+            options["region_name"] = AWS_S3_REGION_NAME
+        if AWS_S3_SIGNATURE_VERSION:
+            options["signature_version"] = AWS_S3_SIGNATURE_VERSION
+        if AWS_S3_ADDRESSING_STYLE:
+            options["addressing_style"] = AWS_S3_ADDRESSING_STYLE
+        return options
 
     STORAGES["default"] = {  # TODO allow setting this to local
         "BACKEND": "core.storage_backends.PrivateMediaStorage",
-        "OPTIONS": {
-            "bucket_name": AWS_STORAGE_BUCKET_NAME,
-            "custom_domain": False,
-            "querystring_auth": AWS_QUERYSTRING_AUTH,
-            "querystring_expire": AWS_QUERYSTRING_EXPIRE,
-            "location": PRIVATE_MEDIA_LOCATION,
-        }
+        "OPTIONS": get_s3_storage_options(
+            AWS_PRIVATE_STORAGE_BUCKET_NAME,
+            PRIVATE_MEDIA_LOCATION,
+            AWS_QUERYSTRING_AUTH,
+        ) | {"querystring_expire": AWS_QUERYSTRING_EXPIRE},
     }
     STORAGES["public_media"] = {
         "BACKEND": "core.storage_backends.PublicMediaStorage",
-        "OPTIONS": {
-            "bucket_name": AWS_STORAGE_BUCKET_NAME,
-            "custom_domain": False,
-            "location": PUBLIC_MEDIA_LOCATION,
-        }
+        "OPTIONS": get_s3_storage_options(
+            AWS_PUBLIC_STORAGE_BUCKET_NAME,
+            PUBLIC_MEDIA_LOCATION,
+            False,
+        ),
     }
 
 else:
@@ -322,10 +349,6 @@ EMAIL_PORT = 587
 
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', str, '')
 EMAIL_HOST_RECEIVER = env('EMAIL_HOST_RECEIVER', str, '')
-
-# Celery Configuration
-CELERY_BROKER_URL = 'redis://redis:6379/0'
-CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 30000  # large value for large events
 

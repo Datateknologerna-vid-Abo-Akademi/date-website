@@ -4,6 +4,9 @@ from itertools import chain
 from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
+from django.core.cache import cache
+from django.db import connection
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -14,6 +17,25 @@ from ads.models import AdUrl
 from events.models import Event
 from news.models import Post
 from social.models import IgUrl
+
+
+def healthz(request):
+    return JsonResponse({"status": "ok"})
+
+
+def readyz(request):
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+
+        cache_key = "readiness_check"
+        cache.set(cache_key, "ok", 10)
+        if cache.get(cache_key) != "ok":
+            return JsonResponse({"status": "unhealthy"}, status=503)
+    except Exception:
+        return JsonResponse({"status": "unhealthy"}, status=503)
+
+    return JsonResponse({"status": "ok"})
 
 
 def get_homepage_template_name():
