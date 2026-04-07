@@ -18,11 +18,28 @@ admin.site.register(Subscription)
 class TOTPDeviceInline(admin.TabularInline):
     model = TOTPDevice
     extra = 0
+    max_num = 0
     can_delete = True
-    fields = ('name', 'confirmed', 'created_at', 'last_used_at')
-    readonly_fields = ('created_at', 'last_used_at')
+    fields = ('name', 'created_at', 'last_used_at')
+    readonly_fields = ('name', 'created_at', 'last_used_at')
     verbose_name = "2FA device"
     verbose_name_plural = "2FA devices"
+
+
+class StaticDeviceInline(admin.TabularInline):
+    model = StaticDevice
+    extra = 0
+    max_num = 0
+    can_delete = True
+    fields = ('name', 'token_count')
+    readonly_fields = ('name', 'token_count')
+    verbose_name = "Backup token device"
+    verbose_name_plural = "Backup token devices"
+
+    def token_count(self, obj):
+        return obj.token_set.count()
+
+    token_count.short_description = "Tokens remaining"
 
 FRESHMAN = 1
 ORDINARY_MEMBER = 2
@@ -46,7 +63,7 @@ class UserAdmin(auth_admin.UserAdmin):
     search_fields = ('first_name', 'last_name', 'email')
     ordering = [Lower('username'), ]
     readonly_fields = ('last_login', 'has_two_factor')
-    inlines = [TOTPDeviceInline]
+    inlines = [TOTPDeviceInline, StaticDeviceInline]
     actions = ['activate_user', 'deactivate_user', 'disable_two_factor']
 
     def is_staff(self, obj):
@@ -78,7 +95,8 @@ class UserAdmin(auth_admin.UserAdmin):
     def disable_two_factor(self, request, queryset):
         totp_deleted, _ = TOTPDevice.objects.filter(user__in=queryset).delete()
         static_deleted, _ = StaticDevice.objects.filter(user__in=queryset).delete()
-        self.message_user(request, f"2FA disabled: {totp_deleted} TOTP device(s), {static_deleted} static device(s) removed.")
+        total = totp_deleted + static_deleted
+        self.message_user(request, f"2FA disabled for selected member(s): {total} device(s) removed.")
 
     disable_two_factor.short_description = "Inaktivera 2FA"
 
