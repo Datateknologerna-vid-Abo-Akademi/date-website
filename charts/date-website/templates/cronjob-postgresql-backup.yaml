@@ -111,7 +111,7 @@ spec:
               volumeMounts:
                 - name: backups
                   mountPath: /backups
-              {{- with .Values.securityContext }}
+              {{- with .Values.backups.securityContext }}
               securityContext:
                 {{- toYaml . | nindent 16 }}
               {{- end }}

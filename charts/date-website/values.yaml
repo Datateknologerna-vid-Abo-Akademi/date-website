@@ -100,6 +100,13 @@ backups:
     accessKeyId: ""
     secretAccessKey: ""
     installAwsCli: true
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    runAsUser: 0
+    runAsGroup: 0
   resources: {}
 
 redis:

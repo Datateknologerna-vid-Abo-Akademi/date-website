@@ -183,7 +183,9 @@ Then inspect the job logs and confirm the object exists in B2:
 kubectl -n date-website logs job/<manual-backup-job-name>
 ```
 
-The backup CronJob currently installs `aws-cli` at runtime when object-storage uploads are enabled. This is acceptable for a first deployment, but a pinned backup image containing both `pg_dump` and the AWS CLI is a better long-term option.
+The backup CronJob currently installs `aws-cli` at runtime when object-storage uploads are enabled. Because package installation requires root, the backup container has its own `backups.securityContext` and defaults to `runAsUser: 0`; this does not change the web, ASGI, Celery, PostgreSQL, or Redis containers. A pinned backup image containing both `pg_dump` and the AWS CLI is a better long-term option.
+
+`retentionDays` prunes old dump files only from the local `/backups` directory. When the B2 override uses `backups.persistence.enabled: false`, this local retention is only for the temporary `emptyDir`; remote B2 objects are not pruned by the CronJob. Configure a B2 bucket lifecycle rule for `date-website/postgresql/` if remote backup retention should be automatic.
 
 ## Operational Notes
 

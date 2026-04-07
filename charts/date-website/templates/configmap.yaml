@@ -23,15 +23,15 @@ data:
   CELERY_BROKER_URL: {{ printf "%s/0" (include "date-website.redisUrl" .) | quote }}
   CELERY_RESULT_BACKEND: {{ printf "%s/0" (include "date-website.redisUrl" .) | quote }}
   USE_S3: {{ .Values.media.s3.enabled | quote }}
-  AWS_S3_ENDPOINT_URL: {{ .Values.media.s3.endpointUrl | quote }}
-  AWS_S3_REGION_NAME: {{ .Values.media.s3.regionName | quote }}
+  AWS_S3_ENDPOINT_URL: {{ if .Values.media.s3.enabled }}{{ required "media.s3.endpointUrl is required when media.s3.enabled=true" .Values.media.s3.endpointUrl | quote }}{{ else }}{{ .Values.media.s3.endpointUrl | quote }}{{ end }}
+  AWS_S3_REGION_NAME: {{ if .Values.media.s3.enabled }}{{ required "media.s3.regionName is required when media.s3.enabled=true" .Values.media.s3.regionName | quote }}{{ else }}{{ .Values.media.s3.regionName | quote }}{{ end }}
   AWS_S3_SIGNATURE_VERSION: {{ .Values.media.s3.signatureVersion | quote }}
   AWS_S3_ADDRESSING_STYLE: {{ .Values.media.s3.addressingStyle | quote }}
-  AWS_STORAGE_BUCKET_NAME: {{ .Values.media.s3.bucketName | quote }}
-  AWS_PRIVATE_STORAGE_BUCKET_NAME: {{ default .Values.media.s3.bucketName .Values.media.s3.privateBucketName | quote }}
-  AWS_PUBLIC_STORAGE_BUCKET_NAME: {{ default .Values.media.s3.bucketName .Values.media.s3.publicBucketName | quote }}
-  PRIVATE_MEDIA_LOCATION: {{ .Values.media.s3.privateLocation | quote }}
-  PUBLIC_MEDIA_LOCATION: {{ .Values.media.s3.publicLocation | quote }}
+  AWS_STORAGE_BUCKET_NAME: {{ if .Values.media.s3.enabled }}{{ required "media.s3.bucketName is required when media.s3.enabled=true" .Values.media.s3.bucketName | quote }}{{ else }}{{ .Values.media.s3.bucketName | quote }}{{ end }}
+  AWS_PRIVATE_STORAGE_BUCKET_NAME: {{ if .Values.media.s3.enabled }}{{ default (required "media.s3.bucketName is required when media.s3.enabled=true" .Values.media.s3.bucketName) .Values.media.s3.privateBucketName | quote }}{{ else }}{{ default .Values.media.s3.bucketName .Values.media.s3.privateBucketName | quote }}{{ end }}
+  AWS_PUBLIC_STORAGE_BUCKET_NAME: {{ if .Values.media.s3.enabled }}{{ default (required "media.s3.bucketName is required when media.s3.enabled=true" .Values.media.s3.bucketName) .Values.media.s3.publicBucketName | quote }}{{ else }}{{ default .Values.media.s3.bucketName .Values.media.s3.publicBucketName | quote }}{{ end }}
+  PRIVATE_MEDIA_LOCATION: {{ if .Values.media.s3.enabled }}{{ required "media.s3.privateLocation is required when media.s3.enabled=true" .Values.media.s3.privateLocation | quote }}{{ else }}{{ .Values.media.s3.privateLocation | quote }}{{ end }}
+  PUBLIC_MEDIA_LOCATION: {{ if .Values.media.s3.enabled }}{{ required "media.s3.publicLocation is required when media.s3.enabled=true" .Values.media.s3.publicLocation | quote }}{{ else }}{{ .Values.media.s3.publicLocation | quote }}{{ end }}
   EMAIL_HOST_RECEIVER: {{ .Values.email.hostReceiver | quote }}
   DEFAULT_FROM_EMAIL: {{ .Values.email.defaultFrom | quote }}
   EMAIL_HOST: {{ .Values.email.host | quote }}

@@ -19,6 +19,10 @@ from news.models import Post
 from social.models import IgUrl
 
 
+def should_check_cache_readiness():
+    return settings.CACHES["default"]["BACKEND"] != "django.core.cache.backends.dummy.DummyCache"
+
+
 def healthz(request):
     return JsonResponse({"status": "ok"})
 
@@ -28,10 +32,11 @@ def readyz(request):
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
 
-        cache_key = "readiness_check"
-        cache.set(cache_key, "ok", 10)
-        if cache.get(cache_key) != "ok":
-            return JsonResponse({"status": "unhealthy"}, status=503)
+        if should_check_cache_readiness():
+            cache_key = "readiness_check"
+            cache.set(cache_key, "ok", 10)
+            if cache.get(cache_key) != "ok":
+                return JsonResponse({"status": "unhealthy"}, status=503)
     except Exception:
         return JsonResponse({"status": "unhealthy"}, status=503)
 
