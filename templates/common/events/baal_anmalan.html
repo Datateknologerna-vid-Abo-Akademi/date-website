@@ -5,12 +5,14 @@
 {% load shared_filters %}
 {% block title %}{{ event.title }}{% endblock %}
 
-{% block content %}
-    <head>
+{% block extra_head %}
+    {{ block.super }}
         <link rel="stylesheet" href="{% static 'events/css/baal.css' %}">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
-    </head>
+{% endblock %}
+
+{% block content %}
     <div class="container-md min-vh-100 p-1">
         <div class="container-size">
             {% if event.sign_up %}

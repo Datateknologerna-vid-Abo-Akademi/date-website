@@ -3,10 +3,11 @@
 {% load i18n %}
 {% load static %}
 {% block title %}{% trans 'Registration completed' %}{% endblock %}
+{% block extra_head %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'members/style.css' %}">
+{% endblock %}
 {% block content %}
-    <head>
-        <link rel="stylesheet" href="{% static 'members/style.css' %}">
-    </head>
     <div style="padding-top: 1rem;">
         <div class="center-box">
           <p>

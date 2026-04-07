@@ -6,13 +6,15 @@
 Verifiera din e-postadress
 {% endblock %}
 
+{% block extra_head %}
+    {{ block.super }}
+        <link rel="stylesheet" href="{% static 'members/style.css' %}">
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+{% endblock %}
+
 {% block content %}
 
 
-    <head>
-        <link rel="stylesheet" href="{% static 'members/style.css' %}">
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    </head>
     <div class="signup-page">
         <div class="members-form big">
           <h1>Verifiera din E-Postaddress</h1>

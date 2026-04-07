@@ -3,11 +3,13 @@
 {% load i18n %}
 {% block title %}{{page.title}}{% endblock %}
 
+{% block extra_head %}
+    {{ block.super }}
+        <link rel="stylesheet" href="{% static 'staticpages/css/staticpage.css' %}" type="text/css">
+{% endblock %}
+
 {% block content %}
 
-    <head>
-        <link rel="stylesheet" href="{% static 'staticpages/css/staticpage.css' %}" type="text/css">
-    </head>
 
     <div class="container-md min-vh-100 container-margin-top p-1">
         <div class="container-size break-words">

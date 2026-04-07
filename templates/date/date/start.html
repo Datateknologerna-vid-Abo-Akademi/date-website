@@ -1,10 +1,9 @@
 {% extends 'core/base.html' %}
 {% load cache %}
 {% load i18n %}
-{% block content %}
-    {% load static %}
-{% cache 300 main_page_fixed LANGUAGE_CODE %}
-    <head>
+{% load static %}
+{% block extra_head %}
+    {{ block.super }}
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -14,7 +13,11 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
         <script src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/157670/jquery.jcarousellite.min.js"></script>
         <script src="{% static 'date/js/vanilla-calendar.min.js' %}"></script>
-    </head>
+{% endblock %}
+
+{% block content %}
+    {% load static %}
+{% cache 300 main_page_fixed LANGUAGE_CODE %}
 
     <div class="container-fluid p-2 min-vh-100">
         {% include "date/components/header.html" %}

@@ -6,10 +6,12 @@
 {% load bootstrap3 %}
 {% block title %}{% trans 'Dokument arkiv' %}{% endblock %}
 
-{% block content %}
-<head>
+{% block extra_head %}
+    {{ block.super }}
     <link rel="stylesheet" href="{% static 'archive/css/document.css' %}" type="text/css">
-</head>
+{% endblock %}
+
+{% block content %}
     <div class="container-md min-vh-100 container-margin-top p-1">
         <div class="container-size">
             <div class="content">

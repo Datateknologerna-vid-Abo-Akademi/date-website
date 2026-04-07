@@ -2,11 +2,13 @@
 {% load shared_filters %}
 {% load static %}
 {% load i18n %}
-    {% block content %}
-    <head>
+{% block extra_head %}
+    {{ block.super }}
         <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
         <link rel="stylesheet" href="{% static 'archive/css/detailed.css' %}" type="text/css">
-    </head>
+{% endblock %}
+
+    {% block content %}
 
 
     <div class="container-md min-vh-100 container-margin-top p-1">
