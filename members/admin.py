@@ -13,6 +13,16 @@ from members.models import (Member, Subscription,
 admin.site.register(Permission)
 admin.site.register(Subscription)
 
+
+class TOTPDeviceInline(admin.TabularInline):
+    model = TOTPDevice
+    extra = 0
+    can_delete = True
+    fields = ('name', 'confirmed', 'created_at', 'last_used_at')
+    readonly_fields = ('created_at', 'last_used_at')
+    verbose_name = "2FA device"
+    verbose_name_plural = "2FA devices"
+
 FRESHMAN = 1
 ORDINARY_MEMBER = 2
 SUPPORTING_MEMBER = 3
@@ -35,7 +45,8 @@ class UserAdmin(auth_admin.UserAdmin):
     search_fields = ('first_name', 'last_name', 'email')
     ordering = [Lower('username'), ]
     readonly_fields = ('last_login', 'has_two_factor')
-    actions = ['activate_user', 'deactivate_user']
+    inlines = [TOTPDeviceInline]
+    actions = ['activate_user', 'deactivate_user', 'disable_two_factor']
 
     def is_staff(self, obj):
         return obj.is_staff
@@ -62,6 +73,12 @@ class UserAdmin(auth_admin.UserAdmin):
         queryset.update(is_active=False)
 
     deactivate_user.short_description = "Deaktivera användare"
+
+    def disable_two_factor(self, request, queryset):
+        deleted, _ = TOTPDevice.objects.filter(user__in=queryset).delete()
+        self.message_user(request, f"2FA disabled for {deleted} device(s).")
+
+    disable_two_factor.short_description = "Inaktivera 2FA"
 
     def sorter_username(self, queryset):
         return Member.objects.all().order_by(Lower('username')).values_list('username', flat=True)
