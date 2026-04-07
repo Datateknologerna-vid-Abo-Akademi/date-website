@@ -43,6 +43,9 @@ class StaticUrl(models.Model):
     dropdown_element = models.PositiveSmallIntegerField(_('#'), blank=True)
     logged_in_only = models.BooleanField(_('Visa endast åt inloggade användare'), default=False)
 
+    class Meta:
+        ordering = ['dropdown_element']
+
     def __str__(self):
         return self.title
 

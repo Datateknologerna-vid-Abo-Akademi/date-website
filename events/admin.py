@@ -145,7 +145,10 @@ class EventAdmin(EventTranslationAdminBase):
         return TemplateResponse(request, 'events/list.html', context)
 
     class Media:
-        js = ('core/js/eventform.js',)
+        js = (
+            'admin/js/jquery.init.js',
+            'core/js/eventform.js',
+        )
 
     def get_attendee_count(self, obj):
         if obj.parent:

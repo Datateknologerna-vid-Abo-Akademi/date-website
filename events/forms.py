@@ -53,11 +53,6 @@ class EventCreationForm(forms.ModelForm):
         else:
             fields = temp_fields + ('image',)
 
-    class Media:
-        js = (
-            '//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',  # jquery,
-            'js/eventform.js',)
-
     def clean_slug(self):
         slug = self.cleaned_data['slug'].strip()
         if slug == "" and "title" in self.cleaned_data:
@@ -163,11 +158,6 @@ class EventEditForm(forms.ModelForm):
             fields = temp_fields + ('s3_image',)
         else:
             fields = temp_fields + ('image',)
-
-    class Media:
-        js = (
-            '//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',  # jquery,
-            'js/eventform.js',)
 
     def save(self, commit=True):
         post = super(EventEditForm, self).save(commit=False)
