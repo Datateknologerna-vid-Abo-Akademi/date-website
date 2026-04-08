@@ -44,3 +44,7 @@ class RedactingFormatter(logging.Formatter):
 
     def format(self, record):
         return self.redact(super().format(record))
+
+
+def redact_text(text):
+    return RedactingFormatter.redact(str(text))

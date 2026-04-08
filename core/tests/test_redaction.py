@@ -1,8 +1,14 @@
 import logging
 
+from django.conf import settings
 from django.test import SimpleTestCase
 
-from core.redaction import DateExceptionReporterFilter, REDACTED, RedactingFormatter
+from core.redaction import (
+    DateExceptionReporterFilter,
+    REDACTED,
+    RedactingFormatter,
+    redact_text,
+)
 
 
 class DateExceptionReporterFilterTests(SimpleTestCase):
@@ -62,3 +68,14 @@ class RedactingFormatterTests(SimpleTestCase):
 
         self.assertIn(REDACTED, output)
         self.assertNotIn("secret-key", output)
+
+    def test_redact_text_uses_formatter_redaction_rules(self):
+        output = redact_text('client_email="service@example.com"')
+
+        self.assertIn(REDACTED, output)
+        self.assertNotIn("service@example.com", output)
+
+
+class LoggingSettingsTests(SimpleTestCase):
+    def test_django_console_handler_does_not_override_logger_level(self):
+        self.assertEqual(settings.LOGGING["handlers"]["console"]["level"], "NOTSET")

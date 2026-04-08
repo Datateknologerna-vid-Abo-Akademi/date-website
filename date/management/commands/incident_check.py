@@ -10,6 +10,8 @@ from django.db.models import Q
 from django.db.utils import DatabaseError, OperationalError
 from django.utils import timezone
 
+from core.redaction import redact_text
+
 
 class Command(BaseCommand):
     help = "Print a redacted production incident triage snapshot."
@@ -58,6 +60,7 @@ class Command(BaseCommand):
             try:
                 queryset = (
                     model.objects.filter(Q(slug__isnull=True) | Q(slug=""))
+                    .order_by("-id")
                     .values(*fields)[:limit]
                 )
                 rows = list(queryset)
@@ -99,7 +102,8 @@ class Command(BaseCommand):
             self.stdout.write(
                 f"{entry.action_time.isoformat()} user={user} "
                 f"action={entry.get_action_flag_display()} object={content_type}:{entry.object_id} "
-                f"repr={entry.object_repr} changes={entry.change_message}"
+                f"repr={self.format_admin_value(entry.object_repr)} "
+                f"changes={self.format_admin_value(entry.change_message)}"
             )
 
     def get_model(self, app_label, model_name):
@@ -126,3 +130,9 @@ class Command(BaseCommand):
 
     def print_kv(self, key, value):
         self.stdout.write(f"{key}: {value}")
+
+    def format_admin_value(self, value, max_length=120):
+        value = redact_text(value or "-")
+        if len(value) <= max_length:
+            return value
+        return f"{value[: max_length - 3]}..."
