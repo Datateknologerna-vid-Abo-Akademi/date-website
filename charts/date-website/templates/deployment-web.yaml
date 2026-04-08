@@ -81,6 +81,9 @@ spec:
             httpGet:
               path: /healthz/
               port: http
+              httpHeaders:
+                - name: Host
+                  value: {{ first .Values.django.allowedHosts | quote }}
             initialDelaySeconds: 30
             periodSeconds: 30
             failureThreshold: 3
@@ -88,6 +91,9 @@ spec:
             httpGet:
               path: /readyz/
               port: http
+              httpHeaders:
+                - name: Host
+                  value: {{ first .Values.django.allowedHosts | quote }}
             initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 3

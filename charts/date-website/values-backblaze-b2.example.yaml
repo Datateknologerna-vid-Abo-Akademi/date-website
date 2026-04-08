@@ -15,8 +15,13 @@ media:
     publicLocation: "date/public"
 
 backups:
-  # For production, override backups.image to an image that contains both pg_dump
-  # and aws-cli when objectStorage.enabled=true and installAwsCli=false.
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    runAsUser: 0
+    runAsGroup: 0
   persistence:
     enabled: false
   objectStorage:
@@ -25,4 +30,4 @@ backups:
     regionName: "us-west-000"
     bucketName: "date-website-backups"
     prefix: "date-website/postgresql"
-    installAwsCli: false
+    installAwsCli: true
