@@ -30,6 +30,8 @@ ingress:
 
 Do not manually mount a Hetzner volume for PostgreSQL. Let the Hetzner CSI driver provision it from the chart's PVC by using `storageClass: hcloud-volumes`.
 
+Use either `values-k3s.yaml` or `values-hetzner.yaml` as the cluster-specific storage preset, not both. `values-k3s.yaml` is for a generic k3s cluster using `local-path`; `values-hetzner.yaml` is for Hetzner k3s using `hcloud-volumes` and includes the resource sizing used for the planned CX33 worker.
+
 ## Helm Chart
 
 The chart lives in:
@@ -50,7 +52,9 @@ The chart deploys:
 - PostgreSQL backup CronJob
 - optional migration Job
 
-For the current single-worker setup, `values-hetzner.yaml` keeps `web.migrateOnStartup: true` and disables the migration Job. If the web deployment is scaled above one replica, move migrations out of web startup and into a controlled migration step.
+The base chart defaults `web.migrateOnStartup: false` to avoid migration races when `web.replicaCount` is increased. For the current single-worker Hetzner setup, `values-hetzner.yaml` overrides this to `true` and disables the migration Job. If the web deployment is scaled above one replica, move migrations out of web startup and into a controlled migration step.
+
+The Ingress routes WebSocket traffic to the ASGI service with `asgi.wsPath`, which defaults to `/ws`.
 
 ## Multiple Associations
 
@@ -166,7 +170,15 @@ kubectl -n date-website create secret generic date-website-prod-secrets \
 
 Use separate B2 application keys for media and backups if possible. The media key should only access the media buckets; the backup key should only access the backup bucket.
 
-Do not commit real secrets to values files.
+Do not commit real secrets to values files. If `secret.existingSecret` is not set, the chart-created Secret requires real `django.secretKey` and `database.password` values at render time.
+
+When `secret.existingSecret` is used, pod checksum annotations cannot detect changes inside that external Secret. After rotating an external Secret, restart the affected workloads:
+
+```bash
+kubectl -n <namespace> rollout restart deploy/<release>-date-website-web
+kubectl -n <namespace> rollout restart deploy/<release>-date-website-asgi
+kubectl -n <namespace> rollout restart deploy/<release>-date-website-celery
+```
 
 ## Deploy
 
@@ -239,7 +251,7 @@ Then inspect the job logs and confirm the object exists in B2:
 kubectl -n date-website logs job/<manual-backup-job-name>
 ```
 
-The backup CronJob currently installs `aws-cli` at runtime when object-storage uploads are enabled. Because package installation requires root, the backup container has its own `backups.securityContext` and defaults to `runAsUser: 0`; this does not change the web, ASGI, Celery, PostgreSQL, or Redis containers. A pinned backup image containing both `pg_dump` and the AWS CLI is a better long-term option.
+For object-storage uploads, prefer a pinned backup image that already contains both `pg_dump` and the AWS CLI, and keep `backups.objectStorage.installAwsCli: false`. The B2 example values intentionally keep runtime package installation disabled, so production deployments using object-storage uploads should override `backups.image` to a backup image with both tools installed. The backup job defaults to the PostgreSQL image's non-root UID/GID and sets `backups.podSecurityContext.fsGroup` so the mounted backup directory is writable. If you temporarily set `installAwsCli: true` with an Alpine image, the backup container needs a root-capable `backups.securityContext` because `apk add --no-cache aws-cli` requires package-install privileges.
 
 `retentionDays` prunes old dump files only from the local `/backups` directory. When the B2 override uses `backups.persistence.enabled: false`, this local retention is only for the temporary `emptyDir`; remote B2 objects are not pruned by the CronJob. Configure a B2 bucket lifecycle rule for `date-website/postgresql/` if remote backup retention should be automatic.
 

@@ -32,6 +32,12 @@ celery:
 migrations:
   job:
     enabled: false
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 768Mi
 
 postgresql:
   persistence:

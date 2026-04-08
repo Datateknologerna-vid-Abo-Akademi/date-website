@@ -52,11 +52,13 @@ spec:
               port: redis
             initialDelaySeconds: 20
             periodSeconds: 30
+            failureThreshold: 3
           readinessProbe:
             tcpSocket:
               port: redis
             initialDelaySeconds: 5
             periodSeconds: 10
+            failureThreshold: 3
           {{- with .Values.redis.resources }}
           resources:
             {{- toYaml . | nindent 12 }}

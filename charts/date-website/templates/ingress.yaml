@@ -22,7 +22,7 @@ spec:
     - host: {{ .host | quote }}
       http:
         paths:
-          - path: /ws
+          - path: {{ $.Values.asgi.wsPath | quote }}
             pathType: Prefix
             backend:
               service:

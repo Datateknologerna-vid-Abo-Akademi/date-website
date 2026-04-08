@@ -26,6 +26,10 @@ spec:
           restartPolicy: OnFailure
           serviceAccountName: {{ include "date-website.serviceAccountName" . }}
           automountServiceAccountToken: false
+          {{- with .Values.backups.podSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- with .Values.imagePullSecrets }}
           imagePullSecrets:
             {{- toYaml . | nindent 12 }}

@@ -1,4 +1,5 @@
 import datetime
+import logging
 import random
 from itertools import chain
 from urllib.parse import urlsplit, urlunsplit
@@ -17,6 +18,9 @@ from ads.models import AdUrl
 from events.models import Event
 from news.models import Post
 from social.models import IgUrl
+
+
+logger = logging.getLogger(__name__)
 
 
 def should_check_cache_readiness():
@@ -38,6 +42,7 @@ def readyz(request):
             if cache.get(cache_key) != "ok":
                 return JsonResponse({"status": "unhealthy"}, status=503)
     except Exception:
+        logger.exception("Readiness check failed")
         return JsonResponse({"status": "unhealthy"}, status=503)
 
     return JsonResponse({"status": "ok"})

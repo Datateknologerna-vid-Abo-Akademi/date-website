@@ -28,7 +28,7 @@ secret:
 
 django:
   projectName: date
-  secretKey: change-me
+  secretKey: ""
   debug: false
   develop: false
   enableLanguageFeatures: false
@@ -47,7 +47,7 @@ django:
 database:
   name: postgres
   username: postgres
-  password: change-me
+  password: ""
   external:
     host: ""
     port: 5432
@@ -99,14 +99,16 @@ backups:
     prefix: "date-website/postgresql"
     accessKeyId: ""
     secretAccessKey: ""
-    installAwsCli: true
+    installAwsCli: false
   securityContext:
     allowPrivilegeEscalation: false
     capabilities:
       drop:
         - ALL
-    runAsUser: 0
-    runAsGroup: 0
+    runAsUser: 999
+    runAsGroup: 999
+  podSecurityContext:
+    fsGroup: 999
   resources: {}
 
 redis:
@@ -164,7 +166,7 @@ web:
     workers: 3
     maxRequests: 1000
     maxRequestsJitter: 100
-  migrateOnStartup: true
+  migrateOnStartup: false
   collectstaticOnStartup: true
   resources: {}
 
@@ -173,12 +175,18 @@ asgi:
   service:
     type: ClusterIP
     port: 8000
+  wsPath: /ws
   resources: {}
 
 celery:
   replicaCount: 1
   concurrency: 2
   logLevel: info
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 60
+    timeoutSeconds: 10
+    failureThreshold: 3
   resources: {}
 
 migrations:
@@ -187,6 +195,7 @@ migrations:
     hook: post-install,post-upgrade
     hookDeletePolicy: before-hook-creation,hook-succeeded
     backoffLimit: 3
+    resources: {}
 
 ingress:
   enabled: true
