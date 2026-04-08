@@ -1,8 +1,9 @@
 import logging
+from urllib.parse import urlsplit, urlunsplit
 
 from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponseRedirect
-from django.shortcuts import redirect
+from django.shortcuts import redirect, resolve_url
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.urls import resolve, reverse_lazy
 from django.utils.translation import gettext_lazy as _
@@ -48,6 +49,37 @@ class MemberLoginView(LoginView):
         (LoginView.TOKEN_STEP, AuthenticationTokenForm),
         (LoginView.BACKUP_STEP, BackupTokenForm),
     )
+
+    def get(self, request, *args, **kwargs):
+        if self.redirect_field_name not in request.GET:
+            redirect_to = self._get_referer_redirect_target(request)
+            if redirect_to:
+                query = request.GET.copy()
+                query[self.redirect_field_name] = redirect_to
+                return HttpResponseRedirect(f'{request.path}?{query.urlencode()}')
+
+        return super().get(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return self.get_redirect_url() or resolve_url('index')
+
+    def _get_referer_redirect_target(self, request):
+        referer = request.META.get('HTTP_REFERER')
+        if not referer:
+            return None
+
+        if not url_has_allowed_host_and_scheme(
+            referer,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        ):
+            return None
+
+        referer_parts = urlsplit(referer)
+        if referer_parts.path == request.path:
+            return None
+
+        return urlunsplit(('', '', referer_parts.path or '/', referer_parts.query, ''))
 
     def done(self, form_list, **kwargs):
         response = super().done(form_list, **kwargs)
@@ -114,7 +146,7 @@ class MemberSetupCompleteView(SetupCompleteView):
         # before redirecting in case the session is tampered with.
         if next_target and url_has_allowed_host_and_scheme(next_target, allowed_hosts={request.get_host()}):
             return redirect(next_target)
-        return redirect('members:info')
+        return redirect('index')
 
 
 class TwoFactorProfileRedirectView(RedirectView):

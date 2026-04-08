@@ -306,7 +306,40 @@ class TwoFactorIntegrationTests(TestCase):
         })
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.headers['Location'], reverse('members:info'))
+        self.assertEqual(response.headers['Location'], reverse('index'))
+
+    def test_login_redirects_to_safe_referer_when_next_is_missing(self):
+        login_url = reverse('members:login')
+        response = self.client.get(login_url, HTTP_REFERER='http://testserver/events/?page=2')
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], f'{login_url}?next=%2Fevents%2F%3Fpage%3D2')
+
+        response = self.client.get(response.headers['Location'])
+        prefix = self._wizard_prefix(response)
+
+        response = self.client.post(f'{login_url}?next=%2Fevents%2F%3Fpage%3D2', data={
+            f'{prefix}-current_step': 'auth',
+            'auth-username': self.member.email,
+            'auth-password': 'secret12345',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], '/events/?page=2')
+
+    def test_login_ignores_external_referer_and_defaults_to_homepage(self):
+        login_url = reverse('members:login')
+        response = self.client.get(login_url, HTTP_REFERER='https://evil.example/phish')
+        prefix = self._wizard_prefix(response)
+
+        response = self.client.post(login_url, data={
+            f'{prefix}-current_step': 'auth',
+            'auth-username': self.member.email,
+            'auth-password': 'secret12345',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], reverse('index'))
 
     def test_strict_totp_form_saves_device_with_one_step_tolerance(self):
         form_key = '3132333435363738393031323334353637383930'
@@ -423,7 +456,7 @@ class TwoFactorIntegrationTests(TestCase):
         response = self.client.get(reverse('two_factor:setup_complete'))
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.headers['Location'], reverse('members:info'))
+        self.assertEqual(response.headers['Location'], reverse('index'))
         self.assertNotIn('next', self.client.session)
 
     def test_disable_two_factor_removes_all_devices_for_selected_members(self):
