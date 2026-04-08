@@ -13,6 +13,7 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 
 from events.forms import EventEditForm
 from events.models import Event, EventAttendees, EventRegistrationForm
+from events.routing import websocket_urlpatterns
 from events.websocket_utils import ws_data, ws_send
 from members.models import Member, ORDINARY_MEMBER, Subscription, SubscriptionPayment, MembershipType
 from news.models import Category, Post
@@ -60,7 +61,7 @@ class EventTestCase(TestCase):
                                           author_id=self.member.id,
                                           sign_up_deadline=(timezone.now() + timezone.timedelta(days=7))
                                           )
-        self.content = {'user': 'person', 'email': 'person@test.com'}
+        self.content = {'user': 'person', 'email': 'person@test.com', 'terms_accepted': 'on'}
         self.assertIsNotNone(self.event)
         self.assertTrue(self.event.published)
 
@@ -88,7 +89,7 @@ class EventTestCase(TestCase):
         self.assertEqual(self.event.get_registrations().count(), 0)
         c = Client()
         response = c.post(reverse('events:detail', args=[self.event.slug]),
-                          {'user': 'person', 'email': 'person@test.com'}, follow=True)
+                          {'user': 'person', 'email': 'person@test.com', 'terms_accepted': 'on'}, follow=True)
         self.assertEqual(response.redirect_chain[0][1], 302)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
@@ -337,9 +338,32 @@ class EventTestCase(TestCase):
         self.assertEqual(self.event.get_registrations().count(), 0)
 
         mock_validate_captcha.return_value = True
-        content = {'user': 'person', 'email': 'person@test.com', 'cf-turnstile-response': 'test'}
+        content = {
+            'user': 'person',
+            'email': 'person@test.com',
+            'terms_accepted': 'on',
+            'cf-turnstile-response': 'test'
+        }
         response = c.post(reverse('events:detail', args=[self.event.slug]), content, follow=True)
         mock_validate_captcha.assert_called()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.event.get_registrations().count(), 1)
+
+    def test_signup_requires_terms_acceptance_by_default(self):
+        content = {'user': 'person', 'email': 'person@test.com'}
+
+        response = self.client.post(reverse('events:detail', args=[self.event.slug]), content)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.event.get_registrations().count(), 0)
+
+    def test_signup_allows_disabling_terms_checkbox_per_event(self):
+        self.event.require_registration_terms = False
+        self.event.save()
+        content = {'user': 'person', 'email': 'person@test.com'}
+
+        response = self.client.post(reverse('events:detail', args=[self.event.slug]), content, follow=True)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
@@ -662,6 +686,7 @@ class EventFormBuilderTests(TestCase):
             "meal",
             "notes",
             "hidden",
+            "terms_accepted",
             "avec",
             "avec_user",
             "avec_email",
@@ -673,6 +698,23 @@ class EventFormBuilderTests(TestCase):
         self.assertEqual(form.base_fields["user"].label, "Nimi/Namn/Name")
         self.assertEqual(form.base_fields["anonymous"].label, "Anonyymi/Anonym/Anonymous")
         self.assertNotIn("avec_hidden", form.base_fields)
+        self.assertTrue(self.event.require_registration_terms)
+
+    def test_dynamic_form_omits_terms_field_when_disabled(self):
+        self.event.require_registration_terms = False
+        self.event.save()
+
+        form_class = self.event.make_registration_form()
+        form = form_class()
+
+        self.assertNotIn("terms_accepted", form.base_fields)
+
+    @override_settings(PROJECT_NAME="kk")
+    def test_terms_field_is_date_only(self):
+        form_class = self.event.make_registration_form()
+        form = form_class()
+
+        self.assertNotIn("terms_accepted", form.base_fields)
 
 
 class EventNumberingTests(TestCase):
@@ -766,6 +808,14 @@ class EventTemplateSelectionTests(TestCase):
         )
         response = self.client.get(reverse("events:detail", args=[event.slug]))
         self.assertTemplateUsed(response, "events/event_passcode.html")
+
+
+class EventRoutingTests(TestCase):
+    def test_websocket_route_supports_hyphenated_slugs(self):
+        match = websocket_urlpatterns[0].pattern.regex.fullmatch("ws/events/valentines-sitsit/")
+
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group("event_name"), "valentines-sitsit")
 
 
 class EventWebsocketUtilsTests(TestCase):

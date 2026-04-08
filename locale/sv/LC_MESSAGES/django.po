@@ -1648,3 +1648,7 @@ msgstr "Detta tar bort det extra verifieringssteget från ditt konto."
 #: templates/common/two_factor/profile/disable.html:13
 msgid "Disable"
 msgstr "Stäng av"
+
+#: templates/common/events/registering.html:58
+msgid "Please check this box to continue."
+msgstr "Välj den här rutan för att fortsätta."

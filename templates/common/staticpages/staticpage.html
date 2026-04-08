@@ -1,7 +1,7 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% load i18n %}
-{% block title %}{{page.title}}{% endblock %}
+{% block title %}{{ page.title }}{% endblock %}
 
 {% block extra_head %}
     {{ block.super }}
@@ -15,7 +15,21 @@
         <div class="container-size break-words">
             {% if show_content %}
                 <div class="content">
-                    {{page.content | safe}}
+                    {% if document_html %}
+                        {% if show_document_title %}
+                            <h1>{{ page.title }}</h1>
+                        {% endif %}
+                        {{ document_html|safe }}
+                        {% if fetch_error %}
+                            <p>
+                                <a href="{{ fetch_error }}" target="_blank" rel="noopener noreferrer">
+                                    {% trans "Öppna originaldokumentet" %}
+                                </a>
+                            </p>
+                        {% endif %}
+                    {% else %}
+                        {{ page.content|safe }}
+                    {% endif %}
                 </div>
             {% else %}
                 <div class="content">
