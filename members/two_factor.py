@@ -53,6 +53,7 @@ class MemberLoginView(LoginView):
 
     def get(self, request, *args, **kwargs):
         if self.redirect_field_name not in request.GET:
+            request.session.pop(INFERRED_REDIRECT_SESSION_KEY, None)
             redirect_to = self._get_referer_redirect_target(request)
             if redirect_to:
                 request.session[INFERRED_REDIRECT_SESSION_KEY] = redirect_to
@@ -160,7 +161,11 @@ class MemberSetupCompleteView(SetupCompleteView):
         next_target = request.session.pop('next', None)
         # The value comes from get_success_url() during login, but validate it
         # before redirecting in case the session is tampered with.
-        if next_target and url_has_allowed_host_and_scheme(next_target, allowed_hosts={request.get_host()}):
+        if next_target and url_has_allowed_host_and_scheme(
+            next_target,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        ):
             return redirect(next_target)
         return redirect('index')
 

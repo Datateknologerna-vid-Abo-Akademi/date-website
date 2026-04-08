@@ -412,8 +412,14 @@ class AssociationHomepageSmokeTests(TestCase):
 
     def _association_overrides(self, association):
         settings_module = importlib.import_module(self.association_settings_modules[association])
+        installed_apps = [
+            app for app in settings_module.INSTALLED_APPS
+            if app != "django_cleanup"
+        ]
         overrides = {
             "PROJECT_NAME": association,
+            "INSTALLED_APPS": installed_apps,
+            "ROOT_URLCONF": settings_module.ROOT_URLCONF,
             "TEMPLATES": settings_module.TEMPLATES,
             "CONTENT_VARIABLES": settings_module.CONTENT_VARIABLES,
             "STAFF_GROUPS": settings_module.STAFF_GROUPS,
@@ -423,8 +429,6 @@ class AssociationHomepageSmokeTests(TestCase):
             "BILLING_CONTEXT": getattr(settings_module, "BILLING_CONTEXT", {}),
             "EXPERIMENTAL_FEATURES": getattr(settings_module, "EXPERIMENTAL_FEATURES", []),
         }
-        if association == "on":
-            overrides["ROOT_URLCONF"] = settings_module.ROOT_URLCONF
         return overrides
 
     def _clear_routing_caches(self):
