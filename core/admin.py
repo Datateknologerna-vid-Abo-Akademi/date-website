@@ -3,19 +3,9 @@ from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.admin import AdminSiteOTPRequiredMixin
 
+
 class FixedLanguageAdminSite(AdminSiteOTPRequiredMixin, admin.AdminSite):
     """Mirror the default admin site while preserving normal locale resolution."""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Remove standalone OTP device admins registered by django_otp.
-        # Devices are managed through the Member inline instead.
-        for model in (TOTPDevice, StaticDevice):
-            try:
-                self.unregister(model)
-            except admin.sites.NotRegistered:
-                pass
 
     def has_permission(self, request):
         if not admin.AdminSite.has_permission(self, request):
