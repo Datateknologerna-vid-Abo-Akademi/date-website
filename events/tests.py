@@ -11,7 +11,7 @@ from django.utils import timezone, translation
 from django.utils.translation import gettext
 from django_ckeditor_5.widgets import CKEditor5Widget
 
-from events.forms import EventEditForm
+from events.forms import EventCreationForm, EventEditForm
 from events.models import Event, EventAttendees, EventRegistrationForm
 from events.routing import websocket_urlpatterns
 from events.websocket_utils import ws_data, ws_send
@@ -453,6 +453,19 @@ class EventAdminTests(TestCase):
         form.cleaned_data = {"title": event.title, "slug": ""}
 
         self.assertEqual(form.clean_slug(), "missing_slug_event")
+
+    def test_admin_forms_assume_https_for_redirect_links(self):
+        creation_form = EventCreationForm()
+        edit_form = EventEditForm(instance=self.event)
+
+        self.assertEqual(
+            creation_form.fields["redirect_link"].clean("example.com"),
+            "https://example.com",
+        )
+        self.assertEqual(
+            edit_form.fields["redirect_link"].clean("example.com"),
+            "https://example.com",
+        )
 
 
 class TranslationAdminRegressionTests(TestCase):

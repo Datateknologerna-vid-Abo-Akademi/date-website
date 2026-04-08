@@ -17,7 +17,7 @@
 - `MemberCreationForm` validates usernames via `USERNAME_VALIDATOR` (letters, underscores, hyphens). `AdminMemberUpdateForm` uses `ReadOnlyPasswordHashField` and disables password editing unless explicitly changed.
 - `SignUpForm` collects data for `/members/signup/`, including captcha validation and manual activation flow.
 - `FunctionaryForm` enforces uniqueness per (member, role, year) and sets `member` during save.
-- `CustomPasswordResetForm` overrides `send_mail` to push messages through `send_email_task` (Celery).
+- `CustomPasswordResetForm` overrides `send_mail` to push messages through `send_email_task` (Celery-backed).
 
 ## Views
 - `UserinfoView`: GET shows profile form; POST saves the `MemberEditForm` and redirects.
@@ -29,7 +29,8 @@
 - Password views subclass Django’s built-ins to use the custom templates/forms.
 
 ## Emails & Tokens
-- Emails are queued via Celery (`send_email_task.delay`). Activation tokens use `members/tokens.py` (standard Django token generator) and base64-encoded user IDs.
+- Emails are queued via Celery. Request-side enqueue points that depend on fresh database state should go through `core.utils.enqueue_task_on_commit()` so jobs are only published after the surrounding transaction commits.
+- Activation tokens use `members/tokens.py` (standard Django token generator) and base64-encoded user IDs.
 
 ## Admin Customizations
 - `UserAdmin` inherits from `auth_admin.UserAdmin` but swaps in custom forms and ordering.
@@ -38,5 +39,5 @@
 
 ## Extending
 - Consider adding auditing (who edited a member) since current forms don’t track admin users.
-- When migrating to Django 5+, review password reset email templates for compatibility.
+- Django 6 is now in use. If you revisit background jobs, evaluate Django's built-in Tasks framework separately from Celery migration work rather than mixing both changes into a feature branch.
 - Tests are sparse; add coverage for signup + activation flows and functionary filtering.
