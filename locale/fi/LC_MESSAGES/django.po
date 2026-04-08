@@ -18,6 +18,18 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 3.6\n"
 
+#: templates/common/core/cookie_banner.html:6
+msgid "Vi använder cookies för att förbättra din upplevelse på vår webbplats. Genom att fortsätta använda webbplatsen godkänner du vår användning av cookies."
+msgstr "Käytämme evästeitä parantaaksemme käyttökokemustasi verkkosivustollamme. Jatkamalla verkkosivuston käyttöä hyväksyt evästeiden käytön."
+
+#: templates/common/core/cookie_banner.html:9
+msgid "Godkänn"
+msgstr "Hyväksy"
+
+#: templates/common/core/cookie_banner.html:10
+msgid "Avböj"
+msgstr "Hylkää"
+
 #: alumni/forms.py:15 alumni/forms.py:16 alumni/forms.py:17 alumni/forms.py:72
 #: members/forms.py:171 members/forms.py:174 members/forms.py:180
 msgid "detta fält är obligatoriskt"
@@ -1399,8 +1411,8 @@ msgstr ""
 "luonnontieteiden ja teknillisen tiedekunnan tietotekniikan koulutusohjelman "
 "opiskelijoille sekä muiden tietojenkäsittelyn teknisesti suuntautuneiden "
 "koulutuslinjojen opiskelijoille. Yhdistys on perustettu vuonna 1999, "
-"tarkemmin sanottuna 24.8 16:32 Jäsenet tunnistaa mustista tossuistaan ​​ja "
-"tyylikkäistä tupsulakeista."
+"tarkemmin sanottuna 24.8 16:32 Jäsenet tunnistaa mustista haalareistaan ja "
+"tyylikkäistä teekkarilakeistaan."
 
 #: templates/date/date/components/events.html:3
 msgid "Evenemang"
