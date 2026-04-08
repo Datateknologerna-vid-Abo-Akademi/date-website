@@ -312,13 +312,10 @@ class TwoFactorIntegrationTests(TestCase):
         login_url = reverse('members:login')
         response = self.client.get(login_url, HTTP_REFERER='http://testserver/events/?page=2')
 
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.headers['Location'], f'{login_url}?next=%2Fevents%2F%3Fpage%3D2')
-
-        response = self.client.get(response.headers['Location'])
+        self.assertEqual(response.status_code, 200)
         prefix = self._wizard_prefix(response)
 
-        response = self.client.post(f'{login_url}?next=%2Fevents%2F%3Fpage%3D2', data={
+        response = self.client.post(login_url, data={
             f'{prefix}-current_step': 'auth',
             'auth-username': self.member.email,
             'auth-password': 'secret12345',
@@ -326,6 +323,7 @@ class TwoFactorIntegrationTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], '/events/?page=2')
+        self.assertNotIn('members_login_inferred_next', self.client.session)
 
     def test_login_ignores_external_referer_and_defaults_to_homepage(self):
         login_url = reverse('members:login')

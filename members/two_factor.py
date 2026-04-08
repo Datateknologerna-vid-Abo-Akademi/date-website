@@ -22,6 +22,7 @@ from two_factor.views import (
 from two_factor.views.mixins import OTPRequiredMixin
 
 logger = logging.getLogger('date')
+INFERRED_REDIRECT_SESSION_KEY = 'members_login_inferred_next'
 
 
 def member_has_2fa(user):
@@ -54,11 +55,23 @@ class MemberLoginView(LoginView):
         if self.redirect_field_name not in request.GET:
             redirect_to = self._get_referer_redirect_target(request)
             if redirect_to:
-                query = request.GET.copy()
-                query[self.redirect_field_name] = redirect_to
-                return HttpResponseRedirect(f'{request.path}?{query.urlencode()}')
+                request.session[INFERRED_REDIRECT_SESSION_KEY] = redirect_to
 
         return super().get(request, *args, **kwargs)
+
+    def get_redirect_url(self):
+        redirect_to = super().get_redirect_url()
+        if redirect_to:
+            return redirect_to
+
+        redirect_to = self.request.session.get(INFERRED_REDIRECT_SESSION_KEY, '')
+        if url_has_allowed_host_and_scheme(
+            redirect_to,
+            allowed_hosts=self.get_success_url_allowed_hosts(),
+            require_https=self.request.is_secure(),
+        ):
+            return redirect_to
+        return ''
 
     def get_success_url(self):
         return self.get_redirect_url() or resolve_url('index')
@@ -84,17 +97,20 @@ class MemberLoginView(LoginView):
     def done(self, form_list, **kwargs):
         response = super().done(form_list, **kwargs)
         redirect_to = self.get_success_url()
-        target = self.request.GET.get(self.redirect_field_name)
+        target = self.get_redirect_url()
 
         if getattr(self.get_user(), 'otp_device', None) or not target or not OTPRequiredMixin.is_otp_view(target):
+            self.request.session.pop(INFERRED_REDIRECT_SESSION_KEY, None)
             return response
 
         resolver_match = resolve(target)
         if resolver_match.namespace == 'admin' and self.request.user.is_active and self.request.user.is_staff and not member_has_2fa(self.request.user):
+            self.request.session.pop(INFERRED_REDIRECT_SESSION_KEY, None)
             return HttpResponseRedirect(redirect_to)
 
         if target:
             self.request.session['next'] = redirect_to
+        self.request.session.pop(INFERRED_REDIRECT_SESSION_KEY, None)
         return redirect('two_factor:setup')
 
 
