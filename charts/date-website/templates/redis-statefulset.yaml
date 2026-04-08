@@ -48,14 +48,18 @@ spec:
             - name: data
               mountPath: /data
           livenessProbe:
-            tcpSocket:
-              port: redis
+            exec:
+              command:
+                - valkey-cli
+                - ping
             initialDelaySeconds: 20
             periodSeconds: 30
             failureThreshold: 3
           readinessProbe:
-            tcpSocket:
-              port: redis
+            exec:
+              command:
+                - valkey-cli
+                - ping
             initialDelaySeconds: 5
             periodSeconds: 10
             failureThreshold: 3

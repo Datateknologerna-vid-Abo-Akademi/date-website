@@ -1,4 +1,7 @@
 {{- if .Values.backups.enabled -}}
+{{- if and .Values.backups.objectStorage.installAwsCli (ne (int (default 0 .Values.backups.securityContext.runAsUser)) 0) -}}
+{{- fail "backups.objectStorage.installAwsCli=true requires backups.securityContext.runAsUser=0, or use a backup image that already contains aws-cli and keep installAwsCli=false" -}}
+{{- end -}}
 apiVersion: batch/v1
 kind: CronJob
 metadata:

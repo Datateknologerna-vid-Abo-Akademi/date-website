@@ -19,6 +19,8 @@ securityContext:
   capabilities:
     drop:
       - ALL
+  # Do not set runAsNonRoot until the application image defines a non-root USER.
+  # The current Dockerfile does not, and forcing it here would break startup.
 nodeSelector: {}
 tolerations: []
 affinity: {}
@@ -72,6 +74,8 @@ postgresql:
 backups:
   enabled: false
   schedule: "17 2 * * *"
+  # Only prunes the local /backups directory. Configure B2/object-storage
+  # lifecycle rules separately for remote backup retention.
   retentionDays: 14
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
@@ -99,6 +103,8 @@ backups:
     prefix: "date-website/postgresql"
     accessKeyId: ""
     secretAccessKey: ""
+    # Requires backups.securityContext.runAsUser=0 when using an Alpine image,
+    # because apk add --no-cache aws-cli needs package-install privileges.
     installAwsCli: false
   securityContext:
     allowPrivilegeEscalation: false
@@ -158,6 +164,8 @@ email:
   password: ""
 
 web:
+  # Do not increase without disabling migrateOnStartup and using a migration Job
+  # or another single-run migration step.
   replicaCount: 1
   service:
     type: ClusterIP

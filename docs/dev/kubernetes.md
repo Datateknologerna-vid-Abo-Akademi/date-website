@@ -56,6 +56,8 @@ The base chart defaults `web.migrateOnStartup: false` to avoid migration races w
 
 The Ingress routes WebSocket traffic to the ASGI service with `asgi.wsPath`, which defaults to `/ws`.
 
+The application container security context drops capabilities and prevents privilege escalation, but it does not set `runAsNonRoot: true` yet. The current application Dockerfile does not define a non-root `USER`, so forcing `runAsNonRoot` in the chart would break the image. Add a non-root user to the image first, then tighten the chart default.
+
 ## Multiple Associations
 
 Run one Helm release per association. Do not route `date`, `kk`, `biocum`, and `pulterit` through the same release, because each release needs its own `PROJECT_NAME`, Django URL configuration, static/template paths, hosts, media prefixes, database, and backup prefix.

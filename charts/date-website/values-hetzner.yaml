@@ -2,6 +2,8 @@ ingress:
   className: traefik
 
 web:
+  # Do not increase without disabling migrateOnStartup and using a migration Job
+  # or another single-run migration step.
   replicaCount: 1
   migrateOnStartup: true
   resources:
