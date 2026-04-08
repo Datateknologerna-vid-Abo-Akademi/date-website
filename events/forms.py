@@ -15,6 +15,41 @@ logger = logging.getLogger('date')
 slug_transtable = str.maketrans("åäö ", "aao_")
 
 
+def _slug_base_from_title(title):
+    base_slug = (title or "").lower().translate(slug_transtable)
+    base_slug = re.sub("[^a-zA-Z0-9_]*", '', base_slug)
+    return re.sub("__+", '_', base_slug).strip('_')
+
+
+def _slug_with_suffix(base_slug, suffix):
+    suffix_text = "_" + str(suffix)
+    base_max_length = models.POST_SLUG_MAX_LENGTH - len(suffix_text)
+    return base_slug[:base_max_length].rstrip('_') + suffix_text
+
+
+def unique_event_slug(slug, title, instance=None):
+    slug = (slug or "").strip()
+    if slug == "":
+        slug = _slug_base_from_title(title)
+
+    slug = slugify_max(slug, max_length=models.POST_SLUG_MAX_LENGTH) or "event"
+    base_slug = slug
+
+    collisions = Event.objects.filter(slug=slug)
+    if instance and instance.pk:
+        collisions = collisions.exclude(pk=instance.pk)
+
+    suffix = 1
+    while collisions.exists():
+        slug = _slug_with_suffix(base_slug, suffix)
+        collisions = Event.objects.filter(slug=slug)
+        if instance and instance.pk:
+            collisions = collisions.exclude(pk=instance.pk)
+        suffix += 1
+
+    return slug
+
+
 class EventCreationForm(forms.ModelForm):
     user = None
     event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
@@ -54,23 +89,11 @@ class EventCreationForm(forms.ModelForm):
             fields = temp_fields + ('image',)
 
     def clean_slug(self):
-        slug = self.cleaned_data['slug'].strip()
-        if slug == "" and "title" in self.cleaned_data:
-            base_slug = self.cleaned_data['title'].lower().translate(slug_transtable)
-            base_slug = re.sub("[^a-zA-Z0-9_]*", '', base_slug)
-            base_slug = re.sub("__+", '_', base_slug)
-            slug = base_slug
-
-            collisions = Event.objects.filter(slug=slug)
-            suffix = 1
-            while collisions:
-                slug = base_slug + "_" + str(suffix)
-                collisions = Event.objects.filter(slug=slug)
-                suffix += 1
-        # slugify_max actually does a trim down to the size of the underlying database column
-        slug = slugify_max(slug, max_length=models.POST_SLUG_MAX_LENGTH)
-
-        return slug
+        return unique_event_slug(
+            self.cleaned_data.get('slug'),
+            self.cleaned_data.get('title'),
+            self.instance,
+        )
 
     def save(self, commit=True):
         post = super(EventCreationForm, self).save(commit=False)
@@ -158,6 +181,12 @@ class EventEditForm(forms.ModelForm):
             fields = temp_fields + ('s3_image',)
         else:
             fields = temp_fields + ('image',)
+
+    def clean_slug(self):
+        slug = (self.cleaned_data.get('slug') or "").strip()
+        if slug == "" and self.instance and self.instance.slug:
+            return self.instance.slug
+        return unique_event_slug(slug, self.cleaned_data.get('title'), self.instance)
 
     def save(self, commit=True):
         post = super(EventEditForm, self).save(commit=False)

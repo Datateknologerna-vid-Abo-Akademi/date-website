@@ -51,7 +51,12 @@ class IndexView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        events = Event.objects.filter(published=True).order_by('event_date_start')
+        events = (
+            Event.objects.filter(published=True)
+            .exclude(slug="")
+            .exclude(slug__isnull=True)
+            .order_by('event_date_start')
+        )
         today = timezone.now()
         context['event_list'] = events.filter(event_date_end__gte=today)
         context['past_events'] = events.filter(event_date_end__lte=today).reverse()

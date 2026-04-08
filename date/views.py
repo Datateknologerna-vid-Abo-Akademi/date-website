@@ -30,9 +30,15 @@ def get_homepage_template_name():
 
 
 def index(request):
-    events_old_events_included = (Event.objects.filter(
-        published=True,
-        event_date_end__gte=(timezone.now() - timezone.timedelta(days=31))).order_by('event_date_start'))
+    events_old_events_included = (
+        Event.objects.filter(
+            published=True,
+            event_date_end__gte=(timezone.now() - timezone.timedelta(days=31)),
+        )
+        .exclude(slug="")
+        .exclude(slug__isnull=True)
+        .order_by('event_date_start')
+    )
     events = events_old_events_included.filter(
         published=True, event_date_end__gte=timezone.now())
     news = Post.objects.filter(
