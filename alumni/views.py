@@ -23,6 +23,7 @@ def _serialize_alumni_payload(cleaned_data):
         payload["token"] = str(token)
     return payload
 
+
 def alumni_signup(request):
     """Handle signup form and email sending for new alumnis"""
 

@@ -224,6 +224,10 @@ ENABLE_LANGUAGE_FEATURES = env('ENABLE_LANGUAGE_FEATURES', bool, False)
 LANGUAGES = ALL_LANGUAGES if ENABLE_LANGUAGE_FEATURES else (
     tuple(language for language in ALL_LANGUAGES if language[0] == LANGUAGE_CODE)
 )
+# Keep modeltranslation's schema stable regardless of whether the multilingual
+# UI is currently enabled. Otherwise makemigrations can think translated fields
+# should be removed whenever ENABLE_LANGUAGE_FEATURES is false.
+MODELTRANSLATION_LANGUAGES = tuple(code for code, _label in ALL_LANGUAGES)
 
 TIME_ZONE = 'Europe/Helsinki'
 
