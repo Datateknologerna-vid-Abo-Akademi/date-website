@@ -82,6 +82,15 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- end }}
 
+{{- define "date-website.probeHost" -}}
+{{- $allowedHosts := .Values.django.allowedHosts | default list -}}
+{{- if gt (len $allowedHosts) 0 -}}
+{{- first $allowedHosts -}}
+{{- else -}}
+{{- fail "django.allowedHosts must contain at least one host for Kubernetes probes" -}}
+{{- end }}
+{{- end }}
+
 {{- define "date-website.mediaVolume" -}}
 {{- if and .Values.media.persistence.enabled (not .Values.media.s3.enabled) }}
 volumes:

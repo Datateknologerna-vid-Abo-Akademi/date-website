@@ -83,7 +83,7 @@ spec:
               port: http
               httpHeaders:
                 - name: Host
-                  value: {{ first .Values.django.allowedHosts | quote }}
+                  value: {{ include "date-website.probeHost" . | quote }}
             initialDelaySeconds: 30
             periodSeconds: 30
             failureThreshold: 3
@@ -93,7 +93,7 @@ spec:
               port: http
               httpHeaders:
                 - name: Host
-                  value: {{ first .Values.django.allowedHosts | quote }}
+                  value: {{ include "date-website.probeHost" . | quote }}
             initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 3
