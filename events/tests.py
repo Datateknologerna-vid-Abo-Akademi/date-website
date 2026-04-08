@@ -11,6 +11,7 @@ from django.utils import timezone, translation
 from django.utils.translation import gettext
 from django_ckeditor_5.widgets import CKEditor5Widget
 
+from events.forms import EventEditForm
 from events.models import Event, EventAttendees, EventRegistrationForm
 from events.websocket_utils import ws_data, ws_send
 from members.models import Member, ORDINARY_MEMBER, Subscription, SubscriptionPayment, MembershipType
@@ -411,6 +412,23 @@ class EventAdminTests(TestCase):
         self.assertContains(response, 'name="title_sv"')
         self.assertContains(response, 'name="title_en"')
         self.assertContains(response, 'name="title_fi"')
+
+    def test_edit_form_preserves_existing_slug_when_field_is_cleared(self):
+        form = EventEditForm(instance=self.event)
+        form.cleaned_data = {"title": self.event.title, "slug": ""}
+
+        self.assertEqual(form.clean_slug(), "admin-event")
+
+    def test_edit_form_regenerates_missing_slug(self):
+        event = Event.objects.create(
+            title="Missing Slug Event",
+            slug="",
+            author=self.admin_user,
+        )
+        form = EventEditForm(instance=event)
+        form.cleaned_data = {"title": event.title, "slug": ""}
+
+        self.assertEqual(form.clean_slug(), "missing_slug_event")
 
 
 class TranslationAdminRegressionTests(TestCase):

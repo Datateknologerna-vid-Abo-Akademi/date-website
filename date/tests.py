@@ -15,6 +15,7 @@ from django.utils import translation
 
 from date.language_utils import localize_url, strip_language_prefix
 from date.views import get_homepage_template_name, handler500
+from events.models import Event
 
 
 def localized_reverse(name, language_code, *args, **kwargs):
@@ -198,6 +199,21 @@ class LanguageSelectionTests(TestCase):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "fi")
+
+    def test_homepage_skips_events_without_slugs(self):
+        author = get_user_model().objects.create_user(username="event-author")
+        Event.objects.create(
+            title="Broken Event",
+            slug="",
+            author=author,
+            event_date_start=timezone.now(),
+            event_date_end=timezone.now() + timedelta(days=1),
+        )
+
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Broken Event")
 
     def test_homepage_defaults_to_swedish_without_cookie_or_header(self):
         response = self.client.get("/")
