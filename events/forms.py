@@ -61,6 +61,14 @@ class EventCreationForm(forms.ModelForm):
     sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
     parent = forms.ModelChoiceField(queryset=Event.objects.filter(event_date_end__gte=now()), required=False)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'require_registration_terms' in self.fields:
+            if models.registration_terms_feature_enabled():
+                self.fields['require_registration_terms'].initial = True
+            else:
+                self.fields.pop('require_registration_terms')
+
     class Meta:
         model = Event
         temp_fields = (
@@ -77,6 +85,7 @@ class EventCreationForm(forms.ModelForm):
             'sign_up_cancelling_deadline',
             'published',
             'sign_up_avec',
+            'require_registration_terms',
             'slug',
             'members_only',
             'passcode',
@@ -140,6 +149,8 @@ class EventEditForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if 'require_registration_terms' in self.fields and not models.registration_terms_feature_enabled():
+            self.fields.pop('require_registration_terms')
         # exclude the current instance from parent choices so an event cannot be its own parent
         try:
             if getattr(self, 'instance', None) and getattr(self.instance, 'pk', None):
@@ -172,6 +183,7 @@ class EventEditForm(forms.ModelForm):
             'sign_up_cancelling_deadline',
             'published',
             'sign_up_avec',
+            'require_registration_terms',
             'slug',
             'members_only',
             'passcode',

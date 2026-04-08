@@ -1,42 +1,61 @@
-from django.test import TestCase
+from unittest.mock import MagicMock, patch
 
-from staticpages.models import StaticPageNav, StaticUrl
+from django.test import TestCase, override_settings
+from django.urls import reverse
 
 
-class StaticUrlModelTests(TestCase):
-    def test_save_assigns_first_dropdown_element_for_category(self):
-        category = StaticPageNav.objects.create(category_name="About")
+class PolicyViewTests(TestCase):
+    @patch("staticpages.views.requests.get")
+    def test_equality_plan_view_renders_remote_markdown(self, mock_get):
+        mock_response = MagicMock()
+        mock_response.text = "# Equality Plan\n\n- First point"
+        mock_response.raise_for_status.return_value = None
+        mock_get.return_value = mock_response
 
-        item = StaticUrl.objects.create(
-            title="First link",
-            url="/first/",
-            category=category,
-            dropdown_element=None,
+        response = self.client.get(reverse("staticpages:equality_plan"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "<h1>Equality Plan</h1>", html=True)
+        self.assertContains(response, "<li>First point</li>", html=True)
+
+    def test_registration_terms_view_renders_local_document(self):
+        response = self.client.get(reverse("staticpages:registration_terms"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Anmälningsvillkor gällande evenemang")
+        self.assertContains(response, "Reservlista och ersättare")
+
+    def test_registration_terms_view_renders_english(self):
+        response = self.client.get(
+            reverse("staticpages:registration_terms"),
+            HTTP_ACCEPT_LANGUAGE="en",
         )
 
-        self.assertEqual(item.dropdown_element, 10)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "<h1>Event registration terms</h1>", html=True)
+        self.assertContains(response, "Your registration becomes binding once the registration period has ended.")
+        self.assertContains(response, "Waitlist and replacements")
 
-    def test_save_increments_dropdown_element_within_category(self):
-        category = StaticPageNav.objects.create(category_name="About")
-        other_category = StaticPageNav.objects.create(category_name="Other")
-        StaticUrl.objects.create(
-            title="Existing link",
-            url="/existing/",
-            category=category,
-            dropdown_element=20,
-        )
-        StaticUrl.objects.create(
-            title="Other category link",
-            url="/other/",
-            category=other_category,
-            dropdown_element=90,
+    def test_registration_terms_view_renders_finnish(self):
+        response = self.client.get(
+            reverse("staticpages:registration_terms"),
+            HTTP_ACCEPT_LANGUAGE="fi",
         )
 
-        item = StaticUrl.objects.create(
-            title="Next link",
-            url="/next/",
-            category=category,
-            dropdown_element=None,
-        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "<h1>Tapahtuman ilmoittautumisehdot</h1>", html=True)
+        self.assertContains(response, "Varasija ja korvaajat")
 
-        self.assertEqual(item.dropdown_element, 30)
+    def test_registration_terms_view_renders_swedish_title(self):
+        response = self.client.get(reverse("staticpages:registration_terms"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "<h1>Anmälningsvillkor gällande evenemang</h1>", html=True)
+
+    @override_settings(PROJECT_NAME="kk")
+    def test_policy_views_are_date_only(self):
+        equality_response = self.client.get(reverse("staticpages:equality_plan"))
+        terms_response = self.client.get(reverse("staticpages:registration_terms"))
+
+        self.assertEqual(equality_response.status_code, 404)
+        self.assertEqual(terms_response.status_code, 404)

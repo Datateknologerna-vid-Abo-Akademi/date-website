@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import logging
 import os
+import re
 from datetime import timedelta
 
 from django.utils import timezone
@@ -13,6 +14,9 @@ from django.db import models
 from django.db.models import Max, JSONField
 from django.template.defaulttags import register
 from django.utils.text import slugify
+from django.urls import reverse
+from django.utils.html import format_html
+from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from django.utils.timezone import now
 
@@ -21,6 +25,11 @@ from core.fields import PublicFileField
 logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
+LANGUAGE_CODE_PATTERN = re.compile(r"^[a-z]{2}")
+
+
+def registration_terms_feature_enabled():
+    return settings.PROJECT_NAME == "date"
 
 def upload_to(instance, filename):
     filename_base, filename_ext = os.path.splitext(filename)
@@ -59,6 +68,9 @@ class Event(models.Model):
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False,
                             max_length=POST_SLUG_MAX_LENGTH, blank=True)
     sign_up_avec = models.BooleanField(_('Avec'), default=False)
+    require_registration_terms = models.BooleanField(
+        _('Kräv godkännande av anmälningsvillkor'), default=True
+    )
     members_only = models.BooleanField(
         _('Kräv inloggning för innehåll'), default=False)
     passcode = models.CharField(_('Passcode'), max_length=255, blank=True)
@@ -186,8 +198,18 @@ class Event(models.Model):
                         fields[question.name] = forms.BooleanField(
                             label=question.name, required=question.required)
                     elif question.type == "text":
-                        fields[question.name] = forms.CharField(label=question.name, required=question.required,
-                                                                max_length=255)
+                        fields[question.name] = forms.CharField(
+                            label=question.name,
+                            required=question.required,
+                            max_length=255,
+                        )
+            if registration_terms_feature_enabled() and self.require_registration_terms:
+                fields['terms_accepted'] = forms.BooleanField(
+                    label=self.get_registration_terms_label(),
+                    help_text=self.get_registration_terms_help_text(),
+                    required=True,
+                    widget=forms.CheckboxInput(attrs={'class': 'terms-checkbox'}),
+                )
             if self.sign_up_avec:
                 fields['avec'] = forms.BooleanField(
                     label='Avec', required=False)
@@ -221,6 +243,44 @@ class Event(models.Model):
                                                                                       attrs={'class': "avec-field"}),
                                                                                   max_length=255)
             return type('EventAttendeeForm', (forms.BaseForm,), {'base_fields': fields, 'data': data}, )
+
+    def get_registration_terms_label(self):
+        language = LANGUAGE_CODE_PATTERN.match(get_language() or "")
+        language_code = language.group(0) if language else "sv"
+        registration_terms_url = reverse('staticpages:registration_terms')
+
+        labels = {
+            "en": (
+                'I have read and agree to the <a href="{}" target="_blank" rel="noopener noreferrer">'
+                'event registration terms</a>.'
+            ),
+            "fi": (
+                'Olen lukenut ja hyväksyn <a href="{}" target="_blank" rel="noopener noreferrer">'
+                'tapahtuman ilmoittautumisehdot</a>.'
+            ),
+            "sv": (
+                'Jag har läst och godkänner <a href="{}" target="_blank" rel="noopener noreferrer">'
+                'anmälningsvillkoren för evenemanget</a>.'
+            ),
+        }
+
+        return format_html(
+            labels.get(language_code, labels["sv"]),
+            registration_terms_url,
+        )
+
+    def get_registration_terms_help_text(self):
+        language = LANGUAGE_CODE_PATTERN.match(get_language() or "")
+        language_code = language.group(0) if language else "sv"
+        equality_plan_url = reverse('staticpages:equality_plan')
+
+        help_texts = {
+            "en": 'Read more: <a href="{}" target="_blank" rel="noopener noreferrer">Equality plan</a>',
+            "fi": 'Lue myös: <a href="{}" target="_blank" rel="noopener noreferrer">Yhdenvertaisuussuunnitelma</a>',
+            "sv": 'Läs också: <a href="{}" target="_blank" rel="noopener noreferrer">Jämlikhetsplan</a>',
+        }
+
+        return format_html(help_texts.get(language_code, help_texts["sv"]), equality_plan_url)
 
     @register.filter
     def show_attendee_list(self):

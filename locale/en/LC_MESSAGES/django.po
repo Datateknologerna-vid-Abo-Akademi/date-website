@@ -218,6 +218,14 @@ msgstr "Start date"
 msgid "Slutdatum"
 msgstr "End date"
 
+#: events/models.py:72 events/migrations/0021_event_require_registration_terms.py:16
+msgid "Kräv godkännande av anmälningsvillkor"
+msgstr "Require acceptance of registration terms"
+
+#: templates/common/events/registering.html:58
+msgid "Please check this box to continue."
+msgstr "Please check this box to continue."
+
 #: ctf/models.py:21 ctf/models.py:46 events/models.py:59 lucia/models.py:18
 #: news/models.py:15 news/models.py:35 publications/models.py:18
 #: staticpages/models.py:28
