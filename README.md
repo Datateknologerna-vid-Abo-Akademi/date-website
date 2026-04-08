@@ -1,6 +1,6 @@
 # DaTe Website 2.0
 
-DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.fi)'s public site, membership tools, alumni portal, polls, and a handful of seasonal or one-off apps. The stack is Django 5.2 running on Python 3.13 inside Docker Compose with Celery workers, Channels/Daphne, PostgreSQL, Valkey (Redis compatible), and S3-compatible storage.
+DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.fi)'s public site, membership tools, alumni portal, polls, and a handful of seasonal or one-off apps. The stack is Django 6.0 running on Python 3.13 inside Docker Compose with Celery workers, Channels/Daphne, PostgreSQL, Valkey (Redis compatible), and S3-compatible storage.
 
 > Active development happens on `develop`. The `master` branch mirrors production releases, so branch off `develop` when you start new work.
 
@@ -117,7 +117,7 @@ date-test members.tests     # run a specific module
 date-manage check           # static checks (migrations, settings sanity)
 ```
 
-Manually verify user-facing flows (forms, Celery tasks, Channels endpoints) when implementing a feature; a lot of work in this repo still benefits from a quick human smoke test after the automated checks pass.
+Manually verify user-facing flows (forms, background jobs, Channels endpoints) when implementing a feature; a lot of work in this repo still benefits from a quick human smoke test after the automated checks pass.
 
 If you touch translations, templates, or language-aware navigation, also smoke-test the default Swedish site plus at least one non-default language selected through the language switcher or `Accept-Language` header with `ENABLE_LANGUAGE_FEATURES=True`.
 
@@ -141,6 +141,8 @@ The production stack relies on the published container image at `ghcr.io/datatek
 4. Deploy: `docker compose -f docker-compose.prod.yml up -d`.
 
 The stack brings up the `web` (Gunicorn), `asgi` (Daphne/Channels), `celery`, `db`, `redis`, and `nginx` services. Rolling deploys usually build a new GHCR image in CI, update `DATE_IMG_TAG`, then restart `web`, `asgi`, and `celery`.
+
+Although Django 6 ships with the new Tasks framework, this project still uses Celery for production background work. The current task dispatch points defer enqueuing until after successful database commits where that matters, so new code should preserve that behavior.
 
 `docker-compose.prod.yml` also reads `ENABLE_LANGUAGE_FEATURES`, so multilingual public/admin behavior must be enabled explicitly in production if you want language switching outside Swedish.
 
