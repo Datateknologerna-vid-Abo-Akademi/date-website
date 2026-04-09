@@ -63,6 +63,13 @@ div a:hover{
     border-radius: var(--defaultRadius);
 }
 
+/* Keep archive meta text readable on KK's green header background. */
+#page-header .text-muted,
+.container-margin-top > .text-center.mb-3:first-child .text-muted {
+    color: var(--textColorLight) !important;
+    opacity: 1;
+}
+
 /*  BUTTON */
 .theme-button {
     background-color: var(--primaryColorLighter);

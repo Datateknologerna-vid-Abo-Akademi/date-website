@@ -26,30 +26,46 @@ def parse_po(path: Path) -> tuple[int, int]:
         msgstr = ""
         in_msgid = False
         in_msgstr = False
+        plural_msgstrs: dict[int, str] = {}
+        current_plural_index: int | None = None
 
         for line in block:
             if line.startswith("msgid "):
                 in_msgid = True
                 in_msgstr = False
+                current_plural_index = None
                 msgid = line[7:-1]
                 continue
             if line.startswith("msgstr "):
                 in_msgid = False
                 in_msgstr = True
+                current_plural_index = None
                 msgstr = line[8:-1]
+                continue
+            if line.startswith("msgstr["):
+                index_end = line.find("]")
+                current_plural_index = int(line[7:index_end])
+                in_msgid = False
+                in_msgstr = False
+                plural_msgstrs[current_plural_index] = line[index_end + 3:-1]
                 continue
             if line.startswith('"'):
                 if in_msgid:
                     msgid += _unquote(line)
                 elif in_msgstr:
                     msgstr += _unquote(line)
+                elif current_plural_index is not None:
+                    plural_msgstrs[current_plural_index] += _unquote(line)
 
         if msgid == "":
             continue
 
         if is_fuzzy:
             fuzzy += 1
-        if msgstr == "":
+        if plural_msgstrs:
+            if any(value == "" for value in plural_msgstrs.values()):
+                untranslated += 1
+        elif msgstr == "":
             untranslated += 1
 
     return fuzzy, untranslated
