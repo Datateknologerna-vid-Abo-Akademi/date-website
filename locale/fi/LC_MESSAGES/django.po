@@ -1737,6 +1737,82 @@ msgstr "Tämä poistaa ylimääräisen vahvistusvaiheen tililtäsi."
 msgid "Disable"
 msgstr "Poista käytöstä"
 
+#: templates/common/archive/detail.html:18
+msgid "Sida"
+msgstr "Sivu"
+
+#: templates/common/archive/detail.html:19
+msgid "Bild"
+msgstr "Kuva"
+
+#: templates/common/archive/detail.html:20
+msgid "Dela eller kopiera länk"
+msgstr "Jaa tai kopioi linkki"
+
+#: templates/common/archive/detail.html:21
+msgid "Delar..."
+msgstr "Jaetaan..."
+
+#: templates/common/archive/detail.html:22
+msgid "Länk delad"
+msgstr "Linkki jaettu"
+
+#: templates/common/archive/detail.html:23
+msgid "Länk kopierad"
+msgstr "Linkki kopioitu"
+
+#: templates/common/archive/detail.html:24
+msgid "Kunde inte dela eller kopiera länk"
+msgstr "Linkin jakaminen tai kopiointi epäonnistui"
+
+#: templates/common/archive/detail.html:25
+msgid "Laddar fler bilder..."
+msgstr "Ladataan lisää kuvia..."
+
+#: templates/common/archive/detail.html:26
+msgid "Kunde inte ladda fler bilder."
+msgstr "Lisäkuvien lataaminen epäonnistui."
+
+#: templates/common/archive/detail.html:27
+msgid "Ladda ner aktuell bild"
+msgstr "Lataa nykyinen kuva"
+
+#: templates/common/archive/partials/detail_header.html:7
+#, python-format
+msgid "%(total_count)s bild"
+msgid_plural "%(total_count)s bilder"
+msgstr[0] "%(total_count)s kuva"
+msgstr[1] "%(total_count)s kuvaa"
+
+#: templates/common/archive/picture_index.html:36
+#, python-format
+msgid "%(picture_count)s Bild"
+msgid_plural "%(picture_count)s Bilder"
+msgstr[0] "%(picture_count)s kuva"
+msgstr[1] "%(picture_count)s kuvaa"
+
+#: templates/common/archive/partials/detail_gallery_shell.html:10
+msgid "Bildsidor"
+msgstr "Kuvasivut"
+
+#: templates/common/archive/partials/detail_gallery_shell.html:11
+msgid "Om automatisk bildladdning inte fungerar kan du bläddra mellan sidorna här."
+msgstr "Jos automaattinen kuvien lataus ei toimi, voit siirtyä sivujen välillä tästä."
+
+#: templates/common/archive/partials/detail_gallery_shell.html:34
+msgid "JavaScript krävs för automatisk bildladdning. Använd sidlänkarna ovan för att visa fler bilder."
+msgstr "Automaattinen kuvien lataus vaatii JavaScriptin. Käytä yllä olevia sivulinkkejä nähdäksesi lisää kuvia."
+
+#: templates/common/archive/partials/picture_items.html:8
+#, python-format
+msgid "Öppna bild %(image_number)s av %(total)s"
+msgstr "Avaa kuva %(image_number)s/%(total)s"
+
+#: templates/common/archive/partials/picture_items.html:14
+#, python-format
+msgid "Bild %(image_number)s av %(total)s i albumet"
+msgstr "Kuva %(image_number)s/%(total)s albumissa"
+
 #~ msgid "Registreringsdatum"
 #~ msgstr "Rekisteröintipäivämäärä"
 

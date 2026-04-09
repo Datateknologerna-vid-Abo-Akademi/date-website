@@ -1652,3 +1652,78 @@ msgstr "Stäng av"
 #: templates/common/events/registering.html:58
 msgid "Please check this box to continue."
 msgstr "Välj den här rutan för att fortsätta."
+#: templates/common/archive/detail.html:18
+msgid "Sida"
+msgstr "Sida"
+
+#: templates/common/archive/detail.html:19
+msgid "Bild"
+msgstr "Bild"
+
+#: templates/common/archive/detail.html:20
+msgid "Dela eller kopiera länk"
+msgstr "Dela eller kopiera länk"
+
+#: templates/common/archive/detail.html:21
+msgid "Delar..."
+msgstr "Delar..."
+
+#: templates/common/archive/detail.html:22
+msgid "Länk delad"
+msgstr "Länk delad"
+
+#: templates/common/archive/detail.html:23
+msgid "Länk kopierad"
+msgstr "Länk kopierad"
+
+#: templates/common/archive/detail.html:24
+msgid "Kunde inte dela eller kopiera länk"
+msgstr "Kunde inte dela eller kopiera länk"
+
+#: templates/common/archive/detail.html:25
+msgid "Laddar fler bilder..."
+msgstr "Laddar fler bilder..."
+
+#: templates/common/archive/detail.html:26
+msgid "Kunde inte ladda fler bilder."
+msgstr "Kunde inte ladda fler bilder."
+
+#: templates/common/archive/detail.html:27
+msgid "Ladda ner aktuell bild"
+msgstr "Ladda ner aktuell bild"
+
+#: templates/common/archive/partials/detail_header.html:7
+#, python-format
+msgid "%(total_count)s bild"
+msgid_plural "%(total_count)s bilder"
+msgstr[0] "%(total_count)s bild"
+msgstr[1] "%(total_count)s bilder"
+
+#: templates/common/archive/picture_index.html:36
+#, python-format
+msgid "%(picture_count)s Bild"
+msgid_plural "%(picture_count)s Bilder"
+msgstr[0] "%(picture_count)s Bild"
+msgstr[1] "%(picture_count)s Bilder"
+
+#: templates/common/archive/partials/detail_gallery_shell.html:10
+msgid "Bildsidor"
+msgstr "Bildsidor"
+
+#: templates/common/archive/partials/detail_gallery_shell.html:11
+msgid "Om automatisk bildladdning inte fungerar kan du bläddra mellan sidorna här."
+msgstr "Om automatisk bildladdning inte fungerar kan du bläddra mellan sidorna här."
+
+#: templates/common/archive/partials/detail_gallery_shell.html:34
+msgid "JavaScript krävs för automatisk bildladdning. Använd sidlänkarna ovan för att visa fler bilder."
+msgstr "JavaScript krävs för automatisk bildladdning. Använd sidlänkarna ovan för att visa fler bilder."
+
+#: templates/common/archive/partials/picture_items.html:8
+#, python-format
+msgid "Öppna bild %(image_number)s av %(total)s"
+msgstr "Öppna bild %(image_number)s av %(total)s"
+
+#: templates/common/archive/partials/picture_items.html:14
+#, python-format
+msgid "Bild %(image_number)s av %(total)s i albumet"
+msgstr "Bild %(image_number)s av %(total)s i albumet"

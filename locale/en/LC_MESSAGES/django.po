@@ -1660,6 +1660,82 @@ msgstr "This removes the extra verification step from your account."
 msgid "Disable"
 msgstr "Disable"
 
+#: templates/common/archive/detail.html:18
+msgid "Sida"
+msgstr "Page"
+
+#: templates/common/archive/detail.html:19
+msgid "Bild"
+msgstr "Image"
+
+#: templates/common/archive/detail.html:20
+msgid "Dela eller kopiera länk"
+msgstr "Share or copy link"
+
+#: templates/common/archive/detail.html:21
+msgid "Delar..."
+msgstr "Sharing..."
+
+#: templates/common/archive/detail.html:22
+msgid "Länk delad"
+msgstr "Link shared"
+
+#: templates/common/archive/detail.html:23
+msgid "Länk kopierad"
+msgstr "Link copied"
+
+#: templates/common/archive/detail.html:24
+msgid "Kunde inte dela eller kopiera länk"
+msgstr "Could not share or copy link"
+
+#: templates/common/archive/detail.html:25
+msgid "Laddar fler bilder..."
+msgstr "Loading more images..."
+
+#: templates/common/archive/detail.html:26
+msgid "Kunde inte ladda fler bilder."
+msgstr "Could not load more images."
+
+#: templates/common/archive/detail.html:27
+msgid "Ladda ner aktuell bild"
+msgstr "Download current image"
+
+#: templates/common/archive/partials/detail_header.html:7
+#, python-format
+msgid "%(total_count)s bild"
+msgid_plural "%(total_count)s bilder"
+msgstr[0] "%(total_count)s image"
+msgstr[1] "%(total_count)s images"
+
+#: templates/common/archive/picture_index.html:36
+#, python-format
+msgid "%(picture_count)s Bild"
+msgid_plural "%(picture_count)s Bilder"
+msgstr[0] "%(picture_count)s image"
+msgstr[1] "%(picture_count)s images"
+
+#: templates/common/archive/partials/detail_gallery_shell.html:10
+msgid "Bildsidor"
+msgstr "Image pages"
+
+#: templates/common/archive/partials/detail_gallery_shell.html:11
+msgid "Om automatisk bildladdning inte fungerar kan du bläddra mellan sidorna här."
+msgstr "If automatic image loading does not work, you can browse pages here."
+
+#: templates/common/archive/partials/detail_gallery_shell.html:34
+msgid "JavaScript krävs för automatisk bildladdning. Använd sidlänkarna ovan för att visa fler bilder."
+msgstr "JavaScript is required for automatic image loading. Use the page links above to view more images."
+
+#: templates/common/archive/partials/picture_items.html:8
+#, python-format
+msgid "Öppna bild %(image_number)s av %(total)s"
+msgstr "Open image %(image_number)s of %(total)s"
+
+#: templates/common/archive/partials/picture_items.html:14
+#, python-format
+msgid "Bild %(image_number)s av %(total)s i albumet"
+msgstr "Image %(image_number)s of %(total)s in the album"
+
 #~ msgid "Registreringsdatum"
 #~ msgstr "Registration date"
 

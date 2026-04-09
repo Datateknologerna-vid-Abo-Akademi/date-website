@@ -21,6 +21,8 @@ logger = logging.getLogger('date')
 
 
 def user_type(user):
+    if not user.is_authenticated:
+        return False
     return user.membership_type.permission_profile != 3
 
 
@@ -57,6 +59,8 @@ def picture_index(request, year):
     )
     collections = list(collections)
     for collection in collections:
+        # Avoid instantiating a Picture for every album card; the ImageField
+        # storage is enough to turn the annotated file name into a public URL.
         collection.first_picture_url = (
             picture_image_field.storage.url(collection.first_picture_image)
             if collection.first_picture_image
@@ -185,9 +189,9 @@ def picture_detail(request, year, album):
         return render(request, '404.html', {'error_msg': "Gulisar har inte tillgång till detta album!"})
 
     pictures_qs = (
-        Picture.objects.filter(collection=collection)
+        Picture.objects.filter(collection=collection).order_by('id')
         if year == 2022
-        else Picture.objects.filter(collection=collection).reverse()
+        else Picture.objects.filter(collection=collection).order_by('-id')
     )
 
     page = request.GET.get('page', 1)
