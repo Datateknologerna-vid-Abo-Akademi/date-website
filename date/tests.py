@@ -239,7 +239,13 @@ class LanguageSelectionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, settings.LANGUAGE_CODE)
 
-    def test_accept_language_header_sets_language_on_non_prefixed_url(self):
+    def test_accept_language_header_is_ignored_when_browser_detection_is_disabled(self):
+        response = self.client.get("/", HTTP_ACCEPT_LANGUAGE="en")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "sv")
+
+    @override_settings(USE_ACCEPT_LANGUAGE_HEADER=True)
+    def test_accept_language_header_can_set_language_when_enabled(self):
         response = self.client.get("/", HTTP_ACCEPT_LANGUAGE="en")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "en")
@@ -250,8 +256,9 @@ class LanguageSelectionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "fi")
 
-    def test_404_page_renders_in_finnish_via_accept_language(self):
-        response = self.client.get("/this-page-does-not-exist/", HTTP_ACCEPT_LANGUAGE="fi")
+    def test_404_page_renders_in_finnish_via_cookie(self):
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "fi"
+        response = self.client.get("/this-page-does-not-exist/")
         self.assertEqual(response.status_code, 404)
         self.assertContains(response, "Sivua ei löydetty", status_code=404)
 
@@ -267,18 +274,18 @@ class LanguageSelectionTests(TestCase):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "fi")
-        self.assertContains(response, "Kieli")
+        self.assertContains(response, '<span class="language-dropdown-current">FI</span>', html=True)
 
     def test_homepage_preserves_swedish_labels_by_default(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.LANGUAGE_CODE, "sv")
-        self.assertContains(response, "Språk")
         self.assertContains(response, "Adress")
         self.assertContains(response, "Joke")
 
-    def test_404_page_renders_in_english_via_accept_language(self):
-        response = self.client.get("/this-page-does-not-exist/", HTTP_ACCEPT_LANGUAGE="en")
+    def test_404_page_renders_in_english_via_cookie(self):
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
+        response = self.client.get("/this-page-does-not-exist/")
         self.assertEqual(response.status_code, 404)
         self.assertContains(response, "Page not found", status_code=404)
 

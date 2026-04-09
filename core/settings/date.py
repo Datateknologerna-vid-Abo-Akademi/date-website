@@ -32,6 +32,7 @@ INSTALLED_APPS = get_installed_apps([
 ])
 
 ROOT_URLCONF = 'core.urls.date'
+USE_ACCEPT_LANGUAGE_HEADER = False
 
 STAFF_GROUPS = get_staff_groups([
         'styrelse',

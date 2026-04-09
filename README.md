@@ -119,7 +119,7 @@ date-manage check           # static checks (migrations, settings sanity)
 
 Manually verify user-facing flows (forms, background jobs, Channels endpoints) when implementing a feature; a lot of work in this repo still benefits from a quick human smoke test after the automated checks pass.
 
-If you touch translations, templates, or language-aware navigation, also smoke-test the default Swedish site plus at least one non-default language selected through the language switcher or `Accept-Language` header with `ENABLE_LANGUAGE_FEATURES=True`.
+If you touch translations, templates, or language-aware navigation, also smoke-test the default Swedish site plus at least one non-default language selected through the language switcher with `ENABLE_LANGUAGE_FEATURES=True`.
 
 ## Documentation & app guides
 
@@ -216,7 +216,7 @@ Current fixed terms that should not be translated just because they are user-fac
 
 As the default language is `sv`, Swedish copy should be reviewed against the site itself when strings are extracted into locale files.
 
-The project uses unprefixed public URLs. Language is resolved from the language cookie first, then the `Accept-Language` header, and finally the default `sv`. When linking to internal pages from templates or stored nav items, prefer Django URL reversing or the `localized_url` template filter so links stay on the canonical unprefixed path.
+The project uses unprefixed public URLs. Language is resolved from the language cookie first, then the default `sv`. Associations can opt into browser `Accept-Language` detection with `USE_ACCEPT_LANGUAGE_HEADER=True`. When linking to internal pages from templates or stored nav items, prefer Django URL reversing or the `localized_url` template filter so links stay on the canonical unprefixed path.
 
 To generate the translation file, called `django.po`
 is done by executing the following command **in the root directory of the project**
