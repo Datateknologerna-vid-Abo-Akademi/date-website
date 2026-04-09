@@ -22,11 +22,9 @@
                         <a href="{% url 'archive:detail' year collection.title %}" class="text-decoration-none">
                             <div class="card album-card h-100">
                                 <div class="album-thumb-wrapper">
-                                    {% with collection.pictures_prefetched|first as thumb %}
-                                        {% if thumb %}
-                                            <img class="album-thumb" src="{{ thumb.image.url }}" loading="lazy" alt="{{ collection.title }}">
-                                        {% endif %}
-                                    {% endwith %}
+                                    {% if collection.first_picture_url %}
+                                        <img class="album-thumb" src="{{ collection.first_picture_url }}" loading="lazy" alt="{{ collection.title }}">
+                                    {% endif %}
                                 </div>
                                 <div class="card-body p-2">
                                     <h5 class="card-title text-truncate mb-1" title="{{ collection.title }}">{{ collection.title }}</h5>

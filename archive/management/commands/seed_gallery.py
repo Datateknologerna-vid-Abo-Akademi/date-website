@@ -4,7 +4,7 @@ from django.utils import timezone
 from io import BytesIO
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from PIL import Image, ImageDraw
 
 from archive.models import Collection, Picture
@@ -99,14 +99,17 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         from django.conf import settings
         if not getattr(settings, 'DEVELOP', False):
-            raise SystemExit("seed_gallery must not be run outside of a development environment (DEVELOP must be True).")
+            raise CommandError("seed_gallery must not be run outside of a development environment (DEVELOP must be True).")
         if getattr(settings, 'USE_S3', False):
-            raise SystemExit("seed_gallery must not be run with USE_S3=True — it would upload fake images to S3.")
+            raise CommandError("seed_gallery must not be run with USE_S3=True — it would upload fake images to S3.")
 
         if options["clear"]:
-            qs = Collection.objects.filter(title__startswith=SEED_PREFIX)
-            count = qs.count()
-            qs.delete()
+            collections = list(Collection.objects.filter(title__startswith=SEED_PREFIX))
+            count = len(collections)
+            for collection in collections:
+                for picture in collection.picture_set.all():
+                    picture.delete()
+                collection.delete()
             self.stdout.write(self.style.WARNING(f"Cleared {count} seeded album(s)."))
 
         album_count = options["albums"]

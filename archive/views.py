@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import permission_required, user_passes_test
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Count, Prefetch
+from django.db.models import Count, OuterRef, Subquery
 from django.http import Http404, JsonResponse
 from django.template.loader import render_to_string
 from django.shortcuts import redirect, render
@@ -44,14 +44,24 @@ def year_index(request):
 
 @user_passes_test(user_type, login_url='/members/login/')
 def picture_index(request, year):
-    first_picture_qs = Picture.objects.order_by('id')
+    first_picture_qs = Picture.objects.filter(collection=OuterRef('pk')).order_by('id')
+    picture_image_field = Picture._meta.get_field('image')
     collections = (
         Collection.objects
         .filter(type="Pictures", pub_date__year=year)
-        .prefetch_related(Prefetch('picture_set', queryset=first_picture_qs, to_attr='pictures_prefetched'))
-        .annotate(picture_count=Count('picture'))
+        .annotate(
+            picture_count=Count('picture'),
+            first_picture_image=Subquery(first_picture_qs.values('image')[:1]),
+        )
         .order_by('-pub_date')
     )
+    collections = list(collections)
+    for collection in collections:
+        collection.first_picture_url = (
+            picture_image_field.storage.url(collection.first_picture_image)
+            if collection.first_picture_image
+            else ''
+        )
     context = {
         'type': "pictures",
         'year': year,
