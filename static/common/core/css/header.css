@@ -118,7 +118,7 @@ li .dropdown-menu {
 @media (min-width: 1200px){
     .container, .container-lg, .container-md, .container-sm, .container-xl {
         max-width: none;
-        padding: 0 0 0 20px;
+        padding: 0 20px 0 20px;
     }
 }
 @media (min-width : 992px) {

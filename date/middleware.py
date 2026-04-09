@@ -25,9 +25,9 @@ class LanguageStateMiddleware(MiddlewareMixin):
 class LangMiddleware(MiddlewareMixin):
     @staticmethod
     def process_request(request):
-        # No URL-based language prefixes. Associations can opt out of browser
-        # language detection so first visits always start from LANGUAGE_CODE.
-        if getattr(settings, "USE_ACCEPT_LANGUAGE_HEADER", True):
+        # No URL-based language prefixes. Browser language detection is opt-in
+        # so first visits start from LANGUAGE_CODE unless a cookie is present.
+        if getattr(settings, "USE_ACCEPT_LANGUAGE_HEADER", False):
             lang = get_language_from_request(request, check_path=False)
         else:
             lang = request.COOKIES.get(settings.LANGUAGE_COOKIE_NAME)
