@@ -1,8 +1,9 @@
 import logging
+from urllib.parse import urlsplit, urlunsplit
 
 from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponseRedirect
-from django.shortcuts import redirect
+from django.shortcuts import redirect, resolve_url
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.urls import resolve, reverse_lazy
 from django.utils.translation import gettext_lazy as _
@@ -21,6 +22,7 @@ from two_factor.views import (
 from two_factor.views.mixins import OTPRequiredMixin
 
 logger = logging.getLogger('date')
+INFERRED_REDIRECT_SESSION_KEY = 'members_login_inferred_next'
 
 
 def member_has_2fa(user):
@@ -49,20 +51,67 @@ class MemberLoginView(LoginView):
         (LoginView.BACKUP_STEP, BackupTokenForm),
     )
 
+    def get(self, request, *args, **kwargs):
+        if self.redirect_field_name not in request.GET:
+            request.session.pop(INFERRED_REDIRECT_SESSION_KEY, None)
+            redirect_to = self._get_referer_redirect_target(request)
+            if redirect_to:
+                request.session[INFERRED_REDIRECT_SESSION_KEY] = redirect_to
+
+        return super().get(request, *args, **kwargs)
+
+    def get_redirect_url(self):
+        redirect_to = super().get_redirect_url()
+        if redirect_to:
+            return redirect_to
+
+        redirect_to = self.request.session.get(INFERRED_REDIRECT_SESSION_KEY, '')
+        if url_has_allowed_host_and_scheme(
+            redirect_to,
+            allowed_hosts=self.get_success_url_allowed_hosts(),
+            require_https=self.request.is_secure(),
+        ):
+            return redirect_to
+        return ''
+
+    def get_success_url(self):
+        return self.get_redirect_url() or resolve_url('index')
+
+    def _get_referer_redirect_target(self, request):
+        referer = request.META.get('HTTP_REFERER')
+        if not referer:
+            return None
+
+        if not url_has_allowed_host_and_scheme(
+            referer,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        ):
+            return None
+
+        referer_parts = urlsplit(referer)
+        if referer_parts.path == request.path:
+            return None
+
+        return urlunsplit(('', '', referer_parts.path or '/', referer_parts.query, ''))
+
     def done(self, form_list, **kwargs):
         response = super().done(form_list, **kwargs)
         redirect_to = self.get_success_url()
-        target = self.request.GET.get(self.redirect_field_name)
+        target = self.get_redirect_url()
 
         if getattr(self.get_user(), 'otp_device', None) or not target or not OTPRequiredMixin.is_otp_view(target):
+            self.request.session.pop(INFERRED_REDIRECT_SESSION_KEY, None)
             return response
 
         resolver_match = resolve(target)
         if resolver_match.namespace == 'admin' and self.request.user.is_active and self.request.user.is_staff and not member_has_2fa(self.request.user):
+            self.request.session.pop(INFERRED_REDIRECT_SESSION_KEY, None)
             return HttpResponseRedirect(redirect_to)
 
         if target:
             self.request.session['next'] = redirect_to
+        self.request.session.pop(INFERRED_REDIRECT_SESSION_KEY, None)
         return redirect('two_factor:setup')
 
 
@@ -112,9 +161,13 @@ class MemberSetupCompleteView(SetupCompleteView):
         next_target = request.session.pop('next', None)
         # The value comes from get_success_url() during login, but validate it
         # before redirecting in case the session is tampered with.
-        if next_target and url_has_allowed_host_and_scheme(next_target, allowed_hosts={request.get_host()}):
+        if next_target and url_has_allowed_host_and_scheme(
+            next_target,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        ):
             return redirect(next_target)
-        return redirect('members:info')
+        return redirect('index')
 
 
 class TwoFactorProfileRedirectView(RedirectView):

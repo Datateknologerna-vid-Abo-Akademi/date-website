@@ -18,7 +18,11 @@ from members.forms import (FunctionaryForm, MemberCreationForm, SignUpForm,
 from members.functionary import get_selected_role, get_selected_year
 from members.models import (Functionary, FunctionaryRole, Member,
                             MembershipType, ORDINARY_MEMBER, Subscription)
-from members.two_factor import MemberSetupView, StrictTOTPDeviceForm
+from members.two_factor import (
+    INFERRED_REDIRECT_SESSION_KEY,
+    MemberSetupView,
+    StrictTOTPDeviceForm,
+)
 
 
 class UsernameValidatorTest(TestCase):
@@ -315,7 +319,49 @@ class TwoFactorIntegrationTests(TestCase):
         })
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.headers['Location'], reverse('members:info'))
+        self.assertEqual(response.headers['Location'], reverse('index'))
+
+    def test_login_redirects_to_safe_referer_when_next_is_missing(self):
+        login_url = reverse('members:login')
+        response = self.client.get(login_url, HTTP_REFERER='http://testserver/events/?page=2')
+
+        self.assertEqual(response.status_code, 200)
+        prefix = self._wizard_prefix(response)
+
+        response = self.client.post(login_url, data={
+            f'{prefix}-current_step': 'auth',
+            'auth-username': self.member.email,
+            'auth-password': 'secret12345',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], '/events/?page=2')
+        self.assertNotIn(INFERRED_REDIRECT_SESSION_KEY, self.client.session)
+
+    def test_login_clears_stale_inferred_redirect_when_referer_is_missing(self):
+        login_url = reverse('members:login')
+        session = self.client.session
+        session[INFERRED_REDIRECT_SESSION_KEY] = '/stale-path/'
+        session.save()
+
+        response = self.client.get(login_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(INFERRED_REDIRECT_SESSION_KEY, self.client.session)
+
+    def test_login_ignores_external_referer_and_defaults_to_homepage(self):
+        login_url = reverse('members:login')
+        response = self.client.get(login_url, HTTP_REFERER='https://evil.example/phish')
+        prefix = self._wizard_prefix(response)
+
+        response = self.client.post(login_url, data={
+            f'{prefix}-current_step': 'auth',
+            'auth-username': self.member.email,
+            'auth-password': 'secret12345',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], reverse('index'))
 
     def test_strict_totp_form_saves_device_with_one_step_tolerance(self):
         form_key = '3132333435363738393031323334353637383930'
@@ -432,7 +478,21 @@ class TwoFactorIntegrationTests(TestCase):
         response = self.client.get(reverse('two_factor:setup_complete'))
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.headers['Location'], reverse('members:info'))
+        self.assertEqual(response.headers['Location'], reverse('index'))
+        self.assertNotIn('next', self.client.session)
+
+    def test_setup_complete_rejects_insecure_same_host_redirect_on_https(self):
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+        device = TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
+        session = self.client.session
+        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
+        session['next'] = 'http://testserver/admin/'
+        session.save()
+
+        response = self.client.get(reverse('two_factor:setup_complete'), secure=True)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], reverse('index'))
         self.assertNotIn('next', self.client.session)
 
     def test_disable_two_factor_removes_all_devices_for_selected_members(self):

@@ -1,17 +1,20 @@
 from datetime import date, timedelta
+import importlib
 from unittest.mock import patch
 
 from django.conf import settings
+from django.contrib import admin
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.template import Context, Template
 from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
-from django.urls import reverse
+from django.urls import clear_url_caches, reverse, set_urlconf
 from django.utils import timezone
 from django.utils import translation
 
+from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
 from date.views import get_homepage_template_name, handler500
 from events.models import Event
@@ -395,3 +398,64 @@ class HomepageTemplateSelectionTests(TestCase):
     @patch("date.views.random.randrange", return_value=0)
     def test_non_kk_never_uses_april_template(self, _randrange, _localdate):
         self.assertEqual(get_homepage_template_name(), "date/start.html")
+
+
+class AssociationHomepageSmokeTests(TestCase):
+    association_settings_modules = {
+        "date": "core.settings.date",
+        "kk": "core.settings.kk",
+        "biocum": "core.settings.biocum",
+        "demo": "core.settings.demo",
+        "pulterit": "core.settings.pulterit",
+        "on": "core.settings.on",
+    }
+
+    def _association_overrides(self, association):
+        settings_module = importlib.import_module(self.association_settings_modules[association])
+        installed_apps = [
+            app for app in settings_module.INSTALLED_APPS
+            if app != "django_cleanup"
+        ]
+        overrides = {
+            "PROJECT_NAME": association,
+            "INSTALLED_APPS": installed_apps,
+            "ROOT_URLCONF": settings_module.ROOT_URLCONF,
+            "TEMPLATES": settings_module.TEMPLATES,
+            "CONTENT_VARIABLES": settings_module.CONTENT_VARIABLES,
+            "STAFF_GROUPS": settings_module.STAFF_GROUPS,
+            "STATICFILES_DIRS": settings_module.STATICFILES_DIRS,
+            "ARCHIVE_ENABLED": getattr(settings_module, "ARCHIVE_ENABLED", True),
+            "MEMBERS_SIGNUP_ENABLED": getattr(settings_module, "MEMBERS_SIGNUP_ENABLED", True),
+            "BILLING_CONTEXT": getattr(settings_module, "BILLING_CONTEXT", {}),
+            "EXPERIMENTAL_FEATURES": getattr(settings_module, "EXPERIMENTAL_FEATURES", []),
+        }
+        return overrides
+
+    def _clear_routing_caches(self):
+        clear_url_caches()
+        set_urlconf(None)
+
+    def _get_association_homepage(self, association):
+        default_admin_registry = admin.site._registry.copy()
+        custom_admin_registry = admin_site._registry.copy()
+        with override_settings(**self._association_overrides(association)):
+            self._clear_routing_caches()
+            try:
+                return self.client.get("/")
+            finally:
+                admin.site._registry = default_admin_registry
+                admin_site._registry = custom_admin_registry
+                self._clear_routing_caches()
+
+    def test_association_homepages_render(self):
+        for association in self.association_settings_modules:
+            with self.subTest(association=association):
+                response = self._get_association_homepage(association)
+                self.assertEqual(response.status_code, 200)
+
+    @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
+    @patch("date.views.random.randrange", return_value=0)
+    def test_kk_april_homepage_renders(self, _randrange, _localdate):
+        response = self._get_association_homepage("kk")
+
+        self.assertEqual(response.status_code, 200)
