@@ -333,19 +333,28 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 30000  # large value for large events
 
 ALUMNI_SETTINGS = os.environ.get("ALUMNI_SETTINGS", '')
 
+DEFAULT_EXCEPTION_REPORTER_FILTER = 'core.redaction.DateExceptionReporterFilter'
+
+LOG_LEVEL = env('LOG_LEVEL', str, 'DEBUG' if DEBUG else 'INFO')
+DJANGO_LOG_LEVEL = env('DJANGO_LOG_LEVEL', str, 'INFO')
+DATE_LOG_LEVEL = env('DATE_LOG_LEVEL', str, LOG_LEVEL)
+
 LOGGING = {
     'version': 1,
+    'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
+            '()': 'core.redaction.RedactingFormatter',
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
+            '()': 'core.redaction.RedactingFormatter',
             'format': '%(levelname)s %(message)s'
         },
     },
     'handlers': {
         'console': {
-            'level': 'INFO',
+            'level': 'NOTSET',
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
@@ -354,21 +363,31 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
+        'console_error': {
+            'level': 'ERROR',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': DJANGO_LOG_LEVEL,
             'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console_error'],
+            'level': 'ERROR',
+            'propagate': False,
         },
         'django_auth_ldap': {
             'handlers': ['console_debug'],
-            'level': 'DEBUG',
+            'level': DATE_LOG_LEVEL,
             'propagate': True,
         },
         'date': {
             'handlers': ['console_debug'],
-            'level': 'DEBUG',
+            'level': DATE_LOG_LEVEL,
             'propagate': True,
         },
         'daphne': {

@@ -14,6 +14,7 @@ services:
     command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python /code/manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn -w 3 --max-requests 1000 --max-requests-jitter 100 --bind=0.0.0.0 core.wsgi"
     environment:
       - SECRET_KEY=${DATE_SECRET_KEY}
+      - APP_VERSION=${DATE_IMG_TAG}
       - DEBUG=${DATE_DEBUG}
       - DEVELOP=${DATE_DEVELOP}
       - PROJECT_NAME=${PROJECT_NAME}
@@ -48,6 +49,7 @@ services:
     command: /bin/bash -c "./wait-for-postgres.sh db:5432 && daphne -b 0.0.0.0 core.routing:application"
     environment:
       - SECRET_KEY=${DATE_SECRET_KEY}
+      - APP_VERSION=${DATE_IMG_TAG}
       - DEBUG=${DATE_DEBUG}
       - DEVELOP=${DATE_DEVELOP}
       - PROJECT_NAME=${PROJECT_NAME}
@@ -81,6 +83,7 @@ services:
     command: celery -A core worker -l info -c 2
     environment:
       - DEBUG=${DATE_DEBUG}
+      - APP_VERSION=${DATE_IMG_TAG}
       - ENABLE_LANGUAGE_FEATURES=${ENABLE_LANGUAGE_FEATURES}
       - EMAIL_HOST=${EMAIL_HOST}
       - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
