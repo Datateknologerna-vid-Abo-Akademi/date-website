@@ -62,6 +62,26 @@ div a:hover{
     border-radius: var(--defaultRadius);
 }
 
+/* Archive gallery text should stay bright against Biocum's green gallery background. */
+body .container-md.container-margin-top .text-center.mb-3 > h1,
+#page-header .hero-text-main,
+#page-header h3,
+#page-header .text-muted,
+#page-header .back-btn a,
+#page-header + .center .pagination a,
+#photo-grid + .center .pagination a,
+.container-margin-top > .text-center.mb-3:first-child h1,
+.container-margin-top > .text-center.mb-3:first-child .back-btn a {
+    color: var(--textColorLightish) !important;
+}
+
+#page-header .back-btn a:hover,
+#page-header + .center .pagination a:hover:not(.active, .disabled),
+#photo-grid + .center .pagination a:hover:not(.active, .disabled),
+.container-margin-top > .text-center.mb-3:first-child .back-btn a:hover {
+    color: var(--textColorLight);
+}
+
 /*  BUTTON */
 .theme-button {
     background-color: var(--primaryColorLighter);
