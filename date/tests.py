@@ -3,6 +3,7 @@ import importlib
 from unittest.mock import patch
 
 from django.conf import settings
+from django.contrib import admin
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -14,6 +15,7 @@ from django.urls import clear_url_caches, reverse, set_urlconf
 from django.utils import timezone
 from django.utils import translation
 
+from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
 from date.views import get_homepage_template_name, handler500
 from events.models import Event
@@ -436,11 +438,15 @@ class AssociationHomepageSmokeTests(TestCase):
         set_urlconf(None)
 
     def _get_association_homepage(self, association):
+        default_admin_registry = admin.site._registry.copy()
+        custom_admin_registry = admin_site._registry.copy()
         with override_settings(**self._association_overrides(association)):
             self._clear_routing_caches()
             try:
                 return self.client.get("/")
             finally:
+                admin.site._registry = default_admin_registry
+                admin_site._registry = custom_admin_registry
                 self._clear_routing_caches()
 
     def test_association_homepages_render(self):
