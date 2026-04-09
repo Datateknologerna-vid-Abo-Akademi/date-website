@@ -1,0 +1,31 @@
+# Example per-association values for Pulterit.
+# Use after values-hetzner.yaml and values-backblaze-b2.example.yaml.
+
+django:
+  projectName: pulterit
+  allowedHosts:
+    - pulterit.org
+    - www.pulterit.org
+  allowedOrigins:
+    - https://pulterit.org
+    - https://www.pulterit.org
+
+ingress:
+  hosts:
+    - host: pulterit.org
+      paths:
+        - path: /
+          pathType: Prefix
+
+media:
+  s3:
+    bucketName: "pulterit-website-media"
+    privateBucketName: "pulterit-website-private"
+    publicBucketName: "pulterit-website-public"
+    privateLocation: "pulterit/media"
+    publicLocation: "pulterit/public"
+
+backups:
+  objectStorage:
+    bucketName: "pulterit-website-backups"
+    prefix: "pulterit-website/postgresql"

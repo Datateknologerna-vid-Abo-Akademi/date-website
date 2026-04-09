@@ -1,0 +1,82 @@
+ingress:
+  className: traefik
+
+web:
+  # Do not increase without disabling migrateOnStartup and using a migration Job
+  # or another single-run migration step.
+  replicaCount: 1
+  migrateOnStartup: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+asgi:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
+celery:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 300Mi
+    limits:
+      memory: 768Mi
+
+migrations:
+  job:
+    enabled: false
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 768Mi
+
+postgresql:
+  persistence:
+    storageClass: hcloud-volumes
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 1Gi
+
+backups:
+  enabled: true
+  schedule: "17 2 * * *"
+  retentionDays: 14
+  persistence:
+    storageClass: hcloud-volumes
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+redis:
+  persistence:
+    enabled: false
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      memory: 128Mi
+
+media:
+  persistence:
+    storageClass: hcloud-volumes
+    size: 10Gi

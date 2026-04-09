@@ -1,0 +1,219 @@
+image:
+  repository: ghcr.io/datateknologerna-vid-abo-akademi/date-website
+  tag: master
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podSecurityContext: {}
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  # Do not set runAsNonRoot until the application image defines a non-root USER.
+  # The current Dockerfile does not, and forcing it here would break startup.
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+secret:
+  existingSecret: ""
+
+django:
+  projectName: date
+  secretKey: ""
+  debug: false
+  develop: false
+  enableLanguageFeatures: false
+  allowedHosts:
+    - datateknologerna.org
+  allowedOrigins:
+    - https://datateknologerna.org
+  useXForwardedHost: true
+  trustXForwardedProto: true
+  extraStaffGroups: []
+  alumniSettings: "{}"
+  turnstile:
+    siteKey: ""
+    secretKey: ""
+
+database:
+  name: postgres
+  username: postgres
+  password: ""
+  external:
+    host: ""
+    port: 5432
+
+postgresql:
+  enabled: true
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  image:
+    repository: postgres
+    tag: "16-alpine"
+    pullPolicy: IfNotPresent
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+  resources: {}
+
+backups:
+  enabled: false
+  schedule: "17 2 * * *"
+  # Only prunes the local /backups directory. Configure B2/object-storage
+  # lifecycle rules separately for remote backup retention.
+  retentionDays: 14
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 86400
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  image:
+    repository: postgres
+    tag: "16-alpine"
+    pullPolicy: IfNotPresent
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+  objectStorage:
+    enabled: false
+    endpointUrl: ""
+    regionName: ""
+    bucketName: ""
+    prefix: "date-website/postgresql"
+    accessKeyId: ""
+    secretAccessKey: ""
+    # Requires backups.securityContext.runAsUser=0 when using an Alpine image,
+    # because apk add --no-cache aws-cli needs package-install privileges.
+    installAwsCli: false
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    runAsUser: 999
+    runAsGroup: 999
+  podSecurityContext:
+    fsGroup: 999
+  resources: {}
+
+redis:
+  enabled: true
+  externalUrl: ""
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  image:
+    repository: valkey/valkey
+    tag: "7.2-alpine"
+    pullPolicy: IfNotPresent
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+  resources: {}
+
+media:
+  s3:
+    enabled: false
+    endpointUrl: ""
+    regionName: ""
+    signatureVersion: "s3v4"
+    addressingStyle: "path"
+    accessKeyId: ""
+    secretAccessKey: ""
+    bucketName: ""
+    privateBucketName: ""
+    publicBucketName: ""
+    privateLocation: "date/media"
+    publicLocation: "date/public"
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 5Gi
+
+email:
+  hostReceiver: info@datateknologerna.org
+  defaultFrom: admin@datateknologerna.org
+  host: smtp.gmail.com
+  username: ""
+  password: ""
+
+web:
+  # Do not increase without disabling migrateOnStartup and using a migration Job
+  # or another single-run migration step.
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8000
+  gunicorn:
+    workers: 3
+    maxRequests: 1000
+    maxRequestsJitter: 100
+  migrateOnStartup: false
+  collectstaticOnStartup: true
+  resources: {}
+
+asgi:
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8000
+  wsPath: /ws
+  resources: {}
+
+celery:
+  replicaCount: 1
+  concurrency: 2
+  logLevel: info
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 60
+    timeoutSeconds: 10
+    failureThreshold: 3
+  resources: {}
+
+migrations:
+  job:
+    enabled: false
+    hook: post-install,post-upgrade
+    hookDeletePolicy: before-hook-creation,hook-succeeded
+    backoffLimit: 3
+    resources: {}
+
+ingress:
+  enabled: true
+  className: traefik
+  annotations: {}
+  hosts:
+    - host: datateknologerna.org
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+extraEnv: {}

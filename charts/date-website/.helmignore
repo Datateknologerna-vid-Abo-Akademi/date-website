@@ -1,0 +1,8 @@
+.git/
+.github/
+.idea/
+.vscode/
+*.env
+*.env.*
+*.log
+__pycache__/

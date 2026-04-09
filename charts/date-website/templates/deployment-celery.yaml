@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "date-website.fullname" . }}-celery
+  labels:
+    {{- include "date-website.labels" . | nindent 4 }}
+    app.kubernetes.io/component: celery
+spec:
+  replicas: {{ .Values.celery.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "date-website.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: celery
+  template:
+    metadata:
+      labels:
+        {{- include "date-website.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: celery
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "date-website.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: celery
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - -c
+          args:
+            - |
+              set -e
+              ./wait-for-postgres.sh "${DB_HOST}:${DB_PORT}"
+              exec celery -A core worker -l {{ .Values.celery.logLevel }} -c {{ .Values.celery.concurrency }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "date-website.fullname" . }}
+            - secretRef:
+                name: {{ include "date-website.secretName" . }}
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - celery -A core inspect ping -d "celery@${HOSTNAME}" | grep -q OK
+            initialDelaySeconds: {{ .Values.celery.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.celery.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.celery.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.celery.livenessProbe.failureThreshold }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.celery.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- include "date-website.mediaVolumeMount" . | nindent 10 }}
+      {{- include "date-website.mediaVolume" . | nindent 6 }}
