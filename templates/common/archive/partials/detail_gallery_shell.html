@@ -1,0 +1,11 @@
+{% load i18n %}
+<div class="grid" id="photo-grid">
+    <div class="grid-sizer"></div>
+    {% include 'archive/partials/picture_items.html' %}
+</div>
+
+<div id="gallery-loading" class="gallery-loading" aria-live="polite" hidden></div>
+<div id="gallery-sentinel" class="gallery-sentinel" aria-hidden="true"></div>
+<noscript>
+    <p class="gallery-noscript">{% trans 'JavaScript krävs för att ladda fler bilder automatiskt.' %}</p>
+</noscript>

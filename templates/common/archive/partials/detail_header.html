@@ -1,0 +1,17 @@
+{% load i18n %}
+<div class="text-center" id="page-header">
+    <h1 class="hero-text-main">&nbsp; {{ album }} &nbsp;</h1>
+    <h3>{% trans 'Publicerats' %} <i class="far fa-calendar-alt"></i> {{ collection.pub_date_pretty }}</h3>
+    <p class="text-muted mb-1">
+        <i class="far fa-images"></i>
+        {% blocktranslate count total_count=total_count trimmed %}
+            {{ total_count }} bild
+        {% plural %}
+            {{ total_count }} bilder
+        {% endblocktranslate %}
+    </p>
+    {% if error_msg %}
+        <p>{{ error_msg }}</p>
+    {% endif %}
+    <div class="back-btn"><a href="{% url 'archive:pictures' year %}"><i class="fas fa-chevron-left"></i> {% trans "Tillbaka" %}</a></div>
+</div>

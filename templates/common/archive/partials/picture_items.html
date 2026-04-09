@@ -1,0 +1,16 @@
+{% load i18n %}
+{% for picture in pictures %}
+    <a
+        class="grid-item glightbox"
+        data-gallery="gallery"
+        data-global-index="{{ pictures.start_index|add:forloop.counter0 }}"
+        href="{{ picture.image.url }}"
+        aria-label="{% blocktrans with image_number=pictures.start_index|add:forloop.counter0 total=total_count %}Öppna bild {{ image_number }} av {{ total }}{% endblocktrans %}">
+        <img
+            class="gallery-image"
+            src="{{ picture.image.url }}"
+            loading="lazy"
+            decoding="async"
+            alt="{% blocktrans with image_number=pictures.start_index|add:forloop.counter0 total=total_count %}Bild {{ image_number }} av {{ total }} i albumet{% endblocktrans %}">
+    </a>
+{% endfor %}
