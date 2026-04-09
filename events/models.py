@@ -90,6 +90,24 @@ class Event(models.Model):
     def __str__(self):
         return self.title
 
+    @property
+    def background_image_url(self):
+        for field_name in ("image", "s3_image"):
+            field = getattr(self, field_name, None)
+            if not field:
+                continue
+            try:
+                return field.url
+            except Exception as exc:
+                logger.warning(
+                    "Unable to resolve %s URL for event %s (%s): %s",
+                    field_name,
+                    self.pk,
+                    self.slug or self.title,
+                    exc,
+                )
+        return ""
+
     def event_date_start_pretty(self):
         return self.event_date_start.strftime("%-d %B")
 

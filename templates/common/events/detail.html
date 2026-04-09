@@ -15,7 +15,7 @@
         <script src="{% static 'core/js/live-attendee-list.js' %}"></script>
         <style>
             .background-img{
-                background: url("{% if event.image %}{{ event.image.url }}{% elif event.s3_image %}{{ event.s3_image.url }}{% endif %}") no-repeat center center;
+                background: url("{{ event.background_image_url }}") no-repeat center center;
                 background-attachment: fixed;
                 -webkit-background-size: cover;
                 -moz-background-size: cover;

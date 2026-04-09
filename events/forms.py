@@ -9,6 +9,7 @@ from django.conf import settings
 from date.functions import slugify_max
 from events import models
 from events.models import Event
+from events.widgets import SafeAdminFileWidget
 
 logger = logging.getLogger('date')
 
@@ -63,6 +64,9 @@ class EventCreationForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        for field_name in ('image', 's3_image'):
+            if field_name in self.fields:
+                self.fields[field_name].widget = SafeAdminFileWidget()
         if 'require_registration_terms' in self.fields:
             if models.registration_terms_feature_enabled():
                 self.fields['require_registration_terms'].initial = True
@@ -149,6 +153,9 @@ class EventEditForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        for field_name in ('image', 's3_image'):
+            if field_name in self.fields:
+                self.fields[field_name].widget = SafeAdminFileWidget()
         if 'require_registration_terms' in self.fields and not models.registration_terms_feature_enabled():
             self.fields.pop('require_registration_terms')
         # exclude the current instance from parent choices so an event cannot be its own parent
