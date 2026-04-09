@@ -1,6 +1,6 @@
 import logging
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.conf import settings
 from django.contrib import admin
@@ -414,6 +414,8 @@ class EventRegistrationWindowTests(TestCase):
 
 
 class EventAdminTests(TestCase):
+    NON_DATE_PROJECTS = ("kk", "on", "pulterit", "biocum", "demo")
+
     def setUp(self):
         self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
         self.admin_user = Member.objects.create_superuser(
@@ -466,6 +468,52 @@ class EventAdminTests(TestCase):
             edit_form.fields["redirect_link"].clean("example.com"),
             "https://example.com",
         )
+
+    @override_settings(PROJECT_NAME="date")
+    def test_add_page_renders_registration_terms_field_when_feature_enabled(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("admin:events_event_add"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="require_registration_terms"')
+
+    @override_settings(PROJECT_NAME="date")
+    def test_change_page_renders_registration_terms_field_when_feature_enabled(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="require_registration_terms"')
+
+    def test_non_date_projects_hide_registration_terms_field_on_add_page(self):
+        self.client.force_login(self.admin_user)
+        for project_name in self.NON_DATE_PROJECTS:
+            with self.subTest(project_name=project_name), override_settings(PROJECT_NAME=project_name):
+                response = self.client.get(reverse("admin:events_event_add"))
+                self.assertEqual(response.status_code, 200)
+                self.assertNotContains(response, 'name="require_registration_terms"', status_code=200)
+
+    def test_non_date_projects_hide_registration_terms_field_on_change_page(self):
+        self.client.force_login(self.admin_user)
+        for project_name in self.NON_DATE_PROJECTS:
+            with self.subTest(project_name=project_name), override_settings(PROJECT_NAME=project_name):
+                response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+                self.assertEqual(response.status_code, 200)
+                self.assertNotContains(response, 'name="require_registration_terms"', status_code=200)
+
+    def test_change_page_renders_when_image_url_cannot_be_resolved(self):
+        self.event.image = "events/broken.jpg"
+        self.event.save(update_fields=["image"])
+        self.client.force_login(self.admin_user)
+
+        with patch(
+            "django.db.models.fields.files.FieldFile.url",
+            new_callable=PropertyMock,
+            side_effect=RuntimeError("broken storage"),
+        ):
+            response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
 
 
 class TranslationAdminRegressionTests(TestCase):
@@ -821,6 +869,23 @@ class EventTemplateSelectionTests(TestCase):
         )
         response = self.client.get(reverse("events:detail", args=[event.slug]))
         self.assertTemplateUsed(response, "events/event_passcode.html")
+
+    def test_detail_page_renders_when_image_url_cannot_be_resolved(self):
+        event = Event.objects.create(
+            title="Broken Image Event",
+            slug="broken-image-event",
+            author=self.author,
+            image="events/broken.jpg",
+        )
+
+        with patch(
+            "django.db.models.fields.files.FieldFile.url",
+            new_callable=PropertyMock,
+            side_effect=RuntimeError("broken storage"),
+        ):
+            response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertEqual(response.status_code, 200)
 
 
 class EventRoutingTests(TestCase):

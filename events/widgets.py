@@ -1,7 +1,12 @@
-from django.forms import widgets
+import logging
 
 from django.conf import settings
+from django.contrib.admin import widgets as admin_widgets
+from django.forms import widgets
 from django.template.loader import render_to_string
+
+
+logger = logging.getLogger("date")
 
 
 class PrettyJSONWidget(widgets.Textarea):
@@ -27,3 +32,16 @@ class PrettyJSONWidget(widgets.Textarea):
                 'prettyjson/prettyjson.js',
             ),
         )
+
+
+class SafeAdminFileWidget(admin_widgets.AdminFileWidget):
+    """Avoid crashing the admin form when a stored file cannot resolve a URL."""
+
+    def is_initial(self, value):
+        if not value:
+            return False
+        try:
+            return bool(value.url)
+        except Exception as exc:
+            logger.warning("Unable to resolve admin file widget URL: %s", exc)
+            return False

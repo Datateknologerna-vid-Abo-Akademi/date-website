@@ -15,7 +15,7 @@ from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInl
 from admin_ordering.admin import OrderableAdmin
 
 from events import forms
-from events.models import Event, EventAttendees, EventRegistrationForm
+from events.models import Event, EventAttendees, EventRegistrationForm, registration_terms_feature_enabled
 from .widgets import PrettyJSONWidget
 
 logger = logging.getLogger('date')
@@ -94,6 +94,12 @@ class EventAdmin(EventTranslationAdminBase):
         EventRegistrationFormInline,
         EventAttendeesFormInline
     ]
+
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj))
+        if not registration_terms_feature_enabled() and "require_registration_terms" in fields:
+            fields.remove("require_registration_terms")
+        return fields
 
     def get_urls(self):
         urls = super().get_urls()
