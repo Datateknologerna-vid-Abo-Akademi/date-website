@@ -32,7 +32,7 @@
           </a>
         </div>
         <div class="offcanvas-body p-lg-0 justify-content-end">
-            <ul class="navbar-nav">
+            <ul class="navbar-nav{% if not ENABLE_LANGUAGE_FEATURES or LANGUAGES|length <= 1 %} navbar-nav-no-language{% endif %}">
                 {% for category in categories %}
                     {% if category.use_category_url %}
                         <li class="nav-item">
@@ -61,16 +61,48 @@
                 {% endfor %}
                     <!-- Language picker -->
                     {% if ENABLE_LANGUAGE_FEATURES and LANGUAGES|length > 1 %}
+                    {% get_current_language as LANGUAGE_CODE %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        {% trans "Language" %}
+                        <a class="nav-link dropdown-toggle language-dropdown-toggle" href="#" id="languageDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{% trans 'Choose language' %}">
+                            <svg class="language-dropdown-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                                <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM6.5 1.5C5.9 2.3 5.4 3.4 5.1 4.7H2.7A6.6 6.6 0 0 1 6.5 1.5ZM1.7 6h3.1a13.1 13.1 0 0 0 0 4H1.7a6.6 6.6 0 0 1 0-4Zm1 5.3h2.4c.3 1.3.8 2.4 1.4 3.2a6.6 6.6 0 0 1-3.8-3.2ZM7.4 14c-.4-.6-.8-1.6-1-2.7h3.2c-.2 1.1-.6 2.1-1 2.7-.2.4-.5.6-.6.6s-.4-.2-.6-.6Zm2.5-4H6.1a11.7 11.7 0 0 1 0-4h3.8a11.7 11.7 0 0 1 0 4Zm-.3-5.3H6.4c.2-1.1.6-2.1 1-2.7.2-.4.5-.6.6-.6s.4.2.6.6c.4.6.8 1.6 1 2.7Zm-.1 9.8c.6-.8 1.1-1.9 1.4-3.2h2.4a6.6 6.6 0 0 1-3.8 3.2Zm4.8-4.5h-3.1a13.1 13.1 0 0 0 0-4h3.1a6.6 6.6 0 0 1 0 4Zm-3.4-5.3c-.3-1.3-.8-2.4-1.4-3.2a6.6 6.6 0 0 1 3.8 3.2h-2.4Z"></path>
+                            </svg>
+                            <span class="language-dropdown-current">{{ LANGUAGE_CODE|upper }}</span>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end language-dropdown-menu" aria-labelledby="languageDropdownMenuLink">
                             {% for language in LANGUAGES %}
                                 <li>
                                     <form action="{% url 'set_lang' %}" method="post" style="display:contents">
                                         {% csrf_token %}
-                                        <button class="dropdown-item" name="lang" type="submit" value="{{ language.0 }}">{{ language.1 }}</button>
+                                        <button class="dropdown-item language-dropdown-item{% if language.0 == LANGUAGE_CODE %} active{% endif %}" name="lang" type="submit" value="{{ language.0 }}"{% if language.0 == LANGUAGE_CODE %} aria-current="true"{% endif %}>
+                                            <span class="language-dropdown-choice">
+                                                {% if language.0 == "sv" %}
+                                                    <svg class="language-flag" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 10" aria-hidden="true" focusable="false">
+                                                        <rect width="16" height="10" fill="#006aa7"></rect>
+                                                        <rect x="4" width="2" height="10" fill="#fecc00"></rect>
+                                                        <rect y="4" width="16" height="2" fill="#fecc00"></rect>
+                                                    </svg>
+                                                {% elif language.0 == "en" %}
+                                                    <svg class="language-flag" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 10" aria-hidden="true" focusable="false">
+                                                        <rect width="16" height="10" fill="#012169"></rect>
+                                                        <path d="M0 0h1.8L16 8.9V10h-1.8L0 1.1Zm16 0v1.1L1.8 10H0V8.9L14.2 0Z" fill="#fff"></path>
+                                                        <path d="M0 0h1L16 9.4V10h-1L0 .6Zm16 0v.6L1 10H0v-.6L15 0Z" fill="#c8102e"></path>
+                                                        <path d="M6.4 0h3.2v10H6.4zM0 3.4h16v3.2H0z" fill="#fff"></path>
+                                                        <path d="M7.1 0h1.8v10H7.1zM0 4.1h16v1.8H0z" fill="#c8102e"></path>
+                                                    </svg>
+                                                {% elif language.0 == "fi" %}
+                                                    <svg class="language-flag" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 10" aria-hidden="true" focusable="false">
+                                                        <rect width="16" height="10" fill="#fff"></rect>
+                                                        <rect x="4" width="2.4" height="10" fill="#002f6c"></rect>
+                                                        <rect y="4" width="16" height="2.4" fill="#002f6c"></rect>
+                                                    </svg>
+                                                {% endif %}
+                                                <span>{{ language.1 }}</span>
+                                            </span>
+                                            {% if language.0 == LANGUAGE_CODE %}
+                                                <span class="language-dropdown-check" aria-hidden="true">✓</span>
+                                            {% endif %}
+                                        </button>
                                     </form>
                                 </li>
                             {% endfor %}

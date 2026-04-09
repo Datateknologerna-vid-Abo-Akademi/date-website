@@ -44,6 +44,11 @@ li .dropdown-menu {
     background-color: var(--primaryColorTransparent);
 }
 
+.navbar-nav-no-language > .nav-item.dropdown:last-child > .dropdown-menu {
+    left: auto;
+    right: 0;
+}
+
 .navbar-nav li a {
 color: var(--textColorLight) !important;
 }
