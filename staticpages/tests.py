@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, patch
 
+from django.conf import settings
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -26,10 +27,8 @@ class PolicyViewTests(TestCase):
         self.assertContains(response, "Reservlista och ersättare")
 
     def test_registration_terms_view_renders_english(self):
-        response = self.client.get(
-            reverse("staticpages:registration_terms"),
-            HTTP_ACCEPT_LANGUAGE="en",
-        )
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
+        response = self.client.get(reverse("staticpages:registration_terms"))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "<h1>Event registration terms</h1>", html=True)
@@ -37,10 +36,8 @@ class PolicyViewTests(TestCase):
         self.assertContains(response, "Waitlist and replacements")
 
     def test_registration_terms_view_renders_finnish(self):
-        response = self.client.get(
-            reverse("staticpages:registration_terms"),
-            HTTP_ACCEPT_LANGUAGE="fi",
-        )
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "fi"
+        response = self.client.get(reverse("staticpages:registration_terms"))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "<h1>Tapahtuman ilmoittautumisehdot</h1>", html=True)

@@ -143,13 +143,14 @@ How it works:
 
 - shared route builders expose canonical unprefixed URLs
 - `set_language` stores the user's choice in Django's language cookie
-- `LangMiddleware` activates the language resolved from the cookie or `Accept-Language` header
+- `LangMiddleware` activates the language resolved from the cookie, then the default language
+- `USE_ACCEPT_LANGUAGE_HEADER=True` lets an association use `Accept-Language` when no supported cookie value is set
 - `localize_url()` normalizes internal paths to the canonical unprefixed form
 
 Precedence rules:
 
 1. Language cookie wins when present
-2. `Accept-Language` is used when no supported cookie value is set
+2. `Accept-Language` is used only when `USE_ACCEPT_LANGUAGE_HEADER=True`
 3. The project falls back to Swedish
 
 ## Linking Correctly in Templates and Stored URLs

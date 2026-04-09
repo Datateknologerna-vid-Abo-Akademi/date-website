@@ -21,7 +21,8 @@
 - If the referrer points to an internal page, `date.language_utils.strip_language_prefix()` rewrites the path back to the canonical unprefixed URL before redirecting.
 - `date/middleware.py` contains the project-specific language middleware:
   - `LanguageStateMiddleware` restores the previous translation state after each request.
-  - `LangMiddleware` activates the language resolved from the cookie, then `Accept-Language`, while ignoring URL path prefixes.
+  - `LangMiddleware` activates the language resolved from the cookie, then Swedish by default, while ignoring URL path prefixes.
+  - `USE_ACCEPT_LANGUAGE_HEADER=True` allows browser language detection before falling back to Swedish.
 - Shared URL configuration uses canonical unprefixed public routes such as `/`, `/news/`, and `/events/` even when `ENABLE_LANGUAGE_FEATURES=True`.
 
 ## Error Views

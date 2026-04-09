@@ -32,7 +32,7 @@
           </a>
         </div>
         <div class="offcanvas-body p-lg-0 justify-content-end">
-            <ul class="navbar-nav">
+            <ul class="navbar-nav{% if not ENABLE_LANGUAGE_FEATURES or LANGUAGES|length <= 1 %} navbar-nav-no-language{% endif %}">
                 {% for category in categories %}
                     {% if category.use_category_url %}
                         <li class="nav-item">
