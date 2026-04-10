@@ -15,27 +15,42 @@
     color: var(--textColorLightish);
 }
 
-.card:hover {
-    transform: scale(1.01);
-}
-
 .card .fa-chevron-right{
     transition: .3s;
 }
 
-.card:hover .fa-chevron-right{
-    transform: translateX(10px);
+@media (hover: hover) and (pointer: fine) {
+    .card:hover {
+        transform: scale(1.01);
+    }
+
+    .card:hover .fa-chevron-right{
+        transform: translateX(10px);
+    }
 }
 
 /* Album card grid */
+.album-card-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
 .album-card {
     background: var(--primaryColorLight);
     border-radius: var(--defaultRadius);
     overflow: hidden;
+    width: 100%;
+    min-width: 0;
 }
 
 .album-card .card-title {
     color: var(--textColorLightish);
+    min-width: 0;
+}
+
+.album-card .card-body {
+    min-width: 0;
 }
 
 .album-card .card-text {
@@ -47,6 +62,7 @@
     overflow: hidden;
     background: var(--primaryColorLighter);
     position: relative;
+    width: 100%;
 }
 
 /* skeleton shimmer while thumbnail loads */
@@ -94,12 +110,15 @@
 }
 
 .album-thumb {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform .3s;
 }
 
-.album-card:hover .album-thumb {
-    transform: scale(1.04);
+@media (hover: hover) and (pointer: fine) {
+    .album-card:hover .album-thumb {
+        transform: scale(1.04);
+    }
 }

@@ -18,8 +18,8 @@
         {% if collections %}
             <div class="row g-2 g-md-3 justify-content-center">
                 {% for collection in collections %}
-                    <div class="col-6 col-md-4 col-lg-3">
-                        <a href="{% url 'archive:detail' year collection.title %}" class="text-decoration-none">
+                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                        <a href="{% url 'archive:detail' year collection.title %}" class="album-card-link text-decoration-none">
                             <div class="card album-card h-100">
                                 <div class="album-thumb-wrapper">
                                     {% if collection.first_picture_url %}
