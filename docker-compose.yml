@@ -51,6 +51,7 @@ services:
   celery:
     restart: unless-stopped
     build: .
+    user: "1000:1000"
     command: celery -A core worker -l info -c 2
     volumes:
       - .:/code

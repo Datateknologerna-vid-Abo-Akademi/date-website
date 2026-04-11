@@ -1,23 +1,35 @@
+import json
 import logging
 import os
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import permission_required, user_passes_test
 from django.contrib.auth.mixins import UserPassesTestMixin
+from django.core.cache import cache
+from django.core.files.uploadedfile import UploadedFile
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Count, OuterRef, Subquery
+from django.shortcuts import get_object_or_404
 from django.http import Http404, JsonResponse
 from django.template.loader import render_to_string
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_POST
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 
+from .cloudflare import CloudflareImagesClient, CloudflareImagesError
 from .filters import DocumentFilter, ExamFilter
 from .forms import PictureUploadForm, ExamUploadForm, ExamArchiveUploadForm
 from .models import Collection, Document, Picture
+from .tasks import optimize_picture_image
 from .tables import DocumentTable
+from core.utils import enqueue_task_on_commit
 
 logger = logging.getLogger('date')
+DIRECT_UPLOAD_RATE_LIMIT = 1000
+DIRECT_UPLOAD_RATE_LIMIT_WINDOW_SECONDS = 3600
+DEFAULT_UPLOAD_MAX_FILE_SIZE_MB = 25
 
 
 def user_type(user):
@@ -54,17 +66,19 @@ def picture_index(request, year):
         .annotate(
             picture_count=Count('picture'),
             first_picture_image=Subquery(first_picture_qs.values('image')[:1]),
+            first_picture_cloudflare_variant_url=Subquery(first_picture_qs.values('cloudflare_variant_url')[:1]),
         )
         .order_by('-pub_date')
     )
     collections = list(collections)
     for collection in collections:
-        # Avoid instantiating a Picture for every album card; the ImageField
-        # storage is enough to turn the annotated file name into a public URL.
         collection.first_picture_url = (
-            picture_image_field.storage.url(collection.first_picture_image)
-            if collection.first_picture_image
-            else ''
+            collection.first_picture_cloudflare_variant_url
+            or (
+                picture_image_field.storage.url(collection.first_picture_image)
+                if collection.first_picture_image
+                else ''
+            )
         )
     context = {
         'type': "pictures",
@@ -232,20 +246,180 @@ def picture_detail(request, year, album):
     return render(request, 'archive/detail.html', context)
 
 
+def _parse_json_request(request):
+    try:
+        return json.loads(request.body.decode("utf-8") or "{}")
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None
+
+
+def _get_picture_collection(collection_id):
+    return get_object_or_404(Collection, pk=collection_id, type="Pictures")
+
+
+def _check_direct_upload_rate_limit(request):
+    cache_key = f"archive:direct-upload:{request.user.pk}"
+    current_count = cache.get(cache_key, 0)
+    if current_count >= DIRECT_UPLOAD_RATE_LIMIT:
+        return False
+    cache.set(cache_key, current_count + 1, DIRECT_UPLOAD_RATE_LIMIT_WINDOW_SECONDS)
+    return True
+
+
+def _fallback_upload_enabled():
+    return True
+
+
+@permission_required('archive.add_collection')
+def picture_upload(request, collection_id):
+    collection = _get_picture_collection(collection_id)
+    context = {
+        "collection": collection,
+        "cloudflare_images_enabled": CloudflareImagesClient.is_configured(),
+        "fallback_upload_enabled": _fallback_upload_enabled(),
+        "upload_max_file_size_mb": DEFAULT_UPLOAD_MAX_FILE_SIZE_MB,
+    }
+    return render(request, "archive/picture_upload.html", context)
+
+
+@permission_required('archive.add_collection')
+@require_POST
+def picture_upload_direct(request):
+    payload = _parse_json_request(request)
+    if payload is None:
+        return JsonResponse({"error": "Invalid JSON body."}, status=400)
+
+    collection_id = payload.get("collection_id")
+    if not collection_id:
+        return JsonResponse({"error": "collection_id is required."}, status=400)
+
+    _get_picture_collection(collection_id)
+
+    if not CloudflareImagesClient.is_configured():
+        return JsonResponse({"error": "Cloudflare Images is not configured."}, status=503)
+
+    if not _check_direct_upload_rate_limit(request):
+        return JsonResponse({"error": "Too many upload URL requests. Please wait a moment."}, status=429)
+
+    client = CloudflareImagesClient()
+    try:
+        result = client.create_direct_upload()
+    except CloudflareImagesError as exc:
+        return JsonResponse({"error": str(exc)}, status=502)
+
+    return JsonResponse(
+        {
+            "image_id": result["id"],
+            "upload_url": result["upload_url"],
+        }
+    )
+
+
+@permission_required('archive.add_collection')
+@require_POST
+def picture_upload_fallback(request):
+    collection = _get_picture_collection(request.POST.get("collection_id"))
+
+    if not _check_direct_upload_rate_limit(request):
+        return JsonResponse({"error": "Too many uploads. Please wait a moment."}, status=429)
+
+    uploaded_file = request.FILES.get("file")
+    if not isinstance(uploaded_file, UploadedFile):
+        return JsonResponse({"error": "A file is required."}, status=400)
+
+    if not uploaded_file.content_type or not uploaded_file.content_type.startswith("image/"):
+        return JsonResponse({"error": "Only image uploads are supported."}, status=400)
+
+    max_file_size = DEFAULT_UPLOAD_MAX_FILE_SIZE_MB * 1024 * 1024
+    if uploaded_file.size > max_file_size:
+        return JsonResponse({"error": f"Files must be {DEFAULT_UPLOAD_MAX_FILE_SIZE_MB} MB or smaller."}, status=400)
+
+    picture = Picture(
+        collection=collection,
+        image=uploaded_file,
+        original_filename=(uploaded_file.name or "")[:255],
+        upload_provider=Picture.UPLOAD_PROVIDER_LOCAL,
+    )
+    picture._skip_compression = True
+    picture.save()
+    enqueue_task_on_commit(optimize_picture_image, picture.pk)
+    return JsonResponse(
+        {
+            "picture_id": picture.pk,
+            "image_url": picture.image_url,
+            "optimized_async": True,
+            "provider": "local",
+        }
+    )
+
+
+@permission_required('archive.add_collection')
+@require_POST
+def picture_upload_complete(request):
+    payload = _parse_json_request(request)
+    if payload is None:
+        return JsonResponse({"error": "Invalid JSON body."}, status=400)
+
+    collection_id = payload.get("collection_id")
+    image_id = payload.get("image_id")
+    filename = (payload.get("filename") or "").strip()
+
+    if not collection_id or not image_id:
+        return JsonResponse({"error": "collection_id and image_id are required."}, status=400)
+
+    collection = _get_picture_collection(collection_id)
+
+    existing_picture = Picture.objects.filter(cloudflare_image_id=image_id).first()
+    if existing_picture:
+        if existing_picture.collection_id != collection.pk:
+            return JsonResponse({"error": "This image is already linked to another collection."}, status=409)
+        return JsonResponse(
+            {
+                "picture_id": existing_picture.pk,
+                "image_url": existing_picture.image_url,
+                "duplicate": True,
+            }
+        )
+
+    if not CloudflareImagesClient.is_configured():
+        return JsonResponse({"error": "Cloudflare Images is not configured."}, status=503)
+
+    client = CloudflareImagesClient()
+    try:
+        image_details = client.get_image(image_id)
+    except CloudflareImagesError as exc:
+        return JsonResponse({"error": str(exc)}, status=502)
+
+    if image_details.get("draft", False):
+        return JsonResponse({"error": "Image upload has not completed yet."}, status=409)
+
+    picture = Picture.objects.create(
+        collection=collection,
+        upload_provider=Picture.UPLOAD_PROVIDER_CLOUDFLARE,
+        cloudflare_image_id=image_id,
+        cloudflare_variant_url=client.build_variant_url(image_id),
+        original_filename=filename[:255],
+    )
+    return JsonResponse(
+        {
+            "picture_id": picture.pk,
+            "image_url": picture.image_url,
+            "duplicate": False,
+        }
+    )
+
+
 @permission_required('archive.add_collection')
 def upload(request):
     if request.method == 'POST':
         form = PictureUploadForm(request.POST)
         if form.is_valid():
-            if request.FILES.getlist('images') is None:
-                return redirect('archive:pictures')
-            collection = Collection(title=form['album'].value(), type='Pictures')
+            collection = Collection(title=form.cleaned_data['album'], type='Pictures')
             collection.save()
-            for file in request.FILES.getlist('images'):
-                Picture(image=file, collection=collection).save()
-        return redirect('archive:years')
+            messages.success(request, f'Album "{collection.title}" created. Continue in the bulk uploader.')
+            return redirect('archive:picture_upload', collection_id=collection.pk)
 
-    form = PictureUploadForm
+    form = PictureUploadForm()
     context = {
         'picture_form': form,
     }

@@ -136,28 +136,57 @@ class PublicCollection(Collection):
 
 
 class Picture(models.Model):
+    UPLOAD_PROVIDER_LOCAL = "local"
+    UPLOAD_PROVIDER_CLOUDFLARE = "cloudflare"
+    UPLOAD_PROVIDER_CHOICES = (
+        (UPLOAD_PROVIDER_LOCAL, "Local"),
+        (UPLOAD_PROVIDER_CLOUDFLARE, "Cloudflare"),
+    )
+
     collection = models.ForeignKey(Collection, verbose_name=_('Galleri'), on_delete=models.CASCADE)
-    image = models.ImageField(upload_to=upload_to)
+    image = models.ImageField(upload_to=upload_to, null=True, blank=True)
     favorite = models.BooleanField(default=False)
+    cloudflare_image_id = models.CharField(max_length=64, null=True, blank=True, unique=True)
+    cloudflare_variant_url = models.URLField(max_length=500, null=True, blank=True)
+    original_filename = models.CharField(max_length=255, blank=True)
+    upload_provider = models.CharField(
+        max_length=32,
+        choices=UPLOAD_PROVIDER_CHOICES,
+        default=UPLOAD_PROVIDER_LOCAL,
+    )
 
     class Meta:
         verbose_name = _("bild")
         verbose_name_plural = _("bilder")
 
     def __str__(self):
-        return self.image.name
+        return self.original_filename or self.cloudflare_image_id or getattr(self.image, 'name', '')
+
+    @property
+    def image_url(self):
+        if self.upload_provider == self.UPLOAD_PROVIDER_CLOUDFLARE and self.cloudflare_variant_url:
+            return self.cloudflare_variant_url
+        if self.image:
+            return self.image.url
+        return ""
 
     def get_file_path(self):
-        return self.image.url
+        return self.image_url
 
     def save(self, *args, **kwargs):
-        if not self.id:
+        if (
+            not self.id
+            and self.upload_provider == self.UPLOAD_PROVIDER_LOCAL
+            and self.image
+            and not getattr(self, "_skip_compression", False)
+        ):
             self.image = compress_image(self.image)
         super(Picture, self).save(*args, **kwargs)
     
     if not settings.USE_S3:
         def delete(self, using=None, keep_parents=False):
-                os.remove(os.path.join(settings.MEDIA_ROOT, self.image.name))
+                if self.image:
+                    os.remove(os.path.join(settings.MEDIA_ROOT, self.image.name))
                 super(Picture, self).delete(using, keep_parents)
 
 

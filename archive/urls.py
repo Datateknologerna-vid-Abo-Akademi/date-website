@@ -21,6 +21,10 @@ urlpatterns = [
     path('exams/<int:pk>/', login_required(views.FilteredExamsListView.as_view()), name='exams_detail'),
     path('exam-upload/<int:pk>/', login_required(views.exam_upload), name='exam_upload'),
     path('exam-archive-upload/', login_required(views.exam_archive_upload), name='exam_archive_upload'),
+    path('picture-upload/<int:collection_id>/', login_required(views.picture_upload), name='picture_upload'),
+    path('picture-upload/direct/', login_required(views.picture_upload_direct), name='picture_upload_direct'),
+    path('picture-upload/fallback/', login_required(views.picture_upload_fallback), name='picture_upload_fallback'),
+    path('picture-upload/complete/', login_required(views.picture_upload_complete), name='picture_upload_complete'),
     path('upload/', login_required(views.upload), name='upload'),
     path('cleanMedia/', login_required(views.clean_media), name='cleanMedia'),
 

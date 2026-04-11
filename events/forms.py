@@ -3,13 +3,16 @@ import re
 
 from django import forms
 from django.contrib.admin import widgets
+from django.core.files.uploadedfile import UploadedFile
 from django.utils.timezone import now
 from django.conf import settings
 
 from date.functions import slugify_max
 from events import models
 from events.models import Event
+from events.tasks import optimize_event_image
 from events.widgets import SafeAdminFileWidget
+from core.utils import enqueue_task_on_commit
 
 logger = logging.getLogger('date')
 
@@ -128,7 +131,9 @@ class EventCreationForm(forms.ModelForm):
             post.sign_up_cancelling_deadline = None
 
         if commit:
-            post.update_or_create(pk=post.pk)
+            post.save()
+            if not settings.USE_S3 and isinstance(self.cleaned_data.get('image'), UploadedFile):
+                enqueue_task_on_commit(optimize_event_image, post.pk)
         return post
 
 
@@ -226,7 +231,9 @@ class EventEditForm(forms.ModelForm):
             post.sign_up_cancelling_deadline = None
 
         if commit:
-            post.update_or_create(pk=post.pk)
+            post.save()
+            if not settings.USE_S3 and isinstance(self.cleaned_data.get('image'), UploadedFile):
+                enqueue_task_on_commit(optimize_event_image, post.pk)
         return post
 
 

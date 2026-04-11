@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 from io import BytesIO
+from unittest.mock import patch
 
 from PIL import Image
 
@@ -70,6 +71,20 @@ class CollectionTestCase(TestCase):
         self.assertTrue(isinstance(p, Picture))
         self.assertEqual(p.__str__(), p.image.name)
         self.assertEqual(p.favorite, False)
+
+    def test_cloudflare_picture_uses_compatibility_image_url(self):
+        collection = create_collection(collection_type=TYPE_CHOICES[0][0])
+        picture = Picture.objects.create(
+            collection=collection,
+            upload_provider=Picture.UPLOAD_PROVIDER_CLOUDFLARE,
+            cloudflare_image_id="cf-image-1",
+            cloudflare_variant_url="https://example.com/cf-image-1/public",
+            original_filename="gallery.jpg",
+        )
+
+        self.assertEqual(picture.image_url, "https://example.com/cf-image-1/public")
+        self.assertEqual(picture.get_file_path(), "https://example.com/cf-image-1/public")
+        self.assertEqual(str(picture), "gallery.jpg")
 
     def test_document_creation(self):
         d = create_document()
@@ -166,3 +181,161 @@ class PictureDetailFragmentViewTests(TestCase):
                 'album': self.collection.title,
             },
         )
+
+
+@override_settings(
+    CF_IMAGES_ACCOUNT_ID="account",
+    CF_IMAGES_API_TOKEN="token",
+    CF_IMAGES_DELIVERY_BASE_URL="https://imagedelivery.net/demo",
+    CF_IMAGES_DEFAULT_VARIANT="public",
+)
+class PictureUploadApiTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._media_root = tempfile.mkdtemp()
+        cls._media_override = override_settings(MEDIA_ROOT=cls._media_root)
+        cls._media_override.enable()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._media_override.disable()
+        shutil.rmtree(cls._media_root, ignore_errors=True)
+        super().tearDownClass()
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin_user = Member.objects.create_superuser(
+            username="archive_admin",
+            password="pwd",
+            membership_type=MembershipType.objects.get(pk=ORDINARY_MEMBER),
+        )
+        cls.member = Member.objects.create_user(
+            username="plain_member",
+            password="pwd",
+            membership_type=MembershipType.objects.get(pk=ORDINARY_MEMBER),
+        )
+        cls.collection = create_collection(
+            title="Upload Album",
+            collection_type=TYPE_CHOICES[0][0],
+        )
+        cls.document_collection = create_collection(
+            title="Documents",
+            collection_type=TYPE_CHOICES[1][0],
+        )
+
+    def test_direct_upload_session_requires_permission(self):
+        self.client.force_login(self.member)
+
+        response = self.client.post(
+            reverse("archive:picture_upload_direct"),
+            data='{"collection_id": %d}' % self.collection.pk,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+    @patch("archive.views.CloudflareImagesClient.create_direct_upload")
+    def test_direct_upload_session_succeeds_for_authorized_user(self, create_direct_upload):
+        create_direct_upload.return_value = {
+            "id": "cf-image-1",
+            "upload_url": "https://upload.example.com/direct",
+        }
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse("archive:picture_upload_direct"),
+            data='{"collection_id": %d}' % self.collection.pk,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["image_id"], "cf-image-1")
+
+    def test_direct_upload_session_rejects_non_picture_collection(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse("archive:picture_upload_direct"),
+            data='{"collection_id": %d}' % self.document_collection.pk,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    @patch("archive.views.CloudflareImagesClient.get_image")
+    def test_finalize_creates_cloudflare_picture(self, get_image):
+        get_image.return_value = {"draft": False}
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse("archive:picture_upload_complete"),
+            data='{"collection_id": %d, "image_id": "cf-image-2", "filename": "party.jpg"}' % self.collection.pk,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        picture = Picture.objects.get(cloudflare_image_id="cf-image-2")
+        self.assertEqual(picture.collection, self.collection)
+        self.assertEqual(picture.upload_provider, Picture.UPLOAD_PROVIDER_CLOUDFLARE)
+        self.assertEqual(response.json()["image_url"], picture.image_url)
+
+    @patch("archive.views.CloudflareImagesClient.get_image")
+    def test_finalize_rejects_duplicate_image_ids(self, get_image):
+        get_image.return_value = {"draft": False}
+        Picture.objects.create(
+            collection=self.collection,
+            upload_provider=Picture.UPLOAD_PROVIDER_CLOUDFLARE,
+            cloudflare_image_id="cf-image-3",
+            cloudflare_variant_url="https://imagedelivery.net/demo/cf-image-3/public",
+            original_filename="existing.jpg",
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse("archive:picture_upload_complete"),
+            data='{"collection_id": %d, "image_id": "cf-image-3", "filename": "existing.jpg"}' % self.collection.pk,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["duplicate"])
+
+    @patch("archive.views.CloudflareImagesClient.get_image")
+    def test_finalize_rejects_invalid_or_unfinished_images(self, get_image):
+        get_image.return_value = {"draft": True}
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse("archive:picture_upload_complete"),
+            data='{"collection_id": %d, "image_id": "cf-image-4", "filename": "wait.jpg"}' % self.collection.pk,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 409)
+
+    @patch("archive.views.enqueue_task_on_commit")
+    def test_fallback_upload_creates_local_picture_and_queues_optimization(self, enqueue_task_on_commit):
+        self.client.force_login(self.admin_user)
+        image = Image.new('RGB', (100, 100), color=(50, 50, 50))
+        image_bytes = BytesIO()
+        image.save(image_bytes, format='JPEG')
+        image.close()
+
+        response = self.client.post(
+            reverse("archive:picture_upload_fallback"),
+            data={
+                "collection_id": self.collection.pk,
+                "file": SimpleUploadedFile(
+                    "fallback.jpg",
+                    image_bytes.getvalue(),
+                    content_type="image/jpeg",
+                ),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        picture = Picture.objects.get(pk=response.json()["picture_id"])
+        self.assertEqual(picture.upload_provider, Picture.UPLOAD_PROVIDER_LOCAL)
+        self.assertEqual(picture.original_filename, "fallback.jpg")
+        enqueue_task_on_commit.assert_called_once()
