@@ -142,6 +142,16 @@ class PictureDetailFragmentViewTests(TestCase):
         self.assertIn('data-global-index="13"', payload['html'])
         self.assertIn('class="grid-item glightbox"', payload['html'])
 
+    def test_fragment_response_keeps_album_images_in_upload_order(self):
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+
+        response = self.client.get(self._detail_url(), {'page': 1, 'fragment': '1'})
+
+        self.assertEqual(response.status_code, 200)
+        html = response.json()['html']
+        self.assertLess(html.index('fragment-0.jpg'), html.index('fragment-1.jpg'))
+        self.assertLess(html.index('fragment-10.jpg'), html.index('fragment-11.jpg'))
+
     def test_fragment_response_redirects_anonymous_users_to_login(self):
         response = self.client.get(self._detail_url(), {'page': 1, 'fragment': '1'})
 
