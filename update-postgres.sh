@@ -189,8 +189,6 @@ if [ -z "$backup_dump_path" ] || [ ! -f "$backup_dump_path" ]; then
   exit 1
 fi
 
-# Make sure website is stopped
-docker_compose down
 docker_compose up -d db
 
 if ! ensure_db_running; then
