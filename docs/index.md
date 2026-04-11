@@ -1,6 +1,6 @@
 # DaTe Website Documentation
 
-This directory is published directly via GitHub Pages (branch -> `docs/` folder). Push an updated Markdown file to the tracked branch and the public documentation site refreshes automatically.
+This directory is published via a GitHub Pages workflow. Push a change under `docs/` to the `develop` branch and the public documentation site refreshes automatically.
 
 Use the sections below to jump to either editor-facing instructions or implementation notes.
 
@@ -61,4 +61,4 @@ Use the sections below to jump to either editor-facing instructions or implement
 - When routing, language handling, or deployment behavior changes, it usually helps to update the README and any affected development guide in the same branch.
 - If a guide becomes mostly obsolete, a rewrite is usually clearer than layering more historical notes on top.
 
-Need to add or update a guide? Create or edit the Markdown file in the appropriate subfolder, then commit and push. GitHub Pages will redeploy automatically.
+Need to add or update a guide? Create or edit the Markdown file in the appropriate subfolder, then commit and push to `develop`. GitHub Pages redeploys when `docs/` changes.
