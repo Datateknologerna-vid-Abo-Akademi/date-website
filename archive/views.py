@@ -188,11 +188,9 @@ def picture_detail(request, year, album):
     if collection.hide_for_gulis and request.user.membership_type.permission_profile == 1:
         return render(request, '404.html', {'error_msg': "Gulisar har inte tillgång till detta album!"})
 
-    pictures_qs = (
-        Picture.objects.filter(collection=collection).order_by('id')
-        if year == 2022
-        else Picture.objects.filter(collection=collection).order_by('-id')
-    )
+    # Keep album images in upload order. The recent gallery refactor made the
+    # non-2022 path explicitly descending, which flipped long-standing albums.
+    pictures_qs = Picture.objects.filter(collection=collection).order_by('id')
 
     page = request.GET.get('page', 1)
     paginator = Paginator(pictures_qs, 12)
