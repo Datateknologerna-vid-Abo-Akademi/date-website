@@ -122,11 +122,14 @@ It:
 
 - validates the target env file
 - runs `scripts/backup_postgres.sh`
+- verifies the current PostgreSQL data directory is on a mounted volume before removing anything
 - tears down volumes
 - updates `DATE_POSTGRESQL_VERSION`
 - recreates the database container
 - restores the SQL dump
-- validates that the restored database is usable
+- validates that the restored database is usable and still contains the expected schema footprint
+
+The Compose db service also wraps the upstream Postgres entrypoint so existing volumes that were initialized with the legacy `/var/lib/postgresql/data` layout are moved into the configured `PGDATA` subdirectory on first boot.
 
 This script is destructive if used incorrectly. Read the warnings in the README before running it.
 
