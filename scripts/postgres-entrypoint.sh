@@ -26,4 +26,8 @@ if [ "$target_pgdata" != "$legacy_pgdata" ]; then
   fi
 fi
 
+if [ "$#" -eq 0 ]; then
+  set -- postgres
+fi
+
 exec docker-entrypoint.sh "$@"
