@@ -72,19 +72,30 @@ class CollectionTestCase(TestCase):
         self.assertEqual(p.__str__(), p.image.name)
         self.assertEqual(p.favorite, False)
 
-    def test_cloudflare_picture_uses_compatibility_image_url(self):
+    def test_picture_image_url_uses_stored_image(self):
         collection = create_collection(collection_type=TYPE_CHOICES[0][0])
-        picture = Picture.objects.create(
+        picture = Picture(
             collection=collection,
-            upload_provider=Picture.UPLOAD_PROVIDER_CLOUDFLARE,
-            cloudflare_image_id="cf-image-1",
-            cloudflare_variant_url="https://example.com/cf-image-1/public",
-            original_filename="gallery.jpg",
+            image=SimpleUploadedFile(
+                name="gallery.webp",
+                content=self._image_bytes("WEBP"),
+                content_type="image/webp",
+            ),
+            original_filename="gallery.webp",
         )
+        picture._skip_compression = True
+        picture.save()
 
-        self.assertEqual(picture.image_url, "https://example.com/cf-image-1/public")
-        self.assertEqual(picture.get_file_path(), "https://example.com/cf-image-1/public")
-        self.assertEqual(str(picture), "gallery.jpg")
+        self.assertTrue(picture.image_url.endswith(".webp"))
+        self.assertEqual(picture.get_file_path(), picture.image_url)
+        self.assertEqual(str(picture), "gallery.webp")
+
+    def _image_bytes(self, fmt):
+        image = Image.new('RGB', (100, 100), color=(10, 20, 30))
+        image_bytes = BytesIO()
+        image.save(image_bytes, format=fmt)
+        image.close()
+        return image_bytes.getvalue()
 
     def test_document_creation(self):
         d = create_document()
@@ -183,12 +194,6 @@ class PictureDetailFragmentViewTests(TestCase):
         )
 
 
-@override_settings(
-    CF_IMAGES_ACCOUNT_ID="account",
-    CF_IMAGES_API_TOKEN="token",
-    CF_IMAGES_DELIVERY_BASE_URL="https://imagedelivery.net/demo",
-    CF_IMAGES_DEFAULT_VARIANT="public",
-)
 class PictureUploadApiTests(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -235,80 +240,81 @@ class PictureUploadApiTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
 
-    @patch("archive.views.CloudflareImagesClient.create_direct_upload")
-    def test_direct_upload_session_succeeds_for_authorized_user(self, create_direct_upload):
-        create_direct_upload.return_value = {
-            "id": "cf-image-1",
-            "upload_url": "https://upload.example.com/direct",
+    @override_settings(USE_S3=True)
+    @patch("archive.views.create_presigned_temp_upload")
+    def test_direct_upload_session_succeeds_for_authorized_user(self, create_presigned_temp_upload):
+        create_presigned_temp_upload.return_value = {
+            "upload_url": "https://s3.example.com/upload",
+            "fields": {"key": "temp-key"},
+            "temp_key": "temp/archive/temp-key.jpg",
         }
         self.client.force_login(self.admin_user)
 
         response = self.client.post(
             reverse("archive:picture_upload_direct"),
-            data='{"collection_id": %d}' % self.collection.pk,
+            data='{"collection_id": %d, "filename": "party.jpg", "content_type": "image/jpeg"}' % self.collection.pk,
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["image_id"], "cf-image-1")
+        self.assertEqual(response.json()["temp_key"], "temp/archive/temp-key.jpg")
 
     def test_direct_upload_session_rejects_non_picture_collection(self):
         self.client.force_login(self.admin_user)
 
         response = self.client.post(
             reverse("archive:picture_upload_direct"),
-            data='{"collection_id": %d}' % self.document_collection.pk,
+            data='{"collection_id": %d, "filename": "party.jpg", "content_type": "image/jpeg"}' % self.document_collection.pk,
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 404)
 
-    @patch("archive.views.CloudflareImagesClient.get_image")
-    def test_finalize_creates_cloudflare_picture(self, get_image):
-        get_image.return_value = {"draft": False}
+    @patch("archive.views.enqueue_task_on_commit")
+    @patch("archive.views.head_temp_upload_object")
+    def test_finalize_creates_processing_picture_from_temp_upload(self, head_temp_upload_object, enqueue_task_on_commit):
+        head_temp_upload_object.return_value = {}
         self.client.force_login(self.admin_user)
 
         response = self.client.post(
             reverse("archive:picture_upload_complete"),
-            data='{"collection_id": %d, "image_id": "cf-image-2", "filename": "party.jpg"}' % self.collection.pk,
+            data='{"collection_id": %d, "temp_key": "temp/archive/file-1.jpg", "filename": "party.jpg"}' % self.collection.pk,
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 200)
-        picture = Picture.objects.get(cloudflare_image_id="cf-image-2")
+        picture = Picture.objects.get(temp_upload_key="temp/archive/file-1.jpg")
         self.assertEqual(picture.collection, self.collection)
-        self.assertEqual(picture.upload_provider, Picture.UPLOAD_PROVIDER_CLOUDFLARE)
-        self.assertEqual(response.json()["image_url"], picture.image_url)
+        self.assertEqual(picture.upload_provider, Picture.UPLOAD_PROVIDER_S3_DIRECT)
+        self.assertEqual(picture.processing_status, Picture.PROCESSING_STATUS_PENDING)
+        enqueue_task_on_commit.assert_called_once()
 
-    @patch("archive.views.CloudflareImagesClient.get_image")
-    def test_finalize_rejects_duplicate_image_ids(self, get_image):
-        get_image.return_value = {"draft": False}
+    def test_finalize_rejects_duplicate_temp_keys(self):
         Picture.objects.create(
             collection=self.collection,
-            upload_provider=Picture.UPLOAD_PROVIDER_CLOUDFLARE,
-            cloudflare_image_id="cf-image-3",
-            cloudflare_variant_url="https://imagedelivery.net/demo/cf-image-3/public",
+            upload_provider=Picture.UPLOAD_PROVIDER_S3_DIRECT,
+            temp_upload_key="temp/archive/file-2.jpg",
             original_filename="existing.jpg",
+            processing_status=Picture.PROCESSING_STATUS_PENDING,
         )
         self.client.force_login(self.admin_user)
 
         response = self.client.post(
             reverse("archive:picture_upload_complete"),
-            data='{"collection_id": %d, "image_id": "cf-image-3", "filename": "existing.jpg"}' % self.collection.pk,
+            data='{"collection_id": %d, "temp_key": "temp/archive/file-2.jpg", "filename": "existing.jpg"}' % self.collection.pk,
             content_type="application/json",
         )
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()["duplicate"])
 
-    @patch("archive.views.CloudflareImagesClient.get_image")
-    def test_finalize_rejects_invalid_or_unfinished_images(self, get_image):
-        get_image.return_value = {"draft": True}
+    @patch("archive.views.head_temp_upload_object", side_effect=Exception("missing"))
+    def test_finalize_rejects_missing_temp_uploads(self, _head_temp_upload_object):
         self.client.force_login(self.admin_user)
 
         response = self.client.post(
             reverse("archive:picture_upload_complete"),
-            data='{"collection_id": %d, "image_id": "cf-image-4", "filename": "wait.jpg"}' % self.collection.pk,
+            data='{"collection_id": %d, "temp_key": "temp/archive/missing.jpg", "filename": "wait.jpg"}' % self.collection.pk,
             content_type="application/json",
         )
 
@@ -338,4 +344,5 @@ class PictureUploadApiTests(TestCase):
         picture = Picture.objects.get(pk=response.json()["picture_id"])
         self.assertEqual(picture.upload_provider, Picture.UPLOAD_PROVIDER_LOCAL)
         self.assertEqual(picture.original_filename, "fallback.jpg")
+        self.assertEqual(picture.processing_status, Picture.PROCESSING_STATUS_PENDING)
         enqueue_task_on_commit.assert_called_once()

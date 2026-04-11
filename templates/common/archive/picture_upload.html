@@ -30,9 +30,9 @@
                     </div>
                 </div>
 
-                {% if not cloudflare_images_enabled and not fallback_upload_enabled %}
+                {% if not direct_upload_enabled and not fallback_upload_enabled %}
                     <div class="alert alert-warning mb-0" role="alert">
-                        {% trans "Varken Cloudflare Images eller fallback-uppladdning är tillgängliga i den här miljön." %}
+                        {% trans "Varken direktuppladdning till S3 eller fallback-uppladdning är tillgängliga i den här miljön." %}
                     </div>
                 {% else %}
                     <div class="archive-upload-note mb-4">
@@ -47,7 +47,7 @@
         </div>
     </div>
 
-    {% if cloudflare_images_enabled or fallback_upload_enabled %}
+    {% if direct_upload_enabled or fallback_upload_enabled %}
         <script src="https://releases.transloadit.com/uppy/v3.25.3/uppy.min.js"></script>
         <script>
             (function () {
@@ -56,7 +56,7 @@
                 const fallbackUrl = "{% url 'archive:picture_upload_fallback' %}";
                 const completeUrl = "{% url 'archive:picture_upload_complete' %}";
                 const csrfToken = "{{ csrf_token }}";
-                const cloudflareEnabled = {{ cloudflare_images_enabled|yesno:"true,false" }};
+                const directUploadEnabled = {{ direct_upload_enabled|yesno:"true,false" }};
                 const maxFileSize = {{ upload_max_file_size_mb|default:25 }} * 1024 * 1024;
                 const summaryEl = document.getElementById("upload-summary");
                 const statusEl = document.getElementById("upload-status");
@@ -73,14 +73,18 @@
                     statusEl.dataset.level = level;
                 }
 
-                async function createDirectUpload() {
+                async function createDirectUpload(file) {
                     const response = await fetch(directUrl, {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
                             "X-CSRFToken": csrfToken,
                         },
-                        body: JSON.stringify({collection_id: collectionId}),
+                        body: JSON.stringify({
+                            collection_id: collectionId,
+                            filename: file.name,
+                            content_type: file.type,
+                        }),
                     });
                     const payload = await response.json();
                     if (!response.ok) {
@@ -108,10 +112,10 @@
                     return payload;
                 }
 
-                function uploadFileToCloudflare(file, uploadUrl) {
+                function uploadFileToS3(file, uploadConfig) {
                     return new Promise((resolve, reject) => {
                         const xhr = new XMLHttpRequest();
-                        xhr.open("POST", uploadUrl);
+                        xhr.open("POST", uploadConfig.upload_url);
                         xhr.upload.addEventListener("progress", (event) => {
                             if (event.lengthComputable) {
                                 uppy.emit("upload-progress", file, {
@@ -121,31 +125,23 @@
                             }
                         });
                         xhr.onload = () => {
-                            let payload = null;
-                            try {
-                                payload = JSON.parse(xhr.responseText);
-                            } catch (error) {
-                                payload = null;
-                            }
-
-                            if (
-                                xhr.status >= 200
-                                && xhr.status < 300
-                                && (!payload || payload.success !== false)
-                            ) {
-                                resolve(payload);
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                resolve(uploadConfig);
                                 return;
                             }
-                            reject(new Error((payload && payload.errors && payload.errors[0] && payload.errors[0].message) || "Upload to Cloudflare failed."));
+                            reject(new Error("Upload to S3 failed."));
                         };
-                        xhr.onerror = () => reject(new Error("Network error during Cloudflare upload."));
+                        xhr.onerror = () => reject(new Error("Network error during S3 upload."));
                         const formData = new FormData();
+                        Object.entries(uploadConfig.fields).forEach(([key, value]) => {
+                            formData.append(key, value);
+                        });
                         formData.append("file", file.data, file.name);
                         xhr.send(formData);
                     });
                 }
 
-                async function finalizeUpload(imageId, filename) {
+                async function finalizeUpload(tempKey, filename) {
                     for (let attempt = 0; attempt < 5; attempt += 1) {
                         const response = await fetch(completeUrl, {
                             method: "POST",
@@ -155,7 +151,7 @@
                             },
                             body: JSON.stringify({
                                 collection_id: collectionId,
-                                image_id: imageId,
+                                temp_key: tempKey,
                                 filename: filename,
                             }),
                         });
@@ -174,14 +170,14 @@
                     uploadsInFlight += 1;
                     try {
                         let result;
-                        if (cloudflareEnabled) {
+                        if (directUploadEnabled) {
                             try {
-                                const direct = await createDirectUpload();
-                                await uploadFileToCloudflare(file, direct.upload_url);
-                                result = await finalizeUpload(direct.image_id, file.name);
+                                const direct = await createDirectUpload(file);
+                                await uploadFileToS3(file, direct);
+                                result = await finalizeUpload(direct.temp_key, file.name);
                             } catch (error) {
                                 result = await uploadFileToFallback(file);
-                                setStatus("{% trans 'Cloudflare misslyckades för en fil, fallback-uppladdning används.' %}", "warning");
+                                setStatus("{% trans 'Direktuppladdning till S3 misslyckades för en fil, fallback-uppladdning används.' %}", "warning");
                             }
                         } else {
                             result = await uploadFileToFallback(file);
@@ -189,7 +185,7 @@
                         uppy.emit("upload-success", file, {
                             status: 200,
                             body: result,
-                            uploadURL: result.image_url,
+                            uploadURL: "",
                         });
                     } catch (error) {
                         uppy.emit("upload-error", file, error);

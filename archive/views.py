@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.cache import cache
 from django.core.files.uploadedfile import UploadedFile
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Count, OuterRef, Subquery
+from django.db.models import Count, OuterRef, Q, Subquery
 from django.shortcuts import get_object_or_404
 from django.http import Http404, JsonResponse
 from django.template.loader import render_to_string
@@ -18,12 +18,12 @@ from django.views.decorators.http import require_POST
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 
-from .cloudflare import CloudflareImagesClient, CloudflareImagesError
 from .filters import DocumentFilter, ExamFilter
 from .forms import PictureUploadForm, ExamUploadForm, ExamArchiveUploadForm
 from .models import Collection, Document, Picture
 from .tasks import optimize_picture_image
 from .tables import DocumentTable
+from .uploads import create_presigned_temp_upload, head_temp_upload_object, uploads_use_s3
 from core.utils import enqueue_task_on_commit
 
 logger = logging.getLogger('date')
@@ -58,27 +58,33 @@ def year_index(request):
 
 @user_passes_test(user_type, login_url='/members/login/')
 def picture_index(request, year):
-    first_picture_qs = Picture.objects.filter(collection=OuterRef('pk')).order_by('id')
+    first_picture_qs = (
+        Picture.objects.filter(
+            collection=OuterRef('pk'),
+            processing_status=Picture.PROCESSING_STATUS_READY,
+        )
+        .exclude(image='')
+        .order_by('id')
+    )
     picture_image_field = Picture._meta.get_field('image')
     collections = (
         Collection.objects
         .filter(type="Pictures", pub_date__year=year)
         .annotate(
-            picture_count=Count('picture'),
+            picture_count=Count(
+                'picture',
+                filter=Q(picture__processing_status=Picture.PROCESSING_STATUS_READY),
+            ),
             first_picture_image=Subquery(first_picture_qs.values('image')[:1]),
-            first_picture_cloudflare_variant_url=Subquery(first_picture_qs.values('cloudflare_variant_url')[:1]),
         )
         .order_by('-pub_date')
     )
     collections = list(collections)
     for collection in collections:
         collection.first_picture_url = (
-            collection.first_picture_cloudflare_variant_url
-            or (
-                picture_image_field.storage.url(collection.first_picture_image)
-                if collection.first_picture_image
-                else ''
-            )
+            picture_image_field.storage.url(collection.first_picture_image)
+            if collection.first_picture_image
+            else ''
         )
     context = {
         'type': "pictures",
@@ -204,7 +210,14 @@ def picture_detail(request, year, album):
 
     # Keep album images in upload order. The recent gallery refactor made the
     # non-2022 path explicitly descending, which flipped long-standing albums.
-    pictures_qs = Picture.objects.filter(collection=collection).order_by('id')
+    pictures_qs = (
+        Picture.objects.filter(
+            collection=collection,
+            processing_status=Picture.PROCESSING_STATUS_READY,
+        )
+        .exclude(image='')
+        .order_by('id')
+    )
 
     page = request.GET.get('page', 1)
     paginator = Paginator(pictures_qs, 12)
@@ -275,7 +288,7 @@ def picture_upload(request, collection_id):
     collection = _get_picture_collection(collection_id)
     context = {
         "collection": collection,
-        "cloudflare_images_enabled": CloudflareImagesClient.is_configured(),
+        "direct_upload_enabled": uploads_use_s3(),
         "fallback_upload_enabled": _fallback_upload_enabled(),
         "upload_max_file_size_mb": DEFAULT_UPLOAD_MAX_FILE_SIZE_MB,
     }
@@ -293,24 +306,35 @@ def picture_upload_direct(request):
     if not collection_id:
         return JsonResponse({"error": "collection_id is required."}, status=400)
 
-    _get_picture_collection(collection_id)
+    collection = _get_picture_collection(collection_id)
 
-    if not CloudflareImagesClient.is_configured():
-        return JsonResponse({"error": "Cloudflare Images is not configured."}, status=503)
+    if not uploads_use_s3():
+        return JsonResponse({"error": "Direct S3 uploads are not configured."}, status=503)
 
     if not _check_direct_upload_rate_limit(request):
         return JsonResponse({"error": "Too many upload URL requests. Please wait a moment."}, status=429)
 
-    client = CloudflareImagesClient()
+    filename = (payload.get("filename") or "").strip()
+    content_type = (payload.get("content_type") or "").strip()
+    if not filename or not content_type.startswith("image/"):
+        return JsonResponse({"error": "filename and image content_type are required."}, status=400)
+
     try:
-        result = client.create_direct_upload()
-    except CloudflareImagesError as exc:
-        return JsonResponse({"error": str(exc)}, status=502)
+        result = create_presigned_temp_upload(
+            collection=collection,
+            filename=filename,
+            content_type=content_type,
+            max_file_size=DEFAULT_UPLOAD_MAX_FILE_SIZE_MB * 1024 * 1024,
+        )
+    except Exception as exc:
+        logger.warning("Unable to create archive upload session for collection %s: %s", collection_id, exc)
+        return JsonResponse({"error": "Unable to create upload session."}, status=502)
 
     return JsonResponse(
         {
-            "image_id": result["id"],
             "upload_url": result["upload_url"],
+            "fields": result["fields"],
+            "temp_key": result["temp_key"],
         }
     )
 
@@ -339,6 +363,7 @@ def picture_upload_fallback(request):
         image=uploaded_file,
         original_filename=(uploaded_file.name or "")[:255],
         upload_provider=Picture.UPLOAD_PROVIDER_LOCAL,
+        processing_status=Picture.PROCESSING_STATUS_PENDING,
     )
     picture._skip_compression = True
     picture.save()
@@ -346,9 +371,8 @@ def picture_upload_fallback(request):
     return JsonResponse(
         {
             "picture_id": picture.pk,
-            "image_url": picture.image_url,
-            "optimized_async": True,
-            "provider": "local",
+            "status": picture.processing_status,
+            "provider": picture.upload_provider,
         }
     )
 
@@ -361,49 +385,41 @@ def picture_upload_complete(request):
         return JsonResponse({"error": "Invalid JSON body."}, status=400)
 
     collection_id = payload.get("collection_id")
-    image_id = payload.get("image_id")
+    temp_key = (payload.get("temp_key") or "").strip()
     filename = (payload.get("filename") or "").strip()
 
-    if not collection_id or not image_id:
-        return JsonResponse({"error": "collection_id and image_id are required."}, status=400)
+    if not collection_id or not temp_key:
+        return JsonResponse({"error": "collection_id and temp_key are required."}, status=400)
 
     collection = _get_picture_collection(collection_id)
 
-    existing_picture = Picture.objects.filter(cloudflare_image_id=image_id).first()
+    existing_picture = Picture.objects.filter(temp_upload_key=temp_key).first()
     if existing_picture:
-        if existing_picture.collection_id != collection.pk:
-            return JsonResponse({"error": "This image is already linked to another collection."}, status=409)
         return JsonResponse(
             {
                 "picture_id": existing_picture.pk,
-                "image_url": existing_picture.image_url,
+                "status": existing_picture.processing_status,
                 "duplicate": True,
             }
         )
 
-    if not CloudflareImagesClient.is_configured():
-        return JsonResponse({"error": "Cloudflare Images is not configured."}, status=503)
-
-    client = CloudflareImagesClient()
     try:
-        image_details = client.get_image(image_id)
-    except CloudflareImagesError as exc:
-        return JsonResponse({"error": str(exc)}, status=502)
-
-    if image_details.get("draft", False):
+        head_temp_upload_object(temp_key)
+    except Exception:
         return JsonResponse({"error": "Image upload has not completed yet."}, status=409)
 
     picture = Picture.objects.create(
         collection=collection,
-        upload_provider=Picture.UPLOAD_PROVIDER_CLOUDFLARE,
-        cloudflare_image_id=image_id,
-        cloudflare_variant_url=client.build_variant_url(image_id),
+        upload_provider=Picture.UPLOAD_PROVIDER_S3_DIRECT,
         original_filename=filename[:255],
+        temp_upload_key=temp_key,
+        processing_status=Picture.PROCESSING_STATUS_PENDING,
     )
+    enqueue_task_on_commit(optimize_picture_image, picture.pk)
     return JsonResponse(
         {
             "picture_id": picture.pk,
-            "image_url": picture.image_url,
+            "status": picture.processing_status,
             "duplicate": False,
         }
     )

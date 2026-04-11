@@ -16,22 +16,22 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='picture',
-            name='cloudflare_image_id',
-            field=models.CharField(blank=True, max_length=64, null=True, unique=True),
-        ),
-        migrations.AddField(
-            model_name='picture',
-            name='cloudflare_variant_url',
-            field=models.URLField(blank=True, max_length=500, null=True),
-        ),
-        migrations.AddField(
-            model_name='picture',
             name='original_filename',
             field=models.CharField(blank=True, max_length=255),
         ),
         migrations.AddField(
             model_name='picture',
+            name='processing_status',
+            field=models.CharField(choices=[('pending', 'Pending'), ('processing', 'Processing'), ('ready', 'Ready'), ('failed', 'Failed')], default='ready', max_length=32),
+        ),
+        migrations.AddField(
+            model_name='picture',
+            name='temp_upload_key',
+            field=models.CharField(blank=True, max_length=500),
+        ),
+        migrations.AddField(
+            model_name='picture',
             name='upload_provider',
-            field=models.CharField(choices=[('local', 'Local'), ('cloudflare', 'Cloudflare')], default='local', max_length=32),
+            field=models.CharField(choices=[('local', 'Local'), ('s3_direct', 'S3 direct')], default='local', max_length=32),
         ),
     ]
