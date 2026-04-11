@@ -98,8 +98,6 @@ jobs:
     needs: propose_release
     if: needs.propose_release.outputs.should_release == 'true'
     runs-on: ubuntu-latest
-    environment:
-      name: release-approval
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6

@@ -21,13 +21,15 @@ jobs:
       cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    if: github.ref_type == 'branch'
+    if: github.ref_type == 'branch' || github.event_name == 'schedule'
     defaults:
       run:
         shell: bash
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'master' || github.ref }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
       - name: Compute image repository
@@ -123,7 +125,12 @@ jobs:
 
           MAJOR="${BASH_REMATCH[1]}"
           MINOR="${BASH_REMATCH[2]}"
-          SOURCE_TAG="${IMAGE_REPO}:${GITHUB_SHA}"
+
+          git init -q
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth=1 origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
+          SOURCE_SHA="$(git rev-list -n 1 "${GITHUB_REF_NAME}")"
+          SOURCE_TAG="${IMAGE_REPO}:${SOURCE_SHA}"
 
           # The release tag workflow creates the git tag after the master build starts.
           # Wait for the SHA-tagged image to exist, then reuse that digest instead of rebuilding.
