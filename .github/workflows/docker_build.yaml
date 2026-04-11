@@ -21,12 +21,15 @@ jobs:
       cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    if: github.ref_type == 'branch' || github.event_name == 'schedule'
     defaults:
       run:
         shell: bash
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'schedule' && 'master' || github.ref }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
       - name: Compute image repository
@@ -62,16 +65,6 @@ jobs:
             TAGS+=("${IMAGE_REPO}:${GITHUB_REF_NAME}")
           fi
 
-          if [[ "${GITHUB_REF_TYPE}" = "tag" && "${GITHUB_REF_NAME}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            MAJOR="${BASH_REMATCH[1]}"
-            MINOR="${BASH_REMATCH[2]}"
-            TAGS+=(
-              "${IMAGE_REPO}:${GITHUB_REF_NAME}"
-              "${IMAGE_REPO}:v${MAJOR}.${MINOR}"
-              "${IMAGE_REPO}:v${MAJOR}"
-            )
-          fi
-
           {
             echo "value<<EOF"
             printf '%s\n' "${TAGS[@]}"
@@ -86,3 +79,74 @@ jobs:
           tags: ${{ steps.tags.outputs.value }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  tag_release_image:
+    concurrency:
+      group: 'docker-publish-${{ github.ref_name }}'
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.ref_type == 'tag'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Compute image repository
+        id: image
+        run: |
+          echo "repo_lower=${GITHUB_REPOSITORY,,}" >> "${GITHUB_OUTPUT}"
+
+      - name: Docker login with retry
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin; then
+              exit 0
+            fi
+            if [ "${attempt}" -lt 3 ]; then
+              sleep $((attempt * 5))
+            fi
+          done
+          echo "GHCR login failed after 3 attempts."
+          exit 1
+
+      - name: Add release tags to the existing master image
+        env:
+          IMAGE_REPO: ghcr.io/${{ steps.image.outputs.repo_lower }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "${GITHUB_REF_NAME}" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "Tag ${GITHUB_REF_NAME} is not a SemVer release tag, skipping."
+            exit 0
+          fi
+
+          MAJOR="${BASH_REMATCH[1]}"
+          MINOR="${BASH_REMATCH[2]}"
+
+          git init -q
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --depth=1 origin "refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
+          SOURCE_SHA="$(git rev-list -n 1 "${GITHUB_REF_NAME}")"
+          SOURCE_TAG="${IMAGE_REPO}:${SOURCE_SHA}"
+
+          # The release tag workflow creates the git tag after the master build starts.
+          # Wait for the SHA-tagged image to exist, then reuse that digest instead of rebuilding.
+          for attempt in $(seq 1 24); do
+            if docker buildx imagetools inspect "${SOURCE_TAG}" >/dev/null 2>&1; then
+              break
+            fi
+            if [ "${attempt}" -eq 24 ]; then
+              echo "Timed out waiting for ${SOURCE_TAG} to exist."
+              exit 1
+            fi
+            sleep 10
+          done
+
+          docker buildx imagetools create \
+            --tag "${IMAGE_REPO}:${GITHUB_REF_NAME}" \
+            --tag "${IMAGE_REPO}:v${MAJOR}.${MINOR}" \
+            --tag "${IMAGE_REPO}:v${MAJOR}" \
+            "${SOURCE_TAG}"

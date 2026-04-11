@@ -142,6 +142,15 @@ The production stack relies on the published container image at `ghcr.io/datatek
 
 The stack brings up the `web` (Gunicorn), `asgi` (Daphne/Channels), `celery`, `db`, `redis`, and `nginx` services. Rolling deploys usually build a new GHCR image in CI, update `DATE_IMG_TAG`, then restart `web`, `asgi`, and `celery`.
 
+CI image publishing and release tagging are now separate on purpose:
+
+- Pushes to `develop` publish moving `develop` images plus a commit-SHA tag.
+- Pushes to `master` publish moving `master` images plus a commit-SHA tag.
+- Release tags are created manually through `.github/workflows/release_tag.yaml` with `patch` as the default bump and optional `minor` / `major` overrides.
+- When a release tag is created, CI reuses the already-published `master` image for that commit and adds the SemVer tags to the same image instead of rebuilding.
+
+For production rollouts, prefer a release tag in `DATE_IMG_TAG` instead of the moving `master` tag.
+
 Although Django 6 ships with the new Tasks framework, this project still uses Celery for production background work. The current task dispatch points defer enqueuing until after successful database commits where that matters, so new code should preserve that behavior.
 
 `docker-compose.prod.yml` also reads `ENABLE_LANGUAGE_FEATURES`, so multilingual public/admin behavior must be enabled explicitly in production if you want language switching outside Swedish.
