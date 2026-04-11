@@ -6,6 +6,7 @@ services:
       - date_postgres_data:/var/lib/postgresql/data/
     environment:
       - POSTGRES_PASSWORD=${DATE_DB_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
   web:
     build: .
     restart: unless-stopped

@@ -62,6 +62,7 @@ services:
       - dev_all_postgres_data:/var/lib/postgresql/data/
     environment:
       - POSTGRES_PASSWORD=${DATE_DB_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
     ports:
       - "5433:5432"
 
