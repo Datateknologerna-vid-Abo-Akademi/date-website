@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 from io import BytesIO
+from unittest.mock import patch
 
 from PIL import Image
 
@@ -70,6 +71,31 @@ class CollectionTestCase(TestCase):
         self.assertTrue(isinstance(p, Picture))
         self.assertEqual(p.__str__(), p.image.name)
         self.assertEqual(p.favorite, False)
+
+    def test_picture_image_url_uses_stored_image(self):
+        collection = create_collection(collection_type=TYPE_CHOICES[0][0])
+        picture = Picture(
+            collection=collection,
+            image=SimpleUploadedFile(
+                name="gallery.webp",
+                content=self._image_bytes("WEBP"),
+                content_type="image/webp",
+            ),
+            original_filename="gallery.webp",
+        )
+        picture._skip_compression = True
+        picture.save()
+
+        self.assertTrue(picture.image_url.endswith(".webp"))
+        self.assertEqual(picture.get_file_path(), picture.image_url)
+        self.assertEqual(str(picture), "gallery.webp")
+
+    def _image_bytes(self, fmt):
+        image = Image.new('RGB', (100, 100), color=(10, 20, 30))
+        image_bytes = BytesIO()
+        image.save(image_bytes, format=fmt)
+        image.close()
+        return image_bytes.getvalue()
 
     def test_document_creation(self):
         d = create_document()
@@ -166,3 +192,157 @@ class PictureDetailFragmentViewTests(TestCase):
                 'album': self.collection.title,
             },
         )
+
+
+class PictureUploadApiTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._media_root = tempfile.mkdtemp()
+        cls._media_override = override_settings(MEDIA_ROOT=cls._media_root)
+        cls._media_override.enable()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._media_override.disable()
+        shutil.rmtree(cls._media_root, ignore_errors=True)
+        super().tearDownClass()
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin_user = Member.objects.create_superuser(
+            username="archive_admin",
+            password="pwd",
+            membership_type=MembershipType.objects.get(pk=ORDINARY_MEMBER),
+        )
+        cls.member = Member.objects.create_user(
+            username="plain_member",
+            password="pwd",
+            membership_type=MembershipType.objects.get(pk=ORDINARY_MEMBER),
+        )
+        cls.collection = create_collection(
+            title="Upload Album",
+            collection_type=TYPE_CHOICES[0][0],
+        )
+        cls.document_collection = create_collection(
+            title="Documents",
+            collection_type=TYPE_CHOICES[1][0],
+        )
+
+    def test_direct_upload_session_requires_permission(self):
+        self.client.force_login(self.member)
+
+        response = self.client.post(
+            reverse("archive:picture_upload_direct"),
+            data='{"collection_id": %d}' % self.collection.pk,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 302)
+
+    @override_settings(USE_S3=True)
+    @patch("archive.views.create_presigned_temp_upload")
+    def test_direct_upload_session_succeeds_for_authorized_user(self, create_presigned_temp_upload):
+        create_presigned_temp_upload.return_value = {
+            "upload_url": "https://s3.example.com/upload",
+            "fields": {"key": "temp-key"},
+            "temp_key": "temp/archive/temp-key.jpg",
+        }
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse("archive:picture_upload_direct"),
+            data='{"collection_id": %d, "filename": "party.jpg", "content_type": "image/jpeg"}' % self.collection.pk,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["temp_key"], "temp/archive/temp-key.jpg")
+
+    def test_direct_upload_session_rejects_non_picture_collection(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse("archive:picture_upload_direct"),
+            data='{"collection_id": %d, "filename": "party.jpg", "content_type": "image/jpeg"}' % self.document_collection.pk,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    @patch("archive.views.enqueue_task_on_commit")
+    @patch("archive.views.head_temp_upload_object")
+    def test_finalize_creates_processing_picture_from_temp_upload(self, head_temp_upload_object, enqueue_task_on_commit):
+        head_temp_upload_object.return_value = {}
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse("archive:picture_upload_complete"),
+            data='{"collection_id": %d, "temp_key": "temp/archive/file-1.jpg", "filename": "party.jpg"}' % self.collection.pk,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        picture = Picture.objects.get(temp_upload_key="temp/archive/file-1.jpg")
+        self.assertEqual(picture.collection, self.collection)
+        self.assertEqual(picture.upload_provider, Picture.UPLOAD_PROVIDER_S3_DIRECT)
+        self.assertEqual(picture.processing_status, Picture.PROCESSING_STATUS_PENDING)
+        enqueue_task_on_commit.assert_called_once()
+
+    def test_finalize_rejects_duplicate_temp_keys(self):
+        Picture.objects.create(
+            collection=self.collection,
+            upload_provider=Picture.UPLOAD_PROVIDER_S3_DIRECT,
+            temp_upload_key="temp/archive/file-2.jpg",
+            original_filename="existing.jpg",
+            processing_status=Picture.PROCESSING_STATUS_PENDING,
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse("archive:picture_upload_complete"),
+            data='{"collection_id": %d, "temp_key": "temp/archive/file-2.jpg", "filename": "existing.jpg"}' % self.collection.pk,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["duplicate"])
+
+    @patch("archive.views.head_temp_upload_object", side_effect=Exception("missing"))
+    def test_finalize_rejects_missing_temp_uploads(self, _head_temp_upload_object):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse("archive:picture_upload_complete"),
+            data='{"collection_id": %d, "temp_key": "temp/archive/missing.jpg", "filename": "wait.jpg"}' % self.collection.pk,
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 409)
+
+    @patch("archive.views.enqueue_task_on_commit")
+    def test_fallback_upload_creates_local_picture_and_queues_optimization(self, enqueue_task_on_commit):
+        self.client.force_login(self.admin_user)
+        image = Image.new('RGB', (100, 100), color=(50, 50, 50))
+        image_bytes = BytesIO()
+        image.save(image_bytes, format='JPEG')
+        image.close()
+
+        response = self.client.post(
+            reverse("archive:picture_upload_fallback"),
+            data={
+                "collection_id": self.collection.pk,
+                "file": SimpleUploadedFile(
+                    "fallback.jpg",
+                    image_bytes.getvalue(),
+                    content_type="image/jpeg",
+                ),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        picture = Picture.objects.get(pk=response.json()["picture_id"])
+        self.assertEqual(picture.upload_provider, Picture.UPLOAD_PROVIDER_LOCAL)
+        self.assertEqual(picture.original_filename, "fallback.jpg")
+        self.assertEqual(picture.processing_status, Picture.PROCESSING_STATUS_PENDING)
+        enqueue_task_on_commit.assert_called_once()

@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 from django.conf import settings
+from django.urls import reverse
+from django.utils.html import format_html
 
 from .forms import DocumentAdminForm, PictureAdminForm, PublicAdminForm
 from .models import Document, DocumentCollection, Picture, PictureCollection, PublicFile, PublicCollection, ExamCollection
@@ -14,7 +16,9 @@ class PicturesInline(admin.TabularInline):
     extra = 0
 
     def preview_image(self, obj):
-        return mark_safe("""<img src="%s" style="width: auto; height: 80px"/> """ % obj.image.url)
+        if not obj.image_url:
+            return "-"
+        return mark_safe("""<img src="%s" style="width: auto; height: 80px"/> """ % obj.image_url)
 
 
 class DocumentInline(admin.TabularInline):
@@ -43,6 +47,16 @@ class PictureCollectionAdmin(admin.ModelAdmin):
         PicturesInline
     ]
     list_display = ('title', 'pub_date')
+    readonly_fields = ('bulk_upload_link',)
+
+    def bulk_upload_link(self, obj):
+        if not obj or not obj.pk:
+            return "Save the album first to enable bulk upload."
+        return format_html(
+            '<a class="button" href="{}">Open bulk uploader</a>',
+            reverse('archive:picture_upload', kwargs={'collection_id': obj.pk}),
+        )
+    bulk_upload_link.short_description = "Bulk uploader"
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

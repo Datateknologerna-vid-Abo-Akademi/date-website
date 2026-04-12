@@ -290,6 +290,7 @@ if USE_S3:
     # s3 public media settings
     PRIVATE_MEDIA_LOCATION = env('PRIVATE_MEDIA_LOCATION')
     PUBLIC_MEDIA_LOCATION = env('PUBLIC_MEDIA_LOCATION')
+    ARCHIVE_TEMP_UPLOAD_LOCATION = env('ARCHIVE_TEMP_UPLOAD_LOCATION', str, f'{PRIVATE_MEDIA_LOCATION}/tmp/archive')
     MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_PRIVATE_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/'
 
     def get_s3_storage_options(bucket_name, location, querystring_auth):
@@ -331,6 +332,7 @@ else:
     # Not in use when not using s3 but need to be set in order not to cause errors
     PRIVATE_MEDIA_LOCATION = 'media/private'
     PUBLIC_MEDIA_LOCATION = 'media/public'
+    ARCHIVE_TEMP_UPLOAD_LOCATION = 'media/private/tmp/archive'
     AWS_STORAGE_BUCKET_NAME = "media"
 
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
