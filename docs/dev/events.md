@@ -26,7 +26,7 @@
 
 ## Views & Routing
 - `IndexView` lists upcoming and past events separately.
-- `EventDetailView` handles GET (render + optional redirect link) and POST (passcode validation + signup). On success it redirects back to the detail page with anchor fragments for certain event types (Årsfest, ÖN100, etc.). Template overrides can be triggered by event title or slug for special layouts.
+- `EventDetailView` handles GET (render + optional redirect link) and POST (passcode validation + signup). On success it redirects back to the detail page with anchor fragments for certain event types (Årsfest, etc.). Template overrides can be triggered by event title or slug for special layouts.
 
 ## Websocket Layer
 - `events/consumers.py` and `websocket_utils.py` push attendee updates via channels. Ensure the slug used in `ws_send` matches the subscription on the front end.

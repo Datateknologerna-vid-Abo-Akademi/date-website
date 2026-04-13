@@ -35,13 +35,6 @@ EVENT_TEMPLATES_BY_SLUG = {
     'arsfest': 'events/arsfest.html',
     'arsfest_stipendiater': 'events/arsfest.html',
     'arsfest26': 'events/arsfest.html',
-    # ÖN100
-    'on100_main': 'events/arsfest.html',
-    'on100_student': 'events/arsfest.html',
-    'on100_alumn': 'events/arsfest.html',
-    'on100_guest': 'events/arsfest.html',
-    'on100_secret': 'events/arsfest.html',
-    'on100_stippe': 'events/arsfest.html',
 }
 
 

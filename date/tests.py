@@ -448,7 +448,6 @@ class AssociationHomepageSmokeTests(TestCase):
         "biocum": "core.settings.biocum",
         "demo": "core.settings.demo",
         "pulterit": "core.settings.pulterit",
-        "on": "core.settings.on",
     }
 
     def _association_overrides(self, association):

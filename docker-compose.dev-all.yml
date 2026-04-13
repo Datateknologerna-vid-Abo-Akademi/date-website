@@ -9,8 +9,7 @@
 #   biocum   → http://localhost:8001
 #   date     → http://localhost:8002
 #   kk       → http://localhost:8003
-#   on       → http://localhost:8004
-#   pulterit → http://localhost:8005
+#   pulterit → http://localhost:8004
 
 x-web-common: &web-common
   build: .
@@ -119,18 +118,10 @@ services:
       <<: *web-env
       PROJECT_NAME: kk
 
-  web-on:
-    <<: *web-common
-    ports:
-      - "8004:8000"
-    environment:
-      <<: *web-env
-      PROJECT_NAME: on
-
   web-pulterit:
     <<: *web-common
     ports:
-      - "8005:8000"
+      - "8004:8000"
     environment:
       <<: *web-env
       PROJECT_NAME: pulterit
