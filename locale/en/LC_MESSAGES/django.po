@@ -1147,6 +1147,10 @@ msgstr "Forgot your password?"
 msgid "Registrera dig"
 msgstr "Register"
 
+#: templates/common/members/registration/login.html:25
+msgid "Logga in med GitHub"
+msgstr "Log in with GitHub"
+
 #: templates/common/members/registration/password_change_done.html:4
 #: templates/common/members/registration/password_change_done.html:12
 msgid "Password change successful"
@@ -1553,6 +1557,22 @@ msgstr "Save"
 #: templates/common/members/userinfo.html:118
 msgid "Cancel"
 msgstr "Cancel"
+
+#: templates/common/members/userinfo.html:119
+msgid "GitHub-konto kopplat."
+msgstr "GitHub account connected."
+
+#: templates/common/members/userinfo.html:122
+msgid "Koppla bort GitHub"
+msgstr "Disconnect GitHub"
+
+#: templates/common/members/userinfo.html:125
+msgid "Inget GitHub-konto kopplat."
+msgstr "No GitHub account connected."
+
+#: templates/common/members/userinfo.html:128
+msgid "Koppla GitHub-konto"
+msgstr "Connect GitHub account"
 
 #: templates/common/members/userinfo.html:136
 #, python-format

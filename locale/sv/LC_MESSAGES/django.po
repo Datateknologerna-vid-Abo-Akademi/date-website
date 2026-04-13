@@ -1133,6 +1133,10 @@ msgstr "Glömt lösenordet?"
 msgid "Registrera dig"
 msgstr "Registrera dig"
 
+#: templates/common/members/registration/login.html:25
+msgid "Logga in med GitHub"
+msgstr "Logga in med GitHub"
+
 #: templates/common/members/registration/password_change_done.html:4
 #: templates/common/members/registration/password_change_done.html:12
 msgid "Password change successful"
@@ -1567,6 +1571,22 @@ msgstr "Spara"
 #: templates/common/members/userinfo.html:74
 msgid "Cancel"
 msgstr "Avbryt"
+
+#: templates/common/members/userinfo.html:119
+msgid "GitHub-konto kopplat."
+msgstr "GitHub-konto kopplat."
+
+#: templates/common/members/userinfo.html:122
+msgid "Koppla bort GitHub"
+msgstr "Koppla bort GitHub"
+
+#: templates/common/members/userinfo.html:125
+msgid "Inget GitHub-konto kopplat."
+msgstr "Inget GitHub-konto kopplat."
+
+#: templates/common/members/userinfo.html:128
+msgid "Koppla GitHub-konto"
+msgstr "Koppla GitHub-konto"
 
 #: templates/common/members/userinfo.html:87
 msgid "Positions of trust"
