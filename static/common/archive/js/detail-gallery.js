@@ -22,6 +22,9 @@
     let scrollCheckQueued = false;
     let masonryGrid = null;
     let syncAfterLoadRequested = false;
+    let masonryLayoutQueued = false;
+    let masonryNeedsReload = false;
+    let itemResizeObserver = null;
 
     const lightbox = GLightbox({
         selector: '.glightbox',
@@ -93,6 +96,108 @@
 
     function getLoadedItemCount() {
         return getGridItems().length;
+    }
+
+    function getItemImages(items) {
+        return items.flatMap((item) => Array.from(item.querySelectorAll('.gallery-image')));
+    }
+
+    function markImagesEager(images, options = {}) {
+        const { highPriorityCount = 0 } = options;
+
+        images.forEach((image, index) => {
+            image.loading = 'eager';
+            image.decoding = 'async';
+
+            if ('fetchPriority' in image) {
+                image.fetchPriority = index < highPriorityCount ? 'high' : 'auto';
+            }
+        });
+    }
+
+    function queueMasonryLayout(options = {}) {
+        const { reloadItems = false } = options;
+        if (!masonryGrid) return;
+
+        masonryNeedsReload = masonryNeedsReload || reloadItems;
+        if (masonryLayoutQueued) return;
+
+        masonryLayoutQueued = true;
+        window.requestAnimationFrame(() => {
+            masonryLayoutQueued = false;
+
+            if (!masonryGrid) {
+                masonryNeedsReload = false;
+                return;
+            }
+
+            if (masonryNeedsReload) {
+                masonryGrid.masonry('reloadItems');
+            }
+
+            masonryGrid.masonry('layout');
+            masonryNeedsReload = false;
+        });
+    }
+
+    function stabilizeMasonryLayout(options = {}) {
+        queueMasonryLayout(options);
+        window.requestAnimationFrame(() => queueMasonryLayout(options));
+        window.setTimeout(() => queueMasonryLayout(options), 90);
+        window.setTimeout(() => queueMasonryLayout(options), 240);
+        window.setTimeout(() => queueMasonryLayout(options), 520);
+    }
+
+    function observeGridItems(items) {
+        if (!('ResizeObserver' in window) || !items.length) return;
+
+        if (!itemResizeObserver) {
+            itemResizeObserver = new ResizeObserver(() => {
+                stabilizeMasonryLayout();
+            });
+        }
+
+        items.forEach((item) => itemResizeObserver.observe(item));
+    }
+
+    function preloadImageSource(src, timeoutMs) {
+        return new Promise((resolve) => {
+            if (!src) {
+                resolve(false);
+                return;
+            }
+
+            let finished = false;
+            let timerId = null;
+            const preloader = new Image();
+
+            const done = (loaded) => {
+                if (finished) return;
+                finished = true;
+                if (timerId) {
+                    window.clearTimeout(timerId);
+                }
+                preloader.onload = null;
+                preloader.onerror = null;
+                resolve(loaded);
+            };
+
+            preloader.decoding = 'async';
+            preloader.onload = () => done(true);
+            preloader.onerror = () => done(false);
+            timerId = window.setTimeout(() => done(false), timeoutMs);
+            preloader.src = src;
+        });
+    }
+
+    async function preloadGridItems(items, options = {}) {
+        const { timeoutMs = 2400 } = options;
+        const images = getItemImages(items);
+
+        if (!images.length) return;
+
+        markImagesEager(images, { highPriorityCount: 4 });
+        await Promise.all(images.map((image) => preloadImageSource(image.currentSrc || image.src, timeoutMs)));
     }
 
     function getCurrentGridItem() {
@@ -362,21 +467,22 @@
             const fragment = document.createRange().createContextualFragment(payload.html);
             const appendedItems = Array.from(fragment.querySelectorAll('.grid-item'));
 
+            await preloadGridItems(appendedItems);
+
             grid.appendChild(fragment);
 
             if (appendedItems.length) {
-                // Do not wait for lazy images to load; that can stall viewer paging.
+                observeGridItems(appendedItems);
                 $grid.masonry('appended', appendedItems);
-                $grid.masonry('layout');
+                stabilizeMasonryLayout({ reloadItems: true });
 
-                // Relayout progressively as new lazy images decode.
+                // Keep listening in case a browser still finalizes dimensions after preload.
                 $(appendedItems).imagesLoaded().progress(() => {
-                    $grid.masonry('layout');
+                    stabilizeMasonryLayout();
                 });
 
-                // Extra relayout helps Chromium mobile emulation settle final item bounds.
                 window.setTimeout(() => {
-                    $grid.masonry('layout');
+                    stabilizeMasonryLayout({ reloadItems: true });
                     syncLightboxElements();
                 }, 80);
             }
@@ -458,8 +564,14 @@
         document.addEventListener('scroll', queueViewportCheck, { passive: true, capture: true });
         window.addEventListener('touchend', queueViewportCheck, { passive: true });
         window.addEventListener('touchmove', queueViewportCheck, { passive: true });
-        window.addEventListener('resize', queueViewportCheck, { passive: true });
-        window.addEventListener('orientationchange', queueViewportCheck, { passive: true });
+        window.addEventListener('resize', () => {
+            queueViewportCheck();
+            stabilizeMasonryLayout({ reloadItems: true });
+        }, { passive: true });
+        window.addEventListener('orientationchange', () => {
+            queueViewportCheck();
+            stabilizeMasonryLayout({ reloadItems: true });
+        }, { passive: true });
 
         if ('IntersectionObserver' in window) {
             loadMoreObserver = new IntersectionObserver((entries) => {
@@ -610,6 +722,9 @@
     const $grid = $('.grid');
     masonryGrid = $grid;
 
+    markImagesEager(getItemImages(Array.from(getGridItems())), { highPriorityCount: 6 });
+    observeGridItems(Array.from(getGridItems()));
+
     $grid.masonry({
         itemSelector: '.grid-item',
         columnWidth: '.grid-sizer',
@@ -617,10 +732,12 @@
         gutter: gridGap,
     });
 
-    // Relayout as lazy images decode, without blocking startup.
+    // Relayout as dimensions settle, even if the browser finishes decode later than expected.
     $grid.imagesLoaded().progress(() => {
-        $grid.masonry('layout');
+        stabilizeMasonryLayout();
     });
+
+    stabilizeMasonryLayout({ reloadItems: true });
 
     syncLightboxElements();
     setupInfiniteScroll($grid);
