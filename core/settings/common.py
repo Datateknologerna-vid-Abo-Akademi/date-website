@@ -357,6 +357,10 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 30000  # large value for large events
 
 ALUMNI_SETTINGS = os.environ.get("ALUMNI_SETTINGS", '')
 
+# GitHub OAuth settings
+GITHUB_CLIENT_ID = env('GITHUB_CLIENT_ID', str, '')
+GITHUB_CLIENT_SECRET = env('GITHUB_CLIENT_SECRET', str, '')
+
 DEFAULT_EXCEPTION_REPORTER_FILTER = 'core.redaction.DateExceptionReporterFilter'
 
 LOG_LEVEL = env('LOG_LEVEL', str, 'DEBUG' if DEBUG else 'INFO')

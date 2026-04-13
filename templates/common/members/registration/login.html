@@ -19,6 +19,13 @@
             {% endif %}
             <button class="button" type="submit">{% trans 'Login' %}</button>
         </form>
+        {% if GITHUB_CLIENT_ID %}
+        <div class="github-login">
+            <a href="{% url 'members:github_login' %}{% if next %}?next={{ next }}{% endif %}" class="button github-button">
+                {% trans 'Logga in med GitHub' %}
+            </a>
+        </div>
+        {% endif %}
             <a href="{% url 'members:password_reset' %}"><p>{% trans 'Glömt lösenordet?' %}</p></a>
             {% if MEMBERS_SIGNUP_ENABLED %}
             <a href="{% url 'members:signup' %}"><p>{% trans 'Registrera dig' %}</p></a>
