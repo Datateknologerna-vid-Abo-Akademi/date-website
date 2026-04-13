@@ -112,6 +112,25 @@
                     </form>
                 </div>
 
+                {% if GITHUB_CLIENT_ID %}
+                <div class="mt-3">
+                    <h5>GitHub</h5>
+                    {% if user.github_id %}
+                        <p class="mb-2">{% trans 'GitHub-konto kopplat.' %}</p>
+                        <form method="post" action="{% url 'members:github_disconnect' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="theme-button">{% trans 'Koppla bort GitHub' %}</button>
+                        </form>
+                    {% else %}
+                        <p class="mb-2">{% trans 'Inget GitHub-konto kopplat.' %}</p>
+                        <form method="post" action="{% url 'members:github_connect' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="theme-button">{% trans 'Koppla GitHub-konto' %}</button>
+                        </form>
+                    {% endif %}
+                </div>
+                {% endif %}
+
                 <div class="row g-2 mt-1">
                     <div class="col-6">
                         <a href="{% url 'members:password_change' %}" class="theme-button d-block h-100">{% trans 'Password change' %}<i class="fas fa-chevron-right"></i></a>

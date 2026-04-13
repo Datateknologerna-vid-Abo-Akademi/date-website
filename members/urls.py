@@ -5,11 +5,16 @@ from django.urls import include, path, re_path
 
 from . import two_factor
 from . import views
+from . import views_github
 
 app_name = 'members'
 
 urlpatterns = [
     path('activate/<uidb64>/<token>/', views.activate, name='activate'),
+    path('github/login/', views_github.github_login, name='github_login'),
+    path('github/connect/', views_github.github_connect, name='github_connect'),
+    path('github/disconnect/', views_github.github_disconnect, name='github_disconnect'),
+    path('github/callback/', views_github.github_callback, name='github_callback'),
     path('login/', two_factor.MemberLoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('password_reset/', views.CustomPasswordResetView.as_view(), name='password_reset'),

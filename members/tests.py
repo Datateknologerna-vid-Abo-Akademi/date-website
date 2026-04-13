@@ -1,10 +1,10 @@
 import time
 from inspect import signature
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from dateutil.relativedelta import relativedelta
 from django.contrib.auth.models import AnonymousUser
-from django.test import Client, RequestFactory, TestCase
+from django.test import Client, RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django_otp import DEVICE_ID_SESSION_KEY
@@ -542,3 +542,280 @@ class TwoFactorIntegrationTests(TestCase):
         self.assertContains(response, 'id_first_name_error', html=False)
         self.assertContains(response, 'id="userInfo" style="display:none;"', html=False)
         self.assertNotContains(response, 'id="editForm" style="display:none;"', html=False)
+
+
+GITHUB_SETTINGS = {
+    'GITHUB_CLIENT_ID': 'test-client-id',
+    'GITHUB_CLIENT_SECRET': 'test-client-secret',
+}
+
+
+def _mock_github_responses(github_id=123, email='ghuser@example.com'):
+    """Return (mock_post, mock_get) patchers for the GitHub OAuth API calls."""
+    token_resp = MagicMock()
+    token_resp.raise_for_status = MagicMock()
+    token_resp.json.return_value = {'access_token': 'gh-token-abc'}
+
+    user_resp = MagicMock()
+    user_resp.raise_for_status = MagicMock()
+    user_resp.json.return_value = {'id': github_id, 'email': email}
+
+    emails_resp = MagicMock()
+    emails_resp.raise_for_status = MagicMock()
+    emails_resp.json.return_value = [{'email': email, 'verified': True, 'primary': True}]
+
+    mock_post = patch('members.views_github.requests.post', return_value=token_resp)
+    mock_get = patch('members.views_github.requests.get', side_effect=[user_resp, emails_resp])
+    return mock_post, mock_get
+
+
+@override_settings(**GITHUB_SETTINGS)
+class GitHubLoginViewTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+
+    def test_redirects_to_github_with_state(self):
+        response = self.client.get(reverse('members:github_login'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('github.com/login/oauth/authorize', response['Location'])
+        self.assertIn('test-client-id', response['Location'])
+        self.assertIn('github_oauth_state', self.client.session)
+
+    def test_stores_next_in_session(self):
+        self.client.get(reverse('members:github_login') + '?next=/events/')
+        self.assertEqual(self.client.session.get('github_oauth_next'), '/events/')
+
+    def test_does_not_store_next_when_absent(self):
+        self.client.get(reverse('members:github_login'))
+        self.assertNotIn('github_oauth_next', self.client.session)
+
+    def test_rejects_external_next_url(self):
+        self.client.get(reverse('members:github_login') + '?next=https://evil.example/phish')
+        self.assertNotIn('github_oauth_next', self.client.session)
+
+    @override_settings(GITHUB_CLIENT_ID='')
+    def test_redirects_to_login_when_not_configured(self):
+        response = self.client.get(reverse('members:github_login'))
+        self.assertRedirects(response, reverse('members:login'), fetch_redirect_response=False)
+
+
+@override_settings(**GITHUB_SETTINGS)
+class GitHubCallbackViewTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        cls.member = Member.objects.create_user(
+            username='ghuser',
+            email='ghuser@example.com',
+            password='secret123',
+            membership_type=cls.membership_type,
+            github_id=999,
+        )
+
+    def setUp(self):
+        self.client = Client()
+        # Prime a valid session state
+        session = self.client.session
+        session['github_oauth_state'] = 'valid-state'
+        session['github_oauth_intent'] = 'login'
+        session.save()
+
+    def _callback(self, state='valid-state', code='auth-code', **extra):
+        return self.client.get(
+            reverse('members:github_callback'),
+            {'state': state, 'code': code, **extra},
+        )
+
+    def test_state_mismatch_returns_error(self):
+        response = self._callback(state='wrong-state')
+        self.assertRedirects(response, reverse('members:login'), fetch_redirect_response=False)
+
+    def test_missing_code_returns_error(self):
+        response = self.client.get(
+            reverse('members:github_callback'),
+            {'state': 'valid-state'},
+        )
+        self.assertRedirects(response, reverse('members:login'), fetch_redirect_response=False)
+
+    def test_github_error_param_returns_error(self):
+        response = self.client.get(
+            reverse('members:github_callback'),
+            {'error': 'access_denied'},
+        )
+        self.assertRedirects(response, reverse('members:login'), fetch_redirect_response=False)
+
+    def test_successful_login_by_github_id(self):
+        mock_post, mock_get = _mock_github_responses(github_id=999)
+        with mock_post, mock_get:
+            response = self._callback()
+        self.assertRedirects(response, reverse('members:info'), fetch_redirect_response=False)
+        self.assertEqual(int(self.client.session['_auth_user_id']), self.member.pk)
+
+    def test_successful_login_by_email_links_github_id(self):
+        member = Member.objects.create_user(
+            username='emailonly',
+            email='emailonly@example.com',
+            password='secret123',
+            membership_type=self.membership_type,
+        )
+        mock_post, mock_get = _mock_github_responses(github_id=777, email='emailonly@example.com')
+        with mock_post, mock_get:
+            response = self._callback()
+        self.assertRedirects(response, reverse('members:info'), fetch_redirect_response=False)
+        member.refresh_from_db()
+        self.assertEqual(member.github_id, 777)
+
+    def test_no_matching_member_returns_error(self):
+        mock_post, mock_get = _mock_github_responses(github_id=404, email='nobody@example.com')
+        with mock_post, mock_get:
+            response = self._callback()
+        self.assertRedirects(response, reverse('members:login'), fetch_redirect_response=False)
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_inactive_member_cannot_login(self):
+        inactive = Member.objects.create_user(
+            username='inactive',
+            email='inactive@example.com',
+            password='secret123',
+            membership_type=self.membership_type,
+            github_id=888,
+            is_active=False,
+        )
+        mock_post, mock_get = _mock_github_responses(github_id=888)
+        with mock_post, mock_get:
+            response = self._callback()
+        self.assertRedirects(response, reverse('members:login'), fetch_redirect_response=False)
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_next_url_is_honoured_after_login(self):
+        session = self.client.session
+        session['github_oauth_next'] = '/events/'
+        session.save()
+        mock_post, mock_get = _mock_github_responses(github_id=999)
+        with mock_post, mock_get:
+            response = self._callback()
+        self.assertRedirects(response, '/events/', fetch_redirect_response=False)
+
+    def test_next_removed_from_session_after_login(self):
+        session = self.client.session
+        session['github_oauth_next'] = '/events/'
+        session.save()
+        mock_post, mock_get = _mock_github_responses(github_id=999)
+        with mock_post, mock_get:
+            self._callback()
+        self.assertNotIn('github_oauth_next', self.client.session)
+
+
+@override_settings(**GITHUB_SETTINGS)
+class GitHubConnectViewTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        cls.member = Member.objects.create_user(
+            username='connectuser',
+            email='connect@example.com',
+            password='secret123',
+            membership_type=cls.membership_type,
+        )
+        cls.other = Member.objects.create_user(
+            username='otherconnect',
+            email='other@example.com',
+            password='secret123',
+            membership_type=cls.membership_type,
+            github_id=555,
+        )
+
+    def setUp(self):
+        self.client = Client()
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+
+    def _prime_callback_session(self, github_id):
+        session = self.client.session
+        session['github_oauth_state'] = 'connect-state'
+        session['github_oauth_intent'] = 'connect'
+        session.save()
+        mock_post, mock_get = _mock_github_responses(github_id=github_id)
+        return mock_post, mock_get
+
+    def test_connect_requires_post(self):
+        response = self.client.get(reverse('members:github_connect'))
+        self.assertRedirects(response, reverse('members:info'), fetch_redirect_response=False)
+
+    def test_connect_requires_login(self):
+        self.client.logout()
+        response = self.client.post(reverse('members:github_connect'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('members:login'), response['Location'])
+
+    def test_connect_initiates_oauth_and_stores_intent(self):
+        response = self.client.post(reverse('members:github_connect'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('github.com/login/oauth/authorize', response['Location'])
+        self.assertEqual(self.client.session['github_oauth_intent'], 'connect')
+
+    def test_callback_links_github_id_to_member(self):
+        mock_post, mock_get = self._prime_callback_session(github_id=321)
+        with mock_post, mock_get:
+            response = self.client.get(
+                reverse('members:github_callback'),
+                {'state': 'connect-state', 'code': 'code123'},
+            )
+        self.assertRedirects(response, reverse('members:info'), fetch_redirect_response=False)
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.github_id, 321)
+
+    def test_callback_rejects_github_id_already_on_another_member(self):
+        mock_post, mock_get = self._prime_callback_session(github_id=555)
+        with mock_post, mock_get:
+            response = self.client.get(
+                reverse('members:github_callback'),
+                {'state': 'connect-state', 'code': 'code123'},
+            )
+        self.assertRedirects(response, reverse('members:info'), fetch_redirect_response=False)
+        self.member.refresh_from_db()
+        self.assertIsNone(self.member.github_id)
+
+
+@override_settings(**GITHUB_SETTINGS)
+class GitHubDisconnectViewTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+
+    def setUp(self):
+        self.client = Client()
+        self.member = Member.objects.create_user(
+            username='discuser',
+            email='disc@example.com',
+            password='secret123',
+            membership_type=self.membership_type,
+            github_id=111,
+        )
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+
+    def test_disconnect_clears_github_id(self):
+        response = self.client.post(reverse('members:github_disconnect'))
+        self.assertRedirects(response, reverse('members:info'), fetch_redirect_response=False)
+        self.member.refresh_from_db()
+        self.assertIsNone(self.member.github_id)
+
+    def test_disconnect_requires_post(self):
+        response = self.client.get(reverse('members:github_disconnect'))
+        self.assertRedirects(response, reverse('members:info'), fetch_redirect_response=False)
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.github_id, 111)
+
+    def test_disconnect_requires_login(self):
+        self.client.logout()
+        response = self.client.post(reverse('members:github_disconnect'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('members:login'), response['Location'])
+
+    def test_disconnect_with_no_linked_account_shows_error(self):
+        self.member.github_id = None
+        self.member.save()
+        response = self.client.post(reverse('members:github_disconnect'))
+        self.assertRedirects(response, reverse('members:info'), fetch_redirect_response=False)
+        messages_list = list(response.wsgi_request._messages)
+        self.assertTrue(any('Inget GitHub' in str(m) for m in messages_list))

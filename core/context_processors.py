@@ -10,4 +10,5 @@ def apply_content_variables(_):
         **settings.CONTENT_VARIABLES,
         "ENABLE_LANGUAGE_FEATURES": settings.ENABLE_LANGUAGE_FEATURES,
         "MEMBERS_SIGNUP_ENABLED": getattr(settings, "MEMBERS_SIGNUP_ENABLED", True),
+        "GITHUB_CLIENT_ID": getattr(settings, "GITHUB_CLIENT_ID", ""),
     }

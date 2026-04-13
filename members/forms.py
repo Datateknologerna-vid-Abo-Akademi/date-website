@@ -93,6 +93,7 @@ class AdminMemberUpdateForm(forms.ModelForm):
             'country',
             'membership_type',
             'groups',
+            'github_id',
             'password',
         )
 
