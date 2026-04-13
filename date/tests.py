@@ -334,6 +334,19 @@ class LanguageSelectionTests(TestCase):
         self.assertNotContains(response, 'action="')
         self.assertNotContains(response, 'name="lang"')
 
+    @override_settings(
+        ENABLE_LANGUAGE_FEATURES=True,
+        LANGUAGES=(("sv", "Svenska"), ("en", "English")),
+    )
+    def test_set_language_falls_back_to_default_when_language_is_not_offered(self):
+        response = self.client.post(
+            reverse("set_lang"),
+            {"lang": "fi"},
+            HTTP_REFERER=reverse("index"),
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.cookies[settings.LANGUAGE_COOKIE_NAME].value, "sv")
+
     def test_localized_timeuntil_filter_uses_finnish_word_order(self):
         template = Template("{% load localized_time %}{{ value|localized_timeuntil }}")
         value = timezone.now() + timedelta(minutes=1)
