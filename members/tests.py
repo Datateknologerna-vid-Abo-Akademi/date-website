@@ -560,8 +560,12 @@ def _mock_github_responses(github_id=123, email='ghuser@example.com'):
     user_resp.raise_for_status = MagicMock()
     user_resp.json.return_value = {'id': github_id, 'email': email}
 
+    emails_resp = MagicMock()
+    emails_resp.raise_for_status = MagicMock()
+    emails_resp.json.return_value = [{'email': email, 'verified': True, 'primary': True}]
+
     mock_post = patch('members.views_github.requests.post', return_value=token_resp)
-    mock_get = patch('members.views_github.requests.get', return_value=user_resp)
+    mock_get = patch('members.views_github.requests.get', side_effect=[user_resp, emails_resp])
     return mock_post, mock_get
 
 
