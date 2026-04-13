@@ -25,6 +25,7 @@
     let masonryLayoutQueued = false;
     let masonryNeedsReload = false;
     let itemResizeObserver = null;
+    let masonryFollowUpTimers = [];
 
     const lightbox = GLightbox({
         selector: '.glightbox',
@@ -143,9 +144,15 @@
     function stabilizeMasonryLayout(options = {}) {
         queueMasonryLayout(options);
         window.requestAnimationFrame(() => queueMasonryLayout(options));
-        window.setTimeout(() => queueMasonryLayout(options), 90);
-        window.setTimeout(() => queueMasonryLayout(options), 240);
-        window.setTimeout(() => queueMasonryLayout(options), 520);
+
+        masonryFollowUpTimers.forEach((timerId) => window.clearTimeout(timerId));
+        masonryFollowUpTimers = [90, 240, 520].map((delay) => {
+            const followUpTimerId = window.setTimeout(() => {
+                queueMasonryLayout(options);
+                masonryFollowUpTimers = masonryFollowUpTimers.filter((id) => id !== followUpTimerId);
+            }, delay);
+            return followUpTimerId;
+        });
     }
 
     function observeGridItems(items) {
@@ -174,7 +181,7 @@
             const done = (loaded) => {
                 if (finished) return;
                 finished = true;
-                if (timerId) {
+                if (timerId !== null) {
                     window.clearTimeout(timerId);
                 }
                 preloader.onload = null;
@@ -198,6 +205,25 @@
 
         markImagesEager(images, { highPriorityCount: 4 });
         await Promise.all(images.map((image) => preloadImageSource(image.currentSrc || image.src, timeoutMs)));
+    }
+
+    function waitForTimeout(timeoutMs) {
+        return new Promise((resolve) => {
+            window.setTimeout(resolve, timeoutMs);
+        });
+    }
+
+    async function warmupGridItemsForLayout(items, options = {}) {
+        const { eagerImageCount = 4, timeoutMs = 350 } = options;
+        const layoutImages = getItemImages(items.slice(0, eagerImageCount));
+
+        if (!layoutImages.length) return;
+
+        markImagesEager(layoutImages, { highPriorityCount: eagerImageCount });
+        await Promise.race([
+            Promise.all(layoutImages.map((image) => preloadImageSource(image.currentSrc || image.src, timeoutMs))),
+            waitForTimeout(timeoutMs),
+        ]);
     }
 
     function getCurrentGridItem() {
@@ -467,7 +493,7 @@
             const fragment = document.createRange().createContextualFragment(payload.html);
             const appendedItems = Array.from(fragment.querySelectorAll('.grid-item'));
 
-            await preloadGridItems(appendedItems);
+            await warmupGridItemsForLayout(appendedItems);
 
             grid.appendChild(fragment);
 
@@ -475,6 +501,10 @@
                 observeGridItems(appendedItems);
                 $grid.masonry('appended', appendedItems);
                 stabilizeMasonryLayout({ reloadItems: true });
+
+                preloadGridItems(appendedItems).then(() => {
+                    stabilizeMasonryLayout();
+                });
 
                 // Keep listening in case a browser still finalizes dimensions after preload.
                 $(appendedItems).imagesLoaded().progress(() => {
@@ -721,9 +751,11 @@
     const gridGap = parseInt(getComputedStyle(grid).getPropertyValue('--gap')) || 6;
     const $grid = $('.grid');
     masonryGrid = $grid;
+    const initialGridItems = Array.from(getGridItems());
+    const eagerImageCount = 6;
 
-    markImagesEager(getItemImages(Array.from(getGridItems())), { highPriorityCount: 6 });
-    observeGridItems(Array.from(getGridItems()));
+    markImagesEager(getItemImages(initialGridItems.slice(0, eagerImageCount)), { highPriorityCount: eagerImageCount });
+    observeGridItems(initialGridItems);
 
     $grid.masonry({
         itemSelector: '.grid-item',
