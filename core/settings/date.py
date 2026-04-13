@@ -33,6 +33,15 @@ INSTALLED_APPS = get_installed_apps([
 
 ROOT_URLCONF = 'core.urls.date'
 USE_ACCEPT_LANGUAGE_HEADER = False
+DATE_LANGUAGES = (
+    ("sv", "Svenska"),
+    ("en", "English"),
+)
+LANGUAGES = (
+    DATE_LANGUAGES
+    if ENABLE_LANGUAGE_FEATURES
+    else tuple(language for language in DATE_LANGUAGES if language[0] == LANGUAGE_CODE)
+)
 
 STAFF_GROUPS = get_staff_groups([
         'styrelse',
