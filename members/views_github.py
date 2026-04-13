@@ -10,13 +10,12 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction
 from django.shortcuts import redirect, resolve_url
-from django.urls import resolve, reverse
+from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
-from two_factor.views.mixins import OTPRequiredMixin
 from two_factor.views.utils import LoginStorage
 
-from .two_factor import MemberLoginView, member_has_2fa
+from .two_factor import MemberLoginView, member_has_2fa, should_redirect_to_two_factor_setup
 
 logger = logging.getLogger('date')
 
@@ -50,7 +49,7 @@ def _should_require_local_2fa(member):
     if not member_has_2fa(member):
         return False
 
-    policy = getattr(settings, 'GITHUB_MFA_POLICY', GITHUB_MFA_POLICY_ENROLLED)
+    policy = str(getattr(settings, 'GITHUB_MFA_POLICY', GITHUB_MFA_POLICY_ENROLLED) or '').strip().lower()
     if policy == GITHUB_MFA_POLICY_OFF:
         return False
     if policy == GITHUB_MFA_POLICY_STAFF:
@@ -272,15 +271,8 @@ def _handle_login(request, github_id, github_email):
     login(request, member, backend='members.backends.AuthBackend')
     logger.info('GitHub login successful for member %s', member.username)
 
-    if next_url and OTPRequiredMixin.is_otp_view(next_url):
-        resolver_match = resolve(next_url.split('?', 1)[0])
-        if not (
-            resolver_match.namespace == 'admin'
-            and request.user.is_active
-            and request.user.is_staff
-            and not member_has_2fa(request.user)
-        ):
-            request.session['next'] = next_url
-            return redirect('two_factor:setup')
+    if should_redirect_to_two_factor_setup(request.user, next_url):
+        request.session['next'] = next_url
+        return redirect('two_factor:setup')
 
     return redirect(next_url)

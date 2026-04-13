@@ -741,6 +741,17 @@ class GitHubCallbackViewTests(TestCase):
         self.assertEqual(wizard_session['step'], 'token')
         self.assertEqual(wizard_session['user_pk'], str(staff_member.pk))
 
+    @override_settings(**{**GITHUB_SETTINGS, 'GITHUB_MFA_POLICY': 'OFF'})
+    def test_policy_value_is_case_insensitive(self):
+        TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
+        mock_post, mock_get = _mock_github_responses(github_id=999)
+
+        with mock_post, mock_get:
+            response = self._callback()
+
+        self.assertRedirects(response, reverse('members:info'), fetch_redirect_response=False)
+        self.assertEqual(int(self.client.session['_auth_user_id']), self.member.pk)
+
     def test_successful_login_by_email_links_github_id(self):
         member = Member.objects.create_user(
             username='emailonly',

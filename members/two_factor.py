@@ -29,6 +29,22 @@ def member_has_2fa(user):
     return user.is_authenticated and TOTPDevice.objects.filter(user=user, confirmed=True).exists()
 
 
+def should_redirect_to_two_factor_setup(user, target):
+    if not target or not OTPRequiredMixin.is_otp_view(target):
+        return False
+
+    resolver_match = resolve(target)
+    if (
+        resolver_match.namespace == 'admin'
+        and user.is_active
+        and user.is_staff
+        and not member_has_2fa(user)
+    ):
+        return False
+
+    return True
+
+
 class UsernameOrEmailAuthenticationForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -104,8 +120,7 @@ class MemberLoginView(LoginView):
             self.request.session.pop(INFERRED_REDIRECT_SESSION_KEY, None)
             return response
 
-        resolver_match = resolve(target)
-        if resolver_match.namespace == 'admin' and self.request.user.is_active and self.request.user.is_staff and not member_has_2fa(self.request.user):
+        if not should_redirect_to_two_factor_setup(self.request.user, target):
             self.request.session.pop(INFERRED_REDIRECT_SESSION_KEY, None)
             return HttpResponseRedirect(redirect_to)
 
