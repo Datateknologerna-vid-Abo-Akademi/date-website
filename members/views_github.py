@@ -1,5 +1,6 @@
 import logging
 import secrets
+import time
 from urllib.parse import urlencode
 
 import requests
@@ -8,9 +9,14 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction
-from django.shortcuts import redirect
+from django.shortcuts import redirect, resolve_url
+from django.urls import resolve, reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
+from two_factor.views.mixins import OTPRequiredMixin
+from two_factor.views.utils import LoginStorage
+
+from .two_factor import MemberLoginView, member_has_2fa
 
 logger = logging.getLogger('date')
 
@@ -18,6 +24,38 @@ GITHUB_AUTHORIZE_URL = 'https://github.com/login/oauth/authorize'
 GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token'
 GITHUB_USER_URL = 'https://api.github.com/user'
 GITHUB_EMAILS_URL = 'https://api.github.com/user/emails'
+GITHUB_MFA_POLICY_ENROLLED = 'enrolled'
+GITHUB_MFA_POLICY_STAFF = 'staff'
+GITHUB_MFA_POLICY_OFF = 'off'
+
+
+def _build_login_redirect(next_url=None):
+    login_url = reverse('members:login')
+    if next_url:
+        return f'{login_url}?{urlencode({"next": next_url})}'
+    return login_url
+
+
+def _begin_two_factor_login(request, member, next_url):
+    member.backend = 'members.backends.AuthBackend'
+    storage = LoginStorage(MemberLoginView().get_prefix(request), request)
+    storage.reset()
+    storage.authenticated_user = member
+    storage.data['authentication_time'] = int(time.time())
+    storage.current_step = MemberLoginView.TOKEN_STEP
+    return redirect(_build_login_redirect(next_url))
+
+
+def _should_require_local_2fa(member):
+    if not member_has_2fa(member):
+        return False
+
+    policy = getattr(settings, 'GITHUB_MFA_POLICY', GITHUB_MFA_POLICY_ENROLLED)
+    if policy == GITHUB_MFA_POLICY_OFF:
+        return False
+    if policy == GITHUB_MFA_POLICY_STAFF:
+        return member.is_staff
+    return True
 
 
 def _github_redirect(request, intent):
@@ -226,8 +264,23 @@ def _handle_login(request, github_id, github_email):
         messages.error(request, _('Ditt konto är inaktiverat.'))
         return redirect(settings.LOGIN_URL)
 
+    next_url = request.session.pop('github_oauth_next', None) or resolve_url(settings.LOGIN_REDIRECT_URL)
+    if _should_require_local_2fa(member):
+        logger.info('GitHub login requires local 2FA for member %s', member.username)
+        return _begin_two_factor_login(request, member, next_url)
+
     login(request, member, backend='members.backends.AuthBackend')
     logger.info('GitHub login successful for member %s', member.username)
 
-    next_url = request.session.pop('github_oauth_next', None) or settings.LOGIN_REDIRECT_URL
+    if next_url and OTPRequiredMixin.is_otp_view(next_url):
+        resolver_match = resolve(next_url.split('?', 1)[0])
+        if not (
+            resolver_match.namespace == 'admin'
+            and request.user.is_active
+            and request.user.is_staff
+            and not member_has_2fa(request.user)
+        ):
+            request.session['next'] = next_url
+            return redirect('two_factor:setup')
+
     return redirect(next_url)

@@ -563,6 +563,7 @@ class TwoFactorIntegrationTests(TestCase):
 GITHUB_SETTINGS = {
     'GITHUB_CLIENT_ID': 'test-client-id',
     'GITHUB_CLIENT_SECRET': 'test-client-secret',
+    'GITHUB_MFA_POLICY': 'enrolled',
 }
 
 
@@ -667,6 +668,78 @@ class GitHubCallbackViewTests(TestCase):
             response = self._callback()
         self.assertRedirects(response, reverse('members:info'), fetch_redirect_response=False)
         self.assertEqual(int(self.client.session['_auth_user_id']), self.member.pk)
+
+    def test_member_with_two_factor_is_redirected_to_token_step(self):
+        TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
+        session = self.client.session
+        session['github_oauth_next'] = '/events/'
+        session.save()
+
+        mock_post, mock_get = _mock_github_responses(github_id=999)
+        with mock_post, mock_get:
+            response = self._callback()
+
+        self.assertRedirects(
+            response,
+            f'{reverse("members:login")}?next=%2Fevents%2F',
+            fetch_redirect_response=False,
+        )
+        self.assertNotIn('_auth_user_id', self.client.session)
+        self.assertNotIn('github_oauth_next', self.client.session)
+
+        wizard_session = self.client.session['wizard_member_login_view']
+        self.assertEqual(wizard_session['step'], 'token')
+        self.assertEqual(wizard_session['user_pk'], str(self.member.pk))
+        self.assertEqual(wizard_session['user_backend'], 'members.backends.AuthBackend')
+
+    @override_settings(**{**GITHUB_SETTINGS, 'GITHUB_MFA_POLICY': 'off'})
+    def test_member_with_two_factor_can_bypass_local_token_when_policy_is_off(self):
+        TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
+        mock_post, mock_get = _mock_github_responses(github_id=999)
+
+        with mock_post, mock_get:
+            response = self._callback()
+
+        self.assertRedirects(response, reverse('members:info'), fetch_redirect_response=False)
+        self.assertEqual(int(self.client.session['_auth_user_id']), self.member.pk)
+        self.assertNotIn('wizard_member_login_view', self.client.session)
+
+    @override_settings(**{**GITHUB_SETTINGS, 'GITHUB_MFA_POLICY': 'staff'})
+    def test_non_staff_member_with_two_factor_can_bypass_local_token_when_policy_is_staff(self):
+        TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
+        mock_post, mock_get = _mock_github_responses(github_id=999)
+
+        with mock_post, mock_get:
+            response = self._callback()
+
+        self.assertRedirects(response, reverse('members:info'), fetch_redirect_response=False)
+        self.assertEqual(int(self.client.session['_auth_user_id']), self.member.pk)
+        self.assertNotIn('wizard_member_login_view', self.client.session)
+
+    @override_settings(**{**GITHUB_SETTINGS, 'GITHUB_MFA_POLICY': 'staff'})
+    def test_staff_member_with_two_factor_is_redirected_to_token_step_when_policy_is_staff(self):
+        staff_member = Member.objects.create_superuser(
+            username='ghstaff',
+            email='ghstaff@example.com',
+            password='secret123',
+            membership_type=self.membership_type,
+            github_id=1001,
+        )
+        TOTPDevice.objects.create(user=staff_member, confirmed=True, name='default')
+        mock_post, mock_get = _mock_github_responses(github_id=1001, email='ghstaff@example.com')
+
+        with mock_post, mock_get:
+            response = self._callback()
+
+        self.assertRedirects(
+            response,
+            f'{reverse("members:login")}?next=%2Fmembers%2Finfo%2F',
+            fetch_redirect_response=False,
+        )
+        self.assertNotIn('_auth_user_id', self.client.session)
+        wizard_session = self.client.session['wizard_member_login_view']
+        self.assertEqual(wizard_session['step'], 'token')
+        self.assertEqual(wizard_session['user_pk'], str(staff_member.pk))
 
     def test_successful_login_by_email_links_github_id(self):
         member = Member.objects.create_user(
