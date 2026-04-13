@@ -194,8 +194,6 @@ class EventDetailView(DetailView):
         event = self.get_context_data().get('event')
         if self._get_resolved_template(event) == 'events/arsfest.html':
             return redirect(f"{reverse('events:detail', args=[event.slug])}#/attendee-list")
-        elif event.title.lower() in ['österbottniska nationens 100-årsjubileum'] or 'ön100' in event.title.lower():
-            return redirect(f"{reverse('events:detail', args=[event.slug])}#/attendee-list")
         return redirect(reverse('events:detail', args=[event.slug]))
 
     def handle_avec_data(self, cleaned_data, attendee):
