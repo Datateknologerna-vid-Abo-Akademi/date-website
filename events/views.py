@@ -35,13 +35,6 @@ EVENT_TEMPLATES_BY_SLUG = {
     'arsfest': 'events/arsfest.html',
     'arsfest_stipendiater': 'events/arsfest.html',
     'arsfest26': 'events/arsfest.html',
-    # ÖN100
-    'on100_main': 'events/arsfest.html',
-    'on100_student': 'events/arsfest.html',
-    'on100_alumn': 'events/arsfest.html',
-    'on100_guest': 'events/arsfest.html',
-    'on100_secret': 'events/arsfest.html',
-    'on100_stippe': 'events/arsfest.html',
 }
 
 
@@ -200,8 +193,6 @@ class EventDetailView(DetailView):
     def redirect_after_signup(self):
         event = self.get_context_data().get('event')
         if self._get_resolved_template(event) == 'events/arsfest.html':
-            return redirect(f"{reverse('events:detail', args=[event.slug])}#/attendee-list")
-        elif event.title.lower() in ['österbottniska nationens 100-årsjubileum'] or 'ön100' in event.title.lower():
             return redirect(f"{reverse('events:detail', args=[event.slug])}#/attendee-list")
         return redirect(reverse('events:detail', args=[event.slug]))
 
