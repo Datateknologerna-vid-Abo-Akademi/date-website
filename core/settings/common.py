@@ -360,6 +360,7 @@ ALUMNI_SETTINGS = os.environ.get("ALUMNI_SETTINGS", '')
 # GitHub OAuth settings
 GITHUB_CLIENT_ID = env('GITHUB_CLIENT_ID', str, '')
 GITHUB_CLIENT_SECRET = env('GITHUB_CLIENT_SECRET', str, '')
+GITHUB_MFA_POLICY = env('GITHUB_MFA_POLICY', str, 'enrolled').lower()
 
 DEFAULT_EXCEPTION_REPORTER_FILTER = 'core.redaction.DateExceptionReporterFilter'
 
