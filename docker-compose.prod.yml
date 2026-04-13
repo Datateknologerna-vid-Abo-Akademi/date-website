@@ -50,6 +50,7 @@ services:
       - ALUMNI_SETTINGS=${ALUMNI_SETTINGS}
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GITHUB_MFA_POLICY=${GITHUB_MFA_POLICY:-enrolled}
     depends_on:
       - db
       - redis
@@ -91,6 +92,7 @@ services:
       - CF_TURNSTILE_SECRET_KEY=${CF_TURNSTILE_SECRET_KEY}
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+      - GITHUB_MFA_POLICY=${GITHUB_MFA_POLICY:-enrolled}
     depends_on:
       - db
       - redis
