@@ -345,7 +345,10 @@ class LanguageSelectionTests(TestCase):
             HTTP_REFERER=reverse("index"),
         )
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.cookies[settings.LANGUAGE_COOKIE_NAME].value, "sv")
+        self.assertEqual(
+            response.cookies[settings.LANGUAGE_COOKIE_NAME].value,
+            settings.LANGUAGE_CODE,
+        )
 
     def test_localized_timeuntil_filter_uses_finnish_word_order(self):
         template = Template("{% load localized_time %}{{ value|localized_timeuntil }}")
