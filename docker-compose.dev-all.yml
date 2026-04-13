@@ -58,10 +58,15 @@ services:
   db:
     image: postgres:${DATE_POSTGRESQL_VERSION}-alpine
     restart: unless-stopped
+    entrypoint:
+      - /bin/sh
+      - /scripts/postgres-entrypoint.sh
     volumes:
       - dev_all_postgres_data:/var/lib/postgresql/data/
+      - ./scripts/postgres-entrypoint.sh:/scripts/postgres-entrypoint.sh:ro
     environment:
       - POSTGRES_PASSWORD=${DATE_DB_PASSWORD}
+      - PGDATA=/var/lib/postgresql/data/pgdata
     ports:
       - "5433:5432"
 

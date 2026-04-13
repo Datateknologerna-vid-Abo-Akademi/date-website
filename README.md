@@ -183,6 +183,10 @@ Only use `update-postgres.sh` for **major** PostgreSQL version upgrades. The scr
 2. Run `./update-postgres.sh <target_version> [env_file]`.
 3. Re-source your env (`source env.sh dev`) and restart the stack.
 
+The script now refuses same-major upgrades, verifies that PostgreSQL is storing data inside a mounted volume before it removes anything, and compares the restored schema against the source database before declaring success.
+
+For Compose-based deployments, the db service now keeps `PGDATA` under the mounted volume and migrates older volume layouts into the `pgdata/` subdirectory on first start, so existing stacks do not lose access to pre-change database files.
+
 For minor upgrades, change `DATE_POSTGRESQL_VERSION` and recreate the containers without touching volumes.
 
 ## Troubleshooting
