@@ -141,6 +141,73 @@ form{
 .members-form button:hover,.members-form button:active,.members-form button:focus {
   background: #43A047;
 }
+
+.github-login {
+    margin: 1.25rem 0;
+}
+
+.members-form a.github-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.85rem;
+    width: 100%;
+    min-height: 56px;
+    padding: 0.95rem 1.15rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    background: #24292f;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 15px;
+    line-height: 1.1;
+    box-shadow: 0 10px 24px rgba(27, 31, 35, 0.18);
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.members-form a.github-button:hover,
+.members-form a.github-button:focus {
+    background: #1b1f23;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(27, 31, 35, 0.24);
+}
+
+.github-button__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    align-items: center;
+    justify-content: center;
+}
+
+.github-button__icon svg {
+    display: block;
+    width: 22px;
+    height: 22px;
+}
+
+.github-button__label {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+}
+
+@media screen and (max-width: 420px) {
+    .members-form a.github-button {
+        gap: 0.7rem;
+        padding: 0.9rem 1rem;
+        font-size: 14px;
+    }
+
+    .github-button__icon,
+    .github-button__icon svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
 .members-form .message {
   margin: 15px 0 0;
   color: var(--helpText);

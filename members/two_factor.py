@@ -44,7 +44,7 @@ class StrictTOTPDeviceForm(TOTPDeviceForm):
 
 
 class MemberLoginView(LoginView):
-    template_name = 'two_factor/core/login.html'
+    template_name = 'members/registration/login.html'
     form_list = (
         (LoginView.AUTH_STEP, UsernameOrEmailAuthenticationForm),
         (LoginView.TOKEN_STEP, AuthenticationTokenForm),
