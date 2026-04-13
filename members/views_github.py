@@ -1,11 +1,13 @@
 import logging
 import secrets
+from urllib.parse import urlencode
 
 import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError, transaction
 from django.shortcuts import redirect
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
@@ -15,6 +17,7 @@ logger = logging.getLogger('date')
 GITHUB_AUTHORIZE_URL = 'https://github.com/login/oauth/authorize'
 GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token'
 GITHUB_USER_URL = 'https://api.github.com/user'
+GITHUB_EMAILS_URL = 'https://api.github.com/user/emails'
 
 
 def _github_redirect(request, intent):
@@ -36,8 +39,7 @@ def _github_redirect(request, intent):
         'scope': 'read:user user:email',
         'state': state,
     }
-    query = '&'.join(f'{k}={v}' for k, v in params.items())
-    return redirect(f'{GITHUB_AUTHORIZE_URL}?{query}')
+    return redirect(f'{GITHUB_AUTHORIZE_URL}?{urlencode(params)}')
 
 
 def github_login(request):
@@ -91,6 +93,10 @@ def github_callback(request):
     # Exchange code for access token
     client_id = getattr(settings, 'GITHUB_CLIENT_ID', None)
     client_secret = getattr(settings, 'GITHUB_CLIENT_SECRET', None)
+    if not client_id or not client_secret:
+        messages.error(request, _('GitHub-inloggning är inte konfigurerad.'))
+        return redirect(settings.LOGIN_URL)
+
     try:
         token_response = requests.post(
             GITHUB_TOKEN_URL,
@@ -140,7 +146,26 @@ def github_callback(request):
     if intent == 'connect':
         return _handle_connect(request, github_id)
 
-    return _handle_login(request, github_id, github_user.get('email'))
+    # Fetch verified primary email for account matching (user.email is often null)
+    github_email = None
+    try:
+        emails_response = requests.get(
+            GITHUB_EMAILS_URL,
+            headers={
+                'Authorization': f'Bearer {access_token}',
+                'Accept': 'application/vnd.github+json',
+            },
+            timeout=10,
+        )
+        emails_response.raise_for_status()
+        for entry in emails_response.json():
+            if entry.get('verified') and entry.get('primary'):
+                github_email = entry.get('email')
+                break
+    except requests.RequestException as exc:
+        logger.warning('GitHub emails fetch failed: %s', exc)
+
+    return _handle_login(request, github_id, github_email)
 
 
 def _handle_connect(request, github_id):
@@ -162,8 +187,13 @@ def _handle_connect(request, github_id):
     except Member.DoesNotExist:
         pass
 
-    request.user.github_id = github_id
-    request.user.save(update_fields=['github_id'])
+    try:
+        with transaction.atomic():
+            request.user.github_id = github_id
+            request.user.save(update_fields=['github_id'])
+    except IntegrityError:
+        messages.error(request, _('Det GitHub-kontot är redan kopplat till ett annat konto.'))
+        return redirect('members:info')
     messages.success(request, _('GitHub-kontot har kopplats till ditt konto.'))
     return redirect('members:info')
 

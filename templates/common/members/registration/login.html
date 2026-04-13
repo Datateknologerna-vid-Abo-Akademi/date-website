@@ -21,7 +21,7 @@
         </form>
         {% if GITHUB_CLIENT_ID %}
         <div class="github-login">
-            <a href="{% url 'members:github_login' %}{% if next %}?next={{ next }}{% endif %}" class="button github-button">
+            <a href="{% url 'members:github_login' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="button github-button">
                 {% trans 'Logga in med GitHub' %}
             </a>
         </div>
