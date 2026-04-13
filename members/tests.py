@@ -363,6 +363,22 @@ class TwoFactorIntegrationTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], reverse('index'))
 
+    def test_login_page_renders_github_button_with_redirect_target(self):
+        with override_settings(
+            GITHUB_CLIENT_ID='test-client-id',
+            GITHUB_CLIENT_SECRET='test-client-secret',
+            GITHUB_REDIRECT_URI='https://example.com/members/github/callback/',
+        ):
+            response = self.client.get(f"{reverse('members:login')}?next=/events/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="button github-button"', html=False)
+        self.assertContains(
+            response,
+            f'href="{reverse("members:github_login")}?next=/events/"',
+            html=False,
+        )
+
     def test_strict_totp_form_saves_device_with_one_step_tolerance(self):
         form_key = '3132333435363738393031323334353637383930'
         current_token = TOTP(bytes.fromhex(form_key)).token()
