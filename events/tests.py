@@ -176,6 +176,20 @@ class EventTestCase(TestCase):
         self.assertNotContains(response, 'name="user"', html=False)
         self.assertNotContains(response, 'name="email"', html=False)
 
+    def test_event_detail_falls_back_to_public_opening_when_member_opening_is_missing(self):
+        self.event.sign_up_members = None
+        self.event.sign_up_others = timezone.now() + timezone.timedelta(days=2)
+        self.event.sign_up_deadline = timezone.now() + timezone.timedelta(days=3)
+        self.event.save()
+        self.client.login(username=self.member.username, password='test')
+
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["can_register_now"])
+        self.assertEqual(response.context["next_signup_time"], self.event.sign_up_others)
+        self.assertContains(response, date_format(timezone.localtime(self.event.sign_up_others), "j.n H:i"))
+
     def test_members_only_event_redirects_anonymous_user_to_login(self):
         self.event.members_only = True
         self.event.save()

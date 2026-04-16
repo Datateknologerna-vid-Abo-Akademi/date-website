@@ -87,8 +87,8 @@ class EventDetailView(DetailView):
         if is_commodore:
             return None
         if is_authenticated and is_active_member:
-            return self.object.sign_up_members
-        return self.object.sign_up_others
+            return self.object.sign_up_members or self.object.sign_up_others
+        return self.object.sign_up_others or self.object.sign_up_members
 
     def _get_registration_state(self, request):
         is_authenticated = request.user.is_authenticated
