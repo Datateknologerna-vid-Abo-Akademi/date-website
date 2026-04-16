@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.conf import settings
 from django.contrib import admin
-from django.template import Context, Template
 from django.test import Client, TestCase, override_settings
 from django.test.client import RequestFactory
 from django.urls import reverse
@@ -733,12 +732,14 @@ class EventCapacityTests(TestCase):
 
         self.assertEqual(child.remaining_places(), 1)
 
-    def test_template_renders_remaining_places_not_total_capacity(self):
+    def test_detail_page_renders_remaining_places_not_total_capacity(self):
         event = Event.objects.create(
             title="Rendered Capacity Event",
             slug="rendered-capacity-event",
             author=self.author,
             sign_up_max_participants=8,
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+            event_date_end=timezone.now() + timezone.timedelta(days=1),
         )
         EventAttendees.objects.create(
             event=event,
@@ -747,14 +748,12 @@ class EventCapacityTests(TestCase):
             time_registered=timezone.now(),
             preferences={},
         )
-        template = Template(
-            "{% load localized_time %}{{ event.remaining_places|localized_remaining_places }}"
-        )
 
         with translation.override("sv"):
-            rendered = template.render(Context({"event": event}))
+            response = self.client.get(reverse("events:detail", args=[event.slug]))
 
-        self.assertEqual(rendered, "Det finns 7 platser kvar!")
+        self.assertContains(response, "Det finns 7 platser kvar!")
+        self.assertNotContains(response, "Det finns 8 platser kvar!")
 
 
 @override_settings(CONTENT_VARIABLES={**settings.CONTENT_VARIABLES, "INTERNATIONAL_EVENT_SLUGS": ["intl-slug"]})
