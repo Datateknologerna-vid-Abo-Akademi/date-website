@@ -392,11 +392,35 @@ class LanguageSelectionTests(TestCase):
             rendered = template.render(Context({"value": 80}))
         self.assertEqual(rendered, "80 paikkaa jäljellä!")
 
+    def test_localized_remaining_places_filter_uses_finnish_singular(self):
+        template = Template("{% load localized_time %}{{ value|localized_remaining_places }}")
+        with translation.override("fi"):
+            rendered = template.render(Context({"value": 1}))
+        self.assertEqual(rendered, "1 paikka jäljellä!")
+
+    def test_localized_remaining_places_filter_uses_english_word_order(self):
+        template = Template("{% load localized_time %}{{ value|localized_remaining_places }}")
+        with translation.override("en"):
+            rendered = template.render(Context({"value": 80}))
+        self.assertEqual(rendered, "80 spots left!")
+
+    def test_localized_remaining_places_filter_uses_english_singular(self):
+        template = Template("{% load localized_time %}{{ value|localized_remaining_places }}")
+        with translation.override("en"):
+            rendered = template.render(Context({"value": 1}))
+        self.assertEqual(rendered, "1 spot left!")
+
     def test_localized_remaining_places_filter_uses_swedish_word_order(self):
         template = Template("{% load localized_time %}{{ value|localized_remaining_places }}")
         with translation.override("sv"):
             rendered = template.render(Context({"value": 80}))
-        self.assertEqual(rendered, "Det finns 80 platser!")
+        self.assertEqual(rendered, "Det finns 80 platser kvar!")
+
+    def test_localized_remaining_places_filter_uses_swedish_singular(self):
+        template = Template("{% load localized_time %}{{ value|localized_remaining_places }}")
+        with translation.override("sv"):
+            rendered = template.render(Context({"value": 1}))
+        self.assertEqual(rendered, "Det finns 1 plats kvar!")
 
     def test_footer_skips_social_buttons_without_urls(self):
         template = Template("{% include 'core/footer.html' %}")

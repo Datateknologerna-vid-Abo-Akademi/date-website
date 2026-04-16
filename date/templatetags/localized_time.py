@@ -62,7 +62,10 @@ def localized_remaining_places(value):
     language = (get_language() or "").split("-")[0]
 
     if language == "fi":
-        return f"{value} paikkaa jäljellä!"
+        noun = "paikka" if value == 1 else "paikkaa"
+        return f"{value} {noun} jäljellä!"
     if language == "en":
-        return f"{value} spots left!"
-    return f"Det finns {value} platser!"
+        noun = "spot" if value == 1 else "spots"
+        return f"{value} {noun} left!"
+    noun = "plats" if value == 1 else "platser"
+    return f"Det finns {value} {noun} kvar!"
