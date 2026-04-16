@@ -8,6 +8,7 @@ from django.template import Context, Template
 from django.test import Client, TestCase, override_settings
 from django.test.client import RequestFactory
 from django.urls import reverse
+from django.utils.formats import date_format
 from django.utils import timezone, translation
 from django.utils.translation import gettext
 from django_ckeditor_5.widgets import CKEditor5Widget
@@ -140,6 +141,41 @@ class EventTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         response = c.get(reverse('events:detail', args=['no-such-event']))
         self.assertEqual(response.status_code, 404)
+
+    def test_event_detail_shows_closed_registration_message_after_deadline(self):
+        self.event.sign_up_members = timezone.now() - timezone.timedelta(days=2)
+        self.event.sign_up_others = timezone.now() - timezone.timedelta(days=1)
+        self.event.sign_up_deadline = timezone.now() - timezone.timedelta(minutes=1)
+        self.event.save()
+
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["registration_closed"])
+        self.assertContains(response, "Anmälningstiden gick ut")
+        self.assertNotContains(response, "Anmälan öppnas")
+
+    def test_event_detail_uses_public_opening_for_authenticated_user_without_subscription(self):
+        inactive_member = Member.objects.create_user(
+            username="inactive-user",
+            password="test",
+            email="inactive@example.com",
+            membership_type=MembershipType.objects.get(pk=ORDINARY_MEMBER),
+        )
+        self.event.sign_up_members = timezone.now() - timezone.timedelta(minutes=1)
+        self.event.sign_up_others = timezone.now() + timezone.timedelta(days=2)
+        self.event.sign_up_deadline = timezone.now() + timezone.timedelta(days=3)
+        self.event.save()
+        self.client.login(username=inactive_member.username, password='test')
+
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["can_register_now"])
+        self.assertEqual(response.context["next_signup_time"], self.event.sign_up_others)
+        self.assertContains(response, date_format(timezone.localtime(self.event.sign_up_others), "j.n H:i"))
+        self.assertNotContains(response, 'name="user"', html=False)
+        self.assertNotContains(response, 'name="email"', html=False)
 
     def test_members_only_event_redirects_anonymous_user_to_login(self):
         self.event.members_only = True

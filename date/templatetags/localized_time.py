@@ -1,5 +1,6 @@
 from django import template
 import re
+from django.utils import timezone
 from django.utils.timesince import timeuntil
 from django.utils.timesince import timesince
 from django.utils.translation import get_language
@@ -34,6 +35,9 @@ def _normalize_finnish_future_relative(relative):
 
 @register.filter
 def localized_timeuntil(value):
+    if value is None or value <= timezone.now():
+        return ""
+
     relative = timeuntil(value)
     language = (get_language() or "").split("-")[0]
 
@@ -43,6 +47,13 @@ def localized_timeuntil(value):
     if language == "en":
         return f"in {relative}"
     return f"om {relative}"
+
+
+@register.filter
+def comma_if(value):
+    if not value:
+        return ""
+    return f", {value}"
 
 
 @register.filter

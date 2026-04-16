@@ -372,6 +372,18 @@ class LanguageSelectionTests(TestCase):
             rendered = template.render(Context({"value": value}))
         self.assertTrue(rendered.startswith("om "))
 
+    def test_localized_timeuntil_filter_returns_empty_for_past_timestamps_in_all_languages(self):
+        template = Template(
+            '{% load localized_time %}{{ value|date:"j.n H:i" }}{{ value|localized_timeuntil|comma_if }}'
+        )
+        value = timezone.now() - timedelta(minutes=1)
+
+        for language in ("sv", "en", "fi"):
+            with self.subTest(language=language), translation.override(language):
+                rendered = template.render(Context({"value": value}))
+            self.assertNotIn(", ", rendered)
+            self.assertNotIn("0 ", rendered)
+
     def test_localized_timesince_ago_filter_uses_finnish_word_order(self):
         template = Template("{% load localized_time %}{{ value|localized_timesince_ago }}")
         value = timezone.now() - timedelta(minutes=1)
