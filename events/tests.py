@@ -777,6 +777,15 @@ class EventFormBuilderTests(TestCase):
 
         self.assertNotIn("terms_accepted", form.base_fields)
 
+    def test_terms_field_falls_back_to_swedish_for_finnish_language(self):
+        with translation.override("fi"):
+            form_class = self.event.make_registration_form()
+            form = form_class()
+
+        terms_field = form.base_fields["terms_accepted"]
+        self.assertIn("anmälningsvillkoren för evenemanget", str(terms_field.label))
+        self.assertIn("Jämlikhetsplan", str(terms_field.help_text))
+
 
 class EventNumberingTests(TestCase):
     def setUp(self):

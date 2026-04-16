@@ -8,26 +8,29 @@ The project has three translation layers that work together:
 2. `django-modeltranslation` adds per-language database fields for dynamic content such as event titles and static-page navigation labels.
 3. Language-aware routing and cookies decide which language a request should render in.
 
-Swedish (`sv`) is the default language. English (`en`) and Finnish (`fi`) become active only when `ENABLE_LANGUAGE_FEATURES=True`.
+Swedish (`sv`) is the default language. The exact non-default languages exposed at runtime depend on the active association settings module.
 
 ## Supported Languages
 
 - Default language: `sv`
-- Optional languages: `en`, `fi`
-- Settings source: `core/settings/common.py`
+- Shared locale catalogs in the repo: `sv`, `en`, `fi`
+- DaTe runtime languages: `sv`, `en`
+- Some other associations still expose `fi`
+- Settings sources: `core/settings/common.py`, `core/settings/date.py`
 
 Important settings:
 
 - `LANGUAGE_CODE = "sv"`
 - `ALL_LANGUAGES = (("sv", "Svenska"), ("en", "English"), ("fi", "Suomi"))`
-- `ENABLE_LANGUAGE_FEATURES` controls whether the project exposes all languages or only Swedish
+- `DATE_LANGUAGES = (("sv", "Svenska"), ("en", "English"))` overrides DaTe's active language list
+- `ENABLE_LANGUAGE_FEATURES` controls whether the project exposes the active association's full language set or only Swedish
 - `LOCALE_PATHS = ("locale",)` points Django to the `.po` and `.mo` files
 
 When `ENABLE_LANGUAGE_FEATURES=False`:
 
 - `LANGUAGES` is reduced to Swedish only
 - the public/admin language switchers are hidden
-- attempts to switch to `en` or `fi` fall back to `sv`
+- attempts to switch to a language not offered by the active association fall back to `sv`
 
 ## Layer 1: Static UI Translations
 
@@ -83,7 +86,7 @@ When a field is registered for translation, `django-modeltranslation` creates la
 - `title_en`
 - `title_fi`
 
-The admin then exposes those fields through translated tabs or translated inlines when language features are enabled.
+The shared schema still includes `*_fi` columns for associations that use Finnish. The admin only exposes the languages configured for the active association when language features are enabled.
 
 ## Adding Translation Support to a New Model
 
@@ -96,14 +99,17 @@ The admin then exposes those fields through translated tabs or translated inline
 Example:
 
 ```python
+from core.modeltranslation import get_translation_languages
 from modeltranslation.translator import register, TranslationOptions
 from myapp.models import Thing
+
+TRANSLATION_LANGUAGES = get_translation_languages()
 
 
 @register(Thing)
 class ThingTranslationOptions(TranslationOptions):
     fields = ("title", "content")
-    languages = ("sv", "en", "fi")
+    languages = TRANSLATION_LANGUAGES
 ```
 
 After adding a new translated field to an existing model:

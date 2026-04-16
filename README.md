@@ -76,7 +76,7 @@ date-start-detached
 Important environment flags:
 
 - `PROJECT_NAME` selects the active association/site variant (`date`, `kk`, `biocum`, `demo`, ...).
-- `ENABLE_LANGUAGE_FEATURES=True` enables the language switcher, translated admin tabs, and runtime selection between Swedish, English, and Finnish on unprefixed URLs. When omitted or false, the project runs Swedish-only.
+- `ENABLE_LANGUAGE_FEATURES=True` enables the language switcher, translated admin tabs, and runtime selection between the languages configured for the active association on unprefixed URLs. DaTe currently uses Swedish and English; some other associations also expose Finnish. When omitted or false, the project runs Swedish-only.
 - `USE_S3` toggles whether uploads use local disk storage or the configured S3-compatible backend.
 
 The script exports `COMPOSE_FILE_PATH` and defines the `date-*` aliases used throughout this README:
@@ -197,16 +197,21 @@ For minor upgrades, change `DATE_POSTGRESQL_VERSION` and recreate the containers
 
 ## Internationalization
 
-Locales used in this project
+Shared locale catalogs in this project
 
 - sv (default)
 - en
 - fi
 
-The actual language code will be one of
+Active public/admin languages depend on the current association settings.
+
+DaTe currently uses:
 
 - sv
 - en
+
+Some other associations also expose:
+
 - fi
 
 ### Translation scope
@@ -262,7 +267,7 @@ If there is ever the need to provide a translated version of an existing field:
 
 Example to illustrate the above:
 
-I want to provide three new fields (title_sv, title_en, title_fi) instead of the title field in Events
+I want to provide translated variants of the title field in Events. The shared schema can still include `title_fi` for associations that use Finnish, while DaTe only exposes `sv` and `en` in admin.
 
 - Create the file translation.py under the events directory
 - Create a new class called EventTranslationOptions that inherits from TranslationOptions (provided by django-modeltranslations)
@@ -271,14 +276,17 @@ I want to provide three new fields (title_sv, title_en, title_fi) instead of the
 
 From "/events/translation.py":
 ```python
+from core.modeltranslation import get_translation_languages
 from modeltranslation.translator import register, TranslationOptions
 from events.models import Event, EventAttendees, EventRegistrationForm
+
+TRANSLATION_LANGUAGES = get_translation_languages()
 
 
 @register(Event)
 class EventTranslationOptions(TranslationOptions):
     fields = ('title', 'content',)
-    languages = ('sv', 'en', 'fi')
+    languages = TRANSLATION_LANGUAGES
 ```
 
 In this case, the newly created title_sv will not contain the data from what was previously just "title",
