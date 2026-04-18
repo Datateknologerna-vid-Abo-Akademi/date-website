@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - develop
+      - feat/SF
       - master
     tags:
       - 'v*.*.*'
@@ -62,7 +63,12 @@ jobs:
           TAGS=("${IMAGE_REPO}:${GITHUB_SHA}")
 
           if [ "${GITHUB_REF_TYPE}" = "branch" ]; then
-            TAGS+=("${IMAGE_REPO}:${GITHUB_REF_NAME}")
+            BRANCH_TAG="$(printf '%s' "${GITHUB_REF_NAME}" | tr '[:upper:]' '[:lower:]' | sed 's#[^a-z0-9._-]#-#g')"
+            TAGS+=("${IMAGE_REPO}:${BRANCH_TAG}")
+
+            if [ "${GITHUB_REF_NAME}" = "feat/SF" ]; then
+              TAGS+=("${IMAGE_REPO}:sf")
+            fi
           fi
 
           {
