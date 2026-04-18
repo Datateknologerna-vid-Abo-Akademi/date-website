@@ -1,0 +1,200 @@
+{% load i18n %}
+{% load static %}
+<header class="header">
+    <div class="hero-text-box">
+        <div class="albin">
+            {% include "date/svg/logo.svg" %}
+        </div>
+        <div class="text">
+            <h1>{% trans "SF-Klubben" %}</h1>
+        </div>
+    </div>
+</header>
+<script>
+(function () {
+    var svg = document.querySelector('.hero-text-box .albin svg');
+    var paths = document.querySelectorAll('.hero-text-box .albin path');
+    if (!svg || !paths.length) return;
+
+    // These path positions correspond to the wreath and its lowest side pieces.
+    // Keeping this explicit is more reliable than bbox heuristics for this SVG.
+    var wreathPathIndexes = new Set([
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+        11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+    ]);
+
+    var animatedPaths = [];
+    var leafPaths = [];
+    var viewBox = svg.viewBox && svg.viewBox.baseVal;
+    var centerX = viewBox ? viewBox.x + (viewBox.width / 2) : 0;
+
+    paths.forEach(function (path, index) {
+        var bbox;
+        var len;
+        try {
+            bbox = path.getBBox();
+            len = Math.ceil(path.getTotalLength()) + 50;
+        } catch (e) {
+            return;
+        }
+
+        var pathCenterX = bbox.x + (bbox.width / 2);
+        var isSideShape = viewBox && Math.abs(pathCenterX - centerX) > (viewBox.width * 0.24);
+        var isRegularLeaf = isSideShape
+            && bbox.width < (viewBox.width * 0.16)
+            && bbox.height < (viewBox.height * 0.16);
+        var isLeaf = wreathPathIndexes.has(index) || isRegularLeaf;
+
+        path.style.opacity = '0';
+        path.style.transformBox = 'fill-box';
+        path.style.transformOrigin = 'center bottom';
+
+        if (isLeaf) {
+            path.style.fill = 'var(--secondaryColor)';
+            path.style.stroke = 'var(--secondaryColor)';
+            path.style.strokeDasharray = 'none';
+            path.style.strokeDashoffset = '0';
+            leafPaths.push({ path: path, y: bbox.y + bbox.height });
+            return;
+        }
+
+        path.style.fill = 'none';
+        path.style.strokeDasharray = len;
+        path.style.strokeDashoffset = len;
+        animatedPaths.push({ path: path, len: len });
+    });
+
+    leafPaths.sort(function (a, b) {
+        return b.y - a.y;
+    });
+
+    if (viewBox && animatedPaths.length) {
+        var ns = 'http://www.w3.org/2000/svg';
+        var defs = document.createElementNS(ns, 'defs');
+        var gradient = document.createElementNS(ns, 'linearGradient');
+        var clipPath = document.createElementNS(ns, 'clipPath');
+        var clipRect = document.createElementNS(ns, 'rect');
+        var sweepGroup = document.createElementNS(ns, 'g');
+        var sweepWidth = viewBox.width * 0.28;
+        var sweepId = 'sf-logo-sweep';
+        var clipId = 'sf-logo-sweep-clip';
+
+        gradient.setAttribute('id', sweepId);
+        gradient.setAttribute('gradientUnits', 'userSpaceOnUse');
+        gradient.setAttribute('x1', '0');
+        gradient.setAttribute('y1', String(viewBox.y));
+        gradient.setAttribute('x2', String(viewBox.width));
+        gradient.setAttribute('y2', String(viewBox.y));
+
+        [
+            { offset: '0%', color: '#ffffff', opacity: '0' },
+            { offset: '42%', color: '#ffffff', opacity: '0' },
+            { offset: '50%', color: '#ffffff', opacity: '0.55' },
+            { offset: '58%', color: '#ffffff', opacity: '0' },
+            { offset: '100%', color: '#ffffff', opacity: '0' }
+        ].forEach(function (stopDef) {
+            var stop = document.createElementNS(ns, 'stop');
+            stop.setAttribute('offset', stopDef.offset);
+            stop.setAttribute('stop-color', stopDef.color);
+            stop.setAttribute('stop-opacity', stopDef.opacity);
+            gradient.appendChild(stop);
+        });
+
+        clipPath.setAttribute('id', clipId);
+        clipRect.setAttribute('x', String(viewBox.x - sweepWidth));
+        clipRect.setAttribute('y', String(viewBox.y));
+        clipRect.setAttribute('width', String(sweepWidth));
+        clipRect.setAttribute('height', String(viewBox.height));
+        clipPath.appendChild(clipRect);
+
+        defs.appendChild(gradient);
+        defs.appendChild(clipPath);
+        svg.insertBefore(defs, svg.firstChild);
+
+        sweepGroup.setAttribute('clip-path', 'url(#' + clipId + ')');
+        sweepGroup.setAttribute('opacity', '0');
+        sweepGroup.setAttribute('aria-hidden', 'true');
+
+        paths.forEach(function (path) {
+            var clone = path.cloneNode(false);
+            clone.removeAttribute('class');
+            clone.style.fill = 'url(#' + sweepId + ')';
+            clone.style.stroke = 'url(#' + sweepId + ')';
+            clone.style.strokeWidth = '3';
+            clone.style.strokeLinecap = 'round';
+            clone.style.strokeLinejoin = 'round';
+            clone.style.pointerEvents = 'none';
+            sweepGroup.appendChild(clone);
+        });
+
+        svg.appendChild(sweepGroup);
+
+        setTimeout(function () {
+            sweepGroup.animate([
+                { opacity: 0 },
+                { opacity: 1, offset: 0.15 },
+                { opacity: 1, offset: 0.75 },
+                { opacity: 0 }
+            ], {
+                duration: 650,
+                easing: 'ease-out',
+                fill: 'forwards'
+            });
+
+            clipRect.animate([
+                { x: viewBox.x - sweepWidth },
+                { x: viewBox.x + viewBox.width }
+            ], {
+                duration: 650,
+                easing: 'cubic-bezier(.25,.1,.25,1)',
+                fill: 'forwards'
+            });
+        }, 1650);
+    }
+
+    requestAnimationFrame(function () {
+        svg.classList.add('is-ready');
+
+        requestAnimationFrame(function () {
+            leafPaths.forEach(function (entry, index) {
+                entry.path.animate([
+                    { opacity: 0, transform: 'scale(0.35)' },
+                    { opacity: 1, transform: 'scale(1.08)', offset: 0.72 },
+                    { opacity: 1, transform: 'scale(1)' }
+                ], {
+                    duration: 360,
+                    delay: 220 + (index * 55),
+                    easing: 'cubic-bezier(.2,.9,.28,1.25)',
+                    fill: 'forwards'
+                }).onfinish = function () {
+                    entry.path.style.opacity = '1';
+                    entry.path.style.transform = 'scale(1)';
+                };
+            });
+
+            animatedPaths.forEach(function (entry, index) {
+                var path = entry.path;
+                var len = entry.len;
+
+                var anim = path.animate([
+                    { opacity: 0, fill: 'none', strokeDashoffset: len },
+                    { opacity: 1, fill: 'none', strokeDashoffset: len * 0.6, offset: 0.4 },
+                    { fill: 'rgba(255,255,255,0)', offset: 0.8 },
+                    { opacity: 1, fill: 'var(--secondaryColor)', strokeDashoffset: 0 }
+                ], {
+                    duration: 1850,
+                    delay: Math.min(index * 28, 420),
+                    easing: 'cubic-bezier(0,.18,.64,.1)'
+                });
+
+                anim.onfinish = function () {
+                    path.style.removeProperty('opacity');
+                    path.style.fill = 'var(--secondaryColor)';
+                    path.style.removeProperty('stroke-dasharray');
+                    path.style.removeProperty('stroke-dashoffset');
+                };
+            });
+        });
+    });
+}());
+</script>

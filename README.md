@@ -75,7 +75,7 @@ date-start-detached
 
 Important environment flags:
 
-- `PROJECT_NAME` selects the active association/site variant (`date`, `kk`, `biocum`, `demo`, ...).
+- `PROJECT_NAME` selects the active association/site variant (`date`, `kk`, `biocum`, `demo`, `pulterit`, `sf`, ...).
 - `ENABLE_LANGUAGE_FEATURES=True` enables the language switcher, translated admin tabs, and runtime selection between Swedish, English, and Finnish on unprefixed URLs. When omitted or false, the project runs Swedish-only.
 - `USE_S3` toggles whether uploads use local disk storage or the configured S3-compatible backend.
 

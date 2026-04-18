@@ -1,0 +1,53 @@
+{% load static %}
+{%  load i18n %}
+
+<footer class="container association-footer{% block footer_class_suffix %}{% endblock %}">
+    <div class="association-footer-shell{% block footer_shell_class_suffix %}{% endblock %}">
+        <hr>
+        <!-- Grid container -->
+        <!-- Section: Social media -->
+        <section class="col text-center association-footer-social{% block footer_social_class_suffix %}{% endblock %}">
+
+            {% for btn in SOCIAL_BUTTONS %}
+                {% if btn.1 %}
+                <a class="btn btn-outline-light btn-floating" href="{{ btn.1 }}" role="button"
+                    ><i class="fab {{ btn.0 }}"></i
+                ></a>
+                {% endif %}
+            {% endfor %}
+
+        </section>
+        <!-- Section: Social media -->
+        <div class="row align-middle align-items-center association-footer-content{% block footer_content_class_suffix %}{% endblock %}">
+            <div class="col-12 col-md-4 text-center association-footer-brand{% block footer_brand_class_suffix %}{% endblock %}">
+                {% block footer_logo %}
+                <img class="footer-img img-fluid" alt="{% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}{{ association_name }} logo{% endblocktranslate %}" src="{% static 'core/images/SF_logo_Tran.svg' %}">
+                {% endblock %}
+            </div>
+            <div class="col-12 col-md-4 association-footer-copy{% block footer_copy_class_suffix %}{% endblock %}">
+                <p>
+                    {% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}
+                    Styrelsen för {{ association_name }} kan kontaktas på följande sätt.
+                    {% endblocktranslate %}
+                </p>
+                <p>
+                    {% trans 'E-post' %}:<br>
+                    {{ ASSOCIATION_EMAIL }}<br>
+                    {{ ASSOCIATION_OFFICE_HOURS }}
+                </p>
+                <p>{% trans "Address" %}:<br>
+                    {{ ASSOCIATION_ADDRESS_L1 }}<br>
+                    {{ ASSOCIATION_ADDRESS_L2 }}<br>
+                    {{ ASSOCIATION_POSTAL_CODE }}
+                </p>
+            </div>
+        </div>
+        <!-- Copyright -->
+        {% block extra_footer %}{% endblock %}
+        <div class="text-center p-3">
+            &copy {% now "Y" %}
+        </div>
+        <!-- Copyright -->
+        <!-- Grid container -->
+    </div>
+</footer>

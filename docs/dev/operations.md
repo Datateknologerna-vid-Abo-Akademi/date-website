@@ -65,8 +65,8 @@ Each association gets its own web container on a dedicated port, sharing one Pos
 | biocum      | http://localhost:8001 |
 | date        | http://localhost:8002 |
 | kk          | http://localhost:8003 |
-| on          | http://localhost:8004 |
-| pulterit    | http://localhost:8005 |
+| pulterit    | http://localhost:8004 |
+| sf          | http://localhost:8005 |
 
 The database is exposed on host port `5433` to avoid conflicting with the regular dev stack on `5432`.
 
