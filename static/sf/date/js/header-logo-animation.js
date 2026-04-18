@@ -4,6 +4,11 @@
     var paths = Array.prototype.slice.call(document.querySelectorAll('.hero-text-box .albin path'));
     if (!svg || !paths.length) return;
 
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        svg.classList.add('is-ready');
+        return;
+    }
+
     var mainBodyPaths = [];
     var leafPaths = [];
     var letterPaths = [];
