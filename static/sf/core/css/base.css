@@ -57,16 +57,30 @@ div a:hover{
 
 .content{
     margin: 20px 2vw;
-    background-color: var(--primaryColorLight);
+    background-color: var(--secondaryColor);
+    color: var(--textColorDarkish);
     padding: var(--defaultPadding);
     border-radius: var(--defaultRadius);
 }
 
+.content a {
+    color: var(--linkColorDark);
+}
+
+.content a:hover {
+    color: var(--linkColorDarkHover);
+}
+
+.content a.theme-button,
+.content a.theme-button:hover {
+    color: var(--textColorLight);
+}
+
 /*  BUTTON */
 .theme-button {
-    background-color: var(--primaryColorLighter);
+    background-color: var(--primaryColor);
     border: none;
-    color: var(--linkColorLight);
+    color: var(--textColorLight);
     padding: 10px 20px;
     text-align: center;
     font-size: 16px;
@@ -74,14 +88,13 @@ div a:hover{
     font-family: 'Josefin Sans', sans-serif;
     cursor: pointer;
     transition: background-color 0.3s, color 0.3s;
-    /* Additional styles for interactions */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    outline: none; /* Prevents focus outline */
+    outline: none;
 }
 
 .theme-button:hover {
-    background-color: var(--primaryColorLighte);
-    color: var(--linkColorLightHover);
+    background-color: var(--primaryColorLight);
+    color: var(--textColorLight);
 }
 
 .theme-button:active {
@@ -117,14 +130,14 @@ div a:hover{
 
 /* Basic table colors */
 table.table {
-    --bs-table-bg: #212529;
-    --bs-table-striped-bg: #2c3034;
-    --bs-table-striped-color: #fff;
-    --bs-table-active-bg: #373b3e;
-    --bs-table-active-color: #fff;
-    --bs-table-hover-bg: #323539;
-    --bs-table-hover-color: #fff;
-    color: #fff;
-    border-color: #373b3e;
+    --bs-table-bg: #f8f9fa;
+    --bs-table-striped-bg: #ecedee;
+    --bs-table-striped-color: #000;
+    --bs-table-active-bg: #dfe0e1;
+    --bs-table-active-color: #000;
+    --bs-table-hover-bg: #e5e6e7;
+    --bs-table-hover-color: #000;
+    color: #000;
+    border-color: #dfe0e1;
 }
 /* ---- */

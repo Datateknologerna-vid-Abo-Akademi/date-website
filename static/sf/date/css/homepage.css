@@ -34,7 +34,7 @@
     text-transform: uppercase;
     display: block;
     margin-bottom: 0;
-    font-size: min(calc(0.8*7vh), 7vw);
+    font-size: clamp(1.8rem, 1.2rem + 3vw, 3.5rem);
     font-weight: 400;
     letter-spacing: 0.04em;
     -webkit-animation: sfHeroTitle 1.4s 1s both cubic-bezier(.18,.84,.32,1);
@@ -44,9 +44,9 @@
 .hero-text-box .text h3 {
     display: block;
     text-align: center;
-    font-size: min(calc(0.8*2.5vh), 3.5vw);
+    font-size: clamp(1rem, 0.8rem + 1.2vw, 1.5rem);
     font-weight: 700;
-    letter-spacing: min(1vh, 1vw);
+    letter-spacing: clamp(0.08rem, 0.1rem + 0.25vw, 0.28rem);
     -webkit-animation: fadeIn 4.5s ease-in;
     animation: fadeIn 4.5s ease-in;
     white-space: nowrap;
@@ -56,7 +56,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: min(38vh, 56vw);
+    width: clamp(19rem, 15rem + 22vw, 36rem);
+    max-width: 78vw;
     aspect-ratio: 1 / 1;
     height: auto;
     margin-top: 0;
@@ -83,7 +84,13 @@
     stroke: var(--secondaryColor);
     fill: var(--secondaryColor);
     stroke-width: 2;
-    opacity: 10;
+    opacity: 1;
+}
+
+.albin svg:not(.is-ready) path {
+    opacity: 0;
+    fill-opacity: 0;
+    stroke-opacity: 0;
 }
 
 @-webkit-keyframes sfLogoSettle {
