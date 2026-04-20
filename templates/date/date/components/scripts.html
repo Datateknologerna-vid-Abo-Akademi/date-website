@@ -99,8 +99,9 @@
     });
 </script>
 <script>
-    async function getJoke() {
-        return await fetch("https://icanhazdadjoke.com", {
+    if (document.querySelector("#joke-string")) {
+        async function getJoke() {
+            return await fetch("https://icanhazdadjoke.com", {
                 headers: {
                     "Accept": "application/json"
                 }
@@ -117,10 +118,11 @@
                 return ""
             }) ||
             "";
-    }
-    getJoke().then((joke) => {
-        document.querySelectorAll("#joke-string").forEach(function(elem) {
-            elem.innerText = joke;
+        }
+        getJoke().then((joke) => {
+            document.querySelectorAll("#joke-string").forEach(function(elem) {
+                elem.innerText = joke;
+            })
         })
-    })
+    }
 </script>
