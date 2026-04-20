@@ -110,7 +110,7 @@ jobs:
           source env.sh dev
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           docker-compose run --rm --no-deps web python scripts/validate_translations.py
-          docker-compose run --rm --no-deps web python manage.py compilemessages
+          docker-compose run --rm --no-deps --user "$(id -u):$(id -g)" web python manage.py compilemessages
           date-test
 
       - name: Build and run Docker Compose
