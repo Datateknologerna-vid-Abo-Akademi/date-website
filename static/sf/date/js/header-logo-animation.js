@@ -32,6 +32,7 @@
     var leafStrokeWidth = '0.5';
     var mainTraceStrokeWidth = '0.6';
     var sweepStrokeWidth = '0.5';
+    var settledFillStrokeWidth = '0.4';
 
     var leafDrawDuration = 1080;
     var leafDrawDelayBase = 140;
@@ -91,9 +92,20 @@
     function applyMainBodyStyles(path) {
         path.style.fill = finalFillColor;
         path.style.fillOpacity = '0';
-        path.style.stroke = noFillColor;
+        path.style.stroke = strokeColor;
         path.style.strokeOpacity = '0';
+        path.style.strokeWidth = '0';
+        path.style.strokeLinecap = lineCap;
+        path.style.strokeLinejoin = lineJoin;
         path.style.opacity = '1';
+    }
+
+    function applySettledFillStroke(path) {
+        path.style.stroke = strokeColor;
+        path.style.strokeOpacity = '1';
+        path.style.strokeWidth = settledFillStrokeWidth;
+        path.style.strokeLinecap = lineCap;
+        path.style.strokeLinejoin = lineJoin;
     }
 
     function createTraceEntry(path, bbox, len) {
@@ -159,11 +171,23 @@
         };
     }
 
-    function animateFill(path, delay, hideStroke) {
-        var animation = path.animate([
-            { fillOpacity: 0 },
-            { fillOpacity: 1 }
-        ], {
+    function createFillKeyframes(keepSettledStroke, strokeStartWidth) {
+        if (!keepSettledStroke) {
+            return [
+                { fillOpacity: 0 },
+                { fillOpacity: 1 }
+            ];
+        }
+
+        return [
+            { fillOpacity: 0, strokeOpacity: strokeStartWidth === '0' ? 0 : 1, strokeWidth: strokeStartWidth },
+            { fillOpacity: 0.86, strokeOpacity: 1, strokeWidth: settledFillStrokeWidth, offset: 0.78 },
+            { fillOpacity: 1, strokeOpacity: 1, strokeWidth: settledFillStrokeWidth }
+        ];
+    }
+
+    function animateFill(path, delay, keepSettledStroke, strokeStartWidth) {
+        var animation = path.animate(createFillKeyframes(keepSettledStroke, strokeStartWidth || settledFillStrokeWidth), {
             duration: sharedFillDuration,
             delay: delay,
             easing: 'cubic-bezier(.2,.7,.2,1)',
@@ -174,19 +198,18 @@
             path.style.fill = finalFillColor;
             path.style.fillOpacity = '1';
 
-            if (hideStroke) {
-                path.style.stroke = noFillColor;
-                path.style.strokeOpacity = '0';
+            if (keepSettledStroke) {
+                applySettledFillStroke(path);
             }
         };
     }
 
-    function animateTracedEntries(entries, baseDelay, step, fillDelay, hideStroke) {
+    function animateTracedEntries(entries, baseDelay, step, fillDelay, keepSettledStroke, strokeStartWidth) {
         entries.forEach(function (entry, index) {
             var drawDelay = baseDelay + (index * step);
 
             animateTrace(entry.path, entry.len, drawDelay);
-            animateFill(entry.path, fillDelay, hideStroke);
+            animateFill(entry.path, fillDelay, keepSettledStroke, strokeStartWidth);
         });
     }
 
@@ -428,12 +451,12 @@
                 Math.max(lastLeafDrawEnd, lastLetterDrawEnd, lastMottoDrawEnd, lastMainTraceEnd) - sharedFillOverlap
             );
 
-            animateTracedEntries(leafPaths, leafDrawDelayBase, leafDrawDelayStep, sharedFillDelay, true);
+            animateTracedEntries(leafPaths, leafDrawDelayBase, leafDrawDelayStep, sharedFillDelay, true, leafStrokeWidth);
             animateTracedEntries(letterPaths, leafDrawDelayBase, letterDrawDelayStep, sharedFillDelay, false);
             animateTracedEntries(mottoPaths, mottoDrawDelayBase, mottoDrawDelayStep, sharedFillDelay, false);
 
             mainBodyPaths.forEach(function (entry) {
-                animateFill(entry.path, sharedFillDelay, false);
+                animateFill(entry.path, sharedFillDelay, true, '0');
             });
 
             if (mainTraceSliceGroups.length) {
