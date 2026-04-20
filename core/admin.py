@@ -1,13 +1,7 @@
-from contextvars import ContextVar
-
 from django.conf import settings
 from django.contrib import admin
-from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.admin import AdminSiteOTPRequiredMixin
-
-
-_active_translation_request = ContextVar("active_translation_request", default=None)
 
 
 def get_admin_translation_languages() -> tuple[str, ...]:
@@ -47,63 +41,21 @@ class ActiveLanguageTranslationAdminMixin:
                 filtered_fields.append(field)
         return tuple(filtered_fields) if isinstance(fields, tuple) else filtered_fields
 
-    def _replace_fieldsets_with_active_languages(self, fieldsets):
-        fieldsets_new = []
+    def get_exclude(self, request, obj=None):
+        exclude = super().get_exclude(request, obj)
+        exclude = () if exclude is None else tuple(exclude)
+        hidden_fields = self._hidden_admin_translation_fields(request)
+        return exclude + tuple(field for field in hidden_fields if field not in exclude)
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        filtered_fieldsets = []
         for name, options in fieldsets:
             options = {**options}
             if "fields" in options:
-                options["fields"] = self.replace_orig_field(options["fields"])
-            fieldsets_new.append((name, options))
-        return fieldsets_new
-
-    def replace_orig_field(self, option):
-        fields = super().replace_orig_field(option)
-        request = _active_translation_request.get()
-        if request is None:
-            return fields
-        return self._filter_admin_translation_fields(fields, request)
-
-    def _get_form_or_formset(self, request, obj=None, **kwargs):
-        token = _active_translation_request.set(request)
-        try:
-            kwargs = super()._get_form_or_formset(request, obj, **kwargs)
-
-            hidden_fields = self._hidden_admin_translation_fields(request)
-            if hidden_fields:
-                exclude = kwargs.get("exclude")
-                exclude = [] if exclude is None else list(exclude)
-                exclude.extend(field for field in hidden_fields if field not in exclude)
-                kwargs["exclude"] = tuple(exclude)
-
-            return kwargs
-        finally:
-            _active_translation_request.reset(token)
-
-    def _get_declared_fieldsets(self, request, obj=None):
-        token = _active_translation_request.set(request)
-        try:
-            if not self.fields and hasattr(self.form, "_meta") and self.form._meta.fields:
-                self.fields = self.form._meta.fields
-
-            fieldsets = (
-                self.add_fieldsets
-                if getattr(self, "add_fieldsets", None) and obj is None
-                else self.fieldsets
-            )
-            if fieldsets:
-                return self._replace_fieldsets_with_active_languages(fieldsets)
-            if self.fields:
-                return [(None, {"fields": self.replace_orig_field(self.get_fields(request, obj))})]
-            return None
-        finally:
-            _active_translation_request.reset(token)
-
-    def _get_fieldsets_post_form_or_formset(self, request, form, obj=None):
-        token = _active_translation_request.set(request)
-        try:
-            return super()._get_fieldsets_post_form_or_formset(request, form, obj)
-        finally:
-            _active_translation_request.reset(token)
+                options["fields"] = self._filter_admin_translation_fields(options["fields"], request)
+            filtered_fieldsets.append((name, options))
+        return filtered_fieldsets
 
 
 class FixedLanguageAdminSite(AdminSiteOTPRequiredMixin, admin.AdminSite):
