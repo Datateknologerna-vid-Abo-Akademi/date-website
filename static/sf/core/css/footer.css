@@ -28,6 +28,21 @@ footer section {
     gap: 0.5rem;
 }
 
+.association-footer-social-link {
+    width: 2.75rem;
+    height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.association-footer-social-link svg {
+    width: 1.75rem;
+    height: 1.75rem;
+    fill: currentColor;
+}
+
 .association-footer-content {
     row-gap: 1.5rem;
 }

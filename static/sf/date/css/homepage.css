@@ -34,7 +34,7 @@
     text-transform: uppercase;
     display: block;
     margin-bottom: 0;
-    font-size: clamp(1.8rem, 1.2rem + 3vw, 3.5rem);
+    font-size: clamp(1.50rem, 1rem + 2.50vw, 3rem);
     font-weight: 400;
     letter-spacing: 0.04em;
     will-change: transform, opacity;
@@ -44,7 +44,7 @@
 .hero-text-box .text h3 {
     display: block;
     text-align: center;
-    font-size: clamp(1rem, 0.8rem + 1.2vw, 1.5rem);
+    font-size: clamp(0.8rem, 0.7rem + 1vw, 1.3rem);
     font-weight: 700;
     letter-spacing: clamp(0.08rem, 0.1rem + 0.25vw, 0.28rem);
     animation: sfHeroSubtitle 0.8s ease-out 2.4s both;
@@ -55,7 +55,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: clamp(19rem, 15rem + 22vw, 36rem);
+    width: clamp(16.1rem, 12.8rem + 18.7vw, 30.6rem);
     max-width: 78vw;
     aspect-ratio: 1 / 1;
     height: auto;
@@ -222,6 +222,18 @@ div.news-content a{
 
 div.news-content a:hover{
     color: var(--linkColorDarkHover);
+}
+
+.sf-inline-icon {
+    width: 1em;
+    height: 1em;
+    fill: currentColor;
+    vertical-align: -0.125em;
+}
+
+.sf-inline-icon-lg {
+    width: 1.35em;
+    height: 1.35em;
 }
 
 .more-news{

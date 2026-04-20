@@ -57,7 +57,12 @@ CONTENT_VARIABLES = {
     "ASSOCIATION_ADDRESS_L2": "Astra-huset våning 0, rum 0056",
     "ASSOCIATION_POSTAL_CODE": "20500 Åbo",
     "ASSOCIATION_OFFICE_HOURS": "Kanslitid mån-tors kl. 11.30-13.00",
-    "SOCIAL_BUTTONS": [],
+    "SOCIAL_BUTTONS": [
+        ["instagram", "https://www.instagram.com/sfklubben/"],
+        ["facebook", "https://www.facebook.com/SFKlubben/"],
+        ["x", "https://twitter.com/sfklubben"],
+        ["linkedin", "https://linkedin.com/company/statsvetenskapligaklubben"],
+    ],
 
     # Alumni
     "ALUMNI_ASSOCIATION_NAME": "",

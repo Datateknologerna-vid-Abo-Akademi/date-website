@@ -105,6 +105,7 @@ COMMON_CONTEXT_PROCESSORS = [
 
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'date.middleware.ServerTimingMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'date.middleware.LanguageStateMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -118,6 +119,8 @@ MIDDLEWARE = [
     'date.middleware.HTCPCPMiddleware',
     'date.middleware.CDNRewriteMiddleware'
 ]
+
+SERVER_TIMING_ENABLED = DEVELOP
 
 
 WSGI_APPLICATION = 'core.wsgi.application'

@@ -1,7 +1,6 @@
 import datetime
 import logging
 import random
-from itertools import chain
 from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
@@ -62,27 +61,37 @@ def get_homepage_template_name():
 
 
 def index(request):
+    current_time = timezone.now()
     events_old_events_included = (
         Event.objects.filter(
             published=True,
-            event_date_end__gte=(timezone.now() - timezone.timedelta(days=31)),
+            event_date_end__gte=(current_time - timezone.timedelta(days=31)),
         )
         .exclude(slug="")
         .exclude(slug__isnull=True)
         .order_by('event_date_start')
     )
-    events = events_old_events_included.filter(
-        published=True, event_date_end__gte=timezone.now())
-    news = Post.objects.filter(
-        published=True, category__isnull=True).reverse()[:3]
+    all_events = list(events_old_events_included)
+    events = [
+        event for event in all_events
+        if event.event_date_end >= current_time
+    ]
+    news = list(Post.objects.filter(
+        published=True, category__isnull=True).reverse()[:3])
 
     # Show Albins Angels logo if new post in last 10 days
-    aa_posts = Post.objects.filter(published=True, category__name="Albins Angels").order_by(
-        'published_time').reverse()[:1]  # TODO Remove this hardcoding or move to different function/file
-    time_since = timezone.now() - timezone.timedelta(days=10)
-    aa_post = ''
-    if aa_posts and aa_posts[0].published_time > time_since:
-        aa_post = aa_posts[0]
+    aa_post = None
+    if settings.PROJECT_NAME in {"date", "pulterit"}:
+        aa_post = (
+            Post.objects
+            .filter(published=True, category__name="Albins Angels")
+            .select_related("category")
+            .order_by('-published_time')
+            .first()
+        )  # TODO Remove this hardcoding or move to different function/file
+        time_since = current_time - timezone.timedelta(days=10)
+        if aa_post and aa_post.published_time <= time_since:
+            aa_post = None
 
     def calendar_format(all_events):
         """ Format events into a dictionary where keys (dates)
@@ -104,12 +113,11 @@ def index(request):
         return calendar_events_dict
 
     context = {
-        'calendar_events': calendar_format(events_old_events_included),
+        'calendar_events': calendar_format(all_events),
         'events': events,
         'news': news,
-        'news_events': list(chain(events, news)),
-        'ads': AdUrl.objects.all(),
-        'posts': IgUrl.objects.all(),
+        'ads': list(AdUrl.objects.all()),
+        'posts': list(IgUrl.objects.all()) if settings.PROJECT_NAME == "kk" else (),
         'aa_post': aa_post,  # TODO Remove or rename
     }
 

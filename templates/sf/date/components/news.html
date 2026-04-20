@@ -1,0 +1,27 @@
+{% load i18n localized_urls %}
+<div class="feed-container">
+    <h3 class="news-header header-border-bottom mt-3 heading-link"><a href="{{ '/news/'|localized_url }}">{% trans "Nyheter" %}</a></h3>
+    <div class="news-container">
+        {% for ne in news %}
+            <div class="news-content news-box header-border-bottom">
+                <h3 class="news-title">{{ ne.title }}</h3>
+                <h5 class="news-date">{{ ne.published_time }}</h5>
+                <div>{{ ne.content|safe|truncatewords_html:"50" }}</div>
+                <a class="news-button" href="{% url 'news:detail' ne.slug %}">
+                    <svg class="sf-inline-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17.5A2.5 2.5 0 0 1 17.5 22h-11A2.5 2.5 0 0 1 4 19.5v-15ZM6.5 4a.5.5 0 0 0-.5.5v15a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 .5-.5V4H6.5Zm2 3h7v2h-7V7Zm0 4h7v2h-7v-2Zm0 4h5v2h-5v-2Z"></path>
+                    </svg>
+                    {% trans 'Läs mera' %}...
+                </a>
+            </div>
+        {% empty %}
+            <h3>{% trans 'Inga nyheter hittades' %}...</h3>
+        {% endfor %}
+        <a class="more-news" href="{{ '/news/'|localized_url }}">
+            <svg class="sf-inline-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15.5A2.5 2.5 0 0 1 17.5 21h-12A3.5 3.5 0 0 1 2 17.5V7h2v10.5A1.5 1.5 0 0 0 5.5 19h12a.5.5 0 0 0 .5-.5V5H6.5a.5.5 0 0 0-.5.5V17H4V5.5ZM8 8h8v2H8V8Zm0 4h8v2H8v-2Zm0 4h5v2H8v-2Z"></path>
+            </svg>
+            {% trans "Mera nyheter" %}...
+        </a>
+    </div>
+</div>
