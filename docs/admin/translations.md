@@ -14,7 +14,7 @@ When enabled:
 - the admin shows a language switcher
 - supported models expose translated tabs or translated inline fields
 
-For DaTe, that currently means Swedish and English. Some other associations still expose Finnish as well.
+For DaTe, the public runtime languages are currently Swedish and English. Some other associations still expose Finnish as well. The underlying translated admin fields may include the full shared modeltranslation language set so the database schema stays stable.
 
 When disabled:
 
@@ -35,7 +35,7 @@ Some labels and proper names intentionally stay fixed across languages. Follow t
 ## Editing Translated Content in Admin
 
 1. Open the relevant model in `/admin`.
-2. If language features are enabled, look for language tabs or grouped fields for the active association's languages.
+2. If language features are enabled, look for language tabs or grouped fields.
 3. Treat Swedish as the source version unless the content team has explicitly decided otherwise.
 4. Fill in the non-Swedish language fields only for content that should actually vary by language.
 5. Save and preview the public page in at least one translated locale.

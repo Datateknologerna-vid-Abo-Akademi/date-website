@@ -86,7 +86,7 @@ When a field is registered for translation, `django-modeltranslation` creates la
 - `title_en`
 - `title_fi`
 
-The shared schema still includes `*_fi` columns for associations that use Finnish. The admin only exposes the languages configured for the active association when language features are enabled.
+The shared schema still includes `*_fi` columns for associations that use Finnish. Keep the modeltranslation field registration language set stable, even if an association exposes a smaller runtime language set.
 
 ## Adding Translation Support to a New Model
 

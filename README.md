@@ -76,7 +76,7 @@ date-start-detached
 Important environment flags:
 
 - `PROJECT_NAME` selects the active association/site variant (`date`, `kk`, `biocum`, `demo`, ...).
-- `ENABLE_LANGUAGE_FEATURES=True` enables the language switcher, translated admin tabs, and runtime selection between the languages configured for the active association on unprefixed URLs. DaTe currently uses Swedish and English; some other associations also expose Finnish. When omitted or false, the project runs Swedish-only.
+- `ENABLE_LANGUAGE_FEATURES=True` enables the language switcher, translated admin tabs, and runtime selection between the languages configured for the active association on unprefixed URLs. DaTe currently uses Swedish and English at runtime; some other associations also expose Finnish. When omitted or false, the project runs Swedish-only.
 - `USE_S3` toggles whether uploads use local disk storage or the configured S3-compatible backend.
 
 The script exports `COMPOSE_FILE_PATH` and defines the `date-*` aliases used throughout this README:
@@ -267,7 +267,7 @@ If there is ever the need to provide a translated version of an existing field:
 
 Example to illustrate the above:
 
-I want to provide translated variants of the title field in Events. The shared schema can still include `title_fi` for associations that use Finnish, while DaTe only exposes `sv` and `en` in admin.
+I want to provide translated variants of the title field in Events. The shared schema includes the stable modeltranslation language set, so it can still include `title_fi` for associations that use Finnish even when DaTe only exposes `sv` and `en` at runtime.
 
 - Create the file translation.py under the events directory
 - Create a new class called EventTranslationOptions that inherits from TranslationOptions (provided by django-modeltranslations)
