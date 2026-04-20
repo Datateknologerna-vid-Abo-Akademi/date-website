@@ -372,6 +372,18 @@ class LanguageSelectionTests(TestCase):
             rendered = template.render(Context({"value": value}))
         self.assertTrue(rendered.startswith("om "))
 
+    def test_localized_timeuntil_filter_returns_empty_for_past_timestamps_in_all_languages(self):
+        template = Template(
+            '{% load localized_time %}{{ value|date:"j.n H:i" }}{{ value|localized_timeuntil|comma_if }}'
+        )
+        value = timezone.now() - timedelta(minutes=1)
+
+        for language in ("sv", "en", "fi"):
+            with self.subTest(language=language), translation.override(language):
+                rendered = template.render(Context({"value": value}))
+            self.assertNotIn(", ", rendered)
+            self.assertNotIn("0 ", rendered)
+
     def test_localized_timesince_ago_filter_uses_finnish_word_order(self):
         template = Template("{% load localized_time %}{{ value|localized_timesince_ago }}")
         value = timezone.now() - timedelta(minutes=1)
@@ -392,11 +404,35 @@ class LanguageSelectionTests(TestCase):
             rendered = template.render(Context({"value": 80}))
         self.assertEqual(rendered, "80 paikkaa jäljellä!")
 
+    def test_localized_remaining_places_filter_uses_finnish_singular(self):
+        template = Template("{% load localized_time %}{{ value|localized_remaining_places }}")
+        with translation.override("fi"):
+            rendered = template.render(Context({"value": 1}))
+        self.assertEqual(rendered, "1 paikka jäljellä!")
+
+    def test_localized_remaining_places_filter_uses_english_word_order(self):
+        template = Template("{% load localized_time %}{{ value|localized_remaining_places }}")
+        with translation.override("en"):
+            rendered = template.render(Context({"value": 80}))
+        self.assertEqual(rendered, "80 spots left!")
+
+    def test_localized_remaining_places_filter_uses_english_singular(self):
+        template = Template("{% load localized_time %}{{ value|localized_remaining_places }}")
+        with translation.override("en"):
+            rendered = template.render(Context({"value": 1}))
+        self.assertEqual(rendered, "1 spot left!")
+
     def test_localized_remaining_places_filter_uses_swedish_word_order(self):
         template = Template("{% load localized_time %}{{ value|localized_remaining_places }}")
         with translation.override("sv"):
             rendered = template.render(Context({"value": 80}))
-        self.assertEqual(rendered, "Det finns 80 platser!")
+        self.assertEqual(rendered, "Det finns 80 platser kvar!")
+
+    def test_localized_remaining_places_filter_uses_swedish_singular(self):
+        template = Template("{% load localized_time %}{{ value|localized_remaining_places }}")
+        with translation.override("sv"):
+            rendered = template.render(Context({"value": 1}))
+        self.assertEqual(rendered, "Det finns 1 plats kvar!")
 
     def test_footer_skips_social_buttons_without_urls(self):
         template = Template("{% include 'core/footer.html' %}")
