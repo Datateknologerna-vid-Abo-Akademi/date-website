@@ -4,10 +4,15 @@ from django.db.models import TextField
 from django_ckeditor_5.widgets import CKEditor5Widget
 from modeltranslation.admin import TabbedTranslationAdmin
 
+from core.admin import ActiveLanguageTranslationAdminMixin
 from news import forms
 from news.models import Post, Category
 
-NewsTranslationAdminBase = TabbedTranslationAdmin if settings.ENABLE_LANGUAGE_FEATURES else admin.ModelAdmin
+if settings.ENABLE_LANGUAGE_FEATURES:
+    class NewsTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin):
+        pass
+else:
+    NewsTranslationAdminBase = admin.ModelAdmin
 
 
 class CategoryAdmin(NewsTranslationAdminBase):

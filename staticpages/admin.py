@@ -6,9 +6,17 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 
 from .models import StaticPage, StaticPageNav, StaticUrl
 from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
+from core.admin import ActiveLanguageTranslationAdminMixin
 
-StaticPageTranslationInlineBase = TranslationTabularInline if settings.ENABLE_LANGUAGE_FEATURES else admin.TabularInline
-StaticPageTranslationAdminBase = TabbedTranslationAdmin if settings.ENABLE_LANGUAGE_FEATURES else admin.ModelAdmin
+if settings.ENABLE_LANGUAGE_FEATURES:
+    class StaticPageTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline):
+        pass
+
+    class StaticPageTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin):
+        pass
+else:
+    StaticPageTranslationInlineBase = admin.TabularInline
+    StaticPageTranslationAdminBase = admin.ModelAdmin
 
 
 # Register your models here.

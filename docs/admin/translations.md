@@ -14,7 +14,7 @@ When enabled:
 - the admin shows a language switcher
 - supported models expose translated tabs or translated inline fields
 
-For DaTe, the public runtime languages are currently Swedish and English. Some other associations still expose Finnish as well. The underlying translated admin fields may include the full shared modeltranslation language set so the database schema stays stable.
+For DaTe, the public runtime and translated admin languages are currently Swedish and English. Some other associations still expose Finnish as well. The database schema still keeps the full shared modeltranslation language set so translated columns remain stable.
 
 When disabled:
 
