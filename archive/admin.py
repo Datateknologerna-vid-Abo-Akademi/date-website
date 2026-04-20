@@ -1,5 +1,4 @@
 from django.contrib import admin
-from django.utils.safestring import mark_safe
 from django.conf import settings
 from django.urls import reverse
 from django.utils.html import format_html
@@ -12,13 +11,14 @@ class PicturesInline(admin.TabularInline):
     model = Picture
     fk_name = 'collection'
     can_delete = True
-    readonly_fields = ('preview_image',)
+    readonly_fields = ('preview_image', 'processing_status', 'upload_provider')
+    fields = ('preview_image', 'processing_status', 'upload_provider', 'favorite')
     extra = 0
 
     def preview_image(self, obj):
         if not obj.image_url:
             return "-"
-        return mark_safe("""<img src="%s" style="width: auto; height: 80px"/> """ % obj.image_url)
+        return format_html('<img src="{}" style="width: auto; height: 80px">', obj.image_url)
 
 
 class DocumentInline(admin.TabularInline):
@@ -35,7 +35,7 @@ class PublicFileInline(admin.TabularInline):
     extra = 1
 
     def preview_image(self, obj):
-        return mark_safe("""<img src="%s" style="width: auto; height: 80px"/> """ % obj.some_file.url)
+        return format_html('<img src="{}" style="width: auto; height: 80px">', obj.some_file.url)
 
 
 @admin.register(PictureCollection)

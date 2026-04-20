@@ -9,6 +9,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.core.cache import cache
 from django.core.files.uploadedfile import UploadedFile
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db import IntegrityError
 from django.db.models import Count, OuterRef, Q, Subquery
 from django.shortcuts import get_object_or_404
 from django.http import Http404, JsonResponse
@@ -270,17 +271,13 @@ def _get_picture_collection(collection_id):
     return get_object_or_404(Collection, pk=collection_id, type="Pictures")
 
 
-def _check_direct_upload_rate_limit(request):
-    cache_key = f"archive:direct-upload:{request.user.pk}"
-    current_count = cache.get(cache_key, 0)
-    if current_count >= DIRECT_UPLOAD_RATE_LIMIT:
-        return False
-    cache.set(cache_key, current_count + 1, DIRECT_UPLOAD_RATE_LIMIT_WINDOW_SECONDS)
-    return True
-
-
-def _fallback_upload_enabled():
-    return True
+def _check_upload_rate_limit(request, scope):
+    cache_key = f"archive:upload-{scope}:{request.user.pk}"
+    if not cache.add(cache_key, 1, DIRECT_UPLOAD_RATE_LIMIT_WINDOW_SECONDS):
+        count = cache.incr(cache_key)
+    else:
+        count = 1
+    return count <= DIRECT_UPLOAD_RATE_LIMIT
 
 
 @permission_required('archive.add_collection')
@@ -289,7 +286,7 @@ def picture_upload(request, collection_id):
     context = {
         "collection": collection,
         "direct_upload_enabled": uploads_use_s3(),
-        "fallback_upload_enabled": _fallback_upload_enabled(),
+        "fallback_upload_enabled": True,
         "upload_max_file_size_mb": DEFAULT_UPLOAD_MAX_FILE_SIZE_MB,
     }
     return render(request, "archive/picture_upload.html", context)
@@ -311,7 +308,7 @@ def picture_upload_direct(request):
     if not uploads_use_s3():
         return JsonResponse({"error": "Direct S3 uploads are not configured."}, status=503)
 
-    if not _check_direct_upload_rate_limit(request):
+    if not _check_upload_rate_limit(request, "direct"):
         return JsonResponse({"error": "Too many upload URL requests. Please wait a moment."}, status=429)
 
     filename = (payload.get("filename") or "").strip()
@@ -344,7 +341,7 @@ def picture_upload_direct(request):
 def picture_upload_fallback(request):
     collection = _get_picture_collection(request.POST.get("collection_id"))
 
-    if not _check_direct_upload_rate_limit(request):
+    if not _check_upload_rate_limit(request, "fallback"):
         return JsonResponse({"error": "Too many uploads. Please wait a moment."}, status=429)
 
     uploaded_file = request.FILES.get("file")
@@ -408,13 +405,25 @@ def picture_upload_complete(request):
     except Exception:
         return JsonResponse({"error": "Image upload has not completed yet."}, status=409)
 
-    picture = Picture.objects.create(
-        collection=collection,
-        upload_provider=Picture.UPLOAD_PROVIDER_S3_DIRECT,
-        original_filename=filename[:255],
-        temp_upload_key=temp_key,
-        processing_status=Picture.PROCESSING_STATUS_PENDING,
-    )
+    try:
+        picture = Picture.objects.create(
+            collection=collection,
+            upload_provider=Picture.UPLOAD_PROVIDER_S3_DIRECT,
+            original_filename=filename[:255],
+            temp_upload_key=temp_key,
+            processing_status=Picture.PROCESSING_STATUS_PENDING,
+        )
+    except IntegrityError:
+        existing_picture = Picture.objects.filter(temp_upload_key=temp_key).first()
+        if existing_picture:
+            return JsonResponse(
+                {
+                    "picture_id": existing_picture.pk,
+                    "status": existing_picture.processing_status,
+                    "duplicate": True,
+                }
+            )
+        raise
     enqueue_task_on_commit(optimize_picture_image, picture.pk)
     return JsonResponse(
         {

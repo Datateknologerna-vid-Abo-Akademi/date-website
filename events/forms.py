@@ -132,7 +132,8 @@ class EventCreationForm(forms.ModelForm):
 
         if commit:
             post.save()
-            if not settings.USE_S3 and isinstance(self.cleaned_data.get('image'), UploadedFile):
+            image_field = 's3_image' if settings.USE_S3 else 'image'
+            if isinstance(self.cleaned_data.get(image_field), UploadedFile):
                 enqueue_task_on_commit(optimize_event_image, post.pk)
         return post
 
@@ -232,7 +233,8 @@ class EventEditForm(forms.ModelForm):
 
         if commit:
             post.save()
-            if not settings.USE_S3 and isinstance(self.cleaned_data.get('image'), UploadedFile):
+            image_field = 's3_image' if settings.USE_S3 else 'image'
+            if isinstance(self.cleaned_data.get(image_field), UploadedFile):
                 enqueue_task_on_commit(optimize_event_image, post.pk)
         return post
 

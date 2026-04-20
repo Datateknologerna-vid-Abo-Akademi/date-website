@@ -167,7 +167,7 @@ class Picture(models.Model):
         choices=PROCESSING_STATUS_CHOICES,
         default=PROCESSING_STATUS_READY,
     )
-    temp_upload_key = models.CharField(max_length=500, blank=True)
+    temp_upload_key = models.CharField(max_length=500, blank=True, null=True, unique=True, default=None)
 
     class Meta:
         verbose_name = _("bild")

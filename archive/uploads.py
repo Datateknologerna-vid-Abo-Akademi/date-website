@@ -1,5 +1,6 @@
 import os
 import uuid
+from functools import lru_cache
 
 import boto3
 from django.conf import settings
@@ -26,9 +27,8 @@ def build_temp_upload_key(collection, filename):
     return f"{get_temp_upload_prefix()}/{collection.pub_date:%Y}/{safe_collection}/{uuid.uuid4().hex}{safe_extension}"
 
 
-def get_s3_client():
-    if not uploads_use_s3():
-        raise ImproperlyConfigured("S3 uploads are not configured.")
+@lru_cache(maxsize=1)
+def _create_s3_client():
     return boto3.client(
         "s3",
         endpoint_url=settings.AWS_S3_ENDPOINT_URL,
@@ -38,22 +38,26 @@ def get_s3_client():
     )
 
 
-def create_presigned_temp_upload(collection, filename, content_type, max_file_size):
+def get_s3_client():
     if not uploads_use_s3():
         raise ImproperlyConfigured("S3 uploads are not configured.")
+    return _create_s3_client()
 
+
+def create_presigned_temp_upload(collection, filename, content_type, max_file_size):
     temp_key = build_temp_upload_key(collection, filename)
+    bucket_name = get_private_bucket_name()
     fields = {
         "Content-Type": content_type,
     }
     conditions = [
-        {"bucket": get_private_bucket_name()},
+        {"bucket": bucket_name},
         {"key": temp_key},
         {"Content-Type": content_type},
         ["content-length-range", 1, max_file_size],
     ]
     post = get_s3_client().generate_presigned_post(
-        Bucket=get_private_bucket_name(),
+        Bucket=bucket_name,
         Key=temp_key,
         Fields=fields,
         Conditions=conditions,

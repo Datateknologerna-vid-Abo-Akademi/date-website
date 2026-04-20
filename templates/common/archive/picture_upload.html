@@ -112,7 +112,7 @@
                     return payload;
                 }
 
-                function uploadFileToS3(file, uploadConfig) {
+                function uploadFileToS3(uppy, file, uploadConfig) {
                     return new Promise((resolve, reject) => {
                         const xhr = new XMLHttpRequest();
                         xhr.open("POST", uploadConfig.upload_url);
@@ -173,7 +173,7 @@
                         if (directUploadEnabled) {
                             try {
                                 const direct = await createDirectUpload(file);
-                                await uploadFileToS3(file, direct);
+                                await uploadFileToS3(uppy, file, direct);
                                 result = await finalizeUpload(direct.temp_key, file.name);
                             } catch (error) {
                                 result = await uploadFileToFallback(file);
