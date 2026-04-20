@@ -70,6 +70,8 @@ jobs:
           set -euo pipefail
           REPO_LOWER="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
           CI_IMAGE="ghcr.io/${REPO_LOWER}:${GITHUB_SHA}"
+          HOST_UID="$(id -u)"
+          HOST_GID="$(id -g)"
 
           logged_in=0
           for attempt in 1 2 3; do
@@ -85,8 +87,9 @@ jobs:
           if [ "${logged_in}" -eq 1 ]; then
             for attempt in 1 2 3; do
               if docker pull "${CI_IMAGE}"; then
-                printf 'services:\n  web:\n    image: %s\n  celery:\n    image: %s\n' "${CI_IMAGE}" "${CI_IMAGE}" > docker-compose.ci.yml
+                printf 'services:\n  web:\n    user: "%s:%s"\n    image: %s\n  celery:\n    user: "%s:%s"\n    image: %s\n' "${HOST_UID}" "${HOST_GID}" "${CI_IMAGE}" "${HOST_UID}" "${HOST_GID}" "${CI_IMAGE}" > docker-compose.ci.yml
                 echo "compose_file=docker-compose.yml:docker-compose.ci.yml" >> "${GITHUB_OUTPUT}"
+                echo "prebuilt_available=true" >> "${GITHUB_OUTPUT}"
                 exit 0
               fi
               if [ "${attempt}" -lt 3 ]; then
@@ -95,10 +98,12 @@ jobs:
             done
           fi
 
-          echo "compose_file=docker-compose.yml" >> "${GITHUB_OUTPUT}"
+          printf 'services:\n  web:\n    user: "%s:%s"\n  celery:\n    user: "%s:%s"\n' "${HOST_UID}" "${HOST_GID}" "${HOST_UID}" "${HOST_GID}" > docker-compose.ci.yml
+          echo "compose_file=docker-compose.yml:docker-compose.ci.yml" >> "${GITHUB_OUTPUT}"
+          echo "prebuilt_available=false" >> "${GITHUB_OUTPUT}"
 
       - name: Build image when prebuilt image is unavailable
-        if: steps.prebuilt.outputs.compose_file == 'docker-compose.yml'
+        if: steps.prebuilt.outputs.prebuilt_available != 'true'
         run: |
           set -euo pipefail
           source env.sh dev
