@@ -610,6 +610,24 @@ class TranslationAdminRegressionTests(TestCase):
         self.assertIsInstance(form_class.base_fields["content_en"].widget, CKEditor5Widget)
         self.assertIsInstance(form_class.base_fields["content_fi"].widget, CKEditor5Widget)
 
+    @override_settings(LANGUAGES=(("sv", "Svenska"), ("en", "English")))
+    def test_news_translation_form_hides_inactive_language_fields(self):
+        category = Category.objects.create(name="Date Category", slug="date-category")
+        post = Post.objects.create(
+            title="Date Post",
+            slug="date-post",
+            author=self.admin_user,
+            category=category,
+        )
+        request = self.request_factory.get(reverse("admin:news_post_change", args=[post.pk]))
+        request.user = self.admin_user
+
+        form_class = admin.site._registry[Post].get_form(request, obj=post)
+
+        self.assertIn("content_sv", form_class.base_fields)
+        self.assertIn("content_en", form_class.base_fields)
+        self.assertNotIn("content_fi", form_class.base_fields)
+
     def test_event_translation_form_uses_ckeditor_widget_for_content_fields(self):
         event = Event.objects.create(
             title="Widget Event",
@@ -641,6 +659,24 @@ class TranslationAdminRegressionTests(TestCase):
         self.assertContains(response, 'name="staticurl_set-0-title_sv"')
         self.assertContains(response, 'name="staticurl_set-0-title_en"')
         self.assertContains(response, 'name="staticurl_set-0-title_fi"')
+
+    @override_settings(LANGUAGES=(("sv", "Svenska"), ("en", "English")))
+    def test_staticpage_nav_inline_hides_inactive_language_fields(self):
+        nav = StaticPageNav.objects.create(category_name="Menu")
+        StaticUrl.objects.create(
+            category=nav,
+            title="Link",
+            url="/example",
+            dropdown_element=10,
+        )
+
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("admin:staticpages_staticpagenav_change", args=[nav.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="staticurl_set-0-title_sv"')
+        self.assertContains(response, 'name="staticurl_set-0-title_en"')
+        self.assertNotContains(response, 'name="staticurl_set-0-title_fi"', status_code=200)
 
     def test_staticpage_change_page_renders_translation_fields(self):
         page = StaticPage.objects.create(

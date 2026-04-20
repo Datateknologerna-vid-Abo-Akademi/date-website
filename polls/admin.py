@@ -2,10 +2,18 @@ from django.conf import settings
 from django.contrib import admin
 from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 
+from core.admin import ActiveLanguageTranslationAdminMixin
 from .models import Choice, Question, Vote
 
-PollTranslationInlineBase = TranslationTabularInline if settings.ENABLE_LANGUAGE_FEATURES else admin.TabularInline
-PollTranslationAdminBase = TabbedTranslationAdmin if settings.ENABLE_LANGUAGE_FEATURES else admin.ModelAdmin
+if settings.ENABLE_LANGUAGE_FEATURES:
+    class PollTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline):
+        pass
+
+    class PollTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin):
+        pass
+else:
+    PollTranslationInlineBase = admin.TabularInline
+    PollTranslationAdminBase = admin.ModelAdmin
 
 
 class ChoiceInline(PollTranslationInlineBase):

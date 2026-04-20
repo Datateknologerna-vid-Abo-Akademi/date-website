@@ -14,14 +14,22 @@ from django.utils.html import format_html
 from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 from admin_ordering.admin import OrderableAdmin
 
+from core.admin import ActiveLanguageTranslationAdminMixin
 from events import forms
 from events.models import Event, EventAttendees, EventRegistrationForm, registration_terms_feature_enabled
 from .widgets import PrettyJSONWidget
 
 logger = logging.getLogger('date')
 
-EventTranslationInlineBase = TranslationTabularInline if settings.ENABLE_LANGUAGE_FEATURES else admin.TabularInline
-EventTranslationAdminBase = TabbedTranslationAdmin if settings.ENABLE_LANGUAGE_FEATURES else admin.ModelAdmin
+if settings.ENABLE_LANGUAGE_FEATURES:
+    class EventTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline):
+        pass
+
+    class EventTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin):
+        pass
+else:
+    EventTranslationInlineBase = admin.TabularInline
+    EventTranslationAdminBase = admin.ModelAdmin
 
 
 class EventRegistrationFormInline(OrderableAdmin, EventTranslationInlineBase):
