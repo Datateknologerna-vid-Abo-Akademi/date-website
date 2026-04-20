@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Collection, Document, Picture, PublicFile
+from .models import Collection, Document, PublicFile
 
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -23,7 +23,6 @@ class MultipleFileField(forms.FileField):
 
 class PictureUploadForm(forms.Form):
     album = forms.CharField()
-    images = MultipleFileField(required=False)
 
 
 class ExamUploadForm(forms.Form):
@@ -36,19 +35,9 @@ class ExamArchiveUploadForm(forms.Form):
     
 
 class PictureAdminForm(forms.ModelForm):
-    images = MultipleFileField(label="Ladda upp flera bilder", required=False)
-
     class Meta:
         model = Collection
         fields = '__all__'
-
-    def save(self, *args, **kwargs):
-        collection = super(PictureAdminForm, self).save(*args, **kwargs)
-        collection.save()
-        if hasattr(self.files, 'getlist'):
-            for f in self.files.getlist('images'):
-                Picture.objects.create(collection=collection, image=f)
-        return collection
 
 
 class DocumentAdminForm(forms.ModelForm):

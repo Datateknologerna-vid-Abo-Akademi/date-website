@@ -122,3 +122,81 @@
         transform: scale(1.04);
     }
 }
+
+.archive-upload-shell {
+    max-width: 980px;
+    margin: 0 auto;
+    padding-bottom: 48px;
+}
+
+.archive-upload-card {
+    background: var(--primaryColorLight);
+    border: 1px solid var(--primaryColorLighter);
+    border-radius: var(--defaultRadius);
+    padding: 24px;
+    color: var(--textColorLightish);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.16);
+}
+
+.archive-upload-card .text-muted,
+.archive-upload-note {
+    color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.archive-upload-card label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--textColorLightish);
+}
+
+.archive-upload-card input[type="text"] {
+    width: 100%;
+    max-width: 420px;
+    border-radius: var(--defaultRadius);
+    border: 1px solid var(--primaryColorLighter);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--textColorLightish);
+    padding: 10px 12px;
+}
+
+.archive-upload-summary {
+    min-width: 140px;
+    padding: 14px 18px;
+    border-radius: var(--defaultRadius);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+}
+
+.archive-upload-summary strong {
+    display: block;
+    font-size: 1.4rem;
+}
+
+.archive-upload-status {
+    min-height: 28px;
+    color: var(--textColorLightish);
+}
+
+.archive-upload-status[data-level="warning"] {
+    color: #ffd166;
+}
+
+.archive-upload-status[data-level="danger"] {
+    color: #ff8c8c;
+}
+
+.archive-upload-status[data-level="success"] {
+    color: #8de4af;
+}
+
+#drag-drop-area .uppy-Dashboard-inner {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed rgba(255, 255, 255, 0.22);
+}
+
+#drag-drop-area .uppy-Dashboard-AddFiles-title,
+#drag-drop-area .uppy-Dashboard-note,
+#drag-drop-area .uppy-DashboardContent-title {
+    color: var(--textColorLightish);
+}

@@ -1,9 +1,14 @@
 import logging
+import shutil
+import tempfile
+from io import BytesIO
 from types import SimpleNamespace
 from unittest.mock import MagicMock, PropertyMock, patch
 
+from PIL import Image
 from django.conf import settings
 from django.contrib import admin
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.test.client import RequestFactory
 from django.urls import reverse
@@ -466,6 +471,19 @@ class EventRegistrationWindowTests(TestCase):
 class EventAdminTests(TestCase):
     NON_DATE_PROJECTS = ("kk", "on", "pulterit", "biocum", "demo")
 
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._media_root = tempfile.mkdtemp()
+        cls._media_override = override_settings(MEDIA_ROOT=cls._media_root)
+        cls._media_override.enable()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._media_override.disable()
+        shutil.rmtree(cls._media_root, ignore_errors=True)
+        super().tearDownClass()
+
     def setUp(self):
         self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
         self.admin_user = Member.objects.create_superuser(
@@ -534,6 +552,98 @@ class EventAdminTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'name="require_registration_terms"')
+
+
+class EventImageHandlingTests(TestCase):
+    NON_DATE_PROJECTS = ("kk", "on", "pulterit", "biocum", "demo")
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._media_root = tempfile.mkdtemp()
+        cls._media_override = override_settings(MEDIA_ROOT=cls._media_root)
+        cls._media_override.enable()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._media_override.disable()
+        shutil.rmtree(cls._media_root, ignore_errors=True)
+        super().tearDownClass()
+
+    def setUp(self):
+        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.admin_user = Member.objects.create_superuser(
+            username="event-image-admin",
+            password="pwd",
+            email="event-image-admin@example.com",
+            membership_type=self.membership_type,
+        )
+        self.event = Event.objects.create(
+            title="Image Event",
+            slug="image-event",
+            author=self.admin_user,
+        )
+
+    def _image_upload(self, name="background.jpg", fmt="JPEG", content_type="image/jpeg"):
+        image = Image.new("RGB", (2400, 1200), color=(30, 60, 90))
+        output = BytesIO()
+        image.save(output, format=fmt)
+        image.close()
+        return SimpleUploadedFile(name, output.getvalue(), content_type=content_type)
+
+    def _edit_form_data(self):
+        return {
+            "title": self.event.title,
+            "event_date_start_0": self.event.event_date_start.strftime("%Y-%m-%d"),
+            "event_date_start_1": self.event.event_date_start.strftime("%H:%M:%S"),
+            "event_date_end_0": self.event.event_date_end.strftime("%Y-%m-%d"),
+            "event_date_end_1": self.event.event_date_end.strftime("%H:%M:%S"),
+            "content": "",
+            "sign_up": "on",
+            "sign_up_max_participants": "0",
+            "sign_up_others_0": self.event.sign_up_others.strftime("%Y-%m-%d"),
+            "sign_up_others_1": self.event.sign_up_others.strftime("%H:%M:%S"),
+            "sign_up_members_0": self.event.sign_up_members.strftime("%Y-%m-%d"),
+            "sign_up_members_1": self.event.sign_up_members.strftime("%H:%M:%S"),
+            "sign_up_deadline_0": self.event.sign_up_deadline.strftime("%Y-%m-%d"),
+            "sign_up_deadline_1": self.event.sign_up_deadline.strftime("%H:%M:%S"),
+            "sign_up_cancelling": "on",
+            "sign_up_cancelling_deadline_0": self.event.sign_up_cancelling_deadline.strftime("%Y-%m-%d"),
+            "sign_up_cancelling_deadline_1": self.event.sign_up_cancelling_deadline.strftime("%H:%M:%S"),
+            "published": "on",
+            "slug": self.event.slug,
+            "redirect_link": "",
+            "parent": "",
+        }
+
+    @patch("events.forms.enqueue_task_on_commit")
+    @override_settings(USE_S3=False)
+    def test_edit_form_queues_async_optimization_for_local_image_upload(self, enqueue_task_on_commit):
+        form = EventEditForm(
+            data=self._edit_form_data(),
+            files={"image": self._image_upload()},
+            instance=self.event,
+        )
+        form.user = self.admin_user
+
+        self.assertTrue(form.is_valid(), form.errors)
+        saved_event = form.save()
+
+        self.assertEqual(saved_event.pk, self.event.pk)
+        enqueue_task_on_commit.assert_called_once()
+
+    @override_settings(USE_S3=False)
+    def test_optimize_event_image_task_converts_local_upload_to_webp(self):
+        self.event.image = self._image_upload("hero.jpg")
+        self.event.save()
+
+        from events.tasks import optimize_event_image
+
+        optimize_event_image(self.event.pk)
+        self.event.refresh_from_db()
+
+        self.assertTrue(self.event.image.name.endswith(".webp"))
+        self.assertIn(".webp", self.event.background_image_url)
 
     def test_non_date_projects_hide_registration_terms_field_on_add_page(self):
         self.client.force_login(self.admin_user)

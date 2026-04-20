@@ -136,28 +136,73 @@ class PublicCollection(Collection):
 
 
 class Picture(models.Model):
+    UPLOAD_PROVIDER_LOCAL = "local"
+    UPLOAD_PROVIDER_S3_DIRECT = "s3_direct"
+    UPLOAD_PROVIDER_CHOICES = (
+        (UPLOAD_PROVIDER_LOCAL, "Local"),
+        (UPLOAD_PROVIDER_S3_DIRECT, "S3 direct"),
+    )
+    PROCESSING_STATUS_PENDING = "pending"
+    PROCESSING_STATUS_PROCESSING = "processing"
+    PROCESSING_STATUS_READY = "ready"
+    PROCESSING_STATUS_FAILED = "failed"
+    PROCESSING_STATUS_CHOICES = (
+        (PROCESSING_STATUS_PENDING, "Pending"),
+        (PROCESSING_STATUS_PROCESSING, "Processing"),
+        (PROCESSING_STATUS_READY, "Ready"),
+        (PROCESSING_STATUS_FAILED, "Failed"),
+    )
+
     collection = models.ForeignKey(Collection, verbose_name=_('Galleri'), on_delete=models.CASCADE)
-    image = models.ImageField(upload_to=upload_to)
+    image = models.ImageField(upload_to=upload_to, null=True, blank=True)
     favorite = models.BooleanField(default=False)
+    original_filename = models.CharField(max_length=255, blank=True)
+    upload_provider = models.CharField(
+        max_length=32,
+        choices=UPLOAD_PROVIDER_CHOICES,
+        default=UPLOAD_PROVIDER_LOCAL,
+    )
+    processing_status = models.CharField(
+        max_length=32,
+        choices=PROCESSING_STATUS_CHOICES,
+        default=PROCESSING_STATUS_READY,
+    )
+    temp_upload_key = models.CharField(max_length=500, blank=True, null=True, unique=True, default=None)
 
     class Meta:
         verbose_name = _("bild")
         verbose_name_plural = _("bilder")
 
     def __str__(self):
-        return self.image.name
+        return self.original_filename or getattr(self.image, 'name', '')
+
+    @property
+    def image_url(self):
+        if self.image:
+            return self.image.url
+        return ""
+
+    @property
+    def is_ready(self):
+        return self.processing_status == self.PROCESSING_STATUS_READY and bool(self.image)
 
     def get_file_path(self):
-        return self.image.url
+        return self.image_url
 
     def save(self, *args, **kwargs):
-        if not self.id:
+        if (
+            not self.id
+            and self.upload_provider == self.UPLOAD_PROVIDER_LOCAL
+            and self.image
+            and not getattr(self, "_skip_compression", False)
+        ):
             self.image = compress_image(self.image)
         super(Picture, self).save(*args, **kwargs)
     
     if not settings.USE_S3:
         def delete(self, using=None, keep_parents=False):
-                os.remove(os.path.join(settings.MEDIA_ROOT, self.image.name))
+                if self.image:
+                    os.remove(os.path.join(settings.MEDIA_ROOT, self.image.name))
                 super(Picture, self).delete(using, keep_parents)
 
 

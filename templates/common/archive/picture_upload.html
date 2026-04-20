@@ -1,0 +1,260 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with album=collection.title %}Ladda upp bilder till {{ album }}{% endblocktrans %}{% endblock %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
+    <link rel="stylesheet" href="https://releases.transloadit.com/uppy/v3.25.3/uppy.min.css">
+{% endblock %}
+
+{% block content %}
+    <div class="container-md min-vh-100 container-margin-top">
+        <div class="archive-upload-shell">
+            <div class="back-btn">
+                <a href="{{ collection.get_absolute_url }}">{% trans "Till albumet" %}</a>
+            </div>
+            <div class="archive-upload-card">
+                <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-start mb-4">
+                    <div>
+                        <h1 class="mb-2">{{ collection.title }}</h1>
+                        <p class="text-muted mb-0">
+                            {% blocktrans with year=collection.pub_date|date:"Y" %}Bulk-uppladdning till albumet för {{ year }}.{% endblocktrans %}
+                        </p>
+                    </div>
+                    <div class="archive-upload-summary" id="upload-summary">
+                        <strong>0 / 0</strong>
+                        <span>{% trans "klara" %}</span>
+                    </div>
+                </div>
+
+                {% if not direct_upload_enabled and not fallback_upload_enabled %}
+                    <div class="alert alert-warning mb-0" role="alert">
+                        {% trans "Varken direktuppladdning till S3 eller fallback-uppladdning är tillgängliga i den här miljön." %}
+                    </div>
+                {% else %}
+                    <div class="archive-upload-note mb-4">
+                        {% blocktrans with size_limit=upload_max_file_size_mb %}
+                            Dra in bilder eller välj filer. Endast bilder upp till {{ size_limit }} MB stöds i uppladdaren.
+                        {% endblocktrans %}
+                    </div>
+                    <div id="drag-drop-area"></div>
+                    <div class="archive-upload-status mt-4" id="upload-status" aria-live="polite"></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if direct_upload_enabled or fallback_upload_enabled %}
+        <script src="https://releases.transloadit.com/uppy/v3.25.3/uppy.min.js"></script>
+        <script>
+            (function () {
+                const collectionId = {{ collection.pk }};
+                const directUrl = "{% url 'archive:picture_upload_direct' %}";
+                const fallbackUrl = "{% url 'archive:picture_upload_fallback' %}";
+                const completeUrl = "{% url 'archive:picture_upload_complete' %}";
+                const csrfToken = "{{ csrf_token }}";
+                const directUploadEnabled = {{ direct_upload_enabled|yesno:"true,false" }};
+                const maxFileSize = {{ upload_max_file_size_mb|default:25 }} * 1024 * 1024;
+                const summaryEl = document.getElementById("upload-summary");
+                const statusEl = document.getElementById("upload-status");
+                let uploadsInFlight = 0;
+
+                function updateSummary(uppy) {
+                    const files = uppy.getFiles();
+                    const complete = files.filter((file) => file.progress && file.progress.uploadComplete).length;
+                    summaryEl.innerHTML = `<strong>${complete} / ${files.length}</strong><span>{% trans "klara" %}</span>`;
+                }
+
+                function setStatus(message, level = "info") {
+                    statusEl.textContent = message;
+                    statusEl.dataset.level = level;
+                }
+
+                async function createDirectUpload(file) {
+                    const response = await fetch(directUrl, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": csrfToken,
+                        },
+                        body: JSON.stringify({
+                            collection_id: collectionId,
+                            filename: file.name,
+                            content_type: file.type,
+                        }),
+                    });
+                    const payload = await response.json();
+                    if (!response.ok) {
+                        throw new Error(payload.error || "Unable to create upload session.");
+                    }
+                    return payload;
+                }
+
+                async function uploadFileToFallback(file) {
+                    const formData = new FormData();
+                    formData.append("collection_id", collectionId);
+                    formData.append("file", file.data, file.name);
+
+                    const response = await fetch(fallbackUrl, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": csrfToken,
+                        },
+                        body: formData,
+                    });
+                    const payload = await response.json();
+                    if (!response.ok) {
+                        throw new Error(payload.error || "Fallback upload failed.");
+                    }
+                    return payload;
+                }
+
+                function uploadFileToS3(uppy, file, uploadConfig) {
+                    return new Promise((resolve, reject) => {
+                        const xhr = new XMLHttpRequest();
+                        xhr.open("POST", uploadConfig.upload_url);
+                        xhr.upload.addEventListener("progress", (event) => {
+                            if (event.lengthComputable) {
+                                uppy.emit("upload-progress", file, {
+                                    bytesUploaded: event.loaded,
+                                    bytesTotal: event.total,
+                                });
+                            }
+                        });
+                        xhr.onload = () => {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                resolve(uploadConfig);
+                                return;
+                            }
+                            reject(new Error("Upload to S3 failed."));
+                        };
+                        xhr.onerror = () => reject(new Error("Network error during S3 upload."));
+                        const formData = new FormData();
+                        Object.entries(uploadConfig.fields).forEach(([key, value]) => {
+                            formData.append(key, value);
+                        });
+                        formData.append("file", file.data, file.name);
+                        xhr.send(formData);
+                    });
+                }
+
+                async function finalizeUpload(tempKey, filename) {
+                    for (let attempt = 0; attempt < 5; attempt += 1) {
+                        const response = await fetch(completeUrl, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": csrfToken,
+                            },
+                            body: JSON.stringify({
+                                collection_id: collectionId,
+                                temp_key: tempKey,
+                                filename: filename,
+                            }),
+                        });
+                        const payload = await response.json();
+                        if (response.ok) {
+                            return payload;
+                        }
+                        if (response.status !== 409 || attempt === 4) {
+                            throw new Error(payload.error || "Unable to finalize upload.");
+                        }
+                        await new Promise((resolve) => window.setTimeout(resolve, 1000 * (attempt + 1)));
+                    }
+                }
+
+                async function uploadOne(file) {
+                    uploadsInFlight += 1;
+                    try {
+                        let result;
+                        if (directUploadEnabled) {
+                            try {
+                                const direct = await createDirectUpload(file);
+                                await uploadFileToS3(uppy, file, direct);
+                                result = await finalizeUpload(direct.temp_key, file.name);
+                            } catch (error) {
+                                result = await uploadFileToFallback(file);
+                                setStatus("{% trans 'Direktuppladdning till S3 misslyckades för en fil, fallback-uppladdning används.' %}", "warning");
+                            }
+                        } else {
+                            result = await uploadFileToFallback(file);
+                        }
+                        uppy.emit("upload-success", file, {
+                            status: 200,
+                            body: result,
+                            uploadURL: "",
+                        });
+                    } catch (error) {
+                        uppy.emit("upload-error", file, error);
+                    } finally {
+                        uploadsInFlight -= 1;
+                        updateSummary(uppy);
+                    }
+                }
+
+                async function runWithConcurrency(fileIDs, concurrency) {
+                    const queue = [...fileIDs];
+                    const workers = Array.from({length: concurrency}, async () => {
+                        while (queue.length > 0) {
+                            const fileId = queue.shift();
+                            if (!fileId) {
+                                return;
+                            }
+                            const file = uppy.getFile(fileId);
+                            if (!file) {
+                                continue;
+                            }
+                            await uploadOne(file);
+                        }
+                    });
+                    await Promise.all(workers);
+                }
+
+                const uppy = new Uppy.Uppy({
+                    autoProceed: false,
+                    allowMultipleUploadBatches: true,
+                    restrictions: {
+                        allowedFileTypes: ["image/*"],
+                        maxFileSize: maxFileSize,
+                    },
+                });
+
+                uppy.use(Uppy.Dashboard, {
+                    inline: true,
+                    target: "#drag-drop-area",
+                    proudlyDisplayPoweredByUppy: false,
+                    note: "{% blocktrans with size_limit=upload_max_file_size_mb %}Bilder upp till {{ size_limit }} MB per fil.{% endblocktrans %}",
+                    height: 420,
+                });
+
+                uppy.addUploader(async (fileIDs) => {
+                    setStatus("{% trans 'Uppladdning pågår…' %}");
+                    await runWithConcurrency(fileIDs, 4);
+                    const failed = uppy.getFiles().filter((file) => file.error).length;
+                    if (failed > 0) {
+                        setStatus(`{% trans "Uppladdningen slutfördes med fel i" %} ${failed} {% trans "filer." %}`, "warning");
+                    } else {
+                        setStatus("{% trans 'Alla filer uppladdade.' %}", "success");
+                    }
+                });
+
+                uppy.on("file-added", () => updateSummary(uppy));
+                uppy.on("file-removed", () => updateSummary(uppy));
+                uppy.on("upload-success", () => updateSummary(uppy));
+                uppy.on("upload-error", (file, error) => {
+                    setStatus(`${file.name}: ${error.message}`, "danger");
+                });
+
+                window.addEventListener("beforeunload", (event) => {
+                    if (uploadsInFlight > 0) {
+                        event.preventDefault();
+                        event.returnValue = "";
+                    }
+                });
+            }());
+        </script>
+    {% endif %}
+{% endblock %}

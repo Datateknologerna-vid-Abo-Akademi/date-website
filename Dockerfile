@@ -12,7 +12,12 @@ FROM python:3.14-alpine
 RUN apk add --no-cache libldap libsasl libressl bash gettext
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PATH="/opt/venv/bin:$PATH"
 COPY --from=builder /opt/venv /opt/venv
-RUN mkdir /code
+RUN addgroup -S -g 1000 app \
+    && adduser -S -D -H -h /home/app -u 1000 -G app app \
+    && mkdir -p /code /home/app \
+    && chown app:app /home/app /opt/venv
 WORKDIR /code
 ADD . /code/
+RUN chown -R app:app /code
+USER app
 RUN python manage.py compilemessages -l en -l fi -l sv

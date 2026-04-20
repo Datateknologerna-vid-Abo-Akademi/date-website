@@ -11,11 +11,15 @@
 
 {% block content %}
     <div class="container-md min-vh-100 container-margin-top">
-        <form method="post" enctype="multipart/form-data">
+        <div class="archive-upload-card">
+            <h1 class="mb-3">{% trans "Skapa album" %}</h1>
+            <p class="text-muted mb-4">{% trans "Skapa först albumet och fortsätt sedan i bulk-uppladdaren." %}</p>
+            <form method="post">
             {% csrf_token %}
             {{ picture_form.as_p }}
-        <button type="submit">Upload</button>
-        </form>
-        <p><a href="{% url 'archive:years' %}">Return</a></p>
+                <button class="btn btn-primary" type="submit">{% trans "Fortsätt till uppladdaren" %}</button>
+            </form>
+            <p class="mt-3 mb-0"><a href="{% url 'archive:years' %}">{% trans "Tillbaka" %}</a></p>
+        </div>
     </div>
 {% endblock %}
