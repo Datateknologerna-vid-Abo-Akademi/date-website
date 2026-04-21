@@ -19,6 +19,24 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     DELETE_MEDIA=true
 fi
 
+read_compose_file_from_env() {
+    local env_file="$PROJECT_DIR/.env"
+
+    if [[ ! -f "$env_file" ]]; then
+        return 0
+    fi
+
+    (
+        unset COMPOSE_FILE
+        set -a
+        # shellcheck disable=SC1090
+        source "$env_file"
+        set +a
+        printf '%s' "${COMPOSE_FILE:-}"
+    )
+}
+
+COMPOSE_FILE_PATH="${COMPOSE_FILE_PATH:-$(read_compose_file_from_env)}"
 COMPOSE_FILE_PATH="${COMPOSE_FILE_PATH:-docker-compose.yml}"
 if [[ "$COMPOSE_FILE_PATH" = /* ]]; then
     COMPOSE_PATH="$COMPOSE_FILE_PATH"
