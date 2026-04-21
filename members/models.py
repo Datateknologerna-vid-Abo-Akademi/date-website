@@ -163,8 +163,9 @@ class SubscriptionPayment(models.Model):
 
 
 class FunctionaryRole(models.Model):
-    title = models.CharField(_('Titel'), max_length=200)
-    board = models.BooleanField(_('Styrelse'), default=False)
+    title = models.CharField(_('Titel'), max_length=200, blank=False)
+    board = models.BooleanField(_('Styrelse'), default = False)
+    tutor = models.BooleanField(_('Tutor'), default = False)
 
     class Meta:
         verbose_name = _("Funktionärspost")

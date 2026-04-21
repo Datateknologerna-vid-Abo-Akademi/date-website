@@ -55,8 +55,11 @@ def get_selected_role(request, functionary_roles):
     return selected_role, all_roles
 
 
-def get_filtered_functionaries(year, selected_role, is_board):
-    main_filter = Q(year__in=[year], functionary_role__board=is_board)
+def get_filtered_functionaries(year, selected_role, is_board, is_tutor):
+    if isinstance(year, QuerySet):
+        main_filter = Q(year__in=year)
+    else:
+        main_filter = Q(year=year)
 
     if selected_role is not None:
         role_filter = (
@@ -65,6 +68,13 @@ def get_filtered_functionaries(year, selected_role, is_board):
             else Q(functionary_role=selected_role)
         )
         main_filter &= role_filter
+
+    if is_board:
+        main_filter &= Q(functionary_role__board=True)
+    elif is_tutor:
+        main_filter &= Q(functionary_role__tutor=True) & ~Q(functionary_role__board=True)
+    else:
+        main_filter &= ~Q(functionary_role__board=True) & ~Q(functionary_role__tutor=True)
 
     return Functionary.objects.filter(main_filter).select_related('functionary_role', 'member').order_by('-year')
 

@@ -82,6 +82,11 @@ class FunctionaryAdmin(admin.ModelAdmin):
 
 @admin.register(FunctionaryRole)
 class FunctionaryRoleAdmin(admin.ModelAdmin):
-    list_filter = ('board',)
+    fieldsets = (
+        (None, {
+            'fields': ('title', ('board', 'tutor')),
+        }),
+    )
+    list_filter = ('board', 'tutor',)
     search_fields = ('title',)
     ordering = ['title', ]

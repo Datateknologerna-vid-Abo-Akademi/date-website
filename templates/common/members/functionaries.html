@@ -65,6 +65,31 @@
                             </div>
                         </div>
                     {% endif %}
+                    {% if tutor_functionaries_by_role %}
+                        <div class="col-md-12 mb-4">
+                            <h2>Tutorer</h2>
+                            <div class="row">
+                                {% for role, functionaries in tutor_functionaries_by_role.items %}
+                                    <div class="col-md-6 mb-4">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h5 class="card-title">{{ role.title }}</h5>
+                                                <ul class="list-unstyled">
+                                                    {% for functionary in functionaries %}
+                                                        {% if all_years %}
+                                                            <li>{{ functionary.member.get_full_name }} ({{ functionary.year }})</li>
+                                                        {% else %}
+                                                            <li>{{ functionary.member.get_full_name }}</li>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
                     {% if functionaries_by_role %}
                         <div class="col-md-12">
                             <h2 class="card-title">Övriga Funktionärer</h2>
@@ -90,7 +115,7 @@
                             </div>
                         </div>
                     {% endif %}
-                    {% if not board_functionaries_by_role and not functionaries_by_role %}
+                    {% if not board_functionaries_by_role and not tutor_functionaries_by_role and not functionaries_by_role %}
                         <p>Inga funktionärer hittades...</p>
                     {% endif %}
                 </div>

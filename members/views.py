@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.views import PasswordChangeView, PasswordResetView
 from django.contrib.sites.shortcuts import get_current_site
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template.loader import render_to_string
@@ -20,7 +21,7 @@ from django.views import View
 from core.utils import validate_captcha, send_email_task
 from .forms import SignUpForm, FunctionaryForm, MemberEditForm, CustomPasswordResetForm
 from .functionary import (get_distinct_years, get_functionary_roles, get_selected_year,
-                          get_selected_role, get_filtered_functionaries, get_functionaries_by_role)
+                          get_selected_role, get_functionaries_by_role)
 from .models import Member, Functionary
 from .tokens import account_activation_token
 
@@ -190,18 +191,35 @@ class FunctionariesView(View):
 
         selected_year, all_years = get_selected_year(request, distinct_years)
         selected_role, all_roles = get_selected_role(request, functionary_roles)
-        board_functionaries = get_filtered_functionaries(
-            selected_year, selected_role, True
-        )
-        board_functionaries_by_role = get_functionaries_by_role(board_functionaries)
 
-        other_functionaries = get_filtered_functionaries(
-            selected_year, selected_role, False
-        )
+        base_filter = Q()
+        if hasattr(selected_year, 'all'):
+            base_filter &= Q(year__in=selected_year)
+        else:
+            base_filter &= Q(year=selected_year)
+
+        if selected_role is not None:
+            if hasattr(selected_role, 'all'):
+                base_filter &= Q(functionary_role__in=selected_role)
+            else:
+                base_filter &= Q(functionary_role=selected_role)
+
+        board_filter = base_filter & Q(functionary_role__board=True)
+        tutor_filter = base_filter & Q(functionary_role__tutor=True) & ~Q(functionary_role__board=True)
+        other_filter = base_filter & ~Q(functionary_role__board=True) & ~Q(functionary_role__tutor=True)
+
+        functionary_queryset = Functionary.objects.select_related('functionary_role', 'member').order_by('-year')
+        board_functionaries = functionary_queryset.filter(board_filter)
+        tutor_functionaries = functionary_queryset.filter(tutor_filter)
+        other_functionaries = functionary_queryset.filter(other_filter)
+
+        board_functionaries_by_role = get_functionaries_by_role(board_functionaries)
+        tutor_functionaries_by_role = get_functionaries_by_role(tutor_functionaries)
         functionaries_by_role = get_functionaries_by_role(other_functionaries)
 
         context = {
             "board_functionaries_by_role": board_functionaries_by_role,
+            "tutor_functionaries_by_role": tutor_functionaries_by_role,
             "functionaries_by_role": functionaries_by_role,
             "distinct_years": distinct_years,
             "functionary_roles": functionary_roles,
