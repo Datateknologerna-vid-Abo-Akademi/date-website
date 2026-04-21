@@ -18,6 +18,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('title', models.CharField(max_length=200, verbose_name='Titel')),
                 ('board', models.BooleanField(default=False, verbose_name='Styrelse')),
+                ('tutor', models.BooleanField(default=False, verbose_name='Tutor')),
             ],
             options={
                 'verbose_name': 'Funktionärspost',
