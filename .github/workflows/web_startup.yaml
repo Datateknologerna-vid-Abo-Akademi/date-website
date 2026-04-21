@@ -53,6 +53,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Prepare environment file
+        run: cp .env.example .env
+
       - name: Ensure docker-compose command exists
         run: |
           set -euo pipefail
@@ -101,29 +104,25 @@ jobs:
         if: steps.prebuilt.outputs.compose_file == 'docker-compose.yml'
         run: |
           set -euo pipefail
-          source env.sh dev
           docker-compose build web celery
 
       - name: Run django unit tests
         run: |
           set -euo pipefail
-          source env.sh dev
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           docker-compose run --rm --no-deps web python scripts/validate_translations.py
           docker-compose run --rm --no-deps web python manage.py compilemessages
-          date-test
+          docker-compose run -e TEST=1 web /bin/bash -c './wait-for-postgres.sh db:5432 && python /code/manage.py test'
 
       - name: Build and run Docker Compose
         run: |
           set -euo pipefail
-          source env.sh dev
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           docker-compose up -d
 
       - name: Wait for web container
         run: |
           set -euo pipefail
-          source env.sh dev
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           for i in $(seq 1 30); do
             if [ "$(docker-compose ps -q web | wc -l)" -eq 1 ] && \
@@ -155,7 +154,6 @@ jobs:
         if: failure()
         run: |
           set -euo pipefail
-          source env.sh dev
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           docker-compose ps
           docker-compose logs --tail=200 web db redis
@@ -164,6 +162,5 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          source env.sh dev
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           docker-compose down -v

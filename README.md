@@ -21,7 +21,7 @@ git clone https://github.com/datateknologerna-vid-abo-akademi/date-website.git
 cd date-website
 git checkout develop
 cp .env.example .env            # adjust passwords, ports, S3, etc.
-source env.sh dev               # loads .env and registers helper aliases
+source env.sh                   # registers helper aliases
 date-start-detached             # builds containers, runs migrations, collects static files
 date-createsuperuser            # creates your admin account
 open http://localhost:8000      # admin lives at /admin
@@ -46,7 +46,7 @@ The main workflow in this README is Linux-first. On Windows and macOS, the easie
 
 ```bash
 cd ~/code/date-website
-source env.sh dev
+source env.sh
 date-start-detached
 ```
 
@@ -56,7 +56,7 @@ date-start-detached
 ### macOS
 
 - Install Docker Desktop for Mac so `docker compose` is available.
-- Use Terminal, iTerm2, or another shell that can run Bash-compatible commands. `zsh` is fine; `source env.sh dev` still works.
+- Use Terminal, iTerm2, or another shell that can run Bash-compatible commands. `zsh` is fine; `source env.sh` works.
 - The rest of the workflow is the same as Linux: clone the repo, copy `.env.example`, source `env.sh`, and use the `date-*` aliases.
 - The `open http://localhost:8000` command from the quick start already works on macOS.
 
@@ -67,11 +67,29 @@ date-start-detached
 
 ## Environment configuration & helper aliases
 
-`env.sh` centralises environment loading:
+Docker Compose reads `.env` automatically. Create it once from `.env.example`, then edit it for your local or deployed environment.
 
-- `source env.sh dev` uses `.env` (falling back to `.env.example`) and sets `DATE_DEVELOP=True`, which in turn selects `docker-compose.yml`.
-- `source env.sh prod` prefers `.env.prod`, flips `DATE_DEVELOP=False`, and switches aliases to `docker-compose.prod.yml`.
-- `source env.sh path/to/custom.env` lets you provide an explicit file (relative or absolute path).
+`env.sh` is only for helper aliases. Compose file selection lives in `.env` through `COMPOSE_FILE`.
+
+- `.env.example` sets `COMPOSE_FILE=docker-compose.yml`.
+- `.env.prod.example` sets `COMPOSE_FILE=docker-compose.prod.yml`.
+- `source env.sh` registers the `date-*` aliases without loading or changing app configuration.
+- The helpers use the nearest `date-website` checkout from your current directory, so globally installed helpers follow whichever clone you are working in. When you are outside a checkout, they fall back to `DATE_WEBSITE_DIR`.
+
+If you use these helpers often, install them into your shell config:
+
+```bash
+./scripts/install_shell_aliases.sh
+```
+
+The installer writes the current checkout path as `DATE_WEBSITE_DIR`, which is only used as the fallback target when your shell is not inside a checkout.
+
+Or add them manually and adjust the path to wherever you cloned the repository:
+
+```bash
+export DATE_WEBSITE_DIR="/path/to/date-website"
+source "$DATE_WEBSITE_DIR/env.sh"
+```
 
 Important environment flags:
 
@@ -79,7 +97,7 @@ Important environment flags:
 - `ENABLE_LANGUAGE_FEATURES=True` enables the language switcher, translated admin tabs, and runtime selection between the languages configured for the active association on unprefixed URLs. DaTe currently uses Swedish and English at runtime; some other associations also expose Finnish. When omitted or false, the project runs Swedish-only.
 - `USE_S3` toggles whether uploads use local disk storage or the configured S3-compatible backend.
 
-The script exports `COMPOSE_FILE_PATH` and defines the `date-*` aliases used throughout this README:
+The script defines the `date-*` aliases used throughout this README:
 
 | Command | Description |
 | --- | --- |
@@ -91,9 +109,9 @@ The script exports `COMPOSE_FILE_PATH` and defines the `date-*` aliases used thr
 | `date-pull` | Pull the defined Docker images. |
 | `date-cleaninit` | Reset local data and reload the development fixtures plus generated sample media. |
 
-Reload `env.sh` whenever you edit the `.env` files so the aliases pick up your changes.
+Recreate or restart containers after editing `.env` so Docker Compose passes the updated values into services.
 
-Once that is loaded, the `date-*` commands are the normal way to work with the project.
+Once the aliases are registered, the `date-*` commands are the normal way to work with the project.
 
 ## Database, migrations, and seed data
 
@@ -132,13 +150,12 @@ For translation architecture and workflow, see [docs/dev/translations.md](docs/d
 
 The production stack relies on the published container image at `ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}` plus managed PostgreSQL/Valkey volumes. Typical flow:
 
-1. Place your production secrets in `.env.prod` (or pass a custom env file to `env.sh`).
+1. Copy `.env.prod.example` to `.env` on the deployment host and replace every placeholder.
 2. Ensure the external Docker network referenced by the compose file exists once:
    ```bash
    docker network create web
    ```
-3. Load the production env vars: `source env.sh prod`.
-4. Deploy: `docker compose -f docker-compose.prod.yml up -d`.
+3. Deploy: `docker compose up -d` or run `source env.sh` once and use `date up -d`.
 
 The stack brings up the `web` (Gunicorn), `asgi` (Daphne/Channels), `celery`, `db`, `redis`, and `nginx` services. Rolling deploys usually build a new GHCR image in CI, update `DATE_IMG_TAG`, then restart `web`, `asgi`, and `celery`.
 
@@ -181,7 +198,7 @@ Only use `update-postgres.sh` for **major** PostgreSQL version upgrades. The scr
 
 1. Set `DATE_POSTGRESQL_VERSION` to the **current** version in your `.env`.
 2. Run `./update-postgres.sh <target_version> [env_file]`.
-3. Re-source your env (`source env.sh dev`) and restart the stack.
+3. Restart the stack.
 
 The script now refuses same-major upgrades, verifies that PostgreSQL is storing data inside a mounted volume before it removes anything, and compares the restored schema against the source database before declaring success.
 
@@ -193,7 +210,7 @@ For minor upgrades, change `DATE_POSTGRESQL_VERSION` and recreate the containers
 
 - `date-start` fails with "docker: permission denied": add your user to the `docker` group (`sudo usermod -aG docker $USER`) and reopen the terminal.
 - Shell complains about `clean_init.sh`: run it explicitly with Bash (`/bin/bash scripts/clean_init.sh`).
-- Services restarted but settings not updated: ensure you re-run `source env.sh dev|prod` after editing `.env` files so `COMPOSE_FILE_PATH` and aliases refresh.
+- Services restarted but settings not updated: recreate the affected containers after editing `.env`.
 
 ## Internationalization
 
@@ -326,7 +343,7 @@ Use the dedicated backup script for routine PostgreSQL backups:
 ```
 
 If no env argument is provided, the script resolves `prod`, which checks `.env.prod`, then `.env`, then `.env.example`.
-Like `env.sh`, you can also pass `dev` or a specific env file path.
+You can also pass `dev` or a specific env file path.
 If no `output_dir` is provided, backups are written to `./backups`.
 
 Each run creates two timestamped files that a collector script can scan across many similar repos:
@@ -371,10 +388,10 @@ Run
 ```
 
 The upgrade helper now calls `./scripts/backup_postgres.sh` first and reuses the generated SQL dump during restore.
-If no env argument is provided, it resolves `prod` first using the same lookup order as `env.sh`.
+If no env argument is provided, it resolves `prod` first using the backup script's lookup order.
 For upgrades, the resolved env file must be writable; the script will not modify `.env.example`.
 
-Run `source env.sh dev` afterward to reload your development configuration.
+Restart the stack afterward so containers use the updated `.env`.
 
 ## License
 

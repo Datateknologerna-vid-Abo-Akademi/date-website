@@ -34,14 +34,19 @@ set -a
 source "$config_file"
 set +a
 
+config_compose_file="$(date_read_env_value "$config_file" COMPOSE_FILE)"
 date_apply_env_mode "$resolved_mode"
 
-compose_file="$(date_resolve_compose_file)"
+compose_file="$(date_resolve_compose_file "$resolved_mode" "$config_compose_file")"
 
-compose_path="${SCRIPT_DIR}/${compose_file}"
+if [[ "$compose_file" = /* ]]; then
+  compose_path="$compose_file"
+else
+  compose_path="${SCRIPT_DIR}/${compose_file}"
+fi
 
 docker_compose() {
-  docker compose -f "$compose_path" "$@"
+  docker compose --project-directory "$SCRIPT_DIR" -f "$compose_path" "$@"
 }
 
 wait_for_db() {
@@ -120,7 +125,7 @@ read_django_migration_count() {
 }
 
 # Check if the required environment variables are set
-if [ -z "${DATE_POSTGRESQL_VERSION:-}" ] || [ -z "${DATE_DB_PORT:-}" ] || [ -z "${DATE_DB_PASSWORD:-}" ] || [ -z "${COMPOSE_PROJECT_NAME:-}" ]; then
+if [ -z "${DATE_POSTGRESQL_VERSION:-}" ] || [ -z "${DATE_DB_PASSWORD:-}" ] || [ -z "${COMPOSE_PROJECT_NAME:-}" ]; then
   echo "Error: Required environment variables are not set"
   exit 1
 fi
