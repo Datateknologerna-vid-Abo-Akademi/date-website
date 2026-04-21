@@ -11,7 +11,7 @@ Most scripts assume:
 - you run them from the repository root or via their documented path
 - Docker is installed and available in `PATH`
 - you are not running the script from inside a container
-- the environment is resolved through `env.sh` or the same helper logic used by `scripts/lib/date_env.sh`
+- `.env` exists in the repository root
 
 Unless a script says otherwise, prefer running it from a Bash-compatible shell.
 
@@ -25,7 +25,7 @@ What it does:
 
 - warns before destructive actions
 - optionally deletes uploaded media under `media/archive` and `media/pdfs`
-- loads the development environment through `env.sh dev`
+- uses the repository `.env` through Docker Compose
 - rebuilds and starts the database service
 - recreates the PostgreSQL database from scratch
 - runs migrations
@@ -87,7 +87,7 @@ The `web` service (port 8002) is named `web` specifically so `clean_init.sh` can
 #### Notes
 
 - Static files are collected once by `init` at startup. If you change CSS or JS, restart with `date-all-start` to pick up the changes.
-- The `date-all-cleaninit` alias passes `COMPOSE_FILE_PATH=docker-compose.dev-all.yml` before sourcing `env.sh`, which `clean_init.sh` preserves to avoid being overridden.
+- The `date-all-cleaninit` alias passes `COMPOSE_FILE_PATH=docker-compose.dev-all.yml` so `clean_init.sh` targets the dev-all stack.
 
 ## Backups and Database Upgrades
 
@@ -103,7 +103,7 @@ Typical usage:
 
 Behavior:
 
-- resolves the environment file with the same lookup rules as `env.sh`
+- resolves an environment file with `scripts/lib/date_env.sh`
 - starts the `db` service if needed
 - waits for PostgreSQL readiness
 - creates a plain SQL dump

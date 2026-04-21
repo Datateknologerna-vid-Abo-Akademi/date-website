@@ -25,6 +25,21 @@ env = environ.Env(
     DEVELOP=(bool, False),
 )
 
+
+_MISSING = object()
+
+
+def env_alias(name, *aliases, cast=str, default=_MISSING):
+    for env_name in (name, *aliases):
+        if env_name in os.environ:
+            return env(env_name, cast)
+
+    if default is _MISSING:
+        return env(name, cast)
+
+    return default
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -32,12 +47,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY', str, 'SECRET_KEY')
+SECRET_KEY = env_alias('DATE_SECRET_KEY', 'SECRET_KEY', default='SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG', bool, False)
+DEBUG = env_alias('DATE_DEBUG', 'DEBUG', cast=bool, default=False)
 
-DEVELOP = env('DEVELOP', bool, False)
+DEVELOP = env_alias('DATE_DEVELOP', 'DEVELOP', cast=bool, default=False)
 
 # This gets set only when tests are ran with date-test command
 TEST = env('TEST', bool, False)
@@ -147,7 +162,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': env('DB_DATABASE', str, 'postgres'),
         'USER': env('DB_USERNAME', str, 'postgres'),
-        'PASSWORD': env('DB_PASSWORD', default=''),
+        'PASSWORD': env_alias('DATE_DB_PASSWORD', 'DB_PASSWORD', default=''),
         'HOST': env('DB_HOST', str, 'db'),
         'PORT': env('DB_PORT', int, 5432)
     }
@@ -173,7 +188,7 @@ REDIS_CACHE = {
     },
 }
 
-CACHES = DUMMY_CACHE if env("DEVELOP") else REDIS_CACHE
+CACHES = DUMMY_CACHE if DEVELOP else REDIS_CACHE
 
 # Custom members model
 AUTH_USER_MODEL = 'members.Member'
@@ -275,15 +290,27 @@ STORAGES = {
 
 if USE_S3:
     # aws settings
-    AWS_S3_ENDPOINT_URL = env('AWS_S3_ENDPOINT_URL')
-    AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
-    AWS_PRIVATE_STORAGE_BUCKET_NAME = env('AWS_PRIVATE_STORAGE_BUCKET_NAME', str, '') or AWS_STORAGE_BUCKET_NAME
-    AWS_PUBLIC_STORAGE_BUCKET_NAME = env('AWS_PUBLIC_STORAGE_BUCKET_NAME', str, '') or AWS_STORAGE_BUCKET_NAME
-    AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME', str, None)
-    AWS_S3_SIGNATURE_VERSION = env('AWS_S3_SIGNATURE_VERSION', str, None)
-    AWS_S3_ADDRESSING_STYLE = env('AWS_S3_ADDRESSING_STYLE', str, None)
+    AWS_S3_ENDPOINT_URL = env_alias('S3_ENDPOINT_URL', 'AWS_S3_ENDPOINT_URL')
+    AWS_ACCESS_KEY_ID = env_alias('S3_ACCESS_KEY', 'AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = env_alias('S3_SECRET_KEY', 'AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = env_alias('S3_BUCKET_NAME', 'AWS_STORAGE_BUCKET_NAME')
+    AWS_PRIVATE_STORAGE_BUCKET_NAME = (
+        env_alias(
+            'S3_PRIVATE_BUCKET_NAME',
+            'AWS_PRIVATE_STORAGE_BUCKET_NAME',
+            default='',
+        ) or AWS_STORAGE_BUCKET_NAME
+    )
+    AWS_PUBLIC_STORAGE_BUCKET_NAME = (
+        env_alias(
+            'S3_PUBLIC_BUCKET_NAME',
+            'AWS_PUBLIC_STORAGE_BUCKET_NAME',
+            default='',
+        ) or AWS_STORAGE_BUCKET_NAME
+    )
+    AWS_S3_REGION_NAME = env_alias('S3_REGION_NAME', 'AWS_S3_REGION_NAME', default=None)
+    AWS_S3_SIGNATURE_VERSION = env_alias('S3_SIGNATURE_VERSION', 'AWS_S3_SIGNATURE_VERSION', default=None)
+    AWS_S3_ADDRESSING_STYLE = env_alias('S3_ADDRESSING_STYLE', 'AWS_S3_ADDRESSING_STYLE', default=None)
     AWS_QUERYSTRING_AUTH = True
     AWS_QUERYSTRING_EXPIRE = 3600
 

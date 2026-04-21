@@ -3,6 +3,8 @@
 .claude/
 
 *.env*
+!.env.example
+!.env.prod.example
 
 *.mo
 
