@@ -21,7 +21,7 @@ git clone https://github.com/datateknologerna-vid-abo-akademi/date-website.git
 cd date-website
 git checkout develop
 cp .env.example .env            # adjust passwords, ports, S3, etc.
-source env.sh dev               # registers helper aliases
+source env.sh                   # registers helper aliases
 date-start-detached             # builds containers, runs migrations, collects static files
 date-createsuperuser            # creates your admin account
 open http://localhost:8000      # admin lives at /admin
@@ -46,7 +46,7 @@ The main workflow in this README is Linux-first. On Windows and macOS, the easie
 
 ```bash
 cd ~/code/date-website
-source env.sh dev
+source env.sh
 date-start-detached
 ```
 
@@ -56,7 +56,7 @@ date-start-detached
 ### macOS
 
 - Install Docker Desktop for Mac so `docker compose` is available.
-- Use Terminal, iTerm2, or another shell that can run Bash-compatible commands. `zsh` is fine; `source env.sh dev` still works.
+- Use Terminal, iTerm2, or another shell that can run Bash-compatible commands. `zsh` is fine; `source env.sh` works.
 - The rest of the workflow is the same as Linux: clone the repo, copy `.env.example`, source `env.sh`, and use the `date-*` aliases.
 - The `open http://localhost:8000` command from the quick start already works on macOS.
 
@@ -69,11 +69,24 @@ date-start-detached
 
 Docker Compose reads `.env` automatically. Create it once from `.env.example`, then edit it for your local or deployed environment.
 
-`env.sh` is only for helper aliases:
+`env.sh` is only for helper aliases. Compose file selection lives in `.env` through `COMPOSE_FILE`.
 
-- `source env.sh dev` points the `date-*` aliases at `docker-compose.yml`.
-- `source env.sh prod` points the `date-*` aliases at `docker-compose.prod.yml`.
-- `source env.sh path/to/compose.yml` points the aliases at a custom Compose file.
+- `.env.example` sets `COMPOSE_FILE=docker-compose.yml`.
+- `.env.prod.example` sets `COMPOSE_FILE=docker-compose.prod.yml`.
+- `source env.sh` registers the `date-*` aliases without loading or changing app configuration.
+
+If you use these helpers often, install them into your shell config:
+
+```bash
+./scripts/install_shell_aliases.sh
+```
+
+Or add them manually and adjust the path to wherever you cloned the repository:
+
+```bash
+export DATE_WEBSITE_DIR="/path/to/date-website"
+source "$DATE_WEBSITE_DIR/env.sh"
+```
 
 Important environment flags:
 
@@ -81,7 +94,7 @@ Important environment flags:
 - `ENABLE_LANGUAGE_FEATURES=True` enables the language switcher, translated admin tabs, and runtime selection between the languages configured for the active association on unprefixed URLs. DaTe currently uses Swedish and English at runtime; some other associations also expose Finnish. When omitted or false, the project runs Swedish-only.
 - `USE_S3` toggles whether uploads use local disk storage or the configured S3-compatible backend.
 
-The script exports `COMPOSE_FILE_PATH` and defines the `date-*` aliases used throughout this README:
+The script defines the `date-*` aliases used throughout this README:
 
 | Command | Description |
 | --- | --- |
@@ -95,7 +108,7 @@ The script exports `COMPOSE_FILE_PATH` and defines the `date-*` aliases used thr
 
 Recreate or restart containers after editing `.env` so Docker Compose passes the updated values into services.
 
-Once that is loaded, the `date-*` commands are the normal way to work with the project.
+Once the aliases are registered, the `date-*` commands are the normal way to work with the project.
 
 ## Database, migrations, and seed data
 
@@ -139,8 +152,7 @@ The production stack relies on the published container image at `ghcr.io/datatek
    ```bash
    docker network create web
    ```
-3. Register the production aliases: `source env.sh prod`.
-4. Deploy: `date up -d`.
+3. Deploy: `docker compose up -d` or run `source env.sh` once and use `date up -d`.
 
 The stack brings up the `web` (Gunicorn), `asgi` (Daphne/Channels), `celery`, `db`, `redis`, and `nginx` services. Rolling deploys usually build a new GHCR image in CI, update `DATE_IMG_TAG`, then restart `web`, `asgi`, and `celery`.
 
