@@ -74,12 +74,15 @@ Docker Compose reads `.env` automatically. Create it once from `.env.example`, t
 - `.env.example` sets `COMPOSE_FILE=docker-compose.yml`.
 - `.env.prod.example` sets `COMPOSE_FILE=docker-compose.prod.yml`.
 - `source env.sh` registers the `date-*` aliases without loading or changing app configuration.
+- The helpers use the nearest `date-website` checkout from your current directory, so globally installed helpers follow whichever clone you are working in. When you are outside a checkout, they fall back to `DATE_WEBSITE_DIR`.
 
 If you use these helpers often, install them into your shell config:
 
 ```bash
 ./scripts/install_shell_aliases.sh
 ```
+
+The installer writes the current checkout path as `DATE_WEBSITE_DIR`, which is only used as the fallback target when your shell is not inside a checkout.
 
 Or add them manually and adjust the path to wherever you cloned the repository:
 

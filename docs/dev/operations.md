@@ -69,7 +69,9 @@ Each association gets its own web container on a dedicated port, sharing one Pos
 
 The database is exposed on host port `5433` to avoid conflicting with the regular dev stack on `5432`.
 
-#### Aliases (after `source env.sh` or adding the helpers to your shell config)
+#### Helpers (after `source env.sh` or adding them to your shell config)
+
+The helpers use the nearest `date-website` checkout from your current directory, falling back to `DATE_WEBSITE_DIR` when you are outside a checkout.
 
 ```bash
 date-all-start       # build and start all containers
