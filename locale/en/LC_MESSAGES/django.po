@@ -206,9 +206,8 @@ msgid "Membership Types"
 msgstr "Membership Types"
 
 #: core/settings/common.py:89
-#| msgid "Description"
 msgid "Subscriptions"
-msgstr "Description"
+msgstr "Subscriptions"
 
 #: core/settings/common.py:90
 msgid "Subscription Payments"
@@ -220,28 +219,24 @@ msgid "Functionaries"
 msgstr "Functionaries"
 
 #: core/settings/common.py:92
-#| msgid "Funktionärspost"
 msgid "Functionary Roles"
-msgstr "Position of trust"
+msgstr "Functionary Roles"
 
 #: core/settings/common.py:94
-#| msgid "Continue"
 msgid "Content"
-msgstr "Continue"
+msgstr "Content"
 
 #: core/settings/common.py:95
 msgid "News"
 msgstr "News"
 
 #: core/settings/common.py:96
-#| msgid "kategorier"
 msgid "News Categories"
-msgstr "categories"
+msgstr "News Categories"
 
 #: core/settings/common.py:97
-#| msgid "Poll"
 msgid "Polls"
-msgstr "Poll"
+msgstr "Polls"
 
 #: core/settings/common.py:98
 msgid "Static Pages"
@@ -252,23 +247,20 @@ msgid "Page Navigation"
 msgstr "Page Navigation"
 
 #: core/settings/common.py:101
-#| msgid "Publications"
 msgid "Archive & Publications"
-msgstr "Publications"
+msgstr "Archive & Publications"
 
 #: core/settings/common.py:102
-#| msgid "Publications"
 msgid "PDF Publications"
-msgstr "Publications"
+msgstr "PDF Publications"
 
 #: core/settings/common.py:103
 msgid "Photo Albums"
 msgstr "Photo Albums"
 
 #: core/settings/common.py:104
-#| msgid "dokument"
 msgid "Documents"
-msgstr "document"
+msgstr "Documents"
 
 #: core/settings/common.py:105
 msgid "Exams"
@@ -565,7 +557,7 @@ msgstr "The Lucia"
 msgid ""
 "Enter a valid username consisting only of letters, numbers, underscores, and "
 "hyphens."
-msgstr "Enter a valid username consisting only of letters, numbers, underscores, and hyphens."
+msgstr ""
 "Enter a valid username consisting only of letters, numbers, underscores, and "
 "hyphens."
 

@@ -9,7 +9,7 @@ from members.models import Member, MembershipType, ORDINARY_MEMBER, Subscription
 class MemberAdminSearchTests(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        cls.membership_type = MembershipType.objects.get(permission_profile=ORDINARY_MEMBER)
         cls.admin_user = Member.objects.create_superuser(
             username="admin",
             password="pass",

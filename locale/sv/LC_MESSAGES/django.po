@@ -555,9 +555,9 @@ msgstr "Lucian"
 msgid ""
 "Enter a valid username consisting only of letters, numbers, underscores, and "
 "hyphens."
-msgstr "Enter a valid username consisting only of letters, numbers, underscores, and hyphens."
-"Enter a valid username consisting only of letters, numbers, underscores, and "
-"hyphens."
+msgstr ""
+"Ange ett giltigt användarnamn som endast består av bokstäver, siffror, "
+"understreck och bindestreck."
 
 #: members/forms.py:34 members/forms.py:80 members/forms.py:174
 #: members/models.py:31
