@@ -9,15 +9,12 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-source "${PROJECT_ROOT}/scripts/lib/date_env.sh"
 
-requested_mode="${1:-prod}"
-backup_path="${2:-}"
+backup_path="${1:-}"
 
 if [ -z "$backup_path" ]; then
-  echo "Usage: $0 [mode] <backup-dump-or-manifest>"
+  echo "Usage: $0 <backup-dump-or-manifest>"
   echo ""
-  echo "  mode     Environment mode: dev, prod, or path to env file (default: prod)"
   echo "  backup   Path to a .sql dump file or its .json manifest"
   exit 1
 fi
@@ -45,18 +42,17 @@ if ! command -v docker >/dev/null 2>&1; then
   exit 1
 fi
 
-config_file="$(date_resolve_env_file "$PROJECT_ROOT" "$requested_mode")"
-resolved_mode="$(date_resolve_env_mode "$requested_mode" "$config_file")"
+env_file="${PROJECT_ROOT}/.env"
+if [ ! -f "$env_file" ]; then
+  echo "No .env file found at $env_file"
+  exit 1
+fi
 
 set -a
-source "$config_file"
+source "$env_file"
 set +a
 
-config_compose_file="$(date_read_env_value "$config_file" COMPOSE_FILE)"
-date_apply_env_mode "$resolved_mode"
-
-compose_file="$(date_resolve_compose_file "$resolved_mode" "$config_compose_file")"
-
+compose_file="${COMPOSE_FILE:-docker-compose.yml}"
 if [[ "$compose_file" = /* ]]; then
   compose_path="$compose_file"
 else
