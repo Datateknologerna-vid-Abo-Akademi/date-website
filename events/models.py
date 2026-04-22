@@ -272,10 +272,6 @@ class Event(models.Model):
                 'I have read and agree to the <a href="{}" target="_blank" rel="noopener noreferrer">'
                 'event registration terms</a>.'
             ),
-            "fi": (
-                'Olen lukenut ja hyväksyn <a href="{}" target="_blank" rel="noopener noreferrer">'
-                'tapahtuman ilmoittautumisehdot</a>.'
-            ),
             "sv": (
                 'Jag har läst och godkänner <a href="{}" target="_blank" rel="noopener noreferrer">'
                 'anmälningsvillkoren för evenemanget</a>.'
@@ -294,7 +290,6 @@ class Event(models.Model):
 
         help_texts = {
             "en": 'Read more: <a href="{}" target="_blank" rel="noopener noreferrer">Equality plan</a>',
-            "fi": 'Lue myös: <a href="{}" target="_blank" rel="noopener noreferrer">Yhdenvertaisuussuunnitelma</a>',
             "sv": 'Läs också: <a href="{}" target="_blank" rel="noopener noreferrer">Jämlikhetsplan</a>',
         }
 

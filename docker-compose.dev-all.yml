@@ -14,6 +14,7 @@
 #   sf       → http://localhost:8005
 
 x-web-common: &web-common
+  env_file: .env
   build: .
   restart: unless-stopped
   volumes:
@@ -26,37 +27,8 @@ x-web-common: &web-common
       condition: service_started
 
 x-web-env: &web-env
-  SECRET_KEY: ${DATE_SECRET_KEY}
-  DEBUG: "True"
-  DEVELOP: "True"
-  DB_PASSWORD: ${DATE_DB_PASSWORD}
-  USE_S3: ${USE_S3}
-  AWS_S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}
-  AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
-  AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
-  AWS_STORAGE_BUCKET_NAME: ${S3_BUCKET_NAME}
-  AWS_PRIVATE_STORAGE_BUCKET_NAME: ${S3_PRIVATE_BUCKET_NAME:-}
-  AWS_PUBLIC_STORAGE_BUCKET_NAME: ${S3_PUBLIC_BUCKET_NAME:-}
-  AWS_S3_REGION_NAME: ${S3_REGION_NAME:-}
-  AWS_S3_SIGNATURE_VERSION: ${S3_SIGNATURE_VERSION:-}
-  AWS_S3_ADDRESSING_STYLE: ${S3_ADDRESSING_STYLE:-}
-  PUBLIC_MEDIA_LOCATION: ${PUBLIC_MEDIA_LOCATION}
-  PRIVATE_MEDIA_LOCATION: ${PRIVATE_MEDIA_LOCATION}
-  ALLOWED_HOSTS: ${ALLOWED_HOSTS}
-  ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
-  EXTRA_STAFF_GROUPS: ${EXTRA_STAFF_GROUPS}
-  EMAIL_HOST_RECEIVER: ${EMAIL_HOST_RECEIVER}
-  DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL}
-  EMAIL_HOST: ${EMAIL_HOST}
-  EMAIL_HOST_USER: ${EMAIL_HOST_USER}
-  EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
-  CF_TURNSTILE_SITE_KEY: ${CF_TURNSTILE_SITE_KEY}
-  CF_TURNSTILE_SECRET_KEY: ${CF_TURNSTILE_SECRET_KEY}
-  ALUMNI_SETTINGS: ${ALUMNI_SETTINGS}
-  ENABLE_LANGUAGE_FEATURES: ${ENABLE_LANGUAGE_FEATURES}
-  GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
-  GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
-  GITHUB_MFA_POLICY: ${GITHUB_MFA_POLICY:-enrolled}
+  DATE_DEBUG: "True"
+  DATE_DEVELOP: "True"
 
 services:
   db:
@@ -69,8 +41,8 @@ services:
       - dev_all_postgres_data:/var/lib/postgresql/data/
       - ./scripts/postgres-entrypoint.sh:/scripts/postgres-entrypoint.sh:ro
     environment:
-      - POSTGRES_PASSWORD=${DATE_DB_PASSWORD}
-      - PGDATA=/var/lib/postgresql/data/pgdata
+      POSTGRES_PASSWORD: ${DATE_DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5433:5432"
 
@@ -84,6 +56,7 @@ services:
   # representative project). All web containers wait for this to finish before
   # starting, so they only need to serve requests.
   init:
+    env_file: .env
     build: .
     restart: "no"
     command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py compilemessages -l en -l fi -l sv --verbosity 0"

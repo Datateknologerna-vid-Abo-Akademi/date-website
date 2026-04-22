@@ -78,7 +78,7 @@ date_apply_env_mode() {
 
     case "$resolved_mode" in
         prod)
-            export DATE_DEVELOP="False"
+            export DATE_DEVELOP="${DATE_DEVELOP:-False}"
             ;;
         dev)
             export DATE_DEVELOP="${DATE_DEVELOP:-True}"
@@ -87,9 +87,28 @@ date_apply_env_mode() {
 }
 
 date_resolve_compose_file() {
-    if [ "${DATE_DEVELOP:-True}" = "False" ]; then
+    local resolved_mode="${1:-}"
+    local compose_file_override="${2:-}"
+
+    if [ -n "$compose_file_override" ]; then
+        echo "$compose_file_override"
+    elif [ "$resolved_mode" = "prod" ]; then
         echo "docker-compose.prod.yml"
     else
         echo "docker-compose.yml"
     fi
+}
+
+date_read_env_value() {
+    local config_file="$1"
+    local env_name="$2"
+
+    (
+        unset "$env_name"
+        set -a
+        # shellcheck disable=SC1090
+        source "$config_file"
+        set +a
+        printf '%s' "${!env_name:-}"
+    )
 }

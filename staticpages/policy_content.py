@@ -38,21 +38,4 @@ If you cancel after the registration period has ended, you are required to pay t
 - A replacement may be registered no later than 90 minutes before the event begins. If no replacement has been registered in time, the participant who canceled remains responsible for the participation fee.
 """,
     },
-    "fi": {
-        "title": "Tapahtuman ilmoittautumisehdot",
-        "markdown": """# Tapahtuman ilmoittautumisehdot
-
-Tapahtumaan ilmoittautuminen muuttuu sitovaksi ilmoittautumisajan päätyttyä. Jos et pääse osallistumaan, sinun tulee ilmoittaa siitä tapahtuman järjestäjille mahdollisimman pian ilmoittautumislomakkeessa mainittujen kanavien kautta.
-
-Jos peruutat ilmoittautumisesi ilmoittautumisajan päättymisen jälkeen, olet velvollinen maksamaan koko osallistumismaksun, ellei tilallesi löydy korvaajaa. Jos olet ilmoittautunut varasijalle, sinun tulee perua ilmoittautumisesi, jos et voi osallistua.
-
-## Varasija ja korvaajat
-
-- Kun tapahtuman ilmoittautumisaika on päättynyt, paikka tarjotaan järjestyksessä seuraavalle varasijalla olevalle henkilölle.
-- Jos peruutus tapahtuu tapahtumaa edeltävänä päivänä, seuraavaan varasijalla olevaan henkilöön otetaan yhteyttä, ja hänen tulee vastata seuraavana päivänä klo 12.00 mennessä.
-- Jos peruutus tapahtuu tapahtumapäivänä ja varasijalista on käytössä, henkilöihin otetaan yhteyttä järjestyksessä, ja heillä on yksi (1) tunti aikaa vastata ennen kuin paikka tarjotaan seuraavalle.
-- Jos kukaan varasijalta ei ota paikkaa vastaan, peruutuksen tehnyt osallistuja vastaa itse korvaajan löytämisestä tai osallistumismaksun maksamisesta.
-- Korvaava osallistuja voidaan ilmoittaa viimeistään 90 minuuttia ennen tapahtuman alkua. Jos korvaavaa osallistujaa ei ole ilmoitettu ajoissa, peruutuksen tehnyt osallistuja vastaa osallistumismaksusta.
-""",
-    },
 }

@@ -7,6 +7,7 @@ from django.contrib import admin
 from django.test import Client, TestCase, override_settings
 from django.test.client import RequestFactory
 from django.urls import reverse
+from django.utils.formats import date_format
 from django.utils import timezone, translation
 from django.utils.translation import gettext
 from django_ckeditor_5.widgets import CKEditor5Widget
@@ -139,6 +140,55 @@ class EventTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         response = c.get(reverse('events:detail', args=['no-such-event']))
         self.assertEqual(response.status_code, 404)
+
+    def test_event_detail_shows_closed_registration_message_after_deadline(self):
+        self.event.sign_up_members = timezone.now() - timezone.timedelta(days=2)
+        self.event.sign_up_others = timezone.now() - timezone.timedelta(days=1)
+        self.event.sign_up_deadline = timezone.now() - timezone.timedelta(minutes=1)
+        self.event.save()
+
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["registration_closed"])
+        self.assertContains(response, "Anmälningstiden gick ut")
+        self.assertNotContains(response, "Anmälan öppnas")
+
+    def test_event_detail_uses_public_opening_for_authenticated_user_without_subscription(self):
+        inactive_member = Member.objects.create_user(
+            username="inactive-user",
+            password="test",
+            email="inactive@example.com",
+            membership_type=MembershipType.objects.get(pk=ORDINARY_MEMBER),
+        )
+        self.event.sign_up_members = timezone.now() - timezone.timedelta(minutes=1)
+        self.event.sign_up_others = timezone.now() + timezone.timedelta(days=2)
+        self.event.sign_up_deadline = timezone.now() + timezone.timedelta(days=3)
+        self.event.save()
+        self.client.login(username=inactive_member.username, password='test')
+
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["can_register_now"])
+        self.assertEqual(response.context["next_signup_time"], self.event.sign_up_others)
+        self.assertContains(response, date_format(timezone.localtime(self.event.sign_up_others), "j.n H:i"))
+        self.assertNotContains(response, 'name="user"', html=False)
+        self.assertNotContains(response, 'name="email"', html=False)
+
+    def test_event_detail_falls_back_to_public_opening_when_member_opening_is_missing(self):
+        self.event.sign_up_members = None
+        self.event.sign_up_others = timezone.now() + timezone.timedelta(days=2)
+        self.event.sign_up_deadline = timezone.now() + timezone.timedelta(days=3)
+        self.event.save()
+        self.client.login(username=self.member.username, password='test')
+
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["can_register_now"])
+        self.assertEqual(response.context["next_signup_time"], self.event.sign_up_others)
+        self.assertContains(response, date_format(timezone.localtime(self.event.sign_up_others), "j.n H:i"))
 
     def test_members_only_event_redirects_anonymous_user_to_login(self):
         self.event.members_only = True
@@ -560,6 +610,24 @@ class TranslationAdminRegressionTests(TestCase):
         self.assertIsInstance(form_class.base_fields["content_en"].widget, CKEditor5Widget)
         self.assertIsInstance(form_class.base_fields["content_fi"].widget, CKEditor5Widget)
 
+    @override_settings(LANGUAGES=(("sv", "Svenska"), ("en", "English")))
+    def test_news_translation_form_hides_inactive_language_fields(self):
+        category = Category.objects.create(name="Date Category", slug="date-category")
+        post = Post.objects.create(
+            title="Date Post",
+            slug="date-post",
+            author=self.admin_user,
+            category=category,
+        )
+        request = self.request_factory.get(reverse("admin:news_post_change", args=[post.pk]))
+        request.user = self.admin_user
+
+        form_class = admin.site._registry[Post].get_form(request, obj=post)
+
+        self.assertIn("content_sv", form_class.base_fields)
+        self.assertIn("content_en", form_class.base_fields)
+        self.assertNotIn("content_fi", form_class.base_fields)
+
     def test_event_translation_form_uses_ckeditor_widget_for_content_fields(self):
         event = Event.objects.create(
             title="Widget Event",
@@ -591,6 +659,24 @@ class TranslationAdminRegressionTests(TestCase):
         self.assertContains(response, 'name="staticurl_set-0-title_sv"')
         self.assertContains(response, 'name="staticurl_set-0-title_en"')
         self.assertContains(response, 'name="staticurl_set-0-title_fi"')
+
+    @override_settings(LANGUAGES=(("sv", "Svenska"), ("en", "English")))
+    def test_staticpage_nav_inline_hides_inactive_language_fields(self):
+        nav = StaticPageNav.objects.create(category_name="Menu")
+        StaticUrl.objects.create(
+            category=nav,
+            title="Link",
+            url="/example",
+            dropdown_element=10,
+        )
+
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("admin:staticpages_staticpagenav_change", args=[nav.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="staticurl_set-0-title_sv"')
+        self.assertContains(response, 'name="staticurl_set-0-title_en"')
+        self.assertNotContains(response, 'name="staticurl_set-0-title_fi"', status_code=200)
 
     def test_staticpage_change_page_renders_translation_fields(self):
         page = StaticPage.objects.create(
@@ -696,6 +782,29 @@ class EventCapacityTests(TestCase):
 
         self.assertEqual(child.remaining_places(), 1)
 
+    def test_detail_page_renders_remaining_places_not_total_capacity(self):
+        event = Event.objects.create(
+            title="Rendered Capacity Event",
+            slug="rendered-capacity-event",
+            author=self.author,
+            sign_up_max_participants=8,
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+            event_date_end=timezone.now() + timezone.timedelta(days=1),
+        )
+        EventAttendees.objects.create(
+            event=event,
+            user="Registered",
+            email="rendered-capacity@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        with translation.override("sv"):
+            response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertContains(response, "Det finns 7 platser kvar!")
+        self.assertNotContains(response, "Det finns 8 platser kvar!")
+
 
 @override_settings(CONTENT_VARIABLES={**settings.CONTENT_VARIABLES, "INTERNATIONAL_EVENT_SLUGS": ["intl-slug"]})
 class EventFormBuilderTests(TestCase):
@@ -776,6 +885,15 @@ class EventFormBuilderTests(TestCase):
         form = form_class()
 
         self.assertNotIn("terms_accepted", form.base_fields)
+
+    def test_terms_field_falls_back_to_swedish_for_finnish_language(self):
+        with translation.override("fi"):
+            form_class = self.event.make_registration_form()
+            form = form_class()
+
+        terms_field = form.base_fields["terms_accepted"]
+        self.assertIn("anmälningsvillkoren för evenemanget", str(terms_field.label))
+        self.assertIn("Jämlikhetsplan", str(terms_field.help_text))
 
 
 class EventNumberingTests(TestCase):

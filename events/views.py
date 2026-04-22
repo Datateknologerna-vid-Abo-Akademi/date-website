@@ -10,7 +10,6 @@ from django.utils import timezone
 from django.views.generic import DetailView, ListView
 
 from core.utils import validate_captcha
-from members.models import Member
 from .forms import PasscodeForm
 from .models import Event, EventAttendees
 from .websocket_utils import ws_send
@@ -74,6 +73,49 @@ class EventDetailView(DetailView):
         passcode_status = request.session.get(self.PASSCODE_SESSION_KEY, {})
         return bool(passcode_status.get(str(self.object.pk)))
 
+    def _user_is_active_member(self, user):
+        if not user.is_authenticated or not hasattr(user, "get_active_subscription"):
+            return False
+        return user.get_active_subscription() is not None
+
+    def _user_is_commodore(self, user):
+        if not user.is_authenticated:
+            return False
+        return user.groups.filter(name="commodore").exists()
+
+    def _get_next_signup_time(self, *, is_authenticated, is_active_member, is_commodore):
+        if is_commodore:
+            return None
+        if is_authenticated and is_active_member:
+            return self.object.sign_up_members or self.object.sign_up_others
+        return self.object.sign_up_others or self.object.sign_up_members
+
+    def _get_registration_state(self, request):
+        is_authenticated = request.user.is_authenticated
+        is_active_member = self._user_is_active_member(request.user)
+        is_commodore = self._user_is_commodore(request.user)
+        open_for_members = self.object.registration_is_open_members()
+        open_for_others = self.object.registration_is_open_others()
+        registration_closed = self.object.registration_past_due()
+        can_register_now = self.object.sign_up and (
+            is_commodore
+            or open_for_others
+            or (is_authenticated and is_active_member and open_for_members)
+        )
+        next_signup_time = None
+        if self.object.sign_up and not registration_closed and not can_register_now:
+            next_signup_time = self._get_next_signup_time(
+                is_authenticated=is_authenticated,
+                is_active_member=is_active_member,
+                is_commodore=is_commodore,
+            )
+
+        return {
+            "can_register_now": can_register_now,
+            "registration_closed": registration_closed,
+            "next_signup_time": next_signup_time,
+        }
+
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         if self._requires_member_login(request):
@@ -102,6 +144,7 @@ class EventDetailView(DetailView):
             context['form'] = form
         else:
             context['form'] = self.object.make_registration_form()
+        context.update(self._get_registration_state(self.request))
         return context
 
     def get_template_names(self):
@@ -152,17 +195,7 @@ class EventDetailView(DetailView):
         if not self.object.sign_up:
             return HttpResponseForbidden()
 
-        user_authenticated = request.user.is_authenticated
-        member_obj = Member.objects.filter(username=request.user.username).first()  # Check if user exists
-        user_member = member_obj.get_active_subscription() is not None if member_obj else False
-        open_for_members = self.object.registration_is_open_members()
-        open_for_others = self.object.registration_is_open_others()
-        commodore_group = request.user.groups.filter(name="commodore").exists()
-        # Temp fix to allow commodore peeps to enter pre-signed
-
-        # Check if user is allowed to sign up
-        if self.object.sign_up and (user_authenticated and open_for_members and
-                                    user_member or open_for_others or commodore_group):
+        if self._get_registration_state(request)["can_register_now"]:
 
             form = self.object.make_registration_form()(data=request.POST)
 

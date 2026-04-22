@@ -30,11 +30,16 @@ set -a
 source "$config_file"
 set +a
 
+config_compose_file="$(date_read_env_value "$config_file" COMPOSE_FILE)"
 date_apply_env_mode "$resolved_mode"
 
-compose_file="$(date_resolve_compose_file)"
+compose_file="$(date_resolve_compose_file "$resolved_mode" "$config_compose_file")"
 
-compose_path="${PROJECT_ROOT}/${compose_file}"
+if [[ "$compose_file" = /* ]]; then
+  compose_path="$compose_file"
+else
+  compose_path="${PROJECT_ROOT}/${compose_file}"
+fi
 if [ ! -f "$compose_path" ]; then
   echo "Compose file $compose_path not found"
   exit 1
@@ -58,7 +63,7 @@ dump_file="${output_dir}/${project_name}-${timestamp}.sql"
 manifest_file="${output_dir}/${project_name}-${timestamp}.json"
 
 docker_compose() {
-  docker compose -f "$compose_path" "$@"
+  docker compose --project-directory "$PROJECT_ROOT" -f "$compose_path" "$@"
 }
 
 db_started_by_script=0

@@ -35,13 +35,14 @@ class PolicyViewTests(TestCase):
         self.assertContains(response, "Your registration becomes binding once the registration period has ended.")
         self.assertContains(response, "Waitlist and replacements")
 
-    def test_registration_terms_view_renders_finnish(self):
+    @override_settings(LANGUAGES=(("sv", "Svenska"), ("en", "English")))
+    def test_registration_terms_view_falls_back_to_swedish_for_finnish_cookie(self):
         self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "fi"
         response = self.client.get(reverse("staticpages:registration_terms"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "<h1>Tapahtuman ilmoittautumisehdot</h1>", html=True)
-        self.assertContains(response, "Varasija ja korvaajat")
+        self.assertContains(response, "<h1>Anmälningsvillkor gällande evenemang</h1>", html=True)
+        self.assertContains(response, "Reservlista och ersättare")
 
     def test_registration_terms_view_renders_swedish_title(self):
         response = self.client.get(reverse("staticpages:registration_terms"))

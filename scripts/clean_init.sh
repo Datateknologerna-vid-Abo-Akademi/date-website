@@ -19,13 +19,34 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     DELETE_MEDIA=true
 fi
 
-# Preserve any caller-supplied COMPOSE_FILE_PATH before env.sh overwrites it.
-_COMPOSE_FILE_PATH_OVERRIDE="${COMPOSE_FILE_PATH:-}"
-source "$PROJECT_DIR/env.sh" dev
-if [ -n "$_COMPOSE_FILE_PATH_OVERRIDE" ]; then
-    COMPOSE_FILE_PATH="$_COMPOSE_FILE_PATH_OVERRIDE"
+read_compose_file_from_env() {
+    local env_file="$PROJECT_DIR/.env"
+
+    if [[ ! -f "$env_file" ]]; then
+        return 0
+    fi
+
+    (
+        unset COMPOSE_FILE
+        set -a
+        # shellcheck disable=SC1090
+        source "$env_file"
+        set +a
+        printf '%s' "${COMPOSE_FILE:-}"
+    )
+}
+
+COMPOSE_FILE_PATH="${COMPOSE_FILE_PATH:-$(read_compose_file_from_env)}"
+COMPOSE_FILE_PATH="${COMPOSE_FILE_PATH:-docker-compose.yml}"
+if [[ "$COMPOSE_FILE_PATH" = /* ]]; then
+    COMPOSE_PATH="$COMPOSE_FILE_PATH"
+else
+    COMPOSE_PATH="$PROJECT_DIR/$COMPOSE_FILE_PATH"
 fi
-COMPOSE_PATH="$PROJECT_DIR/${COMPOSE_FILE_PATH:-docker-compose.yml}"
+
+docker_compose() {
+    docker compose --project-directory "$PROJECT_DIR" -f "$COMPOSE_PATH" "$@"
+}
 
 validate_fixtures() {
     echo "Validating fixtures..."
@@ -48,7 +69,7 @@ wait_for_db() {
     local max_attempts=30
     local attempt=0
     while [[ $attempt -lt $max_attempts ]]; do
-        if docker compose -f "$COMPOSE_PATH" exec -T db pg_isready -U postgres -q 2>/dev/null; then
+        if docker_compose exec -T db pg_isready -U postgres -q 2>/dev/null; then
             echo "Database is ready."
             return 0
         fi
@@ -69,25 +90,25 @@ if [[ "$DELETE_MEDIA" == "true" ]]; then
 fi
 
 echo "Shutting down containers..."
-docker compose -f "$COMPOSE_PATH" down --remove-orphans
+docker_compose down --remove-orphans
 
 echo "Building required images and starting database container..."
-docker compose -f "$COMPOSE_PATH" build db web
-docker compose -f "$COMPOSE_PATH" up -d db
+docker_compose build db web
+docker_compose up -d db
 
 wait_for_db
 
 echo "Recreating database..."
-docker compose -f "$COMPOSE_PATH" exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS temp;" 2>/dev/null || true
-docker compose -f "$COMPOSE_PATH" exec -T db psql -U postgres -c "CREATE DATABASE temp;"
-docker compose -f "$COMPOSE_PATH" exec -T db psql -U postgres -d temp -c "DROP DATABASE postgres;"
-docker compose -f "$COMPOSE_PATH" exec -T db psql -U postgres -d temp -c "CREATE DATABASE postgres;"
-docker compose -f "$COMPOSE_PATH" exec -T db psql -U postgres -c "DROP DATABASE temp;"
+docker_compose exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS temp;" 2>/dev/null || true
+docker_compose exec -T db psql -U postgres -c "CREATE DATABASE temp;"
+docker_compose exec -T db psql -U postgres -d temp -c "DROP DATABASE postgres;"
+docker_compose exec -T db psql -U postgres -d temp -c "CREATE DATABASE postgres;"
+docker_compose exec -T db psql -U postgres -c "DROP DATABASE temp;"
 
 echo "Database cleared."
 
 echo "Running migrations and loading fixtures..."
-docker compose -f "$COMPOSE_PATH" run --rm web /bin/bash -c "
+docker_compose run --rm web /bin/bash -c "
     ./wait-for-postgres.sh db:5432 && \
     python /code/manage.py migrate --noinput && \
     ./scripts/load_all_fixtures.sh && \
@@ -101,7 +122,7 @@ print('Passwords set for all users.')
 \"
 "
 
-docker compose -f "$COMPOSE_PATH" down --remove-orphans
+docker_compose down --remove-orphans
 
 echo ""
 echo "============================================"
