@@ -10,6 +10,8 @@
 #   date     → http://localhost:8002
 #   kk       → http://localhost:8003
 #   pulterit → http://localhost:8004
+#   pulterit → http://localhost:8004
+#   sf       → http://localhost:8005
 
 x-web-common: &web-common
   env_file: .env
@@ -101,6 +103,14 @@ services:
     environment:
       <<: *web-env
       PROJECT_NAME: pulterit
+
+  web-sf:
+    <<: *web-common
+    ports:
+      - "8005:8000"
+    environment:
+      <<: *web-env
+      PROJECT_NAME: sf
 
 volumes:
   dev_all_postgres_data:

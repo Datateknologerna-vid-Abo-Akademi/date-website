@@ -93,7 +93,7 @@ source "$DATE_WEBSITE_DIR/env.sh"
 
 Important environment flags:
 
-- `PROJECT_NAME` selects the active association/site variant (`date`, `kk`, `biocum`, `demo`, ...).
+- `PROJECT_NAME` selects the active association/site variant (`date`, `kk`, `biocum`, `demo`, `pulterit`, `sf`, ...).
 - `ENABLE_LANGUAGE_FEATURES=True` enables the language switcher, translated admin tabs, and runtime selection between the languages configured for the active association on unprefixed URLs. DaTe currently uses Swedish and English at runtime; some other associations also expose Finnish. When omitted or false, the project runs Swedish-only.
 - `USE_S3` toggles whether uploads use local disk storage or the configured S3-compatible backend.
 

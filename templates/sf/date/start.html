@@ -1,0 +1,50 @@
+{% extends 'core/base.html' %}
+{% load cache %}
+{% load i18n %}
+{% load static %}
+{% block extra_head %}
+	{{ block.super }}
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+		<link rel="stylesheet" href="{% static 'date/css/homepage.css' %}" type="text/css">
+		<link rel="stylesheet" href="{% static 'date/css/vanilla-calendar.min.css' %}" type="text/css">
+		<style>
+			@media screen and (max-width: 550px) {
+				.hero-text-box .text h1 {
+					font-size: clamp(1.23rem, 0.94rem + 1.7vw, 1.66rem);
+				}
+
+				.hero-text-box .text h3 {
+					font-size: 0.765rem;
+					letter-spacing: 0.06rem;
+				}
+			}
+		</style>
+		{% get_current_language as LANGUAGE_CODE %}
+{% endblock %}
+{% block icon_head %}{% endblock %}
+{% block jquery_head %}{% endblock %}
+
+{% block content %}
+	{% load static %}
+{% cache 300 main_page_fixed LANGUAGE_CODE %}
+
+	<div class="container-fluid p-2 min-vh-100">
+		{% include "date/components/header.html" %}
+		<section id="news" class="news-events">
+			<div id="main" class="main-container">
+				{% include "date/components/news.html" %}
+				{% include "date/components/events.html" %}
+				{% include "date/components/extras.html" %}
+				{% include "date/components/partners.html" %}
+			</div>
+		</section>
+		<section id="reklam" class="text-size">
+		</section>
+	</div>
+
+	<script src="{% static 'date/js/vanilla-calendar.min.js' %}"></script>
+	{% include "date/components/scripts.html" %}
+	{% endcache %}
+{% endblock %}

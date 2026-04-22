@@ -66,6 +66,7 @@ Each association gets its own web container on a dedicated port, sharing one Pos
 | date        | http://localhost:8002 |
 | kk          | http://localhost:8003 |
 | pulterit    | http://localhost:8004 |
+| sf          | http://localhost:8005 |
 
 The database is exposed on host port `5433` to avoid conflicting with the regular dev stack on `5432`.
 

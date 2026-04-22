@@ -1,0 +1,71 @@
+{% load static %}
+{%  load i18n %}
+
+<footer class="container association-footer{% block footer_class_suffix %}{% endblock %}">
+    <div class="association-footer-shell{% block footer_shell_class_suffix %}{% endblock %}">
+        <hr>
+        <!-- Grid container -->
+        <!-- Section: Social media -->
+        <section class="col text-center association-footer-social{% block footer_social_class_suffix %}{% endblock %}">
+
+            {% for btn in SOCIAL_BUTTONS %}
+                {% if btn.1 %}
+                <a class="btn btn-outline-light btn-floating association-footer-social-link" href="{{ btn.1 }}" role="button" aria-label="{{ btn.0|title }}">
+                    {% if btn.0 == "instagram" %}
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M7.75 2h8.5A5.76 5.76 0 0 1 22 7.75v8.5A5.76 5.76 0 0 1 16.25 22h-8.5A5.76 5.76 0 0 1 2 16.25v-8.5A5.76 5.76 0 0 1 7.75 2Zm0 2A3.75 3.75 0 0 0 4 7.75v8.5A3.75 3.75 0 0 0 7.75 20h8.5A3.75 3.75 0 0 0 20 16.25v-8.5A3.75 3.75 0 0 0 16.25 4h-8.5ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm5.25-2.35a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2Z"></path>
+                    </svg>
+                    {% elif btn.0 == "facebook" %}
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M13.5 22v-8h2.7l.4-3h-3.1V9.1c0-.9.3-1.5 1.6-1.5h1.7V4.9c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3V11H7.3v3h2.8v8h3.4Z"></path>
+                    </svg>
+                    {% elif btn.0 == "x" %}
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M14.7 10.6 22.1 2h-1.8l-6.4 7.4L8.8 2H2.9l7.8 11.3L2.9 22h1.8l6.8-7.8 5.4 7.8h5.9l-8.1-11.4Zm-2.4 2.8-.8-1.1L5.2 3.3H8l5 7.1.8 1.1 6.6 9.3h-2.8l-5.3-7.4Z"></path>
+                    </svg>
+                    {% elif btn.0 == "linkedin" %}
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M6.9 8.7H3.6V21h3.3V8.7ZM5.2 3a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 0 0 0-3.8Zm15.2 11c0-3.3-1.8-5.5-4.7-5.5-1.7 0-2.8.9-3.3 1.8h-.1V8.7H9.2V21h3.3v-6.1c0-1.6.3-3.2 2.3-3.2s2 1.8 2 3.3v6h3.3v-7Z"></path>
+                    </svg>
+                    {% else %}
+                    {{ btn.0|title }}
+                    {% endif %}
+                </a>
+                {% endif %}
+            {% endfor %}
+
+        </section>
+        <!-- Section: Social media -->
+        <div class="row align-middle align-items-center association-footer-content{% block footer_content_class_suffix %}{% endblock %}">
+            <div class="col-12 col-md-4 text-center association-footer-brand{% block footer_brand_class_suffix %}{% endblock %}">
+                {% block footer_logo %}
+                <img class="footer-img img-fluid" alt="{% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}{{ association_name }} logo{% endblocktranslate %}" src="{% static 'core/images/SF_logo_Tran.svg' %}">
+                {% endblock %}
+            </div>
+            <div class="col-12 col-md-4 association-footer-copy{% block footer_copy_class_suffix %}{% endblock %}">
+                <p>
+                    {% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}
+                    Styrelsen för {{ association_name }} kan kontaktas på följande sätt.
+                    {% endblocktranslate %}
+                </p>
+                <p>
+                    {% trans 'E-post' %}:<br>
+                    {{ ASSOCIATION_EMAIL }}<br>
+                    {{ ASSOCIATION_OFFICE_HOURS }}
+                </p>
+                <p>{% trans "Address" %}:<br>
+                    {{ ASSOCIATION_ADDRESS_L1 }}<br>
+                    {{ ASSOCIATION_ADDRESS_L2 }}<br>
+                    {{ ASSOCIATION_POSTAL_CODE }}
+                </p>
+            </div>
+        </div>
+        <!-- Copyright -->
+        {% block extra_footer %}{% endblock %}
+        <div class="text-center p-3">
+            &copy {% now "Y" %}
+        </div>
+        <!-- Copyright -->
+        <!-- Grid container -->
+    </div>
+</footer>
