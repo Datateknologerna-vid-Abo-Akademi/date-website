@@ -31,6 +31,8 @@ Prefer SSH? Add your key to GitHub following their [SSH setup guide](https://doc
 
 Need sample content? Run `date-cleaninit` (or `/bin/bash ./scripts/clean_init.sh`) to wipe the dev database, reload the fixture set, generate sample media, and reset the default local user passwords. It is the quickest way to get back to a known-good local setup.
 
+pgAdmin is optional and disabled by default. To include it in the development Compose stacks, set `COMPOSE_PROFILES="pgadmin"` in `.env`, recreate the stack, then open `http://localhost:5050`. Log in with `PGADMIN_DEFAULT_EMAIL` and `PGADMIN_DEFAULT_PASSWORD`; the default sample values are `admin@example.com` / `password`. To connect to the local database, add a server with host `db`, port `5432`, user `postgres`, database `postgres`, and password `DATE_DB_PASSWORD`.
+
 Working on features that touch S3-compatible storage? Run a local [MinIO](https://min.io/) container and point `S3_ENDPOINT_URL`, `S3_ACCESS_KEY`, and `S3_SECRET_KEY` in `.env` to it. This keeps uploads, ACLs, and presigned URLs testable without external dependencies.
 
 ## Platform notes
