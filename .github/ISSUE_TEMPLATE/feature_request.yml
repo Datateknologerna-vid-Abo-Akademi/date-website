@@ -1,0 +1,81 @@
+name: Feature request
+description: Propose a new capability or meaningful product improvement.
+title: "feat: "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for new behavior or larger improvements. If something is broken, please open a bug report instead.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Product area
+      options:
+        - Public website
+        - Admin/editor tools
+        - Membership or alumni tools
+        - Polls, events, or seasonal apps
+        - Authentication or permissions
+        - Translations or language switching
+        - Developer experience
+        - Deployment or infrastructure
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: What user need, workflow, or project goal does this address?
+      placeholder: As a ..., I want ..., so that ...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the behavior, screens, permissions, data model, or workflow you have in mind.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List the concrete outcomes that would make this ready to merge.
+      placeholder: |
+        - [ ] Users can ...
+        - [ ] Admins can ...
+        - [ ] Existing behavior remains ...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Mention simpler options, manual workarounds, or reasons not to solve this another way.
+    validations:
+      required: false
+  - type: textarea
+    id: qa
+    attributes:
+      label: Testing and rollout notes
+      description: Include expected tests, migrations, fixture needs, translation work, documentation updates, or deployment considerations.
+      placeholder: |
+        - Tests:
+        - Migrations:
+        - Translations:
+        - Docs:
+        - Rollout:
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submit checks
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: I included enough detail for someone else to assess scope and priority.
+          required: true
