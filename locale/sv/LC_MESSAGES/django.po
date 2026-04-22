@@ -1687,7 +1687,7 @@ msgstr[1] "%(choice_text)s: %(vote_count)s votes -- %(vote_percentage)s%%"
 #, python-format
 #| msgid "Totala röster: "
 msgid "Totala röster: %(total_votes)s"
-msgstr "Totala röster: "
+msgstr "Totala röster: %(total_votes)s"
 
 #: templates/common/polls/results.html:38
 msgid "Resultaten är gömda"
@@ -1721,7 +1721,7 @@ msgstr "previous"
 #, python-format
 #| msgid "Öppna bild %(image_number)s av %(total)s"
 msgid "Page %(page_number)s of %(total_pages)s."
-msgstr "Öppna bild %(image_number)s av %(total)s"
+msgstr "Sida %(page_number)s av %(total_pages)s."
 
 #: templates/common/publications/list.html:51
 msgid "next"
