@@ -3,6 +3,12 @@ from django.contrib import admin
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.admin import AdminSiteOTPRequiredMixin
 
+if getattr(settings, 'USE_UNFOLD', False):
+    from unfold.sites import UnfoldAdminSite
+    _AdminSiteBase = UnfoldAdminSite
+else:
+    _AdminSiteBase = admin.AdminSite
+
 
 def get_admin_translation_languages() -> tuple[str, ...]:
     """Return language codes that should be shown in modeltranslation admin UI."""
@@ -58,7 +64,7 @@ class ActiveLanguageTranslationAdminMixin:
         return filtered_fieldsets
 
 
-class FixedLanguageAdminSite(AdminSiteOTPRequiredMixin, admin.AdminSite):
+class FixedLanguageAdminSite(AdminSiteOTPRequiredMixin, _AdminSiteBase):
     """Mirror the default admin site while preserving normal locale resolution."""
 
     def has_permission(self, request):

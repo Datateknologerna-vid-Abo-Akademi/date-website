@@ -1,19 +1,21 @@
 from django.conf import settings
 from django.contrib import admin
-from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
+from core.admin_base import ModelAdmin, TabularInline
 
 from core.admin import ActiveLanguageTranslationAdminMixin
 from .models import Choice, Question, Vote
 
 if settings.ENABLE_LANGUAGE_FEATURES:
-    class PollTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline):
+    from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
+
+    class PollTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline, TabularInline):
         pass
 
-    class PollTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin):
+    class PollTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
         pass
 else:
-    PollTranslationInlineBase = admin.TabularInline
-    PollTranslationAdminBase = admin.ModelAdmin
+    PollTranslationInlineBase = TabularInline
+    PollTranslationAdminBase = ModelAdmin
 
 
 class ChoiceInline(PollTranslationInlineBase):
@@ -22,7 +24,7 @@ class ChoiceInline(PollTranslationInlineBase):
     readonly_fields = ['votes']
 
 
-class VoteInline(admin.TabularInline):
+class VoteInline(TabularInline):
     model = Vote
     extra = 0
     readonly_fields = ['user']
@@ -53,10 +55,12 @@ class QuestionAdmin(PollTranslationAdminBase):
                  'end_vote'
              ]}),
     ]
-    list_display = ('question_text', 'pub_date',)
+    list_display = ('question_text', 'pub_date', 'published', 'show_results', 'end_vote')
     inlines = [ChoiceInline, VoteInline]
-    list_filter = ['pub_date']
-    search_fields = ['question_text']
+    list_filter = ['published', 'show_results', 'end_vote', 'multiple_choice']
+    search_fields = ['question_text', 'choice__choice_text', 'vote__user__username', 'vote__user__email']
+    ordering = ('-pub_date',)
+    date_hierarchy = 'pub_date'
 
 
 admin.site.register(Question, QuestionAdmin)

@@ -3,20 +3,22 @@ from django.conf import settings
 from django.contrib import admin
 from django.db.models import TextField
 from django_ckeditor_5.widgets import CKEditor5Widget
+from core.admin_base import ModelAdmin, PublicUrlAdminMixin, TabularInline, UNFOLD_FORMFIELD_OVERRIDES
 
 from .models import StaticPage, StaticPageNav, StaticUrl
-from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 from core.admin import ActiveLanguageTranslationAdminMixin
 
 if settings.ENABLE_LANGUAGE_FEATURES:
-    class StaticPageTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline):
+    from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
+
+    class StaticPageTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline, TabularInline):
         pass
 
-    class StaticPageTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin):
+    class StaticPageTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
         pass
 else:
-    StaticPageTranslationInlineBase = admin.TabularInline
-    StaticPageTranslationAdminBase = admin.ModelAdmin
+    StaticPageTranslationInlineBase = TabularInline
+    StaticPageTranslationAdminBase = ModelAdmin
 
 
 # Register your models here.
@@ -37,15 +39,22 @@ class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
 class StaticPageNavAdmin(StaticPageTranslationAdminBase):
     model = StaticPageNav
     save_on_top = True
-    inlines = [
-        UrlInline,
-    ]
+    list_display = ('category_name', 'nav_element', 'use_category_url', 'url')
+    search_fields = ('category_name', 'url')
+    ordering = ('nav_element',)
+    inlines = [UrlInline]
 
 
 @admin.register(StaticPage)
-class StaticPageAdmin(StaticPageTranslationAdminBase):
+class StaticPageAdmin(PublicUrlAdminMixin, StaticPageTranslationAdminBase):
     model = StaticPage
     formfield_overrides = {
+        **UNFOLD_FORMFIELD_OVERRIDES,
         TextField: {'widget': CKEditor5Widget},
     }
-    list_display = ('title', 'slug', 'members_only')
+    list_display = ('title', 'slug', 'members_only', 'modified_time')
+    search_fields = ('title', 'slug')
+    list_filter = ('members_only',)
+    ordering = ('title',)
+    date_hierarchy = 'created_time'
+    prepopulated_fields = {'slug': ('title',)}

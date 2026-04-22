@@ -1,11 +1,14 @@
 from django.contrib import admin
+from core.admin_base import ModelAdmin, PublicUrlAdminMixin
 from .models import PDFFile
 
 @admin.register(PDFFile)
-class PDFFileAdmin(admin.ModelAdmin):
+class PDFFileAdmin(PublicUrlAdminMixin, ModelAdmin):
     list_display = ('title', 'publication_date', 'is_public', 'requires_login', 'uploaded_at', 'updated_at')
     list_filter = ('is_public', 'requires_login', 'uploaded_at', 'updated_at', 'publication_date')
-    search_fields = ('title', 'slug', 'description')
+    search_fields = ('title', 'slug', 'description', 'file')
+    ordering = ('-uploaded_at',)
+    date_hierarchy = 'publication_date'
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('uploaded_at', 'updated_at')
     fieldsets = (

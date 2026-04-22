@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-06 17:58+0000\n"
+"POT-Creation-Date: 2026-04-22 13:50+0300\n"
 "PO-Revision-Date: 2025-09-16 20:27+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -19,33 +19,21 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 3.6\n"
 
-#: templates/common/core/cookie_banner.html:6
-msgid "Vi använder cookies för att förbättra din upplevelse på vår webbplats. Genom att fortsätta använda webbplatsen godkänner du vår användning av cookies."
-msgstr "We use cookies to improve your experience on our website. By continuing to use the website, you accept our use of cookies."
-
-#: templates/common/core/cookie_banner.html:9
-msgid "Godkänn"
-msgstr "Accept"
-
-#: templates/common/core/cookie_banner.html:10
-msgid "Avböj"
-msgstr "Decline"
-
 #: alumni/forms.py:15 alumni/forms.py:16 alumni/forms.py:17 alumni/forms.py:72
-#: members/forms.py:171 members/forms.py:174 members/forms.py:180
+#: members/forms.py:173 members/forms.py:176 members/forms.py:182
 msgid "detta fält är obligatoriskt"
 msgstr "This field is required"
 
-#: alumni/forms.py:15 members/forms.py:183 members/models.py:33
+#: alumni/forms.py:15 members/forms.py:185 members/models.py:33
 msgid "Förnamn"
 msgstr "First name"
 
-#: alumni/forms.py:16 members/forms.py:184 members/models.py:34
+#: alumni/forms.py:16 members/forms.py:186 members/models.py:34
 msgid "Efternamn"
 msgstr "Last name"
 
-#: alumni/forms.py:17 alumni/forms.py:72 events/models.py:295
-#: members/forms.py:174 members/models.py:32
+#: alumni/forms.py:17 alumni/forms.py:72 events/models.py:378
+#: members/forms.py:176 members/models.py:32
 msgid "E-postadress"
 msgstr "Email address"
 
@@ -58,7 +46,6 @@ msgid "Adress"
 msgstr "Address"
 
 #: alumni/forms.py:21
-#| msgid "Telefonnummer"
 msgid "Postnummer"
 msgstr "Postal code"
 
@@ -70,7 +57,7 @@ msgstr "Post office"
 msgid "Land"
 msgstr "Country"
 
-#: alumni/forms.py:24 members/forms.py:28 members/forms.py:185
+#: alumni/forms.py:24 members/forms.py:29 members/forms.py:187
 #: members/models.py:41
 msgid "Inskrivningsår"
 msgstr "Year studies started"
@@ -100,12 +87,10 @@ msgid "Token"
 msgstr "Token"
 
 #: alumni/forms.py:78
-#| msgid "E-postadress"
 msgid "Ange din e-postadress"
 msgstr "Enter your email address"
 
 #: alumni/models.py:17 alumni/models.py:18
-#| msgid "Emailmottagare för ARG"
 msgid "Emailmottagare för ÅAATK"
 msgstr "Email recipient for ÅAATK"
 
@@ -117,21 +102,22 @@ msgstr "Alumni Update Token"
 msgid "Alumni Update Tokens"
 msgstr "Alumni Update Tokens"
 
-#: alumni/tasks.py:201
+#: alumni/tasks.py:200
 msgid "Uppdatera dina uppgifter"
 msgstr "Update your information"
 
-#: archive/models.py:30 archive/models.py:167 events/models.py:159
-#: events/models.py:252 events/models.py:293 members/models.py:95
-#: members/models.py:120 news/models.py:14
-#: templates/biocum/events/arsfest.html:100
-#: templates/common/events/arsfest.html:113
-#: templates/common/events/baal_detail.html:76
-#: templates/common/events/detail.html:65
-#: templates/common/events/kk100_detail.html:77
-#: templates/common/events/tomtejakt.html:321
-#: templates/common/events/wappmiddag.html:77
-#: templates/date/events/arsfest.html:93 templates/on/events/arsfest.html:101
+#: archive/models.py:30 archive/models.py:167 events/models.py:198
+#: events/models.py:334 events/models.py:376 members/models.py:96
+#: members/models.py:121 news/models.py:14
+#: templates/biocum/events/arsfest.html:91
+#: templates/common/events/arsfest.html:104
+#: templates/common/events/baal_detail.html:69
+#: templates/common/events/detail.html:58
+#: templates/common/events/kk100_detail.html:70
+#: templates/common/events/tomtejakt.html:314
+#: templates/common/events/wappmiddag.html:70
+#: templates/date/events/arsfest.html:84
+#: templates/pulterit/events/arsfest.html:85
 msgid "Namn"
 msgstr "Name"
 
@@ -147,19 +133,19 @@ msgstr "Collection"
 msgid "Samlingar"
 msgstr "Collections"
 
-#: archive/models.py:118 templates/common/archive/index.html:15
+#: archive/models.py:118 templates/common/archive/index.html:17
 #: templates/common/archive/picture_index.html:15
 msgid "Bildarkiv"
 msgstr "Photo archive"
 
-#: archive/models.py:124 templates/common/archive/document_index.html:17
+#: archive/models.py:124 templates/common/archive/document_index.html:19
 msgid "Dokumentarkiv"
 msgstr "Document archive"
 
 #: archive/models.py:129 templates/common/archive/exam_detail.html:7
 #: templates/common/archive/exam_upload.html:5
 #: templates/common/archive/exams_index.html:5
-#: templates/common/archive/exams_index.html:16
+#: templates/common/archive/exams_index.html:18
 msgid "Tentarkiv"
 msgstr "Test archive"
 
@@ -199,40 +185,175 @@ msgstr "file"
 msgid "filer"
 msgstr "files"
 
-#: ctf/models.py:16 events/models.py:36 lucia/models.py:15
-#: members/models.py:166 news/models.py:27 staticpages/models.py:24
+#: core/settings/common.py:81 core/settings/common.py:82
+msgid "Events"
+msgstr "Events"
+
+#: core/settings/common.py:83
+msgid "Billing Configuration"
+msgstr "Billing Configuration"
+
+#: core/settings/common.py:84
+msgid "Invoices"
+msgstr "Invoices"
+
+#: core/settings/common.py:86 core/settings/common.py:87
+msgid "Members"
+msgstr "Members"
+
+#: core/settings/common.py:88
+msgid "Membership Types"
+msgstr "Membership Types"
+
+#: core/settings/common.py:89
+#| msgid "Description"
+msgid "Subscriptions"
+msgstr "Description"
+
+#: core/settings/common.py:90
+msgid "Subscription Payments"
+msgstr "Subscription Payments"
+
+#: core/settings/common.py:91
+#| msgid "Funktionärer"
+msgid "Functionaries"
+msgstr "Functionaries"
+
+#: core/settings/common.py:92
+#| msgid "Funktionärspost"
+msgid "Functionary Roles"
+msgstr "Position of trust"
+
+#: core/settings/common.py:94
+#| msgid "Continue"
+msgid "Content"
+msgstr "Continue"
+
+#: core/settings/common.py:95
+msgid "News"
+msgstr "News"
+
+#: core/settings/common.py:96
+#| msgid "kategorier"
+msgid "News Categories"
+msgstr "categories"
+
+#: core/settings/common.py:97
+#| msgid "Poll"
+msgid "Polls"
+msgstr "Poll"
+
+#: core/settings/common.py:98
+msgid "Static Pages"
+msgstr "Static Pages"
+
+#: core/settings/common.py:99
+msgid "Page Navigation"
+msgstr "Page Navigation"
+
+#: core/settings/common.py:101
+#| msgid "Publications"
+msgid "Archive & Publications"
+msgstr "Publications"
+
+#: core/settings/common.py:102
+#| msgid "Publications"
+msgid "PDF Publications"
+msgstr "Publications"
+
+#: core/settings/common.py:103
+msgid "Photo Albums"
+msgstr "Photo Albums"
+
+#: core/settings/common.py:104
+#| msgid "dokument"
+msgid "Documents"
+msgstr "document"
+
+#: core/settings/common.py:105
+msgid "Exams"
+msgstr "Exams"
+
+#: core/settings/common.py:107
+msgid "Activities"
+msgstr "Activities"
+
+#: core/settings/common.py:108 ctf/models.py:57
+msgid "CTF"
+msgstr "CTF"
+
+#: core/settings/common.py:109
+msgid "CTF Guesses"
+msgstr "CTF Guesses"
+
+#: core/settings/common.py:110 lucia/models.py:22
+msgid "Lucia"
+msgstr "Lucia"
+
+#: core/settings/common.py:112
+msgid "Social & Ads"
+msgstr "Social & Ads"
+
+#: core/settings/common.py:113 templates/biocum/date/components/mobile.html:52
+#: templates/biocum/date/components/sidebar.html:55
+#: templates/date/date/components/partners.html:3
+#: templates/demo/date/components/partners.html:3
+#: templates/kk/date/april_start.html:110
+#: templates/kk/date/components/partners.html:3
+#: templates/pulterit/date/components/partners.html:3
+msgid "Samarbetspartners"
+msgstr "Cooperation partners"
+
+#: core/settings/common.py:114
+msgid "Instagram URLs"
+msgstr "Instagram URLs"
+
+#: core/settings/common.py:115
+msgid "Harassment Reports"
+msgstr "Harassment Reports"
+
+#: core/settings/common.py:116
+msgid "Report Recipients"
+msgstr "Report Recipients"
+
+#: core/settings/common.py:118
+msgid "System"
+msgstr "System"
+
+#: core/settings/common.py:119
+msgid "Admin Log"
+msgstr "Admin Log"
+
+#: core/settings/common.py:120
+msgid "Permissions"
+msgstr "Permissions"
+
+#: ctf/models.py:16 events/models.py:45 lucia/models.py:15
+#: members/models.py:167 news/models.py:27 staticpages/models.py:24
 #: staticpages/models.py:40
 msgid "Titel"
 msgstr "Title"
 
-#: ctf/models.py:17 events/models.py:37 lucia/models.py:16 news/models.py:29
+#: ctf/models.py:17 events/models.py:46 lucia/models.py:16 news/models.py:29
 #: staticpages/models.py:25
 msgid "Innehåll"
 msgstr "Content"
 
-#: ctf/models.py:18 events/models.py:38
+#: ctf/models.py:18 events/models.py:47
 msgid "Startdatum"
 msgstr "Start date"
 
-#: ctf/models.py:19 events/models.py:39
+#: ctf/models.py:19 events/models.py:48
 msgid "Slutdatum"
 msgstr "End date"
 
-#: events/models.py:72 events/migrations/0021_event_require_registration_terms.py:16
-msgid "Kräv godkännande av anmälningsvillkor"
-msgstr "Require acceptance of registration terms"
-
-#: templates/common/events/registering.html:58
-msgid "Please check this box to continue."
-msgstr "Please check this box to continue."
-
-#: ctf/models.py:21 ctf/models.py:46 events/models.py:59 lucia/models.py:18
-#: news/models.py:15 news/models.py:35 publications/models.py:18
+#: ctf/models.py:21 ctf/models.py:46 events/models.py:68 lucia/models.py:18
+#: news/models.py:15 news/models.py:35 publications/models.py:16
 #: staticpages/models.py:28
 msgid "Slug"
 msgstr "Slug"
 
-#: ctf/models.py:22 events/models.py:58 lucia/models.py:17 news/models.py:34
+#: ctf/models.py:22 events/models.py:67 lucia/models.py:17 news/models.py:34
 #: polls/models.py:25
 msgid "Publicera"
 msgstr "Publish"
@@ -252,10 +373,6 @@ msgstr "Flag"
 #: ctf/models.py:50
 msgid "Flags"
 msgstr "Flags"
-
-#: ctf/models.py:57
-msgid "CTF"
-msgstr "CTF"
 
 #: ctf/models.py:58
 msgid "Användare"
@@ -281,148 +398,154 @@ msgstr "Time"
 msgid "Gissningar"
 msgstr "Guesses"
 
-#: events/models.py:40
+#: events/models.py:49
 msgid "Maximal antal deltagare (0 för ingen begränsning)"
 msgstr "Maximal number of attendees (0 for no limit)"
 
-#: events/models.py:41 templates/biocum/events/arsfest.html:75
-#: templates/common/events/arsfest.html:87
-#: templates/common/events/baal_detail.html:52
-#: templates/common/events/detail.html:41
-#: templates/common/events/kk100_detail.html:53
-#: templates/common/events/tomtejakt.html:297
-#: templates/common/events/wappmiddag.html:53
-#: templates/date/events/arsfest.html:67 templates/on/events/arsfest.html:75
+#: events/models.py:50 templates/biocum/events/arsfest.html:78
+#: templates/common/events/arsfest.html:90
+#: templates/common/events/baal_detail.html:55
+#: templates/common/events/detail.html:44
+#: templates/common/events/kk100_detail.html:56
+#: templates/common/events/tomtejakt.html:300
+#: templates/common/events/wappmiddag.html:56
+#: templates/date/events/arsfest.html:70
+#: templates/pulterit/events/arsfest.html:71
 msgid "Anmälning"
 msgstr "Registration"
 
-#: events/models.py:43
+#: events/models.py:52
 msgid "Anmälan öppnas (medlemmar)"
 msgstr "Registration opens (members)"
 
-#: events/models.py:45
+#: events/models.py:54
 msgid "Anmälan öppnas (övriga)"
 msgstr "Registration opens (others)"
 
-#: events/models.py:47
+#: events/models.py:56
 msgid "Anmälningen stängs"
 msgstr "Registration closes"
 
-#: events/models.py:48
+#: events/models.py:57
 msgid "Avanmälning"
 msgstr "Cancel registration"
 
-#: events/models.py:50
+#: events/models.py:59
 msgid "Avanmälningen stängs"
 msgstr "Registration cancellation closes"
 
-#: events/models.py:53 news/models.py:31 staticpages/models.py:26
+#: events/models.py:62 news/models.py:31 staticpages/models.py:26
 msgid "Skapad"
 msgstr "Created"
 
-#: events/models.py:55 news/models.py:32
-#: templates/common/publications/list.html:23
+#: events/models.py:64 news/models.py:32
+#: templates/common/publications/list.html:25
 msgid "Publicerad"
 msgstr "Published"
 
-#: events/models.py:57 news/models.py:33 staticpages/models.py:27
+#: events/models.py:66 news/models.py:33 staticpages/models.py:27
 msgid "Modifierad"
 msgstr "Modified"
 
-#: events/models.py:61
+#: events/models.py:70
 msgid "Avec"
 msgstr "Plus-one"
 
-#: events/models.py:63
+#: events/models.py:72
+msgid "Kräv godkännande av anmälningsvillkor"
+msgstr "Require acceptance of registration terms"
+
+#: events/models.py:75
 msgid "Kräv inloggning för innehåll"
 msgstr "Require login for content"
 
-#: events/models.py:64
+#: events/models.py:76
 msgid "Passcode"
 msgstr "Passcode"
 
-#: events/models.py:66 events/models.py:68
+#: events/models.py:78 events/models.py:80
 msgid "Bakgrundsbild"
 msgstr "Background image"
 
-#: events/models.py:69
+#: events/models.py:81
 msgid "Captcha"
 msgstr "Captcha"
 
-#: events/models.py:70
+#: events/models.py:82
 msgid "Redirect Link"
 msgstr "Redirect Link"
 
-#: events/models.py:74 events/models.py:75
+#: events/models.py:86 events/models.py:87
 msgid "evenemang"
 msgstr "event"
 
-#: events/models.py:160 social/models.py:19
+#: events/models.py:199 social/models.py:19
 msgid "Email"
 msgstr "Email"
 
-#: events/models.py:161 events/models.py:297 events/websocket_utils.py:30
-#: templates/biocum/events/arsfest.html:110
-#: templates/common/events/arsfest.html:122
-#: templates/common/events/baal_detail.html:85
-#: templates/common/events/detail.html:74
-#: templates/common/events/kk100_detail.html:86
-#: templates/common/events/tomtejakt.html:330
-#: templates/common/events/wappmiddag.html:86
-#: templates/date/events/arsfest.html:102 templates/on/events/arsfest.html:110
+#: events/models.py:200 events/models.py:380 events/tests.py:337
+#: events/tests.py:1060 events/websocket_utils.py:30
+#: templates/biocum/events/arsfest.html:101
+#: templates/common/events/arsfest.html:113
+#: templates/common/events/baal_detail.html:78
+#: templates/common/events/detail.html:67
+#: templates/common/events/kk100_detail.html:79
+#: templates/common/events/tomtejakt.html:323
+#: templates/common/events/wappmiddag.html:79
+#: templates/date/events/arsfest.html:93
+#: templates/pulterit/events/arsfest.html:94
 msgid "Anonymt"
 msgstr "Anonymously"
 
-#: events/models.py:226
+#: events/models.py:308
 msgid "Det finns redan någon anmäld med denna email"
 msgstr "There is already someone registered with this email"
 
-#: events/models.py:251 events/models.py:292 staticpages/models.py:43
+#: events/models.py:333 events/models.py:375 staticpages/models.py:43
 msgid "#"
 msgstr "#"
 
-#: events/models.py:253
+#: events/models.py:335
 msgid "Typ"
 msgstr "Type"
 
-#: events/models.py:257
+#: events/models.py:339
 msgid "Krävd"
 msgstr "Required"
 
-#: events/models.py:258
+#: events/models.py:340
 msgid "Öppen info"
 msgstr "Open info"
 
-#: events/models.py:259
+#: events/models.py:341
 msgid "Alternativ"
 msgstr "Options"
 
-#: events/models.py:260
+#: events/models.py:342
 msgid "Göm för avec"
 msgstr "Hide for plus-one"
 
-#: events/models.py:263 events/models.py:264
+#: events/models.py:345 events/models.py:346
 msgid "Anmälningsfält"
 msgstr "Signup field"
 
-#: events/models.py:296
+#: events/models.py:379
 msgid "Svar"
 msgstr "Answer"
 
-#: events/models.py:298 templates/common/events/list.html:37
+#: events/models.py:381 templates/common/events/list.html:37
 msgid "Registrerad"
 msgstr "Registered"
 
-#: events/models.py:299 templates/common/events/list.html:35
+#: events/models.py:382 templates/common/events/list.html:35
 msgid "Avec till"
 msgstr "Plus-one for"
 
-#: events/models.py:300
-#| msgid "Mera evenemang"
+#: events/models.py:383
 msgid "Ursprungligt evenemang"
 msgstr "Original event"
 
-#: events/models.py:303 events/models.py:304
+#: events/models.py:386 events/models.py:387
 msgid "deltagare"
 msgstr "attendee"
 
@@ -434,36 +557,32 @@ msgstr "Image URL"
 msgid "Poll URL"
 msgstr "Poll URL"
 
-#: lucia/models.py:22
-msgid "Lucia"
-msgstr "Lucia"
-
 #: lucia/models.py:23
 msgid "Lucian"
 msgstr "The Lucia"
 
-#: members/forms.py:22
+#: members/forms.py:23
 msgid ""
-"Enter a valid username consisting only of letters, numbers, underscores, and"
-" hyphens."
-msgstr ""
-"Enter a valid username consisting only of letters, numbers, underscores, and"
-" hyphens."
+"Enter a valid username consisting only of letters, numbers, underscores, and "
+"hyphens."
+msgstr "Enter a valid username consisting only of letters, numbers, underscores, and hyphens."
+"Enter a valid username consisting only of letters, numbers, underscores, and "
+"hyphens."
 
-#: members/forms.py:33 members/forms.py:79 members/forms.py:172
+#: members/forms.py:34 members/forms.py:80 members/forms.py:174
 #: members/models.py:31
 msgid "Användarnamn"
 msgstr "Username"
 
-#: members/forms.py:181
+#: members/forms.py:183
 msgid "Lösenord"
 msgstr "Password"
 
-#: members/forms.py:215 members/models.py:180
+#: members/forms.py:217 members/models.py:181
 msgid "Årtal"
 msgstr "Year"
 
-#: members/forms.py:217
+#: members/forms.py:219
 msgid "Ange ett år i formatet YYYY"
 msgstr "Provide a year in the format YYYY"
 
@@ -495,112 +614,178 @@ msgstr "Postal code"
 msgid "Finland"
 msgstr "Finland"
 
-#: members/models.py:48
+#: members/models.py:42
+msgid "GitHub ID"
+msgstr "GitHub ID"
+
+#: members/models.py:49
 msgid "medlem"
 msgstr "member"
 
-#: members/models.py:49
+#: members/models.py:50
 msgid "medlemmar"
 msgstr "members"
 
-#: members/models.py:96
-#| msgid "Inskrivningsår"
+#: members/models.py:97
 msgid "Beskrivning"
 msgstr "Description"
 
-#: members/models.py:97
+#: members/models.py:98
 msgid "Behörighetsprofil"
 msgstr "Permission profile"
 
-#: members/models.py:100
+#: members/models.py:101
 msgid "Medlemskap"
 msgstr "Membership"
 
-#: members/models.py:101
-#| msgid "Medlemskap"
+#: members/models.py:102
 msgid "medlemskapstyper"
 msgstr "Membership types"
 
-#: members/models.py:113
+#: members/models.py:114
 msgid "Dagar"
 msgstr "Days"
 
-#: members/models.py:114
+#: members/models.py:115
 msgid "Månader"
 msgstr "Months"
 
-#: members/models.py:115
+#: members/models.py:116
 msgid "År"
 msgstr "Years"
 
-#: members/models.py:121 members/models.py:141
+#: members/models.py:122 members/models.py:142
 msgid "Upphör"
 msgstr "Ends"
 
-#: members/models.py:123
+#: members/models.py:124
 msgid "Förnyelse skala"
 msgstr "Renewal scale"
 
-#: members/models.py:125
+#: members/models.py:126
 msgid "Förnyelseperiod"
 msgstr "Renewal period"
 
-#: members/models.py:126
+#: members/models.py:127
 msgid "Pris"
 msgstr "Price"
 
-#: members/models.py:129
+#: members/models.py:130
 msgid "prenumeration"
 msgstr "subscription"
 
-#: members/models.py:130
+#: members/models.py:131
 msgid "prenumerationer"
 msgstr "subscriptions"
 
-#: members/models.py:140
+#: members/models.py:141
 msgid "Betald"
 msgstr "Paid"
 
-#: members/models.py:142
+#: members/models.py:143
 msgid "Betald summa"
 msgstr "Paid sum"
 
-#: members/models.py:145
+#: members/models.py:146
 msgid "prenumerationsbetalning"
 msgstr "subscription payment"
 
-#: members/models.py:146
+#: members/models.py:147
 msgid "prenumerationsbetalningar"
 msgstr "subscription payments"
 
-#: members/models.py:161
+#: members/models.py:162
 msgid "Aldrig"
 msgstr "Never"
 
-#: members/models.py:167
+#: members/models.py:168
 msgid "Styrelse"
 msgstr "Board"
 
-#: members/models.py:170
+#: members/models.py:171
 msgid "Funktionärspost"
 msgstr "Position of trust"
 
-#: members/models.py:171 templates/common/members/functionaries.html:4
+#: members/models.py:172 templates/common/members/functionaries.html:4
 #: templates/common/members/functionary.html:4
 msgid "Funktionärsposter"
 msgstr "Positions of trust"
 
-#: members/models.py:185
+#: members/models.py:186
 msgid "Funktionär"
 msgstr "Functionary"
 
-#: members/models.py:186
+#: members/models.py:187
 msgid "Funktionärer"
 msgstr "Functionaries"
 
-#: members/views.py:129
+#: members/two_factor.py:51
+msgid "Username or email"
+msgstr "Username or email"
+
+#: members/views.py:138
 msgid "Användare aktiverad"
 msgstr "User activated"
+
+#: members/views_github.py:64 members/views_github.py:134
+msgid "GitHub-inloggning är inte konfigurerad."
+msgstr "GitHub-inloggning är inte konfigurerad."
+
+#: members/views_github.py:99
+msgid "Inget GitHub-konto är kopplat."
+msgstr "Inget GitHub-konto är kopplat."
+
+#: members/views_github.py:103
+msgid "GitHub-kontot har kopplats bort."
+msgstr "GitHub-kontot har kopplats bort."
+
+#: members/views_github.py:113 members/views_github.py:158
+msgid "GitHub-inloggningen misslyckades."
+msgstr "GitHub-inloggningen misslyckades."
+
+#: members/views_github.py:122
+msgid "Ogiltig OAuth-begäran. Försök igen."
+msgstr "Ogiltig OAuth-begäran. Försök igen."
+
+#: members/views_github.py:127
+msgid "GitHub returnerade ingen auktoriseringskod."
+msgstr "GitHub returnerade ingen auktoriseringskod."
+
+#: members/views_github.py:152
+msgid "Kunde inte kommunicera med GitHub. Försök igen."
+msgstr "Kunde inte kommunicera med GitHub. Försök igen."
+
+#: members/views_github.py:175
+msgid "Kunde inte hämta GitHub-profil. Försök igen."
+msgstr "Kunde inte hämta GitHub-profil. Försök igen."
+
+#: members/views_github.py:180
+msgid "Kunde inte hämta GitHub-användar-ID."
+msgstr "Kunde inte hämta GitHub-användar-ID."
+
+#: members/views_github.py:212
+msgid "Du måste vara inloggad för att koppla ett GitHub-konto."
+msgstr "Du måste vara inloggad för att koppla ett GitHub-konto."
+
+#: members/views_github.py:219 members/views_github.py:232
+msgid "Det GitHub-kontot är redan kopplat till ett annat konto."
+msgstr "Det GitHub-kontot är redan kopplat till ett annat konto."
+
+#: members/views_github.py:222
+msgid "GitHub-kontot är redan kopplat till ditt konto."
+msgstr "GitHub-kontot är redan kopplat till ditt konto."
+
+#: members/views_github.py:234
+msgid "GitHub-kontot har kopplats till ditt konto."
+msgstr "GitHub-kontot har kopplats till ditt konto."
+
+#: members/views_github.py:258
+msgid "Inget konto hittades för ditt GitHub-konto. Kontakta administratören."
+msgstr "Inget konto hittades för ditt GitHub-konto. Kontakta administratören."
+
+#: members/views_github.py:263
+msgid "Ditt konto är inaktiverat."
+msgstr "Ditt konto är inaktiverat."
 
 #: news/models.py:18
 msgid "kategori"
@@ -674,59 +859,59 @@ msgstr "Choices"
 msgid "Röstare"
 msgstr "Voter"
 
-#: publications/models.py:17
+#: publications/models.py:15
 msgid "Title"
 msgstr "Title"
 
-#: publications/models.py:19
+#: publications/models.py:17
 msgid "Leave empty to auto-generate from title"
 msgstr "Leave empty to auto-generate from title"
 
-#: publications/models.py:20
+#: publications/models.py:18
 msgid "File"
 msgstr "File"
 
-#: publications/models.py:21
+#: publications/models.py:19
 msgid "Description"
 msgstr "Description"
 
-#: publications/models.py:22
+#: publications/models.py:20
 msgid "Uploaded at"
 msgstr "Uploaded at"
 
-#: publications/models.py:23
+#: publications/models.py:21
 msgid "Updated at"
 msgstr "Updated at"
 
-#: publications/models.py:24
+#: publications/models.py:22
 msgid "Publication Date"
 msgstr "Publication date"
 
-#: publications/models.py:25
+#: publications/models.py:23
 msgid "Public Access"
 msgstr "Public Access"
 
-#: publications/models.py:26
+#: publications/models.py:24
 msgid ""
 "If checked, this PDF will be visible to everyone. If unchecked, it will be "
 "hidden from all users."
-msgstr ""
+msgstr "If checked, this PDF will be visible to everyone. If unchecked, it will be hidden from all users."
 "If checked, this PDF will be visible to everyone. If unchecked, it will be "
 "hidden from all users."
 
-#: publications/models.py:28
+#: publications/models.py:26
 msgid "Requires Login"
 msgstr "Requires Login"
 
-#: publications/models.py:29
+#: publications/models.py:27
 msgid "If checked, users must be logged in to access this PDF"
 msgstr "If checked, users must be logged in to access this PDF"
 
-#: publications/models.py:32
+#: publications/models.py:30
 msgid "PDF File"
 msgstr "PDF File"
 
-#: publications/models.py:33
+#: publications/models.py:31
 msgid "PDF Files"
 msgstr "PDF Files"
 
@@ -762,12 +947,24 @@ msgstr "Require login"
 msgid "Visa endast åt inloggade användare"
 msgstr "Show only for logged in users"
 
+#: templates/biocum/date/components/mobile.html:3
+#: templates/biocum/date/components/sidebar.html:4
+#: templates/date/date/components/events.html:3
+#: templates/demo/date/components/events.html:3
+#: templates/demo/date/components/mobile.html:3
+#: templates/kk/date/april_start.html:88
+#: templates/kk/date/components/events.html:3
+#: templates/pulterit/date/components/events.html:3
+msgid "Evenemang"
+msgstr "Events"
+
 #: templates/biocum/date/components/mobile.html:42
 #: templates/biocum/date/components/sidebar.html:45
 #: templates/date/date/components/events.html:42
 #: templates/demo/date/components/events.html:44
 #: templates/demo/date/components/mobile.html:42
 #: templates/kk/date/components/events.html:42
+#: templates/pulterit/date/components/events.html:42
 msgid "Inga aktiva evenemang hittades"
 msgstr "No active events found"
 
@@ -777,14 +974,25 @@ msgstr "No active events found"
 #: templates/demo/date/components/events.html:47
 #: templates/demo/date/components/mobile.html:45
 #: templates/kk/date/components/events.html:45
+#: templates/pulterit/date/components/events.html:45
 msgid "Mera evenemang"
 msgstr "More events"
+
+#: templates/biocum/date/components/news.html:3
+#: templates/common/news/index.html:6
+#: templates/date/date/components/news.html:3
+#: templates/demo/date/components/news.html:3
+#: templates/kk/date/components/news.html:3
+#: templates/pulterit/date/components/news.html:3
+msgid "Nyheter"
+msgstr "News"
 
 #: templates/biocum/date/components/news.html:11
 #: templates/date/date/components/news.html:14
 #: templates/demo/date/components/news.html:11
-#: templates/kk/date/april_start.html:69
+#: templates/kk/date/april_start.html:78
 #: templates/kk/date/components/news.html:10
+#: templates/pulterit/date/components/news.html:14
 msgid "Läs mera"
 msgstr "Read more"
 
@@ -792,109 +1000,54 @@ msgstr "Read more"
 #: templates/date/date/components/news.html:17
 #: templates/demo/date/components/news.html:14
 #: templates/kk/date/components/news.html:13
+#: templates/pulterit/date/components/news.html:17
 msgid "Inga nyheter hittades"
 msgstr "No news found"
 
-#: templates/biocum/events/arsfest.html:83
-#: templates/common/events/arsfest.html:95
-#: templates/common/events/baal_anmalan.html:24
-#: templates/common/events/baal_detail.html:58
-#: templates/common/events/detail.html:47
-#: templates/common/events/kk100_detail.html:59
-#: templates/common/events/tomtejakt.html:303
-#: templates/common/events/wappmiddag.html:59
-#: templates/date/events/arsfest.html:75 templates/on/events/arsfest.html:83
-msgid "Anmälningstiden gick ut för"
-msgstr "Registration time ended"
+#: templates/biocum/date/components/news.html:16
+#: templates/date/date/components/news.html:19
+#: templates/demo/date/components/news.html:16
+#: templates/kk/date/april_start.html:83
+#: templates/kk/date/components/news.html:15
+#: templates/pulterit/date/components/news.html:19
+msgid "Mera nyheter"
+msgstr "More news"
 
-#: templates/biocum/events/arsfest.html:83
-#: templates/common/events/arsfest.html:95
-#: templates/common/events/baal_anmalan.html:24
-#: templates/common/events/baal_detail.html:58
-#: templates/common/events/detail.html:47
-#: templates/common/events/kk100_detail.html:59
-#: templates/common/events/tomtejakt.html:303
-#: templates/common/events/wappmiddag.html:59
-#: templates/date/events/arsfest.html:75 templates/on/events/arsfest.html:83
-msgid "sedan"
-msgstr "ago"
-
-#: templates/biocum/events/arsfest.html:85
 #: templates/biocum/events/arsfest.html:87
-#: templates/common/events/arsfest.html:97
-#: templates/common/events/arsfest.html:99
-#: templates/common/events/baal_anmalan.html:26
-#: templates/common/events/baal_anmalan.html:28
-#: templates/common/events/baal_detail.html:60
-#: templates/common/events/baal_detail.html:62
-#: templates/common/events/detail.html:49
-#: templates/common/events/detail.html:51
-#: templates/common/events/kk100_detail.html:61
-#: templates/common/events/kk100_detail.html:63
-#: templates/common/events/tomtejakt.html:305
-#: templates/common/events/tomtejakt.html:307
-#: templates/common/events/wappmiddag.html:61
-#: templates/common/events/wappmiddag.html:63
-#: templates/date/events/arsfest.html:77 templates/date/events/arsfest.html:79
-#: templates/on/events/arsfest.html:85 templates/on/events/arsfest.html:87
-#| msgid "Anmälan öppnas om "
-msgid "Anmälan öppnas"
-msgstr "Registration opens"
-
-#: templates/biocum/events/arsfest.html:85
-#: templates/biocum/events/arsfest.html:87
-#: templates/common/events/arsfest.html:97
-#: templates/common/events/arsfest.html:99
-#: templates/common/events/baal_anmalan.html:26
-#: templates/common/events/baal_anmalan.html:28
-#: templates/common/events/baal_detail.html:60
-#: templates/common/events/baal_detail.html:62
-#: templates/common/events/detail.html:49
-#: templates/common/events/detail.html:51
-#: templates/common/events/kk100_detail.html:61
-#: templates/common/events/kk100_detail.html:63
-#: templates/common/events/registering.html:9
-#: templates/common/events/tomtejakt.html:305
-#: templates/common/events/tomtejakt.html:307
-#: templates/common/events/wappmiddag.html:61
-#: templates/common/events/wappmiddag.html:63
-#: templates/date/events/arsfest.html:77 templates/date/events/arsfest.html:79
-#: templates/on/events/arsfest.html:85 templates/on/events/arsfest.html:87
-msgid "om"
-msgstr "in"
-
-#: templates/biocum/events/arsfest.html:96
-#: templates/common/events/arsfest.html:107
-#: templates/common/events/baal_detail.html:70
-#: templates/common/events/detail.html:59
-#: templates/common/events/kk100_detail.html:71
-#: templates/common/events/tomtejakt.html:315
-#: templates/common/events/wappmiddag.html:71
-#: templates/date/events/arsfest.html:87 templates/on/events/arsfest.html:95
+#: templates/common/events/arsfest.html:98
+#: templates/common/events/baal_detail.html:63
+#: templates/common/events/detail.html:52
+#: templates/common/events/kk100_detail.html:64
+#: templates/common/events/tomtejakt.html:308
+#: templates/common/events/wappmiddag.html:64
+#: templates/date/events/arsfest.html:78
+#: templates/pulterit/events/arsfest.html:79
 msgid "Anmälda"
 msgstr "Attendees"
 
-#: templates/biocum/events/arsfest.html:117
-#: templates/common/events/arsfest.html:128
-#: templates/common/events/baal_detail.html:91
-#: templates/common/events/kk100_detail.html:92
-#: templates/common/events/tomtejakt.html:336
-#: templates/common/events/wappmiddag.html:92
-#: templates/date/events/arsfest.html:108 templates/on/events/arsfest.html:116
+#: templates/biocum/events/arsfest.html:108
+#: templates/common/events/arsfest.html:119
+#: templates/common/events/baal_detail.html:84
+#: templates/common/events/kk100_detail.html:85
+#: templates/common/events/tomtejakt.html:329
+#: templates/common/events/wappmiddag.html:85
+#: templates/date/events/arsfest.html:99
+#: templates/pulterit/events/arsfest.html:100
 msgid "Inga anmälda, var den första att anmäla dig!"
 msgstr "No attendees yet, be the first to sign up!"
 
-#: templates/biocum/events/arsfest.html:121
-#: templates/common/events/arsfest.html:132
-#: templates/common/events/baal_detail.html:95
-#: templates/common/events/kk100_detail.html:96
-#: templates/common/events/tomtejakt.html:340
-#: templates/common/events/wappmiddag.html:96
-#: templates/date/events/arsfest.html:112 templates/on/events/arsfest.html:120
+#: templates/biocum/events/arsfest.html:112
+#: templates/common/events/arsfest.html:123
+#: templates/common/events/baal_detail.html:88
+#: templates/common/events/kk100_detail.html:89
+#: templates/common/events/tomtejakt.html:333
+#: templates/common/events/wappmiddag.html:89
+#: templates/date/events/arsfest.html:103
+#: templates/pulterit/events/arsfest.html:104
 msgid ""
 "Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta "
 "styrelsen vid behov."
-msgstr ""
+msgstr "Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta styrelsen vid behov."
 "The attendee list has been hidden because this is an old event, contact the "
 "board if needed."
 
@@ -902,29 +1055,90 @@ msgstr ""
 msgid "Städa upp media"
 msgstr "Clean up media"
 
-#: templates/common/archive/detail.html:16
-msgid "Publicerats"
-msgstr "Published"
+#: templates/common/admin/base_site.html:4
+msgid "Django site admin"
+msgstr "Django site admin"
 
-#: templates/common/archive/detail.html:20
-#: templates/common/polls/detail.html:15
-#: templates/common/polls/results.html:15
-msgid "Tillbaka"
-msgstr "Back"
+#: templates/common/admin/base_site.html:7
+msgid "Django administration"
+msgstr "Django administration"
+
+#: templates/common/admin/base_site.html:17
+msgid "Welcome,"
+msgstr "Welcome,"
+
+#: templates/common/admin/base_site.html:22
+msgid "View site"
+msgstr "View site"
+
+#: templates/common/admin/base_site.html:25
+#| msgid "Change my password"
+msgid "Change password"
+msgstr "Change my password"
+
+#: templates/common/admin/base_site.html:29
+msgid "Log out"
+msgstr "Log out"
+
+#: templates/common/admin/base_site.html:35
+#: templates/pulterit/core/header.html:64
+#: templates/pulterit/core/header.html:79
+msgid "Language"
+msgstr "Language"
+
+#: templates/common/archive/detail.html:22
+msgid "Sida"
+msgstr "Page"
+
+#: templates/common/archive/detail.html:23
+msgid "Bild"
+msgstr "Image"
+
+#: templates/common/archive/detail.html:24
+msgid "Dela eller kopiera länk"
+msgstr "Share or copy link"
+
+#: templates/common/archive/detail.html:25
+msgid "Delar..."
+msgstr "Sharing..."
+
+#: templates/common/archive/detail.html:26
+msgid "Länk delad"
+msgstr "Link shared"
+
+#: templates/common/archive/detail.html:27
+msgid "Länk kopierad"
+msgstr "Link copied"
+
+#: templates/common/archive/detail.html:28
+msgid "Kunde inte dela eller kopiera länk"
+msgstr "Could not share or copy link"
+
+#: templates/common/archive/detail.html:29
+msgid "Laddar fler bilder..."
+msgstr "Loading more images..."
+
+#: templates/common/archive/detail.html:30
+msgid "Kunde inte ladda fler bilder."
+msgstr "Could not load more images."
+
+#: templates/common/archive/detail.html:31
+msgid "Ladda ner aktuell bild"
+msgstr "Download current image"
 
 #: templates/common/archive/document_index.html:7
 msgid "Dokument arkiv"
 msgstr "Document archive"
 
-#: templates/common/archive/document_index.html:19
+#: templates/common/archive/document_index.html:21
 msgid "Ladda upp dokument"
 msgstr "Upload document"
 
-#: templates/common/archive/exam_detail.html:17
+#: templates/common/archive/exam_detail.html:19
 msgid "Lägg till tentamen"
 msgstr "Add test"
 
-#: templates/common/archive/exams_index.html:15
+#: templates/common/archive/exams_index.html:17
 msgid "Lägg till arkiv"
 msgstr "Add archive"
 
@@ -933,45 +1147,91 @@ msgstr "Add archive"
 msgid "Arkiv"
 msgstr "Archive"
 
-#: templates/common/archive/index.html:17
+#: templates/common/archive/index.html:19
 msgid "Skapa nytt album"
 msgstr "Create new album"
 
-#: templates/common/archive/index.html:47
-#: templates/common/archive/picture_index.html:42
+#: templates/common/archive/index.html:49
+#: templates/common/archive/picture_index.html:49
 msgid "Inga arkiv hittades..."
 msgstr "No archives found..."
 
-#: templates/common/archive/picture_index.html:33
-msgid "Bilder"
-msgstr "Pictures"
+#: templates/common/archive/partials/detail_gallery_shell.html:10
+msgid "Bildsidor"
+msgstr "Image pages"
+
+#: templates/common/archive/partials/detail_gallery_shell.html:11
+msgid ""
+"Om automatisk bildladdning inte fungerar kan du bläddra mellan sidorna här."
+msgstr "If automatic image loading does not work, you can browse pages here."
+
+#: templates/common/archive/partials/detail_gallery_shell.html:34
+msgid ""
+"JavaScript krävs för automatisk bildladdning. Använd sidlänkarna ovan för "
+"att visa fler bilder."
+msgstr "JavaScript krävs för automatisk bildladdning. Använd sidlänkarna ovan för att visa fler bilder."
+"JavaScript is required for automatic image loading. Use the page links above "
+"to view more images."
+
+#: templates/common/archive/partials/detail_header.html:4
+msgid "Publicerats"
+msgstr "Published"
+
+#: templates/common/archive/partials/detail_header.html:7
+#, python-format
+msgid "%(total_count)s bild"
+msgid_plural "%(total_count)s bilder"
+msgstr[0] "%(total_count)s image"
+msgstr[1] "%(total_count)s images"
+
+#: templates/common/archive/partials/detail_header.html:16
+#: templates/common/polls/detail.html:17 templates/common/polls/results.html:17
+msgid "Tillbaka"
+msgstr "Back"
+
+#: templates/common/archive/partials/picture_items.html:8
+#, python-format
+msgid "Öppna bild %(image_number)s av %(total)s"
+msgstr "Open image %(image_number)s of %(total)s"
+
+#: templates/common/archive/partials/picture_items.html:14
+#, python-format
+msgid "Bild %(image_number)s av %(total)s i albumet"
+msgstr "Image %(image_number)s of %(total)s in the album"
+
+#: templates/common/archive/picture_index.html:36
+#, python-format
+msgid "%(picture_count)s Bild"
+msgid_plural "%(picture_count)s Bilder"
+msgstr[0] "%(picture_count)s image"
+msgstr[1] "%(picture_count)s images"
 
 #: templates/common/archive/upload.html:5
 msgid "Ladda upp bilder"
 msgstr "Upload pictures"
 
-#: templates/common/core/404.html:10
+#: templates/common/core/404.html:9
 msgid "Page not found"
 msgstr "Page not found"
 
-#: templates/common/core/404.html:21
+#: templates/common/core/404.html:23
 msgid "Sidan hittades inte"
 msgstr "Page not found"
 
-#: templates/common/core/404.html:23 templates/common/core/418.html:26
-#: templates/common/core/500.html:17
+#: templates/common/core/404.html:25 templates/common/core/418.html:28
+#: templates/common/core/500.html:19
 msgid "Till startsidan"
 msgstr "To the homepage"
 
-#: templates/common/core/418.html:10
+#: templates/common/core/418.html:9
 msgid "I'm a teapot"
 msgstr "I'm a teapot"
 
-#: templates/common/core/418.html:21
+#: templates/common/core/418.html:23
 msgid "Jag är en tekokare"
 msgstr "I am a teapot"
 
-#: templates/common/core/418.html:24
+#: templates/common/core/418.html:26
 msgid "Inget vatten i glöggkokaren, tack"
 msgstr "No water in the glögg kettle, please"
 
@@ -979,11 +1239,32 @@ msgstr "No water in the glögg kettle, please"
 msgid "Server error"
 msgstr "Server error"
 
-#: templates/common/core/500.html:16
+#: templates/common/core/500.html:18
 msgid "Serverfel, försök igen om en stund"
 msgstr "Server error, try again in a while"
 
-#: templates/common/core/footer.html:31
+#: templates/common/core/cookie_banner.html:6
+msgid ""
+"Vi använder cookies för att förbättra din upplevelse på vår webbplats. Genom "
+"att fortsätta använda webbplatsen godkänner du vår användning av cookies."
+msgstr "Vi använder cookies för att förbättra din upplevelse på vår webbplats. Genom att fortsätta använda webbplatsen godkänner du vår användning av cookies."
+"We use cookies to improve your experience on our website. By continuing to "
+"use the website, you accept our use of cookies."
+
+#: templates/common/core/cookie_banner.html:9
+msgid "Godkänn"
+msgstr "Accept"
+
+#: templates/common/core/cookie_banner.html:10
+msgid "Avböj"
+msgstr "Decline"
+
+#: templates/common/core/footer.html:24 templates/pulterit/core/footer.html:12
+#, python-format
+msgid "%(association_name)s logo"
+msgstr "%(association_name)s logo"
+
+#: templates/common/core/footer.html:29
 #, python-format
 msgid "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
 msgstr "The board of %(association_name)s can be contacted as follows."
@@ -992,41 +1273,32 @@ msgstr "The board of %(association_name)s can be contacted as follows."
 msgid "E-post"
 msgstr "Email"
 
-#: templates/common/core/footer.html:39
-#| msgid "Adress"
+#: templates/common/core/footer.html:38
 msgid "Address"
 msgstr "Address"
 
-#: templates/common/core/header.html:51
+#: templates/common/core/header.html:50 templates/pulterit/core/header.html:50
 msgid "Logga ut"
 msgstr "Log out"
 
 #: templates/common/core/header.html:66
-msgid "Language"
+#| msgid "Language"
+msgid "Choose language"
 msgstr "Language"
 
-#: templates/common/events/arsfest.html:105
-#: templates/common/events/detail.html:57
-msgid "Det finns"
-msgstr "There are"
-
-#: templates/common/events/baal_anmalan.html:18
+#: templates/common/events/baal_anmalan.html:21
 msgid "Kemistbaal Anmälning"
 msgstr "Kemistbaal Registration"
 
-#: templates/common/events/detail.html:57
-msgid "platser!"
-msgstr "places!"
-
-#: templates/common/events/detail.html:80
+#: templates/common/events/detail.html:73
 msgid "Inga anmälda ännu, var den första!"
 msgstr "No registrations yet, be the first!"
 
-#: templates/common/events/detail.html:84
+#: templates/common/events/detail.html:77
 msgid ""
-"Deltagarlistan har gömts eftersom det här är ett gammalt evenemang, kontakta"
-" styrelsen vid behov."
-msgstr ""
+"Deltagarlistan har gömts eftersom det här är ett gammalt evenemang, kontakta "
+"styrelsen vid behov."
+msgstr "Deltagarlistan har gömts eftersom det här är ett gammalt evenemang, kontakta styrelsen vid behov."
 "The attendee list has been hidden because this is an old event, contact the "
 "board if needed."
 
@@ -1035,23 +1307,23 @@ msgstr ""
 msgid "Händelser"
 msgstr "Events"
 
-#: templates/common/events/event_passcode.html:22
+#: templates/common/events/event_passcode.html:24
 msgid "Skicka"
 msgstr "Send"
 
-#: templates/common/events/index.html:18 templates/on/events/index.html:58
+#: templates/common/events/index.html:20
 msgid "Kommande händelser"
 msgstr "Upcoming events"
 
-#: templates/common/events/index.html:57 templates/on/events/index.html:97
+#: templates/common/events/index.html:59
 msgid "Inga aktiva händelser"
 msgstr "No active events"
 
-#: templates/common/events/index.html:61 templates/on/events/index.html:101
+#: templates/common/events/index.html:63
 msgid "Tidigare händelser"
 msgstr "Earlier events"
 
-#: templates/common/events/index.html:67 templates/on/events/index.html:107
+#: templates/common/events/index.html:69
 msgid "Inga tidigare händelser"
 msgstr "No earlier events"
 
@@ -1063,32 +1335,31 @@ msgstr "Date:"
 msgid "Inga deltagare..."
 msgstr "No attendees..."
 
-#: templates/common/events/registering.html:9
-#| msgid "Anmälan stängs om "
+#: templates/common/events/registering.html:8
 msgid "Anmälan stängs"
 msgstr "Registration closes"
 
-#: templates/common/events/registering.html:10
+#: templates/common/events/registering.html:9
 msgid "OBS!"
 msgstr "ATTENTION!"
 
-#: templates/common/events/registering.html:10
+#: templates/common/events/registering.html:9
 msgid "Anmälningen är bindande om inget annat meddelas."
 msgstr "The registration is binding unless otherwise specified."
 
-#: templates/common/events/registering.html:11
+#: templates/common/events/registering.html:10
 msgid ""
 "Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på "
 "förhinder."
-msgstr ""
-"Remember to cancel your registration as soon as possible if you wont be able"
-" to attend."
+msgstr "Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på förhinder."
+"Remember to cancel your registration as soon as possible if you wont be able "
+"to attend."
 
-#: templates/common/events/registering.html:33
+#: templates/common/events/registering.html:59
 msgid "Anmäl"
 msgstr "Sign up"
 
-#: templates/common/events/registering.html:38
+#: templates/common/events/registering.html:64
 #, python-format
 msgid ""
 "Genom att anmäla dig godkänner du att %(ASSOCIATION_NAME_FULL)s lagrar ditt "
@@ -1096,169 +1367,226 @@ msgid ""
 "anmälningstiden syns den anmäldas namn i listan nedan. Efter evenemanget "
 "sparas informationen för statistiska ändamål och syns endast för hemsidans "
 "administratörer."
-msgstr ""
+msgstr "Genom att anmäla dig godkänner du att %(ASSOCIATION_NAME_FULL)s lagrar ditt namn, din e-post samt eventuell annan nödvändig information. Under anmälningstiden syns den anmäldas namn i listan nedan. Efter evenemanget sparas informationen för statistiska ändamål och syns endast för hemsidans administratörer."
 "By signing up, you accept that %(ASSOCIATION_NAME_FULL)s will store your "
-"name, your email as well as other possibly needed information. The attendees"
-" name will be visible in the list below during the time of the registration."
-" The information is saved for statistical purposes after the event has "
+"name, your email as well as other possibly needed information. The attendees "
+"name will be visible in the list below during the time of the registration. "
+"The information is saved for statistical purposes after the event has "
 "occurred, but it will only be accessible to the administrators of the "
 "website."
 
-#: templates/common/events/registering.html:46
+#: templates/common/events/registering.html:72
 msgid ""
 "Evenemanget är tyvärr fullt! Vänligen kontakta evenemangets kontaktperson"
 msgstr "This event is unfortunately full. Please contact the event organizer."
 
-#: templates/common/events/registering.html:48
+#: templates/common/events/registering.html:74
 msgid ""
-"Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan"
-" och meddelas om du får plats."
-msgstr ""
+"Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan "
+"och meddelas om du får plats."
+msgstr "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan och meddelas om du får plats."
 "The event is full! By signing up you will be put on the reserve list, and "
 "you will be contacted in case a spot frees up."
+
+#: templates/common/events/registration_state.html:7
+#| msgid "Anmälningstiden gick ut för"
+msgid "Anmälningstiden gick ut"
+msgstr "Registration time ended"
+
+#: templates/common/events/registration_state.html:9
+msgid "Anmälan öppnas"
+msgstr "Registration opens"
 
 #: templates/common/members/certificate.html:5
 msgid "Medlemspass"
 msgstr "Membership pass"
 
-#: templates/common/members/functionary.html:19
+#: templates/common/members/functionary.html:20
 msgid "Radera"
 msgstr "Delete"
 
-#: templates/common/members/functionary.html:68
+#: templates/common/members/functionary.html:69
 msgid "Lägg till"
 msgstr "Add"
 
-#: templates/common/members/functionary.html:77
+#: templates/common/members/functionary.html:78
 msgid "Är du säker på att du vill ta bort posten?"
 msgstr "Are you sure you want to delete the mail?"
 
-#: templates/common/members/registration/login.html:12
-#: templates/common/members/registration/login.html:16
+#: templates/common/members/registration/login.html:7
 msgid "Login"
 msgstr "Login"
 
-#: templates/common/members/registration/login.html:18
+#: templates/common/members/registration/login.html:12
+msgid "Enter one of your backup tokens to continue."
+msgstr "Enter one of your backup tokens to continue."
+
+#: templates/common/members/registration/login.html:22
+msgid "Use another authentication method:"
+msgstr "Use another authentication method:"
+
+#: templates/common/members/registration/login.html:38
+msgid "Use backup token"
+msgstr "Use backup token"
+
+#: templates/common/members/registration/login.html:52
+msgid "Logga in med GitHub"
+msgstr "Logga in med GitHub"
+
+#: templates/common/members/registration/login.html:56
 msgid "Glömt lösenordet?"
 msgstr "Forgot your password?"
 
-#: templates/common/members/registration/login.html:19
-#: templates/common/members/signup.html:53
+#: templates/common/members/registration/login.html:58
+#: templates/common/members/signup.html:54
 msgid "Registrera dig"
 msgstr "Register"
 
 #: templates/common/members/registration/password_change_done.html:4
-#: templates/common/members/registration/password_change_done.html:12
+#: templates/common/members/registration/password_change_done.html:13
 msgid "Password change successful"
 msgstr "Password change successful"
 
-#: templates/common/members/registration/password_change_done.html:13
+#: templates/common/members/registration/password_change_done.html:14
 msgid "Your password was changed."
 msgstr "Your password was changed."
 
 #: templates/common/members/registration/password_change_form.html:4
-#: templates/common/members/registration/password_change_form.html:11
-#: templates/common/members/userinfo.html:114
+#: templates/common/members/registration/password_change_form.html:12
+#: templates/common/members/userinfo.html:136
 msgid "Password change"
 msgstr "Password change"
 
-#: templates/common/members/registration/password_change_form.html:12
+#: templates/common/members/registration/password_change_form.html:13
 msgid ""
-"Please enter your old password, for security’s sake, and then enter your new"
-" password twice so we can verify you typed it in correctly."
-msgstr ""
-"Please enter your old password, for security’s sake, and then enter your new"
-" password twice so we can verify you typed it in correctly."
+"Please enter your old password, for security’s sake, and then enter your new "
+"password twice so we can verify you typed it in correctly."
+msgstr "Please enter your old password, for security’s sake, and then enter your new password twice so we can verify you typed it in correctly."
+"Please enter your old password, for security’s sake, and then enter your new "
+"password twice so we can verify you typed it in correctly."
 
-#: templates/common/members/registration/password_change_form.html:71
+#: templates/common/members/registration/password_change_form.html:72
 msgid "Change my password"
 msgstr "Change my password"
 
 #: templates/common/members/registration/password_reset_complete.html:6
 #: templates/common/members/registration/password_reset_confirm.html:5
 #: templates/common/members/registration/password_reset_form.html:5
-#: templates/common/members/registration/password_reset_form.html:12
+#: templates/common/members/registration/password_reset_form.html:13
 msgid "Glömt lösenord"
 msgstr "Forgot my password"
 
-#: templates/common/members/registration/password_reset_complete.html:14
+#: templates/common/members/registration/password_reset_complete.html:15
 msgid "Ditt lösenord har updaterats"
 msgstr "Your password was changed."
 
-#: templates/common/members/registration/password_reset_complete.html:14
+#: templates/common/members/registration/password_reset_complete.html:15
 msgid "Du kan nu logga in som vanligt"
 msgstr "You can now log in normally"
 
-#: templates/common/members/registration/password_reset_complete.html:16
+#: templates/common/members/registration/password_reset_complete.html:17
 msgid "Logga in"
 msgstr "Login"
 
-#: templates/common/members/registration/password_reset_confirm.html:14
-#: templates/common/members/registration/password_reset_confirm.html:18
+#: templates/common/members/registration/password_reset_confirm.html:15
+#: templates/common/members/registration/password_reset_confirm.html:19
 msgid "Byt lösenord"
 msgstr "Change password"
 
-#: templates/common/members/registration/password_reset_confirm.html:24
+#: templates/common/members/registration/password_reset_confirm.html:25
 msgid ""
-"Denna länk är inte giltigt, det kan hända att länken redan använts. Vänligen"
-" fråga efter en ny länk."
-msgstr ""
+"Denna länk är inte giltigt, det kan hända att länken redan använts. Vänligen "
+"fråga efter en ny länk."
+msgstr "Denna länk är inte giltigt, det kan hända att länken redan använts. Vänligen fråga efter en ny länk."
 "This link is invalid, it might already have been used. Please request a new "
 "link."
 
-#: templates/common/members/registration/password_reset_done.html:13
+#: templates/common/members/registration/password_reset_done.html:5
+msgid "Password reset - Email sent"
+msgstr "Password reset - Email sent"
+
+#: templates/common/members/registration/password_reset_done.html:14
 msgid ""
 "Vi har skicket instruktionerna till din mail, ifall en användare är "
 "registrerad med denna epost. Du borde få mailet inom kort"
-msgstr ""
+msgstr "Vi har skicket instruktionerna till din mail, ifall en användare är registrerad med denna epost. Du borde få mailet inom kort"
 "We have sent instruction to your email, in case a user is registered under "
 "this email address. You should receive the email shortly."
 
-#: templates/common/members/registration/password_reset_done.html:16
+#: templates/common/members/registration/password_reset_done.html:17
 msgid ""
 "Ifall du inte fått något mail. Säkerställ att du angett rätt e-post adress "
 "samt vänligen granska skräpkorgen."
-msgstr ""
+msgstr "Ifall du inte fått något mail. Säkerställ att du angett rätt e-post adress samt vänligen granska skräpkorgen."
 "If you have not received an email, make sure you provided the correct email "
 "address and check your spam inbox."
 
-#: templates/common/members/registration/password_reset_done.html:18
-#: templates/common/members/registration/registration_complete.html:24
+#: templates/common/members/registration/password_reset_done.html:19
+#: templates/common/members/registration/registration_complete.html:25
 msgid "Gå till Startsidan"
 msgstr "Go to homepage"
 
-#: templates/common/members/registration/password_reset_form.html:27
+#: templates/common/members/registration/password_reset_email.html:3
+#, python-format
+msgid "För att inleda lösenordsåterställningen för kontot %(username)s,"
+msgstr "To start the password reset for the account %(username)s,"
+
+#: templates/common/members/registration/password_reset_email.html:4
+msgid "klicka på länken nedan:"
+msgstr "click the link below:"
+
+#: templates/common/members/registration/password_reset_email.html:8
+msgid ""
+"Ifall det inte går att klicka på länken, vänligen kopiera och klistra in "
+"länken i din webbläsare."
+msgstr "Ifall det inte går att klicka på länken, vänligen kopiera och klistra in länken i din webbläsare."
+"If clicking the link does not work, please copy and paste the link into your "
+"browser."
+
+#: templates/common/members/registration/password_reset_email.html:10
+msgid "Om ytterligare frågor uppstår, vänligen kontakta styrelsen."
+msgstr "If you have any further questions, please contact the board."
+
+#: templates/common/members/registration/password_reset_email.html:13
+msgid "Mvh,"
+msgstr "Best regards,"
+
+#: templates/common/members/registration/password_reset_form.html:28
 msgid "Sänd"
 msgstr "Send"
 
-#: templates/common/members/registration/registration_complete.html:13
+#: templates/common/members/registration/registration_complete.html:5
+msgid "Registration completed"
+msgstr "Registration completed"
+
+#: templates/common/members/registration/registration_complete.html:14
 msgid "Styrelsen har blivit notifierad angående din anmälan."
 msgstr "The board has been notified of your sign-up"
 
-#: templates/common/members/registration/registration_complete.html:17
+#: templates/common/members/registration/registration_complete.html:18
 msgid ""
 "Kolla e-postadressen du registrerade dig med för ytterligare instruktioner"
 msgstr "Check the email you registered with for additional instructions"
 
-#: templates/common/members/registration/registration_complete.html:21
+#: templates/common/members/registration/registration_complete.html:22
 msgid ""
 "Du kan logga in <strong>efter</strong> att styrelsen har granskat och "
 "godkänt ditt konto."
-msgstr ""
+msgstr "Du kan logga in <strong>efter</strong> att styrelsen har granskat och godkänt ditt konto."
 "You can log in <strong>after</strong> the board has verified and accepted "
 "your account."
 
 #: templates/common/members/signup.html:5
-#: templates/common/members/signup.html:25
+#: templates/common/members/signup.html:26
 msgid "Sign up"
 msgstr "Sign up"
 
-#: templates/common/members/signup.html:47
+#: templates/common/members/signup.html:48
 #: templates/common/social/harassment_form.html:31
 msgid "Jag godkänner"
 msgstr "I accept"
 
-#: templates/common/members/signup.html:49
+#: templates/common/members/signup.html:50
 #: templates/common/social/harassment_form.html:33
 msgid "villkoren"
 msgstr "the terms and conditions"
@@ -1267,33 +1595,78 @@ msgstr "the terms and conditions"
 msgid "Användarinformation"
 msgstr "User information"
 
-#: templates/common/news/article.html:15 templates/common/news/author.html:15
-#: templates/date/news/article.html:18
-msgid "Skriven "
-msgstr "Written"
+#: templates/common/members/userinfo.html:65
+msgid "Edit"
+msgstr "Edit"
 
-#: templates/common/news/article.html:15 templates/date/news/article.html:18
-msgid "av"
-msgstr "by"
+#: templates/common/members/userinfo.html:109
+msgid "Save"
+msgstr "Save"
 
-#: templates/common/news/author.html:15
-msgid " av "
-msgstr "by"
+#: templates/common/members/userinfo.html:110
+msgid "Cancel"
+msgstr "Cancel"
 
-#: templates/common/news/author.html:22
+#: templates/common/members/userinfo.html:119
+msgid "GitHub-konto kopplat."
+msgstr "GitHub-konto kopplat."
+
+#: templates/common/members/userinfo.html:122
+msgid "Koppla bort GitHub"
+msgstr "Koppla bort GitHub"
+
+#: templates/common/members/userinfo.html:125
+msgid "Inget GitHub-konto kopplat."
+msgstr "Inget GitHub-konto kopplat."
+
+#: templates/common/members/userinfo.html:128
+msgid "Koppla GitHub-konto"
+msgstr "Koppla GitHub-konto"
+
+#: templates/common/members/userinfo.html:140
+#: templates/common/two_factor/profile/disable.html:6
+msgid "Disable two-factor authentication"
+msgstr "Disable two-factor authentication"
+
+#: templates/common/members/userinfo.html:143
+#: templates/common/two_factor/core/backup_tokens.html:6
+msgid "Backup tokens"
+msgstr "Backup tokens"
+
+#: templates/common/members/userinfo.html:147
+#: templates/common/two_factor/core/setup.html:6
+#| msgid "Disable two-factor authentication"
+msgid "Two-factor authentication"
+msgstr "Disable two-factor authentication"
+
+#: templates/common/members/userinfo.html:151
+msgid "Positions of trust"
+msgstr "Positions of trust"
+
+#: templates/common/members/userinfo.html:154
+#, python-format
+msgid ""
+"To change your username or email address, contact the board at "
+"%(ASSOCIATION_EMAIL)s"
+msgstr "To change your username or email address, contact the board at %(ASSOCIATION_EMAIL)s"
+
+#: templates/common/news/article.html:18 templates/common/news/author.html:18
+#: templates/date/news/article.html:21 templates/pulterit/news/article.html:20
+#, python-format
+msgid "Skriven %(published_time)s av"
+msgstr "Skriven %(published_time)s av"
+
+#: templates/common/news/author.html:29
 msgid "Inga artiklar hittades..."
 msgstr "No articles found..."
 
-#: templates/common/news/index.html:6
-#: templates/date/date/components/news.html:3
-msgid "Nyheter"
-msgstr "News"
-
-#: templates/common/news/index.html:38 templates/date/news/index.html:41
+#: templates/common/news/index.html:40 templates/date/news/index.html:43
+#: templates/pulterit/news/index.html:42
 msgid "Läs mera..."
 msgstr "Read more..."
 
-#: templates/common/news/index.html:43 templates/date/news/index.html:46
+#: templates/common/news/index.html:45 templates/date/news/index.html:48
+#: templates/pulterit/news/index.html:47
 msgid "Inga nyheter hittades..."
 msgstr "No news found..."
 
@@ -1302,19 +1675,28 @@ msgstr "No news found..."
 msgid "Poll"
 msgstr "Poll"
 
-#: templates/common/polls/index.html:28
+#: templates/common/polls/index.html:30
 msgid "Det finns inga aktiva omröstningar"
 msgstr "There are no active revotes"
 
-#: templates/common/polls/results.html:18
+#: templates/common/polls/results.html:20
 msgid "Resultat: "
 msgstr "Results:"
 
-#: templates/common/polls/results.html:24
-msgid "Totala röster: "
+#: templates/common/polls/results.html:25
+#, python-format
+msgid "%(choice_text)s: %(vote_count)s vote -- %(vote_percentage)s%%"
+msgid_plural "%(choice_text)s: %(vote_count)s votes -- %(vote_percentage)s%%"
+msgstr[0] "%(choice_text)s: %(vote_count)s vote -- %(vote_percentage)s%%"
+msgstr[1] "%(choice_text)s: %(vote_count)s votes -- %(vote_percentage)s%%"
+
+#: templates/common/polls/results.html:33
+#, python-format
+#| msgid "Totala röster: "
+msgid "Totala röster: %(total_votes)s"
 msgstr "Total votes:"
 
-#: templates/common/polls/results.html:26
+#: templates/common/polls/results.html:38
 msgid "Resultaten är gömda"
 msgstr "The results are hidden"
 
@@ -1322,39 +1704,37 @@ msgstr "The results are hidden"
 msgid "Publications"
 msgstr "Publications"
 
-#: templates/common/publications/list.html:14
+#: templates/common/publications/list.html:16
 msgid "Publikationer"
 msgstr "Publications"
 
-#: templates/common/publications/list.html:22
+#: templates/common/publications/list.html:24
 msgid "Författare"
 msgstr "Author"
 
-#: templates/common/publications/list.html:30
+#: templates/common/publications/list.html:32
 msgid "Det finns inga publikationer."
 msgstr "There are no publications."
 
-#: templates/common/publications/list.html:38
+#: templates/common/publications/list.html:40
 msgid "first"
 msgstr "first"
 
-#: templates/common/publications/list.html:39
+#: templates/common/publications/list.html:41
 msgid "previous"
 msgstr "previous"
 
-#: templates/common/publications/list.html:43
-msgid "Page"
-msgstr "Page"
+#: templates/common/publications/list.html:45
+#, python-format
+#| msgid "Öppna bild %(image_number)s av %(total)s"
+msgid "Page %(page_number)s of %(total_pages)s."
+msgstr "Open image %(image_number)s of %(total)s"
 
-#: templates/common/publications/list.html:43
-msgid "of"
-msgstr "of"
-
-#: templates/common/publications/list.html:47
+#: templates/common/publications/list.html:51
 msgid "next"
 msgstr "next"
 
-#: templates/common/publications/list.html:48
+#: templates/common/publications/list.html:52
 msgid "last"
 msgstr "last"
 
@@ -1367,18 +1747,18 @@ msgstr "Report harrasment or possible shortcomings in the equality plan"
 msgid ""
 "Du kan rapportera trakasserier och brister i jämlikhetsplanen antingen "
 "anonymt eller ange din kontaktinformation. Vi tar alla former av "
-"trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en"
-" trygg och respektfull miljö för alla medlemmar. %(association_name)ss "
+"trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en "
+"trygg och respektfull miljö för alla medlemmar. %(association_name)ss "
 "trygghetspersoner behandlar alla rapporteringar av trakasserier och tar "
 "kontakt till %(association_short)ss styrelse och/eller ÅAS trakasseriombud "
 "om det så önskas."
-msgstr ""
+msgstr "Du kan rapportera trakasserier och brister i jämlikhetsplanen antingen anonymt eller ange din kontaktinformation. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar. %(association_name)ss trygghetspersoner behandlar alla rapporteringar av trakasserier och tar kontakt till %(association_short)ss styrelse och/eller ÅAS trakasseriombud om det så önskas."
 "You can report harassment and shortcomings in the equality plan anonymously "
 "or by providing your contact information. We take all forms of harassment "
-"seriously and will act to maintain a safe and respectful environment for all"
-" members. %(association_name)ss safety contacts handle all harassment "
-"reports and can contact the %(association_short)ss board and/or the student "
-"union harassment contacts if requested."
+"seriously and will act to maintain a safe and respectful environment for all "
+"members. %(association_name)ss safety contacts handle all harassment reports "
+"and can contact the %(association_short)ss board and/or the student union "
+"harassment contacts if requested."
 
 #: templates/common/social/harassment_form.html:26
 msgid "Ange din Email om du vill bli kontaktad"
@@ -1392,233 +1772,49 @@ msgstr "Submit"
 msgid "Tack för att du rapporterade."
 msgstr "Thank you for reporting."
 
-#: templates/common/staticpages/staticpage.html:20
+#: templates/common/staticpages/staticpage.html:26
+msgid "Öppna originaldokumentet"
+msgstr "Öppna originaldokumentet"
+
+#: templates/common/staticpages/staticpage.html:36
 msgid "Logga in för att se den här sidan"
 msgstr "Login to see this page"
 
-#: templates/date/date/components/about.html:4
-msgid "Om oss"
-msgstr "About us"
-
-#: templates/date/date/components/about.html:7
-msgid ""
-"Datateknologerna vid Åbo Akademi rf är en förening för studerande vid "
-"utbildningsprogrammet i datateknik vid Fakulteten för Naturvetenskaper och "
-"Teknik vid Åbo Akademi, samt för studerande vid övriga tekniskt inriktade "
-"utbildningslinjer i databehandling. Föreningen grundades 1999, närmare "
-"bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare "
-"och stiliga tofsmössor."
-msgstr ""
-"Datateknologerna vid Åbo Akademi rf is an organization for the students at "
-"the computer engineering study programme at the faculty of science and "
-"techonology at Åbo Akademi. The organization was founded in 1999, more "
-"specifically on the 24.8. at 16:32. The members can be recognized by their "
-"black overalls and stylish engineering caps."
-
-#: templates/date/date/components/events.html:3
-msgid "Evenemang"
-msgstr "Events"
-
-#: templates/date/date/components/extras.html:3
-msgid "Annat"
-msgstr "Other"
-
-#: templates/date/date/components/extras.html:4
-msgid "Trakasseriombud"
-msgstr "Harrasment representatives"
-
-#: templates/date/date/components/extras.html:6
-msgid ""
-"Om du upplever trakasserier i samband med Datateknologernas verksamhet, "
-"vänligen"
-msgstr ""
-"If you encounter harrasment during the activity of Datateknologerna, please"
-
-#: templates/date/date/components/extras.html:7
-msgid "rapportera"
-msgstr "report"
-
-#: templates/date/date/components/extras.html:8
-msgid ""
-"detta via hemsidan. Vi tar alla former av trakasserier på allvar och kommer "
-"att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för "
-"alla medlemmar."
-msgstr ""
-"this via the website. We take all forms of harrasment very seriously and "
-"will take the necessary steps for ensuring a safe and respectful environment"
-" for all members."
-
-#: templates/date/date/components/extras.html:10
-msgid "Joke"
-msgstr "Joke"
-
-#: templates/date/date/components/header.html:8
-msgid "Datateknologerna"
-msgstr "Datateknologerna"
-
-#: templates/date/date/components/header.html:9
-msgid "vid Åbo Akademi rf"
-msgstr "vid Åbo Akademi rf"
-
-#: templates/date/date/components/news.html:19
-msgid "Mera nyheter"
-msgstr "More news"
-
-#: templates/date/date/components/partners.html:3
-msgid "Samarbetspartners"
-msgstr "Cooperation partners"
-
-#: templates/date/date/components/partners.html:12
-msgid "Vill du samarbeta med DaTe?"
-msgstr "Do you want to collaborate with DaTe?"
-
-#: templates/kk/date/april_start.html:72
-msgid "inga nyheter hittades"
-msgstr "no news found"
-
-#: templates/kk/date/april_start.html:87
-msgid "inga aktiva evenemang hittades"
-msgstr "no active events found"
-
-#: templates/common/members/userinfo.html:18
-msgid "Medlemsprofil"
-msgstr "Member profile"
-
-#: templates/common/members/userinfo.html:22
-#: templates/common/members/userinfo.html:132
-msgid "Tvåfaktorsautentisering"
-msgstr "Two-factor authentication"
-
-#: templates/common/members/userinfo.html:24
-msgid "Aktiverad"
-msgstr "Enabled"
-
-#: templates/common/members/userinfo.html:26
-msgid "Inte aktiverad"
-msgstr "Not enabled"
-
-#: templates/common/members/userinfo.html:31
-#: templates/common/members/userinfo.html:77
-msgid "Email:"
-msgstr "Email:"
-
-#: templates/common/members/userinfo.html:35
-#: templates/common/members/userinfo.html:84
-msgid "Förnamn:"
-msgstr "First name:"
-
-#: templates/common/members/userinfo.html:39
-#: templates/common/members/userinfo.html:88
-msgid "Efternamn:"
-msgstr "Last name:"
-
-#: templates/common/members/userinfo.html:43
-#: templates/common/members/userinfo.html:92
-msgid "Telefonnummer:"
-msgstr "Phone number:"
-
-#: templates/common/members/userinfo.html:47
-#: templates/common/members/userinfo.html:96
-msgid "Adress:"
-msgstr "Address:"
-
-#: templates/common/members/userinfo.html:51
-#: templates/common/members/userinfo.html:100
-msgid "Zip kod:"
-msgstr "ZIP code:"
-
-#: templates/common/members/userinfo.html:55
-#: templates/common/members/userinfo.html:104
-msgid "Stad:"
-msgstr "City:"
-
-#: templates/common/members/userinfo.html:59
-#: templates/common/members/userinfo.html:108
-msgid "Land:"
-msgstr "Country:"
-
-#: templates/common/members/userinfo.html:63
-#: templates/common/members/userinfo.html:112
-msgid "Medlems typ:"
-msgstr "Membership type:"
-
-#: templates/common/members/userinfo.html:69
-msgid "Edit"
-msgstr "Edit"
-
-#: templates/common/members/userinfo.html:117
-msgid "Save"
-msgstr "Save"
-
-#: templates/common/members/userinfo.html:118
-msgid "Cancel"
-msgstr "Cancel"
-
-#: templates/common/members/userinfo.html:136
-#, python-format
-msgid "För att ändra ditt användarnamn eller e-post, kontakta styrelsen på %(ASSOCIATION_EMAIL)s"
-msgstr "To change your username or email address, contact the board at %(ASSOCIATION_EMAIL)s"
-
-#: templates/common/members/registration/password_reset_done.html:5
-msgid "Password reset - Email sent"
-msgstr "Password reset - Email sent"
-
-#: templates/common/members/registration/registration_complete.html:5
-msgid "Registration completed"
-msgstr "Registration completed"
-
-#: templates/common/members/registration/password_reset_email.html:3
-#, python-format
-msgid "För att inleda lösenordsåterställningen för kontot %(username)s,"
-msgstr "To start the password reset for the account %(username)s,"
-
-#: templates/common/members/registration/password_reset_email.html:4
-msgid "klicka på länken nedan:"
-msgstr "click the link below:"
-
-#: templates/common/members/registration/password_reset_email.html:8
-msgid "Ifall det inte går att klicka på länken, vänligen kopiera och klistra in länken i din webbläsare."
-msgstr "If clicking the link does not work, please copy and paste the link into your browser."
-
-#: templates/common/members/registration/password_reset_email.html:10
-msgid "Om ytterligare frågor uppstår, vänligen kontakta styrelsen."
-msgstr "If you have any further questions, please contact the board."
-
-#: templates/common/members/registration/password_reset_email.html:13
-msgid "Mvh,"
-msgstr "Best regards,"
-
 #: templates/common/two_factor/_wizard_actions.html:6
+msgid "Back"
+msgstr "Back"
+
+#: templates/common/two_factor/_wizard_actions.html:10
 msgid "Continue"
 msgstr "Continue"
 
-#: templates/common/two_factor/core/login.html:10
-msgid "Enter your username or email address and password."
-msgstr "Enter your username or email address and password."
+#: templates/common/two_factor/core/backup_tokens.html:7
+msgid ""
+"Generate backup tokens to keep access if your authenticator app is "
+"unavailable."
+msgstr "Generate backup tokens to keep access if your authenticator app is unavailable."
+"Generate backup tokens to keep access if your authenticator app is "
+"unavailable."
 
-#: templates/common/two_factor/core/login.html:14
-msgid "Enter one of your backup tokens to continue."
-msgstr "Enter one of your backup tokens to continue."
-
-#: templates/common/two_factor/core/login.html:24
-msgid "Use another authentication method:"
-msgstr "Use another authentication method:"
-
-#: templates/common/two_factor/core/login.html:40
-msgid "Use backup token"
-msgstr "Use backup token"
+#: templates/common/two_factor/core/backup_tokens.html:20
+msgid "Generate new backup tokens"
+msgstr "Generate new backup tokens"
 
 #: templates/common/two_factor/core/setup.html:9
-msgid "Add an authenticator app to protect your account with a second login step."
+msgid ""
+"Add an authenticator app to protect your account with a second login step."
 msgstr "Add an authenticator app to protect your account with a second login step."
+"Add an authenticator app to protect your account with a second login step."
 
 #: templates/common/two_factor/core/setup.html:11
 msgid "Choose how you want to verify login attempts."
 msgstr "Choose how you want to verify login attempts."
 
 #: templates/common/two_factor/core/setup.html:13
-msgid "Scan this QR code with your authenticator app, or enter the secret manually."
+msgid ""
+"Scan this QR code with your authenticator app, or enter the secret manually."
 msgstr "Scan this QR code with your authenticator app, or enter the secret manually."
+"Scan this QR code with your authenticator app, or enter the secret manually."
 
 #: templates/common/two_factor/core/setup.html:15
 msgid "QR code for authenticator app setup"
@@ -1632,109 +1828,176 @@ msgstr "Secret key"
 msgid "Then enter the code generated by your app."
 msgstr "Then enter the code generated by your app."
 
-#: templates/common/two_factor/core/backup_tokens.html:6
-msgid "Backup tokens"
-msgstr "Backup tokens"
-
-#: templates/common/two_factor/core/backup_tokens.html:7
-msgid "Generate backup tokens to keep access if your authenticator app is unavailable."
-msgstr "Generate backup tokens to keep access if your authenticator app is unavailable."
-
-#: templates/common/two_factor/core/backup_tokens.html:20
-msgid "Generate new backup tokens"
-msgstr "Generate new backup tokens"
-
-#: templates/common/two_factor/core/backup_tokens.html:24
-msgid "Back to profile"
-msgstr "Back to profile"
-
-#: templates/common/two_factor/profile/disable.html:6
-msgid "Disable two-factor authentication"
-msgstr "Disable two-factor authentication"
-
 #: templates/common/two_factor/profile/disable.html:7
 msgid "This removes the extra verification step from your account."
 msgstr "This removes the extra verification step from your account."
 
-#: templates/common/two_factor/profile/disable.html:13
+#: templates/common/two_factor/profile/disable.html:24
 msgid "Disable"
 msgstr "Disable"
 
-#: templates/common/archive/detail.html:18
-msgid "Sida"
-msgstr "Page"
+#: templates/date/date/components/about.html:4
+msgid "Om oss"
+msgstr "About us"
 
-#: templates/common/archive/detail.html:19
-msgid "Bild"
-msgstr "Image"
+#: templates/date/date/components/about.html:7
+msgid ""
+"Datateknologerna vid Åbo Akademi rf är en förening för studerande vid "
+"utbildningsprogrammet i datateknik vid Fakulteten för Naturvetenskaper och "
+"Teknik vid Åbo Akademi, samt för studerande vid övriga tekniskt inriktade "
+"utbildningslinjer i databehandling. Föreningen grundades 1999, närmare "
+"bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare "
+"och stiliga tofsmössor."
+msgstr "Datateknologerna vid Åbo Akademi rf är en förening för studerande vid utbildningsprogrammet i datateknik vid Fakulteten för Naturvetenskaper och Teknik vid Åbo Akademi, samt för studerande vid övriga tekniskt inriktade utbildningslinjer i databehandling. Föreningen grundades 1999, närmare bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare och stiliga tofsmössor."
+"Datateknologerna vid Åbo Akademi rf is an organization for the students at "
+"the computer engineering study programme at the faculty of science and "
+"techonology at Åbo Akademi. The organization was founded in 1999, more "
+"specifically on the 24.8. at 16:32. The members can be recognized by their "
+"black overalls and stylish engineering caps."
 
-#: templates/common/archive/detail.html:20
-msgid "Dela eller kopiera länk"
-msgstr "Share or copy link"
+#: templates/date/date/components/extras.html:3
+msgid "Annat"
+msgstr "Other"
 
-#: templates/common/archive/detail.html:21
-msgid "Delar..."
-msgstr "Sharing..."
+#: templates/date/date/components/extras.html:4
+msgid "Trakasseriombud"
+msgstr "Harrasment representatives"
 
-#: templates/common/archive/detail.html:22
-msgid "Länk delad"
-msgstr "Link shared"
+#: templates/date/date/components/extras.html:6
+msgid ""
+"Om du upplever trakasserier i samband med Datateknologernas verksamhet, "
+"vänligen"
+msgstr "Om du upplever trakasserier i samband med Datateknologernas verksamhet, vänligen"
+"If you encounter harrasment during the activity of Datateknologerna, please"
 
-#: templates/common/archive/detail.html:23
-msgid "Länk kopierad"
-msgstr "Link copied"
+#: templates/date/date/components/extras.html:7
+msgid "rapportera"
+msgstr "report"
 
-#: templates/common/archive/detail.html:24
-msgid "Kunde inte dela eller kopiera länk"
-msgstr "Could not share or copy link"
+#: templates/date/date/components/extras.html:8
+msgid ""
+"detta via hemsidan. Vi tar alla former av trakasserier på allvar och kommer "
+"att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för "
+"alla medlemmar."
+msgstr "detta via hemsidan. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar."
+"this via the website. We take all forms of harrasment very seriously and "
+"will take the necessary steps for ensuring a safe and respectful environment "
+"for all members."
 
-#: templates/common/archive/detail.html:25
-msgid "Laddar fler bilder..."
-msgstr "Loading more images..."
+#: templates/date/date/components/header.html:8
+msgid "Datateknologerna"
+msgstr "Datateknologerna"
 
-#: templates/common/archive/detail.html:26
-msgid "Kunde inte ladda fler bilder."
-msgstr "Could not load more images."
+#: templates/date/date/components/header.html:9
+msgid "vid Åbo Akademi rf"
+msgstr "vid Åbo Akademi rf"
 
-#: templates/common/archive/detail.html:27
-msgid "Ladda ner aktuell bild"
-msgstr "Download current image"
+#: templates/date/date/components/partners.html:12
+#: templates/demo/date/components/partners.html:12
+msgid "Vill du samarbeta med DaTe?"
+msgstr "Do you want to collaborate with DaTe?"
 
-#: templates/common/archive/partials/detail_header.html:7
+#: templates/kk/date/april_start.html:81
+msgid "inga nyheter hittades"
+msgstr "no news found"
+
+#: templates/kk/date/april_start.html:96
+msgid "inga aktiva evenemang hittades"
+msgstr "no active events found"
+
+#: templates/pulterit/date/components/partners.html:8
+#: templates/pulterit/date/components/partners.html:12
+msgid "Partner logo"
+msgstr "Partner logo"
+
+#~ msgid "Please check this box to continue."
+#~ msgstr "Please check this box to continue."
+
+#~ msgid "sedan"
+#~ msgstr "ago"
+
+#~ msgid "om"
+#~ msgstr "in"
+
+#~ msgid "Bilder"
+#~ msgstr "Pictures"
+
+#~ msgid "Det finns"
+#~ msgstr "There are"
+
+#~ msgid "platser!"
+#~ msgstr "places!"
+
+#~ msgid "Skriven "
+#~ msgstr "Written"
+
+#~ msgid "av"
+#~ msgstr "by"
+
+#~ msgid " av "
+#~ msgstr "by"
+
+#~ msgid "Page"
+#~ msgstr "Page"
+
+#~ msgid "of"
+#~ msgstr "of"
+
+#~ msgid "Joke"
+#~ msgstr "Joke"
+
+#~ msgid "Medlemsprofil"
+#~ msgstr "Member profile"
+
+#~ msgid "Tvåfaktorsautentisering"
+#~ msgstr "Two-factor authentication"
+
+#~ msgid "Aktiverad"
+#~ msgstr "Enabled"
+
+#~ msgid "Inte aktiverad"
+#~ msgstr "Not enabled"
+
+#~ msgid "Email:"
+#~ msgstr "Email:"
+
+#~ msgid "Förnamn:"
+#~ msgstr "First name:"
+
+#~ msgid "Efternamn:"
+#~ msgstr "Last name:"
+
+#~ msgid "Telefonnummer:"
+#~ msgstr "Phone number:"
+
+#~ msgid "Adress:"
+#~ msgstr "Address:"
+
+#~ msgid "Zip kod:"
+#~ msgstr "ZIP code:"
+
+#~ msgid "Stad:"
+#~ msgstr "City:"
+
+#~ msgid "Land:"
+#~ msgstr "Country:"
+
+#~ msgid "Medlems typ:"
+#~ msgstr "Membership type:"
+
 #, python-format
-msgid "%(total_count)s bild"
-msgid_plural "%(total_count)s bilder"
-msgstr[0] "%(total_count)s image"
-msgstr[1] "%(total_count)s images"
+#~ msgid ""
+#~ "För att ändra ditt användarnamn eller e-post, kontakta styrelsen på "
+#~ "%(ASSOCIATION_EMAIL)s"
+#~ msgstr ""
+#~ "To change your username or email address, contact the board at "
+#~ "%(ASSOCIATION_EMAIL)s"
 
-#: templates/common/archive/picture_index.html:36
-#, python-format
-msgid "%(picture_count)s Bild"
-msgid_plural "%(picture_count)s Bilder"
-msgstr[0] "%(picture_count)s image"
-msgstr[1] "%(picture_count)s images"
+#~ msgid "Enter your username or email address and password."
+#~ msgstr "Enter your username or email address and password."
 
-#: templates/common/archive/partials/detail_gallery_shell.html:10
-msgid "Bildsidor"
-msgstr "Image pages"
-
-#: templates/common/archive/partials/detail_gallery_shell.html:11
-msgid "Om automatisk bildladdning inte fungerar kan du bläddra mellan sidorna här."
-msgstr "If automatic image loading does not work, you can browse pages here."
-
-#: templates/common/archive/partials/detail_gallery_shell.html:34
-msgid "JavaScript krävs för automatisk bildladdning. Använd sidlänkarna ovan för att visa fler bilder."
-msgstr "JavaScript is required for automatic image loading. Use the page links above to view more images."
-
-#: templates/common/archive/partials/picture_items.html:8
-#, python-format
-msgid "Öppna bild %(image_number)s av %(total)s"
-msgstr "Open image %(image_number)s of %(total)s"
-
-#: templates/common/archive/partials/picture_items.html:14
-#, python-format
-msgid "Bild %(image_number)s av %(total)s i albumet"
-msgstr "Image %(image_number)s of %(total)s in the album"
+#~ msgid "Back to profile"
+#~ msgstr "Back to profile"
 
 #~ msgid "Registreringsdatum"
 #~ msgstr "Registration date"

@@ -1,9 +1,10 @@
 from django.contrib import admin
 from django.contrib.admin.models import LogEntry
+from core.admin_base import ModelAdmin
 
 
 @admin.register(LogEntry)
-class LogEntryAdmin(admin.ModelAdmin):
+class LogEntryAdmin(ModelAdmin):
     """Read-only display of admin actions for audit logging."""
 
     date_hierarchy = "action_time"

@@ -1,21 +1,37 @@
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Permission
-from django.db.models import Exists, OuterRef
-from django.db.models.functions import Lower
+from django.db.models import CharField, Exists, OuterRef, Q, Value
+from django.db.models.functions import Lower, Replace
+from django.utils.translation import gettext_lazy as _
 from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from core.admin_base import ModelAdmin, TabularInline
 
 from members.forms import (MemberCreationForm, AdminMemberUpdateForm,
                            SubscriptionPaymentForm, SubscriptionPaymentChoiceField)
 from members.models import (Member, Subscription,
                             SubscriptionPayment, FunctionaryRole, Functionary, MembershipType)
 
-admin.site.register(Permission)
-admin.site.register(Subscription)
+
+@admin.register(Permission)
+class PermissionAdmin(ModelAdmin):
+    list_display = ('name', 'content_type', 'codename')
+    search_fields = ('name', 'codename', 'content_type__app_label', 'content_type__model')
+    list_filter = ('content_type__app_label',)
+    ordering = ('content_type__app_label', 'content_type__model', 'codename')
 
 
-class TOTPDeviceInline(admin.TabularInline):
+@admin.register(Subscription)
+class SubscriptionAdmin(ModelAdmin):
+    list_display = ('name', 'price', 'does_expire', 'renewal_period', 'renewal_scale')
+    search_fields = ('name',)
+    list_filter = ('does_expire',)
+    ordering = ('name',)
+
+
+class TOTPDeviceInline(TabularInline):
     model = TOTPDevice
     extra = 0
     max_num = 0
@@ -26,7 +42,7 @@ class TOTPDeviceInline(admin.TabularInline):
     verbose_name_plural = "2FA devices"
 
 
-class StaticDeviceInline(admin.TabularInline):
+class StaticDeviceInline(TabularInline):
     model = StaticDevice
     extra = 0
     max_num = 0
@@ -50,8 +66,11 @@ SUPPORTING_MEMBER = 3
 SENIOR_MEMBER = 4
 
 
+_UserAdminBases = (ModelAdmin, auth_admin.UserAdmin) if getattr(settings, 'USE_UNFOLD', False) else (auth_admin.UserAdmin,)
+
+
 @admin.register(Member)
-class UserAdmin(auth_admin.UserAdmin):
+class UserAdmin(*_UserAdminBases):
     fieldsets = (
         (None, {'fields': AdminMemberUpdateForm.Meta.fields}),
     )
@@ -61,9 +80,37 @@ class UserAdmin(auth_admin.UserAdmin):
 
     form = AdminMemberUpdateForm
     add_form = MemberCreationForm
-    list_display = ('username', 'first_name', 'last_name', 'email', 'membership_type', 'is_active', 'is_staff', 'has_two_factor')
-    list_filter = ('membership_type', 'is_active', 'groups')
-    search_fields = ('first_name', 'last_name', 'email')
+    list_display = (
+        'username',
+        'first_name',
+        'last_name',
+        'email',
+        'membership_type',
+        'year_of_admission',
+        'is_active',
+        'is_staff',
+        'has_two_factor',
+    )
+    list_filter = ('membership_type', 'year_of_admission', 'is_active', 'groups')
+    autocomplete_fields = ('membership_type', 'groups')
+    search_fields = (
+        'username',
+        'email',
+        'first_name',
+        'last_name',
+        'phone',
+        'address',
+        'zip_code',
+        'city',
+        'country',
+        'membership_type__name',
+        'groups__name',
+        'subscriptionpayment__subscription__name',
+    )
+    search_help_text = _(
+        'Search by name, username, email, phone, address, postal code, city, '
+        'membership type, group, subscription, admission year, member ID, or GitHub ID.'
+    )
     ordering = [Lower('username'), ]
     readonly_fields = ('last_login', 'has_two_factor')
     inlines = [TOTPDeviceInline, StaticDeviceInline]
@@ -77,7 +124,70 @@ class UserAdmin(auth_admin.UserAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         confirmed_devices = TOTPDevice.objects.filter(user=OuterRef('pk'), confirmed=True)
-        return queryset.annotate(_has_two_factor=Exists(confirmed_devices))
+        return queryset.select_related('membership_type').prefetch_related('groups').annotate(
+            _has_two_factor=Exists(confirmed_devices)
+        )
+
+    def get_search_results(self, request, queryset, search_term):
+        base_queryset = queryset
+        queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)
+        search_term = search_term.strip()
+
+        if not search_term:
+            return queryset, may_have_duplicates
+
+        extra_query = Q()
+
+        for term in search_term.split():
+            if term.isdigit():
+                numeric_term = int(term)
+                extra_query |= Q(pk=numeric_term)
+                extra_query |= Q(year_of_admission=numeric_term)
+                extra_query |= Q(github_id=numeric_term)
+
+        phone_digits = ''.join(char for char in search_term if char.isdigit())
+        if len(phone_digits) >= 4:
+            phone_variants = {phone_digits}
+            if phone_digits.startswith('0') and len(phone_digits) > 1:
+                phone_variants.add(phone_digits[1:])
+                phone_variants.add('358' + phone_digits[1:])
+            elif phone_digits.startswith('358') and len(phone_digits) > 3:
+                phone_variants.add('0' + phone_digits[3:])
+                phone_variants.add(phone_digits[3:])
+
+            base_queryset = base_queryset.annotate(
+                _phone_digits=Replace(
+                    Replace(
+                        Replace(
+                            Replace(
+                                Replace(
+                                    Replace('phone', Value(' '), Value('')),
+                                    Value('-'),
+                                    Value(''),
+                                ),
+                                Value('+'),
+                                Value(''),
+                            ),
+                            Value('('),
+                            Value(''),
+                        ),
+                        Value(')'),
+                        Value(''),
+                    ),
+                    Value('.'),
+                    Value(''),
+                    output_field=CharField(),
+                )
+            )
+            phone_query = Q()
+            for variant in phone_variants:
+                phone_query |= Q(_phone_digits__icontains=variant)
+            extra_query |= phone_query
+
+        if extra_query:
+            queryset = queryset | base_queryset.filter(extra_query)
+
+        return queryset, True
 
     def has_two_factor(self, obj):
         return obj._has_two_factor
@@ -86,12 +196,14 @@ class UserAdmin(auth_admin.UserAdmin):
     has_two_factor.short_description = "2FA"
 
     def activate_user(self, request, queryset):
-        queryset.update(is_active=True)
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f"Aktiverade {updated} användare.")
 
     activate_user.short_description = "Aktivera användare"
 
     def deactivate_user(self, request, queryset):
-        queryset.update(is_active=False)
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f"Deaktiverade {updated} användare.")
 
     deactivate_user.short_description = "Deaktivera användare"
 
@@ -109,15 +221,24 @@ class UserAdmin(auth_admin.UserAdmin):
         return Member.objects.all().order_by(Lower('username')).values_list('username', flat=True)
 
 
-admin.site.register(MembershipType)
+@admin.register(MembershipType)
+class MembershipTypeAdmin(ModelAdmin):
+    list_display = ('name', 'permission_profile')
+    search_fields = ('name',)
+    ordering = ('name',)
 
 
 @admin.register(SubscriptionPayment)
-class SubscriptionPaymentAdmin(admin.ModelAdmin):
+class SubscriptionPaymentAdmin(ModelAdmin):
     form = SubscriptionPaymentForm
     fields = SubscriptionPaymentForm.Meta.fields
     list_display = ('full_name', 'subscription', 'is_active', 'expires')
     list_filter = ('subscription', 'date_expires')
+    search_fields = ('member__first_name', 'member__last_name', 'member__username', 'member__email', 'subscription__name')
+    autocomplete_fields = ('subscription',)
+    list_select_related = ('member', 'subscription')
+    ordering = ('-date_paid',)
+    date_hierarchy = 'date_paid'
 
     def full_name(self, obj):
         return obj.member.get_full_name()
@@ -129,14 +250,18 @@ class SubscriptionPaymentAdmin(admin.ModelAdmin):
 
 
 @admin.register(Functionary)
-class FunctionaryAdmin(admin.ModelAdmin):
+class FunctionaryAdmin(ModelAdmin):
+    list_display = ('member', 'functionary_role', 'year')
     list_filter = ('functionary_role', 'year')
-    search_fields = ('member__first_name', 'member__last_name', 'functionary_role__title', 'year')
-    ordering = ['-year', ]
+    search_fields = ('member__first_name', 'member__last_name', 'member__username', 'member__email', 'functionary_role__title', 'year')
+    autocomplete_fields = ('member', 'functionary_role')
+    list_select_related = ('member', 'functionary_role')
+    ordering = ['-year']
 
 
 @admin.register(FunctionaryRole)
-class FunctionaryRoleAdmin(admin.ModelAdmin):
+class FunctionaryRoleAdmin(ModelAdmin):
+    list_display = ('title', 'board')
     list_filter = ('board',)
     search_fields = ('title',)
-    ordering = ['title', ]
+    ordering = ['title']

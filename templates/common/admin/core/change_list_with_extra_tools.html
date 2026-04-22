@@ -1,0 +1,18 @@
+{% extends 'admin/change_list.html' %}
+{% load admin_ui %}
+
+{% block object-tools-items %}
+    {{ block.super }}
+    {% admin_changelist_extra_links cl as extra_links %}
+    {% for link in extra_links %}
+        <li class="list-none">
+            <a href="{{ link.href }}"
+               class="button border border-base-200 bg-white flex font-medium gap-2 items-center justify-center px-3 py-2 rounded-default shadow-xs text-sm text-font-default-light hover:bg-base-100/80 dark:bg-transparent dark:border-base-700 dark:text-font-default-dark dark:hover:bg-base-800/80">
+                {% if link.icon %}
+                    <span class="material-symbols-outlined text-base">{{ link.icon }}</span>
+                {% endif %}
+                <span>{{ link.label }}</span>
+            </a>
+        </li>
+    {% endfor %}
+{% endblock %}

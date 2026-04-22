@@ -15,6 +15,7 @@ Use the sections below to jump to either editor-facing instructions or implement
 
 - The project can run multiple association/site variants via `PROJECT_NAME`.
 - Language switching and multilingual content are controlled by `ENABLE_LANGUAGE_FEATURES`.
+- The Django admin theme is controlled by `USE_UNFOLD`; false uses classic admin, true enables Unfold.
 - The public docs are meant to complement the README, not replace it. Keep operational commands in the README and app-specific behavior in these guides.
 
 ## Admin & Content Editors

@@ -2,6 +2,7 @@ import logging
 
 from django_ckeditor_5.fields import CKEditor5Field
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -22,6 +23,9 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        return reverse('news:aa_index', args=[self.slug])
+
 
 class Post(models.Model):
     title = models.CharField(_('Titel'), max_length=255, blank=False)
@@ -41,6 +45,11 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        if self.category_id and self.category:
+            return reverse('news:detail', args=[self.category.slug, self.slug])
+        return reverse('news:detail', args=[self.slug])
 
     def publish(self):
         self.published_time = timezone.now()
