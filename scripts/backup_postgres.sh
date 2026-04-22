@@ -9,32 +9,29 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-source "${PROJECT_ROOT}/scripts/lib/date_env.sh"
 
-requested_mode="${1:-prod}"
-output_dir="${2:-${PROJECT_ROOT}/backups}"
+output_dir="${1:-${PROJECT_ROOT}/backups}"
 
 if [[ "$output_dir" != /* ]]; then
   output_dir="${PROJECT_ROOT}/$output_dir"
 fi
-
-config_file="$(date_resolve_env_file "$PROJECT_ROOT" "$requested_mode")"
-resolved_mode="$(date_resolve_env_mode "$requested_mode" "$config_file")"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "docker is required but was not found in PATH"
   exit 1
 fi
 
+env_file="${PROJECT_ROOT}/.env"
+if [ ! -f "$env_file" ]; then
+  echo "No .env file found at $env_file"
+  exit 1
+fi
+
 set -a
-source "$config_file"
+source "$env_file"
 set +a
 
-config_compose_file="$(date_read_env_value "$config_file" COMPOSE_FILE)"
-date_apply_env_mode "$resolved_mode"
-
-compose_file="$(date_resolve_compose_file "$resolved_mode" "$config_compose_file")"
-
+compose_file="${COMPOSE_FILE:-docker-compose.yml}"
 if [[ "$compose_file" = /* ]]; then
   compose_path="$compose_file"
 else
