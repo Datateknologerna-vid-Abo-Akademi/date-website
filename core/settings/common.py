@@ -18,6 +18,9 @@ import environ
 
 from .dependencies.ckeditor import *  # noqa
 
+# Makes more complicated typeings work at runtime
+import django_stubs_ext
+django_stubs_ext.monkeypatch()
 
 env = environ.Env(
     # set casting, default value

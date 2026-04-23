@@ -1,0 +1,98 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{# TODO i18n #}
+
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - Attendance for {{ object.title }} {% endblock %}
+
+{% block content %}
+
+<div class="container-md min-vh-100 container-margin-top d-flex justify-content-center">
+    <div class="container-size">
+        <div class="content" style="width: fit-content">
+            <div class="lh-1">
+                <h2 class="header">{{ object.title }}</h2>
+                <h5>{{ object.description }}</h5>
+                <p></p>
+                <p>Start: {{ object.start_datetime }}</p>
+                <p>End: {{ object.end_datetime|default:"-" }}</p>
+
+                {% if secret %}
+                <p>Secret: {{ secret }}</p>
+                {% endif %}
+            </div>
+
+            {% if user.is_authenticated %}
+            <p>You are
+                {% if is_present %}
+                <span class="text-success">present</span>
+                {% else %}
+                <span class="text-warning">not present</span>
+                {% endif %}
+            </p>
+            {% endif %}
+
+
+            <div>
+                <h2>Present attendees:</h2>
+                <ul class="list-dashed">
+                {% for a in object.present_attendees %}
+                <li>{{a}}</li>
+                {% endfor %}
+                </ul>
+            </div>
+
+
+            <div>
+                {% if generic_error %}
+                <p class="warning">Error: {{ generic_error }}</p>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if not user.is_authenticated %}
+                    <div class="mb-3">
+                        <label for="non_member_name">You are not logged in. If you do not have an account fill in your name below. If you have an account please log in.</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control {% if name_error %} is-invalid {% endif %}" id="non_member_name" name="non_member_name" value="" placeholder="Name" required>
+                            {% if name_error %}
+                            <div class="invalid-feedback">
+                                {{ name_error }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control {% if secret_error %} is-invalid {% endif %}" name="secret" value="{{ secret }}" placeholder="Event secret" required>
+                        {% if secret_error %}
+                        <div class="invalid-feedback">
+                            {{ secret_error }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="input-group mb-3">
+                        <button type="submit" class="btn btn-success" name="type" value="0" {% if user.is_authenticated and is_present %} disabled {% endif %}>Enter</button>
+                        <button type="submit" class="btn btn-warning" name="type" value="1" {% if user.is_authenticated and not is_present %} disabled {% endif %}>Leave</button>
+                    </div>
+                </form>
+            </div>
+
+            {% if user.is_staff %}
+            <div>
+                <h2>Attendance changes</h2>
+                <ul>
+                {% for c in object.attendance_changes.all %}
+                <li>{{ c.attendee }} {{ c.get_type_display.lower }} at {{ c.timestamp }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
