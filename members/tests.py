@@ -53,6 +53,17 @@ class UsernameValidatorTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('username', form.errors)
 
+    def test_member_creation_form_accepts_dotted_username(self):
+        form = MemberCreationForm(data={
+            'username': 'first.last',
+            'email': 'dotted@example.com',
+            'first_name': 'Dot',
+            'last_name': 'User',
+            'membership_type': self.membership_type.id,
+            'password': 'secret123',
+        })
+        self.assertTrue(form.is_valid())
+
     def test_signup_form_rejects_invalid_username(self):
         form = SignUpForm(data={
             'username': 'bad!name',
