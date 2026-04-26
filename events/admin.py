@@ -139,6 +139,7 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
         attendee_sq = (
             EventAttendees.objects
             .filter(event=OuterRef('pk'))
+            .order_by()
             .values('event')
             .annotate(cnt=Count('pk'))
             .values('cnt')
@@ -146,6 +147,7 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
         original_sq = (
             EventAttendees.objects
             .filter(original_event=OuterRef('pk'))
+            .order_by()
             .values('original_event')
             .annotate(cnt=Count('pk'))
             .values('cnt')
