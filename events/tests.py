@@ -565,6 +565,36 @@ class EventAdminTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
+    def test_changelist_attendee_counts_ignore_attendee_ordering(self):
+        child_event = Event.objects.create(
+            title="Child Admin Event",
+            slug="child-admin-event",
+            author=self.admin_user,
+            parent=self.event,
+        )
+        for attendee_nr in (10, 20):
+            EventAttendees.objects.create(
+                event=self.event,
+                original_event=child_event,
+                attendee_nr=attendee_nr,
+                user=f"Attendee {attendee_nr}",
+                email=f"attendee-{attendee_nr}@example.com",
+                time_registered=timezone.now(),
+            )
+        request = RequestFactory().get(reverse("admin:events_event_changelist"))
+        request.user = self.admin_user
+        event_admin = admin.site._registry[Event]
+
+        events = {
+            event.pk: event
+            for event in event_admin.get_queryset(request).filter(pk__in=[self.event.pk, child_event.pk])
+        }
+
+        self.assertEqual(events[self.event.pk]._attendee_count, 2)
+        self.assertEqual(events[child_event.pk]._original_event_attendee_count, 2)
+        self.assertEqual(event_admin.get_attendee_count(events[self.event.pk]), 2)
+        self.assertEqual(event_admin.get_attendee_count(events[child_event.pk]), 2)
+
 
 class TranslationAdminRegressionTests(TestCase):
     def setUp(self):
