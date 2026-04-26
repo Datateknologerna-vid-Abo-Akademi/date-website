@@ -15,7 +15,8 @@
     function applyWidth(w) {
         const sidebar = document.getElementById('nav-sidebar');
         if (!sidebar) return;
-        // parentElement.parentElement is the flex layout spacer (w-[288px] xl:relative)
+        // parentElement.parentElement is Unfold's flex layout spacer (w-[288px] xl:relative).
+        // Coupled to Unfold's sidebar template — revisit if the DOM structure changes.
         const layoutHolder = sidebar.parentElement?.parentElement;
         sidebar.style.width = w + 'px';
         if (layoutHolder) layoutHolder.style.width = w + 'px';

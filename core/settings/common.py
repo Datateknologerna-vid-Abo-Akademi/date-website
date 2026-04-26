@@ -83,7 +83,11 @@ def _get_unfold_environment(request):
     if host.split(".", 1)[0] == "qa":
         return _("Quality Assurance"), _UNFOLD_ENV_TYPE or "warning"
 
-    if DEVELOP or DEBUG:
+    # Read DEBUG/DEVELOP through settings rather than the module-level globals so
+    # tests can override them via @override_settings without depending on env at
+    # import time.
+    from django.conf import settings as django_settings
+    if getattr(django_settings, "DEVELOP", False) or getattr(django_settings, "DEBUG", False):
         return _("Development"), "warning"
 
     return _("Production"), "success"

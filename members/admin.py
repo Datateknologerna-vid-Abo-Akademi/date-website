@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Permission
+from functools import reduce
 from django.db.models import CharField, Exists, F, OuterRef, Q, Value
 from django.db.models.functions import Lower, Replace
 from django.utils.translation import gettext_lazy as _
@@ -163,31 +164,19 @@ class UserAdmin(_UserAdminBase):
                 phone_variants.add('0' + phone_digits[3:])
                 phone_variants.add(phone_digits[3:])
 
-            # Strip all punctuation/spacing from the stored phone number so
-            # digit-only search variants can match regardless of formatting.
+            # Strip common phone formatting characters so digit-only search
+            # variants match regardless of how the number was entered. Stays
+            # DB-agnostic by chaining Replace nodes (regexp_replace is not in
+            # SQLite). The final Replace carries the output_field.
+            _PHONE_NOISE = (' ', '-', '+', '(', ')', '.', '/')
+            phone_digits_annotation = reduce(
+                lambda expr, char: Replace(expr, Value(char), Value('')),
+                _PHONE_NOISE[:-1],
+                F('phone'),
+            )
             phone_digits_annotation = Replace(
-                Replace(
-                    Replace(
-                        Replace(
-                            Replace(
-                                Replace(
-                                    Replace(F('phone'), Value(' '), Value('')),
-                                    Value('-'),
-                                    Value(''),
-                                ),
-                                Value('+'),
-                                Value(''),
-                            ),
-                            Value('('),
-                            Value(''),
-                        ),
-                        Value(')'),
-                        Value(''),
-                    ),
-                    Value('.'),
-                    Value(''),
-                ),
-                Value('/'),
+                phone_digits_annotation,
+                Value(_PHONE_NOISE[-1]),
                 Value(''),
                 output_field=CharField(),
             )
@@ -230,7 +219,10 @@ class UserAdmin(_UserAdminBase):
         total = totp_qs.count() + static_qs.count()
         totp_qs.delete()
         static_qs.delete()
-        self.message_user(request, f"2FA inaktiverat för valda medlemmar: {total} enhet(er) borttagna.")
+        self.message_user(
+            request,
+            _("2FA inaktiverat för valda medlemmar: %(count)d enhet(er) borttagna.") % {'count': total},
+        )
 
     disable_two_factor.short_description = "Inaktivera 2FA"
 

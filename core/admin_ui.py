@@ -40,20 +40,16 @@ TOPBAR_QUICK_CREATE_LINKS = (
 )
 
 
-def get_topbar_quick_create_links(request):
-    return [
-        link
-        for item in TOPBAR_QUICK_CREATE_LINKS
-        if (link := item.resolve(request)) is not None
-    ]
-
-
 def resolve_admin_links(items, request):
     return [
         link
         for item in items
         if (link := item.resolve(request)) is not None
     ]
+
+
+def get_topbar_quick_create_links(request):
+    return resolve_admin_links(TOPBAR_QUICK_CREATE_LINKS, request)
 
 
 @dataclass(frozen=True)

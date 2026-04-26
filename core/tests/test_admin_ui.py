@@ -97,7 +97,7 @@ class AdminUiRegistryTests(TestCase):
         self.assertEqual(str(label), "Quality Assurance")
         self.assertEqual(variant, "warning")
 
-    @override_settings(ALLOWED_HOSTS=["date.example"])
+    @override_settings(ALLOWED_HOSTS=["date.example"], DEBUG=False, DEVELOP=False)
     def test_unfold_environment_returns_success_for_production(self):
         request = self.factory.get("/admin/", HTTP_HOST="date.example")
 
