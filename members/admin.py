@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Permission
-from django.db.models import CharField, Exists, OuterRef, Q, Value
+from django.db.models import CharField, Exists, F, OuterRef, Q, Value
 from django.db.models.functions import Lower, Replace
 from django.utils.translation import gettext_lazy as _
 from django_otp.plugins.otp_static.models import StaticDevice
@@ -160,7 +160,7 @@ class UserAdmin(*_UserAdminBases):
                     Replace(
                         Replace(
                             Replace(
-                                Replace('phone', Value(' '), Value('')),
+                                Replace(F('phone'), Value(' '), Value('')),
                                 Value('-'),
                                 Value(''),
                             ),
