@@ -18,7 +18,6 @@ from django.utils.translation import gettext_lazy as _
 
 import environ
 
-from core.admin_ui import get_sidebar_navigation
 from .dependencies.ckeditor import *  # noqa
 
 
@@ -61,6 +60,11 @@ DEVELOP = env_alias('DATE_DEVELOP', 'DEVELOP', cast=bool, default=False)
 USE_UNFOLD = env('USE_UNFOLD', bool, False)
 
 
+def _get_unfold_sidebar_navigation(request):
+    from core.admin_ui import get_sidebar_navigation
+    return get_sidebar_navigation(request)
+
+
 def _get_unfold_site_url(request):
     from django.conf import settings as django_settings
 
@@ -96,7 +100,7 @@ UNFOLD = {
     ],
     "SIDEBAR": {
         "show_search": True,
-        "navigation": get_sidebar_navigation,
+        "navigation": _get_unfold_sidebar_navigation,
     },
     "COLORS": {
         "primary": {

@@ -159,6 +159,8 @@ class UserAdmin(_UserAdminBase):
                 phone_variants.add('0' + phone_digits[3:])
                 phone_variants.add(phone_digits[3:])
 
+            # Strip all punctuation/spacing from the stored phone number so
+            # digit-only search variants can match regardless of formatting.
             phone_digits_annotation = Replace(
                 Replace(
                     Replace(
@@ -192,8 +194,9 @@ class UserAdmin(_UserAdminBase):
 
         if extra_query:
             queryset = queryset | base_queryset.filter(extra_query)
+            may_have_duplicates = True
 
-        return queryset, True
+        return queryset, may_have_duplicates
 
     def has_two_factor(self, obj):
         return obj._has_two_factor
@@ -203,13 +206,13 @@ class UserAdmin(_UserAdminBase):
 
     def activate_user(self, request, queryset):
         updated = queryset.update(is_active=True)
-        self.message_user(request, f"Aktiverade {updated} användare.")
+        self.message_user(request, _("Aktiverade %(count)d användare.") % {'count': updated})
 
     activate_user.short_description = "Aktivera användare"
 
     def deactivate_user(self, request, queryset):
         updated = queryset.update(is_active=False)
-        self.message_user(request, f"Deaktiverade {updated} användare.")
+        self.message_user(request, _("Deaktiverade %(count)d användare.") % {'count': updated})
 
     deactivate_user.short_description = "Deaktivera användare"
 
