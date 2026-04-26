@@ -77,4 +77,15 @@ class FixedLanguageAdminSite(AdminSiteOTPRequiredMixin, _AdminSiteBase):
         return request.user.is_verified() or not has_totp
 
 
+# When USE_UNFOLD=True, unfold's DefaultAppConfig.ready() preempts Django's lazy
+# DefaultAdminSite by directly assigning a plain UnfoldAdminSite to admin.site,
+# which bypasses our 2FA-enforcing FixedLanguageAdminSite. Reinstall our subclass
+# here (this module is imported from DateAdminConfig.ready() before autodiscovery)
+# so model registrations and URL routing land on the OTP-aware site.
+if not isinstance(admin.site, FixedLanguageAdminSite):
+    _site = FixedLanguageAdminSite()
+    admin.site = _site
+    from django.contrib.admin import sites as _admin_sites
+    _admin_sites.site = _site
+
 admin_site = admin.site

@@ -13,6 +13,11 @@ class DateAdminConfig(admin_apps.AdminConfig):
     default = False
 
     def ready(self):
+        # Importing core.admin here installs FixedLanguageAdminSite as admin.site
+        # (overriding any Unfold-supplied default) before autodiscovery registers
+        # models on it. The admin_site reference is captured at the same time.
+        from core import admin as core_admin  # noqa: F401
+
         super().ready()
 
         from django_otp.plugins.otp_static.models import StaticDevice
