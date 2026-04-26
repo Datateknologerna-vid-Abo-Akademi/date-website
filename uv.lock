@@ -410,6 +410,7 @@ dependencies = [
     { name = "django-storages" },
     { name = "django-tables2" },
     { name = "django-two-factor-auth" },
+    { name = "django-unfold" },
     { name = "gspread" },
     { name = "gunicorn" },
     { name = "icalendar" },
@@ -422,11 +423,6 @@ dependencies = [
     { name = "six" },
     { name = "websocket-client" },
     { name = "whitenoise" },
-]
-
-[package.optional-dependencies]
-unfold = [
-    { name = "django-unfold" },
 ]
 
 [package.metadata]
@@ -450,7 +446,7 @@ requires-dist = [
     { name = "django-storages" },
     { name = "django-tables2" },
     { name = "django-two-factor-auth" },
-    { name = "django-unfold", marker = "extra == 'unfold'" },
+    { name = "django-unfold" },
     { name = "gspread" },
     { name = "gunicorn" },
     { name = "icalendar" },
@@ -464,7 +460,6 @@ requires-dist = [
     { name = "websocket-client" },
     { name = "whitenoise" },
 ]
-provides-extras = ["unfold"]
 
 [package.metadata.requires-dev]
 dev = []

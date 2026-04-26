@@ -17,7 +17,7 @@ Unless a script says otherwise, prefer running it from a Bash-compatible shell.
 
 ## Admin Theme
 
-Set `USE_UNFOLD=True` in `.env` to run Django admin with the Unfold theme. Leave it unset or set it to `False` to use the classic Django admin. The `django-unfold` package is an optional dependency; install it with `uv sync --extra unfold` before enabling this flag.
+Set `USE_UNFOLD=True` in `.env` to run Django admin with the Unfold theme. Leave it unset or set it to `False` to use the classic Django admin.
 
 Changing this value requires restarting or recreating the Django containers, because admin apps, widgets, templates, and static assets are selected when Django starts.
 
