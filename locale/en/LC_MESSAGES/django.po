@@ -887,7 +887,7 @@ msgstr "Public Access"
 msgid ""
 "If checked, this PDF will be visible to everyone. If unchecked, it will be "
 "hidden from all users."
-msgstr "If checked, this PDF will be visible to everyone. If unchecked, it will be hidden from all users."
+msgstr ""
 "If checked, this PDF will be visible to everyone. If unchecked, it will be "
 "hidden from all users."
 
@@ -1423,7 +1423,7 @@ msgstr "Use backup token"
 
 #: templates/common/members/registration/login.html:52
 msgid "Logga in med GitHub"
-msgstr "Logga in med GitHub"
+msgstr "Log in with GitHub"
 
 #: templates/common/members/registration/login.html:56
 msgid "Glömt lösenordet?"
@@ -1629,7 +1629,7 @@ msgstr "Backup tokens"
 #: templates/common/two_factor/core/setup.html:6
 #| msgid "Disable two-factor authentication"
 msgid "Two-factor authentication"
-msgstr "Disable two-factor authentication"
+msgstr "Two-factor authentication"
 
 #: templates/common/members/userinfo.html:151
 msgid "Positions of trust"
