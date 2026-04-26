@@ -10,6 +10,7 @@ from django.core.validators import MinValueValidator, RegexValidator
 from django.template import loader
 from django.utils.translation import gettext_lazy as _
 
+from core.admin_base import UnfoldFormMixin
 from core.utils import send_email_task
 from members.models import (SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH,
                             SUB_RE_SCALE_YEAR, Member, SubscriptionPayment, Functionary)
@@ -23,7 +24,7 @@ USERNAME_VALIDATOR = RegexValidator(
 )
 
 
-class MemberCreationForm(forms.ModelForm):
+class MemberCreationForm(UnfoldFormMixin, forms.ModelForm):
     send_email = forms.BooleanField(required=False)
     year_of_admission = forms.IntegerField(initial=lambda: datetime.datetime.now().year, required=False, label=_('Inskrivningsår'))
 
@@ -67,7 +68,7 @@ class MemberCreationForm(forms.ModelForm):
         return member
 
 
-class AdminMemberUpdateForm(forms.ModelForm):
+class AdminMemberUpdateForm(UnfoldFormMixin, forms.ModelForm):
     password = ReadOnlyPasswordHashField(label="Lösenord",
                                          help_text=("Raw passwords are not stored, so there is no way to see "
                                                     "this user's password, but you can change the password "

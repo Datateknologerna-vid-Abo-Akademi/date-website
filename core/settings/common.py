@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 import json
+from django.templatetags.static import static
+from django.utils.translation import gettext_lazy as _
 
 import environ
 
@@ -23,6 +25,7 @@ env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False),
     DEVELOP=(bool, False),
+    USE_UNFOLD=(bool, False),
 )
 
 
@@ -54,6 +57,72 @@ DEBUG = env_alias('DATE_DEBUG', 'DEBUG', cast=bool, default=False)
 
 DEVELOP = env_alias('DATE_DEVELOP', 'DEVELOP', cast=bool, default=False)
 
+USE_UNFOLD = env('USE_UNFOLD', bool, False)
+
+
+def _get_unfold_sidebar_navigation(request):
+    from core.admin_ui import get_sidebar_navigation
+    return get_sidebar_navigation(request)
+
+
+def _get_unfold_site_url(request):
+    from django.conf import settings as django_settings
+
+    return getattr(django_settings, "CONTENT_VARIABLES", {}).get("SITE_URL", "/")
+
+
+_UNFOLD_ENV_LABEL = env("UNFOLD_ENVIRONMENT_LABEL", str, "")
+_UNFOLD_ENV_TYPE = env("UNFOLD_ENVIRONMENT_TYPE", str, "")
+
+
+def _get_unfold_environment(request):
+    if _UNFOLD_ENV_LABEL:
+        return _UNFOLD_ENV_LABEL, _UNFOLD_ENV_TYPE or "info"
+
+    host = request.get_host().split(":", 1)[0].lower()
+    if host.split(".", 1)[0] == "qa":
+        return _("Quality Assurance"), _UNFOLD_ENV_TYPE or "warning"
+
+    # Read DEBUG/DEVELOP through settings rather than the module-level globals so
+    # tests can override them via @override_settings without depending on env at
+    # import time.
+    from django.conf import settings as django_settings
+    if getattr(django_settings, "DEVELOP", False) or getattr(django_settings, "DEBUG", False):
+        return _("Development"), "warning"
+
+    return _("Production"), "success"
+
+
+UNFOLD = {
+    "SITE_URL": _get_unfold_site_url,
+    "ENVIRONMENT": _get_unfold_environment,
+    "STYLES": [
+        lambda request: static("date/css/admin.css"),
+    ],
+    "SCRIPTS": [
+        lambda request: static("date/js/admin_sidebar.js"),
+    ],
+    "SIDEBAR": {
+        "show_search": True,
+        "navigation": _get_unfold_sidebar_navigation,
+    },
+    "COLORS": {
+        "primary": {
+            "50":  "239 246 255",
+            "100": "219 234 254",
+            "200": "191 219 254",
+            "300": "147 197 253",
+            "400": "96 165 250",
+            "500": "59 130 246",
+            "600": "37 99 235",
+            "700": "29 78 216",
+            "800": "30 64 175",
+            "900": "30 58 138",
+            "950": "23 37 84",
+        },
+    },
+}
+
 # This gets set only when tests are ran with date-test command
 TEST = env('TEST', bool, False)
 
@@ -78,6 +147,7 @@ def get_installed_apps(proj_apps):
         'members.apps.MemberConfig',
         *proj_apps,
         'modeltranslation',
+        *(['unfold', 'unfold.contrib.filters', 'unfold.contrib.forms', 'unfold.contrib.inlines'] if USE_UNFOLD else []),
         'date.apps.DateAdminConfig',
         'django.contrib.auth',
         'django.contrib.contenttypes',

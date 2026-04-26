@@ -1,12 +1,21 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
+from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, TabularInline
+from core.admin_ui import AdminLink
 
 from .forms import DocumentAdminForm, PictureAdminForm, PublicAdminForm
 from .models import Document, DocumentCollection, Picture, PictureCollection, PublicFile, PublicCollection, ExamCollection
 
 
-class PicturesInline(admin.TabularInline):
+class ArchiveCollectionAdminMixin(ExtraChangeListLinksMixin):
+    changelist_links = (
+        AdminLink(_('Städa upp media'), icon='cleaning_services', url_name='archive:cleanMedia'),
+    )
+
+
+class PicturesInline(TabularInline):
     model = Picture
     fk_name = 'collection'
     can_delete = True
@@ -17,13 +26,13 @@ class PicturesInline(admin.TabularInline):
         return mark_safe("""<img src="%s" style="width: auto; height: 80px"/> """ % obj.image.url)
 
 
-class DocumentInline(admin.TabularInline):
+class DocumentInline(TabularInline):
     model = Document
     fk_name = 'collection'
     can_delete = True
     extra = 1
 
-class PublicFileInline(admin.TabularInline):
+class PublicFileInline(TabularInline):
     model = PublicFile
     fk_name = 'collection'
     can_delete = True
@@ -35,14 +44,15 @@ class PublicFileInline(admin.TabularInline):
 
 
 @admin.register(PictureCollection)
-class PictureCollectionAdmin(admin.ModelAdmin):
+class PictureCollectionAdmin(ArchiveCollectionAdminMixin, ModelAdmin):
     model = PictureCollection
     save_on_top = True
     form = PictureAdminForm
-    inlines = [
-        PicturesInline
-    ]
-    list_display = ('title', 'pub_date')
+    inlines = [PicturesInline]
+    list_display = ('title', 'pub_date', 'hide_for_gulis')
+    search_fields = ('title',)
+    ordering = ('-pub_date',)
+    date_hierarchy = 'pub_date'
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -53,14 +63,15 @@ class PictureCollectionAdmin(admin.ModelAdmin):
 
 
 @admin.register(DocumentCollection)
-class DocumentCollectionAdmin(admin.ModelAdmin):
+class DocumentCollectionAdmin(ArchiveCollectionAdminMixin, ModelAdmin):
     model = DocumentCollection
     save_on_top = True
     form = DocumentAdminForm
-    inlines = [
-        DocumentInline
-    ]
-    list_display = ('title', 'pub_date')
+    inlines = [DocumentInline]
+    list_display = ('title', 'pub_date', 'hide_for_gulis')
+    search_fields = ('title', 'document__title')
+    ordering = ('-pub_date',)
+    date_hierarchy = 'pub_date'
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -71,14 +82,15 @@ class DocumentCollectionAdmin(admin.ModelAdmin):
 
 
 @admin.register(ExamCollection)
-class ExamCollectionAdmin(admin.ModelAdmin):
+class ExamCollectionAdmin(ArchiveCollectionAdminMixin, ModelAdmin):
     model = ExamCollection
     save_on_top = True
     form = DocumentAdminForm
-    inlines = [
-        DocumentInline
-    ]
-    list_display = ('title', 'pub_date')
+    inlines = [DocumentInline]
+    list_display = ('title', 'pub_date', 'hide_for_gulis')
+    search_fields = ('title', 'document__title')
+    ordering = ('-pub_date',)
+    date_hierarchy = 'pub_date'
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -90,13 +102,15 @@ class ExamCollectionAdmin(admin.ModelAdmin):
 
 if settings.USE_S3:
     @admin.register(PublicCollection)
-    class PublicCollectionAdmin(admin.ModelAdmin):
+    class PublicCollectionAdmin(ArchiveCollectionAdminMixin, ModelAdmin):
         model = PublicCollection
         save_on_top = True
         form = PublicAdminForm
-        inlines = [
-            PublicFileInline
-        ]
+        inlines = [PublicFileInline]
+        list_display = ('title', 'pub_date')
+        search_fields = ('title',)
+        ordering = ('-pub_date',)
+        date_hierarchy = 'pub_date'
 
         def get_queryset(self, request):
             qs = super().get_queryset(request)

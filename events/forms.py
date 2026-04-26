@@ -5,6 +5,7 @@ from django import forms
 from django.contrib.admin import widgets
 from django.utils.timezone import now
 from django.conf import settings
+from core.admin_base import AdminSplitDateTimeWidget, UnfoldFormMixin
 
 from date.functions import slugify_max
 from events import models
@@ -51,15 +52,15 @@ def unique_event_slug(slug, title, instance=None):
     return slug
 
 
-class EventCreationForm(forms.ModelForm):
+class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
     user = None
     redirect_link = forms.URLField(required=False, assume_scheme="https")
-    event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    event_date_end = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    sign_up_others = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    sign_up_members = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    sign_up_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    event_date_start = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
+    event_date_end = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
+    sign_up_others = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
+    sign_up_members = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
+    sign_up_deadline = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
+    sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
     parent = forms.ModelChoiceField(queryset=Event.objects.filter(event_date_end__gte=now()), required=False)
 
     def __init__(self, *args, **kwargs):
@@ -132,16 +133,16 @@ class EventCreationForm(forms.ModelForm):
         return post
 
 
-class EventEditForm(forms.ModelForm):
+class EventEditForm(UnfoldFormMixin, forms.ModelForm):
 
     user = None
     redirect_link = forms.URLField(required=False, assume_scheme="https")
 
-    event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    event_date_end = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    event_date_start = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
+    event_date_end = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
 
     sign_up_args = {
-        "widget": widgets.AdminSplitDateTime(),
+        "widget": AdminSplitDateTimeWidget(),
         "initial": now(),
         "required": False
     }

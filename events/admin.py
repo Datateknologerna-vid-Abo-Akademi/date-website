@@ -3,15 +3,16 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.contrib import admin
 from django.conf import settings
-from django.db.models import JSONField, TextField
+from django.db.models import Count, IntegerField, JSONField, OuterRef, Subquery, TextField, Value
+from django.db.models.functions import Coalesce
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django_ckeditor_5.widgets import CKEditor5Widget
 from django.urls import reverse, re_path
 from django.utils.html import format_html
+from core.admin_base import ModelAdmin, PublicUrlAdminMixin, TabularInline, UNFOLD_FORMFIELD_OVERRIDES
 
 # Translation and Ordering imports
-from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 from admin_ordering.admin import OrderableAdmin
 
 from core.admin import ActiveLanguageTranslationAdminMixin
@@ -22,14 +23,19 @@ from .widgets import PrettyJSONWidget
 logger = logging.getLogger('date')
 
 if settings.ENABLE_LANGUAGE_FEATURES:
-    class EventTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline):
+    from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
+
+    # MRO when USE_UNFOLD=True: Mixin → Translation → unfold.TabularInline → admin.TabularInline
+    # unfold sits between modeltranslation and Django's base so both layers get their super() calls.
+    class EventTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline, TabularInline):
         pass
 
-    class EventTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin):
+    # MRO when USE_UNFOLD=True: Mixin → TabbedTranslation → unfold.ModelAdmin → admin.ModelAdmin
+    class EventTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
         pass
 else:
-    EventTranslationInlineBase = admin.TabularInline
-    EventTranslationAdminBase = admin.ModelAdmin
+    EventTranslationInlineBase = TabularInline
+    EventTranslationAdminBase = ModelAdmin
 
 
 class EventRegistrationFormInline(OrderableAdmin, EventTranslationInlineBase):
@@ -52,7 +58,8 @@ class EventAttendeesFormInline(OrderableAdmin, EventTranslationInlineBase):
     extra = 0
     list_editable = ('user', 'email', 'preferences')
     formfield_overrides = {
-        JSONField: {'widget': PrettyJSONWidget(attrs={'initial': 'parsed'})}
+        **UNFOLD_FORMFIELD_OVERRIDES,
+        JSONField: {'widget': PrettyJSONWidget(attrs={'initial': 'parsed'})},
     }
     can_delete = True
     ordering = ['attendee_nr']
@@ -79,21 +86,46 @@ class EventAttendeesFormInline(OrderableAdmin, EventTranslationInlineBase):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+@admin.register(EventAttendees)
+class EventAttendeesAdmin(ModelAdmin):
+    list_display = ('event', 'user', 'email', 'time_registered', 'anonymous', 'original_event')
+    list_filter = ('anonymous', 'time_registered')
+    search_fields = (
+        'user',
+        'email',
+        'event__title',
+        'event__slug',
+        'original_event__title',
+        'original_event__slug',
+        'avec_for__user',
+        'avec_for__email',
+    )
+    autocomplete_fields = ('event', 'original_event', 'avec_for')
+    list_select_related = ('event', 'original_event', 'avec_for')
+    ordering = ('-time_registered',)
+    date_hierarchy = 'time_registered'
+
+
 # TODO: Get it working with the old EventAdmin code that is commented out below
 # TODO: Improve the admin panel UI for the translatable fields
 # SEE https://django-modeltranslation.readthedocs.io/en/latest/admin.html
 @admin.register(Event)
-class EventAdmin(EventTranslationAdminBase):
+class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
     save_on_top = True
     formfield_overrides = {
+        **UNFOLD_FORMFIELD_OVERRIDES,
         TextField: {'widget': CKEditor5Widget},
     }
     list_display = (
         'title', 'created_time', 'event_date_start', 'get_attendee_count', 
         'sign_up_max_participants', 'published', 'account_actions', 'parent'
     )
-    search_fields = ('title', 'author__first_name', 'created_time')
+    search_fields = ('title', 'slug', 'author__first_name', 'author__last_name', 'author__username', 'author__email')
+    list_filter = ('published', 'sign_up', 'members_only')
+    autocomplete_fields = ('author', 'parent')
+    list_select_related = ('author', 'parent')
     ordering = ['-event_date_start']
+    date_hierarchy = 'event_date_start'
     actions = ['delete_participants']
 
     form = forms.EventCreationForm
@@ -102,6 +134,26 @@ class EventAdmin(EventTranslationAdminBase):
         EventRegistrationFormInline,
         EventAttendeesFormInline
     ]
+
+    def get_queryset(self, request):
+        attendee_sq = (
+            EventAttendees.objects
+            .filter(event=OuterRef('pk'))
+            .values('event')
+            .annotate(cnt=Count('pk'))
+            .values('cnt')
+        )
+        original_sq = (
+            EventAttendees.objects
+            .filter(original_event=OuterRef('pk'))
+            .values('original_event')
+            .annotate(cnt=Count('pk'))
+            .values('cnt')
+        )
+        return super().get_queryset(request).select_related('author', 'parent').annotate(
+            _attendee_count=Coalesce(Subquery(attendee_sq, output_field=IntegerField()), Value(0)),
+            _original_event_attendee_count=Coalesce(Subquery(original_sq, output_field=IntegerField()), Value(0)),
+        )
 
     def get_fields(self, request, obj=None):
         fields = list(super().get_fields(request, obj))
@@ -165,7 +217,14 @@ class EventAdmin(EventTranslationAdminBase):
 
     def get_attendee_count(self, obj):
         if obj.parent:
+            count = getattr(obj, '_original_event_attendee_count', None)
+            if count is not None:
+                return count
             return EventAttendees.objects.filter(original_event=obj).count()
+
+        count = getattr(obj, '_attendee_count', None)
+        if count is not None:
+            return count
         return obj.get_registrations().count()
 
     get_attendee_count.short_description = 'Anmälda'

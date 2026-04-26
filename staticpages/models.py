@@ -2,6 +2,7 @@ import logging
 
 from django_ckeditor_5.fields import CKEditor5Field
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -30,6 +31,9 @@ class StaticPage(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return reverse('staticpages:page', args=[self.slug])
 
     def update(self):
         self.modified_time = timezone.now()

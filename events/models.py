@@ -90,6 +90,9 @@ class Event(models.Model):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        return reverse('events:detail', args=[self.slug])
+
     @property
     def background_image_url(self):
         for field_name in ("image", "s3_image"):
