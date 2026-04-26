@@ -8,9 +8,11 @@ from .models import Choice, Question, Vote
 if settings.ENABLE_LANGUAGE_FEATURES:
     from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 
+    # MRO when USE_UNFOLD=True: Mixin → Translation → unfold.TabularInline → admin.TabularInline
     class PollTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline, TabularInline):
         pass
 
+    # MRO when USE_UNFOLD=True: Mixin → TabbedTranslation → unfold.ModelAdmin → admin.ModelAdmin
     class PollTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
         pass
 else:

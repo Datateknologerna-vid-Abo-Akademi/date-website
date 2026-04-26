@@ -11,6 +11,7 @@ from news.models import Post, Category
 if settings.ENABLE_LANGUAGE_FEATURES:
     from modeltranslation.admin import TabbedTranslationAdmin
 
+    # MRO when USE_UNFOLD=True: Mixin → TabbedTranslation → unfold.ModelAdmin → admin.ModelAdmin
     class NewsTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
         pass
 else:

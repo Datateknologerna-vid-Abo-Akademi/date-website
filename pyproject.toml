@@ -4,7 +4,6 @@ version = "0.1.0"
 requires-python = ">=3.14"
 dependencies = [
     "Django~=5.2",
-    "django-unfold",
     "asgiref",
     "django-ckeditor-5",
     "requests",
@@ -36,6 +35,9 @@ dependencies = [
     "gunicorn",
     "gspread",
 ]
+
+[project.optional-dependencies]
+unfold = ["django-unfold"]
 
 [dependency-groups]
 dev = []

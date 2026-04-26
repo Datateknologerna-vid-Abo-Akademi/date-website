@@ -24,9 +24,12 @@ logger = logging.getLogger('date')
 if settings.ENABLE_LANGUAGE_FEATURES:
     from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 
+    # MRO when USE_UNFOLD=True: Mixin → Translation → unfold.TabularInline → admin.TabularInline
+    # unfold sits between modeltranslation and Django's base so both layers get their super() calls.
     class EventTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline, TabularInline):
         pass
 
+    # MRO when USE_UNFOLD=True: Mixin → TabbedTranslation → unfold.ModelAdmin → admin.ModelAdmin
     class EventTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
         pass
 else:

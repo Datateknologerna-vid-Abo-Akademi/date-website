@@ -97,7 +97,7 @@ Important environment flags:
 
 - `PROJECT_NAME` selects the active association/site variant (`date`, `kk`, `biocum`, `demo`, ...).
 - `ENABLE_LANGUAGE_FEATURES=True` enables the language switcher, translated admin tabs, and runtime selection between the languages configured for the active association on unprefixed URLs. DaTe currently uses Swedish and English at runtime; some other associations also expose Finnish. When omitted or false, the project runs Swedish-only.
-- `USE_UNFOLD=True` enables the Unfold admin theme. When omitted or false, Django uses the classic admin. Restart or recreate containers after changing it because admin apps, widgets, templates, and static assets are selected at startup.
+- `USE_UNFOLD=True` enables the Unfold admin theme. When omitted or false, Django uses the classic admin. Restart or recreate containers after changing it because admin apps, widgets, templates, and static assets are selected at startup. Requires the `unfold` optional dependency group: `uv sync --extra unfold`.
 - `USE_S3` toggles whether uploads use local disk storage or the configured S3-compatible backend.
 
 The script defines the `date-*` aliases used throughout this README:

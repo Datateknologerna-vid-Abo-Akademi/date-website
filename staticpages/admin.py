@@ -11,9 +11,11 @@ from core.admin import ActiveLanguageTranslationAdminMixin
 if settings.ENABLE_LANGUAGE_FEATURES:
     from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 
+    # MRO when USE_UNFOLD=True: Mixin → Translation → unfold.TabularInline → admin.TabularInline
     class StaticPageTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline, TabularInline):
         pass
 
+    # MRO when USE_UNFOLD=True: Mixin → TabbedTranslation → unfold.ModelAdmin → admin.ModelAdmin
     class StaticPageTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
         pass
 else:

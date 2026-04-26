@@ -122,6 +122,7 @@
                 }
             }
 
+            // _x_dataStack is an Alpine.js internal — coupling risk on upgrades.
             const dataStack = contentMain._x_dataStack;
             if (dataStack && dataStack[0] && hasOwn(dataStack[0], 'filterOpen')) {
                 dataStack[0].filterOpen = true;

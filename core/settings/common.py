@@ -67,16 +67,17 @@ def _get_unfold_site_url(request):
     return getattr(django_settings, "CONTENT_VARIABLES", {}).get("SITE_URL", "/")
 
 
-def _get_unfold_environment(request):
-    label = env("UNFOLD_ENVIRONMENT_LABEL", str, "")
-    variant = env("UNFOLD_ENVIRONMENT_TYPE", str, "")
+_UNFOLD_ENV_LABEL = env("UNFOLD_ENVIRONMENT_LABEL", str, "")
+_UNFOLD_ENV_TYPE = env("UNFOLD_ENVIRONMENT_TYPE", str, "")
 
-    if label:
-        return label, variant or "info"
+
+def _get_unfold_environment(request):
+    if _UNFOLD_ENV_LABEL:
+        return _UNFOLD_ENV_LABEL, _UNFOLD_ENV_TYPE or "info"
 
     host = request.get_host().split(":", 1)[0].lower()
     if host.split(".", 1)[0] == "qa":
-        return _("Quality Assurance"), variant or "warning"
+        return _("Quality Assurance"), _UNFOLD_ENV_TYPE or "warning"
 
     if DEVELOP or DEBUG:
         return _("Development"), "warning"

@@ -66,11 +66,15 @@ SUPPORTING_MEMBER = 3
 SENIOR_MEMBER = 4
 
 
-_UserAdminBases = (ModelAdmin, auth_admin.UserAdmin) if getattr(settings, 'USE_UNFOLD', False) else (auth_admin.UserAdmin,)
+if getattr(settings, 'USE_UNFOLD', False):
+    class _UserAdminBase(ModelAdmin, auth_admin.UserAdmin):
+        pass
+else:
+    _UserAdminBase = auth_admin.UserAdmin
 
 
 @admin.register(Member)
-class UserAdmin(*_UserAdminBases):
+class UserAdmin(_UserAdminBase):
     fieldsets = (
         (None, {'fields': AdminMemberUpdateForm.Meta.fields}),
     )
