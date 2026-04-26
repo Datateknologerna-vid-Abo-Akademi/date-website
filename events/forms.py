@@ -6,11 +6,11 @@ from django.contrib.admin import widgets
 from django.utils.timezone import now
 from django.conf import settings
 from core.admin_base import AdminSplitDateTimeWidget, UnfoldFormMixin
+from core.admin_widgets import SafeAdminFileWidget
 
 from date.functions import slugify_max
 from events import models
 from events.models import Event
-from events.widgets import SafeAdminFileWidget
 
 logger = logging.getLogger('date')
 
