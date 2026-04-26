@@ -50,7 +50,7 @@ class PictureCollectionAdmin(ArchiveCollectionAdminMixin, ModelAdmin):
     form = PictureAdminForm
     inlines = [PicturesInline]
     list_display = ('title', 'pub_date', 'hide_for_gulis')
-    search_fields = ('title', 'picture__title')
+    search_fields = ('title',)
     ordering = ('-pub_date',)
     date_hierarchy = 'pub_date'
 
