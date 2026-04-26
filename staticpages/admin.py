@@ -59,4 +59,3 @@ class StaticPageAdmin(PublicUrlAdminMixin, StaticPageTranslationAdminBase):
     list_filter = ('members_only',)
     ordering = ('title',)
     date_hierarchy = 'created_time'
-    prepopulated_fields = {'slug': ('title',)}

@@ -66,6 +66,10 @@ SUPPORTING_MEMBER = 3
 SENIOR_MEMBER = 4
 
 
+# Direct `class UserAdmin(ModelAdmin, auth_admin.UserAdmin)` would fail when
+# USE_UNFOLD=False because ModelAdmin then IS admin.ModelAdmin — placing it before
+# its own subclass (auth_admin.UserAdmin) violates C3 MRO. The shim is only
+# introduced when Unfold's ModelAdmin is a distinct class that sits above both.
 if getattr(settings, 'USE_UNFOLD', False):
     class _UserAdminBase(ModelAdmin, auth_admin.UserAdmin):
         pass
@@ -166,20 +170,24 @@ class UserAdmin(_UserAdminBase):
                     Replace(
                         Replace(
                             Replace(
-                                Replace(F('phone'), Value(' '), Value('')),
-                                Value('-'),
+                                Replace(
+                                    Replace(F('phone'), Value(' '), Value('')),
+                                    Value('-'),
+                                    Value(''),
+                                ),
+                                Value('+'),
                                 Value(''),
                             ),
-                            Value('+'),
+                            Value('('),
                             Value(''),
                         ),
-                        Value('('),
+                        Value(')'),
                         Value(''),
                     ),
-                    Value(')'),
+                    Value('.'),
                     Value(''),
                 ),
-                Value('.'),
+                Value('/'),
                 Value(''),
                 output_field=CharField(),
             )

@@ -19,7 +19,7 @@ class CtfAdmin(PublicUrlAdminMixin, ModelAdmin):
     list_filter = ('published',)
     search_fields = ('title', 'slug')
     ordering = ('-start_date',)
-    date_hierarchy = 'pub_date'
+    date_hierarchy = 'start_date'
     inlines = [
         FlagInline,
     ]

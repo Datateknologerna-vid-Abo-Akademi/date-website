@@ -86,7 +86,7 @@ def _get_unfold_environment(request):
     if DEVELOP or DEBUG:
         return _("Development"), "warning"
 
-    return _("Production"), "danger"
+    return _("Production"), "success"
 
 
 UNFOLD = {

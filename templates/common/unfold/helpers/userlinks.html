@@ -19,7 +19,7 @@
     </form>
     {% endif %}
 
-    {% if site_url and not has_absolute_url %}
+    {% if site_url %}
         <a href="{{ site_url }}" target="_blank" rel="noopener"
            class="items-center gap-1 hidden px-2 py-1 rounded-default text-sm hover:bg-base-100 hover:text-base-700 dark:hover:bg-base-700 dark:hover:text-base-200 md:flex">
             <span class="material-symbols-outlined text-base">open_in_new</span>

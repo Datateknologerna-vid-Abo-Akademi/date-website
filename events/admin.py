@@ -3,7 +3,8 @@ from django.http import HttpResponseRedirect
 from django.contrib import messages
 from django.contrib import admin
 from django.conf import settings
-from django.db.models import Count, JSONField, TextField
+from django.db.models import Count, IntegerField, JSONField, OuterRef, Subquery, TextField, Value
+from django.db.models.functions import Coalesce
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django_ckeditor_5.widgets import CKEditor5Widget
@@ -135,9 +136,23 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
     ]
 
     def get_queryset(self, request):
+        attendee_sq = (
+            EventAttendees.objects
+            .filter(event=OuterRef('pk'))
+            .values('event')
+            .annotate(cnt=Count('pk'))
+            .values('cnt')
+        )
+        original_sq = (
+            EventAttendees.objects
+            .filter(original_event=OuterRef('pk'))
+            .values('original_event')
+            .annotate(cnt=Count('pk'))
+            .values('cnt')
+        )
         return super().get_queryset(request).select_related('author', 'parent').annotate(
-            _attendee_count=Count('eventattendees', distinct=True),
-            _original_event_attendee_count=Count('original_event', distinct=True),
+            _attendee_count=Coalesce(Subquery(attendee_sq, output_field=IntegerField()), Value(0)),
+            _original_event_attendee_count=Coalesce(Subquery(original_sq, output_field=IntegerField()), Value(0)),
         )
 
     def get_fields(self, request, obj=None):
