@@ -155,30 +155,32 @@ class UserAdmin(*_UserAdminBases):
                 phone_variants.add('0' + phone_digits[3:])
                 phone_variants.add(phone_digits[3:])
 
-            base_queryset = base_queryset.annotate(
-                _phone_digits=Replace(
+            phone_digits_annotation = Replace(
+                Replace(
                     Replace(
                         Replace(
                             Replace(
-                                Replace(
-                                    Replace('phone', Value(' '), Value('')),
-                                    Value('-'),
-                                    Value(''),
-                                ),
-                                Value('+'),
+                                Replace('phone', Value(' '), Value('')),
+                                Value('-'),
                                 Value(''),
                             ),
-                            Value('('),
+                            Value('+'),
                             Value(''),
                         ),
-                        Value(')'),
+                        Value('('),
                         Value(''),
                     ),
-                    Value('.'),
+                    Value(')'),
                     Value(''),
-                    output_field=CharField(),
-                )
+                ),
+                Value('.'),
+                Value(''),
+                output_field=CharField(),
             )
+
+            # Ensure both querysets have matching selected columns before OR-combining.
+            queryset = queryset.annotate(_phone_digits=phone_digits_annotation)
+            base_queryset = base_queryset.annotate(_phone_digits=phone_digits_annotation)
             phone_query = Q()
             for variant in phone_variants:
                 phone_query |= Q(_phone_digits__icontains=variant)

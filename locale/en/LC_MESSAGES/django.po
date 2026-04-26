@@ -1239,7 +1239,7 @@ msgstr "Server error, try again in a while"
 msgid ""
 "Vi använder cookies för att förbättra din upplevelse på vår webbplats. Genom "
 "att fortsätta använda webbplatsen godkänner du vår användning av cookies."
-msgstr "Vi använder cookies för att förbättra din upplevelse på vår webbplats. Genom att fortsätta använda webbplatsen godkänner du vår användning av cookies."
+msgstr ""
 "We use cookies to improve your experience on our website. By continuing to "
 "use the website, you accept our use of cookies."
 
