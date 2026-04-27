@@ -1,12 +1,43 @@
+import logging
+
 from django.contrib import admin
-from django.utils.safestring import mark_safe
 from django.conf import settings
+from django.db import models
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, TabularInline
+from core.admin_widgets import SafeAdminFileWidget
 from core.admin_ui import AdminLink
 
 from .forms import DocumentAdminForm, PictureAdminForm, PublicAdminForm
 from .models import Document, DocumentCollection, Picture, PictureCollection, PublicFile, PublicCollection, ExamCollection
+
+logger = logging.getLogger('date')
+
+
+def safe_file_link(file_field, label=None):
+    if not file_field:
+        return '-'
+    label = label or file_field.name
+    try:
+        return format_html(
+            '<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
+            file_field.url,
+            label,
+        )
+    except Exception as exc:
+        logger.warning("Unable to resolve archive file URL for %s: %s", file_field.name, exc)
+        return label
+
+
+def safe_image_preview(image_field):
+    if not image_field:
+        return '-'
+    try:
+        return format_html('<img src="{}" style="width: auto; height: 80px"/>', image_field.url)
+    except Exception as exc:
+        logger.warning("Unable to resolve archive image URL for %s: %s", image_field.name, exc)
+        return image_field.name
 
 
 class ArchiveCollectionAdminMixin(ExtraChangeListLinksMixin):
@@ -15,7 +46,14 @@ class ArchiveCollectionAdminMixin(ExtraChangeListLinksMixin):
     )
 
 
-class PicturesInline(TabularInline):
+class SafeFileInlineMixin:
+    formfield_overrides = {
+        models.FileField: {'widget': SafeAdminFileWidget},
+        models.ImageField: {'widget': SafeAdminFileWidget},
+    }
+
+
+class PicturesInline(SafeFileInlineMixin, TabularInline):
     model = Picture
     fk_name = 'collection'
     can_delete = True
@@ -23,16 +61,16 @@ class PicturesInline(TabularInline):
     extra = 0
 
     def preview_image(self, obj):
-        return mark_safe("""<img src="%s" style="width: auto; height: 80px"/> """ % obj.image.url)
+        return safe_image_preview(obj.image)
 
 
-class DocumentInline(TabularInline):
+class DocumentInline(SafeFileInlineMixin, TabularInline):
     model = Document
     fk_name = 'collection'
     can_delete = True
     extra = 1
 
-class PublicFileInline(TabularInline):
+class PublicFileInline(SafeFileInlineMixin, TabularInline):
     model = PublicFile
     fk_name = 'collection'
     can_delete = True
@@ -40,7 +78,7 @@ class PublicFileInline(TabularInline):
     extra = 1
 
     def preview_image(self, obj):
-        return mark_safe("""<img src="%s" style="width: auto; height: 80px"/> """ % obj.some_file.url)
+        return safe_file_link(obj.some_file)
 
 
 @admin.register(PictureCollection)

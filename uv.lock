@@ -446,7 +446,7 @@ requires-dist = [
     { name = "django-storages" },
     { name = "django-tables2" },
     { name = "django-two-factor-auth" },
-    { name = "django-unfold" },
+    { name = "django-unfold", specifier = ">=0.90,<0.91" },
     { name = "gspread" },
     { name = "gunicorn" },
     { name = "icalendar" },
