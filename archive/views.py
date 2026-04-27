@@ -90,7 +90,7 @@ def exam_upload(request, pk):
     if request.method == 'POST' and collection:
         form = ExamUploadForm(request.POST)
         if form.is_valid():
-            if request.FILES.getlist('exams') is None:
+            if not request.FILES.getlist('exam'):
                 return redirect('archive:exams')
             for file in request.FILES.getlist('exam'):
                 Document(document=file, title=form.cleaned_data['title'], collection=collection).save()
@@ -237,7 +237,7 @@ def upload(request):
     if request.method == 'POST':
         form = PictureUploadForm(request.POST)
         if form.is_valid():
-            if request.FILES.getlist('images') is None:
+            if not request.FILES.getlist('images'):
                 return redirect('archive:years')
             collection = Collection(title=form['album'].value(), type='Pictures')
             collection.save()
