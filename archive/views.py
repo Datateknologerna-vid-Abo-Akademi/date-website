@@ -238,7 +238,7 @@ def upload(request):
         form = PictureUploadForm(request.POST)
         if form.is_valid():
             if request.FILES.getlist('images') is None:
-                return redirect('archive:pictures')
+                return redirect('archive:years')
             collection = Collection(title=form['album'].value(), type='Pictures')
             collection.save()
             for file in request.FILES.getlist('images'):
@@ -258,4 +258,4 @@ def clean_media(request):
         print(f[0])
         print(f[2])
         # If picture not in any collection, remove it.
-    return redirect('archive:pictures')
+    return redirect('archive:years')
