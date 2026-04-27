@@ -1,3 +1,5 @@
+from typing import cast
+
 from django.shortcuts import render
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.http import HttpRequest
@@ -8,7 +10,8 @@ from django.utils.timezone import now
 from django.db.models import Q
 
 
-from . import forms
+from members.models import Member
+from . import forms, websocket
 from .models import AttendanceChange, AttendanceEvent, NonMemberAttendee, Attendee
 
 
@@ -36,15 +39,13 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
         ctx = {**kwargs}
 
         ctx["object"] = self.object
+        ctx["can_see_overview"] = AttendanceEventOverview.is_user_allowed(self.request.user)
         ctx["user"] = self.request.user
         ctx["present_attendees"] = self.object.present_attendees()
 
         if self.request.user.is_authenticated:
-            ctx["is_present"] = self.object.is_attendee_present(self.request.user)
-
-            if self.request.user.is_staff or self.object.was_attendee_present(self.request.user):
-                # only present if the user reasonably already knows or could know the secret
-                ctx["secret"] = self.object.secret
+            user = cast(Member, self.request.user)
+            ctx["is_present"] = self.object.is_attendee_present(user)
 
         return ctx
 
@@ -67,16 +68,17 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
 
         form = forms.AttendanceChangeForm(request.POST)
         if not form.is_valid():
-            return self._bad_request(request, generic_error=f"Invalid form: {form.errors}")
+            error_dict = { f"{field}_error": errors[0] for field, errors in form.errors.items()}
+            return self._bad_request(request, **error_dict)
 
-        if form.cleaned_data["secret"] != self.object.secret:
-            return self._bad_request(request, secret_error="Invalid secret")
+        if not self.object.is_code_valid(form.cleaned_data["code"]):
+            return self._bad_request(request, code_error="Invalid code")
 
         non_member_name: str = form.cleaned_data["non_member_name"]
         type: AttendanceChange.Type = form.cleaned_data["type"]
 
         if request.user.is_anonymous and len(non_member_name) == 0:
-            return self._bad_request(request, name_error="Name must be specified if you are not logged in")
+            return self._bad_request(request, non_member_name_error="Name must be specified if you are not logged in")
 
 
         # This could theoretically end up in a situation where another request gets through and
@@ -85,7 +87,7 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
 
         attendee: Attendee
         if request.user.is_authenticated:
-            attendee_type, attendee = "user", request.user
+            attendee_type, attendee = "user", cast(Attendee, request.user)
         else:
             non_member, created = NonMemberAttendee.objects.get_or_create(name=non_member_name)
             attendee_type, attendee = "non_member", non_member
@@ -104,5 +106,33 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
 
         change = AttendanceChange(event=self.object, type=type, **{attendee_type: attendee})
         change.save()
+        websocket.send_attendance_change(self.object.slug, change)
+
+        return render(request, self.template_name, self.get_ctx())
+
+class AttendanceEventOverview(UserPassesTestMixin, SingleObjectMixin[AttendanceEvent], View):
+    model = AttendanceEvent
+    template_name = "attendance/overview.html"
+
+    @staticmethod
+    def is_user_allowed(user) -> bool:
+        return user.is_authenticated and user.is_staff
+
+    def test_func(self) -> bool:
+        """Only allows staff to access the code view page"""
+        self.object = self.get_object()
+
+        return self.is_user_allowed(self.request.user)
+
+    def get_ctx(self, **kwargs):
+        ctx = {**kwargs}
+
+        ctx["object"] = self.object
+        ctx["code"] = self.object.get_current_code()
+
+        return ctx
+
+    def get(self, request: HttpRequest, *args, **kwargs):
+        self.object = self.get_object()
 
         return render(request, self.template_name, self.get_ctx())

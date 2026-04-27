@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('description', models.CharField(blank=True, max_length=255, verbose_name='Description')),
                 ('start_datetime', models.DateTimeField(verbose_name='Start date/time')),
                 ('end_datetime', models.DateTimeField(blank=True, null=True, verbose_name='End date/time')),
-                ('secret', models.CharField(default=attendance.models.generate_event_secret, verbose_name='Secret')),
+                ('secret', models.CharField(default="", verbose_name='Secret')),
                 ('allow_non_members', models.BooleanField(default=True, verbose_name='Allow non-member attendees')),
                 ('slug', models.SlugField(unique=True, verbose_name='Slug')),
             ],
