@@ -1,0 +1,35 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{# TODO i18n #}
+
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - Attendance for {{ object.title }} {% endblock %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js" integrity="sha512-PEhlWBZBrQL7flpJPY8lXx8tIN7HWX912GzGhFTDqA3iWFrakVH3lVHomCoU9BhfKzgxfEk6EG2C3xej+9srOQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="{% static 'attendance/js/overview.js' %}" defer></script>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-md min-vh-100 container-margin-top d-flex justify-content-center">
+    <div class="container-size">
+        <div class="content" style="width: fit-content">
+            <div class="lh-1">
+                <h2 class="header">{{ object.title }}</h2>
+                <h5>{{ object.description }}</h5>
+                <p></p>
+            </div>
+
+            <div class="lh-1 text-center">
+                <h1 id="current-code">{{ code }}</h1>
+                <div class="w-100 text-warning" id="status-message"></div>
+            </div>
+
+            <div id="qrcode"></div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

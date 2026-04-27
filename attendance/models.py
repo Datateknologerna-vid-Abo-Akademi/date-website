@@ -7,19 +7,15 @@ from django.db.models import constraints, Q, F, QuerySet
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
-
 from members.models import Member
 
-type Attendee = Member | "NonMemberAttendee"
+from django_otp.oath import TOTP
+from django_otp.util import random_hex
+
+type Attendee = "Member | NonMemberAttendee"
 
 ATTENDANCE_EVENT_MAX_SLUG_LEN = 50
 NON_MEMBER_MAX_NAME_LEN = 255
-
-# The secret could of course be anything,
-# but a random 5-digit number seemed like a reasonable default
-def generate_event_secret():
-    return str(random.randint(10000, 99999))
-
 
 class AttendanceEvent(models.Model):
     """
@@ -30,8 +26,9 @@ class AttendanceEvent(models.Model):
     description = models.CharField(_("Description"), max_length=255, blank=True)
     start_datetime = models.DateTimeField(_("Start date/time"))
     end_datetime = models.DateTimeField(_("End date/time"), null=True, blank=True)
-    secret = models.CharField(_("Secret"), default=generate_event_secret)
     allow_non_members = models.BooleanField(_("Allow non-member attendees"), default=True)
+    code_secret = models.CharField(_("Code generation secret"), default=random_hex)
+    code_validity_time = models.SmallIntegerField(_("Code validity time (seconds)"), default=30)
     slug = models.SlugField(
         _("Slug"),
         unique=True,
@@ -58,7 +55,11 @@ class AttendanceEvent(models.Model):
 
         return self.end_datetime is not None and now() > self.end_datetime
 
-    def present_attendees(self, timestamp: datetime | None = None) -> list[Member | NonMemberAttendee]:
+    @property
+    def totp(self) -> TOTP:
+        return TOTP(self.code_secret.encode(), step=self.code_validity_time)
+
+    def present_attendees(self, timestamp: datetime | None = None) -> list[Attendee]:
         """
         Get all attendees who were present at the given timestamp.
         Defaults to the current time.
@@ -105,6 +106,17 @@ class AttendanceEvent(models.Model):
         except AttendanceChange.DoesNotExist:
             return False
 
+    def get_current_code(self) -> int:
+        return self.totp.token()
+
+    def time_until_next_code(self) -> float:
+        step = self.code_validity_time
+        now = self.totp.time
+        return step - now % step
+
+    def is_code_valid(self, code: int) -> bool:
+        return self.totp.verify(code)
+
 
 #TODO change to use first_name/last_name fields instead?
 class NonMemberAttendee(models.Model):
@@ -113,6 +125,10 @@ class NonMemberAttendee(models.Model):
     """
 
     name = models.CharField(_("Name"), max_length=NON_MEMBER_MAX_NAME_LEN, unique=True)
+
+    # For compatibility with the Member class
+    def get_full_name(self):
+        return str(self)
 
     def __str__(self):
         return f"{self.name} ({_('non-member')})"
@@ -160,9 +176,19 @@ class AttendanceChange(models.Model):
 
 
     @property
-    def attendee(self) -> Member | NonMemberAttendee:
+    def attendee(self) -> Attendee:
         """Either a Member or NonMemberAttendee, depending on which field is set"""
-        return cast(Member | NonMemberAttendee, self.user if self.user is not None else self.non_member)
+        return cast(Attendee, self.user if self.user is not None else self.non_member)
+
+    @property
+    def attendee_name(self) -> str:
+        """Returns the name of any kind of attendee"""
+        if self.user is not None:
+            user = cast(Member, self.user)
+            return user.full_name
+        else:
+            non_member = cast(NonMemberAttendee, self.non_member)
+            return non_member.name
 
     def __str__(self):
         # The constraint that usually ensures either user or non_member is set is only checked when saving the model,
