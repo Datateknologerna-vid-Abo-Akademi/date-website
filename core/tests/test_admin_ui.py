@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.apps import apps
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import NoReverseMatch, reverse
+from django.utils import translation
 
 from core.admin_base import PublicUrlAdminMixin, UnfoldFormMixin
 from core.settings.common import _get_unfold_environment
@@ -94,7 +95,8 @@ class AdminUiRegistryTests(TestCase):
 
         label, variant = _get_unfold_environment(request)
 
-        self.assertEqual(str(label), "Quality Assurance")
+        with translation.override("en"):
+            self.assertEqual(str(label), "Quality Assurance")
         self.assertEqual(variant, "warning")
 
     @override_settings(ALLOWED_HOSTS=["date.example"], DEBUG=False, DEVELOP=False)
@@ -103,7 +105,8 @@ class AdminUiRegistryTests(TestCase):
 
         label, variant = _get_unfold_environment(request)
 
-        self.assertEqual(str(label), "Production")
+        with translation.override("en"):
+            self.assertEqual(str(label), "Production")
         self.assertEqual(variant, "success")
 
     def test_registry_permission_strings_match_models(self):
