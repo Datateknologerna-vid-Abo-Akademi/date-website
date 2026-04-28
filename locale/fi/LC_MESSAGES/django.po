@@ -596,18 +596,18 @@ msgstr ""
 #: members/admin.py:206
 #, python-format
 msgid "Aktiverade %(count)d användare."
-msgstr "Aktivoitu %(count)d käyttäjää."
+msgstr "Aktivoitiin %(count)d käyttäjää."
 
 #: members/admin.py:212
 #, python-format
 msgid "Deaktiverade %(count)d användare."
-msgstr "Deaktivoitu %(count)d käyttäjää."
+msgstr "Deaktivoitiin %(count)d käyttäjää."
 
 #: members/admin.py:224
 #, python-format
 msgid "2FA inaktiverat för valda medlemmar: %(count)d enhet(er) borttagna."
 msgstr ""
-"2FA poistettu valituilta jäseniltä: %(count)d laite(tta) poistettu."
+"2FA poistettu käytöstä valituilta jäseniltä: %(count)d laite(tta) poistettu."
 
 #: members/forms.py:23
 msgid ""
