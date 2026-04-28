@@ -1,9 +1,8 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% load i18n %}
-{# TODO i18n #}
 
-{% block title %}{{ ASSOCIATION_NAME_SHORT }} - Attendance for {{ object.title }} {% endblock %}
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - {% blocktrans with title=object.title %}Närvaro för {{title}}{% endblocktrans %}{% endblock %}
 
 {% block extra_head %}
     {{ block.super }}

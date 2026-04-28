@@ -72,13 +72,13 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
             return self._bad_request(request, **error_dict)
 
         if not self.object.is_code_valid(form.cleaned_data["code"]):
-            return self._bad_request(request, code_error="Invalid code")
+            return self._bad_request(request, code_error=_("Fel kod"))
 
         non_member_name: str = form.cleaned_data["non_member_name"]
         type: AttendanceChange.Type = form.cleaned_data["type"]
 
         if request.user.is_anonymous and len(non_member_name) == 0:
-            return self._bad_request(request, non_member_name_error="Name must be specified if you are not logged in")
+            return self._bad_request(request, non_member_name_error=_("Namn måste anges om du inte är inloggad"))
 
 
         # This could theoretically end up in a situation where another request gets through and
@@ -95,11 +95,11 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
         match type:
             case AttendanceChange.Type.ENTER:
                 if self.object.is_attendee_present(attendee):
-                    return self._conflict(request, generic_error="Cannot enter an event where you are already present")
+                    return self._conflict(request, generic_error=_("Du kan inte gå in i ett evenemang var du redan är närvarande"))
 
             case AttendanceChange.Type.LEAVE:
                 if not self.object.is_attendee_present(attendee):
-                    return self._conflict(request, generic_error="Cannot leave an event where you are not present")
+                    return self._conflict(request, generic_error=_("Du kan inte gå ut ur ett evenemang var du inte är närvarande"))
 
             case unhandled:
                 raise Exception(f"unhandled AttendanceChange.Type {unhandled}")
