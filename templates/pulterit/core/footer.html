@@ -11,3 +11,14 @@
 {% block footer_logo %}
 <img class="footer-img img-fluid" alt="{% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}{{ association_name }} logo{% endblocktranslate %}" src="{% static 'core/images/pulterit-white.svg' %}">
 {% endblock %}
+
+{% block extra_footer %}
+<div class="text-center my-3">
+    <a href="https://geohouse.fi/" target="_blank" rel="noopener">
+        <img class="img-fluid" alt="Geohouse logo" src="{% static 'core/images/Geohouse_logo-1-1.png' %}" style="max-height: 80px;">
+    </a>
+</div>
+<p class="text-center mb-2">
+    <small>{% trans "Developed by" %} <a href="https://datateknologerna.org/" target="_blank" rel="noopener"><img src="{% static 'core/images/Sponsor_Albin.png' %}" alt="DaTe logo" style="max-height: 28px; vertical-align: middle; filter: invert(1); margin-left: 4px;"></a></small>
+</p>
+{% endblock %}

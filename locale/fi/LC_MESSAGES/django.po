@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-22 13:50+0300\n"
+"POT-Creation-Date: 2026-04-28 21:35+0300\n"
 "PO-Revision-Date: 2025-09-16 19:33+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -31,7 +31,7 @@ msgstr "Etunimi"
 msgid "Efternamn"
 msgstr "Sukunimi"
 
-#: alumni/forms.py:17 alumni/forms.py:72 events/models.py:378
+#: alumni/forms.py:17 alumni/forms.py:72 events/models.py:381
 #: members/forms.py:176 members/models.py:32
 msgid "E-postadress"
 msgstr "Sähköpostiosoite"
@@ -105,9 +105,13 @@ msgstr "Alumnipäivityksen tunnisteet"
 msgid "Uppdatera dina uppgifter"
 msgstr "Päivitä tietosi"
 
-#: archive/models.py:30 archive/models.py:167 events/models.py:198
-#: events/models.py:334 events/models.py:376 members/models.py:96
-#: members/models.py:121 news/models.py:14
+#: archive/admin.py:45
+msgid "Städa upp media"
+msgstr "Siivoa media"
+
+#: archive/models.py:30 archive/models.py:167 events/models.py:201
+#: events/models.py:337 events/models.py:379 members/models.py:96
+#: members/models.py:121 news/models.py:15
 #: templates/biocum/events/arsfest.html:91
 #: templates/common/events/arsfest.html:104
 #: templates/common/events/baal_detail.html:69
@@ -184,118 +188,123 @@ msgstr "tiedosto"
 msgid "filer"
 msgstr "tiedostot"
 
-#: core/settings/common.py:81 core/settings/common.py:82
+#: core/admin_base.py:65
+msgid "Open public page"
+msgstr "Avaa julkinen sivu"
+
+#: core/admin_base.py:68
+msgid "Public page"
+msgstr "Julkinen sivu"
+
+#: core/admin_ui.py:37
+msgid "Event"
+msgstr "Tapahtuma"
+
+#: core/admin_ui.py:38 core/admin_ui.py:95
+msgid "News"
+msgstr "Uutiset"
+
+#: core/admin_ui.py:39
+msgid "Static Page"
+msgstr "Staattinen sivu"
+
+#: core/admin_ui.py:81 core/admin_ui.py:82
 msgid "Events"
 msgstr "Events"
 
-#: core/settings/common.py:83
+#: core/admin_ui.py:83
 msgid "Billing Configuration"
 msgstr "Billing Configuration"
 
-#: core/settings/common.py:84
+#: core/admin_ui.py:84
 msgid "Invoices"
 msgstr "Invoices"
 
-#: core/settings/common.py:86 core/settings/common.py:87
-#| msgid "Membership type:"
+#: core/admin_ui.py:86 core/admin_ui.py:87
 msgid "Members"
 msgstr "Jäsentyyppi:"
 
-#: core/settings/common.py:88
-#| msgid "Membership type:"
+#: core/admin_ui.py:88
 msgid "Membership Types"
 msgstr "Jäsentyyppi:"
 
-#: core/settings/common.py:89
-#| msgid "Description"
+#: core/admin_ui.py:89
 msgid "Subscriptions"
 msgstr "Kuvaus"
 
-#: core/settings/common.py:90
+#: core/admin_ui.py:90
 msgid "Subscription Payments"
 msgstr "Subscription Payments"
 
-#: core/settings/common.py:91
-#| msgid "Funktionärer"
+#: core/admin_ui.py:91
 msgid "Functionaries"
 msgstr "Toimihenkilöt"
 
-#: core/settings/common.py:92
-#| msgid "Funktionärspost"
+#: core/admin_ui.py:92
 msgid "Functionary Roles"
 msgstr "Toimihenkilöpesti"
 
-#: core/settings/common.py:94
-#| msgid "Continue"
+#: core/admin_ui.py:94
 msgid "Content"
 msgstr "Jatka"
 
-#: core/settings/common.py:95
-msgid "News"
-msgstr "News"
-
-#: core/settings/common.py:96
-#| msgid "kategorier"
+#: core/admin_ui.py:96
 msgid "News Categories"
 msgstr "kategoriat"
 
-#: core/settings/common.py:97
-#| msgid "Poll"
+#: core/admin_ui.py:97
 msgid "Polls"
 msgstr "Kysely"
 
-#: core/settings/common.py:98
+#: core/admin_ui.py:98
 msgid "Static Pages"
 msgstr "Static Pages"
 
-#: core/settings/common.py:99
+#: core/admin_ui.py:99
 msgid "Page Navigation"
 msgstr "Page Navigation"
 
-#: core/settings/common.py:101
-#| msgid "Publications"
+#: core/admin_ui.py:101
 msgid "Archive & Publications"
 msgstr "Julkaisut"
 
-#: core/settings/common.py:102
-#| msgid "Publications"
+#: core/admin_ui.py:102
 msgid "PDF Publications"
 msgstr "Julkaisut"
 
-#: core/settings/common.py:103
+#: core/admin_ui.py:103
 msgid "Photo Albums"
 msgstr "Photo Albums"
 
-#: core/settings/common.py:104
-#| msgid "dokument"
+#: core/admin_ui.py:104
 msgid "Documents"
 msgstr "tiedosto"
 
-#: core/settings/common.py:105
+#: core/admin_ui.py:105
 msgid "Exams"
 msgstr "Exams"
 
-#: core/settings/common.py:107
+#: core/admin_ui.py:107
 msgid "Activities"
 msgstr "Activities"
 
-#: core/settings/common.py:108 ctf/models.py:57
+#: core/admin_ui.py:108 ctf/models.py:64
 msgid "CTF"
 msgstr "CTF"
 
-#: core/settings/common.py:109
+#: core/admin_ui.py:109
 msgid "CTF Guesses"
 msgstr "CTF Guesses"
 
-#: core/settings/common.py:110 lucia/models.py:22
+#: core/admin_ui.py:110 lucia/models.py:23
 msgid "Lucia"
 msgstr "Lucia"
 
-#: core/settings/common.py:112
+#: core/admin_ui.py:112
 msgid "Social & Ads"
 msgstr "Social & Ads"
 
-#: core/settings/common.py:113 templates/biocum/date/components/mobile.html:52
+#: core/admin_ui.py:113 templates/biocum/date/components/mobile.html:52
 #: templates/biocum/date/components/sidebar.html:55
 #: templates/date/date/components/partners.html:3
 #: templates/demo/date/components/partners.html:3
@@ -305,97 +314,109 @@ msgstr "Social & Ads"
 msgid "Samarbetspartners"
 msgstr "Yhteistyökumppanimme"
 
-#: core/settings/common.py:114
+#: core/admin_ui.py:114
 msgid "Instagram URLs"
 msgstr "Instagram URLs"
 
-#: core/settings/common.py:115
+#: core/admin_ui.py:115
 msgid "Harassment Reports"
 msgstr "Harassment Reports"
 
-#: core/settings/common.py:116
+#: core/admin_ui.py:116
 msgid "Report Recipients"
 msgstr "Report Recipients"
 
-#: core/settings/common.py:118
+#: core/admin_ui.py:118
 msgid "System"
 msgstr "System"
 
-#: core/settings/common.py:119
+#: core/admin_ui.py:119
 msgid "Admin Log"
 msgstr "Admin Log"
 
-#: core/settings/common.py:120
+#: core/admin_ui.py:120
 msgid "Permissions"
 msgstr "Permissions"
 
-#: ctf/models.py:16 events/models.py:45 lucia/models.py:15
-#: members/models.py:167 news/models.py:27 staticpages/models.py:24
-#: staticpages/models.py:40
+#: core/settings/common.py:84
+msgid "Quality Assurance"
+msgstr "Laadunvarmistus"
+
+#: core/settings/common.py:91
+msgid "Development"
+msgstr "Kehitys"
+
+#: core/settings/common.py:93
+msgid "Production"
+msgstr "Tuotanto"
+
+#: ctf/models.py:17 events/models.py:45 lucia/models.py:16
+#: members/models.py:167 news/models.py:31 staticpages/models.py:25
+#: staticpages/models.py:44
 msgid "Titel"
 msgstr "Otsikko"
 
-#: ctf/models.py:17 events/models.py:46 lucia/models.py:16 news/models.py:29
-#: staticpages/models.py:25
+#: ctf/models.py:18 events/models.py:46 lucia/models.py:17 news/models.py:33
+#: staticpages/models.py:26
 msgid "Innehåll"
 msgstr "Sisältö"
 
-#: ctf/models.py:18 events/models.py:47
+#: ctf/models.py:19 events/models.py:47
 msgid "Startdatum"
 msgstr "Alkupäivämäärä"
 
-#: ctf/models.py:19 events/models.py:48
+#: ctf/models.py:20 events/models.py:48
 msgid "Slutdatum"
 msgstr "Loppupäivämäärä"
 
-#: ctf/models.py:21 ctf/models.py:46 events/models.py:68 lucia/models.py:18
-#: news/models.py:15 news/models.py:35 publications/models.py:16
-#: staticpages/models.py:28
+#: ctf/models.py:22 ctf/models.py:50 events/models.py:68 lucia/models.py:19
+#: news/models.py:16 news/models.py:39 publications/models.py:17
+#: staticpages/models.py:29
 msgid "Slug"
 msgstr "Polkutunnus"
 
-#: ctf/models.py:22 events/models.py:67 lucia/models.py:17 news/models.py:34
+#: ctf/models.py:23 events/models.py:67 lucia/models.py:18 news/models.py:38
 #: polls/models.py:25
 msgid "Publicera"
 msgstr "Julkaise"
 
-#: ctf/models.py:25 ctf/models.py:26
+#: ctf/models.py:26 ctf/models.py:27
 msgid "ctf"
 msgstr "ctf"
 
-#: ctf/models.py:45
+#: ctf/models.py:49
 msgid "Clue"
 msgstr "Vihje"
 
-#: ctf/models.py:49
+#: ctf/models.py:53
 msgid "Flag"
 msgstr "Lippu"
 
-#: ctf/models.py:50
+#: ctf/models.py:54
 msgid "Flags"
 msgstr "Lippuja"
 
-#: ctf/models.py:58
+#: ctf/models.py:65
 msgid "Användare"
 msgstr "Käyttäjä"
 
-#: ctf/models.py:59
+#: ctf/models.py:66
 msgid "Flagga"
 msgstr "Lippu"
 
-#: ctf/models.py:60 ctf/models.py:65
+#: ctf/models.py:67 ctf/models.py:72
 msgid "Gissning"
 msgstr "Arvaus"
 
-#: ctf/models.py:61
+#: ctf/models.py:68
 msgid "Korrekt"
 msgstr "Oikein"
 
-#: ctf/models.py:62
+#: ctf/models.py:69
 msgid "Tid"
 msgstr "Aika"
 
-#: ctf/models.py:66
+#: ctf/models.py:73
 msgid "Gissningar"
 msgstr "Arvaukset"
 
@@ -435,16 +456,16 @@ msgstr "Ilmoittautuminen"
 msgid "Avanmälningen stängs"
 msgstr "Ilmoittautuminen sulkeutuu"
 
-#: events/models.py:62 news/models.py:31 staticpages/models.py:26
+#: events/models.py:62 news/models.py:35 staticpages/models.py:27
 msgid "Skapad"
 msgstr "Luotu"
 
-#: events/models.py:64 news/models.py:32
+#: events/models.py:64 news/models.py:36
 #: templates/common/publications/list.html:25
 msgid "Publicerad"
 msgstr "Julkaistu"
 
-#: events/models.py:66 news/models.py:33 staticpages/models.py:27
+#: events/models.py:66 news/models.py:37 staticpages/models.py:28
 msgid "Modifierad"
 msgstr "Muokattu"
 
@@ -480,12 +501,12 @@ msgstr "Uudelleenohjauslinkki"
 msgid "evenemang"
 msgstr "tapahtumat"
 
-#: events/models.py:199 social/models.py:19
+#: events/models.py:202 social/models.py:19
 msgid "Email"
 msgstr "Sähköposti"
 
-#: events/models.py:200 events/models.py:380 events/tests.py:337
-#: events/tests.py:1060 events/websocket_utils.py:30
+#: events/models.py:203 events/models.py:383 events/tests.py:337
+#: events/tests.py:1090 events/websocket_utils.py:30
 #: templates/biocum/events/arsfest.html:101
 #: templates/common/events/arsfest.html:113
 #: templates/common/events/baal_detail.html:78
@@ -498,77 +519,103 @@ msgstr "Sähköposti"
 msgid "Anonymt"
 msgstr "Anonyymisesti"
 
-#: events/models.py:308
+#: events/models.py:311
 msgid "Det finns redan någon anmäld med denna email"
 msgstr "Tällä sähköpostiosoitteella on jo ilmoittautuminen."
 
-#: events/models.py:333 events/models.py:375 staticpages/models.py:43
+#: events/models.py:336 events/models.py:378 staticpages/models.py:47
 msgid "#"
 msgstr "#"
 
-#: events/models.py:335
+#: events/models.py:338
 msgid "Typ"
 msgstr "Tyyppi"
 
-#: events/models.py:339
+#: events/models.py:342
 msgid "Krävd"
 msgstr "Pakollinen"
 
-#: events/models.py:340
+#: events/models.py:343
 msgid "Öppen info"
 msgstr "Julkinen tieto"
 
-#: events/models.py:341
+#: events/models.py:344
 msgid "Alternativ"
 msgstr "Vaihtoehdot"
 
-#: events/models.py:342
+#: events/models.py:345
 msgid "Göm för avec"
 msgstr "Piilota avecilta"
 
-#: events/models.py:345 events/models.py:346
+#: events/models.py:348 events/models.py:349
 msgid "Anmälningsfält"
 msgstr "Ilmoittautumiskentät"
 
-#: events/models.py:379
+#: events/models.py:382
 msgid "Svar"
 msgstr "Vastaus"
 
-#: events/models.py:381 templates/common/events/list.html:37
+#: events/models.py:384 templates/common/events/list.html:37
 msgid "Registrerad"
 msgstr "Ilmoittautunut"
 
-#: events/models.py:382 templates/common/events/list.html:35
+#: events/models.py:385 templates/common/events/list.html:35
 msgid "Avec till"
 msgstr "Avekkina"
 
-#: events/models.py:383
+#: events/models.py:386
 msgid "Ursprungligt evenemang"
 msgstr "Alkuperäinen tapahtuma"
 
-#: events/models.py:386 events/models.py:387
+#: events/models.py:389 events/models.py:390
 msgid "deltagare"
 msgstr "osallistuja"
 
-#: lucia/models.py:14
+#: lucia/models.py:15
 msgid "Bild URL"
 msgstr "Kuva URL"
 
-#: lucia/models.py:19
+#: lucia/models.py:20
 msgid "Poll URL"
 msgstr "Kyselyn URL"
 
-#: lucia/models.py:23
+#: lucia/models.py:24
 msgid "Lucian"
 msgstr "Lucia-neito"
 
+#: members/admin.py:120
+msgid ""
+"Search by name, username, email, phone, address, postal code, city, "
+"membership type, group, subscription, admission year, member ID, or GitHub "
+"ID."
+msgstr ""
+"Hae nimellä, käyttäjätunnuksella, sähköpostilla, puhelimella, osoitteella, "
+"postinumerolla, kaupungilla, jäsentyypillä, ryhmällä, tilauksella, "
+"sisäänottovuodella, jäsen-ID:llä tai GitHub-ID:llä."
+
+#: members/admin.py:206
+#, python-format
+msgid "Aktiverade %(count)d användare."
+msgstr "Aktivoitiin %(count)d käyttäjää."
+
+#: members/admin.py:212
+#, python-format
+msgid "Deaktiverade %(count)d användare."
+msgstr "Deaktivoitiin %(count)d käyttäjää."
+
+#: members/admin.py:224
+#, python-format
+msgid "2FA inaktiverat för valda medlemmar: %(count)d enhet(er) borttagna."
+msgstr ""
+"2FA poistettu käytöstä valituilta jäseniltä: %(count)d laite(tta) poistettu."
+
 #: members/forms.py:23
 msgid ""
-"Enter a valid username consisting only of letters, numbers, underscores, and "
-"hyphens."
+"Enter a valid username consisting only of letters, numbers, dots, "
+"underscores, and hyphens."
 msgstr ""
 "Anna kelvollinen käyttäjätunnus, joka sisältää vain kirjaimia, numeroita, "
-"alaviivoja ja yhdysmerkkejä."
+"pisteitä, alaviivoja ja yhdysmerkkejä."
 
 #: members/forms.py:34 members/forms.py:80 members/forms.py:174
 #: members/models.py:31
@@ -782,29 +829,30 @@ msgstr "GitHub-tili on linkitetty tiliisi."
 
 #: members/views_github.py:258
 msgid "Inget konto hittades för ditt GitHub-konto. Kontakta administratören."
-msgstr "GitHub-tilillesi ei löytynyt tiliä. Ota yhteyttä järjestelmänvalvojaan."
+msgstr ""
+"GitHub-tilillesi ei löytynyt tiliä. Ota yhteyttä järjestelmänvalvojaan."
 
 #: members/views_github.py:263
 msgid "Ditt konto är inaktiverat."
 msgstr "Tilisi on poistettu käytöstä."
 
-#: news/models.py:18
+#: news/models.py:19
 msgid "kategori"
 msgstr "kategoria"
 
-#: news/models.py:19
+#: news/models.py:20
 msgid "kategorier"
 msgstr "kategoriat"
 
-#: news/models.py:28 staticpages/models.py:14
+#: news/models.py:32 staticpages/models.py:15
 msgid "Kategori"
 msgstr "Kategoria"
 
-#: news/models.py:38
+#: news/models.py:42
 msgid "nyhet"
 msgstr "uutinen"
 
-#: news/models.py:39
+#: news/models.py:43
 msgid "nyheter"
 msgstr "Uutiset"
 
@@ -860,39 +908,39 @@ msgstr "Vaihtoehto"
 msgid "Röstare"
 msgstr "Äänestäjät"
 
-#: publications/models.py:15
+#: publications/models.py:16
 msgid "Title"
 msgstr "Otsikko"
 
-#: publications/models.py:17
+#: publications/models.py:18
 msgid "Leave empty to auto-generate from title"
 msgstr "Jätä tyhjäksi luodaksesi sen automaattisesti otsikosta"
 
-#: publications/models.py:18
+#: publications/models.py:19
 msgid "File"
 msgstr "Tiedosto"
 
-#: publications/models.py:19
+#: publications/models.py:20
 msgid "Description"
 msgstr "Kuvaus"
 
-#: publications/models.py:20
+#: publications/models.py:21
 msgid "Uploaded at"
 msgstr "Ladattu"
 
-#: publications/models.py:21
+#: publications/models.py:22
 msgid "Updated at"
 msgstr "Päivitetty"
 
-#: publications/models.py:22
+#: publications/models.py:23
 msgid "Publication Date"
 msgstr "Julkaisupäivä"
 
-#: publications/models.py:23
+#: publications/models.py:24
 msgid "Public Access"
 msgstr "Julkinen saatavuus"
 
-#: publications/models.py:24
+#: publications/models.py:25
 msgid ""
 "If checked, this PDF will be visible to everyone. If unchecked, it will be "
 "hidden from all users."
@@ -900,21 +948,21 @@ msgstr ""
 "Jos tämä on valittuna, PDF näkyy kaikille. Muussa tapauksessa se piilotetaan "
 "kaikilta käyttäjiltä."
 
-#: publications/models.py:26
+#: publications/models.py:27
 msgid "Requires Login"
 msgstr "Vaatii sisäänkirjautumisen"
 
-#: publications/models.py:27
+#: publications/models.py:28
 msgid "If checked, users must be logged in to access this PDF"
 msgstr ""
 "Jos tämä on valittuna, käyttäjien on kirjauduttava sisään avatakseen tämän "
 "PDF:n."
 
-#: publications/models.py:30
+#: publications/models.py:31
 msgid "PDF File"
 msgstr "PDF-tiedosto"
 
-#: publications/models.py:31
+#: publications/models.py:32
 msgid "PDF Files"
 msgstr "PDF-tiedostot"
 
@@ -934,19 +982,19 @@ msgstr "Tapahtuman kuvaus"
 msgid "Emailmottagare för Trakasserianmälan"
 msgstr "Sähköpostivastaanottaja häirintäilmoituksille"
 
-#: staticpages/models.py:16
+#: staticpages/models.py:17
 msgid "Använd kategorins URL"
 msgstr "Käytä kategorian URL-osoitetta"
 
-#: staticpages/models.py:17 staticpages/models.py:41
+#: staticpages/models.py:18 staticpages/models.py:45
 msgid "Url"
 msgstr "URL"
 
-#: staticpages/models.py:29
+#: staticpages/models.py:30
 msgid "Kräv inloggning"
 msgstr "Vaadi sisäänkirajutumista"
 
-#: staticpages/models.py:44
+#: staticpages/models.py:48
 msgid "Visa endast åt inloggade användare"
 msgstr "Näytä vain kirjautuneille käyttäjille"
 
@@ -1054,11 +1102,8 @@ msgstr ""
 "Osallistujalista on piilotettu, koska kyseessä on vanha tapahtuma. Ota "
 "tarvittaessa yhteyttä hallitukseen."
 
-#: templates/common/admin/archive/collection/change_list.html:7
-msgid "Städa upp media"
-msgstr "Siivoa media"
-
 #: templates/common/admin/base_site.html:4
+#: templates/common/admin/events/delete_participants_confirmation.html:4
 msgid "Django site admin"
 msgstr "Django site admin"
 
@@ -1071,11 +1116,11 @@ msgid "Welcome,"
 msgstr "Welcome,"
 
 #: templates/common/admin/base_site.html:22
+#: templates/common/unfold/helpers/userlinks.html:26
 msgid "View site"
 msgstr "View site"
 
 #: templates/common/admin/base_site.html:25
-#| msgid "Change my password"
 msgid "Change password"
 msgstr "Vaihda salasanani"
 
@@ -1084,10 +1129,47 @@ msgid "Log out"
 msgstr "Log out"
 
 #: templates/common/admin/base_site.html:35
+#: templates/common/unfold/helpers/userlinks.html:12
 #: templates/pulterit/core/header.html:64
 #: templates/pulterit/core/header.html:79
 msgid "Language"
 msgstr "Kieli"
+
+#: templates/common/admin/events/delete_participants_confirmation.html:4
+#: templates/common/admin/events/delete_participants_confirmation.html:10
+msgid "Bekräfta borttagning"
+msgstr "Vahvista poisto"
+
+#: templates/common/admin/events/delete_participants_confirmation.html:14
+#, python-format
+msgid ""
+"\n"
+"          Det här tar bort en deltagare från valda evenemang.\n"
+"        "
+msgid_plural ""
+"\n"
+"          Det här tar bort %(counter)s deltagare från valda evenemang.\n"
+"        "
+msgstr[0] ""
+"\n"
+"          Tämä poistaa osallistujan valituista tapahtumista.\n"
+"        "
+msgstr[1] ""
+"\n"
+"          Tämä poistaa %(counter)s osallistujaa valituista tapahtumista.\n"
+"        "
+
+#: templates/common/admin/events/delete_participants_confirmation.html:38
+msgid "Inga deltagare hittades för de valda evenemangen."
+msgstr "Osallistujia ei löytynyt valituista tapahtumista."
+
+#: templates/common/admin/events/delete_participants_confirmation.html:54
+msgid "Avbryt"
+msgstr "Peruuta"
+
+#: templates/common/admin/events/delete_participants_confirmation.html:57
+msgid "Ta bort deltagare"
+msgstr "Poista osallistujat"
 
 #: templates/common/archive/detail.html:22
 msgid "Sida"
@@ -1287,7 +1369,6 @@ msgid "Logga ut"
 msgstr "Kirjaudu ulos"
 
 #: templates/common/core/header.html:66
-#| msgid "Language"
 msgid "Choose language"
 msgstr "Kieli"
 
@@ -1392,7 +1473,6 @@ msgstr ""
 "varasijalle ja sinulle ilmoitetaan, jos paikka vapautuu."
 
 #: templates/common/events/registration_state.html:7
-#| msgid "Anmälningstiden gick ut för"
 msgid "Anmälningstiden gick ut"
 msgstr "Ilmoittautuminen päättyi"
 
@@ -1694,7 +1774,6 @@ msgstr[1] "%(choice_text)s: %(vote_count)s votes -- %(vote_percentage)s%%"
 
 #: templates/common/polls/results.html:33
 #, python-format
-#| msgid "Totala röster: "
 msgid "Totala röster: %(total_votes)s"
 msgstr "Ääniä yhteensä: %(total_votes)s"
 
@@ -1728,7 +1807,6 @@ msgstr "edellinen"
 
 #: templates/common/publications/list.html:45
 #, python-format
-#| msgid "Öppna bild %(image_number)s av %(total)s"
 msgid "Page %(page_number)s of %(total_pages)s."
 msgstr "Sivu %(page_number)s/%(total_pages)s."
 
@@ -1840,6 +1918,10 @@ msgstr "Tämä poistaa ylimääräisen vahvistusvaiheen tililtäsi."
 msgid "Disable"
 msgstr "Poista käytöstä"
 
+#: templates/common/unfold/helpers/userlinks.html:39
+msgid "Create"
+msgstr "Luo"
+
 #: templates/date/date/components/about.html:4
 msgid "Om oss"
 msgstr "Meistä"
@@ -1909,6 +1991,10 @@ msgstr "Uutisia ei löydetty"
 #: templates/kk/date/april_start.html:96
 msgid "inga aktiva evenemang hittades"
 msgstr "Tapahtumia ei löydetty"
+
+#: templates/pulterit/core/footer.html:23
+msgid "Developed by"
+msgstr "Kehittänyt"
 
 #: templates/pulterit/date/components/partners.html:8
 #: templates/pulterit/date/components/partners.html:12
