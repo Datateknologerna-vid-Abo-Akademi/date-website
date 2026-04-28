@@ -566,7 +566,7 @@ msgstr "Lucia-neito"
 msgid ""
 "Enter a valid username consisting only of letters, numbers, underscores, and "
 "hyphens."
-msgstr "Enter a valid username consisting only of letters, numbers, underscores, and hyphens."
+msgstr ""
 "Anna kelvollinen käyttäjätunnus, joka sisältää vain kirjaimia, numeroita, "
 "alaviivoja ja yhdysmerkkejä."
 
@@ -730,63 +730,63 @@ msgstr "Käyttäjä aktivoitu"
 
 #: members/views_github.py:64 members/views_github.py:134
 msgid "GitHub-inloggning är inte konfigurerad."
-msgstr "GitHub-inloggning är inte konfigurerad."
+msgstr "GitHub-kirjautumista ei ole määritetty."
 
 #: members/views_github.py:99
 msgid "Inget GitHub-konto är kopplat."
-msgstr "Inget GitHub-konto är kopplat."
+msgstr "GitHub-tiliä ei ole linkitetty."
 
 #: members/views_github.py:103
 msgid "GitHub-kontot har kopplats bort."
-msgstr "GitHub-kontot har kopplats bort."
+msgstr "GitHub-tilin linkitys on poistettu."
 
 #: members/views_github.py:113 members/views_github.py:158
 msgid "GitHub-inloggningen misslyckades."
-msgstr "GitHub-inloggningen misslyckades."
+msgstr "GitHub-kirjautuminen epäonnistui."
 
 #: members/views_github.py:122
 msgid "Ogiltig OAuth-begäran. Försök igen."
-msgstr "Ogiltig OAuth-begäran. Försök igen."
+msgstr "Virheellinen OAuth-pyyntö. Yritä uudelleen."
 
 #: members/views_github.py:127
 msgid "GitHub returnerade ingen auktoriseringskod."
-msgstr "GitHub returnerade ingen auktoriseringskod."
+msgstr "GitHub ei palauttanut valtuutuskoodia."
 
 #: members/views_github.py:152
 msgid "Kunde inte kommunicera med GitHub. Försök igen."
-msgstr "Kunde inte kommunicera med GitHub. Försök igen."
+msgstr "GitHubin kanssa ei voitu kommunikoida. Yritä uudelleen."
 
 #: members/views_github.py:175
 msgid "Kunde inte hämta GitHub-profil. Försök igen."
-msgstr "Kunde inte hämta GitHub-profil. Försök igen."
+msgstr "GitHub-profiilia ei voitu hakea. Yritä uudelleen."
 
 #: members/views_github.py:180
 msgid "Kunde inte hämta GitHub-användar-ID."
-msgstr "Kunde inte hämta GitHub-användar-ID."
+msgstr "GitHub-käyttäjätunnusta ei voitu hakea."
 
 #: members/views_github.py:212
 msgid "Du måste vara inloggad för att koppla ett GitHub-konto."
-msgstr "Du måste vara inloggad för att koppla ett GitHub-konto."
+msgstr "Sinun on oltava kirjautuneena sisään linkittääksesi GitHub-tilin."
 
 #: members/views_github.py:219 members/views_github.py:232
 msgid "Det GitHub-kontot är redan kopplat till ett annat konto."
-msgstr "Det GitHub-kontot är redan kopplat till ett annat konto."
+msgstr "Kyseinen GitHub-tili on jo linkitetty toiseen tiliin."
 
 #: members/views_github.py:222
 msgid "GitHub-kontot är redan kopplat till ditt konto."
-msgstr "GitHub-kontot är redan kopplat till ditt konto."
+msgstr "GitHub-tili on jo linkitetty tiliisi."
 
 #: members/views_github.py:234
 msgid "GitHub-kontot har kopplats till ditt konto."
-msgstr "GitHub-kontot har kopplats till ditt konto."
+msgstr "GitHub-tili on linkitetty tiliisi."
 
 #: members/views_github.py:258
 msgid "Inget konto hittades för ditt GitHub-konto. Kontakta administratören."
-msgstr "Inget konto hittades för ditt GitHub-konto. Kontakta administratören."
+msgstr "GitHub-tilillesi ei löytynyt tiliä. Ota yhteyttä järjestelmänvalvojaan."
 
 #: members/views_github.py:263
 msgid "Ditt konto är inaktiverat."
-msgstr "Ditt konto är inaktiverat."
+msgstr "Tilisi on poistettu käytöstä."
 
 #: news/models.py:18
 msgid "kategori"
@@ -896,7 +896,7 @@ msgstr "Julkinen saatavuus"
 msgid ""
 "If checked, this PDF will be visible to everyone. If unchecked, it will be "
 "hidden from all users."
-msgstr "If checked, this PDF will be visible to everyone. If unchecked, it will be hidden from all users."
+msgstr ""
 "Jos tämä on valittuna, PDF näkyy kaikille. Muussa tapauksessa se piilotetaan "
 "kaikilta käyttäjiltä."
 
@@ -906,7 +906,7 @@ msgstr "Vaatii sisäänkirjautumisen"
 
 #: publications/models.py:27
 msgid "If checked, users must be logged in to access this PDF"
-msgstr "If checked, users must be logged in to access this PDF"
+msgstr ""
 "Jos tämä on valittuna, käyttäjien on kirjauduttava sisään avatakseen tämän "
 "PDF:n."
 
@@ -1050,7 +1050,7 @@ msgstr "Ei ilmoittautuneita, ole ensimmäinen!"
 msgid ""
 "Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta "
 "styrelsen vid behov."
-msgstr "Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta styrelsen vid behov."
+msgstr ""
 "Osallistujalista on piilotettu, koska kyseessä on vanha tapahtuma. Ota "
 "tarvittaessa yhteyttä hallitukseen."
 
@@ -1166,14 +1166,14 @@ msgstr "Kuvasivut"
 #: templates/common/archive/partials/detail_gallery_shell.html:11
 msgid ""
 "Om automatisk bildladdning inte fungerar kan du bläddra mellan sidorna här."
-msgstr "Om automatisk bildladdning inte fungerar kan du bläddra mellan sidorna här."
+msgstr ""
 "Jos automaattinen kuvien lataus ei toimi, voit siirtyä sivujen välillä tästä."
 
 #: templates/common/archive/partials/detail_gallery_shell.html:34
 msgid ""
 "JavaScript krävs för automatisk bildladdning. Använd sidlänkarna ovan för "
 "att visa fler bilder."
-msgstr "JavaScript krävs för automatisk bildladdning. Använd sidlänkarna ovan för att visa fler bilder."
+msgstr ""
 "Automaattinen kuvien lataus vaatii JavaScriptin. Käytä yllä olevia "
 "sivulinkkejä nähdäksesi lisää kuvia."
 
@@ -1251,7 +1251,7 @@ msgstr "Palvelinvirhe, kokeile uudestaan hetken kuluttua"
 msgid ""
 "Vi använder cookies för att förbättra din upplevelse på vår webbplats. Genom "
 "att fortsätta använda webbplatsen godkänner du vår användning av cookies."
-msgstr "Vi använder cookies för att förbättra din upplevelse på vår webbplats. Genom att fortsätta använda webbplatsen godkänner du vår användning av cookies."
+msgstr ""
 "Käytämme evästeitä parantaaksemme käyttökokemustasi verkkosivustollamme. "
 "Jatkamalla verkkosivuston käyttöä hyväksyt evästeiden käytön."
 
@@ -1271,7 +1271,7 @@ msgstr "%(association_name)s logo"
 #: templates/common/core/footer.html:29
 #, python-format
 msgid "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
-msgstr "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
+msgstr ""
 "%(association_name)s:n hallitukseen voi ottaa yhteyttä seuraavalla tavalla."
 
 #: templates/common/core/footer.html:34
@@ -1303,7 +1303,7 @@ msgstr "Ei ilmoittautuneita, ole ensimmäinen!"
 msgid ""
 "Deltagarlistan har gömts eftersom det här är ett gammalt evenemang, kontakta "
 "styrelsen vid behov."
-msgstr "Deltagarlistan har gömts eftersom det här är ett gammalt evenemang, kontakta styrelsen vid behov."
+msgstr ""
 "Osallistujalista on piilotettu, koska tämä on vanha tapahtuma. Ota "
 "tarvittaessa yhteyttä hallitukseen."
 
@@ -1370,7 +1370,7 @@ msgid ""
 "anmälningstiden syns den anmäldas namn i listan nedan. Efter evenemanget "
 "sparas informationen för statistiska ändamål och syns endast för hemsidans "
 "administratörer."
-msgstr "Genom att anmäla dig godkänner du att %(ASSOCIATION_NAME_FULL)s lagrar ditt namn, din e-post samt eventuell annan nödvändig information. Under anmälningstiden syns den anmäldas namn i listan nedan. Efter evenemanget sparas informationen för statistiska ändamål och syns endast för hemsidans administratörer."
+msgstr ""
 "Ilmoittautumalla hyväksyt että %(ASSOCIATION_NAME_FULL)s säilyttää nimesi, "
 "sähköpostiosoitteesi sekä muu tarvittava tieto. Ilmoittautumisajan aikana "
 "ilmoittautuneen nimi näkyy alla olevassa listassa. Tapahtuman jälkeen tieto "
@@ -1380,14 +1380,14 @@ msgstr "Genom att anmäla dig godkänner du att %(ASSOCIATION_NAME_FULL)s lagrar
 #: templates/common/events/registering.html:72
 msgid ""
 "Evenemanget är tyvärr fullt! Vänligen kontakta evenemangets kontaktperson"
-msgstr "Evenemanget är tyvärr fullt! Vänligen kontakta evenemangets kontaktperson"
+msgstr ""
 "Tapahtuma on valitettavasti täynnä. Ota yhteyttä tapahtuman yhteyshenkilöön."
 
 #: templates/common/events/registering.html:74
 msgid ""
 "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan "
 "och meddelas om du får plats."
-msgstr "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan och meddelas om du får plats."
+msgstr ""
 "Tapahtuma on valitettavasti täynnä. Jos ilmoittaudut, sinut lisätään "
 "varasijalle ja sinulle ilmoitetaan, jos paikka vapautuu."
 
@@ -1464,7 +1464,7 @@ msgstr "Salasanan vaihto"
 msgid ""
 "Please enter your old password, for security’s sake, and then enter your new "
 "password twice so we can verify you typed it in correctly."
-msgstr "Please enter your old password, for security’s sake, and then enter your new password twice so we can verify you typed it in correctly."
+msgstr ""
 "Anna turvallisuussyistä nykyinen salasanasi ja kirjoita uusi salasana "
 "kahdesti, jotta voimme varmistaa sen olevan oikein."
 
@@ -1500,7 +1500,7 @@ msgstr "Vaihda salasana"
 msgid ""
 "Denna länk är inte giltigt, det kan hända att länken redan använts. Vänligen "
 "fråga efter en ny länk."
-msgstr "Denna länk är inte giltigt, det kan hända att länken redan använts. Vänligen fråga efter en ny länk."
+msgstr ""
 "Tämä linkki ei ole kelvollinen. Linkkiä on ehkä jo käytetty. Pyydä uusi "
 "linkki."
 
@@ -1512,7 +1512,7 @@ msgstr "Salasanan palautus - Sähköposti lähetetty"
 msgid ""
 "Vi har skicket instruktionerna till din mail, ifall en användare är "
 "registrerad med denna epost. Du borde få mailet inom kort"
-msgstr "Vi har skicket instruktionerna till din mail, ifall en användare är registrerad med denna epost. Du borde få mailet inom kort"
+msgstr ""
 "Olemme lähettäneet ohjeet sähköpostiisi, jos tällä osoitteella on "
 "rekisteröity käyttäjä. Viestin pitäisi saapua pian."
 
@@ -1520,7 +1520,7 @@ msgstr "Vi har skicket instruktionerna till din mail, ifall en användare är re
 msgid ""
 "Ifall du inte fått något mail. Säkerställ att du angett rätt e-post adress "
 "samt vänligen granska skräpkorgen."
-msgstr "Ifall du inte fått något mail. Säkerställ att du angett rätt e-post adress samt vänligen granska skräpkorgen."
+msgstr ""
 "Jos et saanut sähköpostia, varmista että annoit oikean sähköpostiosoitteen "
 "ja tarkista myös roskapostikansio."
 
@@ -1573,7 +1573,7 @@ msgstr "Tarkista sähköpostisi saadaaksesi lisää ohjeita"
 msgid ""
 "Du kan logga in <strong>efter</strong> att styrelsen har granskat och "
 "godkänt ditt konto."
-msgstr "Du kan logga in <strong>efter</strong> att styrelsen har granskat och godkänt ditt konto."
+msgstr ""
 "Voit kirjautua sisään <strong>sen jälkeen</strong>, kun hallitus on "
 "tarkistanut ja hyväksynyt tilisi."
 
@@ -1610,7 +1610,7 @@ msgstr "Peruuta"
 
 #: templates/common/members/userinfo.html:119
 msgid "GitHub-konto kopplat."
-msgstr "GitHub-konto kopplat."
+msgstr "GitHub-tili linkitetty."
 
 #: templates/common/members/userinfo.html:122
 msgid "Koppla bort GitHub"
@@ -1618,7 +1618,7 @@ msgstr "Koppla bort GitHub"
 
 #: templates/common/members/userinfo.html:125
 msgid "Inget GitHub-konto kopplat."
-msgstr "Inget GitHub-konto kopplat."
+msgstr "Ei linkitettyä GitHub-tiliä."
 
 #: templates/common/members/userinfo.html:128
 msgid "Koppla GitHub-konto"
@@ -1648,7 +1648,7 @@ msgstr "Luottamustehtävät"
 msgid ""
 "To change your username or email address, contact the board at "
 "%(ASSOCIATION_EMAIL)s"
-msgstr "To change your username or email address, contact the board at %(ASSOCIATION_EMAIL)s"
+msgstr ""
 "Jos haluat vaihtaa käyttäjätunnuksesi tai sähköpostiosoitteesi, ota yhteyttä "
 "hallitukseen osoitteessa %(ASSOCIATION_EMAIL)s"
 
@@ -1742,7 +1742,7 @@ msgstr "viimeinen"
 
 #: templates/common/social/harassment_form.html:11
 msgid "Rapportera trakasserier och eventuella brister med jämlikhetsplanen"
-msgstr "Rapportera trakasserier och eventuella brister med jämlikhetsplanen"
+msgstr ""
 "Ilmoita häirinnästä ja mahdollisista yhdenvertaisuussuunnitelman puutteista"
 
 #: templates/common/social/harassment_form.html:13
@@ -1755,7 +1755,7 @@ msgid ""
 "trygghetspersoner behandlar alla rapporteringar av trakasserier och tar "
 "kontakt till %(association_short)ss styrelse och/eller ÅAS trakasseriombud "
 "om det så önskas."
-msgstr "Du kan rapportera trakasserier och brister i jämlikhetsplanen antingen anonymt eller ange din kontaktinformation. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar. %(association_name)ss trygghetspersoner behandlar alla rapporteringar av trakasserier och tar kontakt till %(association_short)ss styrelse och/eller ÅAS trakasseriombud om det så önskas."
+msgstr ""
 "Voit ilmoittaa häirinnästä ja yhdenvertaisuussuunnitelman puutteista joko "
 "anonyymisti tai antamalla yhteystietosi. Suhtaudumme kaikkeen häirintään "
 "vakavasti ja ryhdymme toimiin turvallisen ja kunnioittavan ympäristön "
@@ -1778,7 +1778,7 @@ msgstr "Kiitos ilmoituksestasi."
 
 #: templates/common/staticpages/staticpage.html:26
 msgid "Öppna originaldokumentet"
-msgstr "Öppna originaldokumentet"
+msgstr "Avaa alkuperäinen asiakirja"
 
 #: templates/common/staticpages/staticpage.html:36
 msgid "Logga in för att se den här sidan"
@@ -1796,7 +1796,7 @@ msgstr "Jatka"
 msgid ""
 "Generate backup tokens to keep access if your authenticator app is "
 "unavailable."
-msgstr "Generate backup tokens to keep access if your authenticator app is unavailable."
+msgstr ""
 "Luo varakoodit, jotta pääset edelleen sisään, jos todennussovelluksesi ei "
 "ole käytettävissä."
 
@@ -1807,7 +1807,7 @@ msgstr "Luo uudet varakoodit"
 #: templates/common/two_factor/core/setup.html:9
 msgid ""
 "Add an authenticator app to protect your account with a second login step."
-msgstr "Add an authenticator app to protect your account with a second login step."
+msgstr ""
 "Lisää todennussovellus suojaamaan tiliäsi toisella kirjautumisvaiheella."
 
 #: templates/common/two_factor/core/setup.html:11
@@ -1817,7 +1817,7 @@ msgstr "Valitse, miten haluat vahvistaa kirjautumisyritykset."
 #: templates/common/two_factor/core/setup.html:13
 msgid ""
 "Scan this QR code with your authenticator app, or enter the secret manually."
-msgstr "Scan this QR code with your authenticator app, or enter the secret manually."
+msgstr ""
 "Skannaa tämä QR-koodi todennussovelluksellasi tai syötä salainen avain käsin."
 
 #: templates/common/two_factor/core/setup.html:15
@@ -1852,7 +1852,7 @@ msgid ""
 "utbildningslinjer i databehandling. Föreningen grundades 1999, närmare "
 "bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare "
 "och stiliga tofsmössor."
-msgstr "Datateknologerna vid Åbo Akademi rf är en förening för studerande vid utbildningsprogrammet i datateknik vid Fakulteten för Naturvetenskaper och Teknik vid Åbo Akademi, samt för studerande vid övriga tekniskt inriktade utbildningslinjer i databehandling. Föreningen grundades 1999, närmare bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare och stiliga tofsmössor."
+msgstr ""
 "Datateknologerna vid Åbo Akademi rf on yhdistys Åbo Akademin "
 "luonnontieteiden ja teknillisen tiedekunnan tietotekniikan koulutusohjelman "
 "opiskelijoille sekä muiden tietojenkäsittelyn teknisesti suuntautuneiden "
@@ -1872,7 +1872,7 @@ msgstr "Häirintäyhdyshenkilöt"
 msgid ""
 "Om du upplever trakasserier i samband med Datateknologernas verksamhet, "
 "vänligen"
-msgstr "Om du upplever trakasserier i samband med Datateknologernas verksamhet, vänligen"
+msgstr ""
 "Jos koet epäasiallista käytöstä Datateknologereiden toiminnan aikana, voit"
 
 #: templates/date/date/components/extras.html:7
@@ -1884,7 +1884,7 @@ msgid ""
 "detta via hemsidan. Vi tar alla former av trakasserier på allvar och kommer "
 "att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för "
 "alla medlemmar."
-msgstr "detta via hemsidan. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar."
+msgstr ""
 "asiasta verkkosivumme kautta. Suhtaudumme kaikenlaisen epäasiallisen "
 "käytöksen kohtaan vakavasti ja ryhdymme toimiin ylläpitääksemme turvallista "
 "ja kunnioittavaa ympäristöä kaikille jäsenille."

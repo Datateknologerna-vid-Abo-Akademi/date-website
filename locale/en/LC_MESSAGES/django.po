@@ -721,63 +721,63 @@ msgstr "User activated"
 
 #: members/views_github.py:64 members/views_github.py:134
 msgid "GitHub-inloggning är inte konfigurerad."
-msgstr "GitHub-inloggning är inte konfigurerad."
+msgstr "GitHub login is not configured."
 
 #: members/views_github.py:99
 msgid "Inget GitHub-konto är kopplat."
-msgstr "Inget GitHub-konto är kopplat."
+msgstr "No GitHub account is linked."
 
 #: members/views_github.py:103
 msgid "GitHub-kontot har kopplats bort."
-msgstr "GitHub-kontot har kopplats bort."
+msgstr "The GitHub account has been unlinked."
 
 #: members/views_github.py:113 members/views_github.py:158
 msgid "GitHub-inloggningen misslyckades."
-msgstr "GitHub-inloggningen misslyckades."
+msgstr "GitHub login failed."
 
 #: members/views_github.py:122
 msgid "Ogiltig OAuth-begäran. Försök igen."
-msgstr "Ogiltig OAuth-begäran. Försök igen."
+msgstr "Invalid OAuth request. Please try again."
 
 #: members/views_github.py:127
 msgid "GitHub returnerade ingen auktoriseringskod."
-msgstr "GitHub returnerade ingen auktoriseringskod."
+msgstr "GitHub did not return an authorization code."
 
 #: members/views_github.py:152
 msgid "Kunde inte kommunicera med GitHub. Försök igen."
-msgstr "Kunde inte kommunicera med GitHub. Försök igen."
+msgstr "Could not communicate with GitHub. Please try again."
 
 #: members/views_github.py:175
 msgid "Kunde inte hämta GitHub-profil. Försök igen."
-msgstr "Kunde inte hämta GitHub-profil. Försök igen."
+msgstr "Could not fetch GitHub profile. Please try again."
 
 #: members/views_github.py:180
 msgid "Kunde inte hämta GitHub-användar-ID."
-msgstr "Kunde inte hämta GitHub-användar-ID."
+msgstr "Could not fetch GitHub user ID."
 
 #: members/views_github.py:212
 msgid "Du måste vara inloggad för att koppla ett GitHub-konto."
-msgstr "Du måste vara inloggad för att koppla ett GitHub-konto."
+msgstr "You must be logged in to link a GitHub account."
 
 #: members/views_github.py:219 members/views_github.py:232
 msgid "Det GitHub-kontot är redan kopplat till ett annat konto."
-msgstr "Det GitHub-kontot är redan kopplat till ett annat konto."
+msgstr "That GitHub account is already linked to another account."
 
 #: members/views_github.py:222
 msgid "GitHub-kontot är redan kopplat till ditt konto."
-msgstr "GitHub-kontot är redan kopplat till ditt konto."
+msgstr "The GitHub account is already linked to your account."
 
 #: members/views_github.py:234
 msgid "GitHub-kontot har kopplats till ditt konto."
-msgstr "GitHub-kontot har kopplats till ditt konto."
+msgstr "The GitHub account has been linked to your account."
 
 #: members/views_github.py:258
 msgid "Inget konto hittades för ditt GitHub-konto. Kontakta administratören."
-msgstr "Inget konto hittades för ditt GitHub-konto. Kontakta administratören."
+msgstr "No account was found for your GitHub account. Please contact the administrator."
 
 #: members/views_github.py:263
 msgid "Ditt konto är inaktiverat."
-msgstr "Ditt konto är inaktiverat."
+msgstr "Your account is deactivated."
 
 #: news/models.py:18
 msgid "kategori"
@@ -1039,7 +1039,7 @@ msgstr "No attendees yet, be the first to sign up!"
 msgid ""
 "Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta "
 "styrelsen vid behov."
-msgstr "Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta styrelsen vid behov."
+msgstr ""
 "The attendee list has been hidden because this is an old event, contact the "
 "board if needed."
 
@@ -1161,7 +1161,7 @@ msgstr "If automatic image loading does not work, you can browse pages here."
 msgid ""
 "JavaScript krävs för automatisk bildladdning. Använd sidlänkarna ovan för "
 "att visa fler bilder."
-msgstr "JavaScript krävs för automatisk bildladdning. Använd sidlänkarna ovan för att visa fler bilder."
+msgstr ""
 "JavaScript is required for automatic image loading. Use the page links above "
 "to view more images."
 
@@ -1290,7 +1290,7 @@ msgstr "No registrations yet, be the first!"
 msgid ""
 "Deltagarlistan har gömts eftersom det här är ett gammalt evenemang, kontakta "
 "styrelsen vid behov."
-msgstr "Deltagarlistan har gömts eftersom det här är ett gammalt evenemang, kontakta styrelsen vid behov."
+msgstr ""
 "The attendee list has been hidden because this is an old event, contact the "
 "board if needed."
 
@@ -1343,7 +1343,7 @@ msgstr "The registration is binding unless otherwise specified."
 msgid ""
 "Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på "
 "förhinder."
-msgstr "Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på förhinder."
+msgstr ""
 "Remember to cancel your registration as soon as possible if you wont be able "
 "to attend."
 
@@ -1359,7 +1359,7 @@ msgid ""
 "anmälningstiden syns den anmäldas namn i listan nedan. Efter evenemanget "
 "sparas informationen för statistiska ändamål och syns endast för hemsidans "
 "administratörer."
-msgstr "Genom att anmäla dig godkänner du att %(ASSOCIATION_NAME_FULL)s lagrar ditt namn, din e-post samt eventuell annan nödvändig information. Under anmälningstiden syns den anmäldas namn i listan nedan. Efter evenemanget sparas informationen för statistiska ändamål och syns endast för hemsidans administratörer."
+msgstr ""
 "By signing up, you accept that %(ASSOCIATION_NAME_FULL)s will store your "
 "name, your email as well as other possibly needed information. The attendees "
 "name will be visible in the list below during the time of the registration. "
@@ -1376,7 +1376,7 @@ msgstr "This event is unfortunately full. Please contact the event organizer."
 msgid ""
 "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan "
 "och meddelas om du får plats."
-msgstr "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan och meddelas om du får plats."
+msgstr ""
 "The event is full! By signing up you will be put on the reserve list, and "
 "you will be contacted in case a spot frees up."
 
@@ -1453,7 +1453,7 @@ msgstr "Password change"
 msgid ""
 "Please enter your old password, for security’s sake, and then enter your new "
 "password twice so we can verify you typed it in correctly."
-msgstr "Please enter your old password, for security’s sake, and then enter your new password twice so we can verify you typed it in correctly."
+msgstr ""
 "Please enter your old password, for security’s sake, and then enter your new "
 "password twice so we can verify you typed it in correctly."
 
@@ -1489,7 +1489,7 @@ msgstr "Change password"
 msgid ""
 "Denna länk är inte giltigt, det kan hända att länken redan använts. Vänligen "
 "fråga efter en ny länk."
-msgstr "Denna länk är inte giltigt, det kan hända att länken redan använts. Vänligen fråga efter en ny länk."
+msgstr ""
 "This link is invalid, it might already have been used. Please request a new "
 "link."
 
@@ -1501,7 +1501,7 @@ msgstr "Password reset - Email sent"
 msgid ""
 "Vi har skicket instruktionerna till din mail, ifall en användare är "
 "registrerad med denna epost. Du borde få mailet inom kort"
-msgstr "Vi har skicket instruktionerna till din mail, ifall en användare är registrerad med denna epost. Du borde få mailet inom kort"
+msgstr ""
 "We have sent instruction to your email, in case a user is registered under "
 "this email address. You should receive the email shortly."
 
@@ -1509,7 +1509,7 @@ msgstr "Vi har skicket instruktionerna till din mail, ifall en användare är re
 msgid ""
 "Ifall du inte fått något mail. Säkerställ att du angett rätt e-post adress "
 "samt vänligen granska skräpkorgen."
-msgstr "Ifall du inte fått något mail. Säkerställ att du angett rätt e-post adress samt vänligen granska skräpkorgen."
+msgstr ""
 "If you have not received an email, make sure you provided the correct email "
 "address and check your spam inbox."
 
@@ -1531,7 +1531,7 @@ msgstr "click the link below:"
 msgid ""
 "Ifall det inte går att klicka på länken, vänligen kopiera och klistra in "
 "länken i din webbläsare."
-msgstr "Ifall det inte går att klicka på länken, vänligen kopiera och klistra in länken i din webbläsare."
+msgstr ""
 "If clicking the link does not work, please copy and paste the link into your "
 "browser."
 
@@ -1564,7 +1564,7 @@ msgstr "Check the email you registered with for additional instructions"
 msgid ""
 "Du kan logga in <strong>efter</strong> att styrelsen har granskat och "
 "godkänt ditt konto."
-msgstr "Du kan logga in <strong>efter</strong> att styrelsen har granskat och godkänt ditt konto."
+msgstr ""
 "You can log in <strong>after</strong> the board has verified and accepted "
 "your account."
 
@@ -1601,7 +1601,7 @@ msgstr "Cancel"
 
 #: templates/common/members/userinfo.html:119
 msgid "GitHub-konto kopplat."
-msgstr "GitHub-konto kopplat."
+msgstr "GitHub account linked."
 
 #: templates/common/members/userinfo.html:122
 msgid "Koppla bort GitHub"
@@ -1609,7 +1609,7 @@ msgstr "Koppla bort GitHub"
 
 #: templates/common/members/userinfo.html:125
 msgid "Inget GitHub-konto kopplat."
-msgstr "Inget GitHub-konto kopplat."
+msgstr "No GitHub account linked."
 
 #: templates/common/members/userinfo.html:128
 msgid "Koppla GitHub-konto"
@@ -1744,7 +1744,7 @@ msgid ""
 "trygghetspersoner behandlar alla rapporteringar av trakasserier och tar "
 "kontakt till %(association_short)ss styrelse och/eller ÅAS trakasseriombud "
 "om det så önskas."
-msgstr "Du kan rapportera trakasserier och brister i jämlikhetsplanen antingen anonymt eller ange din kontaktinformation. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar. %(association_name)ss trygghetspersoner behandlar alla rapporteringar av trakasserier och tar kontakt till %(association_short)ss styrelse och/eller ÅAS trakasseriombud om det så önskas."
+msgstr ""
 "You can report harassment and shortcomings in the equality plan anonymously "
 "or by providing your contact information. We take all forms of harassment "
 "seriously and will act to maintain a safe and respectful environment for all "
@@ -1766,7 +1766,7 @@ msgstr "Thank you for reporting."
 
 #: templates/common/staticpages/staticpage.html:26
 msgid "Öppna originaldokumentet"
-msgstr "Öppna originaldokumentet"
+msgstr "Open the original document"
 
 #: templates/common/staticpages/staticpage.html:36
 msgid "Logga in för att se den här sidan"
@@ -1784,7 +1784,7 @@ msgstr "Continue"
 msgid ""
 "Generate backup tokens to keep access if your authenticator app is "
 "unavailable."
-msgstr "Generate backup tokens to keep access if your authenticator app is unavailable."
+msgstr ""
 "Generate backup tokens to keep access if your authenticator app is "
 "unavailable."
 
@@ -1795,7 +1795,7 @@ msgstr "Generate new backup tokens"
 #: templates/common/two_factor/core/setup.html:9
 msgid ""
 "Add an authenticator app to protect your account with a second login step."
-msgstr "Add an authenticator app to protect your account with a second login step."
+msgstr ""
 "Add an authenticator app to protect your account with a second login step."
 
 #: templates/common/two_factor/core/setup.html:11
@@ -1805,7 +1805,7 @@ msgstr "Choose how you want to verify login attempts."
 #: templates/common/two_factor/core/setup.html:13
 msgid ""
 "Scan this QR code with your authenticator app, or enter the secret manually."
-msgstr "Scan this QR code with your authenticator app, or enter the secret manually."
+msgstr ""
 "Scan this QR code with your authenticator app, or enter the secret manually."
 
 #: templates/common/two_factor/core/setup.html:15
@@ -1840,7 +1840,7 @@ msgid ""
 "utbildningslinjer i databehandling. Föreningen grundades 1999, närmare "
 "bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare "
 "och stiliga tofsmössor."
-msgstr "Datateknologerna vid Åbo Akademi rf är en förening för studerande vid utbildningsprogrammet i datateknik vid Fakulteten för Naturvetenskaper och Teknik vid Åbo Akademi, samt för studerande vid övriga tekniskt inriktade utbildningslinjer i databehandling. Föreningen grundades 1999, närmare bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare och stiliga tofsmössor."
+msgstr ""
 "Datateknologerna vid Åbo Akademi rf is an organization for the students at "
 "the computer engineering study programme at the faculty of science and "
 "techonology at Åbo Akademi. The organization was founded in 1999, more "
@@ -1859,7 +1859,7 @@ msgstr "Harrasment representatives"
 msgid ""
 "Om du upplever trakasserier i samband med Datateknologernas verksamhet, "
 "vänligen"
-msgstr "Om du upplever trakasserier i samband med Datateknologernas verksamhet, vänligen"
+msgstr ""
 "If you encounter harrasment during the activity of Datateknologerna, please"
 
 #: templates/date/date/components/extras.html:7
@@ -1871,7 +1871,7 @@ msgid ""
 "detta via hemsidan. Vi tar alla former av trakasserier på allvar och kommer "
 "att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för "
 "alla medlemmar."
-msgstr "detta via hemsidan. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar."
+msgstr ""
 "this via the website. We take all forms of harrasment very seriously and "
 "will take the necessary steps for ensuring a safe and respectful environment "
 "for all members."
