@@ -39,6 +39,7 @@ const startScan = (scanner) => {
         });
     }).catch((err) => {
         qrReaderError.hidden = false;
+        // TODO translate errors once jsi18n is set up
         if (err === "Camera not found.") {
             qrReaderError.innerText = "No cameras found";
         } else {

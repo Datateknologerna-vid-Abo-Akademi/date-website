@@ -54,6 +54,7 @@ const onMessage = (ws, msg) => {
 };
 
 const makeWebsocket = () => {
+    //TODO translate status messages once jsi18n is set up
     setStatusMessage("Connecting to server...");
     const ws = new WebSocket(wsUrl);
     ws.addEventListener("message", (msg) => onMessage(ws, msg));
