@@ -208,7 +208,7 @@ div.news-content a:hover{
   
 .card .fa-chevron-right{
     transition: .3s;
-    color: #6d28d9;
+    color: var(--accentColor);
   }
   
 .card a:hover .fa-chevron-right{
@@ -231,7 +231,7 @@ div.news-content a:hover{
   
 .event-card a{
     color: var(--linkColor);
-    border-top: 2px solid #6d28d9;
+    border-top: 2px solid var(--accentColor);
   }
   
 .event-card a:active{
@@ -250,8 +250,8 @@ div.news-content a:hover{
   }
 
 .chevron-box {
-    margin: auto; 
-    border: 1px solid #6d28d9;
+    margin: auto;
+    border: 1px solid var(--accentColor);
     border-radius: 5px;
     padding: 5px;
 }
@@ -395,14 +395,6 @@ div.calendar-container a {
     background-color: #282828 !important;
 }
 
-.vanilla-calendar-day__btn_selected {
-    background-color: #6d28d9 !important;
-}
-
-.vanilla-calendar-day__btn_selected:hover {
-    background-color: #5b21b6 !important;
-}
-
 .clearfix {
   padding: 10px;
   text-align: center;
@@ -418,22 +410,22 @@ div.calendar-container a {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
   color: white !important;
-  background-color: #6d28d9 !important;
+  background-color: var(--accentColor) !important;
 }
 
 .calendar-eventday:hover {
-    background-color: #5b21b6 !important;
+    background-color: var(--accentColorHover) !important;
 }
 
 .calendar-eventday-popup {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
-  color: #6d28d9;
+  color: var(--accentColor);
   font-size: 0.75rem;
 }
 
 .calendar-eventday-popup:hover {
-    color: #5b21b6;
+    color: var(--accentColorHover);
 }
 
 /*Calendar end*/
@@ -655,9 +647,9 @@ ul#logo-list {
 }
 
 .vanilla-calendar-day__btn_selected {
-    background-color: #D625EB !important;
+    background-color: var(--accentColorBright) !important;
 }
 
 .vanilla-calendar-day__btn_selected:hover {
-    background-color: #CF45E0 !important;
+    background-color: var(--accentColorBrightHover) !important;
 }
