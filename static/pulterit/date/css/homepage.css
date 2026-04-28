@@ -329,7 +329,7 @@ div.news-content a:hover{
 
 .more-events-button{
     display: inline-block;
-    color: var(--linkColor)
+    color: var(--linkColor);
 }
 
 .more-events-button:hover{
