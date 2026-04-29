@@ -2,7 +2,7 @@ from typing import cast
 
 from django.shortcuts import render
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponseRedirect
 from django.views.generic import View, ListView
 from django.views.generic.detail import SingleObjectMixin
 from django.utils.translation import gettext_lazy as _
@@ -14,6 +14,8 @@ from members.models import Member
 from . import forms, websocket
 from .models import AttendanceChange, AttendanceEvent, NonMemberAttendee, Attendee
 
+class HttpResponseSeeOther(HttpResponseRedirect):
+    status_code = 303
 
 class AttendanceEventsView(ListView):
     model = AttendanceEvent
@@ -42,6 +44,8 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
         ctx["can_see_overview"] = AttendanceEventOverview.is_user_allowed(self.request.user)
         ctx["user"] = self.request.user
         ctx["present_attendees"] = self.object.present_attendees()
+        if self.request.method == "GET" and "code" in self.request.GET:
+            ctx["prefilled_code"] = self.request.GET.get("code")
 
         if self.request.user.is_authenticated:
             user = cast(Member, self.request.user)
@@ -108,7 +112,8 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
         change.save()
         websocket.send_attendance_change(self.object.slug, change)
 
-        return render(request, self.template_name, self.get_ctx())
+        # Clears the "code" query parameter
+        return HttpResponseSeeOther(self.request.path)
 
 class AttendanceEventOverview(UserPassesTestMixin, SingleObjectMixin[AttendanceEvent], View):
     model = AttendanceEvent

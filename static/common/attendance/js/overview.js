@@ -1,5 +1,3 @@
-const MAX_DRIFT = 1
-
 /**
  * @param {string} url
  */
