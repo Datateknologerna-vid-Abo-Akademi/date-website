@@ -54,6 +54,7 @@ Use the sections below to jump to either editor-facing instructions or implement
 - [Publications Development Notes](dev/publications.md)
 - [Social Development Notes](dev/social.md)
 - [Static Pages Development Notes](dev/staticpages.md)
+- [Template System & Association Overrides](dev/templates.md)
 - [Translation System Notes](dev/translations.md)
 
 ## Maintenance
