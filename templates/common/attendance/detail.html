@@ -65,8 +65,7 @@
                         <div class="input-group">
                             <input
                                 type="text"
-                                class="form-control
-                                {% if non_member_name_error %} is-invalid {% endif %}"
+                                class="form-control {% if non_member_name_error %} is-invalid {% endif %}"
                                 id="non_member_name"
                                 name="non_member_name"
                                 value=""
@@ -88,11 +87,11 @@
                             <input
                                 type="text"
                                 inputmode="numeric"
-                                class="form-control
-                                {% if code_error %} is-invalid {% endif %}"
+                                class="form-control {% if code_error %} is-invalid {% endif %}"
                                 name="code"
                                 id="code"
                                 placeholder="{% trans "Kod" %}"
+                                value="{{ prefilled_code }}"
                                 required
                             >
                             <button class="btn btn-secondary" id="qr-scan" type="button" disabled>
