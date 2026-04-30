@@ -61,6 +61,8 @@ class EventDetailView(DetailView):
     PASSCODE_SESSION_KEY = 'event_passcode_status'
 
     def _get_resolved_template(self, event):
+        if event.template:
+            return event.template
         title_template = EVENT_TEMPLATES_BY_TITLE.get(event.title.lower())
         if title_template:
             return title_template
@@ -153,7 +155,7 @@ class EventDetailView(DetailView):
         logger.debug(event_title)
         # Will return a 500 response to client if the template is not found
         resolved_template = self._get_resolved_template(event)
-        if resolved_template:  # TODO: Selectable template
+        if resolved_template:
             return resolved_template
 
         if self.object.passcode and not self._has_valid_passcode_session(self.request):
@@ -175,9 +177,8 @@ class EventDetailView(DetailView):
 
     def form_invalid(self, form):
         event = self.get_context_data().get('event')
-        if self._get_resolved_template(event) == 'events/arsfest.html':
-            return render(self.request, 'events/arsfest.html', self.get_context_data(form=form), status=400)
-        return render(self.request, self.template_name, self.get_context_data(form=form), status=400)
+        template = self._get_resolved_template(event) or self.template_name
+        return render(self.request, template, self.get_context_data(form=form), status=400)
 
     def handle_passcode(self, request):
         if self.object.passcode and not self._has_valid_passcode_session(request):

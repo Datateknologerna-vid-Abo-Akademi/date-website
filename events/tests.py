@@ -489,6 +489,20 @@ class EventAdminTests(TestCase):
         self.assertContains(response, 'name="title_en"')
         self.assertContains(response, 'name="title_fi"')
 
+    def test_add_page_renders_template_field(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("admin:events_event_add"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="template"')
+
+    def test_change_page_renders_template_field(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="template"')
+
     def test_edit_form_preserves_existing_slug_when_field_is_cleared(self):
         form = EventEditForm(instance=self.event)
         form.cleaned_data = {"title": self.event.title, "slug": ""}
@@ -518,6 +532,26 @@ class EventAdminTests(TestCase):
             edit_form.fields["redirect_link"].clean("example.com"),
             "https://example.com",
         )
+
+    def test_admin_forms_accept_event_template_choice(self):
+        creation_form = EventCreationForm()
+        edit_form = EventEditForm(instance=self.event)
+
+        self.assertEqual(
+            creation_form.fields["template"].clean("events/arsfest.html"),
+            "events/arsfest.html",
+        )
+        self.assertEqual(
+            edit_form.fields["template"].clean("events/wappmiddag.html"),
+            "events/wappmiddag.html",
+        )
+
+    def test_admin_forms_accept_blank_event_template(self):
+        creation_form = EventCreationForm()
+        edit_form = EventEditForm(instance=self.event)
+
+        self.assertEqual(creation_form.fields["template"].clean(""), "")
+        self.assertEqual(edit_form.fields["template"].clean(""), "")
 
     @override_settings(PROJECT_NAME="date")
     def test_add_page_renders_registration_terms_field_when_feature_enabled(self):
@@ -1007,6 +1041,50 @@ class EventTemplateSelectionTests(TestCase):
         )
         response = self.client.get(reverse("events:detail", args=[event.slug]))
         self.assertTemplateUsed(response, "events/baal_detail.html")
+
+    def test_selected_template_is_used_for_generic_event(self):
+        event = Event.objects.create(
+            title="Generic",
+            slug="generic-selected-template",
+            author=self.author,
+            template="events/arsfest.html",
+        )
+        response = self.client.get(reverse("events:detail", args=[event.slug]))
+        self.assertTemplateUsed(response, "events/arsfest.html")
+
+    def test_selected_template_takes_precedence_over_legacy_mapping(self):
+        event = Event.objects.create(
+            title="Årsfest",
+            slug="arsfest-selected-template",
+            author=self.author,
+            template="events/wappmiddag.html",
+        )
+        response = self.client.get(reverse("events:detail", args=[event.slug]))
+        self.assertTemplateUsed(response, "events/wappmiddag.html")
+
+    def test_blank_template_uses_normal_detail_page_for_generic_event(self):
+        event = Event.objects.create(
+            title="Generic",
+            slug="generic-default-template",
+            author=self.author,
+            template="",
+        )
+        response = self.client.get(reverse("events:detail", args=[event.slug]))
+        self.assertTemplateUsed(response, "events/detail.html")
+
+    def test_selected_arsfest_invalid_signup_uses_arsfest_template(self):
+        event = Event.objects.create(
+            title="Generic",
+            slug="selected-arsfest-invalid",
+            author=self.author,
+            sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
+            template="events/arsfest.html",
+        )
+        invalid_content = {'user': 'person', 'email': 'invalid-email'}
+        response = self.client.post(reverse("events:detail", args=[event.slug]), invalid_content)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertTemplateUsed(response, "events/arsfest.html")
 
     def test_passcode_template_used_when_locked(self):
         event = Event.objects.create(
