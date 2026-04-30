@@ -91,7 +91,7 @@
     function updateAvecForm() {
         if($("#id_avec").is(":checked")) {
             $('#attend-form').find('.avec-field').parent().show();
-            $("#id_avec").parent().after('<h4 id="avec_information_header">Avec information<h4>')
+            $("#id_avec").parent().after('<h4 id="avec_information_header">Avec information</h4>')
             $('#id_avec_user').prop('required', true)
             $('#id_avec_email').prop('required', true)
         } else {

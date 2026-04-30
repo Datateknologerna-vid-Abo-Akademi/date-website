@@ -562,6 +562,71 @@ class EventAdminTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'name="eventattendees_set-0-avec_for"')
 
+    def test_change_page_hides_original_event_for_inline_without_child_events(self):
+        EventAttendees.objects.create(
+            event=self.event,
+            user="Parent Only",
+            email="parent-only@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'column-original_event')
+
+    def test_change_page_shows_original_event_for_inline_with_child_events(self):
+        child = Event.objects.create(
+            title="Child Admin Event",
+            slug="child-admin-event",
+            author=self.admin_user,
+            parent=self.event,
+        )
+        EventAttendees.objects.create(
+            event=self.event,
+            original_event=child,
+            user="Child Attendee",
+            email="child-attendee@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'column-original_event')
+
+    def test_change_page_hides_hide_for_avec_when_avec_is_disabled(self):
+        EventRegistrationForm.objects.create(
+            event=self.event,
+            name="Question",
+            type="text",
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="eventregistrationform_set-0-hide_for_avec"')
+
+    def test_change_page_shows_hide_for_avec_when_avec_is_enabled(self):
+        self.event.sign_up_avec = True
+        self.event.save()
+        EventRegistrationForm.objects.create(
+            event=self.event,
+            name="Question",
+            type="text",
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="eventregistrationform_set-0-hide_for_avec"')
+
     def test_edit_form_preserves_existing_slug_when_field_is_cleared(self):
         form = EventEditForm(instance=self.event)
         form.cleaned_data = {"title": self.event.title, "slug": ""}
