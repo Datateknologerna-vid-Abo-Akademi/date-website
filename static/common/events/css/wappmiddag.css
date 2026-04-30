@@ -3,7 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@500&display=swap');
 
 :root {
-    --opacityColor: var(--primaryColorTransparenter);
+    --opacityColor: var(--primaryColorLighte);
     --backdropBlur:  blur(10px);
 }
 
@@ -26,10 +26,12 @@ html body{
 }
 
 .content{
-    background-color: var(--primaryColorLight);
-    border-top: 2px solid var(--primaryColor);
+    background-color: var(--primaryColorLighte);
+    border: 1px solid var(--primaryColorLighter);
+    border-top: 2px solid var(--secondaryColorDarker);
     color: var(--textColorLightish);
     font-size: 1.1em;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
 }
    
   /* if backdrop support: very transparent and blurred */
