@@ -2,7 +2,7 @@
 
 DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.fi)'s public site, membership tools, alumni portal, polls, and a handful of seasonal or one-off apps. The stack is Django 6.0 running on Python 3.13 inside Docker Compose with Celery workers, Channels/Daphne, PostgreSQL, Valkey (Redis compatible), and S3-compatible storage.
 
-> Active development happens on `develop`. The `master` branch mirrors production releases, so branch off `develop` when you start new work.
+> Active development happens on `main`. QA and production are environments, not branches; production is promoted from an image already tested in QA.
 
 
 ## Requirements
@@ -19,7 +19,7 @@ DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.
 ```bash
 git clone https://github.com/datateknologerna-vid-abo-akademi/date-website.git
 cd date-website
-git checkout develop
+git checkout main
 cp .env.example .env            # adjust passwords, ports, S3, etc.
 source env.sh                   # registers helper aliases
 date-start-detached             # builds containers, runs migrations, collects static files
@@ -144,7 +144,7 @@ If you touch translations, templates, or language-aware navigation, also smoke-t
 
 ## Documentation & app guides
 
-The `docs/` directory contains both developer notes (`docs/dev/*.md`) and content-editor guides (`docs/admin/*.md`). The folder is published via GitHub Pages, so any Markdown file you update on `develop` is deployed automatically after merging. If you change behavior in an app such as `events`, `lucia`, or `members`, update the matching guide in the same branch while the details are still fresh.
+The `docs/` directory contains both developer notes (`docs/dev/*.md`) and content-editor guides (`docs/admin/*.md`). The folder is published via GitHub Pages, so any Markdown file you update on `main` is deployed automatically after merging. If you change behavior in an app such as `events`, `lucia`, or `members`, update the matching guide in the same branch while the details are still fresh.
 
 Use [docs/index.md](docs/index.md) as the landing page for the published documentation site. Update it when you add a new app guide or rename an existing one.
 For translation architecture and workflow, see [docs/dev/translations.md](docs/dev/translations.md).
@@ -162,14 +162,14 @@ The production stack relies on the published container image at `ghcr.io/datatek
 
 The stack brings up the `web` (Gunicorn), `asgi` (Daphne/Channels), `celery`, `db`, `redis`, and `nginx` services. Rolling deploys usually build a new GHCR image in CI, update `DATE_IMG_TAG`, then restart `web`, `asgi`, and `celery`.
 
-CI image publishing and release tagging are now separate on purpose:
+CI image publishing and release tagging are separate on purpose:
 
-- Pushes to `develop` publish moving `develop` images plus a commit-SHA tag.
-- Pushes to `master` publish moving `master` images plus a commit-SHA tag.
+- Pushes to `main` publish an immutable commit-SHA tag plus moving `main` and `qa` tags.
+- QA should deploy `qa` automatically or deploy the immutable commit-SHA tag produced from `main`.
 - Release tags are created manually through `.github/workflows/release_tag.yaml` with `patch` as the default bump and optional `minor` / `major` overrides.
-- When a release tag is created, CI reuses the already-published `master` image for that commit and adds the SemVer tags to the same image instead of rebuilding.
+- When a release tag is created, CI reuses the already-published commit image and adds the SemVer, `prod`, and `latest` tags to the same image instead of rebuilding.
 
-For production rollouts, prefer a release tag in `DATE_IMG_TAG` instead of the moving `master` tag.
+For production rollouts, prefer a release tag or immutable commit SHA in `DATE_IMG_TAG`; `prod` and `latest` are production aliases updated only by the release promotion workflow.
 
 Although Django 6 ships with the new Tasks framework, this project still uses Celery for production background work. The current task dispatch points defer enqueuing until after successful database commits where that matters, so new code should preserve that behavior.
 
@@ -236,7 +236,7 @@ Some other associations also expose:
 
 ### Translation scope
 
-Swedish site copy should match the established wording from `develop` unless there is an explicit content decision to change it. In practice, Swedish is the source of truth for the site's established voice.
+Swedish site copy should match the established wording from `main` unless there is an explicit content decision to change it. In practice, Swedish is the source of truth for the site's established voice.
 
 Use these rules when updating translations:
 

@@ -3,8 +3,7 @@ name: Build and publish Docker image
 on:
   push:
     branches:
-      - develop
-      - master
+      - main
     tags:
       - 'v*.*.*'
   workflow_dispatch:
@@ -29,7 +28,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event_name == 'schedule' && 'master' || github.ref }}
+          ref: ${{ github.event_name == 'schedule' && 'main' || github.ref }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
       - name: Compute image repository
@@ -63,6 +62,9 @@ jobs:
 
           if [ "${GITHUB_REF_TYPE}" = "branch" ]; then
             TAGS+=("${IMAGE_REPO}:${GITHUB_REF_NAME}")
+            if [ "${GITHUB_REF_NAME}" = "main" ]; then
+              TAGS+=("${IMAGE_REPO}:qa")
+            fi
           fi
 
           {
@@ -112,7 +114,7 @@ jobs:
           echo "GHCR login failed after 3 attempts."
           exit 1
 
-      - name: Add release tags to the existing master image
+      - name: Promote the existing image to release tags
         env:
           IMAGE_REPO: ghcr.io/${{ steps.image.outputs.repo_lower }}
         run: |
@@ -132,7 +134,7 @@ jobs:
           SOURCE_SHA="$(git rev-list -n 1 "${GITHUB_REF_NAME}")"
           SOURCE_TAG="${IMAGE_REPO}:${SOURCE_SHA}"
 
-          # The release tag workflow creates the git tag after the master build starts.
+          # The release tag workflow creates the git tag after the main build starts.
           # Wait for the SHA-tagged image to exist, then reuse that digest instead of rebuilding.
           for attempt in $(seq 1 24); do
             if docker buildx imagetools inspect "${SOURCE_TAG}" >/dev/null 2>&1; then
@@ -149,4 +151,6 @@ jobs:
             --tag "${IMAGE_REPO}:${GITHUB_REF_NAME}" \
             --tag "${IMAGE_REPO}:v${MAJOR}.${MINOR}" \
             --tag "${IMAGE_REPO}:v${MAJOR}" \
+            --tag "${IMAGE_REPO}:prod" \
+            --tag "${IMAGE_REPO}:latest" \
             "${SOURCE_TAG}"

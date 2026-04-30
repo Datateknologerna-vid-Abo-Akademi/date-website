@@ -3,7 +3,7 @@ name: Deploy documentation site
 on:
   push:
     branches:
-      - develop
+      - main
     paths:
       - 'docs/**'
       - '.github/workflows/pages.yaml'
