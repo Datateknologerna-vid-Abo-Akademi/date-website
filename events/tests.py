@@ -1348,6 +1348,7 @@ class EventTemplateSelectionTests(TestCase):
         response = self.client.get(reverse("events:detail", args=[event.slug]))
 
         self.assertContains(response, "Spring Dinner")
+        self.assertContains(response, 'class="event-template-logo"')
         self.assertContains(response, 'alt="Datateknologerna logo"')
         self.assertNotContains(response, "Teknologwappmiddag")
         self.assertNotContains(response, "ballong_black.png")
