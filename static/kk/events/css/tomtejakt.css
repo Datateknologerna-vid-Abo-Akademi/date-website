@@ -96,15 +96,6 @@ html body{
     margin-top: 20px;
 }
 
-.event-association-logo {
-    display: block;
-    max-height: 90px;
-    max-width: 220px;
-    margin: 0 auto 16px;
-    -webkit-animation: fadeIn linear 2s;
-            animation: fadeIn linear 2s;
-}
-
 .icon,
 .text {
     vertical-align: middle;
