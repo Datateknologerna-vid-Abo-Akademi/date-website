@@ -28,7 +28,6 @@ html body{
 .content{
     background-color: var(--primaryColorLighte);
     border: 1px solid var(--primaryColorLighter);
-    border-top: 2px solid var(--secondaryColorDarker);
     color: var(--textColorLightish);
     font-size: 1.1em;
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
@@ -44,7 +43,7 @@ html body{
   }
 
 .content a, .baal-content h2, .baal-content h1 {
-    color: rgb(255, 255, 255);
+    color: var(--textColorLight);
 }
 
 .content a:hover {
@@ -104,18 +103,6 @@ html body{
     z-index: -10;
 }
 
-@keyframes balloon {
-    0% {transform: translate3d(-200%, 100%, 10px) rotateZ(90deg); opacity: 0;}
-    15% {opacity: 0;}
-    100% {transform: translate3d(0, 0, 0); opacity: 1;}
-    }
-
-@keyframes balloon2 {
-    0% {transform: translate3d(200%, 100%, 10px) rotateZ(180deg); opacity: 0;}
-    15% {opacity: 0;}
-    100% {transform: translate3d(0, 0, 0) scaleX(-1); opacity: 1;}
-    }
-
 .event-template-logo {
     display: block;
     width: auto;
@@ -142,14 +129,6 @@ html body{
     transform: scale(1.2) !important;
 }
 
-@keyframes treeShadow {
-    0% {-webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 2px #006c33);filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 2px #006c33);}
-    25% {-webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 6px #009947);filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 6px #009947);}
-    50% {-webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 14px #00c05a);filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 14px #00c05a);}
-    75% {-webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 6px #009947);filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 6px #009947);}
-    100% {-webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 2px #006c33);filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 2px #006c33);}
-    }
-
 .baal-header{
     text-align: center;
     overflow-wrap: anywhere;
@@ -172,7 +151,7 @@ html body{
 .baal-nav a{
     margin: 0;
     padding: 10px;
-    background-color: #d4c5a4;
+    background-color: var(--primaryColorLighte);
     border-radius: 5px;
     transition: .3s;
     box-shadow: 1px 1px 5px 0px rgb(32, 32, 32);
@@ -221,7 +200,7 @@ form input {
 
 form button {
     font-family: 'Comfortaa', cursive !important;
-    background-color: #d4c5a4 !important;
+    background-color: var(--primaryColorLighte) !important;
     color: var(--textColorLight) !important;
     transition: .3s;
 }

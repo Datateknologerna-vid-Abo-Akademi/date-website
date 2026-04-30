@@ -1334,9 +1334,8 @@ class EventTemplateSelectionTests(TestCase):
         response = self.client.get(reverse("events:detail", args=[event.slug]))
 
         self.assertContains(response, "Spring Ball")
-        self.assertContains(response, 'alt="Datateknologerna logo"')
-        self.assertNotContains(response, "CII Kemistbaal")
-        self.assertNotContains(response, "HQKK_2.png")
+        self.assertContains(response, "HQKK_2.png")
+        self.assertContains(response, "CII Kemistbaal")
 
     def test_wappmiddag_template_uses_event_and_association_branding(self):
         event = Event.objects.create(
@@ -1348,10 +1347,9 @@ class EventTemplateSelectionTests(TestCase):
         response = self.client.get(reverse("events:detail", args=[event.slug]))
 
         self.assertContains(response, "Spring Dinner")
-        self.assertContains(response, 'class="event-template-logo"')
-        self.assertContains(response, 'alt="Datateknologerna logo"')
+        self.assertContains(response, 'class="header-logo"')
+        self.assertContains(response, "ballong_black.png")
         self.assertNotContains(response, "Teknologwappmiddag")
-        self.assertNotContains(response, "ballong_black.png")
 
     def test_selected_template_is_used_for_generic_event(self):
         event = Event.objects.create(
