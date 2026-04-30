@@ -369,10 +369,21 @@ class EventTestCase(TestCase):
 
         c.post(reverse('events:detail', args=[self.event.slug]), self.content)
         self.content['email'] = 'person2@test.com'
-        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content, follow=True)
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.event.get_registrations().count(), 2)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.event.get_registrations().count(), 1)
+
+    def test_avec_requires_name_and_email_when_selected(self):
+        self.event.sign_up_avec = True
+        self.event.save()
+        c = Client()
+        self.content.update({'avec': 'on'})
+
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.event.get_registrations().count(), 0)
 
     @patch('events.views.validate_captcha')
     @override_settings(CAPTCHA_SITE_KEY='test', TURNSTILE_SECRET_KEY='test')
@@ -417,6 +428,36 @@ class EventTestCase(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
+
+    @override_settings(TEST=False)
+    @patch('events.views.ws_send')
+    def test_websocket_notification_runs_after_signup_commit(self, mock_ws_send):
+        with self.captureOnCommitCallbacks(execute=False) as callbacks:
+            response = self.client.post(reverse('events:detail', args=[self.event.slug]), self.content)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.event.get_registrations().count(), 1)
+        mock_ws_send.assert_not_called()
+        self.assertEqual(len(callbacks), 1)
+
+        callbacks[0]()
+
+        mock_ws_send.assert_called_once()
+
+    @override_settings(EXPERIMENTAL_FEATURES=['event_billing'], TEST=True)
+    @patch('billing.handlers.handle_event_billing')
+    def test_billing_runs_after_signup_commit(self, mock_handle_event_billing):
+        with self.captureOnCommitCallbacks(execute=False) as callbacks:
+            response = self.client.post(reverse('events:detail', args=[self.event.slug]), self.content)
+
+        self.assertEqual(response.status_code, 302)
+        mock_handle_event_billing.assert_not_called()
+        self.assertEqual(len(callbacks), 1)
+
+        callbacks[0]()
+
+        attendee = self.event.get_registrations().get()
+        mock_handle_event_billing.assert_called_once_with(attendee)
 
 
 class EventRegistrationWindowTests(TestCase):
@@ -811,6 +852,63 @@ class EventCapacityTests(TestCase):
         )
 
         self.assertEqual(child.remaining_places(), 1)
+
+    def test_parent_event_rejects_signup_when_full(self):
+        event = Event.objects.create(
+            title="Full Parent Event",
+            slug="full-parent-event",
+            author=self.author,
+            sign_up_max_participants=1,
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+        )
+        EventAttendees.objects.create(
+            event=event,
+            user="Registered",
+            email="registered-full-parent@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        response = self.client.post(reverse("events:detail", args=[event.slug]), {
+            "user": "Blocked",
+            "email": "blocked-parent@example.com",
+            "terms_accepted": "on",
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(event.get_registrations().count(), 1)
+
+    def test_child_event_rejects_signup_when_full(self):
+        parent = Event.objects.create(
+            title="Full Child Parent Event",
+            slug="full-child-parent-event",
+            author=self.author,
+        )
+        child = Event.objects.create(
+            title="Full Child Event",
+            slug="full-child-event",
+            author=self.author,
+            parent=parent,
+            sign_up_max_participants=1,
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+        )
+        EventAttendees.objects.create(
+            event=parent,
+            original_event=child,
+            user="Registered",
+            email="registered-full-child@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        response = self.client.post(reverse("events:detail", args=[child.slug]), {
+            "user": "Blocked",
+            "email": "blocked-child@example.com",
+            "terms_accepted": "on",
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(parent.get_registrations().count(), 1)
 
     def test_detail_page_renders_remaining_places_not_total_capacity(self):
         event = Event.objects.create(

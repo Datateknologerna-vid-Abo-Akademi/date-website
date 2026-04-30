@@ -189,15 +189,17 @@ class Event(models.Model):
         return max(self.sign_up_max_participants - registrations, 0)
 
     def get_registration_form(self):
-        if EventRegistrationForm.objects.filter(event=self).count() == 0:
+        registration_questions = EventRegistrationForm.objects.filter(event=self).order_by('choice_number')
+        if not registration_questions.exists():
             return None
-        return EventRegistrationForm.objects.filter(event=self).order_by('choice_number')
+        return registration_questions
 
     def get_registration_form_public_info(self):
         return EventRegistrationForm.objects.filter(event=self, public_info=True)
 
     def make_registration_form(self, data=None):
         if self.sign_up:
+            registration_questions = list(self.get_registration_form() or [])
             fields = {'user': forms.CharField(label=_('Namn'), max_length=255),
                       'email': forms.EmailField(label=_('Email'), validators=[self.validate_unique_email], max_length=320),
                       'anonymous': forms.BooleanField(label=_('Anonymt'), required=False)}
@@ -207,8 +209,8 @@ class Event(models.Model):
                                                    validators=[self.validate_unique_email],
                                                    max_length=320)
                 fields['anonymous'] = forms.BooleanField(label='Anonyymi/Anonym/Anonymous', required=False)
-            if self.get_registration_form():
-                for question in self.get_registration_form():
+            if registration_questions:
+                for question in registration_questions:
                     if question.type == "select":
                         choices = question.choice_list.split(',')
                         fields[question.name] = forms.ChoiceField(label=question.name,
@@ -243,8 +245,8 @@ class Event(models.Model):
                                                         max_length=320)
                 fields['avec_anonymous'] = forms.BooleanField(label='Anonymt', required=False, widget=forms
                                                               .CheckboxInput(attrs={'class': "avec-field"}))
-                if self.get_registration_form():
-                    for question in self.get_registration_form():
+                if registration_questions:
+                    for question in registration_questions:
                         if not question.hide_for_avec:
                             if question.type == "select":
                                 choices = question.choice_list.split(',')
