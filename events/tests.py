@@ -535,16 +535,23 @@ class EventAdminTests(TestCase):
 
     def test_admin_forms_accept_event_template_choice(self):
         creation_form = EventCreationForm()
-        edit_form = EventEditForm(instance=self.event)
-
         self.assertEqual(
             creation_form.fields["template"].clean("events/arsfest.html"),
             "events/arsfest.html",
         )
+
+    @override_settings(PROJECT_NAME="kk")
+    def test_admin_forms_accept_kk_only_template_choice(self):
+        edit_form = EventEditForm(instance=self.event)
         self.assertEqual(
             edit_form.fields["template"].clean("events/wappmiddag.html"),
             "events/wappmiddag.html",
         )
+
+    def test_admin_forms_reject_kk_only_template_for_other_associations(self):
+        edit_form = EventEditForm(instance=self.event)
+        with self.assertRaises(Exception):
+            edit_form.fields["template"].clean("events/wappmiddag.html")
 
     def test_admin_forms_accept_blank_event_template(self):
         creation_form = EventCreationForm()
