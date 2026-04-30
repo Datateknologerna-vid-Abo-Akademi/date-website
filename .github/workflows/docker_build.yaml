@@ -60,11 +60,8 @@ jobs:
 
           TAGS=("${IMAGE_REPO}:${GITHUB_SHA}")
 
-          if [ "${GITHUB_REF_TYPE}" = "branch" ]; then
-            TAGS+=("${IMAGE_REPO}:${GITHUB_REF_NAME}")
-            if [ "${GITHUB_REF_NAME}" = "main" ]; then
-              TAGS+=("${IMAGE_REPO}:qa")
-            fi
+          if [ "${GITHUB_REF_TYPE}" = "branch" ] && [ "${GITHUB_REF_NAME}" = "main" ]; then
+            TAGS+=("${IMAGE_REPO}:qa")
           fi
 
           {
