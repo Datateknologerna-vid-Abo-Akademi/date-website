@@ -14,6 +14,7 @@ on:
           - major
 
 permissions:
+  actions: write
   contents: write
 
 jobs:
@@ -125,3 +126,12 @@ jobs:
           git checkout main
           git tag -a "${NEXT_TAG}" -m "Release ${NEXT_TAG}" -m "Automated ${BUMP} bump from ${LAST_TAG}"
           git push origin "${NEXT_TAG}"
+
+      - name: Dispatch Docker release tagging workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEXT_TAG: ${{ needs.propose_release.outputs.next_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh workflow run docker_build.yaml --ref "${NEXT_TAG}"
