@@ -93,31 +93,7 @@ html body{
 .header-box {
     overflow: hidden;
     position: relative;
-}
-
-img.balloon {
-    position: absolute;
-    width: 100px !important;
-    height: 120px !important;
-    transition: .3s;
-}
-
-img.balloon-right {
-    right: 15px;
-    animation: balloon ease 4s;
-}
-
-img.balloon-right:hover {
-    transform: rotate(45deg);
-}
-
-img.balloon-left {
-    transform: scaleX(-1);
-    animation: balloon2 ease 4s;
-}
-
-img.balloon-left:hover {
-    transform: scaleX(-1) rotate(45deg);
+    text-align: center;
 }
 
 #canvas{
@@ -139,16 +115,18 @@ img.balloon-left:hover {
     100% {transform: translate3d(0, 0, 0) scaleX(-1); opacity: 1;}
     }
 
-.header-logo{
-    margin-left: auto;
-    margin-right: auto;
-    max-height: 20vh !important;
+.event-template-logo {
+    display: block;
+    width: auto;
+    max-width: min(240px, 70vw);
+    max-height: 120px;
+    object-fit: contain;
+    margin: 0 auto 1rem;
     animation: fadeIn ease 5s;
     -webkit-animation: fadeIn ease 5s;
     -moz-animation: fadeIn ease 5s;
     -o-animation: fadeIn ease 5s;
     -ms-animation: fadeIn ease 5s;
-    filter: drop-shadow(1px 1px 2px #a3ffce);
 }
 
 .container-md .content svg{
@@ -173,6 +151,7 @@ img.balloon-left:hover {
 
 .baal-header{
     text-align: center;
+    overflow-wrap: anywhere;
     animation: fadeIn ease 5s;
     -webkit-animation: fadeIn ease 5s;
     -moz-animation: fadeIn ease 5s;
@@ -183,10 +162,14 @@ img.balloon-left:hover {
 .baal-nav{
     text-align: center;
     margin: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
 }
 
 .baal-nav a{
-    margin: 5px;
+    margin: 0;
     padding: 10px;
     background-color: #d4c5a4;
     border-radius: 5px;
