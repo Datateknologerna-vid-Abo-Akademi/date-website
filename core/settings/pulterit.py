@@ -52,6 +52,7 @@ CONTENT_VARIABLES = {
     "ASSOCIATION_NAME": "Pulterit",
     "ASSOCIATION_NAME_FULL": "Pulterit ry",
     "ASSOCIATION_NAME_SHORT": "Pulterit",
+    "EVENT_TEMPLATE_LOGO": "core/images/pulterit-black-wo-text.svg",
     "ASSOCIATION_EMAIL": "pulterithal@utu.fi",
     "ASSOCIATION_ADDRESS_L1": "Geotalo / Geohuset / Geohouse",
     "ASSOCIATION_ADDRESS_L2": "Akatemiankatu 1",

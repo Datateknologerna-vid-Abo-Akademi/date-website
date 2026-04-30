@@ -18,7 +18,7 @@
             {% if event.sign_up %}
             <div id="anmalan" class="content baal-content anmalan">
                 <div class="baal-nav"><a class="baal-link" href="{{ '/events/baal/'|localized_url }}">Tillbaka</a></div>
-                <h2 id="sign-up">{% trans "Kemistbaal Anmälning" %}</h2>
+                <h2 id="sign-up">{{ event.title }} {% trans "Anmälning" %}</h2>
                 {% include 'events/registration_state.html' %}
             </div>
         {% endif %}

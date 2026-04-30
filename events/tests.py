@@ -1324,6 +1324,34 @@ class EventTemplateSelectionTests(TestCase):
         response = self.client.get(reverse("events:detail", args=[event.slug]))
         self.assertTemplateUsed(response, "events/baal_detail.html")
 
+    def test_baal_template_uses_event_and_association_branding(self):
+        event = Event.objects.create(
+            title="Spring Ball",
+            slug="spring-ball",
+            author=self.author,
+            template="events/baal_detail.html",
+        )
+        response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertContains(response, "Spring Ball")
+        self.assertContains(response, 'alt="Datateknologerna logo"')
+        self.assertNotContains(response, "CII Kemistbaal")
+        self.assertNotContains(response, "HQKK_2.png")
+
+    def test_wappmiddag_template_uses_event_and_association_branding(self):
+        event = Event.objects.create(
+            title="Spring Dinner",
+            slug="spring-dinner",
+            author=self.author,
+            template="events/wappmiddag.html",
+        )
+        response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertContains(response, "Spring Dinner")
+        self.assertContains(response, 'alt="Datateknologerna logo"')
+        self.assertNotContains(response, "Teknologwappmiddag")
+        self.assertNotContains(response, "ballong_black.png")
+
     def test_selected_template_is_used_for_generic_event(self):
         event = Event.objects.create(
             title="Generic",
