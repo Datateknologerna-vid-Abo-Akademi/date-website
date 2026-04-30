@@ -530,6 +530,38 @@ class EventAdminTests(TestCase):
         self.assertContains(response, 'name="title_en"')
         self.assertContains(response, 'name="title_fi"')
 
+    def test_change_page_hides_avec_for_inline_when_avec_is_disabled(self):
+        EventAttendees.objects.create(
+            event=self.event,
+            user="No Avec",
+            email="no-avec@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="eventattendees_set-0-avec_for"')
+
+    def test_change_page_shows_avec_for_inline_when_avec_is_enabled(self):
+        self.event.sign_up_avec = True
+        self.event.save()
+        EventAttendees.objects.create(
+            event=self.event,
+            user="Avec Host",
+            email="avec-host@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="eventattendees_set-0-avec_for"')
+
     def test_edit_form_preserves_existing_slug_when_field_is_cleared(self):
         form = EventEditForm(instance=self.event)
         form.cleaned_data = {"title": self.event.title, "slug": ""}
