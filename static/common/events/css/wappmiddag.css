@@ -3,8 +3,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@500&display=swap');
 
 :root {
-    --opacityColor: rgba(235, 235, 235, 0.7);
-    /*--opacityColor: rgba(223, 223, 223, 0.55);*/
+    --opacityColor: var(--primaryColorTransparenter);
     --backdropBlur:  blur(10px);
 }
 
@@ -27,9 +26,9 @@ html body{
 }
 
 .content{
-    background-color: rgba(243, 243, 243, 0.9);
+    background-color: var(--primaryColorLight);
     border-top: 2px solid var(--primaryColor);
-    color: var(--textColorDark);
+    color: var(--textColorLightish);
     font-size: 1.1em;
 }
    
@@ -53,7 +52,7 @@ html body{
 }
 
 .baal-content h2, .baal-content h1 {
-    color: var(--textColorDark);
+    color: var(--textColorLight);
 }
 
 .baal-content {
