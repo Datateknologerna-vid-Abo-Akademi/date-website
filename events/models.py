@@ -8,7 +8,6 @@ from datetime import timedelta
 from django.utils import timezone
 from django import forms
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Max, JSONField
@@ -134,23 +133,6 @@ class Event(models.Model):
 
     def get_highest_attendee_nr(self):
         return EventAttendees.objects.filter(event=self).aggregate(Max('attendee_nr'))
-
-    def add_event_attendance(self, user, email, anonymous, preferences, avec_for=None):
-        if self.sign_up:
-            try:
-                registration = EventAttendees.objects.get(
-                    email=email, event=self)
-            except ObjectDoesNotExist:
-                user_pref = {}
-                if self.get_registration_form():
-                    for item in self.get_registration_form():
-                        user_pref[str(item)] = preferences.get(str(item))
-                event = self.parent or self
-                registration = EventAttendees.objects.create(user=user,
-                                                             event=event, email=email,
-                                                             time_registered=now(), preferences=user_pref,
-                                                             anonymous=anonymous, avec_for=avec_for, original_event=self)
-                return registration
 
     def cancel_event_attendance(self, user):
         if self.sign_up:

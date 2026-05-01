@@ -77,7 +77,7 @@
     $("#id_avec").click(updateAvecForm);
 
     $('#attend-form').submit(function(e) {
-        // Validate that email != avec email, since add_event_attendance() prohibits this
+        // Validate that email != avec email; the DB unique constraint catches it server-side
         if ($("#id_avec").is(":checked") && ($('#id_avec_email').val() == $('#id_email').val())) {
             if (!$('#unique-email-warning').length) {
                 $("#id_avec_email").parent().before('<div class="alert alert-danger" id="unique-email-warning"><strong>Avecs email kan inte vara samma som din!</strong></div>');
