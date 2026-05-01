@@ -4,19 +4,32 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
-echo "WARNING! This will restore your project to an initial state."
-echo "All database data will be permanently deleted."
-read -p "Are you sure? y/n " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1
-fi
+NON_INTERACTIVE=false
+for arg in "$@"; do
+    case "$arg" in
+        -y|--yes) NON_INTERACTIVE=true ;;
+    esac
+done
 
-read -p "Also delete uploaded media files? y/n " -n 1 -r
-echo
-DELETE_MEDIA=false
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    DELETE_MEDIA=true
+if [[ "$NON_INTERACTIVE" == "true" ]]; then
+    echo "WARNING! This will restore your project to an initial state."
+    echo "All database data will be permanently deleted."
+    DELETE_MEDIA=false
+else
+    echo "WARNING! This will restore your project to an initial state."
+    echo "All database data will be permanently deleted."
+    read -p "Are you sure? y/n " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1
+    fi
+
+    read -p "Also delete uploaded media files? y/n " -n 1 -r
+    echo
+    DELETE_MEDIA=false
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        DELETE_MEDIA=true
+    fi
 fi
 
 read_compose_file_from_env() {

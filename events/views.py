@@ -3,6 +3,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
+from django.db import transaction
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -11,7 +12,8 @@ from django.views.generic import DetailView, ListView
 
 from core.utils import validate_captcha
 from .forms import PasscodeForm
-from .models import Event, EventAttendees
+from .models import Event
+from .registration import EventSignupError, get_public_registration_questions, register_event_signup
 from .websocket_utils import ws_send
 
 logger = logging.getLogger('date')
@@ -161,16 +163,14 @@ class EventDetailView(DetailView):
         return [self.template_name]
 
     def form_valid(self, form):
-        attendee = self.get_object().add_event_attendance(user=form.cleaned_data['user'],
-                                                          email=form.cleaned_data['email'],
-                                                          anonymous=form.cleaned_data['anonymous'],
-                                                          preferences=form.cleaned_data)
-        if "event_billing" in settings.EXPERIMENTAL_FEATURES and 'billing' in settings.INSTALLED_APPS:
-            logger.debug("Handling event billing")
-            from billing.handlers import handle_event_billing
-            handle_event_billing(attendee)
-        if 'avec' in form.cleaned_data and form.cleaned_data['avec']:
-            self.handle_avec_data(form.cleaned_data, attendee)
+        try:
+            result = register_event_signup(self.object, form.cleaned_data)
+        except EventSignupError as exc:
+            form.add_error(exc.field, exc.message)
+            return self.form_invalid(form)
+
+        logger.info(f"User {self.request.user} signed up with name: {form.cleaned_data['user']}")
+        self.schedule_signup_side_effects(form, result.attendee)
         return self.redirect_after_signup()
 
     def form_invalid(self, form):
@@ -199,9 +199,6 @@ class EventDetailView(DetailView):
 
             form = self.object.make_registration_form()(data=request.POST)
 
-            if self.object.parent and self.object.event_is_full():
-                return self.form_invalid(form)
-
             # CAPTCHA validation if applicable
             if self.object.captcha:
                 captcha_response = request.POST.get('cf-turnstile-response', '')
@@ -215,27 +212,21 @@ class EventDetailView(DetailView):
         return HttpResponseForbidden()
 
     def process_signup_form(self, form, request):
-        public_info = self.object.get_registration_form_public_info()
-        if not EventAttendees.objects.filter(email=form.cleaned_data['email'], event=self.object.id).first():
-            logger.info(f"User {request.user} signed up with name: {form.cleaned_data['user']}")
-            if not settings.TEST:
-                slug = self.object.parent.slug if self.object.parent else self.object.slug
-                ws_send(slug, form, public_info)
         return self.form_valid(form)
+
+    def schedule_signup_side_effects(self, form, attendee):
+        if not settings.TEST:
+            public_info = get_public_registration_questions(self.object)
+            slug = self.object.parent.slug if self.object.parent else self.object.slug
+            transaction.on_commit(lambda: ws_send(slug, form, public_info))
+
+        if "event_billing" in settings.EXPERIMENTAL_FEATURES and 'billing' in settings.INSTALLED_APPS:
+            logger.debug("Handling event billing")
+            from billing.handlers import handle_event_billing
+            transaction.on_commit(lambda: handle_event_billing(attendee))
 
     def redirect_after_signup(self):
         event = self.get_context_data().get('event')
         if self._get_resolved_template(event) == 'events/arsfest.html':
             return redirect(f"{reverse('events:detail', args=[event.slug])}#/attendee-list")
         return redirect(reverse('events:detail', args=[event.slug]))
-
-    def handle_avec_data(self, cleaned_data, attendee):
-        avec_data = {'avec_for': attendee}
-        for key in cleaned_data:
-            if key.startswith('avec_'):
-                field_name = key.split('avec_')[1]
-                value = cleaned_data[key]
-                avec_data[field_name] = value
-        self.get_object().add_event_attendance(user=avec_data['user'], email=avec_data['email'],
-                                               anonymous=avec_data['anonymous'], preferences=avec_data,
-                                               avec_for=avec_data['avec_for'])

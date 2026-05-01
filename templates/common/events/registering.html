@@ -9,7 +9,7 @@
 <small>{% trans "OBS!" %} {% trans "Anmälningen är bindande om inget annat meddelas." %} <br>
     {% trans "Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på förhinder." %}</small>
 
-{% if not event.parent or not event.event_is_full %}
+{% if not event.event_is_full %}
 {% if form.errors %}
     {% for field in form %}
         {% for error in field.errors %}
@@ -68,10 +68,8 @@
 </small>
 {% endif %}
 
-{% if event.parent and event.event_is_full %}
+{% if event.event_is_full %}
 <p class="warning">{% translate "Evenemanget är tyvärr fullt! Vänligen kontakta evenemangets kontaktperson" %}</p>
-{% elif event.event_is_full %}
-<p class="warning">{% translate "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan och meddelas om du får plats." %}</p>
 {% endif %}
 
 <script>
@@ -79,7 +77,7 @@
     $("#id_avec").click(updateAvecForm);
 
     $('#attend-form').submit(function(e) {
-        // Validate that email != avec email, since add_event_attendance() prohibits this
+        // Validate that email != avec email; the DB unique constraint catches it server-side
         if ($("#id_avec").is(":checked") && ($('#id_avec_email').val() == $('#id_email').val())) {
             if (!$('#unique-email-warning').length) {
                 $("#id_avec_email").parent().before('<div class="alert alert-danger" id="unique-email-warning"><strong>Avecs email kan inte vara samma som din!</strong></div>');
@@ -91,7 +89,7 @@
     function updateAvecForm() {
         if($("#id_avec").is(":checked")) {
             $('#attend-form').find('.avec-field').parent().show();
-            $("#id_avec").parent().after('<h4 id="avec_information_header">Avec information<h4>')
+            $("#id_avec").parent().after('<h4 id="avec_information_header">Avec information</h4>')
             $('#id_avec_user').prop('required', true)
             $('#id_avec_email').prop('required', true)
         } else {
