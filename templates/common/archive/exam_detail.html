@@ -1,15 +1,17 @@
 {% extends 'core/base.html' %}
-{% load app_filters %}
+{% load shared_filters %}
 {% load static %}
 {% load i18n %}
 {% load render_table from django_tables2 %}
 {% load bootstrap3 %}
 {% block title %}{% trans 'Tentarkiv' %}{% endblock %}
 
-{% block content %}
-<head>
+{% block extra_head %}
+    {{ block.super }}
     <link rel="stylesheet" href="{% static 'archive/css/document.css' %}" type="text/css">
-</head>
+{% endblock %}
+
+{% block content %}
     <div class="container-md min-vh-100 container-margin-top p-1">
         <div class="container-size">
             <div class="content">
@@ -24,4 +26,3 @@
         </div>
     </div>
 {% endblock %}
-

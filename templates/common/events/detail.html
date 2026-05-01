@@ -1,28 +1,36 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% load i18n %}
-{% load app_filters %}
+{% load shared_filters %}
+{% load localized_time %}
 {% block title %}{{ event.title }}{% endblock %}
 
-{% block content %}
-    <head>
+{% block extra_head %}
+    {{ block.super }}
         {% if event.exclude_indexing and not event.in_past_event_list %}
         <meta name="robots" content="noindex">
         {% endif %}
         <link rel="stylesheet" href="{% static 'events/css/detail.css' %}">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
-        <script src="{% static 'js/live-attendee-list.js' %}"></script>
+        <script src="{% static 'core/js/live-attendee-list.js' %}"></script>
         <style>
-            .background-img{
-                background: url("{% if event.image %}{{ event.image.url }}{% elif event.s3_image %}{{ event.s3_image.url }}{% endif %}") no-repeat center center fixed;
+            {% if event.background_image_url %}.background-img{
+                background: url("{{ event.background_image_url }}") no-repeat center center;
+                background-attachment: fixed;
                 -webkit-background-size: cover;
                 -moz-background-size: cover;
                 -o-background-size: cover;
                 background-size: cover;
             }
+            @media (max-width: 768px) {
+                .background-img {
+                    background-attachment: scroll;
+                }
+            }{% endif %}
         </style>
-    </head>
+{% endblock %}
+
+{% block content %}
     <div class="background-img">
         <div class="container-md min-vh-100 p-1">
             <div class="container-size" style="margin-top: 13vh">
@@ -34,22 +42,12 @@
                 {% if event.sign_up %}
                     <div class="content">
                         <h2 id="sign-up">{% trans "Anmälning" %}</h2>
-                        {% if event.registration_is_open_members and user.is_authenticated %}
-                            {% include 'events/registering.html' %}
-                        {% elif event.registration_is_open_others %}
-                            {% include 'events/registering.html' %}
-                        {% elif event.registation_past_due %}
-                            <h4 id="no-registration">{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }} {% trans 'sedan' %}</h4>
-                        {% elif not event.registation_past_due and user.is_authenticated %}
-                            <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_members | timeuntil }}</p>
-                        {% else %}
-                            <p>{% trans "Anmälan öppnas om " %}{{ event.sign_up_others | timeuntil }}</p>
-                        {% endif %}
+                        {% include 'events/registration_state.html' %}
                     </div>
-                    <div class="content overflow-auto">
+                    <div id="attendee-list" class="content overflow-auto" data-parent-slug="{{ event.parent.slug|default:'' }}">
                     {% if event|show_attendee_list %}
                         {% if event.sign_up_max_participants != 0 %}
-                        <p>Det finns {{ event.sign_up_max_participants }} platser!</p>
+                        <p>{{ event.remaining_places|localized_remaining_places }}</p>
                         {% endif %}
                         <h2>{% trans "Anmälda" %}</h2>
                         <table class="" id="attendees">
@@ -63,7 +61,7 @@
                                     {% endfor %}
                             </tr>
                             {% for attendee in event.get_registrations %}
-                                <tr {% if forloop.counter > event.sign_up_max_participants and event.sign_up_max_participants != 0 %} class="event-full" {% endif %} >
+                                <tr {% if forloop.counter > event.sign_up_max_participants and event.sign_up_max_participants != 0 and not event.parent %} class="event-full" {% endif %} >
                                     <td>{{ forloop.counter }}</td>
                                     <td>{% if not attendee.anonymous %}{{ attendee.user }}{% else %}
                                         <i>{% trans "Anonymt" %}</i>{% endif %}</td>

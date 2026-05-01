@@ -1,6 +1,7 @@
 import logging
 
 from django.db import models
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.fields import CKEditor5Field
 from polls.models import Question
@@ -25,3 +26,6 @@ class Candidate(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return reverse('lucia:candidate', args=[self.slug])

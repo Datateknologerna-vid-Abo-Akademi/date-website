@@ -1,0 +1,2130 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-04-28 21:35+0300\n"
+"PO-Revision-Date: 2025-09-16 19:33+0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.6\n"
+
+#: alumni/forms.py:15 alumni/forms.py:16 alumni/forms.py:17 alumni/forms.py:72
+#: members/forms.py:173 members/forms.py:176 members/forms.py:182
+msgid "detta fält är obligatoriskt"
+msgstr "tämä kenttä on pakollinen"
+
+#: alumni/forms.py:15 members/forms.py:185 members/models.py:33
+msgid "Förnamn"
+msgstr "Etunimi"
+
+#: alumni/forms.py:16 members/forms.py:186 members/models.py:34
+msgid "Efternamn"
+msgstr "Sukunimi"
+
+#: alumni/forms.py:17 alumni/forms.py:72 events/models.py:381
+#: members/forms.py:176 members/models.py:32
+msgid "E-postadress"
+msgstr "Sähköpostiosoite"
+
+#: alumni/forms.py:19 members/models.py:35
+msgid "Telefonnummer"
+msgstr "Puhelinnumero"
+
+#: alumni/forms.py:20 members/models.py:36
+msgid "Adress"
+msgstr "Osoite"
+
+#: alumni/forms.py:21
+msgid "Postnummer"
+msgstr "Postinumero"
+
+#: alumni/forms.py:22 members/models.py:38
+msgid "Postanstalt"
+msgstr "Posti"
+
+#: alumni/forms.py:23 members/models.py:39
+msgid "Land"
+msgstr "Maa"
+
+#: alumni/forms.py:24 members/forms.py:29 members/forms.py:187
+#: members/models.py:41
+msgid "Inskrivningsår"
+msgstr "Aloittamisvuosi"
+
+#: alumni/forms.py:25
+msgid "Arbetsplats"
+msgstr "Työpaikka"
+
+#: alumni/forms.py:26
+msgid "Arbetsuppgift"
+msgstr "Työtehtävä"
+
+#: alumni/forms.py:27
+msgid "TFiF medlemskap"
+msgstr "TFiF jäsennyys"
+
+#: alumni/forms.py:28
+msgid "Jag tar gärna emot information om alumnevenemang"
+msgstr "Otan mielelläni vastaan tietoa alumnitapahtumista"
+
+#: alumni/forms.py:30
+msgid "Jag vill:"
+msgstr "Haluan:"
+
+#: alumni/forms.py:32
+msgid "Token"
+msgstr "Tunniste"
+
+#: alumni/forms.py:78
+msgid "Ange din e-postadress"
+msgstr "Anna sähköpostiosoitteesi"
+
+#: alumni/models.py:17 alumni/models.py:18
+msgid "Emailmottagare för ÅAATK"
+msgstr "Sähköpostivastaanottaja ÅAATK:lle"
+
+#: alumni/models.py:30
+msgid "Alumni Update Token"
+msgstr "Alumnipäivityksen tunniste"
+
+#: alumni/models.py:31
+msgid "Alumni Update Tokens"
+msgstr "Alumnipäivityksen tunnisteet"
+
+#: alumni/tasks.py:200
+msgid "Uppdatera dina uppgifter"
+msgstr "Päivitä tietosi"
+
+#: archive/admin.py:45
+msgid "Städa upp media"
+msgstr "Siivoa media"
+
+#: archive/models.py:30 archive/models.py:167 events/models.py:201
+#: events/models.py:337 events/models.py:379 members/models.py:96
+#: members/models.py:121 news/models.py:15
+#: templates/biocum/events/arsfest.html:91
+#: templates/common/events/arsfest.html:104
+#: templates/common/events/baal_detail.html:69
+#: templates/common/events/detail.html:58
+#: templates/common/events/kk100_detail.html:70
+#: templates/common/events/tomtejakt.html:314
+#: templates/common/events/wappmiddag.html:70
+#: templates/date/events/arsfest.html:84
+#: templates/pulterit/events/arsfest.html:85
+msgid "Namn"
+msgstr "Nimi"
+
+#: archive/models.py:33
+msgid "Göm för gulisar"
+msgstr "Piilota fukseilta"
+
+#: archive/models.py:36 archive/models.py:166
+msgid "Samling"
+msgstr "Kokoelma"
+
+#: archive/models.py:37
+msgid "Samlingar"
+msgstr "Kokoelmat"
+
+#: archive/models.py:118 templates/common/archive/index.html:17
+#: templates/common/archive/picture_index.html:15
+msgid "Bildarkiv"
+msgstr "Kuvaarkisto"
+
+#: archive/models.py:124 templates/common/archive/document_index.html:19
+msgid "Dokumentarkiv"
+msgstr "Dokumenttiarkisto"
+
+#: archive/models.py:129 templates/common/archive/exam_detail.html:7
+#: templates/common/archive/exam_upload.html:5
+#: templates/common/archive/exams_index.html:5
+#: templates/common/archive/exams_index.html:18
+msgid "Tentarkiv"
+msgstr "Tenttiarkisto"
+
+#: archive/models.py:134
+msgid "Offentliga Filer"
+msgstr "Julkiset tiedostot"
+
+#: archive/models.py:139 archive/models.py:179
+msgid "Galleri"
+msgstr "Galleria"
+
+#: archive/models.py:144
+msgid "bild"
+msgstr "kuva"
+
+#: archive/models.py:145
+msgid "bilder"
+msgstr "kuvat"
+
+#: archive/models.py:168
+msgid "Filnamn"
+msgstr "Tiedostonimi"
+
+#: archive/models.py:174 archive/models.py:175
+msgid "dokument"
+msgstr "tiedosto"
+
+#: archive/models.py:180
+msgid "file"
+msgstr "tiedosto"
+
+#: archive/models.py:183
+msgid "fil"
+msgstr "tiedosto"
+
+#: archive/models.py:184
+msgid "filer"
+msgstr "tiedostot"
+
+#: core/admin_base.py:65
+msgid "Open public page"
+msgstr "Avaa julkinen sivu"
+
+#: core/admin_base.py:68
+msgid "Public page"
+msgstr "Julkinen sivu"
+
+#: core/admin_ui.py:37
+msgid "Event"
+msgstr "Tapahtuma"
+
+#: core/admin_ui.py:38 core/admin_ui.py:95
+msgid "News"
+msgstr "Uutiset"
+
+#: core/admin_ui.py:39
+msgid "Static Page"
+msgstr "Staattinen sivu"
+
+#: core/admin_ui.py:81 core/admin_ui.py:82
+msgid "Events"
+msgstr "Events"
+
+#: core/admin_ui.py:83
+msgid "Billing Configuration"
+msgstr "Billing Configuration"
+
+#: core/admin_ui.py:84
+msgid "Invoices"
+msgstr "Invoices"
+
+#: core/admin_ui.py:86 core/admin_ui.py:87
+msgid "Members"
+msgstr "Jäsentyyppi:"
+
+#: core/admin_ui.py:88
+msgid "Membership Types"
+msgstr "Jäsentyyppi:"
+
+#: core/admin_ui.py:89
+msgid "Subscriptions"
+msgstr "Kuvaus"
+
+#: core/admin_ui.py:90
+msgid "Subscription Payments"
+msgstr "Subscription Payments"
+
+#: core/admin_ui.py:91
+msgid "Functionaries"
+msgstr "Toimihenkilöt"
+
+#: core/admin_ui.py:92
+msgid "Functionary Roles"
+msgstr "Toimihenkilöpesti"
+
+#: core/admin_ui.py:94
+msgid "Content"
+msgstr "Jatka"
+
+#: core/admin_ui.py:96
+msgid "News Categories"
+msgstr "kategoriat"
+
+#: core/admin_ui.py:97
+msgid "Polls"
+msgstr "Kysely"
+
+#: core/admin_ui.py:98
+msgid "Static Pages"
+msgstr "Static Pages"
+
+#: core/admin_ui.py:99
+msgid "Page Navigation"
+msgstr "Page Navigation"
+
+#: core/admin_ui.py:101
+msgid "Archive & Publications"
+msgstr "Julkaisut"
+
+#: core/admin_ui.py:102
+msgid "PDF Publications"
+msgstr "Julkaisut"
+
+#: core/admin_ui.py:103
+msgid "Photo Albums"
+msgstr "Photo Albums"
+
+#: core/admin_ui.py:104
+msgid "Documents"
+msgstr "tiedosto"
+
+#: core/admin_ui.py:105
+msgid "Exams"
+msgstr "Exams"
+
+#: core/admin_ui.py:107
+msgid "Activities"
+msgstr "Activities"
+
+#: core/admin_ui.py:108 ctf/models.py:64
+msgid "CTF"
+msgstr "CTF"
+
+#: core/admin_ui.py:109
+msgid "CTF Guesses"
+msgstr "CTF Guesses"
+
+#: core/admin_ui.py:110 lucia/models.py:23
+msgid "Lucia"
+msgstr "Lucia"
+
+#: core/admin_ui.py:112
+msgid "Social & Ads"
+msgstr "Social & Ads"
+
+#: core/admin_ui.py:113 templates/biocum/date/components/mobile.html:52
+#: templates/biocum/date/components/sidebar.html:55
+#: templates/date/date/components/partners.html:3
+#: templates/demo/date/components/partners.html:3
+#: templates/kk/date/april_start.html:110
+#: templates/kk/date/components/partners.html:3
+#: templates/pulterit/date/components/partners.html:3
+msgid "Samarbetspartners"
+msgstr "Yhteistyökumppanimme"
+
+#: core/admin_ui.py:114
+msgid "Instagram URLs"
+msgstr "Instagram URLs"
+
+#: core/admin_ui.py:115
+msgid "Harassment Reports"
+msgstr "Harassment Reports"
+
+#: core/admin_ui.py:116
+msgid "Report Recipients"
+msgstr "Report Recipients"
+
+#: core/admin_ui.py:118
+msgid "System"
+msgstr "System"
+
+#: core/admin_ui.py:119
+msgid "Admin Log"
+msgstr "Admin Log"
+
+#: core/admin_ui.py:120
+msgid "Permissions"
+msgstr "Permissions"
+
+#: core/settings/common.py:84
+msgid "Quality Assurance"
+msgstr "Laadunvarmistus"
+
+#: core/settings/common.py:91
+msgid "Development"
+msgstr "Kehitys"
+
+#: core/settings/common.py:93
+msgid "Production"
+msgstr "Tuotanto"
+
+#: ctf/models.py:17 events/models.py:45 lucia/models.py:16
+#: members/models.py:167 news/models.py:31 staticpages/models.py:25
+#: staticpages/models.py:44
+msgid "Titel"
+msgstr "Otsikko"
+
+#: ctf/models.py:18 events/models.py:46 lucia/models.py:17 news/models.py:33
+#: staticpages/models.py:26
+msgid "Innehåll"
+msgstr "Sisältö"
+
+#: ctf/models.py:19 events/models.py:47
+msgid "Startdatum"
+msgstr "Alkupäivämäärä"
+
+#: ctf/models.py:20 events/models.py:48
+msgid "Slutdatum"
+msgstr "Loppupäivämäärä"
+
+#: ctf/models.py:22 ctf/models.py:50 events/models.py:68 lucia/models.py:19
+#: news/models.py:16 news/models.py:39 publications/models.py:17
+#: staticpages/models.py:29
+msgid "Slug"
+msgstr "Polkutunnus"
+
+#: ctf/models.py:23 events/models.py:67 lucia/models.py:18 news/models.py:38
+#: polls/models.py:25
+msgid "Publicera"
+msgstr "Julkaise"
+
+#: ctf/models.py:26 ctf/models.py:27
+msgid "ctf"
+msgstr "ctf"
+
+#: ctf/models.py:49
+msgid "Clue"
+msgstr "Vihje"
+
+#: ctf/models.py:53
+msgid "Flag"
+msgstr "Lippu"
+
+#: ctf/models.py:54
+msgid "Flags"
+msgstr "Lippuja"
+
+#: ctf/models.py:65
+msgid "Användare"
+msgstr "Käyttäjä"
+
+#: ctf/models.py:66
+msgid "Flagga"
+msgstr "Lippu"
+
+#: ctf/models.py:67 ctf/models.py:72
+msgid "Gissning"
+msgstr "Arvaus"
+
+#: ctf/models.py:68
+msgid "Korrekt"
+msgstr "Oikein"
+
+#: ctf/models.py:69
+msgid "Tid"
+msgstr "Aika"
+
+#: ctf/models.py:73
+msgid "Gissningar"
+msgstr "Arvaukset"
+
+#: events/models.py:49
+msgid "Maximal antal deltagare (0 för ingen begränsning)"
+msgstr "Osallistujien enimmäismäärä (0 = ei rajoitusta)"
+
+#: events/models.py:50 templates/biocum/events/arsfest.html:78
+#: templates/common/events/arsfest.html:90
+#: templates/common/events/baal_detail.html:55
+#: templates/common/events/detail.html:44
+#: templates/common/events/kk100_detail.html:56
+#: templates/common/events/tomtejakt.html:300
+#: templates/common/events/wappmiddag.html:56
+#: templates/date/events/arsfest.html:70
+#: templates/pulterit/events/arsfest.html:71
+msgid "Anmälning"
+msgstr "Ilmoittautuminen"
+
+#: events/models.py:52
+msgid "Anmälan öppnas (medlemmar)"
+msgstr "Ilmoittautuminen avautuu (jäsenille)"
+
+#: events/models.py:54
+msgid "Anmälan öppnas (övriga)"
+msgstr "Ilmoittautuminen avautuu (muille)"
+
+#: events/models.py:56
+msgid "Anmälningen stängs"
+msgstr "Ilmoittautuminen sulkeutuu"
+
+#: events/models.py:57
+msgid "Avanmälning"
+msgstr "Ilmoittautuminen"
+
+#: events/models.py:59
+msgid "Avanmälningen stängs"
+msgstr "Ilmoittautuminen sulkeutuu"
+
+#: events/models.py:62 news/models.py:35 staticpages/models.py:27
+msgid "Skapad"
+msgstr "Luotu"
+
+#: events/models.py:64 news/models.py:36
+#: templates/common/publications/list.html:25
+msgid "Publicerad"
+msgstr "Julkaistu"
+
+#: events/models.py:66 news/models.py:37 staticpages/models.py:28
+msgid "Modifierad"
+msgstr "Muokattu"
+
+#: events/models.py:70
+msgid "Avec"
+msgstr "Avec"
+
+#: events/models.py:72
+msgid "Kräv godkännande av anmälningsvillkor"
+msgstr "Edellytä ilmoittautumisehtojen hyväksymistä"
+
+#: events/models.py:75
+msgid "Kräv inloggning för innehåll"
+msgstr "Vaadi sisäänkirjautuminen sisällön näkemiseen"
+
+#: events/models.py:76
+msgid "Passcode"
+msgstr "Pääsykoodi"
+
+#: events/models.py:78 events/models.py:80
+msgid "Bakgrundsbild"
+msgstr "Taustakuva"
+
+#: events/models.py:81
+msgid "Captcha"
+msgstr "Captcha"
+
+#: events/models.py:82
+msgid "Redirect Link"
+msgstr "Uudelleenohjauslinkki"
+
+#: events/models.py:86 events/models.py:87
+msgid "evenemang"
+msgstr "tapahtumat"
+
+#: events/models.py:202 social/models.py:19
+msgid "Email"
+msgstr "Sähköposti"
+
+#: events/models.py:203 events/models.py:383 events/tests.py:337
+#: events/tests.py:1090 events/websocket_utils.py:30
+#: templates/biocum/events/arsfest.html:101
+#: templates/common/events/arsfest.html:113
+#: templates/common/events/baal_detail.html:78
+#: templates/common/events/detail.html:67
+#: templates/common/events/kk100_detail.html:79
+#: templates/common/events/tomtejakt.html:323
+#: templates/common/events/wappmiddag.html:79
+#: templates/date/events/arsfest.html:93
+#: templates/pulterit/events/arsfest.html:94
+msgid "Anonymt"
+msgstr "Anonyymisesti"
+
+#: events/models.py:311
+msgid "Det finns redan någon anmäld med denna email"
+msgstr "Tällä sähköpostiosoitteella on jo ilmoittautuminen."
+
+#: events/models.py:336 events/models.py:378 staticpages/models.py:47
+msgid "#"
+msgstr "#"
+
+#: events/models.py:338
+msgid "Typ"
+msgstr "Tyyppi"
+
+#: events/models.py:342
+msgid "Krävd"
+msgstr "Pakollinen"
+
+#: events/models.py:343
+msgid "Öppen info"
+msgstr "Julkinen tieto"
+
+#: events/models.py:344
+msgid "Alternativ"
+msgstr "Vaihtoehdot"
+
+#: events/models.py:345
+msgid "Göm för avec"
+msgstr "Piilota avecilta"
+
+#: events/models.py:348 events/models.py:349
+msgid "Anmälningsfält"
+msgstr "Ilmoittautumiskentät"
+
+#: events/models.py:382
+msgid "Svar"
+msgstr "Vastaus"
+
+#: events/models.py:384 templates/common/events/list.html:37
+msgid "Registrerad"
+msgstr "Ilmoittautunut"
+
+#: events/models.py:385 templates/common/events/list.html:35
+msgid "Avec till"
+msgstr "Avekkina"
+
+#: events/models.py:386
+msgid "Ursprungligt evenemang"
+msgstr "Alkuperäinen tapahtuma"
+
+#: events/models.py:389 events/models.py:390
+msgid "deltagare"
+msgstr "osallistuja"
+
+#: lucia/models.py:15
+msgid "Bild URL"
+msgstr "Kuva URL"
+
+#: lucia/models.py:20
+msgid "Poll URL"
+msgstr "Kyselyn URL"
+
+#: lucia/models.py:24
+msgid "Lucian"
+msgstr "Lucia-neito"
+
+#: members/admin.py:120
+msgid ""
+"Search by name, username, email, phone, address, postal code, city, "
+"membership type, group, subscription, admission year, member ID, or GitHub "
+"ID."
+msgstr ""
+"Hae nimellä, käyttäjätunnuksella, sähköpostilla, puhelimella, osoitteella, "
+"postinumerolla, kaupungilla, jäsentyypillä, ryhmällä, tilauksella, "
+"sisäänottovuodella, jäsen-ID:llä tai GitHub-ID:llä."
+
+#: members/admin.py:206
+#, python-format
+msgid "Aktiverade %(count)d användare."
+msgstr "Aktivoitiin %(count)d käyttäjää."
+
+#: members/admin.py:212
+#, python-format
+msgid "Deaktiverade %(count)d användare."
+msgstr "Deaktivoitiin %(count)d käyttäjää."
+
+#: members/admin.py:224
+#, python-format
+msgid "2FA inaktiverat för valda medlemmar: %(count)d enhet(er) borttagna."
+msgstr ""
+"2FA poistettu käytöstä valituilta jäseniltä: %(count)d laite(tta) poistettu."
+
+#: members/forms.py:23
+msgid ""
+"Enter a valid username consisting only of letters, numbers, dots, "
+"underscores, and hyphens."
+msgstr ""
+"Anna kelvollinen käyttäjätunnus, joka sisältää vain kirjaimia, numeroita, "
+"pisteitä, alaviivoja ja yhdysmerkkejä."
+
+#: members/forms.py:34 members/forms.py:80 members/forms.py:174
+#: members/models.py:31
+msgid "Användarnamn"
+msgstr "Käyttäjänimi"
+
+#: members/forms.py:183
+msgid "Lösenord"
+msgstr "Salasana"
+
+#: members/forms.py:217 members/models.py:181
+msgid "Årtal"
+msgstr "Vuosi"
+
+#: members/forms.py:219
+msgid "Ange ett år i formatet YYYY"
+msgstr "Kirjoita vuosiluku muodossa YYYY"
+
+#: members/migrations/0009_membershiptype_alter_member_membership_type.py:10
+#: members/models.py:23
+msgid "Gulnäbb"
+msgstr "Fuksi"
+
+#: members/migrations/0009_membershiptype_alter_member_membership_type.py:11
+#: members/models.py:24
+msgid "Ordinarie medlem"
+msgstr "Tavallinen jäsen"
+
+#: members/migrations/0009_membershiptype_alter_member_membership_type.py:12
+#: members/models.py:25
+msgid "Stödjande medlem"
+msgstr "Tukeva jäsen"
+
+#: members/migrations/0009_membershiptype_alter_member_membership_type.py:13
+#: members/models.py:26
+msgid "Seniormedlem"
+msgstr "Seniorijäsen"
+
+#: members/models.py:37
+msgid "Postkod"
+msgstr "Postinumero"
+
+#: members/models.py:39
+msgid "Finland"
+msgstr "Suomi"
+
+#: members/models.py:42
+msgid "GitHub ID"
+msgstr "GitHub ID"
+
+#: members/models.py:49
+msgid "medlem"
+msgstr "jäsen"
+
+#: members/models.py:50
+msgid "medlemmar"
+msgstr "jäsenet"
+
+#: members/models.py:97
+msgid "Beskrivning"
+msgstr "Kuvaus"
+
+#: members/models.py:98
+msgid "Behörighetsprofil"
+msgstr "Käyttöoikeusprofiili"
+
+#: members/models.py:101
+msgid "Medlemskap"
+msgstr "Jäsenyys"
+
+#: members/models.py:102
+msgid "medlemskapstyper"
+msgstr "Jäsenyystyypit"
+
+#: members/models.py:114
+msgid "Dagar"
+msgstr "Päivää"
+
+#: members/models.py:115
+msgid "Månader"
+msgstr "Kuukautta"
+
+#: members/models.py:116
+msgid "År"
+msgstr "Vuotta"
+
+#: members/models.py:122 members/models.py:142
+msgid "Upphör"
+msgstr "Loppuu"
+
+#: members/models.py:124
+msgid "Förnyelse skala"
+msgstr "Uusimisjakso"
+
+#: members/models.py:126
+msgid "Förnyelseperiod"
+msgstr "Uusimiskausi"
+
+#: members/models.py:127
+msgid "Pris"
+msgstr "Hinta"
+
+#: members/models.py:130
+msgid "prenumeration"
+msgstr "tilaus"
+
+#: members/models.py:131
+msgid "prenumerationer"
+msgstr "tilaukset"
+
+#: members/models.py:141
+msgid "Betald"
+msgstr "Uusiutuu"
+
+#: members/models.py:143
+msgid "Betald summa"
+msgstr "Maksettu summa"
+
+#: members/models.py:146
+msgid "prenumerationsbetalning"
+msgstr "tilausmaksu"
+
+#: members/models.py:147
+msgid "prenumerationsbetalningar"
+msgstr "tilausmaksut"
+
+#: members/models.py:162
+msgid "Aldrig"
+msgstr "Ei koskaan"
+
+#: members/models.py:168
+msgid "Styrelse"
+msgstr "Hallitus"
+
+#: members/models.py:171
+msgid "Funktionärspost"
+msgstr "Toimihenkilöpesti"
+
+#: members/models.py:172 templates/common/members/functionaries.html:4
+#: templates/common/members/functionary.html:4
+msgid "Funktionärsposter"
+msgstr "Toimihenkilötehtävät"
+
+#: members/models.py:186
+msgid "Funktionär"
+msgstr "Toimihenkilö"
+
+#: members/models.py:187
+msgid "Funktionärer"
+msgstr "Toimihenkilöt"
+
+#: members/two_factor.py:51
+msgid "Username or email"
+msgstr "Käyttäjänimi tai sähköposti"
+
+#: members/views.py:138
+msgid "Användare aktiverad"
+msgstr "Käyttäjä aktivoitu"
+
+#: members/views_github.py:64 members/views_github.py:134
+msgid "GitHub-inloggning är inte konfigurerad."
+msgstr "GitHub-kirjautumista ei ole määritetty."
+
+#: members/views_github.py:99
+msgid "Inget GitHub-konto är kopplat."
+msgstr "GitHub-tiliä ei ole linkitetty."
+
+#: members/views_github.py:103
+msgid "GitHub-kontot har kopplats bort."
+msgstr "GitHub-tilin linkitys on poistettu."
+
+#: members/views_github.py:113 members/views_github.py:158
+msgid "GitHub-inloggningen misslyckades."
+msgstr "GitHub-kirjautuminen epäonnistui."
+
+#: members/views_github.py:122
+msgid "Ogiltig OAuth-begäran. Försök igen."
+msgstr "Virheellinen OAuth-pyyntö. Yritä uudelleen."
+
+#: members/views_github.py:127
+msgid "GitHub returnerade ingen auktoriseringskod."
+msgstr "GitHub ei palauttanut valtuutuskoodia."
+
+#: members/views_github.py:152
+msgid "Kunde inte kommunicera med GitHub. Försök igen."
+msgstr "GitHubin kanssa ei voitu kommunikoida. Yritä uudelleen."
+
+#: members/views_github.py:175
+msgid "Kunde inte hämta GitHub-profil. Försök igen."
+msgstr "GitHub-profiilia ei voitu hakea. Yritä uudelleen."
+
+#: members/views_github.py:180
+msgid "Kunde inte hämta GitHub-användar-ID."
+msgstr "GitHub-käyttäjätunnusta ei voitu hakea."
+
+#: members/views_github.py:212
+msgid "Du måste vara inloggad för att koppla ett GitHub-konto."
+msgstr "Sinun on oltava kirjautuneena sisään linkittääksesi GitHub-tilin."
+
+#: members/views_github.py:219 members/views_github.py:232
+msgid "Det GitHub-kontot är redan kopplat till ett annat konto."
+msgstr "Kyseinen GitHub-tili on jo linkitetty toiseen tiliin."
+
+#: members/views_github.py:222
+msgid "GitHub-kontot är redan kopplat till ditt konto."
+msgstr "GitHub-tili on jo linkitetty tiliisi."
+
+#: members/views_github.py:234
+msgid "GitHub-kontot har kopplats till ditt konto."
+msgstr "GitHub-tili on linkitetty tiliisi."
+
+#: members/views_github.py:258
+msgid "Inget konto hittades för ditt GitHub-konto. Kontakta administratören."
+msgstr ""
+"GitHub-tilillesi ei löytynyt tiliä. Ota yhteyttä järjestelmänvalvojaan."
+
+#: members/views_github.py:263
+msgid "Ditt konto är inaktiverat."
+msgstr "Tilisi on poistettu käytöstä."
+
+#: news/models.py:19
+msgid "kategori"
+msgstr "kategoria"
+
+#: news/models.py:20
+msgid "kategorier"
+msgstr "kategoriat"
+
+#: news/models.py:32 staticpages/models.py:15
+msgid "Kategori"
+msgstr "Kategoria"
+
+#: news/models.py:42
+msgid "nyhet"
+msgstr "uutinen"
+
+#: news/models.py:43
+msgid "nyheter"
+msgstr "Uutiset"
+
+#: polls/models.py:15
+msgid "Vem som helst"
+msgstr "Kuka tahansa"
+
+#: polls/models.py:16
+msgid "Endast medlemmar"
+msgstr "Vain jäseneet"
+
+#: polls/models.py:17
+msgid "Endast ordinarie medlemmar"
+msgstr "Vain tavalliset jäseneet"
+
+#: polls/models.py:18
+msgid "Endast röstberättigade medlemmar"
+msgstr "Vain äänioikeutetut jäseneet"
+
+#: polls/models.py:26
+msgid "Visa resultat"
+msgstr "Näytä tulokset"
+
+#: polls/models.py:27
+msgid "Avsluta röstande"
+msgstr "Lopeta äänestys"
+
+#: polls/models.py:28
+msgid "Flerval"
+msgstr "Monivalinta"
+
+#: polls/models.py:29
+msgid "Antal flerval som krävs"
+msgstr "Vaadittu monivalintojen määrä"
+
+#: polls/models.py:30
+msgid "Valmöjligheter"
+msgstr "Vastausvaihtoehdot"
+
+#: polls/models.py:34
+msgid "Fråga"
+msgstr "Kysymys"
+
+#: polls/models.py:35
+msgid "Frågor"
+msgstr "Kysymykset"
+
+#: polls/models.py:53 polls/models.py:54
+msgid "Val"
+msgstr "Vaihtoehto"
+
+#: polls/models.py:69 polls/models.py:70
+msgid "Röstare"
+msgstr "Äänestäjät"
+
+#: publications/models.py:16
+msgid "Title"
+msgstr "Otsikko"
+
+#: publications/models.py:18
+msgid "Leave empty to auto-generate from title"
+msgstr "Jätä tyhjäksi luodaksesi sen automaattisesti otsikosta"
+
+#: publications/models.py:19
+msgid "File"
+msgstr "Tiedosto"
+
+#: publications/models.py:20
+msgid "Description"
+msgstr "Kuvaus"
+
+#: publications/models.py:21
+msgid "Uploaded at"
+msgstr "Ladattu"
+
+#: publications/models.py:22
+msgid "Updated at"
+msgstr "Päivitetty"
+
+#: publications/models.py:23
+msgid "Publication Date"
+msgstr "Julkaisupäivä"
+
+#: publications/models.py:24
+msgid "Public Access"
+msgstr "Julkinen saatavuus"
+
+#: publications/models.py:25
+msgid ""
+"If checked, this PDF will be visible to everyone. If unchecked, it will be "
+"hidden from all users."
+msgstr ""
+"Jos tämä on valittuna, PDF näkyy kaikille. Muussa tapauksessa se piilotetaan "
+"kaikilta käyttäjiltä."
+
+#: publications/models.py:27
+msgid "Requires Login"
+msgstr "Vaatii sisäänkirjautumisen"
+
+#: publications/models.py:28
+msgid "If checked, users must be logged in to access this PDF"
+msgstr ""
+"Jos tämä on valittuna, käyttäjien on kirjauduttava sisään avatakseen tämän "
+"PDF:n."
+
+#: publications/models.py:31
+msgid "PDF File"
+msgstr "PDF-tiedosto"
+
+#: publications/models.py:32
+msgid "PDF Files"
+msgstr "PDF-tiedostot"
+
+#: social/models.py:11
+msgid "URL"
+msgstr "URL"
+
+#: social/models.py:12
+msgid "SHORTCODE"
+msgstr "LYHYTKOODI"
+
+#: social/models.py:20 templates/common/social/harassment_form.html:22
+msgid "Beskrivning av händelsen"
+msgstr "Tapahtuman kuvaus"
+
+#: social/models.py:33 social/models.py:34
+msgid "Emailmottagare för Trakasserianmälan"
+msgstr "Sähköpostivastaanottaja häirintäilmoituksille"
+
+#: staticpages/models.py:17
+msgid "Använd kategorins URL"
+msgstr "Käytä kategorian URL-osoitetta"
+
+#: staticpages/models.py:18 staticpages/models.py:45
+msgid "Url"
+msgstr "URL"
+
+#: staticpages/models.py:30
+msgid "Kräv inloggning"
+msgstr "Vaadi sisäänkirajutumista"
+
+#: staticpages/models.py:48
+msgid "Visa endast åt inloggade användare"
+msgstr "Näytä vain kirjautuneille käyttäjille"
+
+#: templates/biocum/date/components/mobile.html:3
+#: templates/biocum/date/components/sidebar.html:4
+#: templates/date/date/components/events.html:3
+#: templates/demo/date/components/events.html:3
+#: templates/demo/date/components/mobile.html:3
+#: templates/kk/date/april_start.html:88
+#: templates/kk/date/components/events.html:3
+#: templates/pulterit/date/components/events.html:3
+msgid "Evenemang"
+msgstr "Tapahtumat"
+
+#: templates/biocum/date/components/mobile.html:42
+#: templates/biocum/date/components/sidebar.html:45
+#: templates/date/date/components/events.html:42
+#: templates/demo/date/components/events.html:44
+#: templates/demo/date/components/mobile.html:42
+#: templates/kk/date/components/events.html:42
+#: templates/pulterit/date/components/events.html:42
+msgid "Inga aktiva evenemang hittades"
+msgstr "Tapahtumia ei löydetty"
+
+#: templates/biocum/date/components/mobile.html:45
+#: templates/biocum/date/components/sidebar.html:48
+#: templates/date/date/components/events.html:45
+#: templates/demo/date/components/events.html:47
+#: templates/demo/date/components/mobile.html:45
+#: templates/kk/date/components/events.html:45
+#: templates/pulterit/date/components/events.html:45
+msgid "Mera evenemang"
+msgstr "Lisää tapahtumia"
+
+#: templates/biocum/date/components/news.html:3
+#: templates/common/news/index.html:6
+#: templates/date/date/components/news.html:3
+#: templates/demo/date/components/news.html:3
+#: templates/kk/date/components/news.html:3
+#: templates/pulterit/date/components/news.html:3
+msgid "Nyheter"
+msgstr "Uutiset"
+
+#: templates/biocum/date/components/news.html:11
+#: templates/date/date/components/news.html:14
+#: templates/demo/date/components/news.html:11
+#: templates/kk/date/april_start.html:78
+#: templates/kk/date/components/news.html:10
+#: templates/pulterit/date/components/news.html:14
+msgid "Läs mera"
+msgstr "Lue lisää"
+
+#: templates/biocum/date/components/news.html:14
+#: templates/date/date/components/news.html:17
+#: templates/demo/date/components/news.html:14
+#: templates/kk/date/components/news.html:13
+#: templates/pulterit/date/components/news.html:17
+msgid "Inga nyheter hittades"
+msgstr "Uutisia ei löydetty"
+
+#: templates/biocum/date/components/news.html:16
+#: templates/date/date/components/news.html:19
+#: templates/demo/date/components/news.html:16
+#: templates/kk/date/april_start.html:83
+#: templates/kk/date/components/news.html:15
+#: templates/pulterit/date/components/news.html:19
+msgid "Mera nyheter"
+msgstr "Lisää uutisia"
+
+#: templates/biocum/events/arsfest.html:87
+#: templates/common/events/arsfest.html:98
+#: templates/common/events/baal_detail.html:63
+#: templates/common/events/detail.html:52
+#: templates/common/events/kk100_detail.html:64
+#: templates/common/events/tomtejakt.html:308
+#: templates/common/events/wappmiddag.html:64
+#: templates/date/events/arsfest.html:78
+#: templates/pulterit/events/arsfest.html:79
+msgid "Anmälda"
+msgstr "Ilmoittautuneet"
+
+#: templates/biocum/events/arsfest.html:108
+#: templates/common/events/arsfest.html:119
+#: templates/common/events/baal_detail.html:84
+#: templates/common/events/kk100_detail.html:85
+#: templates/common/events/tomtejakt.html:329
+#: templates/common/events/wappmiddag.html:85
+#: templates/date/events/arsfest.html:99
+#: templates/pulterit/events/arsfest.html:100
+msgid "Inga anmälda, var den första att anmäla dig!"
+msgstr "Ei ilmoittautuneita, ole ensimmäinen!"
+
+#: templates/biocum/events/arsfest.html:112
+#: templates/common/events/arsfest.html:123
+#: templates/common/events/baal_detail.html:88
+#: templates/common/events/kk100_detail.html:89
+#: templates/common/events/tomtejakt.html:333
+#: templates/common/events/wappmiddag.html:89
+#: templates/date/events/arsfest.html:103
+#: templates/pulterit/events/arsfest.html:104
+msgid ""
+"Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta "
+"styrelsen vid behov."
+msgstr ""
+"Osallistujalista on piilotettu, koska kyseessä on vanha tapahtuma. Ota "
+"tarvittaessa yhteyttä hallitukseen."
+
+#: templates/common/admin/base_site.html:4
+#: templates/common/admin/events/delete_participants_confirmation.html:4
+msgid "Django site admin"
+msgstr "Django site admin"
+
+#: templates/common/admin/base_site.html:7
+msgid "Django administration"
+msgstr "Django administration"
+
+#: templates/common/admin/base_site.html:17
+msgid "Welcome,"
+msgstr "Welcome,"
+
+#: templates/common/admin/base_site.html:22
+#: templates/common/unfold/helpers/userlinks.html:26
+msgid "View site"
+msgstr "View site"
+
+#: templates/common/admin/base_site.html:25
+msgid "Change password"
+msgstr "Vaihda salasanani"
+
+#: templates/common/admin/base_site.html:29
+msgid "Log out"
+msgstr "Log out"
+
+#: templates/common/admin/base_site.html:35
+#: templates/common/unfold/helpers/userlinks.html:12
+#: templates/pulterit/core/header.html:64
+#: templates/pulterit/core/header.html:79
+msgid "Language"
+msgstr "Kieli"
+
+#: templates/common/admin/events/delete_participants_confirmation.html:4
+#: templates/common/admin/events/delete_participants_confirmation.html:10
+msgid "Bekräfta borttagning"
+msgstr "Vahvista poisto"
+
+#: templates/common/admin/events/delete_participants_confirmation.html:14
+#, python-format
+msgid ""
+"\n"
+"          Det här tar bort en deltagare från valda evenemang.\n"
+"        "
+msgid_plural ""
+"\n"
+"          Det här tar bort %(counter)s deltagare från valda evenemang.\n"
+"        "
+msgstr[0] ""
+"\n"
+"          Tämä poistaa osallistujan valituista tapahtumista.\n"
+"        "
+msgstr[1] ""
+"\n"
+"          Tämä poistaa %(counter)s osallistujaa valituista tapahtumista.\n"
+"        "
+
+#: templates/common/admin/events/delete_participants_confirmation.html:38
+msgid "Inga deltagare hittades för de valda evenemangen."
+msgstr "Osallistujia ei löytynyt valituista tapahtumista."
+
+#: templates/common/admin/events/delete_participants_confirmation.html:54
+msgid "Avbryt"
+msgstr "Peruuta"
+
+#: templates/common/admin/events/delete_participants_confirmation.html:57
+msgid "Ta bort deltagare"
+msgstr "Poista osallistujat"
+
+#: templates/common/archive/detail.html:22
+msgid "Sida"
+msgstr "Sivu"
+
+#: templates/common/archive/detail.html:23
+msgid "Bild"
+msgstr "Kuva"
+
+#: templates/common/archive/detail.html:24
+msgid "Dela eller kopiera länk"
+msgstr "Jaa tai kopioi linkki"
+
+#: templates/common/archive/detail.html:25
+msgid "Delar..."
+msgstr "Jaetaan..."
+
+#: templates/common/archive/detail.html:26
+msgid "Länk delad"
+msgstr "Linkki jaettu"
+
+#: templates/common/archive/detail.html:27
+msgid "Länk kopierad"
+msgstr "Linkki kopioitu"
+
+#: templates/common/archive/detail.html:28
+msgid "Kunde inte dela eller kopiera länk"
+msgstr "Linkin jakaminen tai kopiointi epäonnistui"
+
+#: templates/common/archive/detail.html:29
+msgid "Laddar fler bilder..."
+msgstr "Ladataan lisää kuvia..."
+
+#: templates/common/archive/detail.html:30
+msgid "Kunde inte ladda fler bilder."
+msgstr "Lisäkuvien lataaminen epäonnistui."
+
+#: templates/common/archive/detail.html:31
+msgid "Ladda ner aktuell bild"
+msgstr "Lataa nykyinen kuva"
+
+#: templates/common/archive/document_index.html:7
+msgid "Dokument arkiv"
+msgstr "Dokumenttiarkisto"
+
+#: templates/common/archive/document_index.html:21
+msgid "Ladda upp dokument"
+msgstr "Lataa asiakirja"
+
+#: templates/common/archive/exam_detail.html:19
+msgid "Lägg till tentamen"
+msgstr "Lisää tentti"
+
+#: templates/common/archive/exams_index.html:17
+msgid "Lägg till arkiv"
+msgstr "Lisää arkisto"
+
+#: templates/common/archive/index.html:5
+#: templates/common/archive/picture_index.html:5
+msgid "Arkiv"
+msgstr "Arkiivi"
+
+#: templates/common/archive/index.html:19
+msgid "Skapa nytt album"
+msgstr "Luo uusi albumi"
+
+#: templates/common/archive/index.html:49
+#: templates/common/archive/picture_index.html:49
+msgid "Inga arkiv hittades..."
+msgstr "Arkistoja ei löytynyt..."
+
+#: templates/common/archive/partials/detail_gallery_shell.html:10
+msgid "Bildsidor"
+msgstr "Kuvasivut"
+
+#: templates/common/archive/partials/detail_gallery_shell.html:11
+msgid ""
+"Om automatisk bildladdning inte fungerar kan du bläddra mellan sidorna här."
+msgstr ""
+"Jos automaattinen kuvien lataus ei toimi, voit siirtyä sivujen välillä tästä."
+
+#: templates/common/archive/partials/detail_gallery_shell.html:34
+msgid ""
+"JavaScript krävs för automatisk bildladdning. Använd sidlänkarna ovan för "
+"att visa fler bilder."
+msgstr ""
+"Automaattinen kuvien lataus vaatii JavaScriptin. Käytä yllä olevia "
+"sivulinkkejä nähdäksesi lisää kuvia."
+
+#: templates/common/archive/partials/detail_header.html:4
+msgid "Publicerats"
+msgstr "Julkaistu"
+
+#: templates/common/archive/partials/detail_header.html:7
+#, python-format
+msgid "%(total_count)s bild"
+msgid_plural "%(total_count)s bilder"
+msgstr[0] "%(total_count)s kuva"
+msgstr[1] "%(total_count)s kuvaa"
+
+#: templates/common/archive/partials/detail_header.html:16
+#: templates/common/polls/detail.html:17 templates/common/polls/results.html:17
+msgid "Tillbaka"
+msgstr "Takaisin"
+
+#: templates/common/archive/partials/picture_items.html:8
+#, python-format
+msgid "Öppna bild %(image_number)s av %(total)s"
+msgstr "Avaa kuva %(image_number)s/%(total)s"
+
+#: templates/common/archive/partials/picture_items.html:14
+#, python-format
+msgid "Bild %(image_number)s av %(total)s i albumet"
+msgstr "Kuva %(image_number)s/%(total)s albumissa"
+
+#: templates/common/archive/picture_index.html:36
+#, python-format
+msgid "%(picture_count)s Bild"
+msgid_plural "%(picture_count)s Bilder"
+msgstr[0] "%(picture_count)s kuva"
+msgstr[1] "%(picture_count)s kuvaa"
+
+#: templates/common/archive/upload.html:5
+msgid "Ladda upp bilder"
+msgstr "Lataa kuvia"
+
+#: templates/common/core/404.html:9
+msgid "Page not found"
+msgstr "Sivua ei löytynyt"
+
+#: templates/common/core/404.html:23
+msgid "Sidan hittades inte"
+msgstr "Sivua ei löydetty"
+
+#: templates/common/core/404.html:25 templates/common/core/418.html:28
+#: templates/common/core/500.html:19
+msgid "Till startsidan"
+msgstr "Takaisin etusivulle"
+
+#: templates/common/core/418.html:9
+msgid "I'm a teapot"
+msgstr "Olen teepannu"
+
+#: templates/common/core/418.html:23
+msgid "Jag är en tekokare"
+msgstr "Olen teepannu"
+
+#: templates/common/core/418.html:26
+msgid "Inget vatten i glöggkokaren, tack"
+msgstr "Ei vettä glögikattilaan, kiitos"
+
+#: templates/common/core/500.html:9
+msgid "Server error"
+msgstr "Palvelinvirhe"
+
+#: templates/common/core/500.html:18
+msgid "Serverfel, försök igen om en stund"
+msgstr "Palvelinvirhe, kokeile uudestaan hetken kuluttua"
+
+#: templates/common/core/cookie_banner.html:6
+msgid ""
+"Vi använder cookies för att förbättra din upplevelse på vår webbplats. Genom "
+"att fortsätta använda webbplatsen godkänner du vår användning av cookies."
+msgstr ""
+"Käytämme evästeitä parantaaksemme käyttökokemustasi verkkosivustollamme. "
+"Jatkamalla verkkosivuston käyttöä hyväksyt evästeiden käytön."
+
+#: templates/common/core/cookie_banner.html:9
+msgid "Godkänn"
+msgstr "Hyväksy"
+
+#: templates/common/core/cookie_banner.html:10
+msgid "Avböj"
+msgstr "Hylkää"
+
+#: templates/common/core/footer.html:24 templates/pulterit/core/footer.html:12
+#, python-format
+msgid "%(association_name)s logo"
+msgstr "%(association_name)s logo"
+
+#: templates/common/core/footer.html:29
+#, python-format
+msgid "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
+msgstr ""
+"%(association_name)s:n hallitukseen voi ottaa yhteyttä seuraavalla tavalla."
+
+#: templates/common/core/footer.html:34
+msgid "E-post"
+msgstr "Sähköposti"
+
+#: templates/common/core/footer.html:38
+msgid "Address"
+msgstr "Osoite"
+
+#: templates/common/core/header.html:50 templates/pulterit/core/header.html:50
+msgid "Logga ut"
+msgstr "Kirjaudu ulos"
+
+#: templates/common/core/header.html:66
+msgid "Choose language"
+msgstr "Kieli"
+
+#: templates/common/events/baal_anmalan.html:21
+msgid "Kemistbaal Anmälning"
+msgstr "Kemistibaalin ilmoittautuminen"
+
+#: templates/common/events/detail.html:73
+msgid "Inga anmälda ännu, var den första!"
+msgstr "Ei ilmoittautuneita, ole ensimmäinen!"
+
+#: templates/common/events/detail.html:77
+msgid ""
+"Deltagarlistan har gömts eftersom det här är ett gammalt evenemang, kontakta "
+"styrelsen vid behov."
+msgstr ""
+"Osallistujalista on piilotettu, koska tämä on vanha tapahtuma. Ota "
+"tarvittaessa yhteyttä hallitukseen."
+
+#: templates/common/events/event_passcode.html:4
+#: templates/common/events/index.html:5
+msgid "Händelser"
+msgstr "Tapahtumat"
+
+#: templates/common/events/event_passcode.html:24
+msgid "Skicka"
+msgstr "Lähetä"
+
+#: templates/common/events/index.html:20
+msgid "Kommande händelser"
+msgstr "Tulevat tapahtumat"
+
+#: templates/common/events/index.html:59
+msgid "Inga aktiva händelser"
+msgstr "Ei aktiivisia tapahtumia"
+
+#: templates/common/events/index.html:63
+msgid "Tidigare händelser"
+msgstr "Aikaisemmat tapahtumat"
+
+#: templates/common/events/index.html:69
+msgid "Inga tidigare händelser"
+msgstr "Ei aikaisempia tapahtumia"
+
+#: templates/common/events/list.html:19
+msgid "Datum:"
+msgstr "Päivämäärä:"
+
+#: templates/common/events/list.html:66
+msgid "Inga deltagare..."
+msgstr "Ei ilmoittautuneita"
+
+#: templates/common/events/registering.html:8
+msgid "Anmälan stängs"
+msgstr "Ilmoittautuminen sulkeutuu"
+
+#: templates/common/events/registering.html:9
+msgid "OBS!"
+msgstr "HUOM!"
+
+#: templates/common/events/registering.html:9
+msgid "Anmälningen är bindande om inget annat meddelas."
+msgstr "Ilmoittautuminen on sitova."
+
+#: templates/common/events/registering.html:10
+msgid ""
+"Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på "
+"förhinder."
+msgstr "Muista peruttaa ilmoituksesi jos et pysty osallistumaan"
+
+#: templates/common/events/registering.html:59
+msgid "Anmäl"
+msgstr "Ilmoittaudu"
+
+#: templates/common/events/registering.html:64
+#, python-format
+msgid ""
+"Genom att anmäla dig godkänner du att %(ASSOCIATION_NAME_FULL)s lagrar ditt "
+"namn, din e-post samt eventuell annan nödvändig information. Under "
+"anmälningstiden syns den anmäldas namn i listan nedan. Efter evenemanget "
+"sparas informationen för statistiska ändamål och syns endast för hemsidans "
+"administratörer."
+msgstr ""
+"Ilmoittautumalla hyväksyt että %(ASSOCIATION_NAME_FULL)s säilyttää nimesi, "
+"sähköpostiosoitteesi sekä muu tarvittava tieto. Ilmoittautumisajan aikana "
+"ilmoittautuneen nimi näkyy alla olevassa listassa. Tapahtuman jälkeen tieto "
+"tallennetaan statistiikkakäytöön ja tieto näkyy ainoastaan verkkosivun "
+"ylläpitäjille."
+
+#: templates/common/events/registering.html:72
+msgid ""
+"Evenemanget är tyvärr fullt! Vänligen kontakta evenemangets kontaktperson"
+msgstr ""
+"Tapahtuma on valitettavasti täynnä. Ota yhteyttä tapahtuman yhteyshenkilöön."
+
+#: templates/common/events/registering.html:74
+msgid ""
+"Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan "
+"och meddelas om du får plats."
+msgstr ""
+"Tapahtuma on valitettavasti täynnä. Jos ilmoittaudut, sinut lisätään "
+"varasijalle ja sinulle ilmoitetaan, jos paikka vapautuu."
+
+#: templates/common/events/registration_state.html:7
+msgid "Anmälningstiden gick ut"
+msgstr "Ilmoittautuminen päättyi"
+
+#: templates/common/events/registration_state.html:9
+msgid "Anmälan öppnas"
+msgstr "Ilmoittautuminen avautuu"
+
+#: templates/common/members/certificate.html:5
+msgid "Medlemspass"
+msgstr "Jäsenpassi"
+
+#: templates/common/members/functionary.html:20
+msgid "Radera"
+msgstr "Poista"
+
+#: templates/common/members/functionary.html:69
+msgid "Lägg till"
+msgstr "Lisää"
+
+#: templates/common/members/functionary.html:78
+msgid "Är du säker på att du vill ta bort posten?"
+msgstr "Haluatko varmasti poistaa tämän merkinnän?"
+
+#: templates/common/members/registration/login.html:7
+msgid "Login"
+msgstr "Kirjaudu sisään"
+
+#: templates/common/members/registration/login.html:12
+msgid "Enter one of your backup tokens to continue."
+msgstr "Jatka antamalla yksi varakoodeistasi."
+
+#: templates/common/members/registration/login.html:22
+msgid "Use another authentication method:"
+msgstr "Käytä toista tunnistautumistapaa:"
+
+#: templates/common/members/registration/login.html:38
+msgid "Use backup token"
+msgstr "Käytä varakoodia"
+
+#: templates/common/members/registration/login.html:52
+msgid "Logga in med GitHub"
+msgstr "Logga in med GitHub"
+
+#: templates/common/members/registration/login.html:56
+msgid "Glömt lösenordet?"
+msgstr "Unohditko salansanasi?"
+
+#: templates/common/members/registration/login.html:58
+#: templates/common/members/signup.html:54
+msgid "Registrera dig"
+msgstr "Rekisteröidy"
+
+#: templates/common/members/registration/password_change_done.html:4
+#: templates/common/members/registration/password_change_done.html:13
+msgid "Password change successful"
+msgstr "Salasanan vaihto onnistui"
+
+#: templates/common/members/registration/password_change_done.html:14
+msgid "Your password was changed."
+msgstr "Salasanasi vaihdettiin."
+
+#: templates/common/members/registration/password_change_form.html:4
+#: templates/common/members/registration/password_change_form.html:12
+#: templates/common/members/userinfo.html:136
+msgid "Password change"
+msgstr "Salasanan vaihto"
+
+#: templates/common/members/registration/password_change_form.html:13
+msgid ""
+"Please enter your old password, for security’s sake, and then enter your new "
+"password twice so we can verify you typed it in correctly."
+msgstr ""
+"Anna turvallisuussyistä nykyinen salasanasi ja kirjoita uusi salasana "
+"kahdesti, jotta voimme varmistaa sen olevan oikein."
+
+#: templates/common/members/registration/password_change_form.html:72
+msgid "Change my password"
+msgstr "Vaihda salasanani"
+
+#: templates/common/members/registration/password_reset_complete.html:6
+#: templates/common/members/registration/password_reset_confirm.html:5
+#: templates/common/members/registration/password_reset_form.html:5
+#: templates/common/members/registration/password_reset_form.html:13
+msgid "Glömt lösenord"
+msgstr "Unohdin salasanani"
+
+#: templates/common/members/registration/password_reset_complete.html:15
+msgid "Ditt lösenord har updaterats"
+msgstr "Salasanasi on päivitetty"
+
+#: templates/common/members/registration/password_reset_complete.html:15
+msgid "Du kan nu logga in som vanligt"
+msgstr "Voit nyt kirjoittautua normaalisti"
+
+#: templates/common/members/registration/password_reset_complete.html:17
+msgid "Logga in"
+msgstr "Kirjaudu sisään"
+
+#: templates/common/members/registration/password_reset_confirm.html:15
+#: templates/common/members/registration/password_reset_confirm.html:19
+msgid "Byt lösenord"
+msgstr "Vaihda salasana"
+
+#: templates/common/members/registration/password_reset_confirm.html:25
+msgid ""
+"Denna länk är inte giltigt, det kan hända att länken redan använts. Vänligen "
+"fråga efter en ny länk."
+msgstr ""
+"Tämä linkki ei ole kelvollinen. Linkkiä on ehkä jo käytetty. Pyydä uusi "
+"linkki."
+
+#: templates/common/members/registration/password_reset_done.html:5
+msgid "Password reset - Email sent"
+msgstr "Salasanan palautus - Sähköposti lähetetty"
+
+#: templates/common/members/registration/password_reset_done.html:14
+msgid ""
+"Vi har skicket instruktionerna till din mail, ifall en användare är "
+"registrerad med denna epost. Du borde få mailet inom kort"
+msgstr ""
+"Olemme lähettäneet ohjeet sähköpostiisi, jos tällä osoitteella on "
+"rekisteröity käyttäjä. Viestin pitäisi saapua pian."
+
+#: templates/common/members/registration/password_reset_done.html:17
+msgid ""
+"Ifall du inte fått något mail. Säkerställ att du angett rätt e-post adress "
+"samt vänligen granska skräpkorgen."
+msgstr ""
+"Jos et saanut sähköpostia, varmista että annoit oikean sähköpostiosoitteen "
+"ja tarkista myös roskapostikansio."
+
+#: templates/common/members/registration/password_reset_done.html:19
+#: templates/common/members/registration/registration_complete.html:25
+msgid "Gå till Startsidan"
+msgstr "Kotisivulle"
+
+#: templates/common/members/registration/password_reset_email.html:3
+#, python-format
+msgid "För att inleda lösenordsåterställningen för kontot %(username)s,"
+msgstr "Aloittaaksesi tilin %(username)s salasanan palautuksen,"
+
+#: templates/common/members/registration/password_reset_email.html:4
+msgid "klicka på länken nedan:"
+msgstr "klikkaa alla olevaa linkkiä:"
+
+#: templates/common/members/registration/password_reset_email.html:8
+msgid ""
+"Ifall det inte går att klicka på länken, vänligen kopiera och klistra in "
+"länken i din webbläsare."
+msgstr "Jos linkkiä ei voi klikata, kopioi ja liitä se selaimeesi."
+
+#: templates/common/members/registration/password_reset_email.html:10
+msgid "Om ytterligare frågor uppstår, vänligen kontakta styrelsen."
+msgstr "Jos sinulla on lisäkysymyksiä, ota yhteyttä hallitukseen."
+
+#: templates/common/members/registration/password_reset_email.html:13
+msgid "Mvh,"
+msgstr "Ystävällisin terveisin,"
+
+#: templates/common/members/registration/password_reset_form.html:28
+msgid "Sänd"
+msgstr "Lähetä"
+
+#: templates/common/members/registration/registration_complete.html:5
+msgid "Registration completed"
+msgstr "Rekisteröinti valmis"
+
+#: templates/common/members/registration/registration_complete.html:14
+msgid "Styrelsen har blivit notifierad angående din anmälan."
+msgstr "Hallitus on ilmoitettu hakemuksestasi"
+
+#: templates/common/members/registration/registration_complete.html:18
+msgid ""
+"Kolla e-postadressen du registrerade dig med för ytterligare instruktioner"
+msgstr "Tarkista sähköpostisi saadaaksesi lisää ohjeita"
+
+#: templates/common/members/registration/registration_complete.html:22
+msgid ""
+"Du kan logga in <strong>efter</strong> att styrelsen har granskat och "
+"godkänt ditt konto."
+msgstr ""
+"Voit kirjautua sisään <strong>sen jälkeen</strong>, kun hallitus on "
+"tarkistanut ja hyväksynyt tilisi."
+
+#: templates/common/members/signup.html:5
+#: templates/common/members/signup.html:26
+msgid "Sign up"
+msgstr "Rekisteröidy"
+
+#: templates/common/members/signup.html:48
+#: templates/common/social/harassment_form.html:31
+msgid "Jag godkänner"
+msgstr "Hyväksyn"
+
+#: templates/common/members/signup.html:50
+#: templates/common/social/harassment_form.html:33
+msgid "villkoren"
+msgstr "käyttöehdot"
+
+#: templates/common/members/userinfo.html:4
+msgid "Användarinformation"
+msgstr "Käyttäjätiedot"
+
+#: templates/common/members/userinfo.html:65
+msgid "Edit"
+msgstr "Muokkaa"
+
+#: templates/common/members/userinfo.html:109
+msgid "Save"
+msgstr "Tallenna"
+
+#: templates/common/members/userinfo.html:110
+msgid "Cancel"
+msgstr "Peruuta"
+
+#: templates/common/members/userinfo.html:119
+msgid "GitHub-konto kopplat."
+msgstr "GitHub-tili linkitetty."
+
+#: templates/common/members/userinfo.html:122
+msgid "Koppla bort GitHub"
+msgstr "Koppla bort GitHub"
+
+#: templates/common/members/userinfo.html:125
+msgid "Inget GitHub-konto kopplat."
+msgstr "Ei linkitettyä GitHub-tiliä."
+
+#: templates/common/members/userinfo.html:128
+msgid "Koppla GitHub-konto"
+msgstr "Koppla GitHub-konto"
+
+#: templates/common/members/userinfo.html:140
+#: templates/common/two_factor/profile/disable.html:6
+msgid "Disable two-factor authentication"
+msgstr "Poista 2FA käytöstä"
+
+#: templates/common/members/userinfo.html:143
+#: templates/common/two_factor/core/backup_tokens.html:6
+msgid "Backup tokens"
+msgstr "Varakoodit"
+
+#: templates/common/members/userinfo.html:147
+#: templates/common/two_factor/core/setup.html:6
+msgid "Two-factor authentication"
+msgstr "Ota 2FA käyttöön"
+
+#: templates/common/members/userinfo.html:151
+msgid "Positions of trust"
+msgstr "Luottamustehtävät"
+
+#: templates/common/members/userinfo.html:154
+#, python-format
+msgid ""
+"To change your username or email address, contact the board at "
+"%(ASSOCIATION_EMAIL)s"
+msgstr ""
+"Jos haluat vaihtaa käyttäjätunnuksesi tai sähköpostiosoitteesi, ota yhteyttä "
+"hallitukseen osoitteessa %(ASSOCIATION_EMAIL)s"
+
+#: templates/common/news/article.html:18 templates/common/news/author.html:18
+#: templates/date/news/article.html:21 templates/pulterit/news/article.html:20
+#, python-format
+msgid "Skriven %(published_time)s av"
+msgstr "Skriven %(published_time)s av"
+
+#: templates/common/news/author.html:29
+msgid "Inga artiklar hittades..."
+msgstr "Artikkeleita ei löytynyt..."
+
+#: templates/common/news/index.html:40 templates/date/news/index.html:43
+#: templates/pulterit/news/index.html:42
+msgid "Läs mera..."
+msgstr "Lue lisää..."
+
+#: templates/common/news/index.html:45 templates/date/news/index.html:48
+#: templates/pulterit/news/index.html:47
+msgid "Inga nyheter hittades..."
+msgstr "Ei uutisia tällä hetkellä"
+
+#: templates/common/polls/detail.html:4 templates/common/polls/index.html:4
+#: templates/common/polls/results.html:4
+msgid "Poll"
+msgstr "Kysely"
+
+#: templates/common/polls/index.html:30
+msgid "Det finns inga aktiva omröstningar"
+msgstr "Aktiivisia äänestyksiä ei ole"
+
+#: templates/common/polls/results.html:20
+msgid "Resultat: "
+msgstr "Tulokset: "
+
+#: templates/common/polls/results.html:25
+#, python-format
+msgid "%(choice_text)s: %(vote_count)s vote -- %(vote_percentage)s%%"
+msgid_plural "%(choice_text)s: %(vote_count)s votes -- %(vote_percentage)s%%"
+msgstr[0] "%(choice_text)s: %(vote_count)s vote -- %(vote_percentage)s%%"
+msgstr[1] "%(choice_text)s: %(vote_count)s votes -- %(vote_percentage)s%%"
+
+#: templates/common/polls/results.html:33
+#, python-format
+msgid "Totala röster: %(total_votes)s"
+msgstr "Ääniä yhteensä: %(total_votes)s"
+
+#: templates/common/polls/results.html:38
+msgid "Resultaten är gömda"
+msgstr "Tulokset on piilotettu"
+
+#: templates/common/publications/list.html:5
+msgid "Publications"
+msgstr "Julkaisut"
+
+#: templates/common/publications/list.html:16
+msgid "Publikationer"
+msgstr "Julkaisut"
+
+#: templates/common/publications/list.html:24
+msgid "Författare"
+msgstr "Kirjoittaja"
+
+#: templates/common/publications/list.html:32
+msgid "Det finns inga publikationer."
+msgstr "Julkaisuja ei ole."
+
+#: templates/common/publications/list.html:40
+msgid "first"
+msgstr "ensimmäinen"
+
+#: templates/common/publications/list.html:41
+msgid "previous"
+msgstr "edellinen"
+
+#: templates/common/publications/list.html:45
+#, python-format
+msgid "Page %(page_number)s of %(total_pages)s."
+msgstr "Sivu %(page_number)s/%(total_pages)s."
+
+#: templates/common/publications/list.html:51
+msgid "next"
+msgstr "seuraava"
+
+#: templates/common/publications/list.html:52
+msgid "last"
+msgstr "viimeinen"
+
+#: templates/common/social/harassment_form.html:11
+msgid "Rapportera trakasserier och eventuella brister med jämlikhetsplanen"
+msgstr ""
+"Ilmoita häirinnästä ja mahdollisista yhdenvertaisuussuunnitelman puutteista"
+
+#: templates/common/social/harassment_form.html:13
+#, python-format
+msgid ""
+"Du kan rapportera trakasserier och brister i jämlikhetsplanen antingen "
+"anonymt eller ange din kontaktinformation. Vi tar alla former av "
+"trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en "
+"trygg och respektfull miljö för alla medlemmar. %(association_name)ss "
+"trygghetspersoner behandlar alla rapporteringar av trakasserier och tar "
+"kontakt till %(association_short)ss styrelse och/eller ÅAS trakasseriombud "
+"om det så önskas."
+msgstr ""
+"Voit ilmoittaa häirinnästä ja yhdenvertaisuussuunnitelman puutteista joko "
+"anonyymisti tai antamalla yhteystietosi. Suhtaudumme kaikkeen häirintään "
+"vakavasti ja ryhdymme toimiin turvallisen ja kunnioittavan ympäristön "
+"ylläpitämiseksi kaikille jäsenille. %(association_name)ss "
+"turvallisuushenkilöt käsittelevät kaikki häirintäilmoitukset ja ottavat "
+"haluttaessa yhteyttä %(association_short)ss hallitukseen ja/tai ÅAS:n "
+"häirintäyhdyshenkilöihin."
+
+#: templates/common/social/harassment_form.html:26
+msgid "Ange din Email om du vill bli kontaktad"
+msgstr "Anna sähköpostiosoitteesi, jos haluat että sinuun otetaan yhteyttä"
+
+#: templates/common/social/harassment_form.html:37
+msgid "Submit"
+msgstr "Lähetä"
+
+#: templates/common/social/harassment_success.html:10
+msgid "Tack för att du rapporterade."
+msgstr "Kiitos ilmoituksestasi."
+
+#: templates/common/staticpages/staticpage.html:26
+msgid "Öppna originaldokumentet"
+msgstr "Avaa alkuperäinen asiakirja"
+
+#: templates/common/staticpages/staticpage.html:36
+msgid "Logga in för att se den här sidan"
+msgstr "Kirjaudu sisään nähdäksesi tämän sivun"
+
+#: templates/common/two_factor/_wizard_actions.html:6
+msgid "Back"
+msgstr "Back"
+
+#: templates/common/two_factor/_wizard_actions.html:10
+msgid "Continue"
+msgstr "Jatka"
+
+#: templates/common/two_factor/core/backup_tokens.html:7
+msgid ""
+"Generate backup tokens to keep access if your authenticator app is "
+"unavailable."
+msgstr ""
+"Luo varakoodit, jotta pääset edelleen sisään, jos todennussovelluksesi ei "
+"ole käytettävissä."
+
+#: templates/common/two_factor/core/backup_tokens.html:20
+msgid "Generate new backup tokens"
+msgstr "Luo uudet varakoodit"
+
+#: templates/common/two_factor/core/setup.html:9
+msgid ""
+"Add an authenticator app to protect your account with a second login step."
+msgstr ""
+"Lisää todennussovellus suojaamaan tiliäsi toisella kirjautumisvaiheella."
+
+#: templates/common/two_factor/core/setup.html:11
+msgid "Choose how you want to verify login attempts."
+msgstr "Valitse, miten haluat vahvistaa kirjautumisyritykset."
+
+#: templates/common/two_factor/core/setup.html:13
+msgid ""
+"Scan this QR code with your authenticator app, or enter the secret manually."
+msgstr ""
+"Skannaa tämä QR-koodi todennussovelluksellasi tai syötä salainen avain käsin."
+
+#: templates/common/two_factor/core/setup.html:15
+msgid "QR code for authenticator app setup"
+msgstr "QR-koodi todennussovelluksen käyttöönottoon"
+
+#: templates/common/two_factor/core/setup.html:17
+msgid "Secret key"
+msgstr "Salainen avain"
+
+#: templates/common/two_factor/core/setup.html:19
+msgid "Then enter the code generated by your app."
+msgstr "Anna sitten sovelluksen luoma koodi."
+
+#: templates/common/two_factor/profile/disable.html:7
+msgid "This removes the extra verification step from your account."
+msgstr "Tämä poistaa ylimääräisen vahvistusvaiheen tililtäsi."
+
+#: templates/common/two_factor/profile/disable.html:24
+msgid "Disable"
+msgstr "Poista käytöstä"
+
+#: templates/common/unfold/helpers/userlinks.html:39
+msgid "Create"
+msgstr "Luo"
+
+#: templates/date/date/components/about.html:4
+msgid "Om oss"
+msgstr "Meistä"
+
+#: templates/date/date/components/about.html:7
+msgid ""
+"Datateknologerna vid Åbo Akademi rf är en förening för studerande vid "
+"utbildningsprogrammet i datateknik vid Fakulteten för Naturvetenskaper och "
+"Teknik vid Åbo Akademi, samt för studerande vid övriga tekniskt inriktade "
+"utbildningslinjer i databehandling. Föreningen grundades 1999, närmare "
+"bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare "
+"och stiliga tofsmössor."
+msgstr ""
+"Datateknologerna vid Åbo Akademi rf on yhdistys Åbo Akademin "
+"luonnontieteiden ja teknillisen tiedekunnan tietotekniikan koulutusohjelman "
+"opiskelijoille sekä muiden tietojenkäsittelyn teknisesti suuntautuneiden "
+"koulutuslinjojen opiskelijoille. Yhdistys on perustettu vuonna 1999, "
+"tarkemmin sanottuna 24.8 16:32 Jäsenet tunnistaa mustista haalareistaan ja "
+"tyylikkäistä teekkarilakeistaan."
+
+#: templates/date/date/components/extras.html:3
+msgid "Annat"
+msgstr "Muuta"
+
+#: templates/date/date/components/extras.html:4
+msgid "Trakasseriombud"
+msgstr "Häirintäyhdyshenkilöt"
+
+#: templates/date/date/components/extras.html:6
+msgid ""
+"Om du upplever trakasserier i samband med Datateknologernas verksamhet, "
+"vänligen"
+msgstr ""
+"Jos koet epäasiallista käytöstä Datateknologereiden toiminnan aikana, voit"
+
+#: templates/date/date/components/extras.html:7
+msgid "rapportera"
+msgstr "ilmoittaa"
+
+#: templates/date/date/components/extras.html:8
+msgid ""
+"detta via hemsidan. Vi tar alla former av trakasserier på allvar och kommer "
+"att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för "
+"alla medlemmar."
+msgstr ""
+"asiasta verkkosivumme kautta. Suhtaudumme kaikenlaisen epäasiallisen "
+"käytöksen kohtaan vakavasti ja ryhdymme toimiin ylläpitääksemme turvallista "
+"ja kunnioittavaa ympäristöä kaikille jäsenille."
+
+#: templates/date/date/components/header.html:8
+msgid "Datateknologerna"
+msgstr "Datateknologerna"
+
+#: templates/date/date/components/header.html:9
+msgid "vid Åbo Akademi rf"
+msgstr "vid Åbo Akademi rf"
+
+#: templates/date/date/components/partners.html:12
+#: templates/demo/date/components/partners.html:12
+msgid "Vill du samarbeta med DaTe?"
+msgstr "Haluatko tehdä yhteistyötä DaTen kanssa?"
+
+#: templates/kk/date/april_start.html:81
+msgid "inga nyheter hittades"
+msgstr "Uutisia ei löydetty"
+
+#: templates/kk/date/april_start.html:96
+msgid "inga aktiva evenemang hittades"
+msgstr "Tapahtumia ei löydetty"
+
+#: templates/pulterit/core/footer.html:23
+msgid "Developed by"
+msgstr "Kehittänyt"
+
+#: templates/pulterit/date/components/partners.html:8
+#: templates/pulterit/date/components/partners.html:12
+msgid "Partner logo"
+msgstr "Partner logo"
+
+#~ msgid "Please check this box to continue."
+#~ msgstr "Valitse tämä ruutu jatkaaksesi."
+
+#~ msgid "sedan"
+#~ msgstr "sitten"
+
+#~ msgid "om"
+#~ msgstr "kuluttua"
+
+#~ msgid "Bilder"
+#~ msgstr "Kuvat"
+
+#~ msgid "Det finns"
+#~ msgstr "Jäljellä"
+
+#~ msgid "platser!"
+#~ msgstr "paikkaa!"
+
+#~ msgid "Skriven "
+#~ msgstr "Kirjoitettu "
+
+#~ msgid "av"
+#~ msgstr "kirjoittanut"
+
+#~ msgid " av "
+#~ msgstr " kirjoittanut "
+
+#~ msgid "Page"
+#~ msgstr "Sivu"
+
+#~ msgid "of"
+#~ msgstr "/"
+
+#~ msgid "Joke"
+#~ msgstr "Joke"
+
+#~ msgid "Medlemsprofil"
+#~ msgstr "Jäsenprofiili"
+
+#~ msgid "Tvåfaktorsautentisering"
+#~ msgstr "Kaksivaiheinen tunnistautuminen"
+
+#~ msgid "Aktiverad"
+#~ msgstr "Käytössä"
+
+#~ msgid "Inte aktiverad"
+#~ msgstr "Ei käytössä"
+
+#~ msgid "Email:"
+#~ msgstr "Sähköposti:"
+
+#~ msgid "Förnamn:"
+#~ msgstr "Etunimi:"
+
+#~ msgid "Efternamn:"
+#~ msgstr "Sukunimi:"
+
+#~ msgid "Telefonnummer:"
+#~ msgstr "Puhelinnumero:"
+
+#~ msgid "Adress:"
+#~ msgstr "Osoite:"
+
+#~ msgid "Zip kod:"
+#~ msgstr "Postinumero:"
+
+#~ msgid "Stad:"
+#~ msgstr "Kaupunki:"
+
+#~ msgid "Land:"
+#~ msgstr "Maa:"
+
+#~ msgid "Medlems typ:"
+#~ msgstr "Jäsentyyppi:"
+
+#, python-format
+#~ msgid ""
+#~ "För att ändra ditt användarnamn eller e-post, kontakta styrelsen på "
+#~ "%(ASSOCIATION_EMAIL)s"
+#~ msgstr ""
+#~ "Jos haluat vaihtaa käyttäjätunnuksesi tai sähköpostiosoitteesi, ota "
+#~ "yhteyttä hallitukseen osoitteessa %(ASSOCIATION_EMAIL)s"
+
+#~ msgid "Member profile"
+#~ msgstr "Jäsenprofiili"
+
+#~ msgid "Enabled"
+#~ msgstr "Käytössä"
+
+#~ msgid "Not enabled"
+#~ msgstr "Ei käytössä"
+
+#~ msgid "First name:"
+#~ msgstr "Etunimi:"
+
+#~ msgid "Last name:"
+#~ msgstr "Sukunimi:"
+
+#~ msgid "Phone number:"
+#~ msgstr "Puhelinnumero:"
+
+#~ msgid "Address:"
+#~ msgstr "Osoite:"
+
+#~ msgid "Zip code:"
+#~ msgstr "Postinumero:"
+
+#~ msgid "City:"
+#~ msgstr "Kaupunki:"
+
+#~ msgid "Country:"
+#~ msgstr "Maa:"
+
+#~ msgid "Enter your username or email address and password."
+#~ msgstr "Anna käyttäjätunnuksesi tai sähköpostiosoitteesi ja salasanasi."
+
+#~ msgid "Back to profile"
+#~ msgstr "Takaisin profiiliin"
+
+#~ msgid "Registreringsdatum"
+#~ msgstr "Rekisteröintipäivämäärä"
+
+#~ msgid "Processerad"
+#~ msgstr "Prosessoitu"
+
+#~ msgid "Mera nyheter..."
+#~ msgstr "Lisää uutisia..."

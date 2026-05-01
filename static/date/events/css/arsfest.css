@@ -1,0 +1,420 @@
+/* NEW STUFF */
+
+@import url("https://fonts.googleapis.com/css2?family=Amethysta&display=swap");
+
+:root {
+  /* make text boxes slightly less transparent and more green */
+  --opacityColor: rgba(6, 56, 32, 0.85);
+  /*--opacityColor: rgba(223, 223, 223, 0.55);*/
+  --backdropBlur: blur(2px);
+  --mainArsfestColor: var(--silver);
+  --mainArsfestTextColor: var(--lightSilver2);
+  --mainArsfestButtonHoverColor: var(--darkSilver2);
+  --arsfest-dark-green: #0a3925;
+  --arsfest-dark-green-hover: #0d3927;
+  --arsfest-font: "Josefin Sans", sans-serif;
+  z-index: inherit;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.container-md {
+  padding-top: 10vh;
+  min-height: 100vh;
+  font-family: var(--arsfest-font);
+  text-align: start;
+  align-content: start;
+  font-weight: bold;
+  background-position: top;
+  border-bottom: 3px solid var(--primaryColor);
+}
+
+.content {
+  position: relative;
+  background-color: rgba(0, 0, 0, 0.8);
+  border: 1px solid var(--mainArsfestColor);
+  color: var(--mainArsfestTextColor);
+  font-size: 1em;
+}
+
+/* if backdrop support: very transparent and blurred */
+@supports (
+  (-webkit-backdrop-filter: blur(2em)) or (backdrop-filter: blur(2em))
+) {
+  .content {
+    background-color: var(--opacityColor);
+    -webkit-backdrop-filter: var(--backdropBlur);
+    backdrop-filter: var(--backdropBlur);
+  }
+}
+
+.content a,
+.ball-content h2,
+.ball-content h1 {
+  color: var(--mainArsfestTextColor);
+}
+
+.ball-content {
+  color: var(--mainArsfestTextColor);
+}
+
+/* fade animations start*/
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* fade animations start*/
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@-moz-keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@-o-keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@-ms-keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+/* fade animations end */
+
+/* shake animation start */
+
+@keyframes shake {
+  0% {
+    transform: translate(1px, 1px) rotate(0deg);
+  }
+  10% {
+    transform: translate(-1px, -2px) rotate(-1deg);
+  }
+  20% {
+    transform: translate(-3px, 0px) rotate(1deg);
+  }
+  30% {
+    transform: translate(3px, 2px) rotate(0deg);
+  }
+  40% {
+    transform: translate(1px, -1px) rotate(1deg);
+  }
+  50% {
+    transform: translate(-1px, 2px) rotate(-1deg);
+  }
+  60% {
+    transform: translate(-3px, 1px) rotate(0deg);
+  }
+  70% {
+    transform: translate(3px, 1px) rotate(-1deg);
+  }
+  80% {
+    transform: translate(-1px, -1px) rotate(1deg);
+  }
+  90% {
+    transform: translate(1px, 2px) rotate(0deg);
+  }
+  100% {
+    transform: translate(1px, -2px) rotate(-1deg);
+  }
+}
+
+/*shake animation end*/
+
+/*spin animation start*/
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(720deg);
+  }
+}
+
+/*spin animation end*/
+
+.header-box {
+  overflow: hidden;
+}
+
+.periodic-table-square {
+  --text-glow-base-color: #ff7833;
+  --text-glow-color: white;
+  width: 300px !important;
+  height: 300px !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+}
+
+.periodic-table-inner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  width: 200px;
+  height: 200px;
+  position: relative;
+}
+.periodic-table-number-container {
+  position: relative;
+  z-index: 1;
+  top: -10px;
+  left: -57px;
+}
+
+.periodic-table-date-container {
+  position: relative;
+  z-index: 1;
+  top: 20px;
+  /* left: 70px; */
+}
+
+.glowing-text-orange {
+  /* remove the orange glow; keep text readable with site text color */
+  color: var(--mainArsfestTextColor);
+  text-shadow: none;
+}
+
+.periodic-table-date-container > h2 {
+  font-size: 1.1em;
+}
+.periodic-table-inner > h2 {
+  font-size: 3em;
+}
+.card-shine-effect {
+  color: orange;
+  margin: 0px;
+}
+
+.flex-container-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lava-container {
+  z-index: 1;
+  position: relative;
+}
+
+.lava-container::after {
+  content: "";
+  position: absolute;
+  top: -20px;
+  left: 0;
+  width: 100%;
+  height: calc(100% + 40px);
+  /* pseudo-element kept but made invisible to remove container glow */
+  background: transparent !important;
+  z-index: -1;
+  opacity: 0 !important;
+  filter: none !important;
+  transform: none !important;
+  pointer-events: none !important;
+}
+
+.lava-container-bottom::after {
+  top: 20px;
+  height: calc(100% + 20px);
+  /* also disable the bottom pseudo-element's visuals */
+  background: transparent !important;
+  opacity: 0 !important;
+  filter: none !important;
+  pointer-events: none !important;
+}
+
+.ball-link {
+  z-index: 3;
+  /* Make the ball-link text green and disable any glow */
+  color: #2ecc71 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+}
+
+/* Ensure hover/focus states don't re-introduce a glow */
+.ball-link:hover,
+.ball-link:focus,
+.ball-nav a.ball-link:hover,
+.ball-nav a.ball-link:focus {
+  color: #2ecc71 !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+  filter: none !important;
+  outline: none !important;
+}
+
+.ball-nav {
+  position: relative;
+  text-align: center;
+  margin: 8px;
+}
+
+.ball-nav a {
+  color: #ffffff !important;
+  margin: 5px;
+  padding: 10px;
+  background-color: var(--arsfest-dark-green) !important;
+  border-radius: 5px;
+  transition: 0.3s;
+  border: 1px solid var(--mainArsfestColor);
+}
+
+.ball-nav a:hover {
+  background-color: var(--arsfest-dark-green-hover) !important;
+  color: #ffffff !important;
+  box-shadow: none;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+}
+
+.ball-nav a:active {
+  transform: scale(1.05);
+}
+
+.text-content div > *,
+.anmalan > *,
+.anmalda > * {
+  animation: fadeIn ease 2s;
+  -webkit-animation: fadeIn ease 2s;
+  -moz-animation: fadeIn ease 2s;
+  -o-animation: fadeIn ease 2s;
+  -ms-animation: fadeIn ease 2s;
+}
+
+.alert-danger,
+.errorlist,
+.warning {
+  color: rgb(201, 99, 88) !important;
+}
+
+footer {
+  display: none;
+}
+
+.navbar {
+  display: none;
+}
+
+form p > * {
+  width: 100%;
+}
+
+form label {
+  font-family: var(--arsfest-font) !important;
+}
+
+form select {
+  font-family: var(--arsfest-font) !important;
+}
+
+form input {
+  font-family: var(--arsfest-font) !important;
+}
+
+form button {
+  font-family: var(--arsfest-font) !important;
+  background-color: var(--arsfest-dark-green) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--mainArsfestColor) !important;
+}
+
+form button:hover {
+  background-color: var(--arsfest-dark-green-hover) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+}
+
+form button:active {
+  transform: scale(1.05);
+}
+
+.event-full {
+  color: #e4001b;
+}
+
+th {
+  padding-bottom: 1rem;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 8px;
+}
+tr:hover {
+  transition: 200ms;
+  background-color: var(--mainArsfestButtonHoverColor);
+  color: var(--textColorLight);
+}
+
+@keyframes glower {
+  0% {
+    background-position: 0 0;
+  }
+
+  50% {
+    background-position: 400% 0;
+  }
+
+  100% {
+    background-position: 0 0;
+  }
+}
+
+.inner {
+  background-color: var(--opacityColor);
+  padding: var(--defaultPadding);
+}
+
+/* Needed for Viggos easter Greggs */
+.periodic-table-square:hover {
+  transform: scale(1.01);
+}
+.periodic-table-square:active {
+  transform: scale(1.05);
+}

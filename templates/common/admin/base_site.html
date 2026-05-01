@@ -1,0 +1,48 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<div id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></div>
+{% if user.is_anonymous %}
+  {% include "admin/color_theme_toggle.html" %}
+{% endif %}
+{% endblock %}
+
+{% block usertools %}
+{% if has_permission %}
+<div id="user-tools">
+    {% block welcome-msg %}
+    {% translate 'Welcome,' %}
+    <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+    {% endblock %}
+    {% block userlinks %}
+    {% if site_url %}
+    <a href="{{ site_url }}">{% translate 'View site' %}</a> /
+    {% endif %}
+    {% if user.has_usable_password %}
+    <a href="{% url 'admin:password_change' %}">{% translate 'Change password' %}</a> /
+    {% endif %}
+    <form id="logout-form" method="post" action="{% url 'admin:logout' %}">
+        {% csrf_token %}
+        <button type="submit">{% translate 'Log out' %}</button>
+    </form>
+    {% if ENABLE_LANGUAGE_FEATURES and LANGUAGES|length > 1 %}
+    /
+    <form action="{% url 'set_lang' %}" method="post" style="display:inline;">
+        {% csrf_token %}
+        <label for="admin-language-switcher" class="visually-hidden">{% trans "Language" %}</label>
+        <select id="admin-language-switcher" name="lang" onchange="this.form.submit()" style="margin: 0 0.35rem;">
+            {% get_current_language as CURRENT_LANGUAGE %}
+            {% for language in LANGUAGES %}
+            <option value="{{ language.0 }}"{% if language.0 == CURRENT_LANGUAGE %} selected{% endif %}>{{ language.1 }}</option>
+            {% endfor %}
+        </select>
+    </form>
+    {% endif %}
+    {% include "admin/color_theme_toggle.html" %}
+    {% endblock %}
+</div>
+{% endif %}
+{% endblock %}

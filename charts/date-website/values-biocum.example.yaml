@@ -1,0 +1,31 @@
+# Example per-association values for Biologica.
+# Use after values-hetzner.yaml and values-backblaze-b2.example.yaml.
+
+django:
+  projectName: biocum
+  allowedHosts:
+    - biologica.fi
+    - www.biologica.fi
+  allowedOrigins:
+    - https://biologica.fi
+    - https://www.biologica.fi
+
+ingress:
+  hosts:
+    - host: biologica.fi
+      paths:
+        - path: /
+          pathType: Prefix
+
+media:
+  s3:
+    bucketName: "biocum-website-media"
+    privateBucketName: "biocum-website-private"
+    publicBucketName: "biocum-website-public"
+    privateLocation: "biocum/media"
+    publicLocation: "biocum/public"
+
+backups:
+  objectStorage:
+    bucketName: "biocum-website-backups"
+    prefix: "biocum-website/postgresql"

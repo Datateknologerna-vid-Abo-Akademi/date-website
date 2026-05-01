@@ -6,9 +6,12 @@ app_name = 'news'
 
 urlpatterns = [
     path('feed/', feed.LatestPosts()),
-    # This is a mess because of lack of username validation
-    re_path(r'author/(?P<author>[\w\s.@\u00C0-\u00FF\u00C5\u00C4\u00D6\u00E5\u00E4\u00F6-]+)/$', views.author,
-            name='author'),
+    # Keep this regex to support legacy usernames that may contain spaces or special characters
+    re_path(
+        r'author/(?P<author>[\w\s.@\u00C0-\u00FF\u00C5\u00C4\u00D6\u00E5\u00E4\u00F6-]+)/$',
+        views.author,
+        name='author',
+    ),
     path('', views.index, name='index'),
     path('<slug:category>/', views.category_index, name='aa_index'),
     path('articles/<slug:slug>/', views.article, name='detail'),

@@ -3,6 +3,7 @@ import os
 
 from django_ckeditor_5.fields import CKEditor5Field
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
@@ -45,6 +46,9 @@ class StaticPage(models.Model):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        return reverse('staticpages:page', args=[self.slug])
+
     def update(self):
         self.modified_time = timezone.now()
         self.save()
@@ -57,12 +61,17 @@ class StaticUrl(models.Model):
     dropdown_element = models.PositiveSmallIntegerField(_('#'), blank=True)
     logged_in_only = models.BooleanField(_('Visa endast åt inloggade användare'), default=False)
 
+    class Meta:
+        ordering = ['dropdown_element']
+
     def __str__(self):
         return self.title
 
     def save(self, *args, **kwargs):
         if self.dropdown_element is None:
-            max_number = StaticPageNav.objects.filter(category_name=self.category).aggregate(models.Max('dropdown_element'))['dropdown_element__max']
+            max_number = StaticUrl.objects.filter(category=self.category).aggregate(
+                models.Max('dropdown_element')
+            )['dropdown_element__max']
             if max_number is not None:
                 self.dropdown_element = max_number + 10
             else:

@@ -9,9 +9,12 @@
     <div class="container-size text-center" style="max-width: 1000px;">
         <div class="content">
             <h1>{% translate "Rapportera trakasserier och eventuella brister med jämlikhetsplanen" %}</h1>
-            <p>Du kan rapportera trakasserier och brister i jämlikhetsplanen antingen anonymt eller ange din kontaktinformation. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar.<br>
-            <br>
-            {{ ASSOCIATION_NAME }}s trygghetspersoner behandlar alla rapporteringar av trakasserier och tar kontakt till {{ ASSOCIATION_NAME_SHORT }}s styrelse och/eller ÅAS trakasseriombud om det så önskas.
+            <p>
+            {% blocktranslate with association_name=ASSOCIATION_NAME association_short=ASSOCIATION_NAME_SHORT trimmed %}
+            Du kan rapportera trakasserier och brister i jämlikhetsplanen antingen anonymt eller ange din kontaktinformation. Vi tar alla former av trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för alla medlemmar.
+
+            {{ association_name }}s trygghetspersoner behandlar alla rapporteringar av trakasserier och tar kontakt till {{ association_short }}s styrelse och/eller ÅAS trakasseriombud om det så önskas.
+            {% endblocktranslate %}
             </p>
             <form method="post">
                 {% csrf_token %}
@@ -25,13 +28,13 @@
                 </div>
                 <p class="consent-form-group mt-2">
                   <input type="checkbox" name="consent" required/>
-                  Jag godkänner
+                  {% trans "Jag godkänner" %}
                   <a href="http://{{ request.get_host }}/pages/registerbeskrivning/" target="_blank">
-                    villkoren <i class="fa fa-external-link" aria-hidden="true"></i>
+                    {% trans "villkoren" %} <i class="fa fa-external-link" aria-hidden="true"></i>
                   </a>
                 </p>
                 <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}" data-callback="javascriptCallback"></div>
-                <input class="mt-2" type="submit" value="Submit">
+                <input class="mt-2" type="submit" value="{% trans 'Submit' %}">
             </form>
         </div>
     </div>

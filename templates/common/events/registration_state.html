@@ -1,0 +1,10 @@
+{% load i18n %}
+{% load localized_time %}
+
+{% if can_register_now %}
+    {% include 'events/registering.html' %}
+{% elif registration_closed %}
+    <h4 id="no-registration">{% trans "Anmälningstiden gick ut" %} {{ event.sign_up_deadline|localized_timesince_ago }}</h4>
+{% elif next_signup_time %}
+    <p>{% trans "Anmälan öppnas" %} {{ next_signup_time|date:"j.n H:i" }}{{ next_signup_time|localized_timeuntil|comma_if }}</p>
+{% endif %}

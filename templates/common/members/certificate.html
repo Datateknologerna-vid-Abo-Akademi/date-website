@@ -3,10 +3,11 @@
 {% load i18n %}
 {% load static %}
 {% block title %}{% trans 'Medlemspass' %}{% endblock %}
+{% block extra_head %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'members/css/certificate.css' %}" type="text/css">
+{% endblock %}
 {% block content %}
-    <head>
-        <link rel="stylesheet" href="{% static 'members/css/certificate.css' %}" type="text/css">
-    </head>
     <div class="container-md min-vh-100 container-margin-top">
         <div class="container-size">
             <div class="content text-center">
@@ -15,7 +16,7 @@
                 {% endif %}
                 {% if user.is_authenticated %}
                     {% if user.get_active_subscription %}
-                        {% if user.membership_type != 3 %}
+                        {% if user.membership_type.permission_profile != 3 %}
                             <div class="validation valid">
                         {% else %}
                             <div class="validation supporting">
@@ -27,6 +28,9 @@
                             </div>
                             <div class="card-body">
                                 <h5>{{ user.get_str_membership_type }} - Aktiv</h5>
+                                {% if user.active_payment %}
+                                    <h6>Giltig till: {{ user.active_payment.date_expires|date:"d.m.Y" }}</h6>
+                                {% endif %}
                                 <h5 class="card-title">{{ user.first_name }} {{ user.last_name }}</h5>
                                 <h6>{{ user.username }}</h6>
                             </div>

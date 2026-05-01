@@ -1,14 +1,16 @@
 {% extends 'core/base.html' %}
-{% load app_filters %}
+{% load shared_filters %}
 {% load static %}
 {% load i18n %}
 {% block title %}{% trans "Arkiv" %}{% endblock %}
 
-{% block content %}
-<head>
+{% block extra_head %}
+    {{ block.super }}
     <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
     <link rel="stylesheet" href="{% static 'events/css/event-card.css' %}"type="text/css">
-</head>
+{% endblock %}
+
+{% block content %}
     <div class="container-md min-vh-100 container-margin-top">
         <div class="container-size" style="max-width: 600px;">
             {% if type == 'pictures' %}
@@ -21,7 +23,7 @@
                 <div class="col-md-12">
                     {% for year, album_count in year_albums.items %}
                         {% if album_count > 0 %}
-                        <div class="card-group evet-card text-light mb-2">
+                        <div class="card-group event-card text-light mb-2">
                             <a href="{% url 'archive:pictures' year %}" class="card mb-0 p-1">
                                 <div class="card-body py-1">
                                     <div class="row display-6">
@@ -51,4 +53,3 @@
         </div>
     </div>
 {% endblock %}
-

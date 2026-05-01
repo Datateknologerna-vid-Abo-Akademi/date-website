@@ -1,0 +1,23 @@
+{{ wizard.management_form }}
+{% if wizard.form.non_field_errors %}
+    <div class="two-factor-errors">
+        {{ wizard.form.non_field_errors }}
+    </div>
+{% endif %}
+
+{% for hidden in wizard.form.hidden_fields %}
+    {{ hidden }}
+{% endfor %}
+
+{% for field in wizard.form.visible_fields %}
+    <div class="two-factor-field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}
+            <small>{{ field.help_text }}</small>
+        {% endif %}
+        {% if field.errors %}
+            <div class="two-factor-errors">{{ field.errors }}</div>
+        {% endif %}
+    </div>
+{% endfor %}
