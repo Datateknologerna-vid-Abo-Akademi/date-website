@@ -1,15 +1,9 @@
-/* NEW STUFF */
-
 @import url('https://fonts.googleapis.com/css2?family=Josefin+Slab:ital,wght@1,600&display=swap');
 
 :root {
     --opacityColor: rgba(235, 235, 235, 0.7);
     /*--opacityColor: rgba(223, 223, 223, 0.55);*/
     --backdropBlur:  blur(10px);
-}
-
-html body{
-
 }
 
 .hidden{
@@ -57,13 +51,6 @@ html body{
 
 .baal-content h2, .baal-content h1 {
     color: var(--textColorDark);
-}
-
-.baal-content {
-
-}
-
-.background-img {
 }
 
 /* fade animations start*/

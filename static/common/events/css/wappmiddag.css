@@ -1,14 +1,8 @@
-/* NEW STUFF */
-
 @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@500&display=swap');
 
 :root {
     --opacityColor: var(--primaryColorLighte);
     --backdropBlur:  blur(10px);
-}
-
-html body{
-
 }
 
 .hidden{
@@ -54,13 +48,6 @@ html body{
 
 .baal-content h2, .baal-content h1 {
     color: var(--textColorLight);
-}
-
-.baal-content {
-
-}
-
-.background-img {
 }
 
 /* fade animations start*/

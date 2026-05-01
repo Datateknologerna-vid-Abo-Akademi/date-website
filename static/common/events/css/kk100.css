@@ -261,13 +261,7 @@ animation:move-twink-back 200s linear infinite;
 
 /*BAAL SIGNUP FORM CSS*/
 
-/* NEW STUFF */
-
 @import url('https://fonts.googleapis.com/css2?family=Josefin+Slab:ital,wght@1,600&display=swap');
-
-html body{
-
-}
 
 .hidden{
     display: none !important;
@@ -305,33 +299,6 @@ html body{
 .baal-content h2, .baal-content h1 {
     color: var(--baal-gold);
 }
-
-/* fade animations start*/
-@keyframes fadeIn {
-0% {opacity:0;}
-100% {opacity:1;}
-}
-
-@-moz-keyframes fadeIn {
-0% {opacity:0;}
-100% {opacity:1;}
-}
-
-@-webkit-keyframes fadeIn {
-0% {opacity:0;}
-100% {opacity:1;}
-}
-
-@-o-keyframes fadeIn {
-0% {opacity:0;}
-100% {opacity:1;}
-}
-
-@-ms-keyframes fadeIn {
-0% {opacity:0;}
-100% {opacity:1;}
-}
-/* fade animations end */
 
 .header-box {
     overflow: hidden;
