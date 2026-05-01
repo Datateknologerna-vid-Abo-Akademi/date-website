@@ -10,16 +10,16 @@
     transform: translateX(10px);
   }
   
-.evet-card > .card .list-inline-item {
+.event-card > .card .list-inline-item {
     color: var(--helpText);
     font-size: 14px;
   }
   
-.evet-card > .card .badge {
+.event-card > .card .badge {
     background: var(--helpText);
   }
   
-.evet-card > .card {
+.event-card > .card {
     background: var(--primaryColorLight);
   }
   
@@ -46,3 +46,4 @@
 .event-date-txt{
   white-space: nowrap;
 }
+

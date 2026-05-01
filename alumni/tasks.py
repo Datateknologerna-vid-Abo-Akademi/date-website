@@ -1,0 +1,220 @@
+import datetime
+import json
+import logging
+
+from celery import shared_task
+from django.conf import settings
+from django.template.loader import render_to_string
+
+from .gsuite_adapter import DateSheetsAdapter
+from core.utils import send_email_task
+from billing.util import generate_reference_number, generate_invoice_number
+from .models import AlumniEmailRecipient, AlumniUpdateToken
+from .config import AUDIT_LOG_SHEET_NAME, MEMBER_SHEET_NAME, get_alumni_sheet_config
+
+from django.utils.translation import gettext_lazy as _
+
+logger = logging.getLogger("date")
+
+
+def log_error(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            logger.error(f"Error in {func.__name__}: {str(e)}")
+            raise
+    return wrapper
+
+
+def format_date_for_sheets(dt=None):
+    """Format date in Finnish format (dd.mm.yyyy) for Google Sheets"""
+    if dt is None:
+        dt = datetime.datetime.now()
+    return dt.strftime("%d.%m.%Y")
+
+
+def normalize_timestamp(timestamp):
+    if timestamp is None:
+        return None
+    if isinstance(timestamp, str):
+        return datetime.datetime.fromisoformat(timestamp)
+    return timestamp
+
+
+def get_sheet_client(worksheet):
+    auth, sheet = get_alumni_sheet_config()
+    return DateSheetsAdapter(auth, sheet, worksheet)
+
+
+@log_error
+def log_action(operation: str, data: dict):
+    worksheet = AUDIT_LOG_SHEET_NAME
+    client = get_sheet_client(worksheet)
+    client.append_row([operation, json.dumps(data)])
+
+
+def handle_create(form: dict):
+    worksheet = MEMBER_SHEET_NAME
+    client = get_sheet_client(worksheet)
+    try:
+        member_id = int(client.get_last_row()[0]) + 1
+    except ValueError:
+        member_id = 1
+    data = form
+
+    if data["email"] in client.get_column_values(client.get_column_by_name("email")):
+        logger.info("Alumni CREATE: Email already registered")
+        return
+
+    reference = generate_reference_number(generate_invoice_number())
+
+    logger.info("Creating alumni member entry")
+    try:
+        current_date = format_date_for_sheets()
+        client.append_row([
+            member_id,
+            data.get("firstname"),
+            data.get("lastname"),
+            data.get("address"),
+            data.get("zip"),
+            data.get("city"),
+            data.get("country"),
+            data.get("employer"),
+            data.get("work_title"),
+            data.get("phone_number"),
+            data.get("email"),
+            data.get("tfif_membership"),
+            data.get("alumni_newsletter_consent"),
+            data.get("year_of_admission"),
+            current_date,  # Creation date in Finnish format
+            current_date,  # Update date in Finnish format
+            0,  # Paid status
+            reference,
+        ])
+    except Exception as e:
+        logger.error("Error while creating alumni member: " + str(e))
+        return
+
+    logger.info("Creating alumni log entry")
+    log_action("CREATE", data)
+
+
+    logger.info("Sending Alumni email")
+    alumni_email = form['email']
+    alumni_message_subject = "Välkommen till ARG - Betalningsinstruktioner"
+    alumni_message_content = render_to_string('members/alumni_signup_email.html', {"alumni": form, "reference": reference, 
+        'alumini_association_name': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_NAME", "Albins R Gamyler"),
+    })
+    # Send email to alumni
+    send_email_task.delay(alumni_message_subject, alumni_message_content, settings.DEFAULT_FROM_EMAIL,
+                          [alumni_email])
+
+    logger.info("Sending Alumni admin email")
+    # Mail to relevant people
+    admin_message_recipients = list(AlumniEmailRecipient.objects.all().values_list('recipient_email', flat=True))
+    admin_message_subject = f"ARG - Ny medlem {form['firstname']+' ' + form['lastname']}"
+    admin_message_content = render_to_string('members/alumni_signup_email_admin.html',
+                                             {'alumni': form})
+    # Schedule admin message
+    send_email_task.delay(admin_message_subject, admin_message_content, settings.DEFAULT_FROM_EMAIL,
+                          admin_message_recipients)
+
+
+@log_error
+def handle_update(form, timestamp=None):
+    timestamp = normalize_timestamp(timestamp)
+    if not timestamp:
+        timestamp = datetime.datetime.now()
+    worksheet = MEMBER_SHEET_NAME
+    client = get_sheet_client(worksheet)
+    
+    token = form.get('token')
+    if not token:
+        logger.error("Alumni UPDATE: No token provided")
+        return
+    # Validate token from db
+    try:
+        alumni_token = AlumniUpdateToken.objects.get(token=token)
+        if not alumni_token.is_valid() or alumni_token.email != form['email']:
+            logger.error("Alumni UPDATE: Invalid or expired token")
+            return
+    except AlumniUpdateToken.DoesNotExist:
+        logger.error("Alumni UPDATE: Token does not exist")
+        return
+
+    try:
+        emails = client.get_column_values(client.get_column_by_name("email"))
+        row = emails.index(form['email']) + 1 if form['email'] in emails else None
+        
+        if not row:
+            logger.info("Alumni UPDATE: Email not found")
+            return
+
+    except Exception as e:
+        logger.error("Error while fetching alumni row: " + str(e))
+        return
+
+    # Update the row with new data
+    try:
+        client.update_row(row, [            
+            None,  # Member ID is not updated
+            form.get("firstname"),
+            form.get("lastname"),
+            form.get("address"),
+            form.get("zip"),
+            form.get("city"),
+            form.get("country"),
+            form.get("employer"),
+            form.get("work_title"),
+            form.get("phone_number"),
+            None,  # Email is not updated
+            form.get("tfif_membership"),
+            form.get("alumni_newsletter_consent"),
+            form.get("year_of_admission"),
+            None, # Creation time is not updated
+            format_date_for_sheets(timestamp),  # Update time in Finnish format
+            None,  # Paid status
+            None,  # Reference
+        ])
+    except Exception as e:
+        logger.error("Error while updating alumni row: " + str(e))
+        return
+    
+    logger.info("Updating alumni log entry")
+    log_action("UPDATE", form)
+
+    # Delete the token after successful update
+    logger.info("Deleting alumni update token")
+    alumni_token.delete()
+
+
+@shared_task()
+def send_token_email(token: str, email: str):
+    """Send an email with the token to the alumni."""
+    client = get_sheet_client(MEMBER_SHEET_NAME)
+    emails = client.get_column_values(client.get_column_by_name("email"))
+    if email not in emails:
+        logger.info(f"Email {email} not found in alumni records. skipping token email.")
+        return
+    subject = _("Uppdatera dina uppgifter")
+    context = {
+        'TOKEN': token,
+        'SITE_URL': settings.CONTENT_VARIABLES.get("SITE_URL", "https://datateknologerna.org"),
+        'ALUMNI_ASSOCIATION_NAME': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_NAME", "Albins R Gamyler"),
+        'ALUMNI_ASSOCIATION_EMAIL': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_EMAIL")
+    }
+    message = render_to_string('alumni/update_token_email.html', context)
+    send_email_task.delay(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
+
+
+@shared_task()
+def handle_alumni_signup(form: dict, timestamp=None):
+    logger.info("Received alumni signup form with operation: " + form['operation'])
+    match form["operation"]:
+        case "CREATE":
+            handle_create(form)
+        case "UPDATE":
+            handle_update(form, timestamp)
+        case _:
+            raise NotImplementedError()

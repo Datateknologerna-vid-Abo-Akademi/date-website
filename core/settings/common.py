@@ -14,6 +14,8 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 import sys
 import json
+from django.templatetags.static import static
+from django.utils.translation import gettext_lazy as _
 
 import environ
 
@@ -24,7 +26,23 @@ env = environ.Env(
     # set casting, default value
     DEBUG=(bool, False),
     DEVELOP=(bool, False),
+    USE_UNFOLD=(bool, False),
 )
+
+
+_MISSING = object()
+
+
+def env_alias(name, *aliases, cast=str, default=_MISSING):
+    for env_name in (name, *aliases):
+        if env_name in os.environ:
+            return env(env_name, cast)
+
+    if default is _MISSING:
+        return env(name, cast)
+
+    return default
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -33,12 +51,78 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY', str, 'SECRET_KEY')
+SECRET_KEY = env_alias('DATE_SECRET_KEY', 'SECRET_KEY', default='SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG', bool, False)
+DEBUG = env_alias('DATE_DEBUG', 'DEBUG', cast=bool, default=False)
 
-DEVELOP = env('DEVELOP', bool, False)
+DEVELOP = env_alias('DATE_DEVELOP', 'DEVELOP', cast=bool, default=False)
+
+USE_UNFOLD = env('USE_UNFOLD', bool, False)
+
+
+def _get_unfold_sidebar_navigation(request):
+    from core.admin_ui import get_sidebar_navigation
+    return get_sidebar_navigation(request)
+
+
+def _get_unfold_site_url(request):
+    from django.conf import settings as django_settings
+
+    return getattr(django_settings, "CONTENT_VARIABLES", {}).get("SITE_URL", "/")
+
+
+_UNFOLD_ENV_LABEL = env("UNFOLD_ENVIRONMENT_LABEL", str, "")
+_UNFOLD_ENV_TYPE = env("UNFOLD_ENVIRONMENT_TYPE", str, "")
+
+
+def _get_unfold_environment(request):
+    if _UNFOLD_ENV_LABEL:
+        return _UNFOLD_ENV_LABEL, _UNFOLD_ENV_TYPE or "info"
+
+    host = request.get_host().split(":", 1)[0].lower()
+    if host.split(".", 1)[0] == "qa":
+        return _("Quality Assurance"), _UNFOLD_ENV_TYPE or "warning"
+
+    # Read DEBUG/DEVELOP through settings rather than the module-level globals so
+    # tests can override them via @override_settings without depending on env at
+    # import time.
+    from django.conf import settings as django_settings
+    if getattr(django_settings, "DEVELOP", False) or getattr(django_settings, "DEBUG", False):
+        return _("Development"), "warning"
+
+    return _("Production"), "success"
+
+
+UNFOLD = {
+    "SITE_URL": _get_unfold_site_url,
+    "ENVIRONMENT": _get_unfold_environment,
+    "STYLES": [
+        lambda request: static("date/css/admin.css"),
+    ],
+    "SCRIPTS": [
+        lambda request: static("date/js/admin_sidebar.js"),
+    ],
+    "SIDEBAR": {
+        "show_search": True,
+        "navigation": _get_unfold_sidebar_navigation,
+    },
+    "COLORS": {
+        "primary": {
+            "50":  "239 246 255",
+            "100": "219 234 254",
+            "200": "191 219 254",
+            "300": "147 197 253",
+            "400": "96 165 250",
+            "500": "59 130 246",
+            "600": "37 99 235",
+            "700": "29 78 216",
+            "800": "30 64 175",
+            "900": "30 58 138",
+            "950": "23 37 84",
+        },
+    },
+}
 
 # This gets set only when tests are ran with date-test command
 TEST = env('TEST', bool, False)
@@ -52,19 +136,29 @@ if not DEVELOP:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
 
+USE_X_FORWARDED_HOST = env('USE_X_FORWARDED_HOST', bool, False)
+if env('TRUST_X_FORWARDED_PROTO', bool, False):
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 def get_installed_apps(proj_apps):
     return [
         'daphne',
         'date',
-        'members',
+        'members.apps.MemberConfig',
         *proj_apps,
-        'django.contrib.admin',
+        'modeltranslation',
+        *(['unfold', 'unfold.contrib.filters', 'unfold.contrib.forms', 'unfold.contrib.inlines'] if USE_UNFOLD else []),
+        'date.apps.DateAdminConfig',
         'django.contrib.auth',
         'django.contrib.contenttypes',
         'django.contrib.sessions',
         'django.contrib.messages',
         'django.contrib.staticfiles',
+        'django_otp',
+        'django_otp.plugins.otp_static',
+        'django_otp.plugins.otp_totp',
+        'two_factor',
         'admin_ordering',
         'django_ckeditor_5',
         'channels',
@@ -98,14 +192,17 @@ COMMON_CONTEXT_PROCESSORS = [
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'date.middleware.LanguageStateMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
     'date.middleware.LangMiddleware',
     'date.middleware.HTCPCPMiddleware',
+    'date.middleware.CDNRewriteMiddleware'
 ]
 
 
@@ -113,11 +210,16 @@ WSGI_APPLICATION = 'core.wsgi.application'
 ASGI_APPLICATION = 'core.routing.application'
 
 
+REDIS_SERVER = env("REDIS_SERVER", str, "redis://redis:6379")
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", str, "redis://redis:6379/0")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", str, CELERY_BROKER_URL)
+
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('redis', 6379)],
+            "hosts": [REDIS_SERVER],
         },
     },
 }
@@ -131,7 +233,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': env('DB_DATABASE', str, 'postgres'),
         'USER': env('DB_USERNAME', str, 'postgres'),
-        'PASSWORD': env('DB_PASSWORD', default=''),
+        'PASSWORD': env_alias('DATE_DB_PASSWORD', 'DB_PASSWORD', default=''),
         'HOST': env('DB_HOST', str, 'db'),
         'PORT': env('DB_PORT', int, 5432),
         'DISABLE_SERVER_SIDE_CURSORS': True,
@@ -144,12 +246,25 @@ if 'test' in sys.argv or 'test_coverage' in sys.argv:
 
 CONN_MAX_AGE = 600
 
-CACHES = {
+# Caches
+# https://docs.djangoproject.com/en/5.2/topics/cache/
+
+# https://docs.djangoproject.com/en/5.2/topics/cache/#dummy-caching-for-development
+DUMMY_CACHE = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+    }
+}
+
+# https://docs.djangoproject.com/en/5.2/topics/cache/#redis
+REDIS_CACHE = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": env("REDIS_SERVER", str, "redis://redis:6379"),
+        "LOCATION": REDIS_SERVER,
     },
 }
+
+CACHES = DUMMY_CACHE if DEVELOP else REDIS_CACHE
 
 # Custom members model
 AUTH_USER_MODEL = 'members.Member'
@@ -176,6 +291,14 @@ AUTHENTICATION_BACKENDS = (
     'members.backends.AuthBackend',
 )
 
+LOGIN_URL = 'members:login'
+LOGIN_REDIRECT_URL = 'members:info'
+
+# Make CKEditor5 Work with modeltranslations
+MODELTRANSLATION_CUSTOM_FIELDS = (
+    'CKEditor5Field',
+)
+
 
 def get_staff_groups(default_groups: list):
     """Add extra staff groups from environment variable to default_groups."""
@@ -190,16 +313,26 @@ LOCALE_PATHS = (
     'locale',
 )
 
-LANG_FINNISH = 'fi'
-LANG_SWEDISH = 'sv'
+ALL_LANGUAGES = (
+    ('sv', ("Svenska")),
+    ('en', ("English")),
+    ('fi', ("Suomi"))
+)
 
-LANGUAGE_CODE = LANG_SWEDISH
+LANGUAGE_CODE = 'sv'
+USE_ACCEPT_LANGUAGE_HEADER = False
+ENABLE_LANGUAGE_FEATURES = env('ENABLE_LANGUAGE_FEATURES', bool, False)
+LANGUAGES = ALL_LANGUAGES if ENABLE_LANGUAGE_FEATURES else (
+    tuple(language for language in ALL_LANGUAGES if language[0] == LANGUAGE_CODE)
+)
+# Keep modeltranslation's schema stable regardless of whether the multilingual
+# UI is currently enabled. Otherwise makemigrations can think translated fields
+# should be removed whenever ENABLE_LANGUAGE_FEATURES is false.
+MODELTRANSLATION_LANGUAGES = tuple(code for code, _label in ALL_LANGUAGES)
 
 TIME_ZONE = 'Europe/Helsinki'
 
 USE_I18N = True
-
-USE_L10N = True
 
 USE_TZ = True
 
@@ -212,7 +345,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-
+PROJECT_NAME = os.environ.get("PROJECT_NAME", "date")
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Cloudflare captcha config
@@ -233,35 +366,65 @@ STORAGES = {
 
 if USE_S3:
     # aws settings
-    AWS_S3_ENDPOINT_URL = env('AWS_S3_ENDPOINT_URL')
-    AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_ENDPOINT_URL = env_alias('S3_ENDPOINT_URL', 'AWS_S3_ENDPOINT_URL')
+    AWS_ACCESS_KEY_ID = env_alias('S3_ACCESS_KEY', 'AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = env_alias('S3_SECRET_KEY', 'AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = env_alias('S3_BUCKET_NAME', 'AWS_STORAGE_BUCKET_NAME')
+    AWS_PRIVATE_STORAGE_BUCKET_NAME = (
+        env_alias(
+            'S3_PRIVATE_BUCKET_NAME',
+            'AWS_PRIVATE_STORAGE_BUCKET_NAME',
+            default='',
+        ) or AWS_STORAGE_BUCKET_NAME
+    )
+    AWS_PUBLIC_STORAGE_BUCKET_NAME = (
+        env_alias(
+            'S3_PUBLIC_BUCKET_NAME',
+            'AWS_PUBLIC_STORAGE_BUCKET_NAME',
+            default='',
+        ) or AWS_STORAGE_BUCKET_NAME
+    )
+    AWS_S3_REGION_NAME = env_alias('S3_REGION_NAME', 'AWS_S3_REGION_NAME', default=None)
+    AWS_S3_SIGNATURE_VERSION = env_alias('S3_SIGNATURE_VERSION', 'AWS_S3_SIGNATURE_VERSION', default=None)
+    AWS_S3_ADDRESSING_STYLE = env_alias('S3_ADDRESSING_STYLE', 'AWS_S3_ADDRESSING_STYLE', default=None)
     AWS_QUERYSTRING_AUTH = True
     AWS_QUERYSTRING_EXPIRE = 3600
 
     # s3 public media settings
     PRIVATE_MEDIA_LOCATION = env('PRIVATE_MEDIA_LOCATION')
     PUBLIC_MEDIA_LOCATION = env('PUBLIC_MEDIA_LOCATION')
-    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/'
+    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_PRIVATE_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/'
+
+    def get_s3_storage_options(bucket_name, location, querystring_auth):
+        options = {
+            "bucket_name": bucket_name,
+            "custom_domain": False,
+            "location": location,
+            "querystring_auth": querystring_auth,
+        }
+        if AWS_S3_REGION_NAME:
+            options["region_name"] = AWS_S3_REGION_NAME
+        if AWS_S3_SIGNATURE_VERSION:
+            options["signature_version"] = AWS_S3_SIGNATURE_VERSION
+        if AWS_S3_ADDRESSING_STYLE:
+            options["addressing_style"] = AWS_S3_ADDRESSING_STYLE
+        return options
 
     STORAGES["default"] = {  # TODO allow setting this to local
         "BACKEND": "core.storage_backends.PrivateMediaStorage",
-        "OPTIONS": {
-            "bucket_name": AWS_STORAGE_BUCKET_NAME,
-            "custom_domain": False,
-            "querystring_auth": AWS_QUERYSTRING_AUTH,
-            "querystring_expire": AWS_QUERYSTRING_EXPIRE,
-            "location": PRIVATE_MEDIA_LOCATION,
-        }
+        "OPTIONS": get_s3_storage_options(
+            AWS_PRIVATE_STORAGE_BUCKET_NAME,
+            PRIVATE_MEDIA_LOCATION,
+            AWS_QUERYSTRING_AUTH,
+        ) | {"querystring_expire": AWS_QUERYSTRING_EXPIRE},
     }
     STORAGES["public_media"] = {
         "BACKEND": "core.storage_backends.PublicMediaStorage",
-        "OPTIONS": {
-            "bucket_name": AWS_STORAGE_BUCKET_NAME,
-            "custom_domain": False,
-            "location": PUBLIC_MEDIA_LOCATION,
-        }
+        "OPTIONS": get_s3_storage_options(
+            AWS_PUBLIC_STORAGE_BUCKET_NAME,
+            PUBLIC_MEDIA_LOCATION,
+            False,
+        ),
     }
 
 else:
@@ -276,11 +439,11 @@ else:
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
 STATIC_URL = '/static/'
 
-LOGIN_URL = '/members/login'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = 'index'
+OTP_LOGIN_URL = 'members:login'
 
 if DEBUG:
+    WHITENOISE_USE_FINDERS = True
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -294,25 +457,37 @@ EMAIL_PORT = 587
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', str, '')
 EMAIL_HOST_RECEIVER = env('EMAIL_HOST_RECEIVER', str, '')
 
-# Celery Configuration
-CELERY_BROKER_URL = 'redis://redis:6379/0'
-CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 30000  # large value for large events
 
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 3000
+ALUMNI_SETTINGS = os.environ.get("ALUMNI_SETTINGS", '')
+
+# GitHub OAuth settings
+GITHUB_CLIENT_ID = env('GITHUB_CLIENT_ID', str, '')
+GITHUB_CLIENT_SECRET = env('GITHUB_CLIENT_SECRET', str, '')
+GITHUB_MFA_POLICY = env('GITHUB_MFA_POLICY', str, 'enrolled').lower()
+
+DEFAULT_EXCEPTION_REPORTER_FILTER = 'core.redaction.DateExceptionReporterFilter'
+
+LOG_LEVEL = env('LOG_LEVEL', str, 'DEBUG' if DEBUG else 'INFO')
+DJANGO_LOG_LEVEL = env('DJANGO_LOG_LEVEL', str, 'INFO')
+DATE_LOG_LEVEL = env('DATE_LOG_LEVEL', str, LOG_LEVEL)
 
 LOGGING = {
     'version': 1,
+    'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
+            '()': 'core.redaction.RedactingFormatter',
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
+            '()': 'core.redaction.RedactingFormatter',
             'format': '%(levelname)s %(message)s'
         },
     },
     'handlers': {
         'console': {
-            'level': 'INFO',
+            'level': 'NOTSET',
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
@@ -321,21 +496,31 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
+        'console_error': {
+            'level': 'ERROR',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        },
     },
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': DJANGO_LOG_LEVEL,
             'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console_error'],
+            'level': 'ERROR',
+            'propagate': False,
         },
         'django_auth_ldap': {
             'handlers': ['console_debug'],
-            'level': 'DEBUG',
+            'level': DATE_LOG_LEVEL,
             'propagate': True,
         },
         'date': {
             'handlers': ['console_debug'],
-            'level': 'DEBUG',
+            'level': DATE_LOG_LEVEL,
             'propagate': True,
         },
         'daphne': {
@@ -345,3 +530,12 @@ LOGGING = {
         }
     }
 }
+
+EXPERIMENTAL_FEATURES = []
+
+
+# CDN settings
+CDN_URL_TRANSFORMATIONS = [
+    ("fra1.digitaloceanspaces.com/albin-storage/", "albin-storage.cdn.datateknologerna.org/"),
+    ("albin-storage.fra1.digitaloceanspaces.com/", "albin-storage.cdn.datateknologerna.org/"),
+]

@@ -14,8 +14,8 @@ from django.urls import reverse
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from PIL import Image
-from django.dispatch import receiver
 from .fields import PublicFileField
+from django.core.exceptions import ValidationError
 
 
 TYPE_CHOICES = (
@@ -41,7 +41,7 @@ class Collection(models.Model):
             return self.picture_set.first()
 
     def get_absolute_url(self):
-        return reverse('archive:detail', kwargs={'pk': self.pk})
+        return reverse('archive:detail', kwargs={'album': self.title, 'year': self.pub_date.year})
 
     def __str__(self):
         return self.title
@@ -53,6 +53,11 @@ class Collection(models.Model):
         dir_location = os.path.join(settings.MEDIA_ROOT, self.title.lower())
         shutil.rmtree(dir_location, ignore_errors=True)
         super(Collection, self).delete(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        if '/' in self.title:
+            raise ValidationError({'Namn': "Snedstreck är inte tillåtet."})
 
     @register.filter
     def get_file_count(self):

@@ -4,10 +4,12 @@
 
 {% block title %}{{ ASSOCIATION_NAME_SHORT }} - {% trans "Publications" %}{% endblock %}
 
-{% block content %}
-    <head>
+{% block extra_head %}
+    {{ block.super }}
         <link rel="stylesheet" href="{% static 'publications/css/list.css' %}">
-    </head>
+{% endblock %}
+
+{% block content %}
     <body>
     <div class="container-margin-top">
         <header class="text-center">
@@ -40,7 +42,9 @@
             {% endif %}
 
             <span class="current">
-                {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}.
+                {% blocktranslate with page_number=page_obj.number total_pages=page_obj.paginator.num_pages trimmed %}
+                    Page {{ page_number }} of {{ total_pages }}.
+                {% endblocktranslate %}
             </span>
 
             {% if page_obj.has_next %}

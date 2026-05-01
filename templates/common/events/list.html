@@ -16,7 +16,7 @@
     <h2 class="title"><a
             href="{% url 'events:detail' event.slug %}">{{ event.title }}</a></h2>
     <img id="qr-link" src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ request.get_host }}{% url 'events:detail' event.slug%}">
-    <h5>Datum: {{ event.event_date_start }}</h5>
+    <h5>{% translate "Datum:" %} {{ event.event_date_start }}</h5>
 
     {% if event.get_registrations %}
         <table id="attendeeList">
@@ -32,9 +32,9 @@
                     </th>
                 {% endfor %}
                 {% if event.sign_up_avec %}
-                    <th>Avec till<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
+                    <th>{% translate "Avec till" %}<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
                 {% endif %}
-                <th>Registrerad<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
+                <th>{% translate "Registrerad" %}<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
             </tr>
             </thead>
             <tbody>

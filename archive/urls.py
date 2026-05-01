@@ -12,7 +12,7 @@ urlpatterns = [
     path('pictures/', login_required(views.year_index), name='years'),
     # /archive/pictures/<year>/
     path('pictures/<int:year>/', login_required(views.picture_index), name='pictures'),
-    # /archive/pictures/<year>/<Collection_id>/
+    # /archive/pictures/<year>/<album>/
     path('pictures/<int:year>/<str:album>/', login_required(views.picture_detail), name='detail'),
     # /documents/
     path('documents/', login_required(views.FilteredDocumentsListView.as_view()), name='documents'),

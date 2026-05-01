@@ -1,0 +1,13 @@
+                <div class="ig-scroll">
+                    <div class="scroll-content">
+                        <div class="slideshow">
+                            <div class="images">
+                                {% for post in posts%}
+                                <a href="https://www.instagram.com/p/{{post.shortcode}}/">
+                                    <img src="{{post.url}}" alt="image">
+                                </a>
+                                {%endfor%}
+                            </div>
+                         </div>
+                    </div>
+                </div>

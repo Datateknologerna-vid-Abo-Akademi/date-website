@@ -1,13 +1,15 @@
 {% extends 'core/base.html' %}
-{% load app_filters %}
+{% load shared_filters %}
 {% load static %}
 {% load i18n %}
 {% block title %}{% trans "Ladda upp bilder" %}{% endblock %}
 
-{% block content %}
-    <head>
+{% block extra_head %}
+    {{ block.super }}
         <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
-    </head>
+{% endblock %}
+
+{% block content %}
     <div class="container-md min-vh-100 container-margin-top">
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
@@ -17,4 +19,3 @@
         <p><a href="{% url 'archive:years' %}">Return</a></p>
     </div>
 {% endblock %}
-

@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from dateutil.relativedelta import relativedelta
@@ -5,19 +6,33 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import ReadOnlyPasswordHashField, PasswordResetForm
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, RegexValidator
 from django.template import loader
 from django.utils.translation import gettext_lazy as _
 
+from core.admin_base import UnfoldFormMixin
 from core.utils import send_email_task
 from members.models import (SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH,
-                            SUB_RE_SCALE_YEAR, Member, SubscriptionPayment, AlumniSignUp, Functionary)
+                            SUB_RE_SCALE_YEAR, Member, SubscriptionPayment, Functionary)
 
 logger = logging.getLogger('date')
 
+# Restrict usernames to ASCII letters, numbers, dots, underscores, and hyphens
+USERNAME_VALIDATOR = RegexValidator(
+    r'^[0-9a-zA-Z._-]+$',
+    _('Enter a valid username consisting only of letters, numbers, dots, underscores, and hyphens.')
+)
 
-class MemberCreationForm(forms.ModelForm):
+
+class MemberCreationForm(UnfoldFormMixin, forms.ModelForm):
     send_email = forms.BooleanField(required=False)
+    year_of_admission = forms.IntegerField(initial=lambda: datetime.datetime.now().year, required=False, label=_('Inskrivningsår'))
+
+    username = forms.CharField(
+        max_length=20,
+        validators=[USERNAME_VALIDATOR],
+        label=_('Användarnamn'),
+    )
 
     password = forms.CharField(
         widget=forms.PasswordInput(),
@@ -39,6 +54,7 @@ class MemberCreationForm(forms.ModelForm):
             'city',
             'country',
             'membership_type',
+            'year_of_admission',
             'password',
             'groups',
         )
@@ -47,16 +63,22 @@ class MemberCreationForm(forms.ModelForm):
         member = super(MemberCreationForm, self).save(commit=False)
         member.set_password(self.cleaned_data['password'])
         if commit:
-            member.update_or_create(pk=member.pk)
-            logger.debug("Saved new member:", member)
+            member.save()
+            logger.debug("Saved new member: %s", member)
         return member
 
 
-class AdminMemberUpdateForm(forms.ModelForm):
+class AdminMemberUpdateForm(UnfoldFormMixin, forms.ModelForm):
     password = ReadOnlyPasswordHashField(label="Lösenord",
                                          help_text=("Raw passwords are not stored, so there is no way to see "
                                                     "this user's password, but you can change the password "
                                                     "using <a href=\"../password/\">this form</a>."))
+
+    username = forms.CharField(
+        max_length=20,
+        validators=[USERNAME_VALIDATOR],
+        label=_('Användarnamn'),
+    )
 
     class Meta:
         model = Member
@@ -72,6 +94,7 @@ class AdminMemberUpdateForm(forms.ModelForm):
             'country',
             'membership_type',
             'groups',
+            'github_id',
             'password',
         )
 
@@ -81,7 +104,7 @@ class AdminMemberUpdateForm(forms.ModelForm):
         if password:
             member.set_password(password)
         if commit:
-            member.update_or_create(pk=member.pk)
+            member.save()
         return member
 
 
@@ -96,6 +119,8 @@ class CustomPasswordResetForm(PasswordResetForm):
             to_email,
             html_email_template_name=None,
     ):
+        context.update(settings.CONTENT_VARIABLES)
+
         subject = loader.render_to_string(subject_template_name, context)
         # Email subject *must not* contain newlines
         subject = "".join(subject.splitlines())
@@ -136,13 +161,18 @@ class SubscriptionPaymentForm(forms.ModelForm):
             subscription_payment.date_expires = date_paid + delta
             logger.debug("Calculated expiry date for subscription: {}".format(subscription_payment.date_expires))
         if commit:
-            subscription_payment.update_or_create(pk=subscription_payment.pk)
+            subscription_payment.save()
             logger.debug("SubscriptionPayment saved")
         return subscription_payment
 
 
 class SignUpForm(forms.ModelForm):
-    username = forms.CharField(max_length=20, help_text=_('detta fält är obligatoriskt'), label=_('Användarnamn'))
+    username = forms.CharField(
+        max_length=20,
+        validators=[USERNAME_VALIDATOR],
+        help_text=_('detta fält är obligatoriskt'),
+        label=_('Användarnamn')
+    )
     email = forms.EmailField(max_length=200, help_text=_('detta fält är obligatoriskt'), label=_('E-postadress'))
     password = forms.CharField(
         widget=forms.PasswordInput(),
@@ -154,6 +184,7 @@ class SignUpForm(forms.ModelForm):
     )
     first_name = forms.CharField(max_length=100, required=True, label=_('Förnamn'))
     last_name = forms.CharField(max_length=100, required=True, label=_('Efternamn'))
+    year_of_admission = forms.IntegerField(initial=lambda: datetime.datetime.now().year, required=False, label=_('Inskrivningsår'))
 
     class Meta:
         model = Member
@@ -168,49 +199,10 @@ class SignUpForm(forms.ModelForm):
             'city',
             'country',
             'membership_type',
+            'year_of_admission',
             'password'
         )
 
-
-class AlumniSignUpForm(forms.ModelForm):
-    tfif_choices = (
-        ('ja', 'Ja'),
-        ('nej', 'Nej'),
-        ('vet inte', 'Vet inte')
-    )
-    operation_choices = (
-        ('CREATE', 'Registrera mig som ny medlem'),
-        ('UPDATE', 'Uppdatera mina uppgifter'),
-    )
-
-    name = forms.CharField(max_length=200, required=True, help_text=_('detta fält är obligatoriskt'), label=_('Namn'))
-    email = forms.EmailField(max_length=320, help_text=_('detta fält är obligatoriskt'), label=_('E-postadress'),
-                             required=True)
-    phone_number = forms.CharField(max_length=20, label=_('Telefonnummer'), required=False)
-    address = forms.CharField(max_length=200, label=_('Adress'), required=False)
-    year_of_admission = forms.IntegerField(max_value=3000, label=_('Inskrivningsår'), required=False)
-    employer = forms.CharField(max_length=200, label=_('Arbetsplats'), required=False)
-    work_title = forms.CharField(max_length=200, label=_('Arbetsuppgift'), required=False)
-    tfif_membership = forms.ChoiceField(choices=tfif_choices, label=_('TFiF medlemskap'), required=False)
-    alumni_newsletter_consent = forms.BooleanField(label=_('Jag tar gärna emot information om alumnevenemang'),
-                                                   required=False)
-    operation = forms.ChoiceField(choices=operation_choices, label=_('Jag vill:'),
-                                  required=True)
-
-    class Meta:
-        model = AlumniSignUp
-        fields = (
-            'operation',
-            'name',
-            'email',
-            'phone_number',
-            'address',
-            'year_of_admission',
-            'employer',
-            'work_title',
-            'tfif_membership',
-            'alumni_newsletter_consent',
-        )
 
 
 class SubscriptionPaymentChoiceField(forms.ModelChoiceField):

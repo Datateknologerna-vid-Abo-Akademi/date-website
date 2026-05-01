@@ -1,7 +1,8 @@
-from django.forms import widgets
-
 from django.conf import settings
+from django.forms import widgets
 from django.template.loader import render_to_string
+
+from core.admin_widgets import SafeAdminFileWidget
 
 
 class PrettyJSONWidget(widgets.Textarea):

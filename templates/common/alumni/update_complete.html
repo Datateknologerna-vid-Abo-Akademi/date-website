@@ -1,0 +1,26 @@
+{% extends 'core/base.html' %}
+
+{% load static %}
+{% load i18n %}
+
+{% block title %}
+{{ ALUMNI_ASSOCIATION_NAME_SHORT }} - Uppdatering slutförd
+{% endblock %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'members/style.css' %}">
+{% endblock %}
+
+{% block content %}
+
+
+<div style="padding-top: 1rem;">
+    <div class="center-box">
+        <h1>Din information har uppdaterats</h1>
+
+        <p>Din information är nu uppdaterad</p>
+    </div>
+</div>
+
+{% endblock %}

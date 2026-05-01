@@ -1,0 +1,160 @@
+/* NEW STUFF */
+
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap');
+
+:root {
+    --opacityColor: rgba(227, 230, 209, 0.75);
+    --backdropBlur:  blur(10px);
+}
+
+.alert-danger, .errorlist{
+    color: var(--warning);
+}
+
+.warning{
+    color: rgb(216, 121, 110) !important;
+}
+
+.hidden{
+    display: none !important;
+}
+
+footer{
+    display: none;
+}
+
+.header-bar{
+    display: none;
+}
+
+form p label{
+    font-family: 'Dancing Script', cursive !important;
+}
+
+form button {
+    font-family: 'Dancing Script', cursive !important;
+    background-color: var(--secondaryColor) !important;
+    color: var(--primaryColor) !important;
+}
+
+form button:hover {
+    background-color: var(--primaryColor) !important;
+    color: var(--secondaryColor) !important;
+}
+
+.baal-nav a{
+    margin: 5px;
+    padding: 10px;
+    background-color: var(--secondaryColor);
+    border-radius: 5px;
+    transition: .3s;
+    box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
+    color: var(--primaryColor);
+}
+
+.baal-nav a:hover{
+    background-color: var(--primaryColor);
+    color: var(--secondaryColor) !important;
+}
+
+/* NEW STUFF END */
+
+.container{
+    position: relative;
+    padding-top: 10vh;
+    min-height: 100vh;
+    /*font-family: 'Carattere', cursive;*/
+    font-family: 'Dancing Script', cursive;
+    text-align: start;
+    align-content: start;
+    font-size: 1.8em;
+    font-weight: bold;
+    background-color: rgb(26, 26, 26);
+    border-bottom: 3px solid var(--primaryColor);
+}
+
+.container{
+    display: grid;
+    grid-template-columns: 1fr 800px 1fr;
+    grid-template-rows: auto;
+    grid-template-areas: 
+      ". information ."
+      ". signup-form ."
+      ". signed-table .";
+      grid-row-gap: 10px;
+}
+
+.container-text{
+    grid-area: information;
+    padding: 20px;
+    background-color: var(--opacityColor);
+    border-radius: 5px;
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+    border-top: 2px solid var(--primaryColor);
+}
+
+.container-text, h4 {
+    margin: 0.1em;
+}
+
+div.container-text a{
+    display: inline-block;
+    color: var(--primaryColor);
+}
+
+div.container-text a:hover{
+    transition: 0.3s;
+    color: var(--secondaryColor);
+}
+
+.container-form{
+    grid-area: signup-form;
+    padding: 20px;
+    background-color: var(--opacityColor);
+    border-radius: 5px;
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.container-signed::-webkit-scrollbar {
+    display: none;
+  }
+  
+
+.header {
+    margin: 0;
+}
+
+table {
+    border-collapse: collapse;
+    width: 80%;
+    font-size: 1.3em;
+}
+
+.event-full{
+    color: gray;
+}
+
+th {
+    padding-bottom: 1rem;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+}
+tr:hover {
+    transition: 200ms;
+    background-color: var(--secondaryColor);
+    color: var(--primaryColor);
+}
+
+@media only screen and (max-width: 850px) {
+    .container{
+        grid-template-columns: 3vw 1fr 3vw;
+    }
+}

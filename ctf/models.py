@@ -2,6 +2,7 @@ import logging
 
 from django_ckeditor_5.fields import CKEditor5Field
 from django.db import models
+from django.urls import reverse
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
@@ -28,6 +29,9 @@ class Ctf(models.Model):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        return reverse('ctf:detail', args=[self.slug])
+
     def ctf_is_open(self):
         return now() >= self.start_date
 
@@ -51,6 +55,9 @@ class Flag(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return reverse('ctf:flag_detail', args=[self.ctf.slug, self.slug])
 
 
 class Guess(models.Model):

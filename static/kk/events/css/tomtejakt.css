@@ -1,0 +1,224 @@
+@import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&display=swap');
+
+html body{
+    background-color: #F2ECC6;
+    color: rgb(41, 41, 41);
+    font-family: 'Mountains of Christmas', cursive;
+}
+
+.hidden{
+    display: none;
+}
+
+.navbar{
+    display: none;
+}
+
+.content{
+    background-color: #F2ECC6;
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+/* header svgs */
+
+@-webkit-keyframes fadeIn {
+    0% {opacity:0;}
+    50% {-webkit-transform: scale(1.1);transform: scale(1.1);}
+    100% {opacity:1;}
+    }
+
+@keyframes fadeIn {
+    0% {opacity:0;}
+    50% {-webkit-transform: scale(1.1);transform: scale(1.1);}
+    100% {opacity:1;}
+    }
+
+@-webkit-keyframes elfWalk {
+    0% {opacity:0; left:70%; -webkit-transform: rotate(0deg); transform: rotate(0deg);}
+    20% {opacity:0;}
+    25% {opacity:0.5; left: 60%; -webkit-transform: rotate(-25deg); transform: rotate(-25deg);}
+    40% {opacity:0;}
+    50% {opacity: 0.5; left: 50%; -webkit-transform: rotate(0deg); transform: rotate(0deg);}
+    60% {opacity:0;}
+    75% {opacity: 0.5; left: 40%; -webkit-transform: rotate(25deg); transform: rotate(25deg);}
+    90% {opacity:0;}
+    100% {opacity: 0 ;left: 20%; -webkit-transform: rotate(0deg); transform: rotate(0deg);}
+    }
+
+@keyframes elfWalk {
+    0% {opacity:0; left:70%; -webkit-transform: rotate(0deg); transform: rotate(0deg);}
+    20% {opacity:0;}
+    25% {opacity:0.5; left: 60%; -webkit-transform: rotate(-25deg); transform: rotate(-25deg);}
+    40% {opacity:0;}
+    50% {opacity: 0.5; left: 50%; -webkit-transform: rotate(0deg); transform: rotate(0deg);}
+    60% {opacity:0;}
+    75% {opacity: 0.5; left: 40%; -webkit-transform: rotate(25deg); transform: rotate(25deg);}
+    90% {opacity:0;}
+    100% {opacity: 0 ;left: 20%; -webkit-transform: rotate(0deg); transform: rotate(0deg);}
+    }
+
+@-webkit-keyframes elfWiggle {
+    0% {-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    25% {-webkit-transform: rotate(10deg);transform: rotate(10deg);}
+    50% {-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    75% {-webkit-transform: rotate(-10deg);transform: rotate(-10deg);}
+    100% {-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    }
+
+@keyframes elfWiggle {
+    0% {-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    25% {-webkit-transform: rotate(10deg);transform: rotate(10deg);}
+    50% {-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    75% {-webkit-transform: rotate(-10deg);transform: rotate(-10deg);}
+    100% {-webkit-transform: rotate(0deg);transform: rotate(0deg);}
+    }
+
+@-webkit-keyframes treeShadow {
+    0% {-webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 2px #006c33);filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 2px #006c33);}
+    25% {-webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 6px #009947);filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 6px #009947);}
+    50% {-webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 14px #00c05a);filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 14px #00c05a);}
+    75% {-webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 6px #009947);filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 6px #009947);}
+    100% {-webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 2px #006c33);filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 2px #006c33);}
+    }
+
+@keyframes treeShadow {
+    0% {-webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 2px #006c33);filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 2px #006c33);}
+    25% {-webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 6px #009947);filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 6px #009947);}
+    50% {-webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 14px #00c05a);filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 14px #00c05a);}
+    75% {-webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 6px #009947);filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 6px #009947);}
+    100% {-webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 2px #006c33);filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%) drop-shadow(2px -2px 2px #006c33);}
+    }
+
+
+
+.tomte-header{
+    margin-top: 20px;
+}
+
+.icon,
+.text {
+    vertical-align: middle;
+    display: inline-block;
+}
+
+
+.tomte-header .text{
+    font-size: 40px;
+    text-shadow: 1px 1px 2px rgb(0, 0, 0);
+    -webkit-animation: fadeIn linear 2s;
+            animation: fadeIn linear 2s;
+}
+
+.container-md .sitting-elf svg{
+    width: 100px;
+    height: 100px;
+    -webkit-animation: elfWiggle linear 10s infinite;
+            animation: elfWiggle linear 10s infinite;
+    -webkit-filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%);
+            filter: invert(28%) sepia(67%) saturate(525%) hue-rotate(93deg) brightness(98%) contrast(91%);
+}
+    
+.container-md .tree-svg svg{
+    width: 500px;
+    height: 500px;
+    display: block;
+    margin: auto;
+    -webkit-filter: invert(92%) sepia(15%) saturate(475%) hue-rotate(353deg) brightness(104%) contrast(90%) drop-shadow(2px -2px 2px rgb(0, 0, 0));
+            filter: invert(92%) sepia(15%) saturate(475%) hue-rotate(353deg) brightness(104%) contrast(90%) drop-shadow(2px -2px 2px rgb(0, 0, 0));
+    -webkit-animation: treeShadow 5s linear infinite;
+            animation: treeShadow 5s linear infinite;
+    -webkit-transition: 1s;
+    -o-transition: 1s;
+    transition: 1s;
+}
+
+.container-md .elf-svg svg{
+    position: absolute;
+    left: 70%;
+    top: 50%;
+    width: 100px;
+    height: 100px;
+    display: block;
+    margin: auto;
+    -webkit-animation: elfWalk ease-in-out 15s infinite;
+            animation: elfWalk ease-in-out 15s infinite;
+}
+
+.tomte-header{
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* header svgs end */
+
+
+form label{
+    font-family: 'Mountains of Christmas', cursive !important;
+}
+
+form button{
+    background-color: #006c33 !important;
+}
+
+form button:hover{
+    background-color: #019b49 !important;
+    color: rgb(41, 41, 41) !important;
+}
+
+
+table {
+    border-collapse: collapse;
+}
+
+.event-full{
+    color: gray;
+}
+
+th {
+    padding-bottom: 1rem;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+}
+tr:hover {
+    -webkit-transition: 200ms;
+    -o-transition: 200ms;
+    transition: 200ms;
+    background-color: #006c33;
+    color: #e096a2;
+}
+
+footer{
+    display: none;
+}
+
+
+@media only screen and (max-width: 1000px) {
+    .container-md .tree-svg svg{
+        width: 400px;
+        height: 400px;
+
+    }
+    .container-md .elf-svg svg{
+        left: 70%;
+        top: 40%;
+    }
+}
+
+@media only screen and (max-width: 850px) {
+    .container-md .tree-svg svg{
+        width: 250px;
+        height: 250px;
+    }
+    .container-md .elf-svg svg{
+        left: 70%;
+        top: 25%;
+    }
+    .container-md .sitting-elf svg{
+        width: 65px;
+        height: 65px;
+    }
+}

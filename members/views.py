@@ -17,11 +17,12 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 
-from core.utils import validate_captcha, send_email_task
-from .forms import SignUpForm, AlumniSignUpForm, FunctionaryForm, MemberEditForm, CustomPasswordResetForm
+from core.utils import enqueue_task_on_commit, send_email_task, validate_captcha
+from .forms import SignUpForm, FunctionaryForm, MemberEditForm, CustomPasswordResetForm
 from .functionary import (get_distinct_years, get_functionary_roles, get_selected_year,
                           get_selected_role, get_filtered_functionaries, get_functionaries_by_role)
-from .models import Member, AlumniEmailRecipient, Functionary
+from .models import Member, Functionary
+from .two_factor import member_has_2fa
 from .tokens import account_activation_token
 
 logger = logging.getLogger('date')
@@ -35,6 +36,7 @@ class UserinfoView(View):
         context = {
             "user": user,
             "form": form,
+            "two_factor_enabled": member_has_2fa(user),
         }
         return render(request, 'members/userinfo.html', context)
 
@@ -49,6 +51,7 @@ class UserinfoView(View):
         context = {
             "user": user,
             "form": form,
+            "two_factor_enabled": member_has_2fa(user),
         }
         return render(request, 'members/userinfo.html', context)
 
@@ -56,7 +59,7 @@ class UserinfoView(View):
 class CertificateView(View):
     @method_decorator(login_required)
     def get(self, request):
-        icons = ['atom', 'asterisk', 'bahai', 'certificate', 'cog', 'compact-disc', 'snowflake']
+        icons = ['atom', 'asterisk', 'poo', 'certificate', 'cog', 'compact-disc', 'snowflake']
         user = request.user
         current_time = datetime.datetime.now()
 
@@ -108,7 +111,13 @@ def signup(request):
                 'token': account_activation_token.make_token(user),
             })
             to_email = os.environ.get('EMAIL_HOST_RECEIVER')
-            send_email_task.delay(mail_subject, message, settings.DEFAULT_FROM_EMAIL, [to_email])
+            enqueue_task_on_commit(
+                send_email_task,
+                mail_subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [to_email],
+            )
             logger.info(f"NEW USER: Sending email to {to_email}")
             request.session['signup_submitted'] = True
             return redirect(request.path)
@@ -131,39 +140,6 @@ def activate(request, uidb64, token):
     else:
         return HttpResponse('Activation link is invalid!')
 
-
-def alumni_signup(request):
-    """Handle signup form and email sending for new alumnis"""
-
-    form = AlumniSignUpForm(request.POST or None)
-
-    if request.method == 'POST' and form.is_valid():
-        if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
-            return render(request, 'members/signup.html', {'form': form, 'alumni': True})
-
-        alumni = form.save(commit=False)
-        alumni.save()
-
-        # Mail to the person signing up
-        alumni_email = form.cleaned_data['email']
-        alumni_message_subject = "Välkommen till ARG - Betalningsinstruktioner"
-        alumni_message_content = render_to_string('members/alumni_signup_email.html')
-        # Send email to alumni
-        send_email_task.delay(alumni_message_subject, alumni_message_content, settings.DEFAULT_FROM_EMAIL,
-                              [alumni_email])
-
-        # Mail to relevant people
-        admin_message_recipients = list(AlumniEmailRecipient.objects.all().values_list('recipient_email', flat=True))
-        admin_message_subject = f"ARG - Ny medlem {form.cleaned_data['name']}"
-        admin_message_content = render_to_string('members/alumni_signup_email_admin.html',
-                                                 {'alumni': form.cleaned_data, 'alumni_id': alumni.id})
-        # Schedule admin message
-        send_email_task.delay(admin_message_subject, admin_message_content, settings.DEFAULT_FROM_EMAIL,
-                              admin_message_recipients)
-
-        return render(request, 'members/registration/registration_complete.html', {'alumni': True})
-
-    return render(request, 'members/signup.html', {'form': form, 'alumni': True})
 
 
 class CustomPasswordResetView(PasswordResetView):

@@ -1,0 +1,28 @@
+{% extends "two_factor/_base_focus.html" %}
+{% load i18n %}
+
+{% block two_factor_content %}
+    <div class="members-form two-factor-card two-factor-card-panel">
+        <h2>{% trans "Disable two-factor authentication" %}</h2>
+        <p>{% trans "This removes the extra verification step from your account." %}</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="two-factor-errors">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <div class="two-factor-confirm">
+                <label for="{{ form.understand.id_for_label }}" class="two-factor-checkbox-label">
+                    {{ form.understand }}
+                    <span>{{ form.understand.label }}</span>
+                </label>
+                {% if form.understand.errors %}
+                    <div class="two-factor-errors">{{ form.understand.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="two-factor-actions">
+                <button type="submit" class="btn btn-danger">{% trans "Disable" %}</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

@@ -6,4 +6,14 @@ def captcha_context(_):
 
 
 def apply_content_variables(_):
-    return settings.CONTENT_VARIABLES
+    content_variables = settings.CONTENT_VARIABLES
+    return {
+        **content_variables,
+        "EVENT_TEMPLATE_LOGO": content_variables.get(
+            "EVENT_TEMPLATE_LOGO",
+            content_variables.get("ASSOCIATION_LOGO", "core/images/headerlogo.png"),
+        ),
+        "ENABLE_LANGUAGE_FEATURES": settings.ENABLE_LANGUAGE_FEATURES,
+        "MEMBERS_SIGNUP_ENABLED": getattr(settings, "MEMBERS_SIGNUP_ENABLED", True),
+        "GITHUB_CLIENT_ID": getattr(settings, "GITHUB_CLIENT_ID", ""),
+    }

@@ -1,15 +1,14 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% load i18n %}
-{% block title %}{{ event.title }}{% endblock %}
+{% block title %}{% trans "Server error" %}{% endblock %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <link href="{% static 'core/css/error-view.css' %}" rel="stylesheet">
+{% endblock %}
 
 {% block content %}
-<head>
-    <meta charset="UTF-8">
-    <title>Page not found</title>
-    <link href="{% static 'core/css/error-view.css' %}" rel="stylesheet">
-</head>
-<body>
     <div class="container-soft">
         <div class="text-wrapper">
             <h1>- 500 -</h1>
@@ -17,6 +16,4 @@
             <p><a href="{% url 'index' %}">{% trans 'Till startsidan' %}</a></p>
         </div>
     </div>
-
-</body>
 {% endblock %}

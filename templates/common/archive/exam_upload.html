@@ -1,13 +1,15 @@
 {% extends 'core/base.html' %}
-{% load app_filters %}
+{% load shared_filters %}
 {% load static %}
 {% load i18n %}
 {% block title %}{% trans 'Tentarkiv' %}{% endblock %}
 
-{% block content %}
-<head>
+{% block extra_head %}
+    {{ block.super }}
     <link rel="stylesheet" href="{% static 'archive/css/document.css' %}" type="text/css">
-</head>
+{% endblock %}
+
+{% block content %}
     <div class="container-md min-vh-100 container-margin-top p-1">
         <div class="container-size" style="max-width: 500px;">
             <div class="content">
@@ -37,4 +39,3 @@
         </div>
     </div>
 {% endblock %}
-

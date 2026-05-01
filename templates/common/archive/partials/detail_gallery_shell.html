@@ -1,0 +1,35 @@
+{% load i18n %}
+<div class="grid" id="photo-grid">
+    <div class="grid-sizer"></div>
+    {% include 'archive/partials/picture_items.html' %}
+</div>
+
+<div id="gallery-loading" class="gallery-loading" aria-live="polite" hidden></div>
+<div id="gallery-sentinel" class="gallery-sentinel" aria-hidden="true"></div>
+{% if pictures.has_other_pages %}
+    <nav id="gallery-pagination-fallback" class="center gallery-pagination-fallback" aria-label="{% trans 'Bildsidor' %}">
+        <p class="gallery-noscript">{% trans 'Om automatisk bildladdning inte fungerar kan du bläddra mellan sidorna här.' %}</p>
+        <div class="pagination">
+            {% if pictures.has_previous %}
+                <a href="?page={{ pictures.previous_page_number }}"><i class="fas fa-backward"></i></a>
+            {% else %}
+                <a class="disabled" aria-disabled="true"><i class="fas fa-backward"></i></a>
+            {% endif %}
+            {% for i in pictures.paginator.page_range %}
+                {% if pictures.number == i %}
+                    <a class="active" aria-current="page">{{ i }}</a>
+                {% else %}
+                    <a href="?page={{ i }}">{{ i }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if pictures.has_next %}
+                <a href="?page={{ pictures.next_page_number }}"><i class="fas fa-forward"></i></a>
+            {% else %}
+                <a class="disabled" aria-disabled="true"><i class="fas fa-forward"></i></a>
+            {% endif %}
+        </div>
+    </nav>
+{% endif %}
+<noscript>
+    <p class="gallery-noscript">{% trans 'JavaScript krävs för automatisk bildladdning. Använd sidlänkarna ovan för att visa fler bilder.' %}</p>
+</noscript>

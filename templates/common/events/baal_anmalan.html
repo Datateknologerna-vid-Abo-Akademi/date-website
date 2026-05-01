@@ -1,0 +1,51 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n localized_urls %}
+{% load localized_time %}
+{% load shared_filters %}
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block extra_head %}
+    {{ block.super }}
+        <link rel="stylesheet" href="{% static 'events/css/baal.css' %}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="container-md min-vh-100 p-1">
+        <div class="container-size">
+            {% if event.sign_up %}
+            <div id="anmalan" class="content baal-content anmalan">
+                <div class="baal-nav"><a class="baal-link" href="{{ '/events/baal/'|localized_url }}">Tillbaka</a></div>
+                <h2 id="sign-up">{{ event.title }} {% trans "Anmälning" %}</h2>
+                {% include 'events/registration_state.html' %}
+            </div>
+        {% endif %}
+        </div>
+    </div>
+    <script>
+        $( document ).ready(function() {
+            $("input[type=checkbox][name=Avec]").click(function(){
+                $(this).parent().nextAll("p").toggleClass("hidden");
+            });
+            $("input[type=checkbox][name=Avec]").parent().nextAll("p").toggleClass("hidden")
+            $("input[type=checkbox][name=Avec]").prop( "checked", false );
+
+            $("form button").click(function(e){
+                console.log($("input[type=checkbox][name=Avec]").is(":checked"));
+                console.log($("label[for='id_Avecs Namn']").next().val() === "")
+                if ($("input[type=checkbox][name=Avec]").is(":checked")){
+                    if ($("label[for='id_Avecs Namn*']").next().val() === ""){
+                        alert("Ange avecs namn")
+                        e.preventDefault()
+                    }
+                    if ($("label[for='id_Avecs e-post*']").next().val() === ""){
+                        alert("Ange avecs e-post")
+                        e.preventDefault()
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}
