@@ -178,7 +178,7 @@ class Event(models.Model):
 
     def make_registration_form(self, data=None):
         if self.sign_up:
-            registration_questions = list(self.get_registration_form() or [])
+            registration_questions = list(self.get_registration_form())
             fields = {'user': forms.CharField(label=_('Namn'), max_length=255),
                       'email': forms.EmailField(label=_('Email'), validators=[self.validate_unique_email], max_length=320),
                       'anonymous': forms.BooleanField(label=_('Anonymt'), required=False)}

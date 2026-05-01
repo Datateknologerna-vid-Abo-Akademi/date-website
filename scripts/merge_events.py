@@ -15,6 +15,14 @@ target_index = sys.argv[2]
 
 source_event = Event.objects.filter(id=source_index).first()
 target_event = Event.objects.filter(id=target_index).first()
+
+if source_event is None:
+    print(f"Error: No event found with id {source_index}", file=sys.stderr)
+    sys.exit(1)
+if target_event is None:
+    print(f"Error: No event found with id {target_index}", file=sys.stderr)
+    sys.exit(1)
+
 storage_event = target_event.parent or target_event
 
 source_participants = EventAttendees.objects.filter(event=source_event.id).all()
