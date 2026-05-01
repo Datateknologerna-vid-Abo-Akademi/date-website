@@ -169,6 +169,7 @@ class EventDetailView(DetailView):
             form.add_error(exc.field, exc.message)
             return self.form_invalid(form)
 
+        logger.info(f"User {self.request.user} signed up with name: {form.cleaned_data['user']}")
         self.schedule_signup_side_effects(form, result.attendee)
         return self.redirect_after_signup()
 
@@ -211,7 +212,6 @@ class EventDetailView(DetailView):
         return HttpResponseForbidden()
 
     def process_signup_form(self, form, request):
-        logger.info(f"User {request.user} signed up with name: {form.cleaned_data['user']}")
         return self.form_valid(form)
 
     def schedule_signup_side_effects(self, form, attendee):

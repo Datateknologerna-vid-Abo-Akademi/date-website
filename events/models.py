@@ -189,10 +189,7 @@ class Event(models.Model):
         return max(self.sign_up_max_participants - registrations, 0)
 
     def get_registration_form(self):
-        registration_questions = EventRegistrationForm.objects.filter(event=self).order_by('choice_number')
-        if not registration_questions.exists():
-            return None
-        return registration_questions
+        return EventRegistrationForm.objects.filter(event=self).order_by('choice_number')
 
     def get_registration_form_public_info(self):
         return EventRegistrationForm.objects.filter(event=self, public_info=True)

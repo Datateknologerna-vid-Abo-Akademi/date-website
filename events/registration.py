@@ -33,9 +33,9 @@ def get_public_registration_questions(event):
     return list(EventRegistrationForm.objects.filter(event=event, public_info=True).order_by('choice_number'))
 
 
-def registration_preferences(event, cleaned_data, *, prefix=""):
+def registration_preferences(questions, cleaned_data, *, prefix=""):
     preferences = {}
-    for question in get_registration_questions(event):
+    for question in questions:
         key = f"{prefix}{question.name}"
         preferences[str(question)] = cleaned_data.get(key)
     return preferences
@@ -46,6 +46,8 @@ def register_event_signup(event, cleaned_data):
     if cleaned_data.get('avec'):
         _validate_avec(cleaned_data)
 
+    questions = get_registration_questions(event)
+
     with transaction.atomic():
         event = event.__class__.objects.select_for_update().select_related('parent').get(pk=event.pk)
         _ensure_capacity(event, required_places)
@@ -54,7 +56,7 @@ def register_event_signup(event, cleaned_data):
             user=cleaned_data['user'],
             email=cleaned_data['email'],
             anonymous=cleaned_data['anonymous'],
-            preferences=registration_preferences(event, cleaned_data),
+            preferences=registration_preferences(questions, cleaned_data),
         )
         avec_attendee = None
         if cleaned_data.get('avec'):
@@ -63,7 +65,7 @@ def register_event_signup(event, cleaned_data):
                 user=cleaned_data['avec_user'],
                 email=cleaned_data['avec_email'],
                 anonymous=cleaned_data['avec_anonymous'],
-                preferences=registration_preferences(event, cleaned_data, prefix="avec_"),
+                preferences=registration_preferences(questions, cleaned_data, prefix="avec_"),
                 avec_for=attendee,
                 duplicate_field='avec_email',
             )

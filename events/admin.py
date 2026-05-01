@@ -38,7 +38,12 @@ else:
     EventTranslationAdminBase = ModelAdmin
 
 
-class EventRegistrationFormInline(OrderableAdmin, EventTranslationInlineBase):
+class AvecAwareMixin:
+    def _event_uses_avec(self, event):
+        return bool(event and event.sign_up_avec)
+
+
+class EventRegistrationFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationInlineBase):
     line_numbering = 0
     model = EventRegistrationForm
     fk_name = 'event'
@@ -47,9 +52,6 @@ class EventRegistrationFormInline(OrderableAdmin, EventTranslationInlineBase):
     ordering_field = 'choice_number'
     ordering = ['choice_number']
     ordering_field_hide_input = True
-
-    def _event_uses_avec(self, event):
-        return bool(event and event.sign_up_avec)
 
     def get_fields(self, request, event=None):
         fields = ['choice_number', 'name', 'type', 'required', 'public_info']
@@ -68,7 +70,7 @@ class EventRegistrationFormInline(OrderableAdmin, EventTranslationInlineBase):
         return super().get_formset(request, obj, **kwargs)
 
 
-class EventAttendeesFormInline(OrderableAdmin, EventTranslationInlineBase):
+class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationInlineBase):
     ordering_field = 'attendee_nr'
     ordering_field_hide_input = True
     model = EventAttendees
@@ -81,9 +83,6 @@ class EventAttendeesFormInline(OrderableAdmin, EventTranslationInlineBase):
     }
     can_delete = True
     ordering = ['attendee_nr']
-
-    def _event_uses_avec(self, event):
-        return bool(event and event.sign_up_avec)
 
     def get_fields(self, request, event):
         fields = ['attendee_nr', 'user', 'email',
