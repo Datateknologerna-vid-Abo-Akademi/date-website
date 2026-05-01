@@ -52,6 +52,7 @@ CONTENT_VARIABLES = {
     "ASSOCIATION_NAME": "Kemistklubben",
     "ASSOCIATION_NAME_FULL": "Kemistklubben vid Åbo Akademi rf",
     "ASSOCIATION_NAME_SHORT": "KK",
+    "EVENT_TEMPLATE_LOGO": "core/images/headerlogo.png",
     "ASSOCIATION_EMAIL": "kk@abo.fi",
     "ASSOCIATION_ADDRESS_L1": "Åbo Akademi, Aurum",
     "ASSOCIATION_ADDRESS_L2": "Henriksgatan 2",

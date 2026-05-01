@@ -62,6 +62,7 @@ CONTENT_VARIABLES = {
     "ASSOCIATION_NAME": "Datateknologerna",
     "ASSOCIATION_NAME_FULL": "Datateknologerna vid Åbo Akademi rf",
     "ASSOCIATION_NAME_SHORT": "DaTe",
+    "EVENT_TEMPLATE_LOGO": "core/images/headerlogo.png",
     "ASSOCIATION_EMAIL": "date@abo.fi",
     "ASSOCIATION_ADDRESS_L1": "Åbo Akademi, Agora",
     "ASSOCIATION_ADDRESS_L2": "Vattenborgsvägen 5",

@@ -437,6 +437,7 @@ LOGOUT_REDIRECT_URL = 'index'
 OTP_LOGIN_URL = 'members:login'
 
 if DEBUG:
+    WHITENOISE_USE_FINDERS = True
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

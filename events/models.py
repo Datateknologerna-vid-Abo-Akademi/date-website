@@ -25,6 +25,19 @@ logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
 LANGUAGE_CODE_PATTERN = re.compile(r"^[a-z]{2}")
+EVENT_TEMPLATE_CHOICES_COMMON = (
+    ("", _("Normal evenemangssida")),
+    ("events/arsfest.html", _("Årsfest")),
+)
+
+EVENT_TEMPLATE_CHOICES_KK = (
+    ("events/baal_detail.html", _("Baal")),
+    ("events/kk100_detail.html", _("100 Baal")),
+    ("events/tomtejakt.html", _("Tomtejakt")),
+    ("events/wappmiddag.html", _("Wappmiddag")),
+)
+
+EVENT_TEMPLATE_CHOICES = EVENT_TEMPLATE_CHOICES_COMMON + EVENT_TEMPLATE_CHOICES_KK
 
 
 def registration_terms_feature_enabled():
@@ -43,6 +56,12 @@ def upload_to(instance, filename):
 class Event(models.Model):
     title = models.CharField(_('Titel'), max_length=255, blank=False)
     content = models.TextField(_('Innehåll'), blank=True)
+    template = models.CharField(
+        _('Mall'),
+        max_length=255,
+        choices=EVENT_TEMPLATE_CHOICES,
+        blank=True,
+    )
     event_date_start = models.DateTimeField(_('Startdatum'), default=now)
     event_date_end = models.DateTimeField(_('Slutdatum'), default=now)
     sign_up_max_participants = models.IntegerField(_('Maximal antal deltagare (0 för ingen begränsning)'), default=0)
