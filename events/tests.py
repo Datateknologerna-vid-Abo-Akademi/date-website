@@ -374,6 +374,26 @@ class EventTestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(self.event.get_registrations().count(), 1)
 
+    def test_avec_signup_saves_custom_field_preferences_for_both_attendees(self):
+        self.event.sign_up_avec = True
+        self.event.save()
+        EventRegistrationForm.objects.create(
+            event=self.event, choice_number=1, name='meal', type='text', required=False,
+        )
+        c = Client()
+        response = c.post(reverse('events:detail', args=[self.event.slug]), {
+            'user': 'Primary', 'email': 'primary@test.com', 'terms_accepted': 'on',
+            'meal': 'fish',
+            'avec': 'on', 'avec_user': 'Guest', 'avec_email': 'guest@test.com',
+            'avec_meal': 'veg',
+        }, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        primary = self.event.get_registrations().get(email='primary@test.com')
+        guest = self.event.get_registrations().get(email='guest@test.com')
+        self.assertEqual(primary.preferences.get('meal'), 'fish')
+        self.assertEqual(guest.preferences.get('meal'), 'veg')
+
     def test_avec_requires_name_and_email_when_selected(self):
         self.event.sign_up_avec = True
         self.event.save()
@@ -1030,6 +1050,61 @@ class EventCapacityTests(TestCase):
         self.assertContains(response, "Det finns 7 platser kvar!")
         self.assertNotContains(response, "Det finns 8 platser kvar!")
 
+    def test_full_event_detail_page_hides_form_and_shows_warning(self):
+        event = Event.objects.create(
+            title="Full Rendered Event",
+            slug="full-rendered-event",
+            author=self.author,
+            sign_up_max_participants=1,
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+        )
+        EventAttendees.objects.create(
+            event=event,
+            user="Registered",
+            email="registered-rendered@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        with translation.override("sv"):
+            response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="user"')
+        self.assertNotContains(response, 'name="email"')
+        self.assertContains(response, "Evenemanget är tyvärr fullt")
+        self.assertNotContains(response, "reservlistan")
+
+    def test_full_child_event_detail_page_hides_form_and_shows_warning(self):
+        parent = Event.objects.create(
+            title="Full Child Parent Rendered",
+            slug="full-child-parent-rendered",
+            author=self.author,
+        )
+        child = Event.objects.create(
+            title="Full Child Rendered",
+            slug="full-child-rendered",
+            author=self.author,
+            parent=parent,
+            sign_up_max_participants=1,
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+        )
+        EventAttendees.objects.create(
+            event=parent,
+            original_event=child,
+            user="Registered",
+            email="registered-child-rendered@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        with translation.override("sv"):
+            response = self.client.get(reverse("events:detail", args=[child.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="user"')
+        self.assertContains(response, "Evenemanget är tyvärr fullt")
+
 
 @override_settings(CONTENT_VARIABLES={**settings.CONTENT_VARIABLES, "INTERNATIONAL_EVENT_SLUGS": ["intl-slug"]})
 class EventFormBuilderTests(TestCase):
@@ -1119,6 +1194,18 @@ class EventFormBuilderTests(TestCase):
         terms_field = form.base_fields["terms_accepted"]
         self.assertIn("anmälningsvillkoren för evenemanget", str(terms_field.label))
         self.assertIn("Jämlikhetsplan", str(terms_field.help_text))
+
+    def test_get_registration_form_returns_empty_queryset_when_no_questions(self):
+        event = Event.objects.create(
+            title="No Questions Event",
+            slug="no-questions-event",
+            author=self.author,
+        )
+
+        result = event.get_registration_form()
+
+        self.assertFalse(result.exists())
+        self.assertEqual(list(result), [])
 
 
 class EventNumberingTests(TestCase):
