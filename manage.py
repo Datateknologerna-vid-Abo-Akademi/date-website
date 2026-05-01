@@ -1,20 +1,8 @@
 #!/usr/bin/env python
 import os
-import subprocess
 import sys
 
 proj_name = os.environ.get("PROJECT_NAME") or "date"
-
-try:
-    current = subprocess.run(
-        ['git', 'config', 'core.hooksPath'],
-        capture_output=True, text=True,
-    )
-    if current.stdout.strip() != '.githooks':
-        subprocess.run(['git', 'config', 'core.hooksPath', '.githooks'], check=True)
-        print("Configured git hooks (.githooks/pre-push)")
-except Exception:
-    pass
 
 # When running the Django test suite we default to the test settings module.
 if "test" in sys.argv and "DJANGO_SETTINGS_MODULE" not in os.environ:
