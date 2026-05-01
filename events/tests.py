@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.conf import settings
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 from django.test import Client, TestCase, override_settings
 from django.test.client import RequestFactory
 from django.urls import reverse
@@ -708,7 +709,7 @@ class EventAdminTests(TestCase):
 
     def test_admin_forms_reject_kk_only_template_for_other_associations(self):
         edit_form = EventEditForm(instance=self.event)
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValidationError):
             edit_form.fields["template"].clean("events/wappmiddag.html")
 
     def test_admin_forms_accept_blank_event_template(self):
