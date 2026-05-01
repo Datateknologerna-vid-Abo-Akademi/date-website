@@ -446,7 +446,7 @@ requires-dist = [
     { name = "django-storages" },
     { name = "django-tables2" },
     { name = "django-two-factor-auth" },
-    { name = "django-unfold", specifier = ">=0.90,<0.91" },
+    { name = "django-unfold", specifier = ">=0.92.0,<0.93" },
     { name = "gspread" },
     { name = "gunicorn" },
     { name = "icalendar" },
@@ -675,14 +675,14 @@ wheels = [
 
 [[package]]
 name = "django-unfold"
-version = "0.90.0"
+version = "0.92.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "django" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/52/e3/86c7d882260549cb9c9310bc6f343988816aab66d56b22e031cd04d426d8/django_unfold-0.90.0.tar.gz", hash = "sha256:e1627e8a0c8d16311b6e43736eaed449204a2f6cb6c323b63e583a07517f4fcd", size = 1120050, upload-time = "2026-04-16T13:03:10.177Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2a/f7/789d25724f9466a6b0d61a5d88ae34d2dd96623ef478a2490330cb4a2aa5/django_unfold-0.92.0.tar.gz", hash = "sha256:cf3e2b1350899fc4380f5870eef25042993d10aa59544f92d4c9986854c5c048", size = 1122249, upload-time = "2026-05-01T07:49:20.88Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/67/96/5291b8da29254409d9658044837b0a21a5424103534bb472027562c36a73/django_unfold-0.90.0-py3-none-any.whl", hash = "sha256:f921804427a705cfaadca941a8ab32da033735acfb4c43de27f39db5a7467001", size = 1242469, upload-time = "2026-04-16T13:03:08.312Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/36/5546921b5217fe60a3deb2176ad778988dd9733ff9d2adc87534daa7b539/django_unfold-0.92.0-py3-none-any.whl", hash = "sha256:7f57f7db6208faa2eb108586b0d7c2dd03ac37eb45d5d79549f35594c6b24760", size = 1246206, upload-time = "2026-05-01T07:49:19.081Z" },
 ]
 
 [[package]]
