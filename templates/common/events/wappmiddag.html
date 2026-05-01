@@ -12,13 +12,13 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
         <script src="{% static 'core/js/live-attendee-list.js' %}"></script>
         <style>
-            .background-img{
+            {% if event.background_image_url %}.background-img{
                 background: url("{{ event.background_image_url }}") no-repeat center center fixed;
                 -webkit-background-size: cover;
                 -moz-background-size: cover;
                 -o-background-size: cover;
                 background-size: cover;
-            }
+            }{% endif %}
         </style>
 {% endblock %}
 
