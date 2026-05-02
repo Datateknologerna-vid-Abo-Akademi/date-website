@@ -9,3 +9,38 @@
     <img class="header-logo" src="{% static 'core/images/pulterit-white-wo-text.svg' %}" alt="{{ ASSOCIATION_NAME }} logo">
 </a>
 {% endblock %}
+
+{% block header_language_picker %}
+{% if ENABLE_LANGUAGE_FEATURES and LANGUAGES|length > 1 %}
+<li class="nav-item dropdown d-none d-lg-block">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarLanguageMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        {% trans "Language" %}
+    </a>
+    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarLanguageMenuLink">
+        {% for language in LANGUAGES %}
+            <li>
+                <form action="{% url 'set_lang' %}" method="post">
+                    {% csrf_token %}
+                    <button class="dropdown-item" name="lang" type="submit" value="{{ language.0 }}">{{ language.1 }}</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+</li>
+<li class="nav-item dropdown d-lg-none pulterit-mobile-language-switcher">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarMobileLanguageMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        {% trans "Language" %}
+    </a>
+    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarMobileLanguageMenuLink">
+        {% for language in LANGUAGES %}
+            <li>
+                <form action="{% url 'set_lang' %}" method="post">
+                    {% csrf_token %}
+                    <button class="dropdown-item" name="lang" type="submit" value="{{ language.0 }}">{{ language.1 }}</button>
+                </form>
+            </li>
+        {% endfor %}
+    </ul>
+</li>
+{% endif %}
+{% endblock %}
