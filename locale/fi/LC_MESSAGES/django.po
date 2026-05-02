@@ -1994,7 +1994,7 @@ msgstr "Tapahtumia ei löydetty"
 
 #: templates/pulterit/core/footer.html:23
 msgid "Website developed and maintained by"
-msgstr "Verkkosivuston on kehitettänyt ja ylläpitää"
+msgstr "Verkkosivuston on kehittänyt ja sitä ylläpitää"
 
 #: templates/pulterit/date/components/partners.html:8
 #: templates/pulterit/date/components/partners.html:12
