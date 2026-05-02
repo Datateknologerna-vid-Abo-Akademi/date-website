@@ -12,24 +12,6 @@
 <img class="footer-img img-fluid" alt="{% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}{{ association_name }} logo{% endblocktranslate %}" src="{% static 'core/images/pulterit-white.svg' %}">
 {% endblock %}
 
-<<<<<<< HEAD
-{% block footer_right_brand %}
-<a href="https://geohouse.fi/" target="_blank" rel="noopener">
-    <img class="footer-img img-fluid" alt="Geohouse logo" src="{% static 'core/images/Geohouse_logo-1-1.png' %}" style="max-height: 120px;">
-</a>
-{% endblock %}
-
-{% block extra_footer %}
-<div class="text-center mb-2">
-    <small>{% trans "Developed by" %}</small><br>
-    <div style="mix-blend-mode: multiply; display: inline-block;">
-        <a href="https://datateknologerna.org/" target="_blank" rel="noopener">
-            <img src="{% static 'core/images/Sponsor_Albin.png' %}" alt="DaTe logo" style="max-height: 60px; filter: invert(1);">
-        </a>
-    </div>
-</div>
-{% endblock %}
-=======
 {% block footer_right %}
 <div class="col-12 col-md-4 text-center">
     <a href="https://geohouse.fi/" target="_blank" rel="noopener">
@@ -59,4 +41,3 @@
     <a href="https://datateknologerna.org/" target="_blank" rel="noopener"><img src="{% static 'core/images/Sponsor_Albin.png' %}" alt="DaTe logo" style="max-height: 40px; filter: invert(1);"></a></small>
 </p>
 {% endblock %}
->>>>>>> develop
