@@ -15,17 +15,19 @@ services:
       - internal
   pgbouncer:
     image: edoburu/pgbouncer:v1.25.1-p0
+    restart: always
     depends_on:
       - db
     environment:
       DB_HOST: db
-      DB_PORT: 5432
       DB_USER: postgres
       DB_PASSWORD: ${DATE_DB_PASSWORD}
       POOL_MODE: transaction
       AUTH_TYPE: scram-sha-256
       MAX_CLIENT_CONN: 1000
-      ADMIN_USERS: postgres,admin
+      ADMIN_USERS: postgres
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost"]
     networks:
       - internal
   web:
