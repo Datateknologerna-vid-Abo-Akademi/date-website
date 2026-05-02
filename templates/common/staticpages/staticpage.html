@@ -6,10 +6,11 @@
 {% block extra_head %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'staticpages/css/staticpage.css' %}" type="text/css">
-    {% if page.image or page.s3_image %}
+    {% with background_image_url=page.background_image_url %}
+    {% if background_image_url %}
         <style>
             .background-img {
-                background: url("{% if page.image %}{{ page.image.url }}{% elif page.s3_image %}{{ page.s3_image.url }}{% endif %}") no-repeat center center fixed;
+                background: url("{{ background_image_url }}") no-repeat center center fixed;
                 -webkit-background-size: cover;
                 -moz-background-size: cover;
                 -o-background-size: cover;
@@ -17,6 +18,7 @@
             }
         </style>
     {% endif %}
+    {% endwith %}
 {% endblock %}
 
 {% block content %}
