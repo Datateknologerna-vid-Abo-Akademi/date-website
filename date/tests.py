@@ -33,6 +33,7 @@ class SiteShellTemplateTests(TestCase):
         return {
             "ASSOCIATION_NAME": "Test Association",
             "ASSOCIATION_NAME_FULL": "Test Association rf",
+            "ASSOCIATION_NAME_FULL_RF": "Test Association rf",
             "ASSOCIATION_NAME_SHORT": "TA",
             "ASSOCIATION_EMAIL": "test@example.com",
             "ASSOCIATION_ADDRESS_L1": "Line 1",
@@ -92,8 +93,28 @@ class SiteShellTemplateTests(TestCase):
 
         self.assertIn("container-fluid px-3", rendered)
         self.assertIn("pulterit-white-wo-text.svg", rendered)
-        self.assertIn("navbarLanguageMenuLink", rendered)
-        self.assertIn("pulterit-mobile-language-switcher", rendered)
+        self.assertIn("languageDropdownMenuLink", rendered)
+
+    def test_pulterit_base_loads_header_overrides_after_shared_header_css(self):
+        pulterit_settings = importlib.import_module("core.settings.pulterit")
+
+        with override_settings(
+            TEMPLATES=pulterit_settings.TEMPLATES,
+            STATICFILES_DIRS=pulterit_settings.STATICFILES_DIRS,
+        ):
+            rendered = render_to_string("core/base.html", {
+                **self._content_context(),
+                "ASSOCIATION_NAME": "Pulterit",
+                "ENABLE_LANGUAGE_FEATURES": True,
+                "LANGUAGES": (("sv", "Svenska"), ("en", "English")),
+            })
+
+        shared_header_css = "core/css/header.css"
+        pulterit_header_css = "core/css/header-overrides.css"
+        self.assertIn(shared_header_css, rendered)
+        self.assertIn(pulterit_header_css, rendered)
+        self.assertLess(rendered.index(shared_header_css), rendered.index(pulterit_header_css))
+
 
     def test_language_picker_hides_when_disabled_in_header_template(self):
         template = Template("{% include 'core/header.html' %}")

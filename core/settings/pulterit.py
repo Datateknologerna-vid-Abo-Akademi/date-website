@@ -51,6 +51,7 @@ CONTENT_VARIABLES = {
     "SITE_URL": "https://pulterit.org",
     "ASSOCIATION_NAME": "Pulterit",
     "ASSOCIATION_NAME_FULL": "Pulterit ry",
+    "ASSOCIATION_NAME_FULL_RF": "Pulterit rf",
     "ASSOCIATION_NAME_SHORT": "Pulterit",
     "EVENT_TEMPLATE_LOGO": "core/images/pulterit-black-wo-text.svg",
     "ASSOCIATION_EMAIL": "pulterithal@utu.fi",

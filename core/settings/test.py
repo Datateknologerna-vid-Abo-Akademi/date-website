@@ -3,6 +3,7 @@ from core.translation_compiler import ensure_compiled_translations
 
 
 ensure_compiled_translations()
+PROJECT_NAME = "date"
 ENABLE_LANGUAGE_FEATURES = True
 LANGUAGES = ALL_LANGUAGES
 

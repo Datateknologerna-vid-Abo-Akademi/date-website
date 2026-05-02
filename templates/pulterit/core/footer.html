@@ -15,13 +15,29 @@
 {% block footer_right %}
 <div class="col-12 col-md-4 text-center">
     <a href="https://geohouse.fi/" target="_blank" rel="noopener">
-        <img class="footer-img img-fluid" alt="Geohouse logo" src="{% static 'core/images/Geohouse_logo-1-1.png' %}" style="max-height: 80px;">
+        <img class="footer-img img-fluid" alt="Geohouse logo" src="{% static 'core/images/Geohouse_logo-1-1.png' %}" style="max-height: 200px;">
     </a>
 </div>
 {% endblock %}
 
+{% block footer_contact_sentence %}
+{% get_current_language as lang %}
+<p>
+    {% if lang == 'sv' %}
+        {% blocktranslate with association_name=ASSOCIATION_NAME_FULL_RF trimmed %}
+        Styrelsen för {{ association_name }} kan kontaktas på följande sätt.
+        {% endblocktranslate %}
+    {% else %}
+        {% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}
+        Styrelsen för {{ association_name }} kan kontaktas på följande sätt.
+        {% endblocktranslate %}
+    {% endif %}
+</p>
+{% endblock %}
+
 {% block extra_footer %}
 <p class="text-center mb-2 mt-3">
-    <small>{% trans "Developed by" %} <a href="https://datateknologerna.org/" target="_blank" rel="noopener"><img src="{% static 'core/images/Sponsor_Albin.png' %}" alt="DaTe logo" style="max-height: 28px; vertical-align: middle; filter: invert(1); margin-left: 4px;"></a></small>
+    <small>{% trans "Website developed and maintained by" %}  <a href="https://datateknologerna.org/" target="_blank" rel="noopener">DaTe</a><br>
+    <a href="https://datateknologerna.org/" target="_blank" rel="noopener"><img src="{% static 'core/images/Sponsor_Albin.png' %}" alt="DaTe logo" style="max-height: 40px; filter: invert(1);"></a></small>
 </p>
 {% endblock %}

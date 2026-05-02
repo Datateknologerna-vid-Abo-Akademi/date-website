@@ -96,7 +96,7 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
     def get_fieldsets(self, request, event=None):
         return [(None, {'fields': self.get_fields(request, event)})]
 
-    def get_readonly_fields(self, request, event):
+    def get_readonly_fields(self, request, event=None):
         readonly_fields = ['time_registered']
         if event and event.children.exists():
             readonly_fields.append('original_event')
