@@ -1,4 +1,0 @@
-  - job_name: containers
-    static_configs:
-      - targets:
-          - cadvisor:8080
