@@ -20,11 +20,13 @@
                 {% endblock %}
             </div>
             <div class="col-12 col-md-4 association-footer-copy{% block footer_copy_class_suffix %}{% endblock %}">
+                {% block footer_contact_sentence %}
                 <p>
                     {% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}
                     Styrelsen för {{ association_name }} kan kontaktas på följande sätt.
                     {% endblocktranslate %}
                 </p>
+                {% endblock %}
                 <p>
                     {% trans 'E-post' %}:<br>
                     {{ ASSOCIATION_EMAIL }}

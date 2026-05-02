@@ -377,7 +377,9 @@ class EventTestCase(TestCase):
 
     def test_avec_signup_saves_custom_field_preferences_for_both_attendees(self):
         self.event.sign_up_avec = True
+        self.event.sign_up_others = timezone.now() - timezone.timedelta(hours=1)
         self.event.save()
+
         EventRegistrationForm.objects.create(
             event=self.event, choice_number=1, name='meal', type='text', required=False,
         )

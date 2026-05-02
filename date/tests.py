@@ -92,8 +92,8 @@ class SiteShellTemplateTests(TestCase):
 
         self.assertIn("container-fluid px-3", rendered)
         self.assertIn("pulterit-white-wo-text.svg", rendered)
-        self.assertIn("navbarLanguageMenuLink", rendered)
-        self.assertIn("pulterit-mobile-language-switcher", rendered)
+        self.assertIn("languageDropdownMenuLink", rendered)
+
 
     def test_language_picker_hides_when_disabled_in_header_template(self):
         template = Template("{% include 'core/header.html' %}")
