@@ -166,7 +166,7 @@ When `.env.prod.example` changes, update an existing production `.env` without l
 ./scripts/sync_env_from_template.sh .env.prod.example .env
 ```
 
-The script rewrites `.env` using the example file's comments and ordering, keeps existing values for matching keys, and appends keys that exist only in the production file at the bottom. After `source env.sh`, the same operation is available as `date-sync-prod-env`; preview the result with `date-sync-prod-env --dry-run`.
+The script rewrites `.env` using the example file's comments and ordering, keeps existing values for matching keys, and appends keys that exist only in the production file at the bottom. It writes a timestamped backup under `.env-backups/` before replacing the target file. After `source env.sh`, the same operation is available as `date-sync-prod-env`; preview the result with `date-sync-prod-env --dry-run`.
 
 For development checkouts, use `date-sync-dev-env` to sync `.env` from `.env.example` with the same preserve-existing-values behavior. This helper refuses to run when the current `.env` looks like production; use `date-sync-prod-env` there instead.
 

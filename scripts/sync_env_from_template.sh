@@ -3,11 +3,14 @@ set -euo pipefail
 
 usage() {
     cat <<'EOF'
-Usage: scripts/sync_env_from_template.sh [--dry-run] [template-env-file] [target-env-file]
+Usage: scripts/sync_env_from_template.sh [--dry-run] [--no-backup] [template-env-file] [target-env-file]
 
 Rebuild an env file using the template file's comments/order while preserving
 values already present in the target env file. Keys that exist only in the
 target file are appended at the bottom under a local-only section.
+Before writing, the current target file is copied to
+<target-directory>/.env-backups/<target-basename>.bak.<timestamp> unless
+--no-backup is passed.
 
 Defaults:
   template-env-file  .env.prod.example
@@ -16,10 +19,33 @@ EOF
 }
 
 dry_run=false
-if [[ "${1:-}" == "--dry-run" || "${1:-}" == "-n" ]]; then
-    dry_run=true
-    shift
-fi
+backup=true
+
+while [[ "${1:-}" == -* ]]; do
+    case "$1" in
+        --dry-run|-n)
+            dry_run=true
+            shift
+            ;;
+        --no-backup)
+            backup=false
+            shift
+            ;;
+        --help|-h)
+            usage
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            usage >&2
+            exit 1
+            ;;
+    esac
+done
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     usage
@@ -122,9 +148,31 @@ done
 if [[ "$dry_run" == true ]]; then
     cat "$tmp_file"
 else
+    if [[ ! -s "$tmp_file" ]]; then
+        echo "Refusing to replace $target_file with an empty generated file" >&2
+        exit 1
+    fi
+
+    if chmod --reference="$target_file" "$tmp_file" 2>/dev/null; then
+        :
+    else
+        chmod 600 "$tmp_file"
+    fi
+
+    backup_file=""
+    if [[ "$backup" == true ]]; then
+        backup_dir="$(dirname "$target_file")/.env-backups"
+        backup_file="$backup_dir/$(basename "$target_file").bak.$(date +%Y%m%d%H%M%S)"
+        mkdir -p "$backup_dir"
+        cp -p "$target_file" "$backup_file"
+    fi
+
     mv "$tmp_file" "$target_file"
     trap - EXIT
     echo "Synced $target_file from $template_file"
+    if [[ -n "$backup_file" ]]; then
+        echo "Backup written to $backup_file"
+    fi
     if [[ "$extra_count" -gt 0 ]]; then
         echo "Preserved $extra_count target-only key(s) at the bottom"
     fi
