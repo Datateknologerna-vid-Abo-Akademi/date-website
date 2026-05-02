@@ -114,18 +114,3 @@ li .dropdown-menu {
 .header-logo{
     max-height: 45px;
 }
-
-@media (max-width: 991.98px) {
-    .pulterit-mobile-language-switcher {
-        margin: 0.75rem 0 0;
-        padding: 0.5rem 0 0;
-        border-top: 1px solid rgba(255, 255, 255, 0.16);
-    }
-
-    .pulterit-mobile-language-switcher .dropdown-menu {
-        margin: 0.15rem 0 0.25rem 0.5rem;
-        padding: 0.25rem 0;
-        border: 0;
-        box-shadow: none;
-    }
-}
