@@ -116,6 +116,7 @@ class SiteShellTemplateTests(TestCase):
         self.assertLess(rendered.index(shared_header_css), rendered.index(pulterit_header_css))
 
 
+
     def test_language_picker_hides_when_disabled_in_header_template(self):
         template = Template("{% include 'core/header.html' %}")
         rendered = template.render(Context(self._content_context()))

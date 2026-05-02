@@ -10,12 +10,12 @@
 
 .content-past,
 .content-past h4 {
-    color: #6d28d9;
+    color: var(--accentColor);
 }
 
 .content-past:hover,
 .content-past:hover h4 {
-    color: #5b21b6;
+    color: var(--accentColorHover);
 }
 
 .card {
