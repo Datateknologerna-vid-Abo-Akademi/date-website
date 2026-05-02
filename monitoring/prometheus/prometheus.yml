@@ -13,12 +13,7 @@ scrape_configs:
       - targets:
           - node-exporter:9100
 
-  - job_name: containers
-    static_configs:
-      - targets:
-          - cadvisor:8080
-
-  - job_name: app-exporters
+  - job_name: exporters
     file_sd_configs:
       - files:
           - /etc/prometheus/targets/*.yml

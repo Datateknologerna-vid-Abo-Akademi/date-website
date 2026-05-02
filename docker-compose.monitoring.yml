@@ -3,7 +3,9 @@ services:
     image: prometheuscommunity/postgres-exporter:v0.15.0
     restart: unless-stopped
     environment:
-      DATA_SOURCE_NAME: "postgresql://postgres:${DATE_DB_PASSWORD}@db:5432/postgres?sslmode=disable"
+      DATA_SOURCE_URI: "db:5432/postgres?sslmode=disable"
+      DATA_SOURCE_USER: postgres
+      DATA_SOURCE_PASS: "${DATE_DB_PASSWORD}"
     depends_on:
       - db
     networks:

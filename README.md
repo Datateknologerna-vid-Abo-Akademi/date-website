@@ -199,6 +199,7 @@ The app overlay adds only `postgres-exporter`, `redis-exporter`, and `nginx-expo
 Enable cAdvisor only if you need per-container CPU, memory, filesystem, and network metrics:
 
 ```bash
+cp prometheus/targets/cadvisor.yml.example prometheus/targets/cadvisor.yml
 COMPOSE_PROFILES="cadvisor" docker compose up -d
 ```
 
