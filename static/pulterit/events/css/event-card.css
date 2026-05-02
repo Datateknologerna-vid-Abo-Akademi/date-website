@@ -5,7 +5,7 @@
 
 .card .fa-chevron-right {
     transition: .3s;
-    color: #6d28d9;
+    color: var(--accentColor);
 }
 
 .card a:hover .fa-chevron-right {
@@ -27,8 +27,8 @@
 }
 
 .card-body a {
-    color: #6d28d9;
-    border-color: #6d28d9;
+    color: var(--accentColor);
+    border-color: var(--accentColor);
 }
 
 .card-body a:active {
