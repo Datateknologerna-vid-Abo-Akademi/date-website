@@ -160,7 +160,50 @@ The production stack relies on the published container image at `ghcr.io/datatek
    ```
 3. Deploy: `docker compose up -d` or run `source env.sh` once and use `date up -d`.
 
+When `.env.prod.example` changes, update an existing production `.env` without losing real secrets:
+
+```bash
+./scripts/sync_env_from_template.sh .env.prod.example .env
+```
+
+The script rewrites `.env` using the example file's comments and ordering, keeps existing values for matching keys, and appends keys that exist only in the production file at the bottom. It writes a timestamped backup under `.env-backups/` before replacing the target file. After `source env.sh`, the same operation is available as `date-sync-prod-env`; preview the result with `date-sync-prod-env --dry-run`.
+
+For development checkouts, use `date-sync-dev-env` to sync `.env` from `.env.example` with the same preserve-existing-values behavior. This helper refuses to run when the current `.env` looks like production; use `date-sync-prod-env` there instead.
+
 The stack brings up the `web` (Gunicorn), `asgi` (Daphne/Channels), `celery`, `db`, `redis`, and `nginx` services. Rolling deploys usually build a new GHCR image in CI, update `DATE_IMG_TAG`, then restart `web`, `asgi`, and `celery`.
+
+### Shared Compose monitoring
+
+For hosts running multiple association stacks, run one shared Prometheus/Grafana stack per host and enable only lightweight exporters in each app stack. Create the shared network once:
+
+```bash
+docker network create monitoring
+```
+
+Start the shared host monitoring stack from this repository's `monitoring/` directory:
+
+```bash
+cd monitoring
+docker compose up -d
+```
+
+Then enable app-level exporters for each production stack by adding the overlay to that stack's `.env`:
+
+```bash
+COMPOSE_FILE="docker-compose.prod.yml:docker-compose.monitoring.yml"
+MONITORING_TARGET_PREFIX="datewebsite"
+```
+
+The app overlay adds only `postgres-exporter`, `redis-exporter`, and `nginx-exporter`. The shared monitoring stack adds Prometheus, Grafana, and `node-exporter` once per host, with cAdvisor available through the optional `cadvisor` Compose profile. Prometheus scrapes every 30 seconds, keeps 30 days of metrics by default through `PROMETHEUS_RETENTION=30d`, and caps local metric storage at `PROMETHEUS_RETENTION_SIZE=8GB`; older data is removed automatically when either limit is reached. Prometheus and Grafana bind to localhost by default through `PROMETHEUS_BIND` and `GRAFANA_BIND`; keep that default unless they sit behind a trusted VPN, SSH tunnel, or authenticated reverse proxy. The Nginx `stub_status` endpoint listens on port `8080` inside the Nginx container and is not published by Compose, but containers sharing the production app networks can reach it for exporter scraping.
+
+Enable cAdvisor only if you need per-container CPU, memory, filesystem, and network metrics:
+
+```bash
+cp prometheus/targets/cadvisor.yml.example prometheus/targets/cadvisor.yml
+COMPOSE_PROFILES="cadvisor" docker compose up -d
+```
+
+Add each association's exporter aliases to `monitoring/prometheus/targets/*.yml`; `monitoring/prometheus/datewebsite.targets.yml.example` shows the expected labels and target names. Grafana is provisioned with Prometheus as the default data source. Set `GRAFANA_ADMIN_PASSWORD` before enabling the shared stack in production.
 
 CI image publishing and release tagging are separate on purpose:
 
