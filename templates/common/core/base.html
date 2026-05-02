@@ -27,8 +27,8 @@
     <link rel="stylesheet" href="{% static 'core/css/footer.css' %}">
 </head>
 
-{% include 'core/header.html' %}
 <body>
+{% include 'core/header.html' %}
 {% if messages %}
     <div class="container pt-3" style="margin-top: 70px;">
         {% for message in messages %}
@@ -46,34 +46,9 @@
         integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
         crossorigin="anonymous"></script>
 <script src="{% static 'core/js/cookie-banner.js' %}"></script>
+<script src="{% static 'core/js/external-links.js' %}" defer></script>
 {% block footer %}
 {% include 'core/footer.html' %}
 {% endblock %}
 </body>
-<!-- JavaScript for opening external links in new tab -->
-<script defer>
-    function setExternalLinksOpenInNewTab() {
-        const currentURL = new URL(document.URL);
-        document.querySelectorAll('a[href]').forEach((elem) => {
-            const rawHref = (elem.getAttribute('href') || '').trim();
-            if (!rawHref) return;
-            if (rawHref.startsWith('#')) return;
-
-            let linkHref;
-            try {
-                linkHref = new URL(rawHref, document.baseURI);
-            } catch (err) {
-                return;
-            }
-
-            if (!['http:', 'https:'].includes(linkHref.protocol)) return;
-
-            if (currentURL.origin !== linkHref.origin) {
-                elem.target = '_blank';
-                elem.rel = 'noopener noreferrer';
-            }
-        });
-    }
-    setExternalLinksOpenInNewTab();
-</script>
 </html>

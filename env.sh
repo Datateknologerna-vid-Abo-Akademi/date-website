@@ -20,7 +20,7 @@ unalias date date-manage date-migrate date-makemigrations date-collectstatic \
     date-cleaninit date-stop date-start date-start-detached date-createsuperuser \
     date-pull date-seed-gallery date-seed-gallery-clear date-all date-all-manage \
     date-all-start date-all-stop date-all-cleaninit date-all-seed-gallery \
-    date-all-seed-gallery-clear date-backup date-restore 2>/dev/null || true
+    date-all-seed-gallery-clear date-backup date-restore date-setup 2>/dev/null || true
 
 # Resolve the checkout to operate on. This lets globally installed helpers
 # follow the current working directory while still having DATE_WEBSITE_DIR as a
@@ -116,7 +116,7 @@ date-all-manage() {
 }
 
 date-all-start() {
-    date-all up --build "$@"
+    date-all up "$@"
 }
 
 date-all-stop() {
@@ -147,6 +147,25 @@ date-restore() {
     local project_dir
     project_dir="$(_date_website_project_dir)" || return
     "$project_dir/scripts/restore_postgres.sh" "$@"
+}
+
+date-setup() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+
+    if [ ! -f "$project_dir/.env" ]; then
+        cp "$project_dir/.env.example" "$project_dir/.env"
+        echo "Created .env from .env.example — edit it before continuing."
+    else
+        echo ".env already exists, skipping."
+    fi
+
+    git -C "$project_dir" config core.hooksPath .githooks
+    echo "Git hooks installed."
+
+    "$project_dir/scripts/clean_init.sh" --yes
+
+    echo "Run 'date-start' or 'date-start-detached' to start the stack."
 }
 
 date-test() {

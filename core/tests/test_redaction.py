@@ -78,4 +78,5 @@ class RedactingFormatterTests(SimpleTestCase):
 
 class LoggingSettingsTests(SimpleTestCase):
     def test_django_console_handler_does_not_override_logger_level(self):
-        self.assertEqual(settings.LOGGING["handlers"]["console"]["level"], "NOTSET")
+        from core.settings.common import LOGGING
+        self.assertEqual(LOGGING["handlers"]["console"]["level"], "NOTSET")

@@ -38,19 +38,39 @@ else:
     EventTranslationAdminBase = ModelAdmin
 
 
-class EventRegistrationFormInline(OrderableAdmin, EventTranslationInlineBase):
+class AvecAwareMixin:
+    def _event_uses_avec(self, event):
+        return bool(event and event.sign_up_avec)
+
+
+class EventRegistrationFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationInlineBase):
     line_numbering = 0
     model = EventRegistrationForm
     fk_name = 'event'
     extra = 0
-    fields = ('choice_number', 'name', 'type', 'required',
-              'public_info', 'hide_for_avec', 'choice_list')
     can_delete = True
     ordering_field = 'choice_number'
     ordering = ['choice_number']
     ordering_field_hide_input = True
 
-class EventAttendeesFormInline(OrderableAdmin, EventTranslationInlineBase):
+    def get_fields(self, request, event=None):
+        fields = ['choice_number', 'name', 'type', 'required', 'public_info']
+        if self._event_uses_avec(event):
+            fields.append('hide_for_avec')
+        fields.append('choice_list')
+        return fields
+
+    def get_fieldsets(self, request, event=None):
+        return [(None, {'fields': self.get_fields(request, event)})]
+
+    def get_formset(self, request, obj=None, **kwargs):
+        if not self._event_uses_avec(obj):
+            kwargs.setdefault('exclude', [])
+            kwargs['exclude'] = [*kwargs['exclude'], 'hide_for_avec']
+        return super().get_formset(request, obj, **kwargs)
+
+
+class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationInlineBase):
     ordering_field = 'attendee_nr'
     ordering_field_hide_input = True
     model = EventAttendees
@@ -69,15 +89,24 @@ class EventAttendeesFormInline(OrderableAdmin, EventTranslationInlineBase):
                   'anonymous', 'preferences', 'time_registered']
         if event and event.children.exists():
             fields.append('original_event')
-        if event and event.sign_up_avec:
+        if self._event_uses_avec(event):
             fields.append('avec_for')
         return fields
 
-    def get_readonly_fields(self, request, event):
+    def get_fieldsets(self, request, event=None):
+        return [(None, {'fields': self.get_fields(request, event)})]
+
+    def get_readonly_fields(self, request, event=None):
         readonly_fields = ['time_registered']
         if event and event.children.exists():
             readonly_fields.append('original_event')
         return readonly_fields
+
+    def get_formset(self, request, obj=None, **kwargs):
+        if not self._event_uses_avec(obj):
+            kwargs.setdefault('exclude', [])
+            kwargs['exclude'] = [*kwargs['exclude'], 'avec_for']
+        return super().get_formset(request, obj, **kwargs)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         event_id = request.resolver_match.kwargs.get('object_id')

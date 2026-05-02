@@ -10,7 +10,7 @@ from core.admin_widgets import SafeAdminFileWidget
 
 from date.functions import slugify_max
 from events import models
-from events.models import Event
+from events.models import Event, EVENT_TEMPLATE_CHOICES_COMMON, EVENT_TEMPLATE_CHOICES_KK
 
 logger = logging.getLogger('date')
 
@@ -52,6 +52,12 @@ def unique_event_slug(slug, title, instance=None):
     return slug
 
 
+def _template_choices():
+    if settings.PROJECT_NAME == 'kk':
+        return EVENT_TEMPLATE_CHOICES_COMMON + EVENT_TEMPLATE_CHOICES_KK
+    return EVENT_TEMPLATE_CHOICES_COMMON
+
+
 class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
     user = None
     redirect_link = forms.URLField(required=False, assume_scheme="https")
@@ -73,6 +79,8 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
                 self.fields['require_registration_terms'].initial = True
             else:
                 self.fields.pop('require_registration_terms')
+        if 'template' in self.fields:
+            self.fields['template'].choices = _template_choices()
 
     class Meta:
         model = Event
@@ -81,6 +89,7 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
             'event_date_start',
             'event_date_end',
             'content',
+            'template',
             'sign_up',
             'sign_up_max_participants',
             'sign_up_others',
@@ -159,6 +168,8 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
                 self.fields[field_name].widget = SafeAdminFileWidget()
         if 'require_registration_terms' in self.fields and not models.registration_terms_feature_enabled():
             self.fields.pop('require_registration_terms')
+        if 'template' in self.fields:
+            self.fields['template'].choices = _template_choices()
         # exclude the current instance from parent choices so an event cannot be its own parent
         try:
             if getattr(self, 'instance', None) and getattr(self.instance, 'pk', None):
@@ -182,6 +193,7 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
             'event_date_start',
             'event_date_end',
             'content',
+            'template',
             'sign_up',
             'sign_up_max_participants',
             'sign_up_others',

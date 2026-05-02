@@ -8,7 +8,6 @@ from datetime import timedelta
 from django.utils import timezone
 from django import forms
 from django.conf import settings
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Max, JSONField
@@ -26,6 +25,19 @@ logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
 LANGUAGE_CODE_PATTERN = re.compile(r"^[a-z]{2}")
+EVENT_TEMPLATE_CHOICES_COMMON = (
+    ("", _("Normal evenemangssida")),
+    ("events/arsfest.html", _("Årsfest")),
+)
+
+EVENT_TEMPLATE_CHOICES_KK = (
+    ("events/baal_detail.html", _("Baal")),
+    ("events/kk100_detail.html", _("100 Baal")),
+    ("events/tomtejakt.html", _("Tomtejakt")),
+    ("events/wappmiddag.html", _("Wappmiddag")),
+)
+
+EVENT_TEMPLATE_CHOICES = EVENT_TEMPLATE_CHOICES_COMMON + EVENT_TEMPLATE_CHOICES_KK
 
 
 def registration_terms_feature_enabled():
@@ -44,6 +56,12 @@ def upload_to(instance, filename):
 class Event(models.Model):
     title = models.CharField(_('Titel'), max_length=255, blank=False)
     content = models.TextField(_('Innehåll'), blank=True)
+    template = models.CharField(
+        _('Mall'),
+        max_length=255,
+        choices=EVENT_TEMPLATE_CHOICES,
+        blank=True,
+    )
     event_date_start = models.DateTimeField(_('Startdatum'), default=now)
     event_date_end = models.DateTimeField(_('Slutdatum'), default=now)
     sign_up_max_participants = models.IntegerField(_('Maximal antal deltagare (0 för ingen begränsning)'), default=0)
@@ -135,23 +153,6 @@ class Event(models.Model):
     def get_highest_attendee_nr(self):
         return EventAttendees.objects.filter(event=self).aggregate(Max('attendee_nr'))
 
-    def add_event_attendance(self, user, email, anonymous, preferences, avec_for=None):
-        if self.sign_up:
-            try:
-                registration = EventAttendees.objects.get(
-                    email=email, event=self)
-            except ObjectDoesNotExist:
-                user_pref = {}
-                if self.get_registration_form():
-                    for item in self.get_registration_form():
-                        user_pref[str(item)] = preferences.get(str(item))
-                event = self.parent or self
-                registration = EventAttendees.objects.create(user=user,
-                                                             event=event, email=email,
-                                                             time_registered=now(), preferences=user_pref,
-                                                             anonymous=anonymous, avec_for=avec_for, original_event=self)
-                return registration
-
     def cancel_event_attendance(self, user):
         if self.sign_up:
             registration = EventAttendees.objects.get(user=user, event=self)
@@ -189,8 +190,6 @@ class Event(models.Model):
         return max(self.sign_up_max_participants - registrations, 0)
 
     def get_registration_form(self):
-        if EventRegistrationForm.objects.filter(event=self).count() == 0:
-            return None
         return EventRegistrationForm.objects.filter(event=self).order_by('choice_number')
 
     def get_registration_form_public_info(self):
@@ -198,6 +197,7 @@ class Event(models.Model):
 
     def make_registration_form(self, data=None):
         if self.sign_up:
+            registration_questions = list(self.get_registration_form())
             fields = {'user': forms.CharField(label=_('Namn'), max_length=255),
                       'email': forms.EmailField(label=_('Email'), validators=[self.validate_unique_email], max_length=320),
                       'anonymous': forms.BooleanField(label=_('Anonymt'), required=False)}
@@ -207,8 +207,8 @@ class Event(models.Model):
                                                    validators=[self.validate_unique_email],
                                                    max_length=320)
                 fields['anonymous'] = forms.BooleanField(label='Anonyymi/Anonym/Anonymous', required=False)
-            if self.get_registration_form():
-                for question in self.get_registration_form():
+            if registration_questions:
+                for question in registration_questions:
                     if question.type == "select":
                         choices = question.choice_list.split(',')
                         fields[question.name] = forms.ChoiceField(label=question.name,
@@ -243,8 +243,8 @@ class Event(models.Model):
                                                         max_length=320)
                 fields['avec_anonymous'] = forms.BooleanField(label='Anonymt', required=False, widget=forms
                                                               .CheckboxInput(attrs={'class': "avec-field"}))
-                if self.get_registration_form():
-                    for question in self.get_registration_form():
+                if registration_questions:
+                    for question in registration_questions:
                         if not question.hide_for_avec:
                             if question.type == "select":
                                 choices = question.choice_list.split(',')

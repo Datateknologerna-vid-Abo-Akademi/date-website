@@ -10,12 +10,20 @@
 
 .content-past,
 .content-past h4 {
+<<<<<<< HEAD
     color: #6d28d9;
+=======
+    color: var(--accentColor);
+>>>>>>> develop
 }
 
 .content-past:hover,
 .content-past:hover h4 {
+<<<<<<< HEAD
     color: #5b21b6;
+=======
+    color: var(--accentColorHover);
+>>>>>>> develop
 }
 
 .card {

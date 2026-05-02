@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.conf import settings
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 from django.test import Client, TestCase, override_settings
 from django.test.client import RequestFactory
 from django.urls import reverse
@@ -369,10 +370,43 @@ class EventTestCase(TestCase):
 
         c.post(reverse('events:detail', args=[self.event.slug]), self.content)
         self.content['email'] = 'person2@test.com'
-        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content, follow=True)
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.event.get_registrations().count(), 1)
+
+    def test_avec_signup_saves_custom_field_preferences_for_both_attendees(self):
+        self.event.sign_up_avec = True
+        self.event.sign_up_others = timezone.now() - timezone.timedelta(hours=1)
+        self.event.save()
+
+        EventRegistrationForm.objects.create(
+            event=self.event, choice_number=1, name='meal', type='text', required=False,
+        )
+        c = Client()
+        response = c.post(reverse('events:detail', args=[self.event.slug]), {
+            'user': 'Primary', 'email': 'primary@test.com', 'terms_accepted': 'on',
+            'meal': 'fish',
+            'avec': 'on', 'avec_user': 'Guest', 'avec_email': 'guest@test.com',
+            'avec_meal': 'veg',
+        }, follow=True)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.event.get_registrations().count(), 2)
+        primary = self.event.get_registrations().get(email='primary@test.com')
+        guest = self.event.get_registrations().get(email='guest@test.com')
+        self.assertEqual(primary.preferences.get('meal'), 'fish')
+        self.assertEqual(guest.preferences.get('meal'), 'veg')
+
+    def test_avec_requires_name_and_email_when_selected(self):
+        self.event.sign_up_avec = True
+        self.event.save()
+        c = Client()
+        self.content.update({'avec': 'on'})
+
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.event.get_registrations().count(), 0)
 
     @patch('events.views.validate_captcha')
     @override_settings(CAPTCHA_SITE_KEY='test', TURNSTILE_SECRET_KEY='test')
@@ -417,6 +451,36 @@ class EventTestCase(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
+
+    @override_settings(TEST=False)
+    @patch('events.views.ws_send')
+    def test_websocket_notification_runs_after_signup_commit(self, mock_ws_send):
+        with self.captureOnCommitCallbacks(execute=False) as callbacks:
+            response = self.client.post(reverse('events:detail', args=[self.event.slug]), self.content)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.event.get_registrations().count(), 1)
+        mock_ws_send.assert_not_called()
+        self.assertEqual(len(callbacks), 1)
+
+        callbacks[0]()
+
+        mock_ws_send.assert_called_once()
+
+    @override_settings(EXPERIMENTAL_FEATURES=['event_billing'], TEST=True)
+    @patch('billing.handlers.handle_event_billing')
+    def test_billing_runs_after_signup_commit(self, mock_handle_event_billing):
+        with self.captureOnCommitCallbacks(execute=False) as callbacks:
+            response = self.client.post(reverse('events:detail', args=[self.event.slug]), self.content)
+
+        self.assertEqual(response.status_code, 302)
+        mock_handle_event_billing.assert_not_called()
+        self.assertEqual(len(callbacks), 1)
+
+        callbacks[0]()
+
+        attendee = self.event.get_registrations().get()
+        mock_handle_event_billing.assert_called_once_with(attendee)
 
 
 class EventRegistrationWindowTests(TestCase):
@@ -489,6 +553,117 @@ class EventAdminTests(TestCase):
         self.assertContains(response, 'name="title_en"')
         self.assertContains(response, 'name="title_fi"')
 
+    def test_change_page_hides_avec_for_inline_when_avec_is_disabled(self):
+        EventAttendees.objects.create(
+            event=self.event,
+            user="No Avec",
+            email="no-avec@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="eventattendees_set-0-avec_for"')
+
+    def test_change_page_shows_avec_for_inline_when_avec_is_enabled(self):
+        self.event.sign_up_avec = True
+        self.event.save()
+        EventAttendees.objects.create(
+            event=self.event,
+            user="Avec Host",
+            email="avec-host@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="eventattendees_set-0-avec_for"')
+
+    def test_change_page_hides_original_event_for_inline_without_child_events(self):
+        EventAttendees.objects.create(
+            event=self.event,
+            user="Parent Only",
+            email="parent-only@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'column-original_event')
+
+    def test_change_page_shows_original_event_for_inline_with_child_events(self):
+        child = Event.objects.create(
+            title="Child Admin Event",
+            slug="child-admin-event",
+            author=self.admin_user,
+            parent=self.event,
+        )
+        EventAttendees.objects.create(
+            event=self.event,
+            original_event=child,
+            user="Child Attendee",
+            email="child-attendee@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'column-original_event')
+
+    def test_change_page_hides_hide_for_avec_when_avec_is_disabled(self):
+        EventRegistrationForm.objects.create(
+            event=self.event,
+            name="Question",
+            type="text",
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="eventregistrationform_set-0-hide_for_avec"')
+
+    def test_change_page_shows_hide_for_avec_when_avec_is_enabled(self):
+        self.event.sign_up_avec = True
+        self.event.save()
+        EventRegistrationForm.objects.create(
+            event=self.event,
+            name="Question",
+            type="text",
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="eventregistrationform_set-0-hide_for_avec"')
+
+    def test_add_page_renders_template_field(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("admin:events_event_add"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="template"')
+
+    def test_change_page_renders_template_field(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="template"')
+
     def test_edit_form_preserves_existing_slug_when_field_is_cleared(self):
         form = EventEditForm(instance=self.event)
         form.cleaned_data = {"title": self.event.title, "slug": ""}
@@ -518,6 +693,33 @@ class EventAdminTests(TestCase):
             edit_form.fields["redirect_link"].clean("example.com"),
             "https://example.com",
         )
+
+    def test_admin_forms_accept_event_template_choice(self):
+        creation_form = EventCreationForm()
+        self.assertEqual(
+            creation_form.fields["template"].clean("events/arsfest.html"),
+            "events/arsfest.html",
+        )
+
+    @override_settings(PROJECT_NAME="kk")
+    def test_admin_forms_accept_kk_only_template_choice(self):
+        edit_form = EventEditForm(instance=self.event)
+        self.assertEqual(
+            edit_form.fields["template"].clean("events/wappmiddag.html"),
+            "events/wappmiddag.html",
+        )
+
+    def test_admin_forms_reject_kk_only_template_for_other_associations(self):
+        edit_form = EventEditForm(instance=self.event)
+        with self.assertRaises(ValidationError):
+            edit_form.fields["template"].clean("events/wappmiddag.html")
+
+    def test_admin_forms_accept_blank_event_template(self):
+        creation_form = EventCreationForm()
+        edit_form = EventEditForm(instance=self.event)
+
+        self.assertEqual(creation_form.fields["template"].clean(""), "")
+        self.assertEqual(edit_form.fields["template"].clean(""), "")
 
     @override_settings(PROJECT_NAME="date")
     def test_add_page_renders_registration_terms_field_when_feature_enabled(self):
@@ -812,6 +1014,63 @@ class EventCapacityTests(TestCase):
 
         self.assertEqual(child.remaining_places(), 1)
 
+    def test_parent_event_rejects_signup_when_full(self):
+        event = Event.objects.create(
+            title="Full Parent Event",
+            slug="full-parent-event",
+            author=self.author,
+            sign_up_max_participants=1,
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+        )
+        EventAttendees.objects.create(
+            event=event,
+            user="Registered",
+            email="registered-full-parent@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        response = self.client.post(reverse("events:detail", args=[event.slug]), {
+            "user": "Blocked",
+            "email": "blocked-parent@example.com",
+            "terms_accepted": "on",
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(event.get_registrations().count(), 1)
+
+    def test_child_event_rejects_signup_when_full(self):
+        parent = Event.objects.create(
+            title="Full Child Parent Event",
+            slug="full-child-parent-event",
+            author=self.author,
+        )
+        child = Event.objects.create(
+            title="Full Child Event",
+            slug="full-child-event",
+            author=self.author,
+            parent=parent,
+            sign_up_max_participants=1,
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+        )
+        EventAttendees.objects.create(
+            event=parent,
+            original_event=child,
+            user="Registered",
+            email="registered-full-child@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        response = self.client.post(reverse("events:detail", args=[child.slug]), {
+            "user": "Blocked",
+            "email": "blocked-child@example.com",
+            "terms_accepted": "on",
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(parent.get_registrations().count(), 1)
+
     def test_detail_page_renders_remaining_places_not_total_capacity(self):
         event = Event.objects.create(
             title="Rendered Capacity Event",
@@ -834,6 +1093,61 @@ class EventCapacityTests(TestCase):
 
         self.assertContains(response, "Det finns 7 platser kvar!")
         self.assertNotContains(response, "Det finns 8 platser kvar!")
+
+    def test_full_event_detail_page_hides_form_and_shows_warning(self):
+        event = Event.objects.create(
+            title="Full Rendered Event",
+            slug="full-rendered-event",
+            author=self.author,
+            sign_up_max_participants=1,
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+        )
+        EventAttendees.objects.create(
+            event=event,
+            user="Registered",
+            email="registered-rendered@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        with translation.override("sv"):
+            response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="user"')
+        self.assertNotContains(response, 'name="email"')
+        self.assertContains(response, "Evenemanget är tyvärr fullt")
+        self.assertNotContains(response, "reservlistan")
+
+    def test_full_child_event_detail_page_hides_form_and_shows_warning(self):
+        parent = Event.objects.create(
+            title="Full Child Parent Rendered",
+            slug="full-child-parent-rendered",
+            author=self.author,
+        )
+        child = Event.objects.create(
+            title="Full Child Rendered",
+            slug="full-child-rendered",
+            author=self.author,
+            parent=parent,
+            sign_up_max_participants=1,
+            sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
+        )
+        EventAttendees.objects.create(
+            event=parent,
+            original_event=child,
+            user="Registered",
+            email="registered-child-rendered@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        with translation.override("sv"):
+            response = self.client.get(reverse("events:detail", args=[child.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="user"')
+        self.assertContains(response, "Evenemanget är tyvärr fullt")
 
 
 @override_settings(CONTENT_VARIABLES={**settings.CONTENT_VARIABLES, "INTERNATIONAL_EVENT_SLUGS": ["intl-slug"]})
@@ -925,6 +1239,18 @@ class EventFormBuilderTests(TestCase):
         self.assertIn("anmälningsvillkoren för evenemanget", str(terms_field.label))
         self.assertIn("Jämlikhetsplan", str(terms_field.help_text))
 
+    def test_get_registration_form_returns_empty_queryset_when_no_questions(self):
+        event = Event.objects.create(
+            title="No Questions Event",
+            slug="no-questions-event",
+            author=self.author,
+        )
+
+        result = event.get_registration_form()
+
+        self.assertFalse(result.exists())
+        self.assertEqual(list(result), [])
+
 
 class EventNumberingTests(TestCase):
     def setUp(self):
@@ -1007,6 +1333,77 @@ class EventTemplateSelectionTests(TestCase):
         )
         response = self.client.get(reverse("events:detail", args=[event.slug]))
         self.assertTemplateUsed(response, "events/baal_detail.html")
+
+    def test_baal_template_uses_event_and_association_branding(self):
+        event = Event.objects.create(
+            title="Spring Ball",
+            slug="spring-ball",
+            author=self.author,
+            template="events/baal_detail.html",
+        )
+        response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertContains(response, "Spring Ball")
+        self.assertContains(response, "HQKK_2.png")
+        self.assertContains(response, "CII Kemistbaal")
+
+    def test_wappmiddag_template_uses_event_and_association_branding(self):
+        event = Event.objects.create(
+            title="Spring Dinner",
+            slug="spring-dinner",
+            author=self.author,
+            template="events/wappmiddag.html",
+        )
+        response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertContains(response, "Spring Dinner")
+        self.assertContains(response, 'class="header-logo"')
+        self.assertContains(response, "ballong_black.png")
+        self.assertNotContains(response, "Teknologwappmiddag")
+
+    def test_selected_template_is_used_for_generic_event(self):
+        event = Event.objects.create(
+            title="Generic",
+            slug="generic-selected-template",
+            author=self.author,
+            template="events/arsfest.html",
+        )
+        response = self.client.get(reverse("events:detail", args=[event.slug]))
+        self.assertTemplateUsed(response, "events/arsfest.html")
+
+    def test_selected_template_takes_precedence_over_legacy_mapping(self):
+        event = Event.objects.create(
+            title="Årsfest",
+            slug="arsfest-selected-template",
+            author=self.author,
+            template="events/wappmiddag.html",
+        )
+        response = self.client.get(reverse("events:detail", args=[event.slug]))
+        self.assertTemplateUsed(response, "events/wappmiddag.html")
+
+    def test_blank_template_uses_normal_detail_page_for_generic_event(self):
+        event = Event.objects.create(
+            title="Generic",
+            slug="generic-default-template",
+            author=self.author,
+            template="",
+        )
+        response = self.client.get(reverse("events:detail", args=[event.slug]))
+        self.assertTemplateUsed(response, "events/detail.html")
+
+    def test_selected_arsfest_invalid_signup_uses_arsfest_template(self):
+        event = Event.objects.create(
+            title="Generic",
+            slug="selected-arsfest-invalid",
+            author=self.author,
+            sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
+            template="events/arsfest.html",
+        )
+        invalid_content = {'user': 'person', 'email': 'invalid-email'}
+        response = self.client.post(reverse("events:detail", args=[event.slug]), invalid_content)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertTemplateUsed(response, "events/arsfest.html")
 
     def test_passcode_template_used_when_locked(self):
         event = Event.objects.create(

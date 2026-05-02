@@ -3,7 +3,7 @@ name: Run unit tests and ping website
 on:
   pull_request:
     branches:
-      - develop
+      - main
     paths:
       - '**/*.py'
       - '**/*.html'
@@ -18,7 +18,7 @@ on:
       - '.github/workflows/web_startup.yaml'
   push:
     branches:
-      - develop
+      - main
     paths:
       - '**/*.py'
       - '**/*.html'

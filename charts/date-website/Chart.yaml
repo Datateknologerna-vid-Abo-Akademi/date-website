@@ -3,4 +3,4 @@ name: date-website
 description: Helm chart for running date-website on Kubernetes/k3s
 type: application
 version: 0.1.0
-appVersion: "master"
+appVersion: "prod"

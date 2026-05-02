@@ -208,7 +208,11 @@ div.news-content a:hover{
   
 .card .fa-chevron-right{
     transition: .3s;
+<<<<<<< HEAD
     color: #6d28d9;
+=======
+    color: var(--accentColor);
+>>>>>>> develop
   }
   
 .card a:hover .fa-chevron-right{
@@ -231,7 +235,11 @@ div.news-content a:hover{
   
 .event-card a{
     color: var(--linkColor);
+<<<<<<< HEAD
     border-top: 2px solid #6d28d9;
+=======
+    border-top: 2px solid var(--accentColor);
+>>>>>>> develop
   }
   
 .event-card a:active{
@@ -250,8 +258,13 @@ div.news-content a:hover{
   }
 
 .chevron-box {
+<<<<<<< HEAD
     margin: auto; 
     border: 1px solid #6d28d9;
+=======
+    margin: auto;
+    border: 1px solid var(--accentColor);
+>>>>>>> develop
     border-radius: 5px;
     padding: 5px;
 }
@@ -329,7 +342,7 @@ div.news-content a:hover{
 
 .more-events-button{
     display: inline-block;
-    color: var(--linkColor)
+    color: var(--linkColor);
 }
 
 .more-events-button:hover{
@@ -395,6 +408,7 @@ div.calendar-container a {
     background-color: #282828 !important;
 }
 
+<<<<<<< HEAD
 .vanilla-calendar-day__btn_selected {
     background-color: #6d28d9 !important;
 }
@@ -403,6 +417,8 @@ div.calendar-container a {
     background-color: #5b21b6 !important;
 }
 
+=======
+>>>>>>> develop
 .clearfix {
   padding: 10px;
   text-align: center;
@@ -418,22 +434,38 @@ div.calendar-container a {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
   color: white !important;
+<<<<<<< HEAD
   background-color: #6d28d9 !important;
 }
 
 .calendar-eventday:hover {
     background-color: #5b21b6 !important;
+=======
+  background-color: var(--accentColor) !important;
+}
+
+.calendar-eventday:hover {
+    background-color: var(--accentColorHover) !important;
+>>>>>>> develop
 }
 
 .calendar-eventday-popup {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
+<<<<<<< HEAD
   color: #6d28d9;
+=======
+  color: var(--accentColor);
+>>>>>>> develop
   font-size: 0.75rem;
 }
 
 .calendar-eventday-popup:hover {
+<<<<<<< HEAD
     color: #5b21b6;
+=======
+    color: var(--accentColorHover);
+>>>>>>> develop
 }
 
 /*Calendar end*/
@@ -655,9 +687,17 @@ ul#logo-list {
 }
 
 .vanilla-calendar-day__btn_selected {
+<<<<<<< HEAD
     background-color: #D625EB !important;
 }
 
 .vanilla-calendar-day__btn_selected:hover {
     background-color: #CF45E0 !important;
+=======
+    background-color: var(--accentColorBright) !important;
+}
+
+.vanilla-calendar-day__btn_selected:hover {
+    background-color: var(--accentColorBrightHover) !important;
+>>>>>>> develop
 }

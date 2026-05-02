@@ -198,7 +198,7 @@ helm upgrade --install date-website charts/date-website \
   --set image.tag='<release-tag>'
 ```
 
-Set `image.tag` to a release tag or pinned image tag. Avoid deploying `master` by accident in production.
+Set `image.tag` to a release tag, immutable commit SHA, or the `prod` production alias. Avoid deploying `qa` by accident in production.
 
 For KK, Biologica, or Pulterit, layer the matching association values file after the B2 values file so the association-specific hosts, `PROJECT_NAME`, media paths, and backup prefix override the default `date` example.
 

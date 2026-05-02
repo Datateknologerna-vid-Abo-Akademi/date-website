@@ -18,7 +18,7 @@ x-web-common: &web-common
   restart: unless-stopped
   volumes:
     - .:/code
-  command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python manage.py runserver 0.0.0.0:8000"
+  command: python manage.py runserver 0.0.0.0:8000
   depends_on:
     init:
       condition: service_completed_successfully
@@ -37,7 +37,7 @@ services:
       - /bin/sh
       - /scripts/postgres-entrypoint.sh
     volumes:
-      - dev_all_postgres_data:/var/lib/postgresql/data/
+      - date_postgres_data:/var/lib/postgresql/data/
       - ./scripts/postgres-entrypoint.sh:/scripts/postgres-entrypoint.sh:ro
     environment:
       POSTGRES_PASSWORD: ${DATE_DB_PASSWORD}
@@ -66,14 +66,15 @@ services:
     volumes:
       - dev_all_redis_data:/data
 
-  # Runs once: migrate + collectstatic + compilemessages (using 'date' as the
-  # representative project). All web containers wait for this to finish before
-  # starting, so they only need to serve requests.
+  # Runs once: migrate + compilemessages (using 'date' as the representative
+  # project). All web containers wait for this to finish before starting.
+  # collectstatic is skipped — WHITENOISE_USE_FINDERS=True (set when DEBUG) has
+  # each container serve static files directly from its own STATICFILES_DIRS.
   init:
     env_file: .env
     build: .
     restart: "no"
-    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python manage.py migrate --noinput && python manage.py collectstatic --noinput && python manage.py compilemessages -l en -l fi -l sv --verbosity 0"
+    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python manage.py migrate --noinput && python manage.py compilemessages -l en -l fi -l sv --verbosity 0"
     volumes:
       - .:/code
     environment:
@@ -119,6 +120,6 @@ services:
       PROJECT_NAME: pulterit
 
 volumes:
-  dev_all_postgres_data:
+  date_postgres_data:
   dev_all_pgadmin_data:
   dev_all_redis_data:

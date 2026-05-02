@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.test import TestCase
 
@@ -15,14 +14,12 @@ class IncidentCheckCommandTests(TestCase):
     def test_outputs_runtime_blank_slugs_and_recent_admin_edits(self):
         user = get_user_model().objects.create_user(username="incident-admin")
         event = Event.objects.create(title="Broken Event", slug="", author=user)
-        content_type = ContentType.objects.get_for_model(Event)
-        LogEntry.objects.log_action(
+        LogEntry.objects.log_actions(
             user_id=user.pk,
-            content_type_id=content_type.pk,
-            object_id=event.pk,
-            object_repr=str(event),
+            queryset=Event.objects.filter(pk=event.pk),
             action_flag=CHANGE,
             change_message="Changed title.",
+            single_object=True,
         )
 
         output = StringIO()
@@ -56,14 +53,15 @@ class IncidentCheckCommandTests(TestCase):
     def test_admin_edit_fields_are_redacted_before_output(self):
         user = get_user_model().objects.create_user(username="redacted-admin")
         event = Event.objects.create(title="Sensitive Event", slug="", author=user)
-        content_type = ContentType.objects.get_for_model(Event)
-        LogEntry.objects.log_action(
+        LogEntry.objects.log_actions(
             user_id=user.pk,
-            content_type_id=content_type.pk,
-            object_id=event.pk,
-            object_repr='client_email="service@example.com"',
+            queryset=Event.objects.filter(pk=event.pk),
             action_flag=CHANGE,
             change_message='ALUMNI_SETTINGS={"private_key":"secret-key"}',
+            single_object=True,
+        )
+        LogEntry.objects.filter(object_id=event.pk).update(
+            object_repr='client_email="service@example.com"',
         )
 
         output = StringIO()
