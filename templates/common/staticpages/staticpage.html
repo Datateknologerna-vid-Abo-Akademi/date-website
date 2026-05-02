@@ -5,13 +5,25 @@
 
 {% block extra_head %}
     {{ block.super }}
-        <link rel="stylesheet" href="{% static 'staticpages/css/staticpage.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'staticpages/css/staticpage.css' %}" type="text/css">
+    {% with background_image_url=page.background_image_url %}
+    {% if background_image_url %}
+        <style>
+            .background-img {
+                background: url("{{ background_image_url }}") no-repeat center center fixed;
+                -webkit-background-size: cover;
+                -moz-background-size: cover;
+                -o-background-size: cover;
+                background-size: cover;
+            }
+        </style>
+    {% endif %}
+    {% endwith %}
 {% endblock %}
 
 {% block content %}
 
-
-    <div class="container-md min-vh-100 container-margin-top p-1">
+    <div class="container-md min-vh-100 container-margin-top p-1 background-img">
         <div class="container-size break-words">
             {% if show_content %}
                 <div class="content">
