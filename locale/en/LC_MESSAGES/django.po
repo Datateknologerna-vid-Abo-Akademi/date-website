@@ -8,11 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-<<<<<<< HEAD
-"POT-Creation-Date: 2026-04-28 20:02+0300\n"
-=======
 "POT-Creation-Date: 2026-04-28 21:35+0300\n"
->>>>>>> develop
 "PO-Revision-Date: 2025-09-16 20:27+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -195,22 +191,6 @@ msgstr "files"
 
 #: core/admin_base.py:65
 msgid "Open public page"
-<<<<<<< HEAD
-msgstr ""
-
-#: core/admin_base.py:68
-#, fuzzy
-#| msgid "Publicera"
-msgid "Public page"
-msgstr "Publish"
-
-#: core/admin_ui.py:37
-#, fuzzy
-#| msgid "Events"
-msgid "Event"
-msgstr "Events"
-
-=======
 msgstr "Open public page"
 
 #: core/admin_base.py:68
@@ -221,21 +201,13 @@ msgstr "Public page"
 msgid "Event"
 msgstr "Event"
 
->>>>>>> develop
 #: core/admin_ui.py:38 core/admin_ui.py:95
 msgid "News"
 msgstr "News"
 
 #: core/admin_ui.py:39
-<<<<<<< HEAD
-#, fuzzy
-#| msgid "Static Pages"
-msgid "Static Page"
-msgstr "Static Pages"
-=======
 msgid "Static Page"
 msgstr "Static Page"
->>>>>>> develop
 
 #: core/admin_ui.py:81 core/admin_ui.py:82
 msgid "Events"
@@ -369,21 +341,6 @@ msgstr "Permissions"
 
 #: core/settings/common.py:84
 msgid "Quality Assurance"
-<<<<<<< HEAD
-msgstr ""
-
-#: core/settings/common.py:91
-#, fuzzy
-#| msgid "Documents"
-msgid "Development"
-msgstr "Documents"
-
-#: core/settings/common.py:93
-#, fuzzy
-#| msgid "Publications"
-msgid "Production"
-msgstr "Publications"
-=======
 msgstr "Quality Assurance"
 
 #: core/settings/common.py:91
@@ -393,7 +350,6 @@ msgstr "Development"
 #: core/settings/common.py:93
 msgid "Production"
 msgstr "Production"
->>>>>>> develop
 
 #: ctf/models.py:17 events/models.py:45 lucia/models.py:16
 #: members/models.py:167 news/models.py:31 staticpages/models.py:25
@@ -629,35 +585,6 @@ msgid "Lucian"
 msgstr "The Lucia"
 
 #: members/admin.py:120
-<<<<<<< HEAD
-msgid ""
-"Search by name, username, email, phone, address, postal code, city, "
-"membership type, group, subscription, admission year, member ID, or GitHub "
-"ID."
-msgstr ""
-
-#: members/admin.py:206
-#, python-format
-msgid "Aktiverade %(count)d användare."
-msgstr ""
-
-#: members/admin.py:212
-#, python-format
-msgid "Deaktiverade %(count)d användare."
-msgstr ""
-
-#: members/admin.py:224
-#, python-format
-msgid "2FA inaktiverat för valda medlemmar: %(count)d enhet(er) borttagna."
-msgstr ""
-
-#: members/forms.py:23
-#, fuzzy
-#| msgid ""
-#| "Enter a valid username consisting only of letters, numbers, underscores, "
-#| "and hyphens."
-msgid ""
-=======
 msgid ""
 "Search by name, username, email, phone, address, postal code, city, "
 "membership type, group, subscription, admission year, member ID, or GitHub "
@@ -684,7 +611,6 @@ msgstr "2FA disabled for selected members: %(count)d device(s) removed."
 
 #: members/forms.py:23
 msgid ""
->>>>>>> develop
 "Enter a valid username consisting only of letters, numbers, dots, "
 "underscores, and hyphens."
 msgstr ""
@@ -1172,14 +1098,8 @@ msgid ""
 "Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta "
 "styrelsen vid behov."
 msgstr ""
-<<<<<<< HEAD
-"Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta "
-"styrelsen vid behov.The attendee list has been hidden because this is an old "
-"event, contact the board if needed."
-=======
 "The attendee list has been hidden because this is an old event, contact the "
 "board if needed."
->>>>>>> develop
 
 #: templates/common/admin/base_site.html:4
 #: templates/common/admin/events/delete_participants_confirmation.html:4
@@ -1217,11 +1137,7 @@ msgstr "Language"
 #: templates/common/admin/events/delete_participants_confirmation.html:4
 #: templates/common/admin/events/delete_participants_confirmation.html:10
 msgid "Bekräfta borttagning"
-<<<<<<< HEAD
-msgstr ""
-=======
 msgstr "Confirm removal"
->>>>>>> develop
 
 #: templates/common/admin/events/delete_participants_confirmation.html:14
 #, python-format
@@ -1234,23 +1150,6 @@ msgid_plural ""
 "          Det här tar bort %(counter)s deltagare från valda evenemang.\n"
 "        "
 msgstr[0] ""
-<<<<<<< HEAD
-msgstr[1] ""
-
-#: templates/common/admin/events/delete_participants_confirmation.html:38
-msgid "Inga deltagare hittades för de valda evenemangen."
-msgstr ""
-
-#: templates/common/admin/events/delete_participants_confirmation.html:54
-msgid "Avbryt"
-msgstr ""
-
-#: templates/common/admin/events/delete_participants_confirmation.html:57
-#, fuzzy
-#| msgid "deltagare"
-msgid "Ta bort deltagare"
-msgstr "attendee"
-=======
 "\n"
 "          This will remove an attendee from the selected events.\n"
 "        "
@@ -1270,7 +1169,6 @@ msgstr "Cancel"
 #: templates/common/admin/events/delete_participants_confirmation.html:57
 msgid "Ta bort deltagare"
 msgstr "Remove attendees"
->>>>>>> develop
 
 #: templates/common/archive/detail.html:22
 msgid "Sida"
@@ -1356,14 +1254,8 @@ msgid ""
 "JavaScript krävs för automatisk bildladdning. Använd sidlänkarna ovan för "
 "att visa fler bilder."
 msgstr ""
-<<<<<<< HEAD
-"JavaScript krävs för automatisk bildladdning. Använd sidlänkarna ovan för "
-"att visa fler bilder.JavaScript is required for automatic image loading. Use "
-"the page links above to view more images."
-=======
 "JavaScript is required for automatic image loading. Use the page links above "
 "to view more images."
->>>>>>> develop
 
 #: templates/common/archive/partials/detail_header.html:4
 msgid "Publicerats"
@@ -1490,14 +1382,8 @@ msgid ""
 "Deltagarlistan har gömts eftersom det här är ett gammalt evenemang, kontakta "
 "styrelsen vid behov."
 msgstr ""
-<<<<<<< HEAD
-"Deltagarlistan har gömts eftersom det här är ett gammalt evenemang, kontakta "
-"styrelsen vid behov.The attendee list has been hidden because this is an old "
-"event, contact the board if needed."
-=======
 "The attendee list has been hidden because this is an old event, contact the "
 "board if needed."
->>>>>>> develop
 
 #: templates/common/events/event_passcode.html:4
 #: templates/common/events/index.html:5
@@ -1549,14 +1435,8 @@ msgid ""
 "Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på "
 "förhinder."
 msgstr ""
-<<<<<<< HEAD
-"Kom ihåg att avanmäla dig så snabbt som möjligt i fall du stöter på "
-"förhinder.Remember to cancel your registration as soon as possible if you "
-"wont be able to attend."
-=======
 "Remember to cancel your registration as soon as possible if you wont be able "
 "to attend."
->>>>>>> develop
 
 #: templates/common/events/registering.html:59
 msgid "Anmäl"
@@ -1571,25 +1451,12 @@ msgid ""
 "sparas informationen för statistiska ändamål och syns endast för hemsidans "
 "administratörer."
 msgstr ""
-<<<<<<< HEAD
-"Genom att anmäla dig godkänner du att %(ASSOCIATION_NAME_FULL)s lagrar ditt "
-"namn, din e-post samt eventuell annan nödvändig information. Under "
-"anmälningstiden syns den anmäldas namn i listan nedan. Efter evenemanget "
-"sparas informationen för statistiska ändamål och syns endast för hemsidans "
-"administratörer.By signing up, you accept that %(ASSOCIATION_NAME_FULL)s "
-"will store your name, your email as well as other possibly needed "
-"information. The attendees name will be visible in the list below during the "
-"time of the registration. The information is saved for statistical purposes "
-"after the event has occurred, but it will only be accessible to the "
-"administrators of the website."
-=======
 "By signing up, you accept that %(ASSOCIATION_NAME_FULL)s will store your "
 "name, your email as well as other possibly needed information. The attendees "
 "name will be visible in the list below during the time of the registration. "
 "The information is saved for statistical purposes after the event has "
 "occurred, but it will only be accessible to the administrators of the "
 "website."
->>>>>>> develop
 
 #: templates/common/events/registering.html:72
 msgid ""
@@ -1601,14 +1468,8 @@ msgid ""
 "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan "
 "och meddelas om du får plats."
 msgstr ""
-<<<<<<< HEAD
-"Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan "
-"och meddelas om du får plats.The event is full! By signing up you will be "
-"put on the reserve list, and you will be contacted in case a spot frees up."
-=======
 "The event is full! By signing up you will be put on the reserve list, and "
 "you will be contacted in case a spot frees up."
->>>>>>> develop
 
 #: templates/common/events/registration_state.html:7
 msgid "Anmälningstiden gick ut"
@@ -1684,9 +1545,7 @@ msgid ""
 "password twice so we can verify you typed it in correctly."
 msgstr ""
 "Please enter your old password, for security’s sake, and then enter your new "
-"password twice so we can verify you typed it in correctly.Please enter your "
-"old password, for security’s sake, and then enter your new password twice so "
-"we can verify you typed it in correctly."
+"password twice so we can verify you typed it in correctly."
 
 #: templates/common/members/registration/password_change_form.html:72
 msgid "Change my password"
@@ -1721,14 +1580,8 @@ msgid ""
 "Denna länk är inte giltigt, det kan hända att länken redan använts. Vänligen "
 "fråga efter en ny länk."
 msgstr ""
-<<<<<<< HEAD
-"Denna länk är inte giltigt, det kan hända att länken redan använts. Vänligen "
-"fråga efter en ny länk.This link is invalid, it might already have been "
-"used. Please request a new link."
-=======
 "This link is invalid, it might already have been used. Please request a new "
 "link."
->>>>>>> develop
 
 #: templates/common/members/registration/password_reset_done.html:5
 msgid "Password reset - Email sent"
@@ -1739,29 +1592,16 @@ msgid ""
 "Vi har skicket instruktionerna till din mail, ifall en användare är "
 "registrerad med denna epost. Du borde få mailet inom kort"
 msgstr ""
-<<<<<<< HEAD
-"Vi har skicket instruktionerna till din mail, ifall en användare är "
-"registrerad med denna epost. Du borde få mailet inom kortWe have sent "
-"instruction to your email, in case a user is registered under this email "
-"address. You should receive the email shortly."
-=======
 "We have sent instruction to your email, in case a user is registered under "
 "this email address. You should receive the email shortly."
->>>>>>> develop
 
 #: templates/common/members/registration/password_reset_done.html:17
 msgid ""
 "Ifall du inte fått något mail. Säkerställ att du angett rätt e-post adress "
 "samt vänligen granska skräpkorgen."
 msgstr ""
-<<<<<<< HEAD
-"Ifall du inte fått något mail. Säkerställ att du angett rätt e-post adress "
-"samt vänligen granska skräpkorgen.If you have not received an email, make "
-"sure you provided the correct email address and check your spam inbox."
-=======
 "If you have not received an email, make sure you provided the correct email "
 "address and check your spam inbox."
->>>>>>> develop
 
 #: templates/common/members/registration/password_reset_done.html:19
 #: templates/common/members/registration/registration_complete.html:25
@@ -1782,14 +1622,8 @@ msgid ""
 "Ifall det inte går att klicka på länken, vänligen kopiera och klistra in "
 "länken i din webbläsare."
 msgstr ""
-<<<<<<< HEAD
-"Ifall det inte går att klicka på länken, vänligen kopiera och klistra in "
-"länken i din webbläsare.If clicking the link does not work, please copy and "
-"paste the link into your browser."
-=======
 "If clicking the link does not work, please copy and paste the link into your "
 "browser."
->>>>>>> develop
 
 #: templates/common/members/registration/password_reset_email.html:10
 msgid "Om ytterligare frågor uppstår, vänligen kontakta styrelsen."
@@ -1821,14 +1655,8 @@ msgid ""
 "Du kan logga in <strong>efter</strong> att styrelsen har granskat och "
 "godkänt ditt konto."
 msgstr ""
-<<<<<<< HEAD
-"Du kan logga in <strong>efter</strong> att styrelsen har granskat och "
-"godkänt ditt konto.You can log in <strong>after</strong> the board has "
-"verified and accepted your account."
-=======
 "You can log in <strong>after</strong> the board has verified and accepted "
 "your account."
->>>>>>> develop
 
 #: templates/common/members/signup.html:5
 #: templates/common/members/signup.html:26
@@ -2006,27 +1834,12 @@ msgid ""
 "kontakt till %(association_short)ss styrelse och/eller ÅAS trakasseriombud "
 "om det så önskas."
 msgstr ""
-<<<<<<< HEAD
-"Du kan rapportera trakasserier och brister i jämlikhetsplanen antingen "
-"anonymt eller ange din kontaktinformation. Vi tar alla former av "
-"trakasserier på allvar och kommer att vidta åtgärder för att upprätthålla en "
-"trygg och respektfull miljö för alla medlemmar. %(association_name)ss "
-"trygghetspersoner behandlar alla rapporteringar av trakasserier och tar "
-"kontakt till %(association_short)ss styrelse och/eller ÅAS trakasseriombud "
-"om det så önskas.You can report harassment and shortcomings in the equality "
-"plan anonymously or by providing your contact information. We take all forms "
-"of harassment seriously and will act to maintain a safe and respectful "
-"environment for all members. %(association_name)ss safety contacts handle "
-"all harassment reports and can contact the %(association_short)ss board and/"
-"or the student union harassment contacts if requested."
-=======
 "You can report harassment and shortcomings in the equality plan anonymously "
 "or by providing your contact information. We take all forms of harassment "
 "seriously and will act to maintain a safe and respectful environment for all "
 "members. %(association_name)ss safety contacts handle all harassment reports "
 "and can contact the %(association_short)ss board and/or the student union "
 "harassment contacts if requested."
->>>>>>> develop
 
 #: templates/common/social/harassment_form.html:26
 msgid "Ange din Email om du vill bli kontaktad"
@@ -2062,8 +1875,7 @@ msgid ""
 "unavailable."
 msgstr ""
 "Generate backup tokens to keep access if your authenticator app is "
-"unavailable.Generate backup tokens to keep access if your authenticator app "
-"is unavailable."
+"unavailable."
 
 #: templates/common/two_factor/core/backup_tokens.html:20
 msgid "Generate new backup tokens"
@@ -2073,13 +1885,7 @@ msgstr "Generate new backup tokens"
 msgid ""
 "Add an authenticator app to protect your account with a second login step."
 msgstr ""
-<<<<<<< HEAD
-"Add an authenticator app to protect your account with a second login "
-"step.Add an authenticator app to protect your account with a second login "
-"step."
-=======
 "Add an authenticator app to protect your account with a second login step."
->>>>>>> develop
 
 #: templates/common/two_factor/core/setup.html:11
 msgid "Choose how you want to verify login attempts."
@@ -2089,13 +1895,7 @@ msgstr "Choose how you want to verify login attempts."
 msgid ""
 "Scan this QR code with your authenticator app, or enter the secret manually."
 msgstr ""
-<<<<<<< HEAD
-"Scan this QR code with your authenticator app, or enter the secret "
-"manually.Scan this QR code with your authenticator app, or enter the secret "
-"manually."
-=======
 "Scan this QR code with your authenticator app, or enter the secret manually."
->>>>>>> develop
 
 #: templates/common/two_factor/core/setup.html:15
 msgid "QR code for authenticator app setup"
@@ -2119,11 +1919,7 @@ msgstr "Disable"
 
 #: templates/common/unfold/helpers/userlinks.html:39
 msgid "Create"
-<<<<<<< HEAD
-msgstr ""
-=======
 msgstr "Create"
->>>>>>> develop
 
 #: templates/date/date/components/about.html:4
 msgid "Om oss"
@@ -2138,24 +1934,11 @@ msgid ""
 "bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare "
 "och stiliga tofsmössor."
 msgstr ""
-<<<<<<< HEAD
-"Datateknologerna vid Åbo Akademi rf är en förening för studerande vid "
-"utbildningsprogrammet i datateknik vid Fakulteten för Naturvetenskaper och "
-"Teknik vid Åbo Akademi, samt för studerande vid övriga tekniskt inriktade "
-"utbildningslinjer i databehandling. Föreningen grundades 1999, närmare "
-"bestämt den 24.8 kl. 16:32. Medlemmarna känns igen på deras svarta halare "
-"och stiliga tofsmössor.Datateknologerna vid Åbo Akademi rf is an "
-"organization for the students at the computer engineering study programme at "
-"the faculty of science and techonology at Åbo Akademi. The organization was "
-"founded in 1999, more specifically on the 24.8. at 16:32. The members can be "
-"recognized by their black overalls and stylish engineering caps."
-=======
 "Datateknologerna vid Åbo Akademi rf is an organization for the students at "
 "the computer engineering study programme at the faculty of science and "
 "techonology at Åbo Akademi. The organization was founded in 1999, more "
 "specifically on the 24.8. at 16:32. The members can be recognized by their "
 "black overalls and stylish engineering caps."
->>>>>>> develop
 
 #: templates/date/date/components/extras.html:3
 msgid "Annat"
@@ -2170,13 +1953,7 @@ msgid ""
 "Om du upplever trakasserier i samband med Datateknologernas verksamhet, "
 "vänligen"
 msgstr ""
-<<<<<<< HEAD
-"Om du upplever trakasserier i samband med Datateknologernas verksamhet, "
-"vänligenIf you encounter harrasment during the activity of Datateknologerna, "
-"please"
-=======
 "If you encounter harrasment during the activity of Datateknologerna, please"
->>>>>>> develop
 
 #: templates/date/date/components/extras.html:7
 msgid "rapportera"
@@ -2188,17 +1965,9 @@ msgid ""
 "att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för "
 "alla medlemmar."
 msgstr ""
-<<<<<<< HEAD
-"detta via hemsidan. Vi tar alla former av trakasserier på allvar och kommer "
-"att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för "
-"alla medlemmar.this via the website. We take all forms of harrasment very "
-"seriously and will take the necessary steps for ensuring a safe and "
-"respectful environment for all members."
-=======
 "this via the website. We take all forms of harrasment very seriously and "
 "will take the necessary steps for ensuring a safe and respectful environment "
 "for all members."
->>>>>>> develop
 
 #: templates/date/date/components/header.html:8
 msgid "Datateknologerna"
