@@ -142,6 +142,9 @@ li .dropdown-menu {
         border-right: 1px solid rgba(0, 0, 0, .2);
         transform: translateX(-100%);
     }
+    .dropdown-submenu > .dropdown-menu {
+        display: block !important;
+    }
 }
 
 .header-logo{
