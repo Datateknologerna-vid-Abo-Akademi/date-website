@@ -23,11 +23,19 @@ else:
     StaticPageTranslationAdminBase = ModelAdmin
 
 
-# Register your models here.
+class SubUrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
+    model = StaticUrl
+    fk_name = 'parent'
+    extra = 0
+    ordering_field = 'dropdown_element'
+    ordering = ['dropdown_element']
+    ordering_field_hide_input = True
+    fields = ('dropdown_element', 'title', 'url', 'logged_in_only')
 
 
 class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
     model = StaticUrl
+    fk_name = 'category'
     can_delete = True
     extra = 0
     line_numbering = 0
@@ -35,6 +43,10 @@ class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
     ordering = ['dropdown_element']
     ordering_field_hide_input = True
     fields = ('dropdown_element', 'title', 'url', 'logged_in_only')
+    inlines = [SubUrlInline]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(parent=None)
 
 
 @admin.register(StaticPageNav)

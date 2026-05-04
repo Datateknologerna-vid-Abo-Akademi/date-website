@@ -4,10 +4,17 @@ from .models import StaticPageNav, StaticUrl
 
 
 def _filtered_urls_queryset():
-    queryset = StaticUrl.objects.select_related('category').order_by('dropdown_element')
-    if getattr(settings, 'ARCHIVE_ENABLED', True):
-        return queryset
-    return queryset.exclude(url__startswith='/archive/')
+    queryset = (
+        StaticUrl.objects
+        .filter(parent=None)
+        .select_related('category')
+        .prefetch_related('children')
+        .order_by('dropdown_element')
+    )
+
+    if not getattr(settings, 'ARCHIVE_ENABLED', True):
+        return queryset.exclude(url__startswith='/archive/')
+    return queryset
 
 
 def get_categories(context):

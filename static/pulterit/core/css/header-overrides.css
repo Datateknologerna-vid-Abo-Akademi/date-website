@@ -65,6 +65,9 @@ li .dropdown-menu {
     border-radius: var(--defaultRadius);
 }
 
+.navbar-nav .dropdown-item:hover {
+    color: var(--accentColorBright) !important;
+}
 .navbar-nav li a:active, .dropdown-item:active {
     color: var(--textColorLightish) !important;
     border-radius: var(--defaultRadius);
