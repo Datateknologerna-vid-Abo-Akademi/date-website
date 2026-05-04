@@ -101,8 +101,6 @@ class StaticUrl(models.Model):
         super().clean()
         if not self.category_id and not self.parent_id:
             raise ValidationError({'category': _('Välj en kategori eller en överordnad länk.')})
-        if not self.url and (not self.pk or not self.children.exists()):
-            raise ValidationError({'url': _('Välj en URL eller lägg till undersidor.')})
         if self.parent_id and self.parent_id == self.pk:
             raise ValidationError({'parent': _('En länk kan inte vara sin egen överordnade länk.')})
         if self.parent_id and self.category_id and self.parent.category_id != self.category_id:

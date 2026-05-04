@@ -128,13 +128,10 @@ class StaticUrlTests(TestCase):
     def setUp(self):
         self.category = StaticPageNav.objects.create(category_name="Menu")
 
-    def test_blank_leaf_url_is_invalid(self):
+    def test_blank_leaf_url_is_allowed_for_draft_menu_items(self):
         nav_url = StaticUrl(title="Empty", category=self.category, url="")
 
-        with self.assertRaises(ValidationError) as error:
-            nav_url.full_clean()
-
-        self.assertIn("url", error.exception.message_dict)
+        nav_url.full_clean()
 
     def test_blank_parent_url_is_valid_when_it_has_children(self):
         parent = StaticUrl.objects.create(title="Parent", category=self.category, url="")
