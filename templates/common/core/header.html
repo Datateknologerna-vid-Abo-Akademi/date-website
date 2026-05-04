@@ -60,7 +60,22 @@
                                                     </form>
                                                 </li>
                                             {% elif not page.logged_in_only or user.is_authenticated %}
-                                                <li><a class="dropdown-item" href="{{ page.url|localized_url }}">{{ page.title }}</a></li>
+                                                {% with children=page.children.all %}
+                                                {% if children %}
+                                                    <li class="dropdown-submenu">
+                                                        <a class="dropdown-item dropdown-toggle" href="{% if page.url %}{{ page.url|localized_url }}{% else %}#{% endif %}">{{ page.title }}</a>
+                                                        <ul class="dropdown-menu dropdown-menu-dark">
+                                                            {% for child in children %}
+                                                                {% if not child.logged_in_only or user.is_authenticated %}
+                                                                    <li><a class="dropdown-item" href="{{ child.url|localized_url }}">{{ child.title }}</a></li>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </li>
+                                                {% else %}
+                                                    <li><a class="dropdown-item" href="{% if page.url %}{{ page.url|localized_url }}{% else %}#{% endif %}">{{ page.title }}</a></li>
+                                                {% endif %}
+                                                {% endwith %}
                                             {% endif %}
                                         {% endif %}
                                     {% endfor %}
