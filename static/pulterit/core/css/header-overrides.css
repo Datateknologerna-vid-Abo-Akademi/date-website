@@ -119,10 +119,6 @@ li .dropdown-menu {
 }
 
 @media (max-width: 991.98px) {
-    .dropdown-submenu > .dropdown-menu {
-        display: block !important;
-    }
-
     .navbar .offcanvas .language-dropdown-toggle {
         margin: 0.75rem 0 0;
         padding: 0.5rem 0 0;
