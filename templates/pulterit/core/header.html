@@ -1,6 +1,7 @@
 {% extends "core/header.html" %}
 {% load static %}
 {% load i18n %}
+{% load localized_urls %}
 
 {% block header_container_class %}container-fluid px-3{% endblock %}
 
@@ -10,3 +11,66 @@
 </a>
 {% endblock %}
 
+{% block header_nav_items %}
+{% for category in categories %}
+    {% if category.use_category_url %}
+        <li class="nav-item">
+            <a class="nav-link" aria-current="page" href="{{ category.url|localized_url }}">{{ category.category_name }}</a>
+        </li>
+    {% else %}
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink{{ forloop.counter0 }}" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ category.category_name }}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownMenuLink{{ forloop.counter0 }}">
+                {% url 'members:login' as login_url %}
+                {% for page in urls %}
+                    {% if page.category|lower == category.category_name|lower %}
+                        {% if user.is_authenticated and page.url|localized_url == login_url %}
+                            <li>
+                                <form action="{% url 'members:logout' %}" method="post">
+                                    {% csrf_token %}
+                                    <button class="dropdown-item">{% translate "Logga ut" %}</button>
+                                </form>
+                            </li>
+                        {% elif not page.logged_in_only or user.is_authenticated %}
+                            {% with children=page.children.all %}
+                            {% if children %}
+                                <li class="dropdown-submenu">
+                                    {% if page.url %}
+                                        <a class="dropdown-item dropdown-toggle" href="{{ page.url|localized_url }}">{{ page.title }}</a>
+                                    {% else %}
+                                        <button class="dropdown-item dropdown-toggle dropdown-submenu-toggle" type="button">{{ page.title }}</button>
+                                    {% endif %}
+                                    <ul class="dropdown-menu dropdown-menu-dark">
+                                        {% for child in children %}
+                                            {% if not child.logged_in_only or user.is_authenticated %}
+                                                <li>
+                                                    {% if child.url %}
+                                                        <a class="dropdown-item" href="{{ child.url|localized_url }}">{{ child.title }}</a>
+                                                    {% else %}
+                                                        <button class="dropdown-item" type="button">{{ child.title }}</button>
+                                                    {% endif %}
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                </li>
+                            {% else %}
+                                <li>
+                                    {% if page.url %}
+                                        <a class="dropdown-item" href="{{ page.url|localized_url }}">{{ page.title }}</a>
+                                    {% else %}
+                                        <button class="dropdown-item" type="button">{{ page.title }}</button>
+                                    {% endif %}
+                                </li>
+                            {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </li>
+    {% endif %}
+{% endfor %}
+{% endblock %}

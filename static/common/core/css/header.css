@@ -142,35 +142,8 @@ li .dropdown-menu {
         border-right: 1px solid rgba(0, 0, 0, .2);
         transform: translateX(-100%);
     }
-    .dropdown-submenu > .dropdown-menu {
-        display: block !important;
-    }
 }
 
 .header-logo{
     max-height: 45px;
-}
-
-.dropdown-submenu > .dropdown-menu {
-    position: static !important;
-    padding: 0;
-    border: none;
-    box-shadow: none;
-    background-color: transparent;
-    display: none !important;
-}
-
-.dropdown-submenu:hover > .dropdown-menu {
-    display: block !important;
-}
-
-.dropdown-submenu > .dropdown-menu .dropdown-item {
-    padding-left: 2rem;
-    color: rgba(255, 255, 255, 0.85);
-}
-
-.dropdown-submenu > .dropdown-menu .dropdown-item:hover,
-.dropdown-submenu > .dropdown-menu .dropdown-item:focus {
-    color: #fff;
-    background-color: rgba(255, 255, 255, 0.15);
 }

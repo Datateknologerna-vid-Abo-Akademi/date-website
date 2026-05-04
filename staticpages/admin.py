@@ -1,7 +1,7 @@
 from admin_ordering.admin import OrderableAdmin
 from django.conf import settings
 from django.contrib import admin
-from django.db.models import TextField
+from django.db.models import Case, IntegerField, TextField, Value, When
 from django_ckeditor_5.widgets import CKEditor5Widget
 from core.admin_base import ModelAdmin, PublicUrlAdminMixin, TabularInline, UNFOLD_FORMFIELD_OVERRIDES
 
@@ -23,16 +23,6 @@ else:
     StaticPageTranslationAdminBase = ModelAdmin
 
 
-class SubUrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
-    model = StaticUrl
-    fk_name = 'parent'
-    extra = 0
-    ordering_field = 'dropdown_element'
-    ordering = ['dropdown_element']
-    ordering_field_hide_input = True
-    fields = ('dropdown_element', 'title', 'url', 'logged_in_only')
-
-
 class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
     model = StaticUrl
     fk_name = 'category'
@@ -42,11 +32,25 @@ class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
     ordering_field = 'dropdown_element'
     ordering = ['dropdown_element']
     ordering_field_hide_input = True
-    fields = ('dropdown_element', 'title', 'url', 'logged_in_only')
-    inlines = [SubUrlInline]
+    fields = ('dropdown_element', 'title', 'url', 'parent', 'logged_in_only')
 
     def get_queryset(self, request):
-        return super().get_queryset(request).filter(parent=None)
+        return super().get_queryset(request).annotate(
+            has_parent=Case(
+                When(parent__isnull=True, then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField(),
+            )
+        ).order_by('has_parent', 'parent__dropdown_element', 'dropdown_element')
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'parent':
+            queryset = StaticUrl.objects.filter(parent=None)
+            object_id = request.resolver_match.kwargs.get('object_id') if request.resolver_match else None
+            if object_id:
+                queryset = queryset.filter(category_id=object_id)
+            kwargs['queryset'] = queryset
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(StaticPageNav)

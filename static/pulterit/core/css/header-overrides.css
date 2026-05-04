@@ -68,6 +68,43 @@ li .dropdown-menu {
 .navbar-nav .dropdown-item:hover {
     color: var(--accentColorBright) !important;
 }
+
+.dropdown-submenu > .dropdown-menu {
+    position: static !important;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    background-color: transparent;
+    display: none !important;
+}
+
+.dropdown-submenu:hover > .dropdown-menu,
+.dropdown-submenu:focus-within > .dropdown-menu {
+    display: block !important;
+}
+
+.dropdown-submenu-toggle {
+    text-align: left;
+}
+
+.dropdown-submenu > .dropdown-menu .dropdown-item {
+    padding-left: 2rem;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.dropdown-submenu > .dropdown-menu .dropdown-item:hover,
+.dropdown-submenu > .dropdown-menu .dropdown-item:focus {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+@media (max-width : 992px) {
+    .dropdown-submenu > .dropdown-menu {
+        display: block !important;
+        margin-left: 0.5rem;
+    }
+}
+
 .navbar-nav li a:active, .dropdown-item:active {
     color: var(--textColorLightish) !important;
     border-radius: var(--defaultRadius);
