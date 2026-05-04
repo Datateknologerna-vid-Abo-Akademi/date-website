@@ -38,36 +38,7 @@
             <div class="offcanvas-body p-lg-0 justify-content-end">
                 <ul class="navbar-nav{% if not ENABLE_LANGUAGE_FEATURES or LANGUAGES|length <= 1 %} navbar-nav-no-language{% endif %}">
                     {% block header_nav_items %}
-                    {% for category in categories %}
-                        {% if category.use_category_url %}
-                            <li class="nav-item">
-                                <a class="nav-link" aria-current="page" href="{{ category.url|localized_url }}">{{ category.category_name }}</a>
-                            </li>
-                        {% else %}
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink{{ forloop.counter0 }}" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    {{ category.category_name }}
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDropdownMenuLink{{ forloop.counter0 }}">
-                                    {% url 'members:login' as login_url %}
-                                    {% for page in urls %}
-                                        {% if page.category|lower == category.category_name|lower %}
-                                            {% if user.is_authenticated and page.url|localized_url == login_url %}
-                                                <li>
-                                                    <form action="{% url 'members:logout' %}" method="post">
-                                                        {% csrf_token %}
-                                                        <button class="dropdown-item">{% translate "Logga ut" %}</button>
-                                                    </form>
-                                                </li>
-                                            {% elif not page.logged_in_only or user.is_authenticated %}
-                                                <li><a class="dropdown-item" href="{{ page.url|localized_url }}">{{ page.title }}</a></li>
-                                            {% endif %}
-                                        {% endif %}
-                                    {% endfor %}
-                                </ul>
-                            </li>
-                        {% endif %}
-                    {% endfor %}
+                    {% include "core/header_nav_items.html" %}
                     {% endblock %}
                     {% block header_language_picker %}
                     {% if ENABLE_LANGUAGE_FEATURES and LANGUAGES|length > 1 %}

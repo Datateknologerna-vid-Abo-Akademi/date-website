@@ -85,10 +85,11 @@ class StaticPage(models.Model):
 
 class StaticUrl(models.Model):
     title = models.CharField(_('Titel'), max_length=255, blank=False)
-    url = models.CharField(_('Url'), max_length=200)
-    category = models.ForeignKey(StaticPageNav, on_delete=models.CASCADE, blank=True)
+    url = models.CharField(_('Url'), max_length=200, blank=True)
+    category = models.ForeignKey(StaticPageNav, on_delete=models.CASCADE, null=True, blank=True)
     dropdown_element = models.PositiveSmallIntegerField(_('#'), blank=True)
     logged_in_only = models.BooleanField(_('Visa endast åt inloggade användare'), default=False)
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='children')
 
     class Meta:
         ordering = ['dropdown_element']
@@ -96,13 +97,29 @@ class StaticUrl(models.Model):
     def __str__(self):
         return self.title
 
+    def clean(self):
+        super().clean()
+        if not self.category_id and not self.parent_id:
+            raise ValidationError({'category': _('Välj en kategori eller en överordnad länk.')})
+        if self.parent_id and self.parent_id == self.pk:
+            raise ValidationError({'parent': _('En länk kan inte vara sin egen överordnade länk.')})
+        if self.parent_id and self.category_id and self.parent.category_id != self.category_id:
+            raise ValidationError({'parent': _('Välj en överordnad länk i samma kategori.')})
+        if self.parent_id and self.parent.parent_id:
+            raise ValidationError({'parent': _('Undermenyer stöder bara en nivå.')})
+
     def save(self, *args, **kwargs):
+        if self.parent is not None:
+            self.category = self.parent.category
+
         if self.dropdown_element is None:
-            max_number = StaticUrl.objects.filter(category=self.category).aggregate(
-                models.Max('dropdown_element')
-            )['dropdown_element__max']
-            if max_number is not None:
-                self.dropdown_element = max_number + 10
+            if self.parent is not None:
+                max_number = StaticUrl.objects.filter(parent=self.parent).aggregate(
+                    models.Max('dropdown_element')
+                )['dropdown_element__max']
             else:
-                self.dropdown_element = 10
+                max_number = StaticUrl.objects.filter(category=self.category, parent=None).aggregate(
+                    models.Max('dropdown_element')
+                )['dropdown_element__max']
+            self.dropdown_element = (max_number + 10) if max_number is not None else 10
         super(StaticUrl, self).save(*args, **kwargs)
