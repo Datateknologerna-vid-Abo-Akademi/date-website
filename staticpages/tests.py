@@ -1,11 +1,14 @@
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
+from django.test import RequestFactory
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from staticpages.models import StaticPage
+from staticpages.context_processors import get_urls
+from staticpages.models import StaticPage, StaticPageNav, StaticUrl
 
 
 class PolicyViewTests(TestCase):
@@ -119,3 +122,60 @@ class StaticPageViewTests(TestCase):
 
         self.assertIn("image", error.exception.message_dict)
         self.assertIn("s3_image", error.exception.message_dict)
+
+
+class StaticUrlTests(TestCase):
+    def setUp(self):
+        self.category = StaticPageNav.objects.create(category_name="Menu")
+
+    def test_blank_leaf_url_is_allowed_for_draft_menu_items(self):
+        nav_url = StaticUrl(title="Empty", category=self.category, url="")
+
+        nav_url.full_clean()
+
+    def test_blank_parent_url_is_valid_when_it_has_children(self):
+        parent = StaticUrl.objects.create(title="Parent", category=self.category, url="")
+        StaticUrl.objects.create(title="Child", category=self.category, parent=parent, url="/child/")
+
+        parent.full_clean()
+
+    def test_child_urls_must_stay_one_level_deep(self):
+        parent = StaticUrl.objects.create(title="Parent", category=self.category, url="/parent/")
+        child = StaticUrl.objects.create(title="Child", category=self.category, parent=parent, url="/child/")
+        grandchild = StaticUrl(title="Grandchild", category=self.category, parent=child, url="/grandchild/")
+
+        with self.assertRaises(ValidationError) as error:
+            grandchild.full_clean()
+
+        self.assertIn("parent", error.exception.message_dict)
+
+    def test_context_processor_filters_archive_children_when_archive_is_disabled(self):
+        request = RequestFactory().get("/")
+        request.user = AnonymousUser()
+        parent = StaticUrl.objects.create(title="Parent", category=self.category, url="/parent/")
+        StaticUrl.objects.create(title="Archive child", category=self.category, parent=parent, url="/archive/old/")
+        StaticUrl.objects.create(title="Visible child", category=self.category, parent=parent, url="/current/")
+
+        with override_settings(ARCHIVE_ENABLED=False):
+            urls = get_urls(request)["urls"]
+            children = list(urls[0].children.all())
+
+        self.assertEqual([child.title for child in children], ["Visible child"])
+
+    def test_context_processor_filters_logged_in_only_children_for_anonymous_users(self):
+        request = RequestFactory().get("/")
+        request.user = AnonymousUser()
+        parent = StaticUrl.objects.create(title="Parent", category=self.category, url="/parent/")
+        StaticUrl.objects.create(
+            title="Hidden child",
+            category=self.category,
+            parent=parent,
+            url="/hidden/",
+            logged_in_only=True,
+        )
+        StaticUrl.objects.create(title="Visible child", category=self.category, parent=parent, url="/current/")
+
+        urls = get_urls(request)["urls"]
+        children = list(urls[0].children.all())
+
+        self.assertEqual([child.title for child in children], ["Visible child"])
