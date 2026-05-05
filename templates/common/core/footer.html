@@ -33,7 +33,7 @@
                     {% if ASSOCIATION_OFFICE_HOURS %}<br>{{ ASSOCIATION_OFFICE_HOURS }}{% endif %}
                 </p>
                 <p>{% trans "Address" %}:<br>
-                    {{ ASSOCIATION_ADDRESS_L1 }}<br>
+                    {% block footer_address_l1 %}{{ ASSOCIATION_ADDRESS_L1 }}{% endblock %}<br>
                     {{ ASSOCIATION_ADDRESS_L2 }}<br>
                     {{ ASSOCIATION_POSTAL_CODE }}
                 </p>

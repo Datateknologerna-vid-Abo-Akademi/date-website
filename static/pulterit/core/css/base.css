@@ -159,7 +159,8 @@ div a:hover{
 }
 
 .pulterit-footer-shell a:hover {
-    color: rgba(255, 255, 255, 0.82);
+    color: var(--accentColorBright);
+    border-color: vcar(--accentColorBright);
 }
 
 .pulterit-footer-shell section,
