@@ -237,3 +237,30 @@ table.table {
     border-color: #d9d9d7;
 }
 /* ---- */
+
+.footer-credit-link {
+    transition: opacity 0.2s, filter 0.2s;
+}
+
+.association-footer-social .btn:hover {
+    color: var(--accentColorBright);
+    border-color: var(--accentColorBright);
+}
+
+.footer-credit-link:hover {
+    opacity: 0.85;
+    color: var(--accentColorBright) !important;
+    filter: drop-shadow(0 0 8px var(--accentColorBright)) drop-shadow(0 0 16px var(--accentColor));
+}
+
+.logo-container a,
+.partner-link {
+    display: inline-block;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.logo-container a:hover,
+.partner-link:hover {
+    transform: scale(1.03);
+    opacity: 0.75;
+}
