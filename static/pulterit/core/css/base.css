@@ -160,7 +160,7 @@ div a:hover{
 
 .pulterit-footer-shell a:hover {
     color: var(--accentColorBright);
-    border-color: vcar(--accentColorBright);
+    border-color: var(--accentColorBright);
 }
 
 .pulterit-footer-shell section,
