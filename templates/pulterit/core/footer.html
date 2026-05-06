@@ -35,6 +35,11 @@
 </p>
 {% endblock %}
 
+{% block footer_address_l1 %}
+{% get_current_language as lang %}
+{% if lang == 'sv' %}Geohuset{% elif lang == 'fi' %}Geotalo{% else %}Geohouse{% endif %}
+{% endblock %}
+
 {% block extra_footer %}
 <p class="text-center mb-2 mt-3">
     <small>{% trans "Website developed and maintained by" %}  <a class="footer-credit-link" href="https://datateknologerna.org/" target="_blank" rel="noopener">DaTe</a><br>
