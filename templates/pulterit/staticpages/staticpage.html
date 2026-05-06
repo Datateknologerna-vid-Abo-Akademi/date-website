@@ -1,7 +1,6 @@
 {% extends 'staticpages/staticpage.html' %}
 
 {% block extra_head %}
-    {{ block.super }}
     {% with background_image_url=page.background_image_url %}
     {% if background_image_url %}
         <style>
