@@ -14,7 +14,7 @@
 
 {% block footer_right %}
 <div class="col-12 col-md-4 text-center">
-    <a href="https://geohouse.fi/" target="_blank" rel="noopener">
+    <a class="partner-link" href="https://geohouse.fi/" target="_blank" rel="noopener">
         <img class="footer-img img-fluid" alt="Geohouse logo" src="{% static 'core/images/Geohouse_logo-1-1.png' %}" style="max-height: 200px;">
     </a>
 </div>
@@ -37,7 +37,7 @@
 
 {% block extra_footer %}
 <p class="text-center mb-2 mt-3">
-    <small>{% trans "Website developed and maintained by" %}  <a href="https://datateknologerna.org/" target="_blank" rel="noopener">DaTe</a><br>
-    <a href="https://datateknologerna.org/" target="_blank" rel="noopener"><img src="{% static 'core/images/Sponsor_Albin.png' %}" alt="DaTe logo" style="max-height: 40px; filter: invert(1);"></a></small>
+    <small>{% trans "Website developed and maintained by" %}  <a class="footer-credit-link" href="https://datateknologerna.org/" target="_blank" rel="noopener">DaTe</a><br>
+    <a class="footer-credit-link" href="https://datateknologerna.org/" target="_blank" rel="noopener"><img src="{% static 'core/images/Sp_Albin.png' %}" alt="DaTe logo" style="max-height: 40px; filter: invert(1);"></a></small>
 </p>
 {% endblock %}
