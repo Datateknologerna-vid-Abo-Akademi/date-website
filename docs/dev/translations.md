@@ -70,9 +70,11 @@ What this does:
 
 For `gettext` and its variants to be usable in JavaScript code the Django translation catalog has to be loaded first.
 This can be done by including a `script` tag in the `head` of a page:
+{% raw %}
 ```django
 <script src="{% url 'javascript-catalog' %}"></script>
 ```
+{% endraw %}
 
 ## Layer 2: Dynamic Content Translations
 
