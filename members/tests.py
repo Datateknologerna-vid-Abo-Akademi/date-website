@@ -184,6 +184,32 @@ class FunctionaryFormTests(TestCase):
         functionary.save()
         self.assertEqual(Functionary.objects.count(), 1)
 
+    def test_snapshots_member_name_for_deleted_member_display(self):
+        self.member.first_name = 'Function'
+        self.member.last_name = 'Ary'
+        self.member.save()
+        functionary = Functionary.objects.create(
+            member=self.member,
+            functionary_role=self.role,
+            year=2024,
+        )
+
+        self.member.delete()
+        functionary.refresh_from_db()
+
+        self.assertIsNone(functionary.member)
+        self.assertEqual(functionary.name, 'Function Ary')
+        self.assertEqual(functionary.get_full_name(), 'Function Ary')
+
+    def test_uses_username_when_member_name_is_blank(self):
+        functionary = Functionary.objects.create(
+            member=self.member,
+            functionary_role=self.role,
+            year=2024,
+        )
+
+        self.assertEqual(functionary.name, 'functionary')
+
 
 class SignupViewTests(TestCase):
     def setUp(self):

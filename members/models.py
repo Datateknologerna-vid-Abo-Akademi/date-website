@@ -195,5 +195,10 @@ class Functionary(models.Model):
     def get_full_name(self):
         return self.member.get_full_name() if self.member else self.name
 
+    def save(self, *args, **kwargs):
+        if self.member and not self.name:
+            self.name = self.member.get_full_name().strip() or self.member.username
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.get_full_name()} {self.functionary_role.title} {self.year}"

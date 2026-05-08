@@ -30,7 +30,7 @@ Most people register themselves at `/members/signup/`. Those signups land in the
 ## Functionary Roles & Assignments
 1. Define positions under **Members › Functionary roles** (mark `Styrelse` if it’s a board seat).
 2. Assign members in **Members › Functionaries**:
-   - Fill in the member, role, and year.
+   - Fill in the role and year, plus either a linked member or a display name. Linked members automatically snapshot their current name for display if the member account is later removed.
    - Use filters to review by year or role. Deleting a record removes it from the public functionary list.
 3. Members can also manage their own functionary history via `/members/functionary/`, but admin edits override their entries.
 

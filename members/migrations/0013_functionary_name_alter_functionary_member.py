@@ -9,7 +9,7 @@ def copy_member_names(apps, _):
     Functionary = apps.get_model('members', 'Functionary')
 
     for functionary in Functionary.objects.select_related('member').filter(name='', member__isnull=False):
-        functionary.name = f'{functionary.member.first_name} {functionary.member.last_name}'
+        functionary.name = f'{functionary.member.first_name} {functionary.member.last_name}'.strip() or functionary.member.username
         functionary.save(update_fields=['name'])
 
 
