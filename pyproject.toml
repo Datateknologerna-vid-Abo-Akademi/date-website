@@ -35,6 +35,7 @@ dependencies = [
     "celery[redis]",
     "gunicorn",
     "gspread",
+    "twisted[tls]>=26.4.0rc2",
 ]
 
 [dependency-groups]
