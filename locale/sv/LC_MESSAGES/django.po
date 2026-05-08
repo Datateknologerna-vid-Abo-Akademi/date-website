@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-08 18:01+0300\n"
+"POT-Creation-Date: 2026-05-08 22:53+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1541,13 +1541,14 @@ msgstr "Anmälan öppnas"
 msgid "Medlemspass"
 msgstr "Medlemspass"
 
-#: templates/common/members/functionaries.html:17
-msgid "Välj ett år:"
-msgstr "Välj ett år:"
-
+#: templates/common/members/functionaries.html:13
 #: templates/common/members/functionaries.html:20
 msgid "Alla år"
 msgstr "Alla år"
+
+#: templates/common/members/functionaries.html:17
+msgid "Välj ett år:"
+msgstr "Välj ett år:"
 
 #: templates/common/members/functionaries.html:28
 msgid "Välj en post:"
@@ -1574,8 +1575,11 @@ msgid "Inga funktionärer hittades..."
 msgstr "Inga funktionärer hittades..."
 
 #: templates/common/members/functionaries.html:98
-msgid "Vid eventuella frågor kan styrelsen kontaktas via pulterit@utu.fi."
-msgstr "Vid eventuella frågor kan styrelsen kontaktas via pulterit@utu.fi."
+#, python-format
+msgid ""
+"Vid eventuella frågor kan styrelsen kontaktas via %(ASSOCIATION_EMAIL)s."
+msgstr ""
+"Vid eventuella frågor kan styrelsen kontaktas via %(ASSOCIATION_EMAIL)s."
 
 #: templates/common/members/functionary.html:20
 msgid "Radera"

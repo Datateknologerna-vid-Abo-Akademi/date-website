@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-08 18:01+0300\n"
+"POT-Creation-Date: 2026-05-08 22:53+0300\n"
 "PO-Revision-Date: 2025-09-16 20:27+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -874,9 +874,9 @@ msgstr "The GitHub account has been linked to your account."
 
 #: members/views_github.py:258
 msgid "Inget konto hittades för ditt GitHub-konto. Kontakta administratören."
-msgstr "No account found for your GitHub account. Contact the administrator."
-"No account was found for your GitHub account. Please contact the "
-"administrator."
+msgstr ""
+"No account found for your GitHub account. Contact the administrator.No "
+"account was found for your GitHub account. Please contact the administrator."
 
 #: members/views_github.py:263
 msgid "Ditt konto är inaktiverat."
@@ -1543,13 +1543,14 @@ msgstr "Registration opens"
 msgid "Medlemspass"
 msgstr "Membership pass"
 
-#: templates/common/members/functionaries.html:17
-msgid "Välj ett år:"
-msgstr "Choose a year"
-
+#: templates/common/members/functionaries.html:13
 #: templates/common/members/functionaries.html:20
 msgid "Alla år"
 msgstr "All years"
+
+#: templates/common/members/functionaries.html:17
+msgid "Välj ett år:"
+msgstr "Choose a year"
 
 #: templates/common/members/functionaries.html:28
 msgid "Välj en post:"
@@ -1576,8 +1577,10 @@ msgid "Inga funktionärer hittades..."
 msgstr "No officials found..."
 
 #: templates/common/members/functionaries.html:98
-msgid "Vid eventuella frågor kan styrelsen kontaktas via pulterit@utu.fi."
-msgstr "For any questions, the board can be contacted at pulterit@utu.fi."
+#, python-format
+msgid ""
+"Vid eventuella frågor kan styrelsen kontaktas via %(ASSOCIATION_EMAIL)s."
+msgstr "For any questions, the board can be contacted at %(ASSOCIATION_EMAIL)s."
 
 #: templates/common/members/functionary.html:20
 msgid "Radera"

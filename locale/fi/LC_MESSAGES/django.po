@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-08 18:01+0300\n"
+"POT-Creation-Date: 2026-05-08 22:53+0300\n"
 "PO-Revision-Date: 2025-09-16 19:33+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -648,8 +648,10 @@ msgstr "Deaktivoitiin %(count)d käyttäjää."
 #: members/admin.py:224
 #, python-format
 msgid "2FA inaktiverat för valda medlemmar: %(count)d enhet(er) borttagna."
-msgstr "2FA poistettu käytöstä valituille jäsenille: %(count)d laite(tta) poistettu."
-"2FA poistettu käytöstä valituilta jäseniltä: %(count)d laite(tta) poistettu."
+msgstr ""
+"2FA poistettu käytöstä valituille jäsenille: %(count)d laite(tta) "
+"poistettu.2FA poistettu käytöstä valituilta jäseniltä: %(count)d laite(tta) "
+"poistettu."
 
 #: members/forms.py:23
 msgid ""
@@ -875,8 +877,10 @@ msgstr "GitHub-tili on linkitetty tiliisi."
 
 #: members/views_github.py:258
 msgid "Inget konto hittades för ditt GitHub-konto. Kontakta administratören."
-msgstr "GitHub-tiliäsi vastaavaa käyttäjätiliä ei löydy. Ota yhteyttä ylläpitäjään."
-"GitHub-tilillesi ei löytynyt tiliä. Ota yhteyttä järjestelmänvalvojaan."
+msgstr ""
+"GitHub-tiliäsi vastaavaa käyttäjätiliä ei löydy. Ota yhteyttä "
+"ylläpitäjään.GitHub-tilillesi ei löytynyt tiliä. Ota yhteyttä "
+"järjestelmänvalvojaan."
 
 #: members/views_github.py:263
 msgid "Ditt konto är inaktiverat."
@@ -1544,13 +1548,14 @@ msgstr "Ilmoittautuminen avautuu"
 msgid "Medlemspass"
 msgstr "Jäsenpassi"
 
-#: templates/common/members/functionaries.html:17
-msgid "Välj ett år:"
-msgstr "Valitse vuosi"
-
+#: templates/common/members/functionaries.html:13
 #: templates/common/members/functionaries.html:20
 msgid "Alla år"
 msgstr "Kaikki vuodet"
+
+#: templates/common/members/functionaries.html:17
+msgid "Välj ett år:"
+msgstr "Valitse vuosi"
 
 #: templates/common/members/functionaries.html:28
 msgid "Välj en post:"
@@ -1577,10 +1582,12 @@ msgid "Inga funktionärer hittades..."
 msgstr "Toimihenkilöitä ei löytynyt..."
 
 #: templates/common/members/functionaries.html:98
-msgid "Vid eventuella frågor kan styrelsen kontaktas via pulterit@utu.fi."
+#, python-format
+msgid ""
+"Vid eventuella frågor kan styrelsen kontaktas via %(ASSOCIATION_EMAIL)s."
 msgstr ""
 "Mahdollisia kysymyksiä varten hallitukseen voi ottaa yhteyttä osoitteessa "
-"pulterit@utu.fi."
+"%(ASSOCIATION_EMAIL)s."
 
 #: templates/common/members/functionary.html:20
 msgid "Radera"
@@ -1918,8 +1925,9 @@ msgstr "viimeinen"
 
 #: templates/common/social/harassment_form.html:11
 msgid "Rapportera trakasserier och eventuella brister med jämlikhetsplanen"
-msgstr "Ilmoita häirinnästä ja tasa-arvosuunnitelman puutteista"
-"Ilmoita häirinnästä ja mahdollisista yhdenvertaisuussuunnitelman puutteista"
+msgstr ""
+"Ilmoita häirinnästä ja tasa-arvosuunnitelman puutteistaIlmoita häirinnästä "
+"ja mahdollisista yhdenvertaisuussuunnitelman puutteista"
 
 #: templates/common/social/harassment_form.html:13
 #, python-format
