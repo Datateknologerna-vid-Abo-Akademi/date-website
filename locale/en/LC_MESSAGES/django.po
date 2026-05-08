@@ -422,34 +422,32 @@ msgid "Gissningar"
 msgstr "Guesses"
 
 #: events/models.py:29
-#, fuzzy
-#| msgid "Mera evenemang"
 msgid "Normal evenemangssida"
-msgstr "More events"
+msgstr "Normal event page"
 
 #: events/models.py:30
 msgid "Årsfest"
-msgstr ""
+msgstr "Annual Party"
 
 #: events/models.py:34
 msgid "Baal"
-msgstr ""
+msgstr "Baal"
 
 #: events/models.py:35
 msgid "100 Baal"
-msgstr ""
+msgstr "100 Baal"
 
 #: events/models.py:36
 msgid "Tomtejakt"
-msgstr ""
+msgstr "Tomtejakt"
 
 #: events/models.py:37
 msgid "Wappmiddag"
-msgstr ""
+msgstr "Wappmiddag"
 
 #: events/models.py:60
 msgid "Mall"
-msgstr ""
+msgstr "Template"
 
 #: events/models.py:67
 msgid "Maximal antal deltagare (0 för ingen begränsning)"
@@ -606,19 +604,15 @@ msgstr "attendee"
 
 #: events/registration.py:80
 msgid "Evenemanget är fullt."
-msgstr ""
+msgstr "The event is full."
 
 #: events/registration.py:85
-#, fuzzy
-#| msgid "Göm för avec"
 msgid "Ange namn för avec."
-msgstr "Hide for plus-one"
+msgstr "Enter name for plus-one."
 
 #: events/registration.py:87
-#, fuzzy
-#| msgid "Ange din e-postadress"
 msgid "Ange e-post för avec."
-msgstr "Enter your email address"
+msgstr "Enter email for plus-one."
 
 #: lucia/models.py:15
 msgid "Bild URL"
@@ -817,7 +811,7 @@ msgstr "Functionaries"
 
 #: members/models.py:193
 msgid "Funktionärer måste ha antingen en kopplad medlem eller ett namn."
-msgstr ""
+msgstr "A functionary must have either a linked member or a name."
 
 #: members/two_factor.py:51
 msgid "Username or email"
@@ -881,7 +875,7 @@ msgstr "The GitHub account has been linked to your account."
 
 #: members/views_github.py:258
 msgid "Inget konto hittades för ditt GitHub-konto. Kontakta administratören."
-msgstr ""
+msgstr "No account found for your GitHub account. Contact the administrator."
 "No account was found for your GitHub account. Please contact the "
 "administrator."
 
@@ -1057,19 +1051,19 @@ msgstr "Show only for logged in users"
 
 #: staticpages/models.py:103
 msgid "Välj en kategori eller en överordnad länk."
-msgstr ""
+msgstr "Select a category or a parent link."
 
 #: staticpages/models.py:105
 msgid "En länk kan inte vara sin egen överordnade länk."
-msgstr ""
+msgstr "A link cannot be its own parent link."
 
 #: staticpages/models.py:107
 msgid "Välj en överordnad länk i samma kategori."
-msgstr ""
+msgstr "Select a parent link in the same category."
 
 #: staticpages/models.py:109
 msgid "Undermenyer stöder bara en nivå."
-msgstr ""
+msgstr "Submenus only support one level."
 
 #: templates/biocum/date/components/mobile.html:3
 #: templates/biocum/date/components/sidebar.html:4
@@ -1436,7 +1430,7 @@ msgstr "Address"
 
 #: templates/common/core/header.html:23
 msgid "Close"
-msgstr ""
+msgstr "Close"
 
 #: templates/common/core/header.html:47
 msgid "Choose language"
@@ -2093,7 +2087,7 @@ msgstr "no active events found"
 
 #: templates/pulterit/core/footer.html:45
 msgid "Website developed and maintained by"
-msgstr ""
+msgstr "Website developed and maintained by"
 
 #: templates/pulterit/date/components/partners.html:8
 #: templates/pulterit/date/components/partners.html:12

@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
@@ -421,34 +420,32 @@ msgid "Gissningar"
 msgstr "Gissningar"
 
 #: events/models.py:29
-#, fuzzy
-#| msgid "Mera evenemang"
 msgid "Normal evenemangssida"
-msgstr "Mera evenemang"
+msgstr "Normal evenemangssida"
 
 #: events/models.py:30
 msgid "Årsfest"
-msgstr ""
+msgstr "Årsfest"
 
 #: events/models.py:34
 msgid "Baal"
-msgstr ""
+msgstr "Baal"
 
 #: events/models.py:35
 msgid "100 Baal"
-msgstr ""
+msgstr "100 Baal"
 
 #: events/models.py:36
 msgid "Tomtejakt"
-msgstr ""
+msgstr "Tomtejakt"
 
 #: events/models.py:37
 msgid "Wappmiddag"
-msgstr ""
+msgstr "Wappmiddag"
 
 #: events/models.py:60
 msgid "Mall"
-msgstr ""
+msgstr "Mall"
 
 #: events/models.py:67
 msgid "Maximal antal deltagare (0 för ingen begränsning)"
@@ -605,19 +602,15 @@ msgstr "deltagare"
 
 #: events/registration.py:80
 msgid "Evenemanget är fullt."
-msgstr ""
+msgstr "Evenemanget är fullt."
 
 #: events/registration.py:85
-#, fuzzy
-#| msgid "Göm för avec"
 msgid "Ange namn för avec."
-msgstr "Göm för avec"
+msgstr "Ange namn för avec."
 
 #: events/registration.py:87
-#, fuzzy
-#| msgid "Ange din e-postadress"
 msgid "Ange e-post för avec."
-msgstr "Ange din e-postadress"
+msgstr "Ange e-post för avec."
 
 #: lucia/models.py:15
 msgid "Bild URL"
@@ -816,7 +809,7 @@ msgstr "Funktionärer"
 
 #: members/models.py:193
 msgid "Funktionärer måste ha antingen en kopplad medlem eller ett namn."
-msgstr ""
+msgstr "Funktionärer måste ha antingen en kopplad medlem eller ett namn."
 
 #: members/two_factor.py:51
 msgid "Username or email"
@@ -1054,19 +1047,19 @@ msgstr "Visa endast åt inloggade användare"
 
 #: staticpages/models.py:103
 msgid "Välj en kategori eller en överordnad länk."
-msgstr ""
+msgstr "Välj en kategori eller en överordnad länk."
 
 #: staticpages/models.py:105
 msgid "En länk kan inte vara sin egen överordnade länk."
-msgstr ""
+msgstr "En länk kan inte vara sin egen överordnade länk."
 
 #: staticpages/models.py:107
 msgid "Välj en överordnad länk i samma kategori."
-msgstr ""
+msgstr "Välj en överordnad länk i samma kategori."
 
 #: staticpages/models.py:109
 msgid "Undermenyer stöder bara en nivå."
-msgstr ""
+msgstr "Undermenyer stöder bara en nivå."
 
 #: templates/biocum/date/components/mobile.html:3
 #: templates/biocum/date/components/sidebar.html:4
@@ -1434,7 +1427,7 @@ msgstr "Adress"
 
 #: templates/common/core/header.html:23
 msgid "Close"
-msgstr ""
+msgstr "Stäng"
 
 #: templates/common/core/header.html:47
 msgid "Choose language"
@@ -1548,47 +1541,39 @@ msgstr "Medlemspass"
 
 #: templates/common/members/functionaries.html:17
 msgid "Välj ett år:"
-msgstr ""
+msgstr "Välj ett år:"
 
 #: templates/common/members/functionaries.html:20
 msgid "Alla år"
-msgstr ""
+msgstr "Alla år"
 
 #: templates/common/members/functionaries.html:28
 msgid "Välj en post:"
-msgstr ""
+msgstr "Välj en post:"
 
 #: templates/common/members/functionaries.html:31
 msgid "Alla poster"
-msgstr ""
+msgstr "Alla poster"
 
 #: templates/common/members/functionaries.html:40
-#, fuzzy
-#| msgid "Registrerad"
 msgid "Filtrera"
-msgstr "Registrerad"
+msgstr "Filtrera"
 
 #: templates/common/members/functionaries.html:46
-#, fuzzy
-#| msgid "Styrelse"
 msgid "Styrelsen"
-msgstr "Styrelse"
+msgstr "Styrelsen"
 
 #: templates/common/members/functionaries.html:71
-#, fuzzy
-#| msgid "Funktionärer"
 msgid "Övriga Funktionärer"
-msgstr "Funktionärer"
+msgstr "Övriga Funktionärer"
 
 #: templates/common/members/functionaries.html:95
-#, fuzzy
-#| msgid "Inga nyheter hittades..."
 msgid "Inga funktionärer hittades..."
-msgstr "Inga nyheter hittades..."
+msgstr "Inga funktionärer hittades..."
 
 #: templates/common/members/functionaries.html:98
 msgid "Vid eventuella frågor kan styrelsen kontaktas via pulterit@utu.fi."
-msgstr ""
+msgstr "Vid eventuella frågor kan styrelsen kontaktas via pulterit@utu.fi."
 
 #: templates/common/members/functionary.html:20
 msgid "Radera"

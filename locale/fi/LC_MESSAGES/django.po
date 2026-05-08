@@ -421,34 +421,32 @@ msgid "Gissningar"
 msgstr "Arvaukset"
 
 #: events/models.py:29
-#, fuzzy
-#| msgid "Mera evenemang"
 msgid "Normal evenemangssida"
-msgstr "Lisää tapahtumia"
+msgstr "Normaali tapahtumasivu"
 
 #: events/models.py:30
 msgid "Årsfest"
-msgstr ""
+msgstr "Vuosijuhla"
 
 #: events/models.py:34
 msgid "Baal"
-msgstr ""
+msgstr "Baal"
 
 #: events/models.py:35
 msgid "100 Baal"
-msgstr ""
+msgstr "100 Baal"
 
 #: events/models.py:36
 msgid "Tomtejakt"
-msgstr ""
+msgstr "Tomtejakt"
 
 #: events/models.py:37
 msgid "Wappmiddag"
-msgstr ""
+msgstr "Wappmiddag"
 
 #: events/models.py:60
 msgid "Mall"
-msgstr ""
+msgstr "Malli"
 
 #: events/models.py:67
 msgid "Maximal antal deltagare (0 för ingen begränsning)"
@@ -605,19 +603,15 @@ msgstr "osallistuja"
 
 #: events/registration.py:80
 msgid "Evenemanget är fullt."
-msgstr ""
+msgstr "Tapahtuma on täynnä."
 
 #: events/registration.py:85
-#, fuzzy
-#| msgid "Göm för avec"
 msgid "Ange namn för avec."
-msgstr "Piilota avecilta"
+msgstr "Anna nimi avecille."
 
 #: events/registration.py:87
-#, fuzzy
-#| msgid "Ange din e-postadress"
 msgid "Ange e-post för avec."
-msgstr "Anna sähköpostiosoitteesi"
+msgstr "Anna sähköposti avecille."
 
 #: lucia/models.py:15
 msgid "Bild URL"
@@ -654,7 +648,7 @@ msgstr "Deaktivoitiin %(count)d käyttäjää."
 #: members/admin.py:224
 #, python-format
 msgid "2FA inaktiverat för valda medlemmar: %(count)d enhet(er) borttagna."
-msgstr ""
+msgstr "2FA poistettu käytöstä valituille jäsenille: %(count)d laite(tta) poistettu."
 "2FA poistettu käytöstä valituilta jäseniltä: %(count)d laite(tta) poistettu."
 
 #: members/forms.py:23
@@ -817,7 +811,7 @@ msgstr "Toimihenkilöt"
 
 #: members/models.py:193
 msgid "Funktionärer måste ha antingen en kopplad medlem eller ett namn."
-msgstr ""
+msgstr "Toimihenkilöllä täytyy olla joko yhdistetty jäsen tai nimi."
 
 #: members/two_factor.py:51
 msgid "Username or email"
@@ -881,7 +875,7 @@ msgstr "GitHub-tili on linkitetty tiliisi."
 
 #: members/views_github.py:258
 msgid "Inget konto hittades för ditt GitHub-konto. Kontakta administratören."
-msgstr ""
+msgstr "GitHub-tiliäsi vastaavaa käyttäjätiliä ei löydy. Ota yhteyttä ylläpitäjään."
 "GitHub-tilillesi ei löytynyt tiliä. Ota yhteyttä järjestelmänvalvojaan."
 
 #: members/views_github.py:263
@@ -1058,19 +1052,19 @@ msgstr "Näytä vain kirjautuneille käyttäjille"
 
 #: staticpages/models.py:103
 msgid "Välj en kategori eller en överordnad länk."
-msgstr ""
+msgstr "Valitse kategoria tai ylälinkki."
 
 #: staticpages/models.py:105
 msgid "En länk kan inte vara sin egen överordnade länk."
-msgstr ""
+msgstr "Linkki ei voi olla oma ylälinkkinsä."
 
 #: staticpages/models.py:107
 msgid "Välj en överordnad länk i samma kategori."
-msgstr ""
+msgstr "Valitse ylälinkki samasta kategoriasta."
 
 #: staticpages/models.py:109
 msgid "Undermenyer stöder bara en nivå."
-msgstr ""
+msgstr "Alivalikot tukevat vain yhtä tasoa."
 
 #: templates/biocum/date/components/mobile.html:3
 #: templates/biocum/date/components/sidebar.html:4
@@ -1439,7 +1433,7 @@ msgstr "Osoite"
 
 #: templates/common/core/header.html:23
 msgid "Close"
-msgstr ""
+msgstr "Sulje"
 
 #: templates/common/core/header.html:47
 msgid "Choose language"
@@ -1923,7 +1917,7 @@ msgstr "viimeinen"
 
 #: templates/common/social/harassment_form.html:11
 msgid "Rapportera trakasserier och eventuella brister med jämlikhetsplanen"
-msgstr ""
+msgstr "Ilmoita häirinnästä ja tasa-arvosuunnitelman puutteista"
 "Ilmoita häirinnästä ja mahdollisista yhdenvertaisuussuunnitelman puutteista"
 
 #: templates/common/social/harassment_form.html:13
