@@ -10,14 +10,14 @@
     <div class="container-md min-vh-100 container-margin-top">
         <div class="container-size">
             <div class="content">
-            <h2>Funktionärer {{ selected_year }}</h2>
+            <h2>{% trans "Funktionärer" %} {% if all_years %}{% trans "Alla år" %}{% else %}{{ selected_year }}{% endif %}</h2>
             {% if user.is_authenticated %}
                 <form class="form-inline mt-2" action="{% url 'members:functionaries' %}" method="get">
                     <div class="form-group mb-2">
-                        <label for="year" class="mr-2">Välj ett år:</label>
+                        <label for="year" class="mr-2">{% trans "Välj ett år:" %}</label>
                         <select class="form-control" name="year" id="year">
                             <option value="all" {% if all_years %}selected{% endif %}>
-                                Alla år
+                                {% trans "Alla år" %}
                             </option> <!-- An option for displaying all years -->
                             {% for year_option in distinct_years %}
                                 <option value="{{ year_option }}" {% if year_option == selected_year %}selected{% endif %}>
@@ -25,10 +25,10 @@
                                 </option>
                             {% endfor %}
                         </select>
-                        <label for="role" class="mr-2">Välj en post:</label>
+                        <label for="role" class="mr-2">{% trans "Välj en post:" %}</label>
                         <select class="form-control" name="role" id="role">
                             <option value="all" {% if all_roles %}selected{% endif %}>
-                                Alla poster
+                                {% trans "Alla poster" %}
                             </option> <!-- An option for displaying all posts -->
                             {% for role in functionary_roles %}
                                 <option value="{{ role.title }}" {% if role.title == selected_role.title %}selected{% endif %}>
@@ -37,13 +37,13 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <button type="submit" class="theme-button ml-2 mb-2">Filtrera</button>
+                    <button type="submit" class="theme-button ml-2 mb-2">{% trans "Filtrera" %}</button>
                 </form>
             {% endif %}
                 <div class="row">
                     {% if board_functionaries_by_role %}
                         <div class="col-md-12 mb-4">
-                            <h2>Styrelsen</h2>
+                            <h2>{% trans "Styrelsen" %}</h2>
                             <div class="row">
                                 {% for role, functionaries in board_functionaries_by_role.items %}
                                     <div class="col-md-6 mb-4">
@@ -53,9 +53,9 @@
                                                 <ul class="list-unstyled">
                                                     {% for functionary in functionaries %}
                                                         {% if all_years %}
-                                                            <li>{{ functionary.member.get_full_name }} ({{ functionary.year }})</li>
+                                                            <li>{{ functionary.get_full_name }} ({{ functionary.year }})</li>
                                                         {% else %}
-                                                            <li>{{ functionary.member.get_full_name }}</li>
+                                                            <li>{{ functionary.get_full_name }}</li>
                                                         {% endif %}
                                                     {% endfor %}
                                                 </ul>
@@ -68,7 +68,7 @@
                     {% endif %}
                     {% if functionaries_by_role %}
                         <div class="col-md-12">
-                            <h2 class="card-title">Övriga Funktionärer</h2>
+                            <h2 class="card-title">{% trans "Övriga Funktionärer" %}</h2>
                             <div class="row">
                                 {% for role, functionaries in functionaries_by_role.items %}
                                     <div class="col-md-6 mb-4">
@@ -78,9 +78,9 @@
                                                 <ul class="list-unstyled">
                                                     {% for functionary in functionaries %}
                                                         {% if all_years %}
-                                                            <li>{{ functionary.member.get_full_name }} ({{ functionary.year }})</li>
+                                                            <li>{{ functionary.get_full_name }} ({{ functionary.year }})</li>
                                                         {% else %}
-                                                            <li>{{ functionary.member.get_full_name }}</li>
+                                                            <li>{{ functionary.get_full_name }}</li>
                                                         {% endif %}
                                                     {% endfor %}
                                                 </ul>
@@ -92,10 +92,10 @@
                         </div>
                     {% endif %}
                     {% if not board_functionaries_by_role and not functionaries_by_role %}
-                        <p>Inga funktionärer hittades...</p>
+                        <p>{% trans "Inga funktionärer hittades..." %}</p>
                     {% endif %}
                 </div>
-                <p>Styrelsen och de övriga funktionärerna kan kontaktas på förnamn.efternamn[at]abo.fi.</p>
+                <p>{% trans "Vid eventuella frågor kan styrelsen kontaktas via pulterit@utu.fi." %}</p>
             </div>
         </div>
     </div>
