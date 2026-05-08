@@ -1045,6 +1045,7 @@ msgid ""
 "Välj antingen en lokal bakgrundsbild eller en publik S3-bakgrundsbild, inte "
 "båda."
 msgstr ""
+"Valitse joko paikallinen taustakuva tai julkinen S3-taustakuva, ei molempia."
 
 #: staticpages/models.py:91
 msgid "Visa endast åt inloggade användare"

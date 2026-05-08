@@ -1040,6 +1040,8 @@ msgid ""
 "Välj antingen en lokal bakgrundsbild eller en publik S3-bakgrundsbild, inte "
 "båda."
 msgstr ""
+"Välj antingen en lokal bakgrundsbild eller en publik S3-bakgrundsbild, inte "
+"båda."
 
 #: staticpages/models.py:91
 msgid "Visa endast åt inloggade användare"
@@ -2097,7 +2099,6 @@ msgstr "Hemsidan är utvecklad och upprätthålls av"
 msgid "Partner logo"
 msgstr "Partner logo"
 
-#, fuzzy
 #~| msgid "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
 #~ msgid ""
 #~ "Styrelsen och de övriga funktionärerna kan kontaktas på "

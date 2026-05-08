@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
@@ -1044,6 +1043,8 @@ msgid ""
 "Välj antingen en lokal bakgrundsbild eller en publik S3-bakgrundsbild, inte "
 "båda."
 msgstr ""
+"Choose either a local background image or a public S3 background image, not "
+"both."
 
 #: staticpages/models.py:91
 msgid "Visa endast åt inloggade användare"
