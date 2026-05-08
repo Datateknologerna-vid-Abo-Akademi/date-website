@@ -191,10 +191,9 @@ class Functionary(models.Model):
     def clean(self):
         if not self.member and not self.name:
             raise ValidationError(_('Funktionärer måste ha antingen en kopplad medlem eller ett namn.'))
-        
+
     def get_full_name(self):
         return self.member.get_full_name() if self.member else self.name
-       
 
     def __str__(self):
         return f"{self.get_full_name()} {self.functionary_role.title} {self.year}"

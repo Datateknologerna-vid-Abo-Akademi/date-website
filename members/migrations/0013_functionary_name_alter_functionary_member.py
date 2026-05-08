@@ -5,6 +5,14 @@ from django.conf import settings
 from django.db import migrations, models
 
 
+def copy_member_names(apps, _):
+    Functionary = apps.get_model('members', 'Functionary')
+
+    for functionary in Functionary.objects.select_related('member').filter(name='', member__isnull=False):
+        functionary.name = f'{functionary.member.first_name} {functionary.member.last_name}'
+        functionary.save(update_fields=['name'])
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -17,6 +25,7 @@ class Migration(migrations.Migration):
             name='name',
             field=models.CharField(blank=True, max_length=200, verbose_name='Namn'),
         ),
+        migrations.RunPython(copy_member_names, migrations.RunPython.noop),
         migrations.AlterField(
             model_name='functionary',
             name='member',
