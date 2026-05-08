@@ -54,7 +54,7 @@ wait_for_db() {
   local attempt
 
   for attempt in $(seq 1 "$max_attempts"); do
-    if docker_compose exec -T db pg_isready -U "$db_user" -d "$db_name" >/dev/null 2>&1; then
+    if docker_compose exec -T db pg_isready -U "$db_user" -d "$maintenance_db" >/dev/null 2>&1; then
       return 0
     fi
     sleep 2
@@ -94,7 +94,7 @@ validate_data_directory_is_persisted() {
     return 1
   fi
 
-  data_directory="$(docker_compose exec -T db psql -U "$db_user" -d "$db_name" -tAc "SHOW data_directory")"
+  data_directory="$(docker_compose exec -T db psql -U "$db_user" -d "$maintenance_db" -tAc "SHOW data_directory")"
   if [ -z "$data_directory" ]; then
     echo "Could not determine PostgreSQL data_directory"
     return 1
@@ -124,6 +124,19 @@ read_django_migration_count() {
   docker_compose exec -T db psql -U "$db_user" -d "$db_name" -tAc "SELECT COUNT(*) FROM django_migrations" 2>/dev/null || echo ""
 }
 
+recreate_target_database() {
+  echo "Dropping and recreating database: $db_name"
+  docker_compose exec -T db psql -v ON_ERROR_STOP=1 -U "$db_user" -d "$maintenance_db" -v db_name="$db_name" \
+    -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'db_name' AND pid <> pg_backend_pid();" \
+    >/dev/null
+  docker_compose exec -T db psql -v ON_ERROR_STOP=1 -U "$db_user" -d "$maintenance_db" -v db_name="$db_name" \
+    -c 'DROP DATABASE IF EXISTS :"db_name";' \
+    >/dev/null
+  docker_compose exec -T db psql -v ON_ERROR_STOP=1 -U "$db_user" -d "$maintenance_db" -v db_name="$db_name" -v db_user="$db_user" \
+    -c 'CREATE DATABASE :"db_name" OWNER :"db_user";' \
+    >/dev/null
+}
+
 # Check if the required environment variables are set
 if [ -z "${DATE_POSTGRESQL_VERSION:-}" ] || [ -z "${DATE_DB_PASSWORD:-}" ] || [ -z "${COMPOSE_PROJECT_NAME:-}" ]; then
   echo "Error: Required environment variables are not set"
@@ -132,6 +145,7 @@ fi
 
 db_name="${DB_DATABASE:-postgres}"
 db_user="${DB_USERNAME:-postgres}"
+maintenance_db="template1"
 current_version="${DATE_POSTGRESQL_VERSION}"
 current_major="${current_version%%.*}"
 target_major="${version%%.*}"
@@ -234,6 +248,7 @@ if ! validate_data_directory_is_persisted; then
 fi
 
 # Restore the database dump to new container
+recreate_target_database
 docker_compose exec -T db psql -v ON_ERROR_STOP=1 -U "$db_user" -d "$db_name" < "$backup_dump_path"
 
 echo "Validating restored database"
