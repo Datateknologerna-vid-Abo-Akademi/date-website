@@ -4,7 +4,7 @@
 
 The project has three translation layers that work together:
 
-1. Django locale files translate static UI strings from templates, forms, and Python code.
+1. Django locale files translate static UI strings from templates, forms, Python code and JavaScript code.
 2. `django-modeltranslation` adds per-language database fields for dynamic content such as event titles and static-page navigation labels.
 3. Language-aware routing and cookies decide which language a request should render in.
 
@@ -41,24 +41,38 @@ Typical sources:
 - template strings wrapped in <code>&#123;% trans %&#125;</code> or <code>&#123;% blocktrans %&#125;</code>
 - Python strings wrapped in `gettext`, `gettext_lazy`, or `_()`
 - model field labels and admin labels
+- JavaScript strings wrapped in `gettext`, `_()`, and variants
 
 Locale files live here:
 
 - `locale/sv/LC_MESSAGES/django.po`
 - `locale/en/LC_MESSAGES/django.po`
 - `locale/fi/LC_MESSAGES/django.po`
+- `locale/sv/LC_MESSAGES/djangojs.po`
+- `locale/en/LC_MESSAGES/djangojs.po`
+- `locale/fi/LC_MESSAGES/djangojs.po`
 
 Common workflow:
 
 ```bash
 django-admin makemessages -l sv -l en -l fi
+django-admin makemessages -l sv -l en -l fi -d djangojs -i "**/vendor/**" -i "core/static/**"
 django-admin compilemessages
 ```
 
 What this does:
 
 - `makemessages` scans templates and Python files for translatable strings and updates the `.po` files
+- `makemessages` with the domain set to `djangojs` scans JavaScript source files for translatable strings and updates the `djangojs.po` files, vendored and generated static files should be ignored
 - `compilemessages` converts `.po` files into `.mo` files that Django actually loads at runtime
+
+### Using translations in JavaScript
+
+For `gettext` and its variants to be usable in JavaScript code the Django translation catalog has to be loaded first.
+This can be done by including a `script` tag in the `head` of a page:
+```django
+<script src="{% url 'javascript-catalog' %}"></script>
+```
 
 ## Layer 2: Dynamic Content Translations
 
@@ -240,7 +254,9 @@ When you change translation behavior, cover at least these cases:
 ### Translating static strings
 
 1. Mark strings with Django translation helpers.
-2. Run `django-admin makemessages -l sv -l en -l fi`.
+2. Depending on what you are translating, run one or both of:
+    - `django-admin makemessages -l sv -l en -l fi -d djangojs -i "**/vendor/**" -i "core/static/**"` for JavaScript code
+    - `django-admin makemessages -l sv -l en -l fi` for Python code/templates
 3. Edit the `.po` files.
 4. Run `django-admin compilemessages`.
 5. Smoke-test pages in Swedish and at least one non-default language on the same unprefixed URL.
