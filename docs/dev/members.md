@@ -11,12 +11,12 @@
 - `SubscriptionPayment`: links members to subscriptions, stores payment/expiry dates, and exposes `is_active` + `expires` properties. `SubscriptionPaymentForm.save()` auto-calculates `date_expires` using `dateutil.relativedelta`.
 
 ## Functionaries
-- `FunctionaryRole` + `Functionary` capture yearly positions. Views in `members/functionary.py` aggregate data by role and year for the public page.
+- `FunctionaryRole` + `Functionary` capture yearly positions. A functionary can point at a member or store a standalone display name; linked member rows snapshot the member's current name as a fallback if the account is later removed. Views in `members/functionary.py` aggregate data by role and year for the public page.
 
 ## Forms
 - `MemberCreationForm` validates usernames via `USERNAME_VALIDATOR` (letters, underscores, hyphens). `AdminMemberUpdateForm` uses `ReadOnlyPasswordHashField` and disables password editing unless explicitly changed.
 - `SignUpForm` collects data for `/members/signup/`, including captcha validation and manual activation flow.
-- `FunctionaryForm` enforces uniqueness per (member, role, year) and sets `member` during save.
+- `FunctionaryForm` enforces uniqueness per (member, role, year) for member-managed entries and sets `member` during validation/save.
 - `CustomPasswordResetForm` overrides `send_mail` to push messages through `send_email_task` (Celery-backed).
 
 ## Views

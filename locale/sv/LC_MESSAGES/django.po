@@ -3,12 +3,11 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-28 21:35+0300\n"
+"POT-Creation-Date: 2026-05-08 22:53+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,24 +22,24 @@ msgstr ""
 msgid "detta fält är obligatoriskt"
 msgstr "detta fält är obligatoriskt"
 
-#: alumni/forms.py:15 members/forms.py:185 members/models.py:33
+#: alumni/forms.py:15 members/forms.py:185 members/models.py:34
 msgid "Förnamn"
 msgstr "Förnamn"
 
-#: alumni/forms.py:16 members/forms.py:186 members/models.py:34
+#: alumni/forms.py:16 members/forms.py:186 members/models.py:35
 msgid "Efternamn"
 msgstr "Efternamn"
 
 #: alumni/forms.py:17 alumni/forms.py:72 events/models.py:381
-#: members/forms.py:176 members/models.py:32
+#: members/forms.py:176 members/models.py:33
 msgid "E-postadress"
 msgstr "E-postadress"
 
-#: alumni/forms.py:19 members/models.py:35
+#: alumni/forms.py:19 members/models.py:36
 msgid "Telefonnummer"
 msgstr "Telefonnummer"
 
-#: alumni/forms.py:20 members/models.py:36
+#: alumni/forms.py:20 members/models.py:37
 msgid "Adress"
 msgstr "Adress"
 
@@ -48,16 +47,16 @@ msgstr "Adress"
 msgid "Postnummer"
 msgstr "Postnummer"
 
-#: alumni/forms.py:22 members/models.py:38
+#: alumni/forms.py:22 members/models.py:39
 msgid "Postanstalt"
 msgstr "Postanstalt"
 
-#: alumni/forms.py:23 members/models.py:39
+#: alumni/forms.py:23 members/models.py:40
 msgid "Land"
 msgstr "Land"
 
 #: alumni/forms.py:24 members/forms.py:29 members/forms.py:187
-#: members/models.py:41
+#: members/models.py:42
 msgid "Inskrivningsår"
 msgstr "Inskrivningsår"
 
@@ -110,10 +109,10 @@ msgid "Städa upp media"
 msgstr "Städa upp media"
 
 #: archive/models.py:30 archive/models.py:167 events/models.py:201
-#: events/models.py:337 events/models.py:379 members/models.py:96
-#: members/models.py:121 news/models.py:15
+#: events/models.py:337 events/models.py:379 members/models.py:97
+#: members/models.py:122 members/models.py:181 news/models.py:15
 #: templates/biocum/events/arsfest.html:91
-#: templates/common/events/arsfest.html:104
+#: templates/common/events/arsfest.html:78
 #: templates/common/events/baal_detail.html:69
 #: templates/common/events/detail.html:58
 #: templates/common/events/kk100_detail.html:70
@@ -350,32 +349,32 @@ msgstr "Utveckling"
 msgid "Production"
 msgstr "Produktion"
 
-#: ctf/models.py:17 events/models.py:45 lucia/models.py:16
-#: members/models.py:167 news/models.py:31 staticpages/models.py:25
-#: staticpages/models.py:44
+#: ctf/models.py:17 events/models.py:57 lucia/models.py:16
+#: members/models.py:168 news/models.py:31 staticpages/models.py:39
+#: staticpages/models.py:87
 msgid "Titel"
 msgstr "Titel"
 
-#: ctf/models.py:18 events/models.py:46 lucia/models.py:17 news/models.py:33
-#: staticpages/models.py:26
+#: ctf/models.py:18 events/models.py:58 lucia/models.py:17 news/models.py:33
+#: staticpages/models.py:40
 msgid "Innehåll"
 msgstr "Innehåll"
 
-#: ctf/models.py:19 events/models.py:47
+#: ctf/models.py:19 events/models.py:65
 msgid "Startdatum"
 msgstr "Startdatum"
 
-#: ctf/models.py:20 events/models.py:48
+#: ctf/models.py:20 events/models.py:66
 msgid "Slutdatum"
 msgstr "Slutdatum"
 
-#: ctf/models.py:22 ctf/models.py:50 events/models.py:68 lucia/models.py:19
+#: ctf/models.py:22 ctf/models.py:50 events/models.py:86 lucia/models.py:19
 #: news/models.py:16 news/models.py:39 publications/models.py:17
-#: staticpages/models.py:29
+#: staticpages/models.py:43
 msgid "Slug"
 msgstr "Slug"
 
-#: ctf/models.py:23 events/models.py:67 lucia/models.py:18 news/models.py:38
+#: ctf/models.py:23 events/models.py:85 lucia/models.py:18 news/models.py:38
 #: polls/models.py:25
 msgid "Publicera"
 msgstr "Publicera"
@@ -420,12 +419,41 @@ msgstr "Tid"
 msgid "Gissningar"
 msgstr "Gissningar"
 
-#: events/models.py:49
+#: events/models.py:29
+msgid "Normal evenemangssida"
+msgstr "Normal evenemangssida"
+
+#: events/models.py:30
+msgid "Årsfest"
+msgstr "Årsfest"
+
+#: events/models.py:34
+msgid "Baal"
+msgstr "Baal"
+
+#: events/models.py:35
+msgid "100 Baal"
+msgstr "100 Baal"
+
+#: events/models.py:36
+msgid "Tomtejakt"
+msgstr "Tomtejakt"
+
+#: events/models.py:37
+msgid "Wappmiddag"
+msgstr "Wappmiddag"
+
+#: events/models.py:60
+msgid "Mall"
+msgstr "Mall"
+
+#: events/models.py:67
 msgid "Maximal antal deltagare (0 för ingen begränsning)"
 msgstr "Maximal antal deltagare (0 för ingen begränsning)"
 
-#: events/models.py:50 templates/biocum/events/arsfest.html:78
-#: templates/common/events/arsfest.html:90
+#: events/models.py:68 templates/biocum/events/arsfest.html:78
+#: templates/common/events/arsfest.html:64
+#: templates/common/events/baal_anmalan.html:21
 #: templates/common/events/baal_detail.html:55
 #: templates/common/events/detail.html:44
 #: templates/common/events/kk100_detail.html:56
@@ -436,68 +464,69 @@ msgstr "Maximal antal deltagare (0 för ingen begränsning)"
 msgid "Anmälning"
 msgstr "Anmälning"
 
-#: events/models.py:52
+#: events/models.py:70
 msgid "Anmälan öppnas (medlemmar)"
 msgstr "Anmälan öppnas (medlemmar)"
 
-#: events/models.py:54
+#: events/models.py:72
 msgid "Anmälan öppnas (övriga)"
 msgstr "Anmälan öppnas (övriga)"
 
-#: events/models.py:56
+#: events/models.py:74
 msgid "Anmälningen stängs"
 msgstr "Anmälningen stängs"
 
-#: events/models.py:57
+#: events/models.py:75
 msgid "Avanmälning"
 msgstr "Avanmälning"
 
-#: events/models.py:59
+#: events/models.py:77
 msgid "Avanmälningen stängs"
 msgstr "Avanmälningen stängs"
 
-#: events/models.py:62 news/models.py:35 staticpages/models.py:27
+#: events/models.py:80 news/models.py:35 staticpages/models.py:41
 msgid "Skapad"
 msgstr "Skapad"
 
-#: events/models.py:64 news/models.py:36
+#: events/models.py:82 news/models.py:36
 #: templates/common/publications/list.html:25
 msgid "Publicerad"
 msgstr "Publicerad"
 
-#: events/models.py:66 news/models.py:37 staticpages/models.py:28
+#: events/models.py:84 news/models.py:37 staticpages/models.py:42
 msgid "Modifierad"
 msgstr "Modifierad"
 
-#: events/models.py:70
+#: events/models.py:88
 msgid "Avec"
 msgstr "Avec"
 
-#: events/models.py:72
+#: events/models.py:90
 msgid "Kräv godkännande av anmälningsvillkor"
 msgstr "Kräv godkännande av anmälningsvillkor"
 
-#: events/models.py:75
+#: events/models.py:93
 msgid "Kräv inloggning för innehåll"
 msgstr "Kräv inloggning för innehåll"
 
-#: events/models.py:76
+#: events/models.py:94
 msgid "Passcode"
 msgstr "Passcode"
 
-#: events/models.py:78 events/models.py:80
+#: events/models.py:96 events/models.py:98 staticpages/models.py:45
+#: staticpages/models.py:46
 msgid "Bakgrundsbild"
 msgstr "Bakgrundsbild"
 
-#: events/models.py:81
+#: events/models.py:99
 msgid "Captcha"
 msgstr "Captcha"
 
-#: events/models.py:82
+#: events/models.py:100
 msgid "Redirect Link"
 msgstr "Redirect Link"
 
-#: events/models.py:86 events/models.py:87
+#: events/models.py:104 events/models.py:105
 msgid "evenemang"
 msgstr "evenemang"
 
@@ -505,10 +534,10 @@ msgstr "evenemang"
 msgid "Email"
 msgstr "Email"
 
-#: events/models.py:203 events/models.py:383 events/tests.py:337
-#: events/tests.py:1090 events/websocket_utils.py:30
+#: events/models.py:203 events/models.py:383 events/tests.py:338
+#: events/tests.py:1487 events/websocket_utils.py:30
 #: templates/biocum/events/arsfest.html:101
-#: templates/common/events/arsfest.html:113
+#: templates/common/events/arsfest.html:87
 #: templates/common/events/baal_detail.html:78
 #: templates/common/events/detail.html:67
 #: templates/common/events/kk100_detail.html:79
@@ -519,11 +548,11 @@ msgstr "Email"
 msgid "Anonymt"
 msgstr "Anonymt"
 
-#: events/models.py:311
+#: events/models.py:311 events/registration.py:105
 msgid "Det finns redan någon anmäld med denna email"
 msgstr "Det finns redan någon anmäld med denna email"
 
-#: events/models.py:336 events/models.py:378 staticpages/models.py:47
+#: events/models.py:336 events/models.py:378 staticpages/models.py:90
 msgid "#"
 msgstr "#"
 
@@ -571,6 +600,18 @@ msgstr "Ursprungligt evenemang"
 msgid "deltagare"
 msgstr "deltagare"
 
+#: events/registration.py:80
+msgid "Evenemanget är fullt."
+msgstr "Evenemanget är fullt."
+
+#: events/registration.py:85
+msgid "Ange namn för avec."
+msgstr "Ange namn för avec."
+
+#: events/registration.py:87
+msgid "Ange e-post för avec."
+msgstr "Ange e-post för avec."
+
 #: lucia/models.py:15
 msgid "Bild URL"
 msgstr "Bild URL"
@@ -617,7 +658,7 @@ msgstr ""
 "punkter, understreck och bindestreck."
 
 #: members/forms.py:34 members/forms.py:80 members/forms.py:174
-#: members/models.py:31
+#: members/models.py:32
 msgid "Användarnamn"
 msgstr "Användarnamn"
 
@@ -625,7 +666,7 @@ msgstr "Användarnamn"
 msgid "Lösenord"
 msgstr "Lösenord"
 
-#: members/forms.py:217 members/models.py:181
+#: members/forms.py:217 members/models.py:183
 msgid "Årtal"
 msgstr "Årtal"
 
@@ -634,137 +675,141 @@ msgid "Ange ett år i formatet YYYY"
 msgstr "Ange ett år i formatet YYYY"
 
 #: members/migrations/0009_membershiptype_alter_member_membership_type.py:10
-#: members/models.py:23
+#: members/models.py:24
 msgid "Gulnäbb"
 msgstr "Gulnäbb"
 
 #: members/migrations/0009_membershiptype_alter_member_membership_type.py:11
-#: members/models.py:24
+#: members/models.py:25
 msgid "Ordinarie medlem"
 msgstr "Ordinarie medlem"
 
 #: members/migrations/0009_membershiptype_alter_member_membership_type.py:12
-#: members/models.py:25
+#: members/models.py:26
 msgid "Stödjande medlem"
 msgstr "Stödjande medlem"
 
 #: members/migrations/0009_membershiptype_alter_member_membership_type.py:13
-#: members/models.py:26
+#: members/models.py:27
 msgid "Seniormedlem"
 msgstr "Seniormedlem"
 
-#: members/models.py:37
+#: members/models.py:38
 msgid "Postkod"
 msgstr "Postkod"
 
-#: members/models.py:39
+#: members/models.py:40
 msgid "Finland"
 msgstr "Finland"
 
-#: members/models.py:42
+#: members/models.py:43
 msgid "GitHub ID"
 msgstr "GitHub ID"
 
-#: members/models.py:49
+#: members/models.py:50
 msgid "medlem"
 msgstr "medlem"
 
-#: members/models.py:50
+#: members/models.py:51
 msgid "medlemmar"
 msgstr "medlemmar"
 
-#: members/models.py:97
+#: members/models.py:98
 msgid "Beskrivning"
 msgstr "Beskrivning"
 
-#: members/models.py:98
+#: members/models.py:99
 msgid "Behörighetsprofil"
 msgstr "Behörighetsprofil"
 
-#: members/models.py:101
+#: members/models.py:102
 msgid "Medlemskap"
 msgstr "Medlemskap"
 
-#: members/models.py:102
+#: members/models.py:103
 msgid "medlemskapstyper"
 msgstr "medlemskapstyper"
 
-#: members/models.py:114
+#: members/models.py:115
 msgid "Dagar"
 msgstr "Dagar"
 
-#: members/models.py:115
+#: members/models.py:116
 msgid "Månader"
 msgstr "Månader"
 
-#: members/models.py:116
+#: members/models.py:117
 msgid "År"
 msgstr "År"
 
-#: members/models.py:122 members/models.py:142
+#: members/models.py:123 members/models.py:143
 msgid "Upphör"
 msgstr "Upphör"
 
-#: members/models.py:124
+#: members/models.py:125
 msgid "Förnyelse skala"
 msgstr "Förnyelse skala"
 
-#: members/models.py:126
+#: members/models.py:127
 msgid "Förnyelseperiod"
 msgstr "Förnyelseperiod"
 
-#: members/models.py:127
+#: members/models.py:128
 msgid "Pris"
 msgstr "Pris"
 
-#: members/models.py:130
+#: members/models.py:131
 msgid "prenumeration"
 msgstr "prenumeration"
 
-#: members/models.py:131
+#: members/models.py:132
 msgid "prenumerationer"
 msgstr "prenumerationer"
 
-#: members/models.py:141
+#: members/models.py:142
 msgid "Betald"
 msgstr "Betald"
 
-#: members/models.py:143
+#: members/models.py:144
 msgid "Betald summa"
 msgstr "Betald summa"
 
-#: members/models.py:146
+#: members/models.py:147
 msgid "prenumerationsbetalning"
 msgstr "prenumerationsbetalning"
 
-#: members/models.py:147
+#: members/models.py:148
 msgid "prenumerationsbetalningar"
 msgstr "prenumerationsbetalningar"
 
-#: members/models.py:162
+#: members/models.py:163
 msgid "Aldrig"
 msgstr "Aldrig"
 
-#: members/models.py:168
+#: members/models.py:169
 msgid "Styrelse"
 msgstr "Styrelse"
 
-#: members/models.py:171
+#: members/models.py:172
 msgid "Funktionärspost"
 msgstr "Funktionärspost"
 
-#: members/models.py:172 templates/common/members/functionaries.html:4
+#: members/models.py:173 templates/common/members/functionaries.html:4
 #: templates/common/members/functionary.html:4
 msgid "Funktionärsposter"
 msgstr "Funktionärsposter"
 
-#: members/models.py:186
+#: members/models.py:188
 msgid "Funktionär"
 msgstr "Funktionär"
 
-#: members/models.py:187
+#: members/models.py:189 templates/common/members/functionaries.html:13
 msgid "Funktionärer"
 msgstr "Funktionärer"
+
+#: members/models.py:193
+msgid "Funktionärer måste ha antingen en kopplad medlem eller ett namn."
+msgstr "Funktionärer måste ha antingen en kopplad medlem eller ett namn."
 
 #: members/two_factor.py:51
 msgid "Username or email"
@@ -842,7 +887,7 @@ msgstr "kategori"
 msgid "kategorier"
 msgstr "kategorier"
 
-#: news/models.py:32 staticpages/models.py:15
+#: news/models.py:32 staticpages/models.py:29
 msgid "Kategori"
 msgstr "Kategori"
 
@@ -978,21 +1023,45 @@ msgstr "Beskrivning av händelsen"
 msgid "Emailmottagare för Trakasserianmälan"
 msgstr "Emailmottagare för Trakasserianmälan"
 
-#: staticpages/models.py:17
+#: staticpages/models.py:31
 msgid "Använd kategorins URL"
 msgstr "Använd kategorins URL"
 
-#: staticpages/models.py:18 staticpages/models.py:45
+#: staticpages/models.py:32 staticpages/models.py:88
 msgid "Url"
 msgstr "Url"
 
-#: staticpages/models.py:30
+#: staticpages/models.py:44
 msgid "Kräv inloggning"
 msgstr "Kräv inloggning"
 
-#: staticpages/models.py:48
+#: staticpages/models.py:58 staticpages/models.py:59
+msgid ""
+"Välj antingen en lokal bakgrundsbild eller en publik S3-bakgrundsbild, inte "
+"båda."
+msgstr ""
+"Välj antingen en lokal bakgrundsbild eller en publik S3-bakgrundsbild, inte "
+"båda."
+
+#: staticpages/models.py:91
 msgid "Visa endast åt inloggade användare"
 msgstr "Visa endast åt inloggade användare"
+
+#: staticpages/models.py:103
+msgid "Välj en kategori eller en överordnad länk."
+msgstr "Välj en kategori eller en överordnad länk."
+
+#: staticpages/models.py:105
+msgid "En länk kan inte vara sin egen överordnade länk."
+msgstr "En länk kan inte vara sin egen överordnade länk."
+
+#: staticpages/models.py:107
+msgid "Välj en överordnad länk i samma kategori."
+msgstr "Välj en överordnad länk i samma kategori."
+
+#: staticpages/models.py:109
+msgid "Undermenyer stöder bara en nivå."
+msgstr "Undermenyer stöder bara en nivå."
 
 #: templates/biocum/date/components/mobile.html:3
 #: templates/biocum/date/components/sidebar.html:4
@@ -1061,7 +1130,7 @@ msgid "Mera nyheter"
 msgstr "Mera nyheter"
 
 #: templates/biocum/events/arsfest.html:87
-#: templates/common/events/arsfest.html:98
+#: templates/common/events/arsfest.html:72
 #: templates/common/events/baal_detail.html:63
 #: templates/common/events/detail.html:52
 #: templates/common/events/kk100_detail.html:64
@@ -1073,7 +1142,7 @@ msgid "Anmälda"
 msgstr "Anmälda"
 
 #: templates/biocum/events/arsfest.html:108
-#: templates/common/events/arsfest.html:119
+#: templates/common/events/arsfest.html:93
 #: templates/common/events/baal_detail.html:84
 #: templates/common/events/kk100_detail.html:85
 #: templates/common/events/tomtejakt.html:329
@@ -1084,7 +1153,7 @@ msgid "Inga anmälda, var den första att anmäla dig!"
 msgstr "Inga anmälda, var den första att anmäla dig!"
 
 #: templates/biocum/events/arsfest.html:112
-#: templates/common/events/arsfest.html:123
+#: templates/common/events/arsfest.html:97
 #: templates/common/events/baal_detail.html:88
 #: templates/common/events/kk100_detail.html:89
 #: templates/common/events/tomtejakt.html:333
@@ -1126,8 +1195,6 @@ msgstr "Log out"
 
 #: templates/common/admin/base_site.html:35
 #: templates/common/unfold/helpers/userlinks.html:12
-#: templates/pulterit/core/header.html:64
-#: templates/pulterit/core/header.html:79
 msgid "Language"
 msgstr "Språk"
 
@@ -1292,36 +1359,36 @@ msgstr[1] "%(picture_count)s Bilder"
 msgid "Ladda upp bilder"
 msgstr "Ladda upp bilder"
 
-#: templates/common/core/404.html:9
+#: templates/common/core/404.html:4
 msgid "Page not found"
 msgstr "Sidan hittades inte"
 
-#: templates/common/core/404.html:23
+#: templates/common/core/404.html:18
 msgid "Sidan hittades inte"
 msgstr "Sidan hittades inte"
 
-#: templates/common/core/404.html:25 templates/common/core/418.html:28
-#: templates/common/core/500.html:19
+#: templates/common/core/404.html:20 templates/common/core/418.html:23
+#: templates/common/core/500.html:16
 msgid "Till startsidan"
 msgstr "Till startsidan"
 
-#: templates/common/core/418.html:9
+#: templates/common/core/418.html:4
 msgid "I'm a teapot"
 msgstr "Jag är en tekokare"
 
-#: templates/common/core/418.html:23
+#: templates/common/core/418.html:18
 msgid "Jag är en tekokare"
 msgstr "Jag är en tekokare"
 
-#: templates/common/core/418.html:26
+#: templates/common/core/418.html:21
 msgid "Inget vatten i glöggkokaren, tack"
 msgstr "Inget vatten i glöggkokaren, tack"
 
-#: templates/common/core/500.html:9
+#: templates/common/core/500.html:4
 msgid "Server error"
 msgstr "Serverfel"
 
-#: templates/common/core/500.html:18
+#: templates/common/core/500.html:15
 msgid "Serverfel, försök igen om en stund"
 msgstr "Serverfel, försök igen om en stund"
 
@@ -1341,35 +1408,36 @@ msgstr "Godkänn"
 msgid "Avböj"
 msgstr "Avböj"
 
-#: templates/common/core/footer.html:24 templates/pulterit/core/footer.html:12
+#: templates/common/core/footer.html:19 templates/pulterit/core/footer.html:12
 #, python-format
 msgid "%(association_name)s logo"
 msgstr "%(association_name)s logo"
 
-#: templates/common/core/footer.html:29
+#: templates/common/core/footer.html:25 templates/pulterit/core/footer.html:27
+#: templates/pulterit/core/footer.html:31
 #, python-format
 msgid "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
 msgstr "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
 
-#: templates/common/core/footer.html:34
+#: templates/common/core/footer.html:31
 msgid "E-post"
 msgstr "E-post"
 
-#: templates/common/core/footer.html:38
+#: templates/common/core/footer.html:35
 msgid "Address"
 msgstr "Adress"
 
-#: templates/common/core/header.html:50 templates/pulterit/core/header.html:50
-msgid "Logga ut"
-msgstr "Logga ut"
+#: templates/common/core/header.html:23
+msgid "Close"
+msgstr "Stäng"
 
-#: templates/common/core/header.html:66
+#: templates/common/core/header.html:47
 msgid "Choose language"
 msgstr "Språk"
 
-#: templates/common/events/baal_anmalan.html:21
-msgid "Kemistbaal Anmälning"
-msgstr "Kemistbaal Anmälning"
+#: templates/common/core/header_nav_items.html:22
+msgid "Logga ut"
+msgstr "Logga ut"
 
 #: templates/common/events/detail.html:73
 msgid "Inga anmälda ännu, var den första!"
@@ -1461,14 +1529,6 @@ msgid ""
 msgstr ""
 "Evenemanget är tyvärr fullt! Vänligen kontakta evenemangets kontaktperson"
 
-#: templates/common/events/registering.html:74
-msgid ""
-"Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan "
-"och meddelas om du får plats."
-msgstr ""
-"Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan "
-"och meddelas om du får plats."
-
 #: templates/common/events/registration_state.html:7
 msgid "Anmälningstiden gick ut"
 msgstr "Anmälningstiden gick ut för"
@@ -1480,6 +1540,46 @@ msgstr "Anmälan öppnas"
 #: templates/common/members/certificate.html:5
 msgid "Medlemspass"
 msgstr "Medlemspass"
+
+#: templates/common/members/functionaries.html:13
+#: templates/common/members/functionaries.html:20
+msgid "Alla år"
+msgstr "Alla år"
+
+#: templates/common/members/functionaries.html:17
+msgid "Välj ett år:"
+msgstr "Välj ett år:"
+
+#: templates/common/members/functionaries.html:28
+msgid "Välj en post:"
+msgstr "Välj en post:"
+
+#: templates/common/members/functionaries.html:31
+msgid "Alla poster"
+msgstr "Alla poster"
+
+#: templates/common/members/functionaries.html:40
+msgid "Filtrera"
+msgstr "Filtrera"
+
+#: templates/common/members/functionaries.html:46
+msgid "Styrelsen"
+msgstr "Styrelsen"
+
+#: templates/common/members/functionaries.html:71
+msgid "Övriga Funktionärer"
+msgstr "Övriga Funktionärer"
+
+#: templates/common/members/functionaries.html:95
+msgid "Inga funktionärer hittades..."
+msgstr "Inga funktionärer hittades..."
+
+#: templates/common/members/functionaries.html:98
+#, python-format
+msgid ""
+"Vid eventuella frågor kan styrelsen kontaktas via %(ASSOCIATION_EMAIL)s."
+msgstr ""
+"Vid eventuella frågor kan styrelsen kontaktas via %(ASSOCIATION_EMAIL)s."
 
 #: templates/common/members/functionary.html:20
 msgid "Radera"
@@ -1853,11 +1953,11 @@ msgstr "Submit"
 msgid "Tack för att du rapporterade."
 msgstr "Tack för att du rapporterade."
 
-#: templates/common/staticpages/staticpage.html:26
+#: templates/common/staticpages/staticpage.html:38
 msgid "Öppna originaldokumentet"
 msgstr "Öppna originaldokumentet"
 
-#: templates/common/staticpages/staticpage.html:36
+#: templates/common/staticpages/staticpage.html:48
 msgid "Logga in för att se den här sidan"
 msgstr "Logga in för att se den här sidan"
 
@@ -1994,7 +2094,7 @@ msgstr "inga nyheter hittades"
 msgid "inga aktiva evenemang hittades"
 msgstr "inga aktiva evenemang hittades"
 
-#: templates/pulterit/core/footer.html:23
+#: templates/pulterit/core/footer.html:45
 msgid "Website developed and maintained by"
 msgstr "Hemsidan är utvecklad och upprätthålls av"
 
@@ -2002,6 +2102,22 @@ msgstr "Hemsidan är utvecklad och upprätthålls av"
 #: templates/pulterit/date/components/partners.html:12
 msgid "Partner logo"
 msgstr "Partner logo"
+
+#~| msgid "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
+#~ msgid ""
+#~ "Styrelsen och de övriga funktionärerna kan kontaktas på "
+#~ "förnamn.efternamn[at]abo.fi."
+#~ msgstr "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
+
+#~ msgid "Kemistbaal Anmälning"
+#~ msgstr "Kemistbaal Anmälning"
+
+#~ msgid ""
+#~ "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på "
+#~ "reservlistan och meddelas om du får plats."
+#~ msgstr ""
+#~ "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på "
+#~ "reservlistan och meddelas om du får plats."
 
 #~ msgid "Ads"
 #~ msgstr "Annonser"

@@ -264,3 +264,12 @@ table.table {
     transform: scale(1.03);
     opacity: 0.75;
 }
+
+.content > h2 {
+    color: var(--accentColor);
+
+}
+
+.content h5.card-title {
+    color: var(--accentColorBright);
+}

@@ -224,6 +224,11 @@ class FunctionaryForm(forms.ModelForm):
         self.member = kwargs.pop('member', None)
         super().__init__(*args, **kwargs)
 
+    def _post_clean(self):
+        if self.member:
+            self.instance.member = self.member
+        super()._post_clean()
+
     def clean(self):
         cleaned_data = super().clean()
         year = cleaned_data.get('year')
