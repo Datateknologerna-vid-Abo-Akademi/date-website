@@ -157,6 +157,7 @@ This is useful after `makemessages`, after large translation edits, and before r
 
 These scripts are more task-specific and should usually be run only by someone familiar with the target app and data shape:
 
+- `python manage.py import_wordpress_export <xml_path>`
 - `scripts/import_alumni.py`
 - `scripts/export_subscription_status.py`
 - `scripts/export_ctf_guesses.py`
@@ -174,6 +175,24 @@ Before using one of these on shared or production-like data:
 - verify the target environment file
 - confirm whether the script is idempotent
 - make a backup if the script mutates stored data
+
+### `import_wordpress_export`
+
+Use this management command to migrate a WordPress WXR export into the existing Django content apps.
+
+It maps WordPress posts to `news.Post`, WordPress pages to `staticpages.StaticPage`, PDF attachments to `publications.PDFFile`, and copies referenced `sfklubben.fi/wp-content/uploads` files through Django's storage backend. Local development writes to `MEDIA_ROOT`; when `USE_S3=True`, imported media uses the configured public media storage so links in imported CKEditor content remain public.
+
+Typical SF import:
+
+```bash
+PROJECT_NAME=sf python manage.py import_wordpress_export sf-klubben.WordPress.2026-05-09.xml \
+  --media-dir sfklubben-export-local/assets/sfklubben.fi \
+  --author wp-import \
+  --import-nav \
+  --replace-nav
+```
+
+Run `--dry-run` first to inspect planned counts. The command matches rows by slug; existing rows are skipped unless `--update-existing` is passed. Navigation import reads the WordPress `actual` menu by default; use `--nav-menu <slug>` to import another exported menu. It writes a JSON report next to the XML by default.
 
 ## Recommended Operator Checklist
 

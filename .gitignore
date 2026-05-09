@@ -27,6 +27,13 @@ storage
 *.bck
 backups/
 
+# Local site export/import archives
+*.WordPress.*.xml
+*-export-local/
+wordpress-export*/
+wordpress-import*/
+wordpress-import-report*.json
+
 # CSV files
 *.csv
 
