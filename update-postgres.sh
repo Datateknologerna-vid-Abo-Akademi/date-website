@@ -126,15 +126,11 @@ read_django_migration_count() {
 
 recreate_target_database() {
   echo "Dropping and recreating database: $db_name"
-  docker_compose exec -T db psql -v ON_ERROR_STOP=1 -U "$db_user" -d "$maintenance_db" -v db_name="$db_name" \
-    -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'db_name' AND pid <> pg_backend_pid();" \
-    >/dev/null
-  docker_compose exec -T db psql -v ON_ERROR_STOP=1 -U "$db_user" -d "$maintenance_db" -v db_name="$db_name" \
-    -c 'DROP DATABASE IF EXISTS :"db_name";' \
-    >/dev/null
-  docker_compose exec -T db psql -v ON_ERROR_STOP=1 -U "$db_user" -d "$maintenance_db" -v db_name="$db_name" -v db_user="$db_user" \
-    -c 'CREATE DATABASE :"db_name" OWNER :"db_user";' \
-    >/dev/null
+  docker_compose exec -T db psql -v ON_ERROR_STOP=1 -U "$db_user" -d "$maintenance_db" -v db_name="$db_name" -v db_user="$db_user" >/dev/null <<'SQL'
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'db_name' AND pid <> pg_backend_pid();
+DROP DATABASE IF EXISTS :"db_name";
+CREATE DATABASE :"db_name" OWNER :"db_user";
+SQL
 }
 
 # Check if the required environment variables are set
