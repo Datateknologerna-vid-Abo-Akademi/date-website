@@ -1,3 +1,4 @@
+from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -114,6 +115,15 @@ Plain ending<script>bad()</script>]]></content:encoded>
 
 
 class WordPressImportCommandTests(TestCase):
+    def call_import_command(self, *args):
+        return call_command(
+            "import_wordpress_export",
+            *args,
+            stdout=StringIO(),
+            stderr=StringIO(),
+            verbosity=0,
+        )
+
     def test_imports_posts_pages_publications_and_rewrites_media(self):
         with TemporaryDirectory() as work_dir, override_settings(MEDIA_ROOT=str(Path(work_dir) / "media")):
             work_path = Path(work_dir)
@@ -125,14 +135,12 @@ class WordPressImportCommandTests(TestCase):
             (uploads / "imported.pdf").write_bytes(b"%PDF-1.4")
             xml_path.write_text(WORDPRESS_EXPORT, encoding="utf-8")
 
-            call_command(
-                "import_wordpress_export",
+            self.call_import_command(
                 str(xml_path),
                 "--media-dir",
                 str(media_dir),
                 "--media-prefix",
                 "wordpress/test",
-                verbosity=0,
             )
 
             post = Post.objects.get(slug="imported-news")
@@ -160,8 +168,7 @@ class WordPressImportCommandTests(TestCase):
             (uploads / "imported.pdf").write_bytes(b"%PDF-1.4")
             xml_path.write_text(WORDPRESS_EXPORT, encoding="utf-8")
 
-            call_command(
-                "import_wordpress_export",
+            self.call_import_command(
                 str(xml_path),
                 "--media-dir",
                 str(media_dir),
@@ -169,7 +176,6 @@ class WordPressImportCommandTests(TestCase):
                 "wordpress/test",
                 "--import-nav",
                 "--replace-nav",
-                verbosity=0,
             )
 
             category = StaticPageNav.objects.get(category_name="Imported Page")
@@ -184,13 +190,11 @@ class WordPressImportCommandTests(TestCase):
             xml_path = Path(work_dir) / "export.xml"
             xml_path.write_text(WORDPRESS_EXPORT, encoding="utf-8")
 
-            call_command(
-                "import_wordpress_export",
+            self.call_import_command(
                 str(xml_path),
                 "--skip-media",
                 "--skip-publications",
                 "--import-gallery-redirects",
-                verbosity=0,
             )
 
             photos_album = Collection.objects.get(title="2025 - Testalbum", type="Pictures")
@@ -206,13 +210,11 @@ class WordPressImportCommandTests(TestCase):
             xml_path = Path(work_dir) / "export.xml"
             xml_path.write_text(WORDPRESS_EXPORT, encoding="utf-8")
 
-            call_command(
-                "import_wordpress_export",
+            self.call_import_command(
                 str(xml_path),
                 "--dry-run",
                 "--skip-media",
                 "--skip-publications",
-                verbosity=0,
             )
 
             self.assertFalse(Post.objects.filter(slug="imported-news").exists())
