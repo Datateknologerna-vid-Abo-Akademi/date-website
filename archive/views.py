@@ -61,11 +61,12 @@ def picture_index(request, year):
     for collection in collections:
         # Avoid instantiating a Picture for every album card; the ImageField
         # storage is enough to turn the annotated file name into a public URL.
-        collection.first_picture_url = (
-            picture_image_field.storage.url(collection.first_picture_image)
-            if collection.first_picture_image
-            else ''
-        )
+        if collection.thumbnail:
+            collection.album_thumbnail_url = collection.thumbnail.url
+        elif collection.first_picture_image:
+            collection.album_thumbnail_url = picture_image_field.storage.url(collection.first_picture_image)
+        else:
+            collection.album_thumbnail_url = ''
     context = {
         'type': "pictures",
         'year': year,
@@ -184,6 +185,9 @@ def picture_detail(request, year, album):
     collection = Collection.objects.filter(type="Pictures", pub_date__year=year, title=album).order_by('-pub_date').first()
     if collection is None:
         raise Http404
+
+    if collection.redirect_url:
+        return redirect(collection.redirect_url)
 
     if collection.hide_for_gulis and request.user.membership_type.permission_profile == 1:
         return render(request, '404.html', {'error_msg': "Gulisar har inte tillgång till detta album!"})

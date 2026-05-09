@@ -9,6 +9,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
 from email.utils import parsedate_to_datetime
+from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
@@ -17,9 +18,11 @@ from django.core.files import File
 from django.core.files.storage import default_storage, storages
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 
+from archive.models import Collection
 from date.functions import slugify_max
 from members.models import FRESHMAN, Member, MembershipType
 from news.models import Category, Post
@@ -72,6 +75,12 @@ MEDIA_EXTENSIONS = {
 }
 PUBLICATION_EXTENSIONS = {".pdf"}
 IGNORED_CATEGORY_SLUGS = {"nyheter", "uncategorized"}
+GALLERY_LINK_HOSTS = {
+    "photos.app.goo.gl",
+    "photos.google.com",
+    "drive.google.com",
+}
+GALLERY_SOURCE_SLUGS = {"bildgalleriet", "gamla-bilder"}
 
 
 @dataclass
@@ -88,6 +97,8 @@ class ImportStats:
     categories_created: int = 0
     nav_categories_created: int = 0
     nav_urls_created: int = 0
+    gallery_redirects_created: int = 0
+    gallery_redirects_updated: int = 0
     skipped_items: Counter = field(default_factory=Counter)
     missing_media_urls: list[str] = field(default_factory=list)
 
@@ -181,6 +192,16 @@ class Command(BaseCommand):
             help="Delete existing StaticPageNav/StaticUrl rows before importing navigation.",
         )
         parser.add_argument(
+            "--import-gallery-redirects",
+            action="store_true",
+            help="Import Google Photos/Drive gallery links as redirecting picture albums.",
+        )
+        parser.add_argument(
+            "--replace-gallery-redirects",
+            action="store_true",
+            help="Delete existing redirect-only picture albums before importing gallery redirects.",
+        )
+        parser.add_argument(
             "--report",
             help="Optional JSON report path. Defaults to <xml parent>/wordpress-import-report.json.",
         )
@@ -246,6 +267,8 @@ class Command(BaseCommand):
 
             if options["import_nav"]:
                 self.import_navigation(items, url_map, options, stats)
+            if options["import_gallery_redirects"]:
+                self.import_gallery_redirects(items, url_map, options, stats)
 
             if options["dry_run"]:
                 transaction.set_rollback(True)
@@ -268,6 +291,8 @@ class Command(BaseCommand):
                 "categories_created": stats.categories_created,
                 "nav_categories_created": stats.nav_categories_created,
                 "nav_urls_created": stats.nav_urls_created,
+                "gallery_redirects_created": stats.gallery_redirects_created,
+                "gallery_redirects_updated": stats.gallery_redirects_updated,
                 "skipped_items": dict(stats.skipped_items),
             },
             "missing_media_urls": stats.missing_media_urls,
@@ -557,6 +582,83 @@ class Command(BaseCommand):
                     )
                     stats.nav_urls_created += int(created)
 
+    def import_gallery_redirects(
+        self,
+        items: list[WpItem],
+        url_map: dict[str, str],
+        options,
+        stats: ImportStats,
+    ):
+        links = self.gallery_redirect_links(items, url_map)
+        if options["dry_run"]:
+            stats.gallery_redirects_created += len(links)
+            return
+
+        if options["replace_gallery_redirects"]:
+            Collection.objects.filter(type="Pictures", redirect_url__gt="").delete()
+
+        for link in links:
+            collection = Collection.objects.filter(type="Pictures", title=link["title"]).first()
+            fields = {
+                "pub_date": link["pub_date"],
+                "redirect_url": link["url"],
+                "hide_for_gulis": False,
+            }
+            if collection:
+                for key, value in fields.items():
+                    setattr(collection, key, value)
+                collection.save()
+                stats.gallery_redirects_updated += 1
+            else:
+                Collection.objects.create(
+                    title=link["title"][:250],
+                    type="Pictures",
+                    **fields,
+                )
+                stats.gallery_redirects_created += 1
+
+    def gallery_redirect_links(self, items: list[WpItem], url_map: dict[str, str]) -> list[dict]:
+        links = []
+        seen = set()
+        for item in items:
+            if item.post_type != "page" or item.slug not in GALLERY_SOURCE_SLUGS:
+                continue
+            parser = AnchorExtractor()
+            parser.feed(item.content or "")
+            for anchor in parser.anchors:
+                url = self.normalize_gallery_redirect_url(anchor["href"], url_map)
+                if not url:
+                    continue
+                title = re.sub(r"\s+", " ", anchor["text"]).strip()
+                if not title:
+                    title = url
+                key = (title, url)
+                if key in seen:
+                    continue
+                seen.add(key)
+                links.append({
+                    "title": title,
+                    "url": url,
+                    "pub_date": self.gallery_pub_date(title, item.post_date),
+                })
+        return links
+
+    def normalize_gallery_redirect_url(self, url: str, url_map: dict[str, str]) -> str:
+        if not url:
+            return ""
+        normalized = self.normalize_nav_url(url, url_map)
+        parsed = urlparse(normalized)
+        if parsed.netloc.lower() in GALLERY_LINK_HOSTS:
+            return normalized
+        return ""
+
+    def gallery_pub_date(self, title: str, fallback: datetime) -> datetime:
+        match = re.search(r"\b(19|20)\d{2}\b", title)
+        if match:
+            year = int(match.group(0))
+            return timezone.make_aware(datetime(year, 6, 1, 12), timezone.get_current_timezone())
+        return fallback
+
     def nav_parent_id(self, item: WpItem) -> str:
         return item.meta.get("_menu_item_menu_item_parent") or "0"
 
@@ -595,7 +697,8 @@ class Command(BaseCommand):
         if item_type == "post_type":
             object_item = object_by_id.get(item.meta.get("_menu_item_object_id", ""))
             if object_item and object_item.post_type == "page":
-                return f"/{self.unique_slug(object_item.slug or object_item.title, StaticPage, STATICPAGE_SLUG_MAX_LENGTH)}/"
+                slug = self.unique_slug(object_item.slug or object_item.title, StaticPage, STATICPAGE_SLUG_MAX_LENGTH)
+                return reverse("staticpages:page", args=[slug])
             if object_item and object_item.post_type == "post":
                 return f"/news/articles/{self.unique_slug(object_item.slug or object_item.title, Post, Post._meta.get_field('slug').max_length)}/"
         return self.normalize_nav_url(item.meta.get("_menu_item_url", ""), url_map)
@@ -793,5 +896,30 @@ class Command(BaseCommand):
         self.stdout.write(f"  categories created: {stats.categories_created}")
         self.stdout.write(f"  nav categories created: {stats.nav_categories_created}")
         self.stdout.write(f"  nav urls created: {stats.nav_urls_created}")
+        self.stdout.write(
+            f"  gallery redirects created/updated: "
+            f"{stats.gallery_redirects_created}/{stats.gallery_redirects_updated}"
+        )
         if stats.skipped_items:
             self.stdout.write(f"  skipped item types: {dict(stats.skipped_items)}")
+
+
+class AnchorExtractor(HTMLParser):
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.anchors = []
+        self._current = None
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag.lower() == "a":
+            self._current = {"href": attrs.get("href", ""), "text": ""}
+
+    def handle_data(self, data):
+        if self._current is not None:
+            self._current["text"] += data
+
+    def handle_endtag(self, tag):
+        if tag.lower() == "a" and self._current is not None:
+            self.anchors.append(self._current)
+            self._current = None

@@ -189,10 +189,12 @@ PROJECT_NAME=sf python manage.py import_wordpress_export sf-klubben.WordPress.20
   --media-dir sfklubben-export-local/assets/sfklubben.fi \
   --author wp-import \
   --import-nav \
-  --replace-nav
+  --replace-nav \
+  --import-gallery-redirects \
+  --replace-gallery-redirects
 ```
 
-Run `--dry-run` first to inspect planned counts. The command matches rows by slug; existing rows are skipped unless `--update-existing` is passed. Navigation import reads the WordPress `actual` menu by default; use `--nav-menu <slug>` to import another exported menu. It writes a JSON report next to the XML by default.
+Run `--dry-run` first to inspect planned counts. The command matches rows by slug; existing rows are skipped unless `--update-existing` is passed. Navigation import reads the WordPress `actual` menu by default; use `--nav-menu <slug>` to import another exported menu. Gallery redirect import reads Google Photos/Drive links from the exported `bildgalleriet` and `gamla-bilder` pages and creates redirect-only picture albums. It writes a JSON report next to the XML by default.
 
 ## Recommended Operator Checklist
 

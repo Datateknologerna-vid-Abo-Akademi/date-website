@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 
+from archive.models import Collection
 from news.models import Post
 from publications.models import PDFFile
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
@@ -45,6 +46,22 @@ Plain ending<script>bad()</script>]]></content:encoded>
       <wp:post_id>11</wp:post_id>
       <wp:post_date>2026-05-09 10:00:00</wp:post_date>
       <wp:post_name><![CDATA[imported-page]]></wp:post_name>
+      <wp:status><![CDATA[publish]]></wp:status>
+      <wp:post_type><![CDATA[page]]></wp:post_type>
+    </item>
+    <item>
+      <title><![CDATA[Bildgalleriet]]></title>
+      <link>https://sfklubben.fi/bildgalleriet/</link>
+      <pubDate>Sat, 09 May 2026 10:00:00 +0000</pubDate>
+      <dc:creator><![CDATA[admin]]></dc:creator>
+      <content:encoded><![CDATA[
+        <a href="https://photos.app.goo.gl/exampleAlbum">2025 - Testalbum</a>
+        <a href="https://drive.google.com/drive/folders/example">2024 - Drivealbum</a>
+      ]]></content:encoded>
+      <excerpt:encoded><![CDATA[]]></excerpt:encoded>
+      <wp:post_id>13</wp:post_id>
+      <wp:post_date>2026-05-09 10:00:00</wp:post_date>
+      <wp:post_name><![CDATA[bildgalleriet]]></wp:post_name>
       <wp:status><![CDATA[publish]]></wp:status>
       <wp:post_type><![CDATA[page]]></wp:post_type>
     </item>
@@ -159,8 +176,30 @@ class WordPressImportCommandTests(TestCase):
             self.assertFalse(category.use_category_url)
             urls = list(StaticUrl.objects.filter(category=category).order_by("dropdown_element"))
             self.assertEqual([url.title for url in urls], ["Imported Page", "Imported PDF Link"])
-            self.assertEqual(urls[0].url, "/imported-page/")
+            self.assertEqual(urls[0].url, "/pages/imported-page/")
             self.assertEqual(urls[1].url, "/media/wordpress/test/wp-content/uploads/2026/05/imported.pdf")
+
+    def test_imports_gallery_redirect_albums(self):
+        with TemporaryDirectory() as work_dir:
+            xml_path = Path(work_dir) / "export.xml"
+            xml_path.write_text(WORDPRESS_EXPORT, encoding="utf-8")
+
+            call_command(
+                "import_wordpress_export",
+                str(xml_path),
+                "--skip-media",
+                "--skip-publications",
+                "--import-gallery-redirects",
+                verbosity=0,
+            )
+
+            photos_album = Collection.objects.get(title="2025 - Testalbum", type="Pictures")
+            self.assertEqual(photos_album.redirect_url, "https://photos.app.goo.gl/exampleAlbum")
+            self.assertEqual(photos_album.pub_date.year, 2025)
+
+            drive_album = Collection.objects.get(title="2024 - Drivealbum", type="Pictures")
+            self.assertEqual(drive_album.redirect_url, "https://drive.google.com/drive/folders/example")
+            self.assertEqual(drive_album.pub_date.year, 2024)
 
     def test_dry_run_does_not_write_rows(self):
         with TemporaryDirectory() as work_dir:

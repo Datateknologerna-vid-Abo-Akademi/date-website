@@ -42,7 +42,7 @@ class PictureCollectionAdmin(admin.ModelAdmin):
     inlines = [
         PicturesInline
     ]
-    list_display = ('title', 'pub_date')
+    list_display = ('title', 'pub_date', 'redirect_url')
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)

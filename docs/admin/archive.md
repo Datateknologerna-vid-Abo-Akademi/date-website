@@ -18,11 +18,22 @@ Store and present historical material: photo galleries, document archives, exam 
    - **Namn** – gallery title (also used as folder name in `MEDIA_ROOT`).
    - **Pub date** – determines which year bucket the gallery appears under.
    - **Göm för gulisar** – hide sensitive albums from freshmen (permission profile 1).
+   - **Omdirigeringsadress** – optional. When set, clicking the album card opens this URL instead of the local gallery.
+   - **Albumminiatyr** – optional. This image is used as the album card thumbnail before falling back to the first uploaded picture.
 4. Upload photos in the **Bilder** inline table:
    - Click **Add another Picture**.
    - Choose each image file (multiple uploads allowed thanks to the custom form field).
    - Thumbnails appear after you save.
 5. Save the collection. Images are auto-compressed to 1600px width for performance.
+
+## Redirect-Only Picture Galleries
+Use redirect-only galleries for external albums such as Google Photos or Google Drive:
+
+1. Create a normal **Picture Collection**.
+2. Set **Namn** and **Pub date** so the album appears in the right year.
+3. Fill **Omdirigeringsadress** with the external album URL.
+4. Upload **Albumminiatyr** if you want a custom card image.
+5. Leave the inline picture list empty unless you also want local fallback images.
    
 <img alt="archive1.png" src="images/archive1.png" width="1600"/>
 

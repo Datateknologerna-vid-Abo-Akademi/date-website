@@ -1,7 +1,7 @@
 # Archive Development Notes
 
 ## Models
-- `Collection` is the polymorphic base with `title`, `type`, `pub_date`, and `hide_for_gulis`. Proxy subclasses (`PictureCollection`, `DocumentCollection`, `ExamCollection`, `PublicCollection`) provide separate admin menus.
+- `Collection` is the polymorphic base with `title`, `type`, `pub_date`, `hide_for_gulis`, optional `redirect_url`, and optional `thumbnail`. Proxy subclasses (`PictureCollection`, `DocumentCollection`, `ExamCollection`, `PublicCollection`) provide separate admin menus.
 - `Picture` (ImageField) compresses uploads to JPEG via `compress_image` before saving. When `USE_S3=False`, deletions remove the underlying file manually.
 - `Document` stores arbitrary files tied to a collection.
 - `PublicFile` uses `PublicFileField` for S3/public storage.
@@ -13,13 +13,14 @@
 
 ## Views
 - Access control: decorators (`@user_passes_test(user_type)`) reject freshmen (permission profile 3) when needed and force login via `/members/login/`.
-- `year_index`, `picture_index`, and `picture_detail` handle browsing and pagination for photo galleries. 2022 albums keep chronological order; others are reversed.
+- `year_index`, `picture_index`, and `picture_detail` handle browsing and pagination for photo galleries. Redirect albums show in the normal year buckets but send visitors to `redirect_url` instead of the local detail view. 2022 albums keep chronological order; others are reversed.
 - `FilteredDocumentsListView` and `FilteredExamsListView` combine `django-filter` and `django-tables2` for searching by title/category.
 - Upload helpers (`upload`, `exam_upload`, `exam_archive_upload`) require staff permissions and reuse the same forms as admin for bulk operations.
 
 ## Storage Considerations
 - `Collection.delete()` removes the physical directory in `MEDIA_ROOT`. Ensure backups exist before mass deletions.
 - Public files require `USE_S3=True` because `PublicFileField` expects a storage backend with signed URLs.
+- `Collection.thumbnail` uses the default media storage. Album cards prefer this thumbnail and fall back to the first `Picture` file.
 
 ## Extending
 - Add tagging or metadata (e.g., photographer, description) to `Picture` if Getty-style search is needed.
