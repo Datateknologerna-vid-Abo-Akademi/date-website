@@ -210,6 +210,7 @@ CI image publishing and release tagging are separate on purpose:
 - Pushes to `main` publish an immutable commit-SHA tag plus the moving `qa` tag.
 - QA should deploy `qa` automatically or deploy the immutable commit-SHA tag produced from `main`.
 - Release tags are created manually through `.github/workflows/release_tag.yaml` with `patch` as the default bump and optional `minor` / `major` overrides.
+- Each release tag also publishes generated GitHub Release notes, which are the release history for the project.
 - When a release tag is created, CI reuses the already-published commit image and adds the SemVer, `prod`, and `latest` tags to the same image instead of rebuilding.
 - Production can also be promoted manually through `.github/workflows/promote_production.yaml` by entering the already-tested image tag, usually the commit SHA currently running in QA.
 
