@@ -1,3 +1,6 @@
+/** @type {(text: string) => string} */
+const _ = gettext;
+
 /**
  * @param {string} url
  */
@@ -52,8 +55,7 @@ const onMessage = (ws, msg) => {
 };
 
 const makeWebsocket = () => {
-    //TODO translate status messages once jsi18n is set up
-    setStatusMessage("Connecting to server...");
+    setStatusMessage(_("Ansluter till servern..."));
     const ws = new WebSocket(wsUrl);
     ws.addEventListener("message", (msg) => onMessage(ws, msg));
     ws.addEventListener("open", () => {
@@ -63,7 +65,7 @@ const makeWebsocket = () => {
         requestNewCode(ws);
     });
     ws.addEventListener("close", (ev) => {
-        setStatusMessage("Lost connection with server");
+        setStatusMessage(_("Anslutningen till servern bröts"));
         console.warn(`WebSocket closed! Retrying in 5 seconds`);
 
         clearTimeout(codeFetcher);

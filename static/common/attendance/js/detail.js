@@ -1,3 +1,6 @@
+/** @type {(text: string) => string} */
+const _ = gettext;
+
 const codeInput = document.getElementById("code");
 
 const qrScanButton = document.getElementById("qr-scan");
@@ -39,12 +42,11 @@ const startScan = (scanner) => {
         });
     }).catch((err) => {
         qrReaderError.hidden = false;
-        // TODO translate errors once jsi18n is set up
         if (err === "Camera not found.") {
-            qrReaderError.innerText = "No cameras found";
+            qrReaderError.innerText = _("Ingen kamera hittades");
         } else {
             console.error("Error while scanning:", err);
-            qrReaderError.innerText = "An unexpected error occurred while starting the QR scanner.";
+            qrReaderError.innerText = _("Ett oväntat fel uppstod medan QR-skannern startades");
         }
     }).finally(() => {
         qrScanButton.disabled = false;

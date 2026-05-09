@@ -7,6 +7,7 @@
 {% block extra_head %}
     {{ block.super }}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qr-scanner/1.4.2/qr-scanner.umd.min.js" integrity="sha512-a/IwksuXdv0Q60tVkQpwMk5qY+6cJ0FJgi33lrrIddoFItTRiRfSdU1qogP3uYjgHfrGY7+AC+4LU4J+b9HcgQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="{% url 'javascript-catalog' %}"></script>
     <script src="{% static 'attendance/js/detail.js' %}" defer></script>
 {% endblock %}
 
