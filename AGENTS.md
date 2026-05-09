@@ -14,7 +14,7 @@ Mainline development happens on `main`. QA and production are promoted image env
 
 - `README.md`: local setup, helper aliases, Compose workflow, tests, deployment, backups, PostgreSQL upgrades, and i18n.
 - `CONTRIBUTING.md`: branch, review, docs, and squash-merge expectations.
-- `CHANGELOG.md`: notable changes and release history.
+- GitHub Releases: notable changes and release history.
 - `docs/index.md`: published documentation index.
 - `docs/dev/*.md`: implementation notes for each app and cross-cutting system.
 - `docs/admin/*.md`: editor/admin behavior that code changes must preserve.

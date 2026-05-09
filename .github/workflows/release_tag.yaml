@@ -127,6 +127,33 @@ jobs:
           git tag -a "${NEXT_TAG}" -m "Release ${NEXT_TAG}" -m "Automated ${BUMP} bump from ${LAST_TAG}"
           git push origin "${NEXT_TAG}"
 
+      - name: Create GitHub release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEXT_TAG: ${{ needs.propose_release.outputs.next_tag }}
+          LAST_TAG: ${{ needs.propose_release.outputs.last_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if gh release view "${NEXT_TAG}" >/dev/null 2>&1; then
+            echo "Release ${NEXT_TAG} already exists, skipping release creation."
+            exit 0
+          fi
+
+          ARGS=(
+            "${NEXT_TAG}"
+            --title "${NEXT_TAG}"
+            --verify-tag
+            --generate-notes
+          )
+
+          if [ "${LAST_TAG}" != "none" ]; then
+            ARGS+=(--notes-start-tag "${LAST_TAG}")
+          fi
+
+          gh release create "${ARGS[@]}"
+
       - name: Dispatch Docker release tagging workflow
         env:
           GH_TOKEN: ${{ github.token }}
