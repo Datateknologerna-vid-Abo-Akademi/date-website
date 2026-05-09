@@ -5,11 +5,12 @@ from django import forms
 from django.contrib.admin import widgets
 from django.utils.timezone import now
 from django.conf import settings
+from core.admin_base import AdminSplitDateTimeWidget, UnfoldFormMixin
+from core.admin_widgets import SafeAdminFileWidget
 
 from date.functions import slugify_max
 from events import models
-from events.models import Event
-from events.widgets import SafeAdminFileWidget
+from events.models import Event, EVENT_TEMPLATE_CHOICES_COMMON, EVENT_TEMPLATE_CHOICES_KK
 
 logger = logging.getLogger('date')
 
@@ -51,15 +52,21 @@ def unique_event_slug(slug, title, instance=None):
     return slug
 
 
-class EventCreationForm(forms.ModelForm):
+def _template_choices():
+    if settings.PROJECT_NAME == 'kk':
+        return EVENT_TEMPLATE_CHOICES_COMMON + EVENT_TEMPLATE_CHOICES_KK
+    return EVENT_TEMPLATE_CHOICES_COMMON
+
+
+class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
     user = None
     redirect_link = forms.URLField(required=False, assume_scheme="https")
-    event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    event_date_end = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    sign_up_others = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    sign_up_members = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    sign_up_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    event_date_start = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
+    event_date_end = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
+    sign_up_others = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
+    sign_up_members = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
+    sign_up_deadline = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
+    sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
     parent = forms.ModelChoiceField(queryset=Event.objects.filter(event_date_end__gte=now()), required=False)
 
     def __init__(self, *args, **kwargs):
@@ -72,6 +79,8 @@ class EventCreationForm(forms.ModelForm):
                 self.fields['require_registration_terms'].initial = True
             else:
                 self.fields.pop('require_registration_terms')
+        if 'template' in self.fields:
+            self.fields['template'].choices = _template_choices()
 
     class Meta:
         model = Event
@@ -80,6 +89,7 @@ class EventCreationForm(forms.ModelForm):
             'event_date_start',
             'event_date_end',
             'content',
+            'template',
             'sign_up',
             'sign_up_max_participants',
             'sign_up_others',
@@ -132,16 +142,16 @@ class EventCreationForm(forms.ModelForm):
         return post
 
 
-class EventEditForm(forms.ModelForm):
+class EventEditForm(UnfoldFormMixin, forms.ModelForm):
 
     user = None
     redirect_link = forms.URLField(required=False, assume_scheme="https")
 
-    event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    event_date_end = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    event_date_start = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
+    event_date_end = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
 
     sign_up_args = {
-        "widget": widgets.AdminSplitDateTime(),
+        "widget": AdminSplitDateTimeWidget(),
         "initial": now(),
         "required": False
     }
@@ -158,6 +168,8 @@ class EventEditForm(forms.ModelForm):
                 self.fields[field_name].widget = SafeAdminFileWidget()
         if 'require_registration_terms' in self.fields and not models.registration_terms_feature_enabled():
             self.fields.pop('require_registration_terms')
+        if 'template' in self.fields:
+            self.fields['template'].choices = _template_choices()
         # exclude the current instance from parent choices so an event cannot be its own parent
         try:
             if getattr(self, 'instance', None) and getattr(self.instance, 'pk', None):
@@ -181,6 +193,7 @@ class EventEditForm(forms.ModelForm):
             'event_date_start',
             'event_date_end',
             'content',
+            'template',
             'sign_up',
             'sign_up_max_participants',
             'sign_up_others',

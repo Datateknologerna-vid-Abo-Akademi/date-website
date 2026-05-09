@@ -1,8 +1,8 @@
 # DaTe Website 2.0
 
-DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.fi)'s public site, membership tools, alumni portal, polls, and a handful of seasonal or one-off apps. The stack is Django 6.0 running on Python 3.13 inside Docker Compose with Celery workers, Channels/Daphne, PostgreSQL, Valkey (Redis compatible), and S3-compatible storage.
+DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.fi)'s public site, membership tools, alumni portal, polls, and a handful of seasonal or one-off apps. The stack is Django 6.0 running on Python 3.14 inside Docker Compose with Celery workers, Channels/Daphne, PostgreSQL, Valkey (Redis compatible), and S3-compatible storage.
 
-> Active development happens on `develop`. The `master` branch mirrors production releases, so branch off `develop` when you start new work.
+> Active development happens on `main`. QA and production are environments, not branches; production is promoted from an image already tested in QA.
 
 
 ## Requirements
@@ -19,7 +19,7 @@ DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.
 ```bash
 git clone https://github.com/datateknologerna-vid-abo-akademi/date-website.git
 cd date-website
-git checkout develop
+git checkout main
 cp .env.example .env            # adjust passwords, ports, S3, etc.
 source env.sh                   # registers helper aliases
 date-start-detached             # builds containers, runs migrations, collects static files
@@ -30,6 +30,8 @@ open http://localhost:8000      # admin lives at /admin
 Prefer SSH? Add your key to GitHub following their [SSH setup guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account), then clone with `git clone git@github.com:datateknologerna-vid-abo-akademi/date-website.git`.
 
 Need sample content? Run `date-cleaninit` (or `/bin/bash ./scripts/clean_init.sh`) to wipe the dev database, reload the fixture set, generate sample media, and reset the default local user passwords. It is the quickest way to get back to a known-good local setup.
+
+pgAdmin is optional and disabled by default. To include it in the development Compose stacks, set `COMPOSE_PROFILES="pgadmin"` in `.env`, recreate the stack, then open `http://localhost:5050`. Log in with `PGADMIN_DEFAULT_EMAIL` and `PGADMIN_DEFAULT_PASSWORD`; the default sample values are `admin@example.com` / `password`. To connect to the local database, add a server with host `db`, port `5432`, user `postgres`, database `postgres`, and password `DATE_DB_PASSWORD`.
 
 Working on features that touch S3-compatible storage? Run a local [MinIO](https://min.io/) container and point `S3_ENDPOINT_URL`, `S3_ACCESS_KEY`, and `S3_SECRET_KEY` in `.env` to it. This keeps uploads, ACLs, and presigned URLs testable without external dependencies.
 
@@ -95,6 +97,7 @@ Important environment flags:
 
 - `PROJECT_NAME` selects the active association/site variant (`date`, `kk`, `biocum`, `demo`, `pulterit`, `sf`, ...).
 - `ENABLE_LANGUAGE_FEATURES=True` enables the language switcher, translated admin tabs, and runtime selection between the languages configured for the active association on unprefixed URLs. DaTe currently uses Swedish and English at runtime; some other associations also expose Finnish. When omitted or false, the project runs Swedish-only.
+- `USE_UNFOLD=True` enables the Unfold admin theme. When omitted or false, Django uses the classic admin. Restart or recreate containers after changing it because admin apps, widgets, templates, and static assets are selected at startup.
 - `USE_S3` toggles whether uploads use local disk storage or the configured S3-compatible backend.
 
 The script defines the `date-*` aliases used throughout this README:
@@ -141,7 +144,7 @@ If you touch translations, templates, or language-aware navigation, also smoke-t
 
 ## Documentation & app guides
 
-The `docs/` directory contains both developer notes (`docs/dev/*.md`) and content-editor guides (`docs/admin/*.md`). The folder is published via GitHub Pages, so any Markdown file you update on `develop` is deployed automatically after merging. If you change behavior in an app such as `events`, `lucia`, or `members`, update the matching guide in the same branch while the details are still fresh.
+The `docs/` directory contains both developer notes (`docs/dev/*.md`) and content-editor guides (`docs/admin/*.md`). The folder is published via GitHub Pages, so any Markdown file you update on `main` is deployed automatically after merging. If you change behavior in an app such as `events`, `lucia`, or `members`, update the matching guide in the same branch while the details are still fresh.
 
 Use [docs/index.md](docs/index.md) as the landing page for the published documentation site. Update it when you add a new app guide or rename an existing one.
 For translation architecture and workflow, see [docs/dev/translations.md](docs/dev/translations.md).
@@ -157,16 +160,61 @@ The production stack relies on the published container image at `ghcr.io/datatek
    ```
 3. Deploy: `docker compose up -d` or run `source env.sh` once and use `date up -d`.
 
+When `.env.prod.example` changes, update an existing production `.env` without losing real secrets:
+
+```bash
+./scripts/sync_env_from_template.sh .env.prod.example .env
+```
+
+The script rewrites `.env` using the example file's comments and ordering, keeps existing values for matching keys, and appends keys that exist only in the production file at the bottom. It writes a timestamped backup under `.env-backups/` before replacing the target file. After `source env.sh`, the same operation is available as `date-sync-prod-env`; preview the result with `date-sync-prod-env --dry-run`.
+
+For development checkouts, use `date-sync-dev-env` to sync `.env` from `.env.example` with the same preserve-existing-values behavior. This helper refuses to run when the current `.env` looks like production; use `date-sync-prod-env` there instead.
+
 The stack brings up the `web` (Gunicorn), `asgi` (Daphne/Channels), `celery`, `db`, `redis`, and `nginx` services. Rolling deploys usually build a new GHCR image in CI, update `DATE_IMG_TAG`, then restart `web`, `asgi`, and `celery`.
 
-CI image publishing and release tagging are now separate on purpose:
+### Shared Compose monitoring
 
-- Pushes to `develop` publish moving `develop` images plus a commit-SHA tag.
-- Pushes to `master` publish moving `master` images plus a commit-SHA tag.
+For hosts running multiple association stacks, run one shared Prometheus/Grafana stack per host and enable only lightweight exporters in each app stack. Create the shared network once:
+
+```bash
+docker network create monitoring
+```
+
+Start the shared host monitoring stack from this repository's `monitoring/` directory:
+
+```bash
+cd monitoring
+docker compose up -d
+```
+
+Then enable app-level exporters for each production stack by adding the overlay to that stack's `.env`:
+
+```bash
+COMPOSE_FILE="docker-compose.prod.yml:docker-compose.monitoring.yml"
+MONITORING_TARGET_PREFIX="datewebsite"
+```
+
+The app overlay adds only `postgres-exporter`, `redis-exporter`, and `nginx-exporter`. The shared monitoring stack adds Prometheus, Grafana, and `node-exporter` once per host, with cAdvisor available through the optional `cadvisor` Compose profile. Prometheus scrapes every 30 seconds, keeps 30 days of metrics by default through `PROMETHEUS_RETENTION=30d`, and caps local metric storage at `PROMETHEUS_RETENTION_SIZE=8GB`; older data is removed automatically when either limit is reached. Prometheus and Grafana bind to localhost by default through `PROMETHEUS_BIND` and `GRAFANA_BIND`; keep that default unless they sit behind a trusted VPN, SSH tunnel, or authenticated reverse proxy. The Nginx `stub_status` endpoint listens on port `8080` inside the Nginx container and is not published by Compose, but containers sharing the production app networks can reach it for exporter scraping.
+
+Enable cAdvisor only if you need per-container CPU, memory, filesystem, and network metrics:
+
+```bash
+cp prometheus/targets/cadvisor.yml.example prometheus/targets/cadvisor.yml
+COMPOSE_PROFILES="cadvisor" docker compose up -d
+```
+
+Add each association's exporter aliases to `monitoring/prometheus/targets/*.yml`; `monitoring/prometheus/datewebsite.targets.yml.example` shows the expected labels and target names. Grafana is provisioned with Prometheus as the default data source. Set `GRAFANA_ADMIN_PASSWORD` before enabling the shared stack in production.
+
+CI image publishing and release tagging are separate on purpose:
+
+- Pushes to `main` publish an immutable commit-SHA tag plus the moving `qa` tag.
+- QA should deploy `qa` automatically or deploy the immutable commit-SHA tag produced from `main`.
 - Release tags are created manually through `.github/workflows/release_tag.yaml` with `patch` as the default bump and optional `minor` / `major` overrides.
-- When a release tag is created, CI reuses the already-published `master` image for that commit and adds the SemVer tags to the same image instead of rebuilding.
+- Each release tag also publishes generated GitHub Release notes, which are the release history for the project.
+- When a release tag is created, CI reuses the already-published commit image and adds the SemVer, `prod`, and `latest` tags to the same image instead of rebuilding.
+- Production can also be promoted manually through `.github/workflows/promote_production.yaml` by entering the already-tested image tag, usually the commit SHA currently running in QA.
 
-For production rollouts, prefer a release tag in `DATE_IMG_TAG` instead of the moving `master` tag.
+For production rollouts, prefer a release tag or immutable commit SHA in `DATE_IMG_TAG`; `prod` and `latest` are production aliases updated only by the production promotion workflows.
 
 Although Django 6 ships with the new Tasks framework, this project still uses Celery for production background work. The current task dispatch points defer enqueuing until after successful database commits where that matters, so new code should preserve that behavior.
 
@@ -200,7 +248,7 @@ Only use `update-postgres.sh` for **major** PostgreSQL version upgrades. The scr
 2. Run `./update-postgres.sh <target_version> [env_file]`.
 3. Restart the stack.
 
-The script now refuses same-major upgrades, verifies that PostgreSQL is storing data inside a mounted volume before it removes anything, and compares the restored schema against the source database before declaring success.
+The script now refuses same-major upgrades, verifies that PostgreSQL is storing data inside a mounted volume before it removes anything, recreates the target database through `template1` so `DB_DATABASE=postgres` can be restored, and compares the restored schema against the source database before declaring success.
 
 For Compose-based deployments, the db service now keeps `PGDATA` under the mounted volume and migrates older volume layouts into the `pgdata/` subdirectory on first start, so existing stacks do not lose access to pre-change database files.
 
@@ -233,7 +281,7 @@ Some other associations also expose:
 
 ### Translation scope
 
-Swedish site copy should match the established wording from `develop` unless there is an explicit content decision to change it. In practice, Swedish is the source of truth for the site's established voice.
+Swedish site copy should match the established wording from `main` unless there is an explicit content decision to change it. In practice, Swedish is the source of truth for the site's established voice.
 
 Use these rules when updating translations:
 
@@ -388,8 +436,9 @@ Run
 ```
 
 The upgrade helper now calls `./scripts/backup_postgres.sh` first and reuses the generated SQL dump during restore.
-If no env argument is provided, it resolves `prod` first using the backup script's lookup order.
+If no env argument is provided, it resolves `prod` first using the upgrade script's env lookup order.
 For upgrades, the resolved env file must be writable; the script will not modify `.env.example`.
+For manual backups, use `./scripts/backup_postgres.sh [dev|prod|path/to/env] [output_dir]`; the older `./scripts/backup_postgres.sh [output_dir]` form still works.
 
 Restart the stack afterward so containers use the updated `.env`.
 

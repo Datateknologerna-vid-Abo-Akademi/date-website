@@ -48,6 +48,7 @@ CONTENT_VARIABLES = {
     "ASSOCIATION_NAME": "DaTe demo",
     "ASSOCIATION_NAME_FULL": "Demo Website",
     "ASSOCIATION_NAME_SHORT": "Demo",
+    "EVENT_TEMPLATE_LOGO": "core/images/headerlogo.png",
     "ASSOCIATION_EMAIL": "demo@datateknologerna.org",
     "ASSOCIATION_ADDRESS_L1": "Åbo Akademi, Agora",
     "ASSOCIATION_ADDRESS_L2": "Vattenborgsvägen 5",

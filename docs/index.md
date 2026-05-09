@@ -1,6 +1,6 @@
 # DaTe Website Documentation
 
-This directory is published via a GitHub Pages workflow. Push a change under `docs/` to the `develop` branch and the public documentation site refreshes automatically.
+This directory is published via a GitHub Pages workflow. Push a change under `docs/` to the `main` branch and the public documentation site refreshes automatically.
 
 Use the sections below to jump to either editor-facing instructions or implementation notes.
 
@@ -15,6 +15,7 @@ Use the sections below to jump to either editor-facing instructions or implement
 
 - The project can run multiple association/site variants via `PROJECT_NAME`.
 - Language switching and multilingual content are controlled by `ENABLE_LANGUAGE_FEATURES`.
+- The Django admin theme is controlled by `USE_UNFOLD`; false uses classic admin, true enables Unfold.
 - The public docs are meant to complement the README, not replace it. Keep operational commands in the README and app-specific behavior in these guides.
 
 ## Admin & Content Editors
@@ -53,6 +54,7 @@ Use the sections below to jump to either editor-facing instructions or implement
 - [Publications Development Notes](dev/publications.md)
 - [Social Development Notes](dev/social.md)
 - [Static Pages Development Notes](dev/staticpages.md)
+- [Template System & Association Overrides](dev/templates.md)
 - [Translation System Notes](dev/translations.md)
 
 ## Maintenance
@@ -61,4 +63,4 @@ Use the sections below to jump to either editor-facing instructions or implement
 - When routing, language handling, or deployment behavior changes, it usually helps to update the README and any affected development guide in the same branch.
 - If a guide becomes mostly obsolete, a rewrite is usually clearer than layering more historical notes on top.
 
-Need to add or update a guide? Create or edit the Markdown file in the appropriate subfolder, then commit and push to `develop`. GitHub Pages redeploys when `docs/` changes.
+Need to add or update a guide? Create or edit the Markdown file in the appropriate subfolder, then commit and push to `main`. GitHub Pages redeploys when `docs/` changes.

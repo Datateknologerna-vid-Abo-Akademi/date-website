@@ -53,6 +53,17 @@ class UsernameValidatorTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('username', form.errors)
 
+    def test_member_creation_form_accepts_dotted_username(self):
+        form = MemberCreationForm(data={
+            'username': 'first.last',
+            'email': 'dotted@example.com',
+            'first_name': 'Dot',
+            'last_name': 'User',
+            'membership_type': self.membership_type.id,
+            'password': 'secret123',
+        })
+        self.assertTrue(form.is_valid())
+
     def test_signup_form_rejects_invalid_username(self):
         form = SignUpForm(data={
             'username': 'bad!name',
@@ -172,6 +183,32 @@ class FunctionaryFormTests(TestCase):
         functionary.member = self.member
         functionary.save()
         self.assertEqual(Functionary.objects.count(), 1)
+
+    def test_snapshots_member_name_for_deleted_member_display(self):
+        self.member.first_name = 'Function'
+        self.member.last_name = 'Ary'
+        self.member.save()
+        functionary = Functionary.objects.create(
+            member=self.member,
+            functionary_role=self.role,
+            year=2024,
+        )
+
+        self.member.delete()
+        functionary.refresh_from_db()
+
+        self.assertIsNone(functionary.member)
+        self.assertEqual(functionary.name, 'Function Ary')
+        self.assertEqual(functionary.get_full_name(), 'Function Ary')
+
+    def test_uses_username_when_member_name_is_blank(self):
+        functionary = Functionary.objects.create(
+            member=self.member,
+            functionary_role=self.role,
+            year=2024,
+        )
+
+        self.assertEqual(functionary.name, 'functionary')
 
 
 class SignupViewTests(TestCase):

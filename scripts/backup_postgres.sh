@@ -9,32 +9,44 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-source "${PROJECT_ROOT}/scripts/lib/date_env.sh"
+source "${SCRIPT_DIR}/lib/date_env.sh"
 
-requested_mode="${1:-prod}"
-output_dir="${2:-${PROJECT_ROOT}/backups}"
+requested_env_or_output="${1:-}"
+requested_output_dir="${2:-}"
+
+if [ -z "$requested_env_or_output" ]; then
+  env_file="${PROJECT_ROOT}/.env"
+  output_dir="${PROJECT_ROOT}/backups"
+elif [ "$requested_env_or_output" = "dev" ] || [ "$requested_env_or_output" = "prod" ] || [ -f "$requested_env_or_output" ] || [ -f "${PROJECT_ROOT}/$requested_env_or_output" ]; then
+  env_file="$(date_resolve_env_file "$PROJECT_ROOT" "$requested_env_or_output")"
+  output_dir="${requested_output_dir:-${PROJECT_ROOT}/backups}"
+else
+  env_file="${PROJECT_ROOT}/.env"
+  output_dir="$requested_env_or_output"
+fi
 
 if [[ "$output_dir" != /* ]]; then
   output_dir="${PROJECT_ROOT}/$output_dir"
 fi
-
-config_file="$(date_resolve_env_file "$PROJECT_ROOT" "$requested_mode")"
-resolved_mode="$(date_resolve_env_mode "$requested_mode" "$config_file")"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "docker is required but was not found in PATH"
   exit 1
 fi
 
+if [ ! -f "$env_file" ]; then
+  echo "No .env file found at $env_file"
+  exit 1
+fi
+
 set -a
-source "$config_file"
+source "$env_file"
 set +a
 
-config_compose_file="$(date_read_env_value "$config_file" COMPOSE_FILE)"
+resolved_mode="$(date_resolve_env_mode "${requested_env_or_output:-dev}" "$env_file")"
+config_compose_file="$(date_read_env_value "$env_file" COMPOSE_FILE)"
 date_apply_env_mode "$resolved_mode"
-
 compose_file="$(date_resolve_compose_file "$resolved_mode" "$config_compose_file")"
-
 if [[ "$compose_file" = /* ]]; then
   compose_path="$compose_file"
 else

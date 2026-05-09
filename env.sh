@@ -20,7 +20,8 @@ unalias date date-manage date-migrate date-makemigrations date-collectstatic \
     date-cleaninit date-stop date-start date-start-detached date-createsuperuser \
     date-pull date-seed-gallery date-seed-gallery-clear date-all date-all-manage \
     date-all-start date-all-stop date-all-cleaninit date-all-seed-gallery \
-    date-all-seed-gallery-clear 2>/dev/null || true
+    date-all-seed-gallery-clear date-backup date-restore date-sync-dev-env \
+    date-sync-prod-env date-setup 2>/dev/null || true
 
 # Resolve the checkout to operate on. This lets globally installed helpers
 # follow the current working directory while still having DATE_WEBSITE_DIR as a
@@ -116,7 +117,7 @@ date-all-manage() {
 }
 
 date-all-start() {
-    date-all up --build "$@"
+    date-all up "$@"
 }
 
 date-all-stop() {
@@ -135,6 +136,60 @@ date-all-seed-gallery() {
 
 date-all-seed-gallery-clear() {
     date-all-manage seed_gallery --clear "$@"
+}
+
+date-backup() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+    "$project_dir/scripts/backup_postgres.sh" "$@"
+}
+
+date-restore() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+    "$project_dir/scripts/restore_postgres.sh" "$@"
+}
+
+date-sync-dev-env() {
+    local project_dir
+    local env_file
+    project_dir="$(_date_website_project_dir)" || return
+    env_file="$project_dir/.env"
+
+    if [ -f "$env_file" ] && [ "${DATE_FORCE_DEV_ENV_SYNC:-}" != "1" ]; then
+        if grep -Eq '^[[:space:]]*COMPOSE_FILE=["'\'']?docker-compose\.prod\.yml|^[[:space:]]*DATE_DEVELOP=["'\'']?[Ff]alse|^[[:space:]]*DATE_DEBUG=["'\'']?[Ff]alse|^[[:space:]]*UNFOLD_ENVIRONMENT_LABEL=["'\'']?Production' "$env_file"; then
+            echo "Refusing to sync development env over a production-looking .env." >&2
+            echo "Use date-sync-prod-env for production, or set DATE_FORCE_DEV_ENV_SYNC=1 to override." >&2
+            return 1
+        fi
+    fi
+
+    "$project_dir/scripts/sync_env_from_template.sh" "$@" "$project_dir/.env.example" "$project_dir/.env"
+}
+
+date-sync-prod-env() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+    "$project_dir/scripts/sync_env_from_template.sh" "$@" "$project_dir/.env.prod.example" "$project_dir/.env"
+}
+
+date-setup() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+
+    if [ ! -f "$project_dir/.env" ]; then
+        cp "$project_dir/.env.example" "$project_dir/.env"
+        echo "Created .env from .env.example — edit it before continuing."
+    else
+        echo ".env already exists, skipping."
+    fi
+
+    git -C "$project_dir" config core.hooksPath .githooks
+    echo "Git hooks installed."
+
+    "$project_dir/scripts/clean_init.sh" --yes
+
+    echo "Run 'date-start' or 'date-start-detached' to start the stack."
 }
 
 date-test() {

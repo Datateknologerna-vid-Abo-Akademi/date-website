@@ -1,5 +1,7 @@
 from datetime import date, timedelta
 import importlib
+import re
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.conf import settings
@@ -8,6 +10,7 @@ from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.template import Context, Template
+from django.template.loader import render_to_string
 from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 from django.urls import clear_url_caches, reverse, set_urlconf
@@ -23,6 +26,118 @@ from events.models import Event
 def localized_reverse(name, language_code, *args, **kwargs):
     with translation.override(language_code):
         return reverse(name, args=args or None, kwargs=kwargs or None)
+
+
+class SiteShellTemplateTests(TestCase):
+    def _content_context(self):
+        return {
+            "ASSOCIATION_NAME": "Test Association",
+            "ASSOCIATION_NAME_FULL": "Test Association rf",
+            "ASSOCIATION_NAME_FULL_RF": "Test Association rf",
+            "ASSOCIATION_NAME_SHORT": "TA",
+            "ASSOCIATION_EMAIL": "test@example.com",
+            "ASSOCIATION_ADDRESS_L1": "Line 1",
+            "ASSOCIATION_ADDRESS_L2": "Line 2",
+            "ASSOCIATION_POSTAL_CODE": "12345",
+            "ASSOCIATION_OFFICE_HOURS": "",
+            "SOCIAL_BUTTONS": [],
+            "categories": [],
+            "urls": [],
+            "ENABLE_LANGUAGE_FEATURES": False,
+            "LANGUAGES": (("sv", "Svenska"),),
+        }
+
+    def test_base_template_has_one_body_and_keeps_shell_sections(self):
+        rendered = render_to_string("core/base.html", self._content_context())
+
+        self.assertEqual(len(re.findall(r"<body\b", rendered)), 1)
+        self.assertEqual(rendered.count("</body>"), 1)
+        self.assertIn("<nav", rendered)
+        self.assertIn("association-footer", rendered)
+        self.assertIn("core/js/external-links.js", rendered)
+        self.assertLess(rendered.index("<body>"), rendered.index("<nav"))
+        self.assertLess(rendered.index("core/js/external-links.js"), rendered.index("</body>"))
+
+    def test_header_uses_unique_dropdown_ids_for_categories(self):
+        categories = [
+            SimpleNamespace(category_name="About", use_category_url=False, url=""),
+            SimpleNamespace(category_name="Members", use_category_url=False, url=""),
+        ]
+        template = Template("{% include 'core/header.html' %}")
+        rendered = template.render(Context({
+            **self._content_context(),
+            "categories": categories,
+        }))
+
+        dropdown_ids = re.findall(r'id="(navbarDropdownMenuLink\d+)"', rendered)
+        self.assertEqual(dropdown_ids, ["navbarDropdownMenuLink0", "navbarDropdownMenuLink1"])
+        self.assertEqual(len(dropdown_ids), len(set(dropdown_ids)))
+        self.assertIn('aria-labelledby="navbarDropdownMenuLink0"', rendered)
+        self.assertIn('aria-labelledby="navbarDropdownMenuLink1"', rendered)
+        self.assertNotIn('id="navbarDarkDropdownMenuLink"', rendered)
+
+    def test_pulterit_header_override_keeps_custom_logo_and_container(self):
+        pulterit_settings = importlib.import_module("core.settings.pulterit")
+
+        with override_settings(
+            TEMPLATES=pulterit_settings.TEMPLATES,
+            STATICFILES_DIRS=pulterit_settings.STATICFILES_DIRS,
+        ):
+            template = Template("{% include 'core/header.html' %}")
+            rendered = template.render(Context({
+                **self._content_context(),
+                "ASSOCIATION_NAME": "Pulterit",
+                "ENABLE_LANGUAGE_FEATURES": True,
+                "LANGUAGES": (("sv", "Svenska"), ("en", "English")),
+            }))
+
+        self.assertIn("container-fluid px-3", rendered)
+        self.assertIn("pulterit-white-wo-text.svg", rendered)
+        self.assertIn("languageDropdownMenuLink", rendered)
+
+    def test_pulterit_base_loads_header_overrides_after_shared_header_css(self):
+        pulterit_settings = importlib.import_module("core.settings.pulterit")
+
+        with override_settings(
+            TEMPLATES=pulterit_settings.TEMPLATES,
+            STATICFILES_DIRS=pulterit_settings.STATICFILES_DIRS,
+        ):
+            rendered = render_to_string("core/base.html", {
+                **self._content_context(),
+                "ASSOCIATION_NAME": "Pulterit",
+                "ENABLE_LANGUAGE_FEATURES": True,
+                "LANGUAGES": (("sv", "Svenska"), ("en", "English")),
+            })
+
+        shared_header_css = "core/css/header.css"
+        pulterit_header_css = "core/css/header-overrides.css"
+        self.assertIn(shared_header_css, rendered)
+        self.assertIn(pulterit_header_css, rendered)
+        self.assertLess(rendered.index(shared_header_css), rendered.index(pulterit_header_css))
+
+
+
+    def test_language_picker_hides_when_disabled_in_header_template(self):
+        template = Template("{% include 'core/header.html' %}")
+        rendered = template.render(Context(self._content_context()))
+
+        self.assertNotIn('name="lang"', rendered)
+        self.assertNotIn("language-dropdown-toggle", rendered)
+
+    def test_footer_handles_blank_social_urls_and_office_hours(self):
+        template = Template("{% include 'core/footer.html' %}")
+        rendered = template.render(Context({
+            **self._content_context(),
+            "SOCIAL_BUTTONS": [
+                ["fa-facebook-f", "https://example.com/facebook"],
+                ["fa-github", ""],
+            ],
+        }))
+
+        self.assertIn("https://example.com/facebook", rendered)
+        self.assertNotIn('href=""', rendered)
+        self.assertIn("test@example.com", rendered)
+        self.assertNotIn("test@example.com<br>", rendered)
 
 
 class HealthCheckTests(TestCase):

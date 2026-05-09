@@ -1,21 +1,62 @@
 {% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Bekräfta borttagning" %} | {{ site_title|default:_("Django site admin") }}{% endblock %}
+
 {% block content %}
-  <h1>Confirm Deletion</h1>
-  <p>The following attendees will be deleted:</p>
-  <ul>
-    {% for attendee in attendees %}
-      <li>{{ attendee.user }} ({{ attendee.email }})</li>
-    {% endfor %}
-  </ul>
-  <form method="post" action="">
-    {% csrf_token %}
-    <input type="hidden" name="action" value="delete_participants" />
-    <input type="hidden" name="select_across" value="0" />
-    {% for obj in events %}
-      <input type="hidden" name="_selected_action" value="{{ obj.pk }}" />
-    {% endfor %}
-    <input type="hidden" name="confirm" value="1">
-    <button type="submit" class="button">Confirm</button>
-    <a href="{{ request.path }}" class="button">Cancel</a>
-  </form>
+  <div class="border border-base-200 rounded-default shadow-xs dark:border-base-800">
+    <div class="p-4">
+      <h1 class="font-semibold mb-2 text-font-important-light text-lg dark:text-font-important-dark">
+        {% trans "Bekräfta borttagning" %}
+      </h1>
+
+      <p class="leading-relaxed text-font-default-light dark:text-font-default-dark">
+        {% blocktranslate count counter=attendees|length %}
+          Det här tar bort en deltagare från valda evenemang.
+        {% plural %}
+          Det här tar bort {{ counter }} deltagare från valda evenemang.
+        {% endblocktranslate %}
+      </p>
+    </div>
+
+    <div class="border-base-200 border-t p-4 dark:border-base-800">
+      {% if attendees %}
+        <ul class="divide-y divide-base-200 text-sm dark:divide-base-800">
+          {% for attendee in attendees %}
+            <li class="flex flex-col gap-1 py-3 first:pt-0 last:pb-0 md:flex-row md:items-center md:justify-between">
+              <span class="font-medium text-font-important-light dark:text-font-important-dark">
+                {{ attendee.user }}
+              </span>
+              <span class="text-font-subtle-light dark:text-font-subtle-dark">
+                {{ attendee.event }} · {{ attendee.email }}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark">
+          {% trans "Inga deltagare hittades för de valda evenemangen." %}
+        </p>
+      {% endif %}
+    </div>
+
+    <form method="post" action="" class="border-base-200 border-t p-4 dark:border-base-800">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="delete_participants" />
+      <input type="hidden" name="select_across" value="0" />
+      {% for obj in events %}
+        <input type="hidden" name="_selected_action" value="{{ obj.pk }}" />
+      {% endfor %}
+      <input type="hidden" name="confirm" value="1">
+
+      <div class="flex flex-col gap-3 md:flex-row md:items-center">
+        <a href="{{ request.path }}" class="border border-base-200 flex font-medium items-center justify-center px-3 py-2 rounded-default text-sm text-font-default-light transition hover:bg-base-50 dark:border-base-700 dark:text-font-default-dark dark:hover:bg-base-800">
+          {% trans "Avbryt" %}
+        </a>
+        <button type="submit" class="bg-red-600 border border-transparent cursor-pointer flex font-medium items-center justify-center px-3 py-2 rounded-default text-sm text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50 md:ml-auto" {% if not attendees %}disabled{% endif %}>
+          {% trans "Ta bort deltagare" %}
+        </button>
+      </div>
+    </form>
+  </div>
 {% endblock %}

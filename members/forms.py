@@ -10,20 +10,21 @@ from django.core.validators import MinValueValidator, RegexValidator
 from django.template import loader
 from django.utils.translation import gettext_lazy as _
 
+from core.admin_base import UnfoldFormMixin
 from core.utils import send_email_task
 from members.models import (SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH,
                             SUB_RE_SCALE_YEAR, Member, SubscriptionPayment, Functionary)
 
 logger = logging.getLogger('date')
 
-# Restrict usernames to ASCII letters, numbers, underscores, and hyphens
+# Restrict usernames to ASCII letters, numbers, dots, underscores, and hyphens
 USERNAME_VALIDATOR = RegexValidator(
-    r'^[0-9a-zA-Z_-]+$',
-    _('Enter a valid username consisting only of letters, numbers, underscores, and hyphens.')
+    r'^[0-9a-zA-Z._-]+$',
+    _('Enter a valid username consisting only of letters, numbers, dots, underscores, and hyphens.')
 )
 
 
-class MemberCreationForm(forms.ModelForm):
+class MemberCreationForm(UnfoldFormMixin, forms.ModelForm):
     send_email = forms.BooleanField(required=False)
     year_of_admission = forms.IntegerField(initial=lambda: datetime.datetime.now().year, required=False, label=_('Inskrivningsår'))
 
@@ -67,7 +68,7 @@ class MemberCreationForm(forms.ModelForm):
         return member
 
 
-class AdminMemberUpdateForm(forms.ModelForm):
+class AdminMemberUpdateForm(UnfoldFormMixin, forms.ModelForm):
     password = ReadOnlyPasswordHashField(label="Lösenord",
                                          help_text=("Raw passwords are not stored, so there is no way to see "
                                                     "this user's password, but you can change the password "
@@ -222,6 +223,11 @@ class FunctionaryForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.member = kwargs.pop('member', None)
         super().__init__(*args, **kwargs)
+
+    def _post_clean(self):
+        if self.member:
+            self.instance.member = self.member
+        super()._post_clean()
 
     def clean(self):
         cleaned_data = super().clean()

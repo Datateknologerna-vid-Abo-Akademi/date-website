@@ -2,16 +2,18 @@ import os
 import shutil
 import tempfile
 from io import BytesIO
+from unittest.mock import PropertyMock, patch
 
 from PIL import Image
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from archive.models import TYPE_CHOICES, Collection, Document, Picture
+from archive.models import TYPE_CHOICES, Collection, Document, Picture, PictureCollection
 from members.models import Member, MembershipType, ORDINARY_MEMBER
 
 
@@ -76,6 +78,61 @@ class CollectionTestCase(TestCase):
         self.assertTrue(isinstance(d, Document))
         self.assertEqual(d.__str__(), d.title)
         self.assertEqual(d.collection.type, TYPE_CHOICES[1][1])
+
+
+class ArchiveAdminTests(TestCase):
+    def setUp(self):
+        self.admin_user = get_user_model().objects.create_superuser(
+            username="archive-admin",
+            password="pwd",
+            email="archive-admin@example.com",
+        )
+        self.client.force_login(self.admin_user)
+
+    def test_picture_collection_change_page_renders_when_image_url_cannot_be_resolved(self):
+        collection = PictureCollection.objects.create(
+            title="Broken Picture Admin Collection",
+            pub_date=timezone.now(),
+            type="Pictures",
+        )
+        Picture.objects.bulk_create([
+            Picture(
+                collection=collection,
+                image="archive/broken.jpg",
+            )
+        ])
+
+        with patch(
+            "django.db.models.fields.files.FieldFile.url",
+            new_callable=PropertyMock,
+            side_effect=RuntimeError("broken storage"),
+        ):
+            response = self.client.get(reverse("admin:archive_picturecollection_change", args=[collection.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "archive/broken.jpg")
+
+    def test_document_collection_change_page_renders_when_document_url_cannot_be_resolved(self):
+        collection = Collection.objects.create(
+            title="Broken Document Admin Collection",
+            pub_date=timezone.now(),
+            type="Documents",
+        )
+        Document.objects.create(
+            collection=collection,
+            title="Broken document",
+            document="documents/broken.pdf",
+        )
+
+        with patch(
+            "django.db.models.fields.files.FieldFile.url",
+            new_callable=PropertyMock,
+            side_effect=RuntimeError("broken storage"),
+        ):
+            response = self.client.get(reverse("admin:archive_documentcollection_change", args=[collection.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Broken document")
 
 
 class PictureDetailFragmentViewTests(TestCase):

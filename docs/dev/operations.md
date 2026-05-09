@@ -15,6 +15,12 @@ Most scripts assume:
 
 Unless a script says otherwise, prefer running it from a Bash-compatible shell.
 
+## Admin Theme
+
+Set `USE_UNFOLD=True` in `.env` to run Django admin with the Unfold theme. Leave it unset or set it to `False` to use the classic Django admin.
+
+Changing this value requires restarting or recreating the Django containers, because admin apps, widgets, templates, and static assets are selected when Django starts.
+
 ## Fixture Reset and Local Seed Data
 
 ### `date-cleaninit` / `scripts/clean_init.sh`
@@ -106,6 +112,7 @@ Typical usage:
 Behavior:
 
 - resolves an environment file with `scripts/lib/date_env.sh`
+- keeps the old `./scripts/backup_postgres.sh [output_dir]` form for local ad-hoc backups
 - starts the `db` service if needed
 - waits for PostgreSQL readiness
 - creates a plain SQL dump
@@ -128,6 +135,7 @@ It:
 - tears down volumes
 - updates `DATE_POSTGRESQL_VERSION`
 - recreates the database container
+- recreates the target database through `template1`, which also works when `DB_DATABASE=postgres`
 - restores the SQL dump
 - validates that the restored database is usable and still contains the expected schema footprint
 

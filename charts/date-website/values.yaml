@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/datateknologerna-vid-abo-akademi/date-website
-  tag: master
+  tag: prod
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []

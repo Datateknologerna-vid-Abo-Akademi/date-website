@@ -3,7 +3,7 @@ name: Run unit tests and ping website
 on:
   pull_request:
     branches:
-      - develop
+      - main
     paths:
       - '**/*.py'
       - '**/*.html'
@@ -12,13 +12,16 @@ on:
       - 'Dockerfile'
       - 'docker-compose.yml'
       - 'docker-compose.prod.yml'
-      - 'requirements.txt'
+      - 'locale/**'
+      - 'pyproject.toml'
+      - 'scripts/validate_translations.py'
+      - 'uv.lock'
       - '.env.example'
       - 'env.sh'
       - '.github/workflows/web_startup.yaml'
   push:
     branches:
-      - develop
+      - main
     paths:
       - '**/*.py'
       - '**/*.html'
@@ -27,7 +30,10 @@ on:
       - 'Dockerfile'
       - 'docker-compose.yml'
       - 'docker-compose.prod.yml'
-      - 'requirements.txt'
+      - 'locale/**'
+      - 'pyproject.toml'
+      - 'scripts/validate_translations.py'
+      - 'uv.lock'
       - '.env.example'
       - 'env.sh'
       - '.github/workflows/web_startup.yaml'

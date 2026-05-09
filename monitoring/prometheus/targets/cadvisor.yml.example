@@ -1,0 +1,5 @@
+- labels:
+    env: prod
+    service: cadvisor
+  targets:
+    - cadvisor:8080

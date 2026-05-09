@@ -4,20 +4,37 @@ from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import reverse, re_path
 from django.utils.html import format_html
+from core.admin_base import ModelAdmin
 
 from .models import EventInvoice, EventBillingConfiguration
 from .util import BillingIntegrations
 
-# Register your models here.
 
-admin.site.register(EventInvoice)
+@admin.register(EventInvoice)
+class EventInvoiceAdmin(ModelAdmin):
+    list_display = ('participant', 'invoice_number', 'reference_number', 'invoice_date', 'due_date', 'amount', 'currency')
+    search_fields = (
+        'invoice_number',
+        'reference_number',
+        'participant__user',
+        'participant__email',
+        'participant__event__title',
+        'participant__event__slug',
+    )
+    list_filter = ('currency',)
+    autocomplete_fields = ('participant',)
+    list_select_related = ('participant', 'participant__event')
+    ordering = ('-invoice_date',)
+    date_hierarchy = 'invoice_date'
 
 
 @admin.register(EventBillingConfiguration)
-class EventBillingConfigurationAdmin(admin.ModelAdmin):
+class EventBillingConfigurationAdmin(ModelAdmin):
     list_display = ('event', 'due_date', 'integration_type', 'price', 'price_selector', 'ref_export')
     list_filter = ('integration_type',)
-    search_fields = ('event__title',)
+    search_fields = ('event__title', 'event__slug', 'price_selector')
+    autocomplete_fields = ('event',)
+    list_select_related = ('event',)
     ordering = ('event',)
 
     def get_urls(self):

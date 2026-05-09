@@ -5,6 +5,7 @@
 *.env*
 !.env.example
 !.env.prod.example
+.env-backups/
 
 *.mo
 
