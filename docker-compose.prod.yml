@@ -13,12 +13,32 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     networks:
       - internal
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.25.1-p0
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASSWORD: ${DATE_DB_PASSWORD}
+      POOL_MODE: transaction
+      AUTH_TYPE: scram-sha-256
+      MAX_CLIENT_CONN: 1000
+      ADMIN_USERS: postgres
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost"]
+    networks:
+      - internal
   web:
     env_file: .env
     image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}
     restart: always
-    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python /code/manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn -w 3 --max-requests 1000 --max-requests-jitter 100 --bind=0.0.0.0 core.wsgi"
+    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && ./wait-for-postgres.sh pgbouncer:5432 && python /code/manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn -w 3 --max-requests 1000 --max-requests-jitter 100 --bind=0.0.0.0 core.wsgi"
+    environment:
+      DB_HOST: pgbouncer
     depends_on:
+      - pgbouncer
       - db
       - redis
     networks:
@@ -27,8 +47,11 @@ services:
     env_file: .env
     image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}
     restart: always
-    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && daphne -b 0.0.0.0 core.routing:application"
+    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && ./wait-for-postgres.sh pgbouncer:5432 && daphne -b 0.0.0.0 core.routing:application"
+    environment:
+      DB_HOST: pgbouncer
     depends_on:
+      - pgbouncer
       - db
       - redis
     networks:
@@ -37,8 +60,11 @@ services:
     env_file: .env
     restart: always
     image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}
-    command: celery -A core worker -l info -c 2
+    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && ./wait-for-postgres.sh pgbouncer:5432 && celery -A core worker -l info -c 2"
+    environment:
+      DB_HOST: pgbouncer
     depends_on:
+      - pgbouncer
       - db
       - redis
     networks:

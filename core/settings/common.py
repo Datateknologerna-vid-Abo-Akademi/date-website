@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 # update
 
 import os
+import sys
 import json
 from django.templatetags.static import static
 from django.utils.translation import gettext_lazy as _
@@ -234,9 +235,14 @@ DATABASES = {
         'USER': env('DB_USERNAME', str, 'postgres'),
         'PASSWORD': env_alias('DATE_DB_PASSWORD', 'DB_PASSWORD', default=''),
         'HOST': env('DB_HOST', str, 'db'),
-        'PORT': env('DB_PORT', int, 5432)
+        'PORT': env('DB_PORT', int, 5432),
+        'DISABLE_SERVER_SIDE_CURSORS': True,
     }
 }
+
+# Skip pgbouncer for running tests
+if 'test' in sys.argv or 'test_coverage' in sys.argv:
+    DATABASES['default']['HOST'] = 'db'
 
 CONN_MAX_AGE = 600
 
