@@ -4,6 +4,7 @@ from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
 
+import attendance.routing
 import events.routing
 
 proj_name = os.environ.get("PROJECT_NAME", "date")
@@ -17,6 +18,7 @@ application = ProtocolTypeRouter({
     'websocket': AuthMiddlewareStack(
             URLRouter(
                 events.routing.websocket_urlpatterns
+                + attendance.routing.websocket_urlpatterns
             )
     ),
 })
