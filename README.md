@@ -248,7 +248,7 @@ Only use `update-postgres.sh` for **major** PostgreSQL version upgrades. The scr
 2. Run `./update-postgres.sh <target_version> [env_file]`.
 3. Restart the stack.
 
-The script now refuses same-major upgrades, verifies that PostgreSQL is storing data inside a mounted volume before it removes anything, and compares the restored schema against the source database before declaring success.
+The script now refuses same-major upgrades, verifies that PostgreSQL is storing data inside a mounted volume before it removes anything, recreates the target database through `template1` so `DB_DATABASE=postgres` can be restored, and compares the restored schema against the source database before declaring success.
 
 For Compose-based deployments, the db service now keeps `PGDATA` under the mounted volume and migrates older volume layouts into the `pgdata/` subdirectory on first start, so existing stacks do not lose access to pre-change database files.
 
@@ -436,8 +436,9 @@ Run
 ```
 
 The upgrade helper now calls `./scripts/backup_postgres.sh` first and reuses the generated SQL dump during restore.
-If no env argument is provided, it resolves `prod` first using the backup script's lookup order.
+If no env argument is provided, it resolves `prod` first using the upgrade script's env lookup order.
 For upgrades, the resolved env file must be writable; the script will not modify `.env.example`.
+For manual backups, use `./scripts/backup_postgres.sh [dev|prod|path/to/env] [output_dir]`; the older `./scripts/backup_postgres.sh [output_dir]` form still works.
 
 Restart the stack afterward so containers use the updated `.env`.
 

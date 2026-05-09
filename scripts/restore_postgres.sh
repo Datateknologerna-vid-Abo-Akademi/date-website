@@ -71,6 +71,7 @@ fi
 db_name="${DB_DATABASE:-postgres}"
 db_user="${DB_USERNAME:-postgres}"
 db_service="db"
+maintenance_db="template1"
 
 # Verify checksum against manifest when available
 if [ -f "$manifest_file" ]; then
@@ -132,7 +133,7 @@ trap cleanup EXIT
 echo "Waiting for PostgreSQL to accept connections"
 ready=0
 for _ in $(seq 1 30); do
-  if docker_compose exec -T "$db_service" pg_isready -U "$db_user" -d "$db_name" >/dev/null 2>&1; then
+  if docker_compose exec -T "$db_service" pg_isready -U "$db_user" -d "$maintenance_db" >/dev/null 2>&1; then
     ready=1
     break
   fi
@@ -145,14 +146,14 @@ if [ "$ready" -ne 1 ]; then
 fi
 
 echo "Dropping and recreating database: $db_name"
-docker_compose exec -T "$db_service" psql -U "$db_user" -d postgres \
-  -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$db_name' AND pid <> pg_backend_pid();" \
+docker_compose exec -T "$db_service" psql -v ON_ERROR_STOP=1 -U "$db_user" -d "$maintenance_db" -v db_name="$db_name" \
+  -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'db_name' AND pid <> pg_backend_pid();" \
   >/dev/null
-docker_compose exec -T "$db_service" psql -U "$db_user" -d postgres \
-  -c "DROP DATABASE IF EXISTS \"$db_name\";" \
+docker_compose exec -T "$db_service" psql -v ON_ERROR_STOP=1 -U "$db_user" -d "$maintenance_db" -v db_name="$db_name" \
+  -c 'DROP DATABASE IF EXISTS :"db_name";' \
   >/dev/null
-docker_compose exec -T "$db_service" psql -U "$db_user" -d postgres \
-  -c "CREATE DATABASE \"$db_name\" OWNER \"$db_user\";" \
+docker_compose exec -T "$db_service" psql -v ON_ERROR_STOP=1 -U "$db_user" -d "$maintenance_db" -v db_name="$db_name" -v db_user="$db_user" \
+  -c 'CREATE DATABASE :"db_name" OWNER :"db_user";' \
   >/dev/null
 
 echo "Restoring dump: $dump_file"

@@ -111,6 +111,7 @@ Typical usage:
 Behavior:
 
 - resolves an environment file with `scripts/lib/date_env.sh`
+- keeps the old `./scripts/backup_postgres.sh [output_dir]` form for local ad-hoc backups
 - starts the `db` service if needed
 - waits for PostgreSQL readiness
 - creates a plain SQL dump
@@ -133,6 +134,7 @@ It:
 - tears down volumes
 - updates `DATE_POSTGRESQL_VERSION`
 - recreates the database container
+- recreates the target database through `template1`, which also works when `DB_DATABASE=postgres`
 - restores the SQL dump
 - validates that the restored database is usable and still contains the expected schema footprint
 
