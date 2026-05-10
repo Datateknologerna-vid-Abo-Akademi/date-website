@@ -127,6 +127,22 @@ msgstr "Namn"
 msgid "Göm för gulisar"
 msgstr "Göm för gulisar"
 
+#: archive/models.py:35
+msgid "Omdirigeringsadress"
+msgstr "Omdirigeringsadress"
+
+#: archive/models.py:38
+msgid "Om angiven skickas besökaren vidare hit när albumet öppnas."
+msgstr "Om angiven skickas besökaren vidare hit när albumet öppnas."
+
+#: archive/models.py:41
+msgid "Albumminiatyr"
+msgstr "Albumminiatyr"
+
+#: archive/models.py:43
+msgid "Valfri bild som visas som albumets miniatyr."
+msgstr "Valfri bild som visas som albumets miniatyr."
+
 #: archive/models.py:36 archive/models.py:166
 msgid "Samling"
 msgstr "Samling"

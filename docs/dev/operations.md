@@ -199,10 +199,11 @@ PROJECT_NAME=sf python manage.py import_wordpress_export sf-klubben.WordPress.20
   --import-nav \
   --replace-nav \
   --import-gallery-redirects \
-  --replace-gallery-redirects
+  --replace-gallery-redirects \
+  --import-functionaries
 ```
 
-Run `--dry-run` first to inspect planned counts. The command matches rows by slug; existing rows are skipped unless `--update-existing` is passed. Navigation import reads the WordPress `actual` menu by default; use `--nav-menu <slug>` to import another exported menu. Gallery redirect import reads Google Photos/Drive links from the exported `bildgalleriet` and `gamla-bilder` pages and creates redirect-only picture albums. It writes a JSON report next to the XML by default.
+Run `--dry-run` first to inspect planned counts. The command matches rows by slug; existing rows are skipped unless `--update-existing` is passed. Navigation import reads the WordPress `actual` menu by default; use `--nav-menu <slug>` to import another exported menu. Gallery redirect import reads Google Photos/Drive links from the exported `bildgalleriet` and `gamla-bilder` pages and creates redirect-only picture albums. By default the importer also fetches each share URL's `og:image` preview and stores it as the album thumbnail; pass `--skip-gallery-thumbnails` to suppress those network calls (e.g. for offline imports). Albums that already have a thumbnail are left untouched, and fetch failures are logged and counted in the report rather than aborting the import. Pass `--import-exam-archive` to read the WordPress `tentarkiv` rtbs_tabs payload (a PHP-serialized list of subject tabs) and create one `archive.Collection` of type `Exams` per tab, with one `archive.Document` per linked PDF (resolved to its already-imported storage path). Combine with `--replace-exam-archive` to clear existing exam collections first. Pass `--import-functionaries` to parse the WordPress `funktionarer` page into board `members.FunctionaryRole` rows and name-only `members.Functionary` rows; it preserves any existing matching member-linked functionary entries. Combine with `--replace-functionaries` only when you intentionally want to clear all existing functionaries first. It writes a JSON report next to the XML by default.
 
 ## Recommended Operator Checklist
 

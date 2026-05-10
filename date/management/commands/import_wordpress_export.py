@@ -13,8 +13,10 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urlparse
 
+import requests
 from django.conf import settings
 from django.core.files import File
+from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage, storages
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -22,9 +24,9 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 
-from archive.models import Collection
+from archive.models import Collection, Document
 from date.functions import slugify_max
-from members.models import FRESHMAN, Member, MembershipType
+from members.models import FRESHMAN, Functionary, FunctionaryRole, Member, MembershipType
 from news.models import Category, Post
 from publications.models import PDFFile
 from staticpages.models import POST_SLUG_MAX_LENGTH as STATICPAGE_SLUG_MAX_LENGTH
@@ -81,6 +83,46 @@ GALLERY_LINK_HOSTS = {
     "drive.google.com",
 }
 GALLERY_SOURCE_SLUGS = {"bildgalleriet", "gamla-bilder"}
+EXAM_ARCHIVE_POST_TYPE = "rtbs_tabs"
+EXAM_ARCHIVE_SLUGS = {"tentarkiv"}
+FUNCTIONARIES_SOURCE_SLUGS = {"funktionarer"}
+GALLERY_THUMBNAIL_USER_AGENT = (
+    "Mozilla/5.0 (compatible; date-website-wp-import/1.0; +https://datateknologerna.fi)"
+)
+GALLERY_THUMBNAIL_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+OG_IMAGE_RE = re.compile(
+    r'<meta\b[^>]*?(?:'
+    r'property=["\']og:image["\'][^>]*?content=["\']([^"\']+)["\']'
+    r'|'
+    r'content=["\']([^"\']+)["\'][^>]*?property=["\']og:image["\']'
+    r')[^>]*?>',
+    re.IGNORECASE,
+)
+
+
+def php_unserialize(data: bytes, pos: int = 0):
+    """Minimal PHP-serialize decoder for arrays of strings/ints used by rtbs_tabs."""
+    code = data[pos:pos + 2]
+    if code == b"s:":
+        colon = data.index(b":", pos + 2)
+        length = int(data[pos + 2:colon])
+        start = colon + 2
+        end = start + length
+        return data[start:end].decode("utf-8"), end + 2
+    if code == b"i:":
+        end = data.index(b";", pos + 2)
+        return int(data[pos + 2:end]), end + 1
+    if code == b"a:":
+        colon = data.index(b":", pos + 2)
+        count = int(data[pos + 2:colon])
+        cur = colon + 2
+        result: dict = {}
+        for _ in range(count):
+            key, cur = php_unserialize(data, cur)
+            value, cur = php_unserialize(data, cur)
+            result[key] = value
+        return result, cur + 1
+    raise ValueError(f"Unsupported PHP serialize token at offset {pos}")
 
 
 @dataclass
@@ -99,8 +141,19 @@ class ImportStats:
     nav_urls_created: int = 0
     gallery_redirects_created: int = 0
     gallery_redirects_updated: int = 0
+    gallery_thumbnails_saved: int = 0
+    gallery_thumbnails_missing: int = 0
+    exam_collections_created: int = 0
+    exam_collections_updated: int = 0
+    exam_documents_created: int = 0
+    exam_documents_updated: int = 0
+    exam_documents_missing: int = 0
+    functionary_roles_created: int = 0
+    functionaries_created: int = 0
+    functionaries_updated: int = 0
     skipped_items: Counter = field(default_factory=Counter)
     missing_media_urls: list[str] = field(default_factory=list)
+    missing_exam_hrefs: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -202,6 +255,40 @@ class Command(BaseCommand):
             help="Delete existing redirect-only picture albums before importing gallery redirects.",
         )
         parser.add_argument(
+            "--skip-gallery-thumbnails",
+            action="store_true",
+            help=(
+                "Skip fetching og:image previews from Google Photos/Drive share URLs when "
+                "creating gallery redirect albums. Use for offline imports and tests."
+            ),
+        )
+        parser.add_argument(
+            "--import-exam-archive",
+            action="store_true",
+            help=(
+                "Import the WordPress 'tentarkiv' rtbs_tabs payload as exam collections "
+                "(archive.Collection type='Exams') with one Document per linked PDF."
+            ),
+        )
+        parser.add_argument(
+            "--replace-exam-archive",
+            action="store_true",
+            help="Delete existing exam collections (and their documents) before importing.",
+        )
+        parser.add_argument(
+            "--import-functionaries",
+            action="store_true",
+            help=(
+                "Import the WordPress 'funktionarer' page into FunctionaryRole and "
+                "name-only Functionary rows."
+            ),
+        )
+        parser.add_argument(
+            "--replace-functionaries",
+            action="store_true",
+            help="Delete existing functionaries before importing from WordPress.",
+        )
+        parser.add_argument(
             "--report",
             help="Optional JSON report path. Defaults to <xml parent>/wordpress-import-report.json.",
         )
@@ -225,7 +312,8 @@ class Command(BaseCommand):
             options["report"] or xml_path.parent / "wordpress-import-report.json"
         ).expanduser().resolve()
 
-        xml_text = xml_path.read_text(encoding="utf-8", errors="replace")
+        xml_bytes = xml_path.read_bytes()
+        xml_text = xml_bytes.decode("utf-8", errors="replace")
         items = self.parse_items(xml_path)
         upload_urls = self.collect_upload_urls(xml_text)
         storage = self.public_media_storage()
@@ -269,6 +357,10 @@ class Command(BaseCommand):
                 self.import_navigation(items, url_map, options, stats)
             if options["import_gallery_redirects"]:
                 self.import_gallery_redirects(items, url_map, options, stats)
+            if options["import_exam_archive"]:
+                self.import_exam_archive(items, storage, storage_name_map, xml_bytes, options, stats)
+            if options["import_functionaries"]:
+                self.import_functionaries(items, options, stats)
 
             if options["dry_run"]:
                 transaction.set_rollback(True)
@@ -293,9 +385,20 @@ class Command(BaseCommand):
                 "nav_urls_created": stats.nav_urls_created,
                 "gallery_redirects_created": stats.gallery_redirects_created,
                 "gallery_redirects_updated": stats.gallery_redirects_updated,
+                "gallery_thumbnails_saved": stats.gallery_thumbnails_saved,
+                "gallery_thumbnails_missing": stats.gallery_thumbnails_missing,
+                "exam_collections_created": stats.exam_collections_created,
+                "exam_collections_updated": stats.exam_collections_updated,
+                "exam_documents_created": stats.exam_documents_created,
+                "exam_documents_updated": stats.exam_documents_updated,
+                "exam_documents_missing": stats.exam_documents_missing,
+                "functionary_roles_created": stats.functionary_roles_created,
+                "functionaries_created": stats.functionaries_created,
+                "functionaries_updated": stats.functionaries_updated,
                 "skipped_items": dict(stats.skipped_items),
             },
             "missing_media_urls": stats.missing_media_urls,
+            "missing_exam_hrefs": stats.missing_exam_hrefs,
         }
         if not options["dry_run"]:
             report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -559,21 +662,19 @@ class Command(BaseCommand):
             stats.nav_categories_created += int(created)
 
             if has_children:
-                dropdown_items = [(top_item, title, top_url)]
-                for child in descendants:
-                    dropdown_items.append(
-                        (
-                            child,
-                            self.nav_dropdown_title(child, item_by_id, object_by_id),
-                            self.nav_url(child, object_by_id, url_map),
-                        )
-                    )
-                for dropdown_index, (_item, dropdown_title, dropdown_url) in enumerate(dropdown_items, start=1):
-                    if not dropdown_title or not dropdown_url:
+                top_level_dropdown_items = [top_item]
+                top_level_dropdown_items.extend(children_by_parent.get(top_item.post_id, []))
+                imported_parent_links = {}
+                for dropdown_index, dropdown_item in enumerate(top_level_dropdown_items, start=1):
+                    dropdown_title = self.nav_title(dropdown_item, object_by_id)
+                    dropdown_url = self.nav_url(dropdown_item, object_by_id, url_map)
+                    has_submenu_children = bool(children_by_parent.get(dropdown_item.post_id))
+                    if not dropdown_title or (not dropdown_url and not has_submenu_children):
                         continue
-                    _url, created = StaticUrl.objects.update_or_create(
+                    dropdown_url_obj, created = StaticUrl.objects.update_or_create(
                         category=category,
                         title=dropdown_title[:255],
+                        parent=None,
                         defaults={
                             "url": dropdown_url[:200],
                             "dropdown_element": dropdown_index * 10,
@@ -581,6 +682,33 @@ class Command(BaseCommand):
                         },
                     )
                     stats.nav_urls_created += int(created)
+                    imported_parent_links[dropdown_item.post_id] = dropdown_url_obj
+
+                for parent_item in children_by_parent.get(top_item.post_id, []):
+                    parent_url = imported_parent_links.get(parent_item.post_id)
+                    if parent_url is None:
+                        continue
+                    for child_index, child_item in enumerate(
+                        self.nav_descendants(parent_item, children_by_parent),
+                        start=1,
+                    ):
+                        if self.nav_parent_id(child_item) == parent_item.post_id:
+                            child_title = self.nav_title(child_item, object_by_id)
+                        else:
+                            child_title = self.nav_dropdown_title(child_item, item_by_id, object_by_id)
+                        child_url = self.nav_url(child_item, object_by_id, url_map)
+                        if not child_title or not child_url:
+                            continue
+                        _child_url_obj, created = StaticUrl.objects.update_or_create(
+                            parent=parent_url,
+                            title=child_title[:255],
+                            defaults={
+                                "url": child_url[:200],
+                                "dropdown_element": child_index * 10,
+                                "logged_in_only": False,
+                            },
+                        )
+                        stats.nav_urls_created += int(created)
 
     def import_gallery_redirects(
         self,
@@ -610,12 +738,15 @@ class Command(BaseCommand):
                 collection.save()
                 stats.gallery_redirects_updated += 1
             else:
-                Collection.objects.create(
+                collection = Collection.objects.create(
                     title=link["title"][:250],
                     type="Pictures",
                     **fields,
                 )
                 stats.gallery_redirects_created += 1
+
+            if not options["skip_gallery_thumbnails"] and not collection.thumbnail:
+                self.apply_gallery_thumbnail(collection, link, stats)
 
     def gallery_redirect_links(self, items: list[WpItem], url_map: dict[str, str]) -> list[dict]:
         links = []
@@ -643,6 +774,287 @@ class Command(BaseCommand):
                 })
         return links
 
+    def import_functionaries(self, items: list[WpItem], options, stats: ImportStats) -> None:
+        page = next(
+            (
+                item for item in items
+                if item.post_type == "page" and item.slug in FUNCTIONARIES_SOURCE_SLUGS
+            ),
+            None,
+        )
+        if page is None:
+            self.stdout.write(
+                self.style.WARNING("No 'funktionarer' page found; skipping functionary import.")
+            )
+            return
+
+        rows = FunctionaryPageParser.parse(page.content)
+        if not rows:
+            self.stdout.write(
+                self.style.WARNING("No functionary rows found on the 'funktionarer' page.")
+            )
+            return
+
+        if options["replace_functionaries"] and not options["dry_run"]:
+            Functionary.objects.all().delete()
+
+        role_cache = {
+            role.title: role
+            for role in FunctionaryRole.objects.filter(title__in={row["role"] for row in rows})
+        }
+        dry_run_created_roles = set()
+        for row in rows:
+            role = role_cache.get(row["role"])
+            if role is None:
+                if options["dry_run"]:
+                    if row["role"] not in dry_run_created_roles:
+                        dry_run_created_roles.add(row["role"])
+                        stats.functionary_roles_created += 1
+                    role = None
+                else:
+                    role = FunctionaryRole.objects.create(title=row["role"][:200], board=True)
+                    role_cache[row["role"]] = role
+                    stats.functionary_roles_created += 1
+            elif not options["dry_run"] and not role.board:
+                role.board = True
+                role.save(update_fields=["board"])
+
+            if options["dry_run"]:
+                existing = (
+                    Functionary.objects.filter(
+                        functionary_role__title=row["role"],
+                        year=row["year"],
+                        name=row["name"],
+                    ).exists()
+                    if role is not None else False
+                )
+                stats.functionaries_updated += int(existing)
+                stats.functionaries_created += int(not existing)
+                continue
+
+            _functionary, created = Functionary.objects.get_or_create(
+                functionary_role=role,
+                year=row["year"],
+                name=row["name"][:200],
+            )
+            stats.functionaries_created += int(created)
+            stats.functionaries_updated += int(not created)
+
+    def import_exam_archive(
+        self,
+        items: list[WpItem],
+        storage,
+        storage_name_map: dict[str, str],
+        xml_bytes: bytes,
+        options,
+        stats: ImportStats,
+    ) -> None:
+        rtbs_item = next(
+            (
+                item for item in items
+                if item.post_type == EXAM_ARCHIVE_POST_TYPE
+                and item.slug in EXAM_ARCHIVE_SLUGS
+            ),
+            None,
+        )
+        if rtbs_item is None:
+            self.stdout.write(
+                self.style.WARNING(
+                    "No 'tentarkiv' rtbs_tabs item found; skipping exam archive import."
+                )
+            )
+            return
+
+        # ElementTree normalizes CRLF to LF, which corrupts PHP byte counts in
+        # multi-line string values. Extract the raw payload from the source
+        # bytes when possible so the byte counts line up.
+        serialized_bytes = self.extract_rtbs_payload_bytes(xml_bytes)
+        if serialized_bytes is None:
+            serialized_text = rtbs_item.meta.get("_rtbs_tabs_head") or ""
+            if not serialized_text:
+                self.stdout.write(
+                    self.style.WARNING("'tentarkiv' rtbs_tabs item has no _rtbs_tabs_head meta.")
+                )
+                return
+            serialized_bytes = serialized_text.encode("utf-8")
+
+        try:
+            tabs, _ = php_unserialize(serialized_bytes)
+        except (ValueError, IndexError, UnicodeDecodeError) as exc:
+            self.stdout.write(
+                self.style.WARNING(f"Failed to parse rtbs_tabs payload: {exc}")
+            )
+            return
+        if not isinstance(tabs, dict):
+            self.stdout.write(self.style.WARNING("rtbs_tabs payload is not an array."))
+            return
+
+        if options["replace_exam_archive"] and not options["dry_run"]:
+            existing = Collection.objects.filter(type="Exams")
+            Document.objects.filter(collection__in=existing).delete()
+            existing.delete()
+
+        for _, tab in tabs.items():
+            if not isinstance(tab, dict):
+                continue
+            title = (tab.get("_rtbs_title") or "").strip()
+            content = tab.get("_rtbs_content") or ""
+            if not title:
+                continue
+
+            collection = self.get_or_create_exam_collection(
+                title, rtbs_item.post_date, options, stats
+            )
+            anchors = self.exam_anchors_in_content(content)
+            for anchor in anchors:
+                self.import_exam_document(
+                    collection,
+                    anchor,
+                    storage,
+                    storage_name_map,
+                    options,
+                    stats,
+                )
+
+    def extract_rtbs_payload_bytes(self, xml_bytes: bytes) -> bytes | None:
+        match = re.search(
+            rb"_rtbs_tabs_head\]\]>"
+            rb".*?<wp:meta_value>\s*<!\[CDATA\[(a:\d+:\{.*?)\]\]>\s*</wp:meta_value>",
+            xml_bytes,
+            re.DOTALL,
+        )
+        return match.group(1) if match else None
+
+    def get_or_create_exam_collection(
+        self,
+        title: str,
+        fallback_date: datetime,
+        options,
+        stats: ImportStats,
+    ) -> Collection | None:
+        existing = Collection.objects.filter(type="Exams", title=title).first()
+        if existing:
+            stats.exam_collections_updated += 1
+            return existing
+        if options["dry_run"]:
+            stats.exam_collections_created += 1
+            return None
+        collection = Collection.objects.create(
+            title=title[:250],
+            type="Exams",
+            pub_date=fallback_date,
+        )
+        stats.exam_collections_created += 1
+        return collection
+
+    def exam_anchors_in_content(self, html: str) -> list[dict]:
+        parser = AnchorExtractor()
+        parser.feed(html or "")
+        anchors = []
+        seen = set()
+        for anchor in parser.anchors:
+            href = (anchor.get("href") or "").strip()
+            text = re.sub(r"\s+", " ", anchor.get("text") or "").strip()
+            if not href or not text:
+                continue
+            key = (text, href)
+            if key in seen:
+                continue
+            seen.add(key)
+            anchors.append({"href": href, "text": text})
+        return anchors
+
+    def import_exam_document(
+        self,
+        collection: Collection | None,
+        anchor: dict,
+        storage,
+        storage_name_map: dict[str, str],
+        options,
+        stats: ImportStats,
+    ) -> None:
+        href = anchor["href"]
+        title = anchor["text"]
+        storage_name = self.exam_storage_name_for_href(href, storage_name_map)
+        if not storage_name:
+            stats.exam_documents_missing += 1
+            stats.missing_exam_hrefs.append(href)
+            return
+
+        if options["dry_run"] or collection is None:
+            existing = (
+                Document.objects.filter(collection=collection, title=title).first()
+                if collection is not None else None
+            )
+            if existing:
+                stats.exam_documents_updated += 1
+            else:
+                stats.exam_documents_created += 1
+            return
+
+        storage_name = self.exam_document_storage_name(storage_name, collection, title, storage)
+
+        existing = Document.objects.filter(collection=collection, title=title).first()
+        if existing:
+            existing.document = storage_name
+            existing.save()
+            stats.exam_documents_updated += 1
+        else:
+            Document.objects.create(
+                collection=collection,
+                title=title[:250],
+                document=storage_name,
+            )
+            stats.exam_documents_created += 1
+
+    def exam_document_storage_name(
+        self,
+        source_name: str,
+        collection: Collection,
+        title: str,
+        storage,
+    ) -> str:
+        max_length = Document._meta.get_field("document").max_length or 100
+        if len(source_name) <= max_length:
+            return source_name
+
+        extension = Path(source_name).suffix.lower() or ".pdf"
+        year = collection.pub_date.strftime("%Y") if collection.pub_date else "wordpress"
+        coll_slug = slugify_max(collection.title, max_length=40) or "exams"
+        title_slug = slugify_max(title, max_length=40) or "exam"
+        target_name = f"Exams/{year}/{coll_slug}/{title_slug}{extension}"
+        if len(target_name) > max_length:
+            fixed = len(f"Exams/{year}//{extension}")
+            budget = max(8, max_length - fixed)
+            coll_slug = slugify_max(collection.title, max_length=max(4, budget // 3)) or "ex"
+            title_slug = slugify_max(title, max_length=budget - len(coll_slug) - 1) or "f"
+            target_name = f"Exams/{year}/{coll_slug}/{title_slug}{extension}"
+            target_name = target_name[:max_length]
+
+        if not storage.exists(target_name):
+            with storage.open(source_name, "rb") as source_file:
+                storage.save(target_name, File(source_file, name=Path(target_name).name))
+        return target_name
+
+    def exam_storage_name_for_href(
+        self,
+        href: str,
+        storage_name_map: dict[str, str],
+    ) -> str | None:
+        candidates = [href]
+        if href.startswith("http://"):
+            candidates.append("https://" + href[len("http://"):])
+        elif href.startswith("https://"):
+            candidates.append("http://" + href[len("https://"):])
+        elif href.startswith("/wp-content/uploads/"):
+            candidates.append(f"https://sfklubben.fi{href}")
+            candidates.append(f"http://sfklubben.fi{href}")
+        for candidate in candidates:
+            name = storage_name_map.get(candidate)
+            if name:
+                return name
+        return None
+
     def normalize_gallery_redirect_url(self, url: str, url_map: dict[str, str]) -> str:
         if not url:
             return ""
@@ -658,6 +1070,48 @@ class Command(BaseCommand):
             year = int(match.group(0))
             return timezone.make_aware(datetime(year, 6, 1, 12), timezone.get_current_timezone())
         return fallback
+
+    def apply_gallery_thumbnail(self, collection: Collection, link: dict, stats: ImportStats) -> None:
+        result = self.fetch_gallery_og_image(link["url"])
+        if result is None:
+            stats.gallery_thumbnails_missing += 1
+            self.stdout.write(
+                self.style.WARNING(
+                    f"  no og:image preview for {link['url']} ({link['title']})"
+                )
+            )
+            return
+        image_url, image_bytes = result
+        filename = self.gallery_thumbnail_filename(link["title"], image_url)
+        collection.thumbnail.save(filename, ContentFile(image_bytes), save=True)
+        stats.gallery_thumbnails_saved += 1
+
+    def fetch_gallery_og_image(self, share_url: str) -> tuple[str, bytes] | None:
+        headers = {"User-Agent": GALLERY_THUMBNAIL_USER_AGENT}
+        try:
+            response = requests.get(share_url, headers=headers, timeout=10, allow_redirects=True)
+            response.raise_for_status()
+        except requests.RequestException:
+            return None
+        match = OG_IMAGE_RE.search(response.text)
+        if not match:
+            return None
+        image_url = match.group(1) or match.group(2)
+        if not image_url:
+            return None
+        try:
+            image_response = requests.get(image_url, headers=headers, timeout=15)
+            image_response.raise_for_status()
+        except requests.RequestException:
+            return None
+        return image_url, image_response.content
+
+    def gallery_thumbnail_filename(self, title: str, image_url: str) -> str:
+        extension = Path(unquote(urlparse(image_url).path)).suffix.lower()
+        if extension not in GALLERY_THUMBNAIL_EXTENSIONS:
+            extension = ".jpg"
+        base = slugify_max(title, max_length=80) or "thumbnail"
+        return f"{base}{extension}"
 
     def nav_parent_id(self, item: WpItem) -> str:
         return item.meta.get("_menu_item_menu_item_parent") or "0"
@@ -900,6 +1354,23 @@ class Command(BaseCommand):
             f"  gallery redirects created/updated: "
             f"{stats.gallery_redirects_created}/{stats.gallery_redirects_updated}"
         )
+        self.stdout.write(
+            f"  gallery thumbnails saved/missing: "
+            f"{stats.gallery_thumbnails_saved}/{stats.gallery_thumbnails_missing}"
+        )
+        self.stdout.write(
+            f"  exam collections created/updated: "
+            f"{stats.exam_collections_created}/{stats.exam_collections_updated}"
+        )
+        self.stdout.write(
+            f"  exam documents created/updated/missing: "
+            f"{stats.exam_documents_created}/{stats.exam_documents_updated}/{stats.exam_documents_missing}"
+        )
+        self.stdout.write(f"  functionary roles created: {stats.functionary_roles_created}")
+        self.stdout.write(
+            f"  functionaries created/updated: "
+            f"{stats.functionaries_created}/{stats.functionaries_updated}"
+        )
         if stats.skipped_items:
             self.stdout.write(f"  skipped item types: {dict(stats.skipped_items)}")
 
@@ -923,3 +1394,82 @@ class AnchorExtractor(HTMLParser):
         if tag.lower() == "a" and self._current is not None:
             self.anchors.append(self._current)
             self._current = None
+
+
+class FunctionaryPageParser(HTMLParser):
+    YEAR_HEADING_RE = re.compile(r"\bStyrelse\s+(\d{4})\b", re.IGNORECASE)
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.rows = []
+        self.current_year = None
+        self.current_role = ""
+        self.current_name = ""
+        self.in_heading = False
+        self.heading_text = ""
+        self.in_role = False
+
+    @classmethod
+    def parse(cls, html: str) -> list[dict]:
+        parser = cls()
+        parser.feed(html or "")
+        parser.close()
+        return parser.rows
+
+    def handle_starttag(self, tag, attrs):
+        tag = tag.lower()
+        if tag in {"h1", "h2", "h3", "h4", "h5", "h6"}:
+            self.flush_row()
+            self.in_heading = True
+            self.heading_text = ""
+        elif tag in {"strong", "b"}:
+            self.flush_row()
+            self.in_role = True
+            self.current_role = ""
+            self.current_name = ""
+        elif tag in {"br", "p", "div", "li"}:
+            self.current_name += " "
+
+    def handle_data(self, data):
+        if self.in_heading:
+            self.heading_text += data
+        elif self.in_role:
+            self.current_role += data
+        elif self.current_role:
+            self.current_name += data
+
+    def handle_endtag(self, tag):
+        tag = tag.lower()
+        if tag in {"h1", "h2", "h3", "h4", "h5", "h6"} and self.in_heading:
+            match = self.YEAR_HEADING_RE.search(self.clean_text(self.heading_text))
+            if match:
+                self.current_year = int(match.group(1))
+            self.in_heading = False
+            self.heading_text = ""
+        elif tag in {"strong", "b"}:
+            self.in_role = False
+        elif tag in {"p", "div", "li"}:
+            self.flush_row()
+
+    def close(self):
+        super().close()
+        self.flush_row()
+
+    def flush_row(self):
+        role = self.clean_role(self.current_role)
+        name = self.clean_text(self.current_name)
+        if self.current_year and role and name:
+            self.rows.append({
+                "year": self.current_year,
+                "role": role,
+                "name": name,
+            })
+        self.current_role = ""
+        self.current_name = ""
+
+    def clean_role(self, value: str) -> str:
+        role = self.clean_text(value).strip(":")
+        return role[:200]
+
+    def clean_text(self, value: str) -> str:
+        return re.sub(r"\s+", " ", (value or "").replace("\xa0", " ")).strip()

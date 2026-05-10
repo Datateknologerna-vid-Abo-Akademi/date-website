@@ -1,14 +1,29 @@
 from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 
-from archive.models import Collection
+from archive.models import Collection, Document
+from members.models import Functionary, FunctionaryRole
 from news.models import Post
 from publications.models import PDFFile
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
+
+
+def _php_str(value: str) -> str:
+    return f's:{len(value.encode("utf-8"))}:"{value}";'
+
+
+def _php_int_key(value: int) -> str:
+    return f"i:{value};"
+
+
+def _php_assoc(pairs: list[tuple[str, str]]) -> str:
+    inner = "".join(k + v for k, v in pairs)
+    return f"a:{len(pairs)}:{{{inner}}}"
 
 
 WORDPRESS_EXPORT = """<?xml version="1.0" encoding="UTF-8" ?>
@@ -67,6 +82,25 @@ Plain ending<script>bad()</script>]]></content:encoded>
       <wp:post_type><![CDATA[page]]></wp:post_type>
     </item>
     <item>
+      <title><![CDATA[Funktionärer]]></title>
+      <link>https://sfklubben.fi/funktionarer/</link>
+      <pubDate>Sat, 09 May 2026 10:00:00 +0000</pubDate>
+      <dc:creator><![CDATA[admin]]></dc:creator>
+      <content:encoded><![CDATA[
+        <h5><strong>Styrelse 2026</strong></h5>
+        <strong>Ordförande&nbsp;</strong>Ylva Erlin
+        <strong>Skattmästare </strong>Linn Ahlskog
+        <h5>Styrelse 2025</h5>
+        <strong>Ordförande </strong>Antonia Holmberg
+      ]]></content:encoded>
+      <excerpt:encoded><![CDATA[]]></excerpt:encoded>
+      <wp:post_id>14</wp:post_id>
+      <wp:post_date>2026-05-09 10:00:00</wp:post_date>
+      <wp:post_name><![CDATA[funktionarer]]></wp:post_name>
+      <wp:status><![CDATA[publish]]></wp:status>
+      <wp:post_type><![CDATA[page]]></wp:post_type>
+    </item>
+    <item>
       <title><![CDATA[Imported PDF]]></title>
       <link>https://sfklubben.fi/imported-pdf/</link>
       <pubDate>Sat, 09 May 2026 10:00:00 +0000</pubDate>
@@ -108,6 +142,21 @@ Plain ending<script>bad()</script>]]></content:encoded>
       <wp:postmeta><wp:meta_key><![CDATA[_menu_item_object_id]]></wp:meta_key><wp:meta_value><![CDATA[21]]></wp:meta_value></wp:postmeta>
       <wp:postmeta><wp:meta_key><![CDATA[_menu_item_url]]></wp:meta_key><wp:meta_value><![CDATA[/wp-content/uploads/2026/05/imported.pdf]]></wp:meta_value></wp:postmeta>
       <wp:postmeta><wp:meta_key><![CDATA[_menu_item_menu_item_parent]]></wp:meta_key><wp:meta_value><![CDATA[20]]></wp:meta_value></wp:postmeta>
+    </item>
+    <item>
+      <title><![CDATA[Nested Child]]></title>
+      <wp:post_id>22</wp:post_id>
+      <wp:post_date>2026-05-09 10:00:00</wp:post_date>
+      <wp:post_name><![CDATA[nested-child]]></wp:post_name>
+      <wp:status><![CDATA[publish]]></wp:status>
+      <wp:post_type><![CDATA[nav_menu_item]]></wp:post_type>
+      <wp:menu_order>3</wp:menu_order>
+      <category domain="nav_menu" nicename="actual"><![CDATA[Actual]]></category>
+      <wp:postmeta><wp:meta_key><![CDATA[_menu_item_type]]></wp:meta_key><wp:meta_value><![CDATA[custom]]></wp:meta_value></wp:postmeta>
+      <wp:postmeta><wp:meta_key><![CDATA[_menu_item_object]]></wp:meta_key><wp:meta_value><![CDATA[custom]]></wp:meta_value></wp:postmeta>
+      <wp:postmeta><wp:meta_key><![CDATA[_menu_item_object_id]]></wp:meta_key><wp:meta_value><![CDATA[22]]></wp:meta_value></wp:postmeta>
+      <wp:postmeta><wp:meta_key><![CDATA[_menu_item_url]]></wp:meta_key><wp:meta_value><![CDATA[/nested-child/]]></wp:meta_value></wp:postmeta>
+      <wp:postmeta><wp:meta_key><![CDATA[_menu_item_menu_item_parent]]></wp:meta_key><wp:meta_value><![CDATA[21]]></wp:meta_value></wp:postmeta>
     </item>
   </channel>
 </rss>
@@ -180,10 +229,13 @@ class WordPressImportCommandTests(TestCase):
 
             category = StaticPageNav.objects.get(category_name="Imported Page")
             self.assertFalse(category.use_category_url)
-            urls = list(StaticUrl.objects.filter(category=category).order_by("dropdown_element"))
+            urls = list(StaticUrl.objects.filter(category=category, parent=None).order_by("dropdown_element"))
             self.assertEqual([url.title for url in urls], ["Imported Page", "Imported PDF Link"])
             self.assertEqual(urls[0].url, "/pages/imported-page/")
             self.assertEqual(urls[1].url, "/media/wordpress/test/wp-content/uploads/2026/05/imported.pdf")
+            child_urls = list(urls[1].children.order_by("dropdown_element"))
+            self.assertEqual([url.title for url in child_urls], ["Nested Child"])
+            self.assertEqual(child_urls[0].url, "/nested-child/")
 
     def test_imports_gallery_redirect_albums(self):
         with TemporaryDirectory() as work_dir:
@@ -195,15 +247,212 @@ class WordPressImportCommandTests(TestCase):
                 "--skip-media",
                 "--skip-publications",
                 "--import-gallery-redirects",
+                "--skip-gallery-thumbnails",
             )
 
             photos_album = Collection.objects.get(title="2025 - Testalbum", type="Pictures")
             self.assertEqual(photos_album.redirect_url, "https://photos.app.goo.gl/exampleAlbum")
             self.assertEqual(photos_album.pub_date.year, 2025)
+            self.assertFalse(photos_album.thumbnail)
 
             drive_album = Collection.objects.get(title="2024 - Drivealbum", type="Pictures")
             self.assertEqual(drive_album.redirect_url, "https://drive.google.com/drive/folders/example")
             self.assertEqual(drive_album.pub_date.year, 2024)
+
+    def test_gallery_redirect_albums_fetch_og_thumbnail(self):
+        share_html = (
+            '<html><head>'
+            '<meta property="og:image" content="https://lh3.googleusercontent.com/preview.jpg">'
+            '</head><body></body></html>'
+        )
+        image_bytes = b"\x89PNG\r\n\x1a\n-fake-image-bytes-"
+
+        def fake_get(url, *args, **kwargs):
+            response = type("FakeResponse", (), {})()
+            response.raise_for_status = lambda: None
+            if url.startswith("https://photos.app.goo.gl") or url.startswith("https://drive.google.com"):
+                response.text = share_html
+                response.content = share_html.encode("utf-8")
+            else:
+                response.text = ""
+                response.content = image_bytes
+            return response
+
+        with TemporaryDirectory() as work_dir, override_settings(
+            MEDIA_ROOT=str(Path(work_dir) / "media")
+        ):
+            xml_path = Path(work_dir) / "export.xml"
+            xml_path.write_text(WORDPRESS_EXPORT, encoding="utf-8")
+
+            with patch(
+                "date.management.commands.import_wordpress_export.requests.get",
+                side_effect=fake_get,
+            ) as mocked:
+                self.call_import_command(
+                    str(xml_path),
+                    "--skip-media",
+                    "--skip-publications",
+                    "--import-gallery-redirects",
+                )
+
+            self.assertGreaterEqual(mocked.call_count, 4)
+
+            photos_album = Collection.objects.get(title="2025 - Testalbum", type="Pictures")
+            self.assertTrue(photos_album.thumbnail)
+            self.assertTrue(photos_album.thumbnail.name.endswith(".jpg"))
+            with photos_album.thumbnail.open("rb") as fh:
+                self.assertEqual(fh.read(), image_bytes)
+
+            drive_album = Collection.objects.get(title="2024 - Drivealbum", type="Pictures")
+            self.assertTrue(drive_album.thumbnail)
+
+    def test_imports_functionaries_from_funktionarer_page(self):
+        with TemporaryDirectory() as work_dir:
+            xml_path = Path(work_dir) / "export.xml"
+            xml_path.write_text(WORDPRESS_EXPORT, encoding="utf-8")
+
+            self.call_import_command(
+                str(xml_path),
+                "--skip-media",
+                "--skip-publications",
+                "--import-functionaries",
+            )
+
+            chair = FunctionaryRole.objects.get(title="Ordförande")
+            treasurer = FunctionaryRole.objects.get(title="Skattmästare")
+            self.assertTrue(chair.board)
+            self.assertTrue(treasurer.board)
+
+            self.assertTrue(
+                Functionary.objects.filter(
+                    functionary_role=chair,
+                    year=2026,
+                    name="Ylva Erlin",
+                    member=None,
+                ).exists()
+            )
+            self.assertTrue(
+                Functionary.objects.filter(
+                    functionary_role=treasurer,
+                    year=2026,
+                    name="Linn Ahlskog",
+                    member=None,
+                ).exists()
+            )
+            self.assertTrue(
+                Functionary.objects.filter(
+                    functionary_role=chair,
+                    year=2025,
+                    name="Antonia Holmberg",
+                    member=None,
+                ).exists()
+            )
+
+    def test_imports_exam_archive_from_rtbs_tabs(self):
+        folkratt_pdf = (
+            "https://sfklubben.fi/wp-content/uploads/2024/04/"
+            "Inledning-till-folkratt-29.2.2024-2.pdf"
+        )
+        statskunskap_pdf = (
+            "https://sfklubben.fi/wp-content/uploads/2023/01/Val-och-valmetoder-14.10.2022.pdf"
+        )
+        folkratt_tab = _php_assoc([
+            (_php_str("_rtbs_title"), _php_str("Folkrätt")),
+            (
+                _php_str("_rtbs_content"),
+                _php_str(
+                    f'<p><a href="{folkratt_pdf}">Inledning till Folkrätt 29.2.2024</a></p>'
+                ),
+            ),
+        ])
+        statskunskap_tab = _php_assoc([
+            (_php_str("_rtbs_title"), _php_str("Statskunskap")),
+            (
+                _php_str("_rtbs_content"),
+                _php_str(
+                    f'<p><a href="{statskunskap_pdf}">Val och valmetoder 14.10.2022</a></p>'
+                ),
+            ),
+        ])
+        payload = _php_assoc([
+            (_php_int_key(0), folkratt_tab),
+            (_php_int_key(1), statskunskap_tab),
+        ])
+
+        rtbs_xml = f"""<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0"
+    xmlns:content="http://purl.org/rss/1.0/modules/content/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"
+    xmlns:wp="http://wordpress.org/export/1.2/">
+  <channel>
+    <item>
+      <title><![CDATA[Tentarkiv]]></title>
+      <link>https://sfklubben.fi/rtbs_tabs/tentarkiv/</link>
+      <pubDate>Mon, 15 Apr 2024 10:00:00 +0000</pubDate>
+      <dc:creator><![CDATA[admin]]></dc:creator>
+      <content:encoded><![CDATA[]]></content:encoded>
+      <excerpt:encoded><![CDATA[]]></excerpt:encoded>
+      <wp:post_id>30</wp:post_id>
+      <wp:post_date>2024-04-15 10:00:00</wp:post_date>
+      <wp:post_name><![CDATA[tentarkiv]]></wp:post_name>
+      <wp:status><![CDATA[publish]]></wp:status>
+      <wp:post_type><![CDATA[rtbs_tabs]]></wp:post_type>
+      <wp:postmeta>
+        <wp:meta_key><![CDATA[_rtbs_tabs_head]]></wp:meta_key>
+        <wp:meta_value><![CDATA[{payload}]]></wp:meta_value>
+      </wp:postmeta>
+    </item>
+  </channel>
+</rss>
+"""
+
+        with TemporaryDirectory() as work_dir, override_settings(
+            MEDIA_ROOT=str(Path(work_dir) / "media")
+        ):
+            work_path = Path(work_dir)
+            xml_path = work_path / "export.xml"
+            xml_path.write_text(rtbs_xml, encoding="utf-8")
+            media_dir = work_path / "downloads" / "sfklubben.fi"
+            (media_dir / "wp-content" / "uploads" / "2024" / "04").mkdir(parents=True)
+            (media_dir / "wp-content" / "uploads" / "2023" / "01").mkdir(parents=True)
+            folkratt_path = (
+                media_dir / "wp-content" / "uploads" / "2024" / "04"
+                / "Inledning-till-folkratt-29.2.2024-2.pdf"
+            )
+            statskunskap_path = (
+                media_dir / "wp-content" / "uploads" / "2023" / "01"
+                / "Val-och-valmetoder-14.10.2022.pdf"
+            )
+            folkratt_path.write_bytes(b"%PDF-1.4 folkratt")
+            statskunskap_path.write_bytes(b"%PDF-1.4 statskunskap")
+
+            self.call_import_command(
+                str(xml_path),
+                "--media-dir",
+                str(media_dir),
+                "--media-prefix",
+                "wordpress/test",
+                "--skip-publications",
+                "--import-exam-archive",
+            )
+
+            folkratt = Collection.objects.get(type="Exams", title="Folkrätt")
+            statskunskap = Collection.objects.get(type="Exams", title="Statskunskap")
+
+            folkratt_doc = Document.objects.get(collection=folkratt)
+            self.assertEqual(folkratt_doc.title, "Inledning till Folkrätt 29.2.2024")
+            self.assertEqual(
+                folkratt_doc.document.name,
+                "wordpress/test/wp-content/uploads/2024/04/inledning-till-folkratt-2922024-2.pdf",
+            )
+
+            statskunskap_doc = Document.objects.get(collection=statskunskap)
+            self.assertEqual(statskunskap_doc.title, "Val och valmetoder 14.10.2022")
+            self.assertEqual(
+                statskunskap_doc.document.name,
+                "wordpress/test/wp-content/uploads/2023/01/val-och-valmetoder-14102022.pdf",
+            )
 
     def test_dry_run_does_not_write_rows(self):
         with TemporaryDirectory() as work_dir:

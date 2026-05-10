@@ -128,6 +128,22 @@ msgstr "Nimi"
 msgid "Göm för gulisar"
 msgstr "Piilota fukseilta"
 
+#: archive/models.py:35
+msgid "Omdirigeringsadress"
+msgstr "Uudelleenohjausosoite"
+
+#: archive/models.py:38
+msgid "Om angiven skickas besökaren vidare hit när albumet öppnas."
+msgstr "Jos asetettu, kävijä ohjataan tähän osoitteeseen albumia avattaessa."
+
+#: archive/models.py:41
+msgid "Albumminiatyr"
+msgstr "Albumin pikkukuva"
+
+#: archive/models.py:43
+msgid "Valfri bild som visas som albumets miniatyr."
+msgstr "Valinnainen kuva, joka näytetään albumin pikkukuvana."
+
 #: archive/models.py:36 archive/models.py:166
 msgid "Samling"
 msgstr "Kokoelma"

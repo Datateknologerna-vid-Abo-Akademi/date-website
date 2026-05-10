@@ -79,15 +79,36 @@ date-stop() {
     date down "$@"
 }
 
+_date_compose_file() {
+    local project_dir="$1"
+    if [ -n "${COMPOSE_FILE:-}" ]; then
+        printf '%s\n' "$COMPOSE_FILE"
+        return 0
+    fi
+    [ -f "$project_dir/.env" ] || return 0
+    grep -E '^COMPOSE_FILE=' "$project_dir/.env" | tail -1 | cut -d= -f2- | tr -d "\"'"
+}
+
+_date_is_prod_stack() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return 1
+    [[ "$(_date_compose_file "$project_dir")" == *prod* ]]
+}
+
 date-start() {
-    date-pull
-    date-stop
-    date up --build "$@"
+    if _date_is_prod_stack; then
+        date up --pull always "$@"
+    else
+        date up --build "$@"
+    fi
 }
 
 date-start-detached() {
-    date-pull
-    date up -d --build "$@"
+    if _date_is_prod_stack; then
+        date up -d --pull always "$@"
+    else
+        date up -d --build "$@"
+    fi
 }
 
 date-createsuperuser() {

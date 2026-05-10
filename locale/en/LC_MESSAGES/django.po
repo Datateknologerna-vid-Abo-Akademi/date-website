@@ -128,6 +128,22 @@ msgstr "Name"
 msgid "Göm för gulisar"
 msgstr "Hide from freshmen"
 
+#: archive/models.py:35
+msgid "Omdirigeringsadress"
+msgstr "Redirect URL"
+
+#: archive/models.py:38
+msgid "Om angiven skickas besökaren vidare hit när albumet öppnas."
+msgstr "If set, visitors are sent here when the album is opened."
+
+#: archive/models.py:41
+msgid "Albumminiatyr"
+msgstr "Album thumbnail"
+
+#: archive/models.py:43
+msgid "Valfri bild som visas som albumets miniatyr."
+msgstr "Optional image shown as the album thumbnail."
+
 #: archive/models.py:36 archive/models.py:166
 msgid "Samling"
 msgstr "Collection"
