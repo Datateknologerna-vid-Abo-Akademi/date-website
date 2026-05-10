@@ -6,6 +6,7 @@ from unittest.mock import PropertyMock, patch
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -13,6 +14,7 @@ from django.utils import timezone
 from PIL import Image
 
 from archive.models import Collection, Document
+from archive.views import user_type
 from gallery.models import Album, Photo
 from members.models import ORDINARY_MEMBER, Member, MembershipType
 
@@ -136,6 +138,32 @@ class ArchiveAdminTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Broken document")
+
+
+class ArchiveAccessTests(TestCase):
+    def test_user_type_rejects_anonymous_users(self):
+        self.assertFalse(user_type(AnonymousUser()))
+
+    def test_user_type_rejects_users_without_membership_type(self):
+        user = get_user_model()(username="no-membership")
+        user.membership_type = None
+
+        self.assertFalse(user_type(user))
+
+    def test_user_type_allows_non_supporting_members(self):
+        membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        member = Member(username="archive-member", membership_type=membership_type)
+
+        self.assertTrue(user_type(member))
+
+    def test_user_type_rejects_supporting_members(self):
+        membership_type = MembershipType.objects.create(
+            name="Supporting",
+            permission_profile=3,
+        )
+        member = Member(username="archive-supporting", membership_type=membership_type)
+
+        self.assertFalse(user_type(member))
 
 
 class PictureDetailFragmentViewTests(TestCase):

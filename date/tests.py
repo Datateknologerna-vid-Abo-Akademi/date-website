@@ -18,8 +18,14 @@ from django.utils import timezone, translation
 
 from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
-from date.views import get_homepage_template_name, handler500
+from date.views import (
+    format_calendar_events,
+    get_homepage_template_name,
+    get_recent_albins_angels_post,
+    handler500,
+)
 from events.models import Event
+from news.models import Category, Post
 
 
 def localized_reverse(name, language_code, *args, **kwargs):
@@ -180,6 +186,66 @@ class HealthCheckTests(TestCase):
         response = self.client.get(reverse("readyz"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok"})
+
+
+class HomepageContextHelperTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.author = get_user_model().objects.create_user(
+            username="homepage-author",
+            password="pass",
+            email="homepage-author@example.com",
+        )
+        cls.albins_angels = Category.objects.create(
+            name="Albins Angels",
+            slug="albins-angels",
+        )
+
+    def _post(self, title, published_time, published=True):
+        return Post.objects.create(
+            title=title,
+            slug=title.lower().replace(" ", "-"),
+            category=self.albins_angels,
+            author=self.author,
+            published_time=published_time if published else None,
+        )
+
+    def test_recent_albins_angels_post_returns_newest_recent_published_post(self):
+        now = timezone.now()
+        older = self._post("Older recent", now - timedelta(days=2))
+        newest = self._post("Newest recent", now - timedelta(hours=1))
+        self._post("Too old", now - timedelta(days=11))
+        self._post("Draft recent", now - timedelta(minutes=30), published=False)
+
+        self.assertEqual(get_recent_albins_angels_post(now=now), newest)
+        self.assertNotEqual(get_recent_albins_angels_post(now=now), older)
+
+    def test_recent_albins_angels_post_returns_none_without_recent_posts(self):
+        now = timezone.now()
+        self._post("Too old", now - timedelta(days=11))
+
+        self.assertIsNone(get_recent_albins_angels_post(now=now))
+
+    def test_format_calendar_events_keys_by_start_date(self):
+        event_start = timezone.now() + timedelta(days=1)
+        event = Event.objects.create(
+            title="Calendar Event",
+            slug="calendar-event",
+            author=self.author,
+            event_date_start=event_start,
+            event_date_end=event_start + timedelta(hours=2),
+        )
+
+        payload = format_calendar_events([event])
+
+        event_key = event_start.strftime("%Y-%m-%d")
+        self.assertEqual(
+            payload[event_key]["link"],
+            reverse("events:detail", kwargs={"slug": event.slug}),
+        )
+        self.assertEqual(payload[event_key]["modifier"], "calendar-eventday")
+        self.assertEqual(payload[event_key]["eventTitle"], event.title)
+        self.assertEqual(payload[event_key]["eventFullDate"], event.event_date_start)
 
 
 class AuditLogTestCase(TestCase):

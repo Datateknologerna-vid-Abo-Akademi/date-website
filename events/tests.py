@@ -863,6 +863,29 @@ class EventAdminTests(TestCase):
         self.assertEqual(event_admin.get_attendee_count(events[self.event.pk]), 2)
         self.assertEqual(event_admin.get_attendee_count(events[child_event.pk]), 2)
 
+    def test_registration_list_renders_boolean_preferences_as_icons(self):
+        EventRegistrationForm.objects.create(
+            event=self.event,
+            name="Attending dinner",
+            type="checkbox",
+            public_info=True,
+        )
+        EventAttendees.objects.create(
+            event=self.event,
+            user="Boolean Preference",
+            email="boolean-preference@example.com",
+            time_registered=timezone.now(),
+            preferences={"Attending dinner": True},
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:registration_list", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'src="/static/admin/img/icon-yes.svg"')
+        self.assertContains(response, 'alt="True"')
+        self.assertNotContains(response, "True</td>")
+
 
 class TranslationAdminRegressionTests(TestCase):
     def setUp(self):
