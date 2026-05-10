@@ -136,9 +136,12 @@ Examples:
 date-test                   # run the full suite inside Docker
 date-test members.tests     # run a specific module
 date-manage check           # static checks (migrations, settings sanity)
+uv run python scripts/check_project_variants.py
 ```
 
 Manually verify user-facing flows (forms, background jobs, Channels endpoints) when implementing a feature; a lot of work in this repo still benefits from a quick human smoke test after the automated checks pass.
+
+Use `scripts/check_project_variants.py` after changing shared settings, templates, static paths, URL configuration, or apps that are not installed for every association. It runs `manage.py check` for `date`, `kk`, `biocum`, and `pulterit`; pass project names as arguments to narrow the run.
 
 If you touch translations, templates, or language-aware navigation, also smoke-test the default Swedish site plus at least one non-default language selected through the language switcher with `ENABLE_LANGUAGE_FEATURES=True`.
 

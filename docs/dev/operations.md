@@ -144,6 +144,18 @@ This script is destructive if used incorrectly. Read the warnings in the README 
 
 ## Translation Maintenance
 
+### `scripts/check_project_variants.py`
+
+Use this after shared settings, template/static path, URL configuration, or
+cross-association app changes.
+
+```bash
+uv run python scripts/check_project_variants.py
+```
+
+It runs `manage.py check` for `date`, `kk`, `biocum`, and `pulterit`. Pass one
+or more project names as arguments to narrow the run.
+
 ### `scripts/validate_translations.py`
 
 Use this to validate locale completeness before merging translation-heavy work.
