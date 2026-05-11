@@ -19,8 +19,6 @@ logger = logging.getLogger('date')
 
 SCHEDULED_TIME = '00:00'
 
-logger.info("STARTING IG SCHEDULER")
-
 
 def updateIg():
     logger.info("IGSCHEDULER WORKING")
@@ -35,8 +33,14 @@ def updateIg():
         IgUrl.objects.create(url=post.url, shortcode=post.shortcode)
 
 
-schedule.every().day.at(SCHEDULED_TIME).do(updateIg)
+def run_scheduler():
+    logger.info("STARTING IG SCHEDULER")
+    schedule.every().day.at(SCHEDULED_TIME).do(updateIg)
 
-while True:
-    schedule.run_pending()
-    time.sleep(60)
+    while True:
+        schedule.run_pending()
+        time.sleep(60)
+
+
+if __name__ == "__main__":
+    run_scheduler()

@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 
 def upload_to(instance, filename):
     filename_base, filename_ext = os.path.splitext(filename)
-    return "Exams/{year}/{archive}/{filename}{extension}".format(
+    return "{year}/{archive}/{filename}{extension}".format(
         year=instance.archive.pub_date.strftime("%Y"),
         archive=slugify(instance.archive.title),
         filename=slugify(filename_base),

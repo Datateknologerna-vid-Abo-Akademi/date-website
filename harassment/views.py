@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
+from django.urls import reverse
 
 from core.utils import enqueue_task_on_commit, send_email_task, validate_captcha
 
@@ -24,7 +25,10 @@ def harassment_form(request):
             ]
             email_ctx = {
                 'harassment': harassment,
-                'harassment_url': f"{settings.CONTENT_VARIABLES['SITE_URL']}/admin/harassment/harassment/{harassment.id}",
+                'harassment_url': (
+                    f"{settings.CONTENT_VARIABLES['SITE_URL']}"
+                    f"{reverse('admin:harassment_harassment_change', args=[harassment.id])}"
+                ),
             }
             enqueue_task_on_commit(
                 send_email_task,

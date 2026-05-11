@@ -4,6 +4,7 @@ import tempfile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from exambank.forms import ExamArchiveAdminForm
 from exambank.models import ExamArchive, ExamFile
@@ -56,7 +57,10 @@ class ExamBankArchiveRouteTests(TestCase):
         self.assertContains(response, 'tent 01.01.2024')
 
     def test_legacy_archive_exam_upload_adds_files(self):
-        archive = ExamArchive.objects.create(title='Networks')
+        archive = ExamArchive.objects.create(
+            title='Networks',
+            pub_date=timezone.datetime(2024, 1, 1, tzinfo=timezone.UTC),
+        )
 
         response = self.client.post(
             reverse('archive:exam_upload', args=[archive.pk]),
@@ -69,7 +73,7 @@ class ExamBankArchiveRouteTests(TestCase):
         self.assertRedirects(response, reverse('archive:exams_detail', args=[archive.pk]))
         exam_file = ExamFile.objects.get(archive=archive)
         self.assertEqual(exam_file.title, 'tent 02.02.2024')
-        self.assertTrue(exam_file.document.name.endswith('networks.pdf'))
+        self.assertEqual(exam_file.document.name, '2024/networks/networks.pdf')
 
     def test_legacy_archive_exam_archive_upload_adds_archive(self):
         response = self.client.post(

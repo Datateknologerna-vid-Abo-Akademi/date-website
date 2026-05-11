@@ -8,7 +8,7 @@ Manage exam archives shown under `/archive/exams/`.
 2. Create an archive with a title and publication date.
 3. Use the inline table or multi-upload field to upload exam files.
 4. Provide a descriptive **Namn** for each file.
-5. Save. Files are stored under `media/Exams/<year>/<slug>/`.
+5. Save. Files are stored under `media/<year>/<slug>/`.
 
 ## Notes
 - Public URLs remain `/archive/exams/`.
