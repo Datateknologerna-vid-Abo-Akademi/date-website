@@ -24,9 +24,9 @@ INSTALLED_APPS = get_installed_apps([
     'ads',
     'social',
     'polls',
-    'gallery.apps.GalleryConfig',
-    'exambank.apps.ExambankConfig',
-    'archive.apps.ArchiveConfig',
+    'gallery',
+    'exambank',
+    'archive',
 ])
 
 ROOT_URLCONF = 'core.urls.biocum'
