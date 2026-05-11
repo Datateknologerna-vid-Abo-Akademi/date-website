@@ -34,7 +34,6 @@ class ExamArchiveAdminForm(forms.ModelForm):
     class Meta:
         model = ExamArchive
         fields = '__all__'
-        exclude = ('hide_for_gulis',)
 
     def save(self, *args, **kwargs):
         archive = super().save(*args, **kwargs)

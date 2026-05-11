@@ -58,7 +58,8 @@ def get_selected_role(request, functionary_roles):
 
 
 def get_filtered_functionaries(year, selected_role, is_board):
-    main_filter = Q(year__in=[year], functionary_role__board=is_board)
+    years = year if isinstance(year, (QuerySet, list, tuple, set)) else [year]
+    main_filter = Q(year__in=years, functionary_role__board=is_board)
 
     if selected_role is not None:
         role_filter = (

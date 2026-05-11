@@ -4,7 +4,7 @@ from django.utils import timezone
 
 from functionaries.forms import FunctionaryForm
 from functionaries.models import Functionary, FunctionaryRole
-from functionaries.selectors import get_selected_role, get_selected_year
+from functionaries.selectors import get_filtered_functionaries, get_selected_role, get_selected_year
 from members.models import Member, MembershipType, ORDINARY_MEMBER
 
 
@@ -122,3 +122,13 @@ class FunctionaryHelperTests(TestCase):
         selected, all_roles = get_selected_role(request, roles)
         self.assertIsNone(selected)
         self.assertFalse(all_roles)
+
+    def test_get_filtered_functionaries_accepts_all_years_queryset(self):
+        years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')
+
+        functionaries = get_filtered_functionaries(years, None, False)
+
+        self.assertEqual(
+            list(functionaries.values_list('year', flat=True)),
+            [2024, 2023],
+        )
