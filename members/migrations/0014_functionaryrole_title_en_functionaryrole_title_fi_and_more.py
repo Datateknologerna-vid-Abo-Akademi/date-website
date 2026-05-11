@@ -3,6 +3,13 @@
 from django.db import migrations, models
 
 
+def backfill_functionary_role_titles(apps, schema_editor):
+    FunctionaryRole = apps.get_model('members', 'FunctionaryRole')
+    FunctionaryRole.objects.filter(
+        models.Q(title_sv__isnull=True) | models.Q(title_sv='')
+    ).update(title_sv=models.F('title'))
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -24,5 +31,9 @@ class Migration(migrations.Migration):
             model_name='functionaryrole',
             name='title_sv',
             field=models.CharField(max_length=200, null=True, verbose_name='Titel'),
+        ),
+        migrations.RunPython(
+            backfill_functionary_role_titles,
+            migrations.RunPython.noop,
         ),
     ]
