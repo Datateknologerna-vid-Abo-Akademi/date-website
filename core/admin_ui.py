@@ -11,9 +11,12 @@ class AdminLink:
     url_name: str = ''
     url: str = ''
     permission: str = ''
+    any_permissions: tuple[str, ...] = ()
 
     def resolve(self, request):
         if self.permission and not request.user.has_perm(self.permission):
+            return None
+        if self.any_permissions and not any(request.user.has_perm(permission) for permission in self.any_permissions):
             return None
 
         href = self.url
@@ -100,9 +103,19 @@ SIDEBAR_NAVIGATION = (
     )),
     AdminSidebarGroup(_('Archive & Publications'), (
         AdminLink(_('PDF Publications'), icon='picture_as_pdf', url_name='admin:publications_pdffile_changelist', permission='publications.view_pdffile'),
-        AdminLink(_('Photo Albums'), icon='photo_library', url_name='admin:archive_picturecollection_changelist', permission='archive.view_picturecollection'),
+        AdminLink(
+            _('Photo Albums'),
+            icon='photo_library',
+            url_name='admin:gallery_album_changelist',
+            any_permissions=('gallery.view_album', 'archive.view_picturecollection'),
+        ),
         AdminLink(_('Documents'), icon='folder', url_name='admin:archive_documentcollection_changelist', permission='archive.view_documentcollection'),
-        AdminLink(_('Exams'), icon='school', url_name='admin:archive_examcollection_changelist', permission='archive.view_examcollection'),
+        AdminLink(
+            _('Exams'),
+            icon='school',
+            url_name='admin:exambank_examarchive_changelist',
+            any_permissions=('exambank.view_examarchive', 'archive.view_examcollection'),
+        ),
     )),
     AdminSidebarGroup(_('Activities'), (
         AdminLink(_('CTF'), icon='military_tech', url_name='admin:ctf_ctf_changelist', permission='ctf.view_ctf'),
