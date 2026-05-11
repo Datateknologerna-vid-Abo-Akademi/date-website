@@ -15,7 +15,9 @@ from two_factor.forms import TOTPDeviceForm
 
 from members.forms import (FunctionaryForm, MemberCreationForm, SignUpForm,
                            SubscriptionPaymentForm)
-from members.functionary import get_selected_role, get_selected_year
+from members.functionary import (
+    get_filtered_functionaries, get_selected_role, get_selected_year,
+)
 from members.models import (Functionary, FunctionaryRole, Member,
                             MembershipType, ORDINARY_MEMBER, Subscription)
 from members.two_factor import (
@@ -284,6 +286,11 @@ class FunctionaryHelperTests(TestCase):
         self.assertEqual(list(selected), list(years))
         self.assertTrue(all_years)
 
+    def test_get_filtered_functionaries_supports_year_queryset(self):
+        years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')
+        functionaries = get_filtered_functionaries(years, self.role, is_board=False)
+        self.assertEqual(functionaries.count(), 2)
+
     def test_get_selected_year_ignores_parameters_for_anonymous_user(self):
         request = self.factory.get('/funktionarer/?year=2020')
         request.user = AnonymousUser()
@@ -304,6 +311,14 @@ class FunctionaryHelperTests(TestCase):
         selected_role, all_roles_flag = get_selected_role(request_specific, roles)
         self.assertFalse(all_roles_flag)
         self.assertEqual(selected_role, self.role)
+
+    def test_get_selected_role_ignores_unknown_role_ids(self):
+        request = self.factory.get('/funktionarer/?role=999999')
+        request.user = self.member
+        roles = FunctionaryRole.objects.all()
+        selected, all_roles = get_selected_role(request, roles)
+        self.assertIsNone(selected)
+        self.assertFalse(all_roles)
 
     def test_get_selected_role_ignores_anonymous_requests(self):
         request = self.factory.get('/funktionarer/?role=all')

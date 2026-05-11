@@ -1,5 +1,4 @@
 from collections import defaultdict
-from django.shortcuts import get_object_or_404
 from django.db.models import Q, QuerySet
 from django.utils import timezone
 
@@ -53,9 +52,10 @@ def get_selected_role(request, functionary_roles):
         else:
             try:
                 role_id = int(role_param)
-                selected_role = get_object_or_404(FunctionaryRole, pk=role_id)
             except (ValueError, TypeError):
                 pass
+            else:
+                selected_role = FunctionaryRole.objects.filter(pk=role_id).first()
 
     return selected_role, all_roles
 

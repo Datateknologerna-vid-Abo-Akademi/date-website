@@ -166,6 +166,14 @@ div.news-content a:hover{
     color: var(--linkSecondaryHover);
 }
 
+.partner-collaboration-link {
+    color: var(--accentColor);
+}
+
+.partner-collaboration-link:hover {
+    color: var(--linkSecondaryHover);
+}
+
 .news-header{
     position: relative;
 }
