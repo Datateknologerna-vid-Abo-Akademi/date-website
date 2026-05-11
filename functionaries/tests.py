@@ -109,11 +109,19 @@ class FunctionaryHelperTests(TestCase):
         self.assertTrue(all_roles)
         self.assertEqual(list(selected), list(roles))
 
-        request_specific = self.factory.get(f'/funktionarer/?role={self.role.title}')
+        request_specific = self.factory.get(f'/funktionarer/?role={self.role.pk}')
         request_specific.user = self.member
         selected_role, all_roles_flag = get_selected_role(request_specific, roles)
         self.assertFalse(all_roles_flag)
         self.assertEqual(selected_role, self.role)
+
+    def test_get_selected_role_ignores_unknown_role_ids(self):
+        request = self.factory.get('/funktionarer/?role=999999')
+        request.user = self.member
+        roles = FunctionaryRole.objects.all()
+        selected, all_roles = get_selected_role(request, roles)
+        self.assertIsNone(selected)
+        self.assertFalse(all_roles)
 
     def test_get_selected_role_ignores_anonymous_requests(self):
         request = self.factory.get('/funktionarer/?role=all')

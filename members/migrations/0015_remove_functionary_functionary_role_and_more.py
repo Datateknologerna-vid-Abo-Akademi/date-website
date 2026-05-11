@@ -22,6 +22,9 @@ def copy_functionaries(apps, schema_editor):
             id=role.id,
             defaults={
                 'title': role.title,
+                'title_en': role.title_en,
+                'title_fi': role.title_fi,
+                'title_sv': role.title_sv,
                 'board': role.board,
             },
         )
@@ -53,6 +56,9 @@ def restore_functionaries(apps, schema_editor):
             id=role.id,
             defaults={
                 'title': role.title,
+                'title_en': role.title_en,
+                'title_fi': role.title_fi,
+                'title_sv': role.title_sv,
                 'board': role.board,
             },
         )
@@ -77,7 +83,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('functionaries', '0001_initial'),
-        ('members', '0013_functionary_name_alter_functionary_member'),
+        ('members', '0014_functionaryrole_title_en_functionaryrole_title_fi_and_more'),
     ]
 
     operations = [

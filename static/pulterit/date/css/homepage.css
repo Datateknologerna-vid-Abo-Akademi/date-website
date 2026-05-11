@@ -159,7 +159,7 @@ div.news-content a:hover{
 }
 
 .more-news{
-    color: var(--linkColor);
+    color: var(--accentColor);
 }
 
 .more-news:hover{

@@ -19,6 +19,9 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('title', models.CharField(max_length=200, verbose_name='Titel')),
+                ('title_en', models.CharField(max_length=200, null=True, verbose_name='Titel')),
+                ('title_fi', models.CharField(max_length=200, null=True, verbose_name='Titel')),
+                ('title_sv', models.CharField(max_length=200, null=True, verbose_name='Titel')),
                 ('board', models.BooleanField(default=False, verbose_name='Styrelse')),
             ],
             options={

@@ -31,7 +31,7 @@
                                 {% trans "Alla poster" %}
                             </option> <!-- An option for displaying all posts -->
                             {% for role in functionary_roles %}
-                                <option value="{{ role.title }}" {% if role.title == selected_role.title %}selected{% endif %}>
+                                <option value="{{ role.pk }}" {% if role.pk == selected_role.pk %}selected{% endif %}>
                                     {{ role.title }}
                                 </option>
                             {% endfor %}
