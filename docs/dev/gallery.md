@@ -9,7 +9,7 @@ The `gallery` app owns photo albums and uploaded photos. It replaced the previou
 - Upload paths stay compatible with the previous archive layout: `<year>/<album>/<filename>`.
 
 ## Migration Notes
-- `gallery.0002_copy_archive_pictures` copies legacy `archive.Collection(type="Pictures")` rows into `gallery_album` and related `archive.Picture` rows into `gallery_photo`.
+- `archive.0008_remove_picture_collection_delete_examcollection_and_more` copies legacy `archive.Collection(type="Pictures")` rows into `gallery_album` and related `archive.Picture` rows into `gallery_photo`.
 - Primary keys are preserved where possible so existing links and admin references stay predictable.
 - The migration does not delete legacy archive rows; `archive.0008_remove_picture_collection_delete_examcollection_and_more` removes the old models from Django state without dropping legacy tables.
 

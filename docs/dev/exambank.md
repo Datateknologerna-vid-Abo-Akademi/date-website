@@ -9,7 +9,7 @@ The `exambank` app owns exam archive collections and exam files. It replaced the
 - Upload paths stay compatible with the previous archive layout: `Exams/<year>/<archive>/<filename>`.
 
 ## Migration Notes
-- `exambank.0002_copy_archive_exams` copies legacy `archive.Collection(type="Exams")` rows into `exambank_examarchive` and related `archive.Document` rows into `exambank_examfile`.
+- `archive.0008_remove_picture_collection_delete_examcollection_and_more` copies legacy `archive.Collection(type="Exams")` rows into `exambank_examarchive` and related `archive.Document` rows into `exambank_examfile`.
 - Primary keys are preserved where possible.
 - The migration does not delete legacy archive rows; `archive.0008_remove_picture_collection_delete_examcollection_and_more` removes old exam proxy models from Django state without dropping legacy tables.
 

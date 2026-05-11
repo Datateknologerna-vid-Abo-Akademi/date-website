@@ -25,6 +25,7 @@ INSTALLED_APPS = get_installed_apps([
     'ads',
     'social',
     'staticpages',
+    'exambank.apps.ExambankConfig',
     'publications',
     'billing',
 ])

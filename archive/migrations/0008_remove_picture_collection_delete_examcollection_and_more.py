@@ -3,15 +3,88 @@
 from django.db import migrations, models
 
 
+def copy_pictures_and_exams(apps, schema_editor):
+    Collection = apps.get_model('archive', 'Collection')
+    Picture = apps.get_model('archive', 'Picture')
+    Document = apps.get_model('archive', 'Document')
+    Album = apps.get_model('gallery', 'Album')
+    Photo = apps.get_model('gallery', 'Photo')
+    ExamArchive = apps.get_model('exambank', 'ExamArchive')
+    ExamFile = apps.get_model('exambank', 'ExamFile')
+
+    for collection in Collection.objects.filter(type='Pictures').iterator():
+        Album.objects.update_or_create(
+            pk=collection.pk,
+            defaults={
+                'title': collection.title,
+                'pub_date': collection.pub_date,
+                'hide_for_gulis': getattr(collection, 'hide_for_gulis', False),
+            },
+        )
+
+    for picture in Picture.objects.select_related('collection').filter(collection__type='Pictures').iterator():
+        Photo.objects.update_or_create(
+            pk=picture.pk,
+            defaults={
+                'album_id': picture.collection_id,
+                'image': picture.image,
+                'favorite': picture.favorite,
+            },
+        )
+
+    for collection in Collection.objects.filter(type='Exams').iterator():
+        ExamArchive.objects.update_or_create(
+            pk=collection.pk,
+            defaults={
+                'title': collection.title,
+                'pub_date': collection.pub_date,
+                'hide_for_gulis': getattr(collection, 'hide_for_gulis', False),
+            },
+        )
+
+    for document in Document.objects.select_related('collection').filter(collection__type='Exams').iterator():
+        ExamFile.objects.update_or_create(
+            pk=document.pk,
+            defaults={
+                'archive_id': document.collection_id,
+                'title': document.title,
+                'document': document.document,
+            },
+        )
+
+    if schema_editor.connection.vendor == 'postgresql':
+        _reset_sequence(schema_editor, 'gallery_album')
+        _reset_sequence(schema_editor, 'gallery_photo')
+        _reset_sequence(schema_editor, 'exambank_examarchive')
+        _reset_sequence(schema_editor, 'exambank_examfile')
+
+
+def _reset_sequence(schema_editor, table_name):
+    with schema_editor.connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT setval(pg_get_serial_sequence(%s, 'id'), COALESCE(MAX(id), 1), MAX(id) IS NOT NULL) "
+            f"FROM {table_name}",
+            [table_name],
+        )
+
+
+def remove_copied_pictures_and_exams(apps, schema_editor):
+    apps.get_model('gallery', 'Photo').objects.all().delete()
+    apps.get_model('gallery', 'Album').objects.all().delete()
+    apps.get_model('exambank', 'ExamFile').objects.all().delete()
+    apps.get_model('exambank', 'ExamArchive').objects.all().delete()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
         ('archive', '0007_alter_publicfile_some_file'),
-        ('exambank', '0002_copy_archive_exams'),
-        ('gallery', '0002_copy_archive_pictures'),
+        ('exambank', '0001_initial'),
+        ('gallery', '0001_initial'),
     ]
 
     operations = [
+        migrations.RunPython(copy_pictures_and_exams, remove_copied_pictures_and_exams),
         migrations.SeparateDatabaseAndState(
             state_operations=[
                 migrations.RemoveField(
