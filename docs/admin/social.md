@@ -9,4 +9,4 @@
 
 ## Compatibility
 - Existing public links to `/social/harassment/` still work.
-- Templates can keep using `{% url 'social:harassment' %}`.
+- Templates can keep using the `social:harassment` URL name.

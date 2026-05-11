@@ -34,6 +34,6 @@ def harassment_form(request):
                 harassment_receivers,
             )
             request.session['harass_submitted'] = True
-            return redirect(request.path)
+            return redirect('social:harassment')
 
     return render(request, 'social/harassment_form.html', {'form': form})
