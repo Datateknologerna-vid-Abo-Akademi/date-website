@@ -25,6 +25,8 @@ INSTALLED_APPS = get_installed_apps([
     'events',
     'polls',
     'ads',
+    'instagram',
+    'harassment',
     'social',
     'staticpages',
     'ctf',

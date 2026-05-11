@@ -24,7 +24,7 @@ class AdminSearchSmokeTests(TestCase):
             "admin:ctf_guess_changelist",
             "admin:events_event_changelist",
             "admin:events_eventattendees_changelist",
-            "admin:members_functionary_changelist",
+            "admin:functionaries_functionary_changelist",
             "admin:members_member_changelist",
             "admin:members_subscriptionpayment_changelist",
             "admin:news_category_changelist",

@@ -6,6 +6,7 @@ from django.urls import include, path, re_path
 from . import two_factor
 from . import views
 from . import views_github
+from functionaries import views as functionary_views
 
 app_name = 'members'
 
@@ -25,8 +26,8 @@ urlpatterns = [
     path('password_change/done/', auth_views.PasswordChangeDoneView.as_view(), name='password_change_done'),
     path('info/', views.UserinfoView.as_view(), name='info'),
     path('cert/', views.CertificateView.as_view(), name='certificate'),
-    path('funktionar/', views.FunctionaryView.as_view(), name='functionary'),
-    path('funktionarer/', views.FunctionariesView.as_view(), name='functionaries'),
+    path('funktionar/', functionary_views.FunctionaryView.as_view(), name='functionary'),
+    path('funktionarer/', functionary_views.FunctionariesView.as_view(), name='functionaries'),
 ]
 
 if getattr(settings, 'MEMBERS_SIGNUP_ENABLED', True):

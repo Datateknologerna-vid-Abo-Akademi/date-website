@@ -7,7 +7,7 @@ The `archive` app now owns document collections and public files only. Photo gal
 - `Collection` stores document/public-file collections with `title`, `type`, `pub_date`, and `hide_for_gulis`.
 - `Document` stores arbitrary files tied to a document collection.
 - `PublicFile` uses `PublicFileField` for S3/public storage.
-- `TYPE_CHOICES` is limited to `Documents` and `PublicFiles`; legacy `Pictures`/`Exams` rows are copied into their new app tables by split migrations and left in place as rollback data.
+- `TYPE_CHOICES` is limited to `Documents` and `PublicFiles`; legacy `Pictures`/`Exams` rows are copied into their new app tables, then removed from `archive_collection`. The legacy `archive_picture` table is dropped after the copy.
 
 ## Views
 - `FilteredDocumentsListView` combines `django-filter` and `django-tables2` for the document archive.

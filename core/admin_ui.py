@@ -91,8 +91,8 @@ SIDEBAR_NAVIGATION = (
         AdminLink(_('Membership Types'), icon='badge', url_name='admin:members_membershiptype_changelist', permission='members.view_membershiptype'),
         AdminLink(_('Subscriptions'), icon='card_membership', url_name='admin:members_subscription_changelist', permission='members.view_subscription'),
         AdminLink(_('Subscription Payments'), icon='payments', url_name='admin:members_subscriptionpayment_changelist', permission='members.view_subscriptionpayment'),
-        AdminLink(_('Functionaries'), icon='manage_accounts', url_name='admin:members_functionary_changelist', permission='members.view_functionary'),
-        AdminLink(_('Functionary Roles'), icon='work', url_name='admin:members_functionaryrole_changelist', permission='members.view_functionaryrole'),
+        AdminLink(_('Functionaries'), icon='manage_accounts', url_name='admin:functionaries_functionary_changelist', permission='functionaries.view_functionary'),
+        AdminLink(_('Functionary Roles'), icon='work', url_name='admin:functionaries_functionaryrole_changelist', permission='functionaries.view_functionaryrole'),
     )),
     AdminSidebarGroup(_('Content'), (
         AdminLink(_('News'), icon='article', url_name='admin:news_post_changelist', permission='news.view_post'),
@@ -124,9 +124,9 @@ SIDEBAR_NAVIGATION = (
     )),
     AdminSidebarGroup(_('Social & Ads'), (
         AdminLink(_('Samarbetspartners'), icon='campaign', url_name='admin:ads_adurl_changelist', permission='ads.view_adurl'),
-        AdminLink(_('Instagram URLs'), icon='photo_camera', url_name='admin:social_igurl_changelist', permission='social.view_igurl'),
-        AdminLink(_('Harassment Reports'), icon='report', url_name='admin:social_harassment_changelist', permission='social.view_harassment'),
-        AdminLink(_('Report Recipients'), icon='mail', url_name='admin:social_harassmentemailrecipient_changelist', permission='social.view_harassmentemailrecipient'),
+        AdminLink(_('Instagram URLs'), icon='photo_camera', url_name='admin:instagram_igurl_changelist', permission='instagram.view_igurl'),
+        AdminLink(_('Harassment Reports'), icon='report', url_name='admin:harassment_harassment_changelist', permission='harassment.view_harassment'),
+        AdminLink(_('Report Recipients'), icon='mail', url_name='admin:harassment_harassmentemailrecipient_changelist', permission='harassment.view_harassmentemailrecipient'),
     )),
     AdminSidebarGroup(_('System'), (
         AdminLink(_('Admin Log'), icon='history', url_name='admin:admin_logentry_changelist', permission='admin.view_logentry'),

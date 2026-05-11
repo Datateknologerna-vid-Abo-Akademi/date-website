@@ -156,11 +156,14 @@ django-admin compilemessages
 - `date`: homepage composition, calendar data, language switching, middleware, error views.
 - `events`: events, dynamic registration forms, capacity/sign-up windows, passcodes, captcha, child events, WebSocket attendee updates.
 - `lucia`: candidate pages and admin-managed seasonal content.
-- `members`: custom user model, membership/subscription state, functionaries, auth, two-factor, GitHub login.
+- `functionaries`: yearly functionary roles and assignments, member self-service history, public functionary listing.
+- `harassment`: harassment report form, stored submissions, recipient list, and notification emails.
+- `instagram`: Instagram embed URLs used on the home page.
+- `members`: custom user model, membership/subscription state, auth, two-factor, GitHub login.
 - `news`: posts, categories, feeds, homepage/news listing behavior.
 - `polls`: questions, choices, votes, membership-aware vote validation.
 - `publications`: PDF metadata, access controls, viewer/list pages.
-- `social`: Instagram embeds and harassment report form/email flow.
+- `social`: compatibility routes for legacy social URLs.
 - `staticpages`: CKEditor pages, dropdown navigation, stored internal URLs.
 
 Read the corresponding `docs/dev/<app>.md` before changing app internals.
