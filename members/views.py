@@ -101,7 +101,6 @@ def signup(request):
             # Send email of new user
             current_site = get_current_site(request)
             mail_subject = 'A new account has been created and required your attention.'
-            print("Generated token: ", account_activation_token.make_token(user))
             message = render_to_string('members/acc_active_email.html', {
                 'user': user,
                 'domain': current_site.domain,

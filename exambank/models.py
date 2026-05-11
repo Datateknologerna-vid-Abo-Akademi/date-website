@@ -1,9 +1,9 @@
-import datetime
 import os
 
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
@@ -20,7 +20,7 @@ def upload_to(instance, filename):
 
 class ExamArchive(models.Model):
     title = models.CharField(_('Namn'), max_length=250)
-    pub_date = models.DateTimeField(default=datetime.datetime.now, null=True)
+    pub_date = models.DateTimeField(default=timezone.now, null=True)
     hide_for_gulis = models.BooleanField(_('Göm för gulisar'), default=False)
 
     class Meta:
@@ -48,6 +48,7 @@ class ExamFile(models.Model):
     class Meta:
         verbose_name = _('tentamen')
         verbose_name_plural = _('tentamina')
+        ordering = ('title', 'id')
 
     def __str__(self):
         return self.title

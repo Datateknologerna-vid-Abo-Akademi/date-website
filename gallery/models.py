@@ -1,4 +1,3 @@
-import datetime
 import logging
 import os
 import sys
@@ -9,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from PIL import Image
@@ -48,7 +48,7 @@ def compress_image(uploaded_image):
 
 class Album(models.Model):
     title = models.CharField(_('Namn'), max_length=250)
-    pub_date = models.DateTimeField(default=datetime.datetime.now, null=True)
+    pub_date = models.DateTimeField(default=timezone.now, null=True)
     hide_for_gulis = models.BooleanField(_('Göm för gulisar'), default=False)
 
     class Meta:
