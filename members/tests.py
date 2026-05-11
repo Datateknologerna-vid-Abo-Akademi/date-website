@@ -299,7 +299,7 @@ class FunctionaryHelperTests(TestCase):
         self.assertTrue(all_roles)
         self.assertEqual(list(selected), list(roles))
 
-        request_specific = self.factory.get(f'/funktionarer/?role={self.role.title}')
+        request_specific = self.factory.get(f'/funktionarer/?role={self.role.pk}')
         request_specific.user = self.member
         selected_role, all_roles_flag = get_selected_role(request_specific, roles)
         self.assertFalse(all_roles_flag)

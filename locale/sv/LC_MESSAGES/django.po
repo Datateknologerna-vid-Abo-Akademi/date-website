@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-08 22:53+0300\n"
+"POT-Creation-Date: 2026-05-11 21:23+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -111,14 +111,14 @@ msgstr "Städa upp media"
 #: archive/models.py:30 archive/models.py:167 events/models.py:201
 #: events/models.py:337 events/models.py:379 members/models.py:97
 #: members/models.py:122 members/models.py:181 news/models.py:15
-#: templates/biocum/events/arsfest.html:91
-#: templates/common/events/arsfest.html:78
-#: templates/common/events/baal_detail.html:69
-#: templates/common/events/detail.html:58
-#: templates/common/events/kk100_detail.html:70
-#: templates/common/events/tomtejakt.html:314
-#: templates/common/events/wappmiddag.html:70
-#: templates/date/events/arsfest.html:84
+#: templates/biocum/events/arsfest.html:92
+#: templates/common/events/arsfest.html:80
+#: templates/common/events/baal_detail.html:73
+#: templates/common/events/detail.html:60
+#: templates/common/events/kk100_detail.html:74
+#: templates/common/events/tomtejakt.html:318
+#: templates/common/events/wappmiddag.html:74
+#: templates/date/events/arsfest.html:86
 #: templates/pulterit/events/arsfest.html:85
 msgid "Namn"
 msgstr "Namn"
@@ -451,15 +451,15 @@ msgstr "Mall"
 msgid "Maximal antal deltagare (0 för ingen begränsning)"
 msgstr "Maximal antal deltagare (0 för ingen begränsning)"
 
-#: events/models.py:68 templates/biocum/events/arsfest.html:78
-#: templates/common/events/arsfest.html:64
-#: templates/common/events/baal_anmalan.html:21
-#: templates/common/events/baal_detail.html:55
-#: templates/common/events/detail.html:44
-#: templates/common/events/kk100_detail.html:56
-#: templates/common/events/tomtejakt.html:300
-#: templates/common/events/wappmiddag.html:56
-#: templates/date/events/arsfest.html:70
+#: events/models.py:68 templates/biocum/events/arsfest.html:79
+#: templates/common/events/arsfest.html:66
+#: templates/common/events/baal_anmalan.html:25
+#: templates/common/events/baal_detail.html:59
+#: templates/common/events/detail.html:46
+#: templates/common/events/kk100_detail.html:60
+#: templates/common/events/tomtejakt.html:304
+#: templates/common/events/wappmiddag.html:60
+#: templates/date/events/arsfest.html:72
 #: templates/pulterit/events/arsfest.html:71
 msgid "Anmälning"
 msgstr "Anmälning"
@@ -536,14 +536,14 @@ msgstr "Email"
 
 #: events/models.py:203 events/models.py:383 events/tests.py:338
 #: events/tests.py:1487 events/websocket_utils.py:30
-#: templates/biocum/events/arsfest.html:101
-#: templates/common/events/arsfest.html:87
-#: templates/common/events/baal_detail.html:78
-#: templates/common/events/detail.html:67
-#: templates/common/events/kk100_detail.html:79
-#: templates/common/events/tomtejakt.html:323
-#: templates/common/events/wappmiddag.html:79
-#: templates/date/events/arsfest.html:93
+#: templates/biocum/events/arsfest.html:102
+#: templates/common/events/arsfest.html:89
+#: templates/common/events/baal_detail.html:82
+#: templates/common/events/detail.html:69
+#: templates/common/events/kk100_detail.html:83
+#: templates/common/events/tomtejakt.html:327
+#: templates/common/events/wappmiddag.html:83
+#: templates/date/events/arsfest.html:95
 #: templates/pulterit/events/arsfest.html:94
 msgid "Anonymt"
 msgstr "Anonymt"
@@ -1129,36 +1129,36 @@ msgstr "Inga nyheter hittades"
 msgid "Mera nyheter"
 msgstr "Mera nyheter"
 
-#: templates/biocum/events/arsfest.html:87
-#: templates/common/events/arsfest.html:72
-#: templates/common/events/baal_detail.html:63
-#: templates/common/events/detail.html:52
-#: templates/common/events/kk100_detail.html:64
-#: templates/common/events/tomtejakt.html:308
-#: templates/common/events/wappmiddag.html:64
-#: templates/date/events/arsfest.html:78
+#: templates/biocum/events/arsfest.html:88
+#: templates/common/events/arsfest.html:74
+#: templates/common/events/baal_detail.html:67
+#: templates/common/events/detail.html:54
+#: templates/common/events/kk100_detail.html:68
+#: templates/common/events/tomtejakt.html:312
+#: templates/common/events/wappmiddag.html:68
+#: templates/date/events/arsfest.html:80
 #: templates/pulterit/events/arsfest.html:79
 msgid "Anmälda"
 msgstr "Anmälda"
 
-#: templates/biocum/events/arsfest.html:108
-#: templates/common/events/arsfest.html:93
-#: templates/common/events/baal_detail.html:84
-#: templates/common/events/kk100_detail.html:85
-#: templates/common/events/tomtejakt.html:329
-#: templates/common/events/wappmiddag.html:85
-#: templates/date/events/arsfest.html:99
-#: templates/pulterit/events/arsfest.html:100
-msgid "Inga anmälda, var den första att anmäla dig!"
-msgstr "Inga anmälda, var den första att anmäla dig!"
-
-#: templates/biocum/events/arsfest.html:112
-#: templates/common/events/arsfest.html:97
+#: templates/biocum/events/arsfest.html:109
+#: templates/common/events/arsfest.html:95
 #: templates/common/events/baal_detail.html:88
 #: templates/common/events/kk100_detail.html:89
 #: templates/common/events/tomtejakt.html:333
 #: templates/common/events/wappmiddag.html:89
-#: templates/date/events/arsfest.html:103
+#: templates/date/events/arsfest.html:101
+#: templates/pulterit/events/arsfest.html:100
+msgid "Inga anmälda, var den första att anmäla dig!"
+msgstr "Inga anmälda, var den första att anmäla dig!"
+
+#: templates/biocum/events/arsfest.html:113
+#: templates/common/events/arsfest.html:99
+#: templates/common/events/baal_detail.html:92
+#: templates/common/events/kk100_detail.html:93
+#: templates/common/events/tomtejakt.html:337
+#: templates/common/events/wappmiddag.html:93
+#: templates/date/events/arsfest.html:105
 #: templates/pulterit/events/arsfest.html:104
 msgid ""
 "Deltagarlistan har gömts eftersom det är ett gammalt evenemang, kontakta "
@@ -1439,11 +1439,11 @@ msgstr "Språk"
 msgid "Logga ut"
 msgstr "Logga ut"
 
-#: templates/common/events/detail.html:73
+#: templates/common/events/detail.html:75
 msgid "Inga anmälda ännu, var den första!"
 msgstr "Inga anmälda ännu, var den första!"
 
-#: templates/common/events/detail.html:77
+#: templates/common/events/detail.html:79
 msgid ""
 "Deltagarlistan har gömts eftersom det här är ett gammalt evenemang, kontakta "
 "styrelsen vid behov."
@@ -2102,6 +2102,10 @@ msgstr "Hemsidan är utvecklad och upprätthålls av"
 #: templates/pulterit/date/components/partners.html:12
 msgid "Partner logo"
 msgstr "Partner logo"
+
+#: templates/pulterit/date/components/partners.html:18
+msgid "Vill du samarbeta med Pulterit?"
+msgstr "Vill du samarbeta med Pulterit rf?"
 
 #~| msgid "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
 #~ msgid ""
