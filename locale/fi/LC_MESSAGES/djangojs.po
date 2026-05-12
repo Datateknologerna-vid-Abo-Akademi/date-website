@@ -1,0 +1,36 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-12 23:55+0300\n"
+"PO-Revision-Date: 2026-05-13 00:00+0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.8\n"
+
+#: static/common/attendance/js/detail.js:46
+msgid "Ingen kamera hittades"
+msgstr "Kameraa ei löytynyt"
+
+#: static/common/attendance/js/detail.js:49
+msgid "Ett oväntat fel uppstod medan QR-skannern startades"
+msgstr "Tapahtui odottamaton virhe käynnistäessä QR-skanneria"
+
+#: static/common/attendance/js/overview.js:58
+msgid "Ansluter till servern..."
+msgstr "Yhdistetään palvelimeen..."
+
+#: static/common/attendance/js/overview.js:68
+msgid "Anslutningen till servern bröts"
+msgstr "Yhteys palvelimeen on katkennut"
