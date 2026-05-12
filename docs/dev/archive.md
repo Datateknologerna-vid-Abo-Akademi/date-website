@@ -12,8 +12,8 @@
 - Admin classes filter `get_queryset()` by `type` so proxy models only show their relevant records. Inline previews use `mark_safe` to render thumbnails.
 
 ## Views
-- Access control: decorators (`@user_passes_test(user_type)`) reject freshmen (permission profile 3) when needed and force login via `/members/login/`.
-- `year_index`, `picture_index`, and `picture_detail` handle browsing and pagination for photo galleries. 2022 albums keep chronological order; others are reversed.
+- Access control: decorators (`@user_passes_test(user_type)`) reject supporting members (permission profile 3) when needed and force login via `/members/login/`.
+- `year_index`, `picture_index`, and `picture_detail` handle browsing and pagination for photo galleries. Album images are shown in upload order.
 - `FilteredDocumentsListView` and `FilteredExamsListView` combine `django-filter` and `django-tables2` for searching by title/category.
 - Upload helpers (`upload`, `exam_upload`, `exam_archive_upload`) require staff permissions and reuse the same forms as admin for bulk operations.
 
