@@ -2,5 +2,5 @@ apiVersion: v2
 name: date-website
 description: Helm chart for running date-website on Kubernetes/k3s
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "prod"
