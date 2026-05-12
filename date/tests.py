@@ -62,7 +62,7 @@ class SiteShellTemplateTests(TestCase):
         rendered = render_to_string("core/base.html", self._content_context())
 
         self.assertIn(
-            "https://maxst.icons8.com/vue-static/landings/line-awesome/"
+            "https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/"
             "font-awesome-line-awesome/css/all.min.css",
             rendered,
         )
