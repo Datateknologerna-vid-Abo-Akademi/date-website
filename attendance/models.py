@@ -38,8 +38,8 @@ class AttendanceEvent(models.Model):
     )
 
     class Meta:
-        verbose_name = _("närvaroevenemang")
-        verbose_name_plural = _("närvaroevenemang")
+        verbose_name = pgettext_lazy("singular", "närvaroevenemang")
+        verbose_name_plural = pgettext_lazy("plural", "närvaroevenemang")
 
     def __str__(self):
         return f"{self.title}"
@@ -154,6 +154,13 @@ class AttendanceChange(models.Model):
     class Type(models.IntegerChoices):
         ENTER = 0, gettext_noop("Anlände")
         LEAVE = 1, gettext_noop("Lämnade")
+
+    # This is here to trick makemessages into generating the contextual translation strings
+    class _TranslationDummy:
+        _ = pgettext_lazy("left/entered some event", "Anlände")
+        _ = pgettext_lazy("left/entered some event", "Lämnade")
+        _ = pgettext_lazy("left/entered in general", "Anlände")
+        _ = pgettext_lazy("left/entered in general", "Lämnade")
 
     event = models.ForeignKey(AttendanceEvent, on_delete=models.CASCADE, related_name="attendance_changes", verbose_name=_("Närvaroevenemang"))
     """The event that this change applies to"""
