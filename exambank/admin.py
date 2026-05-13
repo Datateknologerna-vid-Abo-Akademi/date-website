@@ -73,6 +73,11 @@ class ExamArchiveAdmin(FlatpickrDateTimeAdminMixin, ExamBankAdminMixin, ModelAdm
     def _has_legacy_permission(self, request, action):
         return request.user.has_perm(self.legacy_permission_map[action])
 
+    def has_module_permission(self, request):
+        if super().has_module_permission(request):
+            return True
+        return any(self._has_legacy_permission(request, action) for action in self.legacy_permission_map)
+
     def has_view_permission(self, request, obj=None):
         return super().has_view_permission(request, obj) or self._has_legacy_permission(request, 'view')
 
