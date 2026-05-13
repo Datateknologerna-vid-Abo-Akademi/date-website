@@ -142,6 +142,17 @@ class ExamBankAccessTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
+    def test_password_access_redirects_to_exam_index_from_detail_route(self):
+        archive = ExamArchive.objects.create(title='Geology')
+        access_settings = ExamBankAccessSettings.get_solo()
+        access_settings.require_sign_in = False
+        access_settings.set_password('stone')
+        access_settings.save()
+
+        response = self.client.post(reverse('archive:exams_detail', args=[archive.pk]), {'password': 'stone'})
+
+        self.assertRedirects(response, reverse('archive:exams'))
+
     def test_passwordless_public_access_allows_anonymous_exam_bank(self):
         ExamArchive.objects.create(title='Open archive')
         access_settings = ExamBankAccessSettings.get_solo()
