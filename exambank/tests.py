@@ -255,3 +255,35 @@ class ExamArchiveAdminTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'flatpickr-datetime')
         self.assertContains(response, 'core/js/flatpickr.min.js')
+
+
+class ExamBankAppIndexLegacyPermissionTests(TestCase):
+    def test_app_index_works_with_legacy_archive_permission(self):
+        from django.conf import settings
+        from django.contrib.auth.models import Group, Permission
+        from django.contrib.contenttypes.models import ContentType
+
+        staff_group, _ = Group.objects.get_or_create(name=settings.STAFF_GROUPS[0])
+        member = Member.objects.create_user(
+            username='legacy-staff',
+            password='pwd',
+            membership_type=MembershipType.objects.get(pk=ORDINARY_MEMBER),
+        )
+        member.groups.add(staff_group)
+
+        content_type, _ = ContentType.objects.get_or_create(
+            app_label='archive',
+            model='examcollection',
+        )
+        legacy_view, _ = Permission.objects.get_or_create(
+            codename='view_examcollection',
+            content_type=content_type,
+            defaults={'name': 'Can view exam collection'},
+        )
+        member.user_permissions.add(legacy_view)
+
+        self.client.force_login(member, backend='members.backends.AuthBackend')
+
+        response = self.client.get('/admin/exambank/')
+
+        self.assertEqual(response.status_code, 200)
