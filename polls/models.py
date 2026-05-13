@@ -1,6 +1,7 @@
 import logging
 
 from django.db import models
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from members.models import Member
 
@@ -19,10 +20,17 @@ VOTING_OPTIONS = [
 ]
 
 
+class QuestionQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(published_time__isnull=False, published_time__lte=now())
+
+
 class Question(models.Model):
     question_text = models.CharField(max_length=200)
     pub_date = models.DateTimeField(auto_now_add=True)
-    published = models.BooleanField(_('Publicera'), default=True)
+    published_time = models.DateTimeField(
+        _('Publiceras'), null=True, blank=True, default=now,
+        help_text=_('Lämna tomt för att dölja frågan. Välj en framtida tid för schemalagd publicering.'))
     show_results = models.BooleanField(_('Visa resultat'), default=False)
     end_vote = models.BooleanField(_('Avsluta röstande'), default=False)
     multiple_choice = models.BooleanField(_('Flerval'), default=False)
@@ -30,12 +38,18 @@ class Question(models.Model):
     voting_options = models.IntegerField(_('Valmöjligheter'), choices=VOTING_OPTIONS, default=ANYONE)
     voters = models.ManyToManyField(Member, through="Vote", related_name='voters')
 
+    objects = QuestionQuerySet.as_manager()
+
     class Meta:
         verbose_name = _('Fråga')
         verbose_name_plural = _('Frågor')
 
     def __str__(self):
         return self.question_text
+
+    @property
+    def published(self):
+        return self.published_time is not None and self.published_time <= now()
 
     def get_total_votes(self):
         count_sum = 0

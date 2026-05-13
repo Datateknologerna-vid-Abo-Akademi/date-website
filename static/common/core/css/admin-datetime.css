@@ -1,0 +1,172 @@
+:root {
+    --datetime-input-bg: var(--color-white, var(--body-bg, #ffffff));
+    --datetime-input-fg: var(--color-font-default-light, var(--body-fg, #333333));
+    --datetime-input-border: var(--color-base-200, var(--border-color, #cfd5dd));
+    --datetime-input-hover-border: var(--color-base-400, var(--body-quiet-color, #8b95a1));
+    --datetime-input-focus: var(--color-primary-600, var(--primary, #79aec8));
+    --datetime-input-muted: var(--color-font-subtle-light, var(--body-quiet-color, #6b7280));
+    --datetime-calendar-bg: var(--color-white, var(--body-bg, #ffffff));
+    --datetime-calendar-fg: var(--color-font-default-light, var(--body-fg, #333333));
+    --datetime-calendar-muted: var(--color-base-400, var(--body-quiet-color, #8b95a1));
+    --datetime-calendar-hover: var(--color-base-100, var(--darkened-bg, #f3f4f6));
+    --datetime-calendar-border: var(--color-base-200, var(--border-color, #d9dee5));
+    --datetime-calendar-shadow: 0 16px 38px rgba(15, 23, 42, 0.16);
+    --datetime-selected-fg: var(--color-white, var(--primary-fg, #ffffff));
+}
+
+html[data-theme="dark"],
+.dark {
+    --datetime-input-bg: var(--color-base-900, var(--body-bg, #121212));
+    --datetime-input-fg: var(--color-font-default-dark, var(--body-fg, #eeeeee));
+    --datetime-input-border: var(--color-base-700, #374151);
+    --datetime-input-hover-border: var(--color-base-500, #6b7280);
+    --datetime-input-focus: var(--color-primary-500, var(--primary, #79aec8));
+    --datetime-input-muted: var(--color-font-subtle-dark, var(--body-quiet-color, #d0d0d0));
+    --datetime-calendar-bg: var(--color-base-900, var(--body-bg, #121212));
+    --datetime-calendar-fg: var(--color-font-default-dark, var(--body-fg, #eeeeee));
+    --datetime-calendar-muted: var(--color-base-500, var(--body-quiet-color, #9ca3af));
+    --datetime-calendar-hover: var(--color-base-800, #1f2937);
+    --datetime-calendar-border: var(--color-base-700, #374151);
+    --datetime-calendar-shadow: 0 16px 38px rgba(0, 0, 0, 0.42);
+    --datetime-selected-fg: var(--color-base-950, var(--primary-fg, #ffffff));
+}
+
+.flatpickr-datetime,
+.flatpickr-datetime.flatpickr-input,
+.flatpickr-datetime.flatpickr-input.active {
+    box-sizing: border-box;
+    width: min(100%, 24rem);
+    min-height: 2.375rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--datetime-input-border);
+    border-radius: var(--border-radius, 6px);
+    background: var(--datetime-input-bg);
+    color: var(--datetime-input-fg);
+    font: inherit;
+    line-height: 1.35;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.flatpickr-datetime::placeholder {
+    color: var(--datetime-input-muted);
+}
+
+.flatpickr-datetime:hover {
+    border-color: var(--datetime-input-hover-border);
+}
+
+.flatpickr-datetime:focus,
+.flatpickr-datetime.flatpickr-input.active {
+    border-color: var(--datetime-input-focus);
+    outline: 0;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--datetime-input-focus) 24%, transparent);
+}
+
+.datetime-action-button,
+.datetime-clear-button {
+    min-height: 2.375rem;
+    margin-left: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--datetime-input-border);
+    border-radius: var(--border-radius, 6px);
+    background: var(--datetime-input-bg);
+    color: var(--datetime-input-fg);
+    cursor: pointer;
+    font: inherit;
+    line-height: 1.35;
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.datetime-action-button:hover,
+.datetime-action-button:focus,
+.datetime-clear-button:hover,
+.datetime-clear-button:focus {
+    border-color: var(--datetime-input-focus);
+    color: var(--datetime-input-focus);
+    outline: 0;
+}
+
+.flatpickr-calendar {
+    border: 1px solid var(--datetime-calendar-border);
+    border-radius: var(--border-radius, 8px);
+    background: var(--datetime-calendar-bg);
+    color: var(--datetime-calendar-fg);
+    box-shadow: var(--datetime-calendar-shadow);
+    overflow: hidden;
+}
+
+.flatpickr-calendar.arrowTop:after {
+    border-bottom-color: var(--datetime-calendar-bg);
+}
+
+.flatpickr-calendar.arrowBottom:after {
+    border-top-color: var(--datetime-calendar-bg);
+}
+
+.flatpickr-months .flatpickr-month,
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month,
+.flatpickr-current-month input.cur-year,
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-time input,
+.flatpickr-time .flatpickr-time-separator {
+    color: var(--datetime-calendar-fg);
+    fill: var(--datetime-calendar-fg);
+}
+
+.flatpickr-months .flatpickr-prev-month svg,
+.flatpickr-months .flatpickr-next-month svg,
+.flatpickr-months .flatpickr-prev-month svg path,
+.flatpickr-months .flatpickr-next-month svg path {
+    fill: var(--datetime-calendar-fg);
+}
+
+.flatpickr-months .flatpickr-prev-month:hover,
+.flatpickr-months .flatpickr-next-month:hover {
+    background: var(--datetime-calendar-hover);
+    color: var(--datetime-input-focus);
+}
+
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg,
+.flatpickr-months .flatpickr-prev-month:hover svg path,
+.flatpickr-months .flatpickr-next-month:hover svg path {
+    fill: var(--datetime-input-focus);
+}
+
+span.flatpickr-weekday,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay,
+.flatpickr-day.flatpickr-disabled {
+    color: var(--datetime-calendar-muted);
+}
+
+.flatpickr-day {
+    color: var(--datetime-calendar-fg);
+}
+
+.flatpickr-day:hover,
+.flatpickr-day:focus,
+.flatpickr-time input:hover,
+.flatpickr-time input:focus,
+.numInputWrapper:hover {
+    background: var(--datetime-calendar-hover);
+    border-color: var(--datetime-calendar-hover);
+}
+
+.flatpickr-day.today {
+    border-color: var(--datetime-input-focus);
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover,
+.flatpickr-day.selected:focus {
+    background: var(--datetime-input-focus);
+    border-color: var(--datetime-input-focus);
+    color: var(--datetime-selected-fg);
+}
+
+.flatpickr-calendar.hasTime .flatpickr-time {
+    border-top-color: var(--datetime-calendar-border);
+}

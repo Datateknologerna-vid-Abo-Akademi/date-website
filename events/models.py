@@ -43,6 +43,12 @@ EVENT_TEMPLATE_CHOICES = EVENT_TEMPLATE_CHOICES_COMMON + EVENT_TEMPLATE_CHOICES_
 def registration_terms_feature_enabled():
     return settings.PROJECT_NAME == "date"
 
+
+class EventQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(published_time__isnull=False, published_time__lte=now())
+
+
 def upload_to(instance, filename):
     filename_base, filename_ext = os.path.splitext(filename)
 
@@ -79,10 +85,10 @@ class Event(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_time = models.DateTimeField(_('Skapad'), default=now)
     published_time = models.DateTimeField(
-        _('Publicerad'), editable=False, null=True, blank=True)
+        _('Publiceras'), null=True, blank=True, default=now,
+        help_text=_('Lämna tomt för att dölja evenemanget. Välj en framtida tid för schemalagd publicering.'))
     modified_time = models.DateTimeField(
         _('Modifierad'), editable=False, null=True, blank=True)
-    published = models.BooleanField(_('Publicera'), default=True)
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False,
                             max_length=POST_SLUG_MAX_LENGTH, blank=True)
     sign_up_avec = models.BooleanField(_('Avec'), default=False)
@@ -100,6 +106,8 @@ class Event(models.Model):
     redirect_link = models.URLField(_('Redirect Link'), blank=True)
     parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children', default=None)
 
+    objects = EventQuerySet.as_manager()
+
     class Meta:
         verbose_name = _('evenemang')
         verbose_name_plural = _('evenemang')
@@ -110,6 +118,10 @@ class Event(models.Model):
 
     def get_absolute_url(self):
         return reverse('events:detail', args=[self.slug])
+
+    @property
+    def published(self):
+        return self.published_time is not None and self.published_time <= now()
 
     @property
     def background_image_url(self):
@@ -134,11 +146,10 @@ class Event(models.Model):
 
     def publish(self):
         self.published_time = now()
-        self.published = True
         self.save()
 
     def unpublish(self):
-        self.published = False
+        self.published_time = None
         self.save()
 
     def update(self):
@@ -322,7 +333,7 @@ class Event(models.Model):
 
     def in_past_event_list(self):
         today = timezone.now()
-        past_events = Event.objects.filter(
+        past_events = Event.objects.published().filter(
             event_date_end__lte=today).order_by('-event_date_end')[:5]
         logger.debug(past_events)
         logger.debug(self)

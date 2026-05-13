@@ -2179,6 +2179,42 @@ msgstr "Do you want to collaborate with Pulterit ry?"
 #~ msgid "Adress:"
 #~ msgstr "Address:"
 
+#: core/admin_widgets.py
+msgid "Don't publish"
+msgstr "Don't publish"
+
+#: core/admin_widgets.py
+msgid "Publish now"
+msgstr "Publish now"
+
+#: events/forms.py
+msgid "Leave blank to keep the event hidden."
+msgstr "Leave blank to keep the event hidden."
+
+#: events/models.py
+msgid "Publiceras"
+msgstr "Published time"
+
+#: events/models.py
+msgid "Lämna tomt för att dölja evenemanget. Välj en framtida tid för schemalagd publicering."
+msgstr "Leave blank to hide the event. Choose a future time for scheduled publishing."
+
+#: news/models.py
+msgid "Lämna tomt för att dölja nyheten. Välj en framtida tid för schemalagd publicering."
+msgstr "Leave blank to hide the post. Choose a future time for scheduled publishing."
+
+#: polls/models.py
+msgid "Lämna tomt för att dölja frågan. Välj en framtida tid för schemalagd publicering."
+msgstr "Leave blank to hide the poll. Choose a future time for scheduled publishing."
+
+#: ctf/models.py
+msgid "Lämna tomt för att dölja CTF:n. Välj en framtida tid för schemalagd publicering."
+msgstr "Leave blank to hide the CTF. Choose a future time for scheduled publishing."
+
+#: lucia/models.py
+msgid "Lämna tomt för att dölja kandidaten. Välj en framtida tid för schemalagd publicering."
+msgstr "Leave blank to hide the candidate. Choose a future time for scheduled publishing."
+
 #~ msgid "Zip kod:"
 #~ msgstr "ZIP code:"
 

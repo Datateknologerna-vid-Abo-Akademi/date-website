@@ -10,7 +10,9 @@ from django.template.response import TemplateResponse
 from django_ckeditor_5.widgets import CKEditor5Widget
 from django.urls import reverse, re_path
 from django.utils.html import format_html
+from django.utils.timezone import now
 from core.admin_base import ModelAdmin, PublicUrlAdminMixin, TabularInline, UNFOLD_FORMFIELD_OVERRIDES
+from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
 
 # Translation and Ordering imports
 from admin_ordering.admin import OrderableAdmin
@@ -135,6 +137,28 @@ class EventAttendeesAdmin(ModelAdmin):
     date_hierarchy = 'time_registered'
 
 
+class EventPublicationFilter(admin.SimpleListFilter):
+    title = 'publicering'
+    parameter_name = 'publication'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('published', 'Publicerad'),
+            ('scheduled', 'Schemalagd'),
+            ('hidden', 'Dold'),
+        )
+
+    def queryset(self, request, queryset):
+        current_time = now()
+        if self.value() == 'published':
+            return queryset.filter(published_time__isnull=False, published_time__lte=current_time)
+        if self.value() == 'scheduled':
+            return queryset.filter(published_time__gt=current_time)
+        if self.value() == 'hidden':
+            return queryset.filter(published_time__isnull=True)
+        return queryset
+
+
 # TODO: Get it working with the old EventAdmin code that is commented out below
 # TODO: Improve the admin panel UI for the translatable fields
 # SEE https://django-modeltranslation.readthedocs.io/en/latest/admin.html
@@ -147,10 +171,10 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
     }
     list_display = (
         'title', 'created_time', 'event_date_start', 'get_attendee_count', 
-        'sign_up_max_participants', 'published', 'account_actions', 'parent'
+        'sign_up_max_participants', 'publication_status', 'published_time', 'account_actions', 'parent'
     )
     search_fields = ('title', 'slug', 'author__first_name', 'author__last_name', 'author__username', 'author__email')
-    list_filter = ('published', 'sign_up', 'members_only')
+    list_filter = (EventPublicationFilter, 'sign_up', 'members_only')
     autocomplete_fields = ('author', 'parent')
     list_select_related = ('author', 'parent')
     ordering = ['-event_date_start']
@@ -241,10 +265,8 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
         return TemplateResponse(request, 'events/list.html', context)
 
     class Media:
-        js = (
-            'admin/js/jquery.init.js',
-            'core/js/eventform.js',
-        )
+        css = {'all': FLATPICKR_ADMIN_CSS}
+        js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS + ('core/js/eventform.js',)
 
     def get_attendee_count(self, obj):
         if obj.parent:
@@ -257,6 +279,16 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
         if count is not None:
             return count
         return obj.get_registrations().count()
+
+    def publication_status(self, obj):
+        if obj.published_time is None:
+            return 'Dold'
+        if obj.published_time > now():
+            return 'Schemalagd'
+        return 'Publicerad'
+
+    publication_status.short_description = 'Publicering'
+    publication_status.admin_order_field = 'published_time'
 
     get_attendee_count.short_description = 'Anmälda'
 

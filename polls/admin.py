@@ -1,6 +1,12 @@
 from django.conf import settings
 from django.contrib import admin
+from django.utils.timezone import now
 from core.admin_base import ModelAdmin, TabularInline
+from core.admin_widgets import (
+    FLATPICKR_ADMIN_CSS,
+    FLATPICKR_ADMIN_JS,
+    FlatpickrDateTimeAdminMixin,
+)
 
 from core.admin import ActiveLanguageTranslationAdminMixin
 from .models import Choice, Question, Vote
@@ -43,7 +49,29 @@ class VoteInline(TabularInline):
         return obj.user.get_full_name()
 
 
-class QuestionAdmin(PollTranslationAdminBase):
+class QuestionPublicationFilter(admin.SimpleListFilter):
+    title = 'publicering'
+    parameter_name = 'publication'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('published', 'Publicerad'),
+            ('scheduled', 'Schemalagd'),
+            ('hidden', 'Dold'),
+        )
+
+    def queryset(self, request, queryset):
+        current_time = now()
+        if self.value() == 'published':
+            return queryset.filter(published_time__isnull=False, published_time__lte=current_time)
+        if self.value() == 'scheduled':
+            return queryset.filter(published_time__gt=current_time)
+        if self.value() == 'hidden':
+            return queryset.filter(published_time__isnull=True)
+        return queryset
+
+
+class QuestionAdmin(FlatpickrDateTimeAdminMixin, PollTranslationAdminBase):
     fieldsets = [
         (None,
          {'fields':
@@ -52,17 +80,31 @@ class QuestionAdmin(PollTranslationAdminBase):
                  'voting_options',
                  'multiple_choice',
                  'required_multiple_choices',
-                 'published',
+                 'published_time',
                  'show_results',
                  'end_vote'
              ]}),
     ]
-    list_display = ('question_text', 'pub_date', 'published', 'show_results', 'end_vote')
+    list_display = ('question_text', 'pub_date', 'publication_status', 'published_time', 'show_results', 'end_vote')
     inlines = [ChoiceInline, VoteInline]
-    list_filter = ['published', 'show_results', 'end_vote', 'multiple_choice']
+    list_filter = [QuestionPublicationFilter, 'show_results', 'end_vote', 'multiple_choice']
     search_fields = ['question_text', 'choice__choice_text', 'vote__user__username', 'vote__user__email']
     ordering = ('-pub_date',)
     date_hierarchy = 'pub_date'
+
+    def publication_status(self, obj):
+        if obj.published_time is None:
+            return 'Dold'
+        if obj.published_time > now():
+            return 'Schemalagd'
+        return 'Publicerad'
+
+    publication_status.short_description = 'Publicering'
+    publication_status.admin_order_field = 'published_time'
+
+    class Media:
+        css = {'all': FLATPICKR_ADMIN_CSS}
+        js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS
 
 
 admin.site.register(Question, QuestionAdmin)

@@ -2164,6 +2164,42 @@ msgstr "Haluatko tehdä yhteistyötä Pulterit ry:n kanssa?"
 #~ msgstr "Kaksivaiheinen tunnistautuminen"
 
 #~ msgid "Aktiverad"
+#: core/admin_widgets.py
+msgid "Don't publish"
+msgstr "Älä julkaise"
+
+#: core/admin_widgets.py
+msgid "Publish now"
+msgstr "Julkaise nyt"
+
+#: events/forms.py
+msgid "Leave blank to keep the event hidden."
+msgstr "Jätä tyhjäksi pitääksesi tapahtuman piilotettuna."
+
+#: events/models.py
+msgid "Publiceras"
+msgstr "Julkaisuaika"
+
+#: events/models.py
+msgid "Lämna tomt för att dölja evenemanget. Välj en framtida tid för schemalagd publicering."
+msgstr "Jätä tyhjäksi piilottaaksesi tapahtuman. Valitse tuleva aika ajastettua julkaisua varten."
+
+#: news/models.py
+msgid "Lämna tomt för att dölja nyheten. Välj en framtida tid för schemalagd publicering."
+msgstr "Jätä tyhjäksi piilottaaksesi uutisen. Valitse tuleva aika ajastettua julkaisua varten."
+
+#: polls/models.py
+msgid "Lämna tomt för att dölja frågan. Välj en framtida tid för schemalagd publicering."
+msgstr "Jätä tyhjäksi piilottaaksesi kyselyn. Valitse tuleva aika ajastettua julkaisua varten."
+
+#: ctf/models.py
+msgid "Lämna tomt för att dölja CTF:n. Välj en framtida tid för schemalagd publicering."
+msgstr "Jätä tyhjäksi piilottaaksesi CTF:n. Valitse tuleva aika ajastettua julkaisua varten."
+
+#: lucia/models.py
+msgid "Lämna tomt för att dölja kandidaten. Välj en framtida tid för schemalagd publicering."
+msgstr "Jätä tyhjäksi piilottaaksesi ehdokkaan. Valitse tuleva aika ajastettua julkaisua varten."
+
 #~ msgstr "Käytössä"
 
 #~ msgid "Inte aktiverad"

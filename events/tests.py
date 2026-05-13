@@ -142,6 +142,27 @@ class EventTestCase(TestCase):
         response = c.get(reverse('events:detail', args=['no-such-event']))
         self.assertEqual(response.status_code, 404)
 
+    def test_scheduled_event_is_hidden_until_publish_time(self):
+        self.event.published_time = timezone.now() + timezone.timedelta(days=1)
+        self.event.save()
+
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get(reverse('events:index'))
+        self.assertNotIn(self.event, list(response.context["event_list"]))
+        self.assertNotIn(self.event, list(response.context["past_events"]))
+
+    def test_past_publish_time_makes_event_public(self):
+        self.event.published_time = timezone.now() - timezone.timedelta(minutes=1)
+        self.event.save()
+
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get(reverse('events:index'))
+        self.assertIn(self.event, list(response.context["past_events"]))
+
     def test_event_detail_shows_closed_registration_message_after_deadline(self):
         self.event.sign_up_members = timezone.now() - timezone.timedelta(days=2)
         self.event.sign_up_others = timezone.now() - timezone.timedelta(days=1)
@@ -663,6 +684,26 @@ class EventAdminTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'name="template"')
+
+    def test_change_page_renders_publish_time_field(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="published_time"')
+        self.assertContains(response, "flatpickr-datetime")
+        self.assertContains(response, timezone.localtime(self.event.published_time).strftime("%Y-%m-%d %H:%M"))
+        self.assertNotContains(response, ".216")
+        self.assertContains(response, "core/js/flatpickr.min.js")
+        self.assertContains(response, "core/css/admin-datetime.css")
+        self.assertNotContains(response, "vDateField")
+        self.assertNotContains(response, "vTimeField")
+        self.assertContains(response, "Lämna tomt för att hålla evenemanget dolt.")
+        self.assertContains(response, "Publicera inte")
+        self.assertContains(response, 'data-clear-datetime="#id_published_time"')
+        self.assertContains(response, "Publicera nu")
+        self.assertContains(response, 'data-set-datetime="#id_published_time"')
+        self.assertContains(response, 'data-set-datetime-value="')
 
     def test_edit_form_preserves_existing_slug_when_field_is_cleared(self):
         form = EventEditForm(instance=self.event)
