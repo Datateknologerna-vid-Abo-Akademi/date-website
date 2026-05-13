@@ -3,6 +3,7 @@ from functools import wraps
 
 from django.contrib.auth.views import redirect_to_login
 from django.shortcuts import redirect, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 
@@ -37,7 +38,14 @@ def exam_bank_password_gate(request, access_settings):
         form = ExamBankPasswordForm(request.POST, access_settings=access_settings)
         if form.is_valid():
             request.session[EXAM_BANK_ACCESS_SESSION_KEY] = access_settings.password_hash
-            return redirect(request.get_full_path())
+            target = request.get_full_path()
+            if not url_has_allowed_host_and_scheme(
+                target,
+                allowed_hosts={request.get_host()},
+                require_https=request.is_secure(),
+            ):
+                target = '/archive/exams/'
+            return redirect(target)
         status = 403
     else:
         form = ExamBankPasswordForm(access_settings=access_settings)
