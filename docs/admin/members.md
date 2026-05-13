@@ -1,7 +1,7 @@
 # Members Admin Guide
 
 ## Purpose
-Manage member accounts, memberships, subscription payments, and functionary roles.
+Manage member accounts, memberships, and subscription payments.
 
 ## Member Accounts
 Most people register themselves at `/members/signup/`. Those signups land in the admin as inactive users; review their details and activate them once payment/eligibility is confirmed. Only use the manual “Add member” flow below when you truly need to create an account on someone’s behalf.
@@ -28,17 +28,13 @@ Most people register themselves at `/members/signup/`. Those signups land in the
    - List filters help you find expired vs active payments.
 
 ## Functionary Roles & Assignments
-1. Define positions under **Members › Functionary roles** (mark `Styrelse` if it’s a board seat).
-2. Assign members in **Members › Functionaries**:
-   - Fill in the role and year, plus either a linked member or a display name. Linked members automatically snapshot their current name for display if the member account is later removed.
-   - Use filters to review by year or role. Deleting a record removes it from the public functionary list.
-3. Members can also manage their own functionary history via `/members/functionary/`, but admin edits override their entries.
+Functionary roles and assignments are managed by the `functionaries` app. See the [Functionaries Admin Guide](functionaries.md).
 
 ## Front-Facing Pages
 - `/members/login/` – custom auth view using the `Member` model.
 - `/members/info/` – members can edit their profile (first/last name, address, etc.).
 - `/members/signup/` – collects new member requests (kept inactive until an admin activates them).
-- `/members/functionaries/` – public listing filtered by year/role using data from Functionary models.
+- `/members/functionaries/` – public functionary listing owned by the `functionaries` app.
 
 ## Tips
 - When demoting a member (e.g., from Ordinary to Senior), consider their access in other apps (archive, polls) that rely on `permission_profile`.

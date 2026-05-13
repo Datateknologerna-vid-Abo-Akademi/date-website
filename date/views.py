@@ -17,7 +17,7 @@ from .language_utils import resolve_language, strip_language_prefix
 from ads.models import AdUrl
 from events.models import Event
 from news.models import Post
-from social.models import IgUrl
+from instagram.models import IgUrl
 
 
 logger = logging.getLogger(__name__)

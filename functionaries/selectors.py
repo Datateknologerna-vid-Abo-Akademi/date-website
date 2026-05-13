@@ -1,4 +1,5 @@
 from collections import defaultdict
+
 from django.db.models import Q, QuerySet
 from django.utils import timezone
 
@@ -61,10 +62,8 @@ def get_selected_role(request, functionary_roles):
 
 
 def get_filtered_functionaries(year, selected_role, is_board):
-    if isinstance(year, int):
-        main_filter = Q(year=year, functionary_role__board=is_board)
-    else:
-        main_filter = Q(year__in=year, functionary_role__board=is_board)
+    years = year if isinstance(year, (QuerySet, list, tuple, set)) else [year]
+    main_filter = Q(year__in=years, functionary_role__board=is_board)
 
     if selected_role is not None:
         role_filter = (

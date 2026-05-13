@@ -5,7 +5,7 @@
   - Upcoming events (`Event` objects where `event_date_end >= now`) plus the last 31 days for calendar dots.
   - Latest three un-categorized news posts.
   - Albins Angels spotlight (news posts in that category within 10 days).
-  - Ad banners (`AdUrl`) and Instagram embeds (`IgUrl`).
+  - Ad banners (`AdUrl`) and Instagram embeds (`instagram.IgUrl`).
 - Also provides the homepage-template selection logic, language switching endpoint, and custom 404/500 handlers.
 
 ## Homepage Variants

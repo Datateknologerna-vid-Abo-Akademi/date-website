@@ -13,7 +13,8 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from archive.models import TYPE_CHOICES, Collection, Document, Picture, PictureCollection
+from archive.models import Collection, Document
+from gallery.models import Album, Photo
 from members.models import Member, MembershipType, ORDINARY_MEMBER
 
 
@@ -21,8 +22,12 @@ def create_collection(title="Test collection", collection_type=None):
     return Collection.objects.create(title=title, pub_date=timezone.now(), type=collection_type)
 
 
+def create_album(title="Test album"):
+    return Album.objects.create(title=title, pub_date=timezone.now())
+
+
 def create_picture(favorite=False):
-    collection = create_collection(collection_type=TYPE_CHOICES[0][1])
+    album = create_album()
     img = Image.new('RGB', (100, 100))
     img.save(os.path.join(settings.MEDIA_ROOT, 'test_image.jpg'))
     img.close()
@@ -32,11 +37,11 @@ def create_picture(favorite=False):
     test_image = SimpleUploadedFile(name='test_image.jpg',
                                     content=img_data,
                                     content_type='image/jpg')
-    return Picture.objects.create(collection=collection, image=test_image, favorite=favorite)
+    return Photo.objects.create(album=album, image=test_image, favorite=favorite)
 
 
 def create_document(title="Test document"):
-    collection = create_collection(collection_type=TYPE_CHOICES[1][1])
+    collection = create_collection(collection_type='Documents')
 
     # Create a temporary file with some test data
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
@@ -62,14 +67,14 @@ class CollectionTestCase(TestCase):
         shutil.rmtree(cls._media_root, ignore_errors=True)
         super().tearDownClass()
     def test_collection_creation(self):
-        c = create_collection(collection_type=TYPE_CHOICES[0][1])
+        c = create_collection(collection_type='Documents')
         self.assertTrue(isinstance(c, Collection))
         self.assertEqual(c.__str__(), c.title)
-        self.assertEqual(c.type, TYPE_CHOICES[0][1])
+        self.assertEqual(c.type, 'Documents')
 
     def test_picture_creation(self):
         p = create_picture(favorite=False)
-        self.assertTrue(isinstance(p, Picture))
+        self.assertTrue(isinstance(p, Photo))
         self.assertEqual(p.__str__(), p.image.name)
         self.assertEqual(p.favorite, False)
 
@@ -77,7 +82,7 @@ class CollectionTestCase(TestCase):
         d = create_document()
         self.assertTrue(isinstance(d, Document))
         self.assertEqual(d.__str__(), d.title)
-        self.assertEqual(d.collection.type, TYPE_CHOICES[1][1])
+        self.assertEqual(d.collection.type, 'Documents')
 
 
 class ArchiveAdminTests(TestCase):
@@ -89,15 +94,14 @@ class ArchiveAdminTests(TestCase):
         )
         self.client.force_login(self.admin_user)
 
-    def test_picture_collection_change_page_renders_when_image_url_cannot_be_resolved(self):
-        collection = PictureCollection.objects.create(
+    def test_album_change_page_renders_when_image_url_cannot_be_resolved(self):
+        album = Album.objects.create(
             title="Broken Picture Admin Collection",
             pub_date=timezone.now(),
-            type="Pictures",
         )
-        Picture.objects.bulk_create([
-            Picture(
-                collection=collection,
+        Photo.objects.bulk_create([
+            Photo(
+                album=album,
                 image="archive/broken.jpg",
             )
         ])
@@ -107,7 +111,7 @@ class ArchiveAdminTests(TestCase):
             new_callable=PropertyMock,
             side_effect=RuntimeError("broken storage"),
         ):
-            response = self.client.get(reverse("admin:archive_picturecollection_change", args=[collection.pk]))
+            response = self.client.get(reverse("admin:gallery_album_change", args=[album.pk]))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "archive/broken.jpg")
@@ -157,15 +161,14 @@ class PictureDetailFragmentViewTests(TestCase):
             password='pwd',
             membership_type=cls.membership_type,
         )
-        cls.collection = create_collection(
+        cls.collection = create_album(
             title='Fragment Album',
-            collection_type=TYPE_CHOICES[0][0],
         )
 
     def setUp(self):
         for index in range(13):
-            Picture.objects.create(
-                collection=self.collection,
+            Photo.objects.create(
+                album=self.collection,
                 image=self._uploaded_image(f'fragment-{index}.jpg'),
             )
 

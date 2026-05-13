@@ -83,6 +83,7 @@ Static UI strings are not enough for this project because editors need translate
 The project registers translated fields in these files:
 
 - `events/translation.py`
+- `functionaries/translation.py`
 - `news/translation.py`
 - `polls/translation.py`
 - `staticpages/translation.py`
@@ -90,6 +91,7 @@ The project registers translated fields in these files:
 Examples of translated model fields:
 
 - `Event.title`, `Event.content`
+- `FunctionaryRole.title`
 - `Post.title`, `Post.content`
 - `Category.name`
 - `Question.question_text`, `Choice.choice_text`

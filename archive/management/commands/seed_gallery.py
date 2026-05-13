@@ -7,7 +7,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.management.base import BaseCommand, CommandError
 from PIL import Image, ImageDraw
 
-from archive.models import Collection, Picture
+from gallery.models import Album, Photo
 
 SEED_PREFIX = "[Seed] "
 
@@ -104,12 +104,12 @@ class Command(BaseCommand):
             raise CommandError("seed_gallery must not be run with USE_S3=True — it would upload fake images to S3.")
 
         if options["clear"]:
-            collections = list(Collection.objects.filter(title__startswith=SEED_PREFIX))
-            count = len(collections)
-            for collection in collections:
-                for picture in collection.picture_set.all():
+            albums = list(Album.objects.filter(title__startswith=SEED_PREFIX))
+            count = len(albums)
+            for album in albums:
+                for picture in album.photo_set.all():
                     picture.delete()
-                collection.delete()
+                album.delete()
             self.stdout.write(self.style.WARNING(f"Cleared {count} seeded album(s)."))
 
         album_count = options["albums"]
@@ -131,17 +131,16 @@ class Command(BaseCommand):
                 tzinfo=timezone.get_current_timezone(),
             )
 
-            collection = Collection.objects.create(
+            album = Album.objects.create(
                 title=f"{SEED_PREFIX}{name} {year}",
-                type="Pictures",
                 pub_date=pub_date,
             )
 
-            self.stdout.write(f'  [{i + 1}/{album_count}] "{collection.title}"', ending=" ")
+            self.stdout.write(f'  [{i + 1}/{album_count}] "{album.title}"', ending=" ")
 
             for j in range(image_count):
                 fake_img = _make_fake_image(i * image_count + j)
-                Picture(collection=collection, image=fake_img).save()
+                Photo(album=album, image=fake_img).save()
                 self.stdout.write(".", ending="")
                 self.stdout.flush()
 

@@ -145,6 +145,7 @@ def get_installed_apps(proj_apps):
         'daphne',
         'date',
         'members.apps.MemberConfig',
+        'functionaries',
         *proj_apps,
         'modeltranslation',
         *(['unfold', 'unfold.contrib.filters', 'unfold.contrib.forms', 'unfold.contrib.inlines'] if USE_UNFOLD else []),
