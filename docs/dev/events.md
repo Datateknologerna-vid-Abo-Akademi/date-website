@@ -7,6 +7,7 @@
 
 ## Core Logic
 - `Event.make_registration_form()` dynamically builds a `forms.BaseForm` subclass per event based on `EventRegistrationForm`. That form is used by `EventDetailView` to render the signup.
+- Publication is controlled by `published_time`: `NULL` means hidden, a future timestamp means scheduled, and a past timestamp means public. Use `Event.objects.published()` for public-facing event lists, feeds, and detail lookups.
 - Capacity: `Event.event_is_full()` (defined elsewhere in the model) prevents registrations when the limit is hit. Child events delegate to their parent for attendee counts.
 - Sign-up windows rely on helper methods (`registration_is_open_members`, `registration_is_open_others`, etc.) comparing now to the configured datetimes.
 - Passcode flow: if `passcode` is set, `EventDetailView` stores the successful passphrase in `request.session['passcode_status']`. Until matched, the template `events/event_passcode.html` is rendered.
@@ -21,7 +22,7 @@
 - Extra admin URL `/list/` renders `events/list.html` for an event, showing public info answers.
 
 ## Forms
-- Creation/Edit forms override `save()` to enforce slug uniqueness (`slugify_max`), normalize signup settings when `sign_up` is false, and stamp publish/modified times.
+- Creation/Edit forms override `save()` to enforce slug uniqueness (`slugify_max`), normalize signup settings when `sign_up` is false, and stamp modified times.
 - `PasscodeForm` is a simple `forms.Form` used when `passcode` is required.
 
 ## Views & Routing

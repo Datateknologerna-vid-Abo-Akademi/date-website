@@ -10,7 +10,7 @@ Publish capture-the-flag competitions, manage individual flags, and review guess
    - **Titel / Innehåll** – shown on `/ctf/` and the detail page (rich text supported).
    - **Startdatum / Slutdatum** – controls when the challenge opens/closes.
    - **Slug** – URL identifier (auto-populate manually, e.g., `vaarctf-2024`).
-   - **Publicera** – hide drafts by unchecking.
+   - **Publiceras** – timestamp when the CTF should become visible. Leave empty to keep it hidden, or pick a future time to schedule publication; a past time publishes immediately.
 4. Save to unlock the inline **Flags** table.
 
 ## Add Flags to a CTF

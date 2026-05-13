@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-11 21:23+0300\n"
+"POT-Creation-Date: 2026-05-13 21:54+0300\n"
 "PO-Revision-Date: 2025-09-16 20:27+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -31,7 +31,7 @@ msgstr "First name"
 msgid "Efternamn"
 msgstr "Last name"
 
-#: alumni/forms.py:17 alumni/forms.py:72 events/models.py:381
+#: alumni/forms.py:17 alumni/forms.py:72 events/models.py:392
 #: members/forms.py:176 members/models.py:33
 msgid "E-postadress"
 msgstr "Email address"
@@ -109,8 +109,8 @@ msgstr "Update your information"
 msgid "Städa upp media"
 msgstr "Clean up media"
 
-#: archive/models.py:30 archive/models.py:167 events/models.py:201
-#: events/models.py:337 events/models.py:379 members/models.py:97
+#: archive/models.py:30 archive/models.py:167 events/models.py:212
+#: events/models.py:348 events/models.py:390 members/models.py:97
 #: members/models.py:122 members/models.py:181 news/models.py:15
 #: templates/biocum/events/arsfest.html:92
 #: templates/common/events/arsfest.html:80
@@ -288,7 +288,7 @@ msgstr "Exams"
 msgid "Activities"
 msgstr "Activities"
 
-#: core/admin_ui.py:108 ctf/models.py:64
+#: core/admin_ui.py:108 ctf/models.py:77
 msgid "CTF"
 msgstr "CTF"
 
@@ -296,7 +296,7 @@ msgstr "CTF"
 msgid "CTF Guesses"
 msgstr "CTF Guesses"
 
-#: core/admin_ui.py:110 lucia/models.py:23
+#: core/admin_ui.py:110 lucia/models.py:33
 msgid "Lucia"
 msgstr "Lucia"
 
@@ -338,6 +338,14 @@ msgstr "Admin Log"
 msgid "Permissions"
 msgstr "Permissions"
 
+#: core/admin_widgets.py:63
+msgid "Publish now"
+msgstr "Publish now"
+
+#: core/admin_widgets.py:64
+msgid "Don't publish"
+msgstr "Don't publish"
+
 #: core/settings/common.py:84
 msgid "Quality Assurance"
 msgstr "Quality Assurance"
@@ -350,75 +358,115 @@ msgstr "Development"
 msgid "Production"
 msgstr "Production"
 
-#: ctf/models.py:17 events/models.py:57 lucia/models.py:16
-#: members/models.py:168 news/models.py:31 staticpages/models.py:39
+#: ctf/admin.py:22 events/admin.py:142 lucia/admin.py:30 news/admin.py:31
+#: polls/admin.py:54
+msgid "publicering"
+msgstr "publication"
+
+#: ctf/admin.py:27 ctf/admin.py:62 events/admin.py:147 events/admin.py:289
+#: lucia/admin.py:35 lucia/admin.py:64 news/admin.py:36 news/admin.py:84
+#: polls/admin.py:59 polls/admin.py:101
+#: templates/common/publications/list.html:25
+msgid "Publicerad"
+msgstr "Published"
+
+#: ctf/admin.py:28 ctf/admin.py:61 events/admin.py:148 events/admin.py:288
+#: lucia/admin.py:36 lucia/admin.py:63 news/admin.py:37 news/admin.py:83
+#: polls/admin.py:60 polls/admin.py:100
+msgid "Schemalagd"
+msgstr "Scheduled"
+
+#: ctf/admin.py:29 ctf/admin.py:59 events/admin.py:149 events/admin.py:286
+#: lucia/admin.py:37 lucia/admin.py:61 news/admin.py:38 news/admin.py:81
+#: polls/admin.py:61 polls/admin.py:98
+msgid "Dold"
+msgstr "Hidden"
+
+#: ctf/admin.py:64 events/admin.py:291 lucia/admin.py:66 news/admin.py:86
+#: polls/admin.py:103
+msgid "Publicering"
+msgstr "Publication"
+
+#: ctf/models.py:22 events/models.py:63 lucia/models.py:22
+#: members/models.py:168 news/models.py:36 staticpages/models.py:39
 #: staticpages/models.py:87
 msgid "Titel"
 msgstr "Title"
 
-#: ctf/models.py:18 events/models.py:58 lucia/models.py:17 news/models.py:33
+#: ctf/models.py:23 events/models.py:64 lucia/models.py:23 news/models.py:38
 #: staticpages/models.py:40
 msgid "Innehåll"
 msgstr "Content"
 
-#: ctf/models.py:19 events/models.py:65
+#: ctf/models.py:24 events/models.py:71
 msgid "Startdatum"
 msgstr "Start date"
 
-#: ctf/models.py:20 events/models.py:66
+#: ctf/models.py:25 events/models.py:72
 msgid "Slutdatum"
 msgstr "End date"
 
-#: ctf/models.py:22 ctf/models.py:50 events/models.py:86 lucia/models.py:19
-#: news/models.py:16 news/models.py:39 publications/models.py:17
+#: ctf/models.py:27 ctf/models.py:63 events/models.py:92 lucia/models.py:27
+#: news/models.py:16 news/models.py:45 publications/models.py:17
 #: staticpages/models.py:43
 msgid "Slug"
 msgstr "Slug"
 
-#: ctf/models.py:23 events/models.py:85 lucia/models.py:18 news/models.py:38
-#: polls/models.py:25
-msgid "Publicera"
-msgstr "Publish"
+#: ctf/models.py:29 events/models.py:88 lucia/models.py:25 news/models.py:42
+#: polls/models.py:32
+msgid "Publiceras"
+msgstr "Published time"
 
-#: ctf/models.py:26 ctf/models.py:27
+#: ctf/models.py:30
+msgid ""
+"Lämna tomt för att dölja CTF:n. Välj en framtida tid för schemalagd "
+"publicering."
+msgstr ""
+"Leave blank to hide the CTF. Choose a future time for scheduled publishing."
+
+#: ctf/models.py:35 ctf/models.py:36
 msgid "ctf"
 msgstr "ctf"
 
-#: ctf/models.py:49
+#: ctf/models.py:62
 msgid "Clue"
 msgstr "Clue"
 
-#: ctf/models.py:53
+#: ctf/models.py:66
 msgid "Flag"
 msgstr "Flag"
 
-#: ctf/models.py:54
+#: ctf/models.py:67
 msgid "Flags"
 msgstr "Flags"
 
-#: ctf/models.py:65
+#: ctf/models.py:78
 msgid "Användare"
 msgstr "User"
 
-#: ctf/models.py:66
+#: ctf/models.py:79
 msgid "Flagga"
 msgstr "Flag"
 
-#: ctf/models.py:67 ctf/models.py:72
+#: ctf/models.py:80 ctf/models.py:85
 msgid "Gissning"
 msgstr "Guess"
 
-#: ctf/models.py:68
+#: ctf/models.py:81
 msgid "Korrekt"
 msgstr "Correct"
 
-#: ctf/models.py:69
+#: ctf/models.py:82
 msgid "Tid"
 msgstr "Time"
 
-#: ctf/models.py:73
+#: ctf/models.py:86
 msgid "Gissningar"
 msgstr "Guesses"
+
+#: events/forms.py:81 events/forms.py:174
+msgid "Leave blank to keep the event hidden."
+msgstr "Leave blank to keep the event hidden."
 
 #: events/models.py:29
 msgid "Normal evenemangssida"
@@ -444,15 +492,15 @@ msgstr "Tomtejakt"
 msgid "Wappmiddag"
 msgstr "Wappmiddag"
 
-#: events/models.py:60
+#: events/models.py:66
 msgid "Mall"
 msgstr "Template"
 
-#: events/models.py:67
+#: events/models.py:73
 msgid "Maximal antal deltagare (0 för ingen begränsning)"
 msgstr "Maximal number of attendees (0 for no limit)"
 
-#: events/models.py:68 templates/biocum/events/arsfest.html:79
+#: events/models.py:74 templates/biocum/events/arsfest.html:79
 #: templates/common/events/arsfest.html:66
 #: templates/common/events/baal_anmalan.html:25
 #: templates/common/events/baal_detail.html:59
@@ -465,78 +513,80 @@ msgstr "Maximal number of attendees (0 for no limit)"
 msgid "Anmälning"
 msgstr "Registration"
 
-#: events/models.py:70
+#: events/models.py:76
 msgid "Anmälan öppnas (medlemmar)"
 msgstr "Registration opens (members)"
 
-#: events/models.py:72
+#: events/models.py:78
 msgid "Anmälan öppnas (övriga)"
 msgstr "Registration opens (others)"
 
-#: events/models.py:74
+#: events/models.py:80
 msgid "Anmälningen stängs"
 msgstr "Registration closes"
 
-#: events/models.py:75
+#: events/models.py:81
 msgid "Avanmälning"
 msgstr "Cancel registration"
 
-#: events/models.py:77
+#: events/models.py:83
 msgid "Avanmälningen stängs"
 msgstr "Registration cancellation closes"
 
-#: events/models.py:80 news/models.py:35 staticpages/models.py:41
+#: events/models.py:86 news/models.py:40 staticpages/models.py:41
 msgid "Skapad"
 msgstr "Created"
 
-#: events/models.py:82 news/models.py:36
-#: templates/common/publications/list.html:25
-msgid "Publicerad"
-msgstr "Published"
+#: events/models.py:89
+msgid ""
+"Lämna tomt för att dölja evenemanget. Välj en framtida tid för schemalagd "
+"publicering."
+msgstr ""
+"Leave blank to hide the event. Choose a future time for scheduled publishing."
 
-#: events/models.py:84 news/models.py:37 staticpages/models.py:42
+#: events/models.py:91 news/models.py:44 staticpages/models.py:42
 msgid "Modifierad"
 msgstr "Modified"
 
-#: events/models.py:88
+#: events/models.py:94
 msgid "Avec"
 msgstr "Plus-one"
 
-#: events/models.py:90
+#: events/models.py:96
 msgid "Kräv godkännande av anmälningsvillkor"
 msgstr "Require acceptance of registration terms"
 
-#: events/models.py:93
+#: events/models.py:99
 msgid "Kräv inloggning för innehåll"
 msgstr "Require login for content"
 
-#: events/models.py:94
+#: events/models.py:100
 msgid "Passcode"
 msgstr "Passcode"
 
-#: events/models.py:96 events/models.py:98 staticpages/models.py:45
+#: events/models.py:102 events/models.py:104 staticpages/models.py:45
 #: staticpages/models.py:46
 msgid "Bakgrundsbild"
 msgstr "Background image"
 
-#: events/models.py:99
+#: events/models.py:105
 msgid "Captcha"
 msgstr "Captcha"
 
-#: events/models.py:100
+#: events/models.py:106
 msgid "Redirect Link"
 msgstr "Redirect Link"
 
-#: events/models.py:104 events/models.py:105
+#: events/models.py:112 events/models.py:113
 msgid "evenemang"
 msgstr "event"
 
-#: events/models.py:202 social/models.py:19
+#: events/models.py:213 social/models.py:19
 msgid "Email"
 msgstr "Email"
 
-#: events/models.py:203 events/models.py:383 events/tests.py:338
-#: events/tests.py:1487 events/websocket_utils.py:30
+#: events/models.py:214 events/models.py:394 events/tests.py:359
+#: events/tests.py:1527 events/websocket_utils.py:30
 #: templates/biocum/events/arsfest.html:102
 #: templates/common/events/arsfest.html:89
 #: templates/common/events/baal_detail.html:82
@@ -549,55 +599,55 @@ msgstr "Email"
 msgid "Anonymt"
 msgstr "Anonymously"
 
-#: events/models.py:311 events/registration.py:105
+#: events/models.py:322 events/registration.py:105
 msgid "Det finns redan någon anmäld med denna email"
 msgstr "There is already someone registered with this email"
 
-#: events/models.py:336 events/models.py:378 staticpages/models.py:90
+#: events/models.py:347 events/models.py:389 staticpages/models.py:90
 msgid "#"
 msgstr "#"
 
-#: events/models.py:338
+#: events/models.py:349
 msgid "Typ"
 msgstr "Type"
 
-#: events/models.py:342
+#: events/models.py:353
 msgid "Krävd"
 msgstr "Required"
 
-#: events/models.py:343
+#: events/models.py:354
 msgid "Öppen info"
 msgstr "Open info"
 
-#: events/models.py:344
+#: events/models.py:355
 msgid "Alternativ"
 msgstr "Options"
 
-#: events/models.py:345
+#: events/models.py:356
 msgid "Göm för avec"
 msgstr "Hide for plus-one"
 
-#: events/models.py:348 events/models.py:349
+#: events/models.py:359 events/models.py:360
 msgid "Anmälningsfält"
 msgstr "Signup field"
 
-#: events/models.py:382
+#: events/models.py:393
 msgid "Svar"
 msgstr "Answer"
 
-#: events/models.py:384 templates/common/events/list.html:37
+#: events/models.py:395 templates/common/events/list.html:37
 msgid "Registrerad"
 msgstr "Registered"
 
-#: events/models.py:385 templates/common/events/list.html:35
+#: events/models.py:396 templates/common/events/list.html:35
 msgid "Avec till"
 msgstr "Plus-one for"
 
-#: events/models.py:386
+#: events/models.py:397
 msgid "Ursprungligt evenemang"
 msgstr "Original event"
 
-#: events/models.py:389 events/models.py:390
+#: events/models.py:400 events/models.py:401
 msgid "deltagare"
 msgstr "attendee"
 
@@ -613,15 +663,27 @@ msgstr "Enter name for plus-one."
 msgid "Ange e-post för avec."
 msgstr "Enter email for plus-one."
 
-#: lucia/models.py:15
+#: lucia/admin.py:26
+msgid "Leave blank to keep the candidate hidden."
+msgstr "Leave blank to keep the candidate hidden."
+
+#: lucia/models.py:21
 msgid "Bild URL"
 msgstr "Image URL"
 
-#: lucia/models.py:20
+#: lucia/models.py:26
+msgid ""
+"Lämna tomt för att dölja kandidaten. Välj en framtida tid för schemalagd "
+"publicering."
+msgstr ""
+"Leave blank to hide the candidate. Choose a future time for scheduled "
+"publishing."
+
+#: lucia/models.py:28
 msgid "Poll URL"
 msgstr "Poll URL"
 
-#: lucia/models.py:24
+#: lucia/models.py:34
 msgid "Lucian"
 msgstr "The Lucia"
 
@@ -882,6 +944,10 @@ msgstr ""
 msgid "Ditt konto är inaktiverat."
 msgstr "Your account is deactivated."
 
+#: news/forms.py:34 news/forms.py:70
+msgid "Leave blank to keep the post hidden."
+msgstr "Leave blank to keep the post hidden."
+
 #: news/models.py:19
 msgid "kategori"
 msgstr "category"
@@ -890,67 +956,81 @@ msgstr "category"
 msgid "kategorier"
 msgstr "categories"
 
-#: news/models.py:32 staticpages/models.py:29
+#: news/models.py:37 staticpages/models.py:29
 msgid "Kategori"
 msgstr "Category"
 
-#: news/models.py:42
+#: news/models.py:43
+msgid ""
+"Lämna tomt för att dölja nyheten. Välj en framtida tid för schemalagd "
+"publicering."
+msgstr ""
+"Leave blank to hide the post. Choose a future time for scheduled publishing."
+
+#: news/models.py:50
 msgid "nyhet"
 msgstr "news"
 
-#: news/models.py:43
+#: news/models.py:51
 msgid "nyheter"
 msgstr "news"
 
-#: polls/models.py:15
+#: polls/models.py:16
 msgid "Vem som helst"
 msgstr "Whoever"
 
-#: polls/models.py:16
+#: polls/models.py:17
 msgid "Endast medlemmar"
 msgstr "Only members"
 
-#: polls/models.py:17
+#: polls/models.py:18
 msgid "Endast ordinarie medlemmar"
 msgstr "Only ordinary members"
 
-#: polls/models.py:18
+#: polls/models.py:19
 msgid "Endast röstberättigade medlemmar"
 msgstr "Only members with voting rights"
 
-#: polls/models.py:26
+#: polls/models.py:33
+msgid ""
+"Lämna tomt för att dölja frågan. Välj en framtida tid för schemalagd "
+"publicering."
+msgstr ""
+"Leave blank to hide the poll. Choose a future time for scheduled publishing."
+
+#: polls/models.py:34
 msgid "Visa resultat"
 msgstr "Show results"
 
-#: polls/models.py:27
+#: polls/models.py:35
 msgid "Avsluta röstande"
 msgstr "End voting"
 
-#: polls/models.py:28
+#: polls/models.py:36
 msgid "Flerval"
 msgstr "Mutli-select"
 
-#: polls/models.py:29
+#: polls/models.py:37
 msgid "Antal flerval som krävs"
 msgstr "Number of selections required"
 
-#: polls/models.py:30
+#: polls/models.py:38
 msgid "Valmöjligheter"
 msgstr "Alternatives"
 
-#: polls/models.py:34
+#: polls/models.py:44
 msgid "Fråga"
 msgstr "Question"
 
-#: polls/models.py:35
+#: polls/models.py:45
 msgid "Frågor"
 msgstr "Questions"
 
-#: polls/models.py:53 polls/models.py:54
+#: polls/models.py:67 polls/models.py:68
 msgid "Val"
 msgstr "Choices"
 
-#: polls/models.py:69 polls/models.py:70
+#: polls/models.py:83 polls/models.py:84
 msgid "Röstare"
 msgstr "Voter"
 
@@ -1858,7 +1938,7 @@ msgstr "No news found..."
 msgid "Poll"
 msgstr "Poll"
 
-#: templates/common/polls/index.html:30
+#: templates/common/polls/index.html:27
 msgid "Det finns inga aktiva omröstningar"
 msgstr "There are no active revotes"
 

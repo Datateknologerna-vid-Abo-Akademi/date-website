@@ -46,7 +46,7 @@ class IndexView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         events = (
-            Event.objects.filter(published=True)
+            Event.objects.published()
             .exclude(slug="")
             .exclude(slug__isnull=True)
             .order_by('event_date_start')

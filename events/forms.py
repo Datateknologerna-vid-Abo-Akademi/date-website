@@ -2,11 +2,16 @@ import logging
 import re
 
 from django import forms
-from django.contrib.admin import widgets
 from django.utils.timezone import now
 from django.conf import settings
-from core.admin_base import AdminSplitDateTimeWidget, UnfoldFormMixin
-from core.admin_widgets import SafeAdminFileWidget
+from django.utils.translation import gettext_lazy as _
+from core.admin_base import UnfoldFormMixin
+from core.admin_widgets import (
+    FLATPICKR_DATETIME_INPUT_FORMATS,
+    SafeAdminFileWidget,
+    flatpickr_datetime_field,
+    flatpickr_datetime_widget,
+)
 
 from date.functions import slugify_max
 from events import models
@@ -61,16 +66,19 @@ def _template_choices():
 class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
     user = None
     redirect_link = forms.URLField(required=False, assume_scheme="https")
-    event_date_start = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
-    event_date_end = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
-    sign_up_others = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
-    sign_up_members = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
-    sign_up_deadline = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
-    sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
+    published_time = flatpickr_datetime_field(initial=now, required=False)
+    event_date_start = flatpickr_datetime_field(initial=now())
+    event_date_end = flatpickr_datetime_field(initial=now())
+    sign_up_others = flatpickr_datetime_field(initial=now())
+    sign_up_members = flatpickr_datetime_field(initial=now())
+    sign_up_deadline = flatpickr_datetime_field(initial=now())
+    sign_up_cancelling_deadline = flatpickr_datetime_field(initial=now())
     parent = forms.ModelChoiceField(queryset=Event.objects.filter(event_date_end__gte=now()), required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if 'published_time' in self.fields:
+            self.fields['published_time'].help_text = _("Leave blank to keep the event hidden.")
         for field_name in ('image', 's3_image'):
             if field_name in self.fields:
                 self.fields[field_name].widget = SafeAdminFileWidget()
@@ -97,7 +105,7 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
             'sign_up_deadline',
             'sign_up_cancelling',
             'sign_up_cancelling_deadline',
-            'published',
+            'published_time',
             'sign_up_avec',
             'require_registration_terms',
             'slug',
@@ -126,9 +134,6 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
             return None
         post.author = self.user
 
-        if post.published:
-            post.published_time = now()
-
         if not post.sign_up:
             post.sign_up_max_participants = 0
             post.sign_up_others = None
@@ -146,23 +151,27 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
 
     user = None
     redirect_link = forms.URLField(required=False, assume_scheme="https")
+    published_time = flatpickr_datetime_field(required=False)
 
-    event_date_start = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
-    event_date_end = forms.SplitDateTimeField(widget=AdminSplitDateTimeWidget(), initial=now())
+    event_date_start = flatpickr_datetime_field(initial=now())
+    event_date_end = flatpickr_datetime_field(initial=now())
 
     sign_up_args = {
-        "widget": AdminSplitDateTimeWidget(),
+        "widget": flatpickr_datetime_widget(),
+        "input_formats": FLATPICKR_DATETIME_INPUT_FORMATS,
         "initial": now(),
         "required": False
     }
-    sign_up_others = forms.SplitDateTimeField(**sign_up_args)
-    sign_up_members = forms.SplitDateTimeField(**sign_up_args)
-    sign_up_deadline = forms.SplitDateTimeField(**sign_up_args)
-    sign_up_cancelling_deadline = forms.SplitDateTimeField(**sign_up_args)
+    sign_up_others = forms.DateTimeField(**sign_up_args)
+    sign_up_members = forms.DateTimeField(**sign_up_args)
+    sign_up_deadline = forms.DateTimeField(**sign_up_args)
+    sign_up_cancelling_deadline = forms.DateTimeField(**sign_up_args)
     parent = forms.ModelChoiceField(queryset=Event.objects.all(), required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if 'published_time' in self.fields:
+            self.fields['published_time'].help_text = _("Leave blank to keep the event hidden.")
         for field_name in ('image', 's3_image'):
             if field_name in self.fields:
                 self.fields[field_name].widget = SafeAdminFileWidget()
@@ -201,7 +210,7 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
             'sign_up_deadline',
             'sign_up_cancelling',
             'sign_up_cancelling_deadline',
-            'published',
+            'published_time',
             'sign_up_avec',
             'require_registration_terms',
             'slug',
