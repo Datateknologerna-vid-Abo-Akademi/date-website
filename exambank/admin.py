@@ -5,9 +5,14 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
-from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, TabularInline
+from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, TabularInline, UNFOLD_FORMFIELD_OVERRIDES
 from core.admin_ui import AdminLink
-from core.admin_widgets import SafeAdminFileWidget
+from core.admin_widgets import (
+    FLATPICKR_ADMIN_CSS,
+    FLATPICKR_ADMIN_JS,
+    FlatpickrDateTimeAdminMixin,
+    SafeAdminFileWidget,
+)
 
 from .forms import ExamArchiveAdminForm
 from .models import ExamArchive, ExamFile
@@ -42,12 +47,13 @@ class ExamFileInline(TabularInline):
     can_delete = True
     extra = 1
     formfield_overrides = {
+        **UNFOLD_FORMFIELD_OVERRIDES,
         models.FileField: {'widget': SafeAdminFileWidget},
     }
 
 
 @admin.register(ExamArchive)
-class ExamArchiveAdmin(ExamBankAdminMixin, ModelAdmin):
+class ExamArchiveAdmin(FlatpickrDateTimeAdminMixin, ExamBankAdminMixin, ModelAdmin):
     save_on_top = True
     form = ExamArchiveAdminForm
     inlines = [ExamFileInline]
@@ -55,6 +61,7 @@ class ExamArchiveAdmin(ExamBankAdminMixin, ModelAdmin):
     search_fields = ('title', 'examfile__title')
     ordering = ('-pub_date',)
     date_hierarchy = 'pub_date'
+    flatpickr_datetime_fields = ('pub_date',)
 
     legacy_permission_map = {
         'view': 'archive.view_examcollection',
@@ -77,3 +84,7 @@ class ExamArchiveAdmin(ExamBankAdminMixin, ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return super().has_delete_permission(request, obj) or self._has_legacy_permission(request, 'delete')
+
+    class Media:
+        css = {'all': FLATPICKR_ADMIN_CSS}
+        js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS

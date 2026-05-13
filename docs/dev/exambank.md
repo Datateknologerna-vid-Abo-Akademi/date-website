@@ -16,4 +16,6 @@ The `exambank` app owns exam archive collections and exam files. It replaced the
 ## Routing
 Public routes are still exposed through `archive.urls` under `/archive/exams/...` with the existing `archive:exams`, `archive:exams_detail`, `archive:exam_upload`, and `archive:exam_archive_upload` names.
 
+Association variants that install `exambank` without the full `archive` app, such as Pulterit, mount `exambank.archive_urls` under `/archive/` so the exam-only compatibility routes keep the same public paths and URL names.
+
 The app intentionally renders the shared `archive/...` templates so the public archive pages keep their historical layout while the data ownership lives in `exambank`.

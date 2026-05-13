@@ -1,6 +1,7 @@
 import shutil
 import tempfile
 
+from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -85,8 +86,47 @@ class ExamBankArchiveRouteTests(TestCase):
         self.assertTrue(ExamArchive.objects.filter(title='Compilers').exists())
 
 
+@override_settings(ROOT_URLCONF='core.urls.pulterit', ARCHIVE_ENABLED=False)
+class PulteritExamBankArchiveRouteTests(TestCase):
+    def setUp(self):
+        membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.member = Member.objects.create_user(
+            username='pulterit-exam-user',
+            password='pwd',
+            membership_type=membership_type,
+        )
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+
+    def test_archive_exams_index_is_available_without_archive_app_routes(self):
+        ExamArchive.objects.create(title='Geology')
+
+        response = self.client.get(reverse('archive:exams'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Geology')
+
+
 class ExamArchiveAdminFormTests(TestCase):
     def test_hide_for_gulis_is_editable(self):
         form = ExamArchiveAdminForm()
 
         self.assertIn('hide_for_gulis', form.fields)
+
+
+class ExamArchiveAdminTests(TestCase):
+    def setUp(self):
+        self.admin_user = get_user_model().objects.create_superuser(
+            username='exam-admin',
+            password='pwd',
+            email='exam-admin@example.com',
+        )
+        self.client.force_login(self.admin_user)
+
+    def test_pub_date_uses_flatpickr_datetime_widget(self):
+        archive = ExamArchive.objects.create(title='Admin archive')
+
+        response = self.client.get(reverse('admin:exambank_examarchive_change', args=[archive.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'flatpickr-datetime')
+        self.assertContains(response, 'core/js/flatpickr.min.js')

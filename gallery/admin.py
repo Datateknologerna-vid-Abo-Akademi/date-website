@@ -5,9 +5,14 @@ from django.db import models
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
-from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, TabularInline
+from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, TabularInline, UNFOLD_FORMFIELD_OVERRIDES
 from core.admin_ui import AdminLink
-from core.admin_widgets import SafeAdminFileWidget
+from core.admin_widgets import (
+    FLATPICKR_ADMIN_CSS,
+    FLATPICKR_ADMIN_JS,
+    FlatpickrDateTimeAdminMixin,
+    SafeAdminFileWidget,
+)
 
 from .forms import AlbumAdminForm
 from .models import Album, Photo
@@ -38,6 +43,7 @@ class PhotoInline(TabularInline):
     readonly_fields = ('preview_image',)
     extra = 0
     formfield_overrides = {
+        **UNFOLD_FORMFIELD_OVERRIDES,
         models.ImageField: {'widget': SafeAdminFileWidget},
     }
 
@@ -46,7 +52,7 @@ class PhotoInline(TabularInline):
 
 
 @admin.register(Album)
-class AlbumAdmin(GalleryAdminMixin, ModelAdmin):
+class AlbumAdmin(FlatpickrDateTimeAdminMixin, GalleryAdminMixin, ModelAdmin):
     save_on_top = True
     form = AlbumAdminForm
     inlines = [PhotoInline]
@@ -54,6 +60,7 @@ class AlbumAdmin(GalleryAdminMixin, ModelAdmin):
     search_fields = ('title',)
     ordering = ('-pub_date',)
     date_hierarchy = 'pub_date'
+    flatpickr_datetime_fields = ('pub_date',)
 
     legacy_permission_map = {
         'view': 'archive.view_picturecollection',
@@ -76,3 +83,7 @@ class AlbumAdmin(GalleryAdminMixin, ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return super().has_delete_permission(request, obj) or self._has_legacy_permission(request, 'delete')
+
+    class Media:
+        css = {'all': FLATPICKR_ADMIN_CSS}
+        js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS
