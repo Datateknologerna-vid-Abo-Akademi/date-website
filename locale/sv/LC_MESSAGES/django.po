@@ -2107,6 +2107,42 @@ msgstr "Partner logo"
 msgid "Vill du samarbeta med Pulterit?"
 msgstr "Vill du samarbeta med Pulterit rf?"
 
+#: core/admin_widgets.py
+msgid "Don't publish"
+msgstr "Publicera inte"
+
+#: core/admin_widgets.py
+msgid "Publish now"
+msgstr "Publicera nu"
+
+#: events/forms.py
+msgid "Leave blank to keep the event hidden."
+msgstr "Lämna tomt för att hålla evenemanget dolt."
+
+#: events/models.py
+msgid "Publiceras"
+msgstr "Publiceras"
+
+#: events/models.py
+msgid "Lämna tomt för att dölja evenemanget. Välj en framtida tid för schemalagd publicering."
+msgstr "Lämna tomt för att dölja evenemanget. Välj en framtida tid för schemalagd publicering."
+
+#: news/models.py
+msgid "Lämna tomt för att dölja nyheten. Välj en framtida tid för schemalagd publicering."
+msgstr "Lämna tomt för att dölja nyheten. Välj en framtida tid för schemalagd publicering."
+
+#: polls/models.py
+msgid "Lämna tomt för att dölja frågan. Välj en framtida tid för schemalagd publicering."
+msgstr "Lämna tomt för att dölja frågan. Välj en framtida tid för schemalagd publicering."
+
+#: ctf/models.py
+msgid "Lämna tomt för att dölja CTF:n. Välj en framtida tid för schemalagd publicering."
+msgstr "Lämna tomt för att dölja CTF:n. Välj en framtida tid för schemalagd publicering."
+
+#: lucia/models.py
+msgid "Lämna tomt för att dölja kandidaten. Välj en framtida tid för schemalagd publicering."
+msgstr "Lämna tomt för att dölja kandidaten. Välj en framtida tid för schemalagd publicering."
+
 #~| msgid "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
 #~ msgid ""
 #~ "Styrelsen och de övriga funktionärerna kan kontaktas på "
@@ -2157,42 +2193,6 @@ msgstr "Vill du samarbeta med Pulterit rf?"
 #~ msgstr "of"
 
 #~ msgid "Joke"
-#: core/admin_widgets.py
-msgid "Don't publish"
-msgstr "Publicera inte"
-
-#: core/admin_widgets.py
-msgid "Publish now"
-msgstr "Publicera nu"
-
-#: events/forms.py
-msgid "Leave blank to keep the event hidden."
-msgstr "Lämna tomt för att hålla evenemanget dolt."
-
-#: events/models.py
-msgid "Publiceras"
-msgstr "Publiceras"
-
-#: events/models.py
-msgid "Lämna tomt för att dölja evenemanget. Välj en framtida tid för schemalagd publicering."
-msgstr "Lämna tomt för att dölja evenemanget. Välj en framtida tid för schemalagd publicering."
-
-#: news/models.py
-msgid "Lämna tomt för att dölja nyheten. Välj en framtida tid för schemalagd publicering."
-msgstr "Lämna tomt för att dölja nyheten. Välj en framtida tid för schemalagd publicering."
-
-#: polls/models.py
-msgid "Lämna tomt för att dölja frågan. Välj en framtida tid för schemalagd publicering."
-msgstr "Lämna tomt för att dölja frågan. Välj en framtida tid för schemalagd publicering."
-
-#: ctf/models.py
-msgid "Lämna tomt för att dölja CTF:n. Välj en framtida tid för schemalagd publicering."
-msgstr "Lämna tomt för att dölja CTF:n. Välj en framtida tid för schemalagd publicering."
-
-#: lucia/models.py
-msgid "Lämna tomt för att dölja kandidaten. Välj en framtida tid för schemalagd publicering."
-msgstr "Lämna tomt för att dölja kandidaten. Välj en framtida tid för schemalagd publicering."
-
 #~ msgstr "Joke"
 
 #~ msgid "Member profile"
