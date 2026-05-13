@@ -165,6 +165,21 @@ class ExamBankAccessTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Open archive')
 
+    def test_repeated_wrong_passwords_trigger_lockout(self):
+        access_settings = ExamBankAccessSettings.get_solo()
+        access_settings.require_sign_in = False
+        access_settings.set_password('stone')
+        access_settings.save()
+
+        for _ in range(5):
+            response = self.client.post(reverse('archive:exams'), {'password': 'wrong'})
+
+        self.assertEqual(response.status_code, 429)
+
+        response = self.client.post(reverse('archive:exams'), {'password': 'stone'})
+
+        self.assertEqual(response.status_code, 429)
+
     def test_password_change_invalidates_existing_session_access(self):
         access_settings = ExamBankAccessSettings.get_solo()
         access_settings.require_sign_in = False

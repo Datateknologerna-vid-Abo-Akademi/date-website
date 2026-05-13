@@ -1,8 +1,10 @@
 import logging
+import time
 from functools import wraps
 
 from django.contrib.auth.views import redirect_to_login
 from django.shortcuts import redirect, render
+from django.utils.decorators import method_decorator
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 
@@ -14,6 +16,10 @@ from .tables import ExamFileTable
 logger = logging.getLogger('date')
 
 EXAM_BANK_ACCESS_SESSION_KEY = 'exambank_access_password_hash'
+EXAM_BANK_PASSWORD_ATTEMPTS_KEY = 'exambank_password_attempts'
+EXAM_BANK_PASSWORD_LOCKOUT_KEY = 'exambank_password_lockout_until'
+EXAM_BANK_PASSWORD_ATTEMPT_LIMIT = 5
+EXAM_BANK_PASSWORD_LOCKOUT_SECONDS = 15 * 60
 
 
 def user_type(user):
@@ -31,19 +37,46 @@ def exam_bank_access_is_allowed(request, access_settings=None):
     return request.session.get(EXAM_BANK_ACCESS_SESSION_KEY) == access_settings.password_hash
 
 
+def _password_lockout_remaining(request):
+    until = request.session.get(EXAM_BANK_PASSWORD_LOCKOUT_KEY)
+    if not until:
+        return 0
+    remaining = int(until - time.time())
+    if remaining <= 0:
+        request.session.pop(EXAM_BANK_PASSWORD_LOCKOUT_KEY, None)
+        request.session.pop(EXAM_BANK_PASSWORD_ATTEMPTS_KEY, None)
+        return 0
+    return remaining
+
+
 def exam_bank_password_gate(request, access_settings):
+    lockout_remaining = _password_lockout_remaining(request)
+    form = ExamBankPasswordForm(access_settings=access_settings)
     status = 200
-    if request.method == 'POST':
+
+    if lockout_remaining:
+        status = 429
+    elif request.method == 'POST':
         form = ExamBankPasswordForm(request.POST, access_settings=access_settings)
         if form.is_valid():
             request.session[EXAM_BANK_ACCESS_SESSION_KEY] = access_settings.password_hash
+            request.session.pop(EXAM_BANK_PASSWORD_ATTEMPTS_KEY, None)
+            request.session.pop(EXAM_BANK_PASSWORD_LOCKOUT_KEY, None)
             return redirect('archive:exams')
-        status = 403
-    else:
-        form = ExamBankPasswordForm(access_settings=access_settings)
+        attempts = request.session.get(EXAM_BANK_PASSWORD_ATTEMPTS_KEY, 0) + 1
+        request.session[EXAM_BANK_PASSWORD_ATTEMPTS_KEY] = attempts
+        if attempts >= EXAM_BANK_PASSWORD_ATTEMPT_LIMIT:
+            request.session[EXAM_BANK_PASSWORD_LOCKOUT_KEY] = (
+                time.time() + EXAM_BANK_PASSWORD_LOCKOUT_SECONDS
+            )
+            lockout_remaining = EXAM_BANK_PASSWORD_LOCKOUT_SECONDS
+            status = 429
+        else:
+            status = 403
 
     return render(request, 'archive/exam_password.html', {
         'form': form,
+        'lockout_remaining': lockout_remaining,
     }, status=status)
 
 
@@ -102,6 +135,7 @@ def exam_archive_upload(request):
     })
 
 
+@method_decorator(exam_bank_access_required, name='dispatch')
 class FilteredExamsListView(SingleTableMixin, FilterView):
     model = ExamFile
     paginate_by = 15
@@ -120,7 +154,3 @@ class FilteredExamsListView(SingleTableMixin, FilterView):
         archive_pk = self.kwargs.get('pk')
         context['collection'] = ExamArchive.objects.filter(pk=archive_pk).first()
         return context
-
-    def dispatch(self, request, *args, **kwargs):
-        protected_view = exam_bank_access_required(super().dispatch)
-        return protected_view(request, *args, **kwargs)

@@ -14,6 +14,8 @@ Exam views use the `exambank.views.exam_bank_access_required` gate instead of UR
 
 When `require_sign_in=True`, access follows the historical member check. When it is false and a password is configured, successful password entry stores the current password hash in the session so changing the password invalidates existing grants. When sign-in is disabled and no password is configured, the exam bank routes are public.
 
+Failed password submissions are rate-limited per session: after `EXAM_BANK_PASSWORD_ATTEMPT_LIMIT` (5) failures the gate returns HTTP 429 and refuses further attempts for `EXAM_BANK_PASSWORD_LOCKOUT_SECONDS` (15 minutes). A successful entry clears the counter.
+
 ## Migration Notes
 - `archive.0008_remove_picture_collection_delete_examcollection_and_more` copies legacy `archive.Collection(type="Exams")` rows into `exambank_examarchive` and related `archive.Document` rows into `exambank_examfile`.
 - Primary keys are preserved where possible.
