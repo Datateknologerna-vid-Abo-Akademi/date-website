@@ -1,5 +1,6 @@
 import os
 
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
@@ -37,6 +38,42 @@ class ExamArchive(models.Model):
         super().clean()
         if '/' in self.title:
             raise ValidationError({'title': "Snedstreck är inte tillåtet."})
+
+
+class ExamBankAccessSettings(models.Model):
+    require_sign_in = models.BooleanField(
+        _('Kräv inloggning'),
+        default=True,
+        help_text=_('När detta är aktivt kräver tentarkivet vanlig medlemsinloggning.'),
+    )
+    password_hash = models.CharField(
+        _('Lösenord'),
+        max_length=128,
+        blank=True,
+        editable=False,
+    )
+
+    class Meta:
+        verbose_name = _('Åtkomst till tentarkiv')
+        verbose_name_plural = _('Åtkomst till tentarkiv')
+
+    def __str__(self):
+        return str(_('Åtkomst till tentarkiv'))
+
+    @classmethod
+    def get_solo(cls):
+        settings, _ = cls.objects.get_or_create(pk=1)
+        return settings
+
+    @property
+    def has_password(self):
+        return bool(self.password_hash)
+
+    def set_password(self, raw_password):
+        self.password_hash = make_password(raw_password) if raw_password else ''
+
+    def check_password(self, raw_password):
+        return bool(self.password_hash) and check_password(raw_password, self.password_hash)
 
 
 class ExamFile(models.Model):

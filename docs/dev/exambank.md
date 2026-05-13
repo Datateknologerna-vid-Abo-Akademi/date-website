@@ -5,8 +5,14 @@ The `exambank` app owns exam archive collections and exam files. It replaced the
 
 ## Models
 - `ExamArchive` stores the archive title, publication date, and migrated `hide_for_gulis` flag.
+- `ExamBankAccessSettings` is a singleton configuration row for the whole public exam bank. It defaults to member sign-in, can disable sign-in, and can store an optional hashed shared password.
 - `ExamFile` stores the uploaded file and display title.
 - Upload paths stay compatible with the previous archive layout: `<year>/<archive>/<filename>`.
+
+## Access Control
+Exam views use the `exambank.views.exam_bank_access_required` gate instead of URL-level `login_required`. This keeps the same policy on the index, detail, and upload routes whether they are mounted through `archive.urls`, `exambank.archive_urls`, or `exambank.urls`.
+
+When `require_sign_in=True`, access follows the historical member check. When it is false and a password is configured, successful password entry stores the current password hash in the session so changing the password invalidates existing grants. When sign-in is disabled and no password is configured, the exam bank routes are public.
 
 ## Migration Notes
 - `archive.0008_remove_picture_collection_delete_examcollection_and_more` copies legacy `archive.Collection(type="Exams")` rows into `exambank_examarchive` and related `archive.Document` rows into `exambank_examfile`.

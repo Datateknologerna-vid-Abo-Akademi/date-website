@@ -1,17 +1,19 @@
 import logging
+from functools import wraps
 
-from django.contrib.auth.decorators import user_passes_test
-from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.auth.views import redirect_to_login
 from django.shortcuts import redirect, render
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 
 from .filters import ExamFilter
-from .forms import ExamArchiveUploadForm, ExamUploadForm
-from .models import ExamArchive, ExamFile
+from .forms import ExamArchiveUploadForm, ExamBankPasswordForm, ExamUploadForm
+from .models import ExamArchive, ExamBankAccessSettings, ExamFile
 from .tables import ExamFileTable
 
 logger = logging.getLogger('date')
+
+EXAM_BANK_ACCESS_SESSION_KEY = 'exambank_access_password_hash'
 
 
 def user_type(user):
@@ -20,7 +22,45 @@ def user_type(user):
     return user.membership_type.permission_profile != 3
 
 
-@user_passes_test(user_type, login_url='/members/login/')
+def exam_bank_access_is_allowed(request, access_settings=None):
+    access_settings = access_settings or ExamBankAccessSettings.get_solo()
+    if access_settings.require_sign_in:
+        return user_type(request.user)
+    if not access_settings.has_password:
+        return True
+    return request.session.get(EXAM_BANK_ACCESS_SESSION_KEY) == access_settings.password_hash
+
+
+def exam_bank_password_gate(request, access_settings):
+    status = 200
+    if request.method == 'POST':
+        form = ExamBankPasswordForm(request.POST, access_settings=access_settings)
+        if form.is_valid():
+            request.session[EXAM_BANK_ACCESS_SESSION_KEY] = access_settings.password_hash
+            return redirect(request.get_full_path())
+        status = 403
+    else:
+        form = ExamBankPasswordForm(access_settings=access_settings)
+
+    return render(request, 'archive/exam_password.html', {
+        'form': form,
+    }, status=status)
+
+
+def exam_bank_access_required(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        access_settings = ExamBankAccessSettings.get_solo()
+        if exam_bank_access_is_allowed(request, access_settings):
+            return view_func(request, *args, **kwargs)
+        if access_settings.require_sign_in:
+            return redirect_to_login(request.get_full_path(), login_url='/members/login/')
+        return exam_bank_password_gate(request, access_settings)
+
+    return wrapper
+
+
+@exam_bank_access_required
 def exams_index(request):
     archives = ExamArchive.objects.all().order_by('title')
     return render(request, 'archive/exams_index.html', {
@@ -29,7 +69,7 @@ def exams_index(request):
     })
 
 
-@user_passes_test(user_type, login_url='/members/login/')
+@exam_bank_access_required
 def exam_upload(request, pk):
     archive = ExamArchive.objects.filter(pk=pk).first()
     if request.method == 'POST' and archive:
@@ -48,7 +88,7 @@ def exam_upload(request, pk):
     })
 
 
-@user_passes_test(user_type, login_url='/members/login/')
+@exam_bank_access_required
 def exam_archive_upload(request):
     if request.method == 'POST':
         form = ExamArchiveUploadForm(request.POST)
@@ -62,7 +102,7 @@ def exam_archive_upload(request):
     })
 
 
-class FilteredExamsListView(UserPassesTestMixin, SingleTableMixin, FilterView):
+class FilteredExamsListView(SingleTableMixin, FilterView):
     model = ExamFile
     paginate_by = 15
     table_class = ExamFileTable
@@ -81,5 +121,6 @@ class FilteredExamsListView(UserPassesTestMixin, SingleTableMixin, FilterView):
         context['collection'] = ExamArchive.objects.filter(pk=archive_pk).first()
         return context
 
-    def test_func(self):
-        return self.request.user.membership_type.permission_profile != 3
+    def dispatch(self, request, *args, **kwargs):
+        protected_view = exam_bank_access_required(super().dispatch)
+        return protected_view(request, *args, **kwargs)

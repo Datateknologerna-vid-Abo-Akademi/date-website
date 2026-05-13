@@ -7,8 +7,8 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from exambank.forms import ExamArchiveAdminForm
-from exambank.models import ExamArchive, ExamFile
+from exambank.forms import ExamArchiveAdminForm, ExamBankAccessSettingsAdminForm
+from exambank.models import ExamArchive, ExamBankAccessSettings, ExamFile
 from members.models import Member, MembershipType, ORDINARY_MEMBER
 
 
@@ -106,11 +106,110 @@ class PulteritExamBankArchiveRouteTests(TestCase):
         self.assertContains(response, 'Geology')
 
 
+class ExamBankAccessTests(TestCase):
+    def test_default_access_requires_member_sign_in(self):
+        response = self.client.get(reverse('archive:exams'))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/members/login/', response['Location'])
+
+    def test_password_access_allows_anonymous_exam_bank_routes(self):
+        archive = ExamArchive.objects.create(title='Geology')
+        access_settings = ExamBankAccessSettings.get_solo()
+        access_settings.require_sign_in = False
+        access_settings.set_password('stone')
+        access_settings.save()
+
+        response = self.client.get(reverse('archive:exams'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Tentarkiv')
+
+        response = self.client.post(reverse('archive:exams'), {'password': 'wrong'})
+
+        self.assertEqual(response.status_code, 403)
+
+        response = self.client.post(reverse('archive:exams'), {'password': 'stone'})
+
+        self.assertRedirects(response, reverse('archive:exams'))
+
+        response = self.client.get(reverse('archive:exams_detail', args=[archive.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Geology')
+
+        response = self.client.get(reverse('archive:exam_upload', args=[archive.pk]))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_passwordless_public_access_allows_anonymous_exam_bank(self):
+        ExamArchive.objects.create(title='Open archive')
+        access_settings = ExamBankAccessSettings.get_solo()
+        access_settings.require_sign_in = False
+        access_settings.set_password('')
+        access_settings.save()
+
+        response = self.client.get(reverse('archive:exams'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Open archive')
+
+    def test_password_change_invalidates_existing_session_access(self):
+        access_settings = ExamBankAccessSettings.get_solo()
+        access_settings.require_sign_in = False
+        access_settings.set_password('stone')
+        access_settings.save()
+
+        self.client.post(reverse('archive:exams'), {'password': 'stone'})
+
+        access_settings.set_password('granite')
+        access_settings.save()
+
+        response = self.client.get(reverse('archive:exams'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Lösenord')
+
+
 class ExamArchiveAdminFormTests(TestCase):
     def test_hide_for_gulis_is_editable(self):
         form = ExamArchiveAdminForm()
 
         self.assertIn('hide_for_gulis', form.fields)
+
+
+class ExamBankAccessSettingsAdminFormTests(TestCase):
+    def test_password_is_hashed_when_saved(self):
+        form = ExamBankAccessSettingsAdminForm({
+            'require_sign_in': '',
+            'password': 'granite',
+        })
+
+        self.assertTrue(form.is_valid())
+        access_settings = form.save()
+
+        self.assertFalse(access_settings.require_sign_in)
+        self.assertNotEqual(access_settings.password_hash, 'granite')
+        self.assertTrue(access_settings.check_password('granite'))
+
+    def test_password_placeholder_keeps_existing_hash(self):
+        access_settings = ExamBankAccessSettings.get_solo()
+        access_settings.set_password('granite')
+        access_settings.save()
+        original_hash = access_settings.password_hash
+
+        form = ExamBankAccessSettingsAdminForm(
+            {
+                'require_sign_in': 'on',
+                'password': ExamBankAccessSettingsAdminForm.PASSWORD_PLACEHOLDER,
+            },
+            instance=access_settings,
+        )
+
+        self.assertTrue(form.is_valid())
+        access_settings = form.save()
+
+        self.assertEqual(access_settings.password_hash, original_hash)
 
 
 class ExamArchiveAdminTests(TestCase):
