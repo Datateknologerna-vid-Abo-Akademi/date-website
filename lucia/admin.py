@@ -27,14 +27,14 @@ class CandidateAdminForm(UnfoldFormMixin, forms.ModelForm):
 
 
 class CandidatePublicationFilter(admin.SimpleListFilter):
-    title = 'publicering'
+    title = _('publicering')
     parameter_name = 'publication'
 
     def lookups(self, request, model_admin):
         return (
-            ('published', 'Publicerad'),
-            ('scheduled', 'Schemalagd'),
-            ('hidden', 'Dold'),
+            ('published', _('Publicerad')),
+            ('scheduled', _('Schemalagd')),
+            ('hidden', _('Dold')),
         )
 
     def queryset(self, request, queryset):
@@ -58,12 +58,12 @@ class CandidateAdmin(PublicUrlAdminMixin, ModelAdmin):
 
     def publication_status(self, obj):
         if obj.published_time is None:
-            return 'Dold'
+            return _('Dold')
         if obj.published_time > now():
-            return 'Schemalagd'
-        return 'Publicerad'
+            return _('Schemalagd')
+        return _('Publicerad')
 
-    publication_status.short_description = 'Publicering'
+    publication_status.short_description = _('Publicering')
     publication_status.admin_order_field = 'published_time'
 
     class Media:

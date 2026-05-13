@@ -66,7 +66,7 @@ def _template_choices():
 class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
     user = None
     redirect_link = forms.URLField(required=False, assume_scheme="https")
-    published_time = flatpickr_datetime_field(initial=now(), required=False)
+    published_time = flatpickr_datetime_field(initial=now, required=False)
     event_date_start = flatpickr_datetime_field(initial=now())
     event_date_end = flatpickr_datetime_field(initial=now())
     sign_up_others = flatpickr_datetime_field(initial=now())

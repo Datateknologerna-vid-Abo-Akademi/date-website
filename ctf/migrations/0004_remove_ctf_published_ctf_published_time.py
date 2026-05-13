@@ -2,13 +2,13 @@
 
 import django.utils.timezone
 from django.db import migrations, models
+from django.db.models import F
 
 
 def migrate_ctf_publication(apps, schema_editor):
     Ctf = apps.get_model("ctf", "Ctf")
-    for ctf in Ctf.objects.all():
-        ctf.published_time = ctf.pub_date if ctf.published else None
-        ctf.save(update_fields=["published_time"])
+    Ctf.objects.filter(published=True).update(published_time=F("pub_date"))
+    Ctf.objects.filter(published=False).update(published_time=None)
 
 
 class Migration(migrations.Migration):

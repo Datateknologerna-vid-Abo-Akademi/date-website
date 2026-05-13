@@ -2,13 +2,13 @@
 
 import django.utils.timezone
 from django.db import migrations, models
+from django.db.models import F
 
 
 def migrate_question_publication(apps, schema_editor):
     Question = apps.get_model("polls", "Question")
-    for question in Question.objects.all():
-        question.published_time = question.pub_date if question.published else None
-        question.save(update_fields=["published_time"])
+    Question.objects.filter(published=True).update(published_time=F("pub_date"))
+    Question.objects.filter(published=False).update(published_time=None)
 
 
 class Migration(migrations.Migration):

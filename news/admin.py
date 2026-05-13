@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.db.models import TextField
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.widgets import CKEditor5Widget
 from core.admin_base import ModelAdmin, PublicUrlAdminMixin, UNFOLD_FORMFIELD_OVERRIDES
 from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
@@ -27,14 +28,14 @@ class CategoryAdmin(PublicUrlAdminMixin, NewsTranslationAdminBase):
 
 
 class PostPublicationFilter(admin.SimpleListFilter):
-    title = 'publicering'
+    title = _('publicering')
     parameter_name = 'publication'
 
     def lookups(self, request, model_admin):
         return (
-            ('published', 'Publicerad'),
-            ('scheduled', 'Schemalagd'),
-            ('hidden', 'Dold'),
+            ('published', _('Publicerad')),
+            ('scheduled', _('Schemalagd')),
+            ('hidden', _('Dold')),
         )
 
     def queryset(self, request, queryset):
@@ -77,12 +78,12 @@ class PostAdmin(PublicUrlAdminMixin, NewsTranslationAdminBase):
 
     def publication_status(self, obj):
         if obj.published_time is None:
-            return 'Dold'
+            return _('Dold')
         if obj.published_time > now():
-            return 'Schemalagd'
-        return 'Publicerad'
+            return _('Schemalagd')
+        return _('Publicerad')
 
-    publication_status.short_description = 'Publicering'
+    publication_status.short_description = _('Publicering')
     publication_status.admin_order_field = 'published_time'
 
     class Media:

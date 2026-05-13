@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from core.admin_base import ModelAdmin, PublicUrlAdminMixin, StackedInline
 from core.admin_widgets import (
     FLATPICKR_ADMIN_CSS,
@@ -18,14 +19,14 @@ class FlagInline(StackedInline):
 
 
 class CtfPublicationFilter(admin.SimpleListFilter):
-    title = 'publicering'
+    title = _('publicering')
     parameter_name = 'publication'
 
     def lookups(self, request, model_admin):
         return (
-            ('published', 'Publicerad'),
-            ('scheduled', 'Schemalagd'),
-            ('hidden', 'Dold'),
+            ('published', _('Publicerad')),
+            ('scheduled', _('Schemalagd')),
+            ('hidden', _('Dold')),
         )
 
     def queryset(self, request, queryset):
@@ -55,12 +56,12 @@ class CtfAdmin(FlatpickrDateTimeAdminMixin, PublicUrlAdminMixin, ModelAdmin):
 
     def publication_status(self, obj):
         if obj.published_time is None:
-            return 'Dold'
+            return _('Dold')
         if obj.published_time > now():
-            return 'Schemalagd'
-        return 'Publicerad'
+            return _('Schemalagd')
+        return _('Publicerad')
 
-    publication_status.short_description = 'Publicering'
+    publication_status.short_description = _('Publicering')
     publication_status.admin_order_field = 'published_time'
 
     class Media:

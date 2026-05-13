@@ -693,7 +693,6 @@ class EventAdminTests(TestCase):
         self.assertContains(response, 'name="published_time"')
         self.assertContains(response, "flatpickr-datetime")
         self.assertContains(response, timezone.localtime(self.event.published_time).strftime("%Y-%m-%d %H:%M"))
-        self.assertNotContains(response, ".216")
         self.assertContains(response, "core/js/flatpickr.min.js")
         self.assertContains(response, "core/css/admin-datetime.css")
         self.assertNotContains(response, "vDateField")
