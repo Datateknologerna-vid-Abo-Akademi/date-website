@@ -14,8 +14,8 @@ from core.admin_widgets import (
     SafeAdminFileWidget,
 )
 
-from .forms import ExamArchiveAdminForm
-from .models import ExamArchive, ExamFile
+from .forms import ExamArchiveAdminForm, ExamBankAccessSettingsAdminForm
+from .models import ExamArchive, ExamBankAccessSettings, ExamFile
 
 logger = logging.getLogger('date')
 
@@ -88,3 +88,21 @@ class ExamArchiveAdmin(FlatpickrDateTimeAdminMixin, ExamBankAdminMixin, ModelAdm
     class Media:
         css = {'all': FLATPICKR_ADMIN_CSS}
         js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS
+
+
+@admin.register(ExamBankAccessSettings)
+class ExamBankAccessSettingsAdmin(ModelAdmin):
+    form = ExamBankAccessSettingsAdminForm
+    list_display = ('__str__', 'require_sign_in', 'password_configured')
+
+    def has_add_permission(self, request):
+        return not ExamBankAccessSettings.objects.exists() and super().has_add_permission(request)
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def password_configured(self, obj):
+        return obj.has_password
+
+    password_configured.boolean = True
+    password_configured.short_description = _('Lösenord inställt')

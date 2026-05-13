@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-13 21:54+0300\n"
+"POT-Creation-Date: 2026-05-14 00:56+0300\n"
 "PO-Revision-Date: 2025-09-16 20:27+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -19,28 +19,28 @@ msgstr ""
 "X-Generator: Poedit 3.6\n"
 
 #: alumni/forms.py:15 alumni/forms.py:16 alumni/forms.py:17 alumni/forms.py:72
-#: members/forms.py:173 members/forms.py:176 members/forms.py:182
+#: members/forms.py:172 members/forms.py:175 members/forms.py:181
 msgid "detta fält är obligatoriskt"
 msgstr "This field is required"
 
-#: alumni/forms.py:15 members/forms.py:185 members/models.py:34
+#: alumni/forms.py:15 members/forms.py:184 members/models.py:33
 msgid "Förnamn"
 msgstr "First name"
 
-#: alumni/forms.py:16 members/forms.py:186 members/models.py:35
+#: alumni/forms.py:16 members/forms.py:185 members/models.py:34
 msgid "Efternamn"
 msgstr "Last name"
 
 #: alumni/forms.py:17 alumni/forms.py:72 events/models.py:392
-#: members/forms.py:176 members/models.py:33
+#: members/forms.py:175 members/models.py:32
 msgid "E-postadress"
 msgstr "Email address"
 
-#: alumni/forms.py:19 members/models.py:36
+#: alumni/forms.py:19 members/models.py:35
 msgid "Telefonnummer"
 msgstr "Phone number"
 
-#: alumni/forms.py:20 members/models.py:37
+#: alumni/forms.py:20 members/models.py:36
 msgid "Adress"
 msgstr "Address"
 
@@ -48,16 +48,16 @@ msgstr "Address"
 msgid "Postnummer"
 msgstr "Postal code"
 
-#: alumni/forms.py:22 members/models.py:39
+#: alumni/forms.py:22 members/models.py:38
 msgid "Postanstalt"
 msgstr "Post office"
 
-#: alumni/forms.py:23 members/models.py:40
+#: alumni/forms.py:23 members/models.py:39
 msgid "Land"
 msgstr "Country"
 
-#: alumni/forms.py:24 members/forms.py:29 members/forms.py:187
-#: members/models.py:42
+#: alumni/forms.py:24 members/forms.py:28 members/forms.py:186
+#: members/models.py:41
 msgid "Inskrivningsår"
 msgstr "Year studies started"
 
@@ -105,13 +105,14 @@ msgstr "Alumni Update Tokens"
 msgid "Uppdatera dina uppgifter"
 msgstr "Update your information"
 
-#: archive/admin.py:45
+#: archive/admin.py:40 exambank/admin.py:40 gallery/admin.py:35
 msgid "Städa upp media"
 msgstr "Clean up media"
 
-#: archive/models.py:30 archive/models.py:167 events/models.py:212
-#: events/models.py:348 events/models.py:390 members/models.py:97
-#: members/models.py:122 members/models.py:181 news/models.py:15
+#: archive/models.py:21 archive/models.py:83 events/models.py:212
+#: events/models.py:348 events/models.py:390 exambank/models.py:23
+#: exambank/models.py:82 functionaries/models.py:21 gallery/models.py:50
+#: members/models.py:96 members/models.py:121 news/models.py:15
 #: templates/biocum/events/arsfest.html:92
 #: templates/common/events/arsfest.html:80
 #: templates/common/events/baal_detail.html:73
@@ -124,67 +125,47 @@ msgstr "Clean up media"
 msgid "Namn"
 msgstr "Name"
 
-#: archive/models.py:33
+#: archive/models.py:24 exambank/models.py:25 gallery/models.py:52
 msgid "Göm för gulisar"
 msgstr "Hide from freshmen"
 
-#: archive/models.py:36 archive/models.py:166
+#: archive/models.py:27 archive/models.py:82 exambank/models.py:81
 msgid "Samling"
 msgstr "Collection"
 
-#: archive/models.py:37
+#: archive/models.py:28
 msgid "Samlingar"
 msgstr "Collections"
 
-#: archive/models.py:118 templates/common/archive/index.html:17
-#: templates/common/archive/picture_index.html:15
-msgid "Bildarkiv"
-msgstr "Photo archive"
-
-#: archive/models.py:124 templates/common/archive/document_index.html:19
+#: archive/models.py:71 templates/common/archive/document_index.html:19
 msgid "Dokumentarkiv"
 msgstr "Document archive"
 
-#: archive/models.py:129 templates/common/archive/exam_detail.html:7
-#: templates/common/archive/exam_upload.html:5
-#: templates/common/archive/exams_index.html:5
-#: templates/common/archive/exams_index.html:18
-msgid "Tentarkiv"
-msgstr "Test archive"
-
-#: archive/models.py:134
+#: archive/models.py:76
 msgid "Offentliga Filer"
 msgstr "Public files"
 
-#: archive/models.py:139 archive/models.py:179
-msgid "Galleri"
-msgstr "Gallery"
-
-#: archive/models.py:144
-msgid "bild"
-msgstr "photo"
-
-#: archive/models.py:145
-msgid "bilder"
-msgstr "photos"
-
-#: archive/models.py:168
+#: archive/models.py:84 exambank/models.py:83
 msgid "Filnamn"
 msgstr "Filename"
 
-#: archive/models.py:174 archive/models.py:175
+#: archive/models.py:90 archive/models.py:91
 msgid "dokument"
 msgstr "document"
 
-#: archive/models.py:180
+#: archive/models.py:95 gallery/models.py:74
+msgid "Galleri"
+msgstr "Gallery"
+
+#: archive/models.py:96
 msgid "file"
 msgstr "file"
 
-#: archive/models.py:183
+#: archive/models.py:99
 msgid "fil"
 msgstr "file"
 
-#: archive/models.py:184
+#: archive/models.py:100
 msgid "filer"
 msgstr "files"
 
@@ -196,115 +177,119 @@ msgstr "Open public page"
 msgid "Public page"
 msgstr "Public page"
 
-#: core/admin_ui.py:37
+#: core/admin_ui.py:40
 msgid "Event"
 msgstr "Event"
 
-#: core/admin_ui.py:38 core/admin_ui.py:95
+#: core/admin_ui.py:41 core/admin_ui.py:98
 msgid "News"
 msgstr "News"
 
-#: core/admin_ui.py:39
+#: core/admin_ui.py:42
 msgid "Static Page"
 msgstr "Static Page"
 
-#: core/admin_ui.py:81 core/admin_ui.py:82
+#: core/admin_ui.py:84 core/admin_ui.py:85
 msgid "Events"
 msgstr "Events"
 
-#: core/admin_ui.py:83
+#: core/admin_ui.py:86
 msgid "Billing Configuration"
 msgstr "Billing Configuration"
 
-#: core/admin_ui.py:84
+#: core/admin_ui.py:87
 msgid "Invoices"
 msgstr "Invoices"
 
-#: core/admin_ui.py:86 core/admin_ui.py:87
+#: core/admin_ui.py:89 core/admin_ui.py:90
 msgid "Members"
 msgstr "Members"
 
-#: core/admin_ui.py:88
+#: core/admin_ui.py:91
 msgid "Membership Types"
 msgstr "Membership Types"
 
-#: core/admin_ui.py:89
+#: core/admin_ui.py:92
 msgid "Subscriptions"
 msgstr "Subscriptions"
 
-#: core/admin_ui.py:90
+#: core/admin_ui.py:93
 msgid "Subscription Payments"
 msgstr "Subscription Payments"
 
-#: core/admin_ui.py:91
+#: core/admin_ui.py:94
 msgid "Functionaries"
 msgstr "Officials"
 
-#: core/admin_ui.py:92
+#: core/admin_ui.py:95
 msgid "Functionary Roles"
 msgstr "Official Roles"
 
-#: core/admin_ui.py:94
+#: core/admin_ui.py:97
 msgid "Content"
 msgstr "Content"
 
-#: core/admin_ui.py:96
+#: core/admin_ui.py:99
 msgid "News Categories"
 msgstr "News Categories"
 
-#: core/admin_ui.py:97
+#: core/admin_ui.py:100
 msgid "Polls"
 msgstr "Polls"
 
-#: core/admin_ui.py:98
+#: core/admin_ui.py:101
 msgid "Static Pages"
 msgstr "Static Pages"
 
-#: core/admin_ui.py:99
+#: core/admin_ui.py:102
 msgid "Page Navigation"
 msgstr "Page Navigation"
 
-#: core/admin_ui.py:101
+#: core/admin_ui.py:104
 msgid "Archive & Publications"
 msgstr "Archive & Publications"
 
-#: core/admin_ui.py:102
+#: core/admin_ui.py:105
 msgid "PDF Publications"
 msgstr "PDF Publications"
 
-#: core/admin_ui.py:103
+#: core/admin_ui.py:107
 msgid "Photo Albums"
 msgstr "Photo Albums"
 
-#: core/admin_ui.py:104
+#: core/admin_ui.py:112
 msgid "Documents"
 msgstr "Documents"
 
-#: core/admin_ui.py:105
+#: core/admin_ui.py:114
 msgid "Exams"
 msgstr "Exams"
 
-#: core/admin_ui.py:107
+#: core/admin_ui.py:120
+msgid "Exam Access"
+msgstr "Exam Access"
+
+#: core/admin_ui.py:126
 msgid "Activities"
 msgstr "Activities"
 
-#: core/admin_ui.py:108 ctf/models.py:77
+#: core/admin_ui.py:127 ctf/models.py:77
 msgid "CTF"
 msgstr "CTF"
 
-#: core/admin_ui.py:109
+#: core/admin_ui.py:128
 msgid "CTF Guesses"
 msgstr "CTF Guesses"
 
-#: core/admin_ui.py:110 lucia/models.py:33
+#: core/admin_ui.py:129 lucia/models.py:33
 msgid "Lucia"
 msgstr "Lucia"
 
-#: core/admin_ui.py:112
+#: core/admin_ui.py:131
 msgid "Social & Ads"
 msgstr "Social & Ads"
 
-#: core/admin_ui.py:113 templates/biocum/date/components/mobile.html:52
+#: core/admin_ui.py:132 templates/biocum/date/components/mobile.html:52
 #: templates/biocum/date/components/sidebar.html:55
 #: templates/date/date/components/partners.html:3
 #: templates/demo/date/components/partners.html:3
@@ -314,27 +299,27 @@ msgstr "Social & Ads"
 msgid "Samarbetspartners"
 msgstr "Cooperation partners"
 
-#: core/admin_ui.py:114
+#: core/admin_ui.py:133
 msgid "Instagram URLs"
 msgstr "Instagram URLs"
 
-#: core/admin_ui.py:115
+#: core/admin_ui.py:134
 msgid "Harassment Reports"
 msgstr "Harassment Reports"
 
-#: core/admin_ui.py:116
+#: core/admin_ui.py:135
 msgid "Report Recipients"
 msgstr "Report Recipients"
 
-#: core/admin_ui.py:118
+#: core/admin_ui.py:137
 msgid "System"
 msgstr "System"
 
-#: core/admin_ui.py:119
+#: core/admin_ui.py:138
 msgid "Admin Log"
 msgstr "Admin Log"
 
-#: core/admin_ui.py:120
+#: core/admin_ui.py:139
 msgid "Permissions"
 msgstr "Permissions"
 
@@ -387,8 +372,8 @@ msgstr "Hidden"
 msgid "Publicering"
 msgstr "Publication"
 
-#: ctf/models.py:22 events/models.py:63 lucia/models.py:22
-#: members/models.py:168 news/models.py:36 staticpages/models.py:39
+#: ctf/models.py:22 events/models.py:63 functionaries/models.py:8
+#: lucia/models.py:22 news/models.py:36 staticpages/models.py:39
 #: staticpages/models.py:87
 msgid "Titel"
 msgstr "Title"
@@ -581,7 +566,7 @@ msgstr "Redirect Link"
 msgid "evenemang"
 msgstr "event"
 
-#: events/models.py:213 social/models.py:19
+#: events/models.py:213 harassment/models.py:6
 msgid "Email"
 msgstr "Email"
 
@@ -663,6 +648,118 @@ msgstr "Enter name for plus-one."
 msgid "Ange e-post för avec."
 msgstr "Enter email for plus-one."
 
+#: exambank/admin.py:108
+msgid "Lösenord inställt"
+msgstr "Password set"
+
+#: exambank/forms.py:51 exambank/forms.py:82 exambank/models.py:50
+#: members/forms.py:182
+msgid "Lösenord"
+msgstr "Password"
+
+#: exambank/forms.py:55
+msgid ""
+"Används bara när inloggning inte krävs. Lämna tomt för inget lösenord, eller "
+"behåll markeringen för att spara nuvarande lösenord."
+msgstr ""
+"Only used when sign-in is not required. Leave empty for no password, or keep "
+"the placeholder to save the current password."
+
+#: exambank/forms.py:93
+msgid "Fel lösenord."
+msgstr "Incorrect password."
+
+#: exambank/models.py:28 templates/common/archive/exam_detail.html:7
+#: templates/common/archive/exam_password.html:4
+#: templates/common/archive/exam_password.html:16
+#: templates/common/archive/exam_upload.html:5
+#: templates/common/archive/exams_index.html:5
+#: templates/common/archive/exams_index.html:18
+msgid "Tentarkiv"
+msgstr "Test archive"
+
+#: exambank/models.py:45 staticpages/models.py:44
+msgid "Kräv inloggning"
+msgstr "Require login"
+
+#: exambank/models.py:47
+msgid "När detta är aktivt kräver tentarkivet vanlig medlemsinloggning."
+msgstr "When this is active, the exam bank requires normal member sign-in."
+
+#: exambank/models.py:57 exambank/models.py:58 exambank/models.py:61
+msgid "Åtkomst till tentarkiv"
+msgstr "Exam bank access"
+
+#: exambank/models.py:86
+msgid "tentamen"
+msgstr "exam"
+
+#: exambank/models.py:87
+msgid "tentamina"
+msgstr "exams"
+
+#: functionaries/forms.py:11 functionaries/models.py:23
+msgid "Årtal"
+msgstr "Year"
+
+#: functionaries/forms.py:13
+msgid "Ange ett år i formatet YYYY"
+msgstr "Provide a year in the format YYYY"
+
+#: functionaries/models.py:9
+msgid "Styrelse"
+msgstr "Board"
+
+#: functionaries/models.py:12
+msgid "Funktionärspost"
+msgstr "Position of trust"
+
+#: functionaries/models.py:13 templates/common/members/functionaries.html:4
+#: templates/common/members/functionary.html:4
+msgid "Funktionärsposter"
+msgstr "Positions of trust"
+
+#: functionaries/models.py:28
+msgid "Funktionär"
+msgstr "Official"
+
+#: functionaries/models.py:29 templates/common/members/functionaries.html:13
+msgid "Funktionärer"
+msgstr "Officials"
+
+#: functionaries/models.py:33
+msgid "Funktionärer måste ha antingen en kopplad medlem eller ett namn."
+msgstr "An official must have either a linked member or a name."
+
+#: gallery/models.py:55 templates/common/archive/index.html:17
+#: templates/common/archive/picture_index.html:15
+msgid "Bildarkiv"
+msgstr "Photo archive"
+
+#: gallery/models.py:79
+msgid "bild"
+msgstr "photo"
+
+#: gallery/models.py:80
+msgid "bilder"
+msgstr "photos"
+
+#: harassment/models.py:7 templates/common/social/harassment_form.html:22
+msgid "Beskrivning av händelsen"
+msgstr "Description of the event"
+
+#: harassment/models.py:20 harassment/models.py:21
+msgid "Emailmottagare för Trakasserianmälan"
+msgstr "Email recipient for the report"
+
+#: instagram/models.py:6
+msgid "URL"
+msgstr "URL"
+
+#: instagram/models.py:7
+msgid "SHORTCODE"
+msgstr "SHORTCODE"
+
 #: lucia/admin.py:26
 msgid "Leave blank to keep the candidate hidden."
 msgstr "Leave blank to keep the candidate hidden."
@@ -712,7 +809,7 @@ msgstr "Deactivated %(count)d users."
 msgid "2FA inaktiverat för valda medlemmar: %(count)d enhet(er) borttagna."
 msgstr "2FA disabled for selected members: %(count)d device(s) removed."
 
-#: members/forms.py:23
+#: members/forms.py:22
 msgid ""
 "Enter a valid username consisting only of letters, numbers, dots, "
 "underscores, and hyphens."
@@ -720,165 +817,128 @@ msgstr ""
 "Enter a valid username consisting only of letters, numbers, dots, "
 "underscores, and hyphens."
 
-#: members/forms.py:34 members/forms.py:80 members/forms.py:174
-#: members/models.py:32
+#: members/forms.py:33 members/forms.py:79 members/forms.py:173
+#: members/models.py:31
 msgid "Användarnamn"
 msgstr "Username"
 
-#: members/forms.py:183
-msgid "Lösenord"
-msgstr "Password"
-
-#: members/forms.py:217 members/models.py:183
-msgid "Årtal"
-msgstr "Year"
-
-#: members/forms.py:219
-msgid "Ange ett år i formatet YYYY"
-msgstr "Provide a year in the format YYYY"
-
 #: members/migrations/0009_membershiptype_alter_member_membership_type.py:10
-#: members/models.py:24
+#: members/models.py:23
 msgid "Gulnäbb"
 msgstr "Freshman"
 
 #: members/migrations/0009_membershiptype_alter_member_membership_type.py:11
-#: members/models.py:25
+#: members/models.py:24
 msgid "Ordinarie medlem"
 msgstr "Ordinary member"
 
 #: members/migrations/0009_membershiptype_alter_member_membership_type.py:12
-#: members/models.py:26
+#: members/models.py:25
 msgid "Stödjande medlem"
 msgstr "Supporting member"
 
 #: members/migrations/0009_membershiptype_alter_member_membership_type.py:13
-#: members/models.py:27
+#: members/models.py:26
 msgid "Seniormedlem"
 msgstr "Senior member"
 
-#: members/models.py:38
+#: members/models.py:37
 msgid "Postkod"
 msgstr "Postal code"
 
-#: members/models.py:40
+#: members/models.py:39
 msgid "Finland"
 msgstr "Finland"
 
-#: members/models.py:43
+#: members/models.py:42
 msgid "GitHub ID"
 msgstr "GitHub ID"
 
-#: members/models.py:50
+#: members/models.py:49
 msgid "medlem"
 msgstr "member"
 
-#: members/models.py:51
+#: members/models.py:50
 msgid "medlemmar"
 msgstr "members"
 
-#: members/models.py:98
+#: members/models.py:97
 msgid "Beskrivning"
 msgstr "Description"
 
-#: members/models.py:99
+#: members/models.py:98
 msgid "Behörighetsprofil"
 msgstr "Permission profile"
 
-#: members/models.py:102
+#: members/models.py:101
 msgid "Medlemskap"
 msgstr "Membership"
 
-#: members/models.py:103
+#: members/models.py:102
 msgid "medlemskapstyper"
 msgstr "Membership types"
 
-#: members/models.py:115
+#: members/models.py:114
 msgid "Dagar"
 msgstr "Days"
 
-#: members/models.py:116
+#: members/models.py:115
 msgid "Månader"
 msgstr "Months"
 
-#: members/models.py:117
+#: members/models.py:116
 msgid "År"
 msgstr "Years"
 
-#: members/models.py:123 members/models.py:143
+#: members/models.py:122 members/models.py:142
 msgid "Upphör"
 msgstr "Ends"
 
-#: members/models.py:125
+#: members/models.py:124
 msgid "Förnyelse skala"
 msgstr "Renewal scale"
 
-#: members/models.py:127
+#: members/models.py:126
 msgid "Förnyelseperiod"
 msgstr "Renewal period"
 
-#: members/models.py:128
+#: members/models.py:127
 msgid "Pris"
 msgstr "Price"
 
-#: members/models.py:131
+#: members/models.py:130
 msgid "prenumeration"
 msgstr "subscription"
 
-#: members/models.py:132
+#: members/models.py:131
 msgid "prenumerationer"
 msgstr "subscriptions"
 
-#: members/models.py:142
+#: members/models.py:141
 msgid "Betald"
 msgstr "Paid"
 
-#: members/models.py:144
+#: members/models.py:143
 msgid "Betald summa"
 msgstr "Paid sum"
 
-#: members/models.py:147
+#: members/models.py:146
 msgid "prenumerationsbetalning"
 msgstr "subscription payment"
 
-#: members/models.py:148
+#: members/models.py:147
 msgid "prenumerationsbetalningar"
 msgstr "subscription payments"
 
-#: members/models.py:163
+#: members/models.py:162
 msgid "Aldrig"
 msgstr "Never"
-
-#: members/models.py:169
-msgid "Styrelse"
-msgstr "Board"
-
-#: members/models.py:172
-msgid "Funktionärspost"
-msgstr "Position of trust"
-
-#: members/models.py:173 templates/common/members/functionaries.html:4
-#: templates/common/members/functionary.html:4
-msgid "Funktionärsposter"
-msgstr "Positions of trust"
-
-#: members/models.py:188
-msgid "Funktionär"
-msgstr "Official"
-
-#: members/models.py:189 templates/common/members/functionaries.html:13
-msgid "Funktionärer"
-msgstr "Officials"
-
-#: members/models.py:193
-msgid "Funktionärer måste ha antingen en kopplad medlem eller ett namn."
-msgstr "An official must have either a linked member or a name."
 
 #: members/two_factor.py:51
 msgid "Username or email"
 msgstr "Username or email"
 
-#: members/views.py:138
+#: members/views.py:135
 msgid "Användare aktiverad"
 msgstr "User activated"
 
@@ -1090,22 +1150,6 @@ msgstr "PDF File"
 msgid "PDF Files"
 msgstr "PDF Files"
 
-#: social/models.py:11
-msgid "URL"
-msgstr "URL"
-
-#: social/models.py:12
-msgid "SHORTCODE"
-msgstr "SHORTCODE"
-
-#: social/models.py:20 templates/common/social/harassment_form.html:22
-msgid "Beskrivning av händelsen"
-msgstr "Description of the event"
-
-#: social/models.py:33 social/models.py:34
-msgid "Emailmottagare för Trakasserianmälan"
-msgstr "Email recipient for the report"
-
 #: staticpages/models.py:31
 msgid "Använd kategorins URL"
 msgstr "Use category URL"
@@ -1113,10 +1157,6 @@ msgstr "Use category URL"
 #: staticpages/models.py:32 staticpages/models.py:88
 msgid "Url"
 msgstr "URL"
-
-#: staticpages/models.py:44
-msgid "Kräv inloggning"
-msgstr "Require login"
 
 #: staticpages/models.py:58 staticpages/models.py:59
 msgid ""
@@ -1368,6 +1408,10 @@ msgstr "Upload document"
 #: templates/common/archive/exam_detail.html:19
 msgid "Lägg till tentamen"
 msgstr "Add test"
+
+#: templates/common/archive/exam_password.html:21
+msgid "Fortsätt"
+msgstr "Continue"
 
 #: templates/common/archive/exams_index.html:17
 msgid "Lägg till arkiv"
