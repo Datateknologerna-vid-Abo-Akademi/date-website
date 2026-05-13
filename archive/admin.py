@@ -5,8 +5,13 @@ from django.conf import settings
 from django.db import models
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, TabularInline
-from core.admin_widgets import SafeAdminFileWidget
+from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, TabularInline, UNFOLD_FORMFIELD_OVERRIDES
+from core.admin_widgets import (
+    FLATPICKR_ADMIN_CSS,
+    FLATPICKR_ADMIN_JS,
+    FlatpickrDateTimeAdminMixin,
+    SafeAdminFileWidget,
+)
 from core.admin_ui import AdminLink
 
 from .forms import DocumentAdminForm, PublicAdminForm
@@ -38,6 +43,7 @@ class ArchiveCollectionAdminMixin(ExtraChangeListLinksMixin):
 
 class SafeFileInlineMixin:
     formfield_overrides = {
+        **UNFOLD_FORMFIELD_OVERRIDES,
         models.FileField: {'widget': SafeAdminFileWidget},
         models.ImageField: {'widget': SafeAdminFileWidget},
     }
@@ -61,7 +67,7 @@ class PublicFileInline(SafeFileInlineMixin, TabularInline):
 
 
 @admin.register(DocumentCollection)
-class DocumentCollectionAdmin(ArchiveCollectionAdminMixin, ModelAdmin):
+class DocumentCollectionAdmin(FlatpickrDateTimeAdminMixin, ArchiveCollectionAdminMixin, ModelAdmin):
     model = DocumentCollection
     save_on_top = True
     form = DocumentAdminForm
@@ -70,6 +76,7 @@ class DocumentCollectionAdmin(ArchiveCollectionAdminMixin, ModelAdmin):
     search_fields = ('title', 'document__title')
     ordering = ('-pub_date',)
     date_hierarchy = 'pub_date'
+    flatpickr_datetime_fields = ('pub_date',)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -78,10 +85,14 @@ class DocumentCollectionAdmin(ArchiveCollectionAdminMixin, ModelAdmin):
     def get_changeform_initial_data(self, request):
         return {'type': 'Documents'}
 
+    class Media:
+        css = {'all': FLATPICKR_ADMIN_CSS}
+        js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS
+
 
 if settings.USE_S3:
     @admin.register(PublicCollection)
-    class PublicCollectionAdmin(ArchiveCollectionAdminMixin, ModelAdmin):
+    class PublicCollectionAdmin(FlatpickrDateTimeAdminMixin, ArchiveCollectionAdminMixin, ModelAdmin):
         model = PublicCollection
         save_on_top = True
         form = PublicAdminForm
@@ -90,6 +101,7 @@ if settings.USE_S3:
         search_fields = ('title',)
         ordering = ('-pub_date',)
         date_hierarchy = 'pub_date'
+        flatpickr_datetime_fields = ('pub_date',)
 
         def get_queryset(self, request):
             qs = super().get_queryset(request)
@@ -97,3 +109,7 @@ if settings.USE_S3:
 
         def get_changeform_initial_data(self, request):
             return {'type': 'PublicFiles'}
+
+        class Media:
+            css = {'all': FLATPICKR_ADMIN_CSS}
+            js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS

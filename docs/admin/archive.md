@@ -5,7 +5,7 @@ Manage document archives and public files. Photo galleries are managed in **Gall
 
 ## Document Collections
 1. Open **Archive › Document collections**.
-2. Create a collection with title and publication date.
+2. Create a collection with title and publication date. The publication date uses the shared calendar/time picker.
 3. Use the inline table to upload one or many files.
 4. Save. Files are stored under `media/documents/<year>/<slug>/`.
 
