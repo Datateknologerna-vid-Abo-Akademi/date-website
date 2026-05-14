@@ -11,7 +11,6 @@
         <div class="container-size">
             <div class="content">
             <h2>{% trans "Funktionärer" %} {% if all_years %}{% trans "Alla år" %}{% else %}{{ selected_year }}{% endif %}</h2>
-            {% if user.is_authenticated %}
                 <form class="form-inline mt-2" action="{% url 'members:functionaries' %}" method="get">
                     <div class="form-group mb-2">
                         <label for="year" class="mr-2">{% trans "Välj ett år:" %}</label>
@@ -39,7 +38,6 @@
                     </div>
                     <button type="submit" class="theme-button ml-2 mb-2">{% trans "Filtrera" %}</button>
                 </form>
-            {% endif %}
                 <div class="row">
                     {% if board_functionaries_by_role %}
                         <div class="col-md-12 mb-4">

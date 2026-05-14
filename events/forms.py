@@ -69,10 +69,10 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
     published_time = flatpickr_datetime_field(initial=now, required=False)
     event_date_start = flatpickr_datetime_field(initial=now())
     event_date_end = flatpickr_datetime_field(initial=now())
-    sign_up_others = flatpickr_datetime_field(initial=now())
-    sign_up_members = flatpickr_datetime_field(initial=now())
-    sign_up_deadline = flatpickr_datetime_field(initial=now())
-    sign_up_cancelling_deadline = flatpickr_datetime_field(initial=now())
+    sign_up_others = flatpickr_datetime_field(initial=now(), required=False)
+    sign_up_members = flatpickr_datetime_field(initial=now(), required=False)
+    sign_up_deadline = flatpickr_datetime_field(initial=now(), required=False)
+    sign_up_cancelling_deadline = flatpickr_datetime_field(initial=now(), required=False)
     parent = forms.ModelChoiceField(queryset=Event.objects.filter(event_date_end__gte=now()), required=False)
 
     def __init__(self, *args, **kwargs):
