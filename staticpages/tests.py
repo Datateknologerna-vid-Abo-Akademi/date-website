@@ -7,7 +7,7 @@ from django.test import RequestFactory
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from staticpages.context_processors import get_urls
+from staticpages.context_processors import get_categories, get_urls
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
 
 
@@ -161,6 +161,74 @@ class StaticUrlTests(TestCase):
             children = list(urls[0].children.all())
 
         self.assertEqual([child.title for child in children], ["Visible child"])
+
+    def test_context_processor_keeps_exambank_urls_when_archive_is_disabled(self):
+        request = RequestFactory().get("/")
+        request.user = AnonymousUser()
+        parent = StaticUrl.objects.create(title="Parent", category=self.category, url="/parent/")
+        StaticUrl.objects.create(title="Exam child", category=self.category, parent=parent, url="/archive/exams/")
+        StaticUrl.objects.create(title="Exam detail child", category=self.category, parent=parent, url="/archive/exams/1/")
+        StaticUrl.objects.create(title="Archive child", category=self.category, parent=parent, url="/archive/old/")
+        StaticUrl.objects.create(title="Examined files", category=self.category, parent=parent, url="/archive/examined/")
+
+        installed_with_exambank = list(settings.INSTALLED_APPS)
+        if 'exambank' not in installed_with_exambank:
+            installed_with_exambank.append('exambank')
+
+        with override_settings(ARCHIVE_ENABLED=False), \
+                patch.object(settings, 'INSTALLED_APPS', new=installed_with_exambank):
+            urls = get_urls(request)["urls"]
+            children = list(urls[0].children.all())
+
+        self.assertEqual(
+            sorted(child.title for child in children),
+            ["Exam child", "Exam detail child"],
+        )
+
+    def test_context_processor_hides_all_archive_urls_when_exambank_not_installed(self):
+        request = RequestFactory().get("/")
+        request.user = AnonymousUser()
+        parent = StaticUrl.objects.create(title="Parent", category=self.category, url="/parent/")
+        StaticUrl.objects.create(title="Exam child", category=self.category, parent=parent, url="/archive/exams/")
+        StaticUrl.objects.create(title="Visible child", category=self.category, parent=parent, url="/current/")
+
+        installed_without_exambank = [app for app in settings.INSTALLED_APPS if app != 'exambank']
+
+        with override_settings(ARCHIVE_ENABLED=False), \
+                patch.object(settings, 'INSTALLED_APPS', new=installed_without_exambank):
+            urls = get_urls(request)["urls"]
+            children = list(urls[0].children.all())
+
+        self.assertEqual([child.title for child in children], ["Visible child"])
+
+    def test_get_categories_keeps_exambank_category_when_archive_is_disabled(self):
+        request = RequestFactory().get("/")
+        request.user = AnonymousUser()
+        exam_category = StaticPageNav.objects.create(
+            category_name="Exams",
+            nav_element=10,
+            use_category_url=True,
+            url="/archive/exams/",
+        )
+        StaticPageNav.objects.create(
+            category_name="Archive",
+            nav_element=20,
+            use_category_url=True,
+            url="/archive/old/",
+        )
+
+        installed_with_exambank = list(settings.INSTALLED_APPS)
+        if 'exambank' not in installed_with_exambank:
+            installed_with_exambank.append('exambank')
+
+        with override_settings(ARCHIVE_ENABLED=False), \
+                patch.object(settings, 'INSTALLED_APPS', new=installed_with_exambank):
+            categories = get_categories(request)["categories"]
+
+        self.assertIn(exam_category, categories)
+        self.assertFalse(
+            any(category.url == "/archive/old/" for category in categories)
+        )
 
     def test_context_processor_filters_logged_in_only_children_for_anonymous_users(self):
         request = RequestFactory().get("/")
