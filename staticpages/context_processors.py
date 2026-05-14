@@ -9,7 +9,7 @@ def _visible_urls_queryset(user=None):
     if not getattr(settings, 'ARCHIVE_ENABLED', True):
         if 'exambank' in settings.INSTALLED_APPS:
             queryset = queryset.exclude(
-                Q(url__startswith='/archive/') & ~Q(url__startswith='/archive/exams')
+                Q(url__startswith='/archive/') & ~Q(url__startswith='/archive/exams/')
             )
         else:
             queryset = queryset.exclude(url__startswith='/archive/')
@@ -35,7 +35,14 @@ def get_categories(request):
     visible_category_ids = set(filtered_urls.values_list('category_id', flat=True))
     categories = StaticPageNav.objects.all().order_by('nav_element')
     if not getattr(settings, 'ARCHIVE_ENABLED', True):
-        categories = categories.exclude(use_category_url=True, url__startswith='/archive/')
+        if 'exambank' in settings.INSTALLED_APPS:
+            categories = categories.exclude(
+                Q(use_category_url=True)
+                & Q(url__startswith='/archive/')
+                & ~Q(url__startswith='/archive/exams/')
+            )
+        else:
+            categories = categories.exclude(use_category_url=True, url__startswith='/archive/')
     categories = [
         category for category in categories
         if category.use_category_url or category.id in visible_category_ids

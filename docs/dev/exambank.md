@@ -27,3 +27,6 @@ Public routes are still exposed through `archive.urls` under `/archive/exams/...
 Association variants that install `exambank` without the full `archive` app, such as Pulterit, mount `exambank.archive_urls` under `/archive/` so the exam-only compatibility routes keep the same public paths and URL names.
 
 The app intentionally renders the shared `archive/...` templates so the public archive pages keep their historical layout while the data ownership lives in `exambank`.
+
+## Navigation Visibility
+The `staticpages.context_processors._visible_urls_queryset` and `get_categories` helpers hide nav entries whose URL starts with `/archive/` when `ARCHIVE_ENABLED=False`. When `exambank` is in `INSTALLED_APPS`, entries under `/archive/exams/` are kept visible so the exam compatibility routes remain reachable from the menu. The trailing slash is significant — only `/archive/exams/...` is exempted, not unrelated prefixes such as `/archive/examined/`.
