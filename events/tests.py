@@ -1436,6 +1436,7 @@ class EventTemplateSelectionTests(TestCase):
             title="Generic",
             slug="selected-arsfest-invalid",
             author=self.author,
+            published_time=timezone.now(),
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
             template="events/arsfest.html",
         )

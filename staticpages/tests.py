@@ -162,6 +162,19 @@ class StaticUrlTests(TestCase):
 
         self.assertEqual([child.title for child in children], ["Visible child"])
 
+    def test_context_processor_keeps_exambank_urls_when_archive_is_disabled(self):
+        request = RequestFactory().get("/")
+        request.user = AnonymousUser()
+        parent = StaticUrl.objects.create(title="Parent", category=self.category, url="/parent/")
+        StaticUrl.objects.create(title="Exam child", category=self.category, parent=parent, url="/archive/exams/")
+        StaticUrl.objects.create(title="Archive child", category=self.category, parent=parent, url="/archive/old/")
+
+        with override_settings(ARCHIVE_ENABLED=False):
+            urls = get_urls(request)["urls"]
+            children = list(urls[0].children.all())
+
+        self.assertEqual([child.title for child in children], ["Exam child"])
+
     def test_context_processor_filters_logged_in_only_children_for_anonymous_users(self):
         request = RequestFactory().get("/")
         request.user = AnonymousUser()
