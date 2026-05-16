@@ -3,25 +3,16 @@ from __future__ import unicode_literals
 import datetime
 import os
 import shutil
-import sys
-from io import BytesIO
-
 from django.conf import settings
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.exceptions import ValidationError
 from django.db import models
-from django.template.defaulttags import register
-from django.urls import reverse
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
-from PIL import Image
 from .fields import PublicFileField
-from django.core.exceptions import ValidationError
 
 
 TYPE_CHOICES = (
-    ('Pictures', 'Bilder'),
     ('Documents', 'Dokument'),
-    ('Exams', 'Tenter'),
     ('PublicFiles', 'OffentligaFiler')
 )
 
@@ -48,25 +39,6 @@ class Collection(models.Model):
         verbose_name = _('Samling')
         verbose_name_plural = _('Samlingar')
 
-    def get_first_picture(self):
-        if self.type == 'Pictures':
-            return self.picture_set.first()
-
-    def get_absolute_url(self):
-        if self.redirect_url:
-            return self.redirect_url
-        return reverse('archive:detail', kwargs={'album': self.title, 'year': self.pub_date.year})
-
-    @property
-    def redirects_externally(self):
-        return bool(self.redirect_url)
-
-    @property
-    def thumbnail_url(self):
-        if self.thumbnail:
-            return self.thumbnail.url
-        return ''
-
     def __str__(self):
         return self.title
 
@@ -83,64 +55,27 @@ class Collection(models.Model):
         if '/' in self.title:
             raise ValidationError({'Namn': "Snedstreck är inte tillåtet."})
 
-    @register.filter
-    def get_file_count(self):
-        return Picture.objects.filter(collection=self).count()
-
 
 def upload_to(instance, filename):
-    file_location = ""
     filename_base, filename_ext = os.path.splitext(filename)
 
     if instance.collection.type == "Documents":
-        file_location = "documents/{year}/{collection}/{filename}{extension}".format(
+        return "documents/{year}/{collection}/{filename}{extension}".format(
             year=instance.collection.pub_date.strftime("%Y"),
             collection=slugify(instance.collection.title),
             filename=slugify(filename_base),
             extension=filename_ext.lower(),
         )
-    
-    elif instance.collection.type == "Exams":
-        file_location = "Exams/{year}/{collection}/{filename}{extension}".format(
-            year=instance.collection.pub_date.strftime("%Y"),
-            collection=slugify(instance.collection.title),
-            filename=slugify(filename_base),
-            extension=filename_ext.lower(),
-        )
-
-    else:
-        file_location = "{year}/{collection}/{filename}{extension}".format(
-            year=instance.collection.pub_date.strftime("%Y"),
-            collection=slugify(instance.collection.title),
-            filename=slugify(filename_base),
-            extension=filename_ext.lower(),
-        )
-    return file_location
+    return "{year}/{collection}/{filename}{extension}".format(
+        year=instance.collection.pub_date.strftime("%Y"),
+        collection=slugify(instance.collection.title),
+        filename=slugify(filename_base),
+        extension=filename_ext.lower(),
+    )
 
 
 def get_collections_of_type(t):
     return Collection.objects.filter(type=t)
-
-
-def compress_image(uploaded_image):
-    basewidth = 1600
-    img = Image.open(uploaded_image)
-    outputIOStream = BytesIO()
-    img = img.convert('RGB')
-    wpercent = (basewidth / float(img.size[0]))
-    hsize = int((float(img.size[1]) * float(wpercent)))
-    img = img.resize((basewidth, hsize), Image.LANCZOS)
-
-    img.save(outputIOStream, format='JPEG', quality=60)
-    outputIOStream.seek(0)
-    uploaded_image = InMemoryUploadedFile(outputIOStream, 'ImageField', "%s.jpg" % uploaded_image.name.split('.')[0],  'image/jpeg', sys.getsizeof(outputIOStream), None)
-    return uploaded_image
-
-
-class PictureCollection(Collection):
-    class Meta:
-        verbose_name_plural = verbose_name = _('Bildarkiv')
-        proxy = True
 
 
 class DocumentCollection(Collection):
@@ -148,41 +83,10 @@ class DocumentCollection(Collection):
         verbose_name_plural = verbose_name = _('Dokumentarkiv')
         proxy = True
 
-class ExamCollection(Collection):
-    class Meta:
-        verbose_name_plural = verbose_name = _('Tentarkiv')
-        proxy = True
-
 class PublicCollection(Collection):
     class Meta:
         verbose_name_plural = verbose_name = _('Offentliga Filer')
         proxy = True
-
-
-class Picture(models.Model):
-    collection = models.ForeignKey(Collection, verbose_name=_('Galleri'), on_delete=models.CASCADE)
-    image = models.ImageField(upload_to=upload_to)
-    favorite = models.BooleanField(default=False)
-
-    class Meta:
-        verbose_name = _("bild")
-        verbose_name_plural = _("bilder")
-
-    def __str__(self):
-        return self.image.name
-
-    def get_file_path(self):
-        return self.image.url
-
-    def save(self, *args, **kwargs):
-        if not self.id:
-            self.image = compress_image(self.image)
-        super(Picture, self).save(*args, **kwargs)
-    
-    if not settings.USE_S3:
-        def delete(self, using=None, keep_parents=False):
-                os.remove(os.path.join(settings.MEDIA_ROOT, self.image.name))
-                super(Picture, self).delete(using, keep_parents)
 
 
 class Document(models.Model):

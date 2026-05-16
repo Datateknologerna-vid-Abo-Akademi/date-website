@@ -18,7 +18,7 @@ class EventFeed(ICalFeed):
         return super(EventFeed, self).__call__(request, *args, **kwargs)
 
     def items(self):
-        return Event.objects.filter(published=True).order_by('-event_date_start')
+        return Event.objects.published().order_by('-event_date_start')
 
     def item_guid(self, item):
         return "{}{}".format(item.id, 'date.abo.fi')

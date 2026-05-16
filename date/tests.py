@@ -58,6 +58,19 @@ class SiteShellTemplateTests(TestCase):
         self.assertLess(rendered.index("<body>"), rendered.index("<nav"))
         self.assertLess(rendered.index("core/js/external-links.js"), rendered.index("</body>"))
 
+    def test_base_template_loads_font_awesome_compatibility_css(self):
+        rendered = render_to_string("core/base.html", self._content_context())
+
+        self.assertIn(
+            "https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/"
+            "font-awesome-line-awesome/css/all.min.css",
+            rendered,
+        )
+        self.assertIn(
+            "sha384-snzOGIbz+keYJBq8ozkYChzFE6HnRT5PIEwo25BGyLtpC4G3qF/YAP4vRkinYp7+",
+            rendered,
+        )
+
     def test_header_uses_unique_dropdown_ids_for_categories(self):
         categories = [
             SimpleNamespace(category_name="About", use_category_url=False, url=""),

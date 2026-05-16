@@ -207,6 +207,18 @@ Run `--dry-run` first to inspect planned counts. The command matches rows by slu
 
 ## Recommended Operator Checklist
 
+### After splitting apps
+
+Before running `manage.py remove_stale_contenttypes` after this split, grant the replacement permissions for the new apps:
+
+- `gallery.*` for photo albums and photos
+- `exambank.*` for exam archives and files
+- `instagram.*` for Instagram URLs
+- `harassment.*` for harassment reports and recipients
+- `functionaries.*` for functionary roles and assignments
+
+The admin keeps temporary fallbacks to the old `archive`, `social`, and `members` permissions while the stale content types still exist. Those fallbacks disappear once stale content types and their permissions are removed.
+
 ### Before destructive operations
 
 1. Confirm which env file you are targeting.

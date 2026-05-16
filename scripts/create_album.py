@@ -16,23 +16,22 @@ sys.path.append("/code")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings.date")
 django.setup()
 
-from archive.models import Picture, Collection
+from gallery.models import Album, Photo
 
-collection = Collection(
+album = Album(
     title=sys.argv[1],
-    type="Pictures",
     pub_date=datetime.datetime.now(tz=datetime.timezone.utc)
 )
-collection.save()
+album.save()
 
-print("created collection")
+print("created album")
 
 for root, _, files in os.walk(sys.argv[2]):
     for file in files:
         with open(os.path.join(root, file), 'rb') as file_obj:
             print(f"Uploading {file}")
-            pic = Picture.objects.create(
-                collection=collection,
+            pic = Photo.objects.create(
+                album=album,
                 image=File(file_obj, file)
             )
             pic.save()

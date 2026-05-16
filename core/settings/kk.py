@@ -19,13 +19,18 @@ TEMPLATES = [
 
 INSTALLED_APPS = get_installed_apps([
     'news',
-    'archive.apps.ArchiveConfig',
+    'gallery',
+    'exambank',
+    'archive',
     'events',
     'polls',
     'ads',
+    'instagram',
+    'harassment',
     'social',
     'staticpages',
     'lucia',
+    'publications',
     'alumni',
     'billing',
 ])

@@ -384,7 +384,7 @@ def generate():
     # --- SOCIAL ---
     data.append(
         {
-            "model": "social.harassmentemailrecipient",
+            "model": "harassment.harassmentemailrecipient",
             "pk": 1,
             "fields": {"recipient_email": "test-admin@example.com"},
         }

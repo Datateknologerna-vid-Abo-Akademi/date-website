@@ -222,7 +222,7 @@ Although Django 6 ships with the new Tasks framework, this project still uses Ce
 
 ## Deployment (`k3s` / Helm)
 
-The Kubernetes deployment path uses the Helm chart in `charts/date-website/`. The current target is k3s on Hetzner Cloud with Traefik ingress, `hcloud-volumes` for PostgreSQL, and Backblaze B2 through the S3-compatible API for media and PostgreSQL backups.
+The Kubernetes deployment path uses the Helm chart in `charts/date-website/`. The current target is k3s on Hetzner Cloud with Traefik Gateway API, `hcloud-volumes` for persistent workloads when they run in-cluster, and Backblaze B2 through the S3-compatible API for media and PostgreSQL backups.
 
 Use these values files together:
 
@@ -233,6 +233,7 @@ helm upgrade --install date-website charts/date-website \
   -f charts/date-website/values-hetzner.yaml \
   -f charts/date-website/values-backblaze-b2.example.yaml \
   --set secret.existingSecret=date-website-prod-secrets \
+  --set database.external.host='<bastion-private-ip-or-dns>' \
   --set image.tag='<release-tag>'
 ```
 

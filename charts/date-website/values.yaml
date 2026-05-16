@@ -216,4 +216,19 @@ ingress:
           pathType: Prefix
   tls: []
 
+gateway:
+  enabled: false
+  className: traefik
+  name: ""
+  annotations: {}
+  http:
+    enabled: true
+    port: 80
+  https:
+    enabled: false
+    port: 443
+    secretName: ""
+  route:
+    annotations: {}
+
 extraEnv: {}

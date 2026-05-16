@@ -15,7 +15,7 @@ import datetime
 import pytz
 
 from django.conf import settings
-from archive.models import Collection
+from gallery.models import Album
 from django.db import connection, transaction
 
 logger = logging.getLogger('date')
@@ -53,16 +53,14 @@ for year in year_list:
     # For every year, list containing albums
     for obj in response.get('CommonPrefixes'):
         album_name = obj.get('Prefix').replace(settings.PRIVATE_MEDIA_LOCATION + f"/{year}", "").replace("/", "")
-        exists_check = Collection.objects.filter(title=album_name, pub_date__year=album_year).count()
+        exists_check = Album.objects.filter(title=album_name, pub_date__year=album_year).count()
         # check if album name not exists
         if exists_check == 0:
             logger.info("Album does not exist")
-            # Create a collection from album name
-            collection = Collection(title=album_name, type="Pictures",
-                                    pub_date=datetime.datetime(album_year, 1, 1, 10, 10,
-                                                               tzinfo=pytz.timezone('Europe/Helsinki')))
-            # If an album with same name in a specific year does not exist, save the collection
-            collection.save()
+            album = Album.objects.create(
+                title=album_name,
+                pub_date=datetime.datetime(album_year, 1, 1, 10, 10, tzinfo=pytz.timezone('Europe/Helsinki')),
+            )
             response = client.list_objects(Bucket=settings.AWS_STORAGE_BUCKET_NAME,
                                            Prefix=settings.PRIVATE_MEDIA_LOCATION + f"/{year}/{album_name}")
             contents = response.get('Contents')
@@ -70,14 +68,14 @@ for year in year_list:
             for data in contents:
                 path = data["Key"].replace(settings.PRIVATE_MEDIA_LOCATION + "/", "")
                 logger.info(path)
-                picture_data = (path, False, collection.id)
+                picture_data = (path, False, album.id)
                 query_list.append(picture_data)
 
 # Creates a connection to the database and inserts the query list to the correct table
 cursor = connection.cursor()
 
-query = ''' INSERT INTO archive_picture 
-        (image, favorite, collection_id) 
+query = ''' INSERT INTO gallery_photo 
+        (image, favorite, album_id) 
         VALUES (%s,%s,%s) '''
 
 cursor.executemany(query, query_list)

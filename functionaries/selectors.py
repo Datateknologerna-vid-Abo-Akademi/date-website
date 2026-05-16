@@ -1,7 +1,8 @@
 from collections import defaultdict
-from django.shortcuts import get_object_or_404
+
 from django.db.models import Q, QuerySet
 from django.utils import timezone
+
 from .models import Functionary, FunctionaryRole
 
 
@@ -49,14 +50,20 @@ def get_selected_role(request, functionary_roles):
         if role_param == 'all':
             selected_role = functionary_roles
             all_roles = True
-        elif role_param in functionary_roles.values_list('title', flat=True):
-            selected_role = get_object_or_404(FunctionaryRole, title=role_param)
+        else:
+            try:
+                role_id = int(role_param)
+            except (ValueError, TypeError):
+                pass
+            else:
+                selected_role = FunctionaryRole.objects.filter(pk=role_id).first()
 
     return selected_role, all_roles
 
 
 def get_filtered_functionaries(year, selected_role, is_board):
-    main_filter = Q(year__in=[year], functionary_role__board=is_board)
+    years = year if isinstance(year, (QuerySet, list, tuple, set)) else [year]
+    main_filter = Q(year__in=years, functionary_role__board=is_board)
 
     if selected_role is not None:
         role_filter = (

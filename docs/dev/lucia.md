@@ -1,11 +1,12 @@
 # Lucia Development Notes
 
 ## Models
-- `Candidate` fields: `img_url`, `title`, `content` (CKEditor5), `published`, `slug`, and `poll_url`. Meta ordering is by `id`, so insertion order dictates listing. Verbose names are set to Swedish strings ("Lucia"/"Lucian").
+- `Candidate` fields: `img_url`, `title`, `content` (CKEditor5), `published_time`, `slug`, and `poll_url`. Meta ordering is by `id`, so insertion order dictates listing. Verbose names are set to Swedish strings ("Lucia"/"Lucian").
+- Publication is controlled by `published_time` (same pattern as events/news): `NULL` is hidden, future is scheduled, past is public. Use `Candidate.objects.published()` or the `Candidate.published` property.
 
 ## Views & URLs
 - `lucia.views.index` and `lucia.views.candidates` both load `Candidate.objects.all()` and render different templates (`lucia/index.html`, `lucia/candidates.html`).
-- `lucia.views.candidate` fetches a single published candidate by slug and renders `lucia/candidate.html`. Attempting to view an unpublished slug raises `DoesNotExist` and triggers a 500, so publish status doubles as public visibility control.
+- `lucia.views.candidate` fetches a single candidate from `Candidate.objects.published()` by slug and renders `lucia/candidate.html`. Attempting to view an unpublished slug raises `DoesNotExist` and triggers a 500, so publication state doubles as public visibility control.
 
 ## Admin
 - Default admin registration (`admin.site.register(Candidate)`) means there is no custom form logic. Slugs must be managed manually or via Django’s "slug" suggestions.

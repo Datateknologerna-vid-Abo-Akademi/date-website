@@ -11,12 +11,11 @@
 - `SubscriptionPayment`: links members to subscriptions, stores payment/expiry dates, and exposes `is_active` + `expires` properties. `SubscriptionPaymentForm.save()` auto-calculates `date_expires` using `dateutil.relativedelta`.
 
 ## Functionaries
-- `FunctionaryRole` + `Functionary` capture yearly positions. A functionary can point at a member or store a standalone display name; linked member rows snapshot the member's current name as a fallback if the account is later removed. Views in `members/functionary.py` aggregate data by role and year for the public page.
+- Functionary roles and assignments live in the `functionaries` app. `members.urls` keeps the old `/members/functionary/` and `/members/functionaries/` routes for compatibility.
 
 ## Forms
 - `MemberCreationForm` validates usernames via `USERNAME_VALIDATOR` (letters, underscores, hyphens). `AdminMemberUpdateForm` uses `ReadOnlyPasswordHashField` and disables password editing unless explicitly changed.
 - `SignUpForm` collects data for `/members/signup/`, including captcha validation and manual activation flow.
-- `FunctionaryForm` enforces uniqueness per (member, role, year) for member-managed entries and sets `member` during validation/save.
 - `CustomPasswordResetForm` overrides `send_mail` to push messages through `send_email_task` (Celery-backed).
 
 ## Views
@@ -24,8 +23,6 @@
 - `CertificateView`: renders a fun membership certificate with a daily icon.
 - `signup`: handles public registrations, enforces captcha, sets user inactive, and emails the board for approval using `account_activation_token`.
 - `activate`: clicks from the activation email mark the user active.
-- `FunctionaryView`: login-protected view for members to list/add/remove their own functionary entries.
-- `FunctionariesView`: public filterable list using helpers in `functionary.py` to collect data.
 - Password views subclass Django’s built-ins to use the custom templates/forms.
 
 ## Emails & Tokens
@@ -40,4 +37,4 @@
 ## Extending
 - Consider adding auditing (who edited a member) since current forms don’t track admin users.
 - Django 6 is now in use. If you revisit background jobs, evaluate Django's built-in Tasks framework separately from Celery migration work rather than mixing both changes into a feature branch.
-- Tests are sparse; add coverage for signup + activation flows and functionary filtering.
+- Tests are sparse; add coverage for signup + activation flows.

@@ -15,16 +15,19 @@ Use this together with:
 
 The first production k3s target is expected to be:
 
-- one CX23 control-plane node
-- one CX33 worker node
+- one CX33 control-plane node with workloads scheduled on it
+- an existing CX23 bastion/backend host for admin access and PostgreSQL
 - Hetzner Cloud Controller Manager and CSI driver installed by `hetzner-k3s` or the Terraform k3s module
-- Traefik as the k3s ingress controller
-- Hetzner `hcloud-volumes` storage class for PostgreSQL
+- Traefik with the Kubernetes Gateway API provider enabled
+- Hetzner `hcloud-volumes` storage class for in-cluster persistent workloads
 
-The chart assumes Traefik through:
+The chart can render either Kubernetes `Ingress` or Gateway API resources. The Hetzner values use Gateway API:
 
 ```yaml
 ingress:
+  enabled: false
+gateway:
+  enabled: true
   className: traefik
 ```
 
@@ -40,21 +43,29 @@ The chart lives in:
 charts/date-website/
 ```
 
+It is published as an OCI Helm chart to GHCR by `.github/workflows/helm_chart.yaml` whenever chart files change on `main`, and can also be published manually through the workflow dispatch button. Bump `charts/date-website/Chart.yaml` `version` whenever chart templates or values change; production deploys should pin that immutable chart version.
+
+Current chart reference:
+
+```text
+oci://ghcr.io/datateknologerna-vid-abo-akademi/charts/date-website
+```
+
 The chart deploys:
 
 - Django/Gunicorn web deployment
 - Daphne ASGI deployment for WebSocket traffic
 - Celery worker deployment
-- PostgreSQL StatefulSet
+- PostgreSQL StatefulSet, unless `postgresql.enabled=false`
 - Valkey/Redis StatefulSet
-- Traefik-compatible Ingress
+- Gateway API `Gateway` and `HTTPRoute`, or a Traefik-compatible `Ingress`
 - optional local media PVC
 - PostgreSQL backup CronJob
 - optional migration Job
 
 The base chart defaults `web.migrateOnStartup: false` to avoid migration races when `web.replicaCount` is increased. For the current single-worker Hetzner setup, `values-hetzner.yaml` overrides this to `true` and disables the migration Job. If the web deployment is scaled above one replica, move migrations out of web startup and into a controlled migration step.
 
-The Ingress routes WebSocket traffic to the ASGI service with `asgi.wsPath`, which defaults to `/ws`.
+The public route sends WebSocket traffic to the ASGI service with `asgi.wsPath`, which defaults to `/ws`.
 
 The application container security context drops capabilities and prevents privilege escalation, but it does not set `runAsNonRoot: true` yet. The current application Dockerfile does not define a non-root `USER`, so forcing `runAsNonRoot` in the chart would break the image. Add a non-root user to the image first, then tighten the chart default.
 
@@ -65,49 +76,61 @@ Run one Helm release per association. Do not route `date`, `kk`, `biocum`, and `
 Examples:
 
 ```bash
-helm upgrade --install date charts/date-website \
+helm upgrade --install date \
+  oci://ghcr.io/datateknologerna-vid-abo-akademi/charts/date-website \
+  --version 0.2.0 \
   --namespace date \
   --create-namespace \
   -f charts/date-website/values-hetzner.yaml \
   -f charts/date-website/values-backblaze-b2.example.yaml \
   --set secret.existingSecret=date-website-prod-secrets \
+  --set database.external.host='<bastion-private-ip-or-dns>' \
   --set image.tag='<release-tag>'
 ```
 
 ```bash
-helm upgrade --install kk charts/date-website \
+helm upgrade --install kk \
+  oci://ghcr.io/datateknologerna-vid-abo-akademi/charts/date-website \
+  --version 0.2.0 \
   --namespace kk \
   --create-namespace \
   -f charts/date-website/values-hetzner.yaml \
   -f charts/date-website/values-backblaze-b2.example.yaml \
   -f charts/date-website/values-kk.example.yaml \
   --set secret.existingSecret=kk-website-prod-secrets \
+  --set database.external.host='<bastion-private-ip-or-dns>' \
   --set image.tag='<release-tag>'
 ```
 
 ```bash
-helm upgrade --install biocum charts/date-website \
+helm upgrade --install biocum \
+  oci://ghcr.io/datateknologerna-vid-abo-akademi/charts/date-website \
+  --version 0.2.0 \
   --namespace biocum \
   --create-namespace \
   -f charts/date-website/values-hetzner.yaml \
   -f charts/date-website/values-backblaze-b2.example.yaml \
   -f charts/date-website/values-biocum.example.yaml \
   --set secret.existingSecret=biocum-website-prod-secrets \
+  --set database.external.host='<bastion-private-ip-or-dns>' \
   --set image.tag='<release-tag>'
 ```
 
 ```bash
-helm upgrade --install pulterit charts/date-website \
+helm upgrade --install pulterit \
+  oci://ghcr.io/datateknologerna-vid-abo-akademi/charts/date-website \
+  --version 0.2.0 \
   --namespace pulterit \
   --create-namespace \
   -f charts/date-website/values-hetzner.yaml \
   -f charts/date-website/values-backblaze-b2.example.yaml \
   -f charts/date-website/values-pulterit.example.yaml \
   --set secret.existingSecret=pulterit-website-prod-secrets \
+  --set database.external.host='<bastion-private-ip-or-dns>' \
   --set image.tag='<release-tag>'
 ```
 
-Each release should have separate `django.projectName`, `django.allowedHosts`, `django.allowedOrigins`, `ingress.hosts`, media bucket names or prefixes, backup bucket name or prefix, and Kubernetes Secret. Keeping separate namespaces is optional, but it makes secrets, PVCs, and operational commands harder to mix up.
+Each release should have separate `django.projectName`, `django.allowedHosts`, `django.allowedOrigins`, `ingress.hosts`, media bucket names or prefixes, backup bucket name or prefix, and Kubernetes Secret. `ingress.hosts` is also used as the HTTPRoute hostname source when Gateway API is enabled. Keeping separate namespaces is optional, but it makes secrets, PVCs, and operational commands harder to mix up.
 
 If several associations share one B2 bucket, keep unique media locations such as `date/media`, `kk/media`, `biocum/media`, and `pulterit/media`. If they use separate B2 buckets, still keep distinct backup prefixes such as `date-website/postgresql`, `kk-website/postgresql`, `biocum-website/postgresql`, and `pulterit-website/postgresql`.
 
@@ -189,12 +212,15 @@ Copy the B2 example values into an environment-specific private values file befo
 Typical install or upgrade:
 
 ```bash
-helm upgrade --install date-website charts/date-website \
+helm upgrade --install date-website \
+  oci://ghcr.io/datateknologerna-vid-abo-akademi/charts/date-website \
+  --version 0.2.0 \
   --namespace date-website \
   --create-namespace \
   -f charts/date-website/values-hetzner.yaml \
   -f charts/date-website/values-backblaze-b2.example.yaml \
   --set secret.existingSecret=date-website-prod-secrets \
+  --set database.external.host='<bastion-private-ip-or-dns>' \
   --set image.tag='<release-tag>'
 ```
 
@@ -208,7 +234,7 @@ Check Kubernetes resources:
 
 ```bash
 kubectl -n date-website get pods
-kubectl -n date-website get ingress
+kubectl -n date-website get gateway,httproute
 kubectl -n date-website get pvc
 kubectl -n date-website logs deploy/date-website-web
 ```

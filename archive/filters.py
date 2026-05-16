@@ -11,10 +11,3 @@ class DocumentFilter(django_filters.FilterSet):
             'collection': ['exact'],
             'title': ['contains'],
         }
-
-
-class ExamFilter(django_filters.FilterSet):
-
-    class Meta:
-        model = Document
-        fields = {}

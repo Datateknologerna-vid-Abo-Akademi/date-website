@@ -156,11 +156,14 @@ django-admin compilemessages
 - `date`: homepage composition, calendar data, language switching, middleware, error views.
 - `events`: events, dynamic registration forms, capacity/sign-up windows, passcodes, captcha, child events, WebSocket attendee updates.
 - `lucia`: candidate pages and admin-managed seasonal content.
-- `members`: custom user model, membership/subscription state, functionaries, auth, two-factor, GitHub login.
+- `functionaries`: yearly functionary roles and assignments, member self-service history, public functionary listing.
+- `harassment`: harassment report form, stored submissions, recipient list, and notification emails.
+- `instagram`: Instagram embed URLs used on the home page.
+- `members`: custom user model, membership/subscription state, auth, two-factor, GitHub login.
 - `news`: posts, categories, feeds, homepage/news listing behavior.
 - `polls`: questions, choices, votes, membership-aware vote validation.
 - `publications`: PDF metadata, access controls, viewer/list pages.
-- `social`: Instagram embeds and harassment report form/email flow.
+- `social`: compatibility routes for legacy social URLs.
 - `staticpages`: CKEditor pages, dropdown navigation, stored internal URLs.
 
 Read the corresponding `docs/dev/<app>.md` before changing app internals.
@@ -170,7 +173,7 @@ Read the corresponding `docs/dev/<app>.md` before changing app internals.
 - Preserve user data. Make backups before destructive database or media operations.
 - Never use `update-postgres.sh` for minor PostgreSQL upgrades. It is only for major upgrades and is destructive if misused.
 - Do not rewrite published migrations. Add new migrations.
-- Generate migration files with Django (`date-makemigrations` / `python manage.py makemigrations`) unless the migration needs custom data movement or another operation Django cannot infer automatically.
+- Generate migration files with Django (`date-makemigrations` / `python manage.py makemigrations`) first. If the migration needs custom data movement or another operation Django cannot infer automatically, edit the newly generated migration rather than creating one from scratch.
 - Keep branch changes focused. Update docs/config examples when behavior or setup changes.
 - Do not add secrets to source, fixtures, docs, or Helm values.
 - Be careful with admin/editor flows; many features are operated by non-developers through Django admin.

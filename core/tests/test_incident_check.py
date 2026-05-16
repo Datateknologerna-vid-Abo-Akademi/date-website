@@ -39,7 +39,7 @@ class IncidentCheckCommandTests(TestCase):
         filtered = fake_model.objects.filter.return_value
         ordered = filtered.order_by.return_value
         valued = ordered.values.return_value
-        valued.__getitem__.return_value = [{"id": 2, "title": "Latest", "published": True}]
+        valued.__getitem__.return_value = [{"id": 2, "title": "Latest", "published_time": None}]
 
         output = StringIO()
         command = Command(stdout=output)
@@ -48,7 +48,7 @@ class IncidentCheckCommandTests(TestCase):
             command.print_blank_slugs(limit=2)
 
         filtered.order_by.assert_called_once_with("-id")
-        ordered.values.assert_called_once_with("id", "title", "published")
+        ordered.values.assert_called_once_with("id", "title", "published_time")
 
     def test_admin_edit_fields_are_redacted_before_output(self):
         user = get_user_model().objects.create_user(username="redacted-admin")

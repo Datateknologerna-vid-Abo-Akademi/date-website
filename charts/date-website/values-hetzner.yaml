@@ -1,5 +1,11 @@
 ingress:
+  enabled: false
+
+gateway:
+  enabled: true
   className: traefik
+  https:
+    enabled: true
 
 web:
   # Do not increase without disabling migrateOnStartup and using a migration Job
@@ -42,6 +48,7 @@ migrations:
         memory: 768Mi
 
 postgresql:
+  enabled: false
   persistence:
     storageClass: hcloud-volumes
     size: 10Gi

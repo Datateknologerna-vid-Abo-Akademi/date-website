@@ -26,7 +26,9 @@ urlpatterns = build_urlpatterns(
 )
 
 if getattr(settings, 'ARCHIVE_ENABLED', True):
-    urlpatterns[0].url_patterns.insert(4, path('archive/', include('archive.urls')))
+    urlpatterns.insert(6, path('archive/', include('archive.urls')))
+else:
+    urlpatterns.insert(6, path('archive/', include('exambank.archive_urls')))
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

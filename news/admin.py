@@ -1,8 +1,11 @@
 from django.conf import settings
 from django.contrib import admin
 from django.db.models import TextField
+from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.widgets import CKEditor5Widget
 from core.admin_base import ModelAdmin, PublicUrlAdminMixin, UNFOLD_FORMFIELD_OVERRIDES
+from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
 
 from core.admin import ActiveLanguageTranslationAdminMixin
 from news import forms
@@ -24,6 +27,28 @@ class CategoryAdmin(PublicUrlAdminMixin, NewsTranslationAdminBase):
     ordering = ('name',)
 
 
+class PostPublicationFilter(admin.SimpleListFilter):
+    title = _('publicering')
+    parameter_name = 'publication'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('published', _('Publicerad')),
+            ('scheduled', _('Schemalagd')),
+            ('hidden', _('Dold')),
+        )
+
+    def queryset(self, request, queryset):
+        current_time = now()
+        if self.value() == 'published':
+            return queryset.filter(published_time__isnull=False, published_time__lte=current_time)
+        if self.value() == 'scheduled':
+            return queryset.filter(published_time__gt=current_time)
+        if self.value() == 'hidden':
+            return queryset.filter(published_time__isnull=True)
+        return queryset
+
+
 class PostAdmin(PublicUrlAdminMixin, NewsTranslationAdminBase):
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
@@ -31,11 +56,11 @@ class PostAdmin(PublicUrlAdminMixin, NewsTranslationAdminBase):
     }
 
     fieldsets = [
-        (None, {'fields': ['title', 'category', 'content', 'published', 'slug']}),
+        (None, {'fields': ['title', 'category', 'content', 'published_time', 'slug']}),
     ]
-    list_display = ('title', 'author', 'category', 'created_time', 'modified_time', 'published')
+    list_display = ('title', 'author', 'category', 'created_time', 'modified_time', 'publication_status', 'published_time')
     search_fields = ('title', 'slug', 'category__name', 'category__slug', 'author__username', 'author__first_name', 'author__last_name', 'author__email')
-    list_filter = ('published', 'category')
+    list_filter = (PostPublicationFilter, 'category')
     autocomplete_fields = ('author', 'category')
     list_select_related = ('author', 'category')
     ordering = ('-created_time',)
@@ -50,6 +75,20 @@ class PostAdmin(PublicUrlAdminMixin, NewsTranslationAdminBase):
         form = super().get_form(request, obj, change=change, **kwargs)
         form.user = request.user
         return form
+
+    def publication_status(self, obj):
+        if obj.published_time is None:
+            return _('Dold')
+        if obj.published_time > now():
+            return _('Schemalagd')
+        return _('Publicerad')
+
+    publication_status.short_description = _('Publicering')
+    publication_status.admin_order_field = 'published_time'
+
+    class Media:
+        css = {'all': FLATPICKR_ADMIN_CSS}
+        js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS
 
 
 admin.site.register(Category, CategoryAdmin)

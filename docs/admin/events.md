@@ -20,7 +20,8 @@ Create public event pages, manage registration windows, collect attendee data, a
    - **Background image** – upload locally (`Bakgrundsbild`) or to S3 (`s3_image`) depending on deployment settings.
    - **Redirect Link** – skip the internal page entirely and send visitors to another URL like another student association's event page.
 3. Publishing:
-   - Leave **Publicera** checked so the event stays visible; uncheck it to hide the page until you’re ready to republish.
+   - Set **Publiceras** to the date and time when the event should become visible.
+   - Leave **Publiceras** empty to keep the event hidden. A future timestamp keeps it hidden until that time; a past timestamp publishes it immediately.
    - `Slug` can stay blank; it auto-fills from the title and becomes the URL path segment (`/events/<slug>/`), so keep it short, readable, and unique.
 4. Save to create the event and unlock the inline sections described below.
 

@@ -13,6 +13,19 @@ class NewsTestCase(TestCase):
         self.assertTrue(self.post.published)
         self.assertIsInstance(self.post, Post)
 
+    def test_unpublish_clears_published_time(self):
+        self.post.unpublish()
+        self.assertIsNone(self.post.published_time)
+        self.assertFalse(self.post.published)
+
+    def test_scheduled_post_is_not_listed(self):
+        from django.utils import timezone
+        self.post.published_time = timezone.now() + timezone.timedelta(days=1)
+        self.post.save()
+        response = self.client.get(reverse('news:index'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(self.post, list(response.context['latest_news_items']))
+
     def test_get_news_index(self):
         c = Client()
         response = c.get(reverse('news:index'))

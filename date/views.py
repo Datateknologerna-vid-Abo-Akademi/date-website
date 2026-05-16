@@ -16,7 +16,7 @@ from .language_utils import resolve_language, strip_language_prefix
 from ads.models import AdUrl
 from events.models import Event
 from news.models import Post
-from social.models import IgUrl
+from instagram.models import IgUrl
 
 
 logger = logging.getLogger(__name__)
@@ -63,35 +63,24 @@ def get_homepage_template_name():
 def index(request):
     current_time = timezone.now()
     events_old_events_included = (
-        Event.objects.filter(
-            published=True,
-            event_date_end__gte=(current_time - timezone.timedelta(days=31)),
+        Event.objects.published().filter(
+            event_date_end__gte=(timezone.now() - timezone.timedelta(days=31)),
         )
         .exclude(slug="")
         .exclude(slug__isnull=True)
         .order_by('event_date_start')
     )
-    all_events = list(events_old_events_included)
-    events = [
-        event for event in all_events
-        if event.event_date_end >= current_time
-    ]
-    news = list(Post.objects.filter(
-        published=True, category__isnull=True).reverse()[:3])
+    events = events_old_events_included.filter(
+        event_date_end__gte=timezone.now())
+    news = Post.objects.published().filter(category__isnull=True).reverse()[:3]
 
     # Show Albins Angels logo if new post in last 10 days
-    aa_post = None
-    if settings.PROJECT_NAME in {"date", "pulterit"}:
-        aa_post = (
-            Post.objects
-            .filter(published=True, category__name="Albins Angels")
-            .select_related("category")
-            .order_by('-published_time')
-            .first()
-        )  # TODO Remove this hardcoding or move to different function/file
-        time_since = current_time - timezone.timedelta(days=10)
-        if aa_post and aa_post.published_time <= time_since:
-            aa_post = None
+    aa_posts = Post.objects.published().filter(category__name="Albins Angels").order_by(
+        'published_time').reverse()[:1]  # TODO Remove this hardcoding or move to different function/file
+    time_since = timezone.now() - timezone.timedelta(days=10)
+    aa_post = ''
+    if aa_posts and aa_posts[0].published_time > time_since:
+        aa_post = aa_posts[0]
 
     def calendar_format(all_events):
         """ Format events into a dictionary where keys (dates)

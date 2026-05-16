@@ -45,8 +45,8 @@ class Command(BaseCommand):
         self.stdout.write("")
         self.stdout.write(self.style.MIGRATE_HEADING("Blank Slugs"))
         slug_models = [
-            ("events", "Event", ("id", "title", "published")),
-            ("news", "Post", ("id", "title", "published")),
+            ("events", "Event", ("id", "title", "published_time")),
+            ("news", "Post", ("id", "title", "published_time")),
             ("news", "Category", ("id", "name")),
             ("staticpages", "StaticPage", ("id", "title")),
         ]

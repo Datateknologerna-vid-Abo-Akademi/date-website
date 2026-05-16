@@ -1,5 +1,12 @@
 from django.contrib import admin
+from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 from core.admin_base import ModelAdmin, PublicUrlAdminMixin, StackedInline
+from core.admin_widgets import (
+    FLATPICKR_ADMIN_CSS,
+    FLATPICKR_ADMIN_JS,
+    FlatpickrDateTimeAdminMixin,
+)
 from .models import Ctf, Flag, Guess
 
 
@@ -11,18 +18,55 @@ class FlagInline(StackedInline):
     autocomplete_fields = ('solver',)
 
 
+class CtfPublicationFilter(admin.SimpleListFilter):
+    title = _('publicering')
+    parameter_name = 'publication'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('published', _('Publicerad')),
+            ('scheduled', _('Schemalagd')),
+            ('hidden', _('Dold')),
+        )
+
+    def queryset(self, request, queryset):
+        current_time = now()
+        if self.value() == 'published':
+            return queryset.filter(published_time__isnull=False, published_time__lte=current_time)
+        if self.value() == 'scheduled':
+            return queryset.filter(published_time__gt=current_time)
+        if self.value() == 'hidden':
+            return queryset.filter(published_time__isnull=True)
+        return queryset
+
+
 @admin.register(Ctf)
-class CtfAdmin(PublicUrlAdminMixin, ModelAdmin):
+class CtfAdmin(FlatpickrDateTimeAdminMixin, PublicUrlAdminMixin, ModelAdmin):
     model = Ctf
     save_on_top = True
-    list_display = ('title', 'start_date', 'end_date', 'published')
-    list_filter = ('published',)
+    list_display = ('title', 'start_date', 'end_date', 'publication_status', 'published_time')
+    list_filter = (CtfPublicationFilter,)
     search_fields = ('title', 'slug')
     ordering = ('-start_date',)
     date_hierarchy = 'start_date'
     inlines = [
         FlagInline,
     ]
+    flatpickr_datetime_fields = ('published_time', 'start_date', 'end_date')
+
+    def publication_status(self, obj):
+        if obj.published_time is None:
+            return _('Dold')
+        if obj.published_time > now():
+            return _('Schemalagd')
+        return _('Publicerad')
+
+    publication_status.short_description = _('Publicering')
+    publication_status.admin_order_field = 'published_time'
+
+    class Media:
+        css = {'all': FLATPICKR_ADMIN_CSS}
+        js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS
 
 
 @admin.register(Flag)

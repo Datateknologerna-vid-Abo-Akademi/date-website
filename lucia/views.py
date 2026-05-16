@@ -17,6 +17,6 @@ def candidates(request):
     return render(request, 'lucia/candidates.html', context)    
 
 def candidate(request, slug):
-    candidate = models.Candidate.objects.get(slug=slug, published=True)
+    candidate = models.Candidate.objects.published().get(slug=slug)
     context = {'candidate': candidate}
     return render(request, 'lucia/candidate.html', context)

@@ -1,7 +1,8 @@
 # CTF Development Notes
 
 ## Models
-- `Ctf`: title/content, start/end dates, slug, and published flag. Methods `ctf_is_open()` and `ctf_ended()` wrap simple `now()` comparisons.
+- `Ctf`: title/content, start/end dates, slug, and `published_time`. Methods `ctf_is_open()` and `ctf_ended()` wrap simple `now()` comparisons.
+- Publication is controlled by `published_time` (same pattern as events/news): `NULL` is hidden, future is scheduled, past is public. Use `Ctf.objects.published()` or the `Ctf.published` property in views and templates.
 - `Flag`: FK to `Ctf`, optional FK to `Member` (solver), plaintext `flag` string, optional `clues`, slug, and `solved_date`.
 - `Guess`: records every submission with references to the CTF, flag, member, guessed string, correctness, and timestamp.
 
@@ -10,7 +11,7 @@
 - `DetailView` adds all related flags to the context for display.
 - `flag` view handles GET (render form + status) and POST (validate guess). Logic includes:
   - Session flags `flag_valid`/`flag_invalid` to show success/failure messages without duplicate posts.
-  - Checks `ctf.ctf_is_open()`, `ctf.published`, and `request.user.is_authenticated` before processing submissions.
+  - Checks `ctf.ctf_is_open()`, the `ctf.published` property (time-based), and `request.user.is_authenticated` before processing submissions.
   - Iterates through `ctf_flags` to mark `user_solved` once any flag has a solver that matches the user.
   - On correct guess: if the flag already has a solver or the user solved another flag, the guess is marked `correct=True` but doesn’t overwrite the solver. Otherwise, the solver + timestamp are saved, a success message is queued, and the user is redirected.
   - Incorrect guesses still create `Guess` records (unless the flag lookup fails, in which case an error is logged).

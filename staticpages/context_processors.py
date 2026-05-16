@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 
 from .models import StaticPageNav, StaticUrl
 
@@ -7,7 +7,12 @@ from .models import StaticPageNav, StaticUrl
 def _visible_urls_queryset(user=None):
     queryset = StaticUrl.objects.all()
     if not getattr(settings, 'ARCHIVE_ENABLED', True):
-        queryset = queryset.exclude(url__startswith='/archive/')
+        if 'exambank' in settings.INSTALLED_APPS:
+            queryset = queryset.exclude(
+                Q(url__startswith='/archive/') & ~Q(url__startswith='/archive/exams/')
+            )
+        else:
+            queryset = queryset.exclude(url__startswith='/archive/')
     if user is not None and not user.is_authenticated:
         queryset = queryset.exclude(logged_in_only=True)
     return queryset
@@ -30,7 +35,14 @@ def get_categories(request):
     visible_category_ids = set(filtered_urls.values_list('category_id', flat=True))
     categories = StaticPageNav.objects.all().order_by('nav_element')
     if not getattr(settings, 'ARCHIVE_ENABLED', True):
-        categories = categories.exclude(use_category_url=True, url__startswith='/archive/')
+        if 'exambank' in settings.INSTALLED_APPS:
+            categories = categories.exclude(
+                Q(use_category_url=True)
+                & Q(url__startswith='/archive/')
+                & ~Q(url__startswith='/archive/exams/')
+            )
+        else:
+            categories = categories.exclude(use_category_url=True, url__startswith='/archive/')
     categories = [
         category for category in categories
         if category.use_category_url or category.id in visible_category_ids
