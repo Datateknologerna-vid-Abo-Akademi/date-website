@@ -62,18 +62,22 @@ async function buildSpread(state) {
 
     try {
         if (layout.type === 'single') {
-            await renderPage(state, layout.leftPage, spread);
+            spread.appendChild(await renderPage(state, layout.leftPage));
         } else if (layout.type === 'cover-right') {
-            await renderPage(state, layout.rightPage, spread);
-            spread.insertBefore(buildEmptySlot(spread.querySelector('canvas')), spread.firstChild);
+            const rightCanvas = await renderPage(state, layout.rightPage);
+            spread.appendChild(buildEmptySlot(rightCanvas));
+            spread.appendChild(rightCanvas);
         } else if (layout.type === 'cover-left') {
-            await renderPage(state, layout.leftPage, spread);
-            spread.appendChild(buildEmptySlot(spread.querySelector('canvas')));
+            const leftCanvas = await renderPage(state, layout.leftPage);
+            spread.appendChild(leftCanvas);
+            spread.appendChild(buildEmptySlot(leftCanvas));
         } else {
-            await Promise.all([
-                renderPage(state, layout.leftPage, spread),
-                renderPage(state, layout.rightPage, spread),
+            const [leftCanvas, rightCanvas] = await Promise.all([
+                renderPage(state, layout.leftPage),
+                renderPage(state, layout.rightPage),
             ]);
+            spread.appendChild(leftCanvas);
+            spread.appendChild(rightCanvas);
         }
         return spread;
     } catch (error) {
@@ -292,7 +296,7 @@ function cloneCanvas(src) {
     return clone;
 }
 
-async function renderPage(state, pageNumber, container) {
+async function renderPage(state, pageNumber) {
     const page = await state.pdfDoc.getPage(pageNumber);
     const canvas = document.createElement('canvas');
     canvas.className = 'page-canvas';
@@ -310,7 +314,7 @@ async function renderPage(state, pageNumber, container) {
 
     const context = canvas.getContext('2d', { alpha: false });
     await page.render({ canvasContext: context, viewport: renderViewport }).promise;
-    container.appendChild(canvas);
+    return canvas;
 }
 
 /**

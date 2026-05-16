@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-14 00:56+0300\n"
+"POT-Creation-Date: 2026-05-16 23:19+0300\n"
 "PO-Revision-Date: 2025-09-16 19:33+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -351,7 +351,6 @@ msgstr "julkaisu"
 #: ctf/admin.py:27 ctf/admin.py:62 events/admin.py:147 events/admin.py:289
 #: lucia/admin.py:35 lucia/admin.py:64 news/admin.py:36 news/admin.py:84
 #: polls/admin.py:59 polls/admin.py:101
-#: templates/common/publications/list.html:25
 msgid "Publicerad"
 msgstr "Julkaistu"
 
@@ -573,7 +572,7 @@ msgid "Email"
 msgstr "Sähköposti"
 
 #: events/models.py:214 events/models.py:394 events/tests.py:359
-#: events/tests.py:1527 events/websocket_utils.py:30
+#: events/tests.py:1528 events/websocket_utils.py:30
 #: templates/biocum/events/arsfest.html:102
 #: templates/common/events/arsfest.html:89
 #: templates/common/events/baal_detail.html:82
@@ -650,7 +649,7 @@ msgstr "Anna nimi avecille."
 msgid "Ange e-post för avec."
 msgstr "Anna sähköposti avecille."
 
-#: exambank/admin.py:108
+#: exambank/admin.py:113
 msgid "Lösenord inställt"
 msgstr "Salasana asetettu"
 
@@ -686,7 +685,8 @@ msgstr "Vaadi sisäänkirajutumista"
 
 #: exambank/models.py:47
 msgid "När detta är aktivt kräver tentarkivet vanlig medlemsinloggning."
-msgstr "Kun tämä on käytössä, tenttiarkisto vaatii tavallisen jäsenkirjautumisen."
+msgstr ""
+"Kun tämä on käytössä, tenttiarkisto vaatii tavallisen jäsenkirjautumisen."
 
 #: exambank/models.py:57 exambank/models.py:58 exambank/models.py:61
 msgid "Åtkomst till tentarkiv"
@@ -1417,7 +1417,14 @@ msgstr "Lataa asiakirja"
 msgid "Lägg till tentamen"
 msgstr "Lisää tentti"
 
-#: templates/common/archive/exam_password.html:21
+#: templates/common/archive/exam_password.html:19
+#, python-format
+msgid "För många försök. Försök igen om %(seconds)s sekund."
+msgid_plural "För många försök. Försök igen om %(seconds)s sekunder."
+msgstr[0] "Liian monta yritystä. Yritä uudelleen %(seconds)s sekunnin kuluttua."
+msgstr[1] "Liian monta yritystä. Yritä uudelleen %(seconds)s sekunnin kuluttua."
+
+#: templates/common/archive/exam_password.html:24
 msgid "Fortsätt"
 msgstr "Jatka"
 
@@ -1676,39 +1683,39 @@ msgid "Medlemspass"
 msgstr "Jäsenpassi"
 
 #: templates/common/members/functionaries.html:13
-#: templates/common/members/functionaries.html:20
+#: templates/common/members/functionaries.html:19
 msgid "Alla år"
 msgstr "Kaikki vuodet"
 
-#: templates/common/members/functionaries.html:17
+#: templates/common/members/functionaries.html:16
 msgid "Välj ett år:"
 msgstr "Valitse vuosi"
 
-#: templates/common/members/functionaries.html:28
+#: templates/common/members/functionaries.html:27
 msgid "Välj en post:"
 msgstr "Valitse pesti"
 
-#: templates/common/members/functionaries.html:31
+#: templates/common/members/functionaries.html:30
 msgid "Alla poster"
 msgstr "Kaikki pestit"
 
-#: templates/common/members/functionaries.html:40
+#: templates/common/members/functionaries.html:39
 msgid "Filtrera"
 msgstr "Suodata"
 
-#: templates/common/members/functionaries.html:46
+#: templates/common/members/functionaries.html:44
 msgid "Styrelsen"
 msgstr "Hallitus"
 
-#: templates/common/members/functionaries.html:71
+#: templates/common/members/functionaries.html:69
 msgid "Övriga Funktionärer"
 msgstr "Muut toimihenkilöt"
 
-#: templates/common/members/functionaries.html:95
+#: templates/common/members/functionaries.html:93
 msgid "Inga funktionärer hittades..."
 msgstr "Toimihenkilöitä ei löytynyt..."
 
-#: templates/common/members/functionaries.html:98
+#: templates/common/members/functionaries.html:96
 #, python-format
 msgid ""
 "Vid eventuella frågor kan styrelsen kontaktas via %(ASSOCIATION_EMAIL)s."
@@ -2017,38 +2024,73 @@ msgstr "Tulokset on piilotettu"
 msgid "Publications"
 msgstr "Julkaisut"
 
-#: templates/common/publications/list.html:16
+#: templates/common/publications/list.html:18
+#: templates/common/publications/viewer.html:21
 msgid "Publikationer"
 msgstr "Julkaisut"
 
-#: templates/common/publications/list.html:24
-msgid "Författare"
-msgstr "Kirjoittaja"
+#: templates/common/publications/list.html:21
+#, python-format
+msgid "%(counter)s publikation"
+msgid_plural "%(counter)s publikationer"
+msgstr[0] "%(counter)s julkaisu"
+msgstr[1] "%(counter)s julkaisua"
 
-#: templates/common/publications/list.html:32
+#: templates/common/publications/list.html:47
+msgid "Öppna"
+msgstr "Avaa"
+
+#: templates/common/publications/list.html:68
 msgid "Det finns inga publikationer."
 msgstr "Julkaisuja ei ole."
 
-#: templates/common/publications/list.html:40
-msgid "first"
-msgstr "ensimmäinen"
+#: templates/common/publications/list.html:72
+msgid "Pagination"
+msgstr "Sivutus"
 
-#: templates/common/publications/list.html:41
+#: templates/common/publications/list.html:77
 msgid "previous"
 msgstr "edellinen"
 
-#: templates/common/publications/list.html:45
-#, python-format
-msgid "Page %(page_number)s of %(total_pages)s."
-msgstr "Sivu %(page_number)s/%(total_pages)s."
-
-#: templates/common/publications/list.html:51
+#: templates/common/publications/list.html:110
 msgid "next"
 msgstr "seuraava"
 
-#: templates/common/publications/list.html:52
-msgid "last"
-msgstr "viimeinen"
+#: templates/common/publications/viewer.html:36
+msgid "PDF controls"
+msgstr "PDF-ohjaimet"
+
+#: templates/common/publications/viewer.html:39
+msgid "Föregående sida"
+msgstr "Edellinen sivu"
+
+#: templates/common/publications/viewer.html:47
+msgid "Go to page"
+msgstr "Siirry sivulle"
+
+#: templates/common/publications/viewer.html:53
+msgid "Nästa sida"
+msgstr "Seuraava sivu"
+
+#: templates/common/publications/viewer.html:60
+msgid "Zoom out"
+msgstr "Loitonna"
+
+#: templates/common/publications/viewer.html:65
+msgid "Zoom in"
+msgstr "Lähennä"
+
+#: templates/common/publications/viewer.html:69
+msgid "Toggle fullscreen"
+msgstr "Vaihda koko näyttö"
+
+#: templates/common/publications/viewer.html:82
+msgid "Laddar publikation…"
+msgstr "Ladataan julkaisua..."
+
+#: templates/common/publications/viewer.html:90
+msgid "Svep eller använd piltangenterna för att bläddra."
+msgstr "Selaa pyyhkäisemällä tai nuolinäppäimillä."
 
 #: templates/common/social/harassment_form.html:11
 msgid "Rapportera trakasserier och eventuella brister med jämlikhetsplanen"
@@ -2237,6 +2279,19 @@ msgstr "Partner logo"
 #: templates/pulterit/date/components/partners.html:18
 msgid "Vill du samarbeta med Pulterit?"
 msgstr "Haluatko tehdä yhteistyötä Pulterit ry:n kanssa?"
+
+#~ msgid "Författare"
+#~ msgstr "Kirjoittaja"
+
+#~ msgid "first"
+#~ msgstr "ensimmäinen"
+
+#, python-format
+#~ msgid "Page %(page_number)s of %(total_pages)s."
+#~ msgstr "Sivu %(page_number)s/%(total_pages)s."
+
+#~ msgid "last"
+#~ msgstr "viimeinen"
 
 #~ msgid "Kemistbaal Anmälning"
 #~ msgstr "Kemistibaalin ilmoittautuminen"

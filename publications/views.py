@@ -61,6 +61,8 @@ def pdf_list(request):
     paginator = Paginator(pdfs, 12)  # Show 12 PDFs per page (4×3 grid)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    for pdf in page_obj:
+        pdf.thumbnail_url = pdf.get_safe_file_url()
     page_range = _compact_page_range(page_obj.number, paginator.num_pages)
 
     context = {
@@ -69,4 +71,3 @@ def pdf_list(request):
     }
 
     return render(request, 'publications/list.html', context)
-

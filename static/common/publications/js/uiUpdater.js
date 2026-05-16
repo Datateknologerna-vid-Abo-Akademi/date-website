@@ -67,6 +67,8 @@ function updateNavButtons(state) {
 function updateReadingProgress(state) {
     const bar = document.getElementById('reading-progress');
     if (!bar) return;
-    const progress = (state.currentPage / state.pdfDoc.numPages) * 100;
+    const layout = getSpreadLayout(state);
+    const visibleLastPage = layout.rightPage || layout.leftPage || state.currentPage;
+    const progress = (visibleLastPage / state.pdfDoc.numPages) * 100;
     bar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
 }

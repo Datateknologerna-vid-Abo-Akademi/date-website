@@ -39,3 +39,28 @@ class PDFFileAdminTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "pdfs/broken.pdf")
+
+
+class PDFFileListTests(TestCase):
+    def test_list_renders_when_file_url_cannot_be_resolved(self):
+        timestamp = timezone.now()
+        PDFFile.objects.bulk_create([
+            PDFFile(
+                title="Broken PDF",
+                slug="broken-pdf",
+                file="pdfs/broken.pdf",
+                uploaded_at=timestamp,
+                updated_at=timestamp,
+            )
+        ])
+
+        with patch(
+            "django.db.models.fields.files.FieldFile.url",
+            new_callable=PropertyMock,
+            side_effect=RuntimeError("broken storage"),
+        ):
+            response = self.client.get(reverse("publications:pdf_list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Broken PDF")
+        self.assertNotContains(response, "data-pdf-url")
