@@ -184,8 +184,9 @@ class WpItem:
 
 class Command(BaseCommand):
     help = (
-        "Import a WordPress WXR export into news/static pages/publications and "
-        "copy referenced upload files through Django storage."
+        "One-off SF migration helper: import the SF WordPress WXR export into "
+        "Django content apps and copy referenced sfklubben.fi uploads through "
+        "Django storage."
     )
 
     def add_arguments(self, parser):
@@ -221,7 +222,7 @@ class Command(BaseCommand):
             "--keep-wordpress-categories",
             action="store_true",
             help=(
-                "Create news categories from WordPress categories. By default generic "
+                "Create SF WordPress categories as news categories. By default generic "
                 "'Nyheter' and 'Uncategorized' are imported as normal uncategorized news."
             ),
         )
@@ -238,7 +239,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--import-nav",
             action="store_true",
-            help="Import WordPress nav_menu_item records into StaticPageNav/StaticUrl.",
+            help="Import SF WordPress nav_menu_item records into StaticPageNav/StaticUrl.",
         )
         parser.add_argument(
             "--nav-menu",
@@ -253,7 +254,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--import-gallery-redirects",
             action="store_true",
-            help="Import Google Photos/Drive gallery links as redirecting picture albums.",
+            help="Import SF Google Photos/Drive gallery links as redirecting picture albums.",
         )
         parser.add_argument(
             "--replace-gallery-redirects",
@@ -285,7 +286,7 @@ class Command(BaseCommand):
             "--import-functionaries",
             action="store_true",
             help=(
-                "Import the WordPress 'funktionarer' page into FunctionaryRole and "
+                "Import the SF WordPress 'funktionarer' page into FunctionaryRole and "
                 "name-only Functionary rows."
             ),
         )

@@ -186,9 +186,9 @@ Before using one of these on shared or production-like data:
 
 ### `import_wordpress_export`
 
-Use this management command to migrate a WordPress WXR export into the existing Django content apps.
+Use this management command as a one-off migration helper for moving the SF association site from WordPress into the existing Django content apps. It is not intended to be a reusable generic WordPress importer; several defaults and parsing rules assume the SF export shape and `sfklubben.fi` upload paths.
 
-It maps WordPress posts to `news.Post`, WordPress pages to `staticpages.StaticPage`, PDF attachments to `publications.PDFFile`, and copies referenced `sfklubben.fi/wp-content/uploads` files through Django's storage backend. Local development writes to `MEDIA_ROOT`; when `USE_S3=True`, imported media uses the configured public media storage so links in imported CKEditor content remain public.
+It maps SF WordPress posts to `news.Post`, WordPress pages to `staticpages.StaticPage`, PDF attachments to `publications.PDFFile`, and copies referenced `sfklubben.fi/wp-content/uploads` files through Django's storage backend. Local development writes to `MEDIA_ROOT`; when `USE_S3=True`, imported media uses the configured public media storage so links in imported CKEditor content remain public.
 
 Typical SF import:
 
