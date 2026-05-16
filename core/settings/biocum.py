@@ -29,6 +29,7 @@ INSTALLED_APPS = get_installed_apps([
     'gallery',
     'exambank',
     'archive',
+    'publications',
 ])
 
 ROOT_URLCONF = 'core.urls.biocum'

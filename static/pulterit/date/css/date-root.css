@@ -46,4 +46,5 @@
     --pubStageBg:      var(--primaryColor);       /* PDF stage — light gray gives white pages a soft contrast */
     --pubChromeFg:     var(--textColorDark);      /* primary chrome text — black */
     --pubChromeFgSoft: var(--textColorMedium);    /* muted chrome text — mid gray */
+    --pubListHeadingFg: var(--textColorDark);     /* list page heading — black on pulterit's light bg */
 }

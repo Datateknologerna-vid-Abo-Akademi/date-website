@@ -6,6 +6,7 @@
     --pub-surface-hover:   var(--pubChromeHover, var(--primaryColorLighter));
     --pub-chrome-fg:       var(--pubChromeFg,    var(--textColorLightish));
     --pub-chrome-fg-soft:  var(--pubChromeFgSoft, var(--helpText));
+    --pub-list-heading-fg: var(--pubListHeadingFg, var(--pub-chrome-fg));
     --pub-accent:          var(--accentColorBright, var(--linkColorLight, var(--linkColor, var(--secondaryColor))));
     --pub-accent-hover:    var(--accentColorBrightHover, var(--linkColorLightHover, var(--linkColorHover, var(--secondaryColorDarker))));
     --pub-accent-contrast: var(--textColorDark);
@@ -38,6 +39,7 @@
     margin: 0 0 0.5rem;
     font-size: clamp(1.75rem, 4vw, 2.5rem);
     letter-spacing: 0.02em;
+    color: var(--pub-list-heading-fg);
 }
 
 .publications-subtitle {

@@ -10,6 +10,7 @@
 - Fieldsets group metadata, access control, and timestamps for clarity.
 
 ## Views/URLs (`publications/views.py`)
+- The app is installed for DaTe, KK, Biologica/biocum, and Pulterit. Each of those variants exposes the public list at `/publications/`.
 - `pdf_list` paginates 12 items per page (sized to fit common 2/3/4/6-column grids) and filters by login status:
   - Anonymous users: `is_public=True` and `requires_login=False`.
   - Authenticated users: any `is_public=True` file (even if `requires_login=True`).
@@ -29,6 +30,7 @@
 - The surfaces map to the three `--primaryColorLight*` shades, which are consistently ordered dark→mid→lighter across every association. `--primaryColor` is intentionally avoided because its lightness relative to the others differs by association (pulterit's is bright gray).
 - `--pub-accent` falls back `--accentColorBright` → `--linkColorLight` → `--linkColor` → `--secondaryColor`. Pulterit defines `--accentColorBright` (its pink) so it wins there; date and kk use their `--linkColorLight` (bright green); biocum (no `--linkColorLight`) falls through to `--linkColor`.
 - The list view has a separate card sub-palette (`--pub-card-bg`, `--pub-card-fg`, `--pub-card-fg-soft`, `--pub-card-thumb-bg`, `--pub-card-thumb-shimmer`). It defaults to a **light card** (white bg, black text). Only DaTe opts into a dark card by defining `--pubCardBg` etc. in its `static/date/date/css/date-root.css`. A new association inherits the light theme automatically.
+- The list heading uses `--pubListHeadingFg` when an association needs explicit contrast. Biologica sets it to white on the dark green page background, while Pulterit sets it to black on its light page background.
 - The viewer chrome (toolbar, stage, loading, fullscreen, pagination, error) is dark-themed by default. An association can opt into a **light viewer** by defining `--pubChromeBg`, `--pubChromePill`, `--pubChromeHover`, `--pubStageBg`, `--pubChromeFg`, `--pubChromeFgSoft` in its `date-root.css`. Only pulterit does so, because the rest of pulterit's site is light-themed with pink accents.
 
 ## Extending
