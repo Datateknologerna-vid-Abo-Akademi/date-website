@@ -9,16 +9,16 @@ logger = logging.getLogger('date')
 
 @admin.register(PDFFile)
 class PDFFileAdmin(PublicUrlAdminMixin, ModelAdmin):
-    list_display = ('title', 'publication_date', 'is_public', 'requires_login', 'uploaded_at', 'updated_at')
+    list_display = ('title', 'publication_date', 'is_external_link', 'is_public', 'requires_login', 'uploaded_at', 'updated_at')
     list_filter = ('is_public', 'requires_login', 'uploaded_at', 'updated_at', 'publication_date')
-    search_fields = ('title', 'slug', 'description', 'file')
+    search_fields = ('title', 'slug', 'description', 'file', 'redirect_url')
     ordering = ('-uploaded_at',)
     date_hierarchy = 'publication_date'
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('uploaded_at', 'updated_at')
     fieldsets = (
         (None, {
-            'fields': ('title', 'slug', 'publication_date', 'description', 'file')
+            'fields': ('title', 'slug', 'publication_date', 'description', 'file', 'redirect_url')
         }),
         ('Access Control', {
             'fields': ('is_public', 'requires_login'),
@@ -67,3 +67,7 @@ class PDFFileAdmin(PublicUrlAdminMixin, ModelAdmin):
             return obj.file.name
 
     file_link.short_description = 'File'
+
+    @admin.display(boolean=True, description='External link')
+    def is_external_link(self, obj):
+        return bool(obj.redirect_url)

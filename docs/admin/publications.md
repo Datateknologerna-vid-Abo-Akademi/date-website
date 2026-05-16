@@ -13,8 +13,9 @@ Publish downloadable PDFs (meeting minutes, magazines, etc.) with optional login
    - **Title** – shown on listings and in the viewer.
    - **Slug** – leave blank to auto-generate from the title. This becomes the URL (`/publications/<slug>/`).
    - **Publication Date** – used for sorting and filtering.
-   - **Description** – short summary shown next to the download button.
-   - **File** – upload the PDF (stored under `media/pdfs/<slug>/`).
+   - **Description** – short summary shown on the publication card.
+   - **File** – upload the PDF (stored under `media/pdfs/<slug>/`) when the publication should use the internal reader.
+   - **Redirect URL** – optional external reader link, such as an Issuu URL. When set, visitors are sent there instead of the internal reader. Use this instead of **File** for external-only publications.
    - **Public Access** – keep checked unless the file should be completely hidden.
    - **Requires Login** – forces a member login before the reader opens, while still letting you link to the page publicly.
 3. Save. Upload time stamps are recorded automatically.
@@ -29,4 +30,4 @@ Publish downloadable PDFs (meeting minutes, magazines, etc.) with optional login
 
 ## Visitor Experience
 - `/publications/` lists all allowed PDFs with pagination.
-- Clicking an item opens the internal viewer. Visitors without permission see either a login redirect (if `Requires Login`) or a 403 message (if not public).
+- Clicking a PDF-backed item opens the internal viewer. Clicking an item with **Redirect URL** opens the external site. Visitors without permission see either a login redirect (if `Requires Login`) or a 403 message (if not public).

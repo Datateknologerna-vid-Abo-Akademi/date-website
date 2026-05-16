@@ -1,5 +1,6 @@
 import os
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -16,7 +17,13 @@ class PDFFile(models.Model):
     title = models.CharField(_('Title'), max_length=250)
     slug = models.SlugField(_('Slug'), max_length=255, unique=True, blank=True,
                             help_text=_('Leave empty to auto-generate from title'))
-    file = PublicFileField(_('File'), upload_to=upload_to)
+    file = PublicFileField(_('File'), upload_to=upload_to, blank=True)
+    redirect_url = models.URLField(
+        _('Redirect URL'),
+        max_length=500,
+        blank=True,
+        help_text=_('If set, visitors are sent to this URL instead of the internal PDF viewer.'),
+    )
     description = models.TextField(_('Description'), blank=True)
     uploaded_at = models.DateTimeField(_('Uploaded at'), auto_now_add=True)
     updated_at = models.DateTimeField(_('Updated at'), auto_now=True)
@@ -41,6 +48,14 @@ class PDFFile(models.Model):
     def get_absolute_url(self):
         return reverse('publications:pdf_view', args=[self.slug])
 
+    def clean(self):
+        super().clean()
+        if not self.file and not self.redirect_url:
+            raise ValidationError({
+                'file': _('Upload a PDF file or set a redirect URL.'),
+                'redirect_url': _('Upload a PDF file or set a redirect URL.'),
+            })
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = self.generate_unique_slug()
@@ -60,6 +75,8 @@ class PDFFile(models.Model):
         return unique_slug
 
     def get_file_url(self):
+        if not self.file:
+            return ''
         return self.file.url
 
     def get_safe_file_url(self):
@@ -68,8 +85,11 @@ class PDFFile(models.Model):
         except Exception:
             return ''
 
+    def get_public_url(self):
+        return self.redirect_url or self.get_absolute_url()
+
     def delete(self, *args, **kwargs):
-        if not settings.USE_S3:
+        if self.file and not settings.USE_S3:
             if os.path.isfile(self.file.path):
                 os.remove(self.file.path)
         super().delete(*args, **kwargs)

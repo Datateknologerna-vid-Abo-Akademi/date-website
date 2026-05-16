@@ -3,6 +3,7 @@
 ## Data Model (`publications/models.py`)
 - `PDFFile` captures metadata, upload, and access flags. `slug` auto-fills from title if left blank and is guaranteed unique by `generate_unique_slug()`.
 - `file` uses `PublicFileField`, which supports S3/alternative storage. When `USE_S3` is false, `delete()` removes the local file manually.
+- `redirect_url` lets a publication point to an external reader instead of the internal PDF viewer. Entries must have either `file` or `redirect_url`; redirect-only entries intentionally do not render PDF thumbnails.
 - `is_public` and `requires_login` are independent flags; a PDF can be hidden entirely or visible-but-gated.
 
 ## Admin (`publications/admin.py`)
@@ -15,10 +16,10 @@
   - Anonymous users: `is_public=True` and `requires_login=False`.
   - Authenticated users: any `is_public=True` file (even if `requires_login=True`).
 - The view also passes a `page_range` list built by `_compact_page_range()`; entries are page numbers or `None` (= ellipsis). The template uses this to render numbered page buttons with first/last/window pages and ellipsis gaps.
-- `pdf_view` enforces the same checks and redirects unauthenticated users to `login` if necessary. Non-public files always return HTTP 403.
+- `pdf_view` enforces the same checks and redirects unauthenticated users to `settings.LOGIN_URL` if necessary. Non-public files always return HTTP 403. If `redirect_url` is set, the view sends the visitor to that external URL after access checks pass.
 
 ## Templates
-- `publications/list.html` expects `page_obj` and `page_range`. Cards render PDF cover thumbnails client-side via PDF.js (see `static/common/publications/js/list.js`), so the template surfaces `pdf.get_file_url` to JS via a `data-pdf-url` attribute on each card.
+- `publications/list.html` expects `page_obj` and `page_range`. Cards link to `pdf.get_public_url`, which is either the external redirect URL or the internal viewer URL. PDF-backed cards render cover thumbnails client-side via PDF.js (see `static/common/publications/js/list.js`), so the template surfaces `pdf.get_file_url` to JS via a `data-pdf-url` attribute only when a file exists.
 - The list thumbnail renderer is intentionally lazy and capped at two concurrent PDF.js tasks. It avoids storing derivative images today, but larger libraries should prefer generated thumbnail files or browser/server-side cache headers so returning visitors do not re-fetch and re-render every cover.
 - `publications/viewer.html` embeds the PDF via `pdf_url`. The viewer JS modules under `static/common/publications/js/` implement page transitions, swipe gestures, fullscreen, neighbor preloading and a reading-progress bar.
 - Page-change animation is mode-dependent: two-page (desktop) uses a 3D book-flip rotation (`runTwoPageFlip` / `.page-flipper`), single-page (mobile) uses a card-shuffle horizontal slide (`runSinglePageShuffle` / `.page-shuffle`). The rotation reads as "turning a stiff page" which clashes with the touch-swipe gesture on mobile, where a slide matches the user's input direction.

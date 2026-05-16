@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.contrib.auth.views import redirect_to_login
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import PDFFile
@@ -40,7 +42,10 @@ def pdf_view(request, slug):
         return HttpResponseForbidden("You do not have permission to access this PDF.")
 
     if pdf_file.requires_login and not request.user.is_authenticated:
-        return redirect('login')
+        return redirect_to_login(request.get_full_path(), login_url=settings.LOGIN_URL)
+
+    if pdf_file.redirect_url:
+        return redirect(pdf_file.redirect_url)
 
     context = {
         'pdf_url': pdf_file.get_file_url(),

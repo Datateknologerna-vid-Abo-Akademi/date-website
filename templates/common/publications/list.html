@@ -32,7 +32,8 @@
                 {% for pdf in page_obj %}
                     <li class="publication-card-wrapper">
                         <a class="publication-card"
-                           href="{% url 'publications:pdf_view' pdf.slug %}"
+                           href="{{ pdf.get_public_url }}"
+                           {% if pdf.redirect_url %}target="_blank" rel="noopener noreferrer"{% endif %}
                            {% if pdf.thumbnail_url %}data-pdf-url="{{ pdf.thumbnail_url }}"{% endif %}
                            aria-label="{{ pdf.title }}">
                             <div class="publication-thumb" aria-hidden="true">
