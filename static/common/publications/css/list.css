@@ -1,88 +1,398 @@
-.pdf-list {
-    margin-top: 2rem;
+.publications-page {
+    /* See publications.css for the rationale behind this semantic palette
+       — keep the two definitions in sync. */
+    --pub-surface:         var(--pubChromeBg,    var(--primaryColorLight));
+    --pub-surface-pill:    var(--pubChromePill,  var(--primaryColorLighte));
+    --pub-surface-hover:   var(--pubChromeHover, var(--primaryColorLighter));
+    --pub-chrome-fg:       var(--pubChromeFg,    var(--textColorLightish));
+    --pub-chrome-fg-soft:  var(--pubChromeFgSoft, var(--helpText));
+    --pub-accent:          var(--accentColorBright, var(--linkColorLight, var(--linkColor, var(--secondaryColor))));
+    --pub-accent-hover:    var(--accentColorBrightHover, var(--linkColorLightHover, var(--linkColorHover, var(--secondaryColorDarker))));
+    --pub-accent-contrast: var(--textColorDark);
+
+    /* Card theme: light by default. Associations opt into a dark card by
+       defining --pubCardBg etc. in their date-root.css; currently only
+       DaTe does so to keep its black-on-black look. */
+    --pub-card-bg:            var(--pubCardBg, var(--secondaryColor));
+    --pub-card-fg:            var(--pubCardFg, var(--textColorDark));
+    --pub-card-fg-soft:       var(--pubCardFgSoft, var(--textColorMedium, #606060));
+    /* Literal fallbacks (not --secondaryColorDarker) so the loading
+       shimmer stays visible across associations — biocum's
+       --secondaryColorDarker is #f8f8f8, basically invisible against
+       a white card. */
+    --pub-card-thumb-bg:      var(--pubCardThumbBg, #e6e6e6);
+    --pub-card-thumb-shimmer: var(--pubCardThumbShimmer, #f5f5f5);
+
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 1.5rem 4rem;
 }
 
-header h1 {
-    margin-left: 2vw;
+.publications-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
 }
 
-.list-container {
+.publications-header h1 {
+    margin: 0 0 0.5rem;
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    letter-spacing: 0.02em;
+}
+
+.publications-subtitle {
+    margin: 0;
+    color: var(--pub-chrome-fg-soft);
+    font-size: 0.95rem;
+}
+
+.publications-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+
+.publication-card-wrapper {
+    list-style: none;
+}
+
+.publication-card {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-
-}
-
-.content {
-    background: var(--primaryColor);
-}
-
-.pdf-item {
-    background-color: var(--primaryColorLight);
-    padding: 1rem;
-    margin-bottom: 1rem;
-    transition: box-shadow 0.3s ease;
-}
-
-.pdf-item:hover {
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-}
-
-.pdf-item h2 {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-}
-
-.pdf-item h2 a {
-    color: #007bff;
+    flex-direction: column;
+    height: 100%;
+    background: var(--pub-card-bg);
+    color: var(--pub-card-fg);
+    border-radius: var(--defaultRadius);
+    overflow: hidden;
     text-decoration: none;
+    border: 1px solid transparent;
+    transform: translateY(0);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-.pdf-item h2 a:hover {
-    text-decoration: underline;
+.publication-card:hover,
+.publication-card:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+    border-color: var(--pub-accent);
+    outline: none;
 }
 
-.pdf-meta, .pdf-info {
-    font-size: 0.875rem;
-    color: #6c757d;
-    margin-bottom: 0.5rem;
+.publication-thumb {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1.414; /* A4 portrait */
+    background: var(--pub-card-thumb-bg);
+    overflow: hidden;
+    isolation: isolate;
 }
 
-.pdf-description {
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-    color: var(--textColorDarkish);
+.publication-thumb-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    opacity: 0;
+    transition: opacity 0.4s ease;
 }
 
-.pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 2rem;
+.publication-card.thumb-loaded .publication-thumb-canvas {
+    opacity: 1;
 }
 
-.pagination .step-links {
+.publication-thumb-skeleton {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        100deg,
+        var(--pub-card-thumb-bg) 0%,
+        var(--pub-card-thumb-shimmer) 50%,
+        var(--pub-card-thumb-bg) 100%
+    );
+    background-size: 200% 100%;
+    animation: publication-skeleton 1.6s ease-in-out infinite;
+    transition: opacity 0.3s ease;
+}
+
+.publication-card.thumb-loaded .publication-thumb-skeleton,
+.publication-card.thumb-failed .publication-thumb-skeleton {
+    opacity: 0;
+    animation-play-state: paused;
+}
+
+@keyframes publication-skeleton {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.publication-thumb-fallback {
+    position: absolute;
+    inset: 0;
     display: flex;
     align-items: center;
+    justify-content: center;
+    color: var(--pub-card-fg-soft);
+    font-size: 4rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
 }
 
-.pagination a {
-    color: #007bff;
+.publication-card.thumb-failed .publication-thumb-fallback {
+    opacity: 1;
+}
+
+.publication-thumb-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.6) 0%,
+        rgba(0, 0, 0, 0) 40%
+    );
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+}
+
+.publication-card:hover .publication-thumb-overlay,
+.publication-card:focus-visible .publication-thumb-overlay {
+    opacity: 1;
+}
+
+.publication-thumb-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.9rem;
+    background: var(--pub-accent);
+    color: var(--pub-accent-contrast);
+    border-radius: var(--defaultRadius);
+    font-weight: 600;
+    font-size: 0.9rem;
+    transform: translateY(8px);
+    transition: transform 0.25s ease;
+}
+
+.publication-card:hover .publication-thumb-open,
+.publication-card:focus-visible .publication-thumb-open {
+    transform: translateY(0);
+}
+
+.publication-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.9rem 1rem 1rem;
+    flex: 1;
+}
+
+.publication-title {
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.25;
+    color: var(--pub-card-fg);
+    word-break: break-word;
+}
+
+.publication-meta {
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--pub-card-fg-soft);
+}
+
+.publication-meta i {
+    font-size: 0.95rem;
+}
+
+.publication-description {
+    margin: 0.2rem 0 0;
+    font-size: 0.875rem;
+    color: var(--pub-card-fg-soft);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.publications-empty {
+    text-align: center;
+    color: var(--pub-card-fg-soft);
+    padding: 3rem 1rem;
+    background: var(--pub-card-bg);
+    border-radius: var(--defaultRadius);
+}
+
+.publications-pagination {
+    /* width: max-content + auto margins make this a pill that shrinks to
+       its chips and centers in the page, rather than stretching the full
+       row. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    margin: 3rem auto 0;
+    padding: 0.35rem 0.6rem;
+    width: max-content;
+    max-width: 100%;
+    flex-wrap: nowrap;
+    /* Sit on the chrome surface so the chips have a visible tray on every
+       association — without this, the pagination row picks up whatever the
+       body or surrounding footer happens to render behind it. */
+    background: var(--pub-surface);
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.pagination-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--pub-accent);
+    background: transparent;
+    border-radius: 999px;
     text-decoration: none;
-    padding: 0.5rem 0.75rem;
-    margin: 0 0.25rem;
-    border: 1px solid #dee2e6;
-    border-radius: 0.25rem;
+    flex-shrink: 0;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
-.pagination a:hover {
-    background-color: #e9ecef;
+.pagination-btn:hover {
+    background: var(--pub-surface-hover);
+    color: var(--pub-accent-hover);
+    transform: translateY(-1px);
 }
 
-.pagination .current {
-    padding: 0.5rem 0.75rem;
-    margin: 0 0.25rem;
-    border: 1px solid #dee2e6;
-    border-radius: 0.25rem;
-    color: #495057;
-    background-color: #e9ecef;
+.pagination-btn.is-disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.pagination-pages {
+    display: inline-flex;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 0.25rem;
+}
+
+.pagination-pages li {
+    list-style: none;
+}
+
+.pagination-page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    padding: 0 0.6rem;
+    border-radius: var(--defaultRadius);
+    background: transparent;
+    color: var(--pub-chrome-fg);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.pagination-page:hover {
+    background: var(--pub-surface);
+    color: var(--pub-accent);
+    transform: translateY(-1px);
+}
+
+.pagination-page.is-current {
+    background: var(--pub-accent);
+    color: var(--pub-accent-contrast);
+    font-weight: 600;
+    cursor: default;
+}
+
+.pagination-page.is-current:hover {
+    transform: none;
+}
+
+.pagination-ellipsis {
+    color: var(--pub-chrome-fg-soft);
+    padding: 0 0.25rem;
+    user-select: none;
+}
+
+.pagination-compact {
+    display: none;
+    color: var(--pub-chrome-fg-soft);
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+    min-width: 4rem;
+    text-align: center;
+}
+
+/* Mobile: keep just prev / "X / Y" / next */
+@media (max-width: 560px) {
+    .pagination-pages {
+        display: none;
+    }
+
+    .pagination-compact {
+        display: inline-block;
+    }
+
+    .publications-pagination {
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .publications-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 1rem;
+    }
+
+    .publication-info {
+        padding: 0.75rem;
+        gap: 0.25rem;
+    }
+
+    .publication-title {
+        font-size: 0.95rem;
+    }
+
+    .publication-description {
+        -webkit-line-clamp: 2;
+    }
+}
+
+@media (max-width: 380px) {
+    .publication-description {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .publication-card,
+    .publication-thumb-canvas,
+    .publication-thumb-skeleton,
+    .publication-thumb-open,
+    .publication-thumb-overlay {
+        transition: none;
+        animation: none;
+    }
 }

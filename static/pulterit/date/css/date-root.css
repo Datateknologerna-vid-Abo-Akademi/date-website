@@ -35,4 +35,15 @@
     --navHoverHighlight: rgba(255, 255, 255, 0.15);
     --defaultPadding: 20px;
     --defaultRadius: 5px;
+
+    /* Publications viewer: pulterit is a light-themed site (white content
+       boxes on light-gray bg, pink accents), so flip the viewer chrome to
+       match. Other associations inherit the dark defaults from
+       publications.css. */
+    --pubChromeBg:     var(--secondaryColor);     /* toolbar / loading / error / fullscreen — white */
+    --pubChromePill:   var(--primaryColor);       /* inner toolbar nav/zoom pill — light gray */
+    --pubChromeHover:  #c8c8c5;                   /* hover bg, matches the gradient used on pulterit's hero */
+    --pubStageBg:      var(--primaryColor);       /* PDF stage — light gray gives white pages a soft contrast */
+    --pubChromeFg:     var(--textColorDark);      /* primary chrome text — black */
+    --pubChromeFgSoft: var(--textColorMedium);    /* muted chrome text — mid gray */
 }

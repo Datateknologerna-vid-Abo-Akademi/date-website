@@ -1,56 +1,79 @@
 export function updateUIComponents(state) {
-    if (state.isLoading) {
-        updateLoadingDisplay(state);
-    } else {
+    updateLoadingDisplay(state);
+    updateLoadingProgress(state);
+    if (state.pdfDoc) {
         updatePageDisplay(state);
         updateZoomDisplay(state);
         updateViewMode(state);
+        updateNavButtons(state);
+        updateReadingProgress(state);
     }
 }
 
 function updateLoadingDisplay(state) {
-    const loadingElement = document.createElement('div');
-    loadingElement.className = 'loading-message';
-    loadingElement.textContent = 'Loading PDF...';
-    state.viewerElement.innerHTML = '';
-    state.viewerElement.appendChild(loadingElement);
+    const loading = document.getElementById('pdf-loading');
+    if (!loading) return;
+    loading.classList.toggle('is-hidden', !state.isLoading);
+}
+
+function updateLoadingProgress(state) {
+    const bar = document.getElementById('pdf-loading-bar');
+    if (!bar) return;
+    bar.style.width = `${state.loadingProgress || 0}%`;
 }
 
 function updatePageDisplay(state) {
-    const { currentPage, pdfDoc, pagesPerView } = state;
-    if (!pdfDoc) return;
+    const { currentPage, pdfDoc } = state;
+    const pageInput = document.getElementById('page-input');
+    const pageCount = document.getElementById('page-count');
+    if (!pageInput || !pageCount) return;
 
-    let endPage = currentPage;
-
-    // If on the first page and not in two-page view, only show "1"
-    if (currentPage === 1 && pagesPerView === 1) {
-        endPage = currentPage; // Show only "1" when on the cover page
-    } else if (pagesPerView === 2 && currentPage < pdfDoc.numPages) {
-        // Show two-page range, e.g., "3-4"
-        endPage = currentPage + 1;
+    if (document.activeElement !== pageInput) {
+        pageInput.value = String(currentPage);
     }
-
-    // Update the page display text
-    document.getElementById('page-num').textContent = `${currentPage}${endPage !== currentPage ? ` - ${endPage}` : ''}`;
-    document.getElementById('page-count').textContent = pdfDoc.numPages;
+    pageInput.max = pdfDoc.numPages;
+    pageCount.textContent = pdfDoc.numPages;
 }
 
-
 function updateZoomDisplay(state) {
-    document.getElementById('zoom-select').value = state.scale;
+    const label = document.getElementById('zoom-label');
+    if (label) label.textContent = `${Math.round(state.scale * 100)}%`;
 }
 
 function updateViewMode(state) {
-    const viewer = document.getElementById('pdf-viewer');
+    const viewer = state.viewerElement;
+    if (!viewer) return;
+    // A two-page layout is rendered whenever the spread shows two real
+    // pages: any middle spread, plus the 2-page-PDF special case where both
+    // pages share a single (1, 2) spread (see layoutFor in pageRenderer).
+    const numPages = state.pdfDoc.numPages;
+    const twoPage = state.pagesPerView === 2
+        && ((state.currentPage > 1 && state.currentPage < numPages) || numPages === 2);
+    viewer.classList.toggle('two-page-view', twoPage);
+    viewer.classList.toggle('single-page-view', !twoPage);
+}
 
-    // Add a class to handle single-page view for the cover page and the last page
-    if (state.currentPage === 1 || state.currentPage >= state.pdfDoc.numPages || state.pagesPerView === 1) {
-        viewer.classList.add('single-page-view');
-        viewer.classList.remove('two-page-view');
-    } else if (state.pagesPerView === 2) {
-        viewer.classList.add('two-page-view');
-        viewer.classList.remove('single-page-view');
-    } else {
-        viewer.classList.remove('two-page-view', 'single-page-view');
-    }
+function updateNavButtons(state) {
+    const numPages = state.pdfDoc.numPages;
+    const inPair = state.pagesPerView === 2 && state.currentPage > 1 && state.currentPage < numPages;
+    const twoPageWholeDoc = state.pagesPerView === 2 && numPages === 2;
+    const atStart = state.currentPage <= 1;
+    // Also at the end when the current spread already includes the last
+    // page (odd-paginated PDFs have no useful "back cover" view past the
+    // final spread, and 2-page PDFs render the whole document as one
+    // spread — see navigateNext).
+    const atEnd = state.currentPage >= numPages
+        || (inPair && state.currentPage + 1 >= numPages)
+        || twoPageWholeDoc;
+    const prev = document.getElementById('prev-page');
+    const next = document.getElementById('next-page');
+    if (prev) prev.disabled = atStart;
+    if (next) next.disabled = atEnd;
+}
+
+function updateReadingProgress(state) {
+    const bar = document.getElementById('reading-progress');
+    if (!bar) return;
+    const progress = (state.currentPage / state.pdfDoc.numPages) * 100;
+    bar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
 }
