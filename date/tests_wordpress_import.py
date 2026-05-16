@@ -103,6 +103,30 @@ Plain ending<script>bad()</script>]]></content:encoded>
       <wp:post_type><![CDATA[page]]></wp:post_type>
     </item>
     <item>
+      <title><![CDATA[A&O]]></title>
+      <link>https://sfklubben.fi/ao/</link>
+      <pubDate>Sat, 09 May 2026 10:00:00 +0000</pubDate>
+      <dc:creator><![CDATA[admin]]></dc:creator>
+      <content:encoded><![CDATA[
+        <h1><strong>2026</strong></h1>
+        <table>
+          <tbody>
+            <tr><td>01/2026</td><td>02/2026</td></tr>
+            <tr>
+              <td><a href="https://issuu.com/sfklubben/docs/ao-1-2026"><img src="/wp-content/uploads/2026/05/ao1.jpg" alt="" /></a></td>
+              <td><a href="https://issuu.com/sfklubben/docs/ao-2-2026"><img src="/wp-content/uploads/2026/05/ao2.jpg" alt="" /></a></td>
+            </tr>
+          </tbody>
+        </table>
+      ]]></content:encoded>
+      <excerpt:encoded><![CDATA[Argument och Opinion på Issuu]]></excerpt:encoded>
+      <wp:post_id>15</wp:post_id>
+      <wp:post_date>2026-05-09 10:00:00</wp:post_date>
+      <wp:post_name><![CDATA[ao]]></wp:post_name>
+      <wp:status><![CDATA[publish]]></wp:status>
+      <wp:post_type><![CDATA[page]]></wp:post_type>
+    </item>
+    <item>
       <title><![CDATA[Imported PDF]]></title>
       <link>https://sfklubben.fi/imported-pdf/</link>
       <pubDate>Sat, 09 May 2026 10:00:00 +0000</pubDate>
@@ -175,7 +199,7 @@ class WordPressImportCommandTests(TestCase):
             verbosity=0,
         )
 
-    def test_imports_posts_pages_publications_and_rewrites_media(self):
+    def test_imports_posts_pages_ao_publications_and_rewrites_media(self):
         with TemporaryDirectory() as work_dir, override_settings(MEDIA_ROOT=str(Path(work_dir) / "media")):
             work_path = Path(work_dir)
             xml_path = work_path / "export.xml"
@@ -204,9 +228,14 @@ class WordPressImportCommandTests(TestCase):
             page = StaticPage.objects.get(slug="imported-page")
             self.assertEqual(page.title, "Imported Page")
 
-            pdf = PDFFile.objects.get(slug="imported-pdf")
-            self.assertEqual(pdf.file.name, "wordpress/test/wp-content/uploads/2026/05/imported.pdf")
-            self.assertTrue((Path(work_dir) / "media" / pdf.file.name).exists())
+            self.assertFalse(PDFFile.objects.filter(slug="imported-pdf").exists())
+            self.assertTrue((Path(work_dir) / "media" / "wordpress/test/wp-content/uploads/2026/05/imported.pdf").exists())
+
+            publication = PDFFile.objects.get(title="A&O 01/2026")
+            self.assertFalse(publication.file)
+            self.assertEqual(publication.redirect_url, "https://issuu.com/sfklubben/docs/ao-1-2026")
+            self.assertEqual(publication.publication_date.isoformat(), "2026-01-01")
+            self.assertTrue(PDFFile.objects.filter(title="A&O 02/2026").exists())
 
     def test_imports_navigation(self):
         with TemporaryDirectory() as work_dir, override_settings(MEDIA_ROOT=str(Path(work_dir) / "media")):

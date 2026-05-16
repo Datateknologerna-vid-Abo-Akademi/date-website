@@ -77,8 +77,9 @@ MEDIA_EXTENSIONS = {
     ".xlsx",
     ".zip",
 }
-PUBLICATION_EXTENSIONS = {".pdf"}
 IGNORED_CATEGORY_SLUGS = {"nyheter", "uncategorized"}
+ISSUU_HOSTS = {"issuu.com", "www.issuu.com"}
+AO_PUBLICATION_SOURCE_SLUGS = {"ao"}
 GALLERY_LINK_HOSTS = {
     "photos.app.goo.gl",
     "photos.google.com",
@@ -234,7 +235,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--skip-publications",
             action="store_true",
-            help="Do not create publication records from PDF attachment items.",
+            help="Do not create publication records from SF A&O Issuu links.",
         )
         parser.add_argument(
             "--import-nav",
@@ -353,13 +354,13 @@ class Command(BaseCommand):
                     self.import_post(item, author, url_map, options, stats)
                 elif item.post_type == "page":
                     self.import_page(item, url_map, options, stats)
-                elif item.post_type == "attachment" and not options["skip_publications"]:
-                    self.import_publication(item, storage, storage_name_map, options, stats)
                 elif item.post_type == "nav_menu_item" and options["import_nav"]:
                     continue
                 else:
                     stats.skipped_items[item.post_type] += 1
 
+            if not options["skip_publications"]:
+                self.import_publications(items, options, stats)
             if options["import_nav"]:
                 self.import_navigation(items, url_map, options, stats)
             if options["import_gallery_redirects"]:
@@ -566,54 +567,64 @@ class Command(BaseCommand):
             StaticPage.objects.create(slug=slug, **fields)
             stats.pages_created += 1
 
-    def import_publication(
-        self,
-        item: WpItem,
-        storage,
-        storage_name_map: dict[str, str],
-        options,
-        stats: ImportStats,
-    ):
-        if not item.attachment_url:
-            return
-        extension = Path(unquote(urlparse(item.attachment_url).path)).suffix.lower()
-        if extension not in PUBLICATION_EXTENSIONS:
-            return
+    def import_publications(self, items: list[WpItem], options, stats: ImportStats):
+        for link in self.ao_publication_links(items):
+            slug = self.unique_slug(
+                link["title"],
+                PDFFile,
+                max_length=PDFFile._meta.get_field("slug").max_length,
+            )
+            existing = PDFFile.objects.filter(slug=slug).first()
+            if existing and not options["update_existing"]:
+                continue
 
-        storage_name = storage_name_map.get(item.attachment_url)
-        if not storage_name and not options["dry_run"]:
-            if options["skip_media"]:
-                stats.media_missing += 1
-                stats.missing_media_urls.append(item.attachment_url)
-            return
+            if options["dry_run"]:
+                stats.publications_updated += int(existing is not None)
+                stats.publications_created += int(existing is None)
+                continue
 
-        slug = self.unique_slug(item.slug or item.title, PDFFile, max_length=PDFFile._meta.get_field("slug").max_length)
-        existing = PDFFile.objects.filter(slug=slug).first()
-        if existing and not options["update_existing"]:
-            return
+            fields = {
+                "title": link["title"][:250],
+                "description": link["description"],
+                "publication_date": link["publication_date"],
+                "is_public": True,
+                "requires_login": False,
+                "file": "",
+                "redirect_url": link["url"],
+            }
+            if existing:
+                for key, value in fields.items():
+                    setattr(existing, key, value)
+                existing.save()
+                stats.publications_updated += 1
+            else:
+                PDFFile.objects.create(slug=slug, **fields)
+                stats.publications_created += 1
 
-        if options["dry_run"]:
-            stats.publications_updated += int(existing is not None)
-            stats.publications_created += int(existing is None)
-            return
+    def ao_publication_links(self, items: list[WpItem]) -> list[dict]:
+        links = []
+        seen_urls = set()
+        for item in items:
+            if item.post_type != "page" or item.slug not in AO_PUBLICATION_SOURCE_SLUGS:
+                continue
+            for publication in AOPublicationPageParser.parse(item.content):
+                url = publication["url"]
+                if not self.is_issuu_url(url):
+                    continue
+                if url in seen_urls:
+                    continue
+                seen_urls.add(url)
+                links.append({
+                    "title": publication["title"],
+                    "url": url,
+                    "description": self.plain_text(item.excerpt),
+                    "publication_date": publication["publication_date"] or item.post_date.date(),
+                })
+        return links
 
-        storage_name = self.publication_storage_name(item, storage_name, slug, storage)
-        fields = {
-            "title": item.title[:250],
-            "description": self.plain_text(item.excerpt or item.content),
-            "publication_date": item.post_date.date(),
-            "is_public": item.status != "private",
-            "requires_login": item.status == "private",
-            "file": storage_name,
-        }
-        if existing:
-            for key, value in fields.items():
-                setattr(existing, key, value)
-            existing.save()
-            stats.publications_updated += 1
-        else:
-            PDFFile.objects.create(slug=slug, **fields)
-            stats.publications_created += 1
+    def is_issuu_url(self, url: str) -> bool:
+        parsed = urlparse(url)
+        return parsed.scheme in {"http", "https"} and parsed.netloc.lower() in ISSUU_HOSTS
 
     def import_navigation(
         self,
@@ -1177,31 +1188,6 @@ class Command(BaseCommand):
             return parsed.path or "/"
         return url
 
-    def publication_storage_name(self, item: WpItem, source_name: str, slug: str, storage) -> str:
-        max_length = PDFFile._meta.get_field("file").max_length or 100
-        if len(source_name) <= max_length:
-            return source_name
-
-        original_name = Path(unquote(urlparse(item.attachment_url).path)).name
-        cleaned_name = self.clean_path_part(original_name)
-        extension = Path(cleaned_name).suffix
-        base = Path(cleaned_name).stem
-
-        slug_budget = 44
-        short_slug = slugify_max(slug, max_length=slug_budget) or "wordpress"
-        reserved = len("pdfs//") + len(short_slug) + len(extension)
-        filename_budget = max(12, max_length - reserved)
-        short_base = slugify_max(base, max_length=filename_budget) or "file"
-        target_name = f"pdfs/{short_slug}/{short_base}{extension}"
-
-        if len(target_name) > max_length:
-            target_name = f"pdfs/{short_slug[:32].strip('-')}/{short_base[:45].strip('-')}{extension}"
-
-        if not storage.exists(target_name):
-            with storage.open(source_name, "rb") as source_file:
-                storage.save(target_name, File(source_file, name=Path(target_name).name))
-        return target_name
-
     def category_for_item(
         self,
         item: WpItem,
@@ -1398,6 +1384,116 @@ class AnchorExtractor(HTMLParser):
         if tag.lower() == "a" and self._current is not None:
             self.anchors.append(self._current)
             self._current = None
+
+
+class AOPublicationPageParser(HTMLParser):
+    ISSUE_RE = re.compile(r"^\d{1,2}(?:/\d{4})?$")
+    YEAR_RE = re.compile(r"\b(20\d{2})\b")
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.links = []
+        self.current_year = ""
+        self.in_heading = False
+        self.heading_text = ""
+        self.in_table = False
+        self.table_labels = []
+        self.table_link_index = 0
+        self.in_cell = False
+        self.cell_text = ""
+        self.cell_anchors = []
+        self.current_anchor = None
+
+    @classmethod
+    def parse(cls, html: str) -> list[dict]:
+        parser = cls()
+        parser.feed(html or "")
+        parser.close()
+        return parser.links
+
+    def handle_starttag(self, tag, attrs):
+        tag = tag.lower()
+        attrs = dict(attrs)
+        if tag in {"h1", "h2", "h3", "h4", "h5", "h6"}:
+            self.in_heading = True
+            self.heading_text = ""
+        elif tag == "table":
+            self.in_table = True
+            self.table_labels = []
+            self.table_link_index = 0
+        elif tag == "td" and self.in_table:
+            self.in_cell = True
+            self.cell_text = ""
+            self.cell_anchors = []
+        elif tag == "a" and self.in_cell:
+            self.current_anchor = {"href": attrs.get("href", ""), "text": ""}
+
+    def handle_data(self, data):
+        if self.in_heading:
+            self.heading_text += data
+        if self.in_cell:
+            self.cell_text += data
+        if self.current_anchor is not None:
+            self.current_anchor["text"] += data
+
+    def handle_endtag(self, tag):
+        tag = tag.lower()
+        if tag in {"h1", "h2", "h3", "h4", "h5", "h6"} and self.in_heading:
+            match = self.YEAR_RE.search(self.heading_text)
+            if match:
+                self.current_year = match.group(1)
+            self.in_heading = False
+            self.heading_text = ""
+        elif tag == "a" and self.current_anchor is not None:
+            self.cell_anchors.append(self.current_anchor)
+            self.current_anchor = None
+        elif tag == "td" and self.in_cell:
+            self.flush_cell()
+        elif tag == "table":
+            self.in_table = False
+            self.table_labels = []
+            self.table_link_index = 0
+
+    def flush_cell(self):
+        text = re.sub(r"\s+", " ", self.cell_text).strip()
+        if self.cell_anchors:
+            for anchor in self.cell_anchors:
+                issue_label = self.issue_label_for_current_link(anchor, text)
+                if not issue_label:
+                    continue
+                self.links.append({
+                    "title": f"A&O {issue_label}",
+                    "url": anchor["href"].strip(),
+                    "publication_date": self.publication_date(issue_label),
+                })
+                self.table_link_index += 1
+        elif self.ISSUE_RE.match(text):
+            self.table_labels.append(text)
+
+        self.in_cell = False
+        self.cell_text = ""
+        self.cell_anchors = []
+
+    def issue_label_for_current_link(self, anchor: dict, fallback_text: str) -> str:
+        label = (
+            self.table_labels[self.table_link_index]
+            if self.table_link_index < len(self.table_labels)
+            else fallback_text
+        )
+        label = label.strip()
+        if not label:
+            label = re.sub(r"\s+", " ", anchor.get("text") or "").strip()
+        if label and "/" not in label and self.current_year:
+            label = f"{label}/{self.current_year}"
+        return label
+
+    def publication_date(self, issue_label: str):
+        match = re.match(r"^(\d{1,2})/(\d{4})$", issue_label)
+        if not match:
+            return None
+        issue_number = max(1, min(12, int(match.group(1))))
+        year = int(match.group(2))
+        return datetime(year, issue_number, 1).date()
 
 
 class FunctionaryPageParser(HTMLParser):
