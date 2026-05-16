@@ -233,6 +233,11 @@ class Command(BaseCommand):
             help="Do not copy media files. Content URLs are left as they are.",
         )
         parser.add_argument(
+            "--download-missing-media",
+            action="store_true",
+            help="Fetch missing sfklubben.fi upload files over HTTP when they are not in --media-dir.",
+        )
+        parser.add_argument(
             "--skip-publications",
             action="store_true",
             help="Do not create publication records from SF A&O Issuu links.",
@@ -310,10 +315,10 @@ class Command(BaseCommand):
             options["media_dir"]
             or xml_path.parent / "sfklubben-export-local" / "assets" / "sfklubben.fi"
         ).expanduser().resolve()
-        if not options["skip_media"] and not media_dir.exists():
+        if not options["skip_media"] and not options["download_missing_media"] and not media_dir.exists():
             raise CommandError(
                 f"Media directory does not exist: {media_dir}. "
-                "Run with --skip-media or pass --media-dir."
+                "Run with --skip-media, pass --media-dir, or use --download-missing-media."
             )
 
         report_path = Path(
@@ -340,6 +345,7 @@ class Command(BaseCommand):
                 storage,
                 options["media_prefix"].strip("/"),
                 options["dry_run"],
+                options["download_missing_media"],
                 stats,
                 storage_name_map,
             )
@@ -478,34 +484,65 @@ class Command(BaseCommand):
         storage,
         media_prefix: str,
         dry_run: bool,
+        download_missing_media: bool,
         stats: ImportStats,
         storage_name_map: dict[str, str],
     ) -> dict[str, str]:
         url_map = {}
         for url in urls:
             source = self.local_source_path(media_dir, url)
-            if not source.exists():
+            storage_name = self.storage_name_for_url(media_prefix, url)
+            if storage.exists(storage_name):
+                stats.media_existing += 1
+                url_map[url] = storage.url(storage_name)
+                storage_name_map[url] = storage_name
+                continue
+
+            downloaded_content = None
+            if not source.exists() and download_missing_media:
+                downloaded_content = self.download_media_content(url)
+            if not source.exists() and downloaded_content is None:
                 stats.media_missing += 1
                 stats.missing_media_urls.append(url)
                 continue
 
-            storage_name = self.storage_name_for_url(media_prefix, url)
             if dry_run:
                 stats.media_saved += 1
                 url_map[url] = f"DRY-RUN:{storage_name}"
                 storage_name_map[url] = storage_name
                 continue
 
-            if storage.exists(storage_name):
-                stats.media_existing += 1
+            if downloaded_content is not None:
+                saved_name = storage.save(
+                    storage_name,
+                    ContentFile(downloaded_content, name=Path(storage_name).name),
+                )
             else:
                 with source.open("rb") as source_file:
                     saved_name = storage.save(storage_name, File(source_file, name=source.name))
-                storage_name = saved_name
-                stats.media_saved += 1
+            storage_name = saved_name
+            stats.media_saved += 1
             url_map[url] = storage.url(storage_name)
             storage_name_map[url] = storage_name
         return url_map
+
+    def download_media_content(self, url: str) -> bytes | None:
+        for candidate in self.media_download_candidates(url):
+            try:
+                response = requests.get(candidate, timeout=8, allow_redirects=True)
+                response.raise_for_status()
+            except requests.RequestException:
+                continue
+            return response.content
+        return None
+
+    def media_download_candidates(self, url: str) -> list[str]:
+        candidates = [url]
+        if url.startswith("http://"):
+            candidates.append("https://" + url[len("http://"):])
+        elif url.startswith("https://"):
+            candidates.append("http://" + url[len("https://"):])
+        return candidates
 
     def import_post(self, item: WpItem, author: Member | None, url_map: dict[str, str], options, stats: ImportStats):
         slug = self.unique_slug(item.slug or item.title, Post, max_length=Post._meta.get_field("slug").max_length)

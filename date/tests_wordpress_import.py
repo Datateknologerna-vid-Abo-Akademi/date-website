@@ -268,6 +268,39 @@ class WordPressImportCommandTests(TestCase):
             self.assertEqual([url.title for url in child_urls], ["Nested Child"])
             self.assertEqual(child_urls[0].url, "/nested-child/")
 
+    def test_downloads_missing_media_when_requested(self):
+        def fake_get(url, *args, **kwargs):
+            response = type("FakeResponse", (), {})()
+            response.raise_for_status = lambda: None
+            response.content = b"%PDF-1.4 downloaded"
+            return response
+
+        with TemporaryDirectory() as work_dir, override_settings(MEDIA_ROOT=str(Path(work_dir) / "media")):
+            work_path = Path(work_dir)
+            xml_path = work_path / "export.xml"
+            media_dir = work_path / "downloads" / "sfklubben.fi"
+            media_dir.mkdir(parents=True)
+            xml_path.write_text(WORDPRESS_EXPORT, encoding="utf-8")
+
+            with patch(
+                "date.management.commands.import_wordpress_export.requests.get",
+                side_effect=fake_get,
+            ) as mocked:
+                self.call_import_command(
+                    str(xml_path),
+                    "--media-dir",
+                    str(media_dir),
+                    "--media-prefix",
+                    "wordpress/test",
+                    "--download-missing-media",
+                    "--skip-publications",
+                )
+
+            self.assertGreater(mocked.call_count, 0)
+            self.assertTrue(
+                (Path(work_dir) / "media" / "wordpress/test/wp-content/uploads/2026/05/imported.pdf").exists()
+            )
+
     def test_imports_gallery_redirect_albums(self):
         with TemporaryDirectory() as work_dir:
             xml_path = Path(work_dir) / "export.xml"
