@@ -1,84 +1,225 @@
 import { renderPages } from './pageRenderer.js';
-import { updateState, shouldRenderTwoPages } from './pdfViewer.js';
+import { updateState, preloadNeighborPages } from './pdfViewer.js';
+import {
+    getNextPagePosition,
+    getPreviousPagePosition,
+    normalizeTargetPage,
+} from './spreadLayout.js';
+
+const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2];
+const SWIPE_THRESHOLD = 50;
+const SWIPE_RATIO = 1.4;
 
 export function setupEventListeners(state) {
-    document.getElementById('prev-page').addEventListener('click', () => {
-    if (state.currentPage <= 1) return;
+    document.getElementById('prev-page')?.addEventListener('click', () => navigatePrev(state));
+    document.getElementById('next-page')?.addEventListener('click', () => navigateNext(state));
 
-    let newPage;
+    setupPageInput(state);
+    setupZoomControls(state);
+    setupFullscreen(state);
+    setupKeyboard(state);
+    setupTouchSwipe(state);
+}
 
-    if (state.currentPage === state.pdfDoc.numPages) {
-        // Jump back two from the last page (the previous pair)
-        newPage = state.currentPage - 2;
-    } else if (shouldRenderTwoPages(state)) {
-        // Regular two-page navigation
-        newPage = state.currentPage - 2;
-    } else {
-        // Standard single-page navigation
-        newPage = state.currentPage - 1;
-    }
+function setupPageInput(state) {
+    const indicator = document.getElementById('page-jump-form');
+    const input = document.getElementById('page-input');
+    if (!indicator || !input) return;
 
-    updateState({ currentPage: Math.max(1, newPage) });
-    renderPages(state);
-});
+    const commit = () => {
+        const n = parseInt(input.value, 10);
+        if (!state.pdfDoc || Number.isNaN(n)) {
+            syncInputFromState(state);
+            return;
+        }
+        const target = normalizeTargetPage(n, state);
+        if (target === state.currentPage) {
+            syncInputFromState(state);
+            return;
+        }
+        const direction = target > state.currentPage ? 'next' : 'prev';
+        updateState({ currentPage: target });
+        renderPages(state, { direction });
+        preloadNeighborPages(state);
+    };
 
-
-
-
-    document.getElementById('next-page').addEventListener('click', () => {
-    if (state.currentPage >= state.pdfDoc.numPages) return;
-
-    let newPage;
-
-    if (shouldRenderTwoPages(state) && state.currentPage === state.pdfDoc.numPages - 2) {
-        newPage = state.pdfDoc.numPages;
-    } else {
-        newPage = shouldRenderTwoPages(state) ? state.currentPage + 2 : state.currentPage + 1;
-    }
-
-    updateState({ currentPage: Math.min(state.pdfDoc.numPages, newPage) });
-    renderPages(state);
-});
-
-
-    document.getElementById('go-to-page').addEventListener('click', () => {
-        const input = document.getElementById('page-input');
-        const n = parseInt(input.value);
-        if (n > 0 && n <= state.pdfDoc.numPages) {
-            updateState({ currentPage: n });
-            renderPages(state);
+    input.addEventListener('focus', () => input.select());
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            input.blur();
+        } else if (e.key === 'Escape') {
+            syncInputFromState(state);
+            input.blur();
         }
     });
+}
 
-    document.getElementById('zoom-select').addEventListener('change', (e) => {
-        // Disable tag after its been used
-        document.getElementById('zoom-select').disabled = true;
-        // Re-enable it after a short delay
-        setTimeout(() => {
-            document.getElementById('zoom-select').disabled = false;
-        }, 100);
-        updateState({ scale: parseFloat(e.target.value) });
-        renderPages(state);
+function syncInputFromState(state) {
+    const input = document.getElementById('page-input');
+    if (!input || !state.pdfDoc) return;
+    input.value = String(state.currentPage);
+}
+
+function setupZoomControls(state) {
+    document.getElementById('zoom-in')?.addEventListener('click', () => stepZoom(state, +1));
+    document.getElementById('zoom-out')?.addEventListener('click', () => stepZoom(state, -1));
+}
+
+function stepZoom(state, delta) {
+    const currentIdx = closestZoomIndex(state.scale);
+    const nextIdx = Math.min(ZOOM_STEPS.length - 1, Math.max(0, currentIdx + delta));
+    const nextScale = ZOOM_STEPS[nextIdx];
+    if (nextScale === state.scale) return;
+    updateState({ scale: nextScale });
+    renderPages(state, { skipAnimation: true });
+}
+
+function closestZoomIndex(scale) {
+    let bestIdx = 0;
+    let bestDiff = Infinity;
+    ZOOM_STEPS.forEach((z, i) => {
+        const d = Math.abs(z - scale);
+        if (d < bestDiff) {
+            bestDiff = d;
+            bestIdx = i;
+        }
     });
+    return bestIdx;
+}
 
-    document.getElementById('prev-page-mobile').addEventListener('click', () => {
-        if (state.currentPage <= 1) return;
-        updateState({ currentPage: state.currentPage - 1 });
-        renderPages(state);
-    });
+function setupFullscreen(state) {
+    document.getElementById('fullscreen-toggle')?.addEventListener('click', () => toggleFullscreen(state));
+    document.addEventListener('fullscreenchange', updateFullscreenButton);
+}
 
-    document.getElementById('next-page-mobile').addEventListener('click', () => {
-        if (state.currentPage >= state.pdfDoc.numPages) return;
-        updateState({ currentPage: state.currentPage + 1 });
-        renderPages(state);
-    });
+function toggleFullscreen(state) {
+    const el = state.shellElement || document.documentElement;
+    if (!document.fullscreenElement) {
+        if (el.requestFullscreen) {
+            el.requestFullscreen().catch((err) => console.warn('Fullscreen denied:', err));
+        }
+    } else if (document.exitFullscreen) {
+        document.exitFullscreen();
+    }
+}
 
-    // Add keyboard navigation
+function updateFullscreenButton() {
+    const btn = document.getElementById('fullscreen-toggle');
+    const icon = btn?.querySelector('i');
+    if (!icon) return;
+    icon.className = document.fullscreenElement ? 'las la-compress' : 'las la-expand';
+}
+
+function setupKeyboard(state) {
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft') {
-            document.getElementById('prev-page').click();
-        } else if (e.key === 'ArrowRight') {
-            document.getElementById('next-page').click();
+        if (!state.pdfDoc) return;
+        const shell = state.shellElement;
+        if (shell && !shell.contains(e.target) && !shell.matches(':hover')) return;
+        const tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'select' || tag === 'textarea' || e.target.isContentEditable) {
+            return;
+        }
+        const numPages = state.pdfDoc.numPages;
+
+        switch (e.key) {
+            case 'ArrowLeft':
+            case 'PageUp':
+                e.preventDefault();
+                navigatePrev(state);
+                break;
+            case 'ArrowRight':
+            case 'PageDown':
+            case ' ':
+                e.preventDefault();
+                navigateNext(state);
+                break;
+            case 'Home':
+                e.preventDefault();
+                if (state.currentPage !== 1) {
+                    updateState({ currentPage: 1 });
+                    renderPages(state, { direction: 'prev' });
+                    preloadNeighborPages(state);
+                }
+                break;
+            case 'End': {
+                e.preventDefault();
+                const target = normalizeTargetPage(numPages, state);
+                if (state.currentPage !== target) {
+                    updateState({ currentPage: target });
+                    renderPages(state, { direction: 'next' });
+                    preloadNeighborPages(state);
+                }
+                break;
+            }
+            case 'f':
+            case 'F':
+                toggleFullscreen(state);
+                break;
+            case '+':
+            case '=':
+                e.preventDefault();
+                stepZoom(state, +1);
+                break;
+            case '-':
+            case '_':
+                e.preventDefault();
+                stepZoom(state, -1);
+                break;
         }
     });
+}
+
+function setupTouchSwipe(state) {
+    const stage = document.querySelector('.pdf-stage');
+    if (!stage) return;
+
+    let startX = null;
+    let startY = null;
+    let startTime = 0;
+
+    stage.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) {
+            startX = null;
+            return;
+        }
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        startTime = Date.now();
+    }, { passive: true });
+
+    stage.addEventListener('touchend', (e) => {
+        if (startX === null) return;
+        const touch = e.changedTouches[0];
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        const elapsed = Date.now() - startTime;
+        startX = null;
+        if (elapsed > 600) return;
+        if (Math.abs(dx) < SWIPE_THRESHOLD) return;
+        if (Math.abs(dx) < Math.abs(dy) * SWIPE_RATIO) return;
+        if (dx < 0) navigateNext(state);
+        else navigatePrev(state);
+    }, { passive: true });
+
+    stage.addEventListener('touchcancel', () => { startX = null; }, { passive: true });
+}
+
+function navigatePrev(state) {
+    if (!state.pdfDoc || state.currentPage <= 1) return;
+    const newPage = getPreviousPagePosition(state);
+    if (newPage === state.currentPage) return;
+    updateState({ currentPage: newPage });
+    renderPages(state, { direction: 'prev' });
+    preloadNeighborPages(state);
+}
+
+function navigateNext(state) {
+    if (!state.pdfDoc || state.currentPage >= state.pdfDoc.numPages) return;
+    const newPage = getNextPagePosition(state);
+    if (newPage === state.currentPage) return;
+    updateState({ currentPage: newPage });
+    renderPages(state, { direction: 'next' });
+    preloadNeighborPages(state);
 }

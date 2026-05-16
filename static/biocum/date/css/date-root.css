@@ -24,4 +24,5 @@
     --badgeColor: #49796b;
     --defaultPadding: 20px;
     --defaultRadius: 5px;
+    --pubListHeadingFg: var(--textColorLight);
 }

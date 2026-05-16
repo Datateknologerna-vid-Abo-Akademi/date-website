@@ -62,6 +62,12 @@ class PDFFile(models.Model):
     def get_file_url(self):
         return self.file.url
 
+    def get_safe_file_url(self):
+        try:
+            return self.get_file_url()
+        except Exception:
+            return ''
+
     def delete(self, *args, **kwargs):
         if not settings.USE_S3:
             if os.path.isfile(self.file.path):

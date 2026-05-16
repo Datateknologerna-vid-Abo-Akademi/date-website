@@ -30,6 +30,7 @@ INSTALLED_APPS = get_installed_apps([
     'social',
     'staticpages',
     'lucia',
+    'publications',
     'alumni',
     'billing',
 ])

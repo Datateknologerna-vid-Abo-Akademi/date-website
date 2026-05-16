@@ -117,7 +117,7 @@ date-all-manage() {
 }
 
 date-all-start() {
-    date-all up "$@"
+    date-all up --build "$@"
 }
 
 date-all-stop() {

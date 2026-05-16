@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-14 00:56+0300\n"
+"POT-Creation-Date: 2026-05-16 23:19+0300\n"
 "PO-Revision-Date: 2025-09-16 20:27+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -351,7 +351,6 @@ msgstr "publication"
 #: ctf/admin.py:27 ctf/admin.py:62 events/admin.py:147 events/admin.py:289
 #: lucia/admin.py:35 lucia/admin.py:64 news/admin.py:36 news/admin.py:84
 #: polls/admin.py:59 polls/admin.py:101
-#: templates/common/publications/list.html:25
 msgid "Publicerad"
 msgstr "Published"
 
@@ -571,7 +570,7 @@ msgid "Email"
 msgstr "Email"
 
 #: events/models.py:214 events/models.py:394 events/tests.py:359
-#: events/tests.py:1527 events/websocket_utils.py:30
+#: events/tests.py:1528 events/websocket_utils.py:30
 #: templates/biocum/events/arsfest.html:102
 #: templates/common/events/arsfest.html:89
 #: templates/common/events/baal_detail.html:82
@@ -648,7 +647,7 @@ msgstr "Enter name for plus-one."
 msgid "Ange e-post för avec."
 msgstr "Enter email for plus-one."
 
-#: exambank/admin.py:108
+#: exambank/admin.py:113
 msgid "Lösenord inställt"
 msgstr "Password set"
 
@@ -1409,7 +1408,14 @@ msgstr "Upload document"
 msgid "Lägg till tentamen"
 msgstr "Add test"
 
-#: templates/common/archive/exam_password.html:21
+#: templates/common/archive/exam_password.html:19
+#, python-format
+msgid "För många försök. Försök igen om %(seconds)s sekund."
+msgid_plural "För många försök. Försök igen om %(seconds)s sekunder."
+msgstr[0] "Too many attempts. Try again in %(seconds)s second."
+msgstr[1] "Too many attempts. Try again in %(seconds)s seconds."
+
+#: templates/common/archive/exam_password.html:24
 msgid "Fortsätt"
 msgstr "Continue"
 
@@ -1668,39 +1674,39 @@ msgid "Medlemspass"
 msgstr "Membership pass"
 
 #: templates/common/members/functionaries.html:13
-#: templates/common/members/functionaries.html:20
+#: templates/common/members/functionaries.html:19
 msgid "Alla år"
 msgstr "All years"
 
-#: templates/common/members/functionaries.html:17
+#: templates/common/members/functionaries.html:16
 msgid "Välj ett år:"
 msgstr "Choose a year"
 
-#: templates/common/members/functionaries.html:28
+#: templates/common/members/functionaries.html:27
 msgid "Välj en post:"
 msgstr "Choose a post"
 
-#: templates/common/members/functionaries.html:31
+#: templates/common/members/functionaries.html:30
 msgid "Alla poster"
 msgstr "All posts"
 
-#: templates/common/members/functionaries.html:40
+#: templates/common/members/functionaries.html:39
 msgid "Filtrera"
 msgstr "Filter"
 
-#: templates/common/members/functionaries.html:46
+#: templates/common/members/functionaries.html:44
 msgid "Styrelsen"
 msgstr "The Board"
 
-#: templates/common/members/functionaries.html:71
+#: templates/common/members/functionaries.html:69
 msgid "Övriga Funktionärer"
 msgstr "Other Officials"
 
-#: templates/common/members/functionaries.html:95
+#: templates/common/members/functionaries.html:93
 msgid "Inga funktionärer hittades..."
 msgstr "No officials found..."
 
-#: templates/common/members/functionaries.html:98
+#: templates/common/members/functionaries.html:96
 #, python-format
 msgid ""
 "Vid eventuella frågor kan styrelsen kontaktas via %(ASSOCIATION_EMAIL)s."
@@ -2010,38 +2016,73 @@ msgstr "The results are hidden"
 msgid "Publications"
 msgstr "Publications"
 
-#: templates/common/publications/list.html:16
+#: templates/common/publications/list.html:18
+#: templates/common/publications/viewer.html:21
 msgid "Publikationer"
 msgstr "Publications"
 
-#: templates/common/publications/list.html:24
-msgid "Författare"
-msgstr "Author"
+#: templates/common/publications/list.html:21
+#, python-format
+msgid "%(counter)s publikation"
+msgid_plural "%(counter)s publikationer"
+msgstr[0] "%(counter)s publication"
+msgstr[1] "%(counter)s publications"
 
-#: templates/common/publications/list.html:32
+#: templates/common/publications/list.html:47
+msgid "Öppna"
+msgstr "Open"
+
+#: templates/common/publications/list.html:68
 msgid "Det finns inga publikationer."
 msgstr "There are no publications."
 
-#: templates/common/publications/list.html:40
-msgid "first"
-msgstr "first"
+#: templates/common/publications/list.html:72
+msgid "Pagination"
+msgstr "Pagination"
 
-#: templates/common/publications/list.html:41
+#: templates/common/publications/list.html:77
 msgid "previous"
 msgstr "previous"
 
-#: templates/common/publications/list.html:45
-#, python-format
-msgid "Page %(page_number)s of %(total_pages)s."
-msgstr "Page %(page_number)s of %(total_pages)s."
-
-#: templates/common/publications/list.html:51
+#: templates/common/publications/list.html:110
 msgid "next"
 msgstr "next"
 
-#: templates/common/publications/list.html:52
-msgid "last"
-msgstr "last"
+#: templates/common/publications/viewer.html:36
+msgid "PDF controls"
+msgstr "PDF controls"
+
+#: templates/common/publications/viewer.html:39
+msgid "Föregående sida"
+msgstr "Previous page"
+
+#: templates/common/publications/viewer.html:47
+msgid "Go to page"
+msgstr "Go to page"
+
+#: templates/common/publications/viewer.html:53
+msgid "Nästa sida"
+msgstr "Next page"
+
+#: templates/common/publications/viewer.html:60
+msgid "Zoom out"
+msgstr "Zoom out"
+
+#: templates/common/publications/viewer.html:65
+msgid "Zoom in"
+msgstr "Zoom in"
+
+#: templates/common/publications/viewer.html:69
+msgid "Toggle fullscreen"
+msgstr "Toggle fullscreen"
+
+#: templates/common/publications/viewer.html:82
+msgid "Laddar publikation…"
+msgstr "Loading publication..."
+
+#: templates/common/publications/viewer.html:90
+msgid "Svep eller använd piltangenterna för att bläddra."
+msgstr "Swipe or use the arrow keys to turn pages."
 
 #: templates/common/social/harassment_form.html:11
 msgid "Rapportera trakasserier och eventuella brister med jämlikhetsplanen"
@@ -2226,6 +2267,19 @@ msgstr "Partner logo"
 #: templates/pulterit/date/components/partners.html:18
 msgid "Vill du samarbeta med Pulterit?"
 msgstr "Do you want to collaborate with Pulterit ry?"
+
+#~ msgid "Författare"
+#~ msgstr "Author"
+
+#~ msgid "first"
+#~ msgstr "first"
+
+#, python-format
+#~ msgid "Page %(page_number)s of %(total_pages)s."
+#~ msgstr "Page %(page_number)s of %(total_pages)s."
+
+#~ msgid "last"
+#~ msgstr "last"
 
 #~ msgid "Kemistbaal Anmälning"
 #~ msgstr "Kemistbaal Registration"
