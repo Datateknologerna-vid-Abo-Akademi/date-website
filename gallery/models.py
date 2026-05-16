@@ -50,6 +50,18 @@ class Album(models.Model):
     title = models.CharField(_('Namn'), max_length=250)
     pub_date = models.DateTimeField(default=timezone.now, null=True)
     hide_for_gulis = models.BooleanField(_('Göm för gulisar'), default=False)
+    redirect_url = models.URLField(
+        _('Omdirigeringsadress'),
+        max_length=500,
+        blank=True,
+        help_text=_('Om angiven skickas besökaren vidare hit när albumet öppnas.'),
+    )
+    thumbnail = models.ImageField(
+        _('Albumminiatyr'),
+        upload_to='archive/thumbnails/',
+        blank=True,
+        help_text=_('Valfri bild som visas som albumets miniatyr.'),
+    )
 
     class Meta:
         verbose_name_plural = verbose_name = _('Bildarkiv')

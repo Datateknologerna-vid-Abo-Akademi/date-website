@@ -22,18 +22,6 @@ class Collection(models.Model):
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     pub_date = models.DateTimeField(default=datetime.datetime.now, null=True)
     hide_for_gulis = models.BooleanField(_('Göm för gulisar'), default=False)
-    redirect_url = models.URLField(
-        _('Omdirigeringsadress'),
-        max_length=500,
-        blank=True,
-        help_text=_('Om angiven skickas besökaren vidare hit när albumet öppnas.'),
-    )
-    thumbnail = models.ImageField(
-        _('Albumminiatyr'),
-        upload_to='archive/thumbnails/',
-        blank=True,
-        help_text=_('Valfri bild som visas som albumets miniatyr.'),
-    )
 
     class Meta:
         verbose_name = _('Samling')

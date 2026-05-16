@@ -7,7 +7,9 @@ from django.core.management import call_command
 from django.test import TestCase, override_settings
 
 from archive.models import Collection, Document
-from members.models import Functionary, FunctionaryRole
+from exambank.models import ExamArchive, ExamFile
+from functionaries.models import Functionary, FunctionaryRole
+from gallery.models import Album
 from news.models import Post
 from publications.models import PDFFile
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
@@ -250,12 +252,12 @@ class WordPressImportCommandTests(TestCase):
                 "--skip-gallery-thumbnails",
             )
 
-            photos_album = Collection.objects.get(title="2025 - Testalbum", type="Pictures")
+            photos_album = Album.objects.get(title="2025 - Testalbum")
             self.assertEqual(photos_album.redirect_url, "https://photos.app.goo.gl/exampleAlbum")
             self.assertEqual(photos_album.pub_date.year, 2025)
             self.assertFalse(photos_album.thumbnail)
 
-            drive_album = Collection.objects.get(title="2024 - Drivealbum", type="Pictures")
+            drive_album = Album.objects.get(title="2024 - Drivealbum")
             self.assertEqual(drive_album.redirect_url, "https://drive.google.com/drive/folders/example")
             self.assertEqual(drive_album.pub_date.year, 2024)
 
@@ -297,13 +299,13 @@ class WordPressImportCommandTests(TestCase):
 
             self.assertGreaterEqual(mocked.call_count, 4)
 
-            photos_album = Collection.objects.get(title="2025 - Testalbum", type="Pictures")
+            photos_album = Album.objects.get(title="2025 - Testalbum")
             self.assertTrue(photos_album.thumbnail)
             self.assertTrue(photos_album.thumbnail.name.endswith(".jpg"))
             with photos_album.thumbnail.open("rb") as fh:
                 self.assertEqual(fh.read(), image_bytes)
 
-            drive_album = Collection.objects.get(title="2024 - Drivealbum", type="Pictures")
+            drive_album = Album.objects.get(title="2024 - Drivealbum")
             self.assertTrue(drive_album.thumbnail)
 
     def test_imports_functionaries_from_funktionarer_page(self):
@@ -437,17 +439,17 @@ class WordPressImportCommandTests(TestCase):
                 "--import-exam-archive",
             )
 
-            folkratt = Collection.objects.get(type="Exams", title="Folkrätt")
-            statskunskap = Collection.objects.get(type="Exams", title="Statskunskap")
+            folkratt = ExamArchive.objects.get(title="Folkrätt")
+            statskunskap = ExamArchive.objects.get(title="Statskunskap")
 
-            folkratt_doc = Document.objects.get(collection=folkratt)
+            folkratt_doc = ExamFile.objects.get(archive=folkratt)
             self.assertEqual(folkratt_doc.title, "Inledning till Folkrätt 29.2.2024")
             self.assertEqual(
                 folkratt_doc.document.name,
                 "wordpress/test/wp-content/uploads/2024/04/inledning-till-folkratt-2922024-2.pdf",
             )
 
-            statskunskap_doc = Document.objects.get(collection=statskunskap)
+            statskunskap_doc = ExamFile.objects.get(archive=statskunskap)
             self.assertEqual(statskunskap_doc.title, "Val och valmetoder 14.10.2022")
             self.assertEqual(
                 statskunskap_doc.document.name,

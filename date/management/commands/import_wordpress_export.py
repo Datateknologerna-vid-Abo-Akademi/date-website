@@ -26,7 +26,10 @@ from django.utils.text import slugify
 
 from archive.models import Collection, Document
 from date.functions import slugify_max
-from members.models import FRESHMAN, Functionary, FunctionaryRole, Member, MembershipType
+from exambank.models import ExamArchive, ExamFile
+from functionaries.models import Functionary, FunctionaryRole
+from gallery.models import Album
+from members.models import FRESHMAN, Member, MembershipType
 from news.models import Category, Post
 from publications.models import PDFFile
 from staticpages.models import POST_SLUG_MAX_LENGTH as STATICPAGE_SLUG_MAX_LENGTH
@@ -266,14 +269,14 @@ class Command(BaseCommand):
             "--import-exam-archive",
             action="store_true",
             help=(
-                "Import the WordPress 'tentarkiv' rtbs_tabs payload as exam collections "
-                "(archive.Collection type='Exams') with one Document per linked PDF."
+                "Import the WordPress 'tentarkiv' rtbs_tabs payload as exam archives "
+                "with one exam file per linked PDF."
             ),
         )
         parser.add_argument(
             "--replace-exam-archive",
             action="store_true",
-            help="Delete existing exam collections (and their documents) before importing.",
+            help="Delete existing exam archives (and their files) before importing.",
         )
         parser.add_argument(
             "--import-functionaries",
@@ -514,7 +517,6 @@ class Command(BaseCommand):
             "created_time": item.post_date,
             "published_time": item.post_date if item.status == "publish" else None,
             "modified_time": item.modified_date,
-            "published": item.status == "publish",
             "category": category,
         }
         if options["dry_run"]:
@@ -723,30 +725,29 @@ class Command(BaseCommand):
             return
 
         if options["replace_gallery_redirects"]:
-            Collection.objects.filter(type="Pictures", redirect_url__gt="").delete()
+            Album.objects.filter(redirect_url__gt="").delete()
 
         for link in links:
-            collection = Collection.objects.filter(type="Pictures", title=link["title"]).first()
+            album = Album.objects.filter(title=link["title"]).first()
             fields = {
                 "pub_date": link["pub_date"],
                 "redirect_url": link["url"],
                 "hide_for_gulis": False,
             }
-            if collection:
+            if album:
                 for key, value in fields.items():
-                    setattr(collection, key, value)
-                collection.save()
+                    setattr(album, key, value)
+                album.save()
                 stats.gallery_redirects_updated += 1
             else:
-                collection = Collection.objects.create(
+                album = Album.objects.create(
                     title=link["title"][:250],
-                    type="Pictures",
                     **fields,
                 )
                 stats.gallery_redirects_created += 1
 
-            if not options["skip_gallery_thumbnails"] and not collection.thumbnail:
-                self.apply_gallery_thumbnail(collection, link, stats)
+            if not options["skip_gallery_thumbnails"] and not album.thumbnail:
+                self.apply_gallery_thumbnail(album, link, stats)
 
     def gallery_redirect_links(self, items: list[WpItem], url_map: dict[str, str]) -> list[dict]:
         links = []
@@ -890,8 +891,8 @@ class Command(BaseCommand):
             return
 
         if options["replace_exam_archive"] and not options["dry_run"]:
-            existing = Collection.objects.filter(type="Exams")
-            Document.objects.filter(collection__in=existing).delete()
+            existing = ExamArchive.objects.all()
+            ExamFile.objects.filter(archive__in=existing).delete()
             existing.delete()
 
         for _, tab in tabs.items():
@@ -902,13 +903,13 @@ class Command(BaseCommand):
             if not title:
                 continue
 
-            collection = self.get_or_create_exam_collection(
+            archive = self.get_or_create_exam_collection(
                 title, rtbs_item.post_date, options, stats
             )
             anchors = self.exam_anchors_in_content(content)
             for anchor in anchors:
                 self.import_exam_document(
-                    collection,
+                    archive,
                     anchor,
                     storage,
                     storage_name_map,
@@ -931,21 +932,20 @@ class Command(BaseCommand):
         fallback_date: datetime,
         options,
         stats: ImportStats,
-    ) -> Collection | None:
-        existing = Collection.objects.filter(type="Exams", title=title).first()
+    ) -> ExamArchive | None:
+        existing = ExamArchive.objects.filter(title=title).first()
         if existing:
             stats.exam_collections_updated += 1
             return existing
         if options["dry_run"]:
             stats.exam_collections_created += 1
             return None
-        collection = Collection.objects.create(
+        archive = ExamArchive.objects.create(
             title=title[:250],
-            type="Exams",
             pub_date=fallback_date,
         )
         stats.exam_collections_created += 1
-        return collection
+        return archive
 
     def exam_anchors_in_content(self, html: str) -> list[dict]:
         parser = AnchorExtractor()
@@ -966,7 +966,7 @@ class Command(BaseCommand):
 
     def import_exam_document(
         self,
-        collection: Collection | None,
+        archive: ExamArchive | None,
         anchor: dict,
         storage,
         storage_name_map: dict[str, str],
@@ -981,10 +981,10 @@ class Command(BaseCommand):
             stats.missing_exam_hrefs.append(href)
             return
 
-        if options["dry_run"] or collection is None:
+        if options["dry_run"] or archive is None:
             existing = (
-                Document.objects.filter(collection=collection, title=title).first()
-                if collection is not None else None
+                ExamFile.objects.filter(archive=archive, title=title).first()
+                if archive is not None else None
             )
             if existing:
                 stats.exam_documents_updated += 1
@@ -992,16 +992,16 @@ class Command(BaseCommand):
                 stats.exam_documents_created += 1
             return
 
-        storage_name = self.exam_document_storage_name(storage_name, collection, title, storage)
+        storage_name = self.exam_document_storage_name(storage_name, archive, title, storage)
 
-        existing = Document.objects.filter(collection=collection, title=title).first()
+        existing = ExamFile.objects.filter(archive=archive, title=title).first()
         if existing:
             existing.document = storage_name
             existing.save()
             stats.exam_documents_updated += 1
         else:
-            Document.objects.create(
-                collection=collection,
+            ExamFile.objects.create(
+                archive=archive,
                 title=title[:250],
                 document=storage_name,
             )
@@ -1010,17 +1010,17 @@ class Command(BaseCommand):
     def exam_document_storage_name(
         self,
         source_name: str,
-        collection: Collection,
+        archive: ExamArchive,
         title: str,
         storage,
     ) -> str:
-        max_length = Document._meta.get_field("document").max_length or 100
+        max_length = ExamFile._meta.get_field("document").max_length or 100
         if len(source_name) <= max_length:
             return source_name
 
         extension = Path(source_name).suffix.lower() or ".pdf"
-        year = collection.pub_date.strftime("%Y") if collection.pub_date else "wordpress"
-        coll_slug = slugify_max(collection.title, max_length=40) or "exams"
+        year = archive.pub_date.strftime("%Y") if archive.pub_date else "wordpress"
+        coll_slug = slugify_max(archive.title, max_length=40) or "exams"
         title_slug = slugify_max(title, max_length=40) or "exam"
         target_name = f"Exams/{year}/{coll_slug}/{title_slug}{extension}"
         if len(target_name) > max_length:

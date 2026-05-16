@@ -1,6 +1,7 @@
 import datetime
 import logging
 import random
+from itertools import chain
 from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
@@ -61,7 +62,6 @@ def get_homepage_template_name():
 
 
 def index(request):
-    current_time = timezone.now()
     events_old_events_included = (
         Event.objects.published().filter(
             event_date_end__gte=(timezone.now() - timezone.timedelta(days=31)),
@@ -102,11 +102,12 @@ def index(request):
         return calendar_events_dict
 
     context = {
-        'calendar_events': calendar_format(all_events),
+        'calendar_events': calendar_format(events_old_events_included),
         'events': events,
         'news': news,
-        'ads': list(AdUrl.objects.all()),
-        'posts': list(IgUrl.objects.all()) if settings.PROJECT_NAME == "kk" else (),
+        'news_events': list(chain(events, news)),
+        'ads': AdUrl.objects.all(),
+        'posts': IgUrl.objects.all(),
         'aa_post': aa_post,  # TODO Remove or rename
     }
 
