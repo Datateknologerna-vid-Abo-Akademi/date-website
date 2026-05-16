@@ -1,5 +1,10 @@
 import { renderPages } from './pageRenderer.js';
 import { updateState, preloadNeighborPages } from './pdfViewer.js';
+import {
+    getNextPagePosition,
+    getPreviousPagePosition,
+    normalizeTargetPage,
+} from './spreadLayout.js';
 
 const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 const SWIPE_THRESHOLD = 50;
@@ -17,9 +22,9 @@ export function setupEventListeners(state) {
 }
 
 function setupPageInput(state) {
-    const form = document.getElementById('page-jump-form');
+    const indicator = document.getElementById('page-jump-form');
     const input = document.getElementById('page-input');
-    if (!form || !input) return;
+    if (!indicator || !input) return;
 
     const commit = () => {
         const n = parseInt(input.value, 10);
@@ -40,12 +45,11 @@ function setupPageInput(state) {
 
     input.addEventListener('focus', () => input.select());
     input.addEventListener('blur', commit);
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        input.blur();
-    });
     input.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            input.blur();
+        } else if (e.key === 'Escape') {
             syncInputFromState(state);
             input.blur();
         }
@@ -111,6 +115,8 @@ function updateFullscreenButton() {
 function setupKeyboard(state) {
     document.addEventListener('keydown', (e) => {
         if (!state.pdfDoc) return;
+        const shell = state.shellElement;
+        if (shell && !shell.contains(e.target) && !shell.matches(':hover')) return;
         const tag = (e.target.tagName || '').toLowerCase();
         if (tag === 'input' || tag === 'select' || tag === 'textarea' || e.target.isContentEditable) {
             return;
@@ -202,18 +208,7 @@ function setupTouchSwipe(state) {
 
 function navigatePrev(state) {
     if (!state.pdfDoc || state.currentPage <= 1) return;
-    const numPages = state.pdfDoc.numPages;
-    const twoPage = state.pagesPerView === 2;
-
-    let newPage;
-    if (state.currentPage === numPages && twoPage) {
-        newPage = Math.max(2, state.currentPage - 2);
-    } else if (twoPage && state.currentPage > 2) {
-        newPage = state.currentPage - 2;
-    } else {
-        newPage = state.currentPage - 1;
-    }
-    newPage = Math.max(1, newPage);
+    const newPage = getPreviousPagePosition(state);
     if (newPage === state.currentPage) return;
     updateState({ currentPage: newPage });
     renderPages(state, { direction: 'prev' });
@@ -222,51 +217,9 @@ function navigatePrev(state) {
 
 function navigateNext(state) {
     if (!state.pdfDoc || state.currentPage >= state.pdfDoc.numPages) return;
-    const numPages = state.pdfDoc.numPages;
-    const inPair = state.pagesPerView === 2 && state.currentPage > 1 && state.currentPage < numPages;
-
-    // 2-page PDFs in two-page mode show both pages as a single spread, so
-    // there's nothing to navigate to.
-    if (state.pagesPerView === 2 && numPages === 2) return;
-
-    // The current spread already covers the last page when currentPage + 1
-    // >= numPages — true for odd-paginated PDFs at the final spread (e.g.
-    // pages 2,3 of a 3-page PDF). Flipping forward would only reveal a
-    // back-cover view that duplicates the page just shown on the right.
-    if (inPair && state.currentPage + 1 >= numPages) return;
-
-    let newPage;
-    if (inPair && state.currentPage === numPages - 2) {
-        newPage = numPages;
-    } else if (inPair) {
-        newPage = state.currentPage + 2;
-    } else {
-        newPage = state.currentPage + 1;
-    }
-    newPage = Math.min(numPages, newPage);
+    const newPage = getNextPagePosition(state);
     if (newPage === state.currentPage) return;
     updateState({ currentPage: newPage });
     renderPages(state, { direction: 'next' });
     preloadNeighborPages(state);
-}
-
-/**
- * Snap a requested page number to a position the two-page layout can render
- * without producing a redundant back-cover view. Valid two-page positions:
- *   1                               (cover-right)
- *   2, 4, 6, … up to numPages-1     (spread starts on even pages)
- *   numPages, only if even          (cover-left / back-cover view)
- * For odd numPages, a target of numPages snaps down to numPages-1 so the
- * final spread (numPages-1, numPages) is shown instead of the last page
- * alone.
- */
-function normalizeTargetPage(target, state) {
-    const numPages = state.pdfDoc.numPages;
-    const clamped = Math.min(Math.max(1, target), numPages);
-    if (state.pagesPerView !== 2) return clamped;
-    // 2-page PDFs always render as a single (1, 2) spread — pin to 1.
-    if (numPages === 2) return 1;
-    if (clamped === 1) return 1;
-    if (clamped === numPages && numPages % 2 === 0) return clamped;
-    return clamped % 2 === 0 ? clamped : clamped - 1;
 }

@@ -1,3 +1,5 @@
+import { getSpreadLayout } from './spreadLayout.js';
+
 let pageRendering = false;
 let pendingRender = null;
 
@@ -56,21 +58,21 @@ async function buildSpread(state) {
     const spread = document.createElement('div');
     spread.className = 'page-spread';
 
-    const layout = layoutFor(state);
+    const layout = getSpreadLayout(state);
 
     try {
-        if (layout === 'single') {
-            await renderPage(state, state.currentPage, spread);
-        } else if (layout === 'cover-right') {
-            await renderPage(state, 1, spread);
+        if (layout.type === 'single') {
+            await renderPage(state, layout.leftPage, spread);
+        } else if (layout.type === 'cover-right') {
+            await renderPage(state, layout.rightPage, spread);
             spread.insertBefore(buildEmptySlot(spread.querySelector('canvas')), spread.firstChild);
-        } else if (layout === 'cover-left') {
-            await renderPage(state, state.currentPage, spread);
+        } else if (layout.type === 'cover-left') {
+            await renderPage(state, layout.leftPage, spread);
             spread.appendChild(buildEmptySlot(spread.querySelector('canvas')));
         } else {
             await Promise.all([
-                renderPage(state, state.currentPage, spread),
-                renderPage(state, state.currentPage + 1, spread),
+                renderPage(state, layout.leftPage, spread),
+                renderPage(state, layout.rightPage, spread),
             ]);
         }
         return spread;
@@ -79,22 +81,6 @@ async function buildSpread(state) {
         showErrorMessage(state, 'Failed to render PDF pages. Please try again.');
         return null;
     }
-}
-
-function layoutFor(state) {
-    if (state.pagesPerView === 1) return 'single';
-    // Single-page documents render centered — the cover-right layout
-    // would push the only page to the right half with empty space on the
-    // left, which looks like a bug.
-    if (state.pdfDoc.numPages === 1) return 'single';
-    // 2-page PDFs are shown as a single (1, 2) spread — no separate cover
-    // and back-cover views, which would just split the document across two
-    // single-page screens. navigateNext / normalizeTargetPage keep
-    // currentPage pinned at 1 in this case.
-    if (state.pdfDoc.numPages === 2) return 'spread';
-    if (state.currentPage === 1) return 'cover-right';
-    if (state.currentPage === state.pdfDoc.numPages) return 'cover-left';
-    return 'spread';
 }
 
 /**

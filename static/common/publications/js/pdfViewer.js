@@ -2,6 +2,7 @@ import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136
 import { renderPages } from './pageRenderer.js';
 import { setupEventListeners } from './eventListeners.js';
 import { updateUIComponents } from './uiUpdater.js';
+import { normalizeTargetPage } from './spreadLayout.js';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc =
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf.worker.min.mjs';
@@ -25,24 +26,35 @@ class PDFViewerState {
 }
 
 const state = new PDFViewerState();
+let resizeTimer = null;
+let resizeHandler = null;
 
 function computePagesPerView() {
     return window.innerWidth > 1024 ? 2 : 1;
 }
 
 export function initPDFViewer(pdfUrl, viewerElement) {
+    if (resizeHandler) {
+        window.removeEventListener('resize', resizeHandler);
+        clearTimeout(resizeTimer);
+    }
     state.viewerElement = viewerElement;
     state.shellElement = document.getElementById('pdf-shell');
     state.pagesPerView = computePagesPerView();
     state.updateState({ isLoading: true, loadingProgress: 0 });
 
-    let resizeTimer;
-    window.addEventListener('resize', () => {
+    resizeHandler = () => {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
             const newPagesPerView = computePagesPerView();
             if (newPagesPerView !== state.pagesPerView) {
                 state.updateState({ pagesPerView: newPagesPerView });
+                const currentPage = state.pdfDoc
+                    ? normalizeTargetPage(state.currentPage, state)
+                    : state.currentPage;
+                if (state.pdfDoc && currentPage !== state.currentPage) {
+                    state.updateState({ currentPage });
+                }
             }
             // Always re-render — even when pagesPerView didn't flip, the
             // viewer width might have changed and the fit-scale needs to
@@ -51,7 +63,8 @@ export function initPDFViewer(pdfUrl, viewerElement) {
                 renderPages(state, { skipAnimation: true });
             }
         }, 150);
-    });
+    };
+    window.addEventListener('resize', resizeHandler);
 
     setupEventListeners(state);
     loadPDF(pdfUrl);
@@ -73,13 +86,18 @@ async function loadPDF(pdfUrl) {
         preloadNeighborPages(state);
     } catch (error) {
         console.error('Error loading PDF:', error);
-        showErrorMessage('Failed to load PDF. Please try again later.');
         state.updateState({ isLoading: false });
+        showErrorMessage('Failed to load PDF. Please try again later.');
     }
 }
 
 function showErrorMessage(message) {
-    state.viewerElement.innerHTML = `<p class="pdf-error">${message}</p>`;
+    state.updateState({ isLoading: false });
+    const el = document.createElement('p');
+    el.className = 'pdf-error';
+    el.textContent = message;
+    state.viewerElement.innerHTML = '';
+    state.viewerElement.appendChild(el);
 }
 
 export function preloadNeighborPages(state) {

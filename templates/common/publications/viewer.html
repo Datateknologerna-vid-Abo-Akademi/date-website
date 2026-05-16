@@ -39,7 +39,7 @@
                         aria-label="{% trans 'Föregående sida' %}" disabled>
                     <i class="las la-angle-left"></i>
                 </button>
-                <form id="page-jump-form" class="pdf-page-indicator" aria-live="polite">
+                <div id="page-jump-form" class="pdf-page-indicator">
                     <input id="page-input" class="pdf-page-input"
                            type="text" inputmode="numeric" pattern="[0-9]*"
                            autocomplete="off"
@@ -47,7 +47,8 @@
                            aria-label="{% trans 'Go to page' %}">
                     <span class="pdf-page-divider">/</span>
                     <span id="page-count">–</span>
-                </form>
+                    <span id="page-status" class="pdf-sr-status" aria-live="polite" aria-atomic="true"></span>
+                </div>
                 <button id="next-page" class="pdf-icon-btn" type="button"
                         aria-label="{% trans 'Nästa sida' %}" disabled>
                     <i class="las la-angle-right"></i>

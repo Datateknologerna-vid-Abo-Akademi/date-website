@@ -1,3 +1,5 @@
+import { getSpreadLayout } from './spreadLayout.js';
+
 export function updateUIComponents(state) {
     updateLoadingDisplay(state);
     updateLoadingProgress(state);
@@ -31,8 +33,13 @@ function updatePageDisplay(state) {
     if (document.activeElement !== pageInput) {
         pageInput.value = String(currentPage);
     }
-    pageInput.max = pdfDoc.numPages;
     pageCount.textContent = pdfDoc.numPages;
+    updatePageStatus(currentPage, pdfDoc.numPages);
+}
+
+function updatePageStatus(currentPage, pageCount) {
+    const status = document.getElementById('page-status');
+    if (status) status.textContent = `${currentPage} / ${pageCount}`;
 }
 
 function updateZoomDisplay(state) {
@@ -43,32 +50,18 @@ function updateZoomDisplay(state) {
 function updateViewMode(state) {
     const viewer = state.viewerElement;
     if (!viewer) return;
-    // A two-page layout is rendered whenever the spread shows two real
-    // pages: any middle spread, plus the 2-page-PDF special case where both
-    // pages share a single (1, 2) spread (see layoutFor in pageRenderer).
-    const numPages = state.pdfDoc.numPages;
-    const twoPage = state.pagesPerView === 2
-        && ((state.currentPage > 1 && state.currentPage < numPages) || numPages === 2);
+    const layout = getSpreadLayout(state);
+    const twoPage = Boolean(layout.leftPage && layout.rightPage);
     viewer.classList.toggle('two-page-view', twoPage);
     viewer.classList.toggle('single-page-view', !twoPage);
 }
 
 function updateNavButtons(state) {
-    const numPages = state.pdfDoc.numPages;
-    const inPair = state.pagesPerView === 2 && state.currentPage > 1 && state.currentPage < numPages;
-    const twoPageWholeDoc = state.pagesPerView === 2 && numPages === 2;
-    const atStart = state.currentPage <= 1;
-    // Also at the end when the current spread already includes the last
-    // page (odd-paginated PDFs have no useful "back cover" view past the
-    // final spread, and 2-page PDFs render the whole document as one
-    // spread — see navigateNext).
-    const atEnd = state.currentPage >= numPages
-        || (inPair && state.currentPage + 1 >= numPages)
-        || twoPageWholeDoc;
+    const layout = getSpreadLayout(state);
     const prev = document.getElementById('prev-page');
     const next = document.getElementById('next-page');
-    if (prev) prev.disabled = atStart;
-    if (next) next.disabled = atEnd;
+    if (prev) prev.disabled = layout.isFirstSpread;
+    if (next) next.disabled = layout.isLastSpread;
 }
 
 function updateReadingProgress(state) {
