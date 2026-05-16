@@ -24,7 +24,6 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 
-from archive.models import Collection, Document
 from date.functions import slugify_max
 from exambank.models import ExamArchive, ExamFile
 from functionaries.models import Functionary, FunctionaryRole
@@ -123,6 +122,10 @@ def php_unserialize(data: bytes, pos: int = 0):
         for _ in range(count):
             key, cur = php_unserialize(data, cur)
             value, cur = php_unserialize(data, cur)
+            if not isinstance(key, (str, int)):
+                raise ValueError(
+                    f"Unsupported PHP array key type {type(key).__name__} at offset {pos}"
+                )
             result[key] = value
         return result, cur + 1
     raise ValueError(f"Unsupported PHP serialize token at offset {pos}")
@@ -1071,7 +1074,7 @@ class Command(BaseCommand):
             return timezone.make_aware(datetime(year, 6, 1, 12), timezone.get_current_timezone())
         return fallback
 
-    def apply_gallery_thumbnail(self, collection: Collection, link: dict, stats: ImportStats) -> None:
+    def apply_gallery_thumbnail(self, collection: Album, link: dict, stats: ImportStats) -> None:
         result = self.fetch_gallery_og_image(link["url"])
         if result is None:
             stats.gallery_thumbnails_missing += 1

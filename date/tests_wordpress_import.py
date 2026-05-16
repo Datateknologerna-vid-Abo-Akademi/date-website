@@ -1,12 +1,12 @@
 from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from urllib.parse import urlparse
 from unittest.mock import patch
 
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 
-from archive.models import Collection, Document
 from exambank.models import ExamArchive, ExamFile
 from functionaries.models import Functionary, FunctionaryRole
 from gallery.models import Album
@@ -272,7 +272,11 @@ class WordPressImportCommandTests(TestCase):
         def fake_get(url, *args, **kwargs):
             response = type("FakeResponse", (), {})()
             response.raise_for_status = lambda: None
-            if url.startswith("https://photos.app.goo.gl") or url.startswith("https://drive.google.com"):
+            parsed_url = urlparse(url)
+            if parsed_url.scheme == "https" and parsed_url.netloc in {
+                "photos.app.goo.gl",
+                "drive.google.com",
+            }:
                 response.text = share_html
                 response.content = share_html.encode("utf-8")
             else:

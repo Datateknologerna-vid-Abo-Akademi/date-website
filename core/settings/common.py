@@ -537,3 +537,5 @@ CDN_URL_TRANSFORMATIONS = [
     ("fra1.digitaloceanspaces.com/albin-storage/", "albin-storage.cdn.datateknologerna.org/"),
     ("albin-storage.fra1.digitaloceanspaces.com/", "albin-storage.cdn.datateknologerna.org/"),
 ]
+
+__all__ = [name for name in globals() if not name.startswith('_')]
