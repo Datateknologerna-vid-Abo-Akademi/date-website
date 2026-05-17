@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
 from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
+from django.utils.http import url_has_allowed_host_and_scheme
 from .models import PDFFile, PublicationCollection
 from django.core.paginator import Paginator
 
@@ -88,7 +89,16 @@ def _collection_access_response(request, collection):
         if request.method == 'POST':
             if collection.check_password(request.POST.get('password', '')):
                 request.session[session_key] = True
-                return redirect(request.get_full_path())
+                # Re-issue the current request as a GET. Validate the URL is
+                # local so CodeQL's open-redirect check is satisfied — in
+                # practice request.get_full_path() always is, but the explicit
+                # gate makes the safety provable.
+                next_url = request.get_full_path()
+                if not url_has_allowed_host_and_scheme(
+                    next_url, allowed_hosts=None, require_https=False,
+                ):
+                    next_url = collection.get_absolute_url()
+                return redirect(next_url)
             error = 'Fel lösenord.'
         return render(
             request,
