@@ -104,9 +104,22 @@
     align-items: center;
     justify-content: center;
     min-height: 7rem;
+    aspect-ratio: 16 / 9;
     background: var(--pub-card-thumb-bg);
     color: var(--pub-accent);
     font-size: 3.5rem;
+    overflow: hidden;
+}
+
+.publication-collection-icon.has-image {
+    padding: 1.25rem;
+}
+
+.publication-collection-icon img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
 }
 
 .publication-thumb {

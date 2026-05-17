@@ -33,13 +33,17 @@
                         <a class="publication-card publication-collection-card"
                            href="{{ collection.get_absolute_url }}"
                            aria-label="{{ collection.title }}">
-                            <div class="publication-collection-icon" aria-hidden="true">
-                                {% if collection.visibility == 'password' %}
-                                    <i class="las la-lock"></i>
-                                {% elif collection.visibility == 'login' or collection.visibility == 'membership' %}
-                                    <i class="las la-user-lock"></i>
+                            <div class="publication-collection-icon{% if collection.cover_url %} has-image{% endif %}" aria-hidden="true">
+                                {% if collection.cover_url %}
+                                    <img src="{{ collection.cover_url }}" loading="lazy" alt="">
                                 {% else %}
-                                    <i class="las la-folder-open"></i>
+                                    {% if collection.visibility == 'password' %}
+                                        <i class="las la-lock"></i>
+                                    {% elif collection.visibility == 'login' or collection.visibility == 'membership' %}
+                                        <i class="las la-user-lock"></i>
+                                    {% else %}
+                                        <i class="las la-folder-open"></i>
+                                    {% endif %}
                                 {% endif %}
                             </div>
                             <div class="publication-info">

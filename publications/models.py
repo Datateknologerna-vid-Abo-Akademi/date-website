@@ -19,6 +19,10 @@ def cover_upload_to(instance, filename):
     return f'publication-covers/{instance.slug}/{filename}'
 
 
+def collection_cover_upload_to(instance, filename):
+    return f'publication-collections/{instance.slug}/{filename}'
+
+
 class PublicationCollection(models.Model):
     VISIBILITY_PUBLIC = 'public'
     VISIBILITY_LOGIN = 'login'
@@ -49,6 +53,12 @@ class PublicationCollection(models.Model):
         choices=VISIBILITY_CHOICES,
         default=VISIBILITY_PUBLIC,
         help_text=_('Controls whether the collection is listed and who may access its publications.'),
+    )
+    cover_image = PublicFileField(
+        _('Cover image'),
+        upload_to=collection_cover_upload_to,
+        blank=True,
+        help_text=_('Optional image shown for this collection on the publications index.'),
     )
     allowed_membership_types = models.ManyToManyField(
         'members.MembershipType',
@@ -98,6 +108,17 @@ class PublicationCollection(models.Model):
 
     def has_password(self):
         return bool(self.password_hash)
+
+    def get_cover_url(self):
+        if not self.cover_image:
+            return ''
+        return self.cover_image.url
+
+    def get_safe_cover_url(self):
+        try:
+            return self.get_cover_url()
+        except Exception:
+            return ''
 
 
 class PDFFile(models.Model):

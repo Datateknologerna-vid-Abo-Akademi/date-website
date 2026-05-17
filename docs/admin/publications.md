@@ -13,6 +13,7 @@ Publish downloadable PDFs or external publication links (meeting minutes, magazi
    - **Title** – shown at `/publications/` and at the top of the collection page.
    - **Slug** – leave blank to auto-generate. This becomes the collection URL, for example `/publications/ao/`.
    - **Description** – optional intro text shown on the collection page.
+   - **Cover image** – optional image shown for the collection on `/publications/`.
    - **Ordering** – lower numbers appear first on the collection index.
    - **Active** – uncheck to remove the collection from public access.
    - **Visibility** – controls who can see/open the collection:

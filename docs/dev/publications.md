@@ -1,7 +1,7 @@
 # Publications Development Notes
 
 ## Data Model (`publications/models.py`)
-- `PublicationCollection` groups publications under an admin-managed URL such as `/publications/publications/` or `/publications/ao/`. Collections own the primary visibility/access rule and can be public, login-only, membership-type-only, password-protected, or hidden.
+- `PublicationCollection` groups publications under an admin-managed URL such as `/publications/publications/` or `/publications/ao/`. Collections own the primary visibility/access rule and can be public, login-only, membership-type-only, password-protected, or hidden. `cover_image` is shown on the collection index when present.
 - `PDFFile` captures metadata, upload, redirect target, and secondary access flags. `slug` auto-fills from title if left blank and is guaranteed unique by `generate_unique_slug()`.
 - `file` uses `PublicFileField`, which supports S3/alternative storage. When `USE_S3` is false, `delete()` removes the local file manually.
 - `redirect_url` lets a publication point to an external reader instead of the internal PDF viewer. List cards still link to the internal detail URL so collection and PDF access checks run before the visitor is redirected.
@@ -26,7 +26,7 @@
 - Collection access intentionally raises 404 for hidden collections and membership mismatches so unauthorized users cannot discover the collection or linked external URL from a direct request. Login-required collections redirect anonymous visitors to `settings.LOGIN_URL`; password-protected collections show a password form.
 
 ## Templates
-- `publications/index.html` expects `collections` and renders the collection index.
+- `publications/index.html` expects `collections` and renders the collection index, using `collection.cover_url` when available and falling back to an icon otherwise.
 - `publications/list.html` expects `collection`, `page_obj`, and `page_range`. Cards link to `pdf.get_absolute_url`, even for external redirects. If `cover_image` is present it renders directly as the card thumbnail; otherwise PDF-backed cards render cover thumbnails client-side via PDF.js (see `static/common/publications/js/list.js`), so the template surfaces `pdf.get_file_url` to JS via a `data-pdf-url` attribute only when needed.
 - `publications/password.html` renders the collection password prompt and posts back to the requested collection/publication URL.
 - The list thumbnail renderer is intentionally lazy and capped at two concurrent PDF.js tasks. It avoids storing derivative images today, but larger libraries should prefer generated thumbnail files or browser/server-side cache headers so returning visitors do not re-fetch and re-render every cover.

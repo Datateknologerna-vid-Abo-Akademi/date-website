@@ -81,6 +81,7 @@ MEDIA_EXTENSIONS = {
 IGNORED_CATEGORY_SLUGS = {"nyheter", "uncategorized"}
 ISSUU_HOSTS = {"issuu.com", "www.issuu.com"}
 AO_PUBLICATION_SOURCE_SLUGS = {"ao"}
+AO_COLLECTION_COVER_URL = "http://sfklubben.fi/wp-content/uploads/2022/04/aologo.png"
 GALLERY_LINK_HOSTS = {
     "photos.app.goo.gl",
     "photos.google.com",
@@ -618,16 +619,21 @@ class Command(BaseCommand):
     ):
         collection = None
         if not options["dry_run"]:
+            cover_image = self.storage_name_for_upload_url(AO_COLLECTION_COVER_URL, storage_name_map)
             collection, _ = PublicationCollection.objects.get_or_create(
                 slug="ao",
                 defaults={
                     "title": "A&O",
                     "description": "Allwar och Oförskämt",
+                    "cover_image": cover_image,
                     "visibility": PublicationCollection.VISIBILITY_PUBLIC,
                     "ordering": 0,
                     "is_active": True,
                 },
             )
+            if cover_image and (options["update_existing"] or not collection.cover_image):
+                collection.cover_image = cover_image
+                collection.save(update_fields=["cover_image", "updated_at"])
         for link in self.ao_publication_links(items):
             slug = self.unique_slug(
                 link["title"],

@@ -56,7 +56,7 @@ class PublicationCollectionAdmin(ModelAdmin):
     readonly_fields = ('created_at', 'updated_at', 'has_password')
     fieldsets = (
         (None, {
-            'fields': ('title', 'slug', 'description', 'ordering', 'is_active'),
+            'fields': ('title', 'slug', 'description', 'cover_image', 'ordering', 'is_active'),
         }),
         ('Access Control', {
             'fields': ('visibility', 'allowed_membership_types', 'password', 'clear_password', 'has_password'),

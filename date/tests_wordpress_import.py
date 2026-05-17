@@ -127,6 +127,15 @@ Plain ending<script>bad()</script>]]></content:encoded>
       <wp:post_type><![CDATA[page]]></wp:post_type>
     </item>
     <item>
+      <title><![CDATA[aologo]]></title>
+      <wp:post_id>16</wp:post_id>
+      <wp:post_date>2022-04-13 23:45:52</wp:post_date>
+      <wp:post_name><![CDATA[aologo]]></wp:post_name>
+      <wp:status><![CDATA[inherit]]></wp:status>
+      <wp:post_type><![CDATA[attachment]]></wp:post_type>
+      <wp:attachment_url><![CDATA[http://sfklubben.fi/wp-content/uploads/2022/04/aologo.png]]></wp:attachment_url>
+    </item>
+    <item>
       <title><![CDATA[Imported PDF]]></title>
       <link>https://sfklubben.fi/imported-pdf/</link>
       <pubDate>Sat, 09 May 2026 10:00:00 +0000</pubDate>
@@ -206,10 +215,13 @@ class WordPressImportCommandTests(TestCase):
             media_dir = work_path / "downloads" / "sfklubben.fi"
             uploads = media_dir / "wp-content" / "uploads" / "2026" / "05"
             uploads.mkdir(parents=True)
+            logo_uploads = media_dir / "wp-content" / "uploads" / "2022" / "04"
+            logo_uploads.mkdir(parents=True)
             (uploads / "news-image.jpg").write_bytes(b"image")
             (uploads / "imported.pdf").write_bytes(b"%PDF-1.4")
             (uploads / "ao1.jpg").write_bytes(b"ao cover 1")
             (uploads / "ao2.jpg").write_bytes(b"ao cover 2")
+            (logo_uploads / "aologo.png").write_bytes(b"ao logo")
             xml_path.write_text(WORDPRESS_EXPORT, encoding="utf-8")
 
             self.call_import_command(
@@ -235,6 +247,7 @@ class WordPressImportCommandTests(TestCase):
 
             publication = PDFFile.objects.get(title="A&O 01/2026")
             self.assertEqual(publication.collection.slug, "ao")
+            self.assertEqual(publication.collection.cover_image.name, "wordpress/test/wp-content/uploads/2022/04/aologo.png")
             self.assertFalse(publication.file)
             self.assertEqual(publication.redirect_url, "https://issuu.com/sfklubben/docs/ao-1-2026")
             self.assertEqual(publication.cover_image.name, "wordpress/test/wp-content/uploads/2026/05/ao1.jpg")

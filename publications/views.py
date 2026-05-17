@@ -170,6 +170,8 @@ def pdf_list(request):
         if _collection_is_visible(collection, request.user)
         and _collection_has_visible_publications(collection, request.user)
     ]
+    for collection in collections:
+        collection.cover_url = collection.get_safe_cover_url()
     return render(request, 'publications/index.html', {'collections': collections})
 
 

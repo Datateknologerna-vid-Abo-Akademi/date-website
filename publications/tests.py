@@ -135,6 +135,20 @@ class PDFFileListTests(TestCase):
         self.assertNotContains(response, "Hidden")
         self.assertNotContains(response, "Members")
 
+    def test_index_renders_collection_cover_image(self):
+        collection = create_collection(title="A&O", slug="ao", cover_image="wordpress/sfklubben/wp-content/uploads/2022/04/aologo.png")
+        PDFFile.objects.create(
+            collection=collection,
+            title="A&O 01/2026",
+            slug="ao-012026",
+            redirect_url="https://issuu.com/sfklubben/docs/ao-1-2026",
+        )
+
+        response = self.client.get(reverse("publications:pdf_list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'src="/media/wordpress/sfklubben/wp-content/uploads/2022/04/aologo.png"')
+
     def test_index_hides_empty_collections(self):
         create_collection(title="Empty", slug="empty")
 
