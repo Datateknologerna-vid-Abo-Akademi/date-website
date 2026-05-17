@@ -30,7 +30,7 @@ from functionaries.models import Functionary, FunctionaryRole
 from gallery.models import Album
 from members.models import FRESHMAN, Member, MembershipType
 from news.models import Category, Post
-from publications.models import PDFFile
+from publications.models import PDFFile, PublicationCollection
 from staticpages.models import POST_SLUG_MAX_LENGTH as STATICPAGE_SLUG_MAX_LENGTH
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
 
@@ -616,6 +616,18 @@ class Command(BaseCommand):
         options,
         stats: ImportStats,
     ):
+        collection = None
+        if not options["dry_run"]:
+            collection, _ = PublicationCollection.objects.get_or_create(
+                slug="ao",
+                defaults={
+                    "title": "A&O",
+                    "description": "Allwar och Oförskämt",
+                    "visibility": PublicationCollection.VISIBILITY_PUBLIC,
+                    "ordering": 0,
+                    "is_active": True,
+                },
+            )
         for link in self.ao_publication_links(items):
             slug = self.unique_slug(
                 link["title"],
@@ -632,6 +644,7 @@ class Command(BaseCommand):
                 continue
 
             fields = {
+                "collection": collection,
                 "title": link["title"][:250],
                 "description": link["description"],
                 "publication_date": link["publication_date"],

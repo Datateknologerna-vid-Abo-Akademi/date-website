@@ -11,7 +11,7 @@ from exambank.models import ExamArchive, ExamFile
 from functionaries.models import Functionary, FunctionaryRole
 from gallery.models import Album
 from news.models import Post
-from publications.models import PDFFile
+from publications.models import PDFFile, PublicationCollection
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
 
 
@@ -234,11 +234,13 @@ class WordPressImportCommandTests(TestCase):
             self.assertTrue((Path(work_dir) / "media" / "wordpress/test/wp-content/uploads/2026/05/imported.pdf").exists())
 
             publication = PDFFile.objects.get(title="A&O 01/2026")
+            self.assertEqual(publication.collection.slug, "ao")
             self.assertFalse(publication.file)
             self.assertEqual(publication.redirect_url, "https://issuu.com/sfklubben/docs/ao-1-2026")
             self.assertEqual(publication.cover_image.name, "wordpress/test/wp-content/uploads/2026/05/ao1.jpg")
             self.assertEqual(publication.publication_date.isoformat(), "2026-01-01")
             self.assertTrue(PDFFile.objects.filter(title="A&O 02/2026").exists())
+            self.assertTrue(PublicationCollection.objects.filter(slug="ao", title="A&O").exists())
 
     def test_imports_navigation(self):
         with TemporaryDirectory() as work_dir, override_settings(MEDIA_ROOT=str(Path(work_dir) / "media")):

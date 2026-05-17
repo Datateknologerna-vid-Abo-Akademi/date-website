@@ -48,6 +48,13 @@
     font-size: 0.95rem;
 }
 
+.publications-description {
+    max-width: 46rem;
+    margin: 0 auto 0.75rem;
+    color: var(--pub-chrome-fg);
+    line-height: 1.5;
+}
+
 .publications-grid {
     list-style: none;
     margin: 0;
@@ -59,6 +66,10 @@
 
 .publication-card-wrapper {
     list-style: none;
+}
+
+.publications-collections-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 }
 
 .publication-card {
@@ -82,6 +93,20 @@
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
     border-color: var(--pub-accent);
     outline: none;
+}
+
+.publication-collection-card {
+    min-height: 13rem;
+}
+
+.publication-collection-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 7rem;
+    background: var(--pub-card-thumb-bg);
+    color: var(--pub-accent);
+    font-size: 3.5rem;
 }
 
 .publication-thumb {
@@ -239,6 +264,73 @@
     padding: 3rem 1rem;
     background: var(--pub-card-bg);
     border-radius: var(--defaultRadius);
+}
+
+.publication-password-panel {
+    max-width: 28rem;
+    margin: 0 auto;
+    padding: 2rem;
+    background: var(--pub-card-bg);
+    color: var(--pub-card-fg);
+    border-radius: var(--defaultRadius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+    text-align: center;
+}
+
+.publication-password-panel > i {
+    color: var(--pub-accent);
+    font-size: 3rem;
+}
+
+.publication-password-panel h1 {
+    margin: 0.5rem 0;
+    font-size: 1.5rem;
+    color: var(--pub-card-fg);
+}
+
+.publication-password-panel p {
+    color: var(--pub-card-fg-soft);
+}
+
+.publication-password-form {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    text-align: left;
+}
+
+.publication-password-form label {
+    color: var(--pub-card-fg);
+    font-weight: 600;
+}
+
+.publication-password-form input {
+    width: 100%;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--pub-card-thumb-bg);
+    border-radius: var(--defaultRadius);
+    color: var(--pub-card-fg);
+    background: var(--pub-card-bg);
+}
+
+.publication-password-form button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.75rem 1rem;
+    border: 0;
+    border-radius: var(--defaultRadius);
+    background: var(--pub-accent);
+    color: var(--pub-accent-contrast);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.publication-password-error {
+    margin: 0;
+    color: #b00020;
+    font-size: 0.9rem;
 }
 
 .publications-pagination {

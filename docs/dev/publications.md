@@ -1,25 +1,34 @@
 # Publications Development Notes
 
 ## Data Model (`publications/models.py`)
-- `PDFFile` captures metadata, upload, and access flags. `slug` auto-fills from title if left blank and is guaranteed unique by `generate_unique_slug()`.
+- `PublicationCollection` groups publications under an admin-managed URL such as `/publications/publications/` or `/publications/ao/`. Collections own the primary visibility/access rule and can be public, login-only, membership-type-only, password-protected, or hidden.
+- `PDFFile` captures metadata, upload, redirect target, and secondary access flags. `slug` auto-fills from title if left blank and is guaranteed unique by `generate_unique_slug()`.
 - `file` uses `PublicFileField`, which supports S3/alternative storage. When `USE_S3` is false, `delete()` removes the local file manually.
-- `redirect_url` lets a publication point to an external reader instead of the internal PDF viewer. Entries must have either `file` or `redirect_url`; redirect-only entries can use `cover_image` for the list thumbnail.
-- `is_public` and `requires_login` are independent flags; a PDF can be hidden entirely or visible-but-gated.
+- `redirect_url` lets a publication point to an external reader instead of the internal PDF viewer. List cards still link to the internal detail URL so collection and PDF access checks run before the visitor is redirected.
+- Entries must have either `file` or `redirect_url`; redirect-only entries can use `cover_image` for the list thumbnail.
+- `is_public` and `requires_login` remain per-publication secondary flags. A PDF can be hidden inside an otherwise visible collection or require login in addition to the collection rule.
+- Migration `0004` creates a default `Publications` collection with slug `publications` and assigns existing PDF rows to it.
 
 ## Admin (`publications/admin.py`)
-- Custom `PDFFileAdmin` prepopulates slugs for new objects, exposes access controls, and locks the `file` field when editing to avoid accidental replacements.
-- Fieldsets group metadata, access control, and timestamps for clarity.
+- `PublicationCollectionAdmin` lets admins create and reorder collections, set visibility, choose allowed membership types, and set/clear a password without storing plaintext.
+- Custom `PDFFileAdmin` prepopulates slugs for new objects, exposes the collection field and secondary access controls, and locks the `file` field when editing to avoid accidental replacements.
+- Fieldsets group metadata, collection access, per-publication access control, and timestamps for clarity.
 
 ## Views/URLs (`publications/views.py`)
 - The app is installed for DaTe, KK, Biologica/biocum, and Pulterit. Each of those variants exposes the public list at `/publications/`.
-- `pdf_list` paginates 12 items per page (sized to fit common 2/3/4/6-column grids) and filters by login status:
+- `pdf_list` now renders a collection index. Hidden collections, empty collections, and collections unavailable to the current user are not listed.
+- `collection_detail` renders `/publications/<collection-slug>/`, enforces collection access first, then paginates 12 items per page (sized to fit common 2/3/4/6-column grids) and filters by per-PDF login status:
   - Anonymous users: `is_public=True` and `requires_login=False`.
   - Authenticated users: any `is_public=True` file (even if `requires_login=True`).
 - The view also passes a `page_range` list built by `_compact_page_range()`; entries are page numbers or `None` (= ellipsis). The template uses this to render numbered page buttons with first/last/window pages and ellipsis gaps.
-- `pdf_view` enforces the same checks and redirects unauthenticated users to `settings.LOGIN_URL` if necessary. Non-public files always return HTTP 403. If `redirect_url` is set, the view sends the visitor to that external URL after access checks pass.
+- `pdf_view` serves `/publications/<collection-slug>/<publication-slug>/`. It enforces collection access first, then the per-publication checks, and only then redirects to `redirect_url` or renders the internal viewer.
+- Legacy one-segment publication URLs (`/publications/<publication-slug>/`) are handled by `collection_detail` as a compatibility path. If the slug is not a collection but matches a publication, the same access checks run before a permanent redirect to the canonical collection URL.
+- Collection access intentionally raises 404 for hidden collections and membership mismatches so unauthorized users cannot discover the collection or linked external URL from a direct request. Login-required collections redirect anonymous visitors to `settings.LOGIN_URL`; password-protected collections show a password form.
 
 ## Templates
-- `publications/list.html` expects `page_obj` and `page_range`. Cards link to `pdf.get_public_url`, which is either the external redirect URL or the internal viewer URL. If `cover_image` is present it renders directly as the card thumbnail; otherwise PDF-backed cards render cover thumbnails client-side via PDF.js (see `static/common/publications/js/list.js`), so the template surfaces `pdf.get_file_url` to JS via a `data-pdf-url` attribute only when needed.
+- `publications/index.html` expects `collections` and renders the collection index.
+- `publications/list.html` expects `collection`, `page_obj`, and `page_range`. Cards link to `pdf.get_absolute_url`, even for external redirects. If `cover_image` is present it renders directly as the card thumbnail; otherwise PDF-backed cards render cover thumbnails client-side via PDF.js (see `static/common/publications/js/list.js`), so the template surfaces `pdf.get_file_url` to JS via a `data-pdf-url` attribute only when needed.
+- `publications/password.html` renders the collection password prompt and posts back to the requested collection/publication URL.
 - The list thumbnail renderer is intentionally lazy and capped at two concurrent PDF.js tasks. It avoids storing derivative images today, but larger libraries should prefer generated thumbnail files or browser/server-side cache headers so returning visitors do not re-fetch and re-render every cover.
 - `publications/viewer.html` embeds the PDF via `pdf_url`. The viewer JS modules under `static/common/publications/js/` implement page transitions, swipe gestures, fullscreen, neighbor preloading and a reading-progress bar.
 - Page-change animation is mode-dependent: two-page (desktop) uses a 3D book-flip rotation (`runTwoPageFlip` / `.page-flipper`), single-page (mobile) uses a card-shuffle horizontal slide (`runSinglePageShuffle` / `.page-shuffle`). The rotation reads as "turning a stiff page" which clashes with the touch-swipe gesture on mobile, where a slide matches the user's input direction.
@@ -36,5 +45,5 @@
 
 ## Extending
 - For download tracking, introduce a `PDFDownload` model and increment in `pdf_view` before rendering.
-- To support categories/tags, relate `PDFFile` to a taxonomy model and extend filters inside `pdf_list`.
-- Consider caching `pdf_list` output if the library grows large; current implementation hits the database on every request.
+- To support tags within a collection, relate `PDFFile` to a taxonomy model and extend filters inside `collection_detail`.
+- Consider caching collection list output if the library grows large; current implementation hits the database on every request.
