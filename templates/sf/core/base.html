@@ -36,8 +36,8 @@
     <link rel="stylesheet" href="{% static 'core/css/footer.css' %}">
 </head>
 
-{% include 'core/header.html' %}
 <body>
+{% include 'core/header.html' %}
 {% if messages %}
     <div class="container pt-3" style="margin-top: 70px;">
         {% for message in messages %}

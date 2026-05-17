@@ -1220,7 +1220,7 @@ class Command(BaseCommand):
         if len(target_name) > max_length:
             fixed = len(f"Exams/{year}//{extension}")
             budget = max(8, max_length - fixed)
-            coll_slug = slugify_max(collection.title, max_length=max(4, budget // 3)) or "ex"
+            coll_slug = slugify_max(archive.title, max_length=max(4, budget // 3)) or "ex"
             title_slug = slugify_max(title, max_length=budget - len(coll_slug) - 1) or "f"
             target_name = f"Exams/{year}/{coll_slug}/{title_slug}{extension}"
             target_name = target_name[:max_length]
