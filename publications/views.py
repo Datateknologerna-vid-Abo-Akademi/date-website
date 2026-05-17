@@ -89,16 +89,17 @@ def _collection_access_response(request, collection):
         if request.method == 'POST':
             if collection.check_password(request.POST.get('password', '')):
                 request.session[session_key] = True
-                # Re-issue the current request as a GET. Validate the URL is
-                # local so CodeQL's open-redirect check is satisfied — in
-                # practice request.get_full_path() always is, but the explicit
-                # gate makes the safety provable.
+                # Re-issue the current request as a GET. request.get_full_path()
+                # is always a local Django-matched path, but gating it through
+                # the sanitiser keeps the open-redirect guarantee provable to
+                # CodeQL. Fall back to a literal route reverse so the failure
+                # branch carries no taint either.
                 next_url = request.get_full_path()
-                if not url_has_allowed_host_and_scheme(
+                if url_has_allowed_host_and_scheme(
                     next_url, allowed_hosts=None, require_https=False,
                 ):
-                    next_url = collection.get_absolute_url()
-                return redirect(next_url)
+                    return redirect(next_url)
+                return redirect('publications:pdf_list')
             error = 'Fel lösenord.'
         return render(
             request,
