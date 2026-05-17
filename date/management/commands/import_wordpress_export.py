@@ -11,7 +11,7 @@ from datetime import datetime
 from email.utils import parsedate_to_datetime
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.parse import unquote, urljoin, urlparse
 
 import requests
 from django.conf import settings
@@ -82,6 +82,8 @@ IGNORED_CATEGORY_SLUGS = {"nyheter", "uncategorized"}
 ISSUU_HOSTS = {"issuu.com", "www.issuu.com"}
 AO_PUBLICATION_SOURCE_SLUGS = {"ao"}
 AO_COLLECTION_COVER_URL = "http://sfklubben.fi/wp-content/uploads/2022/04/aologo.png"
+POLITICUS_PUBLICATION_SOURCE_SLUGS = {"politicus"}
+POLITICUS_COLLECTION_COVER_URL = "http://sfklubben.fi/wp-content/uploads/2022/04/politicuslogo.png"
 GALLERY_LINK_HOSTS = {
     "photos.app.goo.gl",
     "photos.google.com",
@@ -242,7 +244,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--skip-publications",
             action="store_true",
-            help="Do not create publication records from SF A&O Issuu links.",
+            help="Do not create publication records from SF A&O and Politicus pages.",
         )
         parser.add_argument(
             "--import-nav",
@@ -617,60 +619,104 @@ class Command(BaseCommand):
         options,
         stats: ImportStats,
     ):
-        collection = None
-        if not options["dry_run"]:
-            cover_image = self.storage_name_for_upload_url(AO_COLLECTION_COVER_URL, storage_name_map)
-            collection, _ = PublicationCollection.objects.get_or_create(
-                slug="ao",
-                defaults={
-                    "title": "A&O",
-                    "description": "Allwar och Oförskämt",
-                    "cover_image": cover_image,
-                    "visibility": PublicationCollection.VISIBILITY_PUBLIC,
-                    "ordering": 0,
-                    "is_active": True,
-                },
-            )
-            if cover_image and (options["update_existing"] or not collection.cover_image):
-                collection.cover_image = cover_image
-                collection.save(update_fields=["cover_image", "updated_at"])
+        ao_collection = self.import_publication_collection(
+            "ao",
+            "A&O",
+            "Allwar och Oförskämt",
+            AO_COLLECTION_COVER_URL,
+            storage_name_map,
+            options,
+        )
         for link in self.ao_publication_links(items):
-            slug = self.unique_slug(
-                link["title"],
-                PDFFile,
-                max_length=PDFFile._meta.get_field("slug").max_length,
-            )
-            existing = PDFFile.objects.filter(slug=slug).first()
-            if existing and not options["update_existing"]:
-                continue
+            self.import_publication_link(link, ao_collection, storage_name_map, options, stats)
 
-            if options["dry_run"]:
-                stats.publications_updated += int(existing is not None)
-                stats.publications_created += int(existing is None)
-                continue
+        politicus_collection = self.import_publication_collection(
+            "politicus",
+            "Politicus",
+            "",
+            POLITICUS_COLLECTION_COVER_URL,
+            storage_name_map,
+            options,
+        )
+        for link in self.politicus_publication_links(items):
+            self.import_publication_link(link, politicus_collection, storage_name_map, options, stats)
 
-            fields = {
-                "collection": collection,
-                "title": link["title"][:250],
-                "description": link["description"],
-                "publication_date": link["publication_date"],
-                "is_public": True,
-                "requires_login": False,
-                "file": "",
-                "redirect_url": link["url"],
-                "cover_image": self.storage_name_for_upload_url(
-                    link["cover_image_url"],
-                    storage_name_map,
-                ),
-            }
-            if existing:
-                for key, value in fields.items():
-                    setattr(existing, key, value)
-                existing.save()
-                stats.publications_updated += 1
-            else:
-                PDFFile.objects.create(slug=slug, **fields)
-                stats.publications_created += 1
+    def import_publication_collection(
+        self,
+        slug: str,
+        title: str,
+        description: str,
+        cover_url: str,
+        storage_name_map: dict[str, str],
+        options,
+    ):
+        if options["dry_run"]:
+            return None
+
+        cover_image = self.storage_name_for_upload_url(cover_url, storage_name_map)
+        collection, _ = PublicationCollection.objects.get_or_create(
+            slug=slug,
+            defaults={
+                "title": title,
+                "description": description,
+                "cover_image": cover_image,
+                "visibility": PublicationCollection.VISIBILITY_PUBLIC,
+                "ordering": 0,
+                "is_active": True,
+            },
+        )
+        if cover_image and (options["update_existing"] or not collection.cover_image):
+            collection.cover_image = cover_image
+            collection.save(update_fields=["cover_image", "updated_at"])
+        return collection
+
+    def import_publication_link(
+        self,
+        link: dict,
+        collection: PublicationCollection | None,
+        storage_name_map: dict[str, str],
+        options,
+        stats: ImportStats,
+    ):
+        if not link.get("url") and not link.get("file_url"):
+            return
+
+        slug = self.unique_slug(
+            link["title"],
+            PDFFile,
+            max_length=PDFFile._meta.get_field("slug").max_length,
+        )
+        existing = PDFFile.objects.filter(slug=slug).first()
+        if existing and not options["update_existing"]:
+            return
+
+        if options["dry_run"]:
+            stats.publications_updated += int(existing is not None)
+            stats.publications_created += int(existing is None)
+            return
+
+        fields = {
+            "collection": collection,
+            "title": link["title"][:250],
+            "description": link["description"],
+            "publication_date": link["publication_date"],
+            "is_public": True,
+            "requires_login": False,
+            "file": self.storage_name_for_upload_url(link.get("file_url", ""), storage_name_map),
+            "redirect_url": link.get("url", ""),
+            "cover_image": self.storage_name_for_upload_url(
+                link["cover_image_url"],
+                storage_name_map,
+            ),
+        }
+        if existing:
+            for key, value in fields.items():
+                setattr(existing, key, value)
+            existing.save()
+            stats.publications_updated += 1
+        else:
+            PDFFile.objects.create(slug=slug, **fields)
+            stats.publications_created += 1
 
     def ao_publication_links(self, items: list[WpItem]) -> list[dict]:
         links = []
@@ -693,6 +739,50 @@ class Command(BaseCommand):
                     "cover_image_url": publication["cover_image_url"],
                 })
         return links
+
+    def politicus_publication_links(self, items: list[WpItem]) -> list[dict]:
+        links = []
+        seen_targets = set()
+        items_by_slug = {item.slug: item for item in items if item.slug and item.post_type == "page"}
+        for item in items:
+            if item.post_type != "page" or item.slug not in POLITICUS_PUBLICATION_SOURCE_SLUGS:
+                continue
+            for publication in PoliticusPublicationPageParser.parse(item.content):
+                link_url = urljoin("https://sfklubben.fi/", publication["url"])
+                target_url = link_url
+                file_url = ""
+                if not self.is_issuu_url(link_url):
+                    target_item = items_by_slug.get(self.slug_from_url(link_url))
+                    file_url = self.first_pdf_link(target_item.content) if target_item else ""
+                    if not file_url:
+                        continue
+                    target_url = file_url
+                    link_url = ""
+                if target_url in seen_targets:
+                    continue
+                seen_targets.add(target_url)
+                links.append({
+                    "title": publication["title"],
+                    "url": link_url,
+                    "file_url": file_url,
+                    "description": self.plain_text(item.excerpt),
+                    "publication_date": publication["publication_date"] or item.post_date.date(),
+                    "cover_image_url": publication["cover_image_url"],
+                })
+        return links
+
+    def slug_from_url(self, url: str) -> str:
+        path = urlparse(url).path.strip("/")
+        return path.split("/")[-1] if path else ""
+
+    def first_pdf_link(self, html: str) -> str:
+        parser = AnchorExtractor()
+        parser.feed(html or "")
+        for anchor in parser.anchors:
+            href = anchor["href"].strip()
+            if urlparse(href).path.lower().endswith(".pdf"):
+                return urljoin("https://sfklubben.fi/", href)
+        return ""
 
     def is_issuu_url(self, url: str) -> bool:
         parsed = urlparse(url)
@@ -1586,6 +1676,68 @@ class AOPublicationPageParser(HTMLParser):
         issue_number = max(1, min(12, int(match.group(1))))
         year = int(match.group(2))
         return datetime(year, issue_number, 1).date()
+
+
+class PoliticusPublicationPageParser(HTMLParser):
+    YEAR_RE = re.compile(r"\b(20\d{2})\b")
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.links = []
+        self.in_heading = False
+        self.heading_text = ""
+        self.current_anchor = None
+        self.heading_anchors = []
+
+    @classmethod
+    def parse(cls, html: str) -> list[dict]:
+        parser = cls()
+        parser.feed(html or "")
+        parser.close()
+        return parser.links
+
+    def handle_starttag(self, tag, attrs):
+        tag = tag.lower()
+        attrs = dict(attrs)
+        if tag in {"h1", "h2", "h3", "h4", "h5", "h6"}:
+            self.in_heading = True
+            self.heading_text = ""
+            self.heading_anchors = []
+        elif tag == "a" and self.in_heading:
+            self.current_anchor = {"href": attrs.get("href", ""), "text": "", "image_src": ""}
+        elif tag == "img" and self.current_anchor is not None:
+            self.current_anchor["image_src"] = attrs.get("src", "")
+
+    def handle_data(self, data):
+        if self.in_heading:
+            self.heading_text += data
+        if self.current_anchor is not None:
+            self.current_anchor["text"] += data
+
+    def handle_endtag(self, tag):
+        tag = tag.lower()
+        if tag == "a" and self.current_anchor is not None:
+            self.heading_anchors.append(self.current_anchor)
+            self.current_anchor = None
+        elif tag in {"h1", "h2", "h3", "h4", "h5", "h6"} and self.in_heading:
+            self.flush_heading()
+
+    def flush_heading(self):
+        year_match = self.YEAR_RE.search(self.heading_text)
+        if year_match:
+            year = int(year_match.group(1))
+            for anchor in self.heading_anchors:
+                if not anchor.get("href"):
+                    continue
+                self.links.append({
+                    "title": f"Politicus {year}",
+                    "url": anchor["href"].strip(),
+                    "cover_image_url": anchor.get("image_src", "").strip(),
+                    "publication_date": datetime(year, 1, 1).date(),
+                })
+        self.in_heading = False
+        self.heading_text = ""
+        self.heading_anchors = []
 
 
 class FunctionaryPageParser(HTMLParser):

@@ -136,6 +136,50 @@ Plain ending<script>bad()</script>]]></content:encoded>
       <wp:attachment_url><![CDATA[http://sfklubben.fi/wp-content/uploads/2022/04/aologo.png]]></wp:attachment_url>
     </item>
     <item>
+      <title><![CDATA[Politicus]]></title>
+      <link>https://sfklubben.fi/politicus/</link>
+      <pubDate>Sat, 09 May 2026 10:00:00 +0000</pubDate>
+      <dc:creator><![CDATA[admin]]></dc:creator>
+      <content:encoded><![CDATA[
+        <table>
+          <tbody>
+            <tr>
+              <td><h2>2025<a href="https://issuu.com/sfklubben/docs/politicus-2025"><img src="/wp-content/uploads/2025/11/Politicus-2025.png" alt="" /></a></h2></td>
+              <td><h2>2019<a href="/politicus-4/"><img src="/wp-content/uploads/2019/11/Politicus2019-01.jpg" alt="" /></a></h2></td>
+            </tr>
+          </tbody>
+        </table>
+      ]]></content:encoded>
+      <excerpt:encoded><![CDATA[Politicus publications]]></excerpt:encoded>
+      <wp:post_id>17</wp:post_id>
+      <wp:post_date>2026-05-09 10:00:00</wp:post_date>
+      <wp:post_name><![CDATA[politicus]]></wp:post_name>
+      <wp:status><![CDATA[publish]]></wp:status>
+      <wp:post_type><![CDATA[page]]></wp:post_type>
+    </item>
+    <item>
+      <title><![CDATA[politicuslogo]]></title>
+      <wp:post_id>18</wp:post_id>
+      <wp:post_date>2022-04-13 23:48:02</wp:post_date>
+      <wp:post_name><![CDATA[politicuslogo]]></wp:post_name>
+      <wp:status><![CDATA[inherit]]></wp:status>
+      <wp:post_type><![CDATA[attachment]]></wp:post_type>
+      <wp:attachment_url><![CDATA[http://sfklubben.fi/wp-content/uploads/2022/04/politicuslogo.png]]></wp:attachment_url>
+    </item>
+    <item>
+      <title><![CDATA[Politicus 2019]]></title>
+      <link>https://sfklubben.fi/politicus-4/</link>
+      <content:encoded><![CDATA[
+        <a href="/wp-content/uploads/2019/11/Politicus2019.pdf">Läs som PDF</a>
+        <a href="https://sfklubben.fi/politicus/">Tillbaka</a>
+      ]]></content:encoded>
+      <wp:post_id>19</wp:post_id>
+      <wp:post_date>2019-11-01 10:00:00</wp:post_date>
+      <wp:post_name><![CDATA[politicus-4]]></wp:post_name>
+      <wp:status><![CDATA[publish]]></wp:status>
+      <wp:post_type><![CDATA[page]]></wp:post_type>
+    </item>
+    <item>
       <title><![CDATA[Imported PDF]]></title>
       <link>https://sfklubben.fi/imported-pdf/</link>
       <pubDate>Sat, 09 May 2026 10:00:00 +0000</pubDate>
@@ -222,6 +266,14 @@ class WordPressImportCommandTests(TestCase):
             (uploads / "ao1.jpg").write_bytes(b"ao cover 1")
             (uploads / "ao2.jpg").write_bytes(b"ao cover 2")
             (logo_uploads / "aologo.png").write_bytes(b"ao logo")
+            (logo_uploads / "politicuslogo.png").write_bytes(b"politicus logo")
+            politicus_2025_uploads = media_dir / "wp-content" / "uploads" / "2025" / "11"
+            politicus_2025_uploads.mkdir(parents=True)
+            (politicus_2025_uploads / "Politicus-2025.png").write_bytes(b"politicus cover 2025")
+            politicus_2019_uploads = media_dir / "wp-content" / "uploads" / "2019" / "11"
+            politicus_2019_uploads.mkdir(parents=True)
+            (politicus_2019_uploads / "Politicus2019-01.jpg").write_bytes(b"politicus cover 2019")
+            (politicus_2019_uploads / "Politicus2019.pdf").write_bytes(b"%PDF-1.4")
             xml_path.write_text(WORDPRESS_EXPORT, encoding="utf-8")
 
             self.call_import_command(
@@ -254,6 +306,20 @@ class WordPressImportCommandTests(TestCase):
             self.assertEqual(publication.publication_date.isoformat(), "2026-01-01")
             self.assertTrue(PDFFile.objects.filter(title="A&O 02/2026").exists())
             self.assertTrue(PublicationCollection.objects.filter(slug="ao", title="A&O").exists())
+
+            politicus = PDFFile.objects.get(title="Politicus 2025")
+            self.assertEqual(politicus.collection.slug, "politicus")
+            self.assertEqual(
+                politicus.collection.cover_image.name,
+                "wordpress/test/wp-content/uploads/2022/04/politicuslogo.png",
+            )
+            self.assertEqual(politicus.redirect_url, "https://issuu.com/sfklubben/docs/politicus-2025")
+            self.assertEqual(politicus.cover_image.name, "wordpress/test/wp-content/uploads/2025/11/politicus-2025.png")
+
+            politicus_2019 = PDFFile.objects.get(title="Politicus 2019")
+            self.assertFalse(politicus_2019.redirect_url)
+            self.assertEqual(politicus_2019.file.name, "wordpress/test/wp-content/uploads/2019/11/politicus2019.pdf")
+            self.assertEqual(politicus_2019.cover_image.name, "wordpress/test/wp-content/uploads/2019/11/politicus2019-01.jpg")
 
     def test_imports_navigation(self):
         with TemporaryDirectory() as work_dir, override_settings(MEDIA_ROOT=str(Path(work_dir) / "media")):
