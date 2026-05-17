@@ -1467,7 +1467,15 @@ class Command(BaseCommand):
     def local_source_path(self, media_dir: Path, url: str) -> Path:
         parsed = urlparse(url)
         parts = [part for part in unquote(parsed.path).split("/") if part]
-        return media_dir / Path(*parts)
+        candidate = (media_dir / Path(*parts)).resolve()
+        # Reject URL paths containing ".." segments that would escape
+        # media_dir before resolution copies arbitrary files into storage.
+        media_root = media_dir.resolve()
+        try:
+            candidate.relative_to(media_root)
+        except ValueError:
+            return media_dir / "__rejected__"
+        return candidate
 
     def storage_name_for_url(self, media_prefix: str, url: str) -> str:
         parsed = urlparse(url)

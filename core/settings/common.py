@@ -538,4 +538,7 @@ CDN_URL_TRANSFORMATIONS = [
     ("albin-storage.fra1.digitaloceanspaces.com/", "albin-storage.cdn.datateknologerna.org/"),
 ]
 
+# Re-export every public name so that `from .common import *` in a
+# variant settings module brings along imported helpers (os, BASE_DIR,
+# COMMON_TEMPLATE_DIRS, etc.) alongside the settings themselves.
 __all__ = [name for name in globals() if not name.startswith('_')]

@@ -298,6 +298,28 @@ class PDFFileDetailTests(TestCase):
             fetch_redirect_response=False,
         )
 
+    def test_password_rotation_invalidates_existing_session_access(self):
+        collection = create_collection(visibility=PublicationCollection.VISIBILITY_PASSWORD)
+        collection.set_password("secret")
+        collection.save()
+        pdf_file = PDFFile.objects.create(
+            collection=collection,
+            title="Rotating Magazine",
+            slug="rotating-magazine",
+            redirect_url="https://issuu.com/sfklubben/docs/rotating",
+        )
+
+        self.client.post(pdf_file.get_absolute_url(), {"password": "secret"})
+        response = self.client.get(pdf_file.get_absolute_url())
+        self.assertEqual(response.status_code, 302)
+
+        collection.set_password("new-secret")
+        collection.save()
+
+        response = self.client.get(pdf_file.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Lösenord")
+
 
 class PDFFileModelTests(TestCase):
     def test_requires_file_or_redirect_url(self):

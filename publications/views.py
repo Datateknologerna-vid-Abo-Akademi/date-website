@@ -1,8 +1,10 @@
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
+from django.db.models import Exists, OuterRef
 from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.translation import gettext as _
 from .models import PDFFile, PublicationCollection
 from django.core.paginator import Paginator
 
@@ -39,6 +41,13 @@ def _collection_session_key(collection):
     return f'publication_collection_access_{collection.pk}'
 
 
+def _collection_session_token(collection):
+    # Store a hash-derived token so admin password rotation invalidates
+    # existing grants. The token is opaque (a prefix of the bcrypt-style
+    # hash) and not useful for verifying the password.
+    return collection.password_hash[:32]
+
+
 def _collection_is_visible(collection, user):
     if not collection.is_active or collection.visibility == PublicationCollection.VISIBILITY_HIDDEN:
         return False
@@ -51,15 +60,12 @@ def _collection_is_visible(collection, user):
     if collection.visibility == PublicationCollection.VISIBILITY_LOGIN:
         return True
     if collection.visibility == PublicationCollection.VISIBILITY_MEMBERSHIP:
-        return collection.allowed_membership_types.filter(pk=user.membership_type_id).exists()
+        # Iterate the prefetched list rather than re-querying.
+        return any(
+            mt.pk == user.membership_type_id
+            for mt in collection.allowed_membership_types.all()
+        )
     return False
-
-
-def _collection_has_visible_publications(collection, user):
-    publications = collection.publications.filter(is_public=True)
-    if not user.is_authenticated:
-        publications = publications.filter(requires_login=False)
-    return publications.exists()
 
 
 def _collection_access_response(request, collection):
@@ -83,12 +89,13 @@ def _collection_access_response(request, collection):
 
     if collection.visibility == PublicationCollection.VISIBILITY_PASSWORD:
         session_key = _collection_session_key(collection)
-        if request.session.get(session_key):
+        expected_token = _collection_session_token(collection)
+        if expected_token and request.session.get(session_key) == expected_token:
             return None
         error = ''
         if request.method == 'POST':
             if collection.check_password(request.POST.get('password', '')):
-                request.session[session_key] = True
+                request.session[session_key] = _collection_session_token(collection)
                 # Re-issue the current request as a GET. request.get_full_path()
                 # is always a local Django-matched path, but gating it through
                 # the sanitiser keeps the open-redirect guarantee provable to
@@ -100,7 +107,7 @@ def _collection_access_response(request, collection):
                 ):
                     return redirect(next_url)
                 return redirect('publications:pdf_list')
-            error = 'Fel lösenord.'
+            error = _('Fel lösenord.')
         return render(
             request,
             'publications/password.html',
@@ -175,11 +182,18 @@ def legacy_pdf_view(request, slug):
 
 
 def pdf_list(request):
+    publications_filter = {'collection': OuterRef('pk'), 'is_public': True}
+    if not request.user.is_authenticated:
+        publications_filter['requires_login'] = False
     collections = [
         collection
-        for collection in PublicationCollection.objects.prefetch_related('allowed_membership_types')
+        for collection in (
+            PublicationCollection.objects
+            .annotate(_has_visible_publication=Exists(PDFFile.objects.filter(**publications_filter)))
+            .filter(_has_visible_publication=True)
+            .prefetch_related('allowed_membership_types')
+        )
         if _collection_is_visible(collection, request.user)
-        and _collection_has_visible_publications(collection, request.user)
     ]
     if len(collections) == 1:
         return redirect('publications:collection_detail', collection_slug=collections[0].slug)
