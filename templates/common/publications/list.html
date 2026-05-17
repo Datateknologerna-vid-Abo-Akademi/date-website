@@ -31,14 +31,18 @@
             <ul class="publications-grid" role="list">
                 {% for pdf in page_obj %}
                     <li class="publication-card-wrapper">
-                        <a class="publication-card"
+                        <a class="publication-card{% if pdf.cover_url %} has-cover{% endif %}"
                            href="{{ pdf.get_public_url }}"
                            {% if pdf.redirect_url %}target="_blank" rel="noopener noreferrer"{% endif %}
                            {% if pdf.thumbnail_url %}data-pdf-url="{{ pdf.thumbnail_url }}"{% endif %}
                            aria-label="{{ pdf.title }}">
                             <div class="publication-thumb" aria-hidden="true">
                                 <div class="publication-thumb-skeleton"></div>
-                                <canvas class="publication-thumb-canvas"></canvas>
+                                {% if pdf.cover_url %}
+                                    <img class="publication-thumb-image" src="{{ pdf.cover_url }}" loading="lazy" alt="">
+                                {% else %}
+                                    <canvas class="publication-thumb-canvas"></canvas>
+                                {% endif %}
                                 <div class="publication-thumb-fallback">
                                     <i class="las la-file-pdf"></i>
                                 </div>

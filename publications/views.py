@@ -67,7 +67,8 @@ def pdf_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     for pdf in page_obj:
-        pdf.thumbnail_url = pdf.get_safe_file_url()
+        pdf.cover_url = pdf.get_safe_cover_url()
+        pdf.thumbnail_url = '' if pdf.cover_url else pdf.get_safe_file_url()
     page_range = _compact_page_range(page_obj.number, paginator.num_pages)
 
     context = {

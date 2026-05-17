@@ -43,6 +43,7 @@ WXR_NS = {
 }
 
 URL_RE = re.compile(r"https?://[^\s<\]\"')]+")
+RELATIVE_UPLOAD_RE = re.compile(r"/wp-content/uploads/[^\s<\]\"')]+")
 UNWANTED_BLOCK_RE = re.compile(
     r"<(script|style|iframe|object|embed)\b[^>]*>.*?</\1>",
     re.IGNORECASE | re.DOTALL,
@@ -366,7 +367,7 @@ class Command(BaseCommand):
                     stats.skipped_items[item.post_type] += 1
 
             if not options["skip_publications"]:
-                self.import_publications(items, options, stats)
+                self.import_publications(items, storage_name_map, options, stats)
             if options["import_nav"]:
                 self.import_navigation(items, url_map, options, stats)
             if options["import_gallery_redirects"]:
@@ -475,6 +476,10 @@ class Command(BaseCommand):
                 and Path(unquote(parsed.path)).suffix.lower() in MEDIA_EXTENSIONS
             ):
                 urls.add(clean_url)
+        for url in RELATIVE_UPLOAD_RE.findall(xml_text):
+            clean_url = url.rstrip(".,;")
+            if Path(unquote(urlparse(clean_url).path)).suffix.lower() in MEDIA_EXTENSIONS:
+                urls.add(f"http://sfklubben.fi{clean_url}")
         return sorted(urls)
 
     def import_media(
@@ -604,7 +609,13 @@ class Command(BaseCommand):
             StaticPage.objects.create(slug=slug, **fields)
             stats.pages_created += 1
 
-    def import_publications(self, items: list[WpItem], options, stats: ImportStats):
+    def import_publications(
+        self,
+        items: list[WpItem],
+        storage_name_map: dict[str, str],
+        options,
+        stats: ImportStats,
+    ):
         for link in self.ao_publication_links(items):
             slug = self.unique_slug(
                 link["title"],
@@ -628,6 +639,10 @@ class Command(BaseCommand):
                 "requires_login": False,
                 "file": "",
                 "redirect_url": link["url"],
+                "cover_image": self.storage_name_for_upload_url(
+                    link["cover_image_url"],
+                    storage_name_map,
+                ),
             }
             if existing:
                 for key, value in fields.items():
@@ -656,12 +671,30 @@ class Command(BaseCommand):
                     "url": url,
                     "description": self.plain_text(item.excerpt),
                     "publication_date": publication["publication_date"] or item.post_date.date(),
+                    "cover_image_url": publication["cover_image_url"],
                 })
         return links
 
     def is_issuu_url(self, url: str) -> bool:
         parsed = urlparse(url)
         return parsed.scheme in {"http", "https"} and parsed.netloc.lower() in ISSUU_HOSTS
+
+    def storage_name_for_upload_url(self, url: str, storage_name_map: dict[str, str]) -> str:
+        if not url:
+            return ""
+        candidates = [url]
+        if url.startswith("/wp-content/uploads/"):
+            candidates.append(f"http://sfklubben.fi{url}")
+            candidates.append(f"https://sfklubben.fi{url}")
+        elif url.startswith("http://"):
+            candidates.append("https://" + url[len("http://"):])
+        elif url.startswith("https://"):
+            candidates.append("http://" + url[len("https://"):])
+        for candidate in candidates:
+            storage_name = storage_name_map.get(candidate)
+            if storage_name:
+                return storage_name
+        return ""
 
     def import_navigation(
         self,
@@ -1463,7 +1496,9 @@ class AOPublicationPageParser(HTMLParser):
             self.cell_text = ""
             self.cell_anchors = []
         elif tag == "a" and self.in_cell:
-            self.current_anchor = {"href": attrs.get("href", ""), "text": ""}
+            self.current_anchor = {"href": attrs.get("href", ""), "text": "", "image_src": ""}
+        elif tag == "img" and self.current_anchor is not None:
+            self.current_anchor["image_src"] = attrs.get("src", "")
 
     def handle_data(self, data):
         if self.in_heading:
@@ -1501,6 +1536,7 @@ class AOPublicationPageParser(HTMLParser):
                 self.links.append({
                     "title": f"A&O {issue_label}",
                     "url": anchor["href"].strip(),
+                    "cover_image_url": anchor.get("image_src", "").strip(),
                     "publication_date": self.publication_date(issue_label),
                 })
                 self.table_link_index += 1

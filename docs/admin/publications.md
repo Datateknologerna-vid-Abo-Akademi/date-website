@@ -16,6 +16,7 @@ Publish downloadable PDFs (meeting minutes, magazines, etc.) with optional login
    - **Description** – short summary shown on the publication card.
    - **File** – upload the PDF (stored under `media/pdfs/<slug>/`) when the publication should use the internal reader.
    - **Redirect URL** – optional external reader link, such as an Issuu URL. When set, visitors are sent there instead of the internal reader. Use this instead of **File** for external-only publications.
+   - **Cover image** – optional thumbnail shown in the publication list, useful for external-only publications.
    - **Public Access** – keep checked unless the file should be completely hidden.
    - **Requires Login** – forces a member login before the reader opens, while still letting you link to the page publicly.
 3. Save. Upload time stamps are recorded automatically.

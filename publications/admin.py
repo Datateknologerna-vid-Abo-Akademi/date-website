@@ -18,7 +18,7 @@ class PDFFileAdmin(PublicUrlAdminMixin, ModelAdmin):
     readonly_fields = ('uploaded_at', 'updated_at')
     fieldsets = (
         (None, {
-            'fields': ('title', 'slug', 'publication_date', 'description', 'file', 'redirect_url')
+            'fields': ('title', 'slug', 'publication_date', 'description', 'file', 'redirect_url', 'cover_image')
         }),
         ('Access Control', {
             'fields': ('is_public', 'requires_login'),

@@ -93,7 +93,8 @@
     isolation: isolate;
 }
 
-.publication-thumb-canvas {
+.publication-thumb-canvas,
+.publication-thumb-image {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -104,6 +105,7 @@
     transition: opacity 0.4s ease;
 }
 
+.publication-thumb-image,
 .publication-card.thumb-loaded .publication-thumb-canvas {
     opacity: 1;
 }
@@ -122,6 +124,7 @@
     transition: opacity 0.3s ease;
 }
 
+.publication-card.has-cover .publication-thumb-skeleton,
 .publication-card.thumb-loaded .publication-thumb-skeleton,
 .publication-card.thumb-failed .publication-thumb-skeleton {
     opacity: 0;

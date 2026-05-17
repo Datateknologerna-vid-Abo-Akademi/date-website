@@ -13,6 +13,10 @@ from publications.fields import PublicFileField
 def upload_to(instance, filename):
     return f'pdfs/{instance.slug}/{filename}'
 
+
+def cover_upload_to(instance, filename):
+    return f'publication-covers/{instance.slug}/{filename}'
+
 class PDFFile(models.Model):
     title = models.CharField(_('Title'), max_length=250)
     slug = models.SlugField(_('Slug'), max_length=255, unique=True, blank=True,
@@ -23,6 +27,12 @@ class PDFFile(models.Model):
         max_length=500,
         blank=True,
         help_text=_('If set, visitors are sent to this URL instead of the internal PDF viewer.'),
+    )
+    cover_image = PublicFileField(
+        _('Cover image'),
+        upload_to=cover_upload_to,
+        blank=True,
+        help_text=_('Optional thumbnail image shown on the publications list.'),
     )
     description = models.TextField(_('Description'), blank=True)
     uploaded_at = models.DateTimeField(_('Uploaded at'), auto_now_add=True)
@@ -82,6 +92,17 @@ class PDFFile(models.Model):
     def get_safe_file_url(self):
         try:
             return self.get_file_url()
+        except Exception:
+            return ''
+
+    def get_cover_url(self):
+        if not self.cover_image:
+            return ''
+        return self.cover_image.url
+
+    def get_safe_cover_url(self):
+        try:
+            return self.get_cover_url()
         except Exception:
             return ''
 

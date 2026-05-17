@@ -208,6 +208,8 @@ class WordPressImportCommandTests(TestCase):
             uploads.mkdir(parents=True)
             (uploads / "news-image.jpg").write_bytes(b"image")
             (uploads / "imported.pdf").write_bytes(b"%PDF-1.4")
+            (uploads / "ao1.jpg").write_bytes(b"ao cover 1")
+            (uploads / "ao2.jpg").write_bytes(b"ao cover 2")
             xml_path.write_text(WORDPRESS_EXPORT, encoding="utf-8")
 
             self.call_import_command(
@@ -234,6 +236,7 @@ class WordPressImportCommandTests(TestCase):
             publication = PDFFile.objects.get(title="A&O 01/2026")
             self.assertFalse(publication.file)
             self.assertEqual(publication.redirect_url, "https://issuu.com/sfklubben/docs/ao-1-2026")
+            self.assertEqual(publication.cover_image.name, "wordpress/test/wp-content/uploads/2026/05/ao1.jpg")
             self.assertEqual(publication.publication_date.isoformat(), "2026-01-01")
             self.assertTrue(PDFFile.objects.filter(title="A&O 02/2026").exists())
 
