@@ -102,6 +102,7 @@ SIDEBAR_NAVIGATION = (
         AdminLink(_('Page Navigation'), icon='menu_book', url_name='admin:staticpages_staticpagenav_changelist', permission='staticpages.view_staticpagenav'),
     )),
     AdminSidebarGroup(_('Archive & Publications'), (
+        AdminLink(_('Publication Collections'), icon='collections_bookmark', url_name='admin:publications_publicationcollection_changelist', permission='publications.view_publicationcollection'),
         AdminLink(_('PDF Publications'), icon='picture_as_pdf', url_name='admin:publications_pdffile_changelist', permission='publications.view_pdffile'),
         AdminLink(
             _('Photo Albums'),

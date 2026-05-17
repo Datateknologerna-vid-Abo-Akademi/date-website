@@ -49,7 +49,7 @@ def picture_index(request, year):
     )
     albums = list(albums)
     for album in albums:
-        album.first_picture_url = (
+        album.album_thumbnail_url = album.thumbnail.url if album.thumbnail else (
             image_field.storage.url(album.first_picture_image)
             if album.first_picture_image
             else ''

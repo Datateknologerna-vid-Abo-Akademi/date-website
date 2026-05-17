@@ -191,6 +191,7 @@ COMMON_CONTEXT_PROCESSORS = [
 
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'date.middleware.ServerTimingMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'date.middleware.LanguageStateMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -204,6 +205,8 @@ MIDDLEWARE = [
     'date.middleware.HTCPCPMiddleware',
     'date.middleware.CDNRewriteMiddleware'
 ]
+
+SERVER_TIMING_ENABLED = DEVELOP
 
 
 WSGI_APPLICATION = 'core.wsgi.application'
@@ -534,3 +537,8 @@ CDN_URL_TRANSFORMATIONS = [
     ("fra1.digitaloceanspaces.com/albin-storage/", "albin-storage.cdn.datateknologerna.org/"),
     ("albin-storage.fra1.digitaloceanspaces.com/", "albin-storage.cdn.datateknologerna.org/"),
 ]
+
+# Re-export every public name so that `from .common import *` in a
+# variant settings module brings along imported helpers (os, BASE_DIR,
+# COMMON_TEMPLATE_DIRS, etc.) alongside the settings themselves.
+__all__ = [name for name in globals() if not name.startswith('_')]

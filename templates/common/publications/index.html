@@ -1,0 +1,63 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - {% trans "Publications" %}{% endblock %}
+
+{% block extra_head %}
+    {{ block.super }}
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css">
+    <link rel="stylesheet" href="{% static 'publications/css/list.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="container-margin-top publications-page">
+        <header class="publications-header">
+            <h1>{% trans "Publikationer" %}</h1>
+            {% if collections %}
+                <p class="publications-subtitle">
+                    {% blocktranslate count counter=collections|length trimmed %}
+                        {{ counter }} samling
+                    {% plural %}
+                        {{ counter }} samlingar
+                    {% endblocktranslate %}
+                </p>
+            {% endif %}
+        </header>
+
+        {% if collections %}
+            <ul class="publications-grid publications-collections-grid" role="list">
+                {% for collection in collections %}
+                    <li class="publication-card-wrapper">
+                        <a class="publication-card publication-collection-card"
+                           href="{{ collection.get_absolute_url }}"
+                           aria-label="{{ collection.title }}">
+                            <div class="publication-collection-icon{% if collection.cover_url %} has-image{% endif %}" aria-hidden="true">
+                                {% if collection.cover_url %}
+                                    <img src="{{ collection.cover_url }}" loading="lazy" alt="">
+                                {% else %}
+                                    {% if collection.visibility == 'password' %}
+                                        <i class="las la-lock"></i>
+                                    {% elif collection.visibility == 'login' or collection.visibility == 'membership' %}
+                                        <i class="las la-user-lock"></i>
+                                    {% else %}
+                                        <i class="las la-folder-open"></i>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="publication-info">
+                                <h2 class="publication-title">{{ collection.title }}</h2>
+                                {% if collection.description %}
+                                    <p class="publication-description">{{ collection.description|truncatewords:22 }}</p>
+                                {% endif %}
+                            </div>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="publications-empty">{% trans "Det finns inga publikationer." %}</p>
+        {% endif %}
+    </div>
+{% endblock %}

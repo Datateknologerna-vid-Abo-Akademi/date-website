@@ -30,6 +30,7 @@ class AdminSearchSmokeTests(TestCase):
             "admin:news_category_changelist",
             "admin:news_post_changelist",
             "admin:polls_question_changelist",
+            "admin:publications_publicationcollection_changelist",
             "admin:publications_pdffile_changelist",
             "admin:staticpages_staticpage_changelist",
             "admin:staticpages_staticpagenav_changelist",

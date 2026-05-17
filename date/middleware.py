@@ -1,6 +1,9 @@
 import re
+import time
+from contextlib import ExitStack
 
 from django.conf import settings
+from django.db import connections
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import translation
@@ -48,6 +51,39 @@ class HTCPCPMiddleware:
         if request.path in coffe_words and request.method in htcpcp_methods:
             return render(request, template_name="core/418.html", status=418)
         return self.get_response(request)
+
+
+class ServerTimingMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if not getattr(settings, "SERVER_TIMING_ENABLED", False):
+            return self.get_response(request)
+
+        db_timing = {"count": 0, "duration": 0.0}
+        start = time.perf_counter()
+
+        def wrapper(execute, sql, params, many, context):
+            query_start = time.perf_counter()
+            try:
+                return execute(sql, params, many, context)
+            finally:
+                db_timing["count"] += 1
+                db_timing["duration"] += (time.perf_counter() - query_start) * 1000
+
+        with ExitStack() as stack:
+            for connection in connections.all():
+                stack.enter_context(connection.execute_wrapper(wrapper))
+            response = self.get_response(request)
+
+        total_duration = (time.perf_counter() - start) * 1000
+        query_label = "query" if db_timing["count"] == 1 else "queries"
+        response["Server-Timing"] = (
+            f"app;dur={total_duration:.1f}, "
+            f"db;dur={db_timing['duration']:.1f};desc=\"{db_timing['count']} {query_label}\""
+        )
+        return response
 
 
 class CDNRewriteMiddleware:

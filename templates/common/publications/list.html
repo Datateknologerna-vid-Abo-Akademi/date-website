@@ -15,7 +15,10 @@
 {% block content %}
     <div class="container-margin-top publications-page">
         <header class="publications-header">
-            <h1>{% trans "Publikationer" %}</h1>
+            <h1>{% if collection %}{{ collection.title }}{% else %}{% trans "Publikationer" %}{% endif %}</h1>
+            {% if collection.description %}
+                <p class="publications-description">{{ collection.description }}</p>
+            {% endif %}
             {% if page_obj.paginator.count %}
                 <p class="publications-subtitle">
                     {% blocktranslate count counter=page_obj.paginator.count trimmed %}
@@ -31,13 +34,18 @@
             <ul class="publications-grid" role="list">
                 {% for pdf in page_obj %}
                     <li class="publication-card-wrapper">
-                        <a class="publication-card"
-                           href="{% url 'publications:pdf_view' pdf.slug %}"
+                        <a class="publication-card{% if pdf.cover_url %} has-cover{% endif %}"
+                           href="{{ pdf.get_absolute_url }}"
+                           {% if pdf.redirect_url %}target="_blank" rel="noopener noreferrer"{% endif %}
                            {% if pdf.thumbnail_url %}data-pdf-url="{{ pdf.thumbnail_url }}"{% endif %}
                            aria-label="{{ pdf.title }}">
                             <div class="publication-thumb" aria-hidden="true">
                                 <div class="publication-thumb-skeleton"></div>
-                                <canvas class="publication-thumb-canvas"></canvas>
+                                {% if pdf.cover_url %}
+                                    <img class="publication-thumb-image" src="{{ pdf.cover_url }}" loading="lazy" alt="">
+                                {% else %}
+                                    <canvas class="publication-thumb-canvas"></canvas>
+                                {% endif %}
                                 <div class="publication-thumb-fallback">
                                     <i class="las la-file-pdf"></i>
                                 </div>

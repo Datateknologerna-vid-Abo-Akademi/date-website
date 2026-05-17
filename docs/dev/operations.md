@@ -72,6 +72,7 @@ Each association gets its own web container on a dedicated port, sharing one Pos
 | date        | http://localhost:8002 |
 | kk          | http://localhost:8003 |
 | pulterit    | http://localhost:8004 |
+| sf          | http://localhost:8005 |
 
 The database is exposed on host port `5433` to avoid conflicting with the regular dev stack on `5432`.
 
@@ -164,6 +165,7 @@ This is useful after `makemessages`, after large translation edits, and before r
 
 These scripts are more task-specific and should usually be run only by someone familiar with the target app and data shape:
 
+- `python manage.py import_wordpress_export <xml_path>`
 - `scripts/import_alumni.py`
 - `scripts/export_subscription_status.py`
 - `scripts/export_ctf_guesses.py`
@@ -181,6 +183,27 @@ Before using one of these on shared or production-like data:
 - verify the target environment file
 - confirm whether the script is idempotent
 - make a backup if the script mutates stored data
+
+### `import_wordpress_export`
+
+Use this management command as a one-off migration helper for moving the SF association site from WordPress into the existing Django content apps. It is not intended to be a reusable generic WordPress importer; several defaults and parsing rules assume the SF export shape and `sfklubben.fi` upload paths.
+
+It maps SF WordPress posts to `news.Post`, WordPress pages to `staticpages.StaticPage`, and the A&O/Politicus publication pages to `publications.PDFFile` rows grouped into their own publication collections. Other uploaded PDFs are copied as media and stay linked from imported pages, navigation, or app-specific importers such as `exambank`; they are not imported as publications. Local development writes to `MEDIA_ROOT`; when `USE_S3=True`, imported media uses the configured public media storage so links in imported CKEditor content remain public.
+
+Typical SF import:
+
+```bash
+PROJECT_NAME=sf python manage.py import_wordpress_export sf-klubben.WordPress.2026-05-09.xml \
+  --media-dir sfklubben-export-local/assets/sfklubben.fi \
+  --author wp-import \
+  --import-nav \
+  --replace-nav \
+  --import-gallery-redirects \
+  --replace-gallery-redirects \
+  --import-functionaries
+```
+
+Run `--dry-run` first to inspect planned counts. The command matches rows by slug; existing rows are skipped unless `--update-existing` is passed. Publications import reads Issuu links from the exported A&O page (`/ao/`) and stores them as external redirects with the table cover image as `cover_image` when that uploaded image is available. It also reads the exported Politicus page (`/politicus/`), stores Issuu years as external redirects, and stores older linked PDF years as local PDF-backed publications when the target PDF is available in imported media. A&O and Politicus each get their own publication collection and collection logo from the WordPress media library; pass `--skip-publications` to skip those rows. Navigation import reads the WordPress `actual` menu by default; use `--nav-menu <slug>` to import another exported menu. Gallery redirect import reads Google Photos/Drive links from the exported `bildgalleriet` and `gamla-bilder` pages and creates redirect-only `gallery.Album` rows. By default the importer also fetches each share URL's `og:image` preview and stores it as the album thumbnail; pass `--skip-gallery-thumbnails` to suppress those network calls (e.g. for offline imports). Albums that already have a thumbnail are left untouched, and fetch failures are logged and counted in the report rather than aborting the import. Pass `--import-exam-archive` to read the WordPress `tentarkiv` rtbs_tabs payload (a PHP-serialized list of subject tabs) and create one `exambank.ExamArchive` per tab, with one `exambank.ExamFile` per linked PDF (resolved to its already-imported storage path). Combine with `--replace-exam-archive` to clear existing exam archives first. Pass `--import-functionaries` to parse the WordPress `funktionarer` page into board `functionaries.FunctionaryRole` rows and name-only `functionaries.Functionary` rows; it preserves any existing matching member-linked functionary entries. Combine with `--replace-functionaries` only when you intentionally want to clear all existing functionaries first. It writes a JSON report next to the XML by default.
 
 ## Recommended Operator Checklist
 
