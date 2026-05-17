@@ -106,6 +106,9 @@ class PDFFileListTests(TestCase):
 
     def test_index_lists_visible_collections_only(self):
         open_collection = create_collection(title="Open", slug="open")
+        # Second visible collection so the index renders instead of
+        # auto-redirecting to the lone visible collection.
+        second_open = create_collection(title="Open Two", slug="open-two")
         hidden_collection = create_collection(
             title="Hidden",
             slug="hidden",
@@ -118,6 +121,7 @@ class PDFFileListTests(TestCase):
         )
         for collection, slug in (
             (open_collection, "open-publication"),
+            (second_open, "open-two-publication"),
             (hidden_collection, "hidden-publication"),
             (members_collection, "members-publication"),
         ):
@@ -143,11 +147,32 @@ class PDFFileListTests(TestCase):
             slug="ao-012026",
             redirect_url="https://issuu.com/sfklubben/docs/ao-1-2026",
         )
+        # Second collection so the index renders instead of redirecting.
+        other = create_collection(title="Other", slug="other")
+        PDFFile.objects.create(
+            collection=other,
+            title="Other 1",
+            slug="other-1",
+            redirect_url="https://issuu.com/sfklubben/docs/other",
+        )
 
         response = self.client.get(reverse("publications:pdf_list"))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'src="/media/wordpress/sfklubben/wp-content/uploads/2022/04/aologo.png"')
+
+    def test_index_redirects_when_only_one_collection_visible(self):
+        only = create_collection(title="Only", slug="only")
+        PDFFile.objects.create(
+            collection=only,
+            title="Only 1",
+            slug="only-1",
+            redirect_url="https://issuu.com/sfklubben/docs/only",
+        )
+
+        response = self.client.get(reverse("publications:pdf_list"))
+
+        self.assertRedirects(response, only.get_absolute_url())
 
     def test_index_hides_empty_collections(self):
         create_collection(title="Empty", slug="empty")
