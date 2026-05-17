@@ -330,7 +330,7 @@
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    gap: 1.25rem;
+    gap: 2px;
     z-index: 1;
 }
 
@@ -355,6 +355,28 @@
     flex-shrink: 0;
 }
 
+/* Two-page spread: pages are flush at the spine, so each page's inward
+   shadow would overlap the other and paint a dark seam. Clip the shadow at
+   the spine, keeping the outer three sides shadowed. Cover/back-cover (a
+   single .page-canvas next to an empty slot) match neither selector and
+   keep their full shadow. */
+.page-spread .page-canvas:has(+ .page-canvas) {
+    clip-path: polygon(-60px -60px, 100% -60px, 100% calc(100% + 60px), -60px calc(100% + 60px));
+}
+
+.page-spread .page-canvas + .page-canvas {
+    clip-path: polygon(0 -60px, calc(100% + 60px) -60px, calc(100% + 60px) calc(100% + 60px), 0 calc(100% + 60px));
+}
+
+/* The flipping page rotates around the spine. At rotateY(0) it sits flush
+   against the stationary half, so its own box-shadow would bleed across the
+   spine and reproduce the seam for the first frames of the flip. Drop the
+   shadow on the rotating clone — the hybrid spread underneath still casts
+   the spread's shadow correctly. */
+.page-flipper .page-canvas {
+    box-shadow: none;
+}
+
 #pdf-viewer.single-page-view .page-spread {
     justify-content: center;
 }
@@ -375,7 +397,7 @@
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    gap: 1.25rem;
+    gap: 2px;
     z-index: 2;
     pointer-events: none;
     transform-style: preserve-3d;
@@ -400,12 +422,11 @@
     grid-area: stack;
 }
 
-/* NEXT: rotate around the spine (left edge of the flipper, which for
-   two-page mode is the centre of the spread). The negative origin nudges
-   the pivot into the centre of the gap so the rotation visually centres
-   on the book's spine rather than the page edge. */
+/* NEXT: rotate around the spine. The negative origin nudges the pivot
+   into the centre of the 2px gap so the rotation visually centres on the
+   book's spine rather than the page edge. */
 .page-flipper-next {
-    transform-origin: -0.625rem center;
+    transform-origin: -1px center;
     transform: rotateY(0deg);
 }
 
@@ -419,7 +440,7 @@
 }
 
 .page-flipper-prev {
-    transform-origin: calc(100% + 0.625rem) center;
+    transform-origin: calc(100% + 1px) center;
     transform: rotateY(0deg);
 }
 
@@ -569,7 +590,7 @@
     }
 
     .page-spread {
-        gap: 0.5rem;
+        gap: 2px;
     }
 }
 

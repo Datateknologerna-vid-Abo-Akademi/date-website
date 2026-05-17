@@ -327,8 +327,8 @@ async function renderPage(state, pageNumber) {
 function computeFitScale(state, page) {
     const viewer = state.viewerElement;
     if (!viewer) return 1;
-    // page-spread gap (1.25rem ≈ 20px) only consumes width in two-page mode.
-    const gap = state.pagesPerView === 2 ? 20 : 0;
+    // .page-spread leaves a hairline 2px gap between pages in two-page mode.
+    const gap = state.pagesPerView === 2 ? 2 : 0;
     const cols = state.pagesPerView === 2 ? 2 : 1;
     const naturalWidth = page.getViewport({ scale: 1 }).width;
     const available = Math.max(0, viewer.clientWidth - gap);
