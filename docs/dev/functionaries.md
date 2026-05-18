@@ -16,6 +16,10 @@ The public routes remain under the members URL namespace for compatibility:
 - `FunctionaryForm` enforces uniqueness per `(member, role, year)` for member-managed entries.
 - `functionaries.selectors` groups and filters functionaries by year, role, and board/non-board status for the public listing.
 
+## Admin
+- `FunctionaryRoleAdmin` includes an inline `Functionary` table so role metadata and yearly assignments can be edited together.
+- `FunctionaryAdmin` links each assignment back to its role and supports searching by linked member or standalone display name.
+
 ## Migration Notes
 - Data was split out from `members.FunctionaryRole` and `members.Functionary`.
 - The split migration preserves primary keys and translated role titles, then drops the legacy members functionary tables after copying.

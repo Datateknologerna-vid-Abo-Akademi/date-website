@@ -4,6 +4,9 @@ from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import reverse, re_path
 from django.utils.html import format_html
+from django.utils.http import urlencode
+from django.utils.translation import gettext_lazy as _
+
 from core.admin_base import ModelAdmin
 
 from .models import EventInvoice, EventBillingConfiguration
@@ -12,7 +15,16 @@ from .util import BillingIntegrations
 
 @admin.register(EventInvoice)
 class EventInvoiceAdmin(ModelAdmin):
-    list_display = ('participant', 'invoice_number', 'reference_number', 'invoice_date', 'due_date', 'amount', 'currency')
+    list_display = (
+        'participant',
+        'event_link',
+        'invoice_number',
+        'reference_number',
+        'invoice_date',
+        'due_date',
+        'amount',
+        'currency',
+    )
     search_fields = (
         'invoice_number',
         'reference_number',
@@ -21,16 +33,25 @@ class EventInvoiceAdmin(ModelAdmin):
         'participant__event__title',
         'participant__event__slug',
     )
-    list_filter = ('currency',)
+    list_filter = ('participant__event', 'currency')
     autocomplete_fields = ('participant',)
     list_select_related = ('participant', 'participant__event')
     ordering = ('-invoice_date',)
     date_hierarchy = 'invoice_date'
 
+    @admin.display(description=_('Event'))
+    def event_link(self, obj):
+        event = obj.participant.event
+        return format_html(
+            '<a href="{}">{}</a>',
+            reverse('admin:events_event_change', args=[event.pk]),
+            event,
+        )
+
 
 @admin.register(EventBillingConfiguration)
 class EventBillingConfigurationAdmin(ModelAdmin):
-    list_display = ('event', 'due_date', 'integration_type', 'price', 'price_selector', 'ref_export')
+    list_display = ('event_link', 'due_date', 'integration_type', 'price', 'price_selector', 'invoice_count', 'ref_export')
     list_filter = ('integration_type',)
     search_fields = ('event__title', 'event__slug', 'price_selector')
     autocomplete_fields = ('event',)
@@ -46,11 +67,32 @@ class EventBillingConfigurationAdmin(ModelAdmin):
 
     def ref_export(self, obj):
         return format_html(
-            '<a class="button" href={}>Exportera data</a>&nbsp;',
+            '<a class="button" href="{}">Exportera data</a>&nbsp;',
             reverse('admin:billing_ref_numbers', args=[obj.pk])
         )
 
     ref_export.short_description = 'Exportera data'
+
+    @admin.display(description=_('Event'))
+    def event_link(self, obj):
+        return format_html(
+            '<a href="{}">{}</a>',
+            reverse('admin:events_event_change', args=[obj.event_id]),
+            obj.event,
+        )
+
+    @admin.display(description=_('Invoices'))
+    def invoice_count(self, obj):
+        count = EventInvoice.objects.filter(participant__event=obj.event).count()
+        if not count:
+            return '0'
+        return format_html(
+            '<a href="{}?{}">{} {}</a>',
+            reverse('admin:billing_eventinvoice_changelist'),
+            urlencode({'participant__event__id__exact': obj.event_id}),
+            count,
+            _('invoices'),
+        )
 
     def ref_numbers(self, request, conf_id):
         bconfig = self.get_object(request, conf_id)

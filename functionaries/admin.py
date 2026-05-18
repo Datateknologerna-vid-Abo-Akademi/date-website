@@ -1,13 +1,26 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
+from django.utils.http import urlencode
+from django.utils.translation import gettext_lazy as _
 
-from core.admin_base import ModelAdmin
+from core.admin_base import ModelAdmin, TabularInline
 
 from .models import Functionary, FunctionaryRole
 
 
+class FunctionaryInline(TabularInline):
+    model = Functionary
+    fk_name = 'functionary_role'
+    extra = 1
+    autocomplete_fields = ('member',)
+    fields = ('member', 'name', 'year')
+    ordering = ('-year', 'name')
+
+
 @admin.register(Functionary)
 class FunctionaryAdmin(ModelAdmin):
-    list_display = ('get_display_name', 'functionary_role', 'year')
+    list_display = ('get_display_name', 'functionary_role_link', 'year')
     list_filter = ('functionary_role', 'year')
     search_fields = ('member__first_name', 'member__last_name', 'member__username', 'member__email', 'name', 'functionary_role__title', 'year')
     autocomplete_fields = ('member', 'functionary_role')
@@ -19,10 +32,33 @@ class FunctionaryAdmin(ModelAdmin):
     def get_display_name(self, obj):
         return obj.get_full_name()
 
+    @admin.display(description=_('Funktionärspost'))
+    def functionary_role_link(self, obj):
+        return format_html(
+            '<a href="{}">{}</a>',
+            reverse('admin:functionaries_functionaryrole_change', args=[obj.functionary_role_id]),
+            obj.functionary_role,
+        )
+
 
 @admin.register(FunctionaryRole)
 class FunctionaryRoleAdmin(ModelAdmin):
-    list_display = ('title', 'board')
+    save_on_top = True
+    list_display = ('title', 'board', 'functionary_count')
     list_filter = ('board',)
-    search_fields = ('title',)
+    search_fields = ('title', 'functionary__name', 'functionary__member__first_name', 'functionary__member__last_name')
     ordering = ['title']
+    inlines = [FunctionaryInline]
+
+    @admin.display(description=_('Funktionärer'))
+    def functionary_count(self, obj):
+        count = obj.functionary_set.count()
+        if not count:
+            return '0'
+        return format_html(
+            '<a href="{}?{}">{} {}</a>',
+            reverse('admin:functionaries_functionary_changelist'),
+            urlencode({'functionary_role__id__exact': obj.pk}),
+            count,
+            _('functionaries'),
+        )

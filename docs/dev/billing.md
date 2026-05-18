@@ -20,8 +20,8 @@
 - Email templates live in `templates/billing/`. Context merges `BILLING_CONTEXT` and `CONTENT_VARIABLES` from settings.
 
 ## Admin
-- `EventBillingConfigurationAdmin` adds a custom URL (`/ref_numbers/`) to export invoice data as CSV. `ref_export` renders a button on each row.
-- `EventInvoice` uses default admin registration.
+- `EventBillingConfigurationAdmin` adds a custom URL (`/ref_numbers/`) to export invoice data as CSV. `ref_export` renders a button on each row, and the changelist links to the configured event plus that event's generated invoices.
+- `EventInvoiceAdmin` shows the related event as a link, supports event/currency filters, and uses attendee/event `select_related` for the list.
 
 ## Extending
 - Support additional integrations (e.g., Stripe) by adding new members to `BillingIntegrations` and branching in `handle_event_billing`.
