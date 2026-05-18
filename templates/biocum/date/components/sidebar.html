@@ -48,18 +48,17 @@
       </div>
     </div>
   </div>
-  <div class="logo-container">
-    <h3 class="mt-3">{% trans "Samarbetspartners" %}</h3>
-    <div class="carousel-logos">
-      <ul>
-        {% for ad in ads %}
-          <li class="company-logo text-center">
-            <a href="{{ ad.company_url }}">
-              <img src="{{ ad.ad_url }}" alt="img">
-            </a>
-          </li>
-        {% endfor %}
-      </ul>
+  <aside class="logo-container partner-sidebar"
+         aria-labelledby="partner-heading">
+    <h3 id="partner-heading" class="mt-3">{% trans "Samarbetspartners" %}</h3>
+    <div class="partner-logos">
+      {% for ad in ads %}
+        <a class="partner-logo" href="{{ ad.company_url }}">
+          <img src="{{ ad.ad_url }}"
+               alt="img"
+               onerror="this.src='/static/core/images/fallback.png'">
+        </a>
+      {% endfor %}
     </div>
-  </div>
+  </aside>
 </div>
