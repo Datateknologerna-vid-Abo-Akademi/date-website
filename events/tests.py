@@ -331,6 +331,8 @@ class EventTestCase(TestCase):
             title="Biologica VII",
             slug="biologica-vii",
             author_id=self.member.id,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
         )
         c = Client()
@@ -343,6 +345,8 @@ class EventTestCase(TestCase):
             title="Årsfest 2026",
             slug="arsfest-2026",
             author_id=self.member.id,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
         )
         c = Client()
@@ -1082,6 +1086,8 @@ class EventCapacityTests(TestCase):
             slug="full-parent-event",
             author=self.author,
             sign_up_max_participants=1,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
         )
         EventAttendees.objects.create(
@@ -1116,6 +1122,8 @@ class EventCapacityTests(TestCase):
             author=self.author,
             parent=parent,
             sign_up_max_participants=1,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
         )
         EventAttendees.objects.create(
@@ -1201,6 +1209,8 @@ class EventCapacityTests(TestCase):
             author=self.author,
             parent=parent,
             sign_up_max_participants=1,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
         )
         EventAttendees.objects.create(
@@ -1467,6 +1477,8 @@ class EventTemplateSelectionTests(TestCase):
             slug="selected-arsfest-invalid",
             author=self.author,
             published_time=timezone.now(),
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
             template="events/arsfest.html",
         )
