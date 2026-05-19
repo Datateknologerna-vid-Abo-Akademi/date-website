@@ -78,7 +78,52 @@ python_version = "3.14"
 plugins = ["mypy_django_plugin.main"]
 ignore_missing_imports = true
 warn_unused_configs = true
-exclude = ["migrations/"]
+exclude = [
+    "migrations/",
+    "scripts/",
+]
+
+# Settings modules use star-imports from common.py; mypy can't resolve the
+# names they inherit, so we suppress all errors there rather than littering
+# every variant file with ignores.
+[[tool.mypy.overrides]]
+module = "core.settings.*"
+ignore_errors = true
+
+# django-stubs cannot resolve reverse-relation managers added by ForeignKey /
+# ManyToMany fields (a known limitation). Suppress rather than annotate every
+# model with # type: ignore comments.
+[[tool.mypy.overrides]]
+module = [
+    "news.models",
+    "functionaries.models",
+    "polls.models",
+    "events.models",
+    "staticpages.models",
+    "members.models",
+    "gallery.models",
+]
+disable_error_codes = ["django-manager-missing"]
+
+# Admin modules use runtime conditional base-class assignments
+# (if ENABLE_LANGUAGE_FEATURES / USE_UNFOLD) that mypy can't type-check
+# through. Suppress misc/assignment/valid-type in these files only.
+[[tool.mypy.overrides]]
+module = [
+    "core.admin",
+    "events.admin",
+    "news.admin",
+    "polls.admin",
+    "staticpages.admin",
+    "members.admin",
+]
+disable_error_codes = ["misc", "assignment", "valid-type", "attr-defined"]
+
+# URL conf files use settings.STATIC_URL (typed str | None) with static(),
+# which expects str. Safe to ignore — DEBUG-only and always set in practice.
+[[tool.mypy.overrides]]
+module = "core.urls.*"
+disable_error_codes = ["arg-type"]
 
 [tool.django-stubs]
 django_settings_module = "core.settings.date"

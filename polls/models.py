@@ -26,7 +26,7 @@ class QuestionQuerySet(models.QuerySet):
         return self.filter(published_time__isnull=False, published_time__lte=now())
 
 
-class Question(models.Model):
+class Question(models.Model):  # type: ignore[django-manager-missing]
     question_text = models.CharField(max_length=200)
     pub_date = models.DateTimeField(auto_now_add=True)
     published_time = models.DateTimeField(
@@ -41,9 +41,9 @@ class Question(models.Model):
     multiple_choice = models.BooleanField(_("Flerval"), default=False)
     required_multiple_choices = models.IntegerField(_("Antal flerval som krävs"), blank=True, null=True)
     voting_options = models.IntegerField(_("Valmöjligheter"), choices=VOTING_OPTIONS, default=ANYONE)
-    voters = models.ManyToManyField(Member, through="Vote", related_name="voters")
+    voters = models.ManyToManyField(Member, through="Vote", related_name="voters")  # type: ignore[var-annotated]
 
-    objects = QuestionQuerySet.as_manager()
+    objects = QuestionQuerySet.as_manager()  # type: ignore[django-manager-missing]
 
     class Meta:
         verbose_name = _("Fråga")
@@ -63,7 +63,7 @@ class Question(models.Model):
         return count_sum
 
 
-class Choice(models.Model):
+class Choice(models.Model):  # type: ignore[django-manager-missing]
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     choice_text = models.CharField(max_length=200)
     votes = models.IntegerField(default=0)

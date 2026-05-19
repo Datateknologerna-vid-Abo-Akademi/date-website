@@ -53,12 +53,11 @@ class EventBillingConfigurationAdmin(ModelAdmin):
         ]
         return my_urls + urls
 
+    @admin.display(description="Exportera data")
     def ref_export(self, obj):
         return format_html(
             '<a class="button" href={}>Exportera data</a>&nbsp;', reverse("admin:billing_ref_numbers", args=[obj.pk])
         )
-
-    ref_export.short_description = "Exportera data"
 
     def ref_numbers(self, request, conf_id):
         bconfig = self.get_object(request, conf_id)

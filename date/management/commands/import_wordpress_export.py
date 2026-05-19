@@ -541,7 +541,7 @@ class Command(BaseCommand):
         return candidates
 
     def import_post(self, item: WpItem, author: Member | None, url_map: dict[str, str], options, stats: ImportStats):
-        slug = self.unique_slug(item.slug or item.title, Post, max_length=Post._meta.get_field("slug").max_length)
+        slug = self.unique_slug(item.slug or item.title, Post, max_length=Post._meta.get_field("slug").max_length)  # type: ignore[arg-type]
         existing = Post.objects.filter(slug=slug).first()
         if existing and not options["update_existing"]:
             return
@@ -672,7 +672,7 @@ class Command(BaseCommand):
         slug = self.unique_slug(
             link["title"],
             PDFFile,
-            max_length=PDFFile._meta.get_field("slug").max_length,
+            max_length=PDFFile._meta.get_field("slug").max_length,  # type: ignore[arg-type]
         )
         existing = PDFFile.objects.filter(slug=slug).first()
         if existing and not options["update_existing"]:
@@ -1314,7 +1314,7 @@ class Command(BaseCommand):
                 slug = self.unique_slug(object_item.slug or object_item.title, StaticPage, STATICPAGE_SLUG_MAX_LENGTH)
                 return reverse("staticpages:page", args=[slug])
             if object_item and object_item.post_type == "post":
-                return f"/news/articles/{self.unique_slug(object_item.slug or object_item.title, Post, Post._meta.get_field('slug').max_length)}/"
+                return f"/news/articles/{self.unique_slug(object_item.slug or object_item.title, Post, Post._meta.get_field('slug').max_length)}/"  # type: ignore[arg-type]
         return self.normalize_nav_url(item.meta.get("_menu_item_url", ""), url_map)
 
     def normalize_nav_url(self, url: str, url_map: dict[str, str]) -> str:

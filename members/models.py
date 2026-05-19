@@ -27,7 +27,7 @@ PERMISSION_PROFILES = (
 )
 
 
-class Member(AbstractBaseUser, PermissionsMixin):
+class Member(AbstractBaseUser, PermissionsMixin):  # type: ignore[django-manager-missing]
     username = models.CharField(_("Användarnamn"), unique=True, max_length=20, blank=False)
     email = models.EmailField(_("E-postadress"), unique=True, blank=True, null=True)
     first_name = models.CharField(_("Förnamn"), max_length=30, blank=True)

@@ -22,7 +22,7 @@ class MultipleFileField(forms.FileField):
 
 
 class DocumentAdminForm(forms.ModelForm):
-    files = MultipleFileField(label="Ladda upp flera dokument", required=False)
+    files = MultipleFileField(label="Ladda upp flera dokument", required=False)  # type: ignore[assignment]
 
     class Meta:
         model = Collection
@@ -39,7 +39,7 @@ class DocumentAdminForm(forms.ModelForm):
 
 
 class PublicAdminForm(forms.ModelForm):
-    files = MultipleFileField(label="Ladda upp flera filer", required=False)
+    files = MultipleFileField(label="Ladda upp flera filer", required=False)  # type: ignore[assignment]
 
     class Meta:
         model = Collection

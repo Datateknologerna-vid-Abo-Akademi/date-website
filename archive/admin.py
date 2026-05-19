@@ -90,7 +90,7 @@ class DocumentCollectionAdmin(FlatpickrDateTimeAdminMixin, ArchiveCollectionAdmi
         js = ("admin/js/jquery.init.js",) + FLATPICKR_ADMIN_JS
 
 
-if settings.USE_S3:
+if settings.USE_S3:  # type: ignore[misc]
 
     @admin.register(PublicCollection)
     class PublicCollectionAdmin(FlatpickrDateTimeAdminMixin, ArchiveCollectionAdminMixin, ModelAdmin):

@@ -13,7 +13,7 @@ from core.admin_widgets import (
 
 from .models import Choice, Question, Vote
 
-if settings.ENABLE_LANGUAGE_FEATURES:
+if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
     from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 
     # MRO when USE_UNFOLD=True: Mixin → Translation → unfold.TabularInline → admin.TabularInline
@@ -24,8 +24,8 @@ if settings.ENABLE_LANGUAGE_FEATURES:
     class PollTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
         pass
 else:
-    PollTranslationInlineBase = TabularInline
-    PollTranslationAdminBase = ModelAdmin
+    PollTranslationInlineBase = TabularInline  # type: ignore[misc, assignment]
+    PollTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
 class ChoiceInline(PollTranslationInlineBase):
@@ -97,15 +97,13 @@ class QuestionAdmin(FlatpickrDateTimeAdminMixin, PollTranslationAdminBase):
     ordering = ("-pub_date",)
     date_hierarchy = "pub_date"
 
+    @admin.display(description=_("Publicering"), ordering="published_time")
     def publication_status(self, obj):
         if obj.published_time is None:
             return _("Dold")
         if obj.published_time > now():
             return _("Schemalagd")
         return _("Publicerad")
-
-    publication_status.short_description = _("Publicering")
-    publication_status.admin_order_field = "published_time"
 
     class Media:
         css = {"all": FLATPICKR_ADMIN_CSS}

@@ -9,7 +9,7 @@ from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdm
 
 from .models import StaticPage, StaticPageNav, StaticUrl
 
-if settings.ENABLE_LANGUAGE_FEATURES:
+if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
     from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 
     # MRO when USE_UNFOLD=True: Mixin → Translation → unfold.TabularInline → admin.TabularInline
@@ -20,8 +20,8 @@ if settings.ENABLE_LANGUAGE_FEATURES:
     class StaticPageTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
         pass
 else:
-    StaticPageTranslationInlineBase = TabularInline
-    StaticPageTranslationAdminBase = ModelAdmin
+    StaticPageTranslationInlineBase = TabularInline  # type: ignore[misc, assignment]
+    StaticPageTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
 class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):

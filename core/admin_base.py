@@ -64,6 +64,7 @@ class PublicUrlAdminMixin:
 
     public_url_field = "public_url"
 
+    @admin.display(description=_("Public page"))
     def public_url(self, obj):
         if not obj or not getattr(obj, "pk", None) or not hasattr(obj, "get_absolute_url"):
             return "-"
@@ -73,8 +74,6 @@ class PublicUrlAdminMixin:
             obj.get_absolute_url(),
             _("Open public page"),
         )
-
-    public_url.short_description = _("Public page")
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj))
@@ -102,7 +101,7 @@ class ExtraChangeListLinksMixin:
     """Render declarative extra buttons beside the default changelist tools."""
 
     change_list_template = "admin/core/change_list_with_extra_tools.html"
-    changelist_links = ()
+    changelist_links: tuple = ()
 
     def get_changelist_links(self, request):
         return resolve_admin_links(self.changelist_links, request)

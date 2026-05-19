@@ -54,7 +54,7 @@ def upload_to(instance, filename):
     return file_location
 
 
-class Event(models.Model):
+class Event(models.Model):  # type: ignore[django-manager-missing]
     title = models.CharField(_("Titel"), max_length=255, blank=False)
     content = models.TextField(_("Innehåll"), blank=True)
     template = models.CharField(
@@ -95,7 +95,7 @@ class Event(models.Model):
         "self", on_delete=models.CASCADE, null=True, blank=True, related_name="children", default=None
     )  # noqa: E501
 
-    objects = EventQuerySet.as_manager()
+    objects = EventQuerySet.as_manager()  # type: ignore[django-manager-missing]
 
     class Meta:
         verbose_name = _("evenemang")
@@ -344,7 +344,7 @@ class Event(models.Model):
         return self in past_events
 
 
-class EventRegistrationForm(models.Model):
+class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missing]
     event = models.ForeignKey(Event, verbose_name="Event", on_delete=models.CASCADE)
     choice_number = models.PositiveSmallIntegerField(_("#"), blank=True, default=0)
     name = models.CharField(_("Namn"), max_length=255, blank=True)
@@ -389,7 +389,7 @@ class EventRegistrationForm(models.Model):
         super().save(*args, **kwargs)
 
 
-class EventAttendees(models.Model):
+class EventAttendees(models.Model):  # type: ignore[django-manager-missing]
     event = models.ForeignKey(Event, verbose_name="Event", on_delete=models.CASCADE)
     attendee_nr = models.PositiveSmallIntegerField(_("#"), blank=True)
     user = models.CharField(_("Namn"), blank=False, max_length=255)

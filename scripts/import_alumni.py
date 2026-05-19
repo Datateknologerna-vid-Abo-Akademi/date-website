@@ -15,7 +15,7 @@ from alumni.gsuite_adapter import DateSheetsAdapter
 
 # Load alumni settings
 try:
-    ALUMNI_SETTINGS = json.loads(settings.ALUMNI_SETTINGS)
+    ALUMNI_SETTINGS = json.loads(settings.ALUMNI_SETTINGS)  # type: ignore[misc]
     AUTH, SHEET = ALUMNI_SETTINGS.get("auth", {}), ALUMNI_SETTINGS.get("sheet")
 except Exception as e:
     print("Error while loading alumni settings:", e)

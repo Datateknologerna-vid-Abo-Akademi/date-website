@@ -60,10 +60,9 @@ class StaticDeviceInline(TabularInline):
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related("token_set")
 
+    @admin.display(description="Tokens remaining")
     def token_count(self, obj):
         return len(obj.token_set.all())
-
-    token_count.short_description = "Tokens remaining"
 
 
 FRESHMAN = 1
@@ -81,7 +80,7 @@ if getattr(settings, "USE_UNFOLD", False):
     class _UserAdminBase(ModelAdmin, auth_admin.UserAdmin):
         pass
 else:
-    _UserAdminBase = auth_admin.UserAdmin
+    _UserAdminBase = auth_admin.UserAdmin  # type: ignore[misc, assignment]
 
 
 @admin.register(Member)
@@ -129,10 +128,9 @@ class UserAdmin(_UserAdminBase):
     inlines = [TOTPDeviceInline, StaticDeviceInline]
     actions = ["activate_user", "deactivate_user", "disable_two_factor"]
 
+    @admin.display(boolean=True)
     def is_staff(self, obj):
         return obj.is_staff
-
-    is_staff.boolean = True
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -201,24 +199,21 @@ class UserAdmin(_UserAdminBase):
 
         return queryset, may_have_duplicates
 
+    @admin.display(boolean=True, description="2FA")
     def has_two_factor(self, obj):
         return obj._has_two_factor
 
-    has_two_factor.boolean = True
-    has_two_factor.short_description = "2FA"
-
+    @admin.action(description="Aktivera användare")
     def activate_user(self, request, queryset):
         updated = queryset.update(is_active=True)
         self.message_user(request, _("Aktiverade %(count)d användare.") % {"count": updated})
 
-    activate_user.short_description = "Aktivera användare"
-
+    @admin.action(description="Deaktivera användare")
     def deactivate_user(self, request, queryset):
         updated = queryset.update(is_active=False)
         self.message_user(request, _("Deaktiverade %(count)d användare.") % {"count": updated})
 
-    deactivate_user.short_description = "Deaktivera användare"
-
+    @admin.action(description="Inaktivera 2FA")
     def disable_two_factor(self, request, queryset):
         totp_qs = TOTPDevice.objects.filter(user__in=queryset)
         static_qs = StaticDevice.objects.filter(user__in=queryset)
@@ -229,8 +224,6 @@ class UserAdmin(_UserAdminBase):
             request,
             _("2FA inaktiverat för valda medlemmar: %(count)d enhet(er) borttagna.") % {"count": total},
         )
-
-    disable_two_factor.short_description = "Inaktivera 2FA"
 
     def sorter_username(self, queryset):
         return Member.objects.all().order_by(Lower("username")).values_list("username", flat=True)

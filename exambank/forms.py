@@ -30,7 +30,7 @@ class ExamArchiveUploadForm(forms.Form):
 
 
 class ExamArchiveAdminForm(forms.ModelForm):
-    files = MultipleFileField(label="Ladda upp flera dokument", required=False)
+    files = MultipleFileField(label="Ladda upp flera dokument", required=False)  # type: ignore[assignment]
 
     class Meta:
         model = ExamArchive

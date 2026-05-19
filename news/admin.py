@@ -11,14 +11,14 @@ from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
 from news import forms
 from news.models import Category, Post
 
-if settings.ENABLE_LANGUAGE_FEATURES:
+if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
     from modeltranslation.admin import TabbedTranslationAdmin
 
     # MRO when USE_UNFOLD=True: Mixin → TabbedTranslation → unfold.ModelAdmin → admin.ModelAdmin
     class NewsTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
         pass
 else:
-    NewsTranslationAdminBase = ModelAdmin
+    NewsTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
 class CategoryAdmin(PublicUrlAdminMixin, NewsTranslationAdminBase):
@@ -93,15 +93,13 @@ class PostAdmin(PublicUrlAdminMixin, NewsTranslationAdminBase):
         form.user = request.user
         return form
 
+    @admin.display(description=_("Publicering"), ordering="published_time")
     def publication_status(self, obj):
         if obj.published_time is None:
             return _("Dold")
         if obj.published_time > now():
             return _("Schemalagd")
         return _("Publicerad")
-
-    publication_status.short_description = _("Publicering")
-    publication_status.admin_order_field = "published_time"
 
     class Media:
         css = {"all": FLATPICKR_ADMIN_CSS}

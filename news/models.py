@@ -11,7 +11,7 @@ logger = logging.getLogger("date")
 POST_SLUG_MAX_LENGTH = 50
 
 
-class Category(models.Model):
+class Category(models.Model):  # type: ignore[django-manager-missing]
     name = models.CharField(_("Namn"), max_length=255, blank=False)
     slug = models.SlugField(_("Slug"), unique=True, allow_unicode=False)
 
@@ -48,7 +48,7 @@ class Post(models.Model):
     modified_time = models.DateTimeField(_("Modifierad"), editable=False, null=True, blank=True)
     slug = models.SlugField(_("Slug"), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
 
-    objects = PostQuerySet.as_manager()
+    objects = PostQuerySet.as_manager()  # type: ignore[django-manager-missing]
 
     class Meta:
         verbose_name = _("nyhet")

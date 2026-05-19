@@ -102,7 +102,7 @@ class Photo(models.Model):
     def get_file_path(self):
         return self.image.url
 
-    if not settings.USE_S3:
+    if not settings.USE_S3:  # type: ignore[misc]
 
         def delete(self, using=None, keep_parents=False):
             try:

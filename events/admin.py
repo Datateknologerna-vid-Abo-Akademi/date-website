@@ -25,7 +25,7 @@ from .widgets import PrettyJSONWidget
 
 logger = logging.getLogger("date")
 
-if settings.ENABLE_LANGUAGE_FEATURES:
+if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
     from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 
     # MRO when USE_UNFOLD=True: Mixin → Translation → unfold.TabularInline → admin.TabularInline
@@ -37,8 +37,8 @@ if settings.ENABLE_LANGUAGE_FEATURES:
     class EventTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
         pass
 else:
-    EventTranslationInlineBase = TabularInline
-    EventTranslationAdminBase = ModelAdmin
+    EventTranslationInlineBase = TabularInline  # type: ignore[misc, assignment]
+    EventTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
 class AvecAwareMixin:
@@ -232,12 +232,11 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
         ]
         return custom_urls + urls
 
+    @admin.display(description="Deltagarlista")
     def account_actions(self, obj):
         return format_html(
             '<a class="button" href="{}">Deltagarlista</a>&nbsp;', reverse("admin:registration_list", args=[obj.pk])
         )
-
-    account_actions.short_description = "Deltagarlista"
 
     @admin.action(description="Delete all attendees for selected events")
     def delete_participants(self, request, queryset):
@@ -272,6 +271,7 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
         css = {"all": FLATPICKR_ADMIN_CSS}
         js = ("admin/js/jquery.init.js",) + FLATPICKR_ADMIN_JS + ("core/js/eventform.js",)
 
+    @admin.display(description="Anmälda")
     def get_attendee_count(self, obj):
         if obj.parent:
             count = getattr(obj, "_original_event_attendee_count", None)
@@ -284,17 +284,13 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
             return count
         return obj.get_registrations().count()
 
+    @admin.display(description=_("Publicering"), ordering="published_time")
     def publication_status(self, obj):
         if obj.published_time is None:
             return _("Dold")
         if obj.published_time > now():
             return _("Schemalagd")
         return _("Publicerad")
-
-    publication_status.short_description = _("Publicering")
-    publication_status.admin_order_field = "published_time"
-
-    get_attendee_count.short_description = "Anmälda"
 
     def add_view(self, request, form_url="", extra_context=None):
         return super().add_view(request, form_url, extra_context)

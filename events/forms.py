@@ -73,7 +73,9 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
     sign_up_members = flatpickr_datetime_field(initial=now(), required=False)
     sign_up_deadline = flatpickr_datetime_field(initial=now(), required=False)
     sign_up_cancelling_deadline = flatpickr_datetime_field(initial=now(), required=False)
-    parent = forms.ModelChoiceField(queryset=Event.objects.filter(event_date_end__gte=now()), required=False)
+    parent: forms.ModelChoiceField = forms.ModelChoiceField(
+        queryset=Event.objects.filter(event_date_end__gte=now()), required=False
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -115,7 +117,7 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
             "redirect_link",
             "parent",
         )
-        if settings.USE_S3:
+        if settings.USE_S3:  # type: ignore[misc]
             fields = temp_fields + ("s3_image",)
         else:
             fields = temp_fields + ("image",)
@@ -165,7 +167,7 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
     sign_up_members = forms.DateTimeField(**sign_up_args)
     sign_up_deadline = forms.DateTimeField(**sign_up_args)
     sign_up_cancelling_deadline = forms.DateTimeField(**sign_up_args)
-    parent = forms.ModelChoiceField(queryset=Event.objects.all(), required=False)
+    parent: forms.ModelChoiceField = forms.ModelChoiceField(queryset=Event.objects.all(), required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -217,7 +219,7 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
             "redirect_link",
             "parent",
         )
-        if settings.USE_S3:
+        if settings.USE_S3:  # type: ignore[misc]
             fields = temp_fields + ("s3_image",)
         else:
             fields = temp_fields + ("image",)

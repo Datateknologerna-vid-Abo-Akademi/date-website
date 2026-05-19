@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.db.models import F
-from django.shortcuts import HttpResponseRedirect, render
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
 from django.urls import reverse
 
 from members.models import ORDINARY_MEMBER

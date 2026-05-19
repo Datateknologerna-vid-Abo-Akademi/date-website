@@ -160,6 +160,7 @@ class PDFFileAdmin(PublicUrlAdminMixin, ModelAdmin):
             updated_fieldsets.append((name, {**options, "fields": fields}))
         return updated_fieldsets
 
+    @admin.display(description="File")
     def file_link(self, obj):
         if not obj or not obj.file:
             return "-"
@@ -172,8 +173,6 @@ class PDFFileAdmin(PublicUrlAdminMixin, ModelAdmin):
         except Exception as exc:
             logger.warning("Unable to resolve PDF file URL for %s: %s", obj.pk, exc)
             return obj.file.name
-
-    file_link.short_description = "File"
 
     @admin.display(boolean=True, description="External link")
     def is_external_link(self, obj):

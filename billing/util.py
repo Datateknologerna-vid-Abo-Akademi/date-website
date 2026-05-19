@@ -56,7 +56,7 @@ def send_event_invoice(signup: EventAttendees, invoice: EventInvoice):
     context = {
         "invoice": invoice,
         "signup": signup,
-        **settings.BILLING_CONTEXT,
+        **settings.BILLING_CONTEXT,  # type: ignore[misc]
         **settings.CONTENT_VARIABLES,
     }
     content = render_to_string("billing/invoice_email.txt", context)
@@ -69,7 +69,7 @@ def send_event_free_confirmation(signup: EventAttendees):
     """Send confirmation email for free events"""
     context = {
         "signup": signup,
-        **settings.BILLING_CONTEXT,
+        **settings.BILLING_CONTEXT,  # type: ignore[misc]
         **settings.CONTENT_VARIABLES,
     }
     content = render_to_string("billing/free_event_confirmation_email.txt", context)
@@ -77,7 +77,9 @@ def send_event_free_confirmation(signup: EventAttendees):
 
 
 def send_confirmation_email(
-    signup: EventAttendees, billing_data: EventInvoice = None, template="events/emails/confirmation_email.txt"
+    signup: EventAttendees,
+    billing_data: EventInvoice | None = None,
+    template="events/emails/confirmation_email.txt",
 ):
     """Send confirmation email to participant"""
 
@@ -85,7 +87,7 @@ def send_confirmation_email(
         "signup": signup,
         "billing_data": billing_data,
         "event": signup.event,
-        **settings.BILLING_CONTEXT,
+        **settings.BILLING_CONTEXT,  # type: ignore[misc]
         **settings.CONTENT_VARIABLES,
     }
     content = render_to_string(template, context)

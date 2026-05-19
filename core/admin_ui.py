@@ -1,12 +1,13 @@
 from dataclasses import dataclass
 
 from django.urls import NoReverseMatch, reverse
+from django.utils.functional import Promise
 from django.utils.translation import gettext_lazy as _
 
 
 @dataclass(frozen=True)
 class AdminLink:
-    label: str
+    label: str | Promise
     icon: str = ""
     url_name: str = ""
     url: str = ""
@@ -58,7 +59,7 @@ def get_topbar_quick_create_links(request):
 
 @dataclass(frozen=True)
 class AdminSidebarGroup:
-    title: str
+    title: str | Promise
     items: tuple[AdminLink, ...]
     separator: bool = True
 

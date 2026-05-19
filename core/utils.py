@@ -13,7 +13,7 @@ VALIDATION_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 
 
 def validate_captcha(response: str) -> bool:
-    secret_key = settings.TURNSTILE_SECRET_KEY
+    secret_key = settings.TURNSTILE_SECRET_KEY  # type: ignore[misc]
     if secret_key == "":
         logger.info("No captcha secret key defined")
         return True

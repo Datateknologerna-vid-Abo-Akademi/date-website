@@ -74,7 +74,7 @@ class AlumniUpdateForm(AlumniSignUpForm):
         self.fields["lastname"].help_text = ""
 
     class Meta(AlumniSignUpForm.Meta):
-        fields = AlumniSignUpForm.Meta.fields + ("token",)
+        fields = AlumniSignUpForm.Meta.fields + ("token",)  # type: ignore[assignment]
 
 
 class AlumniEmailVerificationForm(forms.Form):

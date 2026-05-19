@@ -24,7 +24,7 @@ def upload_to(instance, filename):
     return file_location
 
 
-class StaticPageNav(models.Model):
+class StaticPageNav(models.Model):  # type: ignore[django-manager-missing]
     category_name = models.CharField(_("Kategori"), max_length=255, blank=False)
     nav_element = models.IntegerField(default=0)
     use_category_url = models.BooleanField(_("Använd kategorins URL"), default=False)
@@ -34,7 +34,7 @@ class StaticPageNav(models.Model):
         return self.category_name
 
 
-class StaticPage(models.Model):
+class StaticPage(models.Model):  # type: ignore[django-manager-missing]
     title = models.CharField(_("Titel"), max_length=255, blank=False)
     content = CKEditor5Field(_("Innehåll"), blank=True)
     created_time = models.DateTimeField(_("Skapad"), default=timezone.now)
@@ -84,7 +84,7 @@ class StaticPage(models.Model):
         self.save()
 
 
-class StaticUrl(models.Model):
+class StaticUrl(models.Model):  # type: ignore[django-manager-missing]
     title = models.CharField(_("Titel"), max_length=255, blank=False)
     url = models.CharField(_("Url"), max_length=200, blank=True)
     category = models.ForeignKey(StaticPageNav, on_delete=models.CASCADE, null=True, blank=True)

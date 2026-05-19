@@ -104,8 +104,6 @@ class ExamBankAccessSettingsAdmin(ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    @admin.display(boolean=True, description=_("Lösenord inställt"))
     def password_configured(self, obj):
         return obj.has_password
-
-    password_configured.boolean = True
-    password_configured.short_description = _("Lösenord inställt")

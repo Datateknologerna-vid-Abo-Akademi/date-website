@@ -193,3 +193,8 @@ jobs:
 
       - name: djlint check
         run: uvx djlint@1.36.4 --check templates/
+
+      - name: mypy
+        run: |
+          uv sync --frozen --group dev
+          uv run mypy .
