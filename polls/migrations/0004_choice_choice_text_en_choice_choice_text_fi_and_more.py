@@ -4,39 +4,40 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("polls", "0003_remove_question_members_only_and_more"),
+        ('polls', '0003_remove_question_members_only_and_more'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="choice",
-            name="choice_text_en",
+            model_name='choice',
+            name='choice_text_en',
             field=models.CharField(max_length=200, null=True),
         ),
         migrations.AddField(
-            model_name="choice",
-            name="choice_text_fi",
+            model_name='choice',
+            name='choice_text_fi',
             field=models.CharField(max_length=200, null=True),
         ),
         migrations.AddField(
-            model_name="choice",
-            name="choice_text_sv",
+            model_name='choice',
+            name='choice_text_sv',
             field=models.CharField(max_length=200, null=True),
         ),
         migrations.AddField(
-            model_name="question",
-            name="question_text_en",
+            model_name='question',
+            name='question_text_en',
             field=models.CharField(max_length=200, null=True),
         ),
         migrations.AddField(
-            model_name="question",
-            name="question_text_fi",
+            model_name='question',
+            name='question_text_fi',
             field=models.CharField(max_length=200, null=True),
         ),
         migrations.AddField(
-            model_name="question",
-            name="question_text_sv",
+            model_name='question',
+            name='question_text_sv',
             field=models.CharField(max_length=200, null=True),
         ),
     ]

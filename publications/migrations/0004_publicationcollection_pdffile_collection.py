@@ -5,100 +5,59 @@ from django.db import migrations, models
 
 
 def assign_default_collection(apps, _schema_editor):
-    PublicationCollection = apps.get_model("publications", "PublicationCollection")
-    PDFFile = apps.get_model("publications", "PDFFile")
+    PublicationCollection = apps.get_model('publications', 'PublicationCollection')
+    PDFFile = apps.get_model('publications', 'PDFFile')
     collection, _ = PublicationCollection.objects.get_or_create(
-        slug="publications",
+        slug='publications',
         defaults={
-            "title": "Publications",
-            "description": "",
-            "visibility": "public",
-            "ordering": 0,
-            "is_active": True,
+            'title': 'Publications',
+            'description': '',
+            'visibility': 'public',
+            'ordering': 0,
+            'is_active': True,
         },
     )
     PDFFile.objects.filter(collection__isnull=True).update(collection=collection)
 
 
 def unassign_default_collection(apps, _schema_editor):
-    PDFFile = apps.get_model("publications", "PDFFile")
+    PDFFile = apps.get_model('publications', 'PDFFile')
     PDFFile.objects.update(collection=None)
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("members", "0015_remove_functionary_functionary_role_and_more"),
-        ("publications", "0003_pdffile_cover_image"),
+        ('members', '0015_remove_functionary_functionary_role_and_more'),
+        ('publications', '0003_pdffile_cover_image'),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="PublicationCollection",
+            name='PublicationCollection',
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("title", models.CharField(max_length=250, verbose_name="Title")),
-                (
-                    "slug",
-                    models.SlugField(
-                        blank=True,
-                        help_text="Leave empty to auto-generate from title",
-                        max_length=255,
-                        unique=True,
-                        verbose_name="Slug",
-                    ),
-                ),
-                ("description", models.TextField(blank=True, verbose_name="Description")),
-                (
-                    "visibility",
-                    models.CharField(
-                        choices=[
-                            ("public", "Public"),
-                            ("login", "Logged-in members"),
-                            ("membership", "Selected membership types"),
-                            ("password", "Password protected"),
-                            ("hidden", "Hidden"),
-                        ],
-                        default="public",
-                        help_text="Controls whether the collection is listed and who may access its publications.",
-                        max_length=20,
-                        verbose_name="Visibility",
-                    ),
-                ),
-                (
-                    "password_hash",
-                    models.CharField(blank=True, editable=False, max_length=128, verbose_name="Password hash"),
-                ),
-                ("ordering", models.PositiveIntegerField(default=0, verbose_name="Ordering")),
-                ("is_active", models.BooleanField(default=True, verbose_name="Active")),
-                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="Created at")),
-                ("updated_at", models.DateTimeField(auto_now=True, verbose_name="Updated at")),
-                (
-                    "allowed_membership_types",
-                    models.ManyToManyField(
-                        blank=True,
-                        help_text="Only used when visibility is set to selected membership types.",
-                        to="members.membershiptype",
-                        verbose_name="Allowed membership types",
-                    ),
-                ),
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('title', models.CharField(max_length=250, verbose_name='Title')),
+                ('slug', models.SlugField(blank=True, help_text='Leave empty to auto-generate from title', max_length=255, unique=True, verbose_name='Slug')),
+                ('description', models.TextField(blank=True, verbose_name='Description')),
+                ('visibility', models.CharField(choices=[('public', 'Public'), ('login', 'Logged-in members'), ('membership', 'Selected membership types'), ('password', 'Password protected'), ('hidden', 'Hidden')], default='public', help_text='Controls whether the collection is listed and who may access its publications.', max_length=20, verbose_name='Visibility')),
+                ('password_hash', models.CharField(blank=True, editable=False, max_length=128, verbose_name='Password hash')),
+                ('ordering', models.PositiveIntegerField(default=0, verbose_name='Ordering')),
+                ('is_active', models.BooleanField(default=True, verbose_name='Active')),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Created at')),
+                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Updated at')),
+                ('allowed_membership_types', models.ManyToManyField(blank=True, help_text='Only used when visibility is set to selected membership types.', to='members.membershiptype', verbose_name='Allowed membership types')),
             ],
             options={
-                "verbose_name": "Publication collection",
-                "verbose_name_plural": "Publication collections",
-                "ordering": ["ordering", "title"],
+                'verbose_name': 'Publication collection',
+                'verbose_name_plural': 'Publication collections',
+                'ordering': ['ordering', 'title'],
             },
         ),
         migrations.AddField(
-            model_name="pdffile",
-            name="collection",
-            field=models.ForeignKey(
-                blank=True,
-                null=True,
-                on_delete=django.db.models.deletion.PROTECT,
-                related_name="publications",
-                to="publications.publicationcollection",
-                verbose_name="Collection",
-            ),
+            model_name='pdffile',
+            name='collection',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='publications', to='publications.publicationcollection', verbose_name='Collection'),
         ),
         migrations.RunPython(assign_default_collection, unassign_default_collection),
     ]

@@ -4,25 +4,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     initial = True
 
-    dependencies = []
+    dependencies = [
+    ]
 
     operations = [
         migrations.CreateModel(
-            name="Candidate",
+            name='Candidate',
             fields=[
-                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("img_url", models.URLField(max_length=255, verbose_name="Bild URL")),
-                ("title", models.CharField(max_length=255, verbose_name="Titel")),
-                ("content", models.TextField(blank=True, verbose_name="Innehåll")),
-                ("published", models.BooleanField(default=True, verbose_name="Publicera")),
-                ("slug", models.SlugField(unique=True, verbose_name="Slug")),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('img_url', models.URLField(max_length=255, verbose_name='Bild URL')),
+                ('title', models.CharField(max_length=255, verbose_name='Titel')),
+                ('content', models.TextField(blank=True, verbose_name='Innehåll')),
+                ('published', models.BooleanField(default=True, verbose_name='Publicera')),
+                ('slug', models.SlugField(unique=True, verbose_name='Slug')),
             ],
             options={
-                "verbose_name": "Lucia",
-                "verbose_name_plural": "Lucian",
-                "ordering": ("id",),
+                'verbose_name': 'Lucia',
+                'verbose_name_plural': 'Lucian',
+                'ordering': ('id',),
             },
         ),
     ]

@@ -5,14 +5,15 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("events", "0012_eventregistrationform_choice_number"),
+        ('events', '0012_eventregistrationform_choice_number'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="event",
-            name="content",
-            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, verbose_name="Innehåll"),
+            model_name='event',
+            name='content',
+            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, verbose_name='Innehåll'),
         ),
     ]

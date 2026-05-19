@@ -4,32 +4,33 @@ from django.db import migrations, models
 
 
 def backfill_functionary_role_titles(apps, schema_editor):
-    FunctionaryRole = apps.get_model("members", "FunctionaryRole")
-    FunctionaryRole.objects.filter(models.Q(title_sv__isnull=True) | models.Q(title_sv="")).update(
-        title_sv=models.F("title")
-    )
+    FunctionaryRole = apps.get_model('members', 'FunctionaryRole')
+    FunctionaryRole.objects.filter(
+        models.Q(title_sv__isnull=True) | models.Q(title_sv='')
+    ).update(title_sv=models.F('title'))
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("members", "0013_functionary_name_alter_functionary_member"),
+        ('members', '0013_functionary_name_alter_functionary_member'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="functionaryrole",
-            name="title_en",
-            field=models.CharField(max_length=200, null=True, verbose_name="Titel"),
+            model_name='functionaryrole',
+            name='title_en',
+            field=models.CharField(max_length=200, null=True, verbose_name='Titel'),
         ),
         migrations.AddField(
-            model_name="functionaryrole",
-            name="title_fi",
-            field=models.CharField(max_length=200, null=True, verbose_name="Titel"),
+            model_name='functionaryrole',
+            name='title_fi',
+            field=models.CharField(max_length=200, null=True, verbose_name='Titel'),
         ),
         migrations.AddField(
-            model_name="functionaryrole",
-            name="title_sv",
-            field=models.CharField(max_length=200, null=True, verbose_name="Titel"),
+            model_name='functionaryrole',
+            name='title_sv',
+            field=models.CharField(max_length=200, null=True, verbose_name='Titel'),
         ),
         migrations.RunPython(
             backfill_functionary_role_titles,

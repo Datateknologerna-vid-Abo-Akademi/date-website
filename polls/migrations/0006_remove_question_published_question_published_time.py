@@ -12,25 +12,20 @@ def migrate_question_publication(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("polls", "0005_backfill_poll_default_translations"),
+        ('polls', '0005_backfill_poll_default_translations'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="question",
-            name="published_time",
-            field=models.DateTimeField(
-                blank=True,
-                default=django.utils.timezone.now,
-                help_text="Lämna tomt för att dölja frågan. Välj en framtida tid för schemalagd publicering.",
-                null=True,
-                verbose_name="Publiceras",
-            ),
+            model_name='question',
+            name='published_time',
+            field=models.DateTimeField(blank=True, default=django.utils.timezone.now, help_text='Lämna tomt för att dölja frågan. Välj en framtida tid för schemalagd publicering.', null=True, verbose_name='Publiceras'),
         ),
         migrations.RunPython(migrate_question_publication, migrations.RunPython.noop),
         migrations.RemoveField(
-            model_name="question",
-            name="published",
+            model_name='question',
+            name='published',
         ),
     ]

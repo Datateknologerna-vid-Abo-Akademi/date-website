@@ -2,47 +2,43 @@
 
 import django.db.models.deletion
 import django.utils.timezone
-from django.db import migrations, models
-
 import gallery.models
+from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     initial = True
 
-    dependencies = []
+    dependencies = [
+    ]
 
     operations = [
         migrations.CreateModel(
-            name="Album",
+            name='Album',
             fields=[
-                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("title", models.CharField(max_length=250, verbose_name="Namn")),
-                ("pub_date", models.DateTimeField(default=django.utils.timezone.now, null=True)),
-                ("hide_for_gulis", models.BooleanField(default=False, verbose_name="Göm för gulisar")),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('title', models.CharField(max_length=250, verbose_name='Namn')),
+                ('pub_date', models.DateTimeField(default=django.utils.timezone.now, null=True)),
+                ('hide_for_gulis', models.BooleanField(default=False, verbose_name='Göm för gulisar')),
             ],
             options={
-                "verbose_name": "Bildarkiv",
-                "verbose_name_plural": "Bildarkiv",
-                "ordering": ("-pub_date",),
+                'verbose_name': 'Bildarkiv',
+                'verbose_name_plural': 'Bildarkiv',
+                'ordering': ('-pub_date',),
             },
         ),
         migrations.CreateModel(
-            name="Photo",
+            name='Photo',
             fields=[
-                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("image", models.ImageField(upload_to=gallery.models.upload_to)),
-                ("favorite", models.BooleanField(default=False)),
-                (
-                    "album",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to="gallery.album", verbose_name="Galleri"
-                    ),
-                ),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('image', models.ImageField(upload_to=gallery.models.upload_to)),
+                ('favorite', models.BooleanField(default=False)),
+                ('album', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='gallery.album', verbose_name='Galleri')),
             ],
             options={
-                "verbose_name": "bild",
-                "verbose_name_plural": "bilder",
+                'verbose_name': 'bild',
+                'verbose_name_plural': 'bilder',
             },
         ),
     ]

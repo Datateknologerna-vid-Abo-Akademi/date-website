@@ -5,14 +5,15 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("lucia", "0002_auto_20201129_1238"),
+        ('lucia', '0002_auto_20201129_1238'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="candidate",
-            name="content",
-            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, verbose_name="Innehåll"),
+            model_name='candidate',
+            name='content',
+            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, verbose_name='Innehåll'),
         ),
     ]

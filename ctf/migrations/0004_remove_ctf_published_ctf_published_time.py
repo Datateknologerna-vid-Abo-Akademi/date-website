@@ -12,25 +12,20 @@ def migrate_ctf_publication(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("ctf", "0003_alter_ctf_content_alter_flag_clues"),
+        ('ctf', '0003_alter_ctf_content_alter_flag_clues'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="ctf",
-            name="published_time",
-            field=models.DateTimeField(
-                blank=True,
-                default=django.utils.timezone.now,
-                help_text="Lämna tomt för att dölja CTF:n. Välj en framtida tid för schemalagd publicering.",
-                null=True,
-                verbose_name="Publiceras",
-            ),
+            model_name='ctf',
+            name='published_time',
+            field=models.DateTimeField(blank=True, default=django.utils.timezone.now, help_text='Lämna tomt för att dölja CTF:n. Välj en framtida tid för schemalagd publicering.', null=True, verbose_name='Publiceras'),
         ),
         migrations.RunPython(migrate_ctf_publication, migrations.RunPython.noop),
         migrations.RemoveField(
-            model_name="ctf",
-            name="published",
+            model_name='ctf',
+            name='published',
         ),
     ]

@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("events", "0009_alter_eventattendees_attendee_nr"),
+        ('events', '0009_alter_eventattendees_attendee_nr'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="event",
-            name="captcha",
-            field=models.BooleanField(default=False, verbose_name="Captcha"),
+            model_name='event',
+            name='captcha',
+            field=models.BooleanField(default=False, verbose_name='Captcha'),
         ),
     ]

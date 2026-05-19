@@ -5,19 +5,20 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("ctf", "0002_guess"),
+        ('ctf', '0002_guess'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="ctf",
-            name="content",
-            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, verbose_name="Innehåll"),
+            model_name='ctf',
+            name='content',
+            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, verbose_name='Innehåll'),
         ),
         migrations.AlterField(
-            model_name="flag",
-            name="clues",
-            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, verbose_name="Clue"),
+            model_name='flag',
+            name='clues',
+            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, verbose_name='Clue'),
         ),
     ]

@@ -4,13 +4,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("members", "0004_alumniemailrecipient"),
+        ('members', '0004_alumniemailrecipient'),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name="alumniemailrecipient",
-            options={"verbose_name": "Emailmottagare för ARG", "verbose_name_plural": "Emailmottagare för ARG"},
+            name='alumniemailrecipient',
+            options={'verbose_name': 'Emailmottagare för ARG', 'verbose_name_plural': 'Emailmottagare för ARG'},
         ),
     ]

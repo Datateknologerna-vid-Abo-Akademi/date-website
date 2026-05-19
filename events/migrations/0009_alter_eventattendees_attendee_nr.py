@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("events", "0008_auto_20230215_2036"),
+        ('events', '0008_auto_20230215_2036'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="eventattendees",
-            name="attendee_nr",
-            field=models.PositiveSmallIntegerField(blank=True, verbose_name="#"),
+            model_name='eventattendees',
+            name='attendee_nr',
+            field=models.PositiveSmallIntegerField(blank=True, verbose_name='#'),
         ),
     ]

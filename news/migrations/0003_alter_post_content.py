@@ -5,14 +5,15 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("news", "0002_post_albins_angels"),
+        ('news', '0002_post_albins_angels'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="post",
-            name="content",
-            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, verbose_name="Innehåll"),
+            model_name='post',
+            name='content',
+            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, verbose_name='Innehåll'),
         ),
     ]

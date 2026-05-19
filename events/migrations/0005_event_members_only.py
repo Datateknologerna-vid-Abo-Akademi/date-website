@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("events", "0004_auto_20220217_1841"),
+        ('events', '0004_auto_20220217_1841'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="event",
-            name="members_only",
-            field=models.BooleanField(default=False, verbose_name="Kräv inloggning för innehåll"),
+            model_name='event',
+            name='members_only',
+            field=models.BooleanField(default=False, verbose_name='Kräv inloggning för innehåll'),
         ),
     ]

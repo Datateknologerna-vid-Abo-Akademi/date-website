@@ -12,19 +12,19 @@ def reset_sequences(apps, schema_editor, models):
 
 
 def copy_social_models(apps, schema_editor):
-    OldIgUrl = apps.get_model("social", "IgUrl")
-    OldHarassment = apps.get_model("social", "Harassment")
-    OldHarassmentEmailRecipient = apps.get_model("social", "HarassmentEmailRecipient")
-    NewIgUrl = apps.get_model("instagram", "IgUrl")
-    NewHarassment = apps.get_model("harassment", "Harassment")
-    NewHarassmentEmailRecipient = apps.get_model("harassment", "HarassmentEmailRecipient")
+    OldIgUrl = apps.get_model('social', 'IgUrl')
+    OldHarassment = apps.get_model('social', 'Harassment')
+    OldHarassmentEmailRecipient = apps.get_model('social', 'HarassmentEmailRecipient')
+    NewIgUrl = apps.get_model('instagram', 'IgUrl')
+    NewHarassment = apps.get_model('harassment', 'Harassment')
+    NewHarassmentEmailRecipient = apps.get_model('harassment', 'HarassmentEmailRecipient')
 
     for ig_url in OldIgUrl.objects.all().iterator():
         NewIgUrl.objects.update_or_create(
             id=ig_url.id,
             defaults={
-                "url": ig_url.url,
-                "shortcode": ig_url.shortcode,
+                'url': ig_url.url,
+                'shortcode': ig_url.shortcode,
             },
         )
 
@@ -32,8 +32,8 @@ def copy_social_models(apps, schema_editor):
         NewHarassment.objects.update_or_create(
             id=harassment.id,
             defaults={
-                "email": harassment.email,
-                "message": harassment.message,
+                'email': harassment.email,
+                'message': harassment.message,
             },
         )
 
@@ -41,7 +41,7 @@ def copy_social_models(apps, schema_editor):
         NewHarassmentEmailRecipient.objects.update_or_create(
             id=recipient.id,
             defaults={
-                "recipient_email": recipient.recipient_email,
+                'recipient_email': recipient.recipient_email,
             },
         )
 
@@ -49,19 +49,19 @@ def copy_social_models(apps, schema_editor):
 
 
 def restore_social_models(apps, schema_editor):
-    OldIgUrl = apps.get_model("social", "IgUrl")
-    OldHarassment = apps.get_model("social", "Harassment")
-    OldHarassmentEmailRecipient = apps.get_model("social", "HarassmentEmailRecipient")
-    NewIgUrl = apps.get_model("instagram", "IgUrl")
-    NewHarassment = apps.get_model("harassment", "Harassment")
-    NewHarassmentEmailRecipient = apps.get_model("harassment", "HarassmentEmailRecipient")
+    OldIgUrl = apps.get_model('social', 'IgUrl')
+    OldHarassment = apps.get_model('social', 'Harassment')
+    OldHarassmentEmailRecipient = apps.get_model('social', 'HarassmentEmailRecipient')
+    NewIgUrl = apps.get_model('instagram', 'IgUrl')
+    NewHarassment = apps.get_model('harassment', 'Harassment')
+    NewHarassmentEmailRecipient = apps.get_model('harassment', 'HarassmentEmailRecipient')
 
     for ig_url in NewIgUrl.objects.all().iterator():
         OldIgUrl.objects.update_or_create(
             id=ig_url.id,
             defaults={
-                "url": ig_url.url,
-                "shortcode": ig_url.shortcode,
+                'url': ig_url.url,
+                'shortcode': ig_url.shortcode,
             },
         )
 
@@ -69,8 +69,8 @@ def restore_social_models(apps, schema_editor):
         OldHarassment.objects.update_or_create(
             id=harassment.id,
             defaults={
-                "email": harassment.email,
-                "message": harassment.message,
+                'email': harassment.email,
+                'message': harassment.message,
             },
         )
 
@@ -78,7 +78,7 @@ def restore_social_models(apps, schema_editor):
         OldHarassmentEmailRecipient.objects.update_or_create(
             id=recipient.id,
             defaults={
-                "recipient_email": recipient.recipient_email,
+                'recipient_email': recipient.recipient_email,
             },
         )
 
@@ -86,21 +86,22 @@ def restore_social_models(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("harassment", "0001_initial"),
-        ("instagram", "0001_initial"),
-        ("social", "0003_harassmentemailrecipient"),
+        ('harassment', '0001_initial'),
+        ('instagram', '0001_initial'),
+        ('social', '0003_harassmentemailrecipient'),
     ]
 
     operations = [
         migrations.RunPython(copy_social_models, restore_social_models),
         migrations.DeleteModel(
-            name="Harassment",
+            name='Harassment',
         ),
         migrations.DeleteModel(
-            name="HarassmentEmailRecipient",
+            name='HarassmentEmailRecipient',
         ),
         migrations.DeleteModel(
-            name="IgUrl",
+            name='IgUrl',
         ),
     ]

@@ -4,13 +4,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("staticpages", "0011_staticpage_title_content_translations"),
+        ('staticpages', '0011_staticpage_title_content_translations'),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name="staticurl",
-            options={"ordering": ["dropdown_element"]},
+            name='staticurl',
+            options={'ordering': ['dropdown_element']},
         ),
     ]

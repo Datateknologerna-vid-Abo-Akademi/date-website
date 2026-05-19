@@ -4,29 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("gallery", "0001_initial"),
+        ('gallery', '0001_initial'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="album",
-            name="redirect_url",
-            field=models.URLField(
-                blank=True,
-                help_text="Om angiven skickas besökaren vidare hit när albumet öppnas.",
-                max_length=500,
-                verbose_name="Omdirigeringsadress",
-            ),
+            model_name='album',
+            name='redirect_url',
+            field=models.URLField(blank=True, help_text='Om angiven skickas besökaren vidare hit när albumet öppnas.', max_length=500, verbose_name='Omdirigeringsadress'),
         ),
         migrations.AddField(
-            model_name="album",
-            name="thumbnail",
-            field=models.ImageField(
-                blank=True,
-                help_text="Valfri bild som visas som albumets miniatyr.",
-                upload_to="archive/thumbnails/",
-                verbose_name="Albumminiatyr",
-            ),
+            model_name='album',
+            name='thumbnail',
+            field=models.ImageField(blank=True, help_text='Valfri bild som visas som albumets miniatyr.', upload_to='archive/thumbnails/', verbose_name='Albumminiatyr'),
         ),
     ]

@@ -6,6 +6,7 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     initial = True
 
     dependencies = [
@@ -14,42 +15,34 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="FunctionaryRole",
+            name='FunctionaryRole',
             fields=[
-                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("title", models.CharField(max_length=200, verbose_name="Titel")),
-                ("title_en", models.CharField(max_length=200, null=True, verbose_name="Titel")),
-                ("title_fi", models.CharField(max_length=200, null=True, verbose_name="Titel")),
-                ("title_sv", models.CharField(max_length=200, null=True, verbose_name="Titel")),
-                ("board", models.BooleanField(default=False, verbose_name="Styrelse")),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('title', models.CharField(max_length=200, verbose_name='Titel')),
+                ('title_en', models.CharField(max_length=200, null=True, verbose_name='Titel')),
+                ('title_fi', models.CharField(max_length=200, null=True, verbose_name='Titel')),
+                ('title_sv', models.CharField(max_length=200, null=True, verbose_name='Titel')),
+                ('board', models.BooleanField(default=False, verbose_name='Styrelse')),
             ],
             options={
-                "verbose_name": "Funktionärspost",
-                "verbose_name_plural": "Funktionärsposter",
+                'verbose_name': 'Funktionärspost',
+                'verbose_name_plural': 'Funktionärsposter',
             },
         ),
         migrations.CreateModel(
-            name="Functionary",
+            name='Functionary',
             fields=[
-                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("name", models.CharField(blank=True, max_length=200, verbose_name="Namn")),
-                ("year", models.IntegerField(verbose_name="Årtal")),
-                ("created_date", models.DateTimeField(auto_now_add=True)),
-                ("modified_date", models.DateTimeField(auto_now=True)),
-                (
-                    "member",
-                    models.ForeignKey(
-                        blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL
-                    ),
-                ),
-                (
-                    "functionary_role",
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="functionaries.functionaryrole"),
-                ),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(blank=True, max_length=200, verbose_name='Namn')),
+                ('year', models.IntegerField(verbose_name='Årtal')),
+                ('created_date', models.DateTimeField(auto_now_add=True)),
+                ('modified_date', models.DateTimeField(auto_now=True)),
+                ('member', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                ('functionary_role', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='functionaries.functionaryrole')),
             ],
             options={
-                "verbose_name": "Funktionär",
-                "verbose_name_plural": "Funktionärer",
+                'verbose_name': 'Funktionär',
+                'verbose_name_plural': 'Funktionärer',
             },
         ),
     ]

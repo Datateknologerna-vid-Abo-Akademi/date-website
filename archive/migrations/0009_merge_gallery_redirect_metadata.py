@@ -4,19 +4,20 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("archive", "0008_collection_redirect_url_collection_thumbnail"),
-        ("archive", "0008_remove_picture_collection_delete_examcollection_and_more"),
-        ("gallery", "0002_album_redirect_url_album_thumbnail"),
+        ('archive', '0008_collection_redirect_url_collection_thumbnail'),
+        ('archive', '0008_remove_picture_collection_delete_examcollection_and_more'),
+        ('gallery', '0002_album_redirect_url_album_thumbnail'),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name="collection",
-            name="redirect_url",
+            model_name='collection',
+            name='redirect_url',
         ),
         migrations.RemoveField(
-            model_name="collection",
-            name="thumbnail",
+            model_name='collection',
+            name='thumbnail',
         ),
     ]

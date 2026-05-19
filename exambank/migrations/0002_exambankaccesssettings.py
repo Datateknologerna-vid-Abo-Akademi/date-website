@@ -4,31 +4,22 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("exambank", "0001_initial"),
+        ('exambank', '0001_initial'),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="ExamBankAccessSettings",
+            name='ExamBankAccessSettings',
             fields=[
-                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                (
-                    "require_sign_in",
-                    models.BooleanField(
-                        default=True,
-                        help_text="När detta är aktivt kräver tentarkivet vanlig medlemsinloggning.",
-                        verbose_name="Kräv inloggning",
-                    ),
-                ),
-                (
-                    "password_hash",
-                    models.CharField(blank=True, editable=False, max_length=128, verbose_name="Lösenord"),
-                ),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('require_sign_in', models.BooleanField(default=True, help_text='När detta är aktivt kräver tentarkivet vanlig medlemsinloggning.', verbose_name='Kräv inloggning')),
+                ('password_hash', models.CharField(blank=True, editable=False, max_length=128, verbose_name='Lösenord')),
             ],
             options={
-                "verbose_name": "Åtkomst till tentarkiv",
-                "verbose_name_plural": "Åtkomst till tentarkiv",
+                'verbose_name': 'Åtkomst till tentarkiv',
+                'verbose_name_plural': 'Åtkomst till tentarkiv',
             },
         ),
     ]

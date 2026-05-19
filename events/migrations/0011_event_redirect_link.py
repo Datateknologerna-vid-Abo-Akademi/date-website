@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("events", "0010_event_captcha"),
+        ('events', '0010_event_captcha'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="event",
-            name="redirect_link",
-            field=models.URLField(blank=True, verbose_name="Redirect Link"),
+            model_name='event',
+            name='redirect_link',
+            field=models.URLField(blank=True, verbose_name='Redirect Link'),
         ),
     ]

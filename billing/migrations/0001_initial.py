@@ -5,38 +5,36 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     initial = True
 
     dependencies = [
-        ("events", "0014_alter_event_sign_up_max_participants"),
+        ('events', '0014_alter_event_sign_up_max_participants'),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="EventBillingConfiguration",
+            name='EventBillingConfiguration',
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("due_date", models.DateField()),
-                ("integration_type", models.IntegerField()),
-                ("price", models.CharField()),
-                ("price_selector", models.CharField()),
-                ("event", models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to="events.event")),
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('due_date', models.DateField()),
+                ('integration_type', models.IntegerField()),
+                ('price', models.CharField()),
+                ('price_selector', models.CharField()),
+                ('event', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='events.event')),
             ],
         ),
         migrations.CreateModel(
-            name="EventInvoice",
+            name='EventInvoice',
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("invoice_number", models.IntegerField(unique=True)),
-                ("reference_number", models.CharField(max_length=20, unique=True)),
-                ("invoice_date", models.DateField()),
-                ("due_date", models.DateField()),
-                ("amount", models.FloatField(default=0)),
-                ("currency", models.CharField(default="EUR", max_length=3)),
-                (
-                    "participant",
-                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="events.eventattendees"),
-                ),
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('invoice_number', models.IntegerField(unique=True)),
+                ('reference_number', models.CharField(max_length=20, unique=True)),
+                ('invoice_date', models.DateField()),
+                ('due_date', models.DateField()),
+                ('amount', models.FloatField(default=0)),
+                ('currency', models.CharField(default='EUR', max_length=3)),
+                ('participant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='events.eventattendees')),
             ],
         ),
     ]

@@ -4,59 +4,59 @@ from django.db import migrations, models
 
 
 def copy_pictures_and_exams(apps, schema_editor):
-    Collection = apps.get_model("archive", "Collection")
-    Picture = apps.get_model("archive", "Picture")
-    Document = apps.get_model("archive", "Document")
-    Album = apps.get_model("gallery", "Album")
-    Photo = apps.get_model("gallery", "Photo")
-    ExamArchive = apps.get_model("exambank", "ExamArchive")
-    ExamFile = apps.get_model("exambank", "ExamFile")
+    Collection = apps.get_model('archive', 'Collection')
+    Picture = apps.get_model('archive', 'Picture')
+    Document = apps.get_model('archive', 'Document')
+    Album = apps.get_model('gallery', 'Album')
+    Photo = apps.get_model('gallery', 'Photo')
+    ExamArchive = apps.get_model('exambank', 'ExamArchive')
+    ExamFile = apps.get_model('exambank', 'ExamFile')
 
-    for collection in Collection.objects.filter(type="Pictures").iterator():
+    for collection in Collection.objects.filter(type='Pictures').iterator():
         Album.objects.update_or_create(
             pk=collection.pk,
             defaults={
-                "title": collection.title,
-                "pub_date": collection.pub_date,
-                "hide_for_gulis": getattr(collection, "hide_for_gulis", False),
+                'title': collection.title,
+                'pub_date': collection.pub_date,
+                'hide_for_gulis': getattr(collection, 'hide_for_gulis', False),
             },
         )
 
-    for picture in Picture.objects.select_related("collection").filter(collection__type="Pictures").iterator():
+    for picture in Picture.objects.select_related('collection').filter(collection__type='Pictures').iterator():
         Photo.objects.update_or_create(
             pk=picture.pk,
             defaults={
-                "album_id": picture.collection_id,
-                "image": picture.image,
-                "favorite": picture.favorite,
+                'album_id': picture.collection_id,
+                'image': picture.image,
+                'favorite': picture.favorite,
             },
         )
 
-    for collection in Collection.objects.filter(type="Exams").iterator():
+    for collection in Collection.objects.filter(type='Exams').iterator():
         ExamArchive.objects.update_or_create(
             pk=collection.pk,
             defaults={
-                "title": collection.title,
-                "pub_date": collection.pub_date,
-                "hide_for_gulis": getattr(collection, "hide_for_gulis", False),
+                'title': collection.title,
+                'pub_date': collection.pub_date,
+                'hide_for_gulis': getattr(collection, 'hide_for_gulis', False),
             },
         )
 
-    for document in Document.objects.select_related("collection").filter(collection__type="Exams").iterator():
+    for document in Document.objects.select_related('collection').filter(collection__type='Exams').iterator():
         ExamFile.objects.update_or_create(
             pk=document.pk,
             defaults={
-                "archive_id": document.collection_id,
-                "title": document.title,
-                "document": document.document,
+                'archive_id': document.collection_id,
+                'title': document.title,
+                'document': document.document,
             },
         )
 
-    if schema_editor.connection.vendor == "postgresql":
-        _reset_sequence(schema_editor, "gallery_album")
-        _reset_sequence(schema_editor, "gallery_photo")
-        _reset_sequence(schema_editor, "exambank_examarchive")
-        _reset_sequence(schema_editor, "exambank_examfile")
+    if schema_editor.connection.vendor == 'postgresql':
+        _reset_sequence(schema_editor, 'gallery_album')
+        _reset_sequence(schema_editor, 'gallery_photo')
+        _reset_sequence(schema_editor, 'exambank_examarchive')
+        _reset_sequence(schema_editor, 'exambank_examfile')
 
 
 def _reset_sequence(schema_editor, table_name):
@@ -69,31 +69,32 @@ def _reset_sequence(schema_editor, table_name):
 
 
 def remove_copied_pictures_and_exams(apps, schema_editor):
-    apps.get_model("gallery", "Photo").objects.all().delete()
-    apps.get_model("gallery", "Album").objects.all().delete()
-    apps.get_model("exambank", "ExamFile").objects.all().delete()
-    apps.get_model("exambank", "ExamArchive").objects.all().delete()
+    apps.get_model('gallery', 'Photo').objects.all().delete()
+    apps.get_model('gallery', 'Album').objects.all().delete()
+    apps.get_model('exambank', 'ExamFile').objects.all().delete()
+    apps.get_model('exambank', 'ExamArchive').objects.all().delete()
 
 
 def drop_legacy_split_data(apps, schema_editor):
-    Collection = apps.get_model("archive", "Collection")
+    Collection = apps.get_model('archive', 'Collection')
 
     # Exam collections may still have legacy Document rows. Deleting the
     # collections cascades those database rows only; copied ExamFile rows keep
     # their stored file names, and historical migration models do not run
     # django-cleanup file deletion signals.
-    Collection.objects.filter(type__in=["Pictures", "Exams"]).delete()
+    Collection.objects.filter(type__in=['Pictures', 'Exams']).delete()
 
-    table_name = "archive_picture"
+    table_name = 'archive_picture'
     if table_name in schema_editor.connection.introspection.table_names():
-        schema_editor.execute(f"DROP TABLE {schema_editor.quote_name(table_name)}")
+        schema_editor.execute(f'DROP TABLE {schema_editor.quote_name(table_name)}')
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ("archive", "0007_alter_publicfile_some_file"),
-        ("exambank", "0001_initial"),
-        ("gallery", "0001_initial"),
+        ('archive', '0007_alter_publicfile_some_file'),
+        ('exambank', '0001_initial'),
+        ('gallery', '0001_initial'),
     ]
 
     operations = [
@@ -101,24 +102,22 @@ class Migration(migrations.Migration):
         migrations.SeparateDatabaseAndState(
             state_operations=[
                 migrations.RemoveField(
-                    model_name="picture",
-                    name="collection",
+                    model_name='picture',
+                    name='collection',
                 ),
                 migrations.DeleteModel(
-                    name="ExamCollection",
+                    name='ExamCollection',
                 ),
                 migrations.DeleteModel(
-                    name="PictureCollection",
+                    name='PictureCollection',
                 ),
                 migrations.AlterField(
-                    model_name="collection",
-                    name="type",
-                    field=models.CharField(
-                        choices=[("Documents", "Dokument"), ("PublicFiles", "OffentligaFiler")], max_length=20
-                    ),
+                    model_name='collection',
+                    name='type',
+                    field=models.CharField(choices=[('Documents', 'Dokument'), ('PublicFiles', 'OffentligaFiler')], max_length=20),
                 ),
                 migrations.DeleteModel(
-                    name="Picture",
+                    name='Picture',
                 ),
             ],
             database_operations=[],
