@@ -1,9 +1,8 @@
 {% extends 'staticpages/staticpage.html' %}
-
 {% block extra_head %}
-    {% with background_image_url=page.background_image_url %}
+  {% with background_image_url=page.background_image_url %}
     {% if background_image_url %}
-        <style>
+      <style>
             body {
                 background: url("{{ background_image_url }}") no-repeat center center fixed;
                 background-size: cover;
@@ -11,7 +10,7 @@
             footer.association-footer {
                 background-color: var(--primaryColor);
             }
-        </style>
+      </style>
     {% endif %}
-    {% endwith %}
+  {% endwith %}
 {% endblock %}

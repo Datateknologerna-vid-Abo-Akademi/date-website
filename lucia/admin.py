@@ -2,12 +2,14 @@ from django import forms
 from django.contrib import admin
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+
 from core.admin_base import ModelAdmin, PublicUrlAdminMixin, UnfoldFormMixin
 from core.admin_widgets import (
     FLATPICKR_ADMIN_CSS,
     FLATPICKR_ADMIN_JS,
     flatpickr_datetime_field,
 )
+
 from .models import Candidate
 
 
@@ -18,32 +20,32 @@ class CandidateAdminForm(UnfoldFormMixin, forms.ModelForm):
 
     class Meta:
         model = Candidate
-        fields = "__all__"
+        fields = "__all__"  # noqa: DJ007
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if 'published_time' in self.fields:
-            self.fields['published_time'].help_text = _("Leave blank to keep the candidate hidden.")
+        if "published_time" in self.fields:
+            self.fields["published_time"].help_text = _("Leave blank to keep the candidate hidden.")
 
 
 class CandidatePublicationFilter(admin.SimpleListFilter):
-    title = _('publicering')
-    parameter_name = 'publication'
+    title = _("publicering")
+    parameter_name = "publication"
 
     def lookups(self, request, model_admin):
         return (
-            ('published', _('Publicerad')),
-            ('scheduled', _('Schemalagd')),
-            ('hidden', _('Dold')),
+            ("published", _("Publicerad")),
+            ("scheduled", _("Schemalagd")),
+            ("hidden", _("Dold")),
         )
 
     def queryset(self, request, queryset):
         current_time = now()
-        if self.value() == 'published':
+        if self.value() == "published":
             return queryset.filter(published_time__isnull=False, published_time__lte=current_time)
-        if self.value() == 'scheduled':
+        if self.value() == "scheduled":
             return queryset.filter(published_time__gt=current_time)
-        if self.value() == 'hidden':
+        if self.value() == "hidden":
             return queryset.filter(published_time__isnull=True)
         return queryset
 
@@ -51,21 +53,21 @@ class CandidatePublicationFilter(admin.SimpleListFilter):
 @admin.register(Candidate)
 class CandidateAdmin(PublicUrlAdminMixin, ModelAdmin):
     form = CandidateAdminForm
-    list_display = ('title', 'publication_status', 'published_time')
+    list_display = ("title", "publication_status", "published_time")
     list_filter = (CandidatePublicationFilter,)
-    search_fields = ('title', 'slug', 'poll_url', 'img_url')
-    prepopulated_fields = {'slug': ('title',)}
+    search_fields = ("title", "slug", "poll_url", "img_url")
+    prepopulated_fields = {"slug": ("title",)}
 
     def publication_status(self, obj):
         if obj.published_time is None:
-            return _('Dold')
+            return _("Dold")
         if obj.published_time > now():
-            return _('Schemalagd')
-        return _('Publicerad')
+            return _("Schemalagd")
+        return _("Publicerad")
 
-    publication_status.short_description = _('Publicering')
-    publication_status.admin_order_field = 'published_time'
+    publication_status.short_description = _("Publicering")
+    publication_status.admin_order_field = "published_time"
 
     class Media:
-        css = {'all': FLATPICKR_ADMIN_CSS}
-        js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS
+        css = {"all": FLATPICKR_ADMIN_CSS}
+        js = ("admin/js/jquery.init.js",) + FLATPICKR_ADMIN_JS

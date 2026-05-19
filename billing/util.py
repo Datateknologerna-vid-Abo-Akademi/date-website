@@ -1,32 +1,32 @@
-import random
-import json
+import secrets
 from enum import Enum
 
 from django.conf import settings
 from django.template.loader import render_to_string
 
 from billing.models import EventInvoice
-from events.models import EventRegistrationForm, EventAttendees
 from core.utils import send_email_task
+from events.models import EventAttendees, EventRegistrationForm
 
 
 class BillingIntegrations(Enum):
     """Integrations for billing"""
+
     INVOICE = 1
 
 
 def generate_invoice_number() -> int:
     """Generate invoice number"""
-    return random.randint(24000000, 24099999)
+    return secrets.randbelow(100000) + 24000000
 
 
 def generate_reference_number(invoice_number: int) -> str:
     """Generate reference number for invoice"""
     multiplication_feed = (7, 3, 1)
-    reference_number_raw = str(invoice_number).replace(' ', '')
+    reference_number_raw = str(invoice_number).replace(" ", "")
     numbers_reverse = map(int, reference_number_raw[::-1])
     sum_of_multiplication = sum(multiplication_feed[i % 3] * x for i, x in enumerate(numbers_reverse))
-    return str(invoice_number)+str((10 - (sum_of_multiplication % 10)) % 10)
+    return str(invoice_number) + str((10 - (sum_of_multiplication % 10)) % 10)
 
 
 def get_selection_price(event, pricing, price_selector, preferences):
@@ -54,33 +54,37 @@ def get_selection_price(event, pricing, price_selector, preferences):
 def send_event_invoice(signup: EventAttendees, invoice: EventInvoice):
     """Send invoice to participant"""
     context = {
-        'invoice': invoice,
-        'signup': signup,
+        "invoice": invoice,
+        "signup": signup,
         **settings.BILLING_CONTEXT,
         **settings.CONTENT_VARIABLES,
     }
-    content = render_to_string('billing/invoice_email.txt', context)
-    send_email_task.delay(f"{signup.event.title} - Betalningsuppgifter", content, settings.DEFAULT_FROM_EMAIL, [signup.email])
+    content = render_to_string("billing/invoice_email.txt", context)
+    send_email_task.delay(
+        f"{signup.event.title} - Betalningsuppgifter", content, settings.DEFAULT_FROM_EMAIL, [signup.email]
+    )
 
 
 def send_event_free_confirmation(signup: EventAttendees):
     """Send confirmation email for free events"""
     context = {
-        'signup': signup,
+        "signup": signup,
         **settings.BILLING_CONTEXT,
         **settings.CONTENT_VARIABLES,
     }
-    content = render_to_string('billing/free_event_confirmation_email.txt', context)
+    content = render_to_string("billing/free_event_confirmation_email.txt", context)
     send_email_task.delay(f"{signup.event.title} - Bekräftelse", content, settings.DEFAULT_FROM_EMAIL, [signup.email])
 
 
-def send_confirmation_email(signup: EventAttendees, billing_data: EventInvoice =None, template='events/emails/confirmation_email.txt'):
+def send_confirmation_email(
+    signup: EventAttendees, billing_data: EventInvoice = None, template="events/emails/confirmation_email.txt"
+):
     """Send confirmation email to participant"""
 
     context = {
-        'signup': signup,
-        'billing_data': billing_data,
-        'event': signup.event,
+        "signup": signup,
+        "billing_data": billing_data,
+        "event": signup.event,
         **settings.BILLING_CONTEXT,
         **settings.CONTENT_VARIABLES,
     }

@@ -34,41 +34,41 @@ class ExamArchiveAdminForm(forms.ModelForm):
 
     class Meta:
         model = ExamArchive
-        fields = '__all__'
+        fields = "__all__"  # noqa: DJ007
 
     def save(self, *args, **kwargs):
         archive = super().save(*args, **kwargs)
-        if hasattr(self.files, 'getlist'):
-            for uploaded_file in self.files.getlist('files'):
+        if hasattr(self.files, "getlist"):
+            for uploaded_file in self.files.getlist("files"):
                 ExamFile.objects.create(archive=archive, document=uploaded_file, title=uploaded_file)
         return archive
 
 
 class ExamBankAccessSettingsAdminForm(forms.ModelForm):
-    PASSWORD_PLACEHOLDER = '********'
+    PASSWORD_PLACEHOLDER = "********"  # noqa: S105
 
     password = forms.CharField(
-        label=_('Lösenord'),
+        label=_("Lösenord"),
         required=False,
         widget=forms.PasswordInput(render_value=True),
         help_text=_(
-            'Används bara när inloggning inte krävs. '
-            'Lämna tomt för inget lösenord, eller behåll markeringen för att spara nuvarande lösenord.'
+            "Används bara när inloggning inte krävs. "
+            "Lämna tomt för inget lösenord, eller behåll markeringen för att spara nuvarande lösenord."
         ),
     )
 
     class Meta:
         model = ExamBankAccessSettings
-        fields = ('require_sign_in',)
+        fields = ("require_sign_in",)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.has_password:
-            self.fields['password'].initial = self.PASSWORD_PLACEHOLDER
+            self.fields["password"].initial = self.PASSWORD_PLACEHOLDER
 
     def save(self, commit=True):
         settings = super().save(commit=False)
-        password = self.cleaned_data.get('password', '')
+        password = self.cleaned_data.get("password", "")
         if password != self.PASSWORD_PLACEHOLDER:
             settings.set_password(password)
         if commit:
@@ -79,7 +79,7 @@ class ExamBankAccessSettingsAdminForm(forms.ModelForm):
 
 class ExamBankPasswordForm(forms.Form):
     password = forms.CharField(
-        label=_('Lösenord'),
+        label=_("Lösenord"),
         widget=forms.PasswordInput,
     )
 
@@ -88,7 +88,7 @@ class ExamBankPasswordForm(forms.Form):
         self.access_settings = access_settings
 
     def clean_password(self):
-        password = self.cleaned_data['password']
+        password = self.cleaned_data["password"]
         if not self.access_settings or not self.access_settings.check_password(password):
-            raise forms.ValidationError(_('Fel lösenord.'))
+            raise forms.ValidationError(_("Fel lösenord."))
         return password

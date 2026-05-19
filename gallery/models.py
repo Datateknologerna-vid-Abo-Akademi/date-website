@@ -13,7 +13,7 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from PIL import Image
 
-logger = logging.getLogger('date')
+logger = logging.getLogger("date")
 
 
 def upload_to(instance, filename):
@@ -30,60 +30,60 @@ def compress_image(uploaded_image):
     basewidth = 1600
     img = Image.open(uploaded_image)
     output_io_stream = BytesIO()
-    img = img.convert('RGB')
+    img = img.convert("RGB")
     wpercent = basewidth / float(img.size[0])
     hsize = int(float(img.size[1]) * float(wpercent))
     img = img.resize((basewidth, hsize), Image.LANCZOS)
-    img.save(output_io_stream, format='JPEG', quality=60)
+    img.save(output_io_stream, format="JPEG", quality=60)
     output_io_stream.seek(0)
     return InMemoryUploadedFile(
         output_io_stream,
-        'ImageField',
-        "%s.jpg" % uploaded_image.name.split('.')[0],
-        'image/jpeg',
+        "ImageField",
+        f"{uploaded_image.name.split('.')[0]}.jpg",
+        "image/jpeg",
         sys.getsizeof(output_io_stream),
         None,
     )
 
 
 class Album(models.Model):
-    title = models.CharField(_('Namn'), max_length=250)
+    title = models.CharField(_("Namn"), max_length=250)
     pub_date = models.DateTimeField(default=timezone.now, null=True)
-    hide_for_gulis = models.BooleanField(_('Göm för gulisar'), default=False)
+    hide_for_gulis = models.BooleanField(_("Göm för gulisar"), default=False)
     redirect_url = models.URLField(
-        _('Omdirigeringsadress'),
+        _("Omdirigeringsadress"),
         max_length=500,
         blank=True,
-        help_text=_('Om angiven skickas besökaren vidare hit när albumet öppnas.'),
+        help_text=_("Om angiven skickas besökaren vidare hit när albumet öppnas."),
     )
     thumbnail = models.ImageField(
-        _('Albumminiatyr'),
-        upload_to='archive/thumbnails/',
+        _("Albumminiatyr"),
+        upload_to="archive/thumbnails/",
         blank=True,
-        help_text=_('Valfri bild som visas som albumets miniatyr.'),
+        help_text=_("Valfri bild som visas som albumets miniatyr."),
     )
 
     class Meta:
-        verbose_name_plural = verbose_name = _('Bildarkiv')
-        ordering = ('-pub_date',)
+        verbose_name_plural = verbose_name = _("Bildarkiv")
+        ordering = ("-pub_date",)
 
     def __str__(self):
         return self.title
 
     def get_absolute_url(self):
-        return reverse('archive:detail', kwargs={'album': self.title, 'year': self.pub_date.year})
+        return reverse("archive:detail", kwargs={"album": self.title, "year": self.pub_date.year})
 
     def pub_date_pretty(self):
-        return self.pub_date.strftime('%b %e %Y')
+        return self.pub_date.strftime("%b %e %Y")
 
     def clean(self):
         super().clean()
-        if '/' in self.title:
-            raise ValidationError({'title': "Snedstreck är inte tillåtet."})
+        if "/" in self.title:
+            raise ValidationError({"title": "Snedstreck är inte tillåtet."})
 
 
 class Photo(models.Model):
-    album = models.ForeignKey(Album, verbose_name=_('Galleri'), on_delete=models.CASCADE)
+    album = models.ForeignKey(Album, verbose_name=_("Galleri"), on_delete=models.CASCADE)
     image = models.ImageField(upload_to=upload_to)
     favorite = models.BooleanField(default=False)
 
@@ -94,15 +94,16 @@ class Photo(models.Model):
     def __str__(self):
         return self.image.name
 
-    def get_file_path(self):
-        return self.image.url
-
     def save(self, *args, **kwargs):
         if not self.id:
             self.image = compress_image(self.image)
         super().save(*args, **kwargs)
 
+    def get_file_path(self):
+        return self.image.url
+
     if not settings.USE_S3:
+
         def delete(self, using=None, keep_parents=False):
             try:
                 os.remove(os.path.join(settings.MEDIA_ROOT, self.image.name))

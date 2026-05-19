@@ -29,11 +29,11 @@ class AlbumAdminForm(forms.ModelForm):
 
     class Meta:
         model = Album
-        fields = '__all__'
+        fields = "__all__"  # noqa: DJ007
 
     def save(self, *args, **kwargs):
         album = super().save(*args, **kwargs)
-        if hasattr(self.files, 'getlist'):
-            for uploaded_file in self.files.getlist('images'):
+        if hasattr(self.files, "getlist"):
+            for uploaded_file in self.files.getlist("images"):
                 Photo.objects.create(album=album, image=uploaded_file)
         return album

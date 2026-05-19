@@ -1,48 +1,57 @@
 {% load static %}
 {% load i18n %}
-
 <footer class="container association-footer{% block footer_class_suffix %}{% endblock %}">
-    <div class="association-footer-shell{% block footer_shell_class_suffix %}{% endblock %}">
-        <hr>
-        <section class="col text-center association-footer-social{% block footer_social_class_suffix %}{% endblock %}">
-            {% for btn in SOCIAL_BUTTONS %}
-                {% if btn.1 %}
-                    <a class="btn btn-outline-light btn-floating" href="{{ btn.1 }}" role="button">
-                        <i class="fab {{ btn.0 }}"></i>
-                    </a>
-                {% endif %}
-            {% endfor %}
-        </section>
-        <div class="row align-middle align-items-center association-footer-content{% block footer_content_class_suffix %}{% endblock %}">
-            <div class="col-12 col-md-4 text-center association-footer-brand{% block footer_brand_class_suffix %}{% endblock %}">
-                {% block footer_logo %}
-                <img class="footer-img img-fluid" alt="{% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}{{ association_name }} logo{% endblocktranslate %}" src="{% static 'core/images/footerlogo.png' %}">
-                {% endblock %}
-            </div>
-            <div class="col-12 col-md-4 association-footer-copy{% block footer_copy_class_suffix %}{% endblock %}">
-                {% block footer_contact_sentence %}
-                <p>
-                    {% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}
-                    Styrelsen för {{ association_name }} kan kontaktas på följande sätt.
-                    {% endblocktranslate %}
-                </p>
-                {% endblock %}
-                <p>
-                    {% trans 'E-post' %}:<br>
-                    {{ ASSOCIATION_EMAIL }}
-                    {% if ASSOCIATION_OFFICE_HOURS %}<br>{{ ASSOCIATION_OFFICE_HOURS }}{% endif %}
-                </p>
-                <p>{% trans "Address" %}:<br>
-                    {% block footer_address_l1 %}{{ ASSOCIATION_ADDRESS_L1 }}{% endblock %}<br>
-                    {{ ASSOCIATION_ADDRESS_L2 }}<br>
-                    {{ ASSOCIATION_POSTAL_CODE }}
-                </p>
-            </div>
-            {% block footer_right %}{% endblock %}
-        </div>
-        {% block extra_footer %}{% endblock %}
-        <div class="text-center p-3">
-            &copy {% now "Y" %}
-        </div>
+  <div class="association-footer-shell{% block footer_shell_class_suffix %}{% endblock %}">
+    <hr>
+    <section class="col text-center association-footer-social{% block footer_social_class_suffix %}{% endblock %}">
+      {% for btn in SOCIAL_BUTTONS %}
+        {% if btn.1 %}
+          <a class="btn btn-outline-light btn-floating"
+             href="{{ btn.1 }}"
+             role="button">
+            <i class="fab {{ btn.0 }}"></i>
+          </a>
+        {% endif %}
+      {% endfor %}
+    </section>
+    <div class="row align-middle align-items-center association-footer-content{% block footer_content_class_suffix %}{% endblock %}">
+      <div class="col-12 col-md-4 text-center association-footer-brand{% block footer_brand_class_suffix %}{% endblock %}">
+        {% block footer_logo %}
+          <img class="footer-img img-fluid"
+               alt="{% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}{{ association_name }} logo{% endblocktranslate %}"
+               src="{% static 'core/images/footerlogo.png' %}">
+        {% endblock %}
+      </div>
+      <div class="col-12 col-md-4 association-footer-copy{% block footer_copy_class_suffix %}{% endblock %}">
+        {% block footer_contact_sentence %}
+          <p>
+            {% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}
+              Styrelsen för {{ association_name }} kan kontaktas på följande sätt.
+            {% endblocktranslate %}
+          </p>
+        {% endblock %}
+        <p>
+          {% trans 'E-post' %}:
+          <br>
+          {{ ASSOCIATION_EMAIL }}
+          {% if ASSOCIATION_OFFICE_HOURS %}
+            <br>
+            {{ ASSOCIATION_OFFICE_HOURS }}
+          {% endif %}
+        </p>
+        <p>
+          {% trans "Address" %}:
+          <br>
+          {% block footer_address_l1 %}{{ ASSOCIATION_ADDRESS_L1 }}{% endblock %}
+          <br>
+          {{ ASSOCIATION_ADDRESS_L2 }}
+          <br>
+          {{ ASSOCIATION_POSTAL_CODE }}
+        </p>
+      </div>
+      {% block footer_right %}{% endblock %}
     </div>
+    {% block extra_footer %}{% endblock %}
+    <div class="text-center p-3">&copy {% now "Y" %}</div>
+  </div>
 </footer>

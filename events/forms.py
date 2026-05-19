@@ -2,9 +2,10 @@ import logging
 import re
 
 from django import forms
-from django.utils.timezone import now
 from django.conf import settings
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+
 from core.admin_base import UnfoldFormMixin
 from core.admin_widgets import (
     FLATPICKR_DATETIME_INPUT_FORMATS,
@@ -12,26 +13,25 @@ from core.admin_widgets import (
     flatpickr_datetime_field,
     flatpickr_datetime_widget,
 )
-
 from date.functions import slugify_max
 from events import models
-from events.models import Event, EVENT_TEMPLATE_CHOICES_COMMON, EVENT_TEMPLATE_CHOICES_KK
+from events.models import EVENT_TEMPLATE_CHOICES_COMMON, EVENT_TEMPLATE_CHOICES_KK, Event
 
-logger = logging.getLogger('date')
+logger = logging.getLogger("date")
 
 slug_transtable = str.maketrans("åäö ", "aao_")
 
 
 def _slug_base_from_title(title):
     base_slug = (title or "").lower().translate(slug_transtable)
-    base_slug = re.sub("[^a-zA-Z0-9_]*", '', base_slug)
-    return re.sub("__+", '_', base_slug).strip('_')
+    base_slug = re.sub("[^a-zA-Z0-9_]*", "", base_slug)
+    return re.sub("__+", "_", base_slug).strip("_")
 
 
 def _slug_with_suffix(base_slug, suffix):
     suffix_text = "_" + str(suffix)
     base_max_length = models.POST_SLUG_MAX_LENGTH - len(suffix_text)
-    return base_slug[:base_max_length].rstrip('_') + suffix_text
+    return base_slug[:base_max_length].rstrip("_") + suffix_text
 
 
 def unique_event_slug(slug, title, instance=None):
@@ -58,7 +58,7 @@ def unique_event_slug(slug, title, instance=None):
 
 
 def _template_choices():
-    if settings.PROJECT_NAME == 'kk':
+    if settings.PROJECT_NAME == "kk":
         return EVENT_TEMPLATE_CHOICES_COMMON + EVENT_TEMPLATE_CHOICES_KK
     return EVENT_TEMPLATE_CHOICES_COMMON
 
@@ -77,58 +77,58 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if 'published_time' in self.fields:
-            self.fields['published_time'].help_text = _("Leave blank to keep the event hidden.")
-        for field_name in ('image', 's3_image'):
+        if "published_time" in self.fields:
+            self.fields["published_time"].help_text = _("Leave blank to keep the event hidden.")
+        for field_name in ("image", "s3_image"):
             if field_name in self.fields:
                 self.fields[field_name].widget = SafeAdminFileWidget()
-        if 'require_registration_terms' in self.fields:
+        if "require_registration_terms" in self.fields:
             if models.registration_terms_feature_enabled():
-                self.fields['require_registration_terms'].initial = True
+                self.fields["require_registration_terms"].initial = True
             else:
-                self.fields.pop('require_registration_terms')
-        if 'template' in self.fields:
-            self.fields['template'].choices = _template_choices()
+                self.fields.pop("require_registration_terms")
+        if "template" in self.fields:
+            self.fields["template"].choices = _template_choices()
 
     class Meta:
         model = Event
         temp_fields = (
-            'title',
-            'event_date_start',
-            'event_date_end',
-            'content',
-            'template',
-            'sign_up',
-            'sign_up_max_participants',
-            'sign_up_others',
-            'sign_up_members',
-            'sign_up_deadline',
-            'sign_up_cancelling',
-            'sign_up_cancelling_deadline',
-            'published_time',
-            'sign_up_avec',
-            'require_registration_terms',
-            'slug',
-            'members_only',
-            'passcode',
-            'captcha',
-            'redirect_link',
-            'parent',
+            "title",
+            "event_date_start",
+            "event_date_end",
+            "content",
+            "template",
+            "sign_up",
+            "sign_up_max_participants",
+            "sign_up_others",
+            "sign_up_members",
+            "sign_up_deadline",
+            "sign_up_cancelling",
+            "sign_up_cancelling_deadline",
+            "published_time",
+            "sign_up_avec",
+            "require_registration_terms",
+            "slug",
+            "members_only",
+            "passcode",
+            "captcha",
+            "redirect_link",
+            "parent",
         )
         if settings.USE_S3:
-            fields = temp_fields + ('s3_image',)
+            fields = temp_fields + ("s3_image",)
         else:
-            fields = temp_fields + ('image',)
+            fields = temp_fields + ("image",)
 
     def clean_slug(self):
         return unique_event_slug(
-            self.cleaned_data.get('slug'),
-            self.cleaned_data.get('title'),
+            self.cleaned_data.get("slug"),
+            self.cleaned_data.get("title"),
             self.instance,
         )
 
     def save(self, commit=True):
-        post = super(EventCreationForm, self).save(commit=False)
+        post = super().save(commit=False)
 
         if self.user is None:
             return None
@@ -148,7 +148,6 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
 
 
 class EventEditForm(UnfoldFormMixin, forms.ModelForm):
-
     user = None
     redirect_link = forms.URLField(required=False, assume_scheme="https")
     published_time = flatpickr_datetime_field(required=False)
@@ -160,7 +159,7 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
         "widget": flatpickr_datetime_widget(),
         "input_formats": FLATPICKR_DATETIME_INPUT_FORMATS,
         "initial": now(),
-        "required": False
+        "required": False,
     }
     sign_up_others = forms.DateTimeField(**sign_up_args)
     sign_up_members = forms.DateTimeField(**sign_up_args)
@@ -170,69 +169,67 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if 'published_time' in self.fields:
-            self.fields['published_time'].help_text = _("Leave blank to keep the event hidden.")
-        for field_name in ('image', 's3_image'):
+        if "published_time" in self.fields:
+            self.fields["published_time"].help_text = _("Leave blank to keep the event hidden.")
+        for field_name in ("image", "s3_image"):
             if field_name in self.fields:
                 self.fields[field_name].widget = SafeAdminFileWidget()
-        if 'require_registration_terms' in self.fields and not models.registration_terms_feature_enabled():
-            self.fields.pop('require_registration_terms')
-        if 'template' in self.fields:
-            self.fields['template'].choices = _template_choices()
+        if "require_registration_terms" in self.fields and not models.registration_terms_feature_enabled():
+            self.fields.pop("require_registration_terms")
+        if "template" in self.fields:
+            self.fields["template"].choices = _template_choices()
         # exclude the current instance from parent choices so an event cannot be its own parent
         try:
-            if getattr(self, 'instance', None) and getattr(self.instance, 'pk', None):
+            if getattr(self, "instance", None) and getattr(self.instance, "pk", None):
                 # limit parent choices to future events and exclude self
-                self.fields['parent'].queryset = Event.objects.filter(
-                    event_date_end__gte=now()
-                ).exclude(pk=self.instance.pk)
+                self.fields["parent"].queryset = Event.objects.filter(event_date_end__gte=now()).exclude(
+                    pk=self.instance.pk
+                )
             else:
                 # creation: only future events
-                self.fields['parent'].queryset = Event.objects.filter(
-                    event_date_end__gte=now()
-                )
-        except Exception:
-            # defensive: if fields not yet set or parent missing, ignore
+                self.fields["parent"].queryset = Event.objects.filter(event_date_end__gte=now())
+        except KeyError:
+            # "parent" field not present during form init — safe to skip
             pass
 
     class Meta:
         model = Event
         temp_fields = (
-            'title',
-            'event_date_start',
-            'event_date_end',
-            'content',
-            'template',
-            'sign_up',
-            'sign_up_max_participants',
-            'sign_up_others',
-            'sign_up_members',
-            'sign_up_deadline',
-            'sign_up_cancelling',
-            'sign_up_cancelling_deadline',
-            'published_time',
-            'sign_up_avec',
-            'require_registration_terms',
-            'slug',
-            'members_only',
-            'passcode',
-            'captcha',
-            'redirect_link',
-            'parent',
+            "title",
+            "event_date_start",
+            "event_date_end",
+            "content",
+            "template",
+            "sign_up",
+            "sign_up_max_participants",
+            "sign_up_others",
+            "sign_up_members",
+            "sign_up_deadline",
+            "sign_up_cancelling",
+            "sign_up_cancelling_deadline",
+            "published_time",
+            "sign_up_avec",
+            "require_registration_terms",
+            "slug",
+            "members_only",
+            "passcode",
+            "captcha",
+            "redirect_link",
+            "parent",
         )
         if settings.USE_S3:
-            fields = temp_fields + ('s3_image',)
+            fields = temp_fields + ("s3_image",)
         else:
-            fields = temp_fields + ('image',)
+            fields = temp_fields + ("image",)
 
     def clean_slug(self):
-        slug = (self.cleaned_data.get('slug') or "").strip()
+        slug = (self.cleaned_data.get("slug") or "").strip()
         if slug == "" and self.instance and self.instance.slug:
             return self.instance.slug
-        return unique_event_slug(slug, self.cleaned_data.get('title'), self.instance)
+        return unique_event_slug(slug, self.cleaned_data.get("title"), self.instance)
 
     def save(self, commit=True):
-        post = super(EventEditForm, self).save(commit=False)
+        post = super().save(commit=False)
 
         if self.user is None:
             return None

@@ -22,17 +22,17 @@ def validate_captcha(response: str) -> bool:
         return False
 
     data = {
-        'secret': secret_key,
-        'response': response,
+        "secret": secret_key,
+        "response": response,
     }
 
     try:
-        res = requests.post(VALIDATION_URL, data=data)
+        res = requests.post(VALIDATION_URL, data=data, timeout=5)
     except Exception:
         logger.info("Request to cloudflare failed")
         return False
 
-    return res.json().get('success', False)
+    return res.json().get("success", False)
 
 
 def enqueue_task_on_commit(task, *args, **kwargs) -> None:
