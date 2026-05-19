@@ -15,20 +15,25 @@ def migrate_candidate_publication(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('lucia', '0003_alter_candidate_content'),
+        ("lucia", "0003_alter_candidate_content"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='candidate',
-            name='published_time',
-            field=models.DateTimeField(blank=True, default=django.utils.timezone.now, help_text='Lämna tomt för att dölja kandidaten. Välj en framtida tid för schemalagd publicering.', null=True, verbose_name='Publiceras'),
+            model_name="candidate",
+            name="published_time",
+            field=models.DateTimeField(
+                blank=True,
+                default=django.utils.timezone.now,
+                help_text="Lämna tomt för att dölja kandidaten. Välj en framtida tid för schemalagd publicering.",
+                null=True,
+                verbose_name="Publiceras",
+            ),
         ),
         migrations.RunPython(migrate_candidate_publication, migrations.RunPython.noop),
         migrations.RemoveField(
-            model_name='candidate',
-            name='published',
+            model_name="candidate",
+            name="published",
         ),
     ]

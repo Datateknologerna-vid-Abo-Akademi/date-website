@@ -1,11 +1,10 @@
 import logging
 
-from django.conf import settings
 from django.test import SimpleTestCase
 
 from core.redaction import (
-    DateExceptionReporterFilter,
     REDACTED,
+    DateExceptionReporterFilter,
     RedactingFormatter,
     redact_text,
 )
@@ -53,7 +52,7 @@ class RedactingFormatterTests(SimpleTestCase):
 
     def test_redacts_alumni_settings_log_message(self):
         output = self.format_message(
-            'ALUMNI_SETTINGS=%s',
+            "ALUMNI_SETTINGS=%s",
             '{"private_key":"secret-key","client_email":"service@example.com"}',
         )
 
@@ -62,9 +61,7 @@ class RedactingFormatterTests(SimpleTestCase):
         self.assertNotIn("service@example.com", output)
 
     def test_redacts_private_key_blocks(self):
-        output = self.format_message(
-            'private_key="-----BEGIN PRIVATE KEY-----secret-key-----END PRIVATE KEY-----"'
-        )
+        output = self.format_message('private_key="-----BEGIN PRIVATE KEY-----secret-key-----END PRIVATE KEY-----"')
 
         self.assertIn(REDACTED, output)
         self.assertNotIn("secret-key", output)
@@ -79,4 +76,5 @@ class RedactingFormatterTests(SimpleTestCase):
 class LoggingSettingsTests(SimpleTestCase):
     def test_django_console_handler_does_not_override_logger_level(self):
         from core.settings.common import LOGGING
+
         self.assertEqual(LOGGING["handlers"]["console"]["level"], "NOTSET")

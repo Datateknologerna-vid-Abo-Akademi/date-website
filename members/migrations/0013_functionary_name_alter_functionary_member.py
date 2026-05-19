@@ -6,29 +6,32 @@ from django.db import migrations, models
 
 
 def copy_member_names(apps, _):
-    Functionary = apps.get_model('members', 'Functionary')
+    Functionary = apps.get_model("members", "Functionary")
 
-    for functionary in Functionary.objects.select_related('member').filter(name='', member__isnull=False):
-        functionary.name = f'{functionary.member.first_name} {functionary.member.last_name}'.strip() or functionary.member.username
-        functionary.save(update_fields=['name'])
+    for functionary in Functionary.objects.select_related("member").filter(name="", member__isnull=False):
+        functionary.name = (
+            f"{functionary.member.first_name} {functionary.member.last_name}".strip() or functionary.member.username
+        )
+        functionary.save(update_fields=["name"])
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('members', '0012_github_id'),
+        ("members", "0012_github_id"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='functionary',
-            name='name',
-            field=models.CharField(blank=True, max_length=200, verbose_name='Namn'),
+            model_name="functionary",
+            name="name",
+            field=models.CharField(blank=True, max_length=200, verbose_name="Namn"),
         ),
         migrations.RunPython(copy_member_names, migrations.RunPython.noop),
         migrations.AlterField(
-            model_name='functionary',
-            name='member',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),
+            model_name="functionary",
+            name="member",
+            field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL
+            ),
         ),
     ]

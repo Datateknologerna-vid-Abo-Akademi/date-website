@@ -24,7 +24,7 @@ def strip_language_prefix(url):
     normalized = url if url.startswith("/") else f"/{url}"
     lang = get_language_from_path(normalized)
     if lang:
-        remainder = normalized[len(f"/{lang}"):] or "/"
+        remainder = normalized[len(f"/{lang}") :] or "/"
         if not remainder.startswith("/"):
             remainder = f"/{remainder}"
         return remainder

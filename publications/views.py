@@ -1,12 +1,13 @@
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
+from django.core.paginator import Paginator
 from django.db.models import Exists, OuterRef
 from django.http import Http404, HttpResponseForbidden
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
+
 from .models import PDFFile, PublicationCollection
-from django.core.paginator import Paginator
 
 
 def _compact_page_range(current, total, window=1, edges=1):
@@ -38,7 +39,7 @@ def _compact_page_range(current, total, window=1, edges=1):
 
 
 def _collection_session_key(collection):
-    return f'publication_collection_access_{collection.pk}'
+    return f"publication_collection_access_{collection.pk}"
 
 
 def _collection_session_token(collection):
@@ -61,10 +62,7 @@ def _collection_is_visible(collection, user):
         return True
     if collection.visibility == PublicationCollection.VISIBILITY_MEMBERSHIP:
         # Iterate the prefetched list rather than re-querying.
-        return any(
-            mt.pk == user.membership_type_id
-            for mt in collection.allowed_membership_types.all()
-        )
+        return any(mt.pk == user.membership_type_id for mt in collection.allowed_membership_types.all())
     return False
 
 
@@ -92,9 +90,9 @@ def _collection_access_response(request, collection):
         expected_token = _collection_session_token(collection)
         if expected_token and request.session.get(session_key) == expected_token:
             return None
-        error = ''
-        if request.method == 'POST':
-            if collection.check_password(request.POST.get('password', '')):
+        error = ""
+        if request.method == "POST":
+            if collection.check_password(request.POST.get("password", "")):
                 request.session[session_key] = _collection_session_token(collection)
                 # Re-issue the current request as a GET. request.get_full_path()
                 # is always a local Django-matched path, but gating it through
@@ -103,17 +101,19 @@ def _collection_access_response(request, collection):
                 # branch carries no taint either.
                 next_url = request.get_full_path()
                 if url_has_allowed_host_and_scheme(
-                    next_url, allowed_hosts=None, require_https=False,
+                    next_url,
+                    allowed_hosts=None,
+                    require_https=False,
                 ):
                     return redirect(next_url)
-                return redirect('publications:pdf_list')
-            error = _('Fel lösenord.')
+                return redirect("publications:pdf_list")
+            error = _("Fel lösenord.")
         return render(
             request,
-            'publications/password.html',
+            "publications/password.html",
             {
-                'collection': collection,
-                'error': error,
+                "collection": collection,
+                "error": error,
             },
         )
 
@@ -133,7 +133,7 @@ def _check_pdf_access(request, pdf_file):
 def _prepare_publication_cards(page_obj):
     for pdf in page_obj:
         pdf.cover_url = pdf.get_safe_cover_url()
-        pdf.thumbnail_url = '' if pdf.cover_url else pdf.get_safe_file_url()
+        pdf.thumbnail_url = "" if pdf.cover_url else pdf.get_safe_file_url()
 
 
 def pdf_view(request, collection_slug, slug):
@@ -151,10 +151,10 @@ def pdf_view(request, collection_slug, slug):
         return redirect(pdf_file.redirect_url)
 
     context = {
-        'pdf_url': pdf_file.get_file_url(),
-        'pdf_file': pdf_file,
+        "pdf_url": pdf_file.get_file_url(),
+        "pdf_file": pdf_file,
     }
-    return render(request, 'publications/viewer.html', context)
+    return render(request, "publications/viewer.html", context)
 
 
 def legacy_pdf_view(request, slug):
@@ -175,31 +175,32 @@ def legacy_pdf_view(request, slug):
         return redirect(pdf_file.redirect_url)
 
     context = {
-        'pdf_url': pdf_file.get_file_url(),
-        'pdf_file': pdf_file,
+        "pdf_url": pdf_file.get_file_url(),
+        "pdf_file": pdf_file,
     }
-    return render(request, 'publications/viewer.html', context)
+    return render(request, "publications/viewer.html", context)
 
 
 def pdf_list(request):
-    publications_filter = {'collection': OuterRef('pk'), 'is_public': True}
+    publications_filter = {"collection": OuterRef("pk"), "is_public": True}
     if not request.user.is_authenticated:
-        publications_filter['requires_login'] = False
+        publications_filter["requires_login"] = False
     collections = [
         collection
         for collection in (
-            PublicationCollection.objects
-            .annotate(_has_visible_publication=Exists(PDFFile.objects.filter(**publications_filter)))
+            PublicationCollection.objects.annotate(
+                _has_visible_publication=Exists(PDFFile.objects.filter(**publications_filter))
+            )
             .filter(_has_visible_publication=True)
-            .prefetch_related('allowed_membership_types')
+            .prefetch_related("allowed_membership_types")
         )
         if _collection_is_visible(collection, request.user)
     ]
     if len(collections) == 1:
-        return redirect('publications:collection_detail', collection_slug=collections[0].slug)
+        return redirect("publications:collection_detail", collection_slug=collections[0].slug)
     for collection in collections:
         collection.cover_url = collection.get_safe_cover_url()
-    return render(request, 'publications/index.html', {'collections': collections})
+    return render(request, "publications/index.html", {"collections": collections})
 
 
 def collection_detail(request, collection_slug):
@@ -215,18 +216,18 @@ def collection_detail(request, collection_slug):
     if not request.user.is_authenticated:
         pdfs = pdfs.filter(requires_login=False)
 
-    pdfs = pdfs.order_by('-publication_date')
+    pdfs = pdfs.order_by("-publication_date")
 
     paginator = Paginator(pdfs, 12)  # Show 12 PDFs per page (4×3 grid)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
     _prepare_publication_cards(page_obj)
     page_range = _compact_page_range(page_obj.number, paginator.num_pages)
 
     context = {
-        'collection': collection,
-        'page_obj': page_obj,
-        'page_range': page_range,
+        "collection": collection,
+        "page_obj": page_obj,
+        "page_range": page_range,
     }
 
-    return render(request, 'publications/list.html', context)
+    return render(request, "publications/list.html", context)

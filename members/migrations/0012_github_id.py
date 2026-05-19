@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('members', '0011_delete_alumniemailrecipient_delete_alumnisignup'),
+        ("members", "0011_delete_alumniemailrecipient_delete_alumnisignup"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='member',
-            name='github_id',
-            field=models.BigIntegerField(blank=True, null=True, unique=True, verbose_name='GitHub ID'),
+            model_name="member",
+            name="github_id",
+            field=models.BigIntegerField(blank=True, null=True, unique=True, verbose_name="GitHub ID"),
         ),
     ]

@@ -12,20 +12,20 @@ def reset_sequences(apps, schema_editor, models):
 
 
 def copy_functionaries(apps, schema_editor):
-    OldFunctionaryRole = apps.get_model('members', 'FunctionaryRole')
-    OldFunctionary = apps.get_model('members', 'Functionary')
-    NewFunctionaryRole = apps.get_model('functionaries', 'FunctionaryRole')
-    NewFunctionary = apps.get_model('functionaries', 'Functionary')
+    OldFunctionaryRole = apps.get_model("members", "FunctionaryRole")
+    OldFunctionary = apps.get_model("members", "Functionary")
+    NewFunctionaryRole = apps.get_model("functionaries", "FunctionaryRole")
+    NewFunctionary = apps.get_model("functionaries", "Functionary")
 
     for role in OldFunctionaryRole.objects.all().iterator():
         NewFunctionaryRole.objects.update_or_create(
             id=role.id,
             defaults={
-                'title': role.title,
-                'title_en': role.title_en,
-                'title_fi': role.title_fi,
-                'title_sv': role.title_sv,
-                'board': role.board,
+                "title": role.title,
+                "title_en": role.title_en,
+                "title_fi": role.title_fi,
+                "title_sv": role.title_sv,
+                "board": role.board,
             },
         )
 
@@ -33,12 +33,12 @@ def copy_functionaries(apps, schema_editor):
         NewFunctionary.objects.update_or_create(
             id=functionary.id,
             defaults={
-                'member_id': functionary.member_id,
-                'name': functionary.name,
-                'functionary_role_id': functionary.functionary_role_id,
-                'year': functionary.year,
-                'created_date': functionary.created_date,
-                'modified_date': functionary.modified_date,
+                "member_id": functionary.member_id,
+                "name": functionary.name,
+                "functionary_role_id": functionary.functionary_role_id,
+                "year": functionary.year,
+                "created_date": functionary.created_date,
+                "modified_date": functionary.modified_date,
             },
         )
 
@@ -46,20 +46,20 @@ def copy_functionaries(apps, schema_editor):
 
 
 def restore_functionaries(apps, schema_editor):
-    OldFunctionaryRole = apps.get_model('members', 'FunctionaryRole')
-    OldFunctionary = apps.get_model('members', 'Functionary')
-    NewFunctionaryRole = apps.get_model('functionaries', 'FunctionaryRole')
-    NewFunctionary = apps.get_model('functionaries', 'Functionary')
+    OldFunctionaryRole = apps.get_model("members", "FunctionaryRole")
+    OldFunctionary = apps.get_model("members", "Functionary")
+    NewFunctionaryRole = apps.get_model("functionaries", "FunctionaryRole")
+    NewFunctionary = apps.get_model("functionaries", "Functionary")
 
     for role in NewFunctionaryRole.objects.all().iterator():
         OldFunctionaryRole.objects.update_or_create(
             id=role.id,
             defaults={
-                'title': role.title,
-                'title_en': role.title_en,
-                'title_fi': role.title_fi,
-                'title_sv': role.title_sv,
-                'board': role.board,
+                "title": role.title,
+                "title_en": role.title_en,
+                "title_fi": role.title_fi,
+                "title_sv": role.title_sv,
+                "board": role.board,
             },
         )
 
@@ -67,12 +67,12 @@ def restore_functionaries(apps, schema_editor):
         OldFunctionary.objects.update_or_create(
             id=functionary.id,
             defaults={
-                'member_id': functionary.member_id,
-                'name': functionary.name,
-                'functionary_role_id': functionary.functionary_role_id,
-                'year': functionary.year,
-                'created_date': functionary.created_date,
-                'modified_date': functionary.modified_date,
+                "member_id": functionary.member_id,
+                "name": functionary.name,
+                "functionary_role_id": functionary.functionary_role_id,
+                "year": functionary.year,
+                "created_date": functionary.created_date,
+                "modified_date": functionary.modified_date,
             },
         )
 
@@ -80,26 +80,25 @@ def restore_functionaries(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('functionaries', '0001_initial'),
-        ('members', '0014_functionaryrole_title_en_functionaryrole_title_fi_and_more'),
+        ("functionaries", "0001_initial"),
+        ("members", "0014_functionaryrole_title_en_functionaryrole_title_fi_and_more"),
     ]
 
     operations = [
         migrations.RunPython(copy_functionaries, restore_functionaries),
         migrations.RemoveField(
-            model_name='functionary',
-            name='functionary_role',
+            model_name="functionary",
+            name="functionary_role",
         ),
         migrations.RemoveField(
-            model_name='functionary',
-            name='member',
+            model_name="functionary",
+            name="member",
         ),
         migrations.DeleteModel(
-            name='FunctionaryRole',
+            name="FunctionaryRole",
         ),
         migrations.DeleteModel(
-            name='Functionary',
+            name="Functionary",
         ),
     ]

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('events', '0005_event_members_only'),
+        ("events", "0005_event_members_only"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='event',
-            name='passcode',
-            field=models.CharField(blank=True, max_length=255, verbose_name='Passcode'),
+            model_name="event",
+            name="passcode",
+            field=models.CharField(blank=True, max_length=255, verbose_name="Passcode"),
         ),
     ]

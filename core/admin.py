@@ -3,8 +3,9 @@ from django.contrib import admin
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.admin import AdminSiteOTPRequiredMixin
 
-if getattr(settings, 'USE_UNFOLD', False):
+if getattr(settings, "USE_UNFOLD", False):
     from unfold.sites import UnfoldAdminSite
+
     _AdminSiteBase = UnfoldAdminSite
 else:
     _AdminSiteBase = admin.AdminSite
@@ -86,6 +87,7 @@ if not isinstance(admin.site, FixedLanguageAdminSite):
     _site = FixedLanguageAdminSite()
     admin.site = _site
     from django.contrib.admin import sites as _admin_sites
+
     _admin_sites.site = _site
 
 admin_site = admin.site

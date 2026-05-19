@@ -6,8 +6,7 @@ from django.utils import timezone
 
 from billing.handlers import handle_event_billing
 from billing.models import EventBillingConfiguration, EventInvoice
-from billing.util import (BillingIntegrations, get_selection_price,
-                          send_event_free_confirmation, send_event_invoice)
+from billing.util import BillingIntegrations, get_selection_price, send_event_free_confirmation, send_event_invoice
 from events.models import Event, EventAttendees, EventRegistrationForm
 from members.models import ORDINARY_MEMBER, Member, MembershipType
 
@@ -60,8 +59,10 @@ class HandleEventBillingTests(BillingBaseTestCase):
         self.configure_billing(price="42")
         signup = self.create_attendee()
 
-        with patch("billing.handlers.send_event_invoice") as mock_send_invoice, \
-                patch("billing.handlers.generate_invoice_number", return_value=24000042):
+        with (
+            patch("billing.handlers.send_event_invoice") as mock_send_invoice,
+            patch("billing.handlers.generate_invoice_number", return_value=24000042),
+        ):
             handle_event_billing(signup)
 
         invoice = EventInvoice.objects.get(participant=signup)
@@ -83,8 +84,10 @@ class HandleEventBillingTests(BillingBaseTestCase):
         self.configure_billing(price="invalid-number")
         signup = self.create_attendee(email="missing@example.com")
 
-        with patch("billing.handlers.send_event_free_confirmation") as mock_free_confirmation, \
-                patch("billing.handlers.send_event_invoice") as mock_send_invoice:
+        with (
+            patch("billing.handlers.send_event_free_confirmation") as mock_free_confirmation,
+            patch("billing.handlers.send_event_invoice") as mock_send_invoice,
+        ):
             handle_event_billing(signup)
 
         self.assertFalse(EventInvoice.objects.exists())
@@ -104,8 +107,10 @@ class HandleEventBillingTests(BillingBaseTestCase):
             call_state["calls"] += 1
             return original_save(self, *args, **kwargs)
 
-        with patch("billing.handlers.EventInvoice.save", new=flaky_save), \
-                patch("billing.handlers.send_event_invoice") as mock_send_invoice:
+        with (
+            patch("billing.handlers.EventInvoice.save", new=flaky_save),
+            patch("billing.handlers.send_event_invoice") as mock_send_invoice,
+        ):
             handle_event_billing(signup)
 
         self.assertEqual(call_state["calls"], 2)

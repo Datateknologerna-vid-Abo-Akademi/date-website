@@ -4,21 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('social', '0002_harassment'),
+        ("social", "0002_harassment"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='HarassmentEmailRecipient',
+            name="HarassmentEmailRecipient",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('recipient_email', models.EmailField(max_length=320)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("recipient_email", models.EmailField(max_length=320)),
             ],
             options={
-                'verbose_name': 'Emailmottagare för Trakasserianmälan',
-                'verbose_name_plural': 'Emailmottagare för Trakasserianmälan',
+                "verbose_name": "Emailmottagare för Trakasserianmälan",
+                "verbose_name_plural": "Emailmottagare för Trakasserianmälan",
             },
         ),
     ]

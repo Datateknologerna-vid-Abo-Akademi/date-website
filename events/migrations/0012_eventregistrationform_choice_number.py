@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('events', '0011_event_redirect_link'),
+        ("events", "0011_event_redirect_link"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='eventregistrationform',
-            name='choice_number',
-            field=models.PositiveSmallIntegerField(blank=True, default=0, verbose_name='#'),
+            model_name="eventregistrationform",
+            name="choice_number",
+            field=models.PositiveSmallIntegerField(blank=True, default=0, verbose_name="#"),
         ),
     ]

@@ -7,17 +7,17 @@ from .models import Harassment, HarassmentEmailRecipient
 
 @admin.register(Harassment)
 class HarassmentAdmin(ModelAdmin):
-    list_display = ('email', 'message_preview')
-    search_fields = ('email', 'message')
+    list_display = ("email", "message_preview")
+    search_fields = ("email", "message")
 
     def message_preview(self, obj):
-        return obj.message[:80] + '...' if len(obj.message) > 80 else obj.message
+        return obj.message[:80] + "..." if len(obj.message) > 80 else obj.message
 
-    message_preview.short_description = 'Message'
+    message_preview.short_description = "Message"
 
 
 @admin.register(HarassmentEmailRecipient)
 class HarassmentEmailRecipientAdmin(ModelAdmin):
-    list_display = ('recipient_email',)
-    search_fields = ('recipient_email',)
-    ordering = ('recipient_email',)
+    list_display = ("recipient_email",)
+    search_fields = ("recipient_email",)
+    ordering = ("recipient_email",)

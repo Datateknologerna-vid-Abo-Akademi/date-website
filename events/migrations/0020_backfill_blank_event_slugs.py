@@ -1,7 +1,6 @@
 from django.db import migrations, models
 from django.utils.text import slugify
 
-
 POST_SLUG_MAX_LENGTH = 50
 
 
@@ -28,14 +27,10 @@ def unique_slug_for_event(event, used_slugs):
 def backfill_blank_event_slugs(apps, schema_editor):
     Event = apps.get_model("events", "Event")
     used_slugs = set(
-        Event.objects.exclude(
-            models.Q(slug__isnull=True) | models.Q(slug="")
-        ).values_list("slug", flat=True)
+        Event.objects.exclude(models.Q(slug__isnull=True) | models.Q(slug="")).values_list("slug", flat=True)
     )
 
-    blank_slug_events = Event.objects.filter(
-        models.Q(slug__isnull=True) | models.Q(slug="")
-    ).order_by("pk")
+    blank_slug_events = Event.objects.filter(models.Q(slug__isnull=True) | models.Q(slug="")).order_by("pk")
 
     for event in blank_slug_events:
         event.slug = unique_slug_for_event(event, used_slugs)

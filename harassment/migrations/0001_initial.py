@@ -4,30 +4,28 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Harassment',
+            name="Harassment",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('email', models.EmailField(blank=True, max_length=255, null=True, verbose_name='Email')),
-                ('message', models.TextField(max_length=1500, verbose_name='Beskrivning av händelsen')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("email", models.EmailField(blank=True, max_length=255, null=True, verbose_name="Email")),
+                ("message", models.TextField(max_length=1500, verbose_name="Beskrivning av händelsen")),
             ],
         ),
         migrations.CreateModel(
-            name='HarassmentEmailRecipient',
+            name="HarassmentEmailRecipient",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('recipient_email', models.EmailField(max_length=320)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("recipient_email", models.EmailField(max_length=320)),
             ],
             options={
-                'verbose_name': 'Emailmottagare för Trakasserianmälan',
-                'verbose_name_plural': 'Emailmottagare för Trakasserianmälan',
+                "verbose_name": "Emailmottagare för Trakasserianmälan",
+                "verbose_name_plural": "Emailmottagare för Trakasserianmälan",
             },
         ),
     ]

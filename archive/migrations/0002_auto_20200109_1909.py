@@ -5,15 +5,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('archive', '0001_initial'),
+        ("archive", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='document',
-            name='collection',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='archive.Collection'),
+            model_name="document",
+            name="collection",
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="archive.Collection"),
         ),
     ]

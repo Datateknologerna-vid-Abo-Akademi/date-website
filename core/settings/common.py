@@ -11,15 +11,14 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 # update
 
-import os
 import json
+import os
+
+import environ
 from django.templatetags.static import static
 from django.utils.translation import gettext_lazy as _
 
-import environ
-
 from .dependencies.ckeditor import *  # noqa
-
 
 env = environ.Env(
     # set casting, default value
@@ -50,18 +49,19 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env_alias('DATE_SECRET_KEY', 'SECRET_KEY', default='SECRET_KEY')
+SECRET_KEY = env_alias("DATE_SECRET_KEY", "SECRET_KEY", default="SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env_alias('DATE_DEBUG', 'DEBUG', cast=bool, default=False)
+DEBUG = env_alias("DATE_DEBUG", "DEBUG", cast=bool, default=False)
 
-DEVELOP = env_alias('DATE_DEVELOP', 'DEVELOP', cast=bool, default=False)
+DEVELOP = env_alias("DATE_DEVELOP", "DEVELOP", cast=bool, default=False)
 
-USE_UNFOLD = env('USE_UNFOLD', bool, False)
+USE_UNFOLD = env("USE_UNFOLD", bool, False)
 
 
 def _get_unfold_sidebar_navigation(request):
     from core.admin_ui import get_sidebar_navigation
+
     return get_sidebar_navigation(request)
 
 
@@ -87,6 +87,7 @@ def _get_unfold_environment(request):
     # tests can override them via @override_settings without depending on env at
     # import time.
     from django.conf import settings as django_settings
+
     if getattr(django_settings, "DEVELOP", False) or getattr(django_settings, "DEBUG", False):
         return _("Development"), "warning"
 
@@ -108,7 +109,7 @@ UNFOLD = {
     },
     "COLORS": {
         "primary": {
-            "50":  "239 246 255",
+            "50": "239 246 255",
             "100": "219 234 254",
             "200": "191 219 254",
             "300": "147 197 253",
@@ -124,93 +125,93 @@ UNFOLD = {
 }
 
 # This gets set only when tests are ran with date-test command
-TEST = env('TEST', bool, False)
+TEST = env("TEST", bool, False)
 
-ALLOWED_HOSTS = json.loads(env('ALLOWED_HOSTS', str, '[]'))
+ALLOWED_HOSTS = json.loads(env("ALLOWED_HOSTS", str, "[]"))
 
-CSRF_TRUSTED_ORIGINS = json.loads(env('ALLOWED_ORIGINS', str, '[]'))
+CSRF_TRUSTED_ORIGINS = json.loads(env("ALLOWED_ORIGINS", str, "[]"))
 
 
 if not DEVELOP:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
 
-USE_X_FORWARDED_HOST = env('USE_X_FORWARDED_HOST', bool, False)
-if env('TRUST_X_FORWARDED_PROTO', bool, False):
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = env("USE_X_FORWARDED_HOST", bool, False)
+if env("TRUST_X_FORWARDED_PROTO", bool, False):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 def get_installed_apps(proj_apps):
     return [
-        'daphne',
-        'date',
-        'members.apps.MemberConfig',
-        'functionaries',
+        "daphne",
+        "date",
+        "members.apps.MemberConfig",
+        "functionaries",
         *proj_apps,
-        'modeltranslation',
-        *(['unfold', 'unfold.contrib.filters', 'unfold.contrib.forms', 'unfold.contrib.inlines'] if USE_UNFOLD else []),
-        'date.apps.DateAdminConfig',
-        'django.contrib.auth',
-        'django.contrib.contenttypes',
-        'django.contrib.sessions',
-        'django.contrib.messages',
-        'django.contrib.staticfiles',
-        'django_otp',
-        'django_otp.plugins.otp_static',
-        'django_otp.plugins.otp_totp',
-        'two_factor',
-        'admin_ordering',
-        'django_ckeditor_5',
-        'channels',
-        'storages',
-        'django_tables2',
-        'django_filters',
-        'bootstrap3',
-        'django_cleanup',  # Should be places last
+        "modeltranslation",
+        *(["unfold", "unfold.contrib.filters", "unfold.contrib.forms", "unfold.contrib.inlines"] if USE_UNFOLD else []),
+        "date.apps.DateAdminConfig",
+        "django.contrib.auth",
+        "django.contrib.contenttypes",
+        "django.contrib.sessions",
+        "django.contrib.messages",
+        "django.contrib.staticfiles",
+        "django_otp",
+        "django_otp.plugins.otp_static",
+        "django_otp.plugins.otp_totp",
+        "two_factor",
+        "admin_ordering",
+        "django_ckeditor_5",
+        "channels",
+        "storages",
+        "django_tables2",
+        "django_filters",
+        "bootstrap3",
+        "django_cleanup",  # Should be places last
     ]
 
 
 # Common template config
 COMMON_TEMPLATE_DIRS = [
-    'templates/common',
-    'templates/common/members',
+    "templates/common",
+    "templates/common/members",
 ]
 
 
 COMMON_CONTEXT_PROCESSORS = [
-    'django.template.context_processors.debug',
-    'django.template.context_processors.request',
-    'django.template.context_processors.i18n',
-    'django.contrib.auth.context_processors.auth',
-    'django.contrib.messages.context_processors.messages',
-    'staticpages.context_processors.get_categories',
-    'staticpages.context_processors.get_urls',
-    'core.context_processors.captcha_context',
-    'core.context_processors.apply_content_variables',
+    "django.template.context_processors.debug",
+    "django.template.context_processors.request",
+    "django.template.context_processors.i18n",
+    "django.contrib.auth.context_processors.auth",
+    "django.contrib.messages.context_processors.messages",
+    "staticpages.context_processors.get_categories",
+    "staticpages.context_processors.get_urls",
+    "core.context_processors.captcha_context",
+    "core.context_processors.apply_content_variables",
 ]
 
 MIDDLEWARE = [
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'date.middleware.ServerTimingMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'date.middleware.LanguageStateMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django_otp.middleware.OTPMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'date.middleware.LangMiddleware',
-    'date.middleware.HTCPCPMiddleware',
-    'date.middleware.CDNRewriteMiddleware'
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "date.middleware.ServerTimingMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "date.middleware.LanguageStateMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django_otp.middleware.OTPMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "date.middleware.LangMiddleware",
+    "date.middleware.HTCPCPMiddleware",
+    "date.middleware.CDNRewriteMiddleware",
 ]
 
 SERVER_TIMING_ENABLED = DEVELOP
 
 
-WSGI_APPLICATION = 'core.wsgi.application'
-ASGI_APPLICATION = 'core.routing.application'
+WSGI_APPLICATION = "core.wsgi.application"
+ASGI_APPLICATION = "core.routing.application"
 
 
 REDIS_SERVER = env("REDIS_SERVER", str, "redis://redis:6379")
@@ -219,9 +220,9 @@ CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", str, CELERY_BROKER_URL)
 
 
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
             "hosts": [REDIS_SERVER],
         },
     },
@@ -232,13 +233,13 @@ CHANNEL_LAYERS = {
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DB_DATABASE', str, 'postgres'),
-        'USER': env('DB_USERNAME', str, 'postgres'),
-        'PASSWORD': env_alias('DATE_DB_PASSWORD', 'DB_PASSWORD', default=''),
-        'HOST': env('DB_HOST', str, 'db'),
-        'PORT': env('DB_PORT', int, 5432)
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("DB_DATABASE", str, "postgres"),
+        "USER": env("DB_USERNAME", str, "postgres"),
+        "PASSWORD": env_alias("DATE_DB_PASSWORD", "DB_PASSWORD", default=""),
+        "HOST": env("DB_HOST", str, "db"),
+        "PORT": env("DB_PORT", int, 5432),
     }
 }
 
@@ -265,70 +266,63 @@ REDIS_CACHE = {
 CACHES = DUMMY_CACHE if DEVELOP else REDIS_CACHE
 
 # Custom members model
-AUTH_USER_MODEL = 'members.Member'
+AUTH_USER_MODEL = "members.Member"
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
-AUTHENTICATION_BACKENDS = (
-    'members.backends.AuthBackend',
-)
+AUTHENTICATION_BACKENDS = ("members.backends.AuthBackend",)
 
-LOGIN_URL = 'members:login'
-LOGIN_REDIRECT_URL = 'members:info'
+LOGIN_URL = "members:login"
+LOGIN_REDIRECT_URL = "members:info"
 
 # Make CKEditor5 Work with modeltranslations
-MODELTRANSLATION_CUSTOM_FIELDS = (
-    'CKEditor5Field',
-)
+MODELTRANSLATION_CUSTOM_FIELDS = ("CKEditor5Field",)
 
 
 def get_staff_groups(default_groups: list):
     """Add extra staff groups from environment variable to default_groups."""
-    default_groups.extend(json.loads(os.environ.get('EXTRA_STAFF_GROUPS', '[]')))
+    default_groups.extend(json.loads(os.environ.get("EXTRA_STAFF_GROUPS", "[]")))
     return default_groups
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
 
-LOCALE_PATHS = (
-    'locale',
-)
+LOCALE_PATHS = ("locale",)
 
-ALL_LANGUAGES = (
-    ('sv', ("Svenska")),
-    ('en', ("English")),
-    ('fi', ("Suomi"))
-)
+ALL_LANGUAGES = (("sv", ("Svenska")), ("en", ("English")), ("fi", ("Suomi")))
 
-LANGUAGE_CODE = 'sv'
+LANGUAGE_CODE = "sv"
 USE_ACCEPT_LANGUAGE_HEADER = False
-ENABLE_LANGUAGE_FEATURES = env('ENABLE_LANGUAGE_FEATURES', bool, False)
-LANGUAGES = ALL_LANGUAGES if ENABLE_LANGUAGE_FEATURES else (
-    tuple(language for language in ALL_LANGUAGES if language[0] == LANGUAGE_CODE)
+ENABLE_LANGUAGE_FEATURES = env("ENABLE_LANGUAGE_FEATURES", bool, False)
+LANGUAGES = (
+    ALL_LANGUAGES
+    if ENABLE_LANGUAGE_FEATURES
+    else (tuple(language for language in ALL_LANGUAGES if language[0] == LANGUAGE_CODE))
 )
 # Keep modeltranslation's schema stable regardless of whether the multilingual
 # UI is currently enabled. Otherwise makemigrations can think translated fields
 # should be removed whenever ENABLE_LANGUAGE_FEATURES is false.
 MODELTRANSLATION_LANGUAGES = tuple(code for code, _label in ALL_LANGUAGES)
 
-TIME_ZONE = 'Europe/Helsinki'
+TIME_ZONE = "Europe/Helsinki"
 
 USE_I18N = True
 
@@ -336,9 +330,9 @@ USE_TZ = True
 
 DECIMAL_INPUT_FORMATS = ()
 
-DATE_INPUT_FORMATS = ('%d.%m.%Y', '%Y-%m-%d')
+DATE_INPUT_FORMATS = ("%d.%m.%Y", "%Y-%m-%d")
 
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
@@ -351,47 +345,49 @@ TURNSTILE_SECRET_KEY = env("CF_TURNSTILE_SECRET_KEY", str, "")
 CAPTCHA_SITE_KEY = env("CF_TURNSTILE_SITE_KEY", str, "")
 
 # S3 conf using django storages
-USE_S3 = env('USE_S3', bool, False)
+USE_S3 = env("USE_S3", bool, False)
 
 STORAGES = {
     "default": {
-        "BACKEND": 'django.core.files.storage.FileSystemStorage',
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    }
+    },
 }
 
 if USE_S3:
     # aws settings
-    AWS_S3_ENDPOINT_URL = env_alias('S3_ENDPOINT_URL', 'AWS_S3_ENDPOINT_URL')
-    AWS_ACCESS_KEY_ID = env_alias('S3_ACCESS_KEY', 'AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = env_alias('S3_SECRET_KEY', 'AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = env_alias('S3_BUCKET_NAME', 'AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_ENDPOINT_URL = env_alias("S3_ENDPOINT_URL", "AWS_S3_ENDPOINT_URL")
+    AWS_ACCESS_KEY_ID = env_alias("S3_ACCESS_KEY", "AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = env_alias("S3_SECRET_KEY", "AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = env_alias("S3_BUCKET_NAME", "AWS_STORAGE_BUCKET_NAME")
     AWS_PRIVATE_STORAGE_BUCKET_NAME = (
         env_alias(
-            'S3_PRIVATE_BUCKET_NAME',
-            'AWS_PRIVATE_STORAGE_BUCKET_NAME',
-            default='',
-        ) or AWS_STORAGE_BUCKET_NAME
+            "S3_PRIVATE_BUCKET_NAME",
+            "AWS_PRIVATE_STORAGE_BUCKET_NAME",
+            default="",
+        )
+        or AWS_STORAGE_BUCKET_NAME
     )
     AWS_PUBLIC_STORAGE_BUCKET_NAME = (
         env_alias(
-            'S3_PUBLIC_BUCKET_NAME',
-            'AWS_PUBLIC_STORAGE_BUCKET_NAME',
-            default='',
-        ) or AWS_STORAGE_BUCKET_NAME
+            "S3_PUBLIC_BUCKET_NAME",
+            "AWS_PUBLIC_STORAGE_BUCKET_NAME",
+            default="",
+        )
+        or AWS_STORAGE_BUCKET_NAME
     )
-    AWS_S3_REGION_NAME = env_alias('S3_REGION_NAME', 'AWS_S3_REGION_NAME', default=None)
-    AWS_S3_SIGNATURE_VERSION = env_alias('S3_SIGNATURE_VERSION', 'AWS_S3_SIGNATURE_VERSION', default=None)
-    AWS_S3_ADDRESSING_STYLE = env_alias('S3_ADDRESSING_STYLE', 'AWS_S3_ADDRESSING_STYLE', default=None)
+    AWS_S3_REGION_NAME = env_alias("S3_REGION_NAME", "AWS_S3_REGION_NAME", default=None)
+    AWS_S3_SIGNATURE_VERSION = env_alias("S3_SIGNATURE_VERSION", "AWS_S3_SIGNATURE_VERSION", default=None)
+    AWS_S3_ADDRESSING_STYLE = env_alias("S3_ADDRESSING_STYLE", "AWS_S3_ADDRESSING_STYLE", default=None)
     AWS_QUERYSTRING_AUTH = True
     AWS_QUERYSTRING_EXPIRE = 3600
 
     # s3 public media settings
-    PRIVATE_MEDIA_LOCATION = env('PRIVATE_MEDIA_LOCATION')
-    PUBLIC_MEDIA_LOCATION = env('PUBLIC_MEDIA_LOCATION')
-    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_PRIVATE_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/'
+    PRIVATE_MEDIA_LOCATION = env("PRIVATE_MEDIA_LOCATION")
+    PUBLIC_MEDIA_LOCATION = env("PUBLIC_MEDIA_LOCATION")
+    MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/{AWS_PRIVATE_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/"
 
     def get_s3_storage_options(bucket_name, location, querystring_auth):
         options = {
@@ -414,7 +410,8 @@ if USE_S3:
             AWS_PRIVATE_STORAGE_BUCKET_NAME,
             PRIVATE_MEDIA_LOCATION,
             AWS_QUERYSTRING_AUTH,
-        ) | {"querystring_expire": AWS_QUERYSTRING_EXPIRE},
+        )
+        | {"querystring_expire": AWS_QUERYSTRING_EXPIRE},
     }
     STORAGES["public_media"] = {
         "BACKEND": "core.storage_backends.PublicMediaStorage",
@@ -426,107 +423,92 @@ if USE_S3:
     }
 
 else:
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+    MEDIA_URL = "/media/"
 
     # Not in use when not using s3 but need to be set in order not to cause errors
-    PRIVATE_MEDIA_LOCATION = 'media/private'
-    PUBLIC_MEDIA_LOCATION = 'media/public'
+    PRIVATE_MEDIA_LOCATION = "media/private"
+    PUBLIC_MEDIA_LOCATION = "media/public"
     AWS_STORAGE_BUCKET_NAME = "media"
 
-STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
-STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(PROJECT_DIR, "static")
+STATIC_URL = "/static/"
 
-LOGOUT_REDIRECT_URL = 'index'
-OTP_LOGIN_URL = 'members:login'
+LOGOUT_REDIRECT_URL = "index"
+OTP_LOGIN_URL = "members:login"
 
 if DEBUG:
     WHITENOISE_USE_FINDERS = True
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 else:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 EMAIL_USE_TLS = True
-EMAIL_HOST = env('EMAIL_HOST', str, '')
-EMAIL_HOST_USER = env('EMAIL_HOST_USER', str, '')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', str, '')
+EMAIL_HOST = env("EMAIL_HOST", str, "")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", str, "")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", str, "")
 EMAIL_PORT = 587
 
-DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', str, '')
-EMAIL_HOST_RECEIVER = env('EMAIL_HOST_RECEIVER', str, '')
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", str, "")
+EMAIL_HOST_RECEIVER = env("EMAIL_HOST_RECEIVER", str, "")
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 30000  # large value for large events
 
-ALUMNI_SETTINGS = os.environ.get("ALUMNI_SETTINGS", '')
+ALUMNI_SETTINGS = os.environ.get("ALUMNI_SETTINGS", "")
 
 # GitHub OAuth settings
-GITHUB_CLIENT_ID = env('GITHUB_CLIENT_ID', str, '')
-GITHUB_CLIENT_SECRET = env('GITHUB_CLIENT_SECRET', str, '')
-GITHUB_MFA_POLICY = env('GITHUB_MFA_POLICY', str, 'enrolled').lower()
+GITHUB_CLIENT_ID = env("GITHUB_CLIENT_ID", str, "")
+GITHUB_CLIENT_SECRET = env("GITHUB_CLIENT_SECRET", str, "")
+GITHUB_MFA_POLICY = env("GITHUB_MFA_POLICY", str, "enrolled").lower()
 
-DEFAULT_EXCEPTION_REPORTER_FILTER = 'core.redaction.DateExceptionReporterFilter'
+DEFAULT_EXCEPTION_REPORTER_FILTER = "core.redaction.DateExceptionReporterFilter"
 
-LOG_LEVEL = env('LOG_LEVEL', str, 'DEBUG' if DEBUG else 'INFO')
-DJANGO_LOG_LEVEL = env('DJANGO_LOG_LEVEL', str, 'INFO')
-DATE_LOG_LEVEL = env('DATE_LOG_LEVEL', str, LOG_LEVEL)
+LOG_LEVEL = env("LOG_LEVEL", str, "DEBUG" if DEBUG else "INFO")
+DJANGO_LOG_LEVEL = env("DJANGO_LOG_LEVEL", str, "INFO")
+DATE_LOG_LEVEL = env("DATE_LOG_LEVEL", str, LOG_LEVEL)
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            '()': 'core.redaction.RedactingFormatter',
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "()": "core.redaction.RedactingFormatter",
+            "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s",
         },
-        'simple': {
-            '()': 'core.redaction.RedactingFormatter',
-            'format': '%(levelname)s %(message)s'
+        "simple": {"()": "core.redaction.RedactingFormatter", "format": "%(levelname)s %(message)s"},
+    },
+    "handlers": {
+        "console": {"level": "NOTSET", "class": "logging.StreamHandler", "formatter": "simple"},
+        "console_debug": {"level": "DEBUG", "class": "logging.StreamHandler", "formatter": "simple"},
+        "console_error": {"level": "ERROR", "class": "logging.StreamHandler", "formatter": "verbose"},
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": True,
+        },
+        "django.request": {
+            "handlers": ["console_error"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "django_auth_ldap": {
+            "handlers": ["console_debug"],
+            "level": DATE_LOG_LEVEL,
+            "propagate": True,
+        },
+        "date": {
+            "handlers": ["console_debug"],
+            "level": DATE_LOG_LEVEL,
+            "propagate": True,
+        },
+        "daphne": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": True,
         },
     },
-    'handlers': {
-        'console': {
-            'level': 'NOTSET',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple'
-        },
-        'console_debug': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple'
-        },
-        'console_error': {
-            'level': 'ERROR',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': DJANGO_LOG_LEVEL,
-            'propagate': True,
-        },
-        'django.request': {
-            'handlers': ['console_error'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-        'django_auth_ldap': {
-            'handlers': ['console_debug'],
-            'level': DATE_LOG_LEVEL,
-            'propagate': True,
-        },
-        'date': {
-            'handlers': ['console_debug'],
-            'level': DATE_LOG_LEVEL,
-            'propagate': True,
-        },
-        'daphne': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': True,
-        }
-    }
 }
 
 EXPERIMENTAL_FEATURES = []
@@ -541,4 +523,4 @@ CDN_URL_TRANSFORMATIONS = [
 # Re-export every public name so that `from .common import *` in a
 # variant settings module brings along imported helpers (os, BASE_DIR,
 # COMMON_TEMPLATE_DIRS, etc.) alongside the settings themselves.
-__all__ = [name for name in globals() if not name.startswith('_')]
+__all__ = [name for name in globals() if not name.startswith("_")]

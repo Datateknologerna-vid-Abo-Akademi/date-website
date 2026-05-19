@@ -1,29 +1,29 @@
 import logging
-from django.http import HttpResponseRedirect
-from django.contrib import messages
-from django.contrib import admin
-from django.conf import settings
-from django.db.models import Count, IntegerField, JSONField, OuterRef, Subquery, TextField, Value
-from django.db.models.functions import Coalesce
-from django.shortcuts import render
-from django.template.response import TemplateResponse
-from django_ckeditor_5.widgets import CKEditor5Widget
-from django.urls import reverse, re_path
-from django.utils.html import format_html
-from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _
-from core.admin_base import ModelAdmin, PublicUrlAdminMixin, TabularInline, UNFOLD_FORMFIELD_OVERRIDES
-from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
 
 # Translation and Ordering imports
 from admin_ordering.admin import OrderableAdmin
+from django.conf import settings
+from django.contrib import admin, messages
+from django.db.models import Count, IntegerField, JSONField, OuterRef, Subquery, TextField, Value
+from django.db.models.functions import Coalesce
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from django.template.response import TemplateResponse
+from django.urls import re_path, reverse
+from django.utils.html import format_html
+from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
+from django_ckeditor_5.widgets import CKEditor5Widget
 
 from core.admin import ActiveLanguageTranslationAdminMixin
+from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin, TabularInline
+from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
 from events import forms
 from events.models import Event, EventAttendees, EventRegistrationForm, registration_terms_feature_enabled
+
 from .widgets import PrettyJSONWidget
 
-logger = logging.getLogger('date')
+logger = logging.getLogger("date")
 
 if settings.ENABLE_LANGUAGE_FEATURES:
     from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
@@ -49,70 +49,69 @@ class AvecAwareMixin:
 class EventRegistrationFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationInlineBase):
     line_numbering = 0
     model = EventRegistrationForm
-    fk_name = 'event'
+    fk_name = "event"
     extra = 0
     can_delete = True
-    ordering_field = 'choice_number'
-    ordering = ['choice_number']
+    ordering_field = "choice_number"
+    ordering = ["choice_number"]
     ordering_field_hide_input = True
 
     def get_fields(self, request, event=None):
-        fields = ['choice_number', 'name', 'type', 'required', 'public_info']
+        fields = ["choice_number", "name", "type", "required", "public_info"]
         if self._event_uses_avec(event):
-            fields.append('hide_for_avec')
-        fields.append('choice_list')
+            fields.append("hide_for_avec")
+        fields.append("choice_list")
         return fields
 
     def get_fieldsets(self, request, event=None):
-        return [(None, {'fields': self.get_fields(request, event)})]
+        return [(None, {"fields": self.get_fields(request, event)})]
 
     def get_formset(self, request, obj=None, **kwargs):
         if not self._event_uses_avec(obj):
-            kwargs.setdefault('exclude', [])
-            kwargs['exclude'] = [*kwargs['exclude'], 'hide_for_avec']
+            kwargs.setdefault("exclude", [])
+            kwargs["exclude"] = [*kwargs["exclude"], "hide_for_avec"]
         return super().get_formset(request, obj, **kwargs)
 
 
 class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationInlineBase):
-    ordering_field = 'attendee_nr'
+    ordering_field = "attendee_nr"
     ordering_field_hide_input = True
     model = EventAttendees
-    fk_name = 'event'
+    fk_name = "event"
     extra = 0
-    list_editable = ('user', 'email', 'preferences')
+    list_editable = ("user", "email", "preferences")
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
-        JSONField: {'widget': PrettyJSONWidget(attrs={'initial': 'parsed'})},
+        JSONField: {"widget": PrettyJSONWidget(attrs={"initial": "parsed"})},
     }
     can_delete = True
-    ordering = ['attendee_nr']
+    ordering = ["attendee_nr"]
 
     def get_fields(self, request, event):
-        fields = ['attendee_nr', 'user', 'email',
-                  'anonymous', 'preferences', 'time_registered']
+        fields = ["attendee_nr", "user", "email", "anonymous", "preferences", "time_registered"]
         if event and event.children.exists():
-            fields.append('original_event')
+            fields.append("original_event")
         if self._event_uses_avec(event):
-            fields.append('avec_for')
+            fields.append("avec_for")
         return fields
 
     def get_fieldsets(self, request, event=None):
-        return [(None, {'fields': self.get_fields(request, event)})]
+        return [(None, {"fields": self.get_fields(request, event)})]
 
     def get_readonly_fields(self, request, event=None):
-        readonly_fields = ['time_registered']
+        readonly_fields = ["time_registered"]
         if event and event.children.exists():
-            readonly_fields.append('original_event')
+            readonly_fields.append("original_event")
         return readonly_fields
 
     def get_formset(self, request, obj=None, **kwargs):
         if not self._event_uses_avec(obj):
-            kwargs.setdefault('exclude', [])
-            kwargs['exclude'] = [*kwargs['exclude'], 'avec_for']
+            kwargs.setdefault("exclude", [])
+            kwargs["exclude"] = [*kwargs["exclude"], "avec_for"]
         return super().get_formset(request, obj, **kwargs)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        event_id = request.resolver_match.kwargs.get('object_id')
+        event_id = request.resolver_match.kwargs.get("object_id")
         if db_field.name == "avec_for":
             kwargs["queryset"] = EventAttendees.objects.filter(event=event_id)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
@@ -120,42 +119,42 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
 
 @admin.register(EventAttendees)
 class EventAttendeesAdmin(ModelAdmin):
-    list_display = ('event', 'user', 'email', 'time_registered', 'anonymous', 'original_event')
-    list_filter = ('anonymous', 'time_registered')
+    list_display = ("event", "user", "email", "time_registered", "anonymous", "original_event")
+    list_filter = ("anonymous", "time_registered")
     search_fields = (
-        'user',
-        'email',
-        'event__title',
-        'event__slug',
-        'original_event__title',
-        'original_event__slug',
-        'avec_for__user',
-        'avec_for__email',
+        "user",
+        "email",
+        "event__title",
+        "event__slug",
+        "original_event__title",
+        "original_event__slug",
+        "avec_for__user",
+        "avec_for__email",
     )
-    autocomplete_fields = ('event', 'original_event', 'avec_for')
-    list_select_related = ('event', 'original_event', 'avec_for')
-    ordering = ('-time_registered',)
-    date_hierarchy = 'time_registered'
+    autocomplete_fields = ("event", "original_event", "avec_for")
+    list_select_related = ("event", "original_event", "avec_for")
+    ordering = ("-time_registered",)
+    date_hierarchy = "time_registered"
 
 
 class EventPublicationFilter(admin.SimpleListFilter):
-    title = _('publicering')
-    parameter_name = 'publication'
+    title = _("publicering")
+    parameter_name = "publication"
 
     def lookups(self, request, model_admin):
         return (
-            ('published', _('Publicerad')),
-            ('scheduled', _('Schemalagd')),
-            ('hidden', _('Dold')),
+            ("published", _("Publicerad")),
+            ("scheduled", _("Schemalagd")),
+            ("hidden", _("Dold")),
         )
 
     def queryset(self, request, queryset):
         current_time = now()
-        if self.value() == 'published':
+        if self.value() == "published":
             return queryset.filter(published_time__isnull=False, published_time__lte=current_time)
-        if self.value() == 'scheduled':
+        if self.value() == "scheduled":
             return queryset.filter(published_time__gt=current_time)
-        if self.value() == 'hidden':
+        if self.value() == "hidden":
             return queryset.filter(published_time__isnull=True)
         return queryset
 
@@ -168,47 +167,54 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
     save_on_top = True
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
-        TextField: {'widget': CKEditor5Widget},
+        TextField: {"widget": CKEditor5Widget},
     }
     list_display = (
-        'title', 'created_time', 'event_date_start', 'get_attendee_count', 
-        'sign_up_max_participants', 'publication_status', 'published_time', 'account_actions', 'parent'
+        "title",
+        "created_time",
+        "event_date_start",
+        "get_attendee_count",
+        "sign_up_max_participants",
+        "publication_status",
+        "published_time",
+        "account_actions",
+        "parent",
     )
-    search_fields = ('title', 'slug', 'author__first_name', 'author__last_name', 'author__username', 'author__email')
-    list_filter = (EventPublicationFilter, 'sign_up', 'members_only')
-    autocomplete_fields = ('author', 'parent')
-    list_select_related = ('author', 'parent')
-    ordering = ['-event_date_start']
-    date_hierarchy = 'event_date_start'
-    actions = ['delete_participants']
+    search_fields = ("title", "slug", "author__first_name", "author__last_name", "author__username", "author__email")
+    list_filter = (EventPublicationFilter, "sign_up", "members_only")
+    autocomplete_fields = ("author", "parent")
+    list_select_related = ("author", "parent")
+    ordering = ["-event_date_start"]
+    date_hierarchy = "event_date_start"
+    actions = ["delete_participants"]
 
     form = forms.EventCreationForm
 
-    inlines = [
-        EventRegistrationFormInline,
-        EventAttendeesFormInline
-    ]
+    inlines = [EventRegistrationFormInline, EventAttendeesFormInline]
 
     def get_queryset(self, request):
         attendee_sq = (
-            EventAttendees.objects
-            .filter(event=OuterRef('pk'))
+            EventAttendees.objects.filter(event=OuterRef("pk"))
             .order_by()
-            .values('event')
-            .annotate(cnt=Count('pk'))
-            .values('cnt')
+            .values("event")
+            .annotate(cnt=Count("pk"))
+            .values("cnt")
         )
         original_sq = (
-            EventAttendees.objects
-            .filter(original_event=OuterRef('pk'))
+            EventAttendees.objects.filter(original_event=OuterRef("pk"))
             .order_by()
-            .values('original_event')
-            .annotate(cnt=Count('pk'))
-            .values('cnt')
+            .values("original_event")
+            .annotate(cnt=Count("pk"))
+            .values("cnt")
         )
-        return super().get_queryset(request).select_related('author', 'parent').annotate(
-            _attendee_count=Coalesce(Subquery(attendee_sq, output_field=IntegerField()), Value(0)),
-            _original_event_attendee_count=Coalesce(Subquery(original_sq, output_field=IntegerField()), Value(0)),
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("author", "parent")
+            .annotate(
+                _attendee_count=Coalesce(Subquery(attendee_sq, output_field=IntegerField()), Value(0)),
+                _original_event_attendee_count=Coalesce(Subquery(original_sq, output_field=IntegerField()), Value(0)),
+            )
         )
 
     def get_fields(self, request, obj=None):
@@ -221,89 +227,86 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
         urls = super().get_urls()
         custom_urls = [
             re_path(
-                r'^(?P<event_id>.+)/list/$',
-                self.admin_site.admin_view(self.process_list),
-                name="registration_list"
+                r"^(?P<event_id>.+)/list/$", self.admin_site.admin_view(self.process_list), name="registration_list"
             ),
         ]
         return custom_urls + urls
 
     def account_actions(self, obj):
         return format_html(
-            '<a class="button" href="{}">Deltagarlista</a>&nbsp;',
-            reverse('admin:registration_list', args=[obj.pk])
+            '<a class="button" href="{}">Deltagarlista</a>&nbsp;', reverse("admin:registration_list", args=[obj.pk])
         )
 
-    account_actions.short_description = 'Deltagarlista'
+    account_actions.short_description = "Deltagarlista"
 
     @admin.action(description="Delete all attendees for selected events")
     def delete_participants(self, request, queryset):
-        queryset = queryset.prefetch_related('eventattendees_set')
+        queryset = queryset.prefetch_related("eventattendees_set")
         attendees_to_delete = []
         for event in queryset:
             attendees_to_delete.extend(event.eventattendees_set.all())
 
-        if 'confirm' in request.POST:
+        if "confirm" in request.POST:
             for attendee in attendees_to_delete:
                 attendee.delete()
             messages.success(request, f"{len(attendees_to_delete)} attendees deleted.")
             return HttpResponseRedirect(request.get_full_path())
 
         context = {
-            'events': queryset,
-            'attendees': attendees_to_delete,
-            'opts': self.model._meta,
-            'action_checkbox_name': admin.helpers.ACTION_CHECKBOX_NAME,
+            "events": queryset,
+            "attendees": attendees_to_delete,
+            "opts": self.model._meta,
+            "action_checkbox_name": admin.helpers.ACTION_CHECKBOX_NAME,
         }
-        return render(request, 'admin/events/delete_participants_confirmation.html', context)
+        return render(request, "admin/events/delete_participants_confirmation.html", context)
 
     def process_list(self, request, event_id, *args, **kwargs):
         context = self.admin_site.each_context(request)
         event = self.get_object(request, event_id)
-        context['event'] = event
+        context["event"] = event
         rf = event.get_registration_form()
         context["form"] = [x.name for x in rf][::-1] if rf else None
-        return TemplateResponse(request, 'events/list.html', context)
+        return TemplateResponse(request, "events/list.html", context)
 
     class Media:
-        css = {'all': FLATPICKR_ADMIN_CSS}
-        js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS + ('core/js/eventform.js',)
+        css = {"all": FLATPICKR_ADMIN_CSS}
+        js = ("admin/js/jquery.init.js",) + FLATPICKR_ADMIN_JS + ("core/js/eventform.js",)
 
     def get_attendee_count(self, obj):
         if obj.parent:
-            count = getattr(obj, '_original_event_attendee_count', None)
+            count = getattr(obj, "_original_event_attendee_count", None)
             if count is not None:
                 return count
             return EventAttendees.objects.filter(original_event=obj).count()
 
-        count = getattr(obj, '_attendee_count', None)
+        count = getattr(obj, "_attendee_count", None)
         if count is not None:
             return count
         return obj.get_registrations().count()
 
     def publication_status(self, obj):
         if obj.published_time is None:
-            return _('Dold')
+            return _("Dold")
         if obj.published_time > now():
-            return _('Schemalagd')
-        return _('Publicerad')
+            return _("Schemalagd")
+        return _("Publicerad")
 
-    publication_status.short_description = _('Publicering')
-    publication_status.admin_order_field = 'published_time'
+    publication_status.short_description = _("Publicering")
+    publication_status.admin_order_field = "published_time"
 
-    get_attendee_count.short_description = 'Anmälda'
+    get_attendee_count.short_description = "Anmälda"
 
-    def add_view(self, request, form_url='', extra_context=None):
+    def add_view(self, request, form_url="", extra_context=None):
         return super().add_view(request, form_url, extra_context)
 
-    def change_view(self, request, object_id, form_url='', extra_context=None):
+    def change_view(self, request, object_id, form_url="", extra_context=None):
         return super().change_view(request, object_id, form_url, extra_context)
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         if obj is None:
-            kwargs['form'] = forms.EventCreationForm
+            kwargs["form"] = forms.EventCreationForm
         else:
-            kwargs['form'] = forms.EventEditForm
+            kwargs["form"] = forms.EventEditForm
 
         form = super().get_form(request, obj, change=change, **kwargs)
         form.user = request.user

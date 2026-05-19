@@ -2,44 +2,48 @@
 
 import django.db.models.deletion
 import django.utils.timezone
-import exambank.models
 from django.db import migrations, models
+
+import exambank.models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='ExamArchive',
+            name="ExamArchive",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=250, verbose_name='Namn')),
-                ('pub_date', models.DateTimeField(default=django.utils.timezone.now, null=True)),
-                ('hide_for_gulis', models.BooleanField(default=False, verbose_name='Göm för gulisar')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("title", models.CharField(max_length=250, verbose_name="Namn")),
+                ("pub_date", models.DateTimeField(default=django.utils.timezone.now, null=True)),
+                ("hide_for_gulis", models.BooleanField(default=False, verbose_name="Göm för gulisar")),
             ],
             options={
-                'verbose_name': 'Tentarkiv',
-                'verbose_name_plural': 'Tentarkiv',
-                'ordering': ('title',),
+                "verbose_name": "Tentarkiv",
+                "verbose_name_plural": "Tentarkiv",
+                "ordering": ("title",),
             },
         ),
         migrations.CreateModel(
-            name='ExamFile',
+            name="ExamFile",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('title', models.CharField(max_length=250, verbose_name='Namn')),
-                ('document', models.FileField(upload_to=exambank.models.upload_to, verbose_name='Filnamn')),
-                ('archive', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='exambank.examarchive', verbose_name='Samling')),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                ("title", models.CharField(max_length=250, verbose_name="Namn")),
+                ("document", models.FileField(upload_to=exambank.models.upload_to, verbose_name="Filnamn")),
+                (
+                    "archive",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="exambank.examarchive", verbose_name="Samling"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'tentamen',
-                'verbose_name_plural': 'tentamina',
-                'ordering': ('title', 'id'),
+                "verbose_name": "tentamen",
+                "verbose_name_plural": "tentamina",
+                "ordering": ("title", "id"),
             },
         ),
     ]

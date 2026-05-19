@@ -2,11 +2,19 @@ import datetime
 import logging
 
 from events.models import EventAttendees
-from .models import EventInvoice, EventBillingConfiguration
-from .util import BillingIntegrations, generate_reference_number, generate_invoice_number, get_selection_price, send_event_invoice, send_event_free_confirmation, send_confirmation_email
 
+from .models import EventBillingConfiguration, EventInvoice
+from .util import (
+    BillingIntegrations,
+    generate_invoice_number,
+    generate_reference_number,
+    get_selection_price,
+    send_confirmation_email,
+    send_event_free_confirmation,
+    send_event_invoice,
+)
 
-logger = logging.getLogger('date')
+logger = logging.getLogger("date")
 
 
 def handle_event_billing(signup: EventAttendees, retries=2):
@@ -38,23 +46,23 @@ def handle_event_billing(signup: EventAttendees, retries=2):
                 amount=amount,
             )
             invoice.save()
-            
+
         except Exception as e:
             logger.error(f"Failed to create invoice for {signup}: {e}")
             if retries:
-                handle_event_billing(signup, retries=retries-1)
+                handle_event_billing(signup, retries=retries - 1)
             return
 
         # Send email with invoice
         send_event_invoice(signup, invoice)
 
 
-def handle_send_confirmation(signup: EventAttendees,template='events/emails/confirmation_email.html'):
+def handle_send_confirmation(signup: EventAttendees, template="events/emails/confirmation_email.html"):
     """Send confirmation email to participant"""
 
     billing_data = EventInvoice.objects.filter(participant=signup).first()
 
     if not (billing_data and billing_data.amount > 0):
-        template = 'events/emails/free_confirmation_email.html'
-    
+        template = "events/emails/free_confirmation_email.html"
+
     send_confirmation_email(signup, template=template, billing_data=billing_data)

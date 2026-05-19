@@ -20,45 +20,45 @@ def upload_to(instance, filename):
 
 
 class ExamArchive(models.Model):
-    title = models.CharField(_('Namn'), max_length=250)
+    title = models.CharField(_("Namn"), max_length=250)
     pub_date = models.DateTimeField(default=timezone.now, null=True)
-    hide_for_gulis = models.BooleanField(_('Göm för gulisar'), default=False)
+    hide_for_gulis = models.BooleanField(_("Göm för gulisar"), default=False)
 
     class Meta:
-        verbose_name_plural = verbose_name = _('Tentarkiv')
-        ordering = ('title',)
+        verbose_name_plural = verbose_name = _("Tentarkiv")
+        ordering = ("title",)
 
     def __str__(self):
         return self.title
 
     def get_absolute_url(self):
-        return reverse('archive:exams_detail', args=[self.pk])
+        return reverse("archive:exams_detail", args=[self.pk])
 
     def clean(self):
         super().clean()
-        if '/' in self.title:
-            raise ValidationError({'title': "Snedstreck är inte tillåtet."})
+        if "/" in self.title:
+            raise ValidationError({"title": "Snedstreck är inte tillåtet."})
 
 
 class ExamBankAccessSettings(models.Model):
     require_sign_in = models.BooleanField(
-        _('Kräv inloggning'),
+        _("Kräv inloggning"),
         default=True,
-        help_text=_('När detta är aktivt kräver tentarkivet vanlig medlemsinloggning.'),
+        help_text=_("När detta är aktivt kräver tentarkivet vanlig medlemsinloggning."),
     )
     password_hash = models.CharField(
-        _('Lösenord'),
+        _("Lösenord"),
         max_length=128,
         blank=True,
         editable=False,
     )
 
     class Meta:
-        verbose_name = _('Åtkomst till tentarkiv')
-        verbose_name_plural = _('Åtkomst till tentarkiv')
+        verbose_name = _("Åtkomst till tentarkiv")
+        verbose_name_plural = _("Åtkomst till tentarkiv")
 
     def __str__(self):
-        return str(_('Åtkomst till tentarkiv'))
+        return str(_("Åtkomst till tentarkiv"))
 
     @classmethod
     def get_solo(cls):
@@ -70,7 +70,7 @@ class ExamBankAccessSettings(models.Model):
         return bool(self.password_hash)
 
     def set_password(self, raw_password):
-        self.password_hash = make_password(raw_password) if raw_password else ''
+        self.password_hash = make_password(raw_password) if raw_password else ""
 
     def check_password(self, raw_password):
         return bool(self.password_hash) and check_password(raw_password, self.password_hash)
@@ -78,14 +78,14 @@ class ExamBankAccessSettings(models.Model):
 
 class ExamFile(models.Model):
     id = models.AutoField(primary_key=True)
-    archive = models.ForeignKey(ExamArchive, on_delete=models.CASCADE, verbose_name=_('Samling'))
-    title = models.CharField(max_length=250, verbose_name=_('Namn'))
-    document = models.FileField(upload_to=upload_to, verbose_name=_('Filnamn'))
+    archive = models.ForeignKey(ExamArchive, on_delete=models.CASCADE, verbose_name=_("Samling"))
+    title = models.CharField(max_length=250, verbose_name=_("Namn"))
+    document = models.FileField(upload_to=upload_to, verbose_name=_("Filnamn"))
 
     class Meta:
-        verbose_name = _('tentamen')
-        verbose_name_plural = _('tentamina')
-        ordering = ('title', 'id')
+        verbose_name = _("tentamen")
+        verbose_name_plural = _("tentamina")
+        ordering = ("title", "id")
 
     def __str__(self):
         return self.title

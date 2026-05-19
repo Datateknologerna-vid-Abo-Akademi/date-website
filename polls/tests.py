@@ -1,19 +1,27 @@
-from django.contrib.auth.models import AnonymousUser
-from django.test import RequestFactory, TestCase
-from django.urls import reverse
-from django.http import HttpResponse
 from unittest.mock import patch
 
+from django.contrib.auth.models import AnonymousUser
+from django.http import HttpResponse
+from django.test import RequestFactory, TestCase
+from django.urls import reverse
 from django.utils import timezone
 
-from members.models import (Member, MembershipType, ORDINARY_MEMBER,
-                            Subscription, SubscriptionPayment)
-from .models import Question, Choice
+from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
+
 from . import views
-from .vote import (ANYONE, MEMBERS_ONLY, ORDINARY_MEMBERS_ONLY,
-                   VOTE_MEMBERS_ONLY, ERROR_MESSAGES, handle_selected_choices,
-                   handle_vote, is_user_authorized_to_vote,
-                   required_multiple_choices_matches_selected, validate_vote)
+from .models import Choice, Question
+from .vote import (
+    ANYONE,
+    ERROR_MESSAGES,
+    MEMBERS_ONLY,
+    ORDINARY_MEMBERS_ONLY,
+    VOTE_MEMBERS_ONLY,
+    handle_selected_choices,
+    handle_vote,
+    is_user_authorized_to_vote,
+    required_multiple_choices_matches_selected,
+    validate_vote,
+)
 
 
 class QuestionModelTests(TestCase):
@@ -43,7 +51,10 @@ class VoteViewTests(TestCase):
     @patch("polls.views.handle_vote")
     def test_vote_calls_handle_vote_authenticated(self, mock_handle_vote):
         mock_handle_vote.return_value = HttpResponse("ok")
-        request = self.factory.post(reverse("polls:vote", args=[self.question.id]), {"choice": [str(self.choice1.id), str(self.choice2.id), str(self.choice1.id)]})
+        request = self.factory.post(
+            reverse("polls:vote", args=[self.question.id]),
+            {"choice": [str(self.choice1.id), str(self.choice2.id), str(self.choice1.id)]},
+        )
         request.user = self.member
         response = views.vote(request, self.question.id)
         selected = mock_handle_vote.call_args.args[3]
@@ -55,6 +66,7 @@ class VoteViewTests(TestCase):
         mock_handle_vote.return_value = HttpResponse("ok")
         request = self.factory.post(reverse("polls:vote", args=[self.question.id]), {"choice": [str(self.choice1.id)]})
         from django.contrib.auth.models import AnonymousUser
+
         request.user = AnonymousUser()
         response = views.vote(request, self.question.id)
         selected = mock_handle_vote.call_args.args[3]
@@ -96,7 +108,7 @@ class AuthorizationLogicTests(TestCase):
         subscription = Subscription.objects.create(
             name="Annual",
             does_expire=True,
-            renewal_scale='year',
+            renewal_scale="year",
             renewal_period=1,
             price=0,
         )
@@ -118,8 +130,8 @@ class RequiredChoicesTests(TestCase):
         )
 
     def test_requires_exact_number_when_set(self):
-        self.assertFalse(required_multiple_choices_matches_selected(self.question, ['1']))
-        self.assertTrue(required_multiple_choices_matches_selected(self.question, ['1', '2']))
+        self.assertFalse(required_multiple_choices_matches_selected(self.question, ["1"]))
+        self.assertTrue(required_multiple_choices_matches_selected(self.question, ["1", "2"]))
 
     def test_returns_true_when_requirement_disabled(self):
         self.question.required_multiple_choices = None
@@ -129,7 +141,9 @@ class RequiredChoicesTests(TestCase):
 class ValidateVoteTests(TestCase):
     def setUp(self):
         self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
-        self.member = Member.objects.create_user(username="validator", password="pwd", membership_type=self.membership_type)
+        self.member = Member.objects.create_user(
+            username="validator", password="pwd", membership_type=self.membership_type
+        )
         self.question = Question.objects.create(question_text="Validate me")
         self.choice = Choice.objects.create(question=self.question, choice_text="yes")
 
@@ -137,27 +151,27 @@ class ValidateVoteTests(TestCase):
         self.question.end_vote = True
         self.question.save()
         message = validate_vote(None, self.question, self.member, [str(self.choice.id)])
-        self.assertEqual(message, ERROR_MESSAGES['vote_ended'])
+        self.assertEqual(message, ERROR_MESSAGES["vote_ended"])
 
     def test_no_choice_returns_error(self):
         message = validate_vote(None, self.question, self.member, [])
-        self.assertEqual(message, ERROR_MESSAGES['no_choice'])
+        self.assertEqual(message, ERROR_MESSAGES["no_choice"])
 
     def test_single_choice_multiple_selected_error(self):
         other_choice = Choice.objects.create(question=self.question, choice_text="no")
         message = validate_vote(None, self.question, self.member, [str(self.choice.id), str(other_choice.id)])
-        self.assertEqual(message, ERROR_MESSAGES['single_choice'])
+        self.assertEqual(message, ERROR_MESSAGES["single_choice"])
 
     def test_not_authorized_returns_error(self):
         self.question.voting_options = MEMBERS_ONLY
         message = validate_vote(None, self.question, AnonymousUser(), [str(self.choice.id)])
-        self.assertEqual(message, ERROR_MESSAGES['not_authorized'])
+        self.assertEqual(message, ERROR_MESSAGES["not_authorized"])
 
     def test_already_voted_blocks_non_anyone_questions(self):
         self.question.voting_options = MEMBERS_ONLY
         self.question.voters.add(self.member)
         message = validate_vote(None, self.question, self.member, [str(self.choice.id)])
-        self.assertEqual(message, ERROR_MESSAGES['already_voted'])
+        self.assertEqual(message, ERROR_MESSAGES["already_voted"])
 
     def test_anyone_allows_multiple_votes(self):
         self.question.voting_options = ANYONE
@@ -169,7 +183,9 @@ class ValidateVoteTests(TestCase):
 class HandleVoteWorkflowTests(TestCase):
     def setUp(self):
         self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
-        self.member = Member.objects.create_user(username="workflow", password="pwd", membership_type=self.membership_type)
+        self.member = Member.objects.create_user(
+            username="workflow", password="pwd", membership_type=self.membership_type
+        )
         self.question = Question.objects.create(question_text="Workflow")
         self.choice = Choice.objects.create(question=self.question, choice_text="option")
         self.factory = RequestFactory()
@@ -181,14 +197,14 @@ class HandleVoteWorkflowTests(TestCase):
         self.assertIn(self.member, self.question.voters.all())
 
     def test_handle_vote_redirects_on_success(self):
-        request = self.factory.post(reverse('polls:vote', args=[self.question.id]), {'choice': [str(self.choice.id)]})
+        request = self.factory.post(reverse("polls:vote", args=[self.question.id]), {"choice": [str(self.choice.id)]})
         request.user = self.member
         response = handle_vote(request, self.question, self.member, [str(self.choice.id)])
         self.assertEqual(response.status_code, 302)
 
     def test_handle_vote_renders_error_template(self):
-        request = self.factory.post(reverse('polls:vote', args=[self.question.id]), {})
+        request = self.factory.post(reverse("polls:vote", args=[self.question.id]), {})
         request.user = self.member
         response = handle_vote(request, self.question, self.member, [])
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Du valde inget alternativ', response.content)
+        self.assertIn(b"Du valde inget alternativ", response.content)

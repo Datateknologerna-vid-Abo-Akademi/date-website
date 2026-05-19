@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('billing', '0001_initial'),
+        ("billing", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='eventbillingconfiguration',
-            name='price_selector',
+            model_name="eventbillingconfiguration",
+            name="price_selector",
             field=models.CharField(blank=True, null=True),
         ),
     ]

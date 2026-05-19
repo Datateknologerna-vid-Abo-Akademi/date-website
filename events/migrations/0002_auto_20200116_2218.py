@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('events', '0001_initial'),
+        ("events", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='event',
-            name='sign_up_cancelling_deadline',
-            field=models.DateTimeField(blank=True, null=True, verbose_name='Avanmälningen stängs'),
+            model_name="event",
+            name="sign_up_cancelling_deadline",
+            field=models.DateTimeField(blank=True, null=True, verbose_name="Avanmälningen stängs"),
         ),
         migrations.AlterField(
-            model_name='event',
-            name='sign_up_deadline',
-            field=models.DateTimeField(blank=True, null=True, verbose_name='Anmälningen stängs'),
+            model_name="event",
+            name="sign_up_deadline",
+            field=models.DateTimeField(blank=True, null=True, verbose_name="Anmälningen stängs"),
         ),
     ]

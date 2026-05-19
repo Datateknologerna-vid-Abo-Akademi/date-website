@@ -11,26 +11,29 @@ def migrate_event_publication(apps, schema_editor):
     published_fallback = datetime(2000, 1, 1, tzinfo=UTC)
 
     Event.objects.filter(published=False).update(published_time=None)
-    Event.objects.filter(published=True, published_time__isnull=True).update(
-        published_time=published_fallback
-    )
+    Event.objects.filter(published=True, published_time__isnull=True).update(published_time=published_fallback)
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('events', '0022_event_template'),
+        ("events", "0022_event_template"),
     ]
 
     operations = [
         migrations.RunPython(migrate_event_publication, migrations.RunPython.noop),
         migrations.RemoveField(
-            model_name='event',
-            name='published',
+            model_name="event",
+            name="published",
         ),
         migrations.AlterField(
-            model_name='event',
-            name='published_time',
-            field=models.DateTimeField(blank=True, default=django.utils.timezone.now, help_text='Lämna tomt för att dölja evenemanget. Välj en framtida tid för schemalagd publicering.', null=True, verbose_name='Publiceras'),
+            model_name="event",
+            name="published_time",
+            field=models.DateTimeField(
+                blank=True,
+                default=django.utils.timezone.now,
+                help_text="Lämna tomt för att dölja evenemanget. Välj en framtida tid för schemalagd publicering.",
+                null=True,
+                verbose_name="Publiceras",
+            ),
         ),
     ]

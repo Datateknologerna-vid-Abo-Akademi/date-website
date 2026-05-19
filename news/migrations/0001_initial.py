@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -16,22 +15,28 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Post',
+            name="Post",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=255, verbose_name='Titel')),
-                ('content', models.TextField(blank=True, verbose_name='Innehåll')),
-                ('created_time', models.DateTimeField(default=django.utils.timezone.now, verbose_name='Skapad')),
-                ('published_time', models.DateTimeField(blank=True, editable=False, null=True, verbose_name='Publicerad')),
-                ('modified_time', models.DateTimeField(blank=True, editable=False, null=True, verbose_name='Modifierad')),
-                ('published', models.BooleanField(default=True, verbose_name='Publicera')),
-                ('slug', models.SlugField(unique=True, verbose_name='Slug')),
-                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("title", models.CharField(max_length=255, verbose_name="Titel")),
+                ("content", models.TextField(blank=True, verbose_name="Innehåll")),
+                ("created_time", models.DateTimeField(default=django.utils.timezone.now, verbose_name="Skapad")),
+                (
+                    "published_time",
+                    models.DateTimeField(blank=True, editable=False, null=True, verbose_name="Publicerad"),
+                ),
+                (
+                    "modified_time",
+                    models.DateTimeField(blank=True, editable=False, null=True, verbose_name="Modifierad"),
+                ),
+                ("published", models.BooleanField(default=True, verbose_name="Publicera")),
+                ("slug", models.SlugField(unique=True, verbose_name="Slug")),
+                ("author", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'verbose_name': 'nyhet',
-                'verbose_name_plural': 'nyheter',
-                'ordering': ('id',),
+                "verbose_name": "nyhet",
+                "verbose_name_plural": "nyheter",
+                "ordering": ("id",),
             },
         ),
     ]

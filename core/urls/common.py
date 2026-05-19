@@ -1,4 +1,4 @@
-from django.urls import include, path
+from django.urls import path
 from django.views.i18n import JavaScriptCatalog
 
 from date import views as date_views

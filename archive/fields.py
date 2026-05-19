@@ -1,1 +1,1 @@
-from core.fields import PublicFileField
+from core.fields import PublicFileField  # noqa: F401

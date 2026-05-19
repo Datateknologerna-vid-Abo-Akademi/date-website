@@ -5,55 +5,54 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('news', '0005_remove_post_albins_angels'),
+        ("news", "0005_remove_post_albins_angels"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='category',
-            name='name_en',
-            field=models.CharField(max_length=255, null=True, verbose_name='Namn'),
+            model_name="category",
+            name="name_en",
+            field=models.CharField(max_length=255, null=True, verbose_name="Namn"),
         ),
         migrations.AddField(
-            model_name='category',
-            name='name_fi',
-            field=models.CharField(max_length=255, null=True, verbose_name='Namn'),
+            model_name="category",
+            name="name_fi",
+            field=models.CharField(max_length=255, null=True, verbose_name="Namn"),
         ),
         migrations.AddField(
-            model_name='category',
-            name='name_sv',
-            field=models.CharField(max_length=255, null=True, verbose_name='Namn'),
+            model_name="category",
+            name="name_sv",
+            field=models.CharField(max_length=255, null=True, verbose_name="Namn"),
         ),
         migrations.AddField(
-            model_name='post',
-            name='content_en',
-            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, null=True, verbose_name='Innehåll'),
+            model_name="post",
+            name="content_en",
+            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, null=True, verbose_name="Innehåll"),
         ),
         migrations.AddField(
-            model_name='post',
-            name='content_fi',
-            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, null=True, verbose_name='Innehåll'),
+            model_name="post",
+            name="content_fi",
+            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, null=True, verbose_name="Innehåll"),
         ),
         migrations.AddField(
-            model_name='post',
-            name='content_sv',
-            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, null=True, verbose_name='Innehåll'),
+            model_name="post",
+            name="content_sv",
+            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, null=True, verbose_name="Innehåll"),
         ),
         migrations.AddField(
-            model_name='post',
-            name='title_en',
-            field=models.CharField(max_length=255, null=True, verbose_name='Titel'),
+            model_name="post",
+            name="title_en",
+            field=models.CharField(max_length=255, null=True, verbose_name="Titel"),
         ),
         migrations.AddField(
-            model_name='post',
-            name='title_fi',
-            field=models.CharField(max_length=255, null=True, verbose_name='Titel'),
+            model_name="post",
+            name="title_fi",
+            field=models.CharField(max_length=255, null=True, verbose_name="Titel"),
         ),
         migrations.AddField(
-            model_name='post',
-            name='title_sv',
-            field=models.CharField(max_length=255, null=True, verbose_name='Titel'),
+            model_name="post",
+            name="title_sv",
+            field=models.CharField(max_length=255, null=True, verbose_name="Titel"),
         ),
     ]

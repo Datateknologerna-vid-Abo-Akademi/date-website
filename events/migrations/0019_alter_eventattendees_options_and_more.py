@@ -4,18 +4,21 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('events', '0018_alter_event_s3_image'),
+        ("events", "0018_alter_event_s3_image"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='eventattendees',
-            options={'ordering': ['attendee_nr'], 'verbose_name': 'deltagare', 'verbose_name_plural': 'deltagare'},
+            name="eventattendees",
+            options={"ordering": ["attendee_nr"], "verbose_name": "deltagare", "verbose_name_plural": "deltagare"},
         ),
         migrations.AlterModelOptions(
-            name='eventregistrationform',
-            options={'ordering': ['choice_number'], 'verbose_name': 'Anmälningsfält', 'verbose_name_plural': 'Anmälningsfält'},
+            name="eventregistrationform",
+            options={
+                "ordering": ["choice_number"],
+                "verbose_name": "Anmälningsfält",
+                "verbose_name_plural": "Anmälningsfält",
+            },
         ),
     ]

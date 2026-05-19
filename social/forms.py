@@ -1,3 +1,3 @@
 from harassment.forms import HarassmentForm
 
-__all__ = ['HarassmentForm']
+__all__ = ["HarassmentForm"]

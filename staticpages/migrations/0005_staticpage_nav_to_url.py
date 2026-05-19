@@ -5,8 +5,8 @@ from django.urls import reverse
 
 
 def change_nav_to_url(apps, schema_editor):
-    StaticPage = apps.get_model('staticpages', 'StaticPage')
-    StaticUrl = apps.get_model('staticpages', 'StaticUrl')
+    StaticPage = apps.get_model("staticpages", "StaticPage")
+    StaticUrl = apps.get_model("staticpages", "StaticUrl")
 
     all_pages = StaticPage.objects.filter(category__isnull=False)
 
@@ -22,9 +22,8 @@ def change_nav_to_url(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('staticpages', '0004_alter_staticpage_content'),
+        ("staticpages", "0004_alter_staticpage_content"),
     ]
 
     operations = [

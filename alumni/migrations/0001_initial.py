@@ -4,22 +4,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='AlumniEmailRecipient',
+            name="AlumniEmailRecipient",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('recipient_email', models.EmailField(max_length=256)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("recipient_email", models.EmailField(max_length=256)),
             ],
             options={
-                'verbose_name': 'Emailmottagare för ÅAATK',
-                'verbose_name_plural': 'Emailmottagare för ÅAATK',
+                "verbose_name": "Emailmottagare för ÅAATK",
+                "verbose_name_plural": "Emailmottagare för ÅAATK",
             },
         ),
     ]

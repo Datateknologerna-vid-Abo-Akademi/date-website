@@ -39,16 +39,18 @@ class PDFFileAdminTests(TestCase):
 
     def test_change_page_renders_when_file_url_cannot_be_resolved(self):
         timestamp = timezone.now()
-        PDFFile.objects.bulk_create([
-            PDFFile(
-                collection=create_collection(),
-                title="Broken PDF",
-                slug="broken-pdf",
-                file="pdfs/broken.pdf",
-                uploaded_at=timestamp,
-                updated_at=timestamp,
-            )
-        ])
+        PDFFile.objects.bulk_create(
+            [
+                PDFFile(
+                    collection=create_collection(),
+                    title="Broken PDF",
+                    slug="broken-pdf",
+                    file="pdfs/broken.pdf",
+                    uploaded_at=timestamp,
+                    updated_at=timestamp,
+                )
+            ]
+        )
         pdf_file = PDFFile.objects.get(slug="broken-pdf")
 
         with patch(
@@ -66,16 +68,18 @@ class PDFFileListTests(TestCase):
     def test_list_renders_when_file_url_cannot_be_resolved(self):
         timestamp = timezone.now()
         collection = create_collection()
-        PDFFile.objects.bulk_create([
-            PDFFile(
-                collection=collection,
-                title="Broken PDF",
-                slug="broken-pdf",
-                file="pdfs/broken.pdf",
-                uploaded_at=timestamp,
-                updated_at=timestamp,
-            )
-        ])
+        PDFFile.objects.bulk_create(
+            [
+                PDFFile(
+                    collection=collection,
+                    title="Broken PDF",
+                    slug="broken-pdf",
+                    file="pdfs/broken.pdf",
+                    uploaded_at=timestamp,
+                    updated_at=timestamp,
+                )
+            ]
+        )
 
         with patch(
             "django.db.models.fields.files.FieldFile.url",
@@ -140,7 +144,9 @@ class PDFFileListTests(TestCase):
         self.assertNotContains(response, "Members")
 
     def test_index_renders_collection_cover_image(self):
-        collection = create_collection(title="A&O", slug="ao", cover_image="wordpress/sfklubben/wp-content/uploads/2022/04/aologo.png")
+        collection = create_collection(
+            title="A&O", slug="ao", cover_image="wordpress/sfklubben/wp-content/uploads/2022/04/aologo.png"
+        )
         PDFFile.objects.create(
             collection=collection,
             title="A&O 01/2026",

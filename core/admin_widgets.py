@@ -6,7 +6,6 @@ from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
-
 logger = logging.getLogger("date")
 
 
@@ -54,14 +53,17 @@ class PublishDateTimeWidget(forms.DateTimeInput):
         widget_id = (attrs or {}).get("id", f"id_{name}")
         server_now = timezone.localtime(timezone.now()).strftime(FLATPICKR_DATETIME_FORMAT)
         return format_html(
-            '{} '
+            "{} "
             '<button type="button" class="datetime-action-button" '
             'data-set-datetime="#{}" data-set-datetime-value="{}">{}</button> '
             '<button type="button" class="datetime-action-button" '
             'data-clear-datetime="#{}">{}</button>',
             rendered,
-            widget_id, server_now, _("Publish now"),
-            widget_id, _("Don't publish"),
+            widget_id,
+            server_now,
+            _("Publish now"),
+            widget_id,
+            _("Don't publish"),
         )
 
 

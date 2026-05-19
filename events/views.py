@@ -1,66 +1,61 @@
-import datetime
 import logging
 
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
 from django.db import transaction
 from django.http import HttpResponseForbidden
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import DetailView, ListView
 
 from core.utils import validate_captcha
+
 from .forms import PasscodeForm
 from .models import Event
 from .registration import EventSignupError, get_public_registration_questions, register_event_signup
 from .websocket_utils import ws_send
 
-logger = logging.getLogger('date')
+logger = logging.getLogger("date")
 
 EVENT_TEMPLATES_BY_TITLE = {
-    'årsfest': 'events/arsfest.html',
-    'årsfest 2026': 'events/arsfest.html',
-    'årsfest gäster': 'events/arsfest.html',
-    'biologica vii': 'events/arsfest.html',
-    '100 baal': 'events/kk100_detail.html',
-    'baal': 'events/baal_detail.html',
-    'tomtejakt': 'events/tomtejakt.html',
-    'wappmiddag': 'events/wappmiddag.html',
+    "årsfest": "events/arsfest.html",
+    "årsfest 2026": "events/arsfest.html",
+    "årsfest gäster": "events/arsfest.html",
+    "biologica vii": "events/arsfest.html",
+    "100 baal": "events/kk100_detail.html",
+    "baal": "events/baal_detail.html",
+    "tomtejakt": "events/tomtejakt.html",
+    "wappmiddag": "events/wappmiddag.html",
 }
 
 EVENT_TEMPLATES_BY_SLUG = {
-    'baal': 'events/baal_detail.html',
-    'tomtejakt': 'events/tomtejakt.html',
-    'wappmiddag': 'events/wappmiddag.html',
-    'arsfest': 'events/arsfest.html',
-    'arsfest_stipendiater': 'events/arsfest.html',
-    'arsfest26': 'events/arsfest.html',
+    "baal": "events/baal_detail.html",
+    "tomtejakt": "events/tomtejakt.html",
+    "wappmiddag": "events/wappmiddag.html",
+    "arsfest": "events/arsfest.html",
+    "arsfest_stipendiater": "events/arsfest.html",
+    "arsfest26": "events/arsfest.html",
 }
 
 
 class IndexView(ListView):
     model = Event
-    template_name = 'events/index.html'
+    template_name = "events/index.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        events = (
-            Event.objects.published()
-            .exclude(slug="")
-            .exclude(slug__isnull=True)
-            .order_by('event_date_start')
-        )
+        events = Event.objects.published().exclude(slug="").exclude(slug__isnull=True).order_by("event_date_start")
         today = timezone.now()
-        context['event_list'] = events.filter(event_date_end__gte=today)
-        context['past_events'] = events.filter(event_date_end__lte=today).reverse()
+        context["event_list"] = events.filter(event_date_end__gte=today)
+        context["past_events"] = events.filter(event_date_end__lte=today).reverse()
         return context
 
 
 class EventDetailView(DetailView):
     model = Event
-    template_name = 'events/detail.html'
-    PASSCODE_SESSION_KEY = 'event_passcode_status'
+    template_name = "events/detail.html"
+    PASSCODE_SESSION_KEY = "event_passcode_status"
 
     def _get_resolved_template(self, event):
         if event.template:
@@ -102,9 +97,7 @@ class EventDetailView(DetailView):
         open_for_others = self.object.registration_is_open_others()
         registration_closed = self.object.registration_past_due()
         can_register_now = self.object.sign_up and (
-            is_commodore
-            or open_for_others
-            or (is_authenticated and is_active_member and open_for_members)
+            is_commodore or open_for_others or (is_authenticated and is_active_member and open_for_members)
         )
         next_signup_time = None
         if self.object.sign_up and not registration_closed and not can_register_now:
@@ -140,19 +133,19 @@ class EventDetailView(DetailView):
         return self.handle_event_signup(request)
 
     def get_context_data(self, **kwargs):
-        context = super(EventDetailView, self).get_context_data(**kwargs)
-        form = kwargs.pop('form', None)
+        context = super().get_context_data(**kwargs)
+        form = kwargs.pop("form", None)
         if self.object.passcode and not self._has_valid_passcode_session(self.request):
             form = PasscodeForm
         if form:
-            context['form'] = form
+            context["form"] = form
         else:
-            context['form'] = self.object.make_registration_form()
+            context["form"] = self.object.make_registration_form()
         context.update(self._get_registration_state(self.request))
         return context
 
     def get_template_names(self):
-        event = self.get_context_data().get('event')
+        event = self.get_context_data().get("event")
         event_title = event.title.lower()
         logger.debug(event_title)
         # Will return a 500 response to client if the template is not found
@@ -161,7 +154,7 @@ class EventDetailView(DetailView):
             return resolved_template
 
         if self.object.passcode and not self._has_valid_passcode_session(self.request):
-            return ['events/event_passcode.html']
+            return ["events/event_passcode.html"]
         return [self.template_name]
 
     def form_valid(self, form):
@@ -176,20 +169,24 @@ class EventDetailView(DetailView):
         return self.redirect_after_signup()
 
     def form_invalid(self, form):
-        event = self.get_context_data().get('event')
+        event = self.get_context_data().get("event")
         template = self._get_resolved_template(event) or self.template_name
         return render(self.request, template, self.get_context_data(form=form), status=400)
 
     def handle_passcode(self, request):
         if self.object.passcode and not self._has_valid_passcode_session(request):
-            if self.object.passcode == request.POST.get('passcode'):
+            if self.object.passcode == request.POST.get("passcode"):
                 passcode_status = request.session.get(self.PASSCODE_SESSION_KEY, {})
                 passcode_status[str(self.object.pk)] = True
                 request.session[self.PASSCODE_SESSION_KEY] = passcode_status
                 return self.render_to_response(self.get_context_data())
             else:
-                return render(request, 'events/event_passcode.html',
-                              self.get_context_data(passcode_error='invalid passcode'), status=401)
+                return render(
+                    request,
+                    "events/event_passcode.html",
+                    self.get_context_data(passcode_error="invalid passcode"),
+                    status=401,
+                )
         return None
 
     def handle_event_signup(self, request):
@@ -197,12 +194,11 @@ class EventDetailView(DetailView):
             return HttpResponseForbidden()
 
         if self._get_registration_state(request)["can_register_now"]:
-
             form = self.object.make_registration_form()(data=request.POST)
 
             # CAPTCHA validation if applicable
             if self.object.captcha:
-                captcha_response = request.POST.get('cf-turnstile-response', '')
+                captcha_response = request.POST.get("cf-turnstile-response", "")
                 if not validate_captcha(captcha_response):
                     return self.form_invalid(form)
 
@@ -221,13 +217,14 @@ class EventDetailView(DetailView):
             slug = self.object.parent.slug if self.object.parent else self.object.slug
             transaction.on_commit(lambda: ws_send(slug, form, public_info))
 
-        if "event_billing" in settings.EXPERIMENTAL_FEATURES and 'billing' in settings.INSTALLED_APPS:
+        if "event_billing" in settings.EXPERIMENTAL_FEATURES and "billing" in settings.INSTALLED_APPS:
             logger.debug("Handling event billing")
             from billing.handlers import handle_event_billing
+
             transaction.on_commit(lambda: handle_event_billing(attendee))
 
     def redirect_after_signup(self):
-        event = self.get_context_data().get('event')
-        if self._get_resolved_template(event) == 'events/arsfest.html':
+        event = self.get_context_data().get("event")
+        if self._get_resolved_template(event) == "events/arsfest.html":
             return redirect(f"{reverse('events:detail', args=[event.slug])}#/attendee-list")
-        return redirect(reverse('events:detail', args=[event.slug]))
+        return redirect(reverse("events:detail", args=[event.slug]))

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('staticpages', '0007_staticpagenav_url_staticpagenav_use_category_url'),
+        ("staticpages", "0007_staticpagenav_url_staticpagenav_use_category_url"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='staticurl',
-            name='logged_in_only',
-            field=models.BooleanField(default=False, verbose_name='Visa endast åt inloggade användare'),
+            model_name="staticurl",
+            name="logged_in_only",
+            field=models.BooleanField(default=False, verbose_name="Visa endast åt inloggade användare"),
         ),
     ]

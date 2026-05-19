@@ -9,49 +9,57 @@ import archive.models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Collection',
+            name="Collection",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=250, verbose_name='Namn')),
-                ('type', models.CharField(choices=[('Pictures', 'Bilder'), ('Documents', 'Dokument')], max_length=20)),
-                ('pub_date', models.DateTimeField(default=datetime.datetime.now, null=True)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("title", models.CharField(max_length=250, verbose_name="Namn")),
+                ("type", models.CharField(choices=[("Pictures", "Bilder"), ("Documents", "Dokument")], max_length=20)),
+                ("pub_date", models.DateTimeField(default=datetime.datetime.now, null=True)),
             ],
             options={
-                'verbose_name': 'Samling',
-                'verbose_name_plural': 'Samlingar',
+                "verbose_name": "Samling",
+                "verbose_name_plural": "Samlingar",
             },
         ),
         migrations.CreateModel(
-            name='Document',
+            name="Document",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=250)),
-                ('document', models.FileField(upload_to=archive.models.upload_to)),
-                ('collection', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='archive.Collection', verbose_name='samling')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("title", models.CharField(max_length=250)),
+                ("document", models.FileField(upload_to=archive.models.upload_to)),
+                (
+                    "collection",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="archive.Collection", verbose_name="samling"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'dokument',
+                "verbose_name": "dokument",
             },
         ),
         migrations.CreateModel(
-            name='Picture',
+            name="Picture",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('image', models.ImageField(upload_to=archive.models.upload_to)),
-                ('favorite', models.BooleanField(default=False)),
-                ('collection', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='archive.Collection', verbose_name='Galleri')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("image", models.ImageField(upload_to=archive.models.upload_to)),
+                ("favorite", models.BooleanField(default=False)),
+                (
+                    "collection",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="archive.Collection", verbose_name="Galleri"
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'bild',
-                'verbose_name_plural': 'bilder',
+                "verbose_name": "bild",
+                "verbose_name_plural": "bilder",
             },
         ),
     ]

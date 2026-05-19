@@ -4,28 +4,34 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('archive', '0005_collection_hide_for_gulis'),
+        ("archive", "0005_collection_hide_for_gulis"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ExamCollection',
-            fields=[
-            ],
+            name="ExamCollection",
+            fields=[],
             options={
-                'verbose_name': 'Tentarkiv',
-                'verbose_name_plural': 'Tentarkiv',
-                'proxy': True,
-                'indexes': [],
-                'constraints': [],
+                "verbose_name": "Tentarkiv",
+                "verbose_name_plural": "Tentarkiv",
+                "proxy": True,
+                "indexes": [],
+                "constraints": [],
             },
-            bases=('archive.collection',),
+            bases=("archive.collection",),
         ),
         migrations.AlterField(
-            model_name='collection',
-            name='type',
-            field=models.CharField(choices=[('Pictures', 'Bilder'), ('Documents', 'Dokument'), ('Exams', 'Tenter'), ('PublicFiles', 'OffentligaFiler')], max_length=20),
+            model_name="collection",
+            name="type",
+            field=models.CharField(
+                choices=[
+                    ("Pictures", "Bilder"),
+                    ("Documents", "Dokument"),
+                    ("Exams", "Tenter"),
+                    ("PublicFiles", "OffentligaFiler"),
+                ],
+                max_length=20,
+            ),
         ),
     ]

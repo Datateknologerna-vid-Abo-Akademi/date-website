@@ -15,9 +15,9 @@ django.setup()
 
 from instagram.models import IgUrl
 
-logger = logging.getLogger('date')
+logger = logging.getLogger("date")
 
-SCHEDULED_TIME = '00:00'
+SCHEDULED_TIME = "00:00"
 
 
 def updateIg():

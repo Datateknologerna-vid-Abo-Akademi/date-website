@@ -5,20 +5,33 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('events', '0014_alter_event_sign_up_max_participants'),
+        ("events", "0014_alter_event_sign_up_max_participants"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='event',
-            name='parent',
-            field=models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='children', to='events.event'),
+            model_name="event",
+            name="parent",
+            field=models.ForeignKey(
+                blank=True,
+                default=None,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="children",
+                to="events.event",
+            ),
         ),
         migrations.AddField(
-            model_name='eventattendees',
-            name='original_event',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='original_event', to='events.event', verbose_name='Ursprungligt evenemang'),
+            model_name="eventattendees",
+            name="original_event",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="original_event",
+                to="events.event",
+                verbose_name="Ursprungligt evenemang",
+            ),
         ),
     ]

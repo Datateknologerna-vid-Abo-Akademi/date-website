@@ -11,26 +11,29 @@ def migrate_post_publication(apps, schema_editor):
     published_fallback = datetime(2000, 1, 1, tzinfo=UTC)
 
     Post.objects.filter(published=False).update(published_time=None)
-    Post.objects.filter(published=True, published_time__isnull=True).update(
-        published_time=published_fallback
-    )
+    Post.objects.filter(published=True, published_time__isnull=True).update(published_time=published_fallback)
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('news', '0007_backfill_news_default_translations'),
+        ("news", "0007_backfill_news_default_translations"),
     ]
 
     operations = [
         migrations.RunPython(migrate_post_publication, migrations.RunPython.noop),
         migrations.RemoveField(
-            model_name='post',
-            name='published',
+            model_name="post",
+            name="published",
         ),
         migrations.AlterField(
-            model_name='post',
-            name='published_time',
-            field=models.DateTimeField(blank=True, default=django.utils.timezone.now, help_text='Lämna tomt för att dölja nyheten. Välj en framtida tid för schemalagd publicering.', null=True, verbose_name='Publiceras'),
+            model_name="post",
+            name="published_time",
+            field=models.DateTimeField(
+                blank=True,
+                default=django.utils.timezone.now,
+                help_text="Lämna tomt för att dölja nyheten. Välj en framtida tid för schemalagd publicering.",
+                null=True,
+                verbose_name="Publiceras",
+            ),
         ),
     ]

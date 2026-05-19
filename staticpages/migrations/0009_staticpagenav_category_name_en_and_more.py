@@ -4,40 +4,39 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('staticpages', '0008_staticurl_logged_in_only'),
+        ("staticpages", "0008_staticurl_logged_in_only"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='staticpagenav',
-            name='category_name_en',
-            field=models.CharField(max_length=255, null=True, verbose_name='Kategori'),
+            model_name="staticpagenav",
+            name="category_name_en",
+            field=models.CharField(max_length=255, null=True, verbose_name="Kategori"),
         ),
         migrations.AddField(
-            model_name='staticpagenav',
-            name='category_name_fi',
-            field=models.CharField(max_length=255, null=True, verbose_name='Kategori'),
+            model_name="staticpagenav",
+            name="category_name_fi",
+            field=models.CharField(max_length=255, null=True, verbose_name="Kategori"),
         ),
         migrations.AddField(
-            model_name='staticpagenav',
-            name='category_name_sv',
-            field=models.CharField(max_length=255, null=True, verbose_name='Kategori'),
+            model_name="staticpagenav",
+            name="category_name_sv",
+            field=models.CharField(max_length=255, null=True, verbose_name="Kategori"),
         ),
         migrations.AddField(
-            model_name='staticurl',
-            name='title_en',
-            field=models.CharField(max_length=255, null=True, verbose_name='Titel'),
+            model_name="staticurl",
+            name="title_en",
+            field=models.CharField(max_length=255, null=True, verbose_name="Titel"),
         ),
         migrations.AddField(
-            model_name='staticurl',
-            name='title_fi',
-            field=models.CharField(max_length=255, null=True, verbose_name='Titel'),
+            model_name="staticurl",
+            name="title_fi",
+            field=models.CharField(max_length=255, null=True, verbose_name="Titel"),
         ),
         migrations.AddField(
-            model_name='staticurl',
-            name='title_sv',
-            field=models.CharField(max_length=255, null=True, verbose_name='Titel'),
+            model_name="staticurl",
+            name="title_sv",
+            field=models.CharField(max_length=255, null=True, verbose_name="Titel"),
         ),
     ]

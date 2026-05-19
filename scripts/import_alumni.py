@@ -1,15 +1,16 @@
-import sys
-import os
-import django
 import csv
 import json
+import os
+import sys
 
+import django
 
 sys.path.append("/code")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings.date")
 django.setup()
 
 from django.conf import settings
+
 from alumni.gsuite_adapter import DateSheetsAdapter
 
 # Load alumni settings
@@ -22,10 +23,11 @@ except Exception as e:
 
 MEMBER_SHEET_NAME = "members"  # Should match the sheet name
 
+
 def main(csv_path):
     client = DateSheetsAdapter(AUTH, SHEET, MEMBER_SHEET_NAME)
     audit_client = DateSheetsAdapter(AUTH, SHEET, "audit_log")
-    with open(csv_path, newline='', encoding='utf-8') as csvfile:
+    with open(csv_path, newline="", encoding="utf-8") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             # Adjust these fields to match your sheet columns
@@ -46,16 +48,19 @@ def main(csv_path):
                 row.get("Inskriven på KTF/MNF/KT/FNT"),
                 row.get("Blivit medlem"),
                 row.get("Uppgifterna uppdaterade"),
-                1, # Set everyone as paid when importing
+                1,  # Set everyone as paid when importing
                 0,
                 row.get("Medlemskap"),
             ]
             client.append_row(data)
             print(f"Added alumni: {row.get('Förnamn')} {row.get('Efternamn')}")
-            audit_client.append_row([
-                "IMPORT",
-                json.dumps(row),
-            ])
+            audit_client.append_row(
+                [
+                    "IMPORT",
+                    json.dumps(row),
+                ]
+            )
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

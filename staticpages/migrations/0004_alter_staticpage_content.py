@@ -5,15 +5,14 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('staticpages', '0003_staticpage_members_only'),
+        ("staticpages", "0003_staticpage_members_only"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='staticpage',
-            name='content',
-            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, verbose_name='Innehåll'),
+            model_name="staticpage",
+            name="content",
+            field=django_ckeditor_5.fields.CKEditor5Field(blank=True, verbose_name="Innehåll"),
         ),
     ]

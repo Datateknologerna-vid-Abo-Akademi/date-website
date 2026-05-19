@@ -8,14 +8,14 @@ from .models import Functionary
 
 class FunctionaryForm(forms.ModelForm):
     year = forms.IntegerField(
-        label=_('Årtal'),
+        label=_("Årtal"),
         validators=[MinValueValidator(1999)],
-        help_text=_('Ange ett år i formatet YYYY'),
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'YYYY'})
+        help_text=_("Ange ett år i formatet YYYY"),
+        widget=forms.NumberInput(attrs={"class": "form-control", "placeholder": "YYYY"}),
     )
 
     def __init__(self, *args, **kwargs):
-        self.member = kwargs.pop('member', None)
+        self.member = kwargs.pop("member", None)
         super().__init__(*args, **kwargs)
 
     def _post_clean(self):
@@ -25,8 +25,8 @@ class FunctionaryForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        year = cleaned_data.get('year')
-        functionary_role = cleaned_data.get('functionary_role')
+        year = cleaned_data.get("year")
+        functionary_role = cleaned_data.get("functionary_role")
         member = self.member or (self.instance.member if self.instance else None)
 
         if Functionary.objects.filter(year=year, functionary_role=functionary_role, member=member).exists():
@@ -36,9 +36,9 @@ class FunctionaryForm(forms.ModelForm):
 
     class Meta:
         model = Functionary
-        fields = ['functionary_role', 'year']
+        fields = ["functionary_role", "year"]
         widgets = {
-            'functionary_role': forms.Select(attrs={'class': 'form-control'}),
+            "functionary_role": forms.Select(attrs={"class": "form-control"}),
         }
 
 
