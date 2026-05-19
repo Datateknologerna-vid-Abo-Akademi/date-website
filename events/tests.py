@@ -58,6 +58,8 @@ class EventTestCase(TestCase):
             title="Test event",
             slug="test",
             author_id=self.member.id,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
         )
         self.content = {"user": "person", "email": "person@test.com", "terms_accepted": "on"}
