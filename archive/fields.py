@@ -1,1 +1,3 @@
-from core.fields import PublicFileField  # noqa: F401
+from core.fields import PublicFileField
+
+__all__ = ["PublicFileField"]

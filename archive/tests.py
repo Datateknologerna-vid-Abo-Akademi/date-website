@@ -30,9 +30,8 @@ def create_picture(favorite=False):
     img = Image.new("RGB", (100, 100))
     img.save(os.path.join(settings.MEDIA_ROOT, "test_image.jpg"))
     img.close()
-    img_file = open(os.path.join(settings.MEDIA_ROOT, "test_image.jpg"), "rb")
-    img_data = img_file.read()
-    img_file.close()
+    with open(os.path.join(settings.MEDIA_ROOT, "test_image.jpg"), "rb") as img_file:
+        img_data = img_file.read()
     test_image = SimpleUploadedFile(name="test_image.jpg", content=img_data, content_type="image/jpg")
     return Photo.objects.create(album=album, image=test_image, favorite=favorite)
 

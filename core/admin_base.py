@@ -6,6 +6,16 @@ from django.utils.translation import gettext_lazy as _
 
 from core.admin_ui import resolve_admin_links
 
+__all__ = [
+    "ModelAdmin",
+    "TabularInline",
+    "StackedInline",
+    "UNFOLD_FORMFIELD_OVERRIDES",
+    "UnfoldFormMixin",
+    "PublicUrlAdminMixin",
+    "ExtraChangeListLinksMixin",
+]
+
 if getattr(settings, "USE_UNFOLD", False):
     from unfold.admin import ModelAdmin, StackedInline, TabularInline
     from unfold.overrides import FORMFIELD_OVERRIDES
