@@ -127,7 +127,7 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ModelAdmin):
             },
         ),
     )
-    inlines = []
+    inlines: list[type[TabularInline]] = []
 
     def get_prepopulated_fields(self, request, obj=None):
         if obj is None:
