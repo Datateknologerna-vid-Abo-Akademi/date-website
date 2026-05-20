@@ -50,7 +50,7 @@ class AdminUxLinkTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse("admin:events_event_change", args=[event.pk]))
         self.assertContains(response, reverse("admin:billing_eventinvoice_changelist"))
-        self.assertContains(response, "1 invoices")
+        self.assertContains(response, "1 invoice")
 
     def test_functionary_role_page_includes_assignments_inline(self):
         role = FunctionaryRole.objects.create(title="Treasurer", board=True)
@@ -61,6 +61,16 @@ class AdminUxLinkTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Ada Admin")
         self.assertContains(response, "id_functionary_set-0-name")
+
+    def test_functionary_role_changelist_uses_singular_count_label(self):
+        role = FunctionaryRole.objects.create(title="Treasurer", board=True)
+        Functionary.objects.create(functionary_role=role, name="Ada Admin", year=2026)
+
+        response = self.client.get(reverse("admin:functionaries_functionaryrole_changelist"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "1 functionary")
+        self.assertNotContains(response, "1 functionaries")
 
     def test_static_pages_admin_exposes_public_and_navigation_links(self):
         StaticPage.objects.create(title="About", slug="about")

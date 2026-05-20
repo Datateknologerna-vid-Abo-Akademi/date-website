@@ -1,11 +1,12 @@
 import csv
 
 from django.contrib import admin
+from django.db.models import Count
 from django.http import HttpResponse
 from django.urls import reverse, re_path
 from django.utils.html import format_html
 from django.utils.http import urlencode
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, ngettext
 
 from core.admin_base import ModelAdmin
 
@@ -58,6 +59,12 @@ class EventBillingConfigurationAdmin(ModelAdmin):
     list_select_related = ('event',)
     ordering = ('event',)
 
+    def get_queryset(self, request):
+        return (
+            super().get_queryset(request)
+            .annotate(invoice_total=Count('event__eventattendees__eventinvoice', distinct=True))
+        )
+
     def get_urls(self):
         urls = super().get_urls()
         my_urls = [
@@ -83,7 +90,7 @@ class EventBillingConfigurationAdmin(ModelAdmin):
 
     @admin.display(description=_('Invoices'))
     def invoice_count(self, obj):
-        count = EventInvoice.objects.filter(participant__event=obj.event).count()
+        count = getattr(obj, 'invoice_total', EventInvoice.objects.filter(participant__event=obj.event).count())
         if not count:
             return '0'
         return format_html(
@@ -91,7 +98,7 @@ class EventBillingConfigurationAdmin(ModelAdmin):
             reverse('admin:billing_eventinvoice_changelist'),
             urlencode({'participant__event__id__exact': obj.event_id}),
             count,
-            _('invoices'),
+            ngettext('invoice', 'invoices', count),
         )
 
     def ref_numbers(self, request, conf_id):

@@ -33,6 +33,7 @@
 
   async function updateSummary(select, container) {
     const collectionId = select.value;
+    container.dataset.requestedCollectionId = collectionId;
     if (!collectionId) {
       container.textContent = "Choose a collection to show its current access settings here.";
       return;
@@ -51,8 +52,15 @@
       if (!response.ok) {
         throw new Error("Request failed");
       }
-      renderSummary(container, await response.json());
+      const details = await response.json();
+      if (container.dataset.requestedCollectionId !== collectionId) {
+        return;
+      }
+      renderSummary(container, details);
     } catch (error) {
+      if (container.dataset.requestedCollectionId !== collectionId) {
+        return;
+      }
       container.textContent = "Could not load collection access settings.";
     }
   }

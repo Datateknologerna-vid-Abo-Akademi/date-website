@@ -1,8 +1,9 @@
 from django.contrib import admin
+from django.db.models import Count
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.http import urlencode
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, ngettext
 
 from core.admin_base import ModelAdmin, TabularInline
 
@@ -50,9 +51,12 @@ class FunctionaryRoleAdmin(ModelAdmin):
     ordering = ['title']
     inlines = [FunctionaryInline]
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(functionary_total=Count('functionary', distinct=True))
+
     @admin.display(description=_('Funktionärer'))
     def functionary_count(self, obj):
-        count = obj.functionary_set.count()
+        count = getattr(obj, 'functionary_total', obj.functionary_set.count())
         if not count:
             return '0'
         return format_html(
@@ -60,5 +64,5 @@ class FunctionaryRoleAdmin(ModelAdmin):
             reverse('admin:functionaries_functionary_changelist'),
             urlencode({'functionary_role__id__exact': obj.pk}),
             count,
-            _('functionaries'),
+            ngettext('functionary', 'functionaries', count),
         )

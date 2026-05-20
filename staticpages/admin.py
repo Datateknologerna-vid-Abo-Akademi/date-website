@@ -1,7 +1,7 @@
 from admin_ordering.admin import OrderableAdmin
 from django.conf import settings
 from django.contrib import admin
-from django.db.models import Case, IntegerField, TextField, Value, When
+from django.db.models import Case, Count, IntegerField, TextField, Value, When
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.widgets import CKEditor5Widget
@@ -76,6 +76,9 @@ class StaticPageNavAdmin(StaticPageTranslationAdminBase):
     ordering = ('nav_element',)
     inlines = [UrlInline]
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(link_total=Count('staticurl', distinct=True))
+
     @admin.display(description=_('Url'))
     def url_link(self, obj):
         if not obj.url:
@@ -88,7 +91,7 @@ class StaticPageNavAdmin(StaticPageTranslationAdminBase):
 
     @admin.display(description=_('Links'))
     def link_count(self, obj):
-        return obj.staticurl_set.count()
+        return getattr(obj, 'link_total', obj.staticurl_set.count())
 
 
 @admin.register(StaticPage)

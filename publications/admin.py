@@ -2,13 +2,15 @@ import logging
 
 from django import forms
 from django.contrib import admin
+from django.core.exceptions import PermissionDenied
 from django.db import models
+from django.db.models import Count
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
 from django.utils.html import format_html
 from django.utils.http import urlencode
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, ngettext
 
 from core.admin_base import (
     ExtraChangeListLinksMixin,
@@ -113,7 +115,11 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ModelAdmin):
         return {}
 
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related('allowed_membership_types')
+        return (
+            super().get_queryset(request)
+            .prefetch_related('allowed_membership_types')
+            .annotate(publication_total=Count('publications', distinct=True))
+        )
 
     def get_inlines(self, request, obj):
         if obj is None:
@@ -140,7 +146,7 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ModelAdmin):
 
     @admin.display(description='Publications')
     def publication_count(self, obj):
-        count = obj.publications.count()
+        count = getattr(obj, 'publication_total', obj.publications.count())
         if not count:
             return '0'
         return format_html(
@@ -148,7 +154,7 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ModelAdmin):
             reverse('admin:publications_pdffile_changelist'),
             urlencode({'collection__id__exact': obj.pk}),
             count,
-            _('publications'),
+            ngettext('publication', 'publications', count),
         )
 
     @admin.display(description='Manage')
@@ -187,6 +193,22 @@ class PublicationInline(TabularInline):
         models.FileField: {'widget': SafeAdminFileWidget},
         models.ImageField: {'widget': SafeAdminFileWidget},
     }
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        base_form = formset.form
+
+        class ExistingFileReadonlyForm(base_form):
+            def __init__(self, *args, **form_kwargs):
+                super().__init__(*args, **form_kwargs)
+                if self.instance.pk and 'file' in self.fields:
+                    self.fields['file'].disabled = True
+                    self.fields['file'].help_text = _(
+                        'Open the publication change page to inspect the existing upload.'
+                    )
+
+        formset.form = ExistingFileReadonlyForm
+        return formset
 
     @admin.display(description='Public page')
     def public_page(self, obj):
@@ -344,6 +366,14 @@ class PDFFileAdmin(PublicUrlAdminMixin, PublicationAdminMixin, ModelAdmin):
         )
 
     def collection_access_view(self, request, collection_id):
+        collection_admin = self.admin_site._registry[PublicationCollection]
+        if not (
+            self.has_view_permission(request)
+            or self.has_change_permission(request)
+            or collection_admin.has_view_permission(request)
+            or collection_admin.has_change_permission(request)
+        ):
+            raise PermissionDenied
         collection = get_object_or_404(
             PublicationCollection.objects.prefetch_related('allowed_membership_types'),
             pk=collection_id,

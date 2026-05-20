@@ -1,6 +1,7 @@
 from unittest.mock import PropertyMock, patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
@@ -95,6 +96,23 @@ class PDFFileAdminTests(TestCase):
         self.assertEqual(response.json()["visibility"], PublicationCollection.VISIBILITY_MEMBERSHIP)
         self.assertEqual(response.json()["memberships"], [senior.name])
 
+    def test_collection_access_endpoint_requires_publication_permission(self):
+        staff_group = Group.objects.create(name="admin")
+        staff_user = get_user_model().objects.create_user(
+            username="staff-without-publications",
+            password="pwd",
+            email="staff-without-publications@example.com",
+        )
+        staff_user.groups.add(staff_group)
+        self.client.force_login(staff_user)
+        collection = create_collection()
+
+        response = self.client.get(
+            reverse("admin:publications_pdffile_collection_access", args=[collection.pk])
+        )
+
+        self.assertEqual(response.status_code, 403)
+
 
 class PublicationCollectionAdminTests(TestCase):
     def setUp(self):
@@ -120,7 +138,26 @@ class PublicationCollectionAdminTests(TestCase):
         self.assertContains(response, "Access Control")
         self.assertContains(response, "Annual Magazine")
         self.assertContains(response, "id_publications-0-title")
+        self.assertRegex(
+            response.content.decode(),
+            r'<input type="file" name="publications-0-file" disabled id="id_publications-0-file">',
+        )
         self.assertContains(response, "Publication list")
+
+    def test_changelist_uses_singular_publication_count_label(self):
+        collection = create_collection()
+        PDFFile.objects.create(
+            collection=collection,
+            title="Annual Magazine",
+            slug="annual-magazine",
+            redirect_url="https://issuu.com/sfklubben/docs/annual",
+        )
+
+        response = self.client.get(reverse("admin:publications_publicationcollection_changelist"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "1 publication")
+        self.assertNotContains(response, "1 publications")
 
     def test_change_page_inline_renders_when_file_url_cannot_be_resolved(self):
         timestamp = timezone.now()
