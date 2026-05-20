@@ -107,7 +107,7 @@ module = [
     "members.models",
     "gallery.models",
 ]
-disable_error_codes = ["django-manager-missing"]
+disable_error_code = ["django-manager-missing"]
 
 # Admin modules use runtime conditional base-class assignments
 # (if ENABLE_LANGUAGE_FEATURES / USE_UNFOLD) that mypy can't type-check
@@ -121,13 +121,13 @@ module = [
     "staticpages.admin",
     "members.admin",
 ]
-disable_error_codes = ["misc", "assignment", "valid-type", "attr-defined"]
+disable_error_code = ["misc", "assignment", "valid-type", "attr-defined"]
 
 # URL conf files use settings.STATIC_URL (typed str | None) with static(),
 # which expects str. Safe to ignore — DEBUG-only and always set in practice.
 [[tool.mypy.overrides]]
 module = "core.urls.*"
-disable_error_codes = ["arg-type"]
+disable_error_code = ["arg-type"]
 
 [tool.django-stubs]
 django_settings_module = "core.settings.date"
