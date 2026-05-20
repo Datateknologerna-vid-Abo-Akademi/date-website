@@ -22,9 +22,8 @@
         <form action="{% url 'polls:vote' question.id %}" method="post">
           {% csrf_token %}
           {% for choice in question.choice_set.all %}
-            <input type="{% if question.multiple_choice == True %}" " checkbox " {% else %} " radio " {% endif %} name="
-                   choice
-                   "
+            <input type="{% if question.multiple_choice %}checkbox{% else %}radio{% endif %}"
+                   name="choice"
                    id="choice{{ forloop.counter }}"
                    value="{{ choice.id }}">
             <label class="p-2" for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label>
