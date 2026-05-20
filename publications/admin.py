@@ -78,7 +78,15 @@ class PublicationCollectionAdminForm(forms.ModelForm):
 
 
 @admin.register(PublicationCollection)
-class PublicationCollectionAdmin(PublicUrlAdminMixin, ModelAdmin):
+class PublicationCollectionAdmin(PublicUrlAdminMixin, ExtraChangeListLinksMixin, ModelAdmin):
+    changelist_links = (
+        AdminLink(
+            _('All PDF publications'),
+            icon='picture_as_pdf',
+            url_name='admin:publications_pdffile_changelist',
+            permission='publications.view_pdffile',
+        ),
+    )
     form = PublicationCollectionAdminForm
     save_on_top = True
     list_display = (

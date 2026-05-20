@@ -21,7 +21,7 @@
 
 ## Admin
 - `FlagInline` sits inside `CtfAdmin`, excluding `solved_date` so staff can’t set it manually.
-- `GuessAdmin` exposes filtering/search across guesses for auditing.
+- `GuessAdmin` exposes filtering/search across guesses for auditing. The full guess list is available through an **All guesses** tool link on the CTF changelist rather than a separate sidebar entry.
 
 ## Extending
 - Add rate limiting to `flag` view to prevent brute force.

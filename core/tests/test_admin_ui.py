@@ -58,6 +58,14 @@ class AdminUiRegistryTests(TestCase):
         self.assertIn("/admin/members/member/", links)
         self.assertIn("/admin/events/event/", links)
         self.assertIn("/admin/staticpages/staticpage/", links)
+        self.assertIn("/admin/billing/eventbillingconfiguration/", links)
+        self.assertIn("/admin/functionaries/functionaryrole/", links)
+        self.assertIn("/admin/publications/publicationcollection/", links)
+        self.assertIn("/admin/ctf/ctf/", links)
+        self.assertNotIn("/admin/billing/eventinvoice/", links)
+        self.assertNotIn("/admin/functionaries/functionary/", links)
+        self.assertNotIn("/admin/publications/pdffile/", links)
+        self.assertNotIn("/admin/ctf/guess/", links)
 
     def test_sidebar_registry_requires_permissions(self):
         request = self.factory.get("/admin/")

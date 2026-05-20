@@ -6,7 +6,7 @@ Publish downloadable PDFs or external publication links (meeting minutes, magazi
 ## Access
 1. Sign in to `/admin`.
 2. Open **Publications › Publication collections** (`/admin/publications/publicationcollection/`) for the normal workflow. A collection page contains both the collection access settings and its publication rows.
-3. Use **Publications › Pdf files** (`/admin/publications/pdffile/`) when you need global search, date filters, or to find publications across many collections.
+3. Use **All PDF publications** from the collection list when you need global search, date filters, or to find publications across many collections.
 
 ## Create a Collection
 1. Open **Publication collections** and click **Add publication collection**.

@@ -9,7 +9,8 @@ from django.utils.http import urlencode
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
 
-from core.admin_base import ModelAdmin
+from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin
+from core.admin_ui import AdminLink
 
 from .models import EventBillingConfiguration, EventInvoice
 from .util import BillingIntegrations
@@ -52,7 +53,15 @@ class EventInvoiceAdmin(ModelAdmin):
 
 
 @admin.register(EventBillingConfiguration)
-class EventBillingConfigurationAdmin(ModelAdmin):
+class EventBillingConfigurationAdmin(ExtraChangeListLinksMixin, ModelAdmin):
+    changelist_links = (
+        AdminLink(
+            _('All invoices'),
+            icon='receipt',
+            url_name='admin:billing_eventinvoice_changelist',
+            permission='billing.view_eventinvoice',
+        ),
+    )
     list_display = (
         'event_link',
         'due_date',

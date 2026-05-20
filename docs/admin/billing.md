@@ -15,7 +15,7 @@ Automate invoicing for paid events. When an attendee signs up, the Billing app c
 4. Save. From now on, every new signup for that event will trigger invoice generation.
 
 ## Generated Invoices
-- View them under **Billing › Event invoices**. Each record links to the participant, lists invoice/reference numbers, dates, amount, and currency (EUR).
+- From **Billing › Event billing configurations**, use **All invoices** when you need the full invoice audit list. Each record links to the participant, lists invoice/reference numbers, dates, amount, and currency (EUR).
 - Use the event column or event filter to find invoices for a specific event.
 - From an event billing configuration, use the invoice count link to jump straight to that event's generated invoices.
 

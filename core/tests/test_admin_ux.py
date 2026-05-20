@@ -5,8 +5,10 @@ from django.utils import timezone
 
 from billing.models import EventBillingConfiguration, EventInvoice
 from billing.util import BillingIntegrations
+from ctf.models import Ctf
 from events.models import Event, EventAttendees
 from functionaries.models import Functionary, FunctionaryRole
+from publications.models import PublicationCollection
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
 
 
@@ -50,6 +52,7 @@ class AdminUxLinkTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse("admin:events_event_change", args=[event.pk]))
         self.assertContains(response, reverse("admin:billing_eventinvoice_changelist"))
+        self.assertContains(response, "All invoices")
         self.assertContains(response, "1 invoice")
 
     def test_functionary_role_page_includes_assignments_inline(self):
@@ -71,6 +74,26 @@ class AdminUxLinkTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "1 functionary")
         self.assertNotContains(response, "1 functionaries")
+        self.assertContains(response, reverse("admin:functionaries_functionary_changelist"))
+        self.assertContains(response, "All assignments")
+
+    def test_publication_collection_changelist_links_global_pdf_list(self):
+        PublicationCollection.objects.create(title="A&O", slug="ao")
+
+        response = self.client.get(reverse("admin:publications_publicationcollection_changelist"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse("admin:publications_pdffile_changelist"))
+        self.assertContains(response, "All PDF publications")
+
+    def test_ctf_changelist_links_global_guess_list(self):
+        Ctf.objects.create(title="Spring CTF", slug="spring-ctf")
+
+        response = self.client.get(reverse("admin:ctf_ctf_changelist"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse("admin:ctf_guess_changelist"))
+        self.assertContains(response, "All guesses")
 
     def test_static_pages_admin_exposes_public_and_navigation_links(self):
         StaticPage.objects.create(title="About", slug="about")

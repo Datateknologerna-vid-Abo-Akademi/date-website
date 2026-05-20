@@ -6,7 +6,8 @@ from django.utils.http import urlencode
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
 
-from core.admin_base import ModelAdmin, TabularInline
+from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, TabularInline
+from core.admin_ui import AdminLink
 
 from .models import Functionary, FunctionaryRole
 
@@ -52,7 +53,15 @@ class FunctionaryAdmin(ModelAdmin):
 
 
 @admin.register(FunctionaryRole)
-class FunctionaryRoleAdmin(ModelAdmin):
+class FunctionaryRoleAdmin(ExtraChangeListLinksMixin, ModelAdmin):
+    changelist_links = (
+        AdminLink(
+            _('All assignments'),
+            icon='manage_accounts',
+            url_name='admin:functionaries_functionary_changelist',
+            permission='functionaries.view_functionary',
+        ),
+    )
     save_on_top = True
     list_display = ('title', 'board', 'functionary_count')
     list_filter = ('board',)

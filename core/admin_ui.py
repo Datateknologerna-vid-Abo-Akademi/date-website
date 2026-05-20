@@ -95,12 +95,6 @@ SIDEBAR_NAVIGATION = (
                 url_name='admin:billing_eventbillingconfiguration_changelist',
                 permission='billing.view_eventbillingconfiguration',
             ),
-            AdminLink(
-                _('Invoices'),
-                icon='receipt',
-                url_name='admin:billing_eventinvoice_changelist',
-                permission='billing.view_eventinvoice',
-            ),
         ),
     ),
     AdminSidebarGroup(
@@ -126,12 +120,6 @@ SIDEBAR_NAVIGATION = (
                 icon='payments',
                 url_name='admin:members_subscriptionpayment_changelist',
                 permission='members.view_subscriptionpayment',
-            ),
-            AdminLink(
-                _('Functionaries'),
-                icon='manage_accounts',
-                url_name='admin:functionaries_functionary_changelist',
-                permission='functionaries.view_functionary',
             ),
             AdminLink(
                 _('Functionary Roles'),
@@ -178,12 +166,6 @@ SIDEBAR_NAVIGATION = (
                 permission='publications.view_publicationcollection',
             ),
             AdminLink(
-                _('PDF Publications'),
-                icon='picture_as_pdf',
-                url_name='admin:publications_pdffile_changelist',
-                permission='publications.view_pdffile',
-            ),
-            AdminLink(
                 _('Photo Albums'),
                 icon='photo_library',
                 url_name='admin:gallery_album_changelist',
@@ -207,9 +189,6 @@ SIDEBAR_NAVIGATION = (
         _('Activities'),
         (
             AdminLink(_('CTF'), icon='military_tech', url_name='admin:ctf_ctf_changelist', permission='ctf.view_ctf'),
-            AdminLink(
-                _('CTF Guesses'), icon='flag', url_name='admin:ctf_guess_changelist', permission='ctf.view_guess'
-            ),
             AdminLink(
                 _('Lucia'), icon='stars', url_name='admin:lucia_candidate_changelist', permission='lucia.view_candidate'
             ),

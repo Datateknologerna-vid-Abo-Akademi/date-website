@@ -10,7 +10,7 @@ Manage yearly functionary roles and assignments.
 4. Use the inline assignment table on the same page to add or review people who have held that role.
 
 ## Functionary Assignments
-1. Open **Members › Functionaries**.
+1. Open **Members › Functionary Roles**, then use **All assignments** when you need the full assignment audit list.
 2. Fill in role and year.
 3. Add either a linked member or a standalone display name.
 4. Use filters to review by year or role. The role column links back to the role page.

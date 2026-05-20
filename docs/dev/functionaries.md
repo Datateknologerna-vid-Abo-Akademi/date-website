@@ -17,7 +17,7 @@ The public routes remain under the members URL namespace for compatibility:
 - `functionaries.selectors` groups and filters functionaries by year, role, and board/non-board status for the public listing.
 
 ## Admin
-- `FunctionaryRoleAdmin` includes an inline `Functionary` table so role metadata and yearly assignments can be edited together.
+- `FunctionaryRoleAdmin` includes an inline `Functionary` table so role metadata and yearly assignments can be edited together. The full assignment list is available through an **All assignments** tool link rather than a separate sidebar entry.
 - `FunctionaryAdmin` links each assignment back to its role and supports searching by linked member or standalone display name.
 
 ## Migration Notes
