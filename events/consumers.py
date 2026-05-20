@@ -5,7 +5,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 
 class EventConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.event = self.scope["url_route"]["kwargs"]["event_name"]
+        self.event = self.scope['url_route']['kwargs']['event_name']
         self.event_group_name = f"event_{self.event}"
 
         # Join event group
@@ -18,5 +18,5 @@ class EventConsumer(AsyncWebsocketConsumer):
 
     async def event_message(self, event):
         # Send message
-        msg = event["data"]
-        await self.send(text_data=json.dumps({"data": msg}))
+        msg = event['data']
+        await self.send(text_data=json.dumps({'data': msg}))

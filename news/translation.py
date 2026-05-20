@@ -9,13 +9,13 @@ TRANSLATION_LANGUAGES = get_translation_languages()
 @register(Post)
 class PostTranslationOptions(TranslationOptions):
     fields = (
-        "title",
-        "content",
+        'title',
+        'content',
     )
     languages = TRANSLATION_LANGUAGES
 
 
 @register(Category)
 class CategoryTranslationOptions(TranslationOptions):
-    fields = ("name",)
+    fields = ('name',)
     languages = TRANSLATION_LANGUAGES

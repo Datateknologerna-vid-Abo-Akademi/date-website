@@ -7,7 +7,7 @@ class DocumentTable(tables.Table):
     class Meta:
         model = Document
         template_name = "django_tables2/bootstrap.html"
-        fields = ("collection", "title", "document")
+        fields = ('collection', 'title', 'document')
 
 
 class SumColumn(tables.Column):

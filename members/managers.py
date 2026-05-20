@@ -9,7 +9,7 @@ class MemberManager(BaseUserManager):
         Creates and saves members with email and password
         """
         if not username:
-            raise ValueError("Username is required")
+            raise ValueError('Username is required')
         member = self.model(username=username, **extra_fields)
         member.set_password(password)
         member.save(using=self._db)
@@ -19,11 +19,11 @@ class MemberManager(BaseUserManager):
         return self._create_user(username, password, **extra_fields)
 
     def create_superuser(self, username, password, **extra_fields):
-        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault('is_superuser', True)
         # extra_fields.setdefault('is_staff', True)
 
-        if extra_fields.get("is_superuser") is not True:
-            raise ValueError("Superuser must have is_superuser=True.")
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
 
         return self._create_user(username, password, **extra_fields)
 

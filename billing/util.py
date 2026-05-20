@@ -23,7 +23,7 @@ def generate_invoice_number() -> int:
 def generate_reference_number(invoice_number: int) -> str:
     """Generate reference number for invoice"""
     multiplication_feed = (7, 3, 1)
-    reference_number_raw = str(invoice_number).replace(" ", "")
+    reference_number_raw = str(invoice_number).replace(' ', '')
     numbers_reverse = map(int, reference_number_raw[::-1])
     sum_of_multiplication = sum(multiplication_feed[i % 3] * x for i, x in enumerate(numbers_reverse))
     return str(invoice_number) + str((10 - (sum_of_multiplication % 10)) % 10)
@@ -54,12 +54,12 @@ def get_selection_price(event, pricing, price_selector, preferences):
 def send_event_invoice(signup: EventAttendees, invoice: EventInvoice):
     """Send invoice to participant"""
     context = {
-        "invoice": invoice,
-        "signup": signup,
+        'invoice': invoice,
+        'signup': signup,
         **settings.BILLING_CONTEXT,  # type: ignore[misc]
         **settings.CONTENT_VARIABLES,
     }
-    content = render_to_string("billing/invoice_email.txt", context)
+    content = render_to_string('billing/invoice_email.txt', context)
     send_email_task.delay(
         f"{signup.event.title} - Betalningsuppgifter", content, settings.DEFAULT_FROM_EMAIL, [signup.email]
     )
@@ -68,25 +68,25 @@ def send_event_invoice(signup: EventAttendees, invoice: EventInvoice):
 def send_event_free_confirmation(signup: EventAttendees):
     """Send confirmation email for free events"""
     context = {
-        "signup": signup,
+        'signup': signup,
         **settings.BILLING_CONTEXT,  # type: ignore[misc]
         **settings.CONTENT_VARIABLES,
     }
-    content = render_to_string("billing/free_event_confirmation_email.txt", context)
+    content = render_to_string('billing/free_event_confirmation_email.txt', context)
     send_email_task.delay(f"{signup.event.title} - Bekräftelse", content, settings.DEFAULT_FROM_EMAIL, [signup.email])
 
 
 def send_confirmation_email(
     signup: EventAttendees,
     billing_data: EventInvoice | None = None,
-    template="events/emails/confirmation_email.txt",
+    template='events/emails/confirmation_email.txt',
 ):
     """Send confirmation email to participant"""
 
     context = {
-        "signup": signup,
-        "billing_data": billing_data,
-        "event": signup.event,
+        'signup': signup,
+        'billing_data': billing_data,
+        'event': signup.event,
         **settings.BILLING_CONTEXT,  # type: ignore[misc]
         **settings.CONTENT_VARIABLES,
     }

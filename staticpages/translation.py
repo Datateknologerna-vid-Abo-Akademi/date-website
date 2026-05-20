@@ -9,19 +9,19 @@ TRANSLATION_LANGUAGES = get_translation_languages()
 @register(StaticPage)
 class StaticPageTranslationOptions(TranslationOptions):
     fields = (
-        "title",
-        "content",
+        'title',
+        'content',
     )
     languages = TRANSLATION_LANGUAGES
 
 
 @register(StaticPageNav)
 class StaticPageNavTranslationOptions(TranslationOptions):
-    fields = ("category_name",)
+    fields = ('category_name',)
     languages = TRANSLATION_LANGUAGES
 
 
 @register(StaticUrl)
 class StaticUrlTranslationOptions(TranslationOptions):
-    fields = ("title",)
+    fields = ('title',)
     languages = TRANSLATION_LANGUAGES

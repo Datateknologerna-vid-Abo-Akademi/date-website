@@ -29,9 +29,9 @@ def alumni_signup(request):
 
     form = AlumniSignUpForm(request.POST or None)
 
-    if request.method == "POST" and form.is_valid():
-        if not validate_captcha(request.POST.get("cf-turnstile-response", "")):
-            return render(request, "members/signup.html", {"form": form, "alumni": True})
+    if request.method == 'POST' and form.is_valid():
+        if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
+            return render(request, 'members/signup.html', {'form': form, 'alumni': True})
 
         auth, sheet = get_alumni_sheet_config()
         client = DateSheetsAdapter(auth, sheet, MEMBER_SHEET_NAME)
@@ -39,14 +39,14 @@ def alumni_signup(request):
         if form.cleaned_data["email"] in client.get_column_values(client.get_column_by_name("email")):
             log.info("Alumni CREATE: Email already registered")
             return render(
-                request, "members/signup.html", {"form": form, "alumni": True, "error": "Email already registered."}
+                request, 'members/signup.html', {'form': form, 'alumni': True, 'error': 'Email already registered.'}
             )  # noqa: E501
 
         handle_alumni_signup.delay(_serialize_alumni_payload(form.cleaned_data))
 
-        return render(request, "members/registration/registration_complete.html", {"alumni": True})
+        return render(request, 'members/registration/registration_complete.html', {'alumni': True})
 
-    return render(request, "members/signup.html", {"form": form, "alumni": True})
+    return render(request, 'members/signup.html', {'form': form, 'alumni': True})
 
 
 def alumni_update_form(request, token):
@@ -57,17 +57,17 @@ def alumni_update_form(request, token):
         assert token.is_valid()
     except AlumniUpdateToken.DoesNotExist, AssertionError:
         log.info(f"Invalid token: {token}")
-        return redirect("alumni:alumni_update")
+        return redirect('alumni:alumni_update')
 
     initial_data = {
-        "email": token.email,
-        "token": token.token,
+        'email': token.email,
+        'token': token.token,
     }
 
-    if request.method == "GET":
+    if request.method == 'GET':
         form = AlumniUpdateForm(initial=initial_data)
-        return render(request, "members/signup.html", {"form": form, "alumni": True})
-    elif request.method == "POST":
+        return render(request, 'members/signup.html', {'form': form, 'alumni': True})
+    elif request.method == 'POST':
         form = AlumniUpdateForm(request.POST, initial=initial_data)
         if form.is_valid():
             handle_alumni_signup.delay(
@@ -77,10 +77,10 @@ def alumni_update_form(request, token):
             return render(request, "alumni/update_complete.html")
         return render(
             request,
-            "members/signup.html",
+            'members/signup.html',
             {
-                "form": form,
-                "alumni": True,
+                'form': form,
+                'alumni': True,
             },
             status=400,
         )
@@ -89,19 +89,19 @@ def alumni_update_form(request, token):
 
 def alumni_update_verify(request):
     """Handle the alumni update form submission."""
-    if request.method == "POST":
+    if request.method == 'POST':
         form = AlumniEmailVerificationForm(request.POST)
-        if not validate_captcha(request.POST.get("cf-turnstile-response", "")):
-            return render(request, "alumni/update_verify.html", {"form": form})
+        if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
+            return render(request, 'alumni/update_verify.html', {'form': form})
 
         if form.is_valid():
-            token = AlumniUpdateToken(email=form.cleaned_data["email"])
+            token = AlumniUpdateToken(email=form.cleaned_data['email'])
             token.save()
 
-            enqueue_task_on_commit(send_token_email, str(token.token), form.cleaned_data["email"])
+            enqueue_task_on_commit(send_token_email, str(token.token), form.cleaned_data['email'])
 
-            return render(request, "alumni/check_email.html")
-    elif request.method == "GET":
+            return render(request, 'alumni/check_email.html')
+    elif request.method == 'GET':
         form = AlumniEmailVerificationForm()
-        return render(request, "alumni/update_verify.html", {"form": form})
+        return render(request, 'alumni/update_verify.html', {'form': form})
     return 405

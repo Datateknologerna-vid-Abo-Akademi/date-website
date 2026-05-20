@@ -81,7 +81,7 @@ class ServerTimingMiddleware:
         query_label = "query" if db_timing["count"] == 1 else "queries"
         response["Server-Timing"] = (
             f"app;dur={total_duration:.1f}, "
-            f'db;dur={db_timing["duration"]:.1f};desc="{db_timing["count"]} {query_label}"'
+            f'db;dur={db_timing['duration']:.1f};desc="{db_timing['count']} {query_label}"'
         )
         return response
 

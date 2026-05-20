@@ -415,9 +415,9 @@ class WordPressImportCommandTests(TestCase):
 
     def test_gallery_redirect_albums_fetch_og_thumbnail(self):
         share_html = (
-            "<html><head>"
+            '<html><head>'
             '<meta property="og:image" content="https://lh3.googleusercontent.com/preview.jpg">'
-            "</head><body></body></html>"
+            '</head><body></body></html>'
         )
         image_bytes = b"\x89PNG\r\n\x1a\n-fake-image-bytes-"
 

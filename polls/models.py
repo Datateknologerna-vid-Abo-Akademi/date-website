@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 from members.models import Member
 
-logger = logging.getLogger("date")
+logger = logging.getLogger('date')
 
 ANYONE = 1
 MEMBERS_ONLY = 2
@@ -14,10 +14,10 @@ ORDINARY_MEMBERS_ONLY = 3
 VOTE_MEMBERS_ONLY = 4
 
 VOTING_OPTIONS = [
-    (ANYONE, _("Vem som helst")),
-    (MEMBERS_ONLY, _("Endast medlemmar")),
-    (ORDINARY_MEMBERS_ONLY, _("Endast ordinarie medlemmar")),
-    (VOTE_MEMBERS_ONLY, _("Endast röstberättigade medlemmar")),
+    (ANYONE, _('Vem som helst')),
+    (MEMBERS_ONLY, _('Endast medlemmar')),
+    (ORDINARY_MEMBERS_ONLY, _('Endast ordinarie medlemmar')),
+    (VOTE_MEMBERS_ONLY, _('Endast röstberättigade medlemmar')),
 ]
 
 
@@ -30,24 +30,24 @@ class Question(models.Model):  # type: ignore[django-manager-missing]
     question_text = models.CharField(max_length=200)
     pub_date = models.DateTimeField(auto_now_add=True)
     published_time = models.DateTimeField(
-        _("Publiceras"),
+        _('Publiceras'),
         null=True,
         blank=True,
         default=now,
-        help_text=_("Lämna tomt för att dölja frågan. Välj en framtida tid för schemalagd publicering."),
+        help_text=_('Lämna tomt för att dölja frågan. Välj en framtida tid för schemalagd publicering.'),
     )
-    show_results = models.BooleanField(_("Visa resultat"), default=False)
-    end_vote = models.BooleanField(_("Avsluta röstande"), default=False)
-    multiple_choice = models.BooleanField(_("Flerval"), default=False)
-    required_multiple_choices = models.IntegerField(_("Antal flerval som krävs"), blank=True, null=True)
-    voting_options = models.IntegerField(_("Valmöjligheter"), choices=VOTING_OPTIONS, default=ANYONE)
-    voters = models.ManyToManyField(Member, through="Vote", related_name="voters")  # type: ignore[var-annotated]
+    show_results = models.BooleanField(_('Visa resultat'), default=False)
+    end_vote = models.BooleanField(_('Avsluta röstande'), default=False)
+    multiple_choice = models.BooleanField(_('Flerval'), default=False)
+    required_multiple_choices = models.IntegerField(_('Antal flerval som krävs'), blank=True, null=True)
+    voting_options = models.IntegerField(_('Valmöjligheter'), choices=VOTING_OPTIONS, default=ANYONE)
+    voters = models.ManyToManyField(Member, through="Vote", related_name='voters')  # type: ignore[var-annotated]
 
     objects = QuestionQuerySet.as_manager()  # type: ignore[django-manager-missing]
 
     class Meta:
-        verbose_name = _("Fråga")
-        verbose_name_plural = _("Frågor")
+        verbose_name = _('Fråga')
+        verbose_name_plural = _('Frågor')
 
     def __str__(self):
         return self.question_text
@@ -69,8 +69,8 @@ class Choice(models.Model):  # type: ignore[django-manager-missing]
     votes = models.IntegerField(default=0)
 
     class Meta:
-        verbose_name = _("Val")
-        verbose_name_plural = _("Val")
+        verbose_name = _('Val')
+        verbose_name_plural = _('Val')
 
     def __str__(self):
         return self.choice_text
@@ -85,8 +85,8 @@ class Vote(models.Model):
     voted_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = _("Röstare")
-        verbose_name_plural = _("Röstare")
+        verbose_name = _('Röstare')
+        verbose_name_plural = _('Röstare')
 
     def __str__(self):
         return self.user.first_name + " " + self.user.last_name

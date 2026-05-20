@@ -8,5 +8,5 @@ TRANSLATION_LANGUAGES = get_translation_languages()
 
 @register(FunctionaryRole)
 class FunctionaryRoleTranslationOptions(TranslationOptions):
-    fields = ("title",)
+    fields = ('title',)
     languages = TRANSLATION_LANGUAGES

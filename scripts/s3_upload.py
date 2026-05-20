@@ -14,16 +14,16 @@ def env_alias(name, *aliases):
     raise KeyError(name)
 
 
-AWS_S3_ENDPOINT_URL = env_alias("S3_ENDPOINT_URL", "AWS_S3_ENDPOINT_URL")
-AWS_ACCESS_KEY_ID = env_alias("S3_ACCESS_KEY", "AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = env_alias("S3_SECRET_KEY", "AWS_SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = env_alias("S3_BUCKET_NAME", "AWS_STORAGE_BUCKET_NAME")
-PRIVATE_MEDIA_LOCATION = os.environ["PRIVATE_MEDIA_LOCATION"]
+AWS_S3_ENDPOINT_URL = env_alias('S3_ENDPOINT_URL', 'AWS_S3_ENDPOINT_URL')
+AWS_ACCESS_KEY_ID = env_alias('S3_ACCESS_KEY', 'AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = env_alias('S3_SECRET_KEY', 'AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = env_alias('S3_BUCKET_NAME', 'AWS_STORAGE_BUCKET_NAME')
+PRIVATE_MEDIA_LOCATION = os.environ['PRIVATE_MEDIA_LOCATION']
 
 
 def s3_config():
     return boto3.client(
-        "s3",
+        's3',
         endpoint_url=AWS_S3_ENDPOINT_URL,
         aws_access_key_id=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
@@ -56,7 +56,7 @@ for root, dirs, files in os.walk(path):
         split_path = path.split("/")
         split_path.reverse()
         # Do not include files from thumbnails folder
-        if "thumbs" != split_path[1]:
+        if 'thumbs' != split_path[1]:
             for title in album_list:
                 if title == split_path[1]:
                     split_path.reverse()

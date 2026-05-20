@@ -12,7 +12,7 @@ from django_ckeditor_5.fields import CKEditor5Field
 
 from core.fields import PublicFileField
 
-logger = logging.getLogger("date")
+logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
 
@@ -25,38 +25,38 @@ def upload_to(instance, filename):
 
 
 class StaticPageNav(models.Model):  # type: ignore[django-manager-missing]
-    category_name = models.CharField(_("Kategori"), max_length=255, blank=False)
+    category_name = models.CharField(_('Kategori'), max_length=255, blank=False)
     nav_element = models.IntegerField(default=0)
-    use_category_url = models.BooleanField(_("Använd kategorins URL"), default=False)
-    url = models.CharField(_("Url"), max_length=200, blank=True)
+    use_category_url = models.BooleanField(_('Använd kategorins URL'), default=False)
+    url = models.CharField(_('Url'), max_length=200, blank=True)
 
     def __str__(self):
         return self.category_name
 
 
 class StaticPage(models.Model):  # type: ignore[django-manager-missing]
-    title = models.CharField(_("Titel"), max_length=255, blank=False)
-    content = CKEditor5Field(_("Innehåll"), blank=True)
-    created_time = models.DateTimeField(_("Skapad"), default=timezone.now)
-    modified_time = models.DateTimeField(_("Modifierad"), editable=False, null=True, blank=True)
-    slug = models.SlugField(_("Slug"), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
-    members_only = models.BooleanField(_("Kräv inloggning"), default=False)
-    image = models.ImageField(_("Bakgrundsbild"), null=True, blank=True, upload_to=upload_to)
-    s3_image = PublicFileField(verbose_name=_("Bakgrundsbild"), null=True, blank=True, upload_to=upload_to)
+    title = models.CharField(_('Titel'), max_length=255, blank=False)
+    content = CKEditor5Field(_('Innehåll'), blank=True)
+    created_time = models.DateTimeField(_('Skapad'), default=timezone.now)
+    modified_time = models.DateTimeField(_('Modifierad'), editable=False, null=True, blank=True)
+    slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
+    members_only = models.BooleanField(_('Kräv inloggning'), default=False)
+    image = models.ImageField(_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
+    s3_image = PublicFileField(verbose_name=_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
 
     def __str__(self):
         return self.title
 
     def get_absolute_url(self):
-        return reverse("staticpages:page", args=[self.slug])
+        return reverse('staticpages:page', args=[self.slug])
 
     def clean(self):
         super().clean()
         if self.image and self.s3_image:
             raise ValidationError(
                 {
-                    "image": _("Välj antingen en lokal bakgrundsbild eller en publik S3-bakgrundsbild, inte båda."),
-                    "s3_image": _("Välj antingen en lokal bakgrundsbild eller en publik S3-bakgrundsbild, inte båda."),
+                    'image': _('Välj antingen en lokal bakgrundsbild eller en publik S3-bakgrundsbild, inte båda.'),
+                    's3_image': _('Välj antingen en lokal bakgrundsbild eller en publik S3-bakgrundsbild, inte båda.'),
                 }
             )
 
@@ -85,15 +85,15 @@ class StaticPage(models.Model):  # type: ignore[django-manager-missing]
 
 
 class StaticUrl(models.Model):  # type: ignore[django-manager-missing]
-    title = models.CharField(_("Titel"), max_length=255, blank=False)
-    url = models.CharField(_("Url"), max_length=200, blank=True)
+    title = models.CharField(_('Titel'), max_length=255, blank=False)
+    url = models.CharField(_('Url'), max_length=200, blank=True)
     category = models.ForeignKey(StaticPageNav, on_delete=models.CASCADE, null=True, blank=True)
-    dropdown_element = models.PositiveSmallIntegerField(_("#"), blank=True)
-    logged_in_only = models.BooleanField(_("Visa endast åt inloggade användare"), default=False)
-    parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.CASCADE, related_name="children")
+    dropdown_element = models.PositiveSmallIntegerField(_('#'), blank=True)
+    logged_in_only = models.BooleanField(_('Visa endast åt inloggade användare'), default=False)
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='children')
 
     class Meta:
-        ordering = ["dropdown_element"]
+        ordering = ['dropdown_element']
 
     def __str__(self):
         return self.title
@@ -117,10 +117,10 @@ class StaticUrl(models.Model):  # type: ignore[django-manager-missing]
     def clean(self):
         super().clean()
         if not self.category_id and not self.parent_id:
-            raise ValidationError({"category": _("Välj en kategori eller en överordnad länk.")})
+            raise ValidationError({'category': _('Välj en kategori eller en överordnad länk.')})
         if self.parent_id and self.parent_id == self.pk:
-            raise ValidationError({"parent": _("En länk kan inte vara sin egen överordnade länk.")})
+            raise ValidationError({'parent': _('En länk kan inte vara sin egen överordnade länk.')})
         if self.parent_id and self.category_id and self.parent.category_id != self.category_id:
-            raise ValidationError({"parent": _("Välj en överordnad länk i samma kategori.")})
+            raise ValidationError({'parent': _('Välj en överordnad länk i samma kategori.')})
         if self.parent_id and self.parent.parent_id:
-            raise ValidationError({"parent": _("Undermenyer stöder bara en nivå.")})
+            raise ValidationError({'parent': _('Undermenyer stöder bara en nivå.')})

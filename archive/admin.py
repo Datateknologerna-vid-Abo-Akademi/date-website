@@ -18,12 +18,12 @@ from core.admin_widgets import (
 from .forms import DocumentAdminForm, PublicAdminForm
 from .models import Document, DocumentCollection, PublicCollection, PublicFile
 
-logger = logging.getLogger("date")
+logger = logging.getLogger('date')
 
 
 def safe_file_link(file_field, label=None):
     if not file_field:
-        return "-"
+        return '-'
     label = label or file_field.name
     try:
         return format_html(
@@ -37,29 +37,29 @@ def safe_file_link(file_field, label=None):
 
 
 class ArchiveCollectionAdminMixin(ExtraChangeListLinksMixin):
-    changelist_links = (AdminLink(_("Städa upp media"), icon="cleaning_services", url_name="archive:cleanMedia"),)
+    changelist_links = (AdminLink(_('Städa upp media'), icon='cleaning_services', url_name='archive:cleanMedia'),)
 
 
 class SafeFileInlineMixin:
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
-        models.FileField: {"widget": SafeAdminFileWidget},
-        models.ImageField: {"widget": SafeAdminFileWidget},
+        models.FileField: {'widget': SafeAdminFileWidget},
+        models.ImageField: {'widget': SafeAdminFileWidget},
     }
 
 
 class DocumentInline(SafeFileInlineMixin, TabularInline):
     model = Document
-    fk_name = "collection"
+    fk_name = 'collection'
     can_delete = True
     extra = 1
 
 
 class PublicFileInline(SafeFileInlineMixin, TabularInline):
     model = PublicFile
-    fk_name = "collection"
+    fk_name = 'collection'
     can_delete = True
-    readonly_fields = ("preview_image",)
+    readonly_fields = ('preview_image',)
     extra = 1
 
     def preview_image(self, obj):
@@ -72,22 +72,22 @@ class DocumentCollectionAdmin(FlatpickrDateTimeAdminMixin, ArchiveCollectionAdmi
     save_on_top = True
     form = DocumentAdminForm
     inlines = [DocumentInline]
-    list_display = ("title", "pub_date", "hide_for_gulis")
-    search_fields = ("title", "document__title")
-    ordering = ("-pub_date",)
-    date_hierarchy = "pub_date"
-    flatpickr_datetime_fields = ("pub_date",)
+    list_display = ('title', 'pub_date', 'hide_for_gulis')
+    search_fields = ('title', 'document__title')
+    ordering = ('-pub_date',)
+    date_hierarchy = 'pub_date'
+    flatpickr_datetime_fields = ('pub_date',)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.filter(type="Documents")
+        return qs.filter(type='Documents')
 
     def get_changeform_initial_data(self, request):
-        return {"type": "Documents"}
+        return {'type': 'Documents'}
 
     class Media:
-        css = {"all": FLATPICKR_ADMIN_CSS}
-        js = ("admin/js/jquery.init.js",) + FLATPICKR_ADMIN_JS
+        css = {'all': FLATPICKR_ADMIN_CSS}
+        js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS
 
 
 if settings.USE_S3:  # type: ignore[misc]
@@ -98,19 +98,19 @@ if settings.USE_S3:  # type: ignore[misc]
         save_on_top = True
         form = PublicAdminForm
         inlines = [PublicFileInline]
-        list_display = ("title", "pub_date")
-        search_fields = ("title",)
-        ordering = ("-pub_date",)
-        date_hierarchy = "pub_date"
-        flatpickr_datetime_fields = ("pub_date",)
+        list_display = ('title', 'pub_date')
+        search_fields = ('title',)
+        ordering = ('-pub_date',)
+        date_hierarchy = 'pub_date'
+        flatpickr_datetime_fields = ('pub_date',)
 
         def get_queryset(self, request):
             qs = super().get_queryset(request)
-            return qs.filter(type="PublicFiles")
+            return qs.filter(type='PublicFiles')
 
         def get_changeform_initial_data(self, request):
-            return {"type": "PublicFiles"}
+            return {'type': 'PublicFiles'}
 
         class Media:
-            css = {"all": FLATPICKR_ADMIN_CSS}
-            js = ("admin/js/jquery.init.js",) + FLATPICKR_ADMIN_JS
+            css = {'all': FLATPICKR_ADMIN_CSS}
+            js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS

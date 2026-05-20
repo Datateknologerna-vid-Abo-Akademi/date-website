@@ -25,58 +25,58 @@ def collection_cover_upload_to(instance, filename):
 
 
 class PublicationCollection(models.Model):
-    VISIBILITY_PUBLIC = "public"
-    VISIBILITY_LOGIN = "login"
-    VISIBILITY_MEMBERSHIP = "membership"
-    VISIBILITY_PASSWORD = "password"  # noqa: S105
-    VISIBILITY_HIDDEN = "hidden"
+    VISIBILITY_PUBLIC = 'public'
+    VISIBILITY_LOGIN = 'login'
+    VISIBILITY_MEMBERSHIP = 'membership'
+    VISIBILITY_PASSWORD = 'password'  # noqa: S105
+    VISIBILITY_HIDDEN = 'hidden'
 
     VISIBILITY_CHOICES = (
-        (VISIBILITY_PUBLIC, _("Public")),
-        (VISIBILITY_LOGIN, _("Logged-in members")),
-        (VISIBILITY_MEMBERSHIP, _("Selected membership types")),
-        (VISIBILITY_PASSWORD, _("Password protected")),
-        (VISIBILITY_HIDDEN, _("Hidden")),
+        (VISIBILITY_PUBLIC, _('Public')),
+        (VISIBILITY_LOGIN, _('Logged-in members')),
+        (VISIBILITY_MEMBERSHIP, _('Selected membership types')),
+        (VISIBILITY_PASSWORD, _('Password protected')),
+        (VISIBILITY_HIDDEN, _('Hidden')),
     )
 
-    title = models.CharField(_("Title"), max_length=250)
+    title = models.CharField(_('Title'), max_length=250)
     slug = models.SlugField(
-        _("Slug"),
+        _('Slug'),
         max_length=255,
         unique=True,
         blank=True,
-        help_text=_("Leave empty to auto-generate from title"),
+        help_text=_('Leave empty to auto-generate from title'),
     )
-    description = models.TextField(_("Description"), blank=True)
+    description = models.TextField(_('Description'), blank=True)
     visibility = models.CharField(
-        _("Visibility"),
+        _('Visibility'),
         max_length=20,
         choices=VISIBILITY_CHOICES,
         default=VISIBILITY_PUBLIC,
-        help_text=_("Controls whether the collection is listed and who may access its publications."),
+        help_text=_('Controls whether the collection is listed and who may access its publications.'),
     )
     cover_image = PublicFileField(
-        _("Cover image"),
+        _('Cover image'),
         upload_to=collection_cover_upload_to,
         blank=True,
-        help_text=_("Optional image shown for this collection on the publications index."),
+        help_text=_('Optional image shown for this collection on the publications index.'),
     )
     allowed_membership_types = models.ManyToManyField(
-        "members.MembershipType",
+        'members.MembershipType',
         blank=True,
-        verbose_name=_("Allowed membership types"),
-        help_text=_("Only used when visibility is set to selected membership types."),
+        verbose_name=_('Allowed membership types'),
+        help_text=_('Only used when visibility is set to selected membership types.'),
     )
-    password_hash = models.CharField(_("Password hash"), max_length=128, blank=True, editable=False)
-    ordering = models.PositiveIntegerField(_("Ordering"), default=0)
-    is_active = models.BooleanField(_("Active"), default=True)
-    created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
-    updated_at = models.DateTimeField(_("Updated at"), auto_now=True)
+    password_hash = models.CharField(_('Password hash'), max_length=128, blank=True, editable=False)
+    ordering = models.PositiveIntegerField(_('Ordering'), default=0)
+    is_active = models.BooleanField(_('Active'), default=True)
+    created_at = models.DateTimeField(_('Created at'), auto_now_add=True)
+    updated_at = models.DateTimeField(_('Updated at'), auto_now=True)
 
     class Meta:
-        verbose_name = _("Publication collection")
-        verbose_name_plural = _("Publication collections")
-        ordering = ["ordering", "title"]
+        verbose_name = _('Publication collection')
+        verbose_name_plural = _('Publication collections')
+        ordering = ['ordering', 'title']
 
     def __str__(self):
         return self.title
@@ -90,7 +90,7 @@ class PublicationCollection(models.Model):
         return reverse("publications:collection_detail", args=[self.slug])
 
     def generate_unique_slug(self):
-        base_slug = slugify(self.title) or "publications"
+        base_slug = slugify(self.title) or 'publications'
         unique_slug = base_slug
         num = 1
         queryset = PublicationCollection.objects.all()
@@ -102,7 +102,7 @@ class PublicationCollection(models.Model):
         return unique_slug
 
     def set_password(self, raw_password):
-        self.password_hash = make_password(raw_password) if raw_password else ""
+        self.password_hash = make_password(raw_password) if raw_password else ''
 
     def check_password(self, raw_password):
         return bool(self.password_hash and check_password(raw_password, self.password_hash))
@@ -112,61 +112,61 @@ class PublicationCollection(models.Model):
 
     def get_cover_url(self):
         if not self.cover_image:
-            return ""
+            return ''
         return self.cover_image.url
 
     def get_safe_cover_url(self):
         try:
             return self.get_cover_url()
         except Exception:
-            return ""
+            return ''
 
 
 class PDFFile(models.Model):
     collection = models.ForeignKey(
         PublicationCollection,
-        verbose_name=_("Collection"),
-        related_name="publications",
+        verbose_name=_('Collection'),
+        related_name='publications',
         null=True,
         blank=True,
         on_delete=models.PROTECT,
     )
-    title = models.CharField(_("Title"), max_length=250)
+    title = models.CharField(_('Title'), max_length=250)
     slug = models.SlugField(
-        _("Slug"), max_length=255, unique=True, blank=True, help_text=_("Leave empty to auto-generate from title")
+        _('Slug'), max_length=255, unique=True, blank=True, help_text=_('Leave empty to auto-generate from title')
     )
-    file = PublicFileField(_("File"), upload_to=upload_to, blank=True)
+    file = PublicFileField(_('File'), upload_to=upload_to, blank=True)
     redirect_url = models.URLField(
-        _("Redirect URL"),
+        _('Redirect URL'),
         max_length=500,
         blank=True,
-        help_text=_("If set, visitors are sent to this URL instead of the internal PDF viewer."),
+        help_text=_('If set, visitors are sent to this URL instead of the internal PDF viewer.'),
     )
     cover_image = PublicFileField(
-        _("Cover image"),
+        _('Cover image'),
         upload_to=cover_upload_to,
         blank=True,
-        help_text=_("Optional thumbnail image shown on the publications list."),
+        help_text=_('Optional thumbnail image shown on the publications list.'),
     )
-    description = models.TextField(_("Description"), blank=True)
-    uploaded_at = models.DateTimeField(_("Uploaded at"), auto_now_add=True)
-    updated_at = models.DateTimeField(_("Updated at"), auto_now=True)
-    publication_date = models.DateField(_("Publication Date"), default=timezone.now, null=True, blank=True)
+    description = models.TextField(_('Description'), blank=True)
+    uploaded_at = models.DateTimeField(_('Uploaded at'), auto_now_add=True)
+    updated_at = models.DateTimeField(_('Updated at'), auto_now=True)
+    publication_date = models.DateField(_('Publication Date'), default=timezone.now, null=True, blank=True)
     is_public = models.BooleanField(
-        _("Public Access"),
+        _('Public Access'),
         default=True,
         help_text=_(
             "If checked, this PDF will be visible to everyone. If unchecked, it will be hidden from all users."
         ),
     )
     requires_login = models.BooleanField(
-        _("Requires Login"), default=False, help_text=_("If checked, users must be logged in to access this PDF")
+        _('Requires Login'), default=False, help_text=_('If checked, users must be logged in to access this PDF')
     )
 
     class Meta:
-        verbose_name = _("PDF File")
-        verbose_name_plural = _("PDF Files")
-        ordering = ["-uploaded_at"]
+        verbose_name = _('PDF File')
+        verbose_name_plural = _('PDF Files')
+        ordering = ['-uploaded_at']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -189,16 +189,16 @@ class PDFFile(models.Model):
         except PublicationCollection.DoesNotExist:
             collection = None
         if collection:
-            return reverse("publications:pdf_view", args=[collection.slug, self.slug])
-        return reverse("publications:collection_detail", args=[self.slug])
+            return reverse('publications:pdf_view', args=[collection.slug, self.slug])
+        return reverse('publications:collection_detail', args=[self.slug])
 
     def clean(self):
         super().clean()
         if not self.file and not self.redirect_url:
             raise ValidationError(
                 {
-                    "file": _("Upload a PDF file or set a redirect URL."),
-                    "redirect_url": _("Upload a PDF file or set a redirect URL."),
+                    'file': _('Upload a PDF file or set a redirect URL.'),
+                    'redirect_url': _('Upload a PDF file or set a redirect URL.'),
                 }
             )
 
@@ -213,25 +213,25 @@ class PDFFile(models.Model):
 
     def get_file_url(self):
         if not self.file:
-            return ""
+            return ''
         return self.file.url
 
     def get_safe_file_url(self):
         try:
             return self.get_file_url()
         except Exception:
-            return ""
+            return ''
 
     def get_cover_url(self):
         if not self.cover_image:
-            return ""
+            return ''
         return self.cover_image.url
 
     def get_safe_cover_url(self):
         try:
             return self.get_cover_url()
         except Exception:
-            return ""
+            return ''
 
     def get_public_url(self):
         return self.get_absolute_url()

@@ -26,7 +26,7 @@ print("created album")
 
 for root, _, files in os.walk(sys.argv[2]):
     for file in files:
-        with open(os.path.join(root, file), "rb") as file_obj:
+        with open(os.path.join(root, file), 'rb') as file_obj:
             print(f"Uploading {file}")
             pic = Photo.objects.create(album=album, image=File(file_obj, file))
             pic.save()

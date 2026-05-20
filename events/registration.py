@@ -26,11 +26,11 @@ class EventSignupResult:
 
 
 def get_registration_questions(event):
-    return list(EventRegistrationForm.objects.filter(event=event).order_by("choice_number"))
+    return list(EventRegistrationForm.objects.filter(event=event).order_by('choice_number'))
 
 
 def get_public_registration_questions(event):
-    return list(EventRegistrationForm.objects.filter(event=event, public_info=True).order_by("choice_number"))
+    return list(EventRegistrationForm.objects.filter(event=event, public_info=True).order_by('choice_number'))
 
 
 def registration_preferences(questions, cleaned_data, *, prefix=""):
@@ -42,32 +42,32 @@ def registration_preferences(questions, cleaned_data, *, prefix=""):
 
 
 def register_event_signup(event, cleaned_data):
-    required_places = 2 if cleaned_data.get("avec") else 1
-    if cleaned_data.get("avec"):
+    required_places = 2 if cleaned_data.get('avec') else 1
+    if cleaned_data.get('avec'):
         _validate_avec(cleaned_data)
 
     questions = get_registration_questions(event)
 
     with transaction.atomic():
-        event = event.__class__.objects.select_for_update().select_related("parent").get(pk=event.pk)
+        event = event.__class__.objects.select_for_update().select_related('parent').get(pk=event.pk)
         _ensure_capacity(event, required_places)
         attendee = _create_attendee(
             event=event,
-            user=cleaned_data["user"],
-            email=cleaned_data["email"],
-            anonymous=cleaned_data["anonymous"],
+            user=cleaned_data['user'],
+            email=cleaned_data['email'],
+            anonymous=cleaned_data['anonymous'],
             preferences=registration_preferences(questions, cleaned_data),
         )
         avec_attendee = None
-        if cleaned_data.get("avec"):
+        if cleaned_data.get('avec'):
             avec_attendee = _create_attendee(
                 event=event,
-                user=cleaned_data["avec_user"],
-                email=cleaned_data["avec_email"],
-                anonymous=cleaned_data["avec_anonymous"],
+                user=cleaned_data['avec_user'],
+                email=cleaned_data['avec_email'],
+                anonymous=cleaned_data['avec_anonymous'],
                 preferences=registration_preferences(questions, cleaned_data, prefix="avec_"),
                 avec_for=attendee,
-                duplicate_field="avec_email",
+                duplicate_field='avec_email',
             )
 
     return EventSignupResult(attendee=attendee, avec_attendee=avec_attendee)
@@ -81,13 +81,13 @@ def _ensure_capacity(event, required_places):
 
 
 def _validate_avec(cleaned_data):
-    if not cleaned_data.get("avec_user"):
-        raise EventSignupError(_("Ange namn för avec."), field="avec_user")
-    if not cleaned_data.get("avec_email"):
-        raise EventSignupError(_("Ange e-post för avec."), field="avec_email")
+    if not cleaned_data.get('avec_user'):
+        raise EventSignupError(_("Ange namn för avec."), field='avec_user')
+    if not cleaned_data.get('avec_email'):
+        raise EventSignupError(_("Ange e-post för avec."), field='avec_email')
 
 
-def _create_attendee(event, user, email, anonymous, preferences, avec_for=None, duplicate_field="email"):
+def _create_attendee(event, user, email, anonymous, preferences, avec_for=None, duplicate_field='email'):
     storage_event = event.parent or event
     try:
         return EventAttendees.objects.create(

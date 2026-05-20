@@ -52,7 +52,7 @@ class RedactingFormatterTests(SimpleTestCase):
 
     def test_redacts_alumni_settings_log_message(self):
         output = self.format_message(
-            "ALUMNI_SETTINGS=%s",
+            'ALUMNI_SETTINGS=%s',
             '{"private_key":"secret-key","client_email":"service@example.com"}',
         )
 

@@ -6,7 +6,7 @@ from django.contrib.auth.backends import ModelBackend
 User = get_user_model()
 
 
-logger = logging.getLogger("date")
+logger = logging.getLogger('date')
 
 
 class AuthBackend(ModelBackend):

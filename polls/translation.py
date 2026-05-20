@@ -8,11 +8,11 @@ TRANSLATION_LANGUAGES = get_translation_languages()
 
 @register(Question)
 class QuestionTranslationOptions(TranslationOptions):
-    fields = ("question_text",)
+    fields = ('question_text',)
     languages = TRANSLATION_LANGUAGES
 
 
 @register(Choice)
 class ChoiceTranslationOptions(TranslationOptions):
-    fields = ("choice_text",)
+    fields = ('choice_text',)
     languages = TRANSLATION_LANGUAGES

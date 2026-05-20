@@ -27,7 +27,7 @@ MEMBER_SHEET_NAME = "members"  # Should match the sheet name
 def main(csv_path):
     client = DateSheetsAdapter(AUTH, SHEET, MEMBER_SHEET_NAME)
     audit_client = DateSheetsAdapter(AUTH, SHEET, "audit_log")
-    with open(csv_path, newline="", encoding="utf-8") as csvfile:
+    with open(csv_path, newline='', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             # Adjust these fields to match your sheet columns

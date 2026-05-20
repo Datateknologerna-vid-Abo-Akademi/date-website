@@ -26,14 +26,14 @@ class DocumentAdminForm(forms.ModelForm):
 
     class Meta:
         model = Collection
-        fields = "__all__"  # noqa: DJ007
-        exclude = ("hide_for_gulis",)  # noqa: DJ006
+        fields = '__all__'  # noqa: DJ007
+        exclude = ('hide_for_gulis',)  # noqa: DJ006
 
     def save(self, *args, **kwargs):
         collection = super().save(*args, **kwargs)
         collection.save()
-        if hasattr(self.files, "getlist"):
-            for f in self.files.getlist("files"):
+        if hasattr(self.files, 'getlist'):
+            for f in self.files.getlist('files'):
                 Document.objects.create(collection=collection, document=f, title=f)
         return collection
 
@@ -43,12 +43,12 @@ class PublicAdminForm(forms.ModelForm):
 
     class Meta:
         model = Collection
-        fields = "__all__"  # noqa: DJ007
+        fields = '__all__'  # noqa: DJ007
 
     def save(self, *args, **kwargs):
         collection = super().save(*args, **kwargs)
         collection.save()
-        if hasattr(self.files, "getlist"):
-            for f in self.files.getlist("files"):
+        if hasattr(self.files, 'getlist'):
+            for f in self.files.getlist('files'):
                 PublicFile.objects.create(collection=collection, some_file=f)
         return collection

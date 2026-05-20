@@ -21,7 +21,7 @@ from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription
 from news.models import Category, Post
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
 
-logger = logging.getLogger("date")
+logger = logging.getLogger('date')
 
 
 class EventTestCase(TestCase):
@@ -55,20 +55,20 @@ class EventTestCase(TestCase):
         )
 
         self.event = Event.objects.create(
-            title="Test event",
-            slug="test",
+            title='Test event',
+            slug='test',
             author_id=self.member.id,
             sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
         )
-        self.content = {"user": "person", "email": "person@test.com", "terms_accepted": "on"}
+        self.content = {'user': 'person', 'email': 'person@test.com', 'terms_accepted': 'on'}
         self.assertIsNotNone(self.event)
         self.assertTrue(self.event.published)
 
     def test_attending_event(self):
         c = Client()
-        response = c.post(reverse("events:detail", args=[self.event.slug]), self.content, follow=True)
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content, follow=True)
         self.assertEqual(response.redirect_chain[0][1], 302)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
@@ -76,11 +76,11 @@ class EventTestCase(TestCase):
     def test_duplicate_attendance(self):
         self.assertEqual(self.event.get_registrations().count(), 0)
         c = Client()
-        response = c.post(reverse("events:detail", args=[self.event.slug]), self.content, follow=True)
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content, follow=True)
         self.assertEqual(response.redirect_chain[0][1], 302)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
-        response = c.post(reverse("events:detail", args=[self.event.slug]), self.content)
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
         # Expect bad request status 400 since duplicate attendance not allowed
         self.assertEqual(response.status_code, 400)
         self.assertEqual(self.event.get_registrations().count(), 1)
@@ -90,8 +90,8 @@ class EventTestCase(TestCase):
         self.assertEqual(self.event.get_registrations().count(), 0)
         c = Client()
         response = c.post(
-            reverse("events:detail", args=[self.event.slug]),
-            {"user": "person", "email": "person@test.com", "terms_accepted": "on"},
+            reverse('events:detail', args=[self.event.slug]),
+            {'user': 'person', 'email': 'person@test.com', 'terms_accepted': 'on'},
             follow=True,
         )
         self.assertEqual(response.redirect_chain[0][1], 302)
@@ -101,8 +101,8 @@ class EventTestCase(TestCase):
     def test_form_validation(self):
         self.assertEqual(self.event.get_registrations().count(), 0)
         c = Client()
-        self.content["email"] = "no-email-provided"
-        response = c.post(reverse("events:detail", args=[self.event.slug]), self.content)
+        self.content['email'] = 'no-email-provided'
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(self.event.get_registrations().count(), 0)
 
@@ -112,7 +112,7 @@ class EventTestCase(TestCase):
         self.event.save()
         self.assertIsNotNone(self.event)
         c = Client()
-        response = c.post(reverse("events:detail", args=[self.event.slug]), self.content)
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
         self.assertEqual(response.status_code, 403)
         self.assertEqual(self.event.get_registrations().count(), 0)
 
@@ -121,37 +121,37 @@ class EventTestCase(TestCase):
         self.event.sign_up_others = timezone.now() + timezone.timedelta(days=1)
         self.event.save()
         c = Client()
-        c.login(username=self.member.username, password="test")
-        response = c.post(reverse("events:detail", args=[self.event.slug]), self.content, follow=True)
+        c.login(username=self.member.username, password='test')
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content, follow=True)
         self.assertIsNotNone(self.event.sign_up_members)
         self.assertEqual(response.status_code, 200)
 
         self.event.sign_up_members = timezone.now() + timezone.timedelta(days=1)
         self.event.save()
-        self.content["email"] = "person2@test.com"
-        response = c.post(reverse("events:detail", args=[self.event.slug]), self.content, follow=True)
+        self.content['email'] = 'person2@test.com'
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content, follow=True)
         self.assertEqual(response.status_code, 403)
 
     def test_get_event_feed(self):
         c = Client()
-        response = c.get(reverse("events:feed"))
+        response = c.get(reverse('events:feed'))
         self.assertEqual(response.status_code, 200)
 
     def test_get_event_detail(self):
         c = Client()
-        response = c.get(reverse("events:detail", args=[self.event.slug]))
+        response = c.get(reverse('events:detail', args=[self.event.slug]))
         self.assertEqual(response.status_code, 200)
-        response = c.get(reverse("events:detail", args=["no-such-event"]))
+        response = c.get(reverse('events:detail', args=['no-such-event']))
         self.assertEqual(response.status_code, 404)
 
     def test_scheduled_event_is_hidden_until_publish_time(self):
         self.event.published_time = timezone.now() + timezone.timedelta(days=1)
         self.event.save()
 
-        response = self.client.get(reverse("events:detail", args=[self.event.slug]))
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get(reverse("events:index"))
+        response = self.client.get(reverse('events:index'))
         self.assertNotIn(self.event, list(response.context["event_list"]))
         self.assertNotIn(self.event, list(response.context["past_events"]))
 
@@ -159,10 +159,10 @@ class EventTestCase(TestCase):
         self.event.published_time = timezone.now() - timezone.timedelta(minutes=1)
         self.event.save()
 
-        response = self.client.get(reverse("events:detail", args=[self.event.slug]))
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
         self.assertEqual(response.status_code, 200)
 
-        response = self.client.get(reverse("events:index"))
+        response = self.client.get(reverse('events:index'))
         self.assertIn(self.event, list(response.context["past_events"]))
 
     def test_event_detail_shows_closed_registration_message_after_deadline(self):
@@ -171,7 +171,7 @@ class EventTestCase(TestCase):
         self.event.sign_up_deadline = timezone.now() - timezone.timedelta(minutes=1)
         self.event.save()
 
-        response = self.client.get(reverse("events:detail", args=[self.event.slug]))
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["registration_closed"])
@@ -189,9 +189,9 @@ class EventTestCase(TestCase):
         self.event.sign_up_others = timezone.now() + timezone.timedelta(days=2)
         self.event.sign_up_deadline = timezone.now() + timezone.timedelta(days=3)
         self.event.save()
-        self.client.login(username=inactive_member.username, password="test")
+        self.client.login(username=inactive_member.username, password='test')
 
-        response = self.client.get(reverse("events:detail", args=[self.event.slug]))
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.context["can_register_now"])
@@ -205,9 +205,9 @@ class EventTestCase(TestCase):
         self.event.sign_up_others = timezone.now() + timezone.timedelta(days=2)
         self.event.sign_up_deadline = timezone.now() + timezone.timedelta(days=3)
         self.event.save()
-        self.client.login(username=self.member.username, password="test")
+        self.client.login(username=self.member.username, password='test')
 
-        response = self.client.get(reverse("events:detail", args=[self.event.slug]))
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.context["can_register_now"])
@@ -218,29 +218,29 @@ class EventTestCase(TestCase):
         self.event.members_only = True
         self.event.save()
 
-        response = self.client.get(reverse("events:detail", args=[self.event.slug]))
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
         self.assertEqual(response.status_code, 302)
-        self.assertIn(reverse("members:login"), response.headers["Location"])
+        self.assertIn(reverse('members:login'), response.headers['Location'])
 
     def test_members_only_event_allows_authenticated_user(self):
         self.event.members_only = True
         self.event.save()
-        self.client.login(username=self.member.username, password="test")
+        self.client.login(username=self.member.username, password='test')
 
-        response = self.client.get(reverse("events:detail", args=[self.event.slug]))
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
         self.assertEqual(response.status_code, 200)
 
     def test_members_only_event_signup_redirects_anonymous_user_to_login(self):
         self.event.members_only = True
         self.event.save()
 
-        response = self.client.post(reverse("events:detail", args=[self.event.slug]), self.content)
+        response = self.client.post(reverse('events:detail', args=[self.event.slug]), self.content)
         self.assertEqual(response.status_code, 302)
-        self.assertIn(reverse("members:login"), response.headers["Location"])
+        self.assertIn(reverse('members:login'), response.headers['Location'])
 
     def test_get_events_index(self):
         c = Client()
-        response = c.get(reverse("events:index"))
+        response = c.get(reverse('events:index'))
         self.assertEqual(response.status_code, 200)
 
     def test_past_deadline(self):
@@ -248,37 +248,37 @@ class EventTestCase(TestCase):
         self.event.save()
         self.assertIsNotNone(self.event)
         c = Client()
-        response = c.post(reverse("events:detail", args=[self.event.slug]), self.content)
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
         self.assertEqual(response.status_code, 403)
         self.assertEqual(self.event.get_registrations().count(), 0)
 
     def test_event_detail_view_with_and_without_passcode(self):
-        self.event.passcode = "secret"
+        self.event.passcode = 'secret'
         self.event.save()
         c = Client()
-        wrong, right = {"passcode": "wrong"}, {"passcode": "secret"}
-        incorrect = c.post(reverse("events:detail", args=[self.event.slug]), wrong)
+        wrong, right = {'passcode': 'wrong'}, {'passcode': 'secret'}
+        incorrect = c.post(reverse('events:detail', args=[self.event.slug]), wrong)
         self.assertEqual(incorrect.status_code, 401)
-        correct = c.post(reverse("events:detail", args=[self.event.slug]), right)
+        correct = c.post(reverse('events:detail', args=[self.event.slug]), right)
         self.assertEqual(correct.status_code, 200)
         self.assertNotContains(correct, "invalid passcode")
 
     def test_passcode_unlock_is_scoped_per_event(self):
-        self.event.passcode = "secret"
+        self.event.passcode = 'secret'
         self.event.save()
         other_event = Event.objects.create(
-            title="Other secret event",
-            slug="other-secret-event",
+            title='Other secret event',
+            slug='other-secret-event',
             author_id=self.member.id,
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
-            passcode="secret",
+            passcode='secret',
         )
         c = Client()
 
-        unlocked = c.post(reverse("events:detail", args=[self.event.slug]), {"passcode": "secret"})
+        unlocked = c.post(reverse('events:detail', args=[self.event.slug]), {'passcode': 'secret'})
         self.assertEqual(unlocked.status_code, 200)
 
-        other_response = c.get(reverse("events:detail", args=[other_event.slug]))
+        other_response = c.get(reverse('events:detail', args=[other_event.slug]))
         self.assertTemplateUsed(other_response, "events/event_passcode.html")
 
     def test_sign_up_members_before_sign_up_open(self):
@@ -286,8 +286,8 @@ class EventTestCase(TestCase):
         self.event.sign_up_others = timezone.now() + timezone.timedelta(days=1)
         self.event.save()
         c = Client()
-        c.login(username=self.member.username, password="test")
-        response = c.post(reverse("events:detail", args=[self.event.slug]), self.content)
+        c.login(username=self.member.username, password='test')
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
         self.assertEqual(response.status_code, 403)
 
     def test_sign_up_members_without_subscription(self):
@@ -296,70 +296,70 @@ class EventTestCase(TestCase):
         self.event.save()
         self.subpay.delete()
         c = Client()
-        c.login(username=self.member.username, password="test")
-        response = c.post(reverse("events:detail", args=[self.event.slug]), self.content, follow=True)
+        c.login(username=self.member.username, password='test')
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content, follow=True)
         self.assertEqual(response.status_code, 403)
 
     def test_avec_data_posting(self):
         self.event.sign_up_avec = True
         self.event.save()
         c = Client()
-        avec_data = {"avec": "on", "avec_user": "Avec Person", "avec_email": "avec@test.com"}
+        avec_data = {'avec': 'on', 'avec_user': 'Avec Person', 'avec_email': 'avec@test.com'}
         self.content.update(avec_data)
-        response = c.post(reverse("events:detail", args=[self.event.slug]), self.content, follow=True)
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content, follow=True)
         self.assertEqual(response.status_code, 200)
         person_registration = self.event.get_registrations().first()
-        self.assertEqual(person_registration.user, "person")
-        self.assertEqual(person_registration.email, "person@test.com")
+        self.assertEqual(person_registration.user, 'person')
+        self.assertEqual(person_registration.email, 'person@test.com')
         avec_registration = self.event.get_registrations().last()
         self.assertIsNotNone(avec_registration)
-        self.assertEqual(avec_registration.user, "Avec Person")
-        self.assertEqual(avec_registration.email, "avec@test.com")
+        self.assertEqual(avec_registration.user, 'Avec Person')
+        self.assertEqual(avec_registration.email, 'avec@test.com')
 
     def test_redirect_link(self):
-        self.event.redirect_link = "https://www.google.com"
+        self.event.redirect_link = 'https://www.google.com'
         self.event.save()
         c = Client()
-        response = c.get(reverse("events:detail", args=[self.event.slug]))
+        response = c.get(reverse('events:detail', args=[self.event.slug]))
         logger.debug(response.status_code)
         logger.debug(response.content)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.headers["Location"], "https://www.google.com")
+        self.assertEqual(response.headers['Location'], 'https://www.google.com')
 
     def test_biologica_vii_signup_redirects_to_attendee_fragment(self):
         biologica_event = Event.objects.create(
-            title="Biologica VII",
-            slug="biologica-vii",
+            title='Biologica VII',
+            slug='biologica-vii',
             author_id=self.member.id,
             sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
         )
         c = Client()
-        response = c.post(reverse("events:detail", args=[biologica_event.slug]), self.content)
+        response = c.post(reverse('events:detail', args=[biologica_event.slug]), self.content)
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.headers["Location"].endswith("#/attendee-list"))
+        self.assertTrue(response.headers['Location'].endswith('#/attendee-list'))
 
     def test_arsfest_2026_invalid_signup_uses_arsfest_template(self):
         arsfest_2026 = Event.objects.create(
-            title="Årsfest 2026",
-            slug="arsfest-2026",
+            title='Årsfest 2026',
+            slug='arsfest-2026',
             author_id=self.member.id,
             sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
         )
         c = Client()
-        invalid_content = {"user": "person", "email": "invalid-email"}
-        response = c.post(reverse("events:detail", args=[arsfest_2026.slug]), invalid_content)
+        invalid_content = {'user': 'person', 'email': 'invalid-email'}
+        response = c.post(reverse('events:detail', args=[arsfest_2026.slug]), invalid_content)
         self.assertEqual(response.status_code, 400)
-        self.assertTemplateUsed(response, "events/arsfest.html")
+        self.assertTemplateUsed(response, 'events/arsfest.html')
 
     def test_anonymous_attendance(self):
         c = Client()
-        self.content["anonymous"] = "on"
-        c.post(reverse("events:detail", args=[self.event.slug]), self.content)
-        details = c.get(reverse("events:detail", args=[self.event.slug]))
+        self.content['anonymous'] = 'on'
+        c.post(reverse('events:detail', args=[self.event.slug]), self.content)
+        details = c.get(reverse('events:detail', args=[self.event.slug]))
         self.assertEqual(self.event.get_registrations().last().anonymous, True)
         with translation.override(details.wsgi_request.LANGUAGE_CODE):
             anonymous_label = gettext("Anonymt")
@@ -367,45 +367,45 @@ class EventTestCase(TestCase):
 
     def test_custom_fields(self):
         EventRegistrationForm(
-            event=self.event, choice_number=1, name="field1", type="text", required=False, public_info=True
+            event=self.event, choice_number=1, name='field1', type='text', required=False, public_info=True
         ).save()
         EventRegistrationForm(
             event=self.event,
             choice_number=2,
-            name="field2",
-            type="select",
+            name='field2',
+            type='select',
             required=False,
             public_info=True,
-            choice_list="choice 1,choice 2,choice 3",
+            choice_list='choice 1,choice 2,choice 3',
         ).save()
         EventRegistrationForm(
-            event=self.event, choice_number=3, name="field3", type="checkbox", required=False, public_info=True
+            event=self.event, choice_number=3, name='field3', type='checkbox', required=False, public_info=True
         ).save()
 
         c = Client()
-        response = c.get(reverse("events:detail", args=[self.event.slug]))
-        self.assertNotContains(response, "Test value")
-        self.assertContains(response, "choice 2", count=2)
-        self.assertNotContains(response, "<td>True</td>")
+        response = c.get(reverse('events:detail', args=[self.event.slug]))
+        self.assertNotContains(response, 'Test value')
+        self.assertContains(response, 'choice 2', count=2)
+        self.assertNotContains(response, '<td>True</td>')
 
-        choices = {"field1": "Test value", "field2": "choice 2", "field3": "on"}
+        choices = {'field1': 'Test value', 'field2': 'choice 2', 'field3': 'on'}
         self.content.update(choices)
-        c.post(reverse("events:detail", args=[self.event.slug]), self.content)
-        response = c.get(reverse("events:detail", args=[self.event.slug]))
+        c.post(reverse('events:detail', args=[self.event.slug]), self.content)
+        response = c.get(reverse('events:detail', args=[self.event.slug]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Test value", count=1)
-        self.assertContains(response, "choice 2", count=3)
-        self.assertContains(response, "<td>True</td>", count=1)
+        self.assertContains(response, 'Test value', count=1)
+        self.assertContains(response, 'choice 2', count=3)
+        self.assertContains(response, '<td>True</td>', count=1)
 
     def test_max_participants(self):
         self.event.sign_up_max_participants = 1
         self.event.save()
         c = Client()
 
-        c.post(reverse("events:detail", args=[self.event.slug]), self.content)
-        self.content["email"] = "person2@test.com"
-        response = c.post(reverse("events:detail", args=[self.event.slug]), self.content)
+        c.post(reverse('events:detail', args=[self.event.slug]), self.content)
+        self.content['email'] = 'person2@test.com'
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(self.event.get_registrations().count(), 1)
@@ -418,73 +418,73 @@ class EventTestCase(TestCase):
         EventRegistrationForm.objects.create(
             event=self.event,
             choice_number=1,
-            name="meal",
-            type="text",
+            name='meal',
+            type='text',
             required=False,
         )
         c = Client()
         response = c.post(
-            reverse("events:detail", args=[self.event.slug]),
+            reverse('events:detail', args=[self.event.slug]),
             {
-                "user": "Primary",
-                "email": "primary@test.com",
-                "terms_accepted": "on",
-                "meal": "fish",
-                "avec": "on",
-                "avec_user": "Guest",
-                "avec_email": "guest@test.com",
-                "avec_meal": "veg",
+                'user': 'Primary',
+                'email': 'primary@test.com',
+                'terms_accepted': 'on',
+                'meal': 'fish',
+                'avec': 'on',
+                'avec_user': 'Guest',
+                'avec_email': 'guest@test.com',
+                'avec_meal': 'veg',
             },
             follow=True,
         )
 
         self.assertEqual(response.status_code, 200)
-        primary = self.event.get_registrations().get(email="primary@test.com")
-        guest = self.event.get_registrations().get(email="guest@test.com")
-        self.assertEqual(primary.preferences.get("meal"), "fish")
-        self.assertEqual(guest.preferences.get("meal"), "veg")
+        primary = self.event.get_registrations().get(email='primary@test.com')
+        guest = self.event.get_registrations().get(email='guest@test.com')
+        self.assertEqual(primary.preferences.get('meal'), 'fish')
+        self.assertEqual(guest.preferences.get('meal'), 'veg')
 
     def test_avec_requires_name_and_email_when_selected(self):
         self.event.sign_up_avec = True
         self.event.save()
         c = Client()
-        self.content.update({"avec": "on"})
+        self.content.update({'avec': 'on'})
 
-        response = c.post(reverse("events:detail", args=[self.event.slug]), self.content)
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(self.event.get_registrations().count(), 0)
 
-    @patch("events.views.validate_captcha")
-    @override_settings(CAPTCHA_SITE_KEY="test", TURNSTILE_SECRET_KEY="test")
+    @patch('events.views.validate_captcha')
+    @override_settings(CAPTCHA_SITE_KEY='test', TURNSTILE_SECRET_KEY='test')
     def test_captcha(self, mock_validate_captcha):
         mock_validate_captcha.return_value = False
         self.event.captcha = True
         self.event.save()
 
         c = Client()
-        response = c.post(reverse("events:detail", args=[self.event.slug]), self.content)
+        response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(self.event.get_registrations().count(), 0)
 
         mock_validate_captcha.return_value = True
         content = {
-            "user": "person",
-            "email": "person@test.com",
-            "terms_accepted": "on",
-            "cf-turnstile-response": "test",
+            'user': 'person',
+            'email': 'person@test.com',
+            'terms_accepted': 'on',
+            'cf-turnstile-response': 'test',
         }
-        response = c.post(reverse("events:detail", args=[self.event.slug]), content, follow=True)
+        response = c.post(reverse('events:detail', args=[self.event.slug]), content, follow=True)
         mock_validate_captcha.assert_called()
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
 
     def test_signup_requires_terms_acceptance_by_default(self):
-        content = {"user": "person", "email": "person@test.com"}
+        content = {'user': 'person', 'email': 'person@test.com'}
 
-        response = self.client.post(reverse("events:detail", args=[self.event.slug]), content)
+        response = self.client.post(reverse('events:detail', args=[self.event.slug]), content)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(self.event.get_registrations().count(), 0)
@@ -492,18 +492,18 @@ class EventTestCase(TestCase):
     def test_signup_allows_disabling_terms_checkbox_per_event(self):
         self.event.require_registration_terms = False
         self.event.save()
-        content = {"user": "person", "email": "person@test.com"}
+        content = {'user': 'person', 'email': 'person@test.com'}
 
-        response = self.client.post(reverse("events:detail", args=[self.event.slug]), content, follow=True)
+        response = self.client.post(reverse('events:detail', args=[self.event.slug]), content, follow=True)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
 
     @override_settings(TEST=False)
-    @patch("events.views.ws_send")
+    @patch('events.views.ws_send')
     def test_websocket_notification_runs_after_signup_commit(self, mock_ws_send):
         with self.captureOnCommitCallbacks(execute=False) as callbacks:
-            response = self.client.post(reverse("events:detail", args=[self.event.slug]), self.content)
+            response = self.client.post(reverse('events:detail', args=[self.event.slug]), self.content)
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.event.get_registrations().count(), 1)
@@ -514,11 +514,11 @@ class EventTestCase(TestCase):
 
         mock_ws_send.assert_called_once()
 
-    @override_settings(EXPERIMENTAL_FEATURES=["event_billing"], TEST=True)
-    @patch("billing.handlers.handle_event_billing")
+    @override_settings(EXPERIMENTAL_FEATURES=['event_billing'], TEST=True)
+    @patch('billing.handlers.handle_event_billing')
     def test_billing_runs_after_signup_commit(self, mock_handle_event_billing):
         with self.captureOnCommitCallbacks(execute=False) as callbacks:
-            response = self.client.post(reverse("events:detail", args=[self.event.slug]), self.content)
+            response = self.client.post(reverse('events:detail', args=[self.event.slug]), self.content)
 
         self.assertEqual(response.status_code, 302)
         mock_handle_event_billing.assert_not_called()
@@ -645,7 +645,7 @@ class EventAdminTests(TestCase):
         response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, "column-original_event")
+        self.assertNotContains(response, 'column-original_event')
 
     def test_change_page_shows_original_event_for_inline_with_child_events(self):
         child = Event.objects.create(
@@ -667,7 +667,7 @@ class EventAdminTests(TestCase):
         response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "column-original_event")
+        self.assertContains(response, 'column-original_event')
 
     def test_change_page_hides_hide_for_avec_when_avec_is_disabled(self):
         EventRegistrationForm.objects.create(
@@ -1482,7 +1482,7 @@ class EventTemplateSelectionTests(TestCase):
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
             template="events/arsfest.html",
         )
-        invalid_content = {"user": "person", "email": "invalid-email"}
+        invalid_content = {'user': 'person', 'email': 'invalid-email'}
         response = self.client.post(reverse("events:detail", args=[event.slug]), invalid_content)
 
         self.assertEqual(response.status_code, 400)

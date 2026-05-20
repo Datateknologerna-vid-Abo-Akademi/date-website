@@ -19,7 +19,7 @@ def main() -> None:
         '<?xml version="1.0" encoding="utf-8"?>',
         '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" '
         f'viewBox="{view_box_match.group(1)}" xml:space="preserve">',
-        '<g fill="none">',
+        "<g fill=\"none\">",
     ]
     lines.extend(f'    <path d="{subpath}"/>' for subpath in subpaths)
     lines.extend(["</g>", "</svg>"])

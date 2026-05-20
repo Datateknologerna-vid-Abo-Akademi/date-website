@@ -134,31 +134,31 @@ class PublicUrlAdminMixinTests(TestCase):
         self.admin = _TestAdmin(StaticPage, django_admin.site)
 
     def test_public_url_returns_dash_for_none(self):
-        self.assertEqual(self.admin.public_url(None), "-")
+        self.assertEqual(self.admin.public_url(None), '-')
 
     def test_public_url_returns_dash_for_unsaved_object(self):
         from staticpages.models import StaticPage
 
-        self.assertEqual(self.admin.public_url(StaticPage()), "-")
+        self.assertEqual(self.admin.public_url(StaticPage()), '-')
 
     def test_public_url_returns_link_for_saved_object(self):
         from staticpages.models import StaticPage
 
-        obj = StaticPage.objects.create(slug="test-mixin", members_only=False)
+        obj = StaticPage.objects.create(slug='test-mixin', members_only=False)
         result = str(self.admin.public_url(obj))
-        self.assertIn("href=", result)
+        self.assertIn('href=', result)
         self.assertIn(obj.get_absolute_url(), result)
 
     def test_get_readonly_fields_includes_public_url_for_saved_object(self):
         from staticpages.models import StaticPage
 
-        obj = StaticPage.objects.create(slug="test-ro", members_only=False)
-        request = self.factory.get("/")
-        self.assertIn("public_url", self.admin.get_readonly_fields(request, obj=obj))
+        obj = StaticPage.objects.create(slug='test-ro', members_only=False)
+        request = self.factory.get('/')
+        self.assertIn('public_url', self.admin.get_readonly_fields(request, obj=obj))
 
     def test_get_readonly_fields_excludes_public_url_for_new_object(self):
-        request = self.factory.get("/")
-        self.assertNotIn("public_url", self.admin.get_readonly_fields(request, obj=None))
+        request = self.factory.get('/')
+        self.assertNotIn('public_url', self.admin.get_readonly_fields(request, obj=None))
 
 
 class UnfoldFormMixinTests(TestCase):
@@ -169,5 +169,5 @@ class UnfoldFormMixinTests(TestCase):
             name = forms.CharField()
             url = forms.URLField()
 
-        form = _SampleForm(data={"name": "test", "url": "https://example.com"})
+        form = _SampleForm(data={'name': 'test', 'url': 'https://example.com'})
         self.assertTrue(form.is_valid())

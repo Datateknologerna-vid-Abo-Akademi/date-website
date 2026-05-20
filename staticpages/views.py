@@ -52,6 +52,6 @@ class StaticPageView(View):
         page = get_object_or_404(models.StaticPage, slug=slug)
         show_content = not page.members_only or (page.members_only and request.user.is_authenticated)
         if show_content:
-            return render(request, "staticpages/staticpage.html", {"page": page, "show_content": show_content})
+            return render(request, 'staticpages/staticpage.html', {'page': page, 'show_content': show_content})
         else:
             return redirect_to_login(request.get_full_path())

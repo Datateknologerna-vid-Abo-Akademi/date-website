@@ -3,7 +3,7 @@ from django import template
 register = template.Library()
 
 
-@register.filter(name="divide")
+@register.filter(name='divide')
 def divide(value, arg):
     try:
         result = int(value) / int(arg)
@@ -12,28 +12,28 @@ def divide(value, arg):
         return None
 
 
-@register.filter(name="in_group")
+@register.filter(name='in_group')
 def in_group(user, group_name):
-    if not getattr(user, "is_authenticated", False):
+    if not getattr(user, 'is_authenticated', False):
         return False
     return user.groups.filter(name=group_name).exists()
 
 
-@register.filter(name="is_photographer")
+@register.filter(name='is_photographer')
 def is_photographer(user):
-    return in_group(user, "fotograf")
+    return in_group(user, 'fotograf')
 
 
-@register.filter(name="is_board")
+@register.filter(name='is_board')
 def is_board(user):
-    return in_group(user, "styrelse")
+    return in_group(user, 'styrelse')
 
 
-@register.filter(name="is_admin")
+@register.filter(name='is_admin')
 def is_admin(user):
-    return in_group(user, "admin")
+    return in_group(user, 'admin')
 
 
-@register.filter(name="is_counter")
+@register.filter(name='is_counter')
 def is_counter(user):
-    return in_group(user, "rösträknare")
+    return in_group(user, 'rösträknare')

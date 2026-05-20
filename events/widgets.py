@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 class PrettyJSONWidget(widgets.Textarea):
     def render(self, name, value, attrs=None, **kwargs):
         html = super().render(name, value, attrs)
-        start_as = self.attrs.get("initial", None) or "raw"
+        start_as = self.attrs.get('initial', None) or 'raw'
 
         ctx = {"html": html, "start_as": start_as}
 
@@ -14,11 +14,11 @@ class PrettyJSONWidget(widgets.Textarea):
 
     @property
     def media(self):
-        extra = "" if settings.DEBUG else ".min"
+        extra = '' if settings.DEBUG else '.min'
         return widgets.Media(
             js=(
                 f"admin/js/vendor/jquery/jquery{extra}.js",
-                "admin/js/jquery.init.js",
-                "prettyjson/prettyjson.js",
+                'admin/js/jquery.init.js',
+                'prettyjson/prettyjson.js',
             ),
         )

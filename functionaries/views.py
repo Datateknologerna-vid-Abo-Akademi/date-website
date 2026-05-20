@@ -17,13 +17,13 @@ from .selectors import (
 
 
 class FunctionaryView(View):
-    template_name = "members/functionary.html"
+    template_name = 'members/functionary.html'
 
     @method_decorator(login_required)
     def get(self, request):
         user = request.user
-        functionaries = Functionary.objects.filter(member=user).order_by("-year")
-        form = FunctionaryForm(initial={"member": user})
+        functionaries = Functionary.objects.filter(member=user).order_by('-year')
+        form = FunctionaryForm(initial={'member': user})
         context = {
             "user": user,
             "functionaries": functionaries,
@@ -33,11 +33,11 @@ class FunctionaryView(View):
 
     @method_decorator(login_required)
     def post(self, request):
-        if "add_functionary" in request.POST:
+        if 'add_functionary' in request.POST:
             return self.add_functionary(request)
-        if "delete_functionary" in request.POST:
+        if 'delete_functionary' in request.POST:
             return self.delete_functionary(request)
-        return redirect(reverse("members:functionary"))
+        return redirect(reverse('members:functionary'))
 
     def add_functionary(self, request):
         form = FunctionaryForm(request.POST)
@@ -46,20 +46,20 @@ class FunctionaryView(View):
             form.save()
         else:
             user = request.user
-            functionaries = Functionary.objects.filter(member=user).order_by("-year")
+            functionaries = Functionary.objects.filter(member=user).order_by('-year')
             context = {
                 "user": user,
                 "functionaries": functionaries,
                 "form": form,
             }
             return render(request, self.template_name, context)
-        return redirect(reverse("members:functionary"))
+        return redirect(reverse('members:functionary'))
 
     def delete_functionary(self, request):
-        functionary_id = request.POST.get("functionary_id")
+        functionary_id = request.POST.get('functionary_id')
         functionary = get_object_or_404(Functionary, id=functionary_id, member=request.user)
         functionary.delete()
-        return redirect(reverse("members:functionary"))
+        return redirect(reverse('members:functionary'))
 
 
 class FunctionariesView(View):
@@ -86,4 +86,4 @@ class FunctionariesView(View):
             "all_years": all_years,
         }
 
-        return render(request, "members/functionaries.html", context)
+        return render(request, 'members/functionaries.html', context)

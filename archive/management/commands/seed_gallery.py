@@ -110,11 +110,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         from django.conf import settings
 
-        if not getattr(settings, "DEVELOP", False):
+        if not getattr(settings, 'DEVELOP', False):
             raise CommandError(
                 "seed_gallery must not be run outside of a development environment (DEVELOP must be True)."
             )
-        if getattr(settings, "USE_S3", False):
+        if getattr(settings, 'USE_S3', False):
             raise CommandError("seed_gallery must not be run with USE_S3=True — it would upload fake images to S3.")
 
         if options["clear"]:

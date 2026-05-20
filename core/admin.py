@@ -3,7 +3,7 @@ from django.contrib import admin
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.admin import AdminSiteOTPRequiredMixin
 
-if getattr(settings, "USE_UNFOLD", False):
+if getattr(settings, 'USE_UNFOLD', False):
     from unfold.sites import UnfoldAdminSite
 
     _AdminSiteBase = UnfoldAdminSite  # type: ignore[misc, assignment]

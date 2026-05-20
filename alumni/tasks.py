@@ -103,14 +103,14 @@ def handle_create(form: dict):
     log_action("CREATE", data)
 
     logger.info("Sending Alumni email")
-    alumni_email = form["email"]
+    alumni_email = form['email']
     alumni_message_subject = "Välkommen till ARG - Betalningsinstruktioner"
     alumni_message_content = render_to_string(
-        "members/alumni_signup_email.html",
+        'members/alumni_signup_email.html',
         {
             "alumni": form,
             "reference": reference,
-            "alumini_association_name": settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_NAME", "Albins R Gamyler"),
+            'alumini_association_name': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_NAME", "Albins R Gamyler"),
         },
     )
     # Send email to alumni
@@ -118,9 +118,9 @@ def handle_create(form: dict):
 
     logger.info("Sending Alumni admin email")
     # Mail to relevant people
-    admin_message_recipients = list(AlumniEmailRecipient.objects.all().values_list("recipient_email", flat=True))
+    admin_message_recipients = list(AlumniEmailRecipient.objects.all().values_list('recipient_email', flat=True))
     admin_message_subject = f"ARG - Ny medlem {form['firstname'] + ' ' + form['lastname']}"
-    admin_message_content = render_to_string("members/alumni_signup_email_admin.html", {"alumni": form})
+    admin_message_content = render_to_string('members/alumni_signup_email_admin.html', {'alumni': form})
     # Schedule admin message
     send_email_task.delay(
         admin_message_subject, admin_message_content, settings.DEFAULT_FROM_EMAIL, admin_message_recipients
@@ -135,14 +135,14 @@ def handle_update(form, timestamp=None):
     worksheet = MEMBER_SHEET_NAME
     client = get_sheet_client(worksheet)
 
-    token = form.get("token")
+    token = form.get('token')
     if not token:
         logger.error("Alumni UPDATE: No token provided")
         return
     # Validate token from db
     try:
         alumni_token = AlumniUpdateToken.objects.get(token=token)
-        if not alumni_token.is_valid() or alumni_token.email != form["email"]:
+        if not alumni_token.is_valid() or alumni_token.email != form['email']:
             logger.error("Alumni UPDATE: Invalid or expired token")
             return
     except AlumniUpdateToken.DoesNotExist:
@@ -151,7 +151,7 @@ def handle_update(form, timestamp=None):
 
     try:
         emails = client.get_column_values(client.get_column_by_name("email"))
-        row = emails.index(form["email"]) + 1 if form["email"] in emails else None
+        row = emails.index(form['email']) + 1 if form['email'] in emails else None
 
         if not row:
             logger.info("Alumni UPDATE: Email not found")
@@ -208,18 +208,18 @@ def send_token_email(token: str, email: str):
         return
     subject = _("Uppdatera dina uppgifter")
     context = {
-        "TOKEN": token,
-        "SITE_URL": settings.CONTENT_VARIABLES.get("SITE_URL", "https://datateknologerna.org"),
-        "ALUMNI_ASSOCIATION_NAME": settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_NAME", "Albins R Gamyler"),
-        "ALUMNI_ASSOCIATION_EMAIL": settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_EMAIL"),
+        'TOKEN': token,
+        'SITE_URL': settings.CONTENT_VARIABLES.get("SITE_URL", "https://datateknologerna.org"),
+        'ALUMNI_ASSOCIATION_NAME': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_NAME", "Albins R Gamyler"),
+        'ALUMNI_ASSOCIATION_EMAIL': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_EMAIL"),
     }
-    message = render_to_string("alumni/update_token_email.html", context)
+    message = render_to_string('alumni/update_token_email.html', context)
     send_email_task.delay(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
 
 
 @shared_task()
 def handle_alumni_signup(form: dict, timestamp=None):
-    logger.info("Received alumni signup form with operation: " + form["operation"])
+    logger.info("Received alumni signup form with operation: " + form['operation'])
     match form["operation"]:
         case "CREATE":
             handle_create(form)

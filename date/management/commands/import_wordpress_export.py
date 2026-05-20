@@ -95,11 +95,11 @@ FUNCTIONARIES_SOURCE_SLUGS = {"funktionarer"}
 GALLERY_THUMBNAIL_USER_AGENT = "Mozilla/5.0 (compatible; date-website-wp-import/1.0; +https://datateknologerna.fi)"
 GALLERY_THUMBNAIL_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 OG_IMAGE_RE = re.compile(
-    r"<meta\b[^>]*?(?:"
+    r'<meta\b[^>]*?(?:'
     r'property=["\']og:image["\'][^>]*?content=["\']([^"\']+)["\']'
-    r"|"
+    r'|'
     r'content=["\']([^"\']+)["\'][^>]*?property=["\']og:image["\']'
-    r")[^>]*?>",
+    r')[^>]*?>',
     re.IGNORECASE,
 )
 

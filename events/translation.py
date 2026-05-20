@@ -9,8 +9,8 @@ TRANSLATION_LANGUAGES = get_translation_languages()
 @register(Event)
 class EventTranslationOptions(TranslationOptions):
     fields = (
-        "title",
-        "content",
+        'title',
+        'content',
     )
     languages = TRANSLATION_LANGUAGES
 

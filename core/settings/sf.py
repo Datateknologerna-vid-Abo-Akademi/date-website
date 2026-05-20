@@ -2,15 +2,15 @@ from .common import *  # noqa
 
 TEMPLATES = [
     {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            "templates/sf",
-            "templates/date",
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            'templates/sf',
+            'templates/date',
             *COMMON_TEMPLATE_DIRS,
         ],
-        "APP_DIRS": True,
-        "OPTIONS": {
-            "context_processors": [
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
                 *COMMON_CONTEXT_PROCESSORS,
                 # Add project context processors here
             ],
@@ -20,31 +20,31 @@ TEMPLATES = [
 
 INSTALLED_APPS = get_installed_apps(
     [
-        "news",
-        "gallery",
-        "exambank",
-        "archive.apps.ArchiveConfig",
-        "events",
-        "polls",
-        "ads",
-        "instagram",
-        "harassment",
-        "social",
-        "staticpages",
-        "publications",
-        "alumni",
-        "billing",
+        'news',
+        'gallery',
+        'exambank',
+        'archive.apps.ArchiveConfig',
+        'events',
+        'polls',
+        'ads',
+        'instagram',
+        'harassment',
+        'social',
+        'staticpages',
+        'publications',
+        'alumni',
+        'billing',
     ]
 )
 
-ROOT_URLCONF = "core.urls.sf"
+ROOT_URLCONF = 'core.urls.sf'
 
-STAFF_GROUPS = get_staff_groups(["styrelse", "admin", "fotograf", "rösträknare"])
+STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static/sf"),
-    os.path.join(BASE_DIR, "static/common"),
+    os.path.join(BASE_DIR, 'static/sf'),
+    os.path.join(BASE_DIR, 'static/common'),
 ]
 
 

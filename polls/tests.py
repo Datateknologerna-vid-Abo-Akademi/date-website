@@ -108,7 +108,7 @@ class AuthorizationLogicTests(TestCase):
         subscription = Subscription.objects.create(
             name="Annual",
             does_expire=True,
-            renewal_scale="year",
+            renewal_scale='year',
             renewal_period=1,
             price=0,
         )
@@ -130,8 +130,8 @@ class RequiredChoicesTests(TestCase):
         )
 
     def test_requires_exact_number_when_set(self):
-        self.assertFalse(required_multiple_choices_matches_selected(self.question, ["1"]))
-        self.assertTrue(required_multiple_choices_matches_selected(self.question, ["1", "2"]))
+        self.assertFalse(required_multiple_choices_matches_selected(self.question, ['1']))
+        self.assertTrue(required_multiple_choices_matches_selected(self.question, ['1', '2']))
 
     def test_returns_true_when_requirement_disabled(self):
         self.question.required_multiple_choices = None
@@ -151,27 +151,27 @@ class ValidateVoteTests(TestCase):
         self.question.end_vote = True
         self.question.save()
         message = validate_vote(None, self.question, self.member, [str(self.choice.id)])
-        self.assertEqual(message, ERROR_MESSAGES["vote_ended"])
+        self.assertEqual(message, ERROR_MESSAGES['vote_ended'])
 
     def test_no_choice_returns_error(self):
         message = validate_vote(None, self.question, self.member, [])
-        self.assertEqual(message, ERROR_MESSAGES["no_choice"])
+        self.assertEqual(message, ERROR_MESSAGES['no_choice'])
 
     def test_single_choice_multiple_selected_error(self):
         other_choice = Choice.objects.create(question=self.question, choice_text="no")
         message = validate_vote(None, self.question, self.member, [str(self.choice.id), str(other_choice.id)])
-        self.assertEqual(message, ERROR_MESSAGES["single_choice"])
+        self.assertEqual(message, ERROR_MESSAGES['single_choice'])
 
     def test_not_authorized_returns_error(self):
         self.question.voting_options = MEMBERS_ONLY
         message = validate_vote(None, self.question, AnonymousUser(), [str(self.choice.id)])
-        self.assertEqual(message, ERROR_MESSAGES["not_authorized"])
+        self.assertEqual(message, ERROR_MESSAGES['not_authorized'])
 
     def test_already_voted_blocks_non_anyone_questions(self):
         self.question.voting_options = MEMBERS_ONLY
         self.question.voters.add(self.member)
         message = validate_vote(None, self.question, self.member, [str(self.choice.id)])
-        self.assertEqual(message, ERROR_MESSAGES["already_voted"])
+        self.assertEqual(message, ERROR_MESSAGES['already_voted'])
 
     def test_anyone_allows_multiple_votes(self):
         self.question.voting_options = ANYONE
@@ -197,14 +197,14 @@ class HandleVoteWorkflowTests(TestCase):
         self.assertIn(self.member, self.question.voters.all())
 
     def test_handle_vote_redirects_on_success(self):
-        request = self.factory.post(reverse("polls:vote", args=[self.question.id]), {"choice": [str(self.choice.id)]})
+        request = self.factory.post(reverse('polls:vote', args=[self.question.id]), {'choice': [str(self.choice.id)]})
         request.user = self.member
         response = handle_vote(request, self.question, self.member, [str(self.choice.id)])
         self.assertEqual(response.status_code, 302)
 
     def test_handle_vote_renders_error_template(self):
-        request = self.factory.post(reverse("polls:vote", args=[self.question.id]), {})
+        request = self.factory.post(reverse('polls:vote', args=[self.question.id]), {})
         request.user = self.member
         response = handle_vote(request, self.question, self.member, [])
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Du valde inget alternativ", response.content)
+        self.assertIn(b'Du valde inget alternativ', response.content)

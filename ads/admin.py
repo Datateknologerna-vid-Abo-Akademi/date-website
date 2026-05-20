@@ -18,6 +18,6 @@ class AdUrlAdminForm(UnfoldFormMixin, forms.ModelForm):
 @admin.register(AdUrl)
 class AdUrlAdmin(ModelAdmin):
     form = AdUrlAdminForm
-    list_display = ("ad_url", "company_url")
-    search_fields = ("ad_url", "company_url")
-    ordering = ("ad_url",)
+    list_display = ('ad_url', 'company_url')
+    search_fields = ('ad_url', 'company_url')
+    ordering = ('ad_url',)

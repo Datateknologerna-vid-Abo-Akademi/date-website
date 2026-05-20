@@ -2,18 +2,18 @@ from django.urls import path, re_path
 
 from . import feed, views
 
-app_name = "news"
+app_name = 'news'
 
 urlpatterns = [
-    path("feed/", feed.LatestPosts()),
+    path('feed/', feed.LatestPosts()),
     # Keep this regex to support legacy usernames that may contain spaces or special characters
     re_path(
-        r"author/(?P<author>[\w\s.@\u00C0-\u00FF\u00C5\u00C4\u00D6\u00E5\u00E4\u00F6-]+)/$",
+        r'author/(?P<author>[\w\s.@\u00C0-\u00FF\u00C5\u00C4\u00D6\u00E5\u00E4\u00F6-]+)/$',
         views.author,
-        name="author",
+        name='author',
     ),
-    path("", views.index, name="index"),
-    path("<slug:category>/", views.category_index, name="aa_index"),
-    path("articles/<slug:slug>/", views.article, name="detail"),
-    path("<slug:category>/<slug:slug>/", views.category_article, name="detail"),
+    path('', views.index, name='index'),
+    path('<slug:category>/', views.category_index, name='aa_index'),
+    path('articles/<slug:slug>/', views.article, name='detail'),
+    path('<slug:category>/<slug:slug>/', views.category_article, name='detail'),
 ]

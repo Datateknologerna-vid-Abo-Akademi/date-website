@@ -2,7 +2,7 @@ import logging
 
 from django.db import models
 
-logger = logging.getLogger("date")
+logger = logging.getLogger('date')
 
 
 # Create your models here.

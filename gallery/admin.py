@@ -17,12 +17,12 @@ from core.admin_widgets import (
 from .forms import AlbumAdminForm
 from .models import Album, Photo
 
-logger = logging.getLogger("date")
+logger = logging.getLogger('date')
 
 
 def safe_image_preview(image_field):
     if not image_field:
-        return "-"
+        return '-'
     try:
         return format_html('<img src="{}" style="width: auto; height: 80px"/>', image_field.url)
     except Exception as exc:
@@ -31,18 +31,18 @@ def safe_image_preview(image_field):
 
 
 class GalleryAdminMixin(ExtraChangeListLinksMixin):
-    changelist_links = (AdminLink(_("Städa upp media"), icon="cleaning_services", url_name="archive:cleanMedia"),)
+    changelist_links = (AdminLink(_('Städa upp media'), icon='cleaning_services', url_name='archive:cleanMedia'),)
 
 
 class PhotoInline(TabularInline):
     model = Photo
-    fk_name = "album"
+    fk_name = 'album'
     can_delete = True
-    readonly_fields = ("preview_image",)
+    readonly_fields = ('preview_image',)
     extra = 0
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
-        models.ImageField: {"widget": SafeAdminFileWidget},
+        models.ImageField: {'widget': SafeAdminFileWidget},
     }
 
     def preview_image(self, obj):
@@ -54,34 +54,34 @@ class AlbumAdmin(FlatpickrDateTimeAdminMixin, GalleryAdminMixin, ModelAdmin):
     save_on_top = True
     form = AlbumAdminForm
     inlines = [PhotoInline]
-    list_display = ("title", "pub_date", "hide_for_gulis")
-    search_fields = ("title",)
-    ordering = ("-pub_date",)
-    date_hierarchy = "pub_date"
-    flatpickr_datetime_fields = ("pub_date",)
+    list_display = ('title', 'pub_date', 'hide_for_gulis')
+    search_fields = ('title',)
+    ordering = ('-pub_date',)
+    date_hierarchy = 'pub_date'
+    flatpickr_datetime_fields = ('pub_date',)
 
     legacy_permission_map = {
-        "view": "archive.view_picturecollection",
-        "add": "archive.add_picturecollection",
-        "change": "archive.change_picturecollection",
-        "delete": "archive.delete_picturecollection",
+        'view': 'archive.view_picturecollection',
+        'add': 'archive.add_picturecollection',
+        'change': 'archive.change_picturecollection',
+        'delete': 'archive.delete_picturecollection',
     }
 
     def _has_legacy_permission(self, request, action):
         return request.user.has_perm(self.legacy_permission_map[action])
 
     def has_view_permission(self, request, obj=None):
-        return super().has_view_permission(request, obj) or self._has_legacy_permission(request, "view")
+        return super().has_view_permission(request, obj) or self._has_legacy_permission(request, 'view')
 
     def has_add_permission(self, request):
-        return super().has_add_permission(request) or self._has_legacy_permission(request, "add")
+        return super().has_add_permission(request) or self._has_legacy_permission(request, 'add')
 
     def has_change_permission(self, request, obj=None):
-        return super().has_change_permission(request, obj) or self._has_legacy_permission(request, "change")
+        return super().has_change_permission(request, obj) or self._has_legacy_permission(request, 'change')
 
     def has_delete_permission(self, request, obj=None):
-        return super().has_delete_permission(request, obj) or self._has_legacy_permission(request, "delete")
+        return super().has_delete_permission(request, obj) or self._has_legacy_permission(request, 'delete')
 
     class Media:
-        css = {"all": FLATPICKR_ADMIN_CSS}
-        js = ("admin/js/jquery.init.js",) + FLATPICKR_ADMIN_JS
+        css = {'all': FLATPICKR_ADMIN_CSS}
+        js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS

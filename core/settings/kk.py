@@ -2,14 +2,14 @@ from .common import *  # noqa
 
 TEMPLATES = [
     {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            "templates/kk",
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            'templates/kk',
             *COMMON_TEMPLATE_DIRS,
         ],
-        "APP_DIRS": True,
-        "OPTIONS": {
-            "context_processors": [
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
                 *COMMON_CONTEXT_PROCESSORS,
                 # Add project context processors here
             ],
@@ -19,33 +19,33 @@ TEMPLATES = [
 
 INSTALLED_APPS = get_installed_apps(
     [
-        "news",
-        "gallery",
-        "exambank",
-        "archive",
-        "events",
-        "polls",
-        "ads",
-        "instagram",
-        "harassment",
-        "social",
-        "staticpages",
-        "lucia",
-        "publications",
-        "alumni",
-        "billing",
+        'news',
+        'gallery',
+        'exambank',
+        'archive',
+        'events',
+        'polls',
+        'ads',
+        'instagram',
+        'harassment',
+        'social',
+        'staticpages',
+        'lucia',
+        'publications',
+        'alumni',
+        'billing',
     ]
 )
 
-ROOT_URLCONF = "core.urls.kk"
+ROOT_URLCONF = 'core.urls.kk'
 USE_ACCEPT_LANGUAGE_HEADER = False
 
-STAFF_GROUPS = get_staff_groups(["styrelse", "admin", "fotograf", "rösträknare"])
+STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static/kk"),
-    os.path.join(BASE_DIR, "static/common"),
+    os.path.join(BASE_DIR, 'static/kk'),
+    os.path.join(BASE_DIR, 'static/common'),
 ]
 
 

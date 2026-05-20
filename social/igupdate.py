@@ -1,3 +1,3 @@
 from instagram.igupdate import updateIg
 
-__all__ = ["updateIg"]
+__all__ = ['updateIg']

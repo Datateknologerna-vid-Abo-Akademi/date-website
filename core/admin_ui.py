@@ -8,10 +8,10 @@ from django.utils.translation import gettext_lazy as _
 @dataclass(frozen=True)
 class AdminLink:
     label: str | Promise
-    icon: str = ""
-    url_name: str = ""
-    url: str = ""
-    permission: str = ""
+    icon: str = ''
+    url_name: str = ''
+    url: str = ''
+    permission: str = ''
     any_permissions: tuple[str, ...] = ()
 
     def resolve(self, request):
@@ -31,20 +31,20 @@ class AdminLink:
             return None
 
         return {
-            "href": href,
-            "icon": self.icon,
-            "label": self.label,
+            'href': href,
+            'icon': self.icon,
+            'label': self.label,
         }
 
 
 TOPBAR_QUICK_CREATE_LINKS = (
-    AdminLink(_("Event"), icon="event", url_name="admin:events_event_add", permission="events.add_event"),
-    AdminLink(_("News"), icon="article", url_name="admin:news_post_add", permission="news.add_post"),
+    AdminLink(_('Event'), icon='event', url_name='admin:events_event_add', permission='events.add_event'),
+    AdminLink(_('News'), icon='article', url_name='admin:news_post_add', permission='news.add_post'),
     AdminLink(
-        _("Static Page"),
-        icon="web",
-        url_name="admin:staticpages_staticpage_add",
-        permission="staticpages.add_staticpage",
+        _('Static Page'),
+        icon='web',
+        url_name='admin:staticpages_staticpage_add',
+        permission='staticpages.add_staticpage',
     ),
 )
 
@@ -66,9 +66,9 @@ class AdminSidebarGroup:
     def resolve(self, request):
         items = [
             {
-                "title": link["label"],
-                "icon": link["icon"],
-                "link": link["href"],
+                'title': link['label'],
+                'icon': link['icon'],
+                'link': link['href'],
             }
             for item in self.items
             if (link := item.resolve(request)) is not None
@@ -76,194 +76,194 @@ class AdminSidebarGroup:
         if not items:
             return None
         return {
-            "title": self.title,
-            "separator": self.separator,
-            "items": items,
+            'title': self.title,
+            'separator': self.separator,
+            'items': items,
         }
 
 
 SIDEBAR_NAVIGATION = (
     AdminSidebarGroup(
-        _("Events"),
+        _('Events'),
         (
             AdminLink(
-                _("Events"), icon="event", url_name="admin:events_event_changelist", permission="events.view_event"
+                _('Events'), icon='event', url_name='admin:events_event_changelist', permission='events.view_event'
             ),
             AdminLink(
-                _("Billing Configuration"),
-                icon="receipt_long",
-                url_name="admin:billing_eventbillingconfiguration_changelist",
-                permission="billing.view_eventbillingconfiguration",
+                _('Billing Configuration'),
+                icon='receipt_long',
+                url_name='admin:billing_eventbillingconfiguration_changelist',
+                permission='billing.view_eventbillingconfiguration',
             ),
             AdminLink(
-                _("Invoices"),
-                icon="receipt",
-                url_name="admin:billing_eventinvoice_changelist",
-                permission="billing.view_eventinvoice",
+                _('Invoices'),
+                icon='receipt',
+                url_name='admin:billing_eventinvoice_changelist',
+                permission='billing.view_eventinvoice',
             ),
         ),
     ),
     AdminSidebarGroup(
-        _("Members"),
+        _('Members'),
         (
             AdminLink(
-                _("Members"), icon="group", url_name="admin:members_member_changelist", permission="members.view_member"
+                _('Members'), icon='group', url_name='admin:members_member_changelist', permission='members.view_member'
             ),
             AdminLink(
-                _("Membership Types"),
-                icon="badge",
-                url_name="admin:members_membershiptype_changelist",
-                permission="members.view_membershiptype",
+                _('Membership Types'),
+                icon='badge',
+                url_name='admin:members_membershiptype_changelist',
+                permission='members.view_membershiptype',
             ),
             AdminLink(
-                _("Subscriptions"),
-                icon="card_membership",
-                url_name="admin:members_subscription_changelist",
-                permission="members.view_subscription",
+                _('Subscriptions'),
+                icon='card_membership',
+                url_name='admin:members_subscription_changelist',
+                permission='members.view_subscription',
             ),
             AdminLink(
-                _("Subscription Payments"),
-                icon="payments",
-                url_name="admin:members_subscriptionpayment_changelist",
-                permission="members.view_subscriptionpayment",
+                _('Subscription Payments'),
+                icon='payments',
+                url_name='admin:members_subscriptionpayment_changelist',
+                permission='members.view_subscriptionpayment',
             ),
             AdminLink(
-                _("Functionaries"),
-                icon="manage_accounts",
-                url_name="admin:functionaries_functionary_changelist",
-                permission="functionaries.view_functionary",
+                _('Functionaries'),
+                icon='manage_accounts',
+                url_name='admin:functionaries_functionary_changelist',
+                permission='functionaries.view_functionary',
             ),
             AdminLink(
-                _("Functionary Roles"),
-                icon="work",
-                url_name="admin:functionaries_functionaryrole_changelist",
-                permission="functionaries.view_functionaryrole",
+                _('Functionary Roles'),
+                icon='work',
+                url_name='admin:functionaries_functionaryrole_changelist',
+                permission='functionaries.view_functionaryrole',
             ),
         ),
     ),
     AdminSidebarGroup(
-        _("Content"),
+        _('Content'),
         (
-            AdminLink(_("News"), icon="article", url_name="admin:news_post_changelist", permission="news.view_post"),
+            AdminLink(_('News'), icon='article', url_name='admin:news_post_changelist', permission='news.view_post'),
             AdminLink(
-                _("News Categories"),
-                icon="category",
-                url_name="admin:news_category_changelist",
-                permission="news.view_category",
+                _('News Categories'),
+                icon='category',
+                url_name='admin:news_category_changelist',
+                permission='news.view_category',
             ),
             AdminLink(
-                _("Polls"), icon="poll", url_name="admin:polls_question_changelist", permission="polls.view_question"
+                _('Polls'), icon='poll', url_name='admin:polls_question_changelist', permission='polls.view_question'
             ),
             AdminLink(
-                _("Static Pages"),
-                icon="web",
-                url_name="admin:staticpages_staticpage_changelist",
-                permission="staticpages.view_staticpage",
+                _('Static Pages'),
+                icon='web',
+                url_name='admin:staticpages_staticpage_changelist',
+                permission='staticpages.view_staticpage',
             ),
             AdminLink(
-                _("Page Navigation"),
-                icon="menu_book",
-                url_name="admin:staticpages_staticpagenav_changelist",
-                permission="staticpages.view_staticpagenav",
+                _('Page Navigation'),
+                icon='menu_book',
+                url_name='admin:staticpages_staticpagenav_changelist',
+                permission='staticpages.view_staticpagenav',
             ),
         ),
     ),
     AdminSidebarGroup(
-        _("Archive & Publications"),
+        _('Archive & Publications'),
         (
             AdminLink(
-                _("Publication Collections"),
-                icon="collections_bookmark",
-                url_name="admin:publications_publicationcollection_changelist",
-                permission="publications.view_publicationcollection",
+                _('Publication Collections'),
+                icon='collections_bookmark',
+                url_name='admin:publications_publicationcollection_changelist',
+                permission='publications.view_publicationcollection',
             ),
             AdminLink(
-                _("PDF Publications"),
-                icon="picture_as_pdf",
-                url_name="admin:publications_pdffile_changelist",
-                permission="publications.view_pdffile",
+                _('PDF Publications'),
+                icon='picture_as_pdf',
+                url_name='admin:publications_pdffile_changelist',
+                permission='publications.view_pdffile',
             ),
             AdminLink(
-                _("Photo Albums"),
-                icon="photo_library",
-                url_name="admin:gallery_album_changelist",
-                any_permissions=("gallery.view_album", "archive.view_picturecollection"),
+                _('Photo Albums'),
+                icon='photo_library',
+                url_name='admin:gallery_album_changelist',
+                any_permissions=('gallery.view_album', 'archive.view_picturecollection'),
             ),
             AdminLink(
-                _("Documents"),
-                icon="folder",
-                url_name="admin:archive_documentcollection_changelist",
-                permission="archive.view_documentcollection",
+                _('Documents'),
+                icon='folder',
+                url_name='admin:archive_documentcollection_changelist',
+                permission='archive.view_documentcollection',
             ),
             AdminLink(
-                _("Exams"),
-                icon="school",
-                url_name="admin:exambank_examarchive_changelist",
-                any_permissions=("exambank.view_examarchive", "archive.view_examcollection"),
+                _('Exams'),
+                icon='school',
+                url_name='admin:exambank_examarchive_changelist',
+                any_permissions=('exambank.view_examarchive', 'archive.view_examcollection'),
             ),
             AdminLink(
-                _("Exam Access"),
-                icon="password",
-                url_name="admin:exambank_exambankaccesssettings_changelist",
-                permission="exambank.view_exambankaccesssettings",
+                _('Exam Access'),
+                icon='password',
+                url_name='admin:exambank_exambankaccesssettings_changelist',
+                permission='exambank.view_exambankaccesssettings',
             ),
         ),
     ),
     AdminSidebarGroup(
-        _("Activities"),
+        _('Activities'),
         (
-            AdminLink(_("CTF"), icon="military_tech", url_name="admin:ctf_ctf_changelist", permission="ctf.view_ctf"),
+            AdminLink(_('CTF'), icon='military_tech', url_name='admin:ctf_ctf_changelist', permission='ctf.view_ctf'),
             AdminLink(
-                _("CTF Guesses"), icon="flag", url_name="admin:ctf_guess_changelist", permission="ctf.view_guess"
+                _('CTF Guesses'), icon='flag', url_name='admin:ctf_guess_changelist', permission='ctf.view_guess'
             ),
             AdminLink(
-                _("Lucia"), icon="stars", url_name="admin:lucia_candidate_changelist", permission="lucia.view_candidate"
+                _('Lucia'), icon='stars', url_name='admin:lucia_candidate_changelist', permission='lucia.view_candidate'
             ),
         ),
     ),
     AdminSidebarGroup(
-        _("Social & Ads"),
+        _('Social & Ads'),
         (
             AdminLink(
-                _("Samarbetspartners"),
-                icon="campaign",
-                url_name="admin:ads_adurl_changelist",
-                permission="ads.view_adurl",
+                _('Samarbetspartners'),
+                icon='campaign',
+                url_name='admin:ads_adurl_changelist',
+                permission='ads.view_adurl',
             ),
             AdminLink(
-                _("Instagram URLs"),
-                icon="photo_camera",
-                url_name="admin:instagram_igurl_changelist",
-                permission="instagram.view_igurl",
+                _('Instagram URLs'),
+                icon='photo_camera',
+                url_name='admin:instagram_igurl_changelist',
+                permission='instagram.view_igurl',
             ),
             AdminLink(
-                _("Harassment Reports"),
-                icon="report",
-                url_name="admin:harassment_harassment_changelist",
-                permission="harassment.view_harassment",
+                _('Harassment Reports'),
+                icon='report',
+                url_name='admin:harassment_harassment_changelist',
+                permission='harassment.view_harassment',
             ),
             AdminLink(
-                _("Report Recipients"),
-                icon="mail",
-                url_name="admin:harassment_harassmentemailrecipient_changelist",
-                permission="harassment.view_harassmentemailrecipient",
+                _('Report Recipients'),
+                icon='mail',
+                url_name='admin:harassment_harassmentemailrecipient_changelist',
+                permission='harassment.view_harassmentemailrecipient',
             ),
         ),
     ),
     AdminSidebarGroup(
-        _("System"),
+        _('System'),
         (
             AdminLink(
-                _("Admin Log"),
-                icon="history",
-                url_name="admin:admin_logentry_changelist",
-                permission="admin.view_logentry",
+                _('Admin Log'),
+                icon='history',
+                url_name='admin:admin_logentry_changelist',
+                permission='admin.view_logentry',
             ),
             AdminLink(
-                _("Permissions"),
-                icon="lock",
-                url_name="admin:auth_permission_changelist",
-                permission="auth.view_permission",
+                _('Permissions'),
+                icon='lock',
+                url_name='admin:auth_permission_changelist',
+                permission='auth.view_permission',
             ),
         ),
     ),

@@ -21,8 +21,8 @@ from two_factor.views import (
 )
 from two_factor.views.mixins import OTPRequiredMixin
 
-logger = logging.getLogger("date")
-INFERRED_REDIRECT_SESSION_KEY = "members_login_inferred_next"
+logger = logging.getLogger('date')
+INFERRED_REDIRECT_SESSION_KEY = 'members_login_inferred_next'
 
 
 def member_has_2fa(user):
@@ -34,7 +34,7 @@ def should_redirect_to_two_factor_setup(user, target):
         return False
 
     resolver_match = resolve(target)
-    if resolver_match.namespace == "admin" and user.is_active and user.is_staff and not member_has_2fa(user):
+    if resolver_match.namespace == 'admin' and user.is_active and user.is_staff and not member_has_2fa(user):
         return False
 
     return True
@@ -43,9 +43,9 @@ def should_redirect_to_two_factor_setup(user, target):
 class UsernameOrEmailAuthenticationForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["username"].label = _("Username or email")
-        self.fields["username"].widget.attrs.setdefault("autocomplete", "username")
-        self.fields["password"].widget.attrs.setdefault("autocomplete", "current-password")
+        self.fields['username'].label = _('Username or email')
+        self.fields['username'].widget.attrs.setdefault('autocomplete', 'username')
+        self.fields['password'].widget.attrs.setdefault('autocomplete', 'current-password')
 
 
 class StrictTOTPDeviceForm(TOTPDeviceForm):
@@ -55,7 +55,7 @@ class StrictTOTPDeviceForm(TOTPDeviceForm):
 
 
 class MemberLoginView(LoginView):
-    template_name = "members/registration/login.html"
+    template_name = 'members/registration/login.html'
     form_list = (
         (LoginView.AUTH_STEP, UsernameOrEmailAuthenticationForm),
         (LoginView.TOKEN_STEP, AuthenticationTokenForm),
@@ -76,20 +76,20 @@ class MemberLoginView(LoginView):
         if redirect_to:
             return redirect_to
 
-        redirect_to = self.request.session.get(INFERRED_REDIRECT_SESSION_KEY, "")
+        redirect_to = self.request.session.get(INFERRED_REDIRECT_SESSION_KEY, '')
         if url_has_allowed_host_and_scheme(
             redirect_to,
             allowed_hosts=self.get_success_url_allowed_hosts(),
             require_https=self.request.is_secure(),
         ):
             return redirect_to
-        return ""
+        return ''
 
     def get_success_url(self):
-        return self.get_redirect_url() or resolve_url("index")
+        return self.get_redirect_url() or resolve_url('index')
 
     def _get_referer_redirect_target(self, request):
-        referer = request.META.get("HTTP_REFERER")
+        referer = request.META.get('HTTP_REFERER')
         if not referer:
             return None
 
@@ -104,14 +104,14 @@ class MemberLoginView(LoginView):
         if referer_parts.path == request.path:
             return None
 
-        return urlunsplit(("", "", referer_parts.path or "/", referer_parts.query, ""))
+        return urlunsplit(('', '', referer_parts.path or '/', referer_parts.query, ''))
 
     def done(self, form_list, **kwargs):
         response = super().done(form_list, **kwargs)
         redirect_to = self.get_success_url()
         target = self.get_redirect_url()
 
-        if getattr(self.get_user(), "otp_device", None) or not target or not OTPRequiredMixin.is_otp_view(target):
+        if getattr(self.get_user(), 'otp_device', None) or not target or not OTPRequiredMixin.is_otp_view(target):
             self.request.session.pop(INFERRED_REDIRECT_SESSION_KEY, None)
             return response
 
@@ -120,28 +120,28 @@ class MemberLoginView(LoginView):
             return HttpResponseRedirect(redirect_to)
 
         if target:
-            self.request.session["next"] = redirect_to
+            self.request.session['next'] = redirect_to
         self.request.session.pop(INFERRED_REDIRECT_SESSION_KEY, None)
-        return redirect("two_factor:setup")
+        return redirect('two_factor:setup')
 
 
 class MemberSetupView(SetupView):
-    template_name = "two_factor/core/setup.html"
+    template_name = 'two_factor/core/setup.html'
 
     def get_form_list(self):
         form_list = super().get_form_list()
-        if form_list.get("generator") is TOTPDeviceForm:
-            form_list["generator"] = StrictTOTPDeviceForm
+        if form_list.get('generator') is TOTPDeviceForm:
+            form_list['generator'] = StrictTOTPDeviceForm
         return form_list
 
     def done(self, form_list, **kwargs):
         try:
             del self.request.session[self.session_key_name]
         except KeyError:
-            logger.warning("2FA setup session key missing on done(); session may have expired")
+            logger.warning('2FA setup session key missing on done(); session may have expired')
 
         method = self.get_method()
-        if method.code == "generator":
+        if method.code == 'generator':
             form = [form for form in form_list if isinstance(form, TOTPDeviceForm)][0]
             device = form.save()
         else:
@@ -154,12 +154,12 @@ class MemberSetupView(SetupView):
 
 
 class MemberDisableView(DisableView):
-    template_name = "two_factor/profile/disable.html"
-    success_url = reverse_lazy("members:info")
+    template_name = 'two_factor/profile/disable.html'
+    success_url = reverse_lazy('members:info')
 
 
 class MemberBackupTokensView(BackupTokensView):
-    template_name = "two_factor/core/backup_tokens.html"
+    template_name = 'two_factor/core/backup_tokens.html'
 
 
 class MemberQRGeneratorView(QRGeneratorView):
@@ -168,7 +168,7 @@ class MemberQRGeneratorView(QRGeneratorView):
 
 class MemberSetupCompleteView(SetupCompleteView):
     def get(self, request, *args, **kwargs):
-        next_target = request.session.pop("next", None)
+        next_target = request.session.pop('next', None)
         # The value comes from get_success_url() during login, but validate it
         # before redirecting in case the session is tampered with.
         if next_target and url_has_allowed_host_and_scheme(
@@ -177,8 +177,8 @@ class MemberSetupCompleteView(SetupCompleteView):
             require_https=request.is_secure(),
         ):
             return redirect(next_target)
-        return redirect("index")
+        return redirect('index')
 
 
 class TwoFactorProfileRedirectView(RedirectView):
-    pattern_name = "members:info"
+    pattern_name = 'members:info'

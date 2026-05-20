@@ -12,29 +12,29 @@ class FunctionaryFormTests(TestCase):
     def setUp(self):
         self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
         self.member = Member.objects.create_user(
-            username="functionary",
-            password="pwd",
+            username='functionary',
+            password='pwd',
             membership_type=self.membership_type,
         )
-        self.role = FunctionaryRole.objects.create(title="Chair", board=True)
+        self.role = FunctionaryRole.objects.create(title='Chair', board=True)
 
     def test_prevents_duplicate_year_role(self):
         Functionary.objects.create(member=self.member, functionary_role=self.role, year=2024)
         form = FunctionaryForm(
             data={
-                "functionary_role": self.role.id,
-                "year": 2024,
+                'functionary_role': self.role.id,
+                'year': 2024,
             },
             member=self.member,
         )
         self.assertFalse(form.is_valid())
-        self.assertIn("Du har redan lagt till den här funktionärsposten", form.errors["__all__"][0])
+        self.assertIn('Du har redan lagt till den här funktionärsposten', form.errors['__all__'][0])
 
     def test_allows_unique_entries(self):
         form = FunctionaryForm(
             data={
-                "functionary_role": self.role.id,
-                "year": 2023,
+                'functionary_role': self.role.id,
+                'year': 2023,
             },
             member=self.member,
         )
@@ -45,8 +45,8 @@ class FunctionaryFormTests(TestCase):
         self.assertEqual(Functionary.objects.count(), 1)
 
     def test_snapshots_member_name_for_deleted_member_display(self):
-        self.member.first_name = "Function"
-        self.member.last_name = "Ary"
+        self.member.first_name = 'Function'
+        self.member.last_name = 'Ary'
         self.member.save()
         functionary = Functionary.objects.create(
             member=self.member,
@@ -58,8 +58,8 @@ class FunctionaryFormTests(TestCase):
         functionary.refresh_from_db()
 
         self.assertIsNone(functionary.member)
-        self.assertEqual(functionary.name, "Function Ary")
-        self.assertEqual(functionary.get_full_name(), "Function Ary")
+        self.assertEqual(functionary.name, 'Function Ary')
+        self.assertEqual(functionary.get_full_name(), 'Function Ary')
 
     def test_uses_username_when_member_name_is_blank(self):
         functionary = Functionary.objects.create(
@@ -68,7 +68,7 @@ class FunctionaryFormTests(TestCase):
             year=2024,
         )
 
-        self.assertEqual(functionary.name, "functionary")
+        self.assertEqual(functionary.name, 'functionary')
 
 
 class FunctionaryHelperTests(TestCase):
@@ -76,39 +76,39 @@ class FunctionaryHelperTests(TestCase):
         self.factory = RequestFactory()
         self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
         self.member = Member.objects.create_user(
-            username="helper",
-            password="pwd",
+            username='helper',
+            password='pwd',
             membership_type=self.membership_type,
         )
-        self.role = FunctionaryRole.objects.create(title="Secretary", board=False)
+        self.role = FunctionaryRole.objects.create(title='Secretary', board=False)
         Functionary.objects.create(member=self.member, functionary_role=self.role, year=2023)
         Functionary.objects.create(member=self.member, functionary_role=self.role, year=2024)
 
     def test_get_selected_year_defaults_to_current(self):
-        request = self.factory.get("/funktionarer/")
+        request = self.factory.get('/funktionarer/')
         request.user = self.member
-        years = Functionary.objects.values_list("year", flat=True).distinct().order_by("-year")
+        years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')
         selected, all_years = get_selected_year(request, years)
         self.assertEqual(selected, timezone.now().year)
         self.assertFalse(all_years)
 
     def test_get_selected_year_allows_all_years_filter(self):
-        request = self.factory.get("/funktionarer/?year=all")
+        request = self.factory.get('/funktionarer/?year=all')
         request.user = self.member
-        years = Functionary.objects.values_list("year", flat=True).distinct().order_by("-year")
+        years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')
         selected, all_years = get_selected_year(request, years)
         self.assertEqual(list(selected), list(years))
         self.assertTrue(all_years)
 
     def test_get_selected_year_ignores_parameters_for_anonymous_user(self):
-        request = self.factory.get("/funktionarer/?year=2020")
+        request = self.factory.get('/funktionarer/?year=2020')
         request.user = AnonymousUser()
-        years = Functionary.objects.values_list("year", flat=True).distinct().order_by("-year")
+        years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')
         selected, _ = get_selected_year(request, years)
         self.assertEqual(selected, timezone.now().year)
 
     def test_get_selected_role_supports_all_and_specific_roles(self):
-        request_all = self.factory.get("/funktionarer/?role=all")
+        request_all = self.factory.get('/funktionarer/?role=all')
         request_all.user = self.member
         roles = FunctionaryRole.objects.all()
         selected, all_roles = get_selected_role(request_all, roles)
@@ -122,7 +122,7 @@ class FunctionaryHelperTests(TestCase):
         self.assertEqual(selected_role, self.role)
 
     def test_get_selected_role_ignores_unknown_role_ids(self):
-        request = self.factory.get("/funktionarer/?role=999999")
+        request = self.factory.get('/funktionarer/?role=999999')
         request.user = self.member
         roles = FunctionaryRole.objects.all()
         selected, all_roles = get_selected_role(request, roles)
@@ -130,7 +130,7 @@ class FunctionaryHelperTests(TestCase):
         self.assertFalse(all_roles)
 
     def test_get_selected_role_ignores_anonymous_requests(self):
-        request = self.factory.get("/funktionarer/?role=all")
+        request = self.factory.get('/funktionarer/?role=all')
         request.user = AnonymousUser()
         roles = FunctionaryRole.objects.all()
         selected, all_roles = get_selected_role(request, roles)
@@ -138,11 +138,11 @@ class FunctionaryHelperTests(TestCase):
         self.assertFalse(all_roles)
 
     def test_get_filtered_functionaries_accepts_all_years_queryset(self):
-        years = Functionary.objects.values_list("year", flat=True).distinct().order_by("-year")
+        years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')
 
         functionaries = get_filtered_functionaries(years, None, False)
 
         self.assertEqual(
-            list(functionaries.values_list("year", flat=True)),
+            list(functionaries.values_list('year', flat=True)),
             [2024, 2023],
         )

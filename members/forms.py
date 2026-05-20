@@ -13,52 +13,52 @@ from core.admin_base import UnfoldFormMixin
 from core.utils import send_email_task
 from members.models import SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH, SUB_RE_SCALE_YEAR, Member, SubscriptionPayment
 
-logger = logging.getLogger("date")
+logger = logging.getLogger('date')
 
 # Restrict usernames to ASCII letters, numbers, dots, underscores, and hyphens
 USERNAME_VALIDATOR = RegexValidator(
-    r"^[0-9a-zA-Z._-]+$",
-    _("Enter a valid username consisting only of letters, numbers, dots, underscores, and hyphens."),
+    r'^[0-9a-zA-Z._-]+$',
+    _('Enter a valid username consisting only of letters, numbers, dots, underscores, and hyphens.'),
 )
 
 
 class MemberCreationForm(UnfoldFormMixin, forms.ModelForm):
     send_email = forms.BooleanField(required=False)
     year_of_admission = forms.IntegerField(
-        initial=lambda: datetime.datetime.now().year, required=False, label=_("Inskrivningsår")
+        initial=lambda: datetime.datetime.now().year, required=False, label=_('Inskrivningsår')
     )
 
     username = forms.CharField(
         max_length=20,
         validators=[USERNAME_VALIDATOR],
-        label=_("Användarnamn"),
+        label=_('Användarnamn'),
     )
 
     password = forms.CharField(
-        widget=forms.PasswordInput(), required=False, min_length=8, error_messages={"required": "Password is required"}
+        widget=forms.PasswordInput(), required=False, min_length=8, error_messages={'required': 'Password is required'}
     )
 
     class Meta:
         model = Member
         fields = (
-            "username",
-            "email",
-            "first_name",
-            "last_name",
-            "phone",
-            "address",
-            "zip_code",
-            "city",
-            "country",
-            "membership_type",
-            "year_of_admission",
-            "password",
-            "groups",
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'phone',
+            'address',
+            'zip_code',
+            'city',
+            'country',
+            'membership_type',
+            'year_of_admission',
+            'password',
+            'groups',
         )
 
     def save(self, commit=True):
         member = super().save(commit=False)
-        member.set_password(self.cleaned_data["password"])
+        member.set_password(self.cleaned_data['password'])
         if commit:
             member.save()
             logger.debug("Saved new member: %s", member)
@@ -71,32 +71,32 @@ class AdminMemberUpdateForm(UnfoldFormMixin, forms.ModelForm):
         help_text=(
             "Raw passwords are not stored, so there is no way to see "
             "this user's password, but you can change the password "
-            'using <a href="../password/">this form</a>.'
+            "using <a href=\"../password/\">this form</a>."
         ),
     )
 
     username = forms.CharField(
         max_length=20,
         validators=[USERNAME_VALIDATOR],
-        label=_("Användarnamn"),
+        label=_('Användarnamn'),
     )
 
     class Meta:
         model = Member
         fields = (
-            "username",
-            "email",
-            "first_name",
-            "last_name",
-            "phone",
-            "address",
-            "zip_code",
-            "city",
-            "country",
-            "membership_type",
-            "groups",
-            "github_id",
-            "password",
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'phone',
+            'address',
+            'zip_code',
+            'city',
+            'country',
+            'membership_type',
+            'groups',
+            'github_id',
+            'password',
         )
 
     def save(self, commit=True):
@@ -139,10 +139,10 @@ class SubscriptionPaymentForm(forms.ModelForm):
     class Meta:
         model = SubscriptionPayment
         fields = (
-            "member",
-            "subscription",
-            "date_paid",
-            "amount_paid",
+            'member',
+            'subscription',
+            'date_paid',
+            'amount_paid',
         )
 
     def save(self, commit=True):
@@ -170,39 +170,39 @@ class SignUpForm(forms.ModelForm):
     username = forms.CharField(
         max_length=20,
         validators=[USERNAME_VALIDATOR],
-        help_text=_("detta fält är obligatoriskt"),
-        label=_("Användarnamn"),
+        help_text=_('detta fält är obligatoriskt'),
+        label=_('Användarnamn'),
     )
-    email = forms.EmailField(max_length=200, help_text=_("detta fält är obligatoriskt"), label=_("E-postadress"))
+    email = forms.EmailField(max_length=200, help_text=_('detta fält är obligatoriskt'), label=_('E-postadress'))
     password = forms.CharField(
         widget=forms.PasswordInput(),
         required=True,
         min_length=8,
-        error_messages={"required": "Password is required"},
-        help_text=_("detta fält är obligatoriskt"),
-        label=_("Lösenord"),
+        error_messages={'required': 'Password is required'},
+        help_text=_('detta fält är obligatoriskt'),
+        label=_('Lösenord'),
     )
-    first_name = forms.CharField(max_length=100, required=True, label=_("Förnamn"))
-    last_name = forms.CharField(max_length=100, required=True, label=_("Efternamn"))
+    first_name = forms.CharField(max_length=100, required=True, label=_('Förnamn'))
+    last_name = forms.CharField(max_length=100, required=True, label=_('Efternamn'))
     year_of_admission = forms.IntegerField(
-        initial=lambda: datetime.datetime.now().year, required=False, label=_("Inskrivningsår")
+        initial=lambda: datetime.datetime.now().year, required=False, label=_('Inskrivningsår')
     )
 
     class Meta:
         model = Member
         fields = (
-            "username",
-            "email",
-            "first_name",
-            "last_name",
-            "phone",
-            "address",
-            "zip_code",
-            "city",
-            "country",
-            "membership_type",
-            "year_of_admission",
-            "password",
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'phone',
+            'address',
+            'zip_code',
+            'city',
+            'country',
+            'membership_type',
+            'year_of_admission',
+            'password',
         )
 
 
@@ -219,4 +219,4 @@ class MemberEditForm(forms.ModelForm):
 
     class Meta:
         model = Member
-        fields = ["first_name", "last_name", "phone", "address", "zip_code", "city", "country"]
+        fields = ['first_name', 'last_name', 'phone', 'address', 'zip_code', 'city', 'country']

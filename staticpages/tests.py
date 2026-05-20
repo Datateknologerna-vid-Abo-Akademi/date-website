@@ -175,12 +175,12 @@ class StaticUrlTests(TestCase):
         )
 
         installed_with_exambank = list(settings.INSTALLED_APPS)
-        if "exambank" not in installed_with_exambank:
-            installed_with_exambank.append("exambank")
+        if 'exambank' not in installed_with_exambank:
+            installed_with_exambank.append('exambank')
 
         with (
             override_settings(ARCHIVE_ENABLED=False),
-            patch.object(settings, "INSTALLED_APPS", new=installed_with_exambank),
+            patch.object(settings, 'INSTALLED_APPS', new=installed_with_exambank),
         ):
             urls = get_urls(request)["urls"]
             children = list(urls[0].children.all())
@@ -197,11 +197,11 @@ class StaticUrlTests(TestCase):
         StaticUrl.objects.create(title="Exam child", category=self.category, parent=parent, url="/archive/exams/")
         StaticUrl.objects.create(title="Visible child", category=self.category, parent=parent, url="/current/")
 
-        installed_without_exambank = [app for app in settings.INSTALLED_APPS if app != "exambank"]
+        installed_without_exambank = [app for app in settings.INSTALLED_APPS if app != 'exambank']
 
         with (
             override_settings(ARCHIVE_ENABLED=False),
-            patch.object(settings, "INSTALLED_APPS", new=installed_without_exambank),
+            patch.object(settings, 'INSTALLED_APPS', new=installed_without_exambank),
         ):
             urls = get_urls(request)["urls"]
             children = list(urls[0].children.all())
@@ -225,12 +225,12 @@ class StaticUrlTests(TestCase):
         )
 
         installed_with_exambank = list(settings.INSTALLED_APPS)
-        if "exambank" not in installed_with_exambank:
-            installed_with_exambank.append("exambank")
+        if 'exambank' not in installed_with_exambank:
+            installed_with_exambank.append('exambank')
 
         with (
             override_settings(ARCHIVE_ENABLED=False),
-            patch.object(settings, "INSTALLED_APPS", new=installed_with_exambank),
+            patch.object(settings, 'INSTALLED_APPS', new=installed_with_exambank),
         ):
             categories = get_categories(request)["categories"]
 

@@ -7,4 +7,4 @@ from . import models
 
 def adsIndex(request):
     ads = models.AdUrl.objects.all()
-    return render(request, "ads/adsindex.html", {"ads": ads})
+    return render(request, 'ads/adsindex.html', {'ads': ads})

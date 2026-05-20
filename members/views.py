@@ -24,7 +24,7 @@ from .models import Member
 from .tokens import account_activation_token
 from .two_factor import member_has_2fa
 
-logger = logging.getLogger("date")
+logger = logging.getLogger('date')
 
 
 class UserinfoView(View):
@@ -37,7 +37,7 @@ class UserinfoView(View):
             "form": form,
             "two_factor_enabled": member_has_2fa(user),
         }
-        return render(request, "members/userinfo.html", context)
+        return render(request, 'members/userinfo.html', context)
 
     @method_decorator(login_required)
     def post(self, request):
@@ -46,72 +46,72 @@ class UserinfoView(View):
         if form.is_valid():
             form.save()
             # Redirect to the same page to display updated info
-            return redirect(reverse("members:info"))  # Replace 'userinfo' with the name of this view in urls.py
+            return redirect(reverse('members:info'))  # Replace 'userinfo' with the name of this view in urls.py
         context = {
             "user": user,
             "form": form,
             "two_factor_enabled": member_has_2fa(user),
         }
-        return render(request, "members/userinfo.html", context)
+        return render(request, 'members/userinfo.html', context)
 
 
 class CertificateView(View):
     @method_decorator(login_required)
     def get(self, request):
-        icons = ["atom", "asterisk", "poo", "certificate", "cog", "compact-disc", "snowflake"]
+        icons = ['atom', 'asterisk', 'poo', 'certificate', 'cog', 'compact-disc', 'snowflake']
         user = request.user
         current_time = datetime.datetime.now()
 
         icon_options = {
-            "Monday": icons[0],
-            "Tuesday": icons[1],
-            "Wednesday": icons[2],
-            "Thursday": icons[3],
-            "Friday": icons[4],
-            "Saturday": icons[5],
-            "Sunday": icons[6],
+            'Monday': icons[0],
+            'Tuesday': icons[1],
+            'Wednesday': icons[2],
+            'Thursday': icons[3],
+            'Friday': icons[4],
+            'Saturday': icons[5],
+            'Sunday': icons[6],
         }
         icon = icon_options[current_time.strftime("%A")]
 
         context = {
-            "user": user,
-            "current_time": current_time,
-            "icon": icon,
+            'user': user,
+            'current_time': current_time,
+            'icon': icon,
         }
-        return render(request, "members/certificate.html", context)
+        return render(request, 'members/certificate.html', context)
 
 
 def signup(request):
     # If user has submitted the form show success page
     if request.session.get("signup_submitted", False):
-        request.session["signup_submitted"] = False
-        return render(request, "members/registration/registration_complete.html")
+        request.session['signup_submitted'] = False
+        return render(request, 'members/registration/registration_complete.html')
 
-    if request.method == "POST":
+    if request.method == 'POST':
         form = SignUpForm(request.POST)
 
-        if not validate_captcha(request.POST.get("cf-turnstile-response", "")):
-            return render(request, "members/signup.html", {"form": form, "alumni": False})
+        if not validate_captcha(request.POST.get('cf-turnstile-response', '')):
+            return render(request, 'members/signup.html', {'form': form, 'alumni': False})
 
         if form.is_valid():
             # Create user
             user = form.save(commit=False)
             user.is_active = False
-            user.password = make_password(form.cleaned_data["password"])
+            user.password = make_password(form.cleaned_data['password'])
             user.save()
             # Send email of new user
             current_site = get_current_site(request)
-            mail_subject = "A new account has been created and required your attention."
+            mail_subject = 'A new account has been created and required your attention.'
             message = render_to_string(
-                "members/acc_active_email.html",
+                'members/acc_active_email.html',
                 {
-                    "user": user,
-                    "domain": current_site.domain,
-                    "uid": urlsafe_base64_encode(force_bytes(user.pk)),  # .decode(),
-                    "token": account_activation_token.make_token(user),
+                    'user': user,
+                    'domain': current_site.domain,
+                    'uid': urlsafe_base64_encode(force_bytes(user.pk)),  # .decode(),
+                    'token': account_activation_token.make_token(user),
                 },
             )
-            to_email = os.environ.get("EMAIL_HOST_RECEIVER")
+            to_email = os.environ.get('EMAIL_HOST_RECEIVER')
             enqueue_task_on_commit(
                 send_email_task,
                 mail_subject,
@@ -120,11 +120,11 @@ def signup(request):
                 [to_email],
             )
             logger.info(f"NEW USER: Sending email to {to_email}")
-            request.session["signup_submitted"] = True
+            request.session['signup_submitted'] = True
             return redirect(request.path)
     else:
         form = SignUpForm()
-    return render(request, "members/signup.html", {"form": form})
+    return render(request, 'members/signup.html', {'form': form})
 
 
 def activate(request, uidb64, token):
@@ -137,9 +137,9 @@ def activate(request, uidb64, token):
         user.is_active = True
         user.save()
         msg = _("Användare aktiverad")
-        return render(request, "members/userinfo.html", {"user": user, "msg": msg})
+        return render(request, 'members/userinfo.html', {"user": user, "msg": msg})
     else:
-        return HttpResponse("Activation link is invalid!")
+        return HttpResponse('Activation link is invalid!')
 
 
 class CustomPasswordResetView(PasswordResetView):

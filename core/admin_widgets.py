@@ -53,7 +53,7 @@ class PublishDateTimeWidget(forms.DateTimeInput):
         widget_id = (attrs or {}).get("id", f"id_{name}")
         server_now = timezone.localtime(timezone.now()).strftime(FLATPICKR_DATETIME_FORMAT)
         return format_html(
-            "{} "
+            '{} '
             '<button type="button" class="datetime-action-button" '
             'data-set-datetime="#{}" data-set-datetime-value="{}">{}</button> '
             '<button type="button" class="datetime-action-button" '

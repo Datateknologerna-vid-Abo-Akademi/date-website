@@ -14,7 +14,7 @@ from .util import (
     send_event_invoice,
 )
 
-logger = logging.getLogger("date")
+logger = logging.getLogger('date')
 
 
 def handle_event_billing(signup: EventAttendees, retries=2):
@@ -57,12 +57,12 @@ def handle_event_billing(signup: EventAttendees, retries=2):
         send_event_invoice(signup, invoice)
 
 
-def handle_send_confirmation(signup: EventAttendees, template="events/emails/confirmation_email.html"):
+def handle_send_confirmation(signup: EventAttendees, template='events/emails/confirmation_email.html'):
     """Send confirmation email to participant"""
 
     billing_data = EventInvoice.objects.filter(participant=signup).first()
 
     if not (billing_data and billing_data.amount > 0):
-        template = "events/emails/free_confirmation_email.html"
+        template = 'events/emails/free_confirmation_email.html'
 
     send_confirmation_email(signup, template=template, billing_data=billing_data)

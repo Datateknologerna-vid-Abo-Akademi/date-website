@@ -16,7 +16,7 @@ __all__ = [
     "ExtraChangeListLinksMixin",
 ]
 
-if getattr(settings, "USE_UNFOLD", False):
+if getattr(settings, 'USE_UNFOLD', False):
     from unfold.admin import ModelAdmin, StackedInline, TabularInline
     from unfold.overrides import FORMFIELD_OVERRIDES
     from unfold.widgets import (
@@ -31,10 +31,10 @@ if getattr(settings, "USE_UNFOLD", False):
     UNFOLD_FORMFIELD_OVERRIDES = FORMFIELD_OVERRIDES
 
     _WIDGET_MAP = {
-        "TextInput": UnfoldAdminTextInputWidget,
-        "URLInput": UnfoldAdminURLInputWidget,
-        "EmailInput": UnfoldAdminEmailInputWidget,
-        "NumberInput": UnfoldAdminIntegerFieldWidget,
+        'TextInput': UnfoldAdminTextInputWidget,
+        'URLInput': UnfoldAdminURLInputWidget,
+        'EmailInput': UnfoldAdminEmailInputWidget,
+        'NumberInput': UnfoldAdminIntegerFieldWidget,
     }
 else:
     ModelAdmin = admin.ModelAdmin
@@ -62,28 +62,28 @@ class UnfoldFormMixin:
 class PublicUrlAdminMixin:
     """Show a compact public-page link for models that implement get_absolute_url."""
 
-    public_url_field = "public_url"
+    public_url_field = 'public_url'
 
     @admin.display(description=_("Public page"))
     def public_url(self, obj):
-        if not obj or not getattr(obj, "pk", None) or not hasattr(obj, "get_absolute_url"):
-            return "-"
+        if not obj or not getattr(obj, 'pk', None) or not hasattr(obj, 'get_absolute_url'):
+            return '-'
 
         return format_html(
             '<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
             obj.get_absolute_url(),
-            _("Open public page"),
+            _('Open public page'),
         )
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj))
-        if obj and hasattr(obj, "get_absolute_url") and self.public_url_field not in readonly_fields:
+        if obj and hasattr(obj, 'get_absolute_url') and self.public_url_field not in readonly_fields:
             readonly_fields.append(self.public_url_field)
         return readonly_fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = list(super().get_fieldsets(request, obj))
-        if not obj or not hasattr(obj, "get_absolute_url"):
+        if not obj or not hasattr(obj, 'get_absolute_url'):
             return fieldsets
 
         if self.public_url_field in flatten_fieldsets(fieldsets) or not fieldsets:
@@ -92,7 +92,7 @@ class PublicUrlAdminMixin:
         # Append the public-page link to the last existing fieldset rather than
         # creating a new unlabelled section at the bottom of the change form.
         name, options = fieldsets[-1]
-        options = {**options, "fields": tuple(options.get("fields", ())) + (self.public_url_field,)}
+        options = {**options, 'fields': tuple(options.get('fields', ())) + (self.public_url_field,)}
         fieldsets[-1] = (name, options)
         return fieldsets
 
@@ -100,7 +100,7 @@ class PublicUrlAdminMixin:
 class ExtraChangeListLinksMixin:
     """Render declarative extra buttons beside the default changelist tools."""
 
-    change_list_template = "admin/core/change_list_with_extra_tools.html"
+    change_list_template = 'admin/core/change_list_with_extra_tools.html'
     changelist_links: tuple = ()
 
     def get_changelist_links(self, request):

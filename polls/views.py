@@ -8,26 +8,26 @@ from members.models import Member
 from .models import Question
 from .vote import handle_vote
 
-logger = logging.getLogger("date")
+logger = logging.getLogger('date')
 
 
 class IndexView(generic.ListView):
-    template_name = "polls/index.html"
-    context_object_name = "latest_question_list"
+    template_name = 'polls/index.html'
+    context_object_name = 'latest_question_list'
 
     def get_queryset(self):
         """Return the last five published questions."""
-        return Question.objects.published().order_by("-pub_date")[:5]
+        return Question.objects.published().order_by('-pub_date')[:5]
 
 
 class DetailView(generic.DetailView):
     model = Question
-    template_name = "polls/detail.html"
+    template_name = 'polls/detail.html'
 
 
 class ResultsView(generic.DetailView):
     model = Question
-    template_name = "polls/results.html"
+    template_name = 'polls/results.html'
 
 
 def vote(request, question_id):
@@ -38,6 +38,6 @@ def vote(request, question_id):
     else:
         user = request.user
 
-    selected_choices = [choice_id for choice_id in set(request.POST.getlist("choice"))]
+    selected_choices = [choice_id for choice_id in set(request.POST.getlist('choice'))]
 
     return handle_vote(request, question, user, selected_choices)

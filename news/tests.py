@@ -8,10 +8,10 @@ from news.models import Post
 
 class NewsTestCase(TestCase):
     def setUp(self):
-        self.member = Member.objects.create(username="Test", password="test", is_superuser=True)
+        self.member = Member.objects.create(username='Test', password='test', is_superuser=True)
         self.post = Post.objects.create(
-            title="Test news",
-            slug="test",
+            title='Test news',
+            slug='test',
             author_id=self.member.id,
             published_time=timezone.now() - timezone.timedelta(seconds=1),
         )
@@ -29,16 +29,16 @@ class NewsTestCase(TestCase):
 
         self.post.published_time = timezone.now() + timezone.timedelta(days=1)
         self.post.save()
-        response = self.client.get(reverse("news:index"))
+        response = self.client.get(reverse('news:index'))
         self.assertEqual(response.status_code, 200)
-        self.assertNotIn(self.post, list(response.context["latest_news_items"]))
+        self.assertNotIn(self.post, list(response.context['latest_news_items']))
 
     def test_get_news_index(self):
         c = Client()
-        response = c.get(reverse("news:index"))
+        response = c.get(reverse('news:index'))
         self.assertEqual(response.status_code, 200)
 
     def test_get_news_detail(self):
         c = Client()
-        response = c.get(reverse("news:detail", args=[self.post.slug]))
+        response = c.get(reverse('news:detail', args=[self.post.slug]))
         self.assertEqual(response.status_code, 200)
