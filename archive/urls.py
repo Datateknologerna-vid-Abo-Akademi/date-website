@@ -1,9 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from django.urls import path
 
-from . import views
 from exambank import views as exambank_views
 from gallery import views as gallery_views
+
+from . import views
 
 app_name = 'archive'
 
@@ -22,5 +23,4 @@ urlpatterns = [
     path('exam-archive-upload/', exambank_views.exam_archive_upload, name='exam_archive_upload'),
     path('upload/', login_required(gallery_views.upload), name='upload'),
     path('cleanMedia/', login_required(views.clean_media), name='cleanMedia'),
-
 ]

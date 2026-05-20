@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from members.models import Member, MembershipType, ORDINARY_MEMBER, Subscription, SubscriptionPayment
+from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
 
 
 class MemberAdminSearchTests(TestCase):

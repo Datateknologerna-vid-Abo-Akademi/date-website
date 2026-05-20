@@ -30,11 +30,11 @@ class ExamArchiveUploadForm(forms.Form):
 
 
 class ExamArchiveAdminForm(forms.ModelForm):
-    files = MultipleFileField(label="Ladda upp flera dokument", required=False)
+    files = MultipleFileField(label="Ladda upp flera dokument", required=False)  # type: ignore[assignment]
 
     class Meta:
         model = ExamArchive
-        fields = '__all__'
+        fields = '__all__'  # noqa: DJ007
 
     def save(self, *args, **kwargs):
         archive = super().save(*args, **kwargs)
@@ -45,7 +45,7 @@ class ExamArchiveAdminForm(forms.ModelForm):
 
 
 class ExamBankAccessSettingsAdminForm(forms.ModelForm):
-    PASSWORD_PLACEHOLDER = '********'
+    PASSWORD_PLACEHOLDER = '********'  # noqa: S105
 
     password = forms.CharField(
         label=_('Lösenord'),

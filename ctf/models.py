@@ -1,10 +1,10 @@
 import logging
 
-from django_ckeditor_5.fields import CKEditor5Field
 from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from django_ckeditor_5.fields import CKEditor5Field
 
 from members.models import Member
 
@@ -26,8 +26,12 @@ class Ctf(models.Model):
     pub_date = models.DateTimeField(auto_now_add=True)
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
     published_time = models.DateTimeField(
-        _('Publiceras'), null=True, blank=True, default=now,
-        help_text=_('Lämna tomt för att dölja CTF:n. Välj en framtida tid för schemalagd publicering.'))
+        _('Publiceras'),
+        null=True,
+        blank=True,
+        default=now,
+        help_text=_('Lämna tomt för att dölja CTF:n. Välj en framtida tid för schemalagd publicering.'),
+    )
 
     objects = CtfQuerySet.as_manager()
 
@@ -86,4 +90,4 @@ class Guess(models.Model):
         verbose_name_plural = _('Gissningar')
 
     def __str__(self):
-        return f'{self.ctf.title} - {self.flag.title} - {self.user.username} - {self.guess}'
+        return f"{self.ctf.title} - {self.flag.title} - {self.user.username} - {self.guess}"

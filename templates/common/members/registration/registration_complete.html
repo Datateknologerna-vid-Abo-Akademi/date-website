@@ -1,28 +1,27 @@
 {% extends 'core/base.html' %}
-
 {% load i18n %}
 {% load static %}
-{% block title %}{% trans 'Registration completed' %}{% endblock %}
+{% block title %}
+  {% trans 'Registration completed' %}
+{% endblock %}
 {% block extra_head %}
-    {{ block.super }}
-    <link rel="stylesheet" href="{% static 'members/style.css' %}">
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'members/style.css' %}">
 {% endblock %}
 {% block content %}
-    <div style="padding-top: 1rem;">
-        <div class="center-box">
-          <p>
-            {% trans 'Styrelsen har blivit notifierad angående din anmälan.' %}
-          </p>
-          {% if alumni %}
-            <p>
-              {% trans 'Kolla e-postadressen du registrerade dig med för ytterligare instruktioner' %}
-            </p>
-          {% else %}
-            <p>
-              {% trans 'Du kan logga in <strong>efter</strong> att styrelsen har granskat och godkänt ditt konto.' %}
-            </p>
-          {% endif %}
-          <p><a class="pw-reset-button" href="{% url 'index' %}">{% trans 'Gå till Startsidan' %}</a></p>
+  <div style="padding-top: 1rem;">
+    <div class="center-box">
+      <p>{% trans 'Styrelsen har blivit notifierad angående din anmälan.' %}</p>
+      {% if alumni %}
+        <p>{% trans 'Kolla e-postadressen du registrerade dig med för ytterligare instruktioner' %}</p>
+      {% else %}
+        <p>
+          {% trans 'Du kan logga in <strong>efter</strong> att styrelsen har granskat och godkänt ditt konto.' %}
+        </p>
+      {% endif %}
+      <p>
+        <a class="pw-reset-button" href="{% url 'index' %}">{% trans 'Gå till Startsidan' %}</a>
+      </p>
     </div>
-</div>
+  </div>
 {% endblock %}

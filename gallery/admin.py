@@ -5,7 +5,7 @@ from django.db import models
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
-from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, TabularInline, UNFOLD_FORMFIELD_OVERRIDES
+from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ExtraChangeListLinksMixin, ModelAdmin, TabularInline
 from core.admin_ui import AdminLink
 from core.admin_widgets import (
     FLATPICKR_ADMIN_CSS,
@@ -31,9 +31,7 @@ def safe_image_preview(image_field):
 
 
 class GalleryAdminMixin(ExtraChangeListLinksMixin):
-    changelist_links = (
-        AdminLink(_('Städa upp media'), icon='cleaning_services', url_name='archive:cleanMedia'),
-    )
+    changelist_links = (AdminLink(_('Städa upp media'), icon='cleaning_services', url_name='archive:cleanMedia'),)
 
 
 class PhotoInline(TabularInline):

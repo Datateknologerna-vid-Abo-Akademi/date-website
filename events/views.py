@@ -1,16 +1,16 @@
-import datetime
 import logging
 
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
 from django.db import transaction
 from django.http import HttpResponseForbidden
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic import DetailView, ListView
 
 from core.utils import validate_captcha
+
 from .forms import PasscodeForm
 from .models import Event
 from .registration import EventSignupError, get_public_registration_questions, register_event_signup
@@ -45,12 +45,7 @@ class IndexView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        events = (
-            Event.objects.published()
-            .exclude(slug="")
-            .exclude(slug__isnull=True)
-            .order_by('event_date_start')
-        )
+        events = Event.objects.published().exclude(slug="").exclude(slug__isnull=True).order_by('event_date_start')
         today = timezone.now()
         context['event_list'] = events.filter(event_date_end__gte=today)
         context['past_events'] = events.filter(event_date_end__lte=today).reverse()
@@ -102,9 +97,7 @@ class EventDetailView(DetailView):
         open_for_others = self.object.registration_is_open_others()
         registration_closed = self.object.registration_past_due()
         can_register_now = self.object.sign_up and (
-            is_commodore
-            or open_for_others
-            or (is_authenticated and is_active_member and open_for_members)
+            is_commodore or open_for_others or (is_authenticated and is_active_member and open_for_members)
         )
         next_signup_time = None
         if self.object.sign_up and not registration_closed and not can_register_now:
@@ -140,7 +133,7 @@ class EventDetailView(DetailView):
         return self.handle_event_signup(request)
 
     def get_context_data(self, **kwargs):
-        context = super(EventDetailView, self).get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
         form = kwargs.pop('form', None)
         if self.object.passcode and not self._has_valid_passcode_session(self.request):
             form = PasscodeForm
@@ -188,8 +181,12 @@ class EventDetailView(DetailView):
                 request.session[self.PASSCODE_SESSION_KEY] = passcode_status
                 return self.render_to_response(self.get_context_data())
             else:
-                return render(request, 'events/event_passcode.html',
-                              self.get_context_data(passcode_error='invalid passcode'), status=401)
+                return render(
+                    request,
+                    'events/event_passcode.html',
+                    self.get_context_data(passcode_error='invalid passcode'),
+                    status=401,
+                )
         return None
 
     def handle_event_signup(self, request):
@@ -197,7 +194,6 @@ class EventDetailView(DetailView):
             return HttpResponseForbidden()
 
         if self._get_registration_state(request)["can_register_now"]:
-
             form = self.object.make_registration_form()(data=request.POST)
 
             # CAPTCHA validation if applicable
@@ -224,6 +220,7 @@ class EventDetailView(DetailView):
         if "event_billing" in settings.EXPERIMENTAL_FEATURES and 'billing' in settings.INSTALLED_APPS:
             logger.debug("Handling event billing")
             from billing.handlers import handle_event_billing
+
             transaction.on_commit(lambda: handle_event_billing(attendee))
 
     def redirect_after_signup(self):

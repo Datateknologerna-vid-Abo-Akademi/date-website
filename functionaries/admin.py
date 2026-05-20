@@ -9,7 +9,15 @@ from .models import Functionary, FunctionaryRole
 class FunctionaryAdmin(ModelAdmin):
     list_display = ('get_display_name', 'functionary_role', 'year')
     list_filter = ('functionary_role', 'year')
-    search_fields = ('member__first_name', 'member__last_name', 'member__username', 'member__email', 'name', 'functionary_role__title', 'year')
+    search_fields = (
+        'member__first_name',
+        'member__last_name',
+        'member__username',
+        'member__email',
+        'name',
+        'functionary_role__title',
+        'year',
+    )
     autocomplete_fields = ('member', 'functionary_role')
     list_select_related = ('member', 'functionary_role')
     ordering = ['-year']

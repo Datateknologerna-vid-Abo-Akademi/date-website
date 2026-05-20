@@ -6,16 +6,26 @@ from django.utils.translation import gettext_lazy as _
 
 from core.admin_ui import resolve_admin_links
 
+__all__ = [
+    "ModelAdmin",
+    "TabularInline",
+    "StackedInline",
+    "UNFOLD_FORMFIELD_OVERRIDES",
+    "UnfoldFormMixin",
+    "PublicUrlAdminMixin",
+    "ExtraChangeListLinksMixin",
+]
+
 if getattr(settings, 'USE_UNFOLD', False):
-    from unfold.admin import ModelAdmin, TabularInline, StackedInline
+    from unfold.admin import ModelAdmin, StackedInline, TabularInline
     from unfold.overrides import FORMFIELD_OVERRIDES
     from unfold.widgets import (
-        UnfoldAdminSplitDateTimeWidget as AdminSplitDateTimeWidget,
-        UnfoldAdminTextInputWidget,
-        UnfoldAdminURLInputWidget,
         UnfoldAdminEmailInputWidget,
         UnfoldAdminIntegerFieldWidget,
+        UnfoldAdminTextInputWidget,
+        UnfoldAdminURLInputWidget,
     )
+
     # Base dict to spread into any admin that defines its own formfield_overrides,
     # so Unfold's datetime/field widget overrides are not accidentally shadowed.
     UNFOLD_FORMFIELD_OVERRIDES = FORMFIELD_OVERRIDES
@@ -27,7 +37,6 @@ if getattr(settings, 'USE_UNFOLD', False):
         'NumberInput': UnfoldAdminIntegerFieldWidget,
     }
 else:
-    from django.contrib.admin.widgets import AdminSplitDateTime as AdminSplitDateTimeWidget
     ModelAdmin = admin.ModelAdmin
     TabularInline = admin.TabularInline
     StackedInline = admin.StackedInline
@@ -55,6 +64,7 @@ class PublicUrlAdminMixin:
 
     public_url_field = 'public_url'
 
+    @admin.display(description=_("Public page"))
     def public_url(self, obj):
         if not obj or not getattr(obj, 'pk', None) or not hasattr(obj, 'get_absolute_url'):
             return '-'
@@ -64,8 +74,6 @@ class PublicUrlAdminMixin:
             obj.get_absolute_url(),
             _('Open public page'),
         )
-
-    public_url.short_description = _('Public page')
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj))
@@ -93,7 +101,7 @@ class ExtraChangeListLinksMixin:
     """Render declarative extra buttons beside the default changelist tools."""
 
     change_list_template = 'admin/core/change_list_with_extra_tools.html'
-    changelist_links = ()
+    changelist_links: tuple = ()
 
     def get_changelist_links(self, request):
         return resolve_admin_links(self.changelist_links, request)

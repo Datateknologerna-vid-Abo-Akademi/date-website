@@ -12,9 +12,8 @@ from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.forms import TOTPDeviceForm
 
-from members.forms import (MemberCreationForm, SignUpForm,
-                           SubscriptionPaymentForm)
-from members.models import (Member, MembershipType, ORDINARY_MEMBER, Subscription)
+from members.forms import MemberCreationForm, SignUpForm, SubscriptionPaymentForm
+from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription
 from members.two_factor import (
     INFERRED_REDIRECT_SESSION_KEY,
     MemberSetupView,
@@ -28,48 +27,56 @@ class UsernameValidatorTest(TestCase):
         cls.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
 
     def test_member_creation_form_accepts_valid_username(self):
-        form = MemberCreationForm(data={
-            'username': 'valid_user123',
-            'email': 'valid@example.com',
-            'first_name': 'Valid',
-            'last_name': 'User',
-            'membership_type': self.membership_type.id,
-            'password': 'secret123',
-        })
+        form = MemberCreationForm(
+            data={
+                'username': 'valid_user123',
+                'email': 'valid@example.com',
+                'first_name': 'Valid',
+                'last_name': 'User',
+                'membership_type': self.membership_type.id,
+                'password': 'secret123',
+            }
+        )
         self.assertTrue(form.is_valid())
 
     def test_member_creation_form_rejects_invalid_username(self):
-        form = MemberCreationForm(data={
-            'username': 'invalid user',
-            'email': 'user@example.com',
-            'first_name': 'Invalid',
-            'last_name': 'User',
-            'membership_type': self.membership_type.id,
-            'password': 'secret123',
-        })
+        form = MemberCreationForm(
+            data={
+                'username': 'invalid user',
+                'email': 'user@example.com',
+                'first_name': 'Invalid',
+                'last_name': 'User',
+                'membership_type': self.membership_type.id,
+                'password': 'secret123',
+            }
+        )
         self.assertFalse(form.is_valid())
         self.assertIn('username', form.errors)
 
     def test_member_creation_form_accepts_dotted_username(self):
-        form = MemberCreationForm(data={
-            'username': 'first.last',
-            'email': 'dotted@example.com',
-            'first_name': 'Dot',
-            'last_name': 'User',
-            'membership_type': self.membership_type.id,
-            'password': 'secret123',
-        })
+        form = MemberCreationForm(
+            data={
+                'username': 'first.last',
+                'email': 'dotted@example.com',
+                'first_name': 'Dot',
+                'last_name': 'User',
+                'membership_type': self.membership_type.id,
+                'password': 'secret123',
+            }
+        )
         self.assertTrue(form.is_valid())
 
     def test_signup_form_rejects_invalid_username(self):
-        form = SignUpForm(data={
-            'username': 'bad!name',
-            'email': 'user@example.com',
-            'first_name': 'Bad',
-            'last_name': 'Name',
-            'membership_type': self.membership_type.id,
-            'password': 'secret123',
-        })
+        form = SignUpForm(
+            data={
+                'username': 'bad!name',
+                'email': 'user@example.com',
+                'first_name': 'Bad',
+                'last_name': 'Name',
+                'membership_type': self.membership_type.id,
+                'password': 'secret123',
+            }
+        )
         self.assertFalse(form.is_valid())
         self.assertIn('username', form.errors)
 
@@ -80,14 +87,16 @@ class MemberCreationFormSaveTests(TestCase):
         cls.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
 
     def test_save_hashes_password(self):
-        form = MemberCreationForm(data={
-            'username': 'hash_user',
-            'email': 'hash@example.com',
-            'first_name': 'Hash',
-            'last_name': 'User',
-            'membership_type': self.membership_type.id,
-            'password': 'secret123',
-        })
+        form = MemberCreationForm(
+            data={
+                'username': 'hash_user',
+                'email': 'hash@example.com',
+                'first_name': 'Hash',
+                'last_name': 'User',
+                'membership_type': self.membership_type.id,
+                'password': 'secret123',
+            }
+        )
         self.assertTrue(form.is_valid())
         member = form.save()
         self.assertNotEqual(member.password, 'secret123')
@@ -122,12 +131,14 @@ class SubscriptionPaymentFormTests(TestCase):
         for scale, delta in cases:
             with self.subTest(scale=scale):
                 subscription = self._create_subscription(scale)
-                form = SubscriptionPaymentForm(data={
-                    'member': self.member.id,
-                    'subscription': subscription.id,
-                    'date_paid': base_date,
-                    'amount_paid': '100.00',
-                })
+                form = SubscriptionPaymentForm(
+                    data={
+                        'member': self.member.id,
+                        'subscription': subscription.id,
+                        'date_paid': base_date,
+                        'amount_paid': '100.00',
+                    }
+                )
                 self.assertTrue(form.is_valid())
                 payment = form.save()
                 self.assertEqual(payment.date_expires, base_date + delta)
@@ -140,12 +151,14 @@ class SubscriptionPaymentFormTests(TestCase):
             renewal_period=None,
             price=0,
         )
-        form = SubscriptionPaymentForm(data={
-            'member': self.member.id,
-            'subscription': subscription.id,
-            'date_paid': timezone.now().date(),
-            'amount_paid': '0',
-        })
+        form = SubscriptionPaymentForm(
+            data={
+                'member': self.member.id,
+                'subscription': subscription.id,
+                'date_paid': timezone.now().date(),
+                'amount_paid': '0',
+            }
+        )
         self.assertTrue(form.is_valid())
         payment = form.save()
         self.assertIsNone(payment.date_expires)
@@ -221,20 +234,26 @@ class TwoFactorIntegrationTests(TestCase):
         response = self.client.get(reverse('members:login'))
         prefix = self._wizard_prefix(response)
 
-        response = self.client.post(reverse('members:login'), data={
-            f'{prefix}-current_step': 'auth',
-            'auth-username': self.member.email,
-            'auth-password': 'secret12345',
-        })
+        response = self.client.post(
+            reverse('members:login'),
+            data={
+                f"{prefix}-current_step": 'auth',
+                'auth-username': self.member.email,
+                'auth-password': 'secret12345',
+            },
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['wizard']['steps'].current, 'token')
 
         prefix = self._wizard_prefix(response)
-        response = self.client.post(reverse('members:login'), data={
-            f'{prefix}-current_step': 'token',
-            'token-otp_token': self._totp_token(device),
-        })
+        response = self.client.post(
+            reverse('members:login'),
+            data={
+                f"{prefix}-current_step": 'token',
+                'token-otp_token': self._totp_token(device),
+            },
+        )
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], reverse('index'))
@@ -246,11 +265,14 @@ class TwoFactorIntegrationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         prefix = self._wizard_prefix(response)
 
-        response = self.client.post(login_url, data={
-            f'{prefix}-current_step': 'auth',
-            'auth-username': self.member.email,
-            'auth-password': 'secret12345',
-        })
+        response = self.client.post(
+            login_url,
+            data={
+                f"{prefix}-current_step": 'auth',
+                'auth-username': self.member.email,
+                'auth-password': 'secret12345',
+            },
+        )
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], '/events/?page=2')
@@ -272,11 +294,14 @@ class TwoFactorIntegrationTests(TestCase):
         response = self.client.get(login_url, HTTP_REFERER='https://evil.example/phish')
         prefix = self._wizard_prefix(response)
 
-        response = self.client.post(login_url, data={
-            f'{prefix}-current_step': 'auth',
-            'auth-username': self.member.email,
-            'auth-password': 'secret12345',
-        })
+        response = self.client.post(
+            login_url,
+            data={
+                f"{prefix}-current_step": 'auth',
+                'auth-username': self.member.email,
+                'auth-password': 'secret12345',
+            },
+        )
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], reverse('index'))
@@ -312,7 +337,9 @@ class TwoFactorIntegrationTests(TestCase):
 
     def test_setup_view_uses_strict_totp_form_for_generator_method(self):
         view = MemberSetupView()
-        with patch('members.two_factor.SetupView.get_form_list', return_value={'generator': TOTPDeviceForm, 'welcome': object}):
+        with patch(
+            'members.two_factor.SetupView.get_form_list', return_value={'generator': TOTPDeviceForm, 'welcome': object}
+        ):
             form_list = view.get_form_list()
 
         self.assertIs(form_list['generator'], StrictTOTPDeviceForm)
@@ -323,9 +350,12 @@ class TwoFactorIntegrationTests(TestCase):
         response = self.client.get(reverse('two_factor:setup'))
         prefix = self._wizard_prefix(response)
 
-        response = self.client.post(reverse('two_factor:setup'), data={
-            f'{prefix}-current_step': 'welcome',
-        })
+        response = self.client.post(
+            reverse('two_factor:setup'),
+            data={
+                f"{prefix}-current_step": 'welcome',
+            },
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['wizard']['steps'].current, 'generator')
@@ -378,11 +408,14 @@ class TwoFactorIntegrationTests(TestCase):
         response = self.client.get(f"{reverse('members:login')}?next={reverse('admin:index')}")
         prefix = self._wizard_prefix(response)
 
-        response = self.client.post(f"{reverse('members:login')}?next={reverse('admin:index')}", data={
-            f'{prefix}-current_step': 'auth',
-            'auth-username': admin_user.email,
-            'auth-password': 'secret12345',
-        })
+        response = self.client.post(
+            f"{reverse('members:login')}?next={reverse('admin:index')}",
+            data={
+                f"{prefix}-current_step": 'auth',
+                'auth-username': admin_user.email,
+                'auth-password': 'secret12345',
+            },
+        )
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], reverse('admin:index'))
@@ -462,15 +495,18 @@ class TwoFactorIntegrationTests(TestCase):
 
     def test_invalid_profile_post_keeps_editor_open_with_errors(self):
         self.client.force_login(self.member, backend='members.backends.AuthBackend')
-        response = self.client.post(reverse('members:info'), data={
-            'first_name': '',
-            'last_name': self.member.last_name,
-            'phone': self.member.phone,
-            'address': self.member.address,
-            'zip_code': self.member.zip_code,
-            'city': self.member.city,
-            'country': self.member.country,
-        })
+        response = self.client.post(
+            reverse('members:info'),
+            data={
+                'first_name': '',
+                'last_name': self.member.last_name,
+                'phone': self.member.phone,
+                'address': self.member.address,
+                'zip_code': self.member.zip_code,
+                'city': self.member.city,
+                'country': self.member.country,
+            },
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'id_first_name_error', html=False)
@@ -599,7 +635,7 @@ class GitHubCallbackViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            f'{reverse("members:login")}?next=%2Fevents%2F',
+            f"{reverse("members:login")}?next=%2Fevents%2F",
             fetch_redirect_response=False,
         )
         self.assertNotIn('_auth_user_id', self.client.session)
@@ -651,7 +687,7 @@ class GitHubCallbackViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            f'{reverse("members:login")}?next=%2Fmembers%2Finfo%2F',
+            f"{reverse("members:login")}?next=%2Fmembers%2Finfo%2F",
             fetch_redirect_response=False,
         )
         self.assertNotIn('_auth_user_id', self.client.session)
@@ -692,7 +728,7 @@ class GitHubCallbackViewTests(TestCase):
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_inactive_member_cannot_login(self):
-        inactive = Member.objects.create_user(
+        Member.objects.create_user(
             username='inactive',
             email='inactive@example.com',
             password='secret123',

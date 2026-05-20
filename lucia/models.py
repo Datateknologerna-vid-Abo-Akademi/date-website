@@ -5,7 +5,6 @@ from django.urls import reverse
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.fields import CKEditor5Field
-from polls.models import Question
 
 logger = logging.getLogger('date')
 
@@ -22,8 +21,12 @@ class Candidate(models.Model):
     title = models.CharField(_('Titel'), max_length=255, blank=False)
     content = CKEditor5Field(_('Innehåll'), blank=True)
     published_time = models.DateTimeField(
-        _('Publiceras'), null=True, blank=True, default=now,
-        help_text=_('Lämna tomt för att dölja kandidaten. Välj en framtida tid för schemalagd publicering.'))
+        _('Publiceras'),
+        null=True,
+        blank=True,
+        default=now,
+        help_text=_('Lämna tomt för att dölja kandidaten. Välj en framtida tid för schemalagd publicering.'),
+    )
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
     poll_url = models.URLField(_('Poll URL'), max_length=255, blank=False)
 

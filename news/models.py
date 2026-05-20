@@ -1,17 +1,17 @@
 import logging
 
-from django_ckeditor_5.fields import CKEditor5Field
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django_ckeditor_5.fields import CKEditor5Field
 
 logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
 
 
-class Category(models.Model):
+class Category(models.Model):  # type: ignore[django-manager-missing]
     name = models.CharField(_('Namn'), max_length=255, blank=False)
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False)
 
@@ -39,12 +39,16 @@ class Post(models.Model):
     author = models.ForeignKey('members.Member', on_delete=models.CASCADE)
     created_time = models.DateTimeField(_('Skapad'), default=timezone.now)
     published_time = models.DateTimeField(
-        _('Publiceras'), null=True, blank=True, default=timezone.now,
-        help_text=_('Lämna tomt för att dölja nyheten. Välj en framtida tid för schemalagd publicering.'))
+        _('Publiceras'),
+        null=True,
+        blank=True,
+        default=timezone.now,
+        help_text=_('Lämna tomt för att dölja nyheten. Välj en framtida tid för schemalagd publicering.'),
+    )
     modified_time = models.DateTimeField(_('Modifierad'), editable=False, null=True, blank=True)
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
 
-    objects = PostQuerySet.as_manager()
+    objects = PostQuerySet.as_manager()  # type: ignore[django-manager-missing]
 
     class Meta:
         verbose_name = _('nyhet')

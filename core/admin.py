@@ -5,9 +5,10 @@ from two_factor.admin import AdminSiteOTPRequiredMixin
 
 if getattr(settings, 'USE_UNFOLD', False):
     from unfold.sites import UnfoldAdminSite
-    _AdminSiteBase = UnfoldAdminSite
+
+    _AdminSiteBase = UnfoldAdminSite  # type: ignore[misc, assignment]
 else:
-    _AdminSiteBase = admin.AdminSite
+    _AdminSiteBase = admin.AdminSite  # type: ignore[misc, assignment]
 
 
 def get_admin_translation_languages() -> tuple[str, ...]:
@@ -29,7 +30,7 @@ class ActiveLanguageTranslationAdminMixin:
 
         return {
             field.name
-            for translation_fields in self.trans_opts.all_fields.values()
+            for translation_fields in self.trans_opts.all_fields.values()  # type: ignore[attr-defined]
             for field in translation_fields
             if field.language not in visible_languages
         }
@@ -64,7 +65,7 @@ class ActiveLanguageTranslationAdminMixin:
         return filtered_fieldsets
 
 
-class FixedLanguageAdminSite(AdminSiteOTPRequiredMixin, _AdminSiteBase):
+class FixedLanguageAdminSite(AdminSiteOTPRequiredMixin, _AdminSiteBase):  # type: ignore[misc, valid-type]
     """Mirror the default admin site while preserving normal locale resolution."""
 
     def has_permission(self, request):
@@ -86,6 +87,7 @@ if not isinstance(admin.site, FixedLanguageAdminSite):
     _site = FixedLanguageAdminSite()
     admin.site = _site
     from django.contrib.admin import sites as _admin_sites
+
     _admin_sites.site = _site
 
 admin_site = admin.site

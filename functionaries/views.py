@@ -69,14 +69,10 @@ class FunctionariesView(View):
 
         selected_year, all_years = get_selected_year(request, distinct_years)
         selected_role, all_roles = get_selected_role(request, functionary_roles)
-        board_functionaries = get_filtered_functionaries(
-            selected_year, selected_role, True
-        )
+        board_functionaries = get_filtered_functionaries(selected_year, selected_role, True)
         board_functionaries_by_role = get_functionaries_by_role(board_functionaries)
 
-        other_functionaries = get_filtered_functionaries(
-            selected_year, selected_role, False
-        )
+        other_functionaries = get_filtered_functionaries(selected_year, selected_role, False)
         functionaries_by_role = get_functionaries_by_role(other_functionaries)
 
         context = {

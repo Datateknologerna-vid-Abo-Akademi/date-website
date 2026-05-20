@@ -31,15 +31,10 @@ class FilteredDocumentsListView(UserPassesTestMixin, SingleTableMixin, FilterVie
         if filter_collection or filter_title_contains:
             if filter_collection:
                 return Document.objects.filter(
-                    collection__type='Documents',
-                    collection=filter_collection,
-                    title__contains=filter_title_contains
+                    collection__type='Documents', collection=filter_collection, title__contains=filter_title_contains
                 )
             else:
-                return Document.objects.filter(
-                    collection__type='Documents',
-                    title__contains=filter_title_contains
-                )
+                return Document.objects.filter(collection__type='Documents', title__contains=filter_title_contains)
         else:
             return Document.objects.filter(collection__type='Documents')
 

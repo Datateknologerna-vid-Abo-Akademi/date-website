@@ -2,9 +2,10 @@ import logging
 import re
 
 from django import forms
-from django.utils.timezone import now
 from django.conf import settings
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+
 from core.admin_base import UnfoldFormMixin
 from core.admin_widgets import (
     FLATPICKR_DATETIME_INPUT_FORMATS,
@@ -12,10 +13,9 @@ from core.admin_widgets import (
     flatpickr_datetime_field,
     flatpickr_datetime_widget,
 )
-
 from date.functions import slugify_max
 from events import models
-from events.models import Event, EVENT_TEMPLATE_CHOICES_COMMON, EVENT_TEMPLATE_CHOICES_KK
+from events.models import EVENT_TEMPLATE_CHOICES_COMMON, EVENT_TEMPLATE_CHOICES_KK, Event
 
 logger = logging.getLogger('date')
 
@@ -73,7 +73,9 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
     sign_up_members = flatpickr_datetime_field(initial=now(), required=False)
     sign_up_deadline = flatpickr_datetime_field(initial=now(), required=False)
     sign_up_cancelling_deadline = flatpickr_datetime_field(initial=now(), required=False)
-    parent = forms.ModelChoiceField(queryset=Event.objects.filter(event_date_end__gte=now()), required=False)
+    parent: forms.ModelChoiceField = forms.ModelChoiceField(
+        queryset=Event.objects.filter(event_date_end__gte=now()), required=False
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -115,7 +117,7 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
             'redirect_link',
             'parent',
         )
-        if settings.USE_S3:
+        if settings.USE_S3:  # type: ignore[misc]
             fields = temp_fields + ('s3_image',)
         else:
             fields = temp_fields + ('image',)
@@ -128,7 +130,7 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
         )
 
     def save(self, commit=True):
-        post = super(EventCreationForm, self).save(commit=False)
+        post = super().save(commit=False)
 
         if self.user is None:
             return None
@@ -148,7 +150,6 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
 
 
 class EventEditForm(UnfoldFormMixin, forms.ModelForm):
-
     user = None
     redirect_link = forms.URLField(required=False, assume_scheme="https")
     published_time = flatpickr_datetime_field(required=False)
@@ -160,13 +161,13 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
         "widget": flatpickr_datetime_widget(),
         "input_formats": FLATPICKR_DATETIME_INPUT_FORMATS,
         "initial": now(),
-        "required": False
+        "required": False,
     }
     sign_up_others = forms.DateTimeField(**sign_up_args)
     sign_up_members = forms.DateTimeField(**sign_up_args)
     sign_up_deadline = forms.DateTimeField(**sign_up_args)
     sign_up_cancelling_deadline = forms.DateTimeField(**sign_up_args)
-    parent = forms.ModelChoiceField(queryset=Event.objects.all(), required=False)
+    parent: forms.ModelChoiceField = forms.ModelChoiceField(queryset=Event.objects.all(), required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -183,16 +184,14 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
         try:
             if getattr(self, 'instance', None) and getattr(self.instance, 'pk', None):
                 # limit parent choices to future events and exclude self
-                self.fields['parent'].queryset = Event.objects.filter(
-                    event_date_end__gte=now()
-                ).exclude(pk=self.instance.pk)
+                self.fields['parent'].queryset = Event.objects.filter(event_date_end__gte=now()).exclude(
+                    pk=self.instance.pk
+                )
             else:
                 # creation: only future events
-                self.fields['parent'].queryset = Event.objects.filter(
-                    event_date_end__gte=now()
-                )
-        except Exception:
-            # defensive: if fields not yet set or parent missing, ignore
+                self.fields['parent'].queryset = Event.objects.filter(event_date_end__gte=now())
+        except KeyError:
+            # "parent" field not present during form init — safe to skip
             pass
 
     class Meta:
@@ -220,7 +219,7 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
             'redirect_link',
             'parent',
         )
-        if settings.USE_S3:
+        if settings.USE_S3:  # type: ignore[misc]
             fields = temp_fields + ('s3_image',)
         else:
             fields = temp_fields + ('image',)
@@ -232,7 +231,7 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
         return unique_event_slug(slug, self.cleaned_data.get('title'), self.instance)
 
     def save(self, commit=True):
-        post = super(EventEditForm, self).save(commit=False)
+        post = super().save(commit=False)
 
         if self.user is None:
             return None

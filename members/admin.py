@@ -1,19 +1,23 @@
+from functools import reduce
+
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Permission
-from functools import reduce
 from django.db.models import CharField, Exists, F, OuterRef, Q, Value
 from django.db.models.functions import Lower, Replace
 from django.utils.translation import gettext_lazy as _
 from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
-from core.admin_base import ModelAdmin, TabularInline
 
-from members.forms import (MemberCreationForm, AdminMemberUpdateForm,
-                           SubscriptionPaymentForm, SubscriptionPaymentChoiceField)
-from members.models import (Member, Subscription,
-                            SubscriptionPayment, MembershipType)
+from core.admin_base import ModelAdmin, TabularInline
+from members.forms import (
+    AdminMemberUpdateForm,
+    MemberCreationForm,
+    SubscriptionPaymentChoiceField,
+    SubscriptionPaymentForm,
+)
+from members.models import Member, MembershipType, Subscription, SubscriptionPayment
 
 
 @admin.register(Permission)
@@ -56,10 +60,10 @@ class StaticDeviceInline(TabularInline):
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related('token_set')
 
+    @admin.display(description="Tokens remaining")
     def token_count(self, obj):
         return len(obj.token_set.all())
 
-    token_count.short_description = "Tokens remaining"
 
 FRESHMAN = 1
 ORDINARY_MEMBER = 2
@@ -72,20 +76,17 @@ SENIOR_MEMBER = 4
 # its own subclass (auth_admin.UserAdmin) violates C3 MRO. The shim is only
 # introduced when Unfold's ModelAdmin is a distinct class that sits above both.
 if getattr(settings, 'USE_UNFOLD', False):
+
     class _UserAdminBase(ModelAdmin, auth_admin.UserAdmin):
         pass
 else:
-    _UserAdminBase = auth_admin.UserAdmin
+    _UserAdminBase = auth_admin.UserAdmin  # type: ignore[misc, assignment]
 
 
 @admin.register(Member)
 class UserAdmin(_UserAdminBase):
-    fieldsets = (
-        (None, {'fields': AdminMemberUpdateForm.Meta.fields}),
-    )
-    add_fieldsets = (
-        (None, {'fields': MemberCreationForm.Meta.fields}),
-    )
+    fieldsets = ((None, {'fields': AdminMemberUpdateForm.Meta.fields}),)
+    add_fieldsets = ((None, {'fields': MemberCreationForm.Meta.fields}),)
 
     form = AdminMemberUpdateForm
     add_form = MemberCreationForm
@@ -120,21 +121,24 @@ class UserAdmin(_UserAdminBase):
         'Search by name, username, email, phone, address, postal code, city, '
         'membership type, group, subscription, admission year, member ID, or GitHub ID.'
     )
-    ordering = [Lower('username'), ]
+    ordering = [
+        Lower('username'),
+    ]
     readonly_fields = ('last_login', 'has_two_factor')
     inlines = [TOTPDeviceInline, StaticDeviceInline]
     actions = ['activate_user', 'deactivate_user', 'disable_two_factor']
 
+    @admin.display(boolean=True)
     def is_staff(self, obj):
         return obj.is_staff
-
-    is_staff.boolean = True
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         confirmed_devices = TOTPDevice.objects.filter(user=OuterRef('pk'), confirmed=True)
-        return queryset.select_related('membership_type').prefetch_related('groups').annotate(
-            _has_two_factor=Exists(confirmed_devices)
+        return (
+            queryset.select_related('membership_type')
+            .prefetch_related('groups')
+            .annotate(_has_two_factor=Exists(confirmed_devices))
         )
 
     def get_search_results(self, request, queryset, search_term):
@@ -195,24 +199,21 @@ class UserAdmin(_UserAdminBase):
 
         return queryset, may_have_duplicates
 
+    @admin.display(boolean=True, description="2FA")
     def has_two_factor(self, obj):
         return obj._has_two_factor
 
-    has_two_factor.boolean = True
-    has_two_factor.short_description = "2FA"
-
+    @admin.action(description="Aktivera användare")
     def activate_user(self, request, queryset):
         updated = queryset.update(is_active=True)
         self.message_user(request, _("Aktiverade %(count)d användare.") % {'count': updated})
 
-    activate_user.short_description = "Aktivera användare"
-
+    @admin.action(description="Deaktivera användare")
     def deactivate_user(self, request, queryset):
         updated = queryset.update(is_active=False)
         self.message_user(request, _("Deaktiverade %(count)d användare.") % {'count': updated})
 
-    deactivate_user.short_description = "Deaktivera användare"
-
+    @admin.action(description="Inaktivera 2FA")
     def disable_two_factor(self, request, queryset):
         totp_qs = TOTPDevice.objects.filter(user__in=queryset)
         static_qs = StaticDevice.objects.filter(user__in=queryset)
@@ -223,8 +224,6 @@ class UserAdmin(_UserAdminBase):
             request,
             _("2FA inaktiverat för valda medlemmar: %(count)d enhet(er) borttagna.") % {'count': total},
         )
-
-    disable_two_factor.short_description = "Inaktivera 2FA"
 
     def sorter_username(self, queryset):
         return Member.objects.all().order_by(Lower('username')).values_list('username', flat=True)
@@ -243,7 +242,13 @@ class SubscriptionPaymentAdmin(ModelAdmin):
     fields = SubscriptionPaymentForm.Meta.fields
     list_display = ('full_name', 'subscription', 'is_active', 'expires')
     list_filter = ('subscription', 'date_expires')
-    search_fields = ('member__first_name', 'member__last_name', 'member__username', 'member__email', 'subscription__name')
+    search_fields = (
+        'member__first_name',
+        'member__last_name',
+        'member__username',
+        'member__email',
+        'subscription__name',
+    )
     autocomplete_fields = ('subscription',)
     list_select_related = ('member', 'subscription')
     ordering = ('-date_paid',)
@@ -256,4 +261,3 @@ class SubscriptionPaymentAdmin(ModelAdmin):
         if db_field.name == 'member':
             return SubscriptionPaymentChoiceField(queryset=Member.objects.all())
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
-

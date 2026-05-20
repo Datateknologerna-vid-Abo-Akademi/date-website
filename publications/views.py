@@ -1,12 +1,13 @@
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
+from django.core.paginator import Paginator
 from django.db.models import Exists, OuterRef
 from django.http import Http404, HttpResponseForbidden
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
+
 from .models import PDFFile, PublicationCollection
-from django.core.paginator import Paginator
 
 
 def _compact_page_range(current, total, window=1, edges=1):
@@ -38,7 +39,7 @@ def _compact_page_range(current, total, window=1, edges=1):
 
 
 def _collection_session_key(collection):
-    return f'publication_collection_access_{collection.pk}'
+    return f"publication_collection_access_{collection.pk}"
 
 
 def _collection_session_token(collection):
@@ -61,10 +62,7 @@ def _collection_is_visible(collection, user):
         return True
     if collection.visibility == PublicationCollection.VISIBILITY_MEMBERSHIP:
         # Iterate the prefetched list rather than re-querying.
-        return any(
-            mt.pk == user.membership_type_id
-            for mt in collection.allowed_membership_types.all()
-        )
+        return any(mt.pk == user.membership_type_id for mt in collection.allowed_membership_types.all())
     return False
 
 
@@ -103,7 +101,9 @@ def _collection_access_response(request, collection):
                 # branch carries no taint either.
                 next_url = request.get_full_path()
                 if url_has_allowed_host_and_scheme(
-                    next_url, allowed_hosts=None, require_https=False,
+                    next_url,
+                    allowed_hosts=None,
+                    require_https=False,
                 ):
                     return redirect(next_url)
                 return redirect('publications:pdf_list')
@@ -188,8 +188,9 @@ def pdf_list(request):
     collections = [
         collection
         for collection in (
-            PublicationCollection.objects
-            .annotate(_has_visible_publication=Exists(PDFFile.objects.filter(**publications_filter)))
+            PublicationCollection.objects.annotate(
+                _has_visible_publication=Exists(PDFFile.objects.filter(**publications_filter))
+            )
             .filter(_has_visible_publication=True)
             .prefetch_related('allowed_membership_types')
         )

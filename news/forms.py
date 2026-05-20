@@ -5,7 +5,6 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from core.admin_widgets import flatpickr_datetime_field
-
 from date.functions import slugify_max
 from news import models
 from news.models import Post
@@ -14,7 +13,6 @@ logger = logging.getLogger('date')
 
 
 class PostCreationForm(forms.ModelForm):
-
     user = None
     published_time = flatpickr_datetime_field(initial=timezone.now, required=False)
 
@@ -34,9 +32,9 @@ class PostCreationForm(forms.ModelForm):
             self.fields['published_time'].help_text = _("Leave blank to keep the post hidden.")
 
     def save(self, commit=True):
-        post = super(PostCreationForm, self).save(commit=False)
+        post = super().save(commit=False)
 
-        logger.debug("Setting post author to {}".format(self.user))
+        logger.debug(f"Setting post author to {self.user}")
         if self.user is None:
             return None
         post.author = self.user
@@ -50,7 +48,6 @@ class PostCreationForm(forms.ModelForm):
 
 
 class PostEditForm(forms.ModelForm):
-
     user = None
     published_time = flatpickr_datetime_field(required=False)
 
@@ -70,7 +67,7 @@ class PostEditForm(forms.ModelForm):
             self.fields['published_time'].help_text = _("Leave blank to keep the post hidden.")
 
     def save(self, commit=True):
-        post = super(PostEditForm, self).save(commit=False)
+        post = super().save(commit=False)
         if self.user is None:
             return None
 

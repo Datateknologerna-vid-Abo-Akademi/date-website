@@ -1,11 +1,11 @@
 import logging
 
-from django.db import models
 from django.contrib import admin
+from django.db import models
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
-from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, TabularInline, UNFOLD_FORMFIELD_OVERRIDES
+from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ExtraChangeListLinksMixin, ModelAdmin, TabularInline
 from core.admin_ui import AdminLink
 from core.admin_widgets import (
     FLATPICKR_ADMIN_CSS,
@@ -36,9 +36,7 @@ def safe_file_link(file_field, label=None):
 
 
 class ExamBankAdminMixin(ExtraChangeListLinksMixin):
-    changelist_links = (
-        AdminLink(_('Städa upp media'), icon='cleaning_services', url_name='archive:cleanMedia'),
-    )
+    changelist_links = (AdminLink(_('Städa upp media'), icon='cleaning_services', url_name='archive:cleanMedia'),)
 
 
 class ExamFileInline(TabularInline):
@@ -106,8 +104,6 @@ class ExamBankAccessSettingsAdmin(ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    @admin.display(boolean=True, description=_('Lösenord inställt'))
     def password_configured(self, obj):
         return obj.has_password
-
-    password_configured.boolean = True
-    password_configured.short_description = _('Lösenord inställt')

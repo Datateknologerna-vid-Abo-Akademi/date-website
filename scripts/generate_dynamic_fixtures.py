@@ -1,7 +1,7 @@
 import json
 import os
 from base64 import b64decode
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
@@ -25,14 +25,12 @@ TEST_PDF_BYTES = b64decode(
 
 def dt(days=0, hours=0, minutes=0):
     """Return an ISO format datetime string with offset from now in UTC."""
-    return (
-        datetime.now(timezone.utc) + timedelta(days=days, hours=hours, minutes=minutes)
-    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return (datetime.now(UTC) + timedelta(days=days, hours=hours, minutes=minutes)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def d(days=0):
     """Return a date string with offset from now in UTC."""
-    return (datetime.now(timezone.utc) + timedelta(days=days)).strftime("%Y-%m-%d")
+    return (datetime.now(UTC) + timedelta(days=days)).strftime("%Y-%m-%d")
 
 
 def ensure_sample_file(target_path, content, binary=False):

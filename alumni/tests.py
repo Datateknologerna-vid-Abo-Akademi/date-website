@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock, patch
 
-from django.utils import timezone
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from alumni.config import get_alumni_sheet_config
 from alumni.models import AlumniUpdateToken

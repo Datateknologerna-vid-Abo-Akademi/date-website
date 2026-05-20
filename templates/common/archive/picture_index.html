@@ -2,54 +2,60 @@
 {% load shared_filters %}
 {% load static %}
 {% load i18n %}
-{% block title %}{% trans "Arkiv" %}{% endblock %}
-
-{% block extra_head %}
-    {{ block.super }}
-    <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
+{% block title %}
+  {% trans "Arkiv" %}
 {% endblock %}
-
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet"
+        href="{% static 'archive/css/style.css' %}"
+        type="text/css">
+{% endblock %}
 {% block content %}
-    <div class="container-md min-vh-100 container-margin-top p-1">
-        <div class="text-center mb-3">
-            <h1>&nbsp; {% trans "Bildarkiv" %} &nbsp;</h1>
-            <div class="back-btn"><a href="{% url 'archive:years' %}"><i class="fas fa-chevron-left"></i> Tillbaka</a></div>
-        </div>
-        {% if collections %}
-            <div class="row g-2 g-md-3 justify-content-center">
-                {% for collection in collections %}
-                    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                        <a
-                            href="{% if collection.redirect_url %}{{ collection.redirect_url }}{% else %}{% url 'archive:detail' year collection.title %}{% endif %}"
-                            class="album-card-link text-decoration-none"
-                            {% if collection.redirect_url %}target="_blank" rel="noopener noreferrer"{% endif %}>
-                            <div class="card album-card h-100">
-                                <div class="album-thumb-wrapper">
-                                    {% if collection.album_thumbnail_url %}
-                                        <img class="album-thumb" src="{{ collection.album_thumbnail_url }}" loading="lazy" alt="{{ collection.title }}">
-                                    {% endif %}
-                                </div>
-                                <div class="card-body p-2">
-                                    <h5 class="card-title text-truncate mb-1" title="{{ collection.title }}">{{ collection.title }}</h5>
-                                    <p class="card-text small mb-0">
-                                        <i class="far fa-calendar-alt"></i> {{ collection.pub_date_pretty }}
-                                    </p>
-                                    <p class="card-text small mb-0">
-                                        <i class="far fa-images"></i>
-                                        {% blocktranslate count picture_count=collection.picture_count trimmed %}
-                                            {{ picture_count }} Bild
-                                        {% plural %}
-                                            {{ picture_count }} Bilder
-                                        {% endblocktranslate %}
-                                    </p>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <h3>{% trans "Inga arkiv hittades..." %}</h3>
-        {% endif %}
+  <div class="container-md min-vh-100 container-margin-top p-1">
+    <div class="text-center mb-3">
+      <h1>&nbsp; {% trans "Bildarkiv" %} &nbsp;</h1>
+      <div class="back-btn">
+        <a href="{% url 'archive:years' %}"><i class="fas fa-chevron-left"></i> Tillbaka</a>
+      </div>
     </div>
+    {% if collections %}
+      <div class="row g-2 g-md-3 justify-content-center">
+        {% for collection in collections %}
+          <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+            <a href="{% if collection.redirect_url %}{{ collection.redirect_url }}{% else %}{% url 'archive:detail' year collection.title %}{% endif %}"
+               class="album-card-link text-decoration-none"
+               {% if collection.redirect_url %}target="_blank" rel="noopener noreferrer"{% endif %}>
+              <div class="card album-card h-100">
+                <div class="album-thumb-wrapper">
+                  {% if collection.album_thumbnail_url %}
+                    <img class="album-thumb"
+                         src="{{ collection.album_thumbnail_url }}"
+                         loading="lazy"
+                         alt="{{ collection.title }}">
+                  {% endif %}
+                </div>
+                <div class="card-body p-2">
+                  <h5 class="card-title text-truncate mb-1" title="{{ collection.title }}">{{ collection.title }}</h5>
+                  <p class="card-text small mb-0">
+                    <i class="far fa-calendar-alt"></i> {{ collection.pub_date_pretty }}
+                  </p>
+                  <p class="card-text small mb-0">
+                    <i class="far fa-images"></i>
+                    {% blocktranslate count picture_count=collection.picture_count trimmed %}
+                      {{ picture_count }} Bild
+                    {% plural %}
+                      {{ picture_count }} Bilder
+                    {% endblocktranslate %}
+                  </p>
+                </div>
+              </div>
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <h3>{% trans "Inga arkiv hittades..." %}</h3>
+    {% endif %}
+  </div>
 {% endblock %}

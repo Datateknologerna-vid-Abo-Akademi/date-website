@@ -18,30 +18,27 @@ TEMPLATES = [
     },
 ]
 
-INSTALLED_APPS = get_installed_apps([
-    'news',
-    'events',
-    'polls',
-    'ads',
-    'instagram',
-    'harassment',
-    'social',
-    'staticpages',
-    'exambank',
-    'publications',
-    'billing',
-])
+INSTALLED_APPS = get_installed_apps(
+    [
+        'news',
+        'events',
+        'polls',
+        'ads',
+        'instagram',
+        'harassment',
+        'social',
+        'staticpages',
+        'exambank',
+        'publications',
+        'billing',
+    ]
+)
 
 ROOT_URLCONF = 'core.urls.pulterit'
 ARCHIVE_ENABLED = False
 MEMBERS_SIGNUP_ENABLED = False
 
-STAFF_GROUPS = get_staff_groups([
-        'styrelse',
-        'admin',
-        'fotograf',
-        'rösträknare'
-    ])
+STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
 
 STATICFILES_DIRS = [

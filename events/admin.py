@@ -1,31 +1,31 @@
 import logging
-from django.http import HttpResponseRedirect
-from django.contrib import messages
-from django.contrib import admin
-from django.conf import settings
-from django.db.models import Count, IntegerField, JSONField, OuterRef, Subquery, TextField, Value
-from django.db.models.functions import Coalesce
-from django.shortcuts import render
-from django.template.response import TemplateResponse
-from django_ckeditor_5.widgets import CKEditor5Widget
-from django.urls import reverse, re_path
-from django.utils.html import format_html
-from django.utils.timezone import now
-from django.utils.translation import gettext_lazy as _
-from core.admin_base import ModelAdmin, PublicUrlAdminMixin, TabularInline, UNFOLD_FORMFIELD_OVERRIDES
-from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
 
 # Translation and Ordering imports
 from admin_ordering.admin import OrderableAdmin
+from django.conf import settings
+from django.contrib import admin, messages
+from django.db.models import Count, IntegerField, JSONField, OuterRef, Subquery, TextField, Value
+from django.db.models.functions import Coalesce
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from django.template.response import TemplateResponse
+from django.urls import re_path, reverse
+from django.utils.html import format_html
+from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
+from django_ckeditor_5.widgets import CKEditor5Widget
 
 from core.admin import ActiveLanguageTranslationAdminMixin
+from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin, TabularInline
+from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
 from events import forms
 from events.models import Event, EventAttendees, EventRegistrationForm, registration_terms_feature_enabled
+
 from .widgets import PrettyJSONWidget
 
 logger = logging.getLogger('date')
 
-if settings.ENABLE_LANGUAGE_FEATURES:
+if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
     from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 
     # MRO when USE_UNFOLD=True: Mixin → Translation → unfold.TabularInline → admin.TabularInline
@@ -37,8 +37,8 @@ if settings.ENABLE_LANGUAGE_FEATURES:
     class EventTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
         pass
 else:
-    EventTranslationInlineBase = TabularInline
-    EventTranslationAdminBase = ModelAdmin
+    EventTranslationInlineBase = TabularInline  # type: ignore[misc, assignment]
+    EventTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
 class AvecAwareMixin:
@@ -88,8 +88,7 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
     ordering = ['attendee_nr']
 
     def get_fields(self, request, event):
-        fields = ['attendee_nr', 'user', 'email',
-                  'anonymous', 'preferences', 'time_registered']
+        fields = ['attendee_nr', 'user', 'email', 'anonymous', 'preferences', 'time_registered']
         if event and event.children.exists():
             fields.append('original_event')
         if self._event_uses_avec(event):
@@ -171,8 +170,15 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
         TextField: {'widget': CKEditor5Widget},
     }
     list_display = (
-        'title', 'created_time', 'event_date_start', 'get_attendee_count', 
-        'sign_up_max_participants', 'publication_status', 'published_time', 'account_actions', 'parent'
+        'title',
+        'created_time',
+        'event_date_start',
+        'get_attendee_count',
+        'sign_up_max_participants',
+        'publication_status',
+        'published_time',
+        'account_actions',
+        'parent',
     )
     search_fields = ('title', 'slug', 'author__first_name', 'author__last_name', 'author__username', 'author__email')
     list_filter = (EventPublicationFilter, 'sign_up', 'members_only')
@@ -184,31 +190,31 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
 
     form = forms.EventCreationForm
 
-    inlines = [
-        EventRegistrationFormInline,
-        EventAttendeesFormInline
-    ]
+    inlines = [EventRegistrationFormInline, EventAttendeesFormInline]
 
     def get_queryset(self, request):
         attendee_sq = (
-            EventAttendees.objects
-            .filter(event=OuterRef('pk'))
+            EventAttendees.objects.filter(event=OuterRef('pk'))
             .order_by()
             .values('event')
             .annotate(cnt=Count('pk'))
             .values('cnt')
         )
         original_sq = (
-            EventAttendees.objects
-            .filter(original_event=OuterRef('pk'))
+            EventAttendees.objects.filter(original_event=OuterRef('pk'))
             .order_by()
             .values('original_event')
             .annotate(cnt=Count('pk'))
             .values('cnt')
         )
-        return super().get_queryset(request).select_related('author', 'parent').annotate(
-            _attendee_count=Coalesce(Subquery(attendee_sq, output_field=IntegerField()), Value(0)),
-            _original_event_attendee_count=Coalesce(Subquery(original_sq, output_field=IntegerField()), Value(0)),
+        return (
+            super()
+            .get_queryset(request)
+            .select_related('author', 'parent')
+            .annotate(
+                _attendee_count=Coalesce(Subquery(attendee_sq, output_field=IntegerField()), Value(0)),
+                _original_event_attendee_count=Coalesce(Subquery(original_sq, output_field=IntegerField()), Value(0)),
+            )
         )
 
     def get_fields(self, request, obj=None):
@@ -221,20 +227,16 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
         urls = super().get_urls()
         custom_urls = [
             re_path(
-                r'^(?P<event_id>.+)/list/$',
-                self.admin_site.admin_view(self.process_list),
-                name="registration_list"
+                r'^(?P<event_id>.+)/list/$', self.admin_site.admin_view(self.process_list), name="registration_list"
             ),
         ]
         return custom_urls + urls
 
+    @admin.display(description="Deltagarlista")
     def account_actions(self, obj):
         return format_html(
-            '<a class="button" href="{}">Deltagarlista</a>&nbsp;',
-            reverse('admin:registration_list', args=[obj.pk])
+            '<a class="button" href="{}">Deltagarlista</a>&nbsp;', reverse('admin:registration_list', args=[obj.pk])
         )
-
-    account_actions.short_description = 'Deltagarlista'
 
     @admin.action(description="Delete all attendees for selected events")
     def delete_participants(self, request, queryset):
@@ -269,6 +271,7 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
         css = {'all': FLATPICKR_ADMIN_CSS}
         js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS + ('core/js/eventform.js',)
 
+    @admin.display(description="Anmälda")
     def get_attendee_count(self, obj):
         if obj.parent:
             count = getattr(obj, '_original_event_attendee_count', None)
@@ -281,17 +284,13 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
             return count
         return obj.get_registrations().count()
 
+    @admin.display(description=_("Publicering"), ordering="published_time")
     def publication_status(self, obj):
         if obj.published_time is None:
             return _('Dold')
         if obj.published_time > now():
             return _('Schemalagd')
         return _('Publicerad')
-
-    publication_status.short_description = _('Publicering')
-    publication_status.admin_order_field = 'published_time'
-
-    get_attendee_count.short_description = 'Anmälda'
 
     def add_view(self, request, form_url='', extra_context=None):
         return super().add_view(request, form_url, extra_context)

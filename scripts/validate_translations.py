@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
 import sys
-
+from pathlib import Path
 
 REQUIRED_LOCALES = ("sv", "en", "fi")
 
@@ -47,7 +46,7 @@ def parse_po(path: Path) -> tuple[int, int]:
                 current_plural_index = int(line[7:index_end])
                 in_msgid = False
                 in_msgstr = False
-                plural_msgstrs[current_plural_index] = line[index_end + 3:-1]
+                plural_msgstrs[current_plural_index] = line[index_end + 3 : -1]
                 continue
             if line.startswith('"'):
                 if in_msgid:

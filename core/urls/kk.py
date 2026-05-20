@@ -19,9 +19,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
 
-from date import views as date
 from core.admin import admin_site
 from core.urls.common import build_urlpatterns
+from date import views as date
 
 app_name = 'core'
 
@@ -33,8 +33,8 @@ urlpatterns = build_urlpatterns(
     path('archive/', include('archive.urls')),
     path('events/', include('events.urls')),
     path('pages/', include('staticpages.urls')),
-    path('ads/',include('ads.urls')),
-    path('social/',include('social.urls')),
+    path('ads/', include('ads.urls')),
+    path('social/', include('social.urls')),
     path('polls/', include('polls.urls')),
     path('lucia/', include('lucia.urls')),
     path('publications/', include('publications.urls')),
@@ -44,7 +44,7 @@ urlpatterns = build_urlpatterns(
 )
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)  # type: ignore[arg-type]
 
 handler404 = date.handler404
 handler500 = date.handler500

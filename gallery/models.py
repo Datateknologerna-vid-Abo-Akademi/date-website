@@ -39,7 +39,7 @@ def compress_image(uploaded_image):
     return InMemoryUploadedFile(
         output_io_stream,
         'ImageField',
-        "%s.jpg" % uploaded_image.name.split('.')[0],
+        f"{uploaded_image.name.split('.')[0]}.jpg",
         'image/jpeg',
         sys.getsizeof(output_io_stream),
         None,
@@ -94,15 +94,16 @@ class Photo(models.Model):
     def __str__(self):
         return self.image.name
 
-    def get_file_path(self):
-        return self.image.url
-
     def save(self, *args, **kwargs):
         if not self.id:
             self.image = compress_image(self.image)
         super().save(*args, **kwargs)
 
-    if not settings.USE_S3:
+    def get_file_path(self):
+        return self.image.url
+
+    if not settings.USE_S3:  # type: ignore[misc]
+
         def delete(self, using=None, keep_parents=False):
             try:
                 os.remove(os.path.join(settings.MEDIA_ROOT, self.image.name))

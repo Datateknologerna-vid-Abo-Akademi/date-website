@@ -4,11 +4,11 @@ from contextlib import ExitStack
 
 from django.conf import settings
 from django.db import connections
-from django.http import HttpResponse
 from django.shortcuts import render
 from django.utils import translation
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.translation import get_language_from_request
+
 from .language_utils import resolve_language
 
 
@@ -81,7 +81,7 @@ class ServerTimingMiddleware:
         query_label = "query" if db_timing["count"] == 1 else "queries"
         response["Server-Timing"] = (
             f"app;dur={total_duration:.1f}, "
-            f"db;dur={db_timing['duration']:.1f};desc=\"{db_timing['count']} {query_label}\""
+            f'db;dur={db_timing['duration']:.1f};desc="{db_timing['count']} {query_label}"'
         )
         return response
 
@@ -116,9 +116,11 @@ class CDNRewriteMiddleware:
                 # Keep presigned private-media URLs on their original host, since
                 # their signatures cover the request host and break if rewritten.
                 response.content = pattern.sub(
-                    lambda match: match.group(0)
-                    if any(marker in match.group(0) for marker in self.PRESIGNED_S3_MARKERS)
-                    else match.group(0).replace(original, new, 1),
+                    lambda match, orig=original, repl=new: (
+                        match.group(0)
+                        if any(marker in match.group(0) for marker in self.PRESIGNED_S3_MARKERS)
+                        else match.group(0).replace(orig, repl, 1)
+                    ),
                     response.content,
                 )
         # Streaming responses do not expose a mutable `.content` buffer here.

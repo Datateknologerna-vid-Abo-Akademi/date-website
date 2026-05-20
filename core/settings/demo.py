@@ -17,28 +17,25 @@ TEMPLATES = [
     },
 ]
 
-INSTALLED_APPS = get_installed_apps([
-    'news',
-    'gallery',
-    'exambank',
-    'archive',
-    'events',
-    'polls',
-    'ads',
-    'instagram',
-    'harassment',
-    'social',
-    'staticpages',
-])
+INSTALLED_APPS = get_installed_apps(
+    [
+        'news',
+        'gallery',
+        'exambank',
+        'archive',
+        'events',
+        'polls',
+        'ads',
+        'instagram',
+        'harassment',
+        'social',
+        'staticpages',
+    ]
+)
 
 ROOT_URLCONF = 'core.urls.demo'
 
-STAFF_GROUPS = get_staff_groups([
-    'styrelse',
-    'admin',
-    'fotograf',
-    'rösträknare'
-])
+STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
 
 STATICFILES_DIRS = [

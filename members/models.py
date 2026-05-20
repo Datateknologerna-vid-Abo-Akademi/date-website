@@ -1,12 +1,12 @@
 import logging
 
+from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from django.conf import settings
 from core.utils import send_email_task
 
 from .managers import MemberManager
@@ -27,7 +27,7 @@ PERMISSION_PROFILES = (
 )
 
 
-class Member(AbstractBaseUser, PermissionsMixin):
+class Member(AbstractBaseUser, PermissionsMixin):  # type: ignore[django-manager-missing]
     username = models.CharField(_('Användarnamn'), unique=True, max_length=20, blank=False)
     email = models.EmailField(_('E-postadress'), unique=True, blank=True, null=True)
     first_name = models.CharField(_('Förnamn'), max_length=30, blank=True)
@@ -37,7 +37,9 @@ class Member(AbstractBaseUser, PermissionsMixin):
     zip_code = models.CharField(_('Postkod'), max_length=5, blank=True)
     city = models.CharField(_('Postanstalt'), max_length=30, blank=True)
     country = models.CharField(_('Land'), max_length=30, default=_('Finland'), blank=True)
-    membership_type = models.ForeignKey("members.MembershipType", default=FRESHMAN, blank=False, on_delete=models.CASCADE)
+    membership_type = models.ForeignKey(
+        "members.MembershipType", default=FRESHMAN, blank=False, on_delete=models.CASCADE
+    )
     year_of_admission = models.IntegerField(_('Inskrivningsår'), blank=True, null=True)
     github_id = models.BigIntegerField(_('GitHub ID'), unique=True, blank=True, null=True)
     is_active = models.BooleanField(default=True)
@@ -51,7 +53,7 @@ class Member(AbstractBaseUser, PermissionsMixin):
         ordering = ('id',)
 
     def __unicode__(self):
-        return u'{0} ({1})'.format(self.get_full_name(), self.email)
+        return f"{self.get_full_name()} ({self.email})"
 
     @property
     def is_staff(self):
@@ -63,15 +65,13 @@ class Member(AbstractBaseUser, PermissionsMixin):
 
     @property
     def active_payment(self):
-        return self.subscriptionpayment_set.filter(
-            date_expires__gte=timezone.now()
-        ).order_by('-date_expires').first()
+        return self.subscriptionpayment_set.filter(date_expires__gte=timezone.now()).order_by('-date_expires').first()
 
     def get_full_name(self):
         """
         :return: First and last name with space between
         """
-        return u'{0} {1}'.format(self.first_name, self.last_name)
+        return f"{self.first_name} {self.last_name}"
 
     def get_short_name(self):
         return self.first_name
@@ -120,7 +120,7 @@ SUBSCRIPTION_RENEWAL_SCALES = (
 class Subscription(models.Model):
     name = models.CharField(_('Namn'), max_length=200, blank=False)
     does_expire = models.BooleanField(_('Upphör'), default=True)
-    renewal_scale = models.CharField(
+    renewal_scale = models.CharField(  # noqa: DJ001
         _('Förnyelse skala'), max_length=10, choices=SUBSCRIPTION_RENEWAL_SCALES, blank=False, null=True
     )
     renewal_period = models.IntegerField(_('Förnyelseperiod'), blank=True, null=True)
@@ -161,4 +161,3 @@ class SubscriptionPayment(models.Model):
         if self.date_expires is None:
             return _('Aldrig')
         return self.date_expires
-

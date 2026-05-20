@@ -1,4 +1,4 @@
-    <script id="custom" defer>
+<script id="custom" defer>
         // element with id "calendar_json" is populated by django as defined in views.py context object
         const calendarScript = document.querySelector('script#calendar_json');
         const events_json = calendarScript ? JSON.parse(calendarScript.textContent) : {};
@@ -97,8 +97,8 @@
             });
             calendarPopups.init();
         });
-    </script>
-    <script>
+</script>
+<script>
         $(".carousel-logos").jCarouselLite({
         circular: true,
         vertical: true,
@@ -107,4 +107,4 @@
         pause: true,
         visible: 4
         });
-    </script>
+</script>

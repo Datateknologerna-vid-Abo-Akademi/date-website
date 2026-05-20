@@ -1,8 +1,8 @@
-import sys
 import os
+import sys
 from io import StringIO
-import django
 
+import django
 
 sys.path.append("/code")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings.date")
@@ -29,4 +29,3 @@ with StringIO() as output:
         output.write(f"FLAG: {flag} - Number of inputs: {count}\n")
 
     print(output.getvalue())
-

@@ -2,17 +2,26 @@ import csv
 
 from django.contrib import admin
 from django.http import HttpResponse
-from django.urls import reverse, re_path
+from django.urls import re_path, reverse
 from django.utils.html import format_html
+
 from core.admin_base import ModelAdmin
 
-from .models import EventInvoice, EventBillingConfiguration
+from .models import EventBillingConfiguration, EventInvoice
 from .util import BillingIntegrations
 
 
 @admin.register(EventInvoice)
 class EventInvoiceAdmin(ModelAdmin):
-    list_display = ('participant', 'invoice_number', 'reference_number', 'invoice_date', 'due_date', 'amount', 'currency')
+    list_display = (
+        'participant',
+        'invoice_number',
+        'reference_number',
+        'invoice_date',
+        'due_date',
+        'amount',
+        'currency',
+    )  # noqa: E501
     search_fields = (
         'invoice_number',
         'reference_number',
@@ -44,13 +53,11 @@ class EventBillingConfigurationAdmin(ModelAdmin):
         ]
         return my_urls + urls
 
+    @admin.display(description="Exportera data")
     def ref_export(self, obj):
         return format_html(
-            '<a class="button" href={}>Exportera data</a>&nbsp;',
-            reverse('admin:billing_ref_numbers', args=[obj.pk])
+            '<a class="button" href={}>Exportera data</a>&nbsp;', reverse('admin:billing_ref_numbers', args=[obj.pk])
         )
-
-    ref_export.short_description = 'Exportera data'
 
     def ref_numbers(self, request, conf_id):
         bconfig = self.get_object(request, conf_id)
@@ -58,26 +65,36 @@ class EventBillingConfigurationAdmin(ModelAdmin):
 
         response = HttpResponse(
             content_type='text/csv',
-            headers={'Content-Disposition': f'attachment; filename="{event.title}_ref_numbers.csv"'}
+            headers={'Content-Disposition': f'attachment; filename="{event.title}_ref_numbers.csv"'},
         )
 
         if bconfig.integration_type == BillingIntegrations.INVOICE.value:
             invoices = EventInvoice.objects.filter(participant__event=event)
-            fieldnames = ['name', 'email', 'invoice_number', 'reference_number', 'invoice_date', 'due_date', 'amount',
-                          'currency']
+            fieldnames = [
+                'name',
+                'email',
+                'invoice_number',
+                'reference_number',
+                'invoice_date',
+                'due_date',
+                'amount',
+                'currency',
+            ]
             writer = csv.DictWriter(response, fieldnames=fieldnames)
             writer.writeheader()
             for invoice in invoices:
-                writer.writerow({
-                    'name': invoice.participant.user,
-                    'email': invoice.participant.email,
-                    'invoice_number': invoice.invoice_number,
-                    'reference_number': invoice.reference_number,
-                    'invoice_date': invoice.invoice_date,
-                    'due_date': invoice.due_date,
-                    'amount': invoice.amount,
-                    'currency': invoice.currency
-                })
+                writer.writerow(
+                    {
+                        'name': invoice.participant.user,
+                        'email': invoice.participant.email,
+                        'invoice_number': invoice.invoice_number,
+                        'reference_number': invoice.reference_number,
+                        'invoice_date': invoice.invoice_date,
+                        'due_date': invoice.due_date,
+                        'amount': invoice.amount,
+                        'currency': invoice.currency,
+                    }
+                )
         else:
             return HttpResponse("Integration not supported", 400)
 

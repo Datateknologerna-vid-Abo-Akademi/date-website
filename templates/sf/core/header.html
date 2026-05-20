@@ -1,9 +1,9 @@
 {% extends "core/header.html" %}
-
 {% block header_logo %}
-<a id="logo" class="navbar-brand header-logo-text" href="{% url 'index' %}">SF</a>
+  <a id="logo"
+     class="navbar-brand header-logo-text"
+     href="{% url 'index' %}">SF</a>
 {% endblock %}
-
 {% block header_nav_items %}
-{% include "core/header_nav_items.html" with show_submenus=True %}
+  {% include "core/header_nav_items.html" with show_submenus=True %}
 {% endblock %}

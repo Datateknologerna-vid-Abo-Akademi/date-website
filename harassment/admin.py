@@ -10,10 +10,9 @@ class HarassmentAdmin(ModelAdmin):
     list_display = ('email', 'message_preview')
     search_fields = ('email', 'message')
 
+    @admin.display(description="Message")
     def message_preview(self, obj):
         return obj.message[:80] + '...' if len(obj.message) > 80 else obj.message
-
-    message_preview.short_description = 'Message'
 
 
 @admin.register(HarassmentEmailRecipient)

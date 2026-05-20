@@ -1,10 +1,9 @@
 import random
-
-from django.utils import timezone
 from io import BytesIO
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 from PIL import Image, ImageDraw
 
 from gallery.models import Album, Photo
@@ -12,10 +11,22 @@ from gallery.models import Album, Photo
 SEED_PREFIX = "[Seed] "
 
 ALBUM_NAMES = [
-    "Mottagningen", "Sittning", "Gasque", "Nollning",
-    "Tentafest", "Pubrunda", "Sommarfest", "Vinterfest",
-    "Kickoff", "Avslutning", "Jubileum", "Afterwork",
-    "Pluggkväll", "Filmkväll", "Grillkväll", "Skidresa",
+    "Mottagningen",
+    "Sittning",
+    "Gasque",
+    "Nollning",
+    "Tentafest",
+    "Pubrunda",
+    "Sommarfest",
+    "Vinterfest",
+    "Kickoff",
+    "Avslutning",
+    "Jubileum",
+    "Afterwork",
+    "Pluggkväll",
+    "Filmkväll",
+    "Grillkväll",
+    "Skidresa",
 ]
 
 
@@ -98,8 +109,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         from django.conf import settings
+
         if not getattr(settings, 'DEVELOP', False):
-            raise CommandError("seed_gallery must not be run outside of a development environment (DEVELOP must be True).")
+            raise CommandError(
+                "seed_gallery must not be run outside of a development environment (DEVELOP must be True)."
+            )
         if getattr(settings, 'USE_S3', False):
             raise CommandError("seed_gallery must not be run with USE_S3=True — it would upload fake images to S3.")
 
@@ -118,9 +132,7 @@ class Command(BaseCommand):
         pool = ALBUM_NAMES * (album_count // len(ALBUM_NAMES) + 1)
         names = random.sample(pool, album_count)
 
-        self.stdout.write(
-            f"Seeding {album_count} album(s) × {image_count} image(s) each…"
-        )
+        self.stdout.write(f"Seeding {album_count} album(s) × {image_count} image(s) each…")
 
         for i, name in enumerate(names):
             year = random.randint(2021, 2025)
@@ -147,8 +159,5 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(" done"))
 
         self.stdout.write(
-            self.style.SUCCESS(
-                f"\nDone. {album_count} album(s) created."
-                f" Run with --clear to remove them."
-            )
+            self.style.SUCCESS(f"\nDone. {album_count} album(s) created. Run with --clear to remove them.")
         )

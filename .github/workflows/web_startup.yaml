@@ -170,3 +170,31 @@ jobs:
           set -euo pipefail
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           docker-compose down -v
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Ruff lint
+        run: uvx ruff@0.15.13 check .
+
+      - name: Ruff format check
+        run: uvx ruff@0.15.13 format --check .
+
+      - name: djlint check
+        run: uvx djlint@1.36.4 --check templates/
+
+      - name: mypy
+        run: |
+          uv sync --frozen --group dev
+          uv run mypy .

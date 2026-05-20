@@ -1,26 +1,28 @@
-import sys
-import os
-import django
 import csv
 import json
+import os
+import sys
 
+import django
 
 sys.path.append("/code")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings.date")
 django.setup()
 
 from django.conf import settings
+
 from alumni.gsuite_adapter import DateSheetsAdapter
 
 # Load alumni settings
 try:
-    ALUMNI_SETTINGS = json.loads(settings.ALUMNI_SETTINGS)
+    ALUMNI_SETTINGS = json.loads(settings.ALUMNI_SETTINGS)  # type: ignore[misc]
     AUTH, SHEET = ALUMNI_SETTINGS.get("auth", {}), ALUMNI_SETTINGS.get("sheet")
 except Exception as e:
     print("Error while loading alumni settings:", e)
     sys.exit(1)
 
 MEMBER_SHEET_NAME = "members"  # Should match the sheet name
+
 
 def main(csv_path):
     client = DateSheetsAdapter(AUTH, SHEET, MEMBER_SHEET_NAME)
@@ -46,16 +48,19 @@ def main(csv_path):
                 row.get("Inskriven på KTF/MNF/KT/FNT"),
                 row.get("Blivit medlem"),
                 row.get("Uppgifterna uppdaterade"),
-                1, # Set everyone as paid when importing
+                1,  # Set everyone as paid when importing
                 0,
                 row.get("Medlemskap"),
             ]
             client.append_row(data)
             print(f"Added alumni: {row.get('Förnamn')} {row.get('Efternamn')}")
-            audit_client.append_row([
-                "IMPORT",
-                json.dumps(row),
-            ])
+            audit_client.append_row(
+                [
+                    "IMPORT",
+                    json.dumps(row),
+                ]
+            )
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

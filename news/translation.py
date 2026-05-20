@@ -1,13 +1,17 @@
-from modeltranslation.translator import register, TranslationOptions
+from modeltranslation.translator import TranslationOptions, register
+
 from core.modeltranslation import get_translation_languages
-from news.models import Post, Category
+from news.models import Category, Post
 
 TRANSLATION_LANGUAGES = get_translation_languages()
 
 
 @register(Post)
 class PostTranslationOptions(TranslationOptions):
-    fields = ('title', 'content',)
+    fields = (
+        'title',
+        'content',
+    )
     languages = TRANSLATION_LANGUAGES
 
 

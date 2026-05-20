@@ -15,7 +15,7 @@ class EventFeed(ICalFeed):
 
     def __call__(self, request, *args, **kwargs):
         self.host = request.get_host()
-        return super(EventFeed, self).__call__(request, *args, **kwargs)
+        return super().__call__(request, *args, **kwargs)
 
     def items(self):
         return Event.objects.published().order_by('-event_date_start')
@@ -24,7 +24,7 @@ class EventFeed(ICalFeed):
         return "{}{}".format(item.id, 'date.abo.fi')
 
     def item_title(self, item):
-        return "{}".format(item.title)
+        return f"{item.title}"
 
     def item_description(self, item):
         text_only = re.sub('[ \t]+', ' ', strip_tags(item.content))

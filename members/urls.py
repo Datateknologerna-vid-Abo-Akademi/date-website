@@ -1,12 +1,11 @@
 import django.views.generic
 from django.conf import settings
 from django.contrib.auth import views as auth_views
-from django.urls import include, path, re_path
+from django.urls import path, re_path
 
-from . import two_factor
-from . import views
-from . import views_github
 from functionaries import views as functionary_views
+
+from . import two_factor, views, views_github
 
 app_name = 'members'
 
@@ -34,4 +33,10 @@ if getattr(settings, 'MEMBERS_SIGNUP_ENABLED', True):
     urlpatterns.insert(0, re_path(r'^signup/$', views.signup, name='signup'))
 
 if "alumni" in settings.INSTALLED_APPS:
-    urlpatterns += [path('alumn/signup', django.views.generic.RedirectView.as_view(url='/alumni/signup/', permanent=True), name='alumni_signup'),]
+    urlpatterns += [
+        path(
+            'alumn/signup',
+            django.views.generic.RedirectView.as_view(url='/alumni/signup/', permanent=True),
+            name='alumni_signup',
+        ),  # noqa: E501
+    ]

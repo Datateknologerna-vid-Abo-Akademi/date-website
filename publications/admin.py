@@ -3,7 +3,9 @@ import logging
 from django import forms
 from django.contrib import admin
 from django.utils.html import format_html
+
 from core.admin_base import ModelAdmin, PublicUrlAdminMixin
+
 from .models import PDFFile, PublicationCollection
 
 logger = logging.getLogger('date')
@@ -24,7 +26,7 @@ class PublicationCollectionAdminForm(forms.ModelForm):
 
     class Meta:
         model = PublicationCollection
-        fields = '__all__'
+        fields = '__all__'  # noqa: DJ007
 
     def clean(self):
         cleaned_data = super().clean()
@@ -55,17 +57,26 @@ class PublicationCollectionAdmin(ModelAdmin):
     filter_horizontal = ('allowed_membership_types',)
     readonly_fields = ('created_at', 'updated_at', 'has_password')
     fieldsets = (
-        (None, {
-            'fields': ('title', 'slug', 'description', 'cover_image', 'ordering', 'is_active'),
-        }),
-        ('Access Control', {
-            'fields': ('visibility', 'allowed_membership_types', 'password', 'clear_password', 'has_password'),
-            'description': 'Controls whether this collection is listed and who can open its publications.',
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',),
-        }),
+        (
+            None,
+            {
+                'fields': ('title', 'slug', 'description', 'cover_image', 'ordering', 'is_active'),
+            },
+        ),
+        (
+            'Access Control',
+            {
+                'fields': ('visibility', 'allowed_membership_types', 'password', 'clear_password', 'has_password'),
+                'description': 'Controls whether this collection is listed and who can open its publications.',
+            },
+        ),
+        (
+            'Timestamps',
+            {
+                'fields': ('created_at', 'updated_at'),
+                'classes': ('collapse',),
+            },
+        ),
     )
 
     def get_prepopulated_fields(self, request, obj=None):
@@ -84,7 +95,16 @@ class PublicationCollectionAdmin(ModelAdmin):
 
 @admin.register(PDFFile)
 class PDFFileAdmin(PublicUrlAdminMixin, ModelAdmin):
-    list_display = ('title', 'collection', 'publication_date', 'is_external_link', 'is_public', 'requires_login', 'uploaded_at', 'updated_at')
+    list_display = (
+        'title',
+        'collection',
+        'publication_date',
+        'is_external_link',
+        'is_public',
+        'requires_login',
+        'uploaded_at',
+        'updated_at',
+    )
     list_filter = ('collection', 'is_public', 'requires_login', 'uploaded_at', 'updated_at', 'publication_date')
     search_fields = ('title', 'slug', 'description', 'file', 'redirect_url', 'collection__title')
     ordering = ('-uploaded_at',)
@@ -92,17 +112,29 @@ class PDFFileAdmin(PublicUrlAdminMixin, ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('uploaded_at', 'updated_at')
     fieldsets = (
-        (None, {
-            'fields': ('collection', 'title', 'slug', 'publication_date', 'description', 'file', 'redirect_url', 'cover_image')
-        }),
-        ('Access Control', {
-            'fields': ('is_public', 'requires_login'),
-            'description': 'Publication access is checked after the collection access rules.'
-        }),
-        ('Timestamps', {
-            'fields': ('uploaded_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
+        (
+            None,
+            {
+                'fields': (
+                    'collection',
+                    'title',
+                    'slug',
+                    'publication_date',
+                    'description',
+                    'file',
+                    'redirect_url',
+                    'cover_image',
+                )  # noqa: E501
+            },
+        ),
+        (
+            'Access Control',
+            {
+                'fields': ('is_public', 'requires_login'),
+                'description': 'Publication access is checked after the collection access rules.',
+            },
+        ),
+        ('Timestamps', {'fields': ('uploaded_at', 'updated_at'), 'classes': ('collapse',)}),
     )
 
     def get_prepopulated_fields(self, request, obj=None):
@@ -128,6 +160,7 @@ class PDFFileAdmin(PublicUrlAdminMixin, ModelAdmin):
             updated_fieldsets.append((name, {**options, 'fields': fields}))
         return updated_fieldsets
 
+    @admin.display(description="File")
     def file_link(self, obj):
         if not obj or not obj.file:
             return '-'
@@ -140,8 +173,6 @@ class PDFFileAdmin(PublicUrlAdminMixin, ModelAdmin):
         except Exception as exc:
             logger.warning("Unable to resolve PDF file URL for %s: %s", obj.pk, exc)
             return obj.file.name
-
-    file_link.short_description = 'File'
 
     @admin.display(boolean=True, description='External link')
     def is_external_link(self, obj):
