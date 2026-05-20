@@ -16,6 +16,9 @@ When `require_sign_in=True`, access follows the historical member check. When it
 
 Failed password submissions are rate-limited per session: after `EXAM_BANK_PASSWORD_ATTEMPT_LIMIT` (5) failures the gate returns HTTP 429 and refuses further attempts for `EXAM_BANK_PASSWORD_LOCKOUT_SECONDS` (15 minutes). A successful entry clears the counter.
 
+## Admin
+`ExamBankAccessSettings` is edited through an **Åtkomstinställningar** tool link on the `ExamArchiveAdmin` changelist. The singleton settings model is hidden from the app index/sidebar so editors manage exams and their access policy from one exam-bank entry point.
+
 ## Migration Notes
 - `archive.0008_remove_picture_collection_delete_examcollection_and_more` copies legacy `archive.Collection(type="Exams")` rows into `exambank_examarchive` and related `archive.Document` rows into `exambank_examfile`.
 - Primary keys are preserved where possible.

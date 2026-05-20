@@ -201,12 +201,6 @@ SIDEBAR_NAVIGATION = (
                 url_name='admin:exambank_examarchive_changelist',
                 any_permissions=('exambank.view_examarchive', 'archive.view_examcollection'),
             ),
-            AdminLink(
-                _('Exam Access'),
-                icon='password',
-                url_name='admin:exambank_exambankaccesssettings_changelist',
-                permission='exambank.view_exambankaccesssettings',
-            ),
         ),
     ),
     AdminSidebarGroup(
