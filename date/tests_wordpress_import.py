@@ -1,8 +1,8 @@
 from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from urllib.parse import urlparse
 from unittest.mock import patch
+from urllib.parse import urlparse
 
 from django.core.management import call_command
 from django.test import TestCase, override_settings
@@ -295,11 +295,15 @@ class WordPressImportCommandTests(TestCase):
             self.assertEqual(page.title, "Imported Page")
 
             self.assertFalse(PDFFile.objects.filter(slug="imported-pdf").exists())
-            self.assertTrue((Path(work_dir) / "media" / "wordpress/test/wp-content/uploads/2026/05/imported.pdf").exists())
+            self.assertTrue(
+                (Path(work_dir) / "media" / "wordpress/test/wp-content/uploads/2026/05/imported.pdf").exists()
+            )
 
             publication = PDFFile.objects.get(title="A&O 01/2026")
             self.assertEqual(publication.collection.slug, "ao")
-            self.assertEqual(publication.collection.cover_image.name, "wordpress/test/wp-content/uploads/2022/04/aologo.png")
+            self.assertEqual(
+                publication.collection.cover_image.name, "wordpress/test/wp-content/uploads/2022/04/aologo.png"
+            )
             self.assertFalse(publication.file)
             self.assertEqual(publication.redirect_url, "https://issuu.com/sfklubben/docs/ao-1-2026")
             self.assertEqual(publication.cover_image.name, "wordpress/test/wp-content/uploads/2026/05/ao1.jpg")
@@ -319,7 +323,9 @@ class WordPressImportCommandTests(TestCase):
             politicus_2019 = PDFFile.objects.get(title="Politicus 2019")
             self.assertFalse(politicus_2019.redirect_url)
             self.assertEqual(politicus_2019.file.name, "wordpress/test/wp-content/uploads/2019/11/politicus2019.pdf")
-            self.assertEqual(politicus_2019.cover_image.name, "wordpress/test/wp-content/uploads/2019/11/politicus2019-01.jpg")
+            self.assertEqual(
+                politicus_2019.cover_image.name, "wordpress/test/wp-content/uploads/2019/11/politicus2019-01.jpg"
+            )
 
     def test_imports_navigation(self):
         with TemporaryDirectory() as work_dir, override_settings(MEDIA_ROOT=str(Path(work_dir) / "media")):
@@ -430,9 +436,7 @@ class WordPressImportCommandTests(TestCase):
                 response.content = image_bytes
             return response
 
-        with TemporaryDirectory() as work_dir, override_settings(
-            MEDIA_ROOT=str(Path(work_dir) / "media")
-        ):
+        with TemporaryDirectory() as work_dir, override_settings(MEDIA_ROOT=str(Path(work_dir) / "media")):
             xml_path = Path(work_dir) / "export.xml"
             xml_path.write_text(WORDPRESS_EXPORT, encoding="utf-8")
 
@@ -501,35 +505,32 @@ class WordPressImportCommandTests(TestCase):
             )
 
     def test_imports_exam_archive_from_rtbs_tabs(self):
-        folkratt_pdf = (
-            "https://sfklubben.fi/wp-content/uploads/2024/04/"
-            "Inledning-till-folkratt-29.2.2024-2.pdf"
-        )
-        statskunskap_pdf = (
-            "https://sfklubben.fi/wp-content/uploads/2023/01/Val-och-valmetoder-14.10.2022.pdf"
-        )
-        folkratt_tab = _php_assoc([
-            (_php_str("_rtbs_title"), _php_str("Folkrätt")),
-            (
-                _php_str("_rtbs_content"),
-                _php_str(
-                    f'<p><a href="{folkratt_pdf}">Inledning till Folkrätt 29.2.2024</a></p>'
+        folkratt_pdf = "https://sfklubben.fi/wp-content/uploads/2024/04/Inledning-till-folkratt-29.2.2024-2.pdf"
+        statskunskap_pdf = "https://sfklubben.fi/wp-content/uploads/2023/01/Val-och-valmetoder-14.10.2022.pdf"
+        folkratt_tab = _php_assoc(
+            [
+                (_php_str("_rtbs_title"), _php_str("Folkrätt")),
+                (
+                    _php_str("_rtbs_content"),
+                    _php_str(f'<p><a href="{folkratt_pdf}">Inledning till Folkrätt 29.2.2024</a></p>'),
                 ),
-            ),
-        ])
-        statskunskap_tab = _php_assoc([
-            (_php_str("_rtbs_title"), _php_str("Statskunskap")),
-            (
-                _php_str("_rtbs_content"),
-                _php_str(
-                    f'<p><a href="{statskunskap_pdf}">Val och valmetoder 14.10.2022</a></p>'
+            ]
+        )
+        statskunskap_tab = _php_assoc(
+            [
+                (_php_str("_rtbs_title"), _php_str("Statskunskap")),
+                (
+                    _php_str("_rtbs_content"),
+                    _php_str(f'<p><a href="{statskunskap_pdf}">Val och valmetoder 14.10.2022</a></p>'),
                 ),
-            ),
-        ])
-        payload = _php_assoc([
-            (_php_int_key(0), folkratt_tab),
-            (_php_int_key(1), statskunskap_tab),
-        ])
+            ]
+        )
+        payload = _php_assoc(
+            [
+                (_php_int_key(0), folkratt_tab),
+                (_php_int_key(1), statskunskap_tab),
+            ]
+        )
 
         rtbs_xml = f"""<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0"
@@ -559,9 +560,7 @@ class WordPressImportCommandTests(TestCase):
 </rss>
 """
 
-        with TemporaryDirectory() as work_dir, override_settings(
-            MEDIA_ROOT=str(Path(work_dir) / "media")
-        ):
+        with TemporaryDirectory() as work_dir, override_settings(MEDIA_ROOT=str(Path(work_dir) / "media")):
             work_path = Path(work_dir)
             xml_path = work_path / "export.xml"
             xml_path.write_text(rtbs_xml, encoding="utf-8")
@@ -569,12 +568,10 @@ class WordPressImportCommandTests(TestCase):
             (media_dir / "wp-content" / "uploads" / "2024" / "04").mkdir(parents=True)
             (media_dir / "wp-content" / "uploads" / "2023" / "01").mkdir(parents=True)
             folkratt_path = (
-                media_dir / "wp-content" / "uploads" / "2024" / "04"
-                / "Inledning-till-folkratt-29.2.2024-2.pdf"
+                media_dir / "wp-content" / "uploads" / "2024" / "04" / "Inledning-till-folkratt-29.2.2024-2.pdf"
             )
             statskunskap_path = (
-                media_dir / "wp-content" / "uploads" / "2023" / "01"
-                / "Val-och-valmetoder-14.10.2022.pdf"
+                media_dir / "wp-content" / "uploads" / "2023" / "01" / "Val-och-valmetoder-14.10.2022.pdf"
             )
             folkratt_path.write_bytes(b"%PDF-1.4 folkratt")
             statskunskap_path.write_bytes(b"%PDF-1.4 statskunskap")

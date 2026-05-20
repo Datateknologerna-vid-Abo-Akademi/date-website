@@ -1,14 +1,14 @@
-import sys
 import os
+import sys
+
 import django
 from django.utils.timezone import now
-
 
 sys.path.append("/code")
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings.date")
 django.setup()
 
-from events.models import EventAttendees, Event
+from events.models import Event, EventAttendees
 
 source_index = sys.argv[1]
 target_index = sys.argv[2]
@@ -33,9 +33,7 @@ for participant in source_participants:
 
     avec_for = None
     if participant.avec_for:
-        avec_for = EventAttendees.objects.filter(
-            event=storage_event, email=participant.avec_for.email
-        ).first()
+        avec_for = EventAttendees.objects.filter(event=storage_event, email=participant.avec_for.email).first()
 
     EventAttendees.objects.create(
         user=participant.user,

@@ -12,6 +12,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.ruff_cache/
+.mypy_cache/
 core/static/
 core/templates/static/admin
 core/templates/static/ckeditor

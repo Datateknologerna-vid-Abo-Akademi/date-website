@@ -29,7 +29,7 @@ class AlbumAdminForm(forms.ModelForm):
 
     class Meta:
         model = Album
-        fields = '__all__'
+        fields = '__all__'  # noqa: DJ007
 
     def save(self, *args, **kwargs):
         album = super().save(*args, **kwargs)

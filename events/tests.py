@@ -8,8 +8,8 @@ from django.core.exceptions import ValidationError
 from django.test import Client, TestCase, override_settings
 from django.test.client import RequestFactory
 from django.urls import reverse
-from django.utils.formats import date_format
 from django.utils import timezone, translation
+from django.utils.formats import date_format
 from django.utils.translation import gettext
 from django_ckeditor_5.widgets import CKEditor5Widget
 
@@ -17,7 +17,7 @@ from events.forms import EventCreationForm, EventEditForm
 from events.models import Event, EventAttendees, EventRegistrationForm
 from events.routing import websocket_urlpatterns
 from events.websocket_utils import ws_data, ws_send
-from members.models import Member, ORDINARY_MEMBER, Subscription, SubscriptionPayment, MembershipType
+from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
 from news.models import Category, Post
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
 
@@ -43,11 +43,7 @@ class EventTestCase(TestCase):
         )
 
         subscription = Subscription.objects.create(
-            name="Basic Subscription",
-            does_expire=True,
-            renewal_scale="year",
-            renewal_period=1,
-            price=100.00
+            name="Basic Subscription", does_expire=True, renewal_scale="year", renewal_period=1, price=100.00
         )
 
         self.subpay = SubscriptionPayment.objects.create(
@@ -55,14 +51,17 @@ class EventTestCase(TestCase):
             subscription=subscription,
             date_paid=timezone.now() - timezone.timedelta(days=1),
             date_expires=timezone.now() + timezone.timedelta(days=365),
-            amount_paid=100.00
+            amount_paid=100.00,
         )
 
-        self.event = Event.objects.create(title='Test event',
-                                          slug='test',
-                                          author_id=self.member.id,
-                                          sign_up_deadline=(timezone.now() + timezone.timedelta(days=7))
-                                          )
+        self.event = Event.objects.create(
+            title='Test event',
+            slug='test',
+            author_id=self.member.id,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
+        )
         self.content = {'user': 'person', 'email': 'person@test.com', 'terms_accepted': 'on'}
         self.assertIsNotNone(self.event)
         self.assertTrue(self.event.published)
@@ -90,8 +89,11 @@ class EventTestCase(TestCase):
         self.event.unpublish()
         self.assertEqual(self.event.get_registrations().count(), 0)
         c = Client()
-        response = c.post(reverse('events:detail', args=[self.event.slug]),
-                          {'user': 'person', 'email': 'person@test.com', 'terms_accepted': 'on'}, follow=True)
+        response = c.post(
+            reverse('events:detail', args=[self.event.slug]),
+            {'user': 'person', 'email': 'person@test.com', 'terms_accepted': 'on'},
+            follow=True,
+        )
         self.assertEqual(response.redirect_chain[0][1], 302)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
@@ -329,6 +331,8 @@ class EventTestCase(TestCase):
             title='Biologica VII',
             slug='biologica-vii',
             author_id=self.member.id,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
         )
         c = Client()
@@ -341,6 +345,8 @@ class EventTestCase(TestCase):
             title='Årsfest 2026',
             slug='arsfest-2026',
             author_id=self.member.id,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
         )
         c = Client()
@@ -357,16 +363,24 @@ class EventTestCase(TestCase):
         self.assertEqual(self.event.get_registrations().last().anonymous, True)
         with translation.override(details.wsgi_request.LANGUAGE_CODE):
             anonymous_label = gettext("Anonymt")
-        self.assertContains(details, f'<i>{anonymous_label}</i>', count=1)
+        self.assertContains(details, f"<i>{anonymous_label}</i>", count=1)
 
     def test_custom_fields(self):
-        EventRegistrationForm(event=self.event, choice_number=1, name='field1',
-                              type='text', required=False, public_info=True).save()
-        EventRegistrationForm(event=self.event, choice_number=2, name='field2',
-                              type='select', required=False, public_info=True,
-                              choice_list='choice 1,choice 2,choice 3').save()
-        EventRegistrationForm(event=self.event, choice_number=3, name='field3',
-                              type='checkbox', required=False, public_info=True).save()
+        EventRegistrationForm(
+            event=self.event, choice_number=1, name='field1', type='text', required=False, public_info=True
+        ).save()
+        EventRegistrationForm(
+            event=self.event,
+            choice_number=2,
+            name='field2',
+            type='select',
+            required=False,
+            public_info=True,
+            choice_list='choice 1,choice 2,choice 3',
+        ).save()
+        EventRegistrationForm(
+            event=self.event, choice_number=3, name='field3', type='checkbox', required=False, public_info=True
+        ).save()
 
         c = Client()
         response = c.get(reverse('events:detail', args=[self.event.slug]))
@@ -402,15 +416,27 @@ class EventTestCase(TestCase):
         self.event.save()
 
         EventRegistrationForm.objects.create(
-            event=self.event, choice_number=1, name='meal', type='text', required=False,
+            event=self.event,
+            choice_number=1,
+            name='meal',
+            type='text',
+            required=False,
         )
         c = Client()
-        response = c.post(reverse('events:detail', args=[self.event.slug]), {
-            'user': 'Primary', 'email': 'primary@test.com', 'terms_accepted': 'on',
-            'meal': 'fish',
-            'avec': 'on', 'avec_user': 'Guest', 'avec_email': 'guest@test.com',
-            'avec_meal': 'veg',
-        }, follow=True)
+        response = c.post(
+            reverse('events:detail', args=[self.event.slug]),
+            {
+                'user': 'Primary',
+                'email': 'primary@test.com',
+                'terms_accepted': 'on',
+                'meal': 'fish',
+                'avec': 'on',
+                'avec_user': 'Guest',
+                'avec_email': 'guest@test.com',
+                'avec_meal': 'veg',
+            },
+            follow=True,
+        )
 
         self.assertEqual(response.status_code, 200)
         primary = self.event.get_registrations().get(email='primary@test.com')
@@ -447,7 +473,7 @@ class EventTestCase(TestCase):
             'user': 'person',
             'email': 'person@test.com',
             'terms_accepted': 'on',
-            'cf-turnstile-response': 'test'
+            'cf-turnstile-response': 'test',
         }
         response = c.post(reverse('events:detail', args=[self.event.slug]), content, follow=True)
         mock_validate_captcha.assert_called()
@@ -1060,6 +1086,8 @@ class EventCapacityTests(TestCase):
             slug="full-parent-event",
             author=self.author,
             sign_up_max_participants=1,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
         )
         EventAttendees.objects.create(
@@ -1070,11 +1098,14 @@ class EventCapacityTests(TestCase):
             preferences={},
         )
 
-        response = self.client.post(reverse("events:detail", args=[event.slug]), {
-            "user": "Blocked",
-            "email": "blocked-parent@example.com",
-            "terms_accepted": "on",
-        })
+        response = self.client.post(
+            reverse("events:detail", args=[event.slug]),
+            {
+                "user": "Blocked",
+                "email": "blocked-parent@example.com",
+                "terms_accepted": "on",
+            },
+        )
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(event.get_registrations().count(), 1)
@@ -1091,6 +1122,8 @@ class EventCapacityTests(TestCase):
             author=self.author,
             parent=parent,
             sign_up_max_participants=1,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
         )
         EventAttendees.objects.create(
@@ -1102,11 +1135,14 @@ class EventCapacityTests(TestCase):
             preferences={},
         )
 
-        response = self.client.post(reverse("events:detail", args=[child.slug]), {
-            "user": "Blocked",
-            "email": "blocked-child@example.com",
-            "terms_accepted": "on",
-        })
+        response = self.client.post(
+            reverse("events:detail", args=[child.slug]),
+            {
+                "user": "Blocked",
+                "email": "blocked-child@example.com",
+                "terms_accepted": "on",
+            },
+        )
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(parent.get_registrations().count(), 1)
@@ -1140,6 +1176,8 @@ class EventCapacityTests(TestCase):
             slug="full-rendered-event",
             author=self.author,
             sign_up_max_participants=1,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
         )
         EventAttendees.objects.create(
@@ -1171,6 +1209,8 @@ class EventCapacityTests(TestCase):
             author=self.author,
             parent=parent,
             sign_up_max_participants=1,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
         )
         EventAttendees.objects.create(
@@ -1437,6 +1477,8 @@ class EventTemplateSelectionTests(TestCase):
             slug="selected-arsfest-invalid",
             author=self.author,
             published_time=timezone.now(),
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
             template="events/arsfest.html",
         )
@@ -1491,20 +1533,24 @@ class EventWebsocketUtilsTests(TestCase):
             return self.name
 
     def test_ws_send_emits_messages_for_avec_signups(self):
-        form = SimpleNamespace(cleaned_data={
-            "user": "Primary",
-            "email": "primary@example.com",
-            "anonymous": False,
-            "avec": True,
-            "avec_user": "Guest",
-            "avec_email": "guest@example.com",
-            "meal": "veg",
-        })
+        form = SimpleNamespace(
+            cleaned_data={
+                "user": "Primary",
+                "email": "primary@example.com",
+                "anonymous": False,
+                "avec": True,
+                "avec_user": "Guest",
+                "avec_email": "guest@example.com",
+                "meal": "veg",
+            }
+        )
         public_info = [self.PublicInfo("meal")]
         group_send = MagicMock()
 
-        with patch("events.websocket_utils.get_channel_layer", return_value=SimpleNamespace(group_send=group_send)), \
-                patch("events.websocket_utils.async_to_sync", side_effect=lambda func: func):
+        with (
+            patch("events.websocket_utils.get_channel_layer", return_value=SimpleNamespace(group_send=group_send)),
+            patch("events.websocket_utils.async_to_sync", side_effect=lambda func: func),
+        ):
             ws_send("event-slug", form, public_info)
 
         self.assertEqual(group_send.call_count, 2)
@@ -1514,11 +1560,13 @@ class EventWebsocketUtilsTests(TestCase):
         self.assertEqual(second_payload["data"]["fields"][0], ("user", "Guest"))
 
     def test_ws_data_masks_anonymous_name_and_filters_public_info(self):
-        form = SimpleNamespace(cleaned_data={
-            "user": "Hidden",
-            "anonymous": True,
-            "allergies": "nuts",
-        })
+        form = SimpleNamespace(
+            cleaned_data={
+                "user": "Hidden",
+                "anonymous": True,
+                "allergies": "nuts",
+            }
+        )
         public_info = [self.PublicInfo("allergies")]
 
         with translation.override("fi"):

@@ -4,21 +4,21 @@ from django.db.models import TextField
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.widgets import CKEditor5Widget
-from core.admin_base import ModelAdmin, PublicUrlAdminMixin, UNFOLD_FORMFIELD_OVERRIDES
-from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
 
 from core.admin import ActiveLanguageTranslationAdminMixin
+from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin
+from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
 from news import forms
-from news.models import Post, Category
+from news.models import Category, Post
 
-if settings.ENABLE_LANGUAGE_FEATURES:
+if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
     from modeltranslation.admin import TabbedTranslationAdmin
 
     # MRO when USE_UNFOLD=True: Mixin → TabbedTranslation → unfold.ModelAdmin → admin.ModelAdmin
     class NewsTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
         pass
 else:
-    NewsTranslationAdminBase = ModelAdmin
+    NewsTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
 class CategoryAdmin(PublicUrlAdminMixin, NewsTranslationAdminBase):
@@ -58,8 +58,25 @@ class PostAdmin(PublicUrlAdminMixin, NewsTranslationAdminBase):
     fieldsets = [
         (None, {'fields': ['title', 'category', 'content', 'published_time', 'slug']}),
     ]
-    list_display = ('title', 'author', 'category', 'created_time', 'modified_time', 'publication_status', 'published_time')
-    search_fields = ('title', 'slug', 'category__name', 'category__slug', 'author__username', 'author__first_name', 'author__last_name', 'author__email')
+    list_display = (
+        'title',
+        'author',
+        'category',
+        'created_time',
+        'modified_time',
+        'publication_status',
+        'published_time',
+    )  # noqa: E501
+    search_fields = (
+        'title',
+        'slug',
+        'category__name',
+        'category__slug',
+        'author__username',
+        'author__first_name',
+        'author__last_name',
+        'author__email',
+    )
     list_filter = (PostPublicationFilter, 'category')
     autocomplete_fields = ('author', 'category')
     list_select_related = ('author', 'category')
@@ -76,15 +93,13 @@ class PostAdmin(PublicUrlAdminMixin, NewsTranslationAdminBase):
         form.user = request.user
         return form
 
+    @admin.display(description=_("Publicering"), ordering="published_time")
     def publication_status(self, obj):
         if obj.published_time is None:
             return _('Dold')
         if obj.published_time > now():
             return _('Schemalagd')
         return _('Publicerad')
-
-    publication_status.short_description = _('Publicering')
-    publication_status.admin_order_field = 'published_time'
 
     class Media:
         css = {'all': FLATPICKR_ADMIN_CSS}

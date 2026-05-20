@@ -21,17 +21,16 @@ def user_type(user):
 
 @user_passes_test(user_type, login_url='/members/login/')
 def year_index(request):
-    counts = (
-        Album.objects
-        .values('pub_date__year')
-        .annotate(album_count=Count('id'))
-        .order_by('-pub_date__year')
-    )
+    counts = Album.objects.values('pub_date__year').annotate(album_count=Count('id')).order_by('-pub_date__year')
     year_albumcount = {str(row['pub_date__year']): row['album_count'] for row in counts}
-    return render(request, 'archive/index.html', {
-        'type': "pictures",
-        'year_albums': year_albumcount,
-    })
+    return render(
+        request,
+        'archive/index.html',
+        {
+            'type': "pictures",
+            'year_albums': year_albumcount,
+        },
+    )
 
 
 @user_passes_test(user_type, login_url='/members/login/')
@@ -39,8 +38,7 @@ def picture_index(request, year):
     first_photo_qs = Photo.objects.filter(album=OuterRef('pk')).order_by('id')
     image_field = Photo._meta.get_field('image')
     albums = (
-        Album.objects
-        .filter(pub_date__year=year)
+        Album.objects.filter(pub_date__year=year)
         .annotate(
             picture_count=Count('photo'),
             first_picture_image=Subquery(first_photo_qs.values('image')[:1]),
@@ -49,16 +47,20 @@ def picture_index(request, year):
     )
     albums = list(albums)
     for album in albums:
-        album.album_thumbnail_url = album.thumbnail.url if album.thumbnail else (
-            image_field.storage.url(album.first_picture_image)
-            if album.first_picture_image
-            else ''
+        album.album_thumbnail_url = (
+            album.thumbnail.url
+            if album.thumbnail
+            else (image_field.storage.url(album.first_picture_image) if album.first_picture_image else '')
         )
-    return render(request, 'archive/picture_index.html', {
-        'type': "pictures",
-        'year': year,
-        'collections': albums,
-    })
+    return render(
+        request,
+        'archive/picture_index.html',
+        {
+            'type': "pictures",
+            'year': year,
+            'collections': albums,
+        },
+    )
 
 
 @user_passes_test(user_type, login_url='/members/login/')
@@ -90,23 +92,29 @@ def picture_detail(request, year, album):
             request=request,
             using='django',
         )
-        return JsonResponse({
-            'html': html,
-            'has_next': photos.has_next(),
-            'next_page': photos.next_page_number() if photos.has_next() else None,
-            'page': photos.number,
-            'start_index': photos.start_index(),
-            'total_count': paginator.count,
-        })
+        return JsonResponse(
+            {
+                'html': html,
+                'has_next': photos.has_next(),
+                'next_page': photos.next_page_number() if photos.has_next() else None,
+                'page': photos.number,
+                'start_index': photos.start_index(),
+                'total_count': paginator.count,
+            }
+        )
 
-    return render(request, 'archive/detail.html', {
-        'type': "pictures",
-        'year': year,
-        'album': album,
-        'collection': album_obj,
-        'pictures': photos,
-        'total_count': paginator.count,
-    })
+    return render(
+        request,
+        'archive/detail.html',
+        {
+            'type': "pictures",
+            'year': year,
+            'album': album,
+            'collection': album_obj,
+            'pictures': photos,
+            'total_count': paginator.count,
+        },
+    )
 
 
 def can_upload_album(user):

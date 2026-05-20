@@ -41,16 +41,18 @@ class PDFFileAdminTests(TestCase):
 
     def test_change_page_renders_when_file_url_cannot_be_resolved(self):
         timestamp = timezone.now()
-        PDFFile.objects.bulk_create([
-            PDFFile(
-                collection=create_collection(),
-                title="Broken PDF",
-                slug="broken-pdf",
-                file="pdfs/broken.pdf",
-                uploaded_at=timestamp,
-                updated_at=timestamp,
-            )
-        ])
+        PDFFile.objects.bulk_create(
+            [
+                PDFFile(
+                    collection=create_collection(),
+                    title="Broken PDF",
+                    slug="broken-pdf",
+                    file="pdfs/broken.pdf",
+                    uploaded_at=timestamp,
+                    updated_at=timestamp,
+                )
+            ]
+        )
         pdf_file = PDFFile.objects.get(slug="broken-pdf")
 
         with patch(
@@ -87,9 +89,7 @@ class PDFFileAdminTests(TestCase):
         collection = create_collection(visibility=PublicationCollection.VISIBILITY_MEMBERSHIP)
         collection.allowed_membership_types.add(senior)
 
-        response = self.client.get(
-            reverse("admin:publications_pdffile_collection_access", args=[collection.pk])
-        )
+        response = self.client.get(reverse("admin:publications_pdffile_collection_access", args=[collection.pk]))
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["title"], collection.title)
@@ -107,9 +107,7 @@ class PDFFileAdminTests(TestCase):
         self.client.force_login(staff_user)
         collection = create_collection()
 
-        response = self.client.get(
-            reverse("admin:publications_pdffile_collection_access", args=[collection.pk])
-        )
+        response = self.client.get(reverse("admin:publications_pdffile_collection_access", args=[collection.pk]))
 
         self.assertEqual(response.status_code, 403)
 
@@ -161,16 +159,18 @@ class PublicationCollectionAdminTests(TestCase):
 
     def test_change_page_inline_renders_when_file_url_cannot_be_resolved(self):
         timestamp = timezone.now()
-        PDFFile.objects.bulk_create([
-            PDFFile(
-                collection=create_collection(),
-                title="Broken PDF",
-                slug="broken-pdf",
-                file="pdfs/broken.pdf",
-                uploaded_at=timestamp,
-                updated_at=timestamp,
-            )
-        ])
+        PDFFile.objects.bulk_create(
+            [
+                PDFFile(
+                    collection=create_collection(),
+                    title="Broken PDF",
+                    slug="broken-pdf",
+                    file="pdfs/broken.pdf",
+                    uploaded_at=timestamp,
+                    updated_at=timestamp,
+                )
+            ]
+        )
         collection = PublicationCollection.objects.get(slug="publications")
 
         with patch(
@@ -184,35 +184,39 @@ class PublicationCollectionAdminTests(TestCase):
         self.assertContains(response, "Broken PDF")
 
     def test_password_visibility_requires_password(self):
-        form = PublicationCollectionAdminForm(data={
-            "title": "Locked",
-            "slug": "locked",
-            "description": "",
-            "visibility": PublicationCollection.VISIBILITY_PASSWORD,
-            "cover_image": "",
-            "allowed_membership_types": [],
-            "password": "",
-            "clear_password": "",
-            "ordering": 0,
-            "is_active": "on",
-        })
+        form = PublicationCollectionAdminForm(
+            data={
+                "title": "Locked",
+                "slug": "locked",
+                "description": "",
+                "visibility": PublicationCollection.VISIBILITY_PASSWORD,
+                "cover_image": "",
+                "allowed_membership_types": [],
+                "password": "",
+                "clear_password": "",
+                "ordering": 0,
+                "is_active": "on",
+            }
+        )
 
         self.assertFalse(form.is_valid())
         self.assertIn("password", form.errors)
 
     def test_membership_visibility_requires_membership_type(self):
-        form = PublicationCollectionAdminForm(data={
-            "title": "Members",
-            "slug": "members",
-            "description": "",
-            "visibility": PublicationCollection.VISIBILITY_MEMBERSHIP,
-            "cover_image": "",
-            "allowed_membership_types": [],
-            "password": "",
-            "clear_password": "",
-            "ordering": 0,
-            "is_active": "on",
-        })
+        form = PublicationCollectionAdminForm(
+            data={
+                "title": "Members",
+                "slug": "members",
+                "description": "",
+                "visibility": PublicationCollection.VISIBILITY_MEMBERSHIP,
+                "cover_image": "",
+                "allowed_membership_types": [],
+                "password": "",
+                "clear_password": "",
+                "ordering": 0,
+                "is_active": "on",
+            }
+        )
 
         self.assertFalse(form.is_valid())
         self.assertIn("allowed_membership_types", form.errors)
@@ -222,16 +226,18 @@ class PDFFileListTests(TestCase):
     def test_list_renders_when_file_url_cannot_be_resolved(self):
         timestamp = timezone.now()
         collection = create_collection()
-        PDFFile.objects.bulk_create([
-            PDFFile(
-                collection=collection,
-                title="Broken PDF",
-                slug="broken-pdf",
-                file="pdfs/broken.pdf",
-                uploaded_at=timestamp,
-                updated_at=timestamp,
-            )
-        ])
+        PDFFile.objects.bulk_create(
+            [
+                PDFFile(
+                    collection=collection,
+                    title="Broken PDF",
+                    slug="broken-pdf",
+                    file="pdfs/broken.pdf",
+                    uploaded_at=timestamp,
+                    updated_at=timestamp,
+                )
+            ]
+        )
 
         with patch(
             "django.db.models.fields.files.FieldFile.url",
@@ -296,7 +302,9 @@ class PDFFileListTests(TestCase):
         self.assertNotContains(response, "Members")
 
     def test_index_renders_collection_cover_image(self):
-        collection = create_collection(title="A&O", slug="ao", cover_image="wordpress/sfklubben/wp-content/uploads/2022/04/aologo.png")
+        collection = create_collection(
+            title="A&O", slug="ao", cover_image="wordpress/sfklubben/wp-content/uploads/2022/04/aologo.png"
+        )
         PDFFile.objects.create(
             collection=collection,
             title="A&O 01/2026",

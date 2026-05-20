@@ -4,28 +4,29 @@ import logging
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.conf import settings
-from django.contrib.auth.forms import ReadOnlyPasswordHashField, PasswordResetForm
+from django.contrib.auth.forms import PasswordResetForm, ReadOnlyPasswordHashField
 from django.core.validators import RegexValidator
 from django.template import loader
 from django.utils.translation import gettext_lazy as _
 
 from core.admin_base import UnfoldFormMixin
 from core.utils import send_email_task
-from members.models import (SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH,
-                            SUB_RE_SCALE_YEAR, Member, SubscriptionPayment)
+from members.models import SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH, SUB_RE_SCALE_YEAR, Member, SubscriptionPayment
 
 logger = logging.getLogger('date')
 
 # Restrict usernames to ASCII letters, numbers, dots, underscores, and hyphens
 USERNAME_VALIDATOR = RegexValidator(
     r'^[0-9a-zA-Z._-]+$',
-    _('Enter a valid username consisting only of letters, numbers, dots, underscores, and hyphens.')
+    _('Enter a valid username consisting only of letters, numbers, dots, underscores, and hyphens.'),
 )
 
 
 class MemberCreationForm(UnfoldFormMixin, forms.ModelForm):
     send_email = forms.BooleanField(required=False)
-    year_of_admission = forms.IntegerField(initial=lambda: datetime.datetime.now().year, required=False, label=_('Inskrivningsår'))
+    year_of_admission = forms.IntegerField(
+        initial=lambda: datetime.datetime.now().year, required=False, label=_('Inskrivningsår')
+    )
 
     username = forms.CharField(
         max_length=20,
@@ -34,10 +35,7 @@ class MemberCreationForm(UnfoldFormMixin, forms.ModelForm):
     )
 
     password = forms.CharField(
-        widget=forms.PasswordInput(),
-        required=False,
-        min_length=8,
-        error_messages={'required': 'Password is required'}
+        widget=forms.PasswordInput(), required=False, min_length=8, error_messages={'required': 'Password is required'}
     )
 
     class Meta:
@@ -59,7 +57,7 @@ class MemberCreationForm(UnfoldFormMixin, forms.ModelForm):
         )
 
     def save(self, commit=True):
-        member = super(MemberCreationForm, self).save(commit=False)
+        member = super().save(commit=False)
         member.set_password(self.cleaned_data['password'])
         if commit:
             member.save()
@@ -68,10 +66,14 @@ class MemberCreationForm(UnfoldFormMixin, forms.ModelForm):
 
 
 class AdminMemberUpdateForm(UnfoldFormMixin, forms.ModelForm):
-    password = ReadOnlyPasswordHashField(label="Lösenord",
-                                         help_text=("Raw passwords are not stored, so there is no way to see "
-                                                    "this user's password, but you can change the password "
-                                                    "using <a href=\"../password/\">this form</a>."))
+    password = ReadOnlyPasswordHashField(
+        label="Lösenord",
+        help_text=(
+            "Raw passwords are not stored, so there is no way to see "
+            "this user's password, but you can change the password "
+            "using <a href=\"../password/\">this form</a>."
+        ),
+    )
 
     username = forms.CharField(
         max_length=20,
@@ -98,7 +100,7 @@ class AdminMemberUpdateForm(UnfoldFormMixin, forms.ModelForm):
         )
 
     def save(self, commit=True):
-        member = super(AdminMemberUpdateForm, self).save(commit=False)
+        member = super().save(commit=False)
         password = None
         if password:
             member.set_password(password)
@@ -108,15 +110,14 @@ class AdminMemberUpdateForm(UnfoldFormMixin, forms.ModelForm):
 
 
 class CustomPasswordResetForm(PasswordResetForm):
-
     def send_mail(
-            self,
-            subject_template_name,
-            email_template_name,
-            context,
-            from_email,
-            to_email,
-            html_email_template_name=None,
+        self,
+        subject_template_name,
+        email_template_name,
+        context,
+        from_email,
+        to_email,
+        html_email_template_name=None,
     ):
         context.update(settings.CONTENT_VARIABLES)
 
@@ -145,7 +146,7 @@ class SubscriptionPaymentForm(forms.ModelForm):
         )
 
     def save(self, commit=True):
-        subscription_payment = super(SubscriptionPaymentForm, self).save(commit=False)
+        subscription_payment = super().save(commit=False)
         if subscription_payment.subscription.does_expire:
             date_paid = subscription_payment.date_paid
             sub_duration = subscription_payment.subscription.renewal_period
@@ -158,7 +159,7 @@ class SubscriptionPaymentForm(forms.ModelForm):
             elif sub_duration_type == SUB_RE_SCALE_YEAR:
                 delta = relativedelta(years=+sub_duration)
             subscription_payment.date_expires = date_paid + delta
-            logger.debug("Calculated expiry date for subscription: {}".format(subscription_payment.date_expires))
+            logger.debug(f"Calculated expiry date for subscription: {subscription_payment.date_expires}")
         if commit:
             subscription_payment.save()
             logger.debug("SubscriptionPayment saved")
@@ -170,7 +171,7 @@ class SignUpForm(forms.ModelForm):
         max_length=20,
         validators=[USERNAME_VALIDATOR],
         help_text=_('detta fält är obligatoriskt'),
-        label=_('Användarnamn')
+        label=_('Användarnamn'),
     )
     email = forms.EmailField(max_length=200, help_text=_('detta fält är obligatoriskt'), label=_('E-postadress'))
     password = forms.CharField(
@@ -179,11 +180,13 @@ class SignUpForm(forms.ModelForm):
         min_length=8,
         error_messages={'required': 'Password is required'},
         help_text=_('detta fält är obligatoriskt'),
-        label=_('Lösenord')
+        label=_('Lösenord'),
     )
     first_name = forms.CharField(max_length=100, required=True, label=_('Förnamn'))
     last_name = forms.CharField(max_length=100, required=True, label=_('Efternamn'))
-    year_of_admission = forms.IntegerField(initial=lambda: datetime.datetime.now().year, required=False, label=_('Inskrivningsår'))
+    year_of_admission = forms.IntegerField(
+        initial=lambda: datetime.datetime.now().year, required=False, label=_('Inskrivningsår')
+    )
 
     class Meta:
         model = Member
@@ -199,16 +202,15 @@ class SignUpForm(forms.ModelForm):
             'country',
             'membership_type',
             'year_of_admission',
-            'password'
+            'password',
         )
-
 
 
 class SubscriptionPaymentChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         if not obj.first_name or not obj.last_name:
             return obj.username
-        return f'{obj.first_name} {obj.last_name}'
+        return f"{obj.first_name} {obj.last_name}"
 
 
 class MemberEditForm(forms.ModelForm):

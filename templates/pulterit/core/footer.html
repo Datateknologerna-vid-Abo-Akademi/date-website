@@ -1,48 +1,68 @@
 {% extends "core/footer.html" %}
 {% load static %}
 {% load i18n %}
-
-{% block footer_class_suffix %} pulterit-footer{% endblock %}
-{% block footer_shell_class_suffix %} pulterit-footer-shell{% endblock %}
-{% block footer_content_class_suffix %} pulterit-footer-content{% endblock %}
-{% block footer_brand_class_suffix %} pulterit-footer-brand{% endblock %}
-{% block footer_copy_class_suffix %} pulterit-footer-copy{% endblock %}
-
+{% block footer_class_suffix %}pulterit-footer{% endblock %}
+{% block footer_shell_class_suffix %}pulterit-footer-shell{% endblock %}
+{% block footer_content_class_suffix %}pulterit-footer-content{% endblock %}
+{% block footer_brand_class_suffix %}pulterit-footer-brand{% endblock %}
+{% block footer_copy_class_suffix %}pulterit-footer-copy{% endblock %}
 {% block footer_logo %}
-<img class="footer-img img-fluid" alt="{% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}{{ association_name }} logo{% endblocktranslate %}" src="{% static 'core/images/pulterit-white.svg' %}">
+  <img class="footer-img img-fluid"
+       alt="{% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}{{ association_name }} logo{% endblocktranslate %}"
+       src="{% static 'core/images/pulterit-white.svg' %}">
 {% endblock %}
-
 {% block footer_right %}
-<div class="col-12 col-md-4 text-center">
-    <a class="partner-link" href="https://geohouse.fi/" target="_blank" rel="noopener">
-        <img class="footer-img img-fluid" alt="Geohouse logo" src="{% static 'core/images/Geohouse_logo-1-1.png' %}" style="max-height: 200px;">
+  <div class="col-12 col-md-4 text-center">
+    <a class="partner-link"
+       href="https://geohouse.fi/"
+       target="_blank"
+       rel="noopener">
+      <img class="footer-img img-fluid"
+           alt="Geohouse logo"
+           src="{% static 'core/images/Geohouse_logo-1-1.png' %}"
+           style="max-height: 200px">
     </a>
-</div>
+  </div>
 {% endblock %}
-
 {% block footer_contact_sentence %}
-{% get_current_language as lang %}
-<p>
+  {% get_current_language as lang %}
+  <p>
     {% if lang == 'sv' %}
-        {% blocktranslate with association_name=ASSOCIATION_NAME_FULL_RF trimmed %}
+      {% blocktranslate with association_name=ASSOCIATION_NAME_FULL_RF trimmed %}
         Styrelsen för {{ association_name }} kan kontaktas på följande sätt.
-        {% endblocktranslate %}
+      {% endblocktranslate %}
     {% else %}
-        {% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}
+      {% blocktranslate with association_name=ASSOCIATION_NAME_FULL trimmed %}
         Styrelsen för {{ association_name }} kan kontaktas på följande sätt.
-        {% endblocktranslate %}
+      {% endblocktranslate %}
     {% endif %}
-</p>
+  </p>
 {% endblock %}
-
 {% block footer_address_l1 %}
-{% get_current_language as lang %}
-{% if lang == 'sv' %}Geohuset{% elif lang == 'fi' %}Geotalo{% else %}Geohouse{% endif %}
+  {% get_current_language as lang %}
+  {% if lang == 'sv' %}
+    Geohuset
+  {% elif lang == 'fi' %}
+    Geotalo
+  {% else %}
+    Geohouse
+  {% endif %}
 {% endblock %}
-
 {% block extra_footer %}
-<p class="text-center mb-2 mt-3">
-    <small>{% trans "Website developed and maintained by" %}  <a class="footer-credit-link" href="https://datateknologerna.org/" target="_blank" rel="noopener">DaTe</a><br>
-    <a class="footer-credit-link" href="https://datateknologerna.org/" target="_blank" rel="noopener"><img src="{% static 'core/images/Sp_Albin.png' %}" alt="DaTe logo" style="max-height: 40px; filter: invert(1);"></a></small>
+  <p class="text-center mb-2 mt-3">
+  <small>{% trans "Website developed and maintained by" %}  <a class="footer-credit-link"
+     href="https://datateknologerna.org/"
+     target="_blank"
+     rel="noopener">DaTe</a>
+  <br>
+  <a class="footer-credit-link"
+     href="https://datateknologerna.org/"
+     target="_blank"
+     rel="noopener">
+    <img src="{% static 'core/images/Sp_Albin.png' %}"
+         alt="DaTe logo"
+         style="max-height: 40px;
+                filter: invert(1)">
+  </a></small>
 </p>
 {% endblock %}

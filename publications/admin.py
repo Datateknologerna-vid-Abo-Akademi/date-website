@@ -10,14 +10,15 @@ from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
 from django.utils.html import format_html
 from django.utils.http import urlencode
-from django.utils.translation import gettext_lazy as _, ngettext
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
 
 from core.admin_base import (
+    UNFOLD_FORMFIELD_OVERRIDES,
     ExtraChangeListLinksMixin,
     ModelAdmin,
     PublicUrlAdminMixin,
     TabularInline,
-    UNFOLD_FORMFIELD_OVERRIDES,
 )
 from core.admin_ui import AdminLink
 from core.admin_widgets import SafeAdminFileWidget
@@ -42,7 +43,7 @@ class PublicationCollectionAdminForm(forms.ModelForm):
 
     class Meta:
         model = PublicationCollection
-        fields = '__all__'
+        fields = '__all__'  # noqa: DJ007
 
     def clean(self):
         cleaned_data = super().clean()
@@ -55,7 +56,9 @@ class PublicationCollectionAdminForm(forms.ModelForm):
                 self.add_error('clear_password', 'Password-protected collections must keep or set a password.')
             elif not cleaned_data.get('password') and not has_existing_password:
                 self.add_error('password', 'Set a password before saving a password-protected collection.')
-        if visibility == PublicationCollection.VISIBILITY_MEMBERSHIP and not cleaned_data.get('allowed_membership_types'):
+        if visibility == PublicationCollection.VISIBILITY_MEMBERSHIP and not cleaned_data.get(
+            'allowed_membership_types'
+        ):
             self.add_error(
                 'allowed_membership_types',
                 'Choose at least one membership type for selected-membership access.',
@@ -95,17 +98,34 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ModelAdmin):
     filter_horizontal = ('allowed_membership_types',)
     readonly_fields = ('created_at', 'updated_at', 'has_password', 'publications_changelist_link')
     fieldsets = (
-        (None, {
-            'fields': ('title', 'slug', 'description', 'cover_image', 'ordering', 'is_active', 'publications_changelist_link'),
-        }),
-        ('Access Control', {
-            'fields': ('visibility', 'allowed_membership_types', 'password', 'clear_password', 'has_password'),
-            'description': 'Controls whether this collection is listed and who can open its publications.',
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',),
-        }),
+        (
+            None,
+            {
+                'fields': (
+                    'title',
+                    'slug',
+                    'description',
+                    'cover_image',
+                    'ordering',
+                    'is_active',
+                    'publications_changelist_link',
+                ),
+            },
+        ),
+        (
+            'Access Control',
+            {
+                'fields': ('visibility', 'allowed_membership_types', 'password', 'clear_password', 'has_password'),
+                'description': 'Controls whether this collection is listed and who can open its publications.',
+            },
+        ),
+        (
+            'Timestamps',
+            {
+                'fields': ('created_at', 'updated_at'),
+                'classes': ('collapse',),
+            },
+        ),
     )
     inlines = []
 
@@ -116,7 +136,8 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ModelAdmin):
 
     def get_queryset(self, request):
         return (
-            super().get_queryset(request)
+            super()
+            .get_queryset(request)
             .prefetch_related('allowed_membership_types')
             .annotate(publication_total=Count('publications', distinct=True))
         )
@@ -260,24 +281,44 @@ class PDFFileAdmin(PublicUrlAdminMixin, PublicationAdminMixin, ModelAdmin):
         'uploaded_at',
         'updated_at',
     )
-    list_filter = ('collection__visibility', 'collection', 'is_public', 'requires_login', 'uploaded_at', 'updated_at', 'publication_date')
+    list_filter = (
+        'collection__visibility',
+        'collection',
+        'is_public',
+        'requires_login',
+        'uploaded_at',
+        'updated_at',
+        'publication_date',
+    )
     search_fields = ('title', 'slug', 'description', 'file', 'redirect_url', 'collection__title')
     ordering = ('-uploaded_at',)
     date_hierarchy = 'publication_date'
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('collection_access_details', 'uploaded_at', 'updated_at')
     fieldsets = (
-        (None, {
-            'fields': ('collection', 'title', 'slug', 'publication_date', 'description', 'file', 'redirect_url', 'cover_image')
-        }),
-        ('Access Control', {
-            'fields': ('collection_access_details', 'is_public', 'requires_login'),
-            'description': 'Collection access is the primary rule. Publication access is checked after it.'
-        }),
-        ('Timestamps', {
-            'fields': ('uploaded_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
+        (
+            None,
+            {
+                'fields': (
+                    'collection',
+                    'title',
+                    'slug',
+                    'publication_date',
+                    'description',
+                    'file',
+                    'redirect_url',
+                    'cover_image',
+                ),
+            },
+        ),
+        (
+            'Access Control',
+            {
+                'fields': ('collection_access_details', 'is_public', 'requires_login'),
+                'description': 'Collection access is the primary rule. Publication access is checked after it.',
+            },
+        ),
+        ('Timestamps', {'fields': ('uploaded_at', 'updated_at'), 'classes': ('collapse',)}),
     )
 
     def get_urls(self):
@@ -317,6 +358,7 @@ class PDFFileAdmin(PublicUrlAdminMixin, PublicationAdminMixin, ModelAdmin):
             updated_fieldsets.append((name, {**options, 'fields': fields}))
         return updated_fieldsets
 
+    @admin.display(description="File")
     def file_link(self, obj):
         if not obj or not obj.file:
             return '-'
@@ -329,8 +371,6 @@ class PDFFileAdmin(PublicUrlAdminMixin, PublicationAdminMixin, ModelAdmin):
         except Exception as exc:
             logger.warning("Unable to resolve PDF file URL for %s: %s", obj.pk, exc)
             return obj.file.name
-
-    file_link.short_description = 'File'
 
     @admin.display(description='Selected collection access')
     def collection_access_details(self, obj):

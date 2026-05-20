@@ -1,7 +1,9 @@
+import logging
+
 from django.shortcuts import get_object_or_404
 from django.views import generic
+
 from members.models import Member
-import logging
 
 from .models import Question
 from .vote import handle_vote

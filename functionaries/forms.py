@@ -11,7 +11,7 @@ class FunctionaryForm(forms.ModelForm):
         label=_('Årtal'),
         validators=[MinValueValidator(1999)],
         help_text=_('Ange ett år i formatet YYYY'),
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'YYYY'})
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'YYYY'}),
     )
 
     def __init__(self, *args, **kwargs):

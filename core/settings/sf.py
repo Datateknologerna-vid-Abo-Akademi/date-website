@@ -18,31 +18,28 @@ TEMPLATES = [
     },
 ]
 
-INSTALLED_APPS = get_installed_apps([
-    'news',
-    'gallery',
-    'exambank',
-    'archive.apps.ArchiveConfig',
-    'events',
-    'polls',
-    'ads',
-    'instagram',
-    'harassment',
-    'social',
-    'staticpages',
-    'publications',
-    'alumni',
-    'billing',
-])
+INSTALLED_APPS = get_installed_apps(
+    [
+        'news',
+        'gallery',
+        'exambank',
+        'archive.apps.ArchiveConfig',
+        'events',
+        'polls',
+        'ads',
+        'instagram',
+        'harassment',
+        'social',
+        'staticpages',
+        'publications',
+        'alumni',
+        'billing',
+    ]
+)
 
 ROOT_URLCONF = 'core.urls.sf'
 
-STAFF_GROUPS = get_staff_groups([
-        'styrelse',
-        'admin',
-        'fotograf',
-        'rösträknare'
-    ])
+STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
 
 STATICFILES_DIRS = [
@@ -67,12 +64,10 @@ CONTENT_VARIABLES = {
         ["x", "https://twitter.com/sfklubben"],
         ["linkedin", "https://linkedin.com/company/statsvetenskapligaklubben"],
     ],
-
     # Alumni
     "ALUMNI_ASSOCIATION_NAME": "",
     "ALUMNI_ASSOCIATION_NAME_SHORT": "",
     "ALUMNI_ASSOCIATION_EMAIL": "",
-
     # Events
     "INTERNATIONAL_EVENT_SLUGS": [],
 }

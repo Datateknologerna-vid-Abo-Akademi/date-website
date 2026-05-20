@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
 import re
-
+from pathlib import Path
 
 SOURCE = Path("templates/sf/date/svg/logo.svg")
 

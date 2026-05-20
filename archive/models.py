@@ -1,20 +1,16 @@
-from __future__ import unicode_literals
-
 import datetime
 import os
 import shutil
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
+
 from .fields import PublicFileField
 
-
-TYPE_CHOICES = (
-    ('Documents', 'Dokument'),
-    ('PublicFiles', 'OffentligaFiler')
-)
+TYPE_CHOICES = (('Documents', 'Dokument'), ('PublicFiles', 'OffentligaFiler'))
 
 
 class Collection(models.Model):
@@ -36,7 +32,7 @@ class Collection(models.Model):
     def delete(self, *args, **kwargs):
         dir_location = os.path.join(settings.MEDIA_ROOT, self.title.lower())
         shutil.rmtree(dir_location, ignore_errors=True)
-        super(Collection, self).delete(*args, **kwargs)
+        super().delete(*args, **kwargs)
 
     def clean(self):
         super().clean()
@@ -71,6 +67,7 @@ class DocumentCollection(Collection):
         verbose_name_plural = verbose_name = _('Dokumentarkiv')
         proxy = True
 
+
 class PublicCollection(Collection):
     class Meta:
         verbose_name_plural = verbose_name = _('Offentliga Filer')
@@ -83,18 +80,18 @@ class Document(models.Model):
     title = models.CharField(max_length=250, verbose_name=_('Namn'))
     document = models.FileField(upload_to=upload_to, verbose_name=_('Filnamn'))
 
-    def __str__(self):
-        return self.title
-
     class Meta:
         verbose_name = _('dokument')  # Verbose plural is same.
         verbose_name_plural = _('dokument')
+
+    def __str__(self):
+        return self.title
 
 
 class PublicFile(models.Model):
     collection = models.ForeignKey(Collection, verbose_name=_('Galleri'), on_delete=models.CASCADE)
     some_file = PublicFileField(upload_to=upload_to, verbose_name=_('file'))
-    
+
     class Meta:
         verbose_name = _("fil")
         verbose_name_plural = _("filer")

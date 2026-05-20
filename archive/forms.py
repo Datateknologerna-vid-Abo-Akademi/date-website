@@ -22,30 +22,31 @@ class MultipleFileField(forms.FileField):
 
 
 class DocumentAdminForm(forms.ModelForm):
-    files = MultipleFileField(label="Ladda upp flera dokument", required=False)
+    files = MultipleFileField(label="Ladda upp flera dokument", required=False)  # type: ignore[assignment]
 
     class Meta:
         model = Collection
-        fields = '__all__'
-        exclude = ('hide_for_gulis',)
+        fields = '__all__'  # noqa: DJ007
+        exclude = ('hide_for_gulis',)  # noqa: DJ006
 
     def save(self, *args, **kwargs):
-        collection = super(DocumentAdminForm, self).save(*args, **kwargs)
+        collection = super().save(*args, **kwargs)
         collection.save()
         if hasattr(self.files, 'getlist'):
             for f in self.files.getlist('files'):
                 Document.objects.create(collection=collection, document=f, title=f)
         return collection
 
+
 class PublicAdminForm(forms.ModelForm):
-    files = MultipleFileField(label="Ladda upp flera filer", required=False)
+    files = MultipleFileField(label="Ladda upp flera filer", required=False)  # type: ignore[assignment]
 
     class Meta:
         model = Collection
-        fields = '__all__'
+        fields = '__all__'  # noqa: DJ007
 
     def save(self, *args, **kwargs):
-        collection = super(PublicAdminForm, self).save(*args, **kwargs)
+        collection = super().save(*args, **kwargs)
         collection.save()
         if hasattr(self.files, 'getlist'):
             for f in self.files.getlist('files'):

@@ -3,14 +3,15 @@ import csv
 from django.contrib import admin
 from django.db.models import Count
 from django.http import HttpResponse
-from django.urls import reverse, re_path
+from django.urls import re_path, reverse
 from django.utils.html import format_html
 from django.utils.http import urlencode
-from django.utils.translation import gettext_lazy as _, ngettext
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
 
 from core.admin_base import ModelAdmin
 
-from .models import EventInvoice, EventBillingConfiguration
+from .models import EventBillingConfiguration, EventInvoice
 from .util import BillingIntegrations
 
 
@@ -52,7 +53,15 @@ class EventInvoiceAdmin(ModelAdmin):
 
 @admin.register(EventBillingConfiguration)
 class EventBillingConfigurationAdmin(ModelAdmin):
-    list_display = ('event_link', 'due_date', 'integration_type', 'price', 'price_selector', 'invoice_count', 'ref_export')
+    list_display = (
+        'event_link',
+        'due_date',
+        'integration_type',
+        'price',
+        'price_selector',
+        'invoice_count',
+        'ref_export',
+    )
     list_filter = ('integration_type',)
     search_fields = ('event__title', 'event__slug', 'price_selector')
     autocomplete_fields = ('event',)
@@ -61,7 +70,8 @@ class EventBillingConfigurationAdmin(ModelAdmin):
 
     def get_queryset(self, request):
         return (
-            super().get_queryset(request)
+            super()
+            .get_queryset(request)
             .annotate(invoice_total=Count('event__eventattendees__eventinvoice', distinct=True))
         )
 
@@ -72,13 +82,12 @@ class EventBillingConfigurationAdmin(ModelAdmin):
         ]
         return my_urls + urls
 
+    @admin.display(description="Exportera data")
     def ref_export(self, obj):
         return format_html(
             '<a class="button" href="{}">Exportera data</a>&nbsp;',
-            reverse('admin:billing_ref_numbers', args=[obj.pk])
+            reverse('admin:billing_ref_numbers', args=[obj.pk]),
         )
-
-    ref_export.short_description = 'Exportera data'
 
     @admin.display(description=_('Event'))
     def event_link(self, obj):
@@ -90,7 +99,11 @@ class EventBillingConfigurationAdmin(ModelAdmin):
 
     @admin.display(description=_('Invoices'))
     def invoice_count(self, obj):
-        count = getattr(obj, 'invoice_total', EventInvoice.objects.filter(participant__event=obj.event).count())
+        count = getattr(
+            obj,
+            'invoice_total',
+            EventInvoice.objects.filter(participant__event=obj.event).count(),
+        )
         if not count:
             return '0'
         return format_html(
@@ -107,26 +120,36 @@ class EventBillingConfigurationAdmin(ModelAdmin):
 
         response = HttpResponse(
             content_type='text/csv',
-            headers={'Content-Disposition': f'attachment; filename="{event.title}_ref_numbers.csv"'}
+            headers={'Content-Disposition': f'attachment; filename="{event.title}_ref_numbers.csv"'},
         )
 
         if bconfig.integration_type == BillingIntegrations.INVOICE.value:
             invoices = EventInvoice.objects.filter(participant__event=event)
-            fieldnames = ['name', 'email', 'invoice_number', 'reference_number', 'invoice_date', 'due_date', 'amount',
-                          'currency']
+            fieldnames = [
+                'name',
+                'email',
+                'invoice_number',
+                'reference_number',
+                'invoice_date',
+                'due_date',
+                'amount',
+                'currency',
+            ]
             writer = csv.DictWriter(response, fieldnames=fieldnames)
             writer.writeheader()
             for invoice in invoices:
-                writer.writerow({
-                    'name': invoice.participant.user,
-                    'email': invoice.participant.email,
-                    'invoice_number': invoice.invoice_number,
-                    'reference_number': invoice.reference_number,
-                    'invoice_date': invoice.invoice_date,
-                    'due_date': invoice.due_date,
-                    'amount': invoice.amount,
-                    'currency': invoice.currency
-                })
+                writer.writerow(
+                    {
+                        'name': invoice.participant.user,
+                        'email': invoice.participant.email,
+                        'invoice_number': invoice.invoice_number,
+                        'reference_number': invoice.reference_number,
+                        'invoice_date': invoice.invoice_date,
+                        'due_date': invoice.due_date,
+                        'amount': invoice.amount,
+                        'currency': invoice.currency,
+                    }
+                )
         else:
             return HttpResponse("Integration not supported", 400)
 

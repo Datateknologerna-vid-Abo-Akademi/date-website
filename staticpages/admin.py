@@ -6,12 +6,12 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.widgets import CKEditor5Widget
 
-from core.admin_base import ModelAdmin, PublicUrlAdminMixin, TabularInline, UNFOLD_FORMFIELD_OVERRIDES
+from core.admin import ActiveLanguageTranslationAdminMixin
+from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin, TabularInline
 
 from .models import StaticPage, StaticPageNav, StaticUrl
-from core.admin import ActiveLanguageTranslationAdminMixin
 
-if settings.ENABLE_LANGUAGE_FEATURES:
+if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
     from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
 
     # MRO when USE_UNFOLD=True: Mixin → Translation → unfold.TabularInline → admin.TabularInline
@@ -22,8 +22,8 @@ if settings.ENABLE_LANGUAGE_FEATURES:
     class StaticPageTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
         pass
 else:
-    StaticPageTranslationInlineBase = TabularInline
-    StaticPageTranslationAdminBase = ModelAdmin
+    StaticPageTranslationInlineBase = TabularInline  # type: ignore[misc, assignment]
+    StaticPageTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
 class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
@@ -39,13 +39,18 @@ class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
     readonly_fields = ('open_link',)
 
     def get_queryset(self, request):
-        return super().get_queryset(request).annotate(
-            has_parent=Case(
-                When(parent__isnull=True, then=Value(0)),
-                default=Value(1),
-                output_field=IntegerField(),
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(
+                has_parent=Case(
+                    When(parent__isnull=True, then=Value(0)),
+                    default=Value(1),
+                    output_field=IntegerField(),
+                )
             )
-        ).order_by('has_parent', 'parent__dropdown_element', 'dropdown_element')
+            .order_by('has_parent', 'parent__dropdown_element', 'dropdown_element')
+        )
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'parent':

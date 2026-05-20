@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from exambank.forms import ExamArchiveAdminForm, ExamBankAccessSettingsAdminForm
 from exambank.models import ExamArchive, ExamBankAccessSettings, ExamFile
-from members.models import Member, MembershipType, ORDINARY_MEMBER
+from members.models import ORDINARY_MEMBER, Member, MembershipType
 
 
 class ExamBankArchiveRouteTests(TestCase):
@@ -206,10 +206,12 @@ class ExamArchiveAdminFormTests(TestCase):
 
 class ExamBankAccessSettingsAdminFormTests(TestCase):
     def test_password_is_hashed_when_saved(self):
-        form = ExamBankAccessSettingsAdminForm({
-            'require_sign_in': '',
-            'password': 'granite',
-        })
+        form = ExamBankAccessSettingsAdminForm(
+            {
+                'require_sign_in': '',
+                'password': 'granite',
+            }
+        )
 
         self.assertTrue(form.is_valid())
         access_settings = form.save()

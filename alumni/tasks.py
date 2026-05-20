@@ -5,14 +5,14 @@ import logging
 from celery import shared_task
 from django.conf import settings
 from django.template.loader import render_to_string
-
-from .gsuite_adapter import DateSheetsAdapter
-from core.utils import send_email_task
-from billing.util import generate_reference_number, generate_invoice_number
-from .models import AlumniEmailRecipient, AlumniUpdateToken
-from .config import AUDIT_LOG_SHEET_NAME, MEMBER_SHEET_NAME, get_alumni_sheet_config
-
 from django.utils.translation import gettext_lazy as _
+
+from billing.util import generate_invoice_number, generate_reference_number
+from core.utils import send_email_task
+
+from .config import AUDIT_LOG_SHEET_NAME, MEMBER_SHEET_NAME, get_alumni_sheet_config
+from .gsuite_adapter import DateSheetsAdapter
+from .models import AlumniEmailRecipient, AlumniUpdateToken
 
 logger = logging.getLogger("date")
 
@@ -24,6 +24,7 @@ def log_error(func):
         except Exception as e:
             logger.error(f"Error in {func.__name__}: {str(e)}")
             raise
+
     return wrapper
 
 
@@ -72,26 +73,28 @@ def handle_create(form: dict):
     logger.info("Creating alumni member entry")
     try:
         current_date = format_date_for_sheets()
-        client.append_row([
-            member_id,
-            data.get("firstname"),
-            data.get("lastname"),
-            data.get("address"),
-            data.get("zip"),
-            data.get("city"),
-            data.get("country"),
-            data.get("employer"),
-            data.get("work_title"),
-            data.get("phone_number"),
-            data.get("email"),
-            data.get("tfif_membership"),
-            data.get("alumni_newsletter_consent"),
-            data.get("year_of_admission"),
-            current_date,  # Creation date in Finnish format
-            current_date,  # Update date in Finnish format
-            0,  # Paid status
-            reference,
-        ])
+        client.append_row(
+            [
+                member_id,
+                data.get("firstname"),
+                data.get("lastname"),
+                data.get("address"),
+                data.get("zip"),
+                data.get("city"),
+                data.get("country"),
+                data.get("employer"),
+                data.get("work_title"),
+                data.get("phone_number"),
+                data.get("email"),
+                data.get("tfif_membership"),
+                data.get("alumni_newsletter_consent"),
+                data.get("year_of_admission"),
+                current_date,  # Creation date in Finnish format
+                current_date,  # Update date in Finnish format
+                0,  # Paid status
+                reference,
+            ]
+        )
     except Exception as e:
         logger.error("Error while creating alumni member: " + str(e))
         return
@@ -99,26 +102,29 @@ def handle_create(form: dict):
     logger.info("Creating alumni log entry")
     log_action("CREATE", data)
 
-
     logger.info("Sending Alumni email")
     alumni_email = form['email']
     alumni_message_subject = "Välkommen till ARG - Betalningsinstruktioner"
-    alumni_message_content = render_to_string('members/alumni_signup_email.html', {"alumni": form, "reference": reference, 
-        'alumini_association_name': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_NAME", "Albins R Gamyler"),
-    })
+    alumni_message_content = render_to_string(
+        'members/alumni_signup_email.html',
+        {
+            "alumni": form,
+            "reference": reference,
+            'alumini_association_name': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_NAME", "Albins R Gamyler"),
+        },
+    )
     # Send email to alumni
-    send_email_task.delay(alumni_message_subject, alumni_message_content, settings.DEFAULT_FROM_EMAIL,
-                          [alumni_email])
+    send_email_task.delay(alumni_message_subject, alumni_message_content, settings.DEFAULT_FROM_EMAIL, [alumni_email])
 
     logger.info("Sending Alumni admin email")
     # Mail to relevant people
     admin_message_recipients = list(AlumniEmailRecipient.objects.all().values_list('recipient_email', flat=True))
-    admin_message_subject = f"ARG - Ny medlem {form['firstname']+' ' + form['lastname']}"
-    admin_message_content = render_to_string('members/alumni_signup_email_admin.html',
-                                             {'alumni': form})
+    admin_message_subject = f"ARG - Ny medlem {form['firstname'] + ' ' + form['lastname']}"
+    admin_message_content = render_to_string('members/alumni_signup_email_admin.html', {'alumni': form})
     # Schedule admin message
-    send_email_task.delay(admin_message_subject, admin_message_content, settings.DEFAULT_FROM_EMAIL,
-                          admin_message_recipients)
+    send_email_task.delay(
+        admin_message_subject, admin_message_content, settings.DEFAULT_FROM_EMAIL, admin_message_recipients
+    )
 
 
 @log_error
@@ -128,7 +134,7 @@ def handle_update(form, timestamp=None):
         timestamp = datetime.datetime.now()
     worksheet = MEMBER_SHEET_NAME
     client = get_sheet_client(worksheet)
-    
+
     token = form.get('token')
     if not token:
         logger.error("Alumni UPDATE: No token provided")
@@ -146,7 +152,7 @@ def handle_update(form, timestamp=None):
     try:
         emails = client.get_column_values(client.get_column_by_name("email"))
         row = emails.index(form['email']) + 1 if form['email'] in emails else None
-        
+
         if not row:
             logger.info("Alumni UPDATE: Email not found")
             return
@@ -157,30 +163,33 @@ def handle_update(form, timestamp=None):
 
     # Update the row with new data
     try:
-        client.update_row(row, [            
-            None,  # Member ID is not updated
-            form.get("firstname"),
-            form.get("lastname"),
-            form.get("address"),
-            form.get("zip"),
-            form.get("city"),
-            form.get("country"),
-            form.get("employer"),
-            form.get("work_title"),
-            form.get("phone_number"),
-            None,  # Email is not updated
-            form.get("tfif_membership"),
-            form.get("alumni_newsletter_consent"),
-            form.get("year_of_admission"),
-            None, # Creation time is not updated
-            format_date_for_sheets(timestamp),  # Update time in Finnish format
-            None,  # Paid status
-            None,  # Reference
-        ])
+        client.update_row(
+            row,
+            [
+                None,  # Member ID is not updated
+                form.get("firstname"),
+                form.get("lastname"),
+                form.get("address"),
+                form.get("zip"),
+                form.get("city"),
+                form.get("country"),
+                form.get("employer"),
+                form.get("work_title"),
+                form.get("phone_number"),
+                None,  # Email is not updated
+                form.get("tfif_membership"),
+                form.get("alumni_newsletter_consent"),
+                form.get("year_of_admission"),
+                None,  # Creation time is not updated
+                format_date_for_sheets(timestamp),  # Update time in Finnish format
+                None,  # Paid status
+                None,  # Reference
+            ],
+        )
     except Exception as e:
         logger.error("Error while updating alumni row: " + str(e))
         return
-    
+
     logger.info("Updating alumni log entry")
     log_action("UPDATE", form)
 
@@ -202,7 +211,7 @@ def send_token_email(token: str, email: str):
         'TOKEN': token,
         'SITE_URL': settings.CONTENT_VARIABLES.get("SITE_URL", "https://datateknologerna.org"),
         'ALUMNI_ASSOCIATION_NAME': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_NAME", "Albins R Gamyler"),
-        'ALUMNI_ASSOCIATION_EMAIL': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_EMAIL")
+        'ALUMNI_ASSOCIATION_EMAIL': settings.CONTENT_VARIABLES.get("ALUMNI_ASSOCIATION_EMAIL"),
     }
     message = render_to_string('alumni/update_token_email.html', context)
     send_email_task.delay(subject, message, settings.DEFAULT_FROM_EMAIL, [email])

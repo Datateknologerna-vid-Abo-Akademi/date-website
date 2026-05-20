@@ -1,6 +1,6 @@
-from datetime import date, timedelta
 import importlib
 import re
+from datetime import date, timedelta
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -14,8 +14,7 @@ from django.template.loader import render_to_string
 from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 from django.urls import clear_url_caches, reverse, set_urlconf
-from django.utils import timezone
-from django.utils import translation
+from django.utils import timezone, translation
 
 from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
@@ -62,8 +61,7 @@ class SiteShellTemplateTests(TestCase):
         rendered = render_to_string("core/base.html", self._content_context())
 
         self.assertIn(
-            "https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/"
-            "font-awesome-line-awesome/css/all.min.css",
+            "https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/font-awesome-line-awesome/css/all.min.css",
             rendered,
         )
         self.assertIn(
@@ -77,10 +75,14 @@ class SiteShellTemplateTests(TestCase):
             SimpleNamespace(category_name="Members", use_category_url=False, url=""),
         ]
         template = Template("{% include 'core/header.html' %}")
-        rendered = template.render(Context({
-            **self._content_context(),
-            "categories": categories,
-        }))
+        rendered = template.render(
+            Context(
+                {
+                    **self._content_context(),
+                    "categories": categories,
+                }
+            )
+        )
 
         dropdown_ids = re.findall(r'id="(navbarDropdownMenuLink\d+)"', rendered)
         self.assertEqual(dropdown_ids, ["navbarDropdownMenuLink0", "navbarDropdownMenuLink1"])
@@ -97,12 +99,16 @@ class SiteShellTemplateTests(TestCase):
             STATICFILES_DIRS=pulterit_settings.STATICFILES_DIRS,
         ):
             template = Template("{% include 'core/header.html' %}")
-            rendered = template.render(Context({
-                **self._content_context(),
-                "ASSOCIATION_NAME": "Pulterit",
-                "ENABLE_LANGUAGE_FEATURES": True,
-                "LANGUAGES": (("sv", "Svenska"), ("en", "English")),
-            }))
+            rendered = template.render(
+                Context(
+                    {
+                        **self._content_context(),
+                        "ASSOCIATION_NAME": "Pulterit",
+                        "ENABLE_LANGUAGE_FEATURES": True,
+                        "LANGUAGES": (("sv", "Svenska"), ("en", "English")),
+                    }
+                )
+            )
 
         self.assertIn("container-fluid px-3", rendered)
         self.assertIn("pulterit-white-wo-text.svg", rendered)
@@ -115,20 +121,21 @@ class SiteShellTemplateTests(TestCase):
             TEMPLATES=pulterit_settings.TEMPLATES,
             STATICFILES_DIRS=pulterit_settings.STATICFILES_DIRS,
         ):
-            rendered = render_to_string("core/base.html", {
-                **self._content_context(),
-                "ASSOCIATION_NAME": "Pulterit",
-                "ENABLE_LANGUAGE_FEATURES": True,
-                "LANGUAGES": (("sv", "Svenska"), ("en", "English")),
-            })
+            rendered = render_to_string(
+                "core/base.html",
+                {
+                    **self._content_context(),
+                    "ASSOCIATION_NAME": "Pulterit",
+                    "ENABLE_LANGUAGE_FEATURES": True,
+                    "LANGUAGES": (("sv", "Svenska"), ("en", "English")),
+                },
+            )
 
         shared_header_css = "core/css/header.css"
         pulterit_header_css = "core/css/header-overrides.css"
         self.assertIn(shared_header_css, rendered)
         self.assertIn(pulterit_header_css, rendered)
         self.assertLess(rendered.index(shared_header_css), rendered.index(pulterit_header_css))
-
-
 
     def test_language_picker_hides_when_disabled_in_header_template(self):
         template = Template("{% include 'core/header.html' %}")
@@ -139,13 +146,17 @@ class SiteShellTemplateTests(TestCase):
 
     def test_footer_handles_blank_social_urls_and_office_hours(self):
         template = Template("{% include 'core/footer.html' %}")
-        rendered = template.render(Context({
-            **self._content_context(),
-            "SOCIAL_BUTTONS": [
-                ["fa-facebook-f", "https://example.com/facebook"],
-                ["fa-github", ""],
-            ],
-        }))
+        rendered = template.render(
+            Context(
+                {
+                    **self._content_context(),
+                    "SOCIAL_BUTTONS": [
+                        ["fa-facebook-f", "https://example.com/facebook"],
+                        ["fa-github", ""],
+                    ],
+                }
+            )
+        )
 
         self.assertIn("https://example.com/facebook", rendered)
         self.assertNotIn('href=""', rendered)
@@ -564,18 +575,22 @@ class LanguageSelectionTests(TestCase):
 
     def test_footer_skips_social_buttons_without_urls(self):
         template = Template("{% include 'core/footer.html' %}")
-        rendered = template.render(Context({
-            "SOCIAL_BUTTONS": [
-                ["fa-facebook-f", "https://example.com/facebook"],
-                ["fa-github", ""],
-            ],
-            "ASSOCIATION_NAME_FULL": "Test Association",
-            "ASSOCIATION_EMAIL": "test@example.com",
-            "ASSOCIATION_ADDRESS_L1": "Line 1",
-            "ASSOCIATION_ADDRESS_L2": "Line 2",
-            "ASSOCIATION_POSTAL_CODE": "12345",
-            "ASSOCIATION_OFFICE_HOURS": "",
-        }))
+        rendered = template.render(
+            Context(
+                {
+                    "SOCIAL_BUTTONS": [
+                        ["fa-facebook-f", "https://example.com/facebook"],
+                        ["fa-github", ""],
+                    ],
+                    "ASSOCIATION_NAME_FULL": "Test Association",
+                    "ASSOCIATION_EMAIL": "test@example.com",
+                    "ASSOCIATION_ADDRESS_L1": "Line 1",
+                    "ASSOCIATION_ADDRESS_L2": "Line 2",
+                    "ASSOCIATION_POSTAL_CODE": "12345",
+                    "ASSOCIATION_OFFICE_HOURS": "",
+                }
+            )
+        )
         self.assertIn("https://example.com/facebook", rendered)
         self.assertNotIn('href=""', rendered)
 
@@ -583,13 +598,13 @@ class LanguageSelectionTests(TestCase):
 class HomepageTemplateSelectionTests(TestCase):
     @override_settings(PROJECT_NAME="kk")
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
-    @patch("date.views.random.randrange", return_value=0)
+    @patch("date.views.secrets.randbelow", return_value=0)
     def test_kk_uses_april_template_on_april_first_when_roll_matches(self, _randrange, _localdate):
         self.assertEqual(get_homepage_template_name(), "date/april_start.html")
 
     @override_settings(PROJECT_NAME="kk")
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
-    @patch("date.views.random.randrange", return_value=1)
+    @patch("date.views.secrets.randbelow", return_value=1)
     def test_kk_uses_regular_template_on_april_first_when_roll_misses(self, _randrange, _localdate):
         self.assertEqual(get_homepage_template_name(), "date/start.html")
 
@@ -600,7 +615,7 @@ class HomepageTemplateSelectionTests(TestCase):
 
     @override_settings(PROJECT_NAME="date")
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
-    @patch("date.views.random.randrange", return_value=0)
+    @patch("date.views.secrets.randbelow", return_value=0)
     def test_non_kk_never_uses_april_template(self, _randrange, _localdate):
         self.assertEqual(get_homepage_template_name(), "date/start.html")
 
@@ -617,10 +632,7 @@ class AssociationHomepageSmokeTests(TestCase):
 
     def _association_overrides(self, association):
         settings_module = importlib.import_module(self.association_settings_modules[association])
-        installed_apps = [
-            app for app in settings_module.INSTALLED_APPS
-            if app != "django_cleanup"
-        ]
+        installed_apps = [app for app in settings_module.INSTALLED_APPS if app != "django_cleanup"]
         overrides = {
             "PROJECT_NAME": association,
             "INSTALLED_APPS": installed_apps,
@@ -659,7 +671,7 @@ class AssociationHomepageSmokeTests(TestCase):
                 self.assertEqual(response.status_code, 200)
 
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
-    @patch("date.views.random.randrange", return_value=0)
+    @patch("date.views.secrets.randbelow", return_value=0)
     def test_kk_april_homepage_renders(self, _randrange, _localdate):
         response = self._get_association_homepage("kk")
 

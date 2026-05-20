@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 
 from django.apps import apps
@@ -59,9 +60,7 @@ class Command(BaseCommand):
 
             try:
                 queryset = (
-                    model.objects.filter(Q(slug__isnull=True) | Q(slug=""))
-                    .order_by("-id")
-                    .values(*fields)[:limit]
+                    model.objects.filter(Q(slug__isnull=True) | Q(slug="")).order_by("-id").values(*fields)[:limit]
                 )
                 rows = list(queryset)
             except (DatabaseError, OperationalError) as exc:
@@ -84,10 +83,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.MIGRATE_HEADING("Recent Admin Edits"))
 
         try:
-            entries = list(
-                LogEntry.objects.select_related("user", "content_type")
-                .order_by("-action_time")[:limit]
-            )
+            entries = list(LogEntry.objects.select_related("user", "content_type").order_by("-action_time")[:limit])
         except (DatabaseError, OperationalError) as exc:
             self.stdout.write(self.style.WARNING(f"Recent admin edits unavailable: {exc}"))
             return
@@ -118,9 +114,12 @@ class Command(BaseCommand):
             if value:
                 return f"{env_name}={value}"
 
+        git = shutil.which("git")
+        if not git:
+            return "unavailable"
         try:
-            return subprocess.check_output(
-                ["git", "rev-parse", "--short", "HEAD"],
+            return subprocess.check_output(  # noqa: S603 — fully hardcoded argument list
+                [git, "rev-parse", "--short", "HEAD"],
                 text=True,
                 stderr=subprocess.DEVNULL,
                 timeout=1,

@@ -3,8 +3,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
-from django.test import RequestFactory
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
 from staticpages.context_processors import get_categories, get_urls
@@ -167,16 +166,22 @@ class StaticUrlTests(TestCase):
         request.user = AnonymousUser()
         parent = StaticUrl.objects.create(title="Parent", category=self.category, url="/parent/")
         StaticUrl.objects.create(title="Exam child", category=self.category, parent=parent, url="/archive/exams/")
-        StaticUrl.objects.create(title="Exam detail child", category=self.category, parent=parent, url="/archive/exams/1/")
+        StaticUrl.objects.create(
+            title="Exam detail child", category=self.category, parent=parent, url="/archive/exams/1/"
+        )
         StaticUrl.objects.create(title="Archive child", category=self.category, parent=parent, url="/archive/old/")
-        StaticUrl.objects.create(title="Examined files", category=self.category, parent=parent, url="/archive/examined/")
+        StaticUrl.objects.create(
+            title="Examined files", category=self.category, parent=parent, url="/archive/examined/"
+        )
 
         installed_with_exambank = list(settings.INSTALLED_APPS)
         if 'exambank' not in installed_with_exambank:
             installed_with_exambank.append('exambank')
 
-        with override_settings(ARCHIVE_ENABLED=False), \
-                patch.object(settings, 'INSTALLED_APPS', new=installed_with_exambank):
+        with (
+            override_settings(ARCHIVE_ENABLED=False),
+            patch.object(settings, 'INSTALLED_APPS', new=installed_with_exambank),
+        ):
             urls = get_urls(request)["urls"]
             children = list(urls[0].children.all())
 
@@ -194,8 +199,10 @@ class StaticUrlTests(TestCase):
 
         installed_without_exambank = [app for app in settings.INSTALLED_APPS if app != 'exambank']
 
-        with override_settings(ARCHIVE_ENABLED=False), \
-                patch.object(settings, 'INSTALLED_APPS', new=installed_without_exambank):
+        with (
+            override_settings(ARCHIVE_ENABLED=False),
+            patch.object(settings, 'INSTALLED_APPS', new=installed_without_exambank),
+        ):
             urls = get_urls(request)["urls"]
             children = list(urls[0].children.all())
 
@@ -221,14 +228,14 @@ class StaticUrlTests(TestCase):
         if 'exambank' not in installed_with_exambank:
             installed_with_exambank.append('exambank')
 
-        with override_settings(ARCHIVE_ENABLED=False), \
-                patch.object(settings, 'INSTALLED_APPS', new=installed_with_exambank):
+        with (
+            override_settings(ARCHIVE_ENABLED=False),
+            patch.object(settings, 'INSTALLED_APPS', new=installed_with_exambank),
+        ):
             categories = get_categories(request)["categories"]
 
         self.assertIn(exam_category, categories)
-        self.assertFalse(
-            any(category.url == "/archive/old/" for category in categories)
-        )
+        self.assertFalse(any(category.url == "/archive/old/" for category in categories))
 
     def test_context_processor_filters_logged_in_only_children_for_anonymous_users(self):
         request = RequestFactory().get("/")

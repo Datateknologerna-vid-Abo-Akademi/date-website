@@ -1,5 +1,7 @@
-import gspread
 import time
+
+import gspread
+
 
 class DateSheetsAdapter:
     def __init__(self, service_account: dict, sheet: str, worksheet: str):
@@ -35,7 +37,7 @@ class DateSheetsAdapter:
 
     def get_last_row(self):
         return self.sheet.get()[-1]
-    
+
     def update_row(self, row: int, data: list):
         """Update a specific row with new data."""
         for cell_index, value in enumerate(data, start=1):

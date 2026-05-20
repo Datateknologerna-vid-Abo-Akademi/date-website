@@ -11,15 +11,14 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 # update
 
-import os
 import json
+import os
+
+import environ
 from django.templatetags.static import static
 from django.utils.translation import gettext_lazy as _
 
-import environ
-
 from .dependencies.ckeditor import *  # noqa
-
 
 env = environ.Env(
     # set casting, default value
@@ -62,6 +61,7 @@ USE_UNFOLD = env('USE_UNFOLD', bool, False)
 
 def _get_unfold_sidebar_navigation(request):
     from core.admin_ui import get_sidebar_navigation
+
     return get_sidebar_navigation(request)
 
 
@@ -87,6 +87,7 @@ def _get_unfold_environment(request):
     # tests can override them via @override_settings without depending on env at
     # import time.
     from django.conf import settings as django_settings
+
     if getattr(django_settings, "DEVELOP", False) or getattr(django_settings, "DEBUG", False):
         return _("Development"), "warning"
 
@@ -108,7 +109,7 @@ UNFOLD = {
     },
     "COLORS": {
         "primary": {
-            "50":  "239 246 255",
+            "50": "239 246 255",
             "100": "219 234 254",
             "200": "191 219 254",
             "300": "147 197 253",
@@ -203,7 +204,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'date.middleware.LangMiddleware',
     'date.middleware.HTCPCPMiddleware',
-    'date.middleware.CDNRewriteMiddleware'
+    'date.middleware.CDNRewriteMiddleware',
 ]
 
 SERVER_TIMING_ENABLED = DEVELOP
@@ -238,7 +239,7 @@ DATABASES = {
         'USER': env('DB_USERNAME', str, 'postgres'),
         'PASSWORD': env_alias('DATE_DB_PASSWORD', 'DB_PASSWORD', default=''),
         'HOST': env('DB_HOST', str, 'db'),
-        'PORT': env('DB_PORT', int, 5432)
+        'PORT': env('DB_PORT', int, 5432),
     }
 }
 
@@ -285,17 +286,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTHENTICATION_BACKENDS = (
-    'members.backends.AuthBackend',
-)
+AUTHENTICATION_BACKENDS = ('members.backends.AuthBackend',)
 
 LOGIN_URL = 'members:login'
 LOGIN_REDIRECT_URL = 'members:info'
 
 # Make CKEditor5 Work with modeltranslations
-MODELTRANSLATION_CUSTOM_FIELDS = (
-    'CKEditor5Field',
-)
+MODELTRANSLATION_CUSTOM_FIELDS = ('CKEditor5Field',)
 
 
 def get_staff_groups(default_groups: list):
@@ -303,25 +300,22 @@ def get_staff_groups(default_groups: list):
     default_groups.extend(json.loads(os.environ.get('EXTRA_STAFF_GROUPS', '[]')))
     return default_groups
 
+
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
 
-LOCALE_PATHS = (
-    'locale',
-)
+LOCALE_PATHS = ('locale',)
 
-ALL_LANGUAGES = (
-    ('sv', ("Svenska")),
-    ('en', ("English")),
-    ('fi', ("Suomi"))
-)
+ALL_LANGUAGES = (('sv', ("Svenska")), ('en', ("English")), ('fi', ("Suomi")))
 
 LANGUAGE_CODE = 'sv'
 USE_ACCEPT_LANGUAGE_HEADER = False
 ENABLE_LANGUAGE_FEATURES = env('ENABLE_LANGUAGE_FEATURES', bool, False)
-LANGUAGES = ALL_LANGUAGES if ENABLE_LANGUAGE_FEATURES else (
-    tuple(language for language in ALL_LANGUAGES if language[0] == LANGUAGE_CODE)
+LANGUAGES = (
+    ALL_LANGUAGES
+    if ENABLE_LANGUAGE_FEATURES
+    else (tuple(language for language in ALL_LANGUAGES if language[0] == LANGUAGE_CODE))
 )
 # Keep modeltranslation's schema stable regardless of whether the multilingual
 # UI is currently enabled. Otherwise makemigrations can think translated fields
@@ -359,7 +353,7 @@ STORAGES = {
     },
     "staticfiles": {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    }
+    },
 }
 
 if USE_S3:
@@ -373,14 +367,16 @@ if USE_S3:
             'S3_PRIVATE_BUCKET_NAME',
             'AWS_PRIVATE_STORAGE_BUCKET_NAME',
             default='',
-        ) or AWS_STORAGE_BUCKET_NAME
+        )
+        or AWS_STORAGE_BUCKET_NAME
     )
     AWS_PUBLIC_STORAGE_BUCKET_NAME = (
         env_alias(
             'S3_PUBLIC_BUCKET_NAME',
             'AWS_PUBLIC_STORAGE_BUCKET_NAME',
             default='',
-        ) or AWS_STORAGE_BUCKET_NAME
+        )
+        or AWS_STORAGE_BUCKET_NAME
     )
     AWS_S3_REGION_NAME = env_alias('S3_REGION_NAME', 'AWS_S3_REGION_NAME', default=None)
     AWS_S3_SIGNATURE_VERSION = env_alias('S3_SIGNATURE_VERSION', 'AWS_S3_SIGNATURE_VERSION', default=None)
@@ -391,7 +387,7 @@ if USE_S3:
     # s3 public media settings
     PRIVATE_MEDIA_LOCATION = env('PRIVATE_MEDIA_LOCATION')
     PUBLIC_MEDIA_LOCATION = env('PUBLIC_MEDIA_LOCATION')
-    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_PRIVATE_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/'
+    MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/{AWS_PRIVATE_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/"
 
     def get_s3_storage_options(bucket_name, location, querystring_auth):
         options = {
@@ -414,7 +410,8 @@ if USE_S3:
             AWS_PRIVATE_STORAGE_BUCKET_NAME,
             PRIVATE_MEDIA_LOCATION,
             AWS_QUERYSTRING_AUTH,
-        ) | {"querystring_expire": AWS_QUERYSTRING_EXPIRE},
+        )
+        | {"querystring_expire": AWS_QUERYSTRING_EXPIRE},
     }
     STORAGES["public_media"] = {
         "BACKEND": "core.storage_backends.PublicMediaStorage",
@@ -476,29 +473,14 @@ LOGGING = {
     'formatters': {
         'verbose': {
             '()': 'core.redaction.RedactingFormatter',
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s',
         },
-        'simple': {
-            '()': 'core.redaction.RedactingFormatter',
-            'format': '%(levelname)s %(message)s'
-        },
+        'simple': {'()': 'core.redaction.RedactingFormatter', 'format': '%(levelname)s %(message)s'},
     },
     'handlers': {
-        'console': {
-            'level': 'NOTSET',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple'
-        },
-        'console_debug': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple'
-        },
-        'console_error': {
-            'level': 'ERROR',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
-        },
+        'console': {'level': 'NOTSET', 'class': 'logging.StreamHandler', 'formatter': 'simple'},
+        'console_debug': {'level': 'DEBUG', 'class': 'logging.StreamHandler', 'formatter': 'simple'},
+        'console_error': {'level': 'ERROR', 'class': 'logging.StreamHandler', 'formatter': 'verbose'},
     },
     'loggers': {
         'django': {
@@ -525,8 +507,8 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
-        }
-    }
+        },
+    },
 }
 
 EXPERIMENTAL_FEATURES = []

@@ -5,7 +5,7 @@ from django.utils import timezone
 from functionaries.forms import FunctionaryForm
 from functionaries.models import Functionary, FunctionaryRole
 from functionaries.selectors import get_filtered_functionaries, get_selected_role, get_selected_year
-from members.models import Member, MembershipType, ORDINARY_MEMBER
+from members.models import ORDINARY_MEMBER, Member, MembershipType
 
 
 class FunctionaryFormTests(TestCase):
@@ -20,18 +20,24 @@ class FunctionaryFormTests(TestCase):
 
     def test_prevents_duplicate_year_role(self):
         Functionary.objects.create(member=self.member, functionary_role=self.role, year=2024)
-        form = FunctionaryForm(data={
-            'functionary_role': self.role.id,
-            'year': 2024,
-        }, member=self.member)
+        form = FunctionaryForm(
+            data={
+                'functionary_role': self.role.id,
+                'year': 2024,
+            },
+            member=self.member,
+        )
         self.assertFalse(form.is_valid())
         self.assertIn('Du har redan lagt till den här funktionärsposten', form.errors['__all__'][0])
 
     def test_allows_unique_entries(self):
-        form = FunctionaryForm(data={
-            'functionary_role': self.role.id,
-            'year': 2023,
-        }, member=self.member)
+        form = FunctionaryForm(
+            data={
+                'functionary_role': self.role.id,
+                'year': 2023,
+            },
+            member=self.member,
+        )
         self.assertTrue(form.is_valid())
         functionary = form.save(commit=False)
         functionary.member = self.member
@@ -109,7 +115,7 @@ class FunctionaryHelperTests(TestCase):
         self.assertTrue(all_roles)
         self.assertEqual(list(selected), list(roles))
 
-        request_specific = self.factory.get(f'/funktionarer/?role={self.role.pk}')
+        request_specific = self.factory.get(f"/funktionarer/?role={self.role.pk}")
         request_specific.user = self.member
         selected_role, all_roles_flag = get_selected_role(request_specific, roles)
         self.assertFalse(all_roles_flag)

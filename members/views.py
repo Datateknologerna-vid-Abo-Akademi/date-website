@@ -8,7 +8,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.views import PasswordChangeView, PasswordResetView
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -18,10 +18,11 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View
 
 from core.utils import enqueue_task_on_commit, send_email_task, validate_captcha
-from .forms import SignUpForm, MemberEditForm, CustomPasswordResetForm
+
+from .forms import CustomPasswordResetForm, MemberEditForm, SignUpForm
 from .models import Member
-from .two_factor import member_has_2fa
 from .tokens import account_activation_token
+from .two_factor import member_has_2fa
 
 logger = logging.getLogger('date')
 
@@ -101,12 +102,15 @@ def signup(request):
             # Send email of new user
             current_site = get_current_site(request)
             mail_subject = 'A new account has been created and required your attention.'
-            message = render_to_string('members/acc_active_email.html', {
-                'user': user,
-                'domain': current_site.domain,
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)),  # .decode(),
-                'token': account_activation_token.make_token(user),
-            })
+            message = render_to_string(
+                'members/acc_active_email.html',
+                {
+                    'user': user,
+                    'domain': current_site.domain,
+                    'uid': urlsafe_base64_encode(force_bytes(user.pk)),  # .decode(),
+                    'token': account_activation_token.make_token(user),
+                },
+            )
             to_email = os.environ.get('EMAIL_HOST_RECEIVER')
             enqueue_task_on_commit(
                 send_email_task,
@@ -127,7 +131,7 @@ def activate(request, uidb64, token):
     try:
         uid = urlsafe_base64_decode(uidb64)
         user = Member.objects.get(pk=uid)
-    except(TypeError, ValueError, OverflowError, Member.DoesNotExist):
+    except TypeError, ValueError, OverflowError, Member.DoesNotExist:
         user = None
     if user is not None and account_activation_token.check_token(user, token):
         user.is_active = True
@@ -136,7 +140,6 @@ def activate(request, uidb64, token):
         return render(request, 'members/userinfo.html', {"user": user, "msg": msg})
     else:
         return HttpResponse('Activation link is invalid!')
-
 
 
 class CustomPasswordResetView(PasswordResetView):

@@ -3,7 +3,8 @@ from django.db.models import Count
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.http import urlencode
-from django.utils.translation import gettext_lazy as _, ngettext
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ngettext
 
 from core.admin_base import ModelAdmin, TabularInline
 
@@ -23,7 +24,15 @@ class FunctionaryInline(TabularInline):
 class FunctionaryAdmin(ModelAdmin):
     list_display = ('get_display_name', 'functionary_role_link', 'year')
     list_filter = ('functionary_role', 'year')
-    search_fields = ('member__first_name', 'member__last_name', 'member__username', 'member__email', 'name', 'functionary_role__title', 'year')
+    search_fields = (
+        'member__first_name',
+        'member__last_name',
+        'member__username',
+        'member__email',
+        'name',
+        'functionary_role__title',
+        'year',
+    )
     autocomplete_fields = ('member', 'functionary_role')
     list_select_related = ('member', 'functionary_role')
     ordering = ['-year']

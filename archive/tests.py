@@ -4,18 +4,17 @@ import tempfile
 from io import BytesIO
 from unittest.mock import PropertyMock, patch
 
-from PIL import Image
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from PIL import Image
 
 from archive.models import Collection, Document
 from gallery.models import Album, Photo
-from members.models import Member, MembershipType, ORDINARY_MEMBER
+from members.models import ORDINARY_MEMBER, Member, MembershipType
 
 
 def create_collection(title="Test collection", collection_type=None):
@@ -31,12 +30,9 @@ def create_picture(favorite=False):
     img = Image.new('RGB', (100, 100))
     img.save(os.path.join(settings.MEDIA_ROOT, 'test_image.jpg'))
     img.close()
-    img_file = open(os.path.join(settings.MEDIA_ROOT, 'test_image.jpg'),"rb")
-    img_data = img_file.read()
-    img_file.close()
-    test_image = SimpleUploadedFile(name='test_image.jpg',
-                                    content=img_data,
-                                    content_type='image/jpg')
+    with open(os.path.join(settings.MEDIA_ROOT, 'test_image.jpg'), "rb") as img_file:
+        img_data = img_file.read()
+    test_image = SimpleUploadedFile(name='test_image.jpg', content=img_data, content_type='image/jpg')
     return Photo.objects.create(album=album, image=test_image, favorite=favorite)
 
 
@@ -66,6 +62,7 @@ class CollectionTestCase(TestCase):
         cls._media_override.disable()
         shutil.rmtree(cls._media_root, ignore_errors=True)
         super().tearDownClass()
+
     def test_collection_creation(self):
         c = create_collection(collection_type='Documents')
         self.assertTrue(isinstance(c, Collection))
@@ -99,12 +96,14 @@ class ArchiveAdminTests(TestCase):
             title="Broken Picture Admin Collection",
             pub_date=timezone.now(),
         )
-        Photo.objects.bulk_create([
-            Photo(
-                album=album,
-                image="archive/broken.jpg",
-            )
-        ])
+        Photo.objects.bulk_create(
+            [
+                Photo(
+                    album=album,
+                    image="archive/broken.jpg",
+                )
+            ]
+        )
 
         with patch(
             "django.db.models.fields.files.FieldFile.url",
@@ -169,7 +168,7 @@ class PictureDetailFragmentViewTests(TestCase):
         for index in range(13):
             Photo.objects.create(
                 album=self.collection,
-                image=self._uploaded_image(f'fragment-{index}.jpg'),
+                image=self._uploaded_image(f"fragment-{index}.jpg"),
             )
 
     def _uploaded_image(self, name):

@@ -4,7 +4,6 @@ import json
 import mimetypes
 import os
 import re
-import xml.etree.ElementTree as ET
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -13,6 +12,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urljoin, urlparse
 
+import defusedxml.ElementTree as ET
 import requests
 from django.conf import settings
 from django.core.files import File
@@ -33,7 +33,6 @@ from news.models import Category, Post
 from publications.models import PDFFile, PublicationCollection
 from staticpages.models import POST_SLUG_MAX_LENGTH as STATICPAGE_SLUG_MAX_LENGTH
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
-
 
 WXR_NS = {
     "content": "http://purl.org/rss/1.0/modules/content/",
@@ -93,9 +92,7 @@ GALLERY_SOURCE_SLUGS = {"bildgalleriet", "gamla-bilder"}
 EXAM_ARCHIVE_POST_TYPE = "rtbs_tabs"
 EXAM_ARCHIVE_SLUGS = {"tentarkiv"}
 FUNCTIONARIES_SOURCE_SLUGS = {"funktionarer"}
-GALLERY_THUMBNAIL_USER_AGENT = (
-    "Mozilla/5.0 (compatible; date-website-wp-import/1.0; +https://datateknologerna.fi)"
-)
+GALLERY_THUMBNAIL_USER_AGENT = "Mozilla/5.0 (compatible; date-website-wp-import/1.0; +https://datateknologerna.fi)"
 GALLERY_THUMBNAIL_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 OG_IMAGE_RE = re.compile(
     r'<meta\b[^>]*?(?:'
@@ -109,28 +106,26 @@ OG_IMAGE_RE = re.compile(
 
 def php_unserialize(data: bytes, pos: int = 0):
     """Minimal PHP-serialize decoder for arrays of strings/ints used by rtbs_tabs."""
-    code = data[pos:pos + 2]
+    code = data[pos : pos + 2]
     if code == b"s:":
         colon = data.index(b":", pos + 2)
-        length = int(data[pos + 2:colon])
+        length = int(data[pos + 2 : colon])
         start = colon + 2
         end = start + length
         return data[start:end].decode("utf-8"), end + 2
     if code == b"i:":
         end = data.index(b";", pos + 2)
-        return int(data[pos + 2:end]), end + 1
+        return int(data[pos + 2 : end]), end + 1
     if code == b"a:":
         colon = data.index(b":", pos + 2)
-        count = int(data[pos + 2:colon])
+        count = int(data[pos + 2 : colon])
         cur = colon + 2
         result: dict = {}
         for _ in range(count):
             key, cur = php_unserialize(data, cur)
             value, cur = php_unserialize(data, cur)
             if not isinstance(key, (str, int)):
-                raise ValueError(
-                    f"Unsupported PHP array key type {type(key).__name__} at offset {pos}"
-                )
+                raise ValueError(f"Unsupported PHP array key type {type(key).__name__} at offset {pos}")
             result[key] = value
         return result, cur + 1
     raise ValueError(f"Unsupported PHP serialize token at offset {pos}")
@@ -283,8 +278,7 @@ class Command(BaseCommand):
             "--import-exam-archive",
             action="store_true",
             help=(
-                "Import the WordPress 'tentarkiv' rtbs_tabs payload as exam archives "
-                "with one exam file per linked PDF."
+                "Import the WordPress 'tentarkiv' rtbs_tabs payload as exam archives with one exam file per linked PDF."
             ),
         )
         parser.add_argument(
@@ -295,10 +289,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--import-functionaries",
             action="store_true",
-            help=(
-                "Import the SF WordPress 'funktionarer' page into FunctionaryRole and "
-                "name-only Functionary rows."
-            ),
+            help=("Import the SF WordPress 'funktionarer' page into FunctionaryRole and name-only Functionary rows."),
         )
         parser.add_argument(
             "--replace-functionaries",
@@ -315,19 +306,18 @@ class Command(BaseCommand):
         if not xml_path.exists():
             raise CommandError(f"XML export does not exist: {xml_path}")
 
-        media_dir = Path(
-            options["media_dir"]
-            or xml_path.parent / "sfklubben-export-local" / "assets" / "sfklubben.fi"
-        ).expanduser().resolve()
+        media_dir = (
+            Path(options["media_dir"] or xml_path.parent / "sfklubben-export-local" / "assets" / "sfklubben.fi")
+            .expanduser()
+            .resolve()
+        )
         if not options["skip_media"] and not options["download_missing_media"] and not media_dir.exists():
             raise CommandError(
                 f"Media directory does not exist: {media_dir}. "
                 "Run with --skip-media, pass --media-dir, or use --download-missing-media."
             )
 
-        report_path = Path(
-            options["report"] or xml_path.parent / "wordpress-import-report.json"
-        ).expanduser().resolve()
+        report_path = Path(options["report"] or xml_path.parent / "wordpress-import-report.json").expanduser().resolve()
 
         xml_bytes = xml_path.read_bytes()
         xml_text = xml_bytes.decode("utf-8", errors="replace")
@@ -338,9 +328,7 @@ class Command(BaseCommand):
         url_map: dict[str, str] = {}
         storage_name_map: dict[str, str] = {}
 
-        self.stdout.write(
-            f"Parsed {len(items)} WordPress items and {len(upload_urls)} sfklubben.fi upload URLs."
-        )
+        self.stdout.write(f"Parsed {len(items)} WordPress items and {len(upload_urls)} sfklubben.fi upload URLs.")
 
         if not options["skip_media"]:
             url_map = self.import_media(
@@ -547,13 +535,13 @@ class Command(BaseCommand):
     def media_download_candidates(self, url: str) -> list[str]:
         candidates = [url]
         if url.startswith("http://"):
-            candidates.append("https://" + url[len("http://"):])
+            candidates.append("https://" + url[len("http://") :])
         elif url.startswith("https://"):
-            candidates.append("http://" + url[len("https://"):])
+            candidates.append("http://" + url[len("https://") :])
         return candidates
 
     def import_post(self, item: WpItem, author: Member | None, url_map: dict[str, str], options, stats: ImportStats):
-        slug = self.unique_slug(item.slug or item.title, Post, max_length=Post._meta.get_field("slug").max_length)
+        slug = self.unique_slug(item.slug or item.title, Post, max_length=Post._meta.get_field("slug").max_length)  # type: ignore[arg-type]
         existing = Post.objects.filter(slug=slug).first()
         if existing and not options["update_existing"]:
             return
@@ -684,7 +672,7 @@ class Command(BaseCommand):
         slug = self.unique_slug(
             link["title"],
             PDFFile,
-            max_length=PDFFile._meta.get_field("slug").max_length,
+            max_length=PDFFile._meta.get_field("slug").max_length,  # type: ignore[arg-type]
         )
         existing = PDFFile.objects.filter(slug=slug).first()
         if existing and not options["update_existing"]:
@@ -731,13 +719,15 @@ class Command(BaseCommand):
                 if url in seen_urls:
                     continue
                 seen_urls.add(url)
-                links.append({
-                    "title": publication["title"],
-                    "url": url,
-                    "description": self.plain_text(item.excerpt),
-                    "publication_date": publication["publication_date"] or item.post_date.date(),
-                    "cover_image_url": publication["cover_image_url"],
-                })
+                links.append(
+                    {
+                        "title": publication["title"],
+                        "url": url,
+                        "description": self.plain_text(item.excerpt),
+                        "publication_date": publication["publication_date"] or item.post_date.date(),
+                        "cover_image_url": publication["cover_image_url"],
+                    }
+                )
         return links
 
     def politicus_publication_links(self, items: list[WpItem]) -> list[dict]:
@@ -761,14 +751,16 @@ class Command(BaseCommand):
                 if target_url in seen_targets:
                     continue
                 seen_targets.add(target_url)
-                links.append({
-                    "title": publication["title"],
-                    "url": link_url,
-                    "file_url": file_url,
-                    "description": self.plain_text(item.excerpt),
-                    "publication_date": publication["publication_date"] or item.post_date.date(),
-                    "cover_image_url": publication["cover_image_url"],
-                })
+                links.append(
+                    {
+                        "title": publication["title"],
+                        "url": link_url,
+                        "file_url": file_url,
+                        "description": self.plain_text(item.excerpt),
+                        "publication_date": publication["publication_date"] or item.post_date.date(),
+                        "cover_image_url": publication["cover_image_url"],
+                    }
+                )
         return links
 
     def slug_from_url(self, url: str) -> str:
@@ -796,9 +788,9 @@ class Command(BaseCommand):
             candidates.append(f"http://sfklubben.fi{url}")
             candidates.append(f"https://sfklubben.fi{url}")
         elif url.startswith("http://"):
-            candidates.append("https://" + url[len("http://"):])
+            candidates.append("https://" + url[len("http://") :])
         elif url.startswith("https://"):
-            candidates.append("http://" + url[len("https://"):])
+            candidates.append("http://" + url[len("https://") :])
         for candidate in candidates:
             storage_name = storage_name_map.get(candidate)
             if storage_name:
@@ -814,9 +806,9 @@ class Command(BaseCommand):
     ):
         menu_slug = options["nav_menu"]
         nav_items = [
-            item for item in items
-            if item.post_type == "nav_menu_item"
-            and any(slug == menu_slug for slug, _name in item.nav_menus)
+            item
+            for item in items
+            if item.post_type == "nav_menu_item" and any(slug == menu_slug for slug, _name in item.nav_menus)
         ]
         if not nav_items:
             self.stdout.write(self.style.WARNING(f"No WordPress nav items found for menu '{menu_slug}'."))
@@ -962,40 +954,34 @@ class Command(BaseCommand):
                 if key in seen:
                     continue
                 seen.add(key)
-                links.append({
-                    "title": title,
-                    "url": url,
-                    "pub_date": self.gallery_pub_date(title, item.post_date),
-                })
+                links.append(
+                    {
+                        "title": title,
+                        "url": url,
+                        "pub_date": self.gallery_pub_date(title, item.post_date),
+                    }
+                )
         return links
 
     def import_functionaries(self, items: list[WpItem], options, stats: ImportStats) -> None:
         page = next(
-            (
-                item for item in items
-                if item.post_type == "page" and item.slug in FUNCTIONARIES_SOURCE_SLUGS
-            ),
+            (item for item in items if item.post_type == "page" and item.slug in FUNCTIONARIES_SOURCE_SLUGS),
             None,
         )
         if page is None:
-            self.stdout.write(
-                self.style.WARNING("No 'funktionarer' page found; skipping functionary import.")
-            )
+            self.stdout.write(self.style.WARNING("No 'funktionarer' page found; skipping functionary import."))
             return
 
         rows = FunctionaryPageParser.parse(page.content)
         if not rows:
-            self.stdout.write(
-                self.style.WARNING("No functionary rows found on the 'funktionarer' page.")
-            )
+            self.stdout.write(self.style.WARNING("No functionary rows found on the 'funktionarer' page."))
             return
 
         if options["replace_functionaries"] and not options["dry_run"]:
             Functionary.objects.all().delete()
 
         role_cache = {
-            role.title: role
-            for role in FunctionaryRole.objects.filter(title__in={row["role"] for row in rows})
+            role.title: role for role in FunctionaryRole.objects.filter(title__in={row["role"] for row in rows})
         }
         dry_run_created_roles = set()
         for row in rows:
@@ -1021,7 +1007,8 @@ class Command(BaseCommand):
                         year=row["year"],
                         name=row["name"],
                     ).exists()
-                    if role is not None else False
+                    if role is not None
+                    else False
                 )
                 stats.functionaries_updated += int(existing)
                 stats.functionaries_created += int(not existing)
@@ -1045,19 +1032,11 @@ class Command(BaseCommand):
         stats: ImportStats,
     ) -> None:
         rtbs_item = next(
-            (
-                item for item in items
-                if item.post_type == EXAM_ARCHIVE_POST_TYPE
-                and item.slug in EXAM_ARCHIVE_SLUGS
-            ),
+            (item for item in items if item.post_type == EXAM_ARCHIVE_POST_TYPE and item.slug in EXAM_ARCHIVE_SLUGS),
             None,
         )
         if rtbs_item is None:
-            self.stdout.write(
-                self.style.WARNING(
-                    "No 'tentarkiv' rtbs_tabs item found; skipping exam archive import."
-                )
-            )
+            self.stdout.write(self.style.WARNING("No 'tentarkiv' rtbs_tabs item found; skipping exam archive import."))
             return
 
         # ElementTree normalizes CRLF to LF, which corrupts PHP byte counts in
@@ -1067,18 +1046,14 @@ class Command(BaseCommand):
         if serialized_bytes is None:
             serialized_text = rtbs_item.meta.get("_rtbs_tabs_head") or ""
             if not serialized_text:
-                self.stdout.write(
-                    self.style.WARNING("'tentarkiv' rtbs_tabs item has no _rtbs_tabs_head meta.")
-                )
+                self.stdout.write(self.style.WARNING("'tentarkiv' rtbs_tabs item has no _rtbs_tabs_head meta."))
                 return
             serialized_bytes = serialized_text.encode("utf-8")
 
         try:
             tabs, _ = php_unserialize(serialized_bytes)
         except (ValueError, IndexError, UnicodeDecodeError) as exc:
-            self.stdout.write(
-                self.style.WARNING(f"Failed to parse rtbs_tabs payload: {exc}")
-            )
+            self.stdout.write(self.style.WARNING(f"Failed to parse rtbs_tabs payload: {exc}"))
             return
         if not isinstance(tabs, dict):
             self.stdout.write(self.style.WARNING("rtbs_tabs payload is not an array."))
@@ -1097,9 +1072,7 @@ class Command(BaseCommand):
             if not title:
                 continue
 
-            archive = self.get_or_create_exam_collection(
-                title, rtbs_item.post_date, options, stats
-            )
+            archive = self.get_or_create_exam_collection(title, rtbs_item.post_date, options, stats)
             anchors = self.exam_anchors_in_content(content)
             for anchor in anchors:
                 self.import_exam_document(
@@ -1176,10 +1149,7 @@ class Command(BaseCommand):
             return
 
         if options["dry_run"] or archive is None:
-            existing = (
-                ExamFile.objects.filter(archive=archive, title=title).first()
-                if archive is not None else None
-            )
+            existing = ExamFile.objects.filter(archive=archive, title=title).first() if archive is not None else None
             if existing:
                 stats.exam_documents_updated += 1
             else:
@@ -1237,9 +1207,9 @@ class Command(BaseCommand):
     ) -> str | None:
         candidates = [href]
         if href.startswith("http://"):
-            candidates.append("https://" + href[len("http://"):])
+            candidates.append("https://" + href[len("http://") :])
         elif href.startswith("https://"):
-            candidates.append("http://" + href[len("https://"):])
+            candidates.append("http://" + href[len("https://") :])
         elif href.startswith("/wp-content/uploads/"):
             candidates.append(f"https://sfklubben.fi{href}")
             candidates.append(f"http://sfklubben.fi{href}")
@@ -1269,11 +1239,7 @@ class Command(BaseCommand):
         result = self.fetch_gallery_og_image(link["url"])
         if result is None:
             stats.gallery_thumbnails_missing += 1
-            self.stdout.write(
-                self.style.WARNING(
-                    f"  no og:image preview for {link['url']} ({link['title']})"
-                )
-            )
+            self.stdout.write(self.style.WARNING(f"  no og:image preview for {link['url']} ({link['title']})"))
             return
         image_url, image_bytes = result
         filename = self.gallery_thumbnail_filename(link["title"], image_url)
@@ -1348,7 +1314,7 @@ class Command(BaseCommand):
                 slug = self.unique_slug(object_item.slug or object_item.title, StaticPage, STATICPAGE_SLUG_MAX_LENGTH)
                 return reverse("staticpages:page", args=[slug])
             if object_item and object_item.post_type == "post":
-                return f"/news/articles/{self.unique_slug(object_item.slug or object_item.title, Post, Post._meta.get_field('slug').max_length)}/"
+                return f"/news/articles/{self.unique_slug(object_item.slug or object_item.title, Post, Post._meta.get_field('slug').max_length)}/"  # type: ignore[arg-type]
         return self.normalize_nav_url(item.meta.get("_menu_item_url", ""), url_map)
 
     def normalize_nav_url(self, url: str, url_map: dict[str, str]) -> str:
@@ -1521,23 +1487,18 @@ class Command(BaseCommand):
         self.stdout.write(f"  media missing locally: {stats.media_missing}")
         self.stdout.write(f"  posts created/updated: {stats.posts_created}/{stats.posts_updated}")
         self.stdout.write(f"  pages created/updated: {stats.pages_created}/{stats.pages_updated}")
-        self.stdout.write(
-            f"  publications created/updated: {stats.publications_created}/{stats.publications_updated}"
-        )
+        self.stdout.write(f"  publications created/updated: {stats.publications_created}/{stats.publications_updated}")
         self.stdout.write(f"  categories created: {stats.categories_created}")
         self.stdout.write(f"  nav categories created: {stats.nav_categories_created}")
         self.stdout.write(f"  nav urls created: {stats.nav_urls_created}")
         self.stdout.write(
-            f"  gallery redirects created/updated: "
-            f"{stats.gallery_redirects_created}/{stats.gallery_redirects_updated}"
+            f"  gallery redirects created/updated: {stats.gallery_redirects_created}/{stats.gallery_redirects_updated}"
         )
         self.stdout.write(
-            f"  gallery thumbnails saved/missing: "
-            f"{stats.gallery_thumbnails_saved}/{stats.gallery_thumbnails_missing}"
+            f"  gallery thumbnails saved/missing: {stats.gallery_thumbnails_saved}/{stats.gallery_thumbnails_missing}"
         )
         self.stdout.write(
-            f"  exam collections created/updated: "
-            f"{stats.exam_collections_created}/{stats.exam_collections_updated}"
+            f"  exam collections created/updated: {stats.exam_collections_created}/{stats.exam_collections_updated}"
         )
         self.stdout.write(
             f"  exam documents created/updated/missing: "
@@ -1545,8 +1506,7 @@ class Command(BaseCommand):
         )
         self.stdout.write(f"  functionary roles created: {stats.functionary_roles_created}")
         self.stdout.write(
-            f"  functionaries created/updated: "
-            f"{stats.functionaries_created}/{stats.functionaries_updated}"
+            f"  functionaries created/updated: {stats.functionaries_created}/{stats.functionaries_updated}"
         )
         if stats.skipped_items:
             self.stdout.write(f"  skipped item types: {dict(stats.skipped_items)}")
@@ -1650,12 +1610,14 @@ class AOPublicationPageParser(HTMLParser):
                 issue_label = self.issue_label_for_current_link(anchor, text)
                 if not issue_label:
                     continue
-                self.links.append({
-                    "title": f"A&O {issue_label}",
-                    "url": anchor["href"].strip(),
-                    "cover_image_url": anchor.get("image_src", "").strip(),
-                    "publication_date": self.publication_date(issue_label),
-                })
+                self.links.append(
+                    {
+                        "title": f"A&O {issue_label}",
+                        "url": anchor["href"].strip(),
+                        "cover_image_url": anchor.get("image_src", "").strip(),
+                        "publication_date": self.publication_date(issue_label),
+                    }
+                )
                 self.table_link_index += 1
         elif self.ISSUE_RE.match(text):
             self.table_labels.append(text)
@@ -1737,12 +1699,14 @@ class PoliticusPublicationPageParser(HTMLParser):
             for anchor in self.heading_anchors:
                 if not anchor.get("href"):
                     continue
-                self.links.append({
-                    "title": f"Politicus {year}",
-                    "url": anchor["href"].strip(),
-                    "cover_image_url": anchor.get("image_src", "").strip(),
-                    "publication_date": datetime(year, 1, 1).date(),
-                })
+                self.links.append(
+                    {
+                        "title": f"Politicus {year}",
+                        "url": anchor["href"].strip(),
+                        "cover_image_url": anchor.get("image_src", "").strip(),
+                        "publication_date": datetime(year, 1, 1).date(),
+                    }
+                )
         self.in_heading = False
         self.heading_text = ""
         self.heading_anchors = []
@@ -1811,11 +1775,13 @@ class FunctionaryPageParser(HTMLParser):
         role = self.clean_role(self.current_role)
         name = self.clean_text(self.current_name)
         if self.current_year and role and name:
-            self.rows.append({
-                "year": self.current_year,
-                "role": role,
-                "name": name,
-            })
+            self.rows.append(
+                {
+                    "year": self.current_year,
+                    "role": role,
+                    "name": name,
+                }
+            )
         self.current_role = ""
         self.current_name = ""
 

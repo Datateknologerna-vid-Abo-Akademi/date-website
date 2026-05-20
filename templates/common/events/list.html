@@ -2,72 +2,99 @@
 {% load i18n %}
 <!DOCTYPE html>
 <html lang="sv_FI">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Deltagarlista</title>
     <link href="{% static 'events/css/form.css' %}">
-    <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
-</head>
-<body>
-
-<div class="container">
-    <div class="qr-code"></div>
-    <h2 class="title"><a
-            href="{% url 'events:detail' event.slug %}">{{ event.title }}</a></h2>
-    <img id="qr-link" src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ request.get_host }}{% url 'events:detail' event.slug%}">
-    <h5>{% translate "Datum:" %} {{ event.event_date_start }}</h5>
-
-    {% if event.get_registrations %}
+    <script type='text/javascript'
+            src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="qr-code"></div>
+      <h2 class="title">
+        <a href="{% url 'events:detail' event.slug %}">{{ event.title }}</a>
+      </h2>
+      <img id="qr-link"
+           src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ request.get_host }}{% url 'events:detail' event.slug %}">
+      <h5>{% translate "Datum:" %} {{ event.event_date_start }}</h5>
+      {% if event.get_registrations %}
         <table id="attendeeList">
-            <thead>
+          <thead>
             <tr>
-                <th>#<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
-                <th>Namn<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
-                <th>E-mail<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
-                {# Had to use first attendee as example in order to get correct order for column headers #}
-                {# TODO:Get preferences eg. with a model property #}
-                {% for header in form %}
-                    <th>{{ header }}<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove">
-                    </th>
-                {% endfor %}
-                {% if event.sign_up_avec %}
-                    <th>{% translate "Avec till" %}<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
-                {% endif %}
-                <th>{% translate "Registrerad" %}<img class="remove-column" src="/static/admin/img/icon-deletelink.svg" alt="Remove"></th>
+              <th>
+                #
+                <img class="remove-column"
+                     src="/static/admin/img/icon-deletelink.svg"
+                     alt="Remove">
+              </th>
+              <th>
+                Namn
+                <img class="remove-column"
+                     src="/static/admin/img/icon-deletelink.svg"
+                     alt="Remove">
+              </th>
+              <th>
+                E-mail
+                <img class="remove-column"
+                     src="/static/admin/img/icon-deletelink.svg"
+                     alt="Remove">
+              </th>
+              {# Had to use first attendee as example in order to get correct order for column headers #}
+              {# TODO:Get preferences eg. with a model property #}
+              {% for header in form %}
+                <th>
+                  {{ header }}
+                  <img class="remove-column"
+                       src="/static/admin/img/icon-deletelink.svg"
+                       alt="Remove">
+                </th>
+              {% endfor %}
+              {% if event.sign_up_avec %}
+                <th>
+                  {% translate "Avec till" %}
+                  <img class="remove-column"
+                       src="/static/admin/img/icon-deletelink.svg"
+                       alt="Remove">
+                </th>
+              {% endif %}
+              <th>
+                {% translate "Registrerad" %}
+                <img class="remove-column"
+                     src="/static/admin/img/icon-deletelink.svg"
+                     alt="Remove">
+              </th>
             </tr>
-            </thead>
-            <tbody>
+          </thead>
+          <tbody>
             {% for attendee in event.get_registrations %}
-                <tr>
-                    <td>{{ forloop.counter }}</td>
-                    <td>{{ attendee.user }}</td>
-                    <td>{{ attendee.email }}</td>
-                    {% for key in form %}
-                        <td>
-                            {% if value is True %}
-                                <img src="/static/admin/img/icon-yes.svg" alt="True">
-                            {% elif value is False %}
-                                <img src="/static/admin/img/icon-no.svg" alt="True">
-                            {% else %}
-                                {{ attendee|get_preference:key }}
-                            {% endif %}
-                        </td>
-                    {% endfor %}
-                    {% if event.sign_up_avec %}
-                        <td>{{ attendee.avec_for }}</td>
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ attendee.user }}</td>
+                <td>{{ attendee.email }}</td>
+                {% for key in form %}
+                  <td>
+                    {% if value is True %}
+                      <img src="/static/admin/img/icon-yes.svg" alt="True">
+                    {% elif value is False %}
+                      <img src="/static/admin/img/icon-no.svg" alt="True">
+                    {% else %}
+                      {{ attendee|get_preference:key }}
                     {% endif %}
-                    <td>{{ attendee.time_registered }}</td>
-                </tr>
+                  </td>
+                {% endfor %}
+                {% if event.sign_up_avec %}<td>{{ attendee.avec_for }}</td>{% endif %}
+                <td>{{ attendee.time_registered }}</td>
+              </tr>
             {% endfor %}
-            </tbody>
+          </tbody>
         </table>
-    {% else %}
+      {% else %}
         <p>{% trans "Inga deltagare..." %}</p>
-    {% endif %}
-</div>
-
-<script>
+      {% endif %}
+    </div>
+    <script>
     $(document).ready(function () {
         $("#attendeeList tr:has(th)").mouseover(function (e) {
             $(this).css("cursor", "pointer");
@@ -80,7 +107,6 @@
             });
         });
     });
-</script>
-
-</body>
+    </script>
+  </body>
 </html>

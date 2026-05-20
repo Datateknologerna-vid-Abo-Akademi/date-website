@@ -19,10 +19,7 @@ def harassment_form(request):
         form = HarassmentForm(request.POST)
         if form.is_valid() and validate_captcha(request.POST.get('cf-turnstile-response')):
             harassment = form.save()
-            harassment_receivers = [
-                receiver.recipient_email
-                for receiver in HarassmentEmailRecipient.objects.all()
-            ]
+            harassment_receivers = [receiver.recipient_email for receiver in HarassmentEmailRecipient.objects.all()]
             email_ctx = {
                 'harassment': harassment,
                 'harassment_url': (

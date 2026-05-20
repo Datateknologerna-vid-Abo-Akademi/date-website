@@ -36,7 +36,98 @@ dependencies = [
     "gunicorn",
     "gspread",
     "twisted[tls]>=26.4.0rc2",
+    "defusedxml>=0.7.1",
 ]
 
 [dependency-groups]
-dev = []
+dev = [
+    "django-stubs>=6.0.4",
+    "djlint>=1.36.4",
+    "mypy>=2.1.0",
+    "pre-commit>=4.6.0",
+    "ruff>=0.15.13",
+    "types-requests>=2.33.0.20260518",
+]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 120
+exclude = ["*/migrations/*"]
+
+[tool.ruff.format]
+quote-style = "preserve"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "DJ", "S"]
+ignore = ["S101"]  # asserts are fine in tests
+
+[tool.ruff.lint.per-file-ignores]
+"*/migrations/*.py" = ["E501", "DJ", "S608"]
+"*/tests*.py" = ["S", "E501"]
+"*/tests/*.py" = ["S", "E501"]
+"core/settings/*.py" = ["F401", "F403", "F405"]
+"scripts/*.py" = ["E402", "E501", "S", "W"]
+"*/management/commands/seed_*.py" = ["S311", "E501"]
+"*/management/commands/import_wordpress_export.py" = ["E501"]
+"staticpages/policy_content.py" = ["E501"]
+"core/admin_ui.py" = ["E501"]
+"instagram/igupdate.py" = ["E402"]
+
+[tool.djlint]
+profile = "django"
+indent = 2
+
+[tool.mypy]
+python_version = "3.14"
+plugins = ["mypy_django_plugin.main"]
+ignore_missing_imports = true
+warn_unused_configs = true
+exclude = [
+    "migrations/",
+    "scripts/",
+]
+
+# Settings modules use star-imports from common.py; mypy can't resolve the
+# names they inherit, so we suppress all errors there rather than littering
+# every variant file with ignores.
+[[tool.mypy.overrides]]
+module = "core.settings.*"
+ignore_errors = true
+
+# django-stubs cannot resolve reverse-relation managers added by ForeignKey /
+# ManyToMany fields (a known limitation). Suppress rather than annotate every
+# model with # type: ignore comments.
+[[tool.mypy.overrides]]
+module = [
+    "news.models",
+    "functionaries.models",
+    "polls.models",
+    "events.models",
+    "staticpages.models",
+    "members.models",
+    "gallery.models",
+]
+disable_error_code = ["django-manager-missing"]
+
+# Admin modules use runtime conditional base-class assignments
+# (if ENABLE_LANGUAGE_FEATURES / USE_UNFOLD) that mypy can't type-check
+# through. Suppress misc/assignment/valid-type in these files only.
+[[tool.mypy.overrides]]
+module = [
+    "core.admin",
+    "events.admin",
+    "news.admin",
+    "polls.admin",
+    "staticpages.admin",
+    "members.admin",
+]
+disable_error_code = ["misc", "assignment", "valid-type", "attr-defined"]
+
+# URL conf files use settings.STATIC_URL (typed str | None) with static(),
+# which expects str. Safe to ignore — DEBUG-only and always set in practice.
+[[tool.mypy.overrides]]
+module = "core.urls.*"
+disable_error_code = ["arg-type"]
+
+[tool.django-stubs]
+django_settings_module = "core.settings.date"

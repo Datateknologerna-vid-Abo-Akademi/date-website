@@ -3,7 +3,6 @@ import re
 
 from django.views.debug import SafeExceptionReporterFilter
 
-
 REDACTED = "********************"
 
 

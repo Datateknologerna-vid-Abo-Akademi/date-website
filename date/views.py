@@ -1,6 +1,5 @@
-import datetime
 import logging
-import random
+import secrets
 from itertools import chain
 from urllib.parse import urlsplit, urlunsplit
 
@@ -10,15 +9,14 @@ from django.db import connection
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.utils import timezone
-from django.utils import translation
-from .language_utils import resolve_language, strip_language_prefix
+from django.utils import timezone, translation
 
 from ads.models import AdUrl
 from events.models import Event
-from news.models import Post
 from instagram.models import IgUrl
+from news.models import Post
 
+from .language_utils import resolve_language, strip_language_prefix
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +53,7 @@ def get_homepage_template_name():
 
     today = timezone.localdate()
     is_april_first = today.month == 4 and today.day == 1
-    if is_april_first and random.randrange(20) == 0:
+    if is_april_first and secrets.randbelow(20) == 0:
         return 'date/april_start.html'
 
     return 'date/start.html'
@@ -63,40 +61,41 @@ def get_homepage_template_name():
 
 def index(request):
     events_old_events_included = (
-        Event.objects.published().filter(
+        Event.objects.published()
+        .filter(
             event_date_end__gte=(timezone.now() - timezone.timedelta(days=31)),
         )
         .exclude(slug="")
         .exclude(slug__isnull=True)
         .order_by('event_date_start')
     )
-    events = events_old_events_included.filter(
-        event_date_end__gte=timezone.now())
+    events = events_old_events_included.filter(event_date_end__gte=timezone.now())
     news = Post.objects.published().filter(category__isnull=True).reverse()[:3]
 
     # Show Albins Angels logo if new post in last 10 days
-    aa_posts = Post.objects.published().filter(category__name="Albins Angels").order_by(
-        'published_time').reverse()[:1]  # TODO Remove this hardcoding or move to different function/file
+    aa_posts = (
+        Post.objects.published().filter(category__name="Albins Angels").order_by('published_time').reverse()[:1]
+    )  # TODO Remove this hardcoding or move to different function/file
     time_since = timezone.now() - timezone.timedelta(days=10)
     aa_post = ''
     if aa_posts and aa_posts[0].published_time > time_since:
         aa_post = aa_posts[0]
 
     def calendar_format(all_events):
-        """ Format events into a dictionary where keys (dates)
+        """Format events into a dictionary where keys (dates)
         are mapped to data used by the calendar on the frontend"""
         calendar_events_dict = {}
         for event in all_events:
             event_url = reverse("events:detail", kwargs={"slug": event.slug})
             # The rest of the "html" field is set on the client side
             # since it includes a time that gets localized on the client-side
-            event_dict = {event.event_date_start.strftime("%Y-%m-%d"):
-                          {
-                "link": event_url,
-                "modifier": "calendar-eventday",
-                "eventFullDate": event.event_date_start,
-                "eventTitle": event.title,
-            }
+            event_dict = {
+                event.event_date_start.strftime("%Y-%m-%d"): {
+                    "link": event_url,
+                    "modifier": "calendar-eventday",
+                    "eventFullDate": event.event_date_start,
+                    "eventTitle": event.title,
+                }
             }
             calendar_events_dict.update(event_dict)
         return calendar_events_dict
@@ -123,9 +122,7 @@ def set_language(request):
     if origin:
         parsed_origin = urlsplit(origin)
         bare_path = strip_language_prefix(parsed_origin.path)
-        redirect_target = urlunsplit(
-            ("", "", bare_path, parsed_origin.query, parsed_origin.fragment)
-        )
+        redirect_target = urlunsplit(("", "", bare_path, parsed_origin.query, parsed_origin.fragment))
     else:
         redirect_target = reverse("index")
 
