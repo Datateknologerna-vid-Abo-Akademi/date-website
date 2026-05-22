@@ -1,37 +1,34 @@
 {% extends 'core/base.html' %}
 {% load static %}
-{% load i18n %}
-{% load app_filters %}
+{% load i18n localized_urls %}
+{% load localized_time %}
+{% load shared_filters %}
 {% block title %}{{ event.title }}{% endblock %}
-
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'events/css/baal.css' %}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"
+          integrity="sha384-FtJyC+/3fgtPbqlacLHdGwBrmPjKoYBsiqNF5/BEprsnIXB4xtXLCJRx7Xx+TWKP"
+          crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"
+          integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+          crossorigin="anonymous"></script>
+{% endblock %}
 {% block content %}
-    <head>
-        <link rel="stylesheet" href="{% static 'events/css/baal.css' %}">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"></script>
-    </head>
-    <div class="container-md min-vh-100 p-1">
-        <div class="container-size">
-            {% if event.sign_up %}
-            <div id="anmalan" class="content baal-content anmalan">
-                <div class="baal-nav"><a class="baal-link" href="/events/baal/">Tillbaka</a></div>
-                <h2 id="sign-up">{% trans "Kemistbaal Anmälning" %}</h2>
-                {% if event.registration_is_open_members and user.is_authenticated %}
-                    {% include 'events/registering.html' %}
-                {% elif event.registration_is_open_others %}
-                    {% include 'events/registering.html' %}
-                {% elif event.registation_past_due %}
-                    <h4 id="no-registration">{% trans "Anmälningstiden gick ut för" %} {{ event.sign_up_deadline | timesince }} {% trans 'sedan' %}</h4>
-                {% elif not event.registation_past_due and user.is_authenticated %}
-                    <p>{% trans "Anmälan öppnas" %} {{ event.sign_up_members|date:"j.n H:i" }}, {% trans "om" %} {{ event.sign_up_members | timeuntil }}</p>
-                {% else %}
-                    <p>{% trans "Anmälan öppnas" %} {{ event.sign_up_others|date:"j.n H:i" }}, {% trans "om" %} {{ event.sign_up_others | timeuntil }}</p>
-                {% endif %}
-            </div>
-        {% endif %}
+  <div class="container-md min-vh-100 p-1">
+    <div class="container-size">
+      {% if event.sign_up %}
+        <div id="anmalan" class="content baal-content anmalan">
+          <div class="baal-nav">
+            <a class="baal-link" href="{{ '/events/baal/'|localized_url }}">Tillbaka</a>
+          </div>
+          <h2 id="sign-up">{{ event.title }} {% trans "Anmälning" %}</h2>
+          {% include 'events/registration_state.html' %}
         </div>
+      {% endif %}
     </div>
-    <script>
+  </div>
+  <script>
         $( document ).ready(function() {
             $("input[type=checkbox][name=Avec]").click(function(){
                 $(this).parent().nextAll("p").toggleClass("hidden");
@@ -54,5 +51,5 @@
                 }
             });
         });
-    </script>
+  </script>
 {% endblock %}

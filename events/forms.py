@@ -2,28 +2,95 @@ import logging
 import re
 
 from django import forms
-from django.contrib.admin import widgets
-from django.utils.timezone import now
 from django.conf import settings
+from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
 
+from core.admin_base import UnfoldFormMixin
+from core.admin_widgets import (
+    FLATPICKR_DATETIME_INPUT_FORMATS,
+    SafeAdminFileWidget,
+    flatpickr_datetime_field,
+    flatpickr_datetime_widget,
+)
 from date.functions import slugify_max
 from events import models
-from events.models import Event
+from events.models import EVENT_TEMPLATE_CHOICES_COMMON, EVENT_TEMPLATE_CHOICES_KK, Event
 
 logger = logging.getLogger('date')
 
 slug_transtable = str.maketrans("åäö ", "aao_")
 
 
-class EventCreationForm(forms.ModelForm):
+def _slug_base_from_title(title):
+    base_slug = (title or "").lower().translate(slug_transtable)
+    base_slug = re.sub("[^a-zA-Z0-9_]*", '', base_slug)
+    return re.sub("__+", '_', base_slug).strip('_')
+
+
+def _slug_with_suffix(base_slug, suffix):
+    suffix_text = "_" + str(suffix)
+    base_max_length = models.POST_SLUG_MAX_LENGTH - len(suffix_text)
+    return base_slug[:base_max_length].rstrip('_') + suffix_text
+
+
+def unique_event_slug(slug, title, instance=None):
+    slug = (slug or "").strip()
+    if slug == "":
+        slug = _slug_base_from_title(title)
+
+    slug = slugify_max(slug, max_length=models.POST_SLUG_MAX_LENGTH) or "event"
+    base_slug = slug
+
+    collisions = Event.objects.filter(slug=slug)
+    if instance and instance.pk:
+        collisions = collisions.exclude(pk=instance.pk)
+
+    suffix = 1
+    while collisions.exists():
+        slug = _slug_with_suffix(base_slug, suffix)
+        collisions = Event.objects.filter(slug=slug)
+        if instance and instance.pk:
+            collisions = collisions.exclude(pk=instance.pk)
+        suffix += 1
+
+    return slug
+
+
+def _template_choices():
+    if settings.PROJECT_NAME == 'kk':
+        return EVENT_TEMPLATE_CHOICES_COMMON + EVENT_TEMPLATE_CHOICES_KK
+    return EVENT_TEMPLATE_CHOICES_COMMON
+
+
+class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
     user = None
-    event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    event_date_end = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    sign_up_others = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    sign_up_members = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    sign_up_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    sign_up_cancelling_deadline = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    parent = forms.ModelChoiceField(queryset=Event.objects.filter(event_date_end__gte=now()), required=False)
+    redirect_link = forms.URLField(required=False, assume_scheme="https")
+    published_time = flatpickr_datetime_field(initial=now, required=False)
+    event_date_start = flatpickr_datetime_field(initial=now())
+    event_date_end = flatpickr_datetime_field(initial=now())
+    sign_up_others = flatpickr_datetime_field(initial=now(), required=False)
+    sign_up_members = flatpickr_datetime_field(initial=now(), required=False)
+    sign_up_deadline = flatpickr_datetime_field(initial=now(), required=False)
+    sign_up_cancelling_deadline = flatpickr_datetime_field(initial=now(), required=False)
+    parent: forms.ModelChoiceField = forms.ModelChoiceField(
+        queryset=Event.objects.filter(event_date_end__gte=now()), required=False
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'published_time' in self.fields:
+            self.fields['published_time'].help_text = _("Leave blank to keep the event hidden.")
+        for field_name in ('image', 's3_image'):
+            if field_name in self.fields:
+                self.fields[field_name].widget = SafeAdminFileWidget()
+        if 'require_registration_terms' in self.fields:
+            if models.registration_terms_feature_enabled():
+                self.fields['require_registration_terms'].initial = True
+            else:
+                self.fields.pop('require_registration_terms')
+        if 'template' in self.fields:
+            self.fields['template'].choices = _template_choices()
 
     class Meta:
         model = Event
@@ -32,6 +99,7 @@ class EventCreationForm(forms.ModelForm):
             'event_date_start',
             'event_date_end',
             'content',
+            'template',
             'sign_up',
             'sign_up_max_participants',
             'sign_up_others',
@@ -39,8 +107,9 @@ class EventCreationForm(forms.ModelForm):
             'sign_up_deadline',
             'sign_up_cancelling',
             'sign_up_cancelling_deadline',
-            'published',
+            'published_time',
             'sign_up_avec',
+            'require_registration_terms',
             'slug',
             'members_only',
             'passcode',
@@ -48,44 +117,24 @@ class EventCreationForm(forms.ModelForm):
             'redirect_link',
             'parent',
         )
-        if settings.USE_S3:
+        if settings.USE_S3:  # type: ignore[misc]
             fields = temp_fields + ('s3_image',)
         else:
             fields = temp_fields + ('image',)
 
-    class Media:
-        js = (
-            '//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',  # jquery,
-            'js/eventform.js',)
-
     def clean_slug(self):
-        slug = self.cleaned_data['slug'].strip()
-        if slug == "" and "title" in self.cleaned_data:
-            base_slug = self.cleaned_data['title'].lower().translate(slug_transtable)
-            base_slug = re.sub("[^a-zA-Z0-9_]*", '', base_slug)
-            base_slug = re.sub("__+", '_', base_slug)
-            slug = base_slug
-
-            collisions = Event.objects.filter(slug=slug)
-            suffix = 1
-            while collisions:
-                slug = base_slug + "_" + str(suffix)
-                collisions = Event.objects.filter(slug=slug)
-                suffix += 1
-        # slugify_max actually does a trim down to the size of the underlying database column
-        slug = slugify_max(slug, max_length=models.POST_SLUG_MAX_LENGTH)
-
-        return slug
+        return unique_event_slug(
+            self.cleaned_data.get('slug'),
+            self.cleaned_data.get('title'),
+            self.instance,
+        )
 
     def save(self, commit=True):
-        post = super(EventCreationForm, self).save(commit=False)
+        post = super().save(commit=False)
 
         if self.user is None:
             return None
         post.author = self.user
-
-        if post.published:
-            post.published_time = now()
 
         if not post.sign_up:
             post.sign_up_max_participants = 0
@@ -100,40 +149,49 @@ class EventCreationForm(forms.ModelForm):
         return post
 
 
-class EventEditForm(forms.ModelForm):
-
+class EventEditForm(UnfoldFormMixin, forms.ModelForm):
     user = None
+    redirect_link = forms.URLField(required=False, assume_scheme="https")
+    published_time = flatpickr_datetime_field(required=False)
 
-    event_date_start = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
-    event_date_end = forms.SplitDateTimeField(widget=widgets.AdminSplitDateTime(), initial=now())
+    event_date_start = flatpickr_datetime_field(initial=now())
+    event_date_end = flatpickr_datetime_field(initial=now())
 
     sign_up_args = {
-        "widget": widgets.AdminSplitDateTime(),
+        "widget": flatpickr_datetime_widget(),
+        "input_formats": FLATPICKR_DATETIME_INPUT_FORMATS,
         "initial": now(),
-        "required": False
+        "required": False,
     }
-    sign_up_others = forms.SplitDateTimeField(**sign_up_args)
-    sign_up_members = forms.SplitDateTimeField(**sign_up_args)
-    sign_up_deadline = forms.SplitDateTimeField(**sign_up_args)
-    sign_up_cancelling_deadline = forms.SplitDateTimeField(**sign_up_args)
-    parent = forms.ModelChoiceField(queryset=Event.objects.all(), required=False)
+    sign_up_others = forms.DateTimeField(**sign_up_args)
+    sign_up_members = forms.DateTimeField(**sign_up_args)
+    sign_up_deadline = forms.DateTimeField(**sign_up_args)
+    sign_up_cancelling_deadline = forms.DateTimeField(**sign_up_args)
+    parent: forms.ModelChoiceField = forms.ModelChoiceField(queryset=Event.objects.all(), required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if 'published_time' in self.fields:
+            self.fields['published_time'].help_text = _("Leave blank to keep the event hidden.")
+        for field_name in ('image', 's3_image'):
+            if field_name in self.fields:
+                self.fields[field_name].widget = SafeAdminFileWidget()
+        if 'require_registration_terms' in self.fields and not models.registration_terms_feature_enabled():
+            self.fields.pop('require_registration_terms')
+        if 'template' in self.fields:
+            self.fields['template'].choices = _template_choices()
         # exclude the current instance from parent choices so an event cannot be its own parent
         try:
             if getattr(self, 'instance', None) and getattr(self.instance, 'pk', None):
                 # limit parent choices to future events and exclude self
-                self.fields['parent'].queryset = Event.objects.filter(
-                    event_date_end__gte=now()
-                ).exclude(pk=self.instance.pk)
+                self.fields['parent'].queryset = Event.objects.filter(event_date_end__gte=now()).exclude(
+                    pk=self.instance.pk
+                )
             else:
                 # creation: only future events
-                self.fields['parent'].queryset = Event.objects.filter(
-                    event_date_end__gte=now()
-                )
-        except Exception:
-            # defensive: if fields not yet set or parent missing, ignore
+                self.fields['parent'].queryset = Event.objects.filter(event_date_end__gte=now())
+        except KeyError:
+            # "parent" field not present during form init — safe to skip
             pass
 
     class Meta:
@@ -143,6 +201,7 @@ class EventEditForm(forms.ModelForm):
             'event_date_start',
             'event_date_end',
             'content',
+            'template',
             'sign_up',
             'sign_up_max_participants',
             'sign_up_others',
@@ -150,8 +209,9 @@ class EventEditForm(forms.ModelForm):
             'sign_up_deadline',
             'sign_up_cancelling',
             'sign_up_cancelling_deadline',
-            'published',
+            'published_time',
             'sign_up_avec',
+            'require_registration_terms',
             'slug',
             'members_only',
             'passcode',
@@ -159,18 +219,19 @@ class EventEditForm(forms.ModelForm):
             'redirect_link',
             'parent',
         )
-        if settings.USE_S3:
+        if settings.USE_S3:  # type: ignore[misc]
             fields = temp_fields + ('s3_image',)
         else:
             fields = temp_fields + ('image',)
 
-    class Media:
-        js = (
-            '//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',  # jquery,
-            'js/eventform.js',)
+    def clean_slug(self):
+        slug = (self.cleaned_data.get('slug') or "").strip()
+        if slug == "" and self.instance and self.instance.slug:
+            return self.instance.slug
+        return unique_event_slug(slug, self.cleaned_data.get('title'), self.instance)
 
     def save(self, commit=True):
-        post = super(EventEditForm, self).save(commit=False)
+        post = super().save(commit=False)
 
         if self.user is None:
             return None

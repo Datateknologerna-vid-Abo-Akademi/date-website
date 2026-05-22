@@ -1,6 +1,5 @@
 from .common import *  # noqa
 
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -18,24 +17,27 @@ TEMPLATES = [
     },
 ]
 
-INSTALLED_APPS = get_installed_apps([
-    'staticpages',
-    'news',
-    'events',
-    'ads',
-    'social',
-    'polls',
-    'archive.apps.ArchiveConfig',
-])
+INSTALLED_APPS = get_installed_apps(
+    [
+        'staticpages',
+        'news',
+        'events',
+        'ads',
+        'instagram',
+        'harassment',
+        'social',
+        'polls',
+        'gallery',
+        'exambank',
+        'archive',
+        'publications',
+    ]
+)
 
 ROOT_URLCONF = 'core.urls.biocum'
+USE_ACCEPT_LANGUAGE_HEADER = False
 
-STAFF_GROUPS = get_staff_groups([
-        'styrelse',
-        'admin',
-        'fotograf',
-        'rösträknare'
-    ])
+STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static/biocum'),
@@ -47,6 +49,7 @@ CONTENT_VARIABLES = {
     "ASSOCIATION_NAME": "Biologica",
     "ASSOCIATION_NAME_FULL": "Biologica rf",
     "ASSOCIATION_NAME_SHORT": "Biologica",
+    "EVENT_TEMPLATE_LOGO": "core/images/headerlogo.png",
     "ASSOCIATION_EMAIL": "biologica@abo.fi",
     "ASSOCIATION_ADDRESS_L1": "Biocity, 2:a vån",
     "ASSOCIATION_ADDRESS_L2": "Artillerigatan 6",

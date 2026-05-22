@@ -1,0 +1,44 @@
+body {
+    background: url("/static/core/images/Pulterit-mineral.jpg") no-repeat center center fixed;
+    background-size: cover;
+}
+
+footer.association-footer {
+    background-color: var(--primaryColor);
+}
+
+.hero-text-box a {
+    color: var(--accentColor);
+}
+
+.hero-text-box a:hover {
+    color: var(--accentColorBrightHover);
+    text-decoration: underline;
+}
+
+.content > div > a {
+    color: var(--accentColor);
+}
+
+.content > div > a:hover {
+    color: var(--accentColorBrightHover);
+    text-decoration: underline;
+}
+
+table thead th,
+table thead th a {
+    color: #000000;
+    text-decoration: none;
+}
+
+table tbody td a:hover,
+table tbody td a:hover span {
+    color: var(--accentColor);
+    text-decoration: underline;
+}
+
+table tbody td,
+table tbody td a,
+table tbody td a span {
+    color: var(--accentColorBright);
+}

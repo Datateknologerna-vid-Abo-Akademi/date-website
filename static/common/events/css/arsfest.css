@@ -4,11 +4,10 @@
 
 :root {
   --opacityColor: #11110ed3;
-  /*--opacityColor: rgba(223, 223, 223, 0.55);*/
   --backdropBlur: blur(2px);
-  --mainArsfestColor: var(--silver);
-  --mainArsfestTextColor: var(--lightSilver2);
-  --mainArsfestButtonHoverColor: var(--darkSilver2);
+  --mainArsfestColor: var(--primaryColorLighter);
+  --mainArsfestTextColor: var(--textColorLight);
+  --mainArsfestButtonHoverColor: var(--primaryColorLighte);
   --arsfest-font: "Josefin Sans", sans-serif;
   z-index: inherit;
 }
@@ -164,6 +163,23 @@
 
 .header-box {
   overflow: hidden;
+  text-align: center;
+}
+
+.event-template-logo {
+  display: block;
+  width: auto;
+  max-width: min(240px, 70vw);
+  max-height: 120px;
+  object-fit: contain;
+  margin: 0 auto 1rem;
+  animation: fadeIn ease 5s;
+}
+
+.baal-header {
+  text-align: center;
+  overflow-wrap: anywhere;
+  animation: fadeIn ease 5s;
 }
 
 .periodic-table-square {
@@ -200,24 +216,12 @@
   /* left: 70px; */
 }
 
-.glowing-text-orange {
-  color: var(--text-glow-base-color);
-  text-shadow: 0 0 7px var(--text-glow-base-color),
-    0 0 10px var(--text-glow-base-color), 0 0 21px var(--text-glow-base-color),
-    0 0 42px var(--text-glow-base-color), 0 0 82px var(--text-glow-color),
-    0 0 92px var(--text-glow-color), 0 0 102px var(--text-glow-color),
-    0 0 151px var(--text-glow-color);
-}
 
 .periodic-table-date-container > h2 {
   font-size: 1.1em;
 }
 .periodic-table-inner > h2 {
   font-size: 3em;
-}
-.card-shine-effect {
-  color: orange;
-  margin: 0px;
 }
 
 .flex-container-center {
@@ -238,7 +242,7 @@
   left: 0;
   width: 100%;
   height: calc(100% + 40px);
-  background: radial-gradient(circle at bottom, #ff4500 0%, #ff6347 100%);
+  background: radial-gradient(circle at bottom, var(--primaryColor) 0%, var(--primaryColorLighter) 100%);
   z-index: -1;
   opacity: 0.7;
   filter: blur(20px);

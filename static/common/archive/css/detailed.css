@@ -1,52 +1,343 @@
-.gallery-image{
-  transition: .3s;
-  border-radius: var(--defaultRadius);
+.gallery-image {
+    width: 100%;
+    display: block;
+    transition: .3s;
+    border-radius: var(--defaultRadius);
 }
 
-.gallery-image:hover{
+.gallery-image:hover {
     transform: scale(1.01);
+}
+
+.grid-item {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--defaultRadius);
+}
+
+.grid-item:focus-visible {
+    outline: 3px solid var(--linkColorLight);
+    outline-offset: 2px;
+}
+
+/* Masonry grid — 2 columns on mobile */
+.grid {
+    --gap: 6px;
+}
+
+.grid-sizer,
+.grid-item {
+    width: calc(50% - var(--gap) / 2);
+    margin-bottom: var(--gap);
+}
+
+.gallery-loading {
+    text-align: center;
+    color: var(--textColorLightish);
+    margin: 18px 0 6px;
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.gallery-sentinel {
+    height: 1px;
+}
+
+.gallery-noscript {
+    text-align: center;
+    color: var(--textColorLightish);
+    opacity: 0.8;
+    font-size: 0.9rem;
+    margin: 8px 0 0;
+}
+
+@media only screen and (min-width: 576px) {
+    .grid-sizer,
+    .grid-item {
+        width: calc(33.333% - var(--gap) * 2 / 3);
+    }
+}
+
+@media only screen and (min-width: 992px) {
+    .grid-sizer,
+    .grid-item {
+        width: calc(25% - var(--gap) * 3 / 4);
+    }
+}
+
+
+/* GLightbox overrides */
+.glightbox-container {
+    overscroll-behavior: none;
+}
+
+#lightbox-dl-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000000;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: background-color .2s;
+    opacity: 1;
+}
+
+#lightbox-share-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 72px;
+    z-index: 1000000;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: background-color .2s, transform .2s;
+    opacity: 1;
+    cursor: pointer;
+}
+
+#lightbox-share-btn:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+#lightbox-share-btn:active,
+#lightbox-share-btn.copying {
+    transform: scale(0.94);
+}
+
+#lightbox-share-btn.copied-ok {
+    background-color: rgba(16, 140, 78, 0.92);
+    transform: scale(1.05);
+}
+
+#lightbox-share-btn.copied-fail {
+    background-color: rgba(178, 49, 49, 0.92);
+    transform: scale(1.05);
+}
+
+#lightbox-share-feedback {
+    position: fixed;
+    left: 50%;
+    bottom: 68px;
+    transform: translateX(-50%);
+    z-index: 1000000;
+    height: 40px;
+    padding: 0 12px;
+    max-width: calc(100vw - 32px);
+    border-radius: 999px;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    background-color: rgba(0, 0, 0, 0.75);
+    white-space: nowrap;
+}
+
+#lightbox-share-feedback.ok {
+    background-color: rgba(16, 140, 78, 0.92);
+}
+
+#lightbox-share-feedback.fail {
+    background-color: rgba(178, 49, 49, 0.92);
+}
+
+#lightbox-counter {
+    position: fixed;
+    bottom: 20px;
+    right: 124px;
+    z-index: 1000000;
+    min-width: 64px;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+@media only screen and (max-width: 575px) {
+    #lightbox-counter {
+        left: 50%;
+        right: auto;
+        bottom: 16px;
+        transform: translateX(-50%);
+        min-width: 0;
+        height: 36px;
+        padding: 0 10px;
+        font-size: 0.82rem;
+    }
+
+    #lightbox-share-btn {
+        left: calc(50% - 86px);
+        right: auto;
+        bottom: 16px;
+        width: 36px;
+        height: 36px;
+    }
+
+    #lightbox-dl-btn {
+        left: calc(50% + 50px);
+        right: auto;
+        bottom: 16px;
+        width: 36px;
+        height: 36px;
+    }
+
+    #lightbox-share-feedback {
+        bottom: 58px;
+        height: 34px;
+        font-size: 0.76rem;
+        max-width: calc(100vw - 20px);
+        white-space: normal;
+        text-align: center;
+        line-height: 1.1;
+    }
+}
+
+#lightbox-dl-btn:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.glightbox-closing ~ #lightbox-dl-btn,
+.glightbox-closing #lightbox-dl-btn {
+    opacity: 0 !important;
+    pointer-events: none;
+}
+
+.glightbox-closing ~ #lightbox-share-btn,
+.glightbox-closing #lightbox-share-btn {
+    opacity: 0 !important;
+    pointer-events: none;
+}
+
+.glightbox-closing ~ #lightbox-counter,
+.glightbox-closing #lightbox-counter {
+    opacity: 0 !important;
+    pointer-events: none;
+}
+
+.glightbox-closing ~ #lightbox-share-feedback,
+.glightbox-closing #lightbox-share-feedback {
+    opacity: 0 !important;
+    pointer-events: none;
+}
+
+.glightbox-clean .gslide-image img {
+    border-radius: 0;
+}
+
+.glightbox-clean .gprev,
+.glightbox-clean .gnext {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+}
+
+.glightbox-clean .gprev:hover,
+.glightbox-clean .gnext:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.glightbox-clean .gclose {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+}
+
+.glightbox-clean .gclose:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* slide counter */
+.glightbox-clean .gbtn.gprev svg,
+.glightbox-clean .gbtn.gnext svg,
+.glightbox-clean .gbtn.gclose svg {
+    width: 18px;
+    height: 18px;
 }
 
 /* pagination */
 .center {
-  text-align: center;
+    text-align: center;
 }
 
 .pagination {
-  display: inline-block;
-  margin-top: 30px;
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 30px;
+    margin-bottom: 16px;
 }
 
 .pagination a {
-  color: var(--textColorLightish);
-  background-color: var(--primaryColorLighter);
-  float: left;
-  padding: 8px 16px;
-  text-decoration: none;
-  transition: background-color .3s;
-  border: 1px solid #ddd;
-  margin: 0 4px;
-  border-radius: var(--defaultRadius);
+    color: var(--textColorLightish);
+    background-color: var(--primaryColorLighter);
+    padding: 8px 14px;
+    text-decoration: none;
+    transition: background-color .3s;
+    border: 1px solid #ddd;
+    border-radius: var(--defaultRadius);
+    min-width: 38px;
+    text-align: center;
 }
 
-.pagination .disabled{
-  border: 0;
+.pagination .disabled {
+    border: 0;
+    opacity: 0.4;
+    pointer-events: none;
 }
 
 .pagination a.active {
-  color: var(--textColorLight);
-  border: 1px solid var(--linkColorLight);
+    color: var(--textColorLight);
+    border: 1px solid var(--linkColorLight);
 }
 
-.pagination a:hover:not(.active, .disabled) {background-color: var(--primaryColorLight);}
+.pagination a:hover:not(.active, .disabled) {
+    background-color: var(--primaryColorLight);
+}
 
-@media only screen and (min-width: 768px) {
-  .grid-sizer,
-  .grid-item { 
-      width: 24.2%;
-  }
+.pagination a:focus-visible {
+    outline: 3px solid var(--linkColorLight);
+    outline-offset: 2px;
+}
 
-  .grid img{
-    max-height: 70vh;
-  }
+@media (hover: none) {
+    .gallery-image:hover {
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gallery-image,
+    .pagination a,
+    #lightbox-dl-btn,
+    #lightbox-share-btn,
+    #lightbox-share-feedback,
+    .glightbox-clean .gprev,
+    .glightbox-clean .gnext,
+    .glightbox-clean .gclose {
+        transition: none;
+    }
 }

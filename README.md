@@ -1,121 +1,316 @@
 # DaTe Website 2.0
 
-Django and python3.x based website for [Datateknologerna vid Åbo Akademi rf](https://date.abo.fi)
+DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.fi)'s public site, membership tools, alumni portal, polls, and a handful of seasonal or one-off apps. The stack is Django 6.0 running on Python 3.14 inside Docker Compose with Celery workers, Channels/Daphne, PostgreSQL, Valkey (Redis compatible), and S3-compatible storage.
+
+> Active development happens on `main`. QA and production are environments, not branches; production is promoted from an image already tested in QA.
+
 
 ## Requirements
 
-This project requires [Docker](https://www.docker.com) and [Docker Compose](https://docs.docker.com/compose/)
+- Docker 24+ plus the Docker Compose plugin (`docker compose`). Follow Docker's official guides for [Ubuntu](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) or [Debian](https://docs.docker.com/engine/install/debian/#install-using-the-repository) to install both the engine and the Compose plugin.
+- Bash-compatible shell (the helper script `env.sh` defines aliases such as `date-start`)
+- Access to `docker` without sudo (add yourself to the `docker` group if needed)
+- Local `django-admin` (e.g., via `pipx install django`) when editing translations outside the container
 
-A local `django-admin` is required for translations
+> Windows developers should run the project inside WSL 2 to match the expected Linux tooling: sourcing `env.sh`, running Bash scripts, and keeping LF line endings all work reliably there. Follow Microsoft's [WSL installation guide](https://learn.microsoft.com/windows/wsl/install) first, then install [Docker Desktop](https://www.docker.com/products/docker-desktop/) (which automatically connects Docker to your default WSL distro).
 
-## Setup development environment
-
-### 1. Clone this repo
-
-Development happens mainly in the `develop`-branch
-
-### 2. Create env variables
-
-For development, copy the defaults and adjust them to your needs:
+## Quick start (development)
 
 ```bash
-cp .env.example .env
+git clone https://github.com/datateknologerna-vid-abo-akademi/date-website.git
+cd date-website
+git checkout main
+cp .env.example .env            # adjust passwords, ports, S3, etc.
+source env.sh                   # registers helper aliases
+date-start-detached             # builds containers, runs migrations, collects static files
+date-createsuperuser            # creates your admin account
+open http://localhost:8000      # admin lives at /admin
 ```
 
-If you plan to run a production-like setup, create a dedicated file (for example `.env.prod`) based on `.env.example` and adjust it separately, keeping secrets out of version control.
+Prefer SSH? Add your key to GitHub following their [SSH setup guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account), then clone with `git clone git@github.com:datateknologerna-vid-abo-akademi/date-website.git`.
 
-Edit the files you just created to match your setup.
+Need sample content? Run `date-cleaninit` (or `/bin/bash ./scripts/clean_init.sh`) to wipe the dev database, reload the fixture set, generate sample media, and reset the default local user passwords. It is the quickest way to get back to a known-good local setup.
 
-### 3. Read env variables
+pgAdmin is optional and disabled by default. To include it in the development Compose stacks, set `COMPOSE_PROFILES="pgadmin"` in `.env`, recreate the stack, then open `http://localhost:5050`. Log in with `PGADMIN_DEFAULT_EMAIL` and `PGADMIN_DEFAULT_PASSWORD`; the default sample values are `admin@example.com` / `password`. To connect to the local database, add a server with host `db`, port `5432`, user `postgres`, database `postgres`, and password `DATE_DB_PASSWORD`.
 
-**This must be done every time you start your terminal or edit the profile file!**
+Working on features that touch S3-compatible storage? Run a local [MinIO](https://min.io/) container and point `S3_ENDPOINT_URL`, `S3_ACCESS_KEY`, and `S3_SECRET_KEY` in `.env` to it. This keeps uploads, ACLs, and presigned URLs testable without external dependencies.
 
-In the terminal, navigate to the root of the project, where the `env.sh` script is located.
+## Platform notes
 
-For the development configuration run (this falls back to `.env` and then `.env.example`):
+The main workflow in this README is Linux-first. On Windows and macOS, the easiest path is still to follow the same Bash-based commands and only adapt the host-specific pieces below.
+
+### Windows (WSL 2)
+
+- Use WSL 2 with Ubuntu or Debian, and run the repo from inside the Linux filesystem rather than from `C:\...`.
+- Install Docker Desktop and enable WSL integration for your distro so `docker compose` works directly inside WSL.
+- Open the project in your editor through WSL if possible. This avoids line-ending, path, and permission oddities.
+- Run the same commands as the Linux quick start from your WSL shell:
 
 ```bash
-source env.sh dev
+cd ~/code/date-website
+source env.sh
+date-start-detached
 ```
 
-To use your production configuration run:
+- To open the site from WSL, use `explorer.exe http://localhost:8000` or open the URL manually in your browser.
+- If a script behaves strangely, first confirm it is being run by Bash inside WSL and not by PowerShell or `cmd.exe`.
+
+### macOS
+
+- Install Docker Desktop for Mac so `docker compose` is available.
+- Use Terminal, iTerm2, or another shell that can run Bash-compatible commands. `zsh` is fine; `source env.sh` works.
+- The rest of the workflow is the same as Linux: clone the repo, copy `.env.example`, source `env.sh`, and use the `date-*` aliases.
+- The `open http://localhost:8000` command from the quick start already works on macOS.
+
+### Linux
+
+- The quick start above is written for Linux shells directly.
+- If Docker requires `sudo`, fix your Docker group membership first rather than rewriting the commands with `sudo`.
+
+## Environment configuration & helper aliases
+
+Docker Compose reads `.env` automatically. Create it once from `.env.example`, then edit it for your local or deployed environment.
+
+`env.sh` is only for helper aliases. Compose file selection lives in `.env` through `COMPOSE_FILE`.
+
+- `.env.example` sets `COMPOSE_FILE=docker-compose.yml`.
+- `.env.prod.example` sets `COMPOSE_FILE=docker-compose.prod.yml`.
+- `source env.sh` registers the `date-*` aliases without loading or changing app configuration.
+- The helpers use the nearest `date-website` checkout from your current directory, so globally installed helpers follow whichever clone you are working in. When you are outside a checkout, they fall back to `DATE_WEBSITE_DIR`.
+
+If you use these helpers often, install them into your shell config:
 
 ```bash
-source env.sh prod
+./scripts/install_shell_aliases.sh
 ```
 
-You can also load a specific file by passing its relative or absolute path (e.g. `source env.sh path/to/custom.env`).
+The installer writes the current checkout path as `DATE_WEBSITE_DIR`, which is only used as the fallback target when your shell is not inside a checkout.
 
-Now you can run all `date-` commands!
-
-### 4. Start server and setup database and superuser
-
-Start the server with 
+Or add them manually and adjust the path to wherever you cloned the repository:
 
 ```bash
-date-start
+export DATE_WEBSITE_DIR="/path/to/date-website"
+source "$DATE_WEBSITE_DIR/env.sh"
 ```
 
-and make sure everything starts ok.
+Important environment flags:
 
-If the `date-start` command complains about docker not being found, make sure that your user account is in the `docker` group (with command `groups $USER`). If it is not, run `usermod -aG docker $USER`, and restart your bash session!
+- `PROJECT_NAME` selects the active association/site variant (`date`, `kk`, `biocum`, `demo`, `pulterit`, `sf`, ...).
+- `ENABLE_LANGUAGE_FEATURES=True` enables the language switcher, translated admin tabs, and runtime selection between the languages configured for the active association on unprefixed URLs. DaTe currently uses Swedish and English at runtime; some other associations also expose Finnish. When omitted or false, the project runs Swedish-only.
+- `USE_UNFOLD=True` enables the Unfold admin theme. When omitted or false, Django uses the classic admin. Restart or recreate containers after changing it because admin apps, widgets, templates, and static assets are selected at startup.
+- `USE_S3` toggles whether uploads use local disk storage or the configured S3-compatible backend.
 
-If you want a clean database you can run the 
-`date-migrate`
-command after everything has started correctly. Otherwise, continue on to the next step.
+The script defines the `date-*` aliases used throughout this README:
 
-### 5. Set up initial test data
+| Command | Description |
+| --- | --- |
+| `date-start` / `date-start-detached` | Pull images, rebuild, apply migrations, collect static files, and start the stack (foreground or detached). |
+| `date-stop` | Shut down the Compose stack. |
+| `date-manage <cmd>` | Run `python manage.py <cmd>` inside the web container. |
+| `date-makemigrations`, `date-migrate`, `date-collectstatic`, `date-createsuperuser` | Convenience wrappers around common `manage.py` commands. |
+| `date-test [labels]` | Execute the Django test suite using the isolated `core.settings.test` configuration. |
+| `date-pull` | Pull the defined Docker images. |
+| `date-cleaninit` | Reset local data and reload the development fixtures plus generated sample media. |
 
-**This will completely delete and recreate the database (all existing data will be lost)**
+Recreate or restart containers after editing `.env` so Docker Compose passes the updated values into services.
 
-If you want initial development data run the script `clean-init.sh` in the folder `scripts/`.
+Once the aliases are registered, the `date-*` commands are the normal way to work with the project.
 
-If you get an `illegal option error` in your shell, use `/bin/bash clean-init.sh` to run the script instead.
+## Database, migrations, and seed data
 
-After this you can re-run the date-createsuperuser.
+- Use `date-makemigrations` and `date-migrate` for schema changes. Commit the generated migration files; do not rewrite published migrations.
+- `date-cleaninit` (alias for `./scripts/clean_init.sh`) drops and recreates the development database volumes, loads the local fixture set, generates sample media, and resets the `admin`, `freshman`, and `member` passwords to `admin`. **All local data will be deleted.**
+- If your shell does not expose aliases, run `/bin/bash ./scripts/clean_init.sh` directly.
+- To inspect data manually, open a shell in the container: `docker compose run --rm web python manage.py shell`.
+- Re-run `date-createsuperuser` after resetting the database so you keep admin access.
 
-### 6. Try out the server
+The fixture reset flow uses `scripts/load_all_fixtures.sh` and `scripts/generate_dynamic_fixtures.py`, so treat generated media and sample content as disposable local data rather than checked-in source material.
 
-Visit http://localhost:8000 or whatever your port is.
+## Tests & QA
 
-The admin page is at http://localhost:8000/admin
+The CI and reviewer expectation is that `python manage.py test` (or the `date-test` alias) passes before you open a pull request. The test settings mock external services, so no Redis or PostgreSQL on the host is required.
 
-## Production deployment
-
-When deploying with `docker-compose.prod.yml`, make sure the external Docker network `web` exists (see the `networks` section in that compose file). If it does not, create it once before starting the stack:
+Examples:
 
 ```bash
-docker network create web
+date-test                   # run the full suite inside Docker
+date-test members.tests     # run a specific module
+date-manage check           # static checks (migrations, settings sanity)
 ```
+
+Manually verify user-facing flows (forms, background jobs, Channels endpoints) when implementing a feature; a lot of work in this repo still benefits from a quick human smoke test after the automated checks pass.
+
+If you touch translations, templates, or language-aware navigation, also smoke-test the default Swedish site plus at least one non-default language selected through the language switcher with `ENABLE_LANGUAGE_FEATURES=True`.
+
+## Documentation & app guides
+
+The `docs/` directory contains both developer notes (`docs/dev/*.md`) and content-editor guides (`docs/admin/*.md`). The folder is published via GitHub Pages, so any Markdown file you update on `main` is deployed automatically after merging. If you change behavior in an app such as `events`, `lucia`, or `members`, update the matching guide in the same branch while the details are still fresh.
+
+Use [docs/index.md](docs/index.md) as the landing page for the published documentation site. Update it when you add a new app guide or rename an existing one.
+For translation architecture and workflow, see [docs/dev/translations.md](docs/dev/translations.md).
+
+## Deployment (`docker-compose.prod.yml`)
+
+The production stack relies on the published container image at `ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}` plus managed PostgreSQL/Valkey volumes. Typical flow:
+
+1. Copy `.env.prod.example` to `.env` on the deployment host and replace every placeholder.
+2. Ensure the external Docker network referenced by the compose file exists once:
+   ```bash
+   docker network create web
+   ```
+3. Deploy: `docker compose up -d` or run `source env.sh` once and use `date up -d`.
+
+When `.env.prod.example` changes, update an existing production `.env` without losing real secrets:
+
+```bash
+./scripts/sync_env_from_template.sh .env.prod.example .env
+```
+
+The script rewrites `.env` using the example file's comments and ordering, keeps existing values for matching keys, and appends keys that exist only in the production file at the bottom. It writes a timestamped backup under `.env-backups/` before replacing the target file. After `source env.sh`, the same operation is available as `date-sync-prod-env`; preview the result with `date-sync-prod-env --dry-run`.
+
+For development checkouts, use `date-sync-dev-env` to sync `.env` from `.env.example` with the same preserve-existing-values behavior. This helper refuses to run when the current `.env` looks like production; use `date-sync-prod-env` there instead.
+
+The stack brings up the `web` (Gunicorn), `asgi` (Daphne/Channels), `celery`, `db`, `redis`, and `nginx` services. Rolling deploys usually build a new GHCR image in CI, update `DATE_IMG_TAG`, then restart `web`, `asgi`, and `celery`.
+
+### Shared Compose monitoring
+
+For hosts running multiple association stacks, run one shared Prometheus/Grafana stack per host and enable only lightweight exporters in each app stack. Create the shared network once:
+
+```bash
+docker network create monitoring
+```
+
+Start the shared host monitoring stack from this repository's `monitoring/` directory:
+
+```bash
+cd monitoring
+docker compose up -d
+```
+
+Then enable app-level exporters for each production stack by adding the overlay to that stack's `.env`:
+
+```bash
+COMPOSE_FILE="docker-compose.prod.yml:docker-compose.monitoring.yml"
+MONITORING_TARGET_PREFIX="datewebsite"
+```
+
+The app overlay adds only `postgres-exporter`, `redis-exporter`, and `nginx-exporter`. The shared monitoring stack adds Prometheus, Grafana, and `node-exporter` once per host, with cAdvisor available through the optional `cadvisor` Compose profile. Prometheus scrapes every 30 seconds, keeps 30 days of metrics by default through `PROMETHEUS_RETENTION=30d`, and caps local metric storage at `PROMETHEUS_RETENTION_SIZE=8GB`; older data is removed automatically when either limit is reached. Prometheus and Grafana bind to localhost by default through `PROMETHEUS_BIND` and `GRAFANA_BIND`; keep that default unless they sit behind a trusted VPN, SSH tunnel, or authenticated reverse proxy. The Nginx `stub_status` endpoint listens on port `8080` inside the Nginx container and is not published by Compose, but containers sharing the production app networks can reach it for exporter scraping.
+
+Enable cAdvisor only if you need per-container CPU, memory, filesystem, and network metrics:
+
+```bash
+cp prometheus/targets/cadvisor.yml.example prometheus/targets/cadvisor.yml
+COMPOSE_PROFILES="cadvisor" docker compose up -d
+```
+
+Add each association's exporter aliases to `monitoring/prometheus/targets/*.yml`; `monitoring/prometheus/datewebsite.targets.yml.example` shows the expected labels and target names. Grafana is provisioned with Prometheus as the default data source. Set `GRAFANA_ADMIN_PASSWORD` before enabling the shared stack in production.
+
+CI image publishing and release tagging are separate on purpose:
+
+- Pushes to `main` publish an immutable commit-SHA tag plus the moving `qa` tag.
+- QA should deploy `qa` automatically or deploy the immutable commit-SHA tag produced from `main`.
+- Release tags are created manually through `.github/workflows/release_tag.yaml` with `patch` as the default bump and optional `minor` / `major` overrides.
+- Each release tag also publishes generated GitHub Release notes, which are the release history for the project.
+- When a release tag is created, CI reuses the already-published commit image and adds the SemVer, `prod`, and `latest` tags to the same image instead of rebuilding.
+- Production can also be promoted manually through `.github/workflows/promote_production.yaml` by entering the already-tested image tag, usually the commit SHA currently running in QA.
+
+For production rollouts, prefer a release tag or immutable commit SHA in `DATE_IMG_TAG`; `prod` and `latest` are production aliases updated only by the production promotion workflows.
+
+Although Django 6 ships with the new Tasks framework, this project still uses Celery for production background work. The current task dispatch points defer enqueuing until after successful database commits where that matters, so new code should preserve that behavior.
+
+`docker-compose.prod.yml` also reads `ENABLE_LANGUAGE_FEATURES`, so multilingual public/admin behavior must be enabled explicitly in production if you want language switching outside Swedish.
+
+## Deployment (`k3s` / Helm)
+
+The Kubernetes deployment path uses the Helm chart in `charts/date-website/`. The current target is k3s on Hetzner Cloud with Traefik Gateway API, `hcloud-volumes` for persistent workloads when they run in-cluster, and Backblaze B2 through the S3-compatible API for media and PostgreSQL backups.
+
+Use these values files together:
+
+```bash
+helm upgrade --install date-website charts/date-website \
+  --namespace date-website \
+  --create-namespace \
+  -f charts/date-website/values-hetzner.yaml \
+  -f charts/date-website/values-backblaze-b2.example.yaml \
+  --set secret.existingSecret=date-website-prod-secrets \
+  --set database.external.host='<bastion-private-ip-or-dns>' \
+  --set image.tag='<release-tag>'
+```
+
+Do not commit real production bucket names, app keys, or Django secrets in values files. Create a Kubernetes Secret first and pass it through `secret.existingSecret`.
+
+For the full operator notes, required Secret keys, B2 bucket model, backup CronJob behavior, and smoke checks, see [docs/dev/kubernetes.md](docs/dev/kubernetes.md).
+
+## Updating PostgreSQL volumes
+
+Only use `update-postgres.sh` for **major** PostgreSQL version upgrades. The script wipes the `date_postgres_data` volume after creating a dump, so back up before running it.
+
+1. Set `DATE_POSTGRESQL_VERSION` to the **current** version in your `.env`.
+2. Run `./update-postgres.sh <target_version> [env_file]`.
+3. Restart the stack.
+
+The script now refuses same-major upgrades, verifies that PostgreSQL is storing data inside a mounted volume before it removes anything, recreates the target database through `template1` so `DB_DATABASE=postgres` can be restored, and compares the restored schema against the source database before declaring success.
+
+For Compose-based deployments, the db service now keeps `PGDATA` under the mounted volume and migrates older volume layouts into the `pgdata/` subdirectory on first start, so existing stacks do not lose access to pre-change database files.
+
+For minor upgrades, change `DATE_POSTGRESQL_VERSION` and recreate the containers without touching volumes.
+
+## Troubleshooting
+
+- `date-start` fails with "docker: permission denied": add your user to the `docker` group (`sudo usermod -aG docker $USER`) and reopen the terminal.
+- Shell complains about `clean_init.sh`: run it explicitly with Bash (`/bin/bash scripts/clean_init.sh`).
+- Services restarted but settings not updated: recreate the affected containers after editing `.env`.
 
 ## Internationalization
 
-NOTE: No need to implement yet
-
-Locales (stupidly called language codes) used in this project
+Shared locale catalogs in this project
 
 - sv (default)
+- en
 - fi
 
-The actual language code will be one of
+Active public/admin languages depend on the current association settings.
+
+DaTe currently uses:
 
 - sv
+- en
+
+Some other associations also expose:
+
 - fi
+
+### Translation scope
+
+Swedish site copy should match the established wording from `main` unless there is an explicit content decision to change it. In practice, Swedish is the source of truth for the site's established voice.
+
+Use these rules when updating translations:
+
+- Keep shared UI labels translated per locale, for example `Language`, `Address`, and error page titles.
+- Keep proper names and intentional fixed labels unchanged across locales when that reflects the intended site copy.
+- Treat Swedish as the source of truth for existing association wording and only introduce new translations where the text is meant to vary by language.
+
+Current fixed terms that should not be translated just because they are user-facing:
+
+- `Datateknologerna`
+- `vid Åbo Akademi rf`
+- `Joke`
 
 ### Translations
 
-As the default language is `sv`, 
-we only need to create translations in the language `fi`.
+As the default language is `sv`, Swedish copy should be reviewed against the site itself when strings are extracted into locale files.
+
+The project uses unprefixed public URLs. Language is resolved from the language cookie first, then the default `sv`. Associations can opt into browser `Accept-Language` detection with `USE_ACCEPT_LANGUAGE_HEADER=True`. When linking to internal pages from templates or stored nav items, prefer Django URL reversing or the `localized_url` template filter so links stay on the canonical unprefixed path.
 
 To generate the translation file, called `django.po`
 is done by executing the following command **in the root directory of the project**
 
 ```bash
-$ django-admin makemessages -l fi
+$ django-admin makemessages -l en -l fi -l sv
 ```
 
 This creates/updates the `django.po` 
-in `date-website/locale/fi/LC_MESSAGES`.
+in `date-website/locale/<language>/LC_MESSAGES`.
 
 Add translations to the empty fields or use a third party translation software,
 such as `Poedit`.
@@ -125,6 +320,99 @@ To compile the translations to `django.mo`, use the following command
 ```bash
 $ django-admin compilemessages
 ``` 
+
+### Django modeltranslations (translation of dynamic content)
+
+The library django-modeltranslations was added to allow translating existing dynamic data (eg. events title and description)
+
+If there is ever the need to provide a translated version of an existing field:
+
+1. Add a file called translation.py to the app in question.
+2. Create classes for each of the models for which fields will be translated and register the fields for translation.
+3. Start the django app and apply the new database migration that will be automatically created by django-modeltranslations
+
+Example to illustrate the above:
+
+I want to provide translated variants of the title field in Events. The shared schema includes the stable modeltranslation language set, so it can still include `title_fi` for associations that use Finnish even when DaTe only exposes `sv` and `en` at runtime.
+
+- Create the file translation.py under the events directory
+- Create a new class called EventTranslationOptions that inherits from TranslationOptions (provided by django-modeltranslations)
+- In the newly created class you register which fields should be translated by defining a variable called "fields"
+- For the events example: `fields = ('title',)`
+
+From "/events/translation.py":
+```python
+from core.modeltranslation import get_translation_languages
+from modeltranslation.translator import register, TranslationOptions
+from events.models import Event, EventAttendees, EventRegistrationForm
+
+TRANSLATION_LANGUAGES = get_translation_languages()
+
+
+@register(Event)
+class EventTranslationOptions(TranslationOptions):
+    fields = ('title', 'content',)
+    languages = TRANSLATION_LANGUAGES
+```
+
+In this case, the newly created title_sv will not contain the data from what was previously just "title",
+to fix this, run the command `docker compose run web python manage.py update_translation_fields`
+
+### Using django-modeltranslations for non-standard field-types (eg. CKEditor5 instead of models.TextField)
+
+Django-modeltranslations naturally does not play well with creating translations of external field types.
+
+See https://django-modeltranslation.readthedocs.io/en/latest/installation.html#modeltranslation-custom-fields for more
+
+Example solution:
+
+1. add the field class to settings.py:
+
+```python 
+MODELTRANSLATION_CUSTOM_FIELDS = (
+    'CKEditor5Field',
+)
+```
+
+2. Change the field model to a standard TextField (or whatever suits your need)
+3. Override the TextField with CKEditor5Field (or the corresponding field types for your case) in admin.py like this:
+
+```python
+    formfield_overrides = {
+        TextField: {'widget': CKEditor5Widget},
+    }
+```
+
+## Database backups
+
+Use the dedicated backup script for routine PostgreSQL backups:
+
+```bash
+./scripts/backup_postgres.sh [dev|prod|path/to/env] [output_dir]
+```
+
+If no env argument is provided, the script resolves `prod`, which checks `.env.prod`, then `.env`, then `.env.example`.
+You can also pass `dev` or a specific env file path.
+If no `output_dir` is provided, backups are written to `./backups`.
+
+Each run creates two timestamped files that a collector script can scan across many similar repos:
+
+- `backups/<project>-<timestamp>.sql`
+- `backups/<project>-<timestamp>.json`
+
+The JSON manifest contains a stable machine-readable contract:
+
+- `project_name`
+- `project_label` when `PROJECT_NAME` is set
+- `created_at_utc`
+- `dump_filename`
+- `dump_format`
+- `database_engine`
+- `database_service`
+- `database_name`
+- `database_user`
+- `postgres_version`
+- `postgres_major_version`
 
 ## Updating the database
 
@@ -145,6 +433,16 @@ Run
 #### Make sure `DATE_POSTGRESQL_VERSION` is set to the CURRENT version before running the following command
 
 ```bash
-./update-postgres.sh target_version [env_file]
+./update-postgres.sh target_version [dev|prod|path/to/env]
 ```
-Run `source env.sh dev` afterward to reload your development configuration.
+
+The upgrade helper now calls `./scripts/backup_postgres.sh` first and reuses the generated SQL dump during restore.
+If no env argument is provided, it resolves `prod` first using the upgrade script's env lookup order.
+For upgrades, the resolved env file must be writable; the script will not modify `.env.example`.
+For manual backups, use `./scripts/backup_postgres.sh [dev|prod|path/to/env] [output_dir]`; the older `./scripts/backup_postgres.sh [output_dir]` form still works.
+
+Restart the stack afterward so containers use the updated `.env`.
+
+## License
+
+All content in this repository is released under [CC0 1.0](LICENSE).

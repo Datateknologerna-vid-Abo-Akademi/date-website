@@ -1,77 +1,78 @@
 {% extends 'core/base.html' %}
 {% load i18n %}
 {% load static %}
-{% block title %}{% trans 'Funktionärsposter' %}{% endblock %}
+{% block title %}
+  {% trans 'Funktionärsposter' %}
+{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet"
+        href="{% static 'members/css/functionary.css' %}"
+        type="text/css">
+{% endblock %}
 {% block content %}
-    <head>
-        <link rel="stylesheet" href="{% static 'members/css/functionary.css' %}" type="text/css">
-    </head>
-    <div class="container-md min-vh-100 container-margin-top">
-        <div class="container-size">
-            <div class="content">
-                <!-- Functionary Table Section -->
-                <h4>Funktionärsposter</h4>
-                <table id="table" class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Årtal</th>
-                            <th>Titel</th>
-                            <th>{% trans 'Radera' %}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for functionary in functionaries %}
-                        <tr>
-                            <td>{{ functionary.year }}</td>
-                            <td>{{ functionary.functionary_role.title }}</td>
-                            <td>
-                                <form id="deleteForm{{ functionary.id }}" method="post">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="functionary_id" value="{{ functionary.id }}">
-                                    <a href="#" class="btn-link-delete" onclick="submitDeleteForm('{{ functionary.id }}'); return false;">
-                                        <i class="fas fa-times-circle"></i>
-                                    </a>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-                <h4>Lägg till funktionärspost</h4>
-                {% if form.non_field_errors %}
-                    <div class="alert alert-danger" role="alert">
-                        <ul class="mb-0">
-                            {% for error in form.non_field_errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                {% endif %}
-                <form method="post" class="mt-4 add-functionary-form">
+  <div class="container-md min-vh-100 container-margin-top">
+    <div class="container-size">
+      <div class="content">
+        <!-- Functionary Table Section -->
+        <h4>Funktionärsposter</h4>
+        <table id="table" class="table table-striped">
+          <thead>
+            <tr>
+              <th>Årtal</th>
+              <th>Titel</th>
+              <th>{% trans 'Radera' %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for functionary in functionaries %}
+              <tr>
+                <td>{{ functionary.year }}</td>
+                <td>{{ functionary.functionary_role.title }}</td>
+                <td>
+                  <form id="deleteForm{{ functionary.id }}" method="post">
                     {% csrf_token %}
-                    <div class="form-group">
-                        <label for="id_functionary_role">Funktionärspost</label>
-                        {{ form.functionary_role }}
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="id_year">År:</label>
-                        {{ form.year }}
-                        {% if form.year.errors %}
-                            <ul class="errorlist">
-                                {% for error in form.year.errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                    <button type="submit" class="theme-button" name="add_functionary">{% trans 'Lägg till' %}</button>
-                </form>
-            </div>
-        </div>
+                    <input type="hidden" name="functionary_id" value="{{ functionary.id }}">
+                    <a href="#"
+                       class="btn-link-delete"
+                       onclick="submitDeleteForm('{{ functionary.id }}'); return false;">
+                      <i class="fas fa-times-circle"></i>
+                    </a>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <h4>Lägg till funktionärspost</h4>
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger" role="alert">
+            <ul class="mb-0">
+              {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+        <form method="post" class="mt-4 add-functionary-form">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="id_functionary_role">Funktionärspost</label>
+            {{ form.functionary_role }}
+          </div>
+          <div class="form-group mb-3">
+            <label for="id_year">År:</label>
+            {{ form.year }}
+            {% if form.year.errors %}
+              <ul class="errorlist">
+                {% for error in form.year.errors %}<li>{{ error }}</li>{% endfor %}
+              </ul>
+            {% endif %}
+          </div>
+          <button type="submit" class="theme-button" name="add_functionary">{% trans 'Lägg till' %}</button>
+        </form>
+      </div>
     </div>
-
-    <script>
+  </div>
+  <script>
         function submitDeleteForm(id) {
             const form = document.getElementById(`deleteForm${id}`);
             if (confirm('{% trans 'Är du säker på att du vill ta bort posten?' %}')) {
@@ -86,5 +87,5 @@
                 form.submit();
             }
         }
-    </script>
+  </script>
 {% endblock %}

@@ -1,13 +1,19 @@
 .idea/
 .vscode/
+.claude/
 
 *.env*
+!.env.example
+!.env.prod.example
+.env-backups/
 
 *.mo
 
 __pycache__/
 *.py[cod]
 *$py.class
+.ruff_cache/
+.mypy_cache/
 core/static/
 core/templates/static/admin
 core/templates/static/ckeditor
@@ -22,6 +28,21 @@ storage
 
 # Database dumps from backup
 *.bck
+backups/
+
+# Local site export/import archives
+*.WordPress.*.xml
+*-export-local/
+wordpress-export*/
+wordpress-import*/
+wordpress-import-report*.json
 
 # CSV files
 *.csv
+
+# Dynamically generated fixtures
+fixtures/dynamic.json
+
+# Generated bootstrap assets
+media/archive/test/
+media/pdfs/test/

@@ -1,0 +1,31 @@
+# Example per-association values for Kemistklubben.
+# Use after values-hetzner.yaml and values-backblaze-b2.example.yaml.
+
+django:
+  projectName: kk
+  allowedHosts:
+    - kemistklubben.org
+    - www.kemistklubben.org
+  allowedOrigins:
+    - https://kemistklubben.org
+    - https://www.kemistklubben.org
+
+ingress:
+  hosts:
+    - host: kemistklubben.org
+      paths:
+        - path: /
+          pathType: Prefix
+
+media:
+  s3:
+    bucketName: "kk-website-media"
+    privateBucketName: "kk-website-private"
+    publicBucketName: "kk-website-public"
+    privateLocation: "kk/media"
+    publicLocation: "kk/public"
+
+backups:
+  objectStorage:
+    bucketName: "kk-website-backups"
+    prefix: "kk-website/postgresql"

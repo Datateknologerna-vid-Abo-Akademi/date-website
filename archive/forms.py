@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Collection, Document, Picture, PublicFile
+from .models import Collection, Document, PublicFile
 
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -21,61 +21,32 @@ class MultipleFileField(forms.FileField):
         return result
 
 
-class PictureUploadForm(forms.Form):
-    album = forms.CharField()
-    images = MultipleFileField(required=False)
-
-
-class ExamUploadForm(forms.Form):
-    title = forms.CharField()
-    exam = MultipleFileField(required=False)
-
-
-class ExamArchiveUploadForm(forms.Form):
-    title = forms.CharField()
-    
-
-class PictureAdminForm(forms.ModelForm):
-    images = MultipleFileField(label="Ladda upp flera bilder", required=False)
-
-    class Meta:
-        model = Collection
-        fields = '__all__'
-
-    def save(self, *args, **kwargs):
-        collection = super(PictureAdminForm, self).save(*args, **kwargs)
-        collection.save()
-        if hasattr(self.files, 'getlist'):
-            for f in self.files.getlist('images'):
-                Picture.objects.create(collection=collection, image=f)
-        return collection
-
-
 class DocumentAdminForm(forms.ModelForm):
-    files = MultipleFileField(label="Ladda upp flera dokument", required=False)
+    files = MultipleFileField(label="Ladda upp flera dokument", required=False)  # type: ignore[assignment]
 
     class Meta:
         model = Collection
-        fields = '__all__'
-        exclude = ('hide_for_gulis',)
+        fields = '__all__'  # noqa: DJ007
+        exclude = ('hide_for_gulis',)  # noqa: DJ006
 
     def save(self, *args, **kwargs):
-        collection = super(DocumentAdminForm, self).save(*args, **kwargs)
+        collection = super().save(*args, **kwargs)
         collection.save()
         if hasattr(self.files, 'getlist'):
             for f in self.files.getlist('files'):
                 Document.objects.create(collection=collection, document=f, title=f)
         return collection
 
+
 class PublicAdminForm(forms.ModelForm):
-    files = MultipleFileField(label="Ladda upp flera filer", required=False)
+    files = MultipleFileField(label="Ladda upp flera filer", required=False)  # type: ignore[assignment]
 
     class Meta:
         model = Collection
-        fields = '__all__'
+        fields = '__all__'  # noqa: DJ007
 
     def save(self, *args, **kwargs):
-        collection = super(PublicAdminForm, self).save(*args, **kwargs)
+        collection = super().save(*args, **kwargs)
         collection.save()
         if hasattr(self.files, 'getlist'):
             for f in self.files.getlist('files'):

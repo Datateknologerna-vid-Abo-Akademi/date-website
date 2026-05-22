@@ -1,47 +1,107 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% load i18n %}
-{% block title %}{{ ASSOCIATION_NAME_SHORT }} - CTF{% endblock %}
-
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - {{ pdf_file.title }}{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf_viewer.min.css">
+  <link rel="stylesheet"
+        href="{% static 'publications/css/publications.css' %}">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css">
+  <script src="{% static 'publications/js/main.js' %}" type="module"></script>
+{% endblock %}
 {% block content %}
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>PDF Viewer - {{ pdf_file.title }}</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.5.136/pdf_viewer.min.css">
-        <link rel="stylesheet" href="{% static 'publications/css/publications.css' %}">
-        <link rel="stylesheet"
-              href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css">
-        <script src="{% static 'publications/js/main.js' %}" type="module"></script>
-    </head>
-    <body>
-
-    <div class="pdf-container container container-margin-top">
-        <header>
-            <h1>{{ pdf_file.title }}</h1>
-        </header>
-        <div id="pdf-controls">
-            <div id="page-navigation">
-                <button id="prev-page" aria-label="Previous page"><i class="las la-arrow-left"></i></button>
-                <span id="page-num"></span> / <span id="page-count"></span>
-                <button id="next-page" aria-label="Next page"><i class="las la-arrow-right"></i></button>
-            </div>
-            <div class="desktop-only">
-                <input type="number" id="page-input" min="1" aria-label="Go to page">
-                <button id="go-to-page">Go</button>
-                <select id="zoom-select" aria-label="Zoom level">
-                    <option value="0.5">50%</option>
-                    <option value="1" selected>100%</option>
-                    <option value="1.5">150%</option>
-                    <option value="2">200%</option>
-                </select>
-            </div>
+  <div class="pdf-shell container-margin-top" id="pdf-shell">
+    <header class="pdf-shell-header">
+      <a class="pdf-back-link" href="{% url 'publications:pdf_list' %}">
+        <i class="las la-arrow-left"></i>
+        <span>{% trans "Publikationer" %}</span>
+      </a>
+      <div class="pdf-title-block">
+        <h1>{{ pdf_file.title }}</h1>
+        {% if pdf_file.publication_date %}
+          <p class="pdf-meta">
+            <time datetime="{{ pdf_file.publication_date|date:'Y-m-d' }}">
+              {{ pdf_file.publication_date|date:'j F Y' }}
+            </time>
+          </p>
+        {% endif %}
+      </div>
+      <div class="pdf-shell-header-spacer" aria-hidden="true"></div>
+    </header>
+    <div class="pdf-toolbar"
+         role="toolbar"
+         aria-label="{% trans 'PDF controls' %}">
+      <div class="pdf-toolbar-group pdf-toolbar-nav">
+        <button id="prev-page"
+                class="pdf-icon-btn"
+                type="button"
+                aria-label="{% trans 'Föregående sida' %}"
+                disabled>
+          <i class="las la-angle-left"></i>
+        </button>
+        <div id="page-jump-form" class="pdf-page-indicator">
+          <input id="page-input"
+                 class="pdf-page-input"
+                 type="text"
+                 inputmode="numeric"
+                 pattern="[0-9]*"
+                 autocomplete="off"
+                 value="–"
+                 aria-label="{% trans 'Go to page' %}">
+          <span class="pdf-page-divider">/</span>
+          <span id="page-count">–</span>
+          <span id="page-status"
+                class="pdf-sr-status"
+                aria-live="polite"
+                aria-atomic="true"></span>
         </div>
-        <div id="pdf-viewer" data-pdf-url="{{ pdf_url }}"></div>
-        <div id="mobile-navigation">
-            <button id="prev-page-mobile" aria-label="Previous page"><i class="las la-arrow-left"></i></button>
-            <button id="next-page-mobile" aria-label="Next page"><i class="las la-arrow-right"></i></button>
-        </div>
+        <button id="next-page"
+                class="pdf-icon-btn"
+                type="button"
+                aria-label="{% trans 'Nästa sida' %}"
+                disabled>
+          <i class="las la-angle-right"></i>
+        </button>
+      </div>
+      <div class="pdf-toolbar-group pdf-toolbar-zoom">
+        <button id="zoom-out"
+                class="pdf-icon-btn"
+                type="button"
+                aria-label="{% trans 'Zoom out' %}">
+          <i class="las la-search-minus"></i>
+        </button>
+        <span id="zoom-label" class="pdf-zoom-label" aria-live="polite">100%</span>
+        <button id="zoom-in"
+                class="pdf-icon-btn"
+                type="button"
+                aria-label="{% trans 'Zoom in' %}">
+          <i class="las la-search-plus"></i>
+        </button>
+        <button id="fullscreen-toggle"
+                class="pdf-icon-btn"
+                type="button"
+                aria-label="{% trans 'Toggle fullscreen' %}">
+          <i class="las la-expand"></i>
+        </button>
+      </div>
     </div>
-    </body>
+    <div class="pdf-progress" aria-hidden="true">
+      <div id="reading-progress" class="pdf-progress-fill"></div>
+    </div>
+    <div class="pdf-stage">
+      <div id="pdf-loading" class="pdf-loading" role="status" aria-live="polite">
+        <div class="pdf-loading-spinner"></div>
+        <span class="pdf-loading-label">{% trans "Laddar publikation…" %}</span>
+        <div class="pdf-loading-progress">
+          <div id="pdf-loading-bar" class="pdf-loading-bar"></div>
+        </div>
+      </div>
+      <div id="pdf-viewer" data-pdf-url="{{ pdf_url }}"></div>
+    </div>
+    <p class="pdf-hint" aria-hidden="true">{% trans "Svep eller använd piltangenterna för att bläddra." %}</p>
+  </div>
 {% endblock %}

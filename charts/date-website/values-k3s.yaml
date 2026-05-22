@@ -1,0 +1,18 @@
+ingress:
+  enabled: false
+
+gateway:
+  enabled: true
+  className: traefik
+
+postgresql:
+  persistence:
+    storageClass: local-path
+
+redis:
+  persistence:
+    storageClass: local-path
+
+media:
+  persistence:
+    storageClass: local-path

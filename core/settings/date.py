@@ -1,6 +1,5 @@
 from .common import *  # noqa
 
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -18,29 +17,40 @@ TEMPLATES = [
     },
 ]
 
-INSTALLED_APPS = get_installed_apps([
-    'news',
-    'archive.apps.ArchiveConfig',
-    'events',
-    'polls',
-    'ads',
-    'social',
-    'staticpages',
-    'ctf',
-    'publications',
-    'alumni',
-    'billing',
-    'booking'
-])
+INSTALLED_APPS = get_installed_apps(
+    [
+        'news',
+        'gallery',
+        'exambank',
+        'archive',
+        'events',
+        'polls',
+        'ads',
+        'instagram',
+        'harassment',
+        'social',
+        'staticpages',
+        'ctf',
+        'publications',
+        'alumni',
+        'billing',
+        'booking'
+    ]
+)
 
 ROOT_URLCONF = 'core.urls.date'
+USE_ACCEPT_LANGUAGE_HEADER = False
+DATE_LANGUAGES = (
+    ("sv", "Svenska"),
+    ("en", "English"),
+)
+LANGUAGES = (
+    DATE_LANGUAGES
+    if ENABLE_LANGUAGE_FEATURES
+    else tuple(language for language in DATE_LANGUAGES if language[0] == LANGUAGE_CODE)
+)
 
-STAFF_GROUPS = get_staff_groups([
-        'styrelse',
-        'admin',
-        'fotograf',
-        'rösträknare'
-    ])
+STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
 
 STATICFILES_DIRS = [
@@ -54,6 +64,7 @@ CONTENT_VARIABLES = {
     "ASSOCIATION_NAME": "Datateknologerna",
     "ASSOCIATION_NAME_FULL": "Datateknologerna vid Åbo Akademi rf",
     "ASSOCIATION_NAME_SHORT": "DaTe",
+    "EVENT_TEMPLATE_LOGO": "core/images/headerlogo.png",
     "ASSOCIATION_EMAIL": "date@abo.fi",
     "ASSOCIATION_ADDRESS_L1": "Åbo Akademi, Agora",
     "ASSOCIATION_ADDRESS_L2": "Vattenborgsvägen 5",
@@ -64,14 +75,10 @@ CONTENT_VARIABLES = {
         ["fa-linkedin-in", "https://www.linkedin.com/company/datateknologerna-vid-%C3%A5bo-akademi-rf/"],
         ["fa-github", "https://github.com/Datateknologerna-vid-Abo-Akademi"],
     ],
-
     # Alumni
     "ALUMNI_ASSOCIATION_NAME": "Albins R Gamyler",
     "ALUMNI_ASSOCIATION_NAME_SHORT": "ARG",
     "ALUMNI_ASSOCIATION_EMAIL": "arg@datateknologerna.org",
-
     # Events
-    "INTERNATIONAL_EVENT_SLUGS": [
-        "teekkarikaste_teknologdop"
-    ],
+    "INTERNATIONAL_EVENT_SLUGS": ["teekkarikaste_teknologdop"],
 }

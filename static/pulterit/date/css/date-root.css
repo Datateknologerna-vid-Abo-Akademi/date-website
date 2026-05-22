@@ -1,0 +1,50 @@
+/* Root colors */
+/* use with var(--color); included in base.html*/
+
+:root {
+    --primaryColor: #D0D0CE;
+    --primaryColorLight:  #202020;
+    --primaryColorLighte:#3d3d3d;
+    --primaryColorLighter:#505050;
+    --primaryColorTransparent: rgba(86, 86, 84, 0.78);
+    --primaryColorTransparenter: rgba(70, 70, 68, 0.92);
+    --secondaryColor: #fff;
+    --secondaryColorDarker: #eaeaea;
+    --textColorLight: #fff;
+    --textColorLightish: #eaeaea;
+    --textColorDark: #000;
+    --textColorDarkish: #202020;
+    --textColorMedium: #606060;
+    --helpText: #888;
+    --helpTextLighter: rgb(199, 199, 199);
+    --linkColor: #6d6d69;
+    --linkColorHover: #474744;
+    --linkColorSecondary: #6d6d69;
+    --linkSecondaryHover: #474744;
+    --linkColorDark: #3a80c3;
+    --linkColorDarkHover: #26547f;
+    --linkColorLight: rgb(208, 255, 0);
+    --linkColorLightHover: rgb(146, 179, 0);
+    --accentColor: #BB29BB;
+    --accentColorHover: #9D229D;
+    --accentColorBright: #E279E2;
+    --accentColorBrightHover: #D954D9;
+    --warning: rgb(216, 153, 146);
+    --warning-darker: rgb(213, 91, 78);
+    --navClickHighlight: rgba(255, 255, 255, 0.25);
+    --navHoverHighlight: rgba(255, 255, 255, 0.15);
+    --defaultPadding: 20px;
+    --defaultRadius: 5px;
+
+    /* Publications viewer: pulterit is a light-themed site (white content
+       boxes on light-gray bg, pink accents), so flip the viewer chrome to
+       match. Other associations inherit the dark defaults from
+       publications.css. */
+    --pubChromeBg:     var(--secondaryColor);     /* toolbar / loading / error / fullscreen — white */
+    --pubChromePill:   var(--primaryColor);       /* inner toolbar nav/zoom pill — light gray */
+    --pubChromeHover:  #c8c8c5;                   /* hover bg, matches the gradient used on pulterit's hero */
+    --pubStageBg:      var(--primaryColor);       /* PDF stage — light gray gives white pages a soft contrast */
+    --pubChromeFg:     var(--textColorDark);      /* primary chrome text — black */
+    --pubChromeFgSoft: var(--textColorMedium);    /* muted chrome text — mid gray */
+    --pubListHeadingFg: var(--textColorDark);     /* list page heading — black on pulterit's light bg */
+}

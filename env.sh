@@ -1,98 +1,220 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC1091
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEFAULT_MODE="dev"
-REQUESTED_MODE="${1:-$DEFAULT_MODE}"
+if [ -n "${BASH_SOURCE[0]:-}" ]; then
+    DATE_WEBSITE_SOURCE="${BASH_SOURCE[0]}"
+elif [ -n "${ZSH_VERSION:-}" ]; then
+    DATE_WEBSITE_SOURCE="${(%):-%x}"
+else
+    DATE_WEBSITE_SOURCE="$0"
+fi
 
-if [ -n "${2:-}" ]; then
-    echo "Usage: source env.sh [dev|prod|path/to/env]" >&2
+DATE_WEBSITE_DIR="${DATE_WEBSITE_DIR:-$(cd "$(dirname "$DATE_WEBSITE_SOURCE")" && pwd)}"
+
+if [ -n "${1:-}" ]; then
+    echo "Usage: source env.sh" >&2
+    echo "COMPOSE_FILE in .env selects the stack; env.sh only registers helper aliases." >&2
     return 1 2>/dev/null || exit 1
 fi
 
-resolve_env_file() {
-    local mode="$1"
-    local -a candidates=()
+unalias date date-manage date-migrate date-makemigrations date-collectstatic \
+    date-cleaninit date-stop date-start date-start-detached date-createsuperuser \
+    date-pull date-seed-gallery date-seed-gallery-clear date-all date-all-manage \
+    date-all-start date-all-stop date-all-cleaninit date-all-seed-gallery \
+    date-all-seed-gallery-clear date-backup date-restore date-sync-dev-env \
+    date-sync-prod-env date-setup 2>/dev/null || true
 
-    case "$mode" in
-        dev)
-            candidates=(
-                "${SCRIPT_DIR}/.env"
-                "${SCRIPT_DIR}/.env.example"
-            )
-            ;;
-        prod)
-            candidates=(
-                "${SCRIPT_DIR}/.env.prod"
-                "${SCRIPT_DIR}/.env"
-                "${SCRIPT_DIR}/.env.example"
-            )
-            ;;
-        *)
-            if [ -f "$mode" ]; then
-                echo "$mode"
-                return 0
-            elif [ -f "${SCRIPT_DIR}/$mode" ]; then
-                echo "${SCRIPT_DIR}/$mode"
-                return 0
-            else
-                echo "Environment file '$mode' not found" >&2
-                return 1
-            fi
-            ;;
-    esac
+# Resolve the checkout to operate on. This lets globally installed helpers
+# follow the current working directory while still having DATE_WEBSITE_DIR as a
+# fallback when run outside any checkout.
+_date_website_project_dir() {
+    local dir
+    dir="$PWD"
 
-    for candidate in "${candidates[@]}"; do
-        if [ -f "$candidate" ]; then
-            echo "$candidate"
+    while [ "$dir" != "/" ]; do
+        if [ -f "$dir/env.sh" ] && [ -f "$dir/docker-compose.yml" ] && [ -f "$dir/manage.py" ]; then
+            printf '%s\n' "$dir"
             return 0
         fi
+        dir="$(dirname "$dir")"
     done
 
-    echo "No suitable environment file found for mode '$mode'" >&2
+    if [ -n "${DATE_WEBSITE_DIR:-}" ] && [ -d "$DATE_WEBSITE_DIR" ]; then
+        printf '%s\n' "$DATE_WEBSITE_DIR"
+        return 0
+    fi
+
+    echo "Could not find a date-website checkout. cd into one or set DATE_WEBSITE_DIR." >&2
     return 1
 }
 
-ENV_FILE="$(resolve_env_file "$REQUESTED_MODE")" || {
-    return 1 2>/dev/null || exit 1
+date() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+    docker compose --project-directory "$project_dir" "$@"
 }
 
-case "$REQUESTED_MODE" in
-    dev|prod)
-        ENV_MODE="$REQUESTED_MODE"
-        ;;
-    *)
-        ENV_MODE="custom"
-        ;;
-esac
+date-manage() {
+    date run web python /code/manage.py "$@"
+}
 
-set -a
-. "${ENV_FILE}"
-set +a
+date-migrate() {
+    date-manage migrate --noinput "$@"
+}
 
-if [ "$ENV_MODE" = "prod" ]; then
-    export DATE_DEVELOP="False"
-elif [ "$ENV_MODE" = "dev" ]; then
-    export DATE_DEVELOP="${DATE_DEVELOP:-True}"
-fi
+date-makemigrations() {
+    date-manage makemigrations "$@"
+}
 
-if [ "${DATE_DEVELOP:-True}" = "False" ]; then
-    export COMPOSE_FILE_PATH="docker-compose.prod.yml"
-else
-    export COMPOSE_FILE_PATH="docker-compose.yml"
-fi
+date-collectstatic() {
+    date-manage collectstatic "$@"
+}
 
-alias date="docker-compose -f \"${COMPOSE_FILE_PATH}\""
-alias date-manage="date run web python /code/manage.py"
-alias date-migrate="date-manage migrate --noinput"
-alias date-makemigrations="date-manage makemigrations"
-alias date-collectstatic="date-manage collectstatic"
-alias date-stop="date down"
-alias date-start="date-pull; date-stop; date up --build"
-alias date-start-detached="date-pull; date up -d --build"
-alias date-createsuperuser="date-manage createsuperuser"
-alias date-pull="date pull"
+date-cleaninit() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+    "$project_dir/scripts/clean_init.sh" "$@"
+}
+
+date-stop() {
+    date down "$@"
+}
+
+_date_compose_file() {
+    local project_dir="$1"
+    if [ -n "${COMPOSE_FILE:-}" ]; then
+        printf '%s\n' "$COMPOSE_FILE"
+        return 0
+    fi
+    [ -f "$project_dir/.env" ] || return 0
+    grep -E '^COMPOSE_FILE=' "$project_dir/.env" | tail -1 | cut -d= -f2- | tr -d "\"'"
+}
+
+_date_is_prod_stack() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return 1
+    [[ "$(_date_compose_file "$project_dir")" == *prod* ]]
+}
+
+date-start() {
+    if _date_is_prod_stack; then
+        date up --pull always "$@"
+    else
+        date up --build "$@"
+    fi
+}
+
+date-start-detached() {
+    if _date_is_prod_stack; then
+        date up -d --pull always "$@"
+    else
+        date up -d --build "$@"
+    fi
+}
+
+date-createsuperuser() {
+    date-manage createsuperuser "$@"
+}
+
+date-pull() {
+    date pull "$@"
+}
+
+date-seed-gallery() {
+    date-manage seed_gallery "$@"
+}
+
+date-seed-gallery-clear() {
+    date-manage seed_gallery --clear "$@"
+}
+
+date-all() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+    docker compose --project-directory "$project_dir" -f "$project_dir/docker-compose.dev-all.yml" "$@"
+}
+
+date-all-manage() {
+    date-all run web python /code/manage.py "$@"
+}
+
+date-all-start() {
+    date-all up --build "$@"
+}
+
+date-all-stop() {
+    date-all down "$@"
+}
+
+date-all-cleaninit() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+    COMPOSE_FILE_PATH="docker-compose.dev-all.yml" "$project_dir/scripts/clean_init.sh" "$@"
+}
+
+date-all-seed-gallery() {
+    date-all-manage seed_gallery "$@"
+}
+
+date-all-seed-gallery-clear() {
+    date-all-manage seed_gallery --clear "$@"
+}
+
+date-backup() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+    "$project_dir/scripts/backup_postgres.sh" "$@"
+}
+
+date-restore() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+    "$project_dir/scripts/restore_postgres.sh" "$@"
+}
+
+date-sync-dev-env() {
+    local project_dir
+    local env_file
+    project_dir="$(_date_website_project_dir)" || return
+    env_file="$project_dir/.env"
+
+    if [ -f "$env_file" ] && [ "${DATE_FORCE_DEV_ENV_SYNC:-}" != "1" ]; then
+        if grep -Eq '^[[:space:]]*COMPOSE_FILE=["'\'']?docker-compose\.prod\.yml|^[[:space:]]*DATE_DEVELOP=["'\'']?[Ff]alse|^[[:space:]]*DATE_DEBUG=["'\'']?[Ff]alse|^[[:space:]]*UNFOLD_ENVIRONMENT_LABEL=["'\'']?Production' "$env_file"; then
+            echo "Refusing to sync development env over a production-looking .env." >&2
+            echo "Use date-sync-prod-env for production, or set DATE_FORCE_DEV_ENV_SYNC=1 to override." >&2
+            return 1
+        fi
+    fi
+
+    "$project_dir/scripts/sync_env_from_template.sh" "$@" "$project_dir/.env.example" "$project_dir/.env"
+}
+
+date-sync-prod-env() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+    "$project_dir/scripts/sync_env_from_template.sh" "$@" "$project_dir/.env.prod.example" "$project_dir/.env"
+}
+
+date-setup() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+
+    if [ ! -f "$project_dir/.env" ]; then
+        cp "$project_dir/.env.example" "$project_dir/.env"
+        echo "Created .env from .env.example — edit it before continuing."
+    else
+        echo ".env already exists, skipping."
+    fi
+
+    git -C "$project_dir" config core.hooksPath .githooks
+    echo "Git hooks installed."
+
+    "$project_dir/scripts/clean_init.sh" --yes
+
+    echo "Run 'date-start' or 'date-start-detached' to start the stack."
+}
 
 date-test() {
-    docker-compose run -e TEST=1 web /bin/bash -c './wait-for-postgres.sh db:5432 && python /code/manage.py test "$@"'
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+    docker compose --project-directory "$project_dir" run -e TEST=1 web /bin/bash -c './wait-for-postgres.sh db:5432 && python /code/manage.py test "$@"' -- "$@"
 }

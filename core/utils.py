@@ -5,6 +5,7 @@ import requests
 from celery import shared_task
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db import transaction
 
 logger = logging.getLogger("date")
 
@@ -12,7 +13,7 @@ VALIDATION_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
 
 
 def validate_captcha(response: str) -> bool:
-    secret_key = settings.TURNSTILE_SECRET_KEY
+    secret_key = settings.TURNSTILE_SECRET_KEY  # type: ignore[misc]
     if secret_key == "":
         logger.info("No captcha secret key defined")
         return True
@@ -26,12 +27,16 @@ def validate_captcha(response: str) -> bool:
     }
 
     try:
-        res = requests.post(VALIDATION_URL, data=data)
+        res = requests.post(VALIDATION_URL, data=data, timeout=5)
     except Exception:
         logger.info("Request to cloudflare failed")
         return False
 
     return res.json().get('success', False)
+
+
+def enqueue_task_on_commit(task, *args, **kwargs) -> None:
+    transaction.on_commit(lambda: task.delay(*args, **kwargs))
 
 
 @shared_task

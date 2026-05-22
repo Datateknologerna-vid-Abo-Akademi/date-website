@@ -4,7 +4,7 @@
 .gitattributes
 
 # Environments
-.env
+*.env
 .env.*
 .venv/
 venv/
@@ -41,6 +41,13 @@ db.sqlite3
 db.sqlite3-journal
 media/
 
+# Local site export/import archives
+*.WordPress.*.xml
+*-export-local/
+wordpress-export*/
+wordpress-import*/
+wordpress-import-report*.json
+
 # IDE
 .idea/
 .vscode/
@@ -55,6 +62,11 @@ docker-compose.prod.yml
 # Documentation
 *.md
 LICENSE
+docs/
+
+# Local tooling
+nginx.conf
+.claude/
 
 # Testing & Coverage
 .coverage

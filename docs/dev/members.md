@@ -1,0 +1,40 @@
+# Members Development Notes
+
+## Custom User Model
+- `Member` extends `AbstractBaseUser` + `PermissionsMixin` with `username` as the `USERNAME_FIELD`.
+- Fields include contact info, `membership_type` FK, `year_of_admission`, and helper props (`is_staff`, `full_name`, `active_payment`).
+- `MemberManager` (see `members/managers.py`) handles user creation.
+- `membership_type.permission_profile` ties into other apps for access control.
+
+## Membership & Payments
+- `Subscription`: defines pricing and renewal cadence (`renewal_scale` + `renewal_period`).
+- `SubscriptionPayment`: links members to subscriptions, stores payment/expiry dates, and exposes `is_active` + `expires` properties. `SubscriptionPaymentForm.save()` auto-calculates `date_expires` using `dateutil.relativedelta`.
+
+## Functionaries
+- Functionary roles and assignments live in the `functionaries` app. `members.urls` keeps the old `/members/functionary/` and `/members/functionaries/` routes for compatibility.
+
+## Forms
+- `MemberCreationForm` validates usernames via `USERNAME_VALIDATOR` (letters, underscores, hyphens). `AdminMemberUpdateForm` uses `ReadOnlyPasswordHashField` and disables password editing unless explicitly changed.
+- `SignUpForm` collects data for `/members/signup/`, including captcha validation and manual activation flow.
+- `CustomPasswordResetForm` overrides `send_mail` to push messages through `send_email_task` (Celery-backed).
+
+## Views
+- `UserinfoView`: GET shows profile form; POST saves the `MemberEditForm` and redirects.
+- `CertificateView`: renders a fun membership certificate with a daily icon.
+- `signup`: handles public registrations, enforces captcha, sets user inactive, and emails the board for approval using `account_activation_token`.
+- `activate`: clicks from the activation email mark the user active.
+- Password views subclass Django’s built-ins to use the custom templates/forms.
+
+## Emails & Tokens
+- Emails are queued via Celery. Request-side enqueue points that depend on fresh database state should go through `core.utils.enqueue_task_on_commit()` so jobs are only published after the surrounding transaction commits.
+- Activation tokens use `members/tokens.py` (standard Django token generator) and base64-encoded user IDs.
+
+## Admin Customizations
+- `UserAdmin` inherits from `auth_admin.UserAdmin` but swaps in custom forms and ordering.
+- Actions `activate_user`/`deactivate_user` bulk-toggle `is_active`.
+- `SubscriptionPaymentAdmin` uses a custom `ModelChoiceField` to show human-readable member names.
+
+## Extending
+- Consider adding auditing (who edited a member) since current forms don’t track admin users.
+- Django 6 is now in use. If you revisit background jobs, evaluate Django's built-in Tasks framework separately from Celery migration work rather than mixing both changes into a feature branch.
+- Tests are sparse; add coverage for signup + activation flows.

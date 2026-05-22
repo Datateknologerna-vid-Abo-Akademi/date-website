@@ -1,15 +1,21 @@
 import logging
 
-from django_ckeditor_5.fields import CKEditor5Field
 from django.db import models
+from django.urls import reverse
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from django_ckeditor_5.fields import CKEditor5Field
 
 from members.models import Member
 
 logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
+
+
+class CtfQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(published_time__isnull=False, published_time__lte=now())
 
 
 class Ctf(models.Model):
@@ -19,7 +25,15 @@ class Ctf(models.Model):
     end_date = models.DateTimeField(_('Slutdatum'), default=now)
     pub_date = models.DateTimeField(auto_now_add=True)
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
-    published = models.BooleanField(_('Publicera'), default=True)
+    published_time = models.DateTimeField(
+        _('Publiceras'),
+        null=True,
+        blank=True,
+        default=now,
+        help_text=_('Lämna tomt för att dölja CTF:n. Välj en framtida tid för schemalagd publicering.'),
+    )
+
+    objects = CtfQuerySet.as_manager()
 
     class Meta:
         verbose_name = _('ctf')
@@ -27,6 +41,13 @@ class Ctf(models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_absolute_url(self):
+        return reverse('ctf:detail', args=[self.slug])
+
+    @property
+    def published(self):
+        return self.published_time is not None and self.published_time <= now()
 
     def ctf_is_open(self):
         return now() >= self.start_date
@@ -52,6 +73,9 @@ class Flag(models.Model):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        return reverse('ctf:flag_detail', args=[self.ctf.slug, self.slug])
+
 
 class Guess(models.Model):
     ctf = models.ForeignKey(Ctf, on_delete=models.CASCADE, verbose_name=_('CTF'))
@@ -66,4 +90,4 @@ class Guess(models.Model):
         verbose_name_plural = _('Gissningar')
 
     def __str__(self):
-        return f'{self.ctf.title} - {self.flag.title} - {self.user.username} - {self.guess}'
+        return f"{self.ctf.title} - {self.flag.title} - {self.user.username} - {self.guess}"

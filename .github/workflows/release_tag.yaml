@@ -1,0 +1,164 @@
+name: Propose and create release tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: SemVer bump level for the next release tag.
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  propose_release:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.version.outputs.should_release }}
+      last_tag: ${{ steps.version.outputs.last_tag }}
+      bump: ${{ steps.version.outputs.bump }}
+      next_tag: ${{ steps.version.outputs.next_tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Compute next SemVer tag
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git describe --tags --exact-match --match 'v[0-9]*.[0-9]*.[0-9]*' main >/dev/null 2>&1; then
+            EXISTING_TAG="$(git describe --tags --exact-match --match 'v[0-9]*.[0-9]*.[0-9]*' main)"
+            echo "Head commit already has release tag: ${EXISTING_TAG}"
+            echo "should_release=false" >> "${GITHUB_OUTPUT}"
+            echo "last_tag=${EXISTING_TAG}" >> "${GITHUB_OUTPUT}"
+            echo "bump=none" >> "${GITHUB_OUTPUT}"
+            echo "next_tag=${EXISTING_TAG}" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          # Follow main's own history instead of picking the highest tag anywhere in the repo.
+          LAST_TAG="$(git describe --tags --abbrev=0 --first-parent --match 'v[0-9]*.[0-9]*.[0-9]*' main 2>/dev/null || true)"
+          if [ -z "${LAST_TAG}" ]; then
+            LAST_TAG="none"
+          fi
+
+          BUMP="${{ github.event.inputs.bump }}"
+
+          if [ "${LAST_TAG}" = "none" ]; then
+            NEXT_TAG="v1.0.0"
+          else
+            VERSION="${LAST_TAG#v}"
+            IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION}"
+
+            case "${BUMP}" in
+              major)
+                MAJOR=$((MAJOR + 1))
+                MINOR=0
+                PATCH=0
+                ;;
+              minor)
+                MINOR=$((MINOR + 1))
+                PATCH=0
+                ;;
+              patch)
+                PATCH=$((PATCH + 1))
+                ;;
+            esac
+
+            NEXT_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          fi
+          echo "should_release=true" >> "${GITHUB_OUTPUT}"
+          echo "last_tag=${LAST_TAG}" >> "${GITHUB_OUTPUT}"
+          echo "bump=${BUMP}" >> "${GITHUB_OUTPUT}"
+          echo "next_tag=${NEXT_TAG}" >> "${GITHUB_OUTPUT}"
+
+      - name: Release summary
+        shell: bash
+        run: |
+          {
+            echo "## Release proposal"
+            echo "- Last tag: \`${{ steps.version.outputs.last_tag }}\`"
+            echo "- Suggested bump: \`${{ steps.version.outputs.bump }}\`"
+            echo "- Next tag: \`${{ steps.version.outputs.next_tag }}\`"
+            echo "- Should create release tag: \`${{ steps.version.outputs.should_release }}\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  create_release_tag:
+    needs: propose_release
+    if: needs.propose_release.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Create and push tag
+        env:
+          NEXT_TAG: ${{ needs.propose_release.outputs.next_tag }}
+          LAST_TAG: ${{ needs.propose_release.outputs.last_tag }}
+          BUMP: ${{ needs.propose_release.outputs.bump }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${NEXT_TAG}" >/dev/null 2>&1; then
+            echo "Tag ${NEXT_TAG} already exists on origin, skipping."
+            exit 0
+          fi
+
+          git config user.name "date-website-ci-bot"
+          git config user.email "date-website-ci-bot@users.noreply.github.com"
+
+          git checkout main
+          git tag -a "${NEXT_TAG}" -m "Release ${NEXT_TAG}" -m "Automated ${BUMP} bump from ${LAST_TAG}"
+          git push origin "${NEXT_TAG}"
+
+      - name: Create GitHub release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEXT_TAG: ${{ needs.propose_release.outputs.next_tag }}
+          LAST_TAG: ${{ needs.propose_release.outputs.last_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if gh release view "${NEXT_TAG}" >/dev/null 2>&1; then
+            echo "Release ${NEXT_TAG} already exists, skipping release creation."
+            exit 0
+          fi
+
+          ARGS=(
+            "${NEXT_TAG}"
+            --title "${NEXT_TAG}"
+            --verify-tag
+            --generate-notes
+          )
+
+          if [ "${LAST_TAG}" != "none" ]; then
+            ARGS+=(--notes-start-tag "${LAST_TAG}")
+          fi
+
+          gh release create "${ARGS[@]}"
+
+      - name: Dispatch Docker release tagging workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEXT_TAG: ${{ needs.propose_release.outputs.next_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh workflow run docker_build.yaml --ref "${NEXT_TAG}"

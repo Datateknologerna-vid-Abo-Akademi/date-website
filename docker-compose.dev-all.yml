@@ -1,0 +1,134 @@
+# Runs all associations simultaneously for style comparison.
+# Each association gets its own web container on a dedicated port, all sharing
+# the same Postgres database and Redis instance.
+#
+# Usage:
+#   docker compose -f docker-compose.dev-all.yml up --build
+#
+# Association ports:
+#   biocum   → http://localhost:8001
+#   date     → http://localhost:8002
+#   kk       → http://localhost:8003
+#   pulterit → http://localhost:8004
+#   sf       → http://localhost:8005
+#   pgAdmin  → http://localhost:5050
+
+x-web-common: &web-common
+  env_file: .env
+  build: .
+  restart: unless-stopped
+  volumes:
+    - .:/code
+  command: python manage.py runserver 0.0.0.0:8000
+  depends_on:
+    init:
+      condition: service_completed_successfully
+    redis:
+      condition: service_started
+
+x-web-env: &web-env
+  DATE_DEBUG: "True"
+  DATE_DEVELOP: "True"
+
+services:
+  db:
+    image: postgres:${DATE_POSTGRESQL_VERSION}-alpine
+    restart: unless-stopped
+    entrypoint:
+      - /bin/sh
+      - /scripts/postgres-entrypoint.sh
+    volumes:
+      - date_postgres_data:/var/lib/postgresql/data/
+      - ./scripts/postgres-entrypoint.sh:/scripts/postgres-entrypoint.sh:ro
+    environment:
+      POSTGRES_PASSWORD: ${DATE_DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5433:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    profiles:
+      - pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-password}
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - dev_all_pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - db
+
+  redis:
+    image: valkey/valkey:7.2-alpine
+    restart: unless-stopped
+    volumes:
+      - dev_all_redis_data:/data
+
+  # Runs once: migrate + compilemessages (using 'date' as the representative
+  # project). All web containers wait for this to finish before starting.
+  # collectstatic is skipped — WHITENOISE_USE_FINDERS=True (set when DEBUG) has
+  # each container serve static files directly from its own STATICFILES_DIRS.
+  init:
+    env_file: .env
+    build: .
+    restart: "no"
+    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python manage.py migrate --noinput && python manage.py compilemessages -l en -l fi -l sv --verbosity 0"
+    volumes:
+      - .:/code
+    environment:
+      <<: *web-env
+      PROJECT_NAME: date
+    depends_on:
+      - db
+
+  # Named 'web' so clean_init.sh can run fixtures against it.
+  # Uses PROJECT_NAME=date because it's the only association with the ctf app.
+  web:
+    <<: *web-common
+    ports:
+      - "8002:8000"
+    environment:
+      <<: *web-env
+      PROJECT_NAME: date
+
+  web-biocum:
+    <<: *web-common
+    ports:
+      - "8001:8000"
+    environment:
+      <<: *web-env
+      PROJECT_NAME: biocum
+
+  # web-date is covered by the 'web' service above (port 8002).
+
+  web-kk:
+    <<: *web-common
+    ports:
+      - "8003:8000"
+    environment:
+      <<: *web-env
+      PROJECT_NAME: kk
+
+  web-pulterit:
+    <<: *web-common
+    ports:
+      - "8004:8000"
+    environment:
+      <<: *web-env
+      PROJECT_NAME: pulterit
+
+  web-sf:
+    <<: *web-common
+    ports:
+      - "8005:8000"
+    environment:
+      <<: *web-env
+      PROJECT_NAME: sf
+
+volumes:
+  date_postgres_data:
+  dev_all_pgadmin_data:
+  dev_all_redis_data:

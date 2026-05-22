@@ -1,0 +1,57 @@
+name: Publish Helm chart
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'charts/date-website/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    env:
+      CHART_PATH: charts/date-website
+      CHART_REGISTRY: oci://ghcr.io/datateknologerna-vid-abo-akademi/charts
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Log in to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "${GHCR_TOKEN}" | helm registry login ghcr.io -u "${GITHUB_ACTOR}" --password-stdin
+
+      - name: Lint chart
+        run: |
+          set -euo pipefail
+          helm lint "${CHART_PATH}"
+
+      - name: Package chart
+        id: package
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          helm package "${CHART_PATH}" --destination dist
+          CHART_VERSION="$(helm show chart "${CHART_PATH}" | awk '$1 == "version:" { print $2 }')"
+          echo "chart_version=${CHART_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "package=dist/date-website-${CHART_VERSION}.tgz" >> "${GITHUB_OUTPUT}"
+
+      - name: Push chart to GHCR
+        run: |
+          set -euo pipefail
+          helm push "${{ steps.package.outputs.package }}" "${CHART_REGISTRY}"

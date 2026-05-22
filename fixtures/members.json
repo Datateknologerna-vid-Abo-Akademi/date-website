@@ -4,14 +4,13 @@
     "pk": 1,
     "fields": {
       "password": "pbkdf2_sha256$216000$Pza41nldCcBB$s7ab3C1Ayvk67O89/3n8r4AZN5Qv8zWBMB39uRkGkYQ=",
-      "last_login": "2026-01-25T12:00:00Z",
-      "is_superuser": true,
       "username": "admin",
       "email": "admin@example.com",
       "first_name": "Admin",
       "last_name": "User",
       "membership_type": 2,
-      "is_active": true
+      "is_active": true,
+      "is_superuser": true
     }
   },
   {
