@@ -2379,3 +2379,26 @@ msgstr "Vill du samarbeta med Pulterit rf?"
 
 #~ msgid "Please check this box to continue."
 #~ msgstr "Välj den här rutan för att fortsätta."
+#: templates/impuls/date/components/header.html:12
+msgid "Impuls"
+msgstr "Impuls"
+
+#: templates/impuls/date/components/about.html:8
+msgid ""
+"Impuls rf är ämnesföreningen för psykologi vid Åbo Akademi. Föreningen "
+"strävar efter att förbättra och fördjupa undervisningen i psykologi, samt "
+"öka samvaron och trivseln för våra psykologistuderande."
+msgstr ""
+"Impuls rf är ämnesföreningen för psykologi vid Åbo Akademi. Föreningen "
+"strävar efter att förbättra och fördjupa undervisningen i psykologi, samt "
+"öka samvaron och trivseln för våra psykologistuderande."
+
+#: templates/impuls/date/components/about.html:13
+msgid ""
+"En central del av Impuls verksamhet är att ordna diverse evenemang för sina "
+"medlemmar och att vara aktiv över fakultets- och föreningsgränserna, såväl "
+"inom psykologi som andra ämnen."
+msgstr ""
+"En central del av Impuls verksamhet är att ordna diverse evenemang för sina "
+"medlemmar och att vara aktiv över fakultets- och föreningsgränserna, såväl "
+"inom psykologi som andra ämnen."

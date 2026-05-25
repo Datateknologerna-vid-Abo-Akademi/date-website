@@ -33,6 +33,7 @@ Django resolves the path in `{% raw %}{% extends %}{% endraw %}` by skipping the
 This means:
 - `templates/common/` defines the base structure and all available `{% raw %}{% block %}{% endraw %}` slots.
 - `templates/<association>/` overrides only the blocks it needs; everything else falls through to the common template.
+- Associations can also layer another association's templates before common templates. For example, Impuls uses `templates/impuls`, then `templates/date`, then `templates/common` so it can reuse the DaTe homepage layout while overriding only Impuls branding and copy.
 
 ## Adding New Block Slots
 
