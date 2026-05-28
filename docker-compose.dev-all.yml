@@ -11,6 +11,7 @@
 #   kk       → http://localhost:8003
 #   pulterit → http://localhost:8004
 #   sf       → http://localhost:8005
+#   impuls   → http://localhost:8006
 #   pgAdmin  → http://localhost:5050
 
 x-web-common: &web-common
@@ -127,6 +128,14 @@ services:
     environment:
       <<: *web-env
       PROJECT_NAME: sf
+
+  web-impuls:
+    <<: *web-common
+    ports:
+      - "8006:8000"
+    environment:
+      <<: *web-env
+      PROJECT_NAME: impuls
 
 volumes:
   date_postgres_data:

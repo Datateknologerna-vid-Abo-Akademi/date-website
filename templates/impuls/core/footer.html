@@ -1,0 +1,7 @@
+{% extends "core/footer.html" %}
+{% load static %}
+{% block footer_logo %}
+  <img class="footer-img img-fluid"
+       alt="{{ ASSOCIATION_NAME_FULL }} logo"
+       src="{% static 'core/images/impuls-logo-transparent.png' %}">
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block favicon %}
+  <link rel="icon"
+        type="image/png"
+        href="{% static 'core/images/impuls-favicon-32.png' %}"
+        sizes="32x32">
+  <link rel="apple-touch-icon"
+        href="{% static 'core/images/impuls-apple-touch-icon.png' %}">
+{% endblock %}

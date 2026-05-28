@@ -73,6 +73,7 @@ Each association gets its own web container on a dedicated port, sharing one Pos
 | kk          | http://localhost:8003 |
 | pulterit    | http://localhost:8004 |
 | sf          | http://localhost:8005 |
+| impuls      | http://localhost:8006 |
 
 The database is exposed on host port `5433` to avoid conflicting with the regular dev stack on `5432`.
 
@@ -204,6 +205,27 @@ PROJECT_NAME=sf python manage.py import_wordpress_export sf-klubben.WordPress.20
 ```
 
 Run `--dry-run` first to inspect planned counts. The command matches rows by slug; existing rows are skipped unless `--update-existing` is passed. Publications import reads Issuu links from the exported A&O page (`/ao/`) and stores them as external redirects with the table cover image as `cover_image` when that uploaded image is available. It also reads the exported Politicus page (`/politicus/`), stores Issuu years as external redirects, and stores older linked PDF years as local PDF-backed publications when the target PDF is available in imported media. A&O and Politicus each get their own publication collection and collection logo from the WordPress media library; pass `--skip-publications` to skip those rows. Navigation import reads the WordPress `actual` menu by default; use `--nav-menu <slug>` to import another exported menu. Gallery redirect import reads Google Photos/Drive links from the exported `bildgalleriet` and `gamla-bilder` pages and creates redirect-only `gallery.Album` rows. By default the importer also fetches each share URL's `og:image` preview and stores it as the album thumbnail; pass `--skip-gallery-thumbnails` to suppress those network calls (e.g. for offline imports). Albums that already have a thumbnail are left untouched, and fetch failures are logged and counted in the report rather than aborting the import. Pass `--import-exam-archive` to read the WordPress `tentarkiv` rtbs_tabs payload (a PHP-serialized list of subject tabs) and create one `exambank.ExamArchive` per tab, with one `exambank.ExamFile` per linked PDF (resolved to its already-imported storage path). Combine with `--replace-exam-archive` to clear existing exam archives first. Pass `--import-functionaries` to parse the WordPress `funktionarer` page into board `functionaries.FunctionaryRole` rows and name-only `functionaries.Functionary` rows; it preserves any existing matching member-linked functionary entries. Combine with `--replace-functionaries` only when you intentionally want to clear all existing functionaries first. It writes a JSON report next to the XML by default.
+
+### `import_impuls_static_archive`
+
+Use this one-off migration helper for the Impuls static WordPress archive stored in the repository root under `impuls/`. Unlike the SF importer, this reads the captured static tree: it prefers REST page JSON under `wp-json/wp/v2/pages/`, falls back to canonical HTML pages, parses the current blog listing into `news.Post` rows, imports referenced uploads into public media storage, and can recreate the captured WordPress navigation.
+
+Run a dry-run first:
+
+```bash
+PROJECT_NAME=impuls python manage.py import_impuls_static_archive --dry-run --import-nav
+```
+
+Then import into a disposable or backed-up target database:
+
+```bash
+PROJECT_NAME=impuls python manage.py import_impuls_static_archive \
+  --import-nav \
+  --replace-nav \
+  --author wp-import
+```
+
+The command matches pages and posts by slug. Existing rows are skipped unless `--update-existing` is passed. It writes `impuls/impuls-import-report.json` by default after a non-dry run.
 
 ## Recommended Operator Checklist
 
