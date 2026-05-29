@@ -9,6 +9,10 @@ Keep it simple.
 - Update docs or config examples if your change affects them.
 - **Squash merge into `main`**. A feature, fix, docs change, or cleanup branch should normally land as one commit on `main`.
 
+By contributing, you agree that your software source code contributions are
+licensed under this repository's AGPL-3.0-or-later software license. Non-code
+materials are handled according to [LICENSE-NOTICE.md](LICENSE-NOTICE.md).
+
 That last point is the important one: branch history can be messy, but the history on `main` should stay clean and readable.
 
 For local setup and project workflow, see `README.md`.

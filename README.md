@@ -445,4 +445,10 @@ Restart the stack afterward so containers use the updated `.env`.
 
 ## License
 
-All content in this repository is released under [CC0 1.0](LICENSE).
+The software source code in this repository is licensed under the GNU Affero
+General Public License v3.0 or later. See [LICENSE](LICENSE).
+
+Association branding, logos, images, fixture content, documentation, and other
+non-code materials are not included in that software license unless explicitly
+stated otherwise. See [LICENSE-NOTICE.md](LICENSE-NOTICE.md) for the full scope
+notice.
