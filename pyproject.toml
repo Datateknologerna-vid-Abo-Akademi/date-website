@@ -5,7 +5,7 @@ license = "AGPL-3.0-or-later"
 requires-python = ">=3.14"
 dependencies = [
     "Django~=6.0",
-    "django-unfold>=0.92.0,<0.93",
+    "django-unfold>=0.95.0,<0.96",
     "asgiref",
     "django-ckeditor-5",
     "requests",
