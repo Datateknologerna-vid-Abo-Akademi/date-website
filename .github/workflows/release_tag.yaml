@@ -87,12 +87,22 @@ jobs:
       - name: Release summary
         shell: bash
         run: |
+          LAST_TAG="${{ steps.version.outputs.last_tag }}"
+
           {
             echo "## Release proposal"
-            echo "- Last tag: \`${{ steps.version.outputs.last_tag }}\`"
+            echo "- Last tag: \`${LAST_TAG}\`"
             echo "- Suggested bump: \`${{ steps.version.outputs.bump }}\`"
             echo "- Next tag: \`${{ steps.version.outputs.next_tag }}\`"
             echo "- Should create release tag: \`${{ steps.version.outputs.should_release }}\`"
+            echo ""
+            echo "### Commits since last tag"
+            echo ""
+            if [ "${LAST_TAG}" = "none" ]; then
+              git log --first-parent --oneline main
+            else
+              git log --first-parent --oneline "${LAST_TAG}..main"
+            fi
           } >> "${GITHUB_STEP_SUMMARY}"
 
   create_release_tag:
