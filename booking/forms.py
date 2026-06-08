@@ -1,6 +1,6 @@
 from django import forms
 
-from booking.models import Room
+from .models import Room
 
 
 class RoomForm(forms.ModelForm):

@@ -29,6 +29,10 @@ urlpatterns = [
     path('', date.index, name='index'),
     path('news/', include('news.urls')),
     path('members/', include('members.urls')),
+    # Two-factor management endpoints used by the members app. Register
+    # under the "two_factor" namespace so reverse('two_factor:setup') etc.
+    # work from members.two_factor.* code paths.
+    path('members/two-factor/', include(('members.two_factor_urls', 'two_factor'), namespace='two_factor')),
     path('members/', include('django.contrib.auth.urls')),
     path('archive/', include('archive.urls')),
     path('events/', include('events.urls')),
