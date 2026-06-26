@@ -78,12 +78,13 @@ Examples:
 ```bash
 helm upgrade --install date \
   oci://ghcr.io/datateknologerna-vid-abo-akademi/charts/date-website \
-  --version 0.2.0 \
+  --version 0.2.1 \
   --namespace date \
   --create-namespace \
   -f charts/date-website/values-hetzner.yaml \
   -f charts/date-website/values-backblaze-b2.example.yaml \
   --set secret.existingSecret=date-website-prod-secrets \
+  --set gateway.https.secretName='<tls-secret-name>' \
   --set database.external.host='<bastion-private-ip-or-dns>' \
   --set image.tag='<release-tag>'
 ```
@@ -91,13 +92,14 @@ helm upgrade --install date \
 ```bash
 helm upgrade --install kk \
   oci://ghcr.io/datateknologerna-vid-abo-akademi/charts/date-website \
-  --version 0.2.0 \
+  --version 0.2.1 \
   --namespace kk \
   --create-namespace \
   -f charts/date-website/values-hetzner.yaml \
   -f charts/date-website/values-backblaze-b2.example.yaml \
   -f charts/date-website/values-kk.example.yaml \
   --set secret.existingSecret=kk-website-prod-secrets \
+  --set gateway.https.secretName='<tls-secret-name>' \
   --set database.external.host='<bastion-private-ip-or-dns>' \
   --set image.tag='<release-tag>'
 ```
@@ -105,13 +107,14 @@ helm upgrade --install kk \
 ```bash
 helm upgrade --install biocum \
   oci://ghcr.io/datateknologerna-vid-abo-akademi/charts/date-website \
-  --version 0.2.0 \
+  --version 0.2.1 \
   --namespace biocum \
   --create-namespace \
   -f charts/date-website/values-hetzner.yaml \
   -f charts/date-website/values-backblaze-b2.example.yaml \
   -f charts/date-website/values-biocum.example.yaml \
   --set secret.existingSecret=biocum-website-prod-secrets \
+  --set gateway.https.secretName='<tls-secret-name>' \
   --set database.external.host='<bastion-private-ip-or-dns>' \
   --set image.tag='<release-tag>'
 ```
@@ -119,13 +122,14 @@ helm upgrade --install biocum \
 ```bash
 helm upgrade --install pulterit \
   oci://ghcr.io/datateknologerna-vid-abo-akademi/charts/date-website \
-  --version 0.2.0 \
+  --version 0.2.1 \
   --namespace pulterit \
   --create-namespace \
   -f charts/date-website/values-hetzner.yaml \
   -f charts/date-website/values-backblaze-b2.example.yaml \
   -f charts/date-website/values-pulterit.example.yaml \
   --set secret.existingSecret=pulterit-website-prod-secrets \
+  --set gateway.https.secretName='<tls-secret-name>' \
   --set database.external.host='<bastion-private-ip-or-dns>' \
   --set image.tag='<release-tag>'
 ```
@@ -214,17 +218,19 @@ Typical install or upgrade:
 ```bash
 helm upgrade --install date-website \
   oci://ghcr.io/datateknologerna-vid-abo-akademi/charts/date-website \
-  --version 0.2.0 \
+  --version 0.2.1 \
   --namespace date-website \
   --create-namespace \
   -f charts/date-website/values-hetzner.yaml \
   -f charts/date-website/values-backblaze-b2.example.yaml \
   --set secret.existingSecret=date-website-prod-secrets \
+  --set gateway.https.secretName='<tls-secret-name>' \
   --set database.external.host='<bastion-private-ip-or-dns>' \
   --set image.tag='<release-tag>'
 ```
 
 Set `image.tag` to a release tag, immutable commit SHA, or the `prod` production alias. Avoid deploying `qa` by accident in production.
+Set `gateway.https.secretName` to a TLS Secret in the release namespace, or provide the same Secret through `ingress.tls[0].secretName`; the Hetzner values enable Gateway HTTPS and require one of those values.
 
 For KK, Biologica, or Pulterit, layer the matching association values file after the B2 values file so the association-specific hosts, `PROJECT_NAME`, media paths, and backup prefix override the default `date` example.
 
