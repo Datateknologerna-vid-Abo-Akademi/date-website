@@ -40,6 +40,13 @@ jobs:
         run: |
           set -euo pipefail
           helm lint "${CHART_PATH}"
+          helm lint "${CHART_PATH}" \
+            -f "${CHART_PATH}/values-hetzner.yaml" \
+            -f "${CHART_PATH}/values-backblaze-b2.example.yaml" \
+            --set secret.existingSecret=date-website-ci-secrets \
+            --set gateway.https.secretName=date-website-ci-tls \
+            --set database.external.host=db.internal \
+            --set image.tag=ci
 
       - name: Package chart
         id: package

@@ -233,6 +233,7 @@ helm upgrade --install date-website charts/date-website \
   -f charts/date-website/values-hetzner.yaml \
   -f charts/date-website/values-backblaze-b2.example.yaml \
   --set secret.existingSecret=date-website-prod-secrets \
+  --set gateway.https.secretName='<tls-secret-name>' \
   --set database.external.host='<bastion-private-ip-or-dns>' \
   --set image.tag='<release-tag>'
 ```

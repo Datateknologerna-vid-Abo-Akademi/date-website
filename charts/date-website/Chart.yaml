@@ -2,5 +2,18 @@ apiVersion: v2
 name: date-website
 description: Helm chart for running date-website on Kubernetes/k3s
 type: application
-version: 0.2.0
+version: 0.2.1
 appVersion: "prod"
+home: https://datateknologerna.org
+sources:
+  - https://github.com/datateknologerna-vid-abo-akademi/date-website
+keywords:
+  - django
+  - datateknologerna
+  - association
+  - k3s
+  - helm
+maintainers:
+  - name: Datateknologerna vid Abo Akademi
+    url: https://github.com/datateknologerna-vid-abo-akademi
+kubeVersion: ">=1.29.0-0"
