@@ -1,5 +1,6 @@
 import logging
 import secrets
+import datetime
 from itertools import chain
 from urllib.parse import urlsplit, urlunsplit
 
@@ -12,6 +13,7 @@ from django.urls import reverse
 from django.utils import timezone, translation
 
 from ads.models import AdUrl
+from booking.models import Booking
 from events.models import Event
 from instagram.models import IgUrl
 from news.models import Post
@@ -63,7 +65,7 @@ def index(request):
     events_old_events_included = (
         Event.objects.published()
         .filter(
-            event_date_end__gte=(timezone.now() - timezone.timedelta(days=31)),
+            event_date_end__gte=(timezone.now() - datetime.timedelta(days=31)),
         )
         .exclude(slug="")
         .exclude(slug__isnull=True)
@@ -71,12 +73,25 @@ def index(request):
     )
     events = events_old_events_included.filter(event_date_end__gte=timezone.now())
     news = Post.objects.published().filter(category__isnull=True).reverse()[:3]
+    bookings = []
+    booking_enabled = False
+    # if booking is enabled, show bookings for the next 7 days
+    if 'booking' in settings.INSTALLED_APPS:
+        booking_enabled = True
+        bookings = (
+            Booking.objects.filter(
+                booking_date_start__gte=timezone.now(),
+                booking_date_start__lte=timezone.now() + datetime.timedelta(days=7),
+            )
+            .select_related('room')
+            .order_by('booking_date_start')
+        )
 
     # Show Albins Angels logo if new post in last 10 days
     aa_posts = (
         Post.objects.published().filter(category__name="Albins Angels").order_by('published_time').reverse()[:1]
     )  # TODO Remove this hardcoding or move to different function/file
-    time_since = timezone.now() - timezone.timedelta(days=10)
+    time_since = timezone.now() - datetime.timedelta(days=10)
     aa_post = ''
     if aa_posts and aa_posts[0].published_time > time_since:
         aa_post = aa_posts[0]
@@ -100,6 +115,8 @@ def index(request):
             calendar_events_dict.update(event_dict)
         return calendar_events_dict
 
+
+
     context = {
         'calendar_events': calendar_format(events_old_events_included),
         'events': events,
@@ -109,6 +126,10 @@ def index(request):
         'posts': IgUrl.objects.all(),
         'aa_post': aa_post,  # TODO Remove or rename
     }
+    # expose booking context flag and bookings (only when enabled)
+    context['booking_enabled'] = booking_enabled
+    if booking_enabled:
+        context['bookings'] = bookings
 
     return render(request, get_homepage_template_name(), context)
 
