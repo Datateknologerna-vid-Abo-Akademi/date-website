@@ -181,8 +181,18 @@
       },
       "then": {
         "properties": {
-          "django": { "required": ["secretKey"] },
-          "database": { "required": ["password"] }
+          "django": {
+            "required": ["secretKey"],
+            "properties": {
+              "secretKey": { "type": "string", "minLength": 1 }
+            }
+          },
+          "database": {
+            "required": ["password"],
+            "properties": {
+              "password": { "type": "string", "minLength": 1 }
+            }
+          }
         }
       }
     },
@@ -340,7 +350,10 @@
                     "minItems": 1,
                     "items": {
                       "type": "object",
-                      "required": ["secretName"]
+                      "required": ["secretName"],
+                      "properties": {
+                        "secretName": { "type": "string", "minLength": 1 }
+                      }
                     }
                   }
                 }

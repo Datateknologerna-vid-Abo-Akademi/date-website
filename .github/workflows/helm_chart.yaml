@@ -39,7 +39,9 @@ jobs:
       - name: Lint chart
         run: |
           set -euo pipefail
-          helm lint "${CHART_PATH}"
+          helm lint "${CHART_PATH}" \
+            --set django.secretKey=ci-secret-key \
+            --set database.password=ci-database-password
           helm lint "${CHART_PATH}" \
             -f "${CHART_PATH}/values-hetzner.yaml" \
             -f "${CHART_PATH}/values-backblaze-b2.example.yaml" \
