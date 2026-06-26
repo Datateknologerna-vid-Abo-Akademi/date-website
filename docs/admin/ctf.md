@@ -26,7 +26,7 @@ Publish capture-the-flag competitions, manage individual flags, and review guess
 <img alt="img.png" src="images/ctf.png" width="1600"/>
 
 ## Review Guesses
-- Open **Ctf › Guesses** to see every submitted attempt. Use filters by CTF, flag, user, timestamp, or correctness.
+- Open **Ctf › Ctfs**, then use **All guesses** to see every submitted attempt. Use filters by CTF, flag, user, timestamp, or correctness.
 - Incorrect guesses appear with `Correct = False`; correct guesses are duplicated (once for the solver, plus any subsequent attempts made after completion).
 
 ## Participant Experience

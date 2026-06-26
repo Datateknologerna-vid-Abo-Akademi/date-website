@@ -258,6 +258,29 @@ class ExamArchiveAdminTests(TestCase):
         self.assertContains(response, 'flatpickr-datetime')
         self.assertContains(response, 'core/js/flatpickr.min.js')
 
+    def test_changelist_links_to_access_settings(self):
+        access_settings = ExamBankAccessSettings.get_solo()
+
+        response = self.client.get(reverse('admin:exambank_examarchive_changelist'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Åtkomstinställningar')
+        self.assertContains(response, reverse('admin:exambank_examarchive_access_settings'))
+
+        response = self.client.get(reverse('admin:exambank_examarchive_access_settings'))
+
+        self.assertRedirects(
+            response,
+            reverse('admin:exambank_exambankaccesssettings_change', args=[access_settings.pk]),
+        )
+
+    def test_access_settings_is_hidden_from_app_index(self):
+        response = self.client.get('/admin/exambank/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Tentarkiv')
+        self.assertNotContains(response, 'Åtkomst till tentarkiv')
+
 
 class ExamBankAppIndexLegacyPermissionTests(TestCase):
     def test_app_index_works_with_legacy_archive_permission(self):

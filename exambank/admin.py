@@ -2,6 +2,8 @@ import logging
 
 from django.contrib import admin
 from django.db import models
+from django.shortcuts import redirect
+from django.urls import path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
@@ -36,7 +38,15 @@ def safe_file_link(file_field, label=None):
 
 
 class ExamBankAdminMixin(ExtraChangeListLinksMixin):
-    changelist_links = (AdminLink(_('Städa upp media'), icon='cleaning_services', url_name='archive:cleanMedia'),)
+    changelist_links = (
+        AdminLink(
+            _('Åtkomstinställningar'),
+            icon='password',
+            url_name='admin:exambank_examarchive_access_settings',
+            permission='exambank.view_exambankaccesssettings',
+        ),
+        AdminLink(_('Städa upp media'), icon='cleaning_services', url_name='archive:cleanMedia'),
+    )
 
 
 class ExamFileInline(TabularInline):
@@ -68,6 +78,21 @@ class ExamArchiveAdmin(FlatpickrDateTimeAdminMixin, ExamBankAdminMixin, ModelAdm
         'delete': 'archive.delete_examcollection',
     }
 
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'access-settings/',
+                self.admin_site.admin_view(self.access_settings_redirect),
+                name='exambank_examarchive_access_settings',
+            ),
+        ]
+        return custom_urls + urls
+
+    def access_settings_redirect(self, request):
+        access_settings = ExamBankAccessSettings.get_solo()
+        return redirect(reverse('admin:exambank_exambankaccesssettings_change', args=[access_settings.pk]))
+
     def _has_legacy_permission(self, request, action):
         return request.user.has_perm(self.legacy_permission_map[action])
 
@@ -97,6 +122,9 @@ class ExamArchiveAdmin(FlatpickrDateTimeAdminMixin, ExamBankAdminMixin, ModelAdm
 class ExamBankAccessSettingsAdmin(ModelAdmin):
     form = ExamBankAccessSettingsAdminForm
     list_display = ('__str__', 'require_sign_in', 'password_configured')
+
+    def has_module_permission(self, request):
+        return False
 
     def has_add_permission(self, request):
         return not ExamBankAccessSettings.objects.exists() and super().has_add_permission(request)

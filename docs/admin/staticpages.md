@@ -17,6 +17,7 @@ Manage the informational pages and navigation links that live under the "About",
    - **Använd kategorins URL** – if checked, visitors clicking the category go directly to the URL below instead of showing dropdown entries.
    - **Url** – external/internal destination used when the checkbox above is ticked.
 4. Save, then use the inline table to add **Static URLs** (dropdown entries). Drag handles in the inline list to reorder.
+5. Existing category and dropdown URLs show quick **Open** links so you can check destinations without leaving the admin workflow.
 
 ## Create/Update Static Pages
 1. Open **Staticpages › Static pages** (`/admin/staticpages/staticpage/`).
@@ -27,6 +28,7 @@ Manage the informational pages and navigation links that live under the "About",
    - **Innehåll** – write/edit content using the CKEditor toolbar.
    - **Kräv inloggning** – tick if only members may read the page; anonymous visitors will be redirected to the login screen.
 4. Save. The `Modifierad` timestamp updates automatically when you edit later.
+5. Use the **Public page** link from the list or edit form to open the rendered page.
 
 ## Add Dropdown Links (Static URLs)
 1. Inside a category edit page, use the inline table:
