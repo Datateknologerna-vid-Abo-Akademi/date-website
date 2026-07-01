@@ -46,7 +46,7 @@ dev = [
     "djlint>=1.36.4",
     "mypy>=2.1.0",
     "pre-commit>=4.6.0",
-    "ruff>=0.15.13",
+    "ruff>=0.15.20",
     "types-requests>=2.33.0.20260518",
 ]
 
