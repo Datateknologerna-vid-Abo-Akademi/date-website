@@ -4,7 +4,6 @@ import os
 import subprocess
 import sys
 
-
 DEFAULT_PROJECTS = ("date", "kk", "biocum", "pulterit")
 
 
