@@ -10,9 +10,10 @@
 - Migration `0004` creates a default `Publications` collection with slug `publications` and assigns existing PDF rows to it.
 
 ## Admin (`publications/admin.py`)
-- `PublicationCollectionAdmin` lets admins create and reorder collections, set visibility, choose allowed membership types, and set/clear a password without storing plaintext.
-- Custom `PDFFileAdmin` prepopulates slugs for new objects, exposes the collection field and secondary access controls, and locks the `file` field when editing to avoid accidental replacements.
-- Fieldsets group metadata, collection access, per-publication access control, and timestamps for clarity.
+- `PublicationCollectionAdmin` is the primary management surface. It lets admins create and reorder collections, set visibility, choose allowed membership types, and set/clear a password without storing plaintext. The change form also includes an inline table for the collection's publications so editors can manage collection access and publication-level flags in one place. The global PDF list is available through an **All PDF publications** tool link rather than a separate sidebar entry.
+- The collection admin validates access combinations: password-protected collections must have a password, and selected-membership collections must select at least one membership type.
+- Custom `PDFFileAdmin` prepopulates slugs for new objects, exposes collection/access columns, links back to the parent collection access settings, and locks the `file` field when editing to avoid accidental replacements. The PDF form shows a selected-collection access summary; `static/common/publications/js/admin-collection-access.js` refreshes that summary when the collection dropdown changes.
+- Fieldsets group metadata, collection access, per-publication access control, and timestamps for clarity. The PDF changelist includes a shortcut back to collection/access management for editors who start from the publication list.
 
 ## Views/URLs (`publications/views.py`)
 - The app is installed for DaTe, KK, Biologica/biocum, and Pulterit. Each of those variants exposes the public list at `/publications/`.

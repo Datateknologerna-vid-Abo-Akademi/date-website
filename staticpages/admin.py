@@ -1,13 +1,32 @@
+from urllib.parse import urlsplit
+
 from admin_ordering.admin import OrderableAdmin
 from django.conf import settings
 from django.contrib import admin
-from django.db.models import Case, IntegerField, TextField, Value, When
+from django.db.models import Case, Count, IntegerField, TextField, Value, When
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.widgets import CKEditor5Widget
 
 from core.admin import ActiveLanguageTranslationAdminMixin
 from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin, TabularInline
 
 from .models import StaticPage, StaticPageNav, StaticUrl
+
+
+def safe_admin_url_link(url, label=None):
+    if not url:
+        return '-'
+    parsed = urlsplit(url)
+    is_safe_url = parsed.scheme in ('http', 'https') or (not parsed.scheme and not parsed.netloc)
+    if not is_safe_url:
+        return format_html('{}', url)
+    return format_html(
+        '<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
+        url,
+        label or url,
+    )
+
 
 if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
     from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
@@ -33,7 +52,8 @@ class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
     ordering_field = 'dropdown_element'
     ordering = ['dropdown_element']
     ordering_field_hide_input = True
-    fields = ('dropdown_element', 'title', 'url', 'parent', 'logged_in_only')
+    fields = ('dropdown_element', 'title', 'url', 'open_link', 'parent', 'logged_in_only')
+    readonly_fields = ('open_link',)
 
     def get_queryset(self, request):
         return (
@@ -58,15 +78,34 @@ class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
             kwargs['queryset'] = queryset
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
+    @admin.display(description=_('Open'))
+    def open_link(self, obj):
+        if not obj or not obj.url:
+            return '-'
+        return safe_admin_url_link(obj.url, _('Open'))
+
 
 @admin.register(StaticPageNav)
 class StaticPageNavAdmin(StaticPageTranslationAdminBase):
     model = StaticPageNav
     save_on_top = True
-    list_display = ('category_name', 'nav_element', 'use_category_url', 'url')
-    search_fields = ('category_name', 'url')
+    list_display = ('category_name', 'nav_element', 'use_category_url', 'url_link', 'link_count')
+    search_fields = ('category_name', 'url', 'staticurl__title', 'staticurl__url')
     ordering = ('nav_element',)
     inlines = [UrlInline]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(link_total=Count('staticurl', distinct=True))
+
+    @admin.display(description=_('Url'))
+    def url_link(self, obj):
+        if not obj.url:
+            return '-'
+        return safe_admin_url_link(obj.url)
+
+    @admin.display(description=_('Links'))
+    def link_count(self, obj):
+        return getattr(obj, 'link_total', obj.staticurl_set.count())
 
 
 @admin.register(StaticPage)
@@ -76,8 +115,22 @@ class StaticPageAdmin(PublicUrlAdminMixin, StaticPageTranslationAdminBase):
         **UNFOLD_FORMFIELD_OVERRIDES,
         TextField: {'widget': CKEditor5Widget},
     }
-    list_display = ('title', 'slug', 'members_only', 'modified_time')
+    list_display = ('title', 'slug', 'members_only', 'public_page_link', 'modified_time')
     search_fields = ('title', 'slug')
     list_filter = ('members_only',)
     ordering = ('title',)
     date_hierarchy = 'created_time'
+    prepopulated_fields = {'slug': ('title',)}
+
+    def get_prepopulated_fields(self, request, obj=None):
+        if obj is None:
+            return self.prepopulated_fields
+        return {}
+
+    @admin.display(description=_('Public page'))
+    def public_page_link(self, obj):
+        return format_html(
+            '<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
+            obj.get_absolute_url(),
+            _('Open'),
+        )

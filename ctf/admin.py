@@ -2,7 +2,8 @@ from django.contrib import admin
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
-from core.admin_base import ModelAdmin, PublicUrlAdminMixin, StackedInline
+from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, PublicUrlAdminMixin, StackedInline
+from core.admin_ui import AdminLink
 from core.admin_widgets import (
     FLATPICKR_ADMIN_CSS,
     FLATPICKR_ADMIN_JS,
@@ -43,7 +44,15 @@ class CtfPublicationFilter(admin.SimpleListFilter):
 
 
 @admin.register(Ctf)
-class CtfAdmin(FlatpickrDateTimeAdminMixin, PublicUrlAdminMixin, ModelAdmin):
+class CtfAdmin(FlatpickrDateTimeAdminMixin, ExtraChangeListLinksMixin, PublicUrlAdminMixin, ModelAdmin):
+    changelist_links = (
+        AdminLink(
+            _('All guesses'),
+            icon='flag',
+            url_name='admin:ctf_guess_changelist',
+            permission='ctf.view_guess',
+        ),
+    )
     model = Ctf
     save_on_top = True
     list_display = ('title', 'start_date', 'end_date', 'publication_status', 'published_time')

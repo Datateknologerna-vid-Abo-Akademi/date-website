@@ -2,6 +2,7 @@ import shutil
 import tempfile
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -257,6 +258,43 @@ class ExamArchiveAdminTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'flatpickr-datetime')
         self.assertContains(response, 'core/js/flatpickr.min.js')
+
+    def test_changelist_links_to_access_settings(self):
+        access_settings = ExamBankAccessSettings.get_solo()
+
+        response = self.client.get(reverse('admin:exambank_examarchive_changelist'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Åtkomstinställningar')
+        self.assertContains(response, reverse('admin:exambank_examarchive_access_settings'))
+
+        response = self.client.get(reverse('admin:exambank_examarchive_access_settings'))
+
+        self.assertRedirects(
+            response,
+            reverse('admin:exambank_exambankaccesssettings_change', args=[access_settings.pk]),
+        )
+
+    def test_access_settings_redirect_requires_settings_permission(self):
+        staff_group = Group.objects.create(name='admin')
+        staff_user = get_user_model().objects.create_user(
+            username='exam-staff-without-settings',
+            password='pwd',
+            email='exam-staff-without-settings@example.com',
+        )
+        staff_user.groups.add(staff_group)
+        self.client.force_login(staff_user)
+
+        response = self.client.get(reverse('admin:exambank_examarchive_access_settings'))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_access_settings_is_hidden_from_app_index(self):
+        response = self.client.get('/admin/exambank/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Tentarkiv')
+        self.assertNotContains(response, 'Åtkomst till tentarkiv')
 
 
 class ExamBankAppIndexLegacyPermissionTests(TestCase):
