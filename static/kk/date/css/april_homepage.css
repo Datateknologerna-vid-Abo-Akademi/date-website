@@ -177,6 +177,14 @@ div.carousel-logos img{
     width: 50%;
 }
 
+.company-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100px;
+    width: auto !important;
+}
+
 .company-logo img{
     max-height: 100px;
     max-width: 100%;

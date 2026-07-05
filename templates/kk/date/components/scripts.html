@@ -99,12 +99,52 @@
         });
 </script>
 <script>
-        $(".carousel-logos").jCarouselLite({
-        circular: true,
-        vertical: true,
-        auto: 1500,
-        speed: 1500,
-        pause: true,
-        visible: 4
-        });
+        (function () {
+            const initPartnerCarousel = function (carousel) {
+                const $carousel = $(carousel);
+
+                if ($carousel.data("jcarousel-initialized") || !$carousel.is(":visible")) {
+                    return;
+                }
+
+                $carousel.data("jcarousel-initialized", true);
+
+                const imagePromises = $carousel.find("img").map(function () {
+                    const image = this;
+                    const deferred = $.Deferred();
+
+                    if (image.complete) {
+                        deferred.resolve();
+                    } else {
+                        $(image).one("load error", function () {
+                            deferred.resolve();
+                        });
+                    }
+
+                    return deferred.promise();
+                }).get();
+
+                $.when.apply($, imagePromises).always(function () {
+                    window.requestAnimationFrame(function () {
+                        $carousel.jCarouselLite({
+                            circular: true,
+                            vertical: true,
+                            auto: 1500,
+                            speed: 1500,
+                            pause: true,
+                            visible: 4
+                        });
+                    });
+                });
+            };
+
+            const initVisiblePartnerCarousels = function () {
+                $(".carousel-logos").each(function () {
+                    initPartnerCarousel(this);
+                });
+            };
+
+            $(window).on("load resize", initVisiblePartnerCarousels);
+            $(initVisiblePartnerCarousels);
+        }());
 </script>
