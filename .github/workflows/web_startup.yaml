@@ -186,10 +186,10 @@ jobs:
         uses: astral-sh/setup-uv@v7
 
       - name: Ruff lint
-        run: uvx ruff@0.15.13 check .
+        run: uvx ruff@0.15.20 check .
 
       - name: Ruff format check
-        run: uvx ruff@0.15.13 format --check .
+        run: uvx ruff@0.15.20 format --check .
 
       - name: djlint check
         run: uvx djlint@1.36.4 --check templates/
