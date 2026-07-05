@@ -173,6 +173,7 @@
       ". news sidebar ."
       ". ig-scroll ig-scroll .";
     grid-column-gap: 3vw;
+    align-items: start;
 }
 
 .text-size{
@@ -496,6 +497,14 @@ div.carousel-logos img{
     width: 50%;
 }
 
+.company-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100px;
+    width: auto !important;
+}
+
 .company-logo img{
     max-height: 100px;
     max-width: 100%;
@@ -616,4 +625,3 @@ div.carousel-logos img{
                 transform: translate(-50%, -60%) scale(.3);
     }
 }
-

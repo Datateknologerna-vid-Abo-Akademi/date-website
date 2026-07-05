@@ -51,9 +51,23 @@
     <ul>
       {% for ad in ads %}
         <li class="company-logo">
-          <a href="{{ ad.company_url }}">
-            <img src="{{ ad.ad_url }}" alt="img">
-          </a>
+          {% if ad.company_url %}
+            <a href="{{ ad.company_url }}">
+              <img src="{{ ad.ad_url }}"
+                   alt="{% trans 'Partner logo' %}"
+                   loading="lazy"
+                   decoding="async"
+                   onerror="this.onerror=null;this.src='{% static 'core/images/fallback.png' %}'">
+            </a>
+          {% else %}
+            <span>
+              <img src="{{ ad.ad_url }}"
+                   alt="{% trans 'Partner logo' %}"
+                   loading="lazy"
+                   decoding="async"
+                   onerror="this.onerror=null;this.src='{% static 'core/images/fallback.png' %}'">
+            </span>
+          {% endif %}
         </li>
       {% endfor %}
     </ul>

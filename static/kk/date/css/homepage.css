@@ -123,6 +123,7 @@
       ". news logos ."
       ". ig-scroll ig-scroll .";
     grid-column-gap: 3vw;
+    align-items: start;
 }
 
 .text-size{

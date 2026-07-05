@@ -177,9 +177,10 @@
     grid-template-areas: 
       ". news events ."
       ". news extras ."
-      ". ig-scroll ig-scroll ."
-      ". logos logos .";
+      ". news logos ."
+      ". ig-scroll ig-scroll .";
     grid-column-gap: 3vw;
+    align-items: start;
 }
 
 .text-size{
@@ -327,19 +328,19 @@ div.news-content a:hover{
   }
   
 .event-card a{
-    color: var(--linkColorDark);
-    border-top: 2px solid var(--linkColorDark);
-  }
+    color: var(--primaryColor);
+    border-top: 2px solid var(--primaryColor);
+}
   
 .event-card a:active{
-    color: var(--linkColorDark);
-  }
+    color: var(--primaryColor);
+}
   
 .event-card a:hover{
     background-color: inherit;
-    border-top: 2px solid var(--linkColorDarkHover);
-    color: var(--linkColorDarkHover);
-  }
+    border-top: 2px solid var(--primaryColorLight);
+    color: var(--primaryColorLight);
+}
   
 .event-card a:focus{
     background-color: inherit;
@@ -348,7 +349,7 @@ div.news-content a:hover{
 
 .chevron-box {
     margin: auto; 
-    border: 1px solid var(--linkColorDark);
+    border: 1px solid var(--primaryColor);
     border-radius: 5px;
     padding: 5px;
 }
@@ -389,7 +390,7 @@ div.news-content a:hover{
     -webkit-transition: all 0.2s;
 	-moz-transition: all 0.2s;
     transition: all 0.2s;
-    border-top: var(--linkColorDark) solid 2pt;
+    border-top: var(--primaryColor) solid 2pt;
     box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
     display: grid;
     grid-template-columns: 3fr 1fr;
@@ -426,13 +427,13 @@ div.news-content a:hover{
 
 .more-events-button{
     display: inline-block;
-    color: var(--linkColorDark)
+    color: var(--primaryColor)
 }
 
 .more-events-button:hover{
     transition: 0.2s;
     scale: 1.01;
-    color: var(--linkColorDarkHover);
+    color: var(--primaryColorLight);
 }
 /*Events end*/
 
@@ -465,7 +466,7 @@ div.news-content a:hover{
 }
   
 div.calendar-container a {
-    color: var(--linkColorDark);
+    color: var(--primaryColor);
 }
 
 .left {
@@ -485,19 +486,19 @@ div.calendar-container a {
 
 .vanilla-calendar-day__btn_today {
     color: var(--textColorLight) !important;
-    background-color: #545454 !important;
+    background-color: var(--primaryColor) !important;
 }
 
 .vanilla-calendar-day__btn_today:hover {
-    background-color: #282828 !important;
+    background-color: var(--primaryColorLight) !important;
 }
 
 .vanilla-calendar-day__btn_selected {
-    background-color: #A3A3A3 !important;
+    background-color: var(--primaryColor) !important;
 }
 
 .vanilla-calendar-day__btn_selected:hover {
-    background-color: #7A7A7A !important;
+    background-color: var(--primaryColorLight) !important;
 }
 
 .clearfix {
@@ -515,22 +516,22 @@ div.calendar-container a {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
   color: white !important;
-  background-color: var(--linkColorDark) !important;
+  background-color: var(--primaryColor) !important;
 }
 
 .calendar-eventday:hover {
-    background-color: var(--linkColorDarkHover) !important;
+    background-color: var(--primaryColorLight) !important;
 }
 
 .calendar-eventday-popup {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
-  color: var(--linkColorDark);
+  color: var(--primaryColor);
   font-size: 0.75rem;
 }
 
 .calendar-eventday-popup:hover {
-    color: var(--linkColorDarkHover);
+    color: var(--primaryColorLight);
 }
 
 /*Calendar end*/
@@ -540,37 +541,6 @@ div.calendar-container a {
 .extra-container{
     grid-area: extras;
     display: block;
-}
-
-.carousel-logos{
-    border-top: solid;
-    border-bottom: solid;
-    border-width: 2px;
-    border-color: rgb(180, 180, 180);
-}
-
-div.carousel-logos {
-    overflow: hidden;
-  }
-
-div.carousel-logos img{
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    width: 50%;
-}
-
-ul#logo-list {
-    list-style-type: none;
-    padding: 0;
-}
-
-.company-logo img{
-    max-height: 100px;
-    max-width: 100%;
-    /* keep img ratio correct */
-    width: auto !important;
-    height: auto !important;
 }
 
 .extra-container a {
@@ -589,23 +559,57 @@ ul#logo-list {
 
 .logo-container {
     grid-area: logos;
-    margin-top: 20px;
+    margin-top: 1.25rem;
 }
 
-.logo-container a {
-    color: var(--linkColorDark);
-    margin-top: 20px;
+.partner-sidebar {
+    padding: 0;
 }
 
-.logo-container a:hover {
-    color: var(--linkColorDarkHover);
+.partner-sidebar h3 {
+    margin-top: 0;
+    margin-bottom: 0.85rem;
+    font-size: 1.25rem;
 }
 
-.logo-container img {
-    max-width: 300px;
-    max-height: 200px;
+.partner-logos {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.partner-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 86px;
+    padding: 0.5rem 0;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.partner-logo:hover {
+    opacity: 0.82;
+    transform: translateY(-1px);
+}
+
+.partner-logo img {
+    display: block;
+    max-width: 100%;
+    max-height: 78px;
     width: auto !important;
     height: auto !important;
+    object-fit: contain;
+}
+
+.partner-cta {
+    display: block;
+    color: var(--linkColorDark);
+    margin-top: 0.9rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+.partner-cta:hover {
+    color: var(--linkColorDarkHover);
 }
 
 /*Logos end*/
@@ -655,6 +659,10 @@ ul#logo-list {
           ". extras ."
           ". logos ."
           ". ig-scroll .";
+    }
+
+    .partner-sidebar {
+        margin-bottom: 1rem;
     }
 
 }

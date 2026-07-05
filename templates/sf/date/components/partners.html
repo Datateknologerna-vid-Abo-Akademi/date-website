@@ -1,16 +1,28 @@
 {% load static i18n localized_urls %}
-<div class="logo-container">
-  <h3 class="header-border-bottom">{% trans "Samarbetspartners" %}</h3>
-  <div class="d-flex flex-wrap justify-content-center align-items-center">
+<aside class="logo-container partner-sidebar"
+       aria-labelledby="partner-heading">
+  <h3 id="partner-heading" class="header-border-bottom">{% trans "Samarbetspartners" %}</h3>
+  <div class="partner-logos">
     {% for ad in ads %}
-      <a class="m-2" href="{{ ad.company_url }}">
-        <img src="{{ ad.ad_url }}"
-             alt="img"
-             onerror="this.src='/static/core/images/fallback.png'">
-      </a>
+      {% if ad.company_url %}
+        <a class="partner-logo" href="{{ ad.company_url }}">
+          <img src="{{ ad.ad_url }}"
+               alt="{% trans 'Partner logo' %}"
+               loading="lazy"
+               decoding="async"
+               onerror="this.onerror=null;this.src='{% static 'core/images/fallback.png' %}'">
+        </a>
+      {% else %}
+        <span class="partner-logo">
+          <img src="{{ ad.ad_url }}"
+               alt="{% trans 'Partner logo' %}"
+               loading="lazy"
+               decoding="async"
+               onerror="this.onerror=null;this.src='{% static 'core/images/fallback.png' %}'">
+        </span>
+      {% endif %}
     {% endfor %}
   </div>
-  <div class="text-center">
-    <a href="{{ '/pages/foretagssamarbete/'|localized_url }}">{% trans "Vill du samarbeta med SF-klubben?" %}</a>
-  </div>
-</div>
+  <a class="partner-cta"
+     href="{{ '/pages/foretagssamarbete/'|localized_url }}">{% trans "Vill du samarbeta med SF-klubben?" %}</a>
+</aside>
