@@ -472,7 +472,6 @@ div.calendar-container a {
 
 .logo-container{
     display: block;
-    margin-top: 1rem;
 }
 
 .mobile-logo-container{
@@ -480,50 +479,30 @@ div.calendar-container a {
     display: none;
 }
 
-.partner-sidebar {
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: var(--defaultRadius);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
-    padding: 1rem;
+.carousel-logos{
+    border-top: solid;
+    border-bottom: solid;
+    border-width: 2px;
+    border-color: rgb(180, 180, 180);
 }
 
-.partner-sidebar h3 {
-    margin-top: 0;
-    margin-bottom: 0.85rem;
-    font-size: 1.25rem;
-}
+div.carousel-logos {
+    overflow: hidden;
+  }
 
-.partner-logos {
-    display: grid;
-    gap: 0.75rem;
-}
-
-.partner-logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 86px;
-    padding: 0.75rem;
-    background: var(--secondaryColor);
-    border: 1px solid var(--secondaryColorDarker);
-    border-radius: var(--defaultRadius);
-    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-}
-
-.partner-logo:hover {
-    border-color: var(--primaryColorLighter);
-    box-shadow: 0 8px 18px rgba(34, 94, 65, 0.12);
-    transform: translateY(-1px);
-}
-
-.partner-logo img {
+div.carousel-logos img{
     display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+}
+
+.company-logo img{
+    max-height: 100px;
     max-width: 100%;
-    max-height: 78px;
+    /* keep img ratio correct */
     width: auto !important;
     height: auto !important;
-    object-fit: contain;
 }
 
 /*logos end*/
@@ -584,7 +563,6 @@ div.calendar-container a {
 
     .mobile-logo-container{
         display: block;
-        margin-bottom: 1rem;
     }
 
 

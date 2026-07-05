@@ -328,19 +328,19 @@ div.news-content a:hover{
   }
   
 .event-card a{
-    color: var(--linkColorDark);
-    border-top: 2px solid var(--linkColorDark);
-  }
+    color: var(--primaryColor);
+    border-top: 2px solid var(--primaryColor);
+}
   
 .event-card a:active{
-    color: var(--linkColorDark);
-  }
+    color: var(--primaryColor);
+}
   
 .event-card a:hover{
     background-color: inherit;
-    border-top: 2px solid var(--linkColorDarkHover);
-    color: var(--linkColorDarkHover);
-  }
+    border-top: 2px solid var(--primaryColorLight);
+    color: var(--primaryColorLight);
+}
   
 .event-card a:focus{
     background-color: inherit;
@@ -349,7 +349,7 @@ div.news-content a:hover{
 
 .chevron-box {
     margin: auto; 
-    border: 1px solid var(--linkColorDark);
+    border: 1px solid var(--primaryColor);
     border-radius: 5px;
     padding: 5px;
 }
@@ -390,7 +390,7 @@ div.news-content a:hover{
     -webkit-transition: all 0.2s;
 	-moz-transition: all 0.2s;
     transition: all 0.2s;
-    border-top: var(--linkColorDark) solid 2pt;
+    border-top: var(--primaryColor) solid 2pt;
     box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
     display: grid;
     grid-template-columns: 3fr 1fr;
@@ -427,13 +427,13 @@ div.news-content a:hover{
 
 .more-events-button{
     display: inline-block;
-    color: var(--linkColorDark)
+    color: var(--primaryColor)
 }
 
 .more-events-button:hover{
     transition: 0.2s;
     scale: 1.01;
-    color: var(--linkColorDarkHover);
+    color: var(--primaryColorLight);
 }
 /*Events end*/
 
@@ -466,7 +466,7 @@ div.news-content a:hover{
 }
   
 div.calendar-container a {
-    color: var(--linkColorDark);
+    color: var(--primaryColor);
 }
 
 .left {
@@ -486,19 +486,19 @@ div.calendar-container a {
 
 .vanilla-calendar-day__btn_today {
     color: var(--textColorLight) !important;
-    background-color: #545454 !important;
+    background-color: var(--primaryColor) !important;
 }
 
 .vanilla-calendar-day__btn_today:hover {
-    background-color: #282828 !important;
+    background-color: var(--primaryColorLight) !important;
 }
 
 .vanilla-calendar-day__btn_selected {
-    background-color: #A3A3A3 !important;
+    background-color: var(--primaryColor) !important;
 }
 
 .vanilla-calendar-day__btn_selected:hover {
-    background-color: #7A7A7A !important;
+    background-color: var(--primaryColorLight) !important;
 }
 
 .clearfix {
@@ -516,22 +516,22 @@ div.calendar-container a {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
   color: white !important;
-  background-color: var(--linkColorDark) !important;
+  background-color: var(--primaryColor) !important;
 }
 
 .calendar-eventday:hover {
-    background-color: var(--linkColorDarkHover) !important;
+    background-color: var(--primaryColorLight) !important;
 }
 
 .calendar-eventday-popup {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
-  color: var(--linkColorDark);
+  color: var(--primaryColor);
   font-size: 0.75rem;
 }
 
 .calendar-eventday-popup:hover {
-    color: var(--linkColorDarkHover);
+    color: var(--primaryColorLight);
 }
 
 /*Calendar end*/
@@ -563,11 +563,7 @@ div.calendar-container a {
 }
 
 .partner-sidebar {
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: var(--defaultRadius);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
-    padding: 1rem;
+    padding: 0;
 }
 
 .partner-sidebar h3 {
@@ -586,16 +582,12 @@ div.calendar-container a {
     align-items: center;
     justify-content: center;
     min-height: 86px;
-    padding: 0.75rem;
-    background: var(--secondaryColor);
-    border: 1px solid var(--secondaryColorDarker);
-    border-radius: var(--defaultRadius);
-    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    padding: 0.5rem 0;
+    transition: opacity 0.2s, transform 0.2s;
 }
 
 .partner-logo:hover {
-    border-color: var(--primaryColorLighter);
-    box-shadow: 0 8px 18px rgba(177, 18, 27, 0.12);
+    opacity: 0.82;
     transform: translateY(-1px);
 }
 

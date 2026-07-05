@@ -45,16 +45,31 @@
     </div>
   </div>
 </div>
-<aside class="mobile-logo-container partner-sidebar"
-       aria-labelledby="mobile-partner-heading">
-  <h3 id="mobile-partner-heading">{% trans "Samarbetspartners" %}</h3>
-  <div class="partner-logos">
-    {% for ad in ads %}
-      <a class="partner-logo" href="{{ ad.company_url }}">
-        <img src="{{ ad.ad_url }}"
-             alt="img"
-             onerror="this.src='/static/core/images/fallback.png'">
-      </a>
-    {% endfor %}
+<div class="mobile-logo-container">
+  <h3>{% trans "Samarbetspartners" %}</h3>
+  <div class="carousel-logos text-center">
+    <ul>
+      {% for ad in ads %}
+        <li class="company-logo">
+          {% if ad.company_url %}
+            <a href="{{ ad.company_url }}">
+              <img src="{{ ad.ad_url }}"
+                   alt="{% trans 'Partner logo' %}"
+                   loading="lazy"
+                   decoding="async"
+                   onerror="this.onerror=null;this.src='{% static 'core/images/fallback.png' %}'">
+            </a>
+          {% else %}
+            <span>
+              <img src="{{ ad.ad_url }}"
+                   alt="{% trans 'Partner logo' %}"
+                   loading="lazy"
+                   decoding="async"
+                   onerror="this.onerror=null;this.src='{% static 'core/images/fallback.png' %}'">
+            </span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
   </div>
-</aside>
+</div>
