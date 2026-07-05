@@ -77,9 +77,9 @@
                   {% with preference=attendee|get_preference:key %}
                     <td>
                       {% if preference is True %}
-                        <img src="/static/admin/img/icon-yes.svg" alt="True">
+                        <img src="{% static 'admin/img/icon-yes.svg' %}" alt="True">
                       {% elif preference is False %}
-                        <img src="/static/admin/img/icon-no.svg" alt="False">
+                        <img src="{% static 'admin/img/icon-no.svg' %}" alt="False">
                       {% else %}
                         {{ preference }}
                       {% endif %}

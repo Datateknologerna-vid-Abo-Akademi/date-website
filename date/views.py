@@ -62,11 +62,12 @@ def get_homepage_template_name():
 
 
 def get_recent_albins_angels_post(now=None):
-    cutoff = (now or timezone.now()) - timezone.timedelta(days=RECENT_ALBINS_ANGELS_DAYS)
+    now = now or timezone.now()
+    cutoff = now - timezone.timedelta(days=RECENT_ALBINS_ANGELS_DAYS)
     return (
-        Post.objects.published()
-        .filter(
+        Post.objects.filter(
             category__name=ALBINS_ANGELS_CATEGORY_NAME,
+            published_time__lte=now,
             published_time__gt=cutoff,
         )
         .order_by('-published_time')

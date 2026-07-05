@@ -879,10 +879,11 @@ class EventAdminTests(TestCase):
         )
         self.client.force_login(self.admin_user)
 
-        response = self.client.get(reverse("admin:registration_list", args=[self.event.pk]))
+        with override_settings(STATIC_URL="/assets/"):
+            response = self.client.get(reverse("admin:registration_list", args=[self.event.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'src="/static/admin/img/icon-yes.svg"')
+        self.assertContains(response, 'src="/assets/admin/img/icon-yes.svg"')
         self.assertContains(response, 'alt="True"')
         self.assertNotContains(response, "True</td>")
 

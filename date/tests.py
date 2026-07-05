@@ -216,6 +216,7 @@ class HomepageContextHelperTests(TestCase):
         newest = self._post("Newest recent", now - timedelta(hours=1))
         self._post("Too old", now - timedelta(days=11))
         self._post("Draft recent", now - timedelta(minutes=30), published=False)
+        self._post("Scheduled future", now + timedelta(hours=1))
 
         self.assertEqual(get_recent_albins_angels_post(now=now), newest)
         self.assertNotEqual(get_recent_albins_angels_post(now=now), older)
