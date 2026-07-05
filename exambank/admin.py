@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib import admin
+from django.core.exceptions import PermissionDenied
 from django.db import models
 from django.shortcuts import redirect
 from django.urls import path, reverse
@@ -90,6 +91,9 @@ class ExamArchiveAdmin(FlatpickrDateTimeAdminMixin, ExamBankAdminMixin, ModelAdm
         return custom_urls + urls
 
     def access_settings_redirect(self, request):
+        settings_admin = self.admin_site._registry[ExamBankAccessSettings]
+        if not (settings_admin.has_view_permission(request) or settings_admin.has_change_permission(request)):
+            raise PermissionDenied
         access_settings = ExamBankAccessSettings.get_solo()
         return redirect(reverse('admin:exambank_exambankaccesssettings_change', args=[access_settings.pk]))
 

@@ -1,3 +1,5 @@
+from urllib.parse import urlsplit
+
 from admin_ordering.admin import OrderableAdmin
 from django.conf import settings
 from django.contrib import admin
@@ -10,6 +12,21 @@ from core.admin import ActiveLanguageTranslationAdminMixin
 from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin, TabularInline
 
 from .models import StaticPage, StaticPageNav, StaticUrl
+
+
+def safe_admin_url_link(url, label=None):
+    if not url:
+        return '-'
+    parsed = urlsplit(url)
+    is_safe_url = parsed.scheme in ('http', 'https') or (not parsed.scheme and not parsed.netloc)
+    if not is_safe_url:
+        return format_html('{}', url)
+    return format_html(
+        '<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
+        url,
+        label or url,
+    )
+
 
 if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
     from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
@@ -65,11 +82,7 @@ class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
     def open_link(self, obj):
         if not obj or not obj.url:
             return '-'
-        return format_html(
-            '<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
-            obj.url,
-            _('Open'),
-        )
+        return safe_admin_url_link(obj.url, _('Open'))
 
 
 @admin.register(StaticPageNav)
@@ -88,11 +101,7 @@ class StaticPageNavAdmin(StaticPageTranslationAdminBase):
     def url_link(self, obj):
         if not obj.url:
             return '-'
-        return format_html(
-            '<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
-            obj.url,
-            obj.url,
-        )
+        return safe_admin_url_link(obj.url)
 
     @admin.display(description=_('Links'))
     def link_count(self, obj):

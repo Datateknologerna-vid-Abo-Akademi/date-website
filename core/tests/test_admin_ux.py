@@ -113,3 +113,25 @@ class AdminUxLinkTests(TestCase):
         self.assertEqual(nav_response.status_code, 200)
         self.assertContains(nav_response, "About page")
         self.assertContains(nav_response, 'href="/pages/about/"')
+
+    def test_static_pages_admin_does_not_link_unsafe_menu_urls(self):
+        nav = StaticPageNav.objects.create(
+            category_name="Unsafe menu",
+            nav_element=10,
+            use_category_url=True,
+            url="javascript:alert(1)",
+        )
+        StaticUrl.objects.create(
+            category=nav,
+            title="Unsafe child",
+            url="data:text/html,boom",
+            dropdown_element=10,
+        )
+
+        response = self.client.get(reverse("admin:staticpages_staticpagenav_change", args=[nav.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "javascript:alert(1)")
+        self.assertContains(response, "data:text/html,boom")
+        self.assertNotContains(response, 'href="javascript:alert(1)"')
+        self.assertNotContains(response, 'href="data:text/html,boom"')

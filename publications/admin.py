@@ -48,20 +48,26 @@ class PublicationCollectionAdminForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         if cleaned_data.get('clear_password') and cleaned_data.get('password'):
-            raise forms.ValidationError('Choose either a new password or clear the current password, not both.')
+            raise forms.ValidationError(_('Choose either a new password or clear the current password, not both.'))
         visibility = cleaned_data.get('visibility')
         if visibility == PublicationCollection.VISIBILITY_PASSWORD:
             has_existing_password = self.instance.pk and self.instance.has_password()
             if cleaned_data.get('clear_password'):
-                self.add_error('clear_password', 'Password-protected collections must keep or set a password.')
+                self.add_error(
+                    'clear_password',
+                    _('Password-protected collections must keep or set a password.'),
+                )
             elif not cleaned_data.get('password') and not has_existing_password:
-                self.add_error('password', 'Set a password before saving a password-protected collection.')
+                self.add_error(
+                    'password',
+                    _('Set a password before saving a password-protected collection.'),
+                )
         if visibility == PublicationCollection.VISIBILITY_MEMBERSHIP and not cleaned_data.get(
             'allowed_membership_types'
         ):
             self.add_error(
                 'allowed_membership_types',
-                'Choose at least one membership type for selected-membership access.',
+                _('Choose at least one membership type for selected-membership access.'),
             )
         return cleaned_data
 
@@ -155,18 +161,18 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ExtraChangeListLinksMixin,
             return []
         return [PublicationInline]
 
-    @admin.display(description='Access')
+    @admin.display(description=_('Access'))
     def access_summary(self, obj):
         label = obj.get_visibility_display()
         details = []
         if obj.visibility == PublicationCollection.VISIBILITY_MEMBERSHIP:
             details = [membership.name for membership in obj.allowed_membership_types.all()]
         elif obj.visibility == PublicationCollection.VISIBILITY_PASSWORD:
-            details = ['password set' if obj.has_password() else 'missing password']
+            details = [_('password set') if obj.has_password() else _('missing password')]
         if not obj.is_active:
-            details.append('inactive')
+            details.append(_('inactive'))
         if details:
-            label = f"{label} ({', '.join(details)})"
+            label = f"{label} ({', '.join(str(detail) for detail in details)})"
         return label
 
     @admin.display(boolean=True, description='Has password')
