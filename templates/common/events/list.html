@@ -75,15 +75,15 @@
                 <td>{{ attendee.email }}</td>
                 {% for key in form %}
                   {% with preference=attendee|get_preference:key %}
-                  <td>
-                    {% if preference is True %}
-                      <img src="/static/admin/img/icon-yes.svg" alt="True">
-                    {% elif preference is False %}
-                      <img src="/static/admin/img/icon-no.svg" alt="False">
-                    {% else %}
-                      {{ preference }}
-                    {% endif %}
-                  </td>
+                    <td>
+                      {% if preference is True %}
+                        <img src="/static/admin/img/icon-yes.svg" alt="True">
+                      {% elif preference is False %}
+                        <img src="/static/admin/img/icon-no.svg" alt="False">
+                      {% else %}
+                        {{ preference }}
+                      {% endif %}
+                    </td>
                   {% endwith %}
                 {% endfor %}
                 {% if event.sign_up_avec %}<td>{{ attendee.avec_for }}</td>{% endif %}
