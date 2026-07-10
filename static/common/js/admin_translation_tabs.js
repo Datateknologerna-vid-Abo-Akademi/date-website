@@ -79,7 +79,7 @@
         if (currentIndex < 0) {
           return;
         }
-        let nextIndex = currentIndex;
+        let nextIndex;
         if (event.key === "ArrowRight" || event.key === "ArrowDown") {
           nextIndex = (currentIndex + 1) % buttons.length;
         } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
@@ -104,6 +104,10 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     initialise();
-    new MutationObserver(initialise).observe(document.body, { childList: true, subtree: true });
+    new MutationObserver((mutations) => {
+      if (mutations.some((mutation) => !mutation.target.closest(".translation-language-tabs"))) {
+        initialise();
+      }
+    }).observe(document.body, { childList: true, subtree: true });
   });
 })();

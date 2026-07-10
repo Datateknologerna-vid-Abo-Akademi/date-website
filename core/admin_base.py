@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.utils import flatten_fieldsets
@@ -100,7 +102,9 @@ class PublicUrlAdminMixin:
 class ExtraChangeListLinksMixin:
     """Render declarative extra buttons beside the default changelist tools."""
 
-    change_list_template = 'admin/core/change_list_with_extra_tools.html'
+    # django-modeltranslation accepts a template object or a sequence here,
+    # while Django's base admin only exposes a narrower runtime type.
+    change_list_template: Any = 'admin/core/change_list_with_extra_tools.html'
     changelist_links: tuple = ()
 
     def get_changelist_links(self, request):
