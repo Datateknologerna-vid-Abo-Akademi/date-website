@@ -28,6 +28,7 @@ Typical translated content in admin includes:
 - event titles and event content
 - news titles, category names, and article content
 - poll questions and choices
+- functionary-role titles
 - static-page navigation category names and dropdown-link titles
 
 Some labels and proper names intentionally stay fixed across languages. Follow the wording rules in the main README and coordinate with the content owners when unsure.
@@ -40,11 +41,15 @@ Some labels and proper names intentionally stay fixed across languages. Follow t
 4. Fill in the non-Swedish language fields only for content that should actually vary by language.
 5. Save and preview the public page in at least one translated locale.
 
+Navigation links are edited as separate expanded forms under their navigation category. Use the language tabs on each link title before moving to the next link.
+
 Common field patterns:
 
 - `title` plus language-specific variants
 - `content` plus language-specific variants
 - category or navigation names translated per language
+
+Translated content lists show a compact language coverage count, such as `sv: 2/2; en: 1/2`. A language is complete only when every translated field for that item has a value.
 
 ## Previewing the Result
 

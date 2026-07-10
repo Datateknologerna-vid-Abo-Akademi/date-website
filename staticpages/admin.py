@@ -8,8 +8,12 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.widgets import CKEditor5Widget
 
-from core.admin import ActiveLanguageTranslationAdminMixin
-from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin, TabularInline
+from core.admin import (
+    ActiveLanguageTranslationAdminMixin,
+    LanguageTabbedTranslationAdmin,
+    TranslationCompletionAdminMixin,
+)
+from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin, StackedInline
 
 from .models import StaticPage, StaticPageNav, StaticUrl
 
@@ -29,17 +33,18 @@ def safe_admin_url_link(url, label=None):
 
 
 if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
-    from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
+    from modeltranslation.admin import TranslationStackedInline
 
-    # MRO when USE_UNFOLD=True: Mixin → Translation → unfold.TabularInline → admin.TabularInline
-    class StaticPageTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline, TabularInline):
+    # Stacked inlines let modeltranslation group each link title behind language tabs.
+    class StaticPageTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationStackedInline, StackedInline):
         pass
 
-    # MRO when USE_UNFOLD=True: Mixin → TabbedTranslation → unfold.ModelAdmin → admin.ModelAdmin
-    class StaticPageTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
+    class StaticPageTranslationAdminBase(
+        ActiveLanguageTranslationAdminMixin, LanguageTabbedTranslationAdmin, ModelAdmin
+    ):
         pass
 else:
-    StaticPageTranslationInlineBase = TabularInline  # type: ignore[misc, assignment]
+    StaticPageTranslationInlineBase = StackedInline  # type: ignore[misc, assignment]
     StaticPageTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
@@ -86,10 +91,10 @@ class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
 
 
 @admin.register(StaticPageNav)
-class StaticPageNavAdmin(StaticPageTranslationAdminBase):
+class StaticPageNavAdmin(TranslationCompletionAdminMixin, StaticPageTranslationAdminBase):
     model = StaticPageNav
     save_on_top = True
-    list_display = ('category_name', 'nav_element', 'use_category_url', 'url_link', 'link_count')
+    list_display = ('category_name', 'translation_status', 'nav_element', 'use_category_url', 'url_link', 'link_count')
     search_fields = ('category_name', 'url', 'staticurl__title', 'staticurl__url')
     ordering = ('nav_element',)
     inlines = [UrlInline]
@@ -109,13 +114,13 @@ class StaticPageNavAdmin(StaticPageTranslationAdminBase):
 
 
 @admin.register(StaticPage)
-class StaticPageAdmin(PublicUrlAdminMixin, StaticPageTranslationAdminBase):
+class StaticPageAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, StaticPageTranslationAdminBase):
     model = StaticPage
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
         TextField: {'widget': CKEditor5Widget},
     }
-    list_display = ('title', 'slug', 'members_only', 'public_page_link', 'modified_time')
+    list_display = ('title', 'translation_status', 'slug', 'members_only', 'public_page_link', 'modified_time')
     search_fields = ('title', 'slug')
     list_filter = ('members_only',)
     ordering = ('title',)

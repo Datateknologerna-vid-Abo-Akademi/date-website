@@ -208,7 +208,7 @@ The admin adapts based on `ENABLE_LANGUAGE_FEATURES`.
 
 When enabled:
 
-- translated models use `TabbedTranslationAdmin` or `TranslationTabularInline`
+- translated models use the project's local language-tab admin or `TranslationTabularInline`
 - the custom admin template shows a language switcher
 - editors can fill language-specific content from the admin UI
 
