@@ -27,7 +27,7 @@ def _page_window(page_obj, window=2):
 
 
 def index(request):
-    queryset = models.Post.objects.published().filter(category__isnull=True).order_by('-published_time')
+    queryset = models.Post.objects.published().filter(category__isnull=True).order_by('-published_time', '-pk')
     page_obj = _paginate(request, queryset)
     return render(request, 'news/index.html', {'latest_news_items': page_obj, **_page_window(page_obj)})
 
@@ -38,12 +38,12 @@ def article(request, slug):
 
 
 def author(request, author):
-    articles = models.Post.objects.published().filter(author__username__exact=author).order_by('-published_time')
+    articles = models.Post.objects.published().filter(author__username__exact=author).order_by('-published_time', '-pk')
     return render(request, 'news/author.html', {'articles': articles})
 
 
 def category_index(request, category):
-    queryset = models.Post.objects.published().filter(category__slug=category).order_by('-published_time')
+    queryset = models.Post.objects.published().filter(category__slug=category).order_by('-published_time', '-pk')
     page_obj = _paginate(request, queryset)
     return render(request, 'news/index.html', {'latest_news_items': page_obj, **_page_window(page_obj)})
 
