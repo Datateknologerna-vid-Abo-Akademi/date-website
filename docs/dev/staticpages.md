@@ -13,7 +13,7 @@
 
 ## Admin/Ordering
 - `StaticPageNavAdmin` allows inline management of `StaticUrl` rows using `admin-ordering`. Dragging rows updates the `dropdown_element`; category and dropdown URLs render quick open links for checking destinations.
-- `StaticPageAdmin` lists pages with `members_only` badge and public-page links for quick auditing. The slug field is prepopulated from the title on new pages.
+- `StaticPageAdmin` lists pages with `members_only` badge, per-language translation coverage, and public-page links for quick auditing. The slug field is prepopulated from the title on new pages. When language features are enabled, the local language tabs show one translated title/content version at a time without relying on an external JavaScript CDN.
 
 ## Extending the App
 - Distinguish between external URLs and internal paths when adding menu links. External URLs should remain absolute; internal paths should stay relative so `localized_url` can rewrite them.

@@ -96,7 +96,7 @@ class AdminUxLinkTests(TestCase):
         self.assertContains(response, "All guesses")
 
     def test_static_pages_admin_exposes_public_and_navigation_links(self):
-        StaticPage.objects.create(title="About", slug="about")
+        page = StaticPage.objects.create(title="About", slug="about")
         nav = StaticPageNav.objects.create(
             category_name="About menu",
             nav_element=10,
@@ -106,13 +106,20 @@ class AdminUxLinkTests(TestCase):
         StaticUrl.objects.create(category=nav, title="About page", url="/pages/about/", dropdown_element=10)
 
         page_response = self.client.get(reverse("admin:staticpages_staticpage_changelist"))
+        page_change_response = self.client.get(reverse("admin:staticpages_staticpage_change", args=[page.pk]))
         nav_response = self.client.get(reverse("admin:staticpages_staticpagenav_change", args=[nav.pk]))
 
         self.assertEqual(page_response.status_code, 200)
         self.assertContains(page_response, "/pages/about/")
+        self.assertContains(page_response, "sv: 1/2; en: 0/2; fi: 0/2")
+        self.assertEqual(page_change_response.status_code, 200)
+        self.assertContains(page_change_response, "common/js/admin_translation_tabs.js")
+        self.assertNotContains(page_change_response, "ajax.googleapis.com/ajax/libs/jqueryui")
         self.assertEqual(nav_response.status_code, 200)
         self.assertContains(nav_response, "About page")
         self.assertContains(nav_response, 'href="/pages/about/"')
+        self.assertContains(nav_response, 'data-inline-type="stacked"')
+        self.assertNotContains(nav_response, 'data-inline-type="tabular"')
 
     def test_static_pages_admin_does_not_link_unsafe_menu_urls(self):
         nav = StaticPageNav.objects.create(

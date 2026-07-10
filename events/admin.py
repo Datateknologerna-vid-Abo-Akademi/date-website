@@ -15,7 +15,11 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.widgets import CKEditor5Widget
 
-from core.admin import ActiveLanguageTranslationAdminMixin
+from core.admin import (
+    ActiveLanguageTranslationAdminMixin,
+    LanguageTabbedTranslationAdmin,
+    TranslationCompletionAdminMixin,
+)
 from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin, TabularInline
 from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
 from events import forms
@@ -26,15 +30,14 @@ from .widgets import PrettyJSONWidget
 logger = logging.getLogger('date')
 
 if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
-    from modeltranslation.admin import TabbedTranslationAdmin, TranslationTabularInline
+    from modeltranslation.admin import TranslationTabularInline
 
     # MRO when USE_UNFOLD=True: Mixin → Translation → unfold.TabularInline → admin.TabularInline
     # unfold sits between modeltranslation and Django's base so both layers get their super() calls.
     class EventTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationTabularInline, TabularInline):
         pass
 
-    # MRO when USE_UNFOLD=True: Mixin → TabbedTranslation → unfold.ModelAdmin → admin.ModelAdmin
-    class EventTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
+    class EventTranslationAdminBase(ActiveLanguageTranslationAdminMixin, LanguageTabbedTranslationAdmin, ModelAdmin):
         pass
 else:
     EventTranslationInlineBase = TabularInline  # type: ignore[misc, assignment]
@@ -163,7 +166,7 @@ class EventPublicationFilter(admin.SimpleListFilter):
 # TODO: Improve the admin panel UI for the translatable fields
 # SEE https://django-modeltranslation.readthedocs.io/en/latest/admin.html
 @admin.register(Event)
-class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
+class EventAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, EventTranslationAdminBase):
     save_on_top = True
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
@@ -171,6 +174,7 @@ class EventAdmin(PublicUrlAdminMixin, EventTranslationAdminBase):
     }
     list_display = (
         'title',
+        'translation_status',
         'created_time',
         'event_date_start',
         'get_attendee_count',

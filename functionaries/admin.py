@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 from django.db.models import Count
 from django.urls import reverse
@@ -6,10 +7,24 @@ from django.utils.http import urlencode
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
 
+from core.admin import (
+    ActiveLanguageTranslationAdminMixin,
+    LanguageTabbedTranslationAdmin,
+    TranslationCompletionAdminMixin,
+)
 from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, TabularInline
 from core.admin_ui import AdminLink
 
 from .models import Functionary, FunctionaryRole
+
+if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
+
+    class FunctionaryRoleTranslationAdminBase(
+        ActiveLanguageTranslationAdminMixin, LanguageTabbedTranslationAdmin, ModelAdmin
+    ):
+        pass
+else:
+    FunctionaryRoleTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
 class FunctionaryInline(TabularInline):
@@ -53,7 +68,9 @@ class FunctionaryAdmin(ModelAdmin):
 
 
 @admin.register(FunctionaryRole)
-class FunctionaryRoleAdmin(ExtraChangeListLinksMixin, ModelAdmin):
+class FunctionaryRoleAdmin(
+    ExtraChangeListLinksMixin, TranslationCompletionAdminMixin, FunctionaryRoleTranslationAdminBase
+):
     changelist_links = (
         AdminLink(
             _('All assignments'),
@@ -63,7 +80,7 @@ class FunctionaryRoleAdmin(ExtraChangeListLinksMixin, ModelAdmin):
         ),
     )
     save_on_top = True
-    list_display = ('title', 'board', 'functionary_count')
+    list_display = ('title', 'translation_status', 'board', 'functionary_count')
     list_filter = ('board',)
     search_fields = ('title', 'functionary__name', 'functionary__member__first_name', 'functionary__member__last_name')
     ordering = ['title']
