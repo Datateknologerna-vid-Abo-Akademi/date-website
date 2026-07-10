@@ -32,7 +32,7 @@
       {% empty %}
         <h4 class="text-center">{% trans "Inga nyheter hittades..." %}</h4>
       {% endfor %}
-      {% include 'news/partials/pagination.html' %}
+      {% include 'news/partials/pagination.html' with page_obj=latest_news_items %}
     </div>
   </div>
 {% endblock %}
