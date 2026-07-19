@@ -19,6 +19,8 @@ from news.models import Post
 from .language_utils import resolve_language, strip_language_prefix
 
 logger = logging.getLogger(__name__)
+ALBINS_ANGELS_CATEGORY_NAME = "Albins Angels"
+RECENT_ALBINS_ANGELS_DAYS = 10
 
 
 def should_check_cache_readiness():
@@ -59,6 +61,34 @@ def get_homepage_template_name():
     return 'date/start.html'
 
 
+def get_recent_albins_angels_post(now=None):
+    now = now or timezone.now()
+    cutoff = now - timezone.timedelta(days=RECENT_ALBINS_ANGELS_DAYS)
+    return (
+        Post.objects.filter(
+            category__name=ALBINS_ANGELS_CATEGORY_NAME,
+            published_time__lte=now,
+            published_time__gt=cutoff,
+        )
+        .order_by('-published_time')
+        .first()
+    )
+
+
+def format_calendar_events(all_events):
+    """Return event metadata keyed by YYYY-MM-DD for the front-end calendar."""
+    calendar_events = {}
+    for event in all_events:
+        event_url = reverse("events:detail", kwargs={"slug": event.slug})
+        calendar_events[event.event_date_start.strftime("%Y-%m-%d")] = {
+            "link": event_url,
+            "modifier": "calendar-eventday",
+            "eventFullDate": event.event_date_start,
+            "eventTitle": event.title,
+        }
+    return calendar_events
+
+
 def index(request):
     events_old_events_included = (
         Event.objects.published()
@@ -72,42 +102,14 @@ def index(request):
     events = events_old_events_included.filter(event_date_end__gte=timezone.now())
     news = Post.objects.published().filter(category__isnull=True).reverse()[:3]
 
-    # Show Albins Angels logo if new post in last 10 days
-    aa_posts = (
-        Post.objects.published().filter(category__name="Albins Angels").order_by('published_time').reverse()[:1]
-    )  # TODO Remove this hardcoding or move to different function/file
-    time_since = timezone.now() - timezone.timedelta(days=10)
-    aa_post = ''
-    if aa_posts and aa_posts[0].published_time > time_since:
-        aa_post = aa_posts[0]
-
-    def calendar_format(all_events):
-        """Format events into a dictionary where keys (dates)
-        are mapped to data used by the calendar on the frontend"""
-        calendar_events_dict = {}
-        for event in all_events:
-            event_url = reverse("events:detail", kwargs={"slug": event.slug})
-            # The rest of the "html" field is set on the client side
-            # since it includes a time that gets localized on the client-side
-            event_dict = {
-                event.event_date_start.strftime("%Y-%m-%d"): {
-                    "link": event_url,
-                    "modifier": "calendar-eventday",
-                    "eventFullDate": event.event_date_start,
-                    "eventTitle": event.title,
-                }
-            }
-            calendar_events_dict.update(event_dict)
-        return calendar_events_dict
-
     context = {
-        'calendar_events': calendar_format(events_old_events_included),
+        'calendar_events': format_calendar_events(events_old_events_included),
         'events': events,
         'news': news,
         'news_events': list(chain(events, news)),
         'ads': AdUrl.objects.all(),
         'posts': IgUrl.objects.all(),
-        'aa_post': aa_post,  # TODO Remove or rename
+        'aa_post': get_recent_albins_angels_post(),
     }
 
     return render(request, get_homepage_template_name(), context)

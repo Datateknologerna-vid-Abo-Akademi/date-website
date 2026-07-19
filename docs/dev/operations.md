@@ -144,6 +144,20 @@ The Compose db service also wraps the upstream Postgres entrypoint so existing v
 
 This script is destructive if used incorrectly. Read the warnings in the README before running it.
 
+## Project Variant Checks
+
+### `scripts/check_project_variants.py`
+
+Use this after shared settings, template/static path, URL configuration, or
+cross-association app changes.
+
+```bash
+uv run python scripts/check_project_variants.py
+```
+
+It runs `manage.py check` for `date`, `kk`, `biocum`, and `pulterit`. Pass one
+or more project names as arguments to narrow the run.
+
 ## Translation Maintenance
 
 ### `scripts/validate_translations.py`
