@@ -3,7 +3,19 @@
 {% load i18n %}
 {% load shared_filters %}
 {% load localized_time %}
+{% load og_tags %}
 {% block title %}{{ event.title }}{% endblock %}
+{% block og_meta %}
+  <meta property="og:title" content="{{ event.title }}">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  {% if event.content %}<meta property="og:description" content="{{ event.content|plaintext_truncate:160 }}">{% endif %}
+  {% if event.background_image_url %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ event.background_image_url }}">{% endif %}
+  <meta name="twitter:card" content="{% if event.background_image_url %}summary_large_image{% else %}summary{% endif %}">
+  <meta name="twitter:title" content="{{ event.title }}">
+  {% if event.content %}<meta name="twitter:description" content="{{ event.content|plaintext_truncate:160 }}">{% endif %}
+  {% if event.background_image_url %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ event.background_image_url }}">{% endif %}
+{% endblock %}
 {% block extra_head %}
   {{ block.super }}
   <link rel="stylesheet" href="{% static 'events/css/tomtejakt.css' %}">
