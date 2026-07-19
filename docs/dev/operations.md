@@ -144,7 +144,7 @@ The Compose db service also wraps the upstream Postgres entrypoint so existing v
 
 This script is destructive if used incorrectly. Read the warnings in the README before running it.
 
-## Translation Maintenance
+## Project Variant Checks
 
 ### `scripts/check_project_variants.py`
 
@@ -157,6 +157,8 @@ uv run python scripts/check_project_variants.py
 
 It runs `manage.py check` for `date`, `kk`, `biocum`, and `pulterit`. Pass one
 or more project names as arguments to narrow the run.
+
+## Translation Maintenance
 
 ### `scripts/validate_translations.py`
 
