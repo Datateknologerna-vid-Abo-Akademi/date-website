@@ -43,6 +43,53 @@ class NewsTestCase(TestCase):
         response = c.get(reverse('news:detail', args=[self.post.slug]))
         self.assertEqual(response.status_code, 200)
 
+    def test_index_orders_equal_publication_times_by_descending_pk(self):
+        self.post.unpublish()
+        published_time = timezone.now() - timezone.timedelta(minutes=1)
+        posts = Post.objects.bulk_create(
+            [
+                Post(
+                    title=f'Post {number}',
+                    slug=f'post-{number}',
+                    author=self.member,
+                    published_time=published_time,
+                )
+                for number in range(11)
+            ]
+        )
+
+        response = self.client.get(reverse('news:index'))
+
+        listed_posts = list(response.context['latest_news_items'])
+        self.assertEqual(listed_posts, list(reversed(posts))[:10])
+
+    def test_index_renders_windowed_pagination(self):
+        published_time = timezone.now() - timezone.timedelta(minutes=1)
+        Post.objects.bulk_create(
+            [
+                Post(
+                    title=f'Pagination post {number}',
+                    slug=f'pagination-post-{number}',
+                    author=self.member,
+                    published_time=published_time,
+                )
+                for number in range(90)
+            ]
+        )
+
+        response = self.client.get(reverse('news:index'), {'page': 5})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['latest_news_items'].number, 5)
+        self.assertContains(response, '<a href="?page=1">1</a>', html=True)
+        self.assertContains(response, '<a class="disabled">…</a>', count=2, html=True)
+        for page_number in range(3, 8):
+            if page_number == 5:
+                self.assertContains(response, '<a class="active">5</a>', html=True)
+            else:
+                self.assertContains(response, f'<a href="?page={page_number}">{page_number}</a>', html=True)
+        self.assertContains(response, '<a href="?page=10">10</a>', html=True)
+
 
 class PageWindowTestCase(TestCase):
     def test_page_window(self):

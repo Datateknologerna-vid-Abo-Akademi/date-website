@@ -12,10 +12,10 @@
 - `PostAdmin` swaps between the two forms in `add_view` vs `change_view`. Columns show author, category, created/modified times, computed publication status, and the raw `published_time`. The `publication` list filter splits posts into published / scheduled / hidden buckets. Categories get their own simple `ModelAdmin`.
 
 ## Views
-- `index`: paginates 10 latest un-categorized, published posts (reverse order).
+- `index`: paginates 10 latest un-categorized, published posts, ordered by publication time and then primary key in descending order so posts with identical timestamps remain stable across pages. Pagination shows a five-page window around the current page, with first/last-page links and ellipses when needed.
 - `article`: fetches a published, un-categorized post by slug.
-- `author`: lists all published posts tied to a specific username.
-- `category_index` & `category_article`: same as above but filter by `Category.slug`.
+- `author`: lists all published posts tied to a specific username using the same stable ordering.
+- `category_index` & `category_article`: same as above but filter by `Category.slug`; category indexes use the same pagination window as the main index.
 
 ## Feed/SEO
 - There’s also `news/feed.py` (not covered here) generating RSS/Atom feeds; ensure `Post` timestamps stay accurate for feed readers.
