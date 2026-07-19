@@ -10,7 +10,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -144,7 +144,9 @@ def activate(request, uidb64, token):
 
 class CustomPasswordResetView(PasswordResetView):
     form_class = CustomPasswordResetForm
+    success_url = reverse_lazy('members:password_reset_done')
 
 
 class CustomPasswordChangeView(PasswordChangeView):
     template_name = "members/registration/password_change_form.html"
+    success_url = reverse_lazy('members:password_change_done')

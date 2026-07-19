@@ -21,6 +21,29 @@ from members.two_factor import (
 )
 
 
+class PasswordResetFlowTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        cls.member = Member.objects.create_user(
+            username='resetuser',
+            email='reset@example.com',
+            password='testpass123',
+            membership_type=cls.membership_type,
+        )
+
+    @patch('members.forms.send_email_task.delay')
+    def test_password_reset_renders_email_and_redirects(self, mock_delay):
+        response = self.client.post(
+            reverse('members:password_reset'),
+            data={'email': 'reset@example.com'},
+        )
+        self.assertEqual(response.status_code, 302)
+        mock_delay.assert_called_once()
+        body = mock_delay.call_args[0][1]
+        self.assertIn('/members/reset/', body)
+
+
 class UsernameValidatorTest(TestCase):
     @classmethod
     def setUpTestData(cls):
