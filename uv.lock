@@ -545,7 +545,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "django-stubs", specifier = ">=6.0.5" },
-    { name = "djlint", specifier = ">=1.36.4" },
+    { name = "djlint", specifier = "==1.36.4" },
     { name = "mypy", specifier = ">=2.1.0" },
     { name = "pre-commit", specifier = ">=4.6.0" },
     { name = "ruff", specifier = ">=0.15.20" },

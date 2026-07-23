@@ -1840,16 +1840,16 @@ msgstr ""
 msgid "Gå till Startsidan"
 msgstr "Gå till Startsidan"
 
-#: templates/common/members/registration/password_reset_email.html:3
+#: templates/common/members/registration/password_reset_email.txt:3
 #, python-format
 msgid "För att inleda lösenordsåterställningen för kontot %(username)s,"
 msgstr "För att inleda lösenordsåterställningen för kontot %(username)s,"
 
-#: templates/common/members/registration/password_reset_email.html:4
+#: templates/common/members/registration/password_reset_email.txt:4
 msgid "klicka på länken nedan:"
 msgstr "klicka på länken nedan:"
 
-#: templates/common/members/registration/password_reset_email.html:8
+#: templates/common/members/registration/password_reset_email.txt:8
 msgid ""
 "Ifall det inte går att klicka på länken, vänligen kopiera och klistra in "
 "länken i din webbläsare."
@@ -1857,11 +1857,11 @@ msgstr ""
 "Ifall det inte går att klicka på länken, vänligen kopiera och klistra in "
 "länken i din webbläsare."
 
-#: templates/common/members/registration/password_reset_email.html:10
+#: templates/common/members/registration/password_reset_email.txt:10
 msgid "Om ytterligare frågor uppstår, vänligen kontakta styrelsen."
 msgstr "Om ytterligare frågor uppstår, vänligen kontakta styrelsen."
 
-#: templates/common/members/registration/password_reset_email.html:13
+#: templates/common/members/registration/password_reset_email.txt:13
 msgid "Mvh,"
 msgstr "Mvh,"
 

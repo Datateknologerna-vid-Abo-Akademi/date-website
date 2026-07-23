@@ -1,9 +1,0 @@
-{% autoescape off %}
-  En ny användare har registrerat sig:
-  Epost: {{ user.email }}
-  Namn:  {{ user.first_name }} {{ user.last_name }}
-  Aktivera användaren genom att klicka på länken nedan,
-  http://{{ domain }}{% url 'members:activate' uidb64=uid token=token %}
-  Eller granska och aktivera medlemmen via admin sidan,
-  http://{{ domain }}/admin/members/member
-{% endautoescape %}

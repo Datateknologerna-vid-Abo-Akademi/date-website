@@ -185,16 +185,17 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
 
+      - name: Install lint dependencies
+        run: uv sync --frozen --group dev
+
       - name: Ruff lint
-        run: uvx ruff@0.15.20 check .
+        run: uv run ruff check .
 
       - name: Ruff format check
-        run: uvx ruff@0.15.20 format --check .
+        run: uv run ruff format --check .
 
       - name: djlint check
-        run: uvx djlint@1.36.4 --check templates/
+        run: uv run djlint --check templates/
 
       - name: mypy
-        run: |
-          uv sync --frozen --group dev
-          uv run mypy .
+        run: uv run mypy .

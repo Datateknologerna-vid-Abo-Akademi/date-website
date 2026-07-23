@@ -42,6 +42,9 @@ class PasswordResetFlowTest(TestCase):
         mock_delay.assert_called_once()
         body = mock_delay.call_args[0][1]
         self.assertIn('/members/reset/', body)
+        self.assertIn('klicka på länken nedan:\n\n', body)
+        self.assertIn('\n\nOm ytterligare frågor uppstår', body)
+        self.assertFalse(body.startswith('  '))
 
 
 class UsernameValidatorTest(TestCase):

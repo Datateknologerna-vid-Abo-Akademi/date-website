@@ -23,6 +23,7 @@
 ## Configuration
 - `settings.ALUMNI_SETTINGS` must contain JSON with Google API credentials and sheet IDs. Missing/invalid settings are logged as errors and disable the integration.
 - Email templates live under `templates/members/` and `templates/alumni/`.
+- Alumni messages are plain text and therefore use `.txt` templates. Django renders them normally, while the extension prevents the HTML formatter from changing user-visible whitespace. Reserve `.html` for messages that are sent as HTML.
 
 ## Extending
 - To expose recipient management in admin, register `AlumniEmailRecipient` with a simple `ModelAdmin` (currently unregistered).
