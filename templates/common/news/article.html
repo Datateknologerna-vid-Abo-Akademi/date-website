@@ -1,7 +1,17 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% load i18n %}
+{% load og_tags %}
 {% block title %}{{ article.title }}{% endblock %}
+{% block og_meta %}
+  <meta property="og:title" content="{{ article.title }}">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  {% if article.content %}<meta property="og:description" content="{{ article.content|plaintext_truncate:160 }}">{% endif %}
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{{ article.title }}">
+  {% if article.content %}<meta name="twitter:description" content="{{ article.content|plaintext_truncate:160 }}">{% endif %}
+{% endblock %}
 {% block extra_head %}
   {{ block.super }}
   <link rel="stylesheet" href="{% static 'news/css/style.css' %}">

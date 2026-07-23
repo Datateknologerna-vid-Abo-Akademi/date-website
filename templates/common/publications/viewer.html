@@ -1,7 +1,19 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% load i18n %}
+{% load og_tags %}
 {% block title %}{{ ASSOCIATION_NAME_SHORT }} - {{ pdf_file.title }}{% endblock %}
+{% block og_meta %}
+  <meta property="og:title" content="{{ pdf_file.title }}">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  {% if pdf_file.description %}<meta property="og:description" content="{{ pdf_file.description|plaintext_truncate:160 }}">{% endif %}
+  {% if pdf_file.cover_image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ pdf_file.cover_image.url }}">{% endif %}
+  <meta name="twitter:card" content="{% if pdf_file.cover_image %}summary_large_image{% else %}summary{% endif %}">
+  <meta name="twitter:title" content="{{ pdf_file.title }}">
+  {% if pdf_file.description %}<meta name="twitter:description" content="{{ pdf_file.description|plaintext_truncate:160 }}">{% endif %}
+  {% if pdf_file.cover_image %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ pdf_file.cover_image.url }}">{% endif %}
+{% endblock %}
 {% block extra_head %}
   {{ block.super }}
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
