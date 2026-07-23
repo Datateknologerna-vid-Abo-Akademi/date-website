@@ -28,6 +28,7 @@
 ## Emails & Tokens
 - Emails are queued via Celery. Request-side enqueue points that depend on fresh database state should go through `core.utils.enqueue_task_on_commit()` so jobs are only published after the surrounding transaction commits.
 - Activation tokens use `members/tokens.py` (standard Django token generator) and base64-encoded user IDs.
+- Plain-text email bodies use `.txt` template names, including activation and password-reset messages. Django template tags work independently of the filename extension; `.txt` keeps these message bodies out of djlint, whose HTML reformatter can otherwise change meaningful indentation and blank lines. Use `.html` only for actual HTML email alternatives.
 
 ## Admin Customizations
 - `UserAdmin` inherits from `auth_admin.UserAdmin` but swaps in custom forms and ordering.

@@ -143,6 +143,29 @@ class SiteShellTemplateTests(TestCase):
         self.assertIn(pulterit_header_css, rendered)
         self.assertLess(rendered.index(shared_header_css), rendered.index(pulterit_header_css))
 
+    def test_pulterit_footer_keeps_shared_and_association_classes_separate(self):
+        pulterit_settings = importlib.import_module("core.settings.pulterit")
+
+        with override_settings(
+            TEMPLATES=pulterit_settings.TEMPLATES,
+            STATICFILES_DIRS=pulterit_settings.STATICFILES_DIRS,
+        ):
+            template = Template("{% include 'core/footer.html' %}")
+            rendered = template.render(Context(self._content_context()))
+
+        self.assertIn('class="container association-footer pulterit-footer"', rendered)
+        self.assertIn(
+            'class="association-footer-shell pulterit-footer-shell"',
+            rendered,
+        )
+        self.assertIn(
+            "association-footer-content pulterit-footer-content",
+            rendered,
+        )
+        self.assertIn("association-footer-brand pulterit-footer-brand", rendered)
+        self.assertIn("association-footer-copy pulterit-footer-copy", rendered)
+        self.assertNotIn("association-footerpulterit-footer", rendered)
+
     def test_language_picker_hides_when_disabled_in_header_template(self):
         template = Template("{% include 'core/header.html' %}")
         rendered = template.render(Context(self._content_context()))

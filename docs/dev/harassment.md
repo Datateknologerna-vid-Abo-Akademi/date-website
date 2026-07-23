@@ -16,8 +16,9 @@ The old public route and reverse name stay available as `/social/harassment/` an
   - On POST with valid form and captcha, saves the report, schedules notification email after commit, sets the session flag, and redirects back to itself.
 
 ## Email Template
-- `templates/social/harassment_admin_email.html` receives `harassment` and `harassment_url`.
+- `templates/social/harassment_admin_email.txt` receives `harassment` and `harassment_url`.
 - `harassment_url` points at `/admin/harassment/harassment/<id>/`.
+- Notification bodies are plain-text `.txt` templates so djlint does not rewrite meaningful email whitespace. Django template variables and tags work normally in `.txt` files; use `.html` only for an actual HTML message body.
 
 ## Migration Notes
 - Data was split out from `social.Harassment` and `social.HarassmentEmailRecipient`.

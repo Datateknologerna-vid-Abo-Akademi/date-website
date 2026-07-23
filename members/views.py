@@ -103,7 +103,7 @@ def signup(request):
             current_site = get_current_site(request)
             mail_subject = 'A new account has been created and required your attention.'
             message = render_to_string(
-                'members/acc_active_email.html',
+                'members/acc_active_email.txt',
                 {
                     'user': user,
                     'domain': current_site.domain,
@@ -144,6 +144,7 @@ def activate(request, uidb64, token):
 
 class CustomPasswordResetView(PasswordResetView):
     form_class = CustomPasswordResetForm
+    email_template_name = 'members/registration/password_reset_email.txt'
     success_url = reverse_lazy('members:password_reset_done')
 
 
