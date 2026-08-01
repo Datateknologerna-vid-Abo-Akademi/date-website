@@ -965,14 +965,14 @@ wheels = [
 
 [[package]]
 name = "instaloader"
-version = "4.15.1"
+version = "4.15.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b0/1f/c66c9d5c65bd59cf03632adf112a05aad720b0620f52848d1e5419ef130b/instaloader-4.15.1.tar.gz", hash = "sha256:323ee2015540e627df25535703f246dc39695b71f7f04dadfe67e239dadf3b55", size = 67082, upload-time = "2026-03-21T21:07:42.55Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ee/ea/bb89a72982bdb196f31291a361977c9ab718336e1980cb1c72d445036b6a/instaloader-4.15.3.tar.gz", hash = "sha256:6df0d03397a9606d85930e5c45fe11cb87c07a7c992101247c339fa51f19fa6d", size = 68969, upload-time = "2026-07-26T09:04:39.115Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cc/4a/33099e653b4d9228920a0596a413770b20de978407a0ba0e16319b234931/instaloader-4.15.1-py3-none-any.whl", hash = "sha256:d89544b841d3d2471d6e270568474a0f022daaf392c2836499c51b332bcd530e", size = 69092, upload-time = "2026-03-21T21:07:41.196Z" },
+    { url = "https://files.pythonhosted.org/packages/25/1e/bdccba210e5681fa3f7490d35e7561c8bb1c4adc0ecb35ac0c06286cdd9b/instaloader-4.15.3-py3-none-any.whl", hash = "sha256:17e25115a65923bcdc1a5a0f58d90728d96718ef129a753656a3ef75443a272b", size = 70830, upload-time = "2026-07-26T09:04:37.939Z" },
 ]
 
 [[package]]
