@@ -1,0 +1,11 @@
+{% extends "core/header.html" %}
+{% load static %}
+{% block header_logo %}
+  <a id="logo" href="{% url 'index' %}">
+    <img class="header-logo"
+         src="{% static 'core/images/impuls-logo.png' %}"
+         alt="Impuls"
+         width="45"
+         height="45">
+  </a>
+{% endblock %}

@@ -337,6 +337,9 @@
     font-size:12px;
     line-height:16px;
     font-weight:400;
+    word-break:normal;
+    overflow-wrap:normal;
+    white-space:nowrap;
     color:var(--primaryColor);
     width:28px;
     height:28px;

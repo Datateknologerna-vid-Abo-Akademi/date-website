@@ -1,0 +1,91 @@
+name: Bug report
+description: Report broken or unexpected behavior in the website or tooling.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Please include enough detail for someone else to reproduce the problem from a clean checkout when possible.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Public website
+        - Admin/editor tools
+        - Membership or alumni tools
+        - Polls, events, or seasonal apps
+        - Authentication or permissions
+        - Translations or language switching
+        - Docker/local development
+        - Deployment or infrastructure
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the broken behavior and what you expected instead.
+      placeholder: The page/form/job does X, but I expected Y.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Give precise steps, URLs, commands, test data, or user roles.
+      placeholder: |
+        1. Start from ...
+        2. Go to ...
+        3. Submit ...
+        4. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include anything relevant to reproducing the issue.
+      value: |
+        - Branch/commit:
+        - Browser/device:
+        - PROJECT_NAME:
+        - ENABLE_LANGUAGE_FEATURES:
+        - Docker Compose file(s):
+        - Local, staging, or production:
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or error output
+      description: Paste tracebacks, browser console output, Celery logs, or links to failing CI runs. Remove secrets first.
+      render: shell
+    validations:
+      required: false
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or recordings
+      description: Drag and drop images or screen recordings here. Leave blank if not applicable.
+    validations:
+      required: false
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround
+      description: If there is a temporary workaround, describe it here.
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submit checks
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: I removed secrets, passwords, tokens, and private production data from this report.
+          required: true

@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: '{{ include "date-website.fullname" . }}-test-web-health'
+  labels:
+    helm.sh/chart: '{{ include "date-website.chart" . }}'
+    app.kubernetes.io/name: '{{ include "date-website.name" . }}'
+    app.kubernetes.io/instance: '{{ .Release.Name }}'
+    app.kubernetes.io/version: '{{ .Chart.AppVersion }}'
+    app.kubernetes.io/managed-by: '{{ .Release.Service }}'
+    app.kubernetes.io/component: test
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  automountServiceAccountToken: false
+  containers:
+    - name: wget
+      image: busybox:1.36
+      command:
+        - /bin/sh
+        - -c
+      args:
+        - 'wget --spider --header "Host: {{ include "date-website.probeHost" . }}" "http://{{ include "date-website.fullname" . }}-web:{{ .Values.web.service.port }}/healthz/"'

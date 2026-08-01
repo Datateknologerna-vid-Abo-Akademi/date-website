@@ -1,29 +1,61 @@
-from django.contrib import admin
-from django.utils.safestring import mark_safe
+import logging
+
 from django.conf import settings
+from django.contrib import admin
+from django.db import models
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 
-from .forms import DocumentAdminForm, PictureAdminForm, PublicAdminForm
-from .models import Document, DocumentCollection, Picture, PictureCollection, PublicFile, PublicCollection, ExamCollection
+from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ExtraChangeListLinksMixin, ModelAdmin, TabularInline
+from core.admin_ui import AdminLink
+from core.admin_widgets import (
+    FLATPICKR_ADMIN_CSS,
+    FLATPICKR_ADMIN_JS,
+    FlatpickrDateTimeAdminMixin,
+    SafeAdminFileWidget,
+)
+
+from .forms import DocumentAdminForm, PublicAdminForm
+from .models import Document, DocumentCollection, PublicCollection, PublicFile
+
+logger = logging.getLogger('date')
 
 
-class PicturesInline(admin.TabularInline):
-    model = Picture
-    fk_name = 'collection'
-    can_delete = True
-    readonly_fields = ('preview_image',)
-    extra = 0
+def safe_file_link(file_field, label=None):
+    if not file_field:
+        return '-'
+    label = label or file_field.name
+    try:
+        return format_html(
+            '<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
+            file_field.url,
+            label,
+        )
+    except Exception as exc:
+        logger.warning("Unable to resolve archive file URL for %s: %s", file_field.name, exc)
+        return label
 
-    def preview_image(self, obj):
-        return mark_safe("""<img src="%s" style="width: auto; height: 80px"/> """ % obj.image.url)
+
+class ArchiveCollectionAdminMixin(ExtraChangeListLinksMixin):
+    changelist_links = (AdminLink(_('Städa upp media'), icon='cleaning_services', url_name='archive:cleanMedia'),)
 
 
-class DocumentInline(admin.TabularInline):
+class SafeFileInlineMixin:
+    formfield_overrides = {
+        **UNFOLD_FORMFIELD_OVERRIDES,
+        models.FileField: {'widget': SafeAdminFileWidget},
+        models.ImageField: {'widget': SafeAdminFileWidget},
+    }
+
+
+class DocumentInline(SafeFileInlineMixin, TabularInline):
     model = Document
     fk_name = 'collection'
     can_delete = True
     extra = 1
 
-class PublicFileInline(admin.TabularInline):
+
+class PublicFileInline(SafeFileInlineMixin, TabularInline):
     model = PublicFile
     fk_name = 'collection'
     can_delete = True
@@ -31,36 +63,20 @@ class PublicFileInline(admin.TabularInline):
     extra = 1
 
     def preview_image(self, obj):
-        return mark_safe("""<img src="%s" style="width: auto; height: 80px"/> """ % obj.some_file.url)
-
-
-@admin.register(PictureCollection)
-class PictureCollectionAdmin(admin.ModelAdmin):
-    model = PictureCollection
-    save_on_top = True
-    form = PictureAdminForm
-    inlines = [
-        PicturesInline
-    ]
-    list_display = ('title', 'pub_date')
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.filter(type='Pictures')
-
-    def get_changeform_initial_data(self, request):
-        return {'type': 'Pictures'}
+        return safe_file_link(obj.some_file)
 
 
 @admin.register(DocumentCollection)
-class DocumentCollectionAdmin(admin.ModelAdmin):
+class DocumentCollectionAdmin(FlatpickrDateTimeAdminMixin, ArchiveCollectionAdminMixin, ModelAdmin):
     model = DocumentCollection
     save_on_top = True
     form = DocumentAdminForm
-    inlines = [
-        DocumentInline
-    ]
-    list_display = ('title', 'pub_date')
+    inlines = [DocumentInline]
+    list_display = ('title', 'pub_date', 'hide_for_gulis')
+    search_fields = ('title', 'document__title')
+    ordering = ('-pub_date',)
+    date_hierarchy = 'pub_date'
+    flatpickr_datetime_fields = ('pub_date',)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -69,34 +85,24 @@ class DocumentCollectionAdmin(admin.ModelAdmin):
     def get_changeform_initial_data(self, request):
         return {'type': 'Documents'}
 
-
-@admin.register(ExamCollection)
-class ExamCollectionAdmin(admin.ModelAdmin):
-    model = ExamCollection
-    save_on_top = True
-    form = DocumentAdminForm
-    inlines = [
-        DocumentInline
-    ]
-    list_display = ('title', 'pub_date')
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        return qs.filter(type='Exams')
-
-    def get_changeform_initial_data(self, request):
-        return {'type': 'Exams'}
+    class Media:
+        css = {'all': FLATPICKR_ADMIN_CSS}
+        js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS
 
 
-if settings.USE_S3:
+if settings.USE_S3:  # type: ignore[misc]
+
     @admin.register(PublicCollection)
-    class PublicCollectionAdmin(admin.ModelAdmin):
+    class PublicCollectionAdmin(FlatpickrDateTimeAdminMixin, ArchiveCollectionAdminMixin, ModelAdmin):
         model = PublicCollection
         save_on_top = True
         form = PublicAdminForm
-        inlines = [
-            PublicFileInline
-        ]
+        inlines = [PublicFileInline]
+        list_display = ('title', 'pub_date')
+        search_fields = ('title',)
+        ordering = ('-pub_date',)
+        date_hierarchy = 'pub_date'
+        flatpickr_datetime_fields = ('pub_date',)
 
         def get_queryset(self, request):
             qs = super().get_queryset(request)
@@ -104,3 +110,7 @@ if settings.USE_S3:
 
         def get_changeform_initial_data(self, request):
             return {'type': 'PublicFiles'}
+
+        class Media:
+            css = {'all': FLATPICKR_ADMIN_CSS}
+            js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS

@@ -1,13 +1,13 @@
 from django.contrib import admin
 
+from core.admin_base import ModelAdmin
 from date_custom.models import MembershipSignupRequest
-from members.models import Member, SUPPORTING_MEMBER, ORDINARY_MEMBER, MembershipType
+from members.models import ORDINARY_MEMBER, SUPPORTING_MEMBER, Member, MembershipType
 
 
 @admin.register(MembershipSignupRequest)
-class MembershipSignupRequestAdmin(admin.ModelAdmin):
-    list_display = ["full_name", "membership_type",
-                    "created_by_email", "created_at"]
+class MembershipSignupRequestAdmin(ModelAdmin):
+    list_display = ["full_name", "membership_type", "created_by_email", "created_at"]
     readonly_fields = ["created_at", "created_by"]
     actions = ["promote_member"]
     list_filter = [
@@ -29,9 +29,7 @@ class MembershipSignupRequestAdmin(admin.ModelAdmin):
             member: Member = req.created_by
             member.is_active = True
             if req.membership_type == "supporting":
-                member.membership_type = MembershipType.objects.get(
-                    pk=SUPPORTING_MEMBER)
+                member.membership_type = MembershipType.objects.get(pk=SUPPORTING_MEMBER)
             else:
-                member.membership_type = MembershipType.objects.get(
-                    pk=ORDINARY_MEMBER)
+                member.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
             member.save()

@@ -1,57 +1,65 @@
 {% extends 'core/base.html' %}
-
 {% load i18n %}
 {% load static %}
-{% block title %}Sign up{% endblock %}
-{% block content %}
-    <head>
-        <link rel="stylesheet" href="{% static 'members/style.css' %}">
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    </head>
-    <div class="signup-page">
-        <div class="members-form big">
-            {% if alumni %}
-              <h2>{{ ALUMNI_ASSOCIATION_NAME_SHORT }} Registrering</h2>
-            <p style="width: 110%; margin-left: -5%; margin-right: auto">
-              {% if form.operation.value == 'CREATE' %}
-                Efter att du registrerat dig vänligen betala medlemsavgiften enligt instruktioner som skickas via e-post.<br>
-                <br>
-                Ifall du redan är medlem kan du <a style="color: var(--linkColorDark)" href="{% url 'alumni:alumni_update' %}">uppdatera dina uppgifter</a>.<br>
-              {% elif form.operation.value == 'UPDATE' %}
-                Endast de fält du fyller i kommer att uppdateras. Om du vill uppdatera din e-postaddress, vänligen kontakta styrelsen: {{ ALUMNI_ASSOCIATION_EMAIL }}<br>
-              {% endif %}
-            </p>
-            {% else %}
-                <h2>Registrera dig</h2>
-            {% endif %}
-          <form method="post">
-            {% csrf_token %}
-            {% for field in form %}
-              {% if field.is_hidden %}
-                <p class="hidden">
-              {% else %}
-                <p>
-              {% endif %}
-                {{ field.label_tag }}<br>
-                  {% if field.help_text %}
-                      <small>{{ field.help_text }}</small>
-                  {% endif %}
-                  {{ field }}
-                {% for error in field.errors %}
-                  <p style="color: red">{{ error }}</p>
-                {% endfor %}
-              </p>
-            {% endfor %}
-            <p class="consent-form-group">
-              <input type="checkbox" name="consent" required/>
-              Jag godkänner
-              <a href="https://{{ request.get_host }}/pages/registerbeskrivning/" target="_blank">
-                villkoren <i class="fa fa-external-link" aria-hidden="true"></i>
-              </a>
-            </p>
-            <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}" data-callback="javascriptCallback"></div>
-            <button class="button" type="submit">Registrera dig</button>
-          </form>
-        </div>
-    </div>
+{% block title %}
+  {% trans "Sign up" %}
 {% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'members/style.css' %}">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          async
+          defer></script>
+{% endblock %}
+{% block content %}
+  <div class="signup-page">
+    <div class="members-form big">
+      {% if alumni %}
+        <h2>{{ ALUMNI_ASSOCIATION_NAME_SHORT }} Registrering</h2>
+        <p style="width: 110%; margin-left: -5%; margin-right: auto">
+          {% if form.operation.value == 'CREATE' %}
+            Efter att du registrerat dig vänligen betala medlemsavgiften enligt instruktioner som skickas via e-post.
+            <br>
+            <br>
+            Ifall du redan är medlem kan du <a style="color: var(--linkColorDark)"
+    href="{% url 'alumni:alumni_update' %}">uppdatera dina uppgifter</a>.
+            <br>
+          {% elif form.operation.value == 'UPDATE' %}
+            Endast de fält du fyller i kommer att uppdateras. Om du vill uppdatera din e-postaddress, vänligen kontakta styrelsen: {{ ALUMNI_ASSOCIATION_EMAIL }}
+            <br>
+          {% endif %}
+        </p>
+      {% else %}
+        <h2>{% translate "Sign up" %}</h2>
+      {% endif %}
+      <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+          {% if field.is_hidden %}
+            <p class="hidden">
+            {% else %}
+              <p>
+              {% endif %}
+              {{ field.label_tag }}
+              <br>
+              {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+              {{ field }}
+              {% for error in field.errors %}<p style="color: red">{{ error }}</p>{% endfor %}
+            </p>
+          {% endfor %}
+          <p class="consent-form-group">
+            <input type="checkbox" name="consent" required />
+            {% translate "Jag godkänner" %}
+            <a href="https://{{ request.get_host }}/pages/registerbeskrivning/"
+               target="_blank">
+              {% translate "villkoren" %} <i class="fa fa-external-link" aria-hidden="true"></i>
+            </a>
+          </p>
+          <div class="cf-turnstile"
+               data-sitekey="{{ CAPTCHA_SITE_KEY }}"
+               data-callback="javascriptCallback"></div>
+          <button class="button" type="submit">{% trans "Registrera dig" %}</button>
+        </form>
+      </div>
+    </div>
+  {% endblock %}

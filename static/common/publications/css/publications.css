@@ -1,177 +1,693 @@
-@import url('https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css');
+.pdf-shell {
+    /* Semantic palette for the publications viewer.
+       Defaults give a dark-themed viewer; an association can opt into a
+       light viewer by defining --pubChromeBg etc. in its date-root.css
+       (currently only pulterit does, because pulterit's site is
+       light-themed with pink accents).
+       Surface defaults use the three consistent dark tones from
+       --primaryColorLight → --primaryColorLighte → --primaryColorLighter.
+       --primaryColor is intentionally avoided as a default because its
+       lightness relative to the surface vars differs by association
+       (notably pulterit, where it is a bright light gray).
+       The accent chain tries --accentColorBright first so pulterit picks
+       up its pink rather than the vestigial yellow-green it inherits via
+       --linkColorLight. biocum falls through to --linkColor (it doesn't
+       define --linkColorLight at all). */
+    --pub-surface:         var(--pubChromeBg,    var(--primaryColorLight));
+    --pub-surface-pill:    var(--pubChromePill,  var(--primaryColorLighte));
+    --pub-surface-hover:   var(--pubChromeHover, var(--primaryColorLighter));
+    --pub-stage-bg:        var(--pubStageBg,     var(--pub-surface));
+    --pub-chrome-fg:       var(--pubChromeFg,    var(--textColorLightish));
+    --pub-chrome-fg-soft:  var(--pubChromeFgSoft, var(--helpText));
+    --pub-accent:          var(--accentColorBright, var(--linkColorLight, var(--linkColor, var(--secondaryColor))));
+    --pub-accent-hover:    var(--accentColorBrightHover, var(--linkColorLightHover, var(--linkColorHover, var(--secondaryColorDarker))));
+    --pub-accent-contrast: var(--textColorDark);
+    --pub-accent-soft:     color-mix(in srgb, var(--pub-accent) 15%, transparent);
 
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    background-color: var(--primaryColorLight);
-    color: var(--textColorLight);
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 1.5rem 3rem;
+    color: var(--pub-chrome-fg);
 }
 
-header {
-    padding: 1rem;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    color: var(--textColorLightish);
-}
-
-main {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+.pdf-shell-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    flex-grow: 1;
-    padding: 1rem;
-}
-
-.pdf-container {
-    max-width: 90%;
-    height: auto;
-    padding: 1rem;
-    background-color: var(--primaryColorLight);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    border-radius: var(--defaultRadius);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: var(--textColorLightish);
-}
-
-h1 {
-    color: var(--textColorLightish);
-    font-size: 1.5rem;
+    gap: 1rem;
     margin-bottom: 1rem;
 }
 
-#pdf-controls {
+.pdf-shell-header-spacer {
+    /* Balances the grid so the title stays centered */
+}
+
+.pdf-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--pub-chrome-fg-soft);
+    text-decoration: none;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--defaultRadius);
+    justify-self: start;
+    transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.pdf-back-link:hover {
+    color: var(--pub-accent);
+    background: var(--pub-surface);
+    transform: translateX(-2px);
+}
+
+.pdf-title-block {
+    text-align: center;
+    min-width: 0;
+}
+
+.pdf-title-block h1 {
+    margin: 0;
+    font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+    line-height: 1.2;
+    color: var(--pub-chrome-fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pdf-meta {
+    margin: 0.15rem 0 0;
+    font-size: 0.8rem;
+    color: var(--pub-chrome-fg-soft);
+}
+
+/* Toolbar
+   ────────────────────────────────────────────── */
+.pdf-toolbar {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem; /* Adjusted gap */
-    margin-bottom: 1rem;
-    width: 100%;
-    justify-content: center; /* Center align items */
-    align-items: center;
-}
-
-#pdf-controls button,
-#pdf-controls input,
-#pdf-controls select {
-    padding: 0.5rem 1rem; /* Adjusted padding */
-    font-size: 0.9rem; /* Slightly smaller font */
-    border: 1px solid var(--helpText);
-    border-radius: var(--defaultRadius);
-    background-color: var(--primaryColorLight); /* Adjusted background-color */
-    color: var(--textColorLight);
-    transition: background-color 0.3s, color 0.3s;
-    cursor: pointer;
-}
-
-#pdf-controls button:hover,
-#pdf-controls input:focus,
-#pdf-controls select:hover {
-    background-color: var(--primaryColorLighter);
-}
-
-#page-navigation {
-    display: flex;
     justify-content: center;
     align-items: center;
-    gap: 0.5rem; /* Adjusted gap */
+    gap: 0.75rem;
+    padding: 0.6rem 0.75rem;
+    margin: 0 0 0.5rem;
+    background: var(--pub-surface);
+    border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    position: sticky;
+    top: 1rem;
+    z-index: 5;
 }
 
-#page-navigation button,
-#mobile-navigation button {
-    padding: 0.5rem 1rem; /* Adjusted padding */
-    font-size: 1rem; /* Adjusted font-size */
-    background-color: var(--linkColorDark);
+.pdf-toolbar-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.pdf-toolbar-nav {
+    background: var(--pub-surface-pill);
+    border-radius: 999px;
+    padding: 0.15rem;
+}
+
+.pdf-icon-btn {
+    width: 2.25rem;
+    height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--pub-chrome-fg);
     border: none;
-    color: #fff;
-    border-radius: var(--defaultRadius);
+    border-radius: 50%;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
-}
-
-#page-navigation button:hover,
-#mobile-navigation button:hover {
-    background-color: var(--linkColorDarkHover);
-    transform: scale(1.05);
-}
-
-#page-num,
-#page-count {
     font-size: 1rem;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.pdf-icon-btn:hover:not(:disabled) {
+    background: var(--pub-surface-hover);
+    color: var(--pub-accent);
+}
+
+.pdf-icon-btn:active:not(:disabled) {
+    transform: scale(0.92);
+}
+
+.pdf-icon-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.pdf-page-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0 0.4rem;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.95rem;
+    color: var(--pub-chrome-fg);
+}
+
+.pdf-page-input {
+    width: 2.5rem;
+    height: 2rem;
+    padding: 0 0.3rem;
+    border: 1px solid transparent;
+    border-radius: var(--defaultRadius);
+    background: transparent;
+    color: var(--pub-chrome-fg);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    -moz-appearance: textfield;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pdf-page-input::-webkit-outer-spin-button,
+.pdf-page-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.pdf-page-input:hover {
+    background: var(--pub-surface-hover);
+}
+
+.pdf-page-input:focus {
+    outline: none;
+    background: var(--pub-surface-hover);
+    border-color: var(--pub-accent);
+    box-shadow: 0 0 0 2px var(--pub-accent-soft);
+}
+
+.pdf-page-divider {
+    color: var(--pub-chrome-fg-soft);
+}
+
+#page-count {
+    color: var(--pub-chrome-fg-soft);
+    padding: 0 0.2rem;
+    min-width: 1.5rem;
+    text-align: left;
+}
+
+.pdf-sr-status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.pdf-toolbar-zoom {
+    background: var(--pub-surface-pill);
+    border-radius: 999px;
+    padding: 0.15rem 0.35rem;
+}
+
+.pdf-zoom-label {
+    display: inline-block;
+    min-width: 3.25rem;
+    text-align: center;
+    color: var(--pub-chrome-fg-soft);
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    user-select: none;
+}
+
+/* Progress bars
+   ────────────────────────────────────────────── */
+.pdf-progress {
+    height: 3px;
+    width: 100%;
+    background: var(--pub-surface);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 0.5rem 0 1rem;
+}
+
+.pdf-progress-fill {
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--pub-accent), var(--pub-accent-hover));
+    border-radius: 2px;
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Loading state
+   ────────────────────────────────────────────── */
+.pdf-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background: var(--pub-surface);
+    z-index: 4;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.pdf-loading.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.pdf-loading-spinner {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 3px solid var(--pub-surface-hover);
+    border-top-color: var(--pub-accent);
+    animation: pdf-spin 0.9s linear infinite;
+}
+
+@keyframes pdf-spin {
+    to { transform: rotate(360deg); }
+}
+
+.pdf-loading-label {
+    color: var(--pub-chrome-fg-soft);
+    font-size: 0.9rem;
+}
+
+.pdf-loading-progress {
+    width: min(220px, 60%);
+    height: 4px;
+    background: var(--pub-surface-hover);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.pdf-loading-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--pub-accent);
+    transition: width 0.3s ease;
+}
+
+/* PDF stage and animated page spreads
+   ────────────────────────────────────────────── */
+.pdf-stage {
+    position: relative;
+    background: var(--pub-stage-bg);
+    border-radius: var(--defaultRadius);
+    padding: 1.5rem;
+    min-height: 70vh;
+    /* auto (not hidden) so the user can pan a zoomed page that overflows the
+       viewer. renderPage's fit-scale baseline keeps state.scale=1 fitting
+       the viewport, so scrollbars only appear when the user actually zooms in. */
+    overflow: auto;
+    /* Perspective gives the 3D flip its depth. Origin slightly above center
+       reads as a viewer looking down at an open book. */
+    perspective: 2400px;
+    perspective-origin: center 35%;
 }
 
 #pdf-viewer {
+    position: relative;
+    display: grid;
+    grid-template-areas: "stack";
+    place-items: start center;
+    min-height: 60vh;
+    width: 100%;
+    /* Pass the .pdf-stage perspective down to the flipper. Without this,
+       rotateY on grandchildren is flattened to a 2D scaleX squish. */
+    transform-style: preserve-3d;
+}
+
+.page-spread {
+    grid-area: stack;
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 20px;
+    gap: 2px;
+    z-index: 1;
+}
 
-    min-height: 70vh; /* Minimum height to ensure visibility */
-    overflow: auto;
-    padding: 1rem;
+/* An empty slot reserves the space a page would occupy. Used in two-page
+   mode for the cover (page 1 alone on the right) and the back-cover
+   position (last page alone on the left) so the spine pivot stays in the
+   same place across cover↔spread transitions. */
+.page-empty-slot {
+    flex-shrink: 0;
+    visibility: hidden;
 }
 
 .page-canvas {
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    max-width: 100%;
-    height: auto;
+    /* No max-width / auto height clamp: the canvas's inline width/height are
+       sized by renderPage based on fit-scale * state.scale, and we want
+       zoom-in to actually enlarge the displayed page rather than be clamped
+       back to the container. Overflow on .pdf-stage handles the pan/scroll. */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     border-radius: var(--defaultRadius);
-    margin: 0 auto;
+    background: #fff;
+    display: block;
+    flex-shrink: 0;
 }
 
-#mobile-navigation {
+/* Two-page spread: pages are flush at the spine, so each page's inward
+   shadow would overlap the other and paint a dark seam. Clip the shadow at
+   the spine, keeping the outer three sides shadowed. Cover/back-cover (a
+   single .page-canvas next to an empty slot) match neither selector and
+   keep their full shadow. */
+.page-spread .page-canvas:has(+ .page-canvas) {
+    clip-path: polygon(-60px -60px, 100% -60px, 100% calc(100% + 60px), -60px calc(100% + 60px));
+}
+
+.page-spread .page-canvas + .page-canvas {
+    clip-path: polygon(0 -60px, calc(100% + 60px) -60px, calc(100% + 60px) calc(100% + 60px), 0 calc(100% + 60px));
+}
+
+/* The flipping page rotates around the spine. At rotateY(0) it sits flush
+   against the stationary half, so its own box-shadow would bleed across the
+   spine and reproduce the seam for the first frames of the flip. Drop the
+   shadow on the rotating clone — the hybrid spread underneath still casts
+   the spread's shadow correctly. */
+.page-flipper .page-canvas {
+    box-shadow: none;
+}
+
+#pdf-viewer.single-page-view .page-spread {
+    justify-content: center;
+}
+
+/* Page flipper: a 3D-rotating layer that briefly sits over the new content
+   while a flip animation runs. The front face holds a drawImage clone of the
+   page we're flipping away from; the back face holds the page that will be
+   on the other side after the flip (= back of the same physical sheet in
+   book terms).
+   ────────────────────────────────────────────── */
+
+/* Row layout for two-page flips: a placeholder reserves space for the page
+   that isn't moving, so the flipper sits in the right half (next) or left
+   half (prev) and pivots on the spine. Single-page flips use .page-flipper
+   directly inside #pdf-viewer with .page-flipper-full. */
+.page-flipper-row {
+    grid-area: stack;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 2px;
+    z-index: 2;
+    pointer-events: none;
+    transform-style: preserve-3d;
+}
+
+.page-flipper-placeholder {
+    visibility: hidden;
+    flex-shrink: 0;
+}
+
+.page-flipper {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.75s cubic-bezier(0.55, 0.05, 0.35, 0.95);
+    will-change: transform;
+    z-index: 2;
+    pointer-events: none;
+    backface-visibility: visible;
+}
+
+.page-flipper-full {
+    grid-area: stack;
+}
+
+/* NEXT: rotate around the spine. The negative origin nudges the pivot
+   into the centre of the 2px gap so the rotation visually centres on the
+   book's spine rather than the page edge. */
+.page-flipper-next {
+    transform-origin: -1px center;
+    transform: rotateY(0deg);
+}
+
+.page-flipper-next.is-flipping {
+    transform: rotateY(-180deg);
+}
+
+/* Single-page mode pivots on the actual left edge — no gap to compensate. */
+.page-flipper-full.page-flipper-next {
+    transform-origin: left center;
+}
+
+.page-flipper-prev {
+    transform-origin: calc(100% + 1px) center;
+    transform: rotateY(0deg);
+}
+
+.page-flipper-prev.is-flipping {
+    transform: rotateY(180deg);
+}
+
+.page-flipper-full.page-flipper-prev {
+    transform-origin: right center;
+}
+
+.page-flipper-face {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* Front face stays in normal flow so it provides the flipper's bounding box
+   (driven by the cloned canvas). */
+.page-flipper-front {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* Back face overlays the front; the rotateY(180) means its content reads
+   normally when the parent has rotated to face the user with the back. */
+.page-flipper-back {
+    position: absolute;
+    inset: 0;
+    transform: rotateY(180deg);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-flipper {
+        transition: opacity 0.2s ease;
+    }
+    .page-flipper.is-flipping {
+        transform: none;
+        opacity: 0;
+    }
+}
+
+/* Card-shuffle slide for single-page (mobile) view: old card slides off in
+   the navigation direction while the new one slides in from the opposite
+   side. Replaces the 3D book flip used in two-page mode — sliding reads
+   more naturally with the touch-swipe gesture mobile users actually use. */
+.page-shuffle {
+    grid-area: stack;
+    display: grid;
+    grid-template-areas: "stack";
+    place-items: start center;
+    z-index: 2;
+    pointer-events: none;
+    /* Clip the slide-out / slide-in transforms locally so the .pdf-stage's
+       overflow:auto (used for zoom scrolling) doesn't flash scrollbars
+       while a card is mid-translate. The shuffle is removed after the
+       animation completes, so this doesn't affect the post-animation
+       reachable area. */
+    overflow: hidden;
+}
+
+.page-shuffle-card {
+    grid-area: stack;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+}
+
+/* NEXT: old card exits left, new card enters from the right. */
+.page-shuffle-next .page-shuffle-old { transform: translateX(0); }
+.page-shuffle-next .page-shuffle-new { transform: translateX(110%); }
+.page-shuffle-next.is-flipping .page-shuffle-old { transform: translateX(-110%); }
+.page-shuffle-next.is-flipping .page-shuffle-new { transform: translateX(0); }
+
+/* PREV: mirror — old exits right, new enters from the left. */
+.page-shuffle-prev .page-shuffle-old { transform: translateX(0); }
+.page-shuffle-prev .page-shuffle-new { transform: translateX(-110%); }
+.page-shuffle-prev.is-flipping .page-shuffle-old { transform: translateX(110%); }
+.page-shuffle-prev.is-flipping .page-shuffle-new { transform: translateX(0); }
+
+@media (prefers-reduced-motion: reduce) {
+    .page-shuffle-card {
+        transition: opacity 0.2s ease;
+        transform: none !important;
+    }
+    .page-shuffle .page-shuffle-old { opacity: 1; }
+    .page-shuffle .page-shuffle-new { opacity: 0; }
+    .page-shuffle.is-flipping .page-shuffle-old { opacity: 0; }
+    .page-shuffle.is-flipping .page-shuffle-new { opacity: 1; }
+}
+
+/* Hint below the viewer (touch users)
+   ────────────────────────────────────────────── */
+.pdf-hint {
     display: none;
-    justify-content: space-between;
-    width: 100%;
-    margin-top: 1rem;
+    margin: 0.75rem 0 0;
+    text-align: center;
+    color: var(--pub-chrome-fg-soft);
+    font-size: 0.8rem;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .pdf-hint {
+        display: block;
+    }
+}
+
+/* Fullscreen mode
+   ────────────────────────────────────────────── */
+.pdf-shell:fullscreen,
+.pdf-shell.is-fullscreen {
+    max-width: none;
+    padding: 1rem;
+    background: var(--pub-surface);
+    overflow: auto;
+}
+
+.pdf-shell:fullscreen .pdf-stage,
+.pdf-shell.is-fullscreen .pdf-stage {
+    min-height: calc(100vh - 8rem);
+}
+
+.pdf-shell:fullscreen .pdf-shell-header,
+.pdf-shell.is-fullscreen .pdf-shell-header {
+    margin-top: 0;
+}
+
+/* Error message
+   ────────────────────────────────────────────── */
+.pdf-error {
+    color: var(--warning);
+    background: var(--pub-surface);
+    padding: 1rem 1.25rem;
+    border-radius: var(--defaultRadius);
+    text-align: center;
+    margin: 2rem auto;
+    max-width: 480px;
+}
+
+/* Responsive
+   ────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .pdf-stage {
+        padding: 1rem 0.5rem;
+    }
+
+    .page-spread {
+        gap: 2px;
+    }
 }
 
 @media (max-width: 767px) {
-    .desktop-only {
+    .pdf-shell {
+        padding: 0 0.5rem 2rem;
+    }
+
+    .pdf-shell-header {
+        grid-template-columns: auto 1fr;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .pdf-shell-header-spacer {
         display: none;
     }
 
-    #page-navigation {
+    .pdf-back-link span {
         display: none;
     }
 
-    #mobile-navigation {
-        display: flex;
+    .pdf-title-block h1 {
+        font-size: 1rem;
+        text-align: left;
+    }
+
+    .pdf-title-block {
+        text-align: left;
+    }
+
+    .pdf-toolbar {
+        padding: 0.4rem 0.5rem;
+        top: 0.5rem;
+        gap: 0.4rem;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        border-radius: var(--defaultRadius);
+    }
+
+    .pdf-toolbar-nav {
+        flex: 0 1 auto;
+    }
+
+    .pdf-toolbar-zoom {
+        flex: 0 0 auto;
+        padding: 0.1rem 0.25rem;
+    }
+
+    .pdf-icon-btn {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    .pdf-page-input {
+        width: 2.25rem;
+    }
+
+    .pdf-zoom-label {
+        display: none;
+    }
+
+    /* On phones, swap the zoom dropdown-style background out so the +/- buttons
+       sit flush against each other for a compact stepper. */
+    .pdf-toolbar-zoom {
+        background: var(--pub-surface-pill);
+    }
+
+    .pdf-stage {
+        padding: 0.5rem;
+        min-height: 60vh;
+        border-radius: var(--defaultRadius);
     }
 }
 
-@media (min-width: 768px) {
-    .desktop-only {
-        display: flex;
-        gap: 0.75rem; /* Adjusted gap */
+@media (max-width: 380px) {
+    .pdf-toolbar-zoom #zoom-out,
+    .pdf-toolbar-zoom #zoom-in {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    .pdf-page-input {
+        width: 2rem;
     }
 }
 
-@media (min-width: 1025px) {
-
-    #pdf-viewer.two-page-view .page-canvas {
-        max-width: calc(50% - 10px);
+@media (prefers-reduced-motion: reduce) {
+    .page-spread,
+    .pdf-progress-fill,
+    .pdf-loading,
+    .pdf-loading-bar {
+        transition: none;
     }
-}
 
-@media (max-width: 1024px) {
-    #pdf-viewer {
-        flex-direction: column;
-        align-items: center;
+    .pdf-loading-spinner {
+        animation: none;
+        border-top-color: var(--pub-accent);
     }
-    .pdf-container {
-        max-width: 100%;
-    }
-}
-
-#pdf-viewer.single-page-view .page-canvas {
-    margin-left: auto;
-    margin-right: auto;
 }

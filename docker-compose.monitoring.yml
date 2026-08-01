@@ -1,0 +1,46 @@
+services:
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_URI: "db:5432/postgres?sslmode=disable"
+      DATA_SOURCE_USER: postgres
+      DATA_SOURCE_PASS: "${DATE_DB_PASSWORD}"
+    depends_on:
+      - db
+    networks:
+      internal:
+      monitoring:
+        aliases:
+          - ${MONITORING_TARGET_PREFIX:-datewebsite}-postgres-exporter
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.66.0
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      internal:
+      monitoring:
+        aliases:
+          - ${MONITORING_TARGET_PREFIX:-datewebsite}-redis-exporter
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.3.0
+    restart: unless-stopped
+    command:
+      - --nginx.scrape-uri=http://nginx:8080/nginx_status
+    depends_on:
+      - nginx
+    networks:
+      internal:
+      monitoring:
+        aliases:
+          - ${MONITORING_TARGET_PREFIX:-datewebsite}-nginx-exporter
+
+networks:
+  monitoring:
+    name: ${MONITORING_NETWORK:-monitoring}
+    external: true

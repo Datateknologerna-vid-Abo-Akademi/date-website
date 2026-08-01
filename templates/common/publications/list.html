@@ -1,55 +1,126 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% load i18n %}
-
-{% block title %}{{ ASSOCIATION_NAME_SHORT }} - {% trans "Publications" %}{% endblock %}
-
+{% block title %}
+  {{ ASSOCIATION_NAME_SHORT }} - {% trans "Publications" %}
+{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/line-awesome/css/line-awesome.min.css">
+  <link rel="stylesheet" href="{% static 'publications/css/list.css' %}">
+  <script type="module" src="{% static 'publications/js/list.js' %}" defer></script>
+{% endblock %}
 {% block content %}
-    <head>
-        <link rel="stylesheet" href="{% static 'publications/css/list.css' %}">
-    </head>
-    <body>
-    <div class="container-margin-top">
-        <header class="text-center">
-            <h1>{% trans "Publikationer" %}</h1>
-        </header>
-
-        <div class="content">
-            {% for pdf in page_obj %}
-                <div class="pdf-item">
-                    <h2><a href="{% url 'publications:pdf_view' pdf.slug %}">{{ pdf.title }}</a></h2>
-                    <p class="pdf-meta">
-                        {% if pdf.author %}{% trans "Författare" %}: {{ pdf.author }} | {% endif %}
-                        {% if pdf.publication_date %}{% trans "Publicerad" %}: {{ pdf.publication_date }} {% endif %}
-                    </p>
-                    {% if pdf.description %}
-                        <p class="pdf-description">{{ pdf.description|truncatewords:30 }}</p>
-                    {% endif %}
-                </div>
-                {% empty %}
-                <p>{% trans "Det finns inga publikationer." %}</p>
-            {% endfor %}
-        </div>
-
-        {% if page_obj.has_other_pages %}
-            <div class="pagination">
-        <span class="step-links">
-            {% if page_obj.has_previous %}
-                <a href="?page=1">&laquo; {% trans "first" %}</a>
-                <a href="?page={{ page_obj.previous_page_number }}">{% trans "previous" %}</a>
-            {% endif %}
-
-            <span class="current">
-                {% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}.
-            </span>
-
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}">{% trans "next" %}</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}">{% trans "last" %} &raquo;</a>
-            {% endif %}
-        </span>
-            </div>
+  <div class="container-margin-top publications-page">
+    <header class="publications-header">
+      <h1>
+        {% if collection %}
+          {{ collection.title }}
+        {% else %}
+          {% trans "Publikationer" %}
         {% endif %}
-    </div>
-    </body>
+      </h1>
+      {% if collection.description %}<p class="publications-description">{{ collection.description }}</p>{% endif %}
+      {% if page_obj.paginator.count %}
+        <p class="publications-subtitle">
+          {% blocktranslate count counter=page_obj.paginator.count trimmed %}
+            {{ counter }} publikation
+          {% plural %}
+            {{ counter }} publikationer
+          {% endblocktranslate %}
+        </p>
+      {% endif %}
+    </header>
+    {% if page_obj %}
+      <ul class="publications-grid" role="list">
+        {% for pdf in page_obj %}
+          <li class="publication-card-wrapper">
+            <a class="publication-card{% if pdf.cover_url %} has-cover{% endif %}"
+               href="{{ pdf.get_absolute_url }}"
+               {% if pdf.redirect_url %}target="_blank" rel="noopener noreferrer"{% endif %}
+               {% if pdf.thumbnail_url %}data-pdf-url="{{ pdf.thumbnail_url }}"{% endif %}
+               aria-label="{{ pdf.title }}">
+              <div class="publication-thumb" aria-hidden="true">
+                <div class="publication-thumb-skeleton"></div>
+                {% if pdf.cover_url %}
+                  <img class="publication-thumb-image"
+                       src="{{ pdf.cover_url }}"
+                       loading="lazy"
+                       alt="">
+                {% else %}
+                  <canvas class="publication-thumb-canvas"></canvas>
+                {% endif %}
+                <div class="publication-thumb-fallback">
+                  <i class="las la-file-pdf"></i>
+                </div>
+                <div class="publication-thumb-overlay">
+                  <span class="publication-thumb-open">
+                    <i class="las la-book-open"></i>
+                    {% trans "Öppna" %}
+                  </span>
+                </div>
+              </div>
+              <div class="publication-info">
+                <h2 class="publication-title">{{ pdf.title }}</h2>
+                {% if pdf.publication_date %}
+                  <p class="publication-meta">
+                    <i class="las la-calendar"></i>
+                    <time datetime="{{ pdf.publication_date|date:'Y-m-d' }}">{{ pdf.publication_date|date:'j M Y' }}</time>
+                  </p>
+                {% endif %}
+                {% if pdf.description %}<p class="publication-description">{{ pdf.description|truncatewords:18 }}</p>{% endif %}
+              </div>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="publications-empty">{% trans "Det finns inga publikationer." %}</p>
+    {% endif %}
+    {% if page_obj.has_other_pages %}
+      <nav class="publications-pagination" aria-label="{% trans 'Pagination' %}">
+        {% if page_obj.has_previous %}
+          <a class="pagination-btn"
+             href="?page={{ page_obj.previous_page_number }}"
+             rel="prev"
+             aria-label="{% trans 'previous' %}">
+            <i class="las la-angle-left"></i>
+          </a>
+        {% else %}
+          <span class="pagination-btn is-disabled" aria-hidden="true">
+            <i class="las la-angle-left"></i>
+          </span>
+        {% endif %}
+        <ol class="pagination-pages" role="list">
+          {% for p in page_range %}
+            {% if p is None %}
+              <li class="pagination-ellipsis" aria-hidden="true">…</li>
+            {% elif p == page_obj.number %}
+              <li>
+                <span class="pagination-page is-current" aria-current="page">{{ p }}</span>
+              </li>
+            {% else %}
+              <li>
+                <a class="pagination-page" href="?page={{ p }}">{{ p }}</a>
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ol>
+        <span class="pagination-compact" aria-hidden="true">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a class="pagination-btn"
+             href="?page={{ page_obj.next_page_number }}"
+             rel="next"
+             aria-label="{% trans 'next' %}">
+            <i class="las la-angle-right"></i>
+          </a>
+        {% else %}
+          <span class="pagination-btn is-disabled" aria-hidden="true">
+            <i class="las la-angle-right"></i>
+          </span>
+        {% endif %}
+      </nav>
+    {% endif %}
+  </div>
 {% endblock %}

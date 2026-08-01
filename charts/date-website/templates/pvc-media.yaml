@@ -1,0 +1,17 @@
+{{- if and .Values.media.persistence.enabled (not .Values.media.s3.enabled) -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "date-website.fullname" . }}-media
+  labels:
+    {{- include "date-website.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    {{- toYaml .Values.media.persistence.accessModes | nindent 4 }}
+  {{- if .Values.media.persistence.storageClass }}
+  storageClassName: {{ .Values.media.persistence.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.media.persistence.size | quote }}
+{{- end }}

@@ -1,0 +1,32 @@
+date-website has been installed.
+
+Release:
+  Name: {{ .Release.Name }}
+  Namespace: {{ .Release.Namespace }}
+  Chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+  App image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+
+Routes:
+{{- if .Values.gateway.enabled }}
+  Gateway: {{ default (include "date-website.fullname" .) .Values.gateway.name }}
+  Hosts:
+{{- range .Values.ingress.hosts }}
+    - {{ .host }}
+{{- end }}
+{{- else if .Values.ingress.enabled }}
+  Ingress: {{ include "date-website.fullname" . }}
+  Hosts:
+{{- range .Values.ingress.hosts }}
+    - {{ .host }}
+{{- end }}
+{{- else }}
+  No Gateway or Ingress is enabled.
+{{- end }}
+
+Checks:
+  kubectl -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/instance={{ .Release.Name }}
+  kubectl -n {{ .Release.Namespace }} logs deploy/{{ include "date-website.fullname" . }}-web
+  helm test {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+After rotating an existing secret, restart the application workloads:
+  kubectl -n {{ .Release.Namespace }} rollout restart deploy/{{ include "date-website.fullname" . }}-web deploy/{{ include "date-website.fullname" . }}-asgi deploy/{{ include "date-website.fullname" . }}-celery

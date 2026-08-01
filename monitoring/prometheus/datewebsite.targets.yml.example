@@ -1,0 +1,23 @@
+- labels:
+    assoc: date
+    env: prod
+    stack: datewebsite
+    service: postgres
+  targets:
+    - datewebsite-postgres-exporter:9187
+
+- labels:
+    assoc: date
+    env: prod
+    stack: datewebsite
+    service: redis
+  targets:
+    - datewebsite-redis-exporter:9121
+
+- labels:
+    assoc: date
+    env: prod
+    stack: datewebsite
+    service: nginx
+  targets:
+    - datewebsite-nginx-exporter:9113

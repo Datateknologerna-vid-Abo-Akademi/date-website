@@ -1,0 +1,69 @@
+body {
+    background: url("/static/core/images/Pulterit-mineral.jpg") no-repeat center center fixed;
+    background-size: cover;
+}
+
+footer.association-footer {
+    background-color: var(--primaryColor);
+}
+
+.card {
+    border-radius: var(--defaultRadius);
+    color: var(--textColorDarkish);
+}
+
+.card .fa-chevron-right {
+    transition: .3s;
+    color: var(--accentColor);
+}
+
+.card a:hover .fa-chevron-right {
+    transform: translateX(10px);
+}
+
+.event-card > .card .list-inline-item {
+    color: var(--helpText);
+    font-size: 14px;
+}
+
+.event-card > .card .badge {
+    background: var(--accentColor);
+    color: var(--secondaryColor);
+}
+
+.event-card > .card {
+    background: var(--secondaryColor);
+}
+
+.card-body a {
+    color: var(--accentColor);
+    border-color: var(--accentColor);
+}
+
+.card-body a:active {
+    color: var(--linkColor);
+}
+
+.card-body a:hover {
+    background-color: inherit;
+    color: var(--linkSecondaryHover);
+    border-color: var(--linkSecondaryHover);
+}
+
+.card-body a:focus {
+    background-color: inherit;
+    box-shadow: none;
+}
+
+.event-date-txt {
+    white-space: nowrap;
+}
+
+.container-size {
+    background: rgba(109, 40, 217, 0.15);
+    backdrop-filter: blur(6px);
+    border-radius: var(--defaultRadius);
+    padding: 20px;
+    border: 1px solid rgba(109, 40, 217, 0.3);
+    color: #ffffff;
+}

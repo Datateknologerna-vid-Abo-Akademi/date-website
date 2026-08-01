@@ -1,47 +1,152 @@
-#!/bin/sh
+#!/bin/bash
 set -Eeuo pipefail
 
-echo "WARNING! This will restore your project to an intial state"
-read -p "Are you sure? y/n " -n 1 -r
-echo    # (optional) move to a new line
-if [[ ! $REPLY =~ ^[Yy]$ ]]
-then
-    [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1 # handle exits from shell or function but don't exit interactive shell
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+NON_INTERACTIVE=false
+for arg in "$@"; do
+    case "$arg" in
+        -y|--yes) NON_INTERACTIVE=true ;;
+    esac
+done
+
+if [[ "$NON_INTERACTIVE" == "true" ]]; then
+    echo "WARNING! This will restore your project to an initial state."
+    echo "All database data will be permanently deleted."
+    DELETE_MEDIA=false
+else
+    echo "WARNING! This will restore your project to an initial state."
+    echo "All database data will be permanently deleted."
+    read -p "Are you sure? y/n " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1
+    fi
+
+    read -p "Also delete uploaded media files? y/n " -n 1 -r
+    echo
+    DELETE_MEDIA=false
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        DELETE_MEDIA=true
+    fi
 fi
 
-source ../example.env
-COMPOSE_PATH="../docker-compose.yml"
+read_compose_file_from_env() {
+    local env_file="$PROJECT_DIR/.env"
 
-# Shut down any currently running containers
-docker-compose down
+    if [[ ! -f "$env_file" ]]; then
+        return 0
+    fi
 
-# Delete all existing migration files
-find ../ -path "*/migrations/*.py" -not -name "__init__.py" -delete
+    (
+        unset COMPOSE_FILE
+        set -a
+        # shellcheck disable=SC1090
+        source "$env_file"
+        set +a
+        printf '%s' "${COMPOSE_FILE:-}"
+    )
+}
 
-# Start the database container
-docker-compose -f $COMPOSE_PATH build
-docker-compose -f $COMPOSE_PATH up -d db
+COMPOSE_FILE_PATH="${COMPOSE_FILE_PATH:-$(read_compose_file_from_env)}"
+COMPOSE_FILE_PATH="${COMPOSE_FILE_PATH:-docker-compose.yml}"
+if [[ "$COMPOSE_FILE_PATH" = /* ]]; then
+    COMPOSE_PATH="$COMPOSE_FILE_PATH"
+else
+    COMPOSE_PATH="$PROJECT_DIR/$COMPOSE_FILE_PATH"
+fi
 
-sleep 2
+docker_compose() {
+    docker compose --project-directory "$PROJECT_DIR" -f "$COMPOSE_PATH" "$@"
+}
 
-# Connect to a temporary database to delete and recreate the postgres database
-docker-compose exec db psql -U postgres -c "CREATE DATABASE temp;"
-docker-compose exec db psql -U postgres -d temp -c "DROP DATABASE postgres;"
-docker-compose exec db psql -U postgres -d temp -c "CREATE DATABASE postgres;"
-docker-compose exec db psql -U postgres -c "DROP DATABASE temp;"
+validate_fixtures() {
+    echo "Validating fixtures..."
+    local fixtures=(
+        "fixtures/members.json"
+        "fixtures/ads.json"
+        "scripts/generate_dynamic_fixtures.py"
+    )
+    for f in "${fixtures[@]}"; do
+        if [[ ! -f "$PROJECT_DIR/$f" ]]; then
+            echo "ERROR: Missing required fixture: $f"
+            exit 1
+        fi
+    done
+    echo "All required fixtures found."
+}
+
+wait_for_db() {
+    echo "Waiting for database to be ready..."
+    local max_attempts=30
+    local attempt=0
+    while [[ $attempt -lt $max_attempts ]]; do
+        if docker_compose exec -T db pg_isready -U postgres -q 2>/dev/null; then
+            echo "Database is ready."
+            return 0
+        fi
+        attempt=$((attempt + 1))
+        sleep 1
+    done
+    echo "ERROR: Database did not become ready in time"
+    exit 1
+}
+
+validate_fixtures
+
+if [[ "$DELETE_MEDIA" == "true" ]]; then
+    echo "Deleting media files..."
+    rm -rf "$PROJECT_DIR/media/archive"/* 2>/dev/null || true
+    rm -rf "$PROJECT_DIR/media/pdfs"/* 2>/dev/null || true
+    echo "Media files deleted."
+fi
+
+echo "Shutting down containers..."
+docker_compose down --remove-orphans
+
+echo "Building required images and starting database container..."
+docker_compose build db web
+docker_compose up -d db
+
+wait_for_db
+
+echo "Recreating database..."
+docker_compose exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS temp;" 2>/dev/null || true
+docker_compose exec -T db psql -U postgres -c "CREATE DATABASE temp;"
+docker_compose exec -T db psql -U postgres -d temp -c "DROP DATABASE postgres;"
+docker_compose exec -T db psql -U postgres -d temp -c "CREATE DATABASE postgres;"
+docker_compose exec -T db psql -U postgres -c "DROP DATABASE temp;"
 
 echo "Database cleared."
-echo "Deleting migration files"
 
-# Run migrations on fresh database and load fixture data
-docker-compose -f $COMPOSE_PATH run web python /code/manage.py makemigrations
-docker-compose -f $COMPOSE_PATH run web python /code/manage.py migrate
-docker-compose -f $COMPOSE_PATH run web python /code/manage.py loaddata initialdata.json
-docker-compose down
+echo "Running migrations and loading fixtures..."
+docker_compose run --rm web /bin/bash -c "
+    ./wait-for-postgres.sh db:5432 && \
+    python /code/manage.py migrate --noinput && \
+    ./scripts/load_all_fixtures.sh && \
+    python /code/manage.py shell -c \"
+from members.models import Member
+for username in ['admin', 'freshman', 'member']:
+    u = Member.objects.get(username=username)
+    u.set_password('admin')
+    u.save()
+print('Passwords set for all users.')
+\"
+"
 
-sleep 2
+docker_compose down --remove-orphans
 
-# (optional) start website
-# docker-compose up -d
-
-echo "All migrations and data cleared, initial website data loaded."
+echo ""
+echo "============================================"
+echo "Clean init completed successfully!"
+echo "============================================"
+echo ""
+echo "Created users:"
+echo "  - admin (superuser)    password: admin"
+echo "  - freshman             password: admin"
+echo "  - member               password: admin"
+echo ""
+echo "Login at: http://localhost:8000/admin"
+echo ""
+echo "Run 'date-start' or 'docker compose up -d' to start the server."

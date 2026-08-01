@@ -1,0 +1,37 @@
+.translation-language-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.translation-language-tabs button {
+  border: 1px solid var(--hairline-color, #d9d9d9);
+  border-radius: 4px;
+  background: var(--body-bg, #fff);
+  color: var(--body-fg, #333);
+  cursor: pointer;
+  font: inherit;
+  padding: 0.4rem 0.7rem;
+  text-transform: uppercase;
+}
+
+.translation-language-tabs button.active {
+  background: var(--primary, #417690);
+  border-color: var(--primary, #417690);
+  color: #fff;
+}
+
+.translation-language-tabs button:focus-visible {
+  outline: 3px solid var(--link-fg, #205067);
+  outline-offset: 2px;
+}
+
+.translation-language-status {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Project setup guide
+    url: https://github.com/datateknologerna-vid-abo-akademi/date-website#quick-start-development
+    about: Start here for local Docker Compose setup, helper aliases, tests, and deployment notes.

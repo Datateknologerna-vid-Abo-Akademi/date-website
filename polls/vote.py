@@ -1,10 +1,11 @@
 from django.db import transaction
-from django.shortcuts import render, HttpResponseRedirect
 from django.db.models import F
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
 from django.urls import reverse
 
 from members.models import ORDINARY_MEMBER
-from polls.models import MEMBERS_ONLY, ORDINARY_MEMBERS_ONLY, VOTE_MEMBERS_ONLY, ANYONE, Choice
+from polls.models import ANYONE, MEMBERS_ONLY, ORDINARY_MEMBERS_ONLY, VOTE_MEMBERS_ONLY, Choice
 
 ERROR_MESSAGES = {
     'not_logged_in': "Logga in för att rösta.",
@@ -18,9 +19,8 @@ ERROR_MESSAGES = {
 
 
 def handle_selected_choices(question, selected_choices, user):
-    with (transaction.atomic()):
-        Choice.objects.filter(id__in=selected_choices
-                              ).update(votes=F('votes') + 1)
+    with transaction.atomic():
+        Choice.objects.filter(id__in=selected_choices).update(votes=F('votes') + 1)
         if user.is_authenticated:
             question.voters.add(user)
 
@@ -46,9 +46,11 @@ def is_user_authorized_to_vote(question, user):
     if question.voting_options == ORDINARY_MEMBERS_ONLY and user.membership_type.permission_profile == ORDINARY_MEMBER:
         return True
 
-    if (question.voting_options == VOTE_MEMBERS_ONLY and
-            user.membership_type.permission_profile == ORDINARY_MEMBER and
-            user.get_active_subscription() is not None):
+    if (
+        question.voting_options == VOTE_MEMBERS_ONLY
+        and user.membership_type.permission_profile == ORDINARY_MEMBER
+        and user.get_active_subscription() is not None
+    ):
         return True
 
     return False
@@ -91,10 +93,14 @@ def handle_vote(request, question, user, selected_choices):
     error_message = validate_vote(request, question, user, selected_choices)
 
     if error_message:
-        return render(request, 'polls/detail.html', {
-            'question': question,
-            'error_message': error_message,
-        })
+        return render(
+            request,
+            'polls/detail.html',
+            {
+                'question': question,
+                'error_message': error_message,
+            },
+        )
 
     handle_selected_choices(question, selected_choices, user)
     return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))

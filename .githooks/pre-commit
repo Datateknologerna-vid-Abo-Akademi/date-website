@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+if command -v uv >/dev/null 2>&1; then
+    exec uv run pre-commit run --hook-stage pre-commit
+elif command -v pre-commit >/dev/null 2>&1; then
+    exec pre-commit run --hook-stage pre-commit
+else
+    echo "Warning: pre-commit not available, skipping pre-commit checks."
+fi

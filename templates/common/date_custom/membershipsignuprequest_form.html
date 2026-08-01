@@ -1,38 +1,37 @@
-
 {% extends 'core/base.html' %}
-
 {% load i18n %}
 {% load static %}
 {% block title %}Membership Signup Request{% endblock %}
 {% block content %}
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static 'members/style.css' %}">
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-</head>
-    <div class="signup-page">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+            async
+            defer></script>
+  </head>
+  <div class="signup-page">
     <div class="members-form big">
-    <form id="signupForm" action="{% url 'date_custom:membership_signup_request' %}" method="post">
-            {% csrf_token %}
-            {{ form.non_field_errors }}
-            {% for field in form %}
-              <p>
-                {{ field.label_tag }}<br>
-                  {% if field.help_text %}
-                      <small>{{ field.help_text }}</small>
-                  {% endif %}
-                  {{ field }}
-                {% for error in field.errors %}
-                  <p style="color: red">{{ error }}</p>
-                {% endfor %}
-              </p>
-            {% endfor %}
-            <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}"></div>
+      <form id="signupForm"
+            action="{% url 'date_custom:membership_signup_request' %}"
+            method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+          <p>
+            {{ field.label_tag }}
+            <br>
+            {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+            {{ field }}
+            {% for error in field.errors %}<p style="color: red">{{ error }}</p>{% endfor %}
+          </p>
+        {% endfor %}
+        <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}"></div>
         <input type="submit" value="Submit">
         <div id="error-message" class="error"></div>
-    {{ user_data|json_script:"membership-user-data" }}
-    <script defer>
+        {{ user_data|json_script:"membership-user-data" }}
+        <script defer>
         const contextData = JSON.parse(document.getElementById('membership-user-data').textContent);
         Object.keys(contextData).forEach(key => {
             const field = document.querySelector(`[name="${key}"]`);
@@ -40,9 +39,8 @@
                 field.value = contextData[key];
             }
         });
-    </script>
-
-    </form>
+        </script>
+      </form>
     </div>
-    </div>
+  </div>
 {% endblock %}

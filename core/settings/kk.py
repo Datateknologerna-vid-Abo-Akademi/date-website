@@ -1,6 +1,5 @@
 from .common import *  # noqa
 
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -18,27 +17,30 @@ TEMPLATES = [
     },
 ]
 
-INSTALLED_APPS = get_installed_apps([
-    'news',
-    'archive.apps.ArchiveConfig',
-    'events',
-    'polls',
-    'ads',
-    'social',
-    'staticpages',
-    'lucia',
-    'alumni',
-    'billing',
-])
+INSTALLED_APPS = get_installed_apps(
+    [
+        'news',
+        'gallery',
+        'exambank',
+        'archive',
+        'events',
+        'polls',
+        'ads',
+        'instagram',
+        'harassment',
+        'social',
+        'staticpages',
+        'lucia',
+        'publications',
+        'alumni',
+        'billing',
+    ]
+)
 
 ROOT_URLCONF = 'core.urls.kk'
+USE_ACCEPT_LANGUAGE_HEADER = False
 
-STAFF_GROUPS = get_staff_groups([
-        'styrelse',
-        'admin',
-        'fotograf',
-        'rösträknare'
-    ])
+STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
 
 STATICFILES_DIRS = [
@@ -52,6 +54,7 @@ CONTENT_VARIABLES = {
     "ASSOCIATION_NAME": "Kemistklubben",
     "ASSOCIATION_NAME_FULL": "Kemistklubben vid Åbo Akademi rf",
     "ASSOCIATION_NAME_SHORT": "KK",
+    "EVENT_TEMPLATE_LOGO": "core/images/headerlogo.png",
     "ASSOCIATION_EMAIL": "kk@abo.fi",
     "ASSOCIATION_ADDRESS_L1": "Åbo Akademi, Aurum",
     "ASSOCIATION_ADDRESS_L2": "Henriksgatan 2",
@@ -62,7 +65,6 @@ CONTENT_VARIABLES = {
         ["fa-instagram", "https://www.instagram.com/kemistklubben/"],
         ["fa-linkedin-in", "https://www.linkedin.com/company/kemistklubben-vid-%C3%A5bo-akademi-rf/"],
     ],
-
     # Alumni
     "ALUMNI_ASSOCIATION_NAME": "Axels och Stinas Gamyler",
     "ALUMNI_ASSOCIATION_NAME_SHORT": "ASG",

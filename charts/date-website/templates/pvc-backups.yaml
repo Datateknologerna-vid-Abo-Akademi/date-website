@@ -1,0 +1,18 @@
+{{- if and .Values.backups.enabled .Values.backups.persistence.enabled -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "date-website.backupsPvcName" . }}
+  labels:
+    {{- include "date-website.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql-backup
+spec:
+  accessModes:
+    {{- toYaml .Values.backups.persistence.accessModes | nindent 4 }}
+  {{- if .Values.backups.persistence.storageClass }}
+  storageClassName: {{ .Values.backups.persistence.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.backups.persistence.size | quote }}
+{{- end }}

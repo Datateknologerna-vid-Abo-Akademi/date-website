@@ -1,0 +1,18 @@
+{{- if .Values.redis.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "date-website.redis.fullname" . }}
+  labels:
+    {{- include "date-website.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  ports:
+    - port: 6379
+      targetPort: redis
+      protocol: TCP
+      name: redis
+  selector:
+    {{- include "date-website.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+{{- end }}

@@ -1,0 +1,36 @@
+/* Root colors */
+/* use with var(--color); included in base.html*/
+
+:root {
+    --primaryColor: #00102E;
+    --primaryColorLight: #132744;
+    --primaryColorLighte: #263246;
+    --primaryColorLighter: #3d5272;
+    --primaryColorTransparent: rgba(38, 50, 70, 0.9);
+    --primaryColorTransparenter: rgba(38, 50, 70, 0.8);
+    --secondaryColor: #fff;
+    --secondaryColorDarker: #edf2f8;
+    --textColorLight: #fff;
+    --textColorLightish: #eef4ff;
+    --textColorDark: #000;
+    --textColorDarkish: #202020;
+    --textColorMedium: #606060;
+    --helpText: #6f7b8d;
+    --helpTextLighter: rgb(199, 199, 199);
+    --linkColorDark: #0b5ea8;
+    --linkColorDarkHover: #00102E;
+    --linkColorLight: #eeee22;
+    --linkColorLightHover: #ffff77;
+    --warning: rgb(216, 153, 146);
+    --warning-darker: rgb(213, 91, 78);
+    --navClickHighlight: rgba(255, 255, 255, 0.25);
+    --navHoverHighlight: rgba(255, 255, 255, 0.15);
+    --defaultPadding: 20px;
+    --defaultRadius: 5px;
+
+    --pubCardBg: var(--secondaryColor);
+    --pubCardFg: var(--textColorDarkish);
+    --pubCardFgSoft: var(--helpText);
+    --pubCardThumbBg: var(--secondaryColorDarker);
+    --pubCardThumbShimmer: #dbe6f2;
+}

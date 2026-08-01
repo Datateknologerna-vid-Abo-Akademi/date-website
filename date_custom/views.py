@@ -23,7 +23,7 @@ class MembershipSignupRequestView(CreateView):
                 'street_address': user.address,
                 'postal_code': user.zip_code,
                 'city': user.city,
-                'country': user.country
+                'country': user.country,
             }
 
             context['user_data'] = user_data

@@ -1,21 +1,23 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+
 class AlumniSignUpForm(forms.Form):
-    tfif_choices = (
-        ('ja', 'Ja'),
-        ('nej', 'Nej'),
-        ('vet inte', 'Vet inte')
-    )
+    tfif_choices = (('ja', 'Ja'), ('nej', 'Nej'), ('vet inte', 'Vet inte'))
     operation_choices = (
         ('CREATE', 'Registrera mig som ny medlem'),
         ('UPDATE', 'Uppdatera mina uppgifter'),
     )
 
-    firstname = forms.CharField(max_length=100, required=True, help_text=_('detta fält är obligatoriskt'), label=_('Förnamn'))
-    lastname = forms.CharField(max_length=100, required=True, help_text=_('detta fält är obligatoriskt'), label=_('Efternamn'))
-    email = forms.EmailField(max_length=320, help_text=_('detta fält är obligatoriskt'), label=_('E-postadress'),
-                             required=True)
+    firstname = forms.CharField(
+        max_length=100, required=True, help_text=_('detta fält är obligatoriskt'), label=_('Förnamn')
+    )
+    lastname = forms.CharField(
+        max_length=100, required=True, help_text=_('detta fält är obligatoriskt'), label=_('Efternamn')
+    )
+    email = forms.EmailField(
+        max_length=320, help_text=_('detta fält är obligatoriskt'), label=_('E-postadress'), required=True
+    )
     phone_number = forms.CharField(max_length=20, label=_('Telefonnummer'), required=False)
     address = forms.CharField(max_length=200, label=_('Adress'), required=False)
     zip = forms.CharField(max_length=20, label=_('Postnummer'), required=False)
@@ -25,10 +27,17 @@ class AlumniSignUpForm(forms.Form):
     employer = forms.CharField(max_length=200, label=_('Arbetsplats'), required=False)
     work_title = forms.CharField(max_length=200, label=_('Arbetsuppgift'), required=False)
     tfif_membership = forms.ChoiceField(choices=tfif_choices, label=_('TFiF medlemskap'), required=False)
-    alumni_newsletter_consent = forms.BooleanField(label=_('Jag tar gärna emot information om alumnevenemang'),
-                                                   required=False)
-    operation = forms.ChoiceField(choices=operation_choices, label=_('Jag vill:'),
-                                  required=True, initial='CREATE', disabled=True, widget=forms.HiddenInput())
+    alumni_newsletter_consent = forms.BooleanField(
+        label=_('Jag tar gärna emot information om alumnevenemang'), required=False
+    )
+    operation = forms.ChoiceField(
+        choices=operation_choices,
+        label=_('Jag vill:'),
+        required=True,
+        initial='CREATE',
+        disabled=True,
+        widget=forms.HiddenInput(),
+    )
     token = forms.CharField(max_length=50, required=False, label=_('Token'), widget=forms.HiddenInput())
 
     class Meta:
@@ -65,12 +74,13 @@ class AlumniUpdateForm(AlumniSignUpForm):
         self.fields['lastname'].help_text = ""
 
     class Meta(AlumniSignUpForm.Meta):
-        fields = AlumniSignUpForm.Meta.fields + ('token',)
+        fields = AlumniSignUpForm.Meta.fields + ('token',)  # type: ignore[assignment]
 
 
 class AlumniEmailVerificationForm(forms.Form):
-    email = forms.EmailField(max_length=320, help_text=_('detta fält är obligatoriskt'), label=_('E-postadress'),
-                             required=True)
+    email = forms.EmailField(
+        max_length=320, help_text=_('detta fält är obligatoriskt'), label=_('E-postadress'), required=True
+    )
 
     class Meta:
         fields = ('email',)

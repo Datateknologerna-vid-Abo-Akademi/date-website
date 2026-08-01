@@ -1,0 +1,158 @@
+.two-factor-page {
+    min-height: 100vh;
+    padding: 25vh 1rem 10rem;
+}
+
+.two-factor-shell {
+    display: flex;
+    justify-content: center;
+}
+
+.two-factor-card {
+    text-align: left;
+}
+
+.two-factor-card-login {
+    width: 360px;
+    max-width: 90vw;
+    text-align: center;
+}
+
+.two-factor-card-panel {
+    width: 620px;
+    max-width: 90vw;
+}
+
+.two-factor-card h2 {
+    margin-bottom: 0.75rem;
+}
+
+.two-factor-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+.two-factor-field label {
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+}
+
+.two-factor-field ul,
+.two-factor-errors ul {
+    padding-left: 1.25rem;
+    margin: 0.35rem 0 0;
+}
+
+.two-factor-field input,
+.two-factor-field select {
+    width: 100%;
+    border: 0;
+    padding: 0.9rem 1rem;
+    background-color: var(--secondaryColorDarker);
+    color: var(--textColorDark);
+}
+
+.two-factor-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
+.two-factor-secondary {
+    background-color: var(--primaryColorLight);
+    color: var(--textColorLightish);
+    width: auto;
+}
+
+.two-factor-secondary:hover,
+.two-factor-secondary:focus {
+    background-color: var(--primaryColorLighte);
+    color: var(--linkColorLightHover);
+}
+
+.two-factor-actions a.theme-button,
+.two-factor-inline-form a.theme-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.two-factor-confirm {
+    margin-top: 1.5rem;
+}
+
+.two-factor-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.two-factor-checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--primaryColorLighter);
+}
+
+.two-factor-alt-methods {
+    margin-top: 1rem;
+}
+
+.two-factor-alt-methods .two-factor-secondary,
+.two-factor-inline-form .two-factor-secondary {
+    margin-top: 0.75rem;
+}
+
+.two-factor-inline-form {
+    margin-top: 0.75rem;
+}
+
+.two-factor-qr-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+    background-color: var(--secondaryColor);
+    border: 1px solid var(--secondaryColorDarker);
+    border-radius: var(--defaultRadius);
+    margin: 1rem 0;
+}
+
+.two-factor-qr {
+    width: min(240px, 100%);
+    height: auto;
+}
+
+.two-factor-secret-label {
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+}
+
+.two-factor-secret {
+    display: block;
+    padding: 0.9rem 1rem;
+    background-color: var(--secondaryColorDarker);
+    color: var(--textColorDark);
+    border-radius: var(--defaultRadius);
+    overflow-wrap: anywhere;
+}
+
+.two-factor-token-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin: 1rem 0 1.5rem;
+}
+
+.two-factor-token-list code {
+    display: block;
+    padding: 0.75rem;
+    background-color: var(--secondaryColorDarker);
+    color: var(--textColorDark);
+    text-align: center;
+    border-radius: var(--defaultRadius);
+}

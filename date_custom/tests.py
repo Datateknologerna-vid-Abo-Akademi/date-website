@@ -1,5 +1,7 @@
 from unittest.mock import patch
 
+from django.conf import settings
+from django.shortcuts import resolve_url
 from django.test import TestCase
 from django.urls import reverse
 
@@ -11,8 +13,7 @@ from members.models import Member
 class MembershipSignupRequestViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user = Member.objects.create_user(
-            username='applicant', password='secret', email='applicant@example.com')
+        cls.user = Member.objects.create_user(username='applicant', password='secret', email='applicant@example.com')
 
     def setUp(self):
         self.url = reverse('date_custom:membership_signup_request')
@@ -21,7 +22,10 @@ class MembershipSignupRequestViewTest(TestCase):
         response = self.client.get(self.url)
 
         self.assertRedirects(
-            response, f'/members/login?next={self.url}', fetch_redirect_response=False)
+            response,
+            f'{resolve_url(settings.LOGIN_URL)}?next={self.url}',
+            fetch_redirect_response=False,
+        )
 
     @patch('date_custom.views.validate_captcha', return_value=False)
     def test_invalid_captcha_does_not_create_request(self, validate_captcha):

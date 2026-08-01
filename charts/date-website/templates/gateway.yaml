@@ -1,0 +1,41 @@
+{{- if .Values.gateway.enabled -}}
+{{- $gatewayName := default (include "date-website.fullname" .) .Values.gateway.name -}}
+{{- $tlsSecretName := .Values.gateway.https.secretName -}}
+{{- if and (not $tlsSecretName) .Values.ingress.tls -}}
+{{- $tlsSecretName = (index .Values.ingress.tls 0).secretName -}}
+{{- end -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ $gatewayName }}
+  labels:
+    {{- include "date-website.labels" . | nindent 4 }}
+  {{- with .Values.gateway.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  gatewayClassName: {{ .Values.gateway.className | quote }}
+  listeners:
+    {{- if .Values.gateway.http.enabled }}
+    - name: http
+      protocol: HTTP
+      port: {{ .Values.gateway.http.port }}
+      allowedRoutes:
+        namespaces:
+          from: Same
+    {{- end }}
+    {{- if .Values.gateway.https.enabled }}
+    - name: https
+      protocol: HTTPS
+      port: {{ .Values.gateway.https.port }}
+      allowedRoutes:
+        namespaces:
+          from: Same
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: {{ required "gateway.https.secretName or ingress.tls[0].secretName is required when gateway.https.enabled=true" $tlsSecretName | quote }}
+    {{- end }}
+{{- end }}

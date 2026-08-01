@@ -1,0 +1,367 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "image": {
+      "type": "object",
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string" },
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] }
+      }
+    },
+    "secret": {
+      "type": "object",
+      "properties": {
+        "existingSecret": { "type": "string" }
+      }
+    },
+    "django": {
+      "type": "object",
+      "properties": {
+        "projectName": { "type": "string", "minLength": 1 },
+        "secretKey": { "type": "string" },
+        "allowedHosts": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "allowedOrigins": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "database": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "username": { "type": "string", "minLength": 1 },
+        "password": { "type": "string" },
+        "external": {
+          "type": "object",
+          "properties": {
+            "host": { "type": "string" },
+            "port": { "type": "integer", "minimum": 1, "maximum": 65535 }
+          }
+        }
+      }
+    },
+    "postgresql": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "redis": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "externalUrl": { "type": "string" }
+      }
+    },
+    "media": {
+      "type": "object",
+      "properties": {
+        "s3": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "endpointUrl": { "type": "string" },
+            "regionName": { "type": "string" },
+            "bucketName": { "type": "string" },
+            "privateLocation": { "type": "string" },
+            "publicLocation": { "type": "string" },
+            "accessKeyId": { "type": "string" },
+            "secretAccessKey": { "type": "string" }
+          }
+        }
+      }
+    },
+    "backups": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "objectStorage": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "endpointUrl": { "type": "string" },
+            "regionName": { "type": "string" },
+            "bucketName": { "type": "string" },
+            "accessKeyId": { "type": "string" },
+            "secretAccessKey": { "type": "string" }
+          }
+        }
+      }
+    },
+    "web": {
+      "type": "object",
+      "properties": {
+        "replicaCount": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "asgi": {
+      "type": "object",
+      "properties": {
+        "replicaCount": { "type": "integer", "minimum": 1 },
+        "wsPath": { "type": "string", "pattern": "^/" }
+      }
+    },
+    "celery": {
+      "type": "object",
+      "properties": {
+        "replicaCount": { "type": "integer", "minimum": 1 },
+        "concurrency": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "hosts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["host", "paths"],
+            "properties": {
+              "host": { "type": "string", "minLength": 1 },
+              "paths": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": ["path", "pathType"],
+                  "properties": {
+                    "path": { "type": "string", "pattern": "^/" },
+                    "pathType": { "type": "string", "enum": ["Exact", "Prefix", "ImplementationSpecific"] }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tls": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "secretName": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "gateway": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "className": { "type": "string" },
+        "https": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "secretName": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "secret": {
+            "properties": {
+              "existingSecret": { "const": "" }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "django": {
+            "required": ["secretKey"],
+            "properties": {
+              "secretKey": { "type": "string", "minLength": 1 }
+            }
+          },
+          "database": {
+            "required": ["password"],
+            "properties": {
+              "password": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "postgresql": {
+            "properties": {
+              "enabled": { "const": false }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "database": {
+            "properties": {
+              "external": {
+                "required": ["host"],
+                "properties": {
+                  "host": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "redis": {
+            "properties": {
+              "enabled": { "const": false }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "redis": {
+            "required": ["externalUrl"],
+            "properties": {
+              "externalUrl": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "media": {
+            "properties": {
+              "s3": {
+                "properties": {
+                  "enabled": { "const": true }
+                }
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "media": {
+            "properties": {
+              "s3": {
+                "required": [
+                  "endpointUrl",
+                  "regionName",
+                  "bucketName",
+                  "privateLocation",
+                  "publicLocation"
+                ],
+                "properties": {
+                  "endpointUrl": { "type": "string", "minLength": 1 },
+                  "regionName": { "type": "string", "minLength": 1 },
+                  "bucketName": { "type": "string", "minLength": 1 },
+                  "privateLocation": { "type": "string", "minLength": 1 },
+                  "publicLocation": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "backups": {
+            "properties": {
+              "objectStorage": {
+                "properties": {
+                  "enabled": { "const": true }
+                }
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "backups": {
+            "properties": {
+              "objectStorage": {
+                "required": ["endpointUrl", "bucketName"],
+                "properties": {
+                  "endpointUrl": { "type": "string", "minLength": 1 },
+                  "bucketName": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "gateway": {
+            "properties": {
+              "enabled": { "const": true },
+              "https": {
+                "properties": {
+                  "enabled": { "const": true }
+                }
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "anyOf": [
+          {
+            "properties": {
+              "gateway": {
+                "properties": {
+                  "https": {
+                    "properties": {
+                      "secretName": { "type": "string", "minLength": 1 }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "ingress": {
+                "properties": {
+                  "tls": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "required": ["secretName"],
+                      "properties": {
+                        "secretName": { "type": "string", "minLength": 1 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

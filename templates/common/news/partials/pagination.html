@@ -1,0 +1,29 @@
+{% if page_obj.has_other_pages %}
+  {% with total=page_obj.paginator.num_pages %}
+    <div class="center">
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+        {% else %}
+          <a class="disabled">&laquo;</a>
+        {% endif %}
+        {% if show_first_page %}<a href="?page=1">1</a>{% endif %}
+        {% if show_first_ellipsis %}<a class="disabled">&hellip;</a>{% endif %}
+        {% for i in page_range_window %}
+          {% if page_obj.number == i %}
+            <a class="active">{{ i }}</a>
+          {% else %}
+            <a href="?page={{ i }}">{{ i }}</a>
+          {% endif %}
+        {% endfor %}
+        {% if show_last_ellipsis %}<a class="disabled">&hellip;</a>{% endif %}
+        {% if show_last_page %}<a href="?page={{ total }}">{{ total }}</a>{% endif %}
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+        {% else %}
+          <a class="disabled">&raquo;</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endwith %}
+{% endif %}

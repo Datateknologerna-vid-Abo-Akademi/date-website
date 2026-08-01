@@ -1,6 +1,5 @@
 from .common import *  # noqa
 
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -18,24 +17,25 @@ TEMPLATES = [
     },
 ]
 
-INSTALLED_APPS = get_installed_apps([
-    'news',
-    'archive.apps.ArchiveConfig',
-    'events',
-    'polls',
-    'ads',
-    'social',
-    'staticpages',
-])
+INSTALLED_APPS = get_installed_apps(
+    [
+        'news',
+        'gallery',
+        'exambank',
+        'archive',
+        'events',
+        'polls',
+        'ads',
+        'instagram',
+        'harassment',
+        'social',
+        'staticpages',
+    ]
+)
 
 ROOT_URLCONF = 'core.urls.demo'
 
-STAFF_GROUPS = get_staff_groups([
-    'styrelse',
-    'admin',
-    'fotograf',
-    'rösträknare'
-])
+STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
 
 STATICFILES_DIRS = [
@@ -49,6 +49,7 @@ CONTENT_VARIABLES = {
     "ASSOCIATION_NAME": "DaTe demo",
     "ASSOCIATION_NAME_FULL": "Demo Website",
     "ASSOCIATION_NAME_SHORT": "Demo",
+    "EVENT_TEMPLATE_LOGO": "core/images/headerlogo.png",
     "ASSOCIATION_EMAIL": "demo@datateknologerna.org",
     "ASSOCIATION_ADDRESS_L1": "Åbo Akademi, Agora",
     "ASSOCIATION_ADDRESS_L2": "Vattenborgsvägen 5",

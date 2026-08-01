@@ -1,33 +1,141 @@
+from urllib.parse import urlsplit
+
 from admin_ordering.admin import OrderableAdmin
+from django.conf import settings
 from django.contrib import admin
+from django.db.models import Case, Count, IntegerField, TextField, Value, When
+from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
+from django_ckeditor_5.widgets import CKEditor5Widget
+
+from core.admin import (
+    ActiveLanguageTranslationAdminMixin,
+    LanguageTabbedTranslationAdmin,
+    TranslationCompletionAdminMixin,
+)
+from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin, StackedInline
 
 from .models import StaticPage, StaticPageNav, StaticUrl
 
 
-# Register your models here.
+def safe_admin_url_link(url, label=None):
+    if not url:
+        return '-'
+    parsed = urlsplit(url)
+    is_safe_url = parsed.scheme in ('http', 'https') or (not parsed.scheme and not parsed.netloc)
+    if not is_safe_url:
+        return format_html('{}', url)
+    return format_html(
+        '<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
+        url,
+        label or url,
+    )
 
 
-class UrlInline(OrderableAdmin, admin.TabularInline):
+if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
+    from modeltranslation.admin import TranslationStackedInline
+
+    # Stacked inlines let modeltranslation group each link title behind language tabs.
+    class StaticPageTranslationInlineBase(ActiveLanguageTranslationAdminMixin, TranslationStackedInline, StackedInline):
+        pass
+
+    class StaticPageTranslationAdminBase(
+        ActiveLanguageTranslationAdminMixin, LanguageTabbedTranslationAdmin, ModelAdmin
+    ):
+        pass
+else:
+    StaticPageTranslationInlineBase = StackedInline  # type: ignore[misc, assignment]
+    StaticPageTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
+
+
+class UrlInline(OrderableAdmin, StaticPageTranslationInlineBase):
     model = StaticUrl
+    fk_name = 'category'
     can_delete = True
     extra = 0
     line_numbering = 0
-    ordering_field = ('dropdown_element',)
+    ordering_field = 'dropdown_element'
     ordering = ['dropdown_element']
     ordering_field_hide_input = True
-    fields = ('dropdown_element', 'title', 'url', 'logged_in_only')
+    fields = ('dropdown_element', 'title', 'url', 'open_link', 'parent', 'logged_in_only')
+    readonly_fields = ('open_link',)
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .annotate(
+                has_parent=Case(
+                    When(parent__isnull=True, then=Value(0)),
+                    default=Value(1),
+                    output_field=IntegerField(),
+                )
+            )
+            .order_by('has_parent', 'parent__dropdown_element', 'dropdown_element')
+        )
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'parent':
+            queryset = StaticUrl.objects.filter(parent=None)
+            object_id = request.resolver_match.kwargs.get('object_id') if request.resolver_match else None
+            if object_id:
+                queryset = queryset.filter(category_id=object_id)
+            kwargs['queryset'] = queryset
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    @admin.display(description=_('Open'))
+    def open_link(self, obj):
+        if not obj or not obj.url:
+            return '-'
+        return safe_admin_url_link(obj.url, _('Open'))
 
 
 @admin.register(StaticPageNav)
-class StaticPageNavAdmin(admin.ModelAdmin):
+class StaticPageNavAdmin(TranslationCompletionAdminMixin, StaticPageTranslationAdminBase):
     model = StaticPageNav
     save_on_top = True
-    inlines = [
-        UrlInline,
-    ]
+    list_display = ('category_name', 'translation_status', 'nav_element', 'use_category_url', 'url_link', 'link_count')
+    search_fields = ('category_name', 'url', 'staticurl__title', 'staticurl__url')
+    ordering = ('nav_element',)
+    inlines = [UrlInline]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(link_total=Count('staticurl', distinct=True))
+
+    @admin.display(description=_('Url'))
+    def url_link(self, obj):
+        if not obj.url:
+            return '-'
+        return safe_admin_url_link(obj.url)
+
+    @admin.display(description=_('Links'))
+    def link_count(self, obj):
+        return getattr(obj, 'link_total', obj.staticurl_set.count())
 
 
 @admin.register(StaticPage)
-class StaticPageAdmin(admin.ModelAdmin):
+class StaticPageAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, StaticPageTranslationAdminBase):
     model = StaticPage
-    list_display = ('title', 'slug', 'members_only')
+    formfield_overrides = {
+        **UNFOLD_FORMFIELD_OVERRIDES,
+        TextField: {'widget': CKEditor5Widget},
+    }
+    list_display = ('title', 'translation_status', 'slug', 'members_only', 'public_page_link', 'modified_time')
+    search_fields = ('title', 'slug')
+    list_filter = ('members_only',)
+    ordering = ('title',)
+    date_hierarchy = 'created_time'
+    prepopulated_fields = {'slug': ('title',)}
+
+    def get_prepopulated_fields(self, request, obj=None):
+        if obj is None:
+            return self.prepopulated_fields
+        return {}
+
+    @admin.display(description=_('Public page'))
+    def public_page_link(self, obj):
+        return format_html(
+            '<a href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
+            obj.get_absolute_url(),
+            _('Open'),
+        )
