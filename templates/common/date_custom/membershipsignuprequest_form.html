@@ -11,12 +11,11 @@
     <link rel="stylesheet" href="{% static 'members/style.css' %}">
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </head>
-<body>
     <div class="signup-page">
     <div class="members-form big">
-    <form id="signupForm" action="/date_custom/membership_signup_request/" method="post">
-        {% csrf_token %}
+    <form id="signupForm" action="{% url 'date_custom:membership_signup_request' %}" method="post">
             {% csrf_token %}
+            {{ form.non_field_errors }}
             {% for field in form %}
               <p>
                 {{ field.label_tag }}<br>
@@ -29,12 +28,12 @@
                 {% endfor %}
               </p>
             {% endfor %}
-            </p>
-            <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}" data-callback="javascriptCallback"></div>
+            <div class="cf-turnstile" data-sitekey="{{ CAPTCHA_SITE_KEY }}"></div>
         <input type="submit" value="Submit">
         <div id="error-message" class="error"></div>
+    {{ user_data|json_script:"membership-user-data" }}
     <script defer>
-        const contextData = JSON.parse('{{ user_data|safe }}');
+        const contextData = JSON.parse(document.getElementById('membership-user-data').textContent);
         Object.keys(contextData).forEach(key => {
             const field = document.querySelector(`[name="${key}"]`);
             if (field) {
@@ -46,5 +45,4 @@
     </form>
     </div>
     </div>
-</body>
 {% endblock %}

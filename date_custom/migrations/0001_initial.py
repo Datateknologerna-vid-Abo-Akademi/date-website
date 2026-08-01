@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
                 ('willing_to_work', models.BooleanField(verbose_name='Jag kan tänka mig att jobba för föreningen (styrelse, fester, annat)')),
                 ('newsletter_consent', models.BooleanField(verbose_name='Jag vill inte ha informationsbrev (eller e-mail) om föreningens verksamhet')),
                 ('personal_data_sharing_nonconsent', models.BooleanField(verbose_name='Mina personuppgifter får inte ges åt andra medlemmar utan mitt samtycke')),
-                ('membership_type', models.CharField(choices=[('ordinary', 'Ordinarie medlem'), ('supporting', 'Stödjande medlem')], verbose_name='Medlemstyp')),
+                ('membership_type', models.CharField(choices=[('ordinary', 'Ordinarie medlem'), ('supporting', 'Stödjande medlem'), ('exchange', 'Utbytesmedlem')], max_length=10, verbose_name='Medlemstyp')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('created_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],

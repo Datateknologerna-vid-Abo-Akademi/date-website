@@ -62,7 +62,8 @@ admin.site.register(MembershipType)
 class SubscriptionPaymentAdmin(admin.ModelAdmin):
     form = SubscriptionPaymentForm
     fields = SubscriptionPaymentForm.Meta.fields
-    search_fields = ("full_name",)
+    search_fields = ('member__first_name', 'member__last_name',
+                     'member__email')
     list_display = ('full_name', 'subscription', 'is_active', 'expires')
     list_filter = ('subscription', 'date_expires')
 
