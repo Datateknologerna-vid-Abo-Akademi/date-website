@@ -53,7 +53,9 @@ def get_selected_role(request, functionary_roles):
         else:
             try:
                 role_id = int(role_param)
-            except (ValueError, TypeError):
+            except ValueError:
+                pass
+            except TypeError:
                 pass
             else:
                 selected_role = FunctionaryRole.objects.filter(pk=role_id).first()
