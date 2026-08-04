@@ -68,6 +68,14 @@ spec:
                 --max-requests-jitter {{ .Values.web.gunicorn.maxRequestsJitter }} \
                 --bind=0.0.0.0:8000 \
                 core.wsgi
+          env:
+            {{- if .Values.django.alumniSettingsSecretName }}
+            - name: ALUMNI_SETTINGS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.django.alumniSettingsSecretName }}
+                  key: ALUMNI_SETTINGS
+            {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ include "date-website.fullname" . }}

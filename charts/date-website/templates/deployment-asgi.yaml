@@ -57,6 +57,14 @@ spec:
               set -e
               ./wait-for-postgres.sh "${DB_HOST}:${DB_PORT}"
               exec daphne -b 0.0.0.0 -p 8000 core.routing:application
+          env:
+            {{- if .Values.django.alumniSettingsSecretName }}
+            - name: ALUMNI_SETTINGS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.django.alumniSettingsSecretName }}
+                  key: ALUMNI_SETTINGS
+            {{- end }}
           envFrom:
             - configMapRef:
                 name: {{ include "date-website.fullname" . }}

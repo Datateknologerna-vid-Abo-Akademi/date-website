@@ -51,6 +51,7 @@ django:
   trustXForwardedProto: true
   extraStaffGroups: []
   alumniSettings: "{}"
+  alumniSettingsSecretName: ""
   turnstile:
     siteKey: ""
     secretKey: ""
