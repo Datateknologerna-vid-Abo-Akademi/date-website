@@ -36,6 +36,8 @@ data:
   DEFAULT_FROM_EMAIL: {{ .Values.email.defaultFrom | quote }}
   EMAIL_HOST: {{ .Values.email.host | quote }}
   CF_TURNSTILE_SITE_KEY: {{ .Values.django.turnstile.siteKey | quote }}
+  GITHUB_CLIENT_ID: {{ .Values.django.github.clientId | quote }}
+  GITHUB_MFA_POLICY: {{ .Values.django.github.mfaPolicy | quote }}
   {{- range $key, $value := .Values.extraEnv }}
   {{ $key }}: {{ $value | quote }}
   {{- end }}
