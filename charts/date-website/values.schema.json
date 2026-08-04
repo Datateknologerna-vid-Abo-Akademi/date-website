@@ -13,7 +13,8 @@
     "secret": {
       "type": "object",
       "properties": {
-        "existingSecret": { "type": "string" }
+        "existingSecret": { "type": "string" },
+        "extraEnv": { "type": "object", "additionalProperties": { "type": "string" } }
       }
     },
     "django": {
@@ -29,6 +30,21 @@
         "allowedOrigins": {
           "type": "array",
           "items": { "type": "string" }
+        },
+        "github": {
+          "type": "object",
+          "properties": {
+            "clientId": { "type": "string" },
+            "clientSecret": { "type": "string" },
+            "mfaPolicy": { "type": "string" }
+          }
+        },
+        "turnstile": {
+          "type": "object",
+          "properties": {
+            "siteKey": { "type": "string" },
+            "secretKey": { "type": "string" }
+          }
         }
       }
     },

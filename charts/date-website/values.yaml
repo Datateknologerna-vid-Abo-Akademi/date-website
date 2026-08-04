@@ -26,7 +26,16 @@ tolerations: []
 affinity: {}
 
 secret:
+  # Use a pre-created Secret (created out-of-band) instead of the generated
+  # one. Expected keys: SECRET_KEY, DB_PASSWORD, AWS_ACCESS_KEY_ID,
+  # AWS_SECRET_ACCESS_KEY, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD,
+  # CF_TURNSTILE_SECRET_KEY, GITHUB_CLIENT_SECRET (if django.github set),
+  # plus every key in secret.extraEnv.
   existingSecret: ""
+  # Extra secret-backed environment variables. When existingSecret is unset
+  # these are added to the generated Secret; when existingSecret is set they
+  # must be present as keys in that Secret. Keys must be valid env var names.
+  extraEnv: {}
 
 django:
   projectName: date
@@ -45,6 +54,13 @@ django:
   turnstile:
     siteKey: ""
     secretKey: ""
+  github:
+    # GitHub OAuth (used by the member login). clientSecret goes into the
+    # Secret (GITHUB_CLIENT_SECRET key); clientId and mfaPolicy into the
+    # ConfigMap.
+    clientId: ""
+    clientSecret: ""
+    mfaPolicy: "enrolled"
 
 database:
   name: postgres
