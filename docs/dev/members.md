@@ -30,6 +30,15 @@
 - Activation tokens use `members/tokens.py` (standard Django token generator) and base64-encoded user IDs.
 - Plain-text email bodies use `.txt` template names, including activation and password-reset messages. Django template tags work independently of the filename extension; `.txt` keeps these message bodies out of djlint, whose HTML reformatter can otherwise change meaningful indentation and blank lines. Use `.html` only for actual HTML email alternatives.
 
+## GDPR Commands
+
+`members/gdpr.py` holds the shared logic behind two management commands:
+
+- `manage.py gdpr_export <email>`: collect all personal data for an email (GDPR access request).
+- `manage.py gdpr_delete <email>`: anonymize/delete personal data (GDPR erasure), with `--dry-run` preview.
+
+The helpers resolve models through `apps.get_model`, so commands work across association variants even when some apps are not installed. Lookups are case-insensitive and match event attendees, alumni tokens, and harassment reports by their stored email, not just the member FK. See `docs/dev/operations.md` for the full erasure policy.
+
 ## Admin Customizations
 - `UserAdmin` inherits from `auth_admin.UserAdmin` but swaps in custom forms and ordering.
 - Actions `activate_user`/`deactivate_user` bulk-toggle `is_active`.
