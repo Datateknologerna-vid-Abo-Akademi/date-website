@@ -253,7 +253,7 @@ Collects all stored personal data for an email address and prints it as JSON (us
 python manage.py gdpr_export user@example.com -o export.json
 ```
 
-The export covers the member profile, subscription payments, event signups with preferences and avec relationships, authored events/news, functionary roles, CTF solves and guesses, poll votes, billing invoices, alumni tokens, and harassment reports.
+The export covers the member profile (including account metadata such as groups and last login), subscription payments, event signups with preferences and avec relationships, authored events/news, functionary roles, CTF solves and guesses, poll votes, billing invoices, alumni token creation dates, and harassment reports. Credentials (password hashes, 2FA secrets, raw alumni token values) are not included.
 
 ### `manage.py gdpr_delete <email>`
 
@@ -266,11 +266,14 @@ python manage.py gdpr_delete user@example.com
 
 Erasure policy:
 
-- The member row is kept but anonymized (username becomes `anonymized_<id>`, email/names/contact fields cleared, account deactivated, password unusable). It is not deleted because authored content, poll votes, and subscription records reference it.
+- The member row is kept but anonymized (username becomes `anonymized_<id>`, email/names/contact fields cleared, account deactivated, password unusable, groups and superuser status removed). It is not deleted because authored content, poll votes, and subscription records reference it.
 - Event attendee rows are kept but anonymized (name, email, and preferences cleared), since billing invoices cascade from them and are accounting records.
+- Functionary names are anonymized; the role/year history is kept.
 - CTF guesses, 2FA devices, and alumni tokens are deleted.
 - Harassment report emails are anonymized; the incident message is kept.
-- Poll votes, authored content, functionary history, and invoices are retained.
+- Poll votes, authored content, and invoices are retained.
+
+Note: the export intentionally excludes the raw alumni token value (a live credential), password hashes, and 2FA secrets. The export may contain sensitive content such as harassment reports; store it securely with restricted file permissions.
 
 ## Recommended Operator Checklist
 

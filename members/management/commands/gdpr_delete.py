@@ -27,6 +27,7 @@ class Command(BaseCommand):
         for label, key in (
             ("members", 'members'),
             ("event attendee rows", 'attendees'),
+            ("functionary names anonymized", 'functionaries_anonymized'),
             ("harassment reports (email)", 'harassment_anonymized'),
         ):
             self.stdout.write(f"  {label}: {summary[key]}")

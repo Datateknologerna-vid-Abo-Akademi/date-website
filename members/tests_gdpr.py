@@ -216,3 +216,99 @@ class GDPRDeleteTests(GDRPTestBase):
         attendee = EventAttendees.objects.get(event=event)
         self.assertEqual(attendee.user, 'Anonym')
         self.assertIsNone(attendee.email)
+
+    def test_delete_anonymizes_functionary_name(self):
+        from functionaries.models import Functionary, FunctionaryRole
+
+        role = FunctionaryRole.objects.create(title='Datör')
+        Functionary.objects.create(
+            member=self.member,
+            name='Test User',
+            functionary_role=role,
+            year=2026,
+        )
+
+        call_command('gdpr_delete', 'gdpr@example.com')
+        functionary = Functionary.objects.get(member=self.member)
+        self.assertEqual(functionary.name, 'Anonym')
+        self.assertEqual(functionary.year, 2026)
+
+    def test_dry_run_counts_guesses_and_devices(self):
+        from ctf.models import Ctf, Flag, Guess
+
+        ctf = Ctf.objects.create(title='GDPR CTF', slug='gdpr-ctf-dry', content='content')
+        flag = Flag.objects.create(ctf=ctf, title='flag1', flag='flag{1}', slug='flag-dry')
+        Guess.objects.create(ctf=ctf, user=self.member, flag=flag, guess='wrong')
+        TOTPDevice.objects.create(user=self.member, name='test', confirmed=True)
+
+        out = StringIO()
+        call_command('gdpr_delete', 'gdpr@example.com', dry_run=True, stdout=out)
+        output = out.getvalue()
+        self.assertIn('CTF guesses deleted: 1', output)
+        self.assertIn('2FA devices deleted: 1', output)
+        self.assertTrue(Guess.objects.filter(user=self.member).exists())
+        self.assertTrue(TOTPDevice.objects.filter(user=self.member).exists())
+
+    def test_export_does_not_include_alumni_token_value(self):
+        import uuid
+
+        from alumni.models import AlumniUpdateToken
+
+        AlumniUpdateToken.objects.create(
+            email='gdpr@example.com',
+            token=uuid.uuid4(),
+        )
+        data = collect_personal_data('gdpr@example.com')
+        self.assertEqual(len(data['alumni_tokens']), 1)
+        self.assertNotIn('token', data['alumni_tokens'][0])
+        self.assertIn('created_at', data['alumni_tokens'][0])
+
+    def test_delete_clears_groups_and_superuser(self):
+        from django.contrib.auth.models import Group
+
+        group = Group.objects.create(name='Styrelsen')
+        self.member.groups.add(group)
+        self.member.is_superuser = True
+        self.member.save()
+
+        call_command('gdpr_delete', 'gdpr@example.com')
+        self.member.refresh_from_db()
+        self.assertFalse(self.member.is_superuser)
+        self.assertEqual(list(self.member.groups.all()), [])
+
+    def test_anonymized_username_fits_limit_and_is_unique(self):
+        call_command('gdpr_delete', 'gdpr@example.com')
+        self.member.refresh_from_db()
+        self.assertLessEqual(len(self.member.username), 20)
+        self.assertNotEqual(self.member.username, 'gdpruser')
+        self.assertFalse(
+            Member.objects.filter(username=self.member.username).exclude(pk=self.member.pk).exists()
+        )
+
+    def test_delete_is_idempotent(self):
+        from events.models import Event, EventAttendees
+
+        event = Event.objects.create(
+            title='GDPR Event',
+            slug='gdpr-event-idem',
+            author=self.other_member,
+        )
+        EventAttendees.objects.create(
+            event=event,
+            user='Test User',
+            email='gdpr@example.com',
+        )
+
+        call_command('gdpr_delete', 'gdpr@example.com')
+        out = StringIO()
+        call_command('gdpr_delete', 'gdpr@example.com', stdout=out)
+        self.member.refresh_from_db()
+        self.assertIsNone(self.member.email)
+        self.assertIn('members: 0', out.getvalue())
+
+    def test_export_includes_account_metadata(self):
+        data = collect_personal_data('gdpr@example.com')
+        profile = data['members'][0]
+        self.assertIn('is_superuser', profile)
+        self.assertIn('last_login', profile)
+        self.assertIn('groups', profile)

@@ -63,6 +63,9 @@ def _member_summary(member) -> dict:
         'github_id': member.github_id,
         'membership_type': str(member.membership_type),
         'is_active': member.is_active,
+        'is_superuser': member.is_superuser,
+        'last_login': member.last_login.isoformat() if member.last_login else None,
+        'groups': [str(group) for group in member.groups.all()],
     }
 
 
@@ -184,7 +187,7 @@ def collect_personal_data(email: str) -> dict:
                 )
 
     for token in find_alumni_tokens_by_email(email):
-        data['alumni_tokens'].append({'created_at': token.created_at.isoformat(), 'token': str(token.token)})
+        data['alumni_tokens'].append({'created_at': token.created_at.isoformat()})
 
     for report in find_harassment_by_email(email):
         data['harassment_reports'].append({'email': report.email, 'message': report.message})
@@ -207,13 +210,23 @@ def anonymize_personal_data(email: str, dry_run: bool = True) -> dict:
     email = email.strip()
     summary = {'email': email, 'dry_run': dry_run, 'members': 0, 'attendees': 0,
                'guesses_deleted': 0, 'devices_deleted': 0, 'tokens_deleted': 0,
-               'harassment_anonymized': 0}
+               'harassment_anonymized': 0, 'functionaries_anonymized': 0}
 
     with transaction.atomic():
         for member in find_members_by_email(email):
             summary['members'] += 1
+
+            for device_model in ('otp_totp', 'otp_static'):
+                Device = _model(device_model, 'TOTPDevice') if device_model == 'otp_totp' else _model(device_model, 'StaticDevice')
+                if Device is not None:
+                    summary['devices_deleted'] += Device.objects.filter(user=member).count()
+
+            Guess = _model('ctf', 'Guess')
+            if Guess is not None:
+                summary['guesses_deleted'] += Guess.objects.filter(user=member).count()
+
             if not dry_run:
-                member.username = f"anonymized_{member.pk}"[:20]
+                member.username = _anonymized_username(member)
                 member.email = None
                 member.first_name = ''
                 member.last_name = ''
@@ -225,19 +238,26 @@ def anonymize_personal_data(email: str, dry_run: bool = True) -> dict:
                 member.year_of_admission = None
                 member.github_id = None
                 member.is_active = False
+                member.is_superuser = False
                 member.set_unusable_password()
+                member.groups.clear()
+                member.user_permissions.clear()
                 member.save()
 
                 for device_model in ('otp_totp', 'otp_static'):
                     Device = _model(device_model, 'TOTPDevice') if device_model == 'otp_totp' else _model(device_model, 'StaticDevice')
                     if Device is not None:
-                        deleted, _ = Device.objects.filter(user=member).delete()
-                        summary['devices_deleted'] += deleted
+                        Device.objects.filter(user=member).delete()
 
                 Guess = _model('ctf', 'Guess')
                 if Guess is not None:
-                    deleted, _ = Guess.objects.filter(user=member).delete()
-                    summary['guesses_deleted'] += deleted
+                    Guess.objects.filter(user=member).delete()
+
+            Functionary = _model('functionaries', 'Functionary')
+            if Functionary is not None:
+                summary['functionaries_anonymized'] += Functionary.objects.filter(member=member).count()
+                if not dry_run:
+                    Functionary.objects.filter(member=member).update(name='Anonym')
 
         for attendee in find_attendees_by_email(email):
             summary['attendees'] += 1
@@ -260,3 +280,16 @@ def anonymize_personal_data(email: str, dry_run: bool = True) -> dict:
                 report.save()
 
     return summary
+
+
+def _anonymized_username(member) -> str:
+    """Return a unique anonymized username that fits the 20-char limit."""
+    base = f"anonymized_{member.pk}"
+    if len(base) <= 20:
+        candidate = base
+    else:
+        candidate = f"anon_{member.pk}"[:20]
+    if not type(member).objects.filter(username=candidate).exclude(pk=member.pk).exists():
+        return candidate
+    suffix = hex(member.pk)[2:][-4:]
+    return f"anon_{suffix}"[:20]
