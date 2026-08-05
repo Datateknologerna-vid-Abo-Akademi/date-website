@@ -1,76 +1,57 @@
+
 image:
   repository: ghcr.io/datateknologerna-vid-abo-akademi/date-website
   tag: prod
   pullPolicy: IfNotPresent
-
 imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
-
+nameOverride: ''
+fullnameOverride: ''
 serviceAccount:
   create: true
   annotations: {}
-  name: ""
-
+  name: ''
 podAnnotations: {}
 podSecurityContext: {}
 securityContext:
   allowPrivilegeEscalation: false
   capabilities:
     drop:
-      - ALL
-  # Do not set runAsNonRoot until the application image defines a non-root USER.
-  # The current Dockerfile does not, and forcing it here would break startup.
+    - ALL
 nodeSelector: {}
 tolerations: []
 affinity: {}
-
 secret:
-  # Use a pre-created Secret (created out-of-band) instead of the generated
-  # one. Expected keys: SECRET_KEY, DB_PASSWORD, AWS_ACCESS_KEY_ID,
-  # AWS_SECRET_ACCESS_KEY, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD,
-  # CF_TURNSTILE_SECRET_KEY, GITHUB_CLIENT_SECRET (if django.github set),
-  # plus every key in secret.extraEnv.
-  existingSecret: ""
-  # Extra secret-backed environment variables. When existingSecret is unset
-  # these are added to the generated Secret; when existingSecret is set they
-  # must be present as keys in that Secret. Keys must be valid env var names.
+  existingSecret: ''
   extraEnv: {}
-
 django:
   projectName: date
-  secretKey: ""
+  secretKey: ''
   debug: false
   develop: false
   enableLanguageFeatures: false
   allowedHosts:
-    - datateknologerna.org
+  - datateknologerna.org
   allowedOrigins:
-    - https://datateknologerna.org
+  - https://datateknologerna.org
   useXForwardedHost: true
   trustXForwardedProto: true
   extraStaffGroups: []
-  alumniSettings: "{}"
-  alumniSettingsSecretName: ""
+  alumniSettings: '{}'
+  alumniSettingsSecretName: ''
   turnstile:
-    siteKey: ""
-    secretKey: ""
+    siteKey: ''
+    secretKey: ''
   github:
-    # GitHub OAuth (used by the member login). clientSecret goes into the
-    # Secret (GITHUB_CLIENT_SECRET key); clientId and mfaPolicy into the
-    # ConfigMap.
-    clientId: ""
-    clientSecret: ""
-    mfaPolicy: "enrolled"
-
+    clientId: ''
+    clientSecret: ''
+    mfaPolicy: enrolled
 database:
   name: postgres
   username: postgres
-  password: ""
+  password: ''
   external:
-    host: ""
+    host: ''
     port: 5432
-
 postgresql:
   enabled: true
   nodeSelector: {}
@@ -78,21 +59,18 @@ postgresql:
   affinity: {}
   image:
     repository: postgres
-    tag: "16-alpine"
+    tag: 16-alpine
     pullPolicy: IfNotPresent
   persistence:
     enabled: true
-    storageClass: ""
+    storageClass: ''
     accessModes:
-      - ReadWriteOnce
+    - ReadWriteOnce
     size: 8Gi
   resources: {}
-
 backups:
   enabled: false
-  schedule: "17 2 * * *"
-  # Only prunes the local /backups directory. Configure B2/object-storage
-  # lifecycle rules separately for remote backup retention.
+  schedule: 17 2 * * *
   retentionDays: 14
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
@@ -104,85 +82,77 @@ backups:
   affinity: {}
   image:
     repository: postgres
-    tag: "16-alpine"
+    tag: 16-alpine
     pullPolicy: IfNotPresent
   persistence:
     enabled: true
-    storageClass: ""
+    storageClass: ''
     accessModes:
-      - ReadWriteOnce
+    - ReadWriteOnce
     size: 8Gi
   objectStorage:
     enabled: false
-    endpointUrl: ""
-    regionName: ""
-    bucketName: ""
-    prefix: "date-website/postgresql"
-    accessKeyId: ""
-    secretAccessKey: ""
-    # Requires backups.securityContext.runAsUser=0 when using an Alpine image,
-    # because apk add --no-cache aws-cli needs package-install privileges.
+    endpointUrl: ''
+    regionName: ''
+    bucketName: ''
+    prefix: date-website/postgresql
+    accessKeyId: ''
+    secretAccessKey: ''
     installAwsCli: false
   securityContext:
     allowPrivilegeEscalation: false
     capabilities:
       drop:
-        - ALL
+      - ALL
     runAsUser: 999
     runAsGroup: 999
   podSecurityContext:
     fsGroup: 999
   resources: {}
-
 redis:
   enabled: true
-  externalUrl: ""
+  externalUrl: ''
   nodeSelector: {}
   tolerations: []
   affinity: {}
   image:
     repository: valkey/valkey
-    tag: "7.2-alpine"
+    tag: 7.2-alpine
     pullPolicy: IfNotPresent
   persistence:
     enabled: true
-    storageClass: ""
+    storageClass: ''
     accessModes:
-      - ReadWriteOnce
+    - ReadWriteOnce
     size: 1Gi
   resources: {}
-
 media:
   s3:
     enabled: false
-    endpointUrl: ""
-    regionName: ""
-    signatureVersion: "s3v4"
-    addressingStyle: "path"
-    accessKeyId: ""
-    secretAccessKey: ""
-    bucketName: ""
-    privateBucketName: ""
-    publicBucketName: ""
-    privateLocation: "date/media"
-    publicLocation: "date/public"
+    endpointUrl: ''
+    regionName: ''
+    signatureVersion: s3v4
+    addressingStyle: path
+    accessKeyId: ''
+    secretAccessKey: ''
+    bucketName: ''
+    privateBucketName: ''
+    publicBucketName: ''
+    privateLocation: date/media
+    publicLocation: date/public
   persistence:
     enabled: true
-    storageClass: ""
+    storageClass: ''
     accessModes:
-      - ReadWriteOnce
+    - ReadWriteOnce
     size: 5Gi
-
 email:
   hostReceiver: info@datateknologerna.org
   defaultFrom: admin@datateknologerna.org
   host: smtp.gmail.com
-  username: ""
-  password: ""
-
+  username: ''
+  password: ''
 web:
-  # Do not increase without disabling migrateOnStartup and using a migration Job
-  # or another single-run migration step.
   replicaCount: 1
   service:
     type: ClusterIP
@@ -194,7 +164,11 @@ web:
   migrateOnStartup: false
   collectstaticOnStartup: true
   resources: {}
-
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
 asgi:
   replicaCount: 1
   service:
@@ -202,21 +176,26 @@ asgi:
     port: 8000
   wsPath: /ws
   resources: {}
-
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
 celery:
   replicaCount: 1
   concurrency: 2
   logLevel: info
   livenessProbe:
-    # `celery inspect ping` imports the whole Django app on every invocation
-    # (~3s of user CPU measured on prod). 60s -> 300s keeps the probe cheap
-    # while still restarting a dead worker within ~15 min (3 x 300s).
     initialDelaySeconds: 60
     periodSeconds: 300
     timeoutSeconds: 10
     failureThreshold: 3
   resources: {}
-
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
 migrations:
   job:
     enabled: false
@@ -224,22 +203,20 @@ migrations:
     hookDeletePolicy: before-hook-creation,hook-succeeded
     backoffLimit: 3
     resources: {}
-
 ingress:
   enabled: true
   className: traefik
   annotations: {}
   hosts:
-    - host: datateknologerna.org
-      paths:
-        - path: /
-          pathType: Prefix
+  - host: datateknologerna.org
+    paths:
+    - path: /
+      pathType: Prefix
   tls: []
-
 gateway:
   enabled: false
   className: traefik
-  name: ""
+  name: ''
   annotations: {}
   http:
     enabled: true
@@ -247,8 +224,7 @@ gateway:
   https:
     enabled: false
     port: 443
-    secretName: ""
+    secretName: ''
   route:
     annotations: {}
-
 extraEnv: {}

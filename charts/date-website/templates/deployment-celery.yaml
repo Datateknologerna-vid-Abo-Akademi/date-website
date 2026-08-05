@@ -11,6 +11,15 @@ spec:
     matchLabels:
       {{- include "date-website.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: celery
+  # Zero-downtime rollouts: never take the old pod down until the new one
+  # is Ready. Default maxUnavailable 25% rounds up to 1 with a single
+  # replica -> the old pod dies while the new one is still migrating,
+  # causing a real outage window on every rollout (2026-08-05).
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   template:
     metadata:
       labels:
@@ -70,6 +79,17 @@ spec:
                 name: {{ include "date-website.fullname" . }}
             - secretRef:
                 name: {{ include "date-website.secretName" . }}
+          # startupProbe gates liveness during slow starts (worker boot +
+          # Django import can exceed the liveness initialDelay).
+          startupProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - celery -A core inspect ping -d "celery@${HOSTNAME}" | grep -q OK
+            failureThreshold: 30
+            periodSeconds: 2
+            timeoutSeconds: 10
           # Liveness via `celery inspect ping`: a real worker-response check,
           # but each invocation imports the whole Django app (~3s user CPU on
           # prod). Keep the cadence coarse (default 300s) — see values.yaml.
@@ -79,7 +99,7 @@ spec:
                 - /bin/bash
                 - -c
                 - celery -A core inspect ping -d "celery@${HOSTNAME}" | grep -q OK
-            initialDelaySeconds: {{ .Values.celery.livenessProbe.initialDelaySeconds }}
+            initialDelaySeconds: 10
             periodSeconds: {{ .Values.celery.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.celery.livenessProbe.timeoutSeconds }}
             failureThreshold: {{ .Values.celery.livenessProbe.failureThreshold }}
