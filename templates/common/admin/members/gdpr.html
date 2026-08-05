@@ -1,8 +1,6 @@
 {% extends "admin/base_site.html" %}
 {% load i18n %}
-{% block title %}
-  GDPR | {{ site_title|default:_("Django site admin") }}
-{% endblock %}
+{% block title %}GDPR | {{ site_title|default:_("Django site admin") }}{% endblock %}
 {% block content %}
   <div class="border border-base-200 rounded-default shadow-xs dark:border-base-800">
     <div class="p-4">
@@ -12,7 +10,9 @@
       </p>
     </div>
     <div class="border-base-200 border-t p-4 dark:border-base-800">
-      <form method="post" action="{% url 'admin:members_gdpr' %}" class="flex flex-col gap-3">
+      <form method="post"
+            action="{% url 'admin:members_gdpr' %}"
+            class="flex flex-col gap-3">
         {% csrf_token %}
         <label for="gdpr-email">{% trans "E-postadress" %}</label>
         <input id="gdpr-email"
