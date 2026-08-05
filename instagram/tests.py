@@ -48,7 +48,9 @@ class FetchInstagramPostsTests(TestCase):
     def test_uses_configured_profile_and_credentials(self):
         with patch("instagram.tasks.instaloader") as loader:
             loader.Profile.from_username.return_value = _mock_profile([])
-            with override_settings(INSTAGRAM_PROFILE="some_profile", INSTAGRAM_USERNAME="user", INSTAGRAM_PASSWORD="pass"):
+            with override_settings(
+                INSTAGRAM_PROFILE="some_profile", INSTAGRAM_USERNAME="user", INSTAGRAM_PASSWORD="pass"
+            ):
                 fetch_instagram_posts.run()
 
         instance = loader.Instaloader()
