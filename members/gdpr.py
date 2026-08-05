@@ -8,6 +8,8 @@ where other records (public content, invoices, poll results) depend on them.
 
 from __future__ import annotations
 
+from typing import Any
+
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -21,6 +23,17 @@ def _model(app_label, model_name):
         return None
 
 
+def _device_model(app_label):
+    """Return the 2FA device model for an otp plugin app label."""
+    model_name = 'TOTPDevice' if app_label == 'otp_totp' else 'StaticDevice'
+    return _model(app_label, model_name)
+
+
+def _empty_queryset() -> QuerySet:
+    """Return an empty queryset for the user model (all apps are optional)."""
+    return get_user_model().objects.none()
+
+
 def find_members_by_email(email: str) -> QuerySet:
     """Return members whose email matches, case-insensitively."""
     Member = get_user_model()
@@ -30,21 +43,21 @@ def find_members_by_email(email: str) -> QuerySet:
 def find_attendees_by_email(email: str) -> QuerySet:
     EventAttendees = _model('events', 'EventAttendees')
     if EventAttendees is None:
-        return []
+        return _empty_queryset()
     return EventAttendees.objects.filter(email__iexact=email.strip())
 
 
 def find_harassment_by_email(email: str) -> QuerySet:
     Harassment = _model('harassment', 'Harassment')
     if Harassment is None:
-        return []
+        return _empty_queryset()
     return Harassment.objects.filter(email__iexact=email.strip())
 
 
 def find_alumni_tokens_by_email(email: str) -> QuerySet:
     AlumniUpdateToken = _model('alumni', 'AlumniUpdateToken')
     if AlumniUpdateToken is None:
-        return []
+        return _empty_queryset()
     return AlumniUpdateToken.objects.filter(email__iexact=email.strip())
 
 
@@ -69,9 +82,9 @@ def _member_summary(member) -> dict:
     }
 
 
-def collect_personal_data(email: str) -> dict:
+def collect_personal_data(email: str) -> dict[str, Any]:
     """Collect all personal data held for an email address, as a dict."""
-    data = {
+    data: dict[str, Any] = {
         'query_email': email.strip(),
         'members': [],
         'subscription_payments': [],
@@ -105,9 +118,7 @@ def collect_personal_data(email: str) -> dict:
         Event = _model('events', 'Event')
         if Event is not None:
             for event in Event.objects.filter(author=member):
-                data['authored_events'].append(
-                    {'title': event.title, 'slug': event.slug, 'id': event.id}
-                )
+                data['authored_events'].append({'title': event.title, 'slug': event.slug, 'id': event.id})
 
         Post = _model('news', 'Post')
         if Post is not None:
@@ -208,16 +219,24 @@ def anonymize_personal_data(email: str, dry_run: bool = True) -> dict:
     - Poll votes, authored content, functionary history and invoices are kept.
     """
     email = email.strip()
-    summary = {'email': email, 'dry_run': dry_run, 'members': 0, 'attendees': 0,
-               'guesses_deleted': 0, 'devices_deleted': 0, 'tokens_deleted': 0,
-               'harassment_anonymized': 0, 'functionaries_anonymized': 0}
+    summary: dict[str, Any] = {
+        'email': email,
+        'dry_run': dry_run,
+        'members': 0,
+        'attendees': 0,
+        'guesses_deleted': 0,
+        'devices_deleted': 0,
+        'tokens_deleted': 0,
+        'harassment_anonymized': 0,
+        'functionaries_anonymized': 0,
+    }
 
     with transaction.atomic():
         for member in find_members_by_email(email):
             summary['members'] += 1
 
             for device_model in ('otp_totp', 'otp_static'):
-                Device = _model(device_model, 'TOTPDevice') if device_model == 'otp_totp' else _model(device_model, 'StaticDevice')
+                Device = _device_model(device_model)
                 if Device is not None:
                     summary['devices_deleted'] += Device.objects.filter(user=member).count()
 
@@ -245,7 +264,7 @@ def anonymize_personal_data(email: str, dry_run: bool = True) -> dict:
                 member.save()
 
                 for device_model in ('otp_totp', 'otp_static'):
-                    Device = _model(device_model, 'TOTPDevice') if device_model == 'otp_totp' else _model(device_model, 'StaticDevice')
+                    Device = _device_model(device_model)
                     if Device is not None:
                         Device.objects.filter(user=member).delete()
 
