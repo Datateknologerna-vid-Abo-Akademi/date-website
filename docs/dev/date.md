@@ -14,7 +14,7 @@
 - Keep variant-specific homepage behavior here rather than scattering date checks through templates.
 
 ## Calendar Data Structure
-- `format_calendar_events()` converts the event queryset into a `dict["YYYY-MM-DD"] = {...}` used by the front-end calendar widget. Each entry includes `link`, `modifier`, `eventFullDate`, and `eventTitle`.
+- `format_calendar_events()` converts the event queryset into a `dict["YYYY-MM-DD"] = [event, ...]` used by the front-end calendar widget. Each date maps to a list because several events can share a day; each event includes `link`, `eventFullDate`, and `eventTitle`. The calendar JS builds the popup HTML (and the `modifier`) itself.
 
 ## Language Handling
 - `set_language(request)` reads `POST["lang"]`, normalizes it through `date.language_utils.resolve_language()`, stores the choice in Django's language cookie, and redirects back to the referrer.
