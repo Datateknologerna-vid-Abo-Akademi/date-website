@@ -182,9 +182,22 @@ Read the corresponding `docs/dev/<app>.md` before changing app internals.
 
 ## Deployment Notes
 
-Compose production uses `docker-compose.prod.yml` and the GHCR image selected by `DATE_IMG_TAG`. Prefer immutable commit SHA or release tags for production rollouts. `qa`, `prod`, and `latest` are moving aliases managed by workflows.
+Production (the association sites) runs on Kubernetes with GitOps: Argo CD
+deploys the published Helm chart (`charts/date-website/`) + per-site values
+from a private operator repository. This repo only *publishes* images and
+the chart — deploys happen in the operator repository. Image/tag rules:
+`main` → `<sha>` + `qa`; SemVer tag or `promote_production` → `prod` /
+`latest`. Blue-green deploys with shared databases: additive (expand-contract)
+migrations are zero-downtime safe; destructive migrations must ship as two
+releases (expand, then contract). Full flow: `docs/dev/kubernetes.md`.
 
-Kubernetes deployment uses the Helm chart in `charts/date-website/`. Run one Helm release per association because each release needs its own `PROJECT_NAME`, settings, static/template paths, hostnames, media prefixes, database, and backup prefix.
+`docker-compose.prod.yml` remains the self-hosted / standalone option
+(compose + `DATE_IMG_TAG`; prefer immutable SHA or release tags — `qa`,
+`prod`, `latest` are moving aliases).
+
+Run one Helm release per association because each release needs its own
+`PROJECT_NAME`, settings, static/template paths, hostnames, media prefixes,
+database, and backup prefix.
 
 Shared monitoring is in `monitoring/` plus the `docker-compose.monitoring.yml` app overlay. Keep Prometheus/Grafana bound to localhost unless there is a trusted authenticated access path.
 
