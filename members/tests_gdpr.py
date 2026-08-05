@@ -91,6 +91,20 @@ class GDPRExportTests(GDRPTestBase):
         self.assertEqual(data['query_email'], 'gdpr@example.com')
         self.assertEqual(len(data['members']), 1)
 
+    def test_export_file_has_owner_only_permissions(self):
+        import os
+        import stat
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = os.path.join(tmpdir, 'export.json')
+            call_command('gdpr_export', 'gdpr@example.com', output=path)
+            mode = stat.S_IMODE(os.stat(path).st_mode)
+            self.assertEqual(mode, stat.S_IRUSR | stat.S_IWUSR)
+            with open(path, encoding='utf-8') as fh:
+                data = json.loads(fh.read())
+            self.assertEqual(len(data['members']), 1)
+
 
 class GDPRDeleteTests(GDRPTestBase):
     def test_dry_run_makes_no_changes(self):
