@@ -1,4 +1,5 @@
 from functools import reduce
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import admin
@@ -103,10 +104,16 @@ class UserAdmin(GDPRAdminMixin, _UserAdminBase):
         'is_active',
         'is_staff',
         'has_two_factor',
-        'gdpr_link',
     )
     list_filter = ('membership_type', 'year_of_admission', 'is_active', 'groups')
     autocomplete_fields = ('membership_type', 'groups')
+
+    def get_list_display(self, request):
+        display = list(super().get_list_display(request))
+        if request.user.is_superuser:
+            display.append('gdpr_link')
+        return display
+
     search_fields = (
         'username',
         'email',
@@ -140,10 +147,8 @@ class UserAdmin(GDPRAdminMixin, _UserAdminBase):
     def gdpr_link(self, obj):
         if not obj.email:
             return "-"
-        return format_html(
-            '<a class="button" href="{}">GDPR</a>',
-            reverse('admin:members_gdpr') + f"?email={obj.email}",
-        )
+        url = reverse('admin:members_gdpr') + '?' + urlencode({'email': obj.email})
+        return format_html('<a class="button" href="{}">GDPR</a>', url)
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)

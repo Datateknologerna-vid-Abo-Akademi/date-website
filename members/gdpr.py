@@ -97,7 +97,9 @@ def collect_personal_data(email: str) -> dict[str, Any]:
         'poll_votes': [],
         'billing_invoices': [],
         'alumni_tokens': [],
+        'alumni_recipient_lists': [],
         'harassment_reports': [],
+        'harassment_recipient_lists': [],
     }
 
     for member in find_members_by_email(email):
@@ -200,8 +202,18 @@ def collect_personal_data(email: str) -> dict[str, Any]:
     for token in find_alumni_tokens_by_email(email):
         data['alumni_tokens'].append({'created_at': token.created_at.isoformat()})
 
+    AlumniEmailRecipient = _model('alumni', 'AlumniEmailRecipient')
+    if AlumniEmailRecipient is not None:
+        for recipient in AlumniEmailRecipient.objects.filter(recipient_email__iexact=email):
+            data['alumni_recipient_lists'].append({'email': recipient.recipient_email})
+
     for report in find_harassment_by_email(email):
         data['harassment_reports'].append({'email': report.email, 'message': report.message})
+
+    HarassmentEmailRecipient = _model('harassment', 'HarassmentEmailRecipient')
+    if HarassmentEmailRecipient is not None:
+        for recipient in HarassmentEmailRecipient.objects.filter(recipient_email__iexact=email):
+            data['harassment_recipient_lists'].append({'email': recipient.recipient_email})
 
     return data
 
@@ -227,7 +239,9 @@ def anonymize_personal_data(email: str, dry_run: bool = True) -> dict:
         'guesses_deleted': 0,
         'devices_deleted': 0,
         'tokens_deleted': 0,
+        'alumni_recipients_removed': 0,
         'harassment_anonymized': 0,
+        'harassment_recipients_removed': 0,
         'functionaries_anonymized': 0,
     }
 
@@ -292,11 +306,27 @@ def anonymize_personal_data(email: str, dry_run: bool = True) -> dict:
             if not dry_run:
                 token.delete()
 
+        AlumniEmailRecipient = _model('alumni', 'AlumniEmailRecipient')
+        if AlumniEmailRecipient is not None:
+            summary['alumni_recipients_removed'] = AlumniEmailRecipient.objects.filter(
+                recipient_email__iexact=email
+            ).count()
+            if not dry_run:
+                AlumniEmailRecipient.objects.filter(recipient_email__iexact=email).delete()
+
         for report in find_harassment_by_email(email):
             summary['harassment_anonymized'] += 1
             if not dry_run:
                 report.email = None
                 report.save()
+
+        HarassmentEmailRecipient = _model('harassment', 'HarassmentEmailRecipient')
+        if HarassmentEmailRecipient is not None:
+            summary['harassment_recipients_removed'] = HarassmentEmailRecipient.objects.filter(
+                recipient_email__iexact=email
+            ).count()
+            if not dry_run:
+                HarassmentEmailRecipient.objects.filter(recipient_email__iexact=email).delete()
 
     return summary
 
