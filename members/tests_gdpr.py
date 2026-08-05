@@ -1,5 +1,4 @@
 import json
-import time
 from io import StringIO
 
 from django.core.management import call_command
@@ -163,7 +162,7 @@ class GDPRDeleteTests(GDRPTestBase):
         self.assertFalse(TOTPDevice.objects.filter(user=self.member).exists())
 
     def test_delete_keeps_votes_and_authored_content(self):
-        from news.models import Category, Post
+        from news.models import Post
         from polls.models import Choice, Question
 
         post = Post.objects.create(
@@ -295,9 +294,7 @@ class GDPRDeleteTests(GDRPTestBase):
         self.member.refresh_from_db()
         self.assertLessEqual(len(self.member.username), 20)
         self.assertNotEqual(self.member.username, 'gdpruser')
-        self.assertFalse(
-            Member.objects.filter(username=self.member.username).exclude(pk=self.member.pk).exists()
-        )
+        self.assertFalse(Member.objects.filter(username=self.member.username).exclude(pk=self.member.pk).exists())
 
     def test_delete_is_idempotent(self):
         from events.models import Event, EventAttendees
