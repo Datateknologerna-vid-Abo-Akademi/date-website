@@ -1,9 +1,12 @@
 import json
 from io import StringIO
 
+from django.contrib.auth.models import Group
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import Client, TestCase
+from django.urls import reverse
 from django.utils import timezone
+from django_otp import DEVICE_ID_SESSION_KEY
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from members.gdpr import collect_personal_data
@@ -323,3 +326,89 @@ class GDPRDeleteTests(GDRPTestBase):
         self.assertIn('is_superuser', profile)
         self.assertIn('last_login', profile)
         self.assertIn('groups', profile)
+
+
+class GDPRAdminViewTests(GDRPTestBase):
+    def setUp(self):
+        self.client = Client()
+        self.superuser = Member.objects.create_superuser(
+            username='gdpr-admin',
+            email='gdpr-admin@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+        )
+        self.device = TOTPDevice.objects.create(user=self.superuser, confirmed=True, name='default')
+        self.client.force_login(self.superuser, backend='members.backends.AuthBackend')
+        session = self.client.session
+        session[DEVICE_ID_SESSION_KEY] = self.device.persistent_id
+        session.save()
+
+    def _login(self, user):
+        device = TOTPDevice.objects.create(user=user, confirmed=True, name='default')
+        self.client.force_login(user, backend='members.backends.AuthBackend')
+        session = self.client.session
+        session[DEVICE_ID_SESSION_KEY] = device.persistent_id
+        session.save()
+        return device
+
+    def _staff_user(self, username):
+        group, _ = Group.objects.get_or_create(name='styrelse')
+        user = Member.objects.create_user(
+            username=username,
+            email=f'{username}@example.com',
+            membership_type=self.membership_type,
+        )
+        user.groups.add(group)
+        return user
+
+    def test_gdpr_view_requires_superuser(self):
+        staff = self._staff_user('gdpr-staff')
+        self._login(staff)
+        response = self.client.get(reverse('admin:members_gdpr'))
+        self.assertEqual(response.status_code, 403)
+
+    def test_gdpr_view_shows_dry_run(self):
+        response = self.client.post(
+            reverse('admin:members_gdpr'),
+            {'email': 'gdpr@example.com', 'action': 'preview'},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['dry_run_summary']['members'], 1)
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.email, 'gdpr@example.com')
+
+    def test_gdpr_view_erase_requires_confirmation(self):
+        response = self.client.post(
+            reverse('admin:members_gdpr'),
+            {'email': 'gdpr@example.com', 'action': 'erase'},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['confirm_erase'])
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.email, 'gdpr@example.com')
+
+    def test_gdpr_view_erase_applies_after_confirmation(self):
+        response = self.client.post(
+            reverse('admin:members_gdpr'),
+            {'email': 'gdpr@example.com', 'action': 'erase', 'confirm': '1'},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.member.refresh_from_db()
+        self.assertIsNone(self.member.email)
+        self.assertFalse(self.member.is_active)
+
+    def test_gdpr_export_download(self):
+        response = self.client.get(reverse('admin:members_gdpr_export'), {'email': 'gdpr@example.com'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertIn('attachment', response['Content-Disposition'])
+        data = json.loads(response.content)
+        self.assertEqual(len(data['members']), 1)
+        self.assertEqual(data['members'][0]['email'], 'gdpr@example.com')
+
+    def test_gdpr_export_requires_superuser(self):
+        self.client.logout()
+        staff = self._staff_user('gdpr-staff2')
+        self._login(staff)
+        response = self.client.get(reverse('admin:members_gdpr_export'), {'email': 'gdpr@example.com'})
+        self.assertEqual(response.status_code, 403)

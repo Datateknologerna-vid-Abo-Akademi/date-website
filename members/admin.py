@@ -8,6 +8,8 @@ from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Group, Permission
 from django.db.models import CharField, Exists, F, OuterRef, Q, Value
 from django.db.models.functions import Lower, Replace
+from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.text import smart_split, unescape_string_literal
 from django.utils.translation import gettext_lazy as _
 from django_otp.plugins.otp_static.models import StaticDevice
@@ -16,6 +18,7 @@ from django_otp_webauthn.models import WebAuthnCredential
 
 from core.admin_base import CompactTabularInline, ModelAdmin
 from members.forms import AdminMemberUpdateForm, MemberCreationForm, SubscriptionPaymentForm
+from members.gdpr_admin import GDPRAdminMixin
 from members.models import Member, MembershipType, Subscription, SubscriptionPayment
 
 logger = logging.getLogger('date')
@@ -98,7 +101,7 @@ else:
 
 
 @admin.register(Member)
-class UserAdmin(_UserAdminBase):
+class UserAdmin(GDPRAdminMixin, _UserAdminBase):
     form = AdminMemberUpdateForm
     add_form = MemberCreationForm
 
@@ -125,6 +128,7 @@ class UserAdmin(_UserAdminBase):
         'is_active',
         'is_staff',
         'has_two_factor',
+        'gdpr_link',
     )
     list_filter = ('membership_type', 'year_of_admission', 'is_active', 'groups')
     autocomplete_fields = ('membership_type', 'groups')
@@ -158,6 +162,15 @@ class UserAdmin(_UserAdminBase):
         if annotated is None:
             return obj.is_staff
         return obj.is_superuser or annotated
+
+    @admin.display(description=_("GDPR"))
+    def gdpr_link(self, obj):
+        if not obj.email:
+            return "-"
+        return format_html(
+            '<a class="button" href="{}">GDPR</a>',
+            reverse('admin:members_gdpr') + f"?email={obj.email}",
+        )
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
