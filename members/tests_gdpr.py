@@ -1,7 +1,7 @@
 import json
 from io import StringIO
 
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.core.management import call_command
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -9,7 +9,7 @@ from django.utils import timezone
 from django_otp import DEVICE_ID_SESSION_KEY
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
-from members.gdpr import collect_personal_data
+from members.gdpr import anonymize_personal_data, collect_personal_data
 from members.models import ORDINARY_MEMBER, Member, MembershipType
 
 
@@ -280,8 +280,6 @@ class GDPRDeleteTests(GDRPTestBase):
         self.assertIn('created_at', data['alumni_tokens'][0])
 
     def test_delete_clears_groups_and_superuser(self):
-        from django.contrib.auth.models import Group
-
         group = Group.objects.create(name='Styrelsen')
         self.member.groups.add(group)
         self.member.is_superuser = True
@@ -359,6 +357,7 @@ class GDPRAdminViewTests(GDRPTestBase):
             membership_type=self.membership_type,
         )
         user.groups.add(group)
+        user.user_permissions.add(*Permission.objects.filter(content_type__app_label='members', codename='view_member'))
         return user
 
     def test_gdpr_view_requires_superuser(self):
@@ -374,20 +373,40 @@ class GDPRAdminViewTests(GDRPTestBase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['dry_run_summary']['members'], 1)
+        self.assertTrue(response.context['confirm_erase'])
         self.member.refresh_from_db()
         self.assertEqual(self.member.email, 'gdpr@example.com')
 
-    def test_gdpr_view_erase_requires_confirmation(self):
+    def test_gdpr_view_erase_requires_prior_preview(self):
         response = self.client.post(
             reverse('admin:members_gdpr'),
-            {'email': 'gdpr@example.com', 'action': 'erase'},
+            {'email': 'gdpr@example.com', 'action': 'erase', 'confirm': '1'},
         )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['confirm_erase'])
         self.member.refresh_from_db()
         self.assertEqual(self.member.email, 'gdpr@example.com')
 
-    def test_gdpr_view_erase_applies_after_confirmation(self):
+    def test_gdpr_view_erase_rejects_preview_of_other_email(self):
+        self.client.post(
+            reverse('admin:members_gdpr'),
+            {'email': 'gdpr@example.com', 'action': 'preview'},
+        )
+        response = self.client.post(
+            reverse('admin:members_gdpr'),
+            {'email': 'other@example.com', 'action': 'erase', 'confirm': '1'},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.member.refresh_from_db()
+        self.assertEqual(self.member.email, 'gdpr@example.com')
+        self.other_member.refresh_from_db()
+        self.assertEqual(self.other_member.email, 'other@example.com')
+
+    def test_gdpr_view_erase_applies_after_preview_and_confirmation(self):
+        self.client.post(
+            reverse('admin:members_gdpr'),
+            {'email': 'gdpr@example.com', 'action': 'preview'},
+        )
         response = self.client.post(
             reverse('admin:members_gdpr'),
             {'email': 'gdpr@example.com', 'action': 'erase', 'confirm': '1'},
@@ -402,6 +421,7 @@ class GDPRAdminViewTests(GDRPTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response['Content-Type'], 'application/json')
         self.assertIn('attachment', response['Content-Disposition'])
+        self.assertEqual(response['Content-Disposition'], 'attachment; filename="gdpr-export.json"')
         data = json.loads(response.content)
         self.assertEqual(len(data['members']), 1)
         self.assertEqual(data['members'][0]['email'], 'gdpr@example.com')
@@ -412,3 +432,38 @@ class GDPRAdminViewTests(GDRPTestBase):
         self._login(staff)
         response = self.client.get(reverse('admin:members_gdpr_export'), {'email': 'gdpr@example.com'})
         self.assertEqual(response.status_code, 403)
+
+    def test_gdpr_link_only_for_superusers(self):
+        self.member.refresh_from_db()
+        gdpr_url = reverse('admin:members_gdpr')
+        response = self.client.get(reverse('admin:members_member_changelist'))
+        self.assertContains(response, gdpr_url)
+        self.client.logout()
+        staff = self._staff_user('gdpr-staff3')
+        self._login(staff)
+        response = self.client.get(reverse('admin:members_member_changelist'))
+        self.assertNotContains(response, gdpr_url)
+
+    def test_export_includes_recipient_lists(self):
+        from alumni.models import AlumniEmailRecipient
+        from harassment.models import HarassmentEmailRecipient
+
+        AlumniEmailRecipient.objects.create(recipient_email='gdpr@example.com')
+        HarassmentEmailRecipient.objects.create(recipient_email='gdpr@example.com')
+
+        data = collect_personal_data('gdpr@example.com')
+        self.assertEqual(len(data['alumni_recipient_lists']), 1)
+        self.assertEqual(len(data['harassment_recipient_lists']), 1)
+
+    def test_delete_removes_from_recipient_lists(self):
+        from alumni.models import AlumniEmailRecipient
+        from harassment.models import HarassmentEmailRecipient
+
+        AlumniEmailRecipient.objects.create(recipient_email='gdpr@example.com')
+        HarassmentEmailRecipient.objects.create(recipient_email='gdpr@example.com')
+
+        summary = anonymize_personal_data('gdpr@example.com', dry_run=False)
+        self.assertEqual(summary['alumni_recipients_removed'], 1)
+        self.assertEqual(summary['harassment_recipients_removed'], 1)
+        self.assertFalse(AlumniEmailRecipient.objects.filter(recipient_email='gdpr@example.com').exists())
+        self.assertFalse(HarassmentEmailRecipient.objects.filter(recipient_email='gdpr@example.com').exists())

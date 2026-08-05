@@ -1,6 +1,8 @@
 {% extends "admin/base_site.html" %}
 {% load i18n %}
-{% block title %}GDPR | {{ site_title|default:_("Django site admin") }}{% endblock %}
+{% block title %}
+  GDPR | {{ site_title|default:_("Django site admin") }}
+{% endblock %}
 {% block content %}
   <div class="border border-base-200 rounded-default shadow-xs dark:border-base-800">
     <div class="p-4">
@@ -10,18 +12,7 @@
       </p>
     </div>
     <div class="border-base-200 border-t p-4 dark:border-base-800">
-      <form method="get"
-            action="{% url 'admin:members_gdpr_export' %}"
-            class="mb-4 flex flex-col gap-3 md:flex-row md:items-center">
-        <input type="hidden" name="email" value="{{ email }}" />
-        <button type="submit"
-                class="border border-base-200 flex font-medium items-center justify-center px-3 py-2 rounded-default text-sm text-font-default-light transition hover:bg-base-50 dark:border-base-700 dark:text-font-default-dark dark:hover:bg-base-800">
-          {% trans "Exportera data (JSON)" %}
-        </button>
-      </form>
-      <form method="post"
-            action="{% url 'admin:members_gdpr' %}"
-            class="flex flex-col gap-3">
+      <form method="post" action="{% url 'admin:members_gdpr' %}" class="flex flex-col gap-3">
         {% csrf_token %}
         <label for="gdpr-email">{% trans "E-postadress" %}</label>
         <input id="gdpr-email"
@@ -31,6 +22,12 @@
                class="border border-base-200 rounded-default px-3 py-2 text-sm dark:border-base-700 dark:bg-base-900"
                required />
         <div class="flex flex-col gap-3 md:flex-row md:items-center">
+          <button type="submit"
+                  name="action"
+                  value="export"
+                  class="border border-base-200 flex font-medium items-center justify-center px-3 py-2 rounded-default text-sm text-font-default-light transition hover:bg-base-50 dark:border-base-700 dark:text-font-default-dark dark:hover:bg-base-800">
+            {% trans "Exportera data (JSON)" %}
+          </button>
           <button type="submit"
                   name="action"
                   value="preview"
@@ -88,7 +85,7 @@
         </table>
         {% if not confirm_erase %}
           <p class="mt-2 text-sm text-font-subtle-light dark:text-font-subtle-dark">
-            {% trans "Det här är en förhandsgranskning. Inget har ändrats. Tryck på Förhandsgranska igen och sedan på den röda knappen för att bekräfta raderingen." %}
+            {% trans "Det här är en förhandsgranskning. Inget har ändrats. Bekräfta raderingen genom att trycka på den röda knappen." %}
           </p>
         {% endif %}
       </div>
