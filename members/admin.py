@@ -6,6 +6,8 @@ from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Permission
 from django.db.models import CharField, Exists, F, OuterRef, Q, Value
 from django.db.models.functions import Lower, Replace
+from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
@@ -17,6 +19,7 @@ from members.forms import (
     SubscriptionPaymentChoiceField,
     SubscriptionPaymentForm,
 )
+from members.gdpr_admin import GDPRAdminMixin
 from members.models import Member, MembershipType, Subscription, SubscriptionPayment
 
 
@@ -84,7 +87,7 @@ else:
 
 
 @admin.register(Member)
-class UserAdmin(_UserAdminBase):
+class UserAdmin(GDPRAdminMixin, _UserAdminBase):
     fieldsets = ((None, {'fields': AdminMemberUpdateForm.Meta.fields}),)
     add_fieldsets = ((None, {'fields': MemberCreationForm.Meta.fields}),)
 
@@ -100,6 +103,7 @@ class UserAdmin(_UserAdminBase):
         'is_active',
         'is_staff',
         'has_two_factor',
+        'gdpr_link',
     )
     list_filter = ('membership_type', 'year_of_admission', 'is_active', 'groups')
     autocomplete_fields = ('membership_type', 'groups')
@@ -131,6 +135,15 @@ class UserAdmin(_UserAdminBase):
     @admin.display(boolean=True)
     def is_staff(self, obj):
         return obj.is_staff
+
+    @admin.display(description=_("GDPR"))
+    def gdpr_link(self, obj):
+        if not obj.email:
+            return "-"
+        return format_html(
+            '<a class="button" href="{}">GDPR</a>',
+            reverse('admin:members_gdpr') + f"?email={obj.email}",
+        )
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)

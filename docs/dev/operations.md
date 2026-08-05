@@ -243,7 +243,7 @@ The command matches pages and posts by slug. Existing rows are skipped unless `-
 
 ## GDPR Requests
 
-Two management commands support GDPR access and erasure requests. Both resolve a person by email address, case-insensitively, including people who only signed up for events without a member account.
+Two management commands support GDPR access and erasure requests, and the same logic is exposed to superusers through the member admin (`/admin/members/member/gdpr/`, see `docs/admin/members.md`). Both resolve a person by email address, case-insensitively, including people who only signed up for events without a member account.
 
 ### `manage.py gdpr_export <email>`
 
