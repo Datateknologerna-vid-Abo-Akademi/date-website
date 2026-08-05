@@ -6,21 +6,12 @@ body:
   - type: markdown
     attributes:
       value: |
-        Use this when the current behavior mostly works, but something should be cleaned up, clarified, modernized, or made less fragile.
-  - type: dropdown
-    id: kind
+        Use this when something mostly works but should be cleaned up or improved.
+  - type: textarea
+    id: desired
     attributes:
-      label: Change type
-      options:
-        - Code cleanup
-        - UI polish
-        - Copy or content correction
-        - Documentation correction
-        - Dependency or tooling update
-        - Test coverage
-        - Performance
-        - Accessibility
-        - Other
+      label: What should change?
+      description: Describe the correction or cleanup you want.
     validations:
       required: true
   - type: textarea
@@ -29,33 +20,12 @@ body:
       label: Current state
       description: What exists now, and why is it worth improving?
     validations:
-      required: true
-  - type: textarea
-    id: desired
-    attributes:
-      label: Desired state
-      description: Describe the exact correction or cleanup you want.
-    validations:
-      required: true
-  - type: textarea
-    id: scope
-    attributes:
-      label: Scope boundaries
-      description: Note files, apps, pages, or behavior that should be included or left untouched.
-      placeholder: |
-        In scope:
-        Out of scope:
-    validations:
       required: false
   - type: textarea
     id: verification
     attributes:
       label: Verification
-      description: How should someone confirm this fix is complete?
-      placeholder: |
-        - Run ...
-        - Visit ...
-        - Confirm ...
+      description: How should someone confirm the change is complete?
     validations:
       required: false
   - type: checkboxes
@@ -64,6 +34,6 @@ body:
       label: Pre-submit checks
       options:
         - label: This is not a reproducible bug report or a larger feature request.
-          required: true
+          required: false
         - label: I searched existing issues and did not find a duplicate.
-          required: true
+          required: false
