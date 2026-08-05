@@ -25,42 +25,46 @@
         }
     };
 
-    Object.entries(events_json).forEach((o)=>{
-        const tempDate = new Date(o[1].eventFullDate);
-        let hours = tempDate.getHours();
-        let minutes = tempDate.getMinutes();
-        // Ensure hours and minutes are displayed with two digits
-        hours = hours < 10 ? '0' + hours : hours;
-        minutes = minutes < 10 ? '0' + minutes : minutes;
-        const rawUrl = (o[1].link || '').trim();
-        
-        const link = document.createElement('a');
-        link.className = "calendar-eventday-popup";
-        
-        if (isValidInternalUrl(rawUrl)) {
-            try {
-                const urlObj = new URL(rawUrl, window.location.origin);
-                if (urlObj.origin === window.location.origin) {
-                    link.href = urlObj.href;
-                } else {
+    Object.entries(events_json).forEach(([dateKey, dayEvents])=>{
+        const links = dayEvents.map((event) => {
+            const tempDate = new Date(event.eventFullDate);
+            let hours = tempDate.getHours();
+            let minutes = tempDate.getMinutes();
+            // Ensure hours and minutes are displayed with two digits
+            hours = hours < 10 ? '0' + hours : hours;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            const rawUrl = (event.link || '').trim();
+
+            const link = document.createElement('a');
+            link.className = "calendar-eventday-popup";
+
+            if (isValidInternalUrl(rawUrl)) {
+                try {
+                    const urlObj = new URL(rawUrl, window.location.origin);
+                    if (urlObj.origin === window.location.origin) {
+                        link.href = urlObj.href;
+                    } else {
+                        link.href = '#';
+                    }
+                } catch (e) {
                     link.href = '#';
                 }
-            } catch (e) {
+            } else {
                 link.href = '#';
             }
-        } else {
-            link.href = '#';
-        }
 
-        const timeText = document.createTextNode(`${hours}:${minutes}`);
-        const br = document.createElement('br');
-        const titleText = document.createTextNode(o[1].eventTitle);
-        
-        link.appendChild(timeText);
-        link.appendChild(br);
-        link.appendChild(titleText);
+            link.appendChild(document.createTextNode(`${hours}:${minutes}`));
+            link.appendChild(document.createElement('br'));
+            link.appendChild(document.createTextNode(event.eventTitle));
 
-        o[1].html = link.outerHTML;
+            return link.outerHTML;
+        });
+
+        events_json[dateKey] = {
+            modifier: "calendar-eventday",
+            html: links.join(''),
+            events: dayEvents,
+        };
     });
 
     // Select all elements with class 'calendar' and initialize VanillaCalendar on each
@@ -68,8 +72,9 @@
         const calendarPopups = new VanillaCalendar(calendarElement, {
             actions: {
                 clickDay(event, date) {
-                    if(events_json[date[0]] !== undefined) {
-                        const rawUrl = (events_json[date[0]].link || '').trim();
+                    const day = events_json[date[0]];
+                    if (day !== undefined && day.events.length === 1) {
+                        const rawUrl = (day.events[0].link || '').trim();
                         if (isValidInternalUrl(rawUrl)) {
                             try {
                                 const safeUrl = new URL(rawUrl, window.location.origin);
