@@ -152,9 +152,33 @@ The `docs/` directory contains both developer notes (`docs/dev/*.md`) and conten
 Use [docs/index.md](docs/index.md) as the landing page for the published documentation site. Update it when you add a new app guide or rename an existing one.
 For translation architecture and workflow, see [docs/dev/translations.md](docs/dev/translations.md).
 
-## Deployment (`docker-compose.prod.yml`)
+## Deployment
 
-The production stack relies on the published container image at `ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}` plus managed PostgreSQL/Valkey volumes. Typical flow:
+### Production: Kubernetes + GitOps
+
+The association's production sites (date, kk, biocum, pulterit, sf, qa)
+run on a Kubernetes cluster managed with **GitOps**: Argo CD watches a
+private operator repository and deploys the published Helm chart + per-site
+values. You do not deploy to production from this repository — you publish
+an image and promote it:
+
+1. Push to `main` → CI builds `ghcr.io/.../date-website:<sha>` and `:qa`.
+2. Test the image as `qa`.
+3. Cut a SemVer tag (`vX.Y.Z`) or run the `promote_production` workflow →
+   the image becomes `:prod` / `:latest`.
+4. The operator repository pins that tag for the sites being updated; Argo CD
+   rolls them out (blue-green, zero-downtime).
+
+See [`docs/dev/kubernetes.md`](docs/dev/kubernetes.md) for the full
+deployment flow, image/tag rules, and the database-migration rules that
+apply to blue-green deploys. Cluster access details are intentionally not in
+this repository — they live in the private operator repository.
+
+### Self-hosted: `docker-compose.prod.yml`
+
+The compose stack is retained as the self-hosted / standalone deployment
+option (e.g. a single VPS not on the cluster). It relies on the published
+container image at `ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}` plus managed PostgreSQL/Valkey volumes. Typical flow:
 
 1. Copy `.env.prod.example` to `.env` on the deployment host and replace every placeholder.
 2. Ensure the external Docker network referenced by the compose file exists once:
