@@ -209,7 +209,7 @@
       "properties": {
         "replicaCount": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 0
         }
       }
     },
@@ -218,7 +218,7 @@
       "properties": {
         "replicaCount": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 0
         },
         "wsPath": {
           "type": "string",
@@ -231,7 +231,7 @@
       "properties": {
         "replicaCount": {
           "type": "integer",
-          "minimum": 1
+          "minimum": 0
         },
         "concurrency": {
           "type": "integer",
