@@ -174,20 +174,23 @@ deployment flow, image/tag rules, and the database-migration rules that
 apply to blue-green deploys. Cluster access details are intentionally not in
 this repository — they live in the private operator repository.
 
-### Self-hosted: `docker-compose.prod.yml`
+### Production-shape preview: `docker-compose.prod.yml`
 
-The compose stack is retained as the self-hosted / standalone deployment
-option (e.g. a single VPS not on the cluster). It relies on the published
-container image at `ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}` plus managed PostgreSQL/Valkey volumes. Typical flow:
+Production itself runs on Kubernetes (see below) — this compose stack is kept
+as a local *production-shape preview*: it runs the published container image
+(`ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}`)
+with the same service split (`web` Gunicorn, `asgi` Daphne/Channels,
+`celery` + `celery-beat`, `db`, `redis`, `nginx`), so you can smoke-test the
+prod-shaped stack and image before deploying. Typical flow:
 
-1. Copy `.env.prod.example` to `.env` on the deployment host and replace every placeholder.
+1. Copy `.env.prod.example` to `.env` (or keep `.env` and set `COMPOSE_FILE=docker-compose.prod.yml`) and replace every placeholder.
 2. Ensure the external Docker network referenced by the compose file exists once:
    ```bash
    docker network create web
    ```
-3. Deploy: `docker compose up -d` or run `source env.sh` once and use `date up -d`.
+3. Run `source env.sh` and use `date up -d`, or `docker compose up -d`.
 
-When `.env.prod.example` changes, update an existing production `.env` without losing real secrets:
+When `.env.prod.example` changes, update an existing `.env` without losing real secrets:
 
 ```bash
 ./scripts/sync_env_from_template.sh .env.prod.example .env
@@ -197,7 +200,7 @@ The script rewrites `.env` using the example file's comments and ordering, keeps
 
 For development checkouts, use `date-sync-dev-env` to sync `.env` from `.env.example` with the same preserve-existing-values behavior. This helper refuses to run when the current `.env` looks like production; use `date-sync-prod-env` there instead.
 
-The stack brings up the `web` (Gunicorn), `asgi` (Daphne/Channels), `celery`, `db`, `redis`, and `nginx` services. Rolling deploys usually build a new GHCR image in CI, update `DATE_IMG_TAG`, then restart `web`, `asgi`, and `celery`.
+The stack brings up `web` (Gunicorn), `asgi` (Daphne/Channels), `celery` + `celery-beat`, `db`, `redis`, and `nginx`. For local previews, build a new GHCR image in CI and set `DATE_IMG_TAG` to the commit SHA or release tag, then restart `web`, `asgi`, and `celery`.
 
 ### Shared Compose monitoring
 
@@ -214,7 +217,7 @@ cd monitoring
 docker compose up -d
 ```
 
-Then enable app-level exporters for each production stack by adding the overlay to that stack's `.env`:
+Then enable app-level exporters for a Compose stack by adding the overlay to that stack's `.env`:
 
 ```bash
 COMPOSE_FILE="docker-compose.prod.yml:docker-compose.monitoring.yml"

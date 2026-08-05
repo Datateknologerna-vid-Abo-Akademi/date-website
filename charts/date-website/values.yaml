@@ -196,6 +196,15 @@ celery:
     rollingUpdate:
       maxUnavailable: 0
       maxSurge: 1
+celeryBeat:
+  replicaCount: 1
+  logLevel: info
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 300
+    timeoutSeconds: 10
+    failureThreshold: 3
+  resources: {}
 migrations:
   job:
     enabled: false

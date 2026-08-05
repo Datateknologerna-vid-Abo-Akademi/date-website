@@ -15,6 +15,7 @@ import json
 import os
 
 import environ
+from celery.schedules import crontab
 from django.templatetags.static import static
 from django.utils.translation import gettext_lazy as _
 
@@ -218,6 +219,17 @@ REDIS_SERVER = env("REDIS_SERVER", str, "redis://redis:6379")
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", str, "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", str, CELERY_BROKER_URL)
 
+CELERY_BEAT_SCHEDULE = {
+    'fetch-instagram-posts-daily': {
+        'task': 'instagram.tasks.fetch_instagram_posts',
+        'schedule': crontab(hour=0, minute=5),
+    },
+}
+
+INSTAGRAM_PROFILE = env("INSTAGRAM_PROFILE", str, "kemistklubben")
+INSTAGRAM_USERNAME = env("INSTAGRAM_USERNAME", str, "")
+INSTAGRAM_PASSWORD = env("INSTAGRAM_PASSWORD", str, "")
+
 
 CHANNEL_LAYERS = {
     'default': {
@@ -327,6 +339,8 @@ TIME_ZONE = 'Europe/Helsinki'
 USE_I18N = True
 
 USE_TZ = True
+
+CELERY_TIMEZONE = TIME_ZONE
 
 DECIMAL_INPUT_FORMATS = ()
 
