@@ -11,6 +11,15 @@ spec:
     matchLabels:
       {{- include "date-website.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: asgi
+  # Zero-downtime rollouts: never take the old pod down until the new one
+  # is Ready. Default maxUnavailable 25% rounds up to 1 with a single
+  # replica -> the old pod dies while the new one is still migrating,
+  # causing a real outage window on every rollout (2026-08-05).
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   template:
     metadata:
       labels:
@@ -74,6 +83,16 @@ spec:
             - name: http
               containerPort: 8000
               protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /healthz/
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: {{ include "date-website.probeHost" . | quote }}
+            failureThreshold: 30
+            periodSeconds: 2
+            timeoutSeconds: 5
           livenessProbe:
             httpGet:
               path: /healthz/
@@ -81,8 +100,9 @@ spec:
               httpHeaders:
                 - name: Host
                   value: {{ include "date-website.probeHost" . | quote }}
-            initialDelaySeconds: 30
+            initialDelaySeconds: 10
             periodSeconds: 30
+            timeoutSeconds: 5
             failureThreshold: 3
           readinessProbe:
             httpGet:
@@ -93,6 +113,7 @@ spec:
                   value: {{ include "date-website.probeHost" . | quote }}
             initialDelaySeconds: 10
             periodSeconds: 10
+            timeoutSeconds: 5
             failureThreshold: 3
           {{- with .Values.securityContext }}
           securityContext:
