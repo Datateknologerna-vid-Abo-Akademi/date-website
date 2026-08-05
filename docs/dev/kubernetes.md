@@ -62,6 +62,7 @@ The chart deploys:
 - Django/Gunicorn web deployment
 - Daphne ASGI deployment for WebSocket traffic
 - Celery worker deployment
+- Celery beat deployment (drives the daily Instagram feed refresh via `CELERY_BEAT_SCHEDULE`)
 - Optional PostgreSQL StatefulSet (disabled in production — see below)
 - Valkey/Redis StatefulSet
 - Traefik-compatible `Ingress`, or Gateway API resources

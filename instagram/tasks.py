@@ -4,6 +4,7 @@ from itertools import islice
 import instaloader
 from celery import shared_task
 from django.conf import settings
+from django.db import transaction
 
 from instagram.models import IgUrl
 
@@ -40,6 +41,7 @@ def fetch_instagram_posts():
     if not posts:
         logger.warning("Instagram fetch returned no posts for %s; keeping existing rows", settings.INSTAGRAM_PROFILE)
         return
-    IgUrl.objects.all().delete()
-    IgUrl.objects.bulk_create([IgUrl(url=url, shortcode=shortcode) for url, shortcode in posts])
+    with transaction.atomic():
+        IgUrl.objects.all().delete()
+        IgUrl.objects.bulk_create([IgUrl(url=url, shortcode=shortcode) for url, shortcode in posts])
     logger.info("Refreshed %d Instagram posts for %s", len(posts), settings.INSTAGRAM_PROFILE)

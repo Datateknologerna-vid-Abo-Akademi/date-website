@@ -45,6 +45,18 @@ class FetchInstagramPostsTests(TestCase):
         stored = list(IgUrl.objects.values_list("url", "shortcode"))
         self.assertEqual(stored, [("https://old.example/1.jpg", "old")])
 
+    def test_keeps_existing_rows_when_replacement_insert_fails(self):
+        IgUrl.objects.create(url="https://old.example/1.jpg", shortcode="old")
+        posts = [MagicMock(url="https://img.example/1.jpg", shortcode="abc123")]
+        with patch("instagram.tasks.instaloader") as loader:
+            loader.Profile.from_username.return_value = _mock_profile(posts)
+            with patch.object(IgUrl.objects, "bulk_create", side_effect=RuntimeError("insert failed")):
+                with self.assertRaises(RuntimeError):
+                    fetch_instagram_posts.run()
+
+        stored = list(IgUrl.objects.values_list("url", "shortcode"))
+        self.assertEqual(stored, [("https://old.example/1.jpg", "old")])
+
     def test_uses_configured_profile_and_credentials(self):
         with patch("instagram.tasks.instaloader") as loader:
             loader.Profile.from_username.return_value = _mock_profile([])
