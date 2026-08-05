@@ -70,6 +70,9 @@ spec:
                 name: {{ include "date-website.fullname" . }}
             - secretRef:
                 name: {{ include "date-website.secretName" . }}
+          # Liveness via `celery inspect ping`: a real worker-response check,
+          # but each invocation imports the whole Django app (~3s user CPU on
+          # prod). Keep the cadence coarse (default 300s) — see values.yaml.
           livenessProbe:
             exec:
               command:

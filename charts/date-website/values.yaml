@@ -208,8 +208,11 @@ celery:
   concurrency: 2
   logLevel: info
   livenessProbe:
+    # `celery inspect ping` imports the whole Django app on every invocation
+    # (~3s of user CPU measured on prod). 60s -> 300s keeps the probe cheap
+    # while still restarting a dead worker within ~15 min (3 x 300s).
     initialDelaySeconds: 60
-    periodSeconds: 60
+    periodSeconds: 300
     timeoutSeconds: 10
     failureThreshold: 3
   resources: {}
