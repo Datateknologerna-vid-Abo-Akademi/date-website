@@ -2453,3 +2453,32 @@ msgstr ""
 "Keskeinen osa Impulsin toimintaa on erilaisten tapahtumien järjestäminen "
 "jäsenilleen sekä aktiivinen toiminta tiedekunta- ja yhdistysrajojen yli, "
 "niin psykologian kuin muidenkin oppiaineiden parissa."
+
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Klotterplanket"
+msgstr "Kommenttiseinä"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Skriv ett inlägg anonymt med en pseudonym. Inlägg som bryter mot reglerna för webbplatsen kan tas bort."
+msgstr "Kirjoita viesti anonyymisti pseudonyymillä. Sivuston sääntöjä rikkovat viestit voidaan poistaa."
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Pseudonym"
+msgstr "Pseudonyymi"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Meddelande"
+msgstr "Viesti"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Inlägg"
+msgstr "Viestit"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Inga inlägg ännu. Skriv det första!"
+msgstr "Ei viestejä vielä. Kirjoita ensimmäinen!"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Ditt inlägg har lagts till!"
+msgstr "Viestisi on lisätty!"
+
+#: klotterplanket/views.py
+msgid "Botkontrollen misslyckades, försök igen."
+msgstr "Botintarkistus epäonnistui, yritä uudelleen."
+#: klotterplanket/views.py
+msgid "Kontrollera pseudonymen och meddelandet."
+msgstr "Tarkista pseudonyymi ja viesti."

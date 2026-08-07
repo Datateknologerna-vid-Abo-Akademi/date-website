@@ -55,6 +55,7 @@ Use the sections below to jump to either editor-facing instructions or implement
 - [Gallery Development Notes](dev/gallery.md)
 - [Harassment Development Notes](dev/harassment.md)
 - [Instagram Development Notes](dev/instagram.md)
+- [Klotterplanket Development Notes](dev/klotterplanket.md)
 - [Lucia Development Notes](dev/lucia.md)
 - [Members Development Notes](dev/members.md)
 - [News Development Notes](dev/news.md)

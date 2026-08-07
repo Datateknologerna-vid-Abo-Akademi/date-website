@@ -1,0 +1,48 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+  {% translate "Klotterplanket" %}
+{% endblock %}
+{% block content %}
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          async
+          defer></script>
+  <div class="container-md min-vh-100 container-margin-top">
+    <div class="container-size" style="max-width: 900px;">
+      <div class="content">
+        <h1>{% translate "Klotterplanket" %}</h1>
+        <p>
+          {% translate "Skriv ett inlägg anonymt med en pseudonym. Inlägg som bryter mot reglerna för webbplatsen kan tas bort." %}
+        </p>
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="{{ form.pseudonym.id_for_label }}">{% translate "Pseudonym" %}*:</label>
+            {{ form.pseudonym }}
+          </div>
+          <div class="form-group mt-2">
+            <label for="{{ form.content.id_for_label }}">{% translate "Meddelande" %}*:</label>
+            {{ form.content }}
+          </div>
+          <div class="cf-turnstile mt-2"
+               data-sitekey="{{ CAPTCHA_SITE_KEY }}"
+               data-callback="javascriptCallback"></div>
+          <input class="mt-2" type="submit" value="{% translate 'Skicka' %}">
+        </form>
+        <h2 class="mt-4">{% translate "Inlägg" %}</h2>
+        {% for post in posts %}
+          <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between">
+              <span>{{ post.pseudonym }}</span>
+              <span class="text-muted">{{ post.created_at|date:"d.m.Y H:i" }}</span>
+            </div>
+            <div class="card-body">{{ post.content|linebreaksbr }}</div>
+          </div>
+        {% empty %}
+          <p>{% translate "Inga inlägg ännu. Skriv det första!" %}</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
