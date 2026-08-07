@@ -49,7 +49,7 @@ def register_event_signup(event, cleaned_data):
     questions = get_registration_questions(event)
 
     with transaction.atomic():
-        event = event.__class__.objects.select_for_update().select_related('parent').get(pk=event.pk)
+        event = event.__class__.objects.select_for_update(of=('self',)).select_related('parent').get(pk=event.pk)
         _ensure_capacity(event, required_places)
         attendee = _create_attendee(
             event=event,

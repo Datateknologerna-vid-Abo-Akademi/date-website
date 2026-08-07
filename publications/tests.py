@@ -99,9 +99,9 @@ class PDFFileAdminTests(TestCase):
     def test_collection_access_endpoint_requires_publication_permission(self):
         staff_group = Group.objects.create(name="admin")
         staff_user = get_user_model().objects.create_user(
-            username="staff-without-publications",
+            username="staff-no-pubs",
             password="pwd",
-            email="staff-without-publications@example.com",
+            email="staff-no-pubs@example.com",
         )
         staff_user.groups.add(staff_group)
         self.client.force_login(staff_user)

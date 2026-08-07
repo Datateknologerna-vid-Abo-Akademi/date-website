@@ -278,9 +278,9 @@ class ExamArchiveAdminTests(TestCase):
     def test_access_settings_redirect_requires_settings_permission(self):
         staff_group = Group.objects.create(name='admin')
         staff_user = get_user_model().objects.create_user(
-            username='exam-staff-without-settings',
+            username='exam-staff-no-set',
             password='pwd',
-            email='exam-staff-without-settings@example.com',
+            email='exam-staff-no-set@example.com',
         )
         staff_user.groups.add(staff_group)
         self.client.force_login(staff_user)
