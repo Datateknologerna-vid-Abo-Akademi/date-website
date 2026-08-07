@@ -89,7 +89,7 @@ spec:
                 - celery -A core inspect ping -d "celery@${HOSTNAME}" | grep -q OK
             failureThreshold: 30
             periodSeconds: 2
-            timeoutSeconds: 10
+            timeoutSeconds: 30
           # Liveness via `celery inspect ping`: a real worker-response check,
           # but each invocation imports the whole Django app (~3s user CPU on
           # prod). Keep the cadence coarse (default 300s) — see values.yaml.
