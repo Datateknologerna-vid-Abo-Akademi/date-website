@@ -100,12 +100,12 @@ class FunctionaryHelperTests(TestCase):
         self.assertEqual(list(selected), list(years))
         self.assertTrue(all_years)
 
-    def test_get_selected_year_ignores_parameters_for_anonymous_user(self):
+    def test_get_selected_year_applies_parameters_for_anonymous_user(self):
         request = self.factory.get('/funktionarer/?year=2020')
         request.user = AnonymousUser()
         years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')
         selected, _ = get_selected_year(request, years)
-        self.assertEqual(selected, timezone.now().year)
+        self.assertEqual(selected, 2020)
 
     def test_get_selected_role_supports_all_and_specific_roles(self):
         request_all = self.factory.get('/funktionarer/?role=all')
@@ -129,13 +129,13 @@ class FunctionaryHelperTests(TestCase):
         self.assertIsNone(selected)
         self.assertFalse(all_roles)
 
-    def test_get_selected_role_ignores_anonymous_requests(self):
+    def test_get_selected_role_applies_for_anonymous_requests(self):
         request = self.factory.get('/funktionarer/?role=all')
         request.user = AnonymousUser()
         roles = FunctionaryRole.objects.all()
         selected, all_roles = get_selected_role(request, roles)
-        self.assertIsNone(selected)
-        self.assertFalse(all_roles)
+        self.assertTrue(all_roles)
+        self.assertEqual(list(selected), list(roles))
 
     def test_get_filtered_functionaries_accepts_all_years_queryset(self):
         years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')
