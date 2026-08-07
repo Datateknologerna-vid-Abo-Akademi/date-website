@@ -188,7 +188,7 @@ celery:
   livenessProbe:
     initialDelaySeconds: 60
     periodSeconds: 300
-    timeoutSeconds: 10
+    timeoutSeconds: 30
     failureThreshold: 3
   resources: {}
   strategy:

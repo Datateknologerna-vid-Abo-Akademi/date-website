@@ -95,8 +95,10 @@ spec:
               containerPort: 8000
               protocol: TCP
           # startupProbe gates liveness during slow starts (migrateOnStartup
-          # can take >1min under load). Without it, liveness kills the pod at
-          # initialDelay + 3*failure — the zero-downtime killer on rollouts.
+          # cold boot: wait-for-postgres + migrate + collectstatic can exceed
+          # 2 min under the web CPU limit; a 30x2s budget is too tight because
+          # refused probes fail instantly -> ~60s floor). 90x2s = ~180s floor,
+          # measured after the 2026-08-07 worker-reboot incident.
           startupProbe:
             httpGet:
               path: /healthz/
@@ -104,7 +106,7 @@ spec:
               httpHeaders:
                 - name: Host
                   value: {{ include "date-website.probeHost" . | quote }}
-            failureThreshold: 30
+            failureThreshold: 90
             periodSeconds: 2
             timeoutSeconds: 5
           livenessProbe:
