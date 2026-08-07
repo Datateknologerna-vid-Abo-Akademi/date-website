@@ -25,6 +25,7 @@ urlpatterns = build_urlpatterns(
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     path('publications/', include('publications.urls')),
     path('alumni/', include('alumni.urls')),
+    path('klotterplanket/', include('klotterplanket.urls')),
 )
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

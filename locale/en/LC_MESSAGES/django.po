@@ -2420,3 +2420,32 @@ msgstr ""
 "A central part of Impuls' work is arranging events for its members and being "
 "active across faculty and association boundaries, both within psychology and "
 "with other subjects."
+
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Klotterplanket"
+msgstr "Scribble board"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Skriv ett inlägg anonymt med en pseudonym. Inlägg som bryter mot reglerna för webbplatsen kan tas bort."
+msgstr "Write a post anonymously with a pseudonym. Posts that break the website rules may be removed."
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Pseudonym"
+msgstr "Pseudonym"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Meddelande"
+msgstr "Message"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Inlägg"
+msgstr "Posts"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Inga inlägg ännu. Skriv det första!"
+msgstr "No posts yet. Write the first one!"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Ditt inlägg har lagts till!"
+msgstr "Your post has been added!"
+
+#: klotterplanket/views.py
+msgid "Botkontrollen misslyckades, försök igen."
+msgstr "The bot check failed, try again."
+#: klotterplanket/views.py
+msgid "Kontrollera pseudonymen och meddelandet."
+msgstr "Check the pseudonym and the message."
