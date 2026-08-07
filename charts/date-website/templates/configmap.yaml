@@ -32,6 +32,8 @@ data:
   AWS_PUBLIC_STORAGE_BUCKET_NAME: {{ if .Values.media.s3.enabled }}{{ default (required "media.s3.bucketName is required when media.s3.enabled=true" .Values.media.s3.bucketName) .Values.media.s3.publicBucketName | quote }}{{ else }}{{ default .Values.media.s3.bucketName .Values.media.s3.publicBucketName | quote }}{{ end }}
   PRIVATE_MEDIA_LOCATION: {{ if .Values.media.s3.enabled }}{{ required "media.s3.privateLocation is required when media.s3.enabled=true" .Values.media.s3.privateLocation | quote }}{{ else }}{{ .Values.media.s3.privateLocation | quote }}{{ end }}
   PUBLIC_MEDIA_LOCATION: {{ if .Values.media.s3.enabled }}{{ required "media.s3.publicLocation is required when media.s3.enabled=true" .Values.media.s3.publicLocation | quote }}{{ else }}{{ .Values.media.s3.publicLocation | quote }}{{ end }}
+  AWS_S3_PRIVATE_CUSTOM_DOMAIN: {{ .Values.media.s3.privateCustomDomain | quote }}
+  AWS_S3_PUBLIC_CUSTOM_DOMAIN: {{ .Values.media.s3.publicCustomDomain | quote }}
   EMAIL_HOST_RECEIVER: {{ .Values.email.hostReceiver | quote }}
   DEFAULT_FROM_EMAIL: {{ .Values.email.defaultFrom | quote }}
   EMAIL_HOST: {{ .Values.email.host | quote }}

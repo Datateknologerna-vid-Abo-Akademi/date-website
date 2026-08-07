@@ -140,6 +140,13 @@ media:
     publicBucketName: ''
     privateLocation: date/media
     publicLocation: date/public
+    # Optional custom media domains (host only, no scheme) served by a reverse proxy
+    # (e.g. a Cloudflare Worker) that forwards to the S3 endpoint, rewriting the Host
+    # header to the S3 endpoint host and preserving path + query. Public media uses
+    # unsigned URLs; private media URLs stay presigned with only the host swapped.
+    # Leave empty to keep endpoint URLs.
+    privateCustomDomain: ''
+    publicCustomDomain: ''
   persistence:
     enabled: true
     storageClass: ''

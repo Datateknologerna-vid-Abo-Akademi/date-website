@@ -163,6 +163,12 @@
             "publicLocation": {
               "type": "string"
             },
+            "privateCustomDomain": {
+              "type": "string"
+            },
+            "publicCustomDomain": {
+              "type": "string"
+            },
             "accessKeyId": {
               "type": "string"
             },

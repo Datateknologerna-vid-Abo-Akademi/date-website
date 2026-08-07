@@ -82,6 +82,14 @@ into the migration Job so two pods cannot race.
   disabled (`postgresql.enabled: false`, `database.external` used).
 - **Media is S3-compatible object storage**, not local PVCs. The chart's
   local media PVC is not used in production.
+- **Optional custom media domains** (`media.s3.privateCustomDomain` /
+  `media.s3.publicCustomDomain`, host only, no scheme) switch media URLs to a
+  domain served by a Cloudflare Worker in the operator repository. The Worker
+  forwards requests to the S3 endpoint, rewriting the Host header to the S3
+  endpoint host (the hostname the URL was signed against) and preserving path
+  and query. Public media URLs become unsigned `https://<domain>/<location>/<key>`;
+  private media URLs stay presigned, with only the host swapped, so the SigV4
+  signature still validates.
 - **The site Ingress lives outside the chart**, in the operator repository,
   so blue-green cutover can flip the backend service names without a chart
   change (see below).
