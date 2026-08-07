@@ -381,6 +381,12 @@ if USE_S3:
     AWS_S3_REGION_NAME = env_alias('S3_REGION_NAME', 'AWS_S3_REGION_NAME', default=None)
     AWS_S3_SIGNATURE_VERSION = env_alias('S3_SIGNATURE_VERSION', 'AWS_S3_SIGNATURE_VERSION', default=None)
     AWS_S3_ADDRESSING_STYLE = env_alias('S3_ADDRESSING_STYLE', 'AWS_S3_ADDRESSING_STYLE', default=None)
+    AWS_S3_PUBLIC_CUSTOM_DOMAIN = (
+        env_alias('S3_PUBLIC_CUSTOM_DOMAIN', 'AWS_S3_PUBLIC_CUSTOM_DOMAIN', default='') or None
+    )
+    AWS_S3_PRIVATE_CUSTOM_DOMAIN = (
+        env_alias('S3_PRIVATE_CUSTOM_DOMAIN', 'AWS_S3_PRIVATE_CUSTOM_DOMAIN', default='') or None
+    )
     AWS_QUERYSTRING_AUTH = True
     AWS_QUERYSTRING_EXPIRE = 3600
 
@@ -389,10 +395,10 @@ if USE_S3:
     PUBLIC_MEDIA_LOCATION = env('PUBLIC_MEDIA_LOCATION')
     MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/{AWS_PRIVATE_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/"
 
-    def get_s3_storage_options(bucket_name, location, querystring_auth):
+    def get_s3_storage_options(bucket_name, location, querystring_auth, custom_domain=None):
         options = {
             "bucket_name": bucket_name,
-            "custom_domain": False,
+            "custom_domain": custom_domain or False,
             "location": location,
             "querystring_auth": querystring_auth,
         }
@@ -410,6 +416,7 @@ if USE_S3:
             AWS_PRIVATE_STORAGE_BUCKET_NAME,
             PRIVATE_MEDIA_LOCATION,
             AWS_QUERYSTRING_AUTH,
+            AWS_S3_PRIVATE_CUSTOM_DOMAIN,
         )
         | {"querystring_expire": AWS_QUERYSTRING_EXPIRE},
     }
@@ -419,6 +426,7 @@ if USE_S3:
             AWS_PUBLIC_STORAGE_BUCKET_NAME,
             PUBLIC_MEDIA_LOCATION,
             False,
+            AWS_S3_PUBLIC_CUSTOM_DOMAIN,
         ),
     }
 
