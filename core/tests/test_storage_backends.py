@@ -35,9 +35,7 @@ class PrivateMediaStorageCustomDomainTests(SimpleTestCase):
     def test_presigned_url_with_swapped_host(self):
         storage, client = make_private_storage(custom_domain="media.example.com")
         url = storage.url("foo/secret.pdf")
-        self.assertTrue(
-            url.startswith("https://media.example.com/date-media/date/media/foo/secret.pdf?")
-        )
+        self.assertTrue(url.startswith("https://media.example.com/date-media/date/media/foo/secret.pdf?"))
         self.assertIn("X-Amz-Signature=abc123", url)
         client.generate_presigned_url.assert_called_once()
         call_kwargs = client.generate_presigned_url.call_args.kwargs

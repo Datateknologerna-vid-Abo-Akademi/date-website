@@ -32,9 +32,7 @@ class PrivateMediaStorage(S3Boto3Storage):
         params["Bucket"] = self.bucket.name
         params["Key"] = name
 
-        connection = (
-            self.connection if self.querystring_auth else self.unsigned_connection
-        )
+        connection = self.connection if self.querystring_auth else self.unsigned_connection
         url = connection.meta.client.generate_presigned_url(
             "get_object",
             Params=params,
