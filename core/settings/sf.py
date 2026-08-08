@@ -32,7 +32,6 @@ INSTALLED_APPS = get_installed_apps(
         'social',
         'staticpages',
         'publications',
-        'alumni',
         'billing',
         'klotterplanket',
     ]
