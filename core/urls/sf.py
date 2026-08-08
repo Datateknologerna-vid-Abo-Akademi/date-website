@@ -24,7 +24,6 @@ urlpatterns = build_urlpatterns(
     path('admin/', admin_site.urls),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     path('publications/', include('publications.urls')),
-    path('alumni/', include('alumni.urls')),
     path('klotterplanket/', include('klotterplanket.urls')),
 )
 
