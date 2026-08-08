@@ -37,6 +37,7 @@ urlpatterns = build_urlpatterns(
     path('social/', include('social.urls')),
     path('polls/', include('polls.urls')),
     path('ctf/', include('ctf.urls')),
+    path('date_custom/', include('date_custom.urls')),
     path('admin/', admin_site.urls),
     path("ckeditor5/", include('django_ckeditor_5.urls')),
     path('publications/', include('publications.urls')),
