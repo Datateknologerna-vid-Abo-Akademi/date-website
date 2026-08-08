@@ -69,8 +69,8 @@
             const calendarPopups = new VanillaCalendar(calendarElement, {
                 actions: {
                     clickDay(event, date) {
-                        if(events_json[date[0]] !== undefined) {
-                            const rawUrl = (events_json[date[0]].link || '').trim();
+                        if(events_json[date.selectedDates[0]] !== undefined) {
+                            const rawUrl = (events_json[date.selectedDates[0]].link || '').trim();
                             if (isValidInternalUrl(rawUrl)) {
                                 try {
                                     const safeUrl = new URL(rawUrl, window.location.origin);
