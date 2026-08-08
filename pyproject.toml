@@ -22,7 +22,6 @@ dependencies = [
     "websocket-client",
     "six",
     "instaloader",
-    "schedule",
     "boto3",
     "django-storages",
     "django-tables2",
@@ -72,7 +71,6 @@ ignore = ["S101"]  # asserts are fine in tests
 "*/management/commands/import_wordpress_export.py" = ["E501"]
 "staticpages/policy_content.py" = ["E501"]
 "core/admin_ui.py" = ["E501"]
-"instagram/igupdate.py" = ["E402"]
 
 [tool.djlint]
 profile = "django"

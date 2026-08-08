@@ -29,4 +29,4 @@ Checks:
   helm test {{ .Release.Name }} -n {{ .Release.Namespace }}
 
 After rotating an existing secret, restart the application workloads:
-  kubectl -n {{ .Release.Namespace }} rollout restart deploy/{{ include "date-website.fullname" . }}-web deploy/{{ include "date-website.fullname" . }}-asgi deploy/{{ include "date-website.fullname" . }}-celery
+  kubectl -n {{ .Release.Namespace }} rollout restart deploy/{{ include "date-website.fullname" . }}-web deploy/{{ include "date-website.fullname" . }}-asgi deploy/{{ include "date-website.fullname" . }}-celery deploy/{{ include "date-website.fullname" . }}-celery-beat

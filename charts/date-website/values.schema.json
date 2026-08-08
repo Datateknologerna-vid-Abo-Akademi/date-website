@@ -251,6 +251,15 @@
         },
         "strategy": {
           "type": "object"
+        },
+        "logLevel": {
+          "type": "string"
+        },
+        "livenessProbe": {
+          "type": "object"
+        },
+        "resources": {
+          "type": "object"
         }
       }
     },
@@ -334,6 +343,24 @@
               "type": "string"
             }
           }
+        }
+      }
+    },
+    "celeryBeat": {
+      "type": "object",
+      "properties": {
+        "replicaCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "logLevel": {
+          "type": "string"
+        },
+        "resources": {
+          "type": "object"
+        },
+        "livenessProbe": {
+          "type": "object"
         }
       }
     }
