@@ -1,0 +1,94 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% block title %}GDPR | {{ site_title|default:_("Django site admin") }}{% endblock %}
+{% block content %}
+  <div class="border border-base-200 rounded-default shadow-xs dark:border-base-800">
+    <div class="p-4">
+      <h1 class="font-semibold mb-2 text-font-important-light text-lg dark:text-font-important-dark">GDPR</h1>
+      <p class="leading-relaxed text-font-default-light dark:text-font-default-dark">
+        {% trans "Exportera eller radera all data som finns sparat för en e-postadress. Endast för superanvändare." %}
+      </p>
+    </div>
+    <div class="border-base-200 border-t p-4 dark:border-base-800">
+      <form method="post"
+            action="{% url 'admin:members_gdpr' %}"
+            class="flex flex-col gap-3">
+        {% csrf_token %}
+        <label for="gdpr-email">{% trans "E-postadress" %}</label>
+        <input id="gdpr-email"
+               type="email"
+               name="email"
+               value="{{ email }}"
+               class="border border-base-200 rounded-default px-3 py-2 text-sm dark:border-base-700 dark:bg-base-900"
+               required />
+        <div class="flex flex-col gap-3 md:flex-row md:items-center">
+          <button type="submit"
+                  name="action"
+                  value="export"
+                  class="border border-base-200 flex font-medium items-center justify-center px-3 py-2 rounded-default text-sm text-font-default-light transition hover:bg-base-50 dark:border-base-700 dark:text-font-default-dark dark:hover:bg-base-800">
+            {% trans "Exportera data (JSON)" %}
+          </button>
+          <button type="submit"
+                  name="action"
+                  value="preview"
+                  class="border border-base-200 flex font-medium items-center justify-center px-3 py-2 rounded-default text-sm text-font-default-light transition hover:bg-base-50 dark:border-base-700 dark:text-font-default-dark dark:hover:bg-base-800">
+            {% trans "Förhandsgranska radering" %}
+          </button>
+          {% if dry_run_summary and confirm_erase %}
+            <button type="submit"
+                    name="action"
+                    value="erase"
+                    class="bg-red-600 border border-transparent cursor-pointer flex font-medium items-center justify-center px-3 py-2 rounded-default text-sm text-white transition hover:bg-red-700">
+              {% trans "Bekräfta och radera data" %}
+            </button>
+            <input type="hidden" name="confirm" value="1" />
+          {% endif %}
+        </div>
+      </form>
+    </div>
+    {% if dry_run_summary %}
+      <div class="border-base-200 border-t p-4 dark:border-base-800">
+        <h2 class="font-semibold mb-2 text-font-important-light text-base dark:text-font-important-dark">
+          {% trans "Förhandsgranskning" %}
+        </h2>
+        <table class="w-full text-sm">
+          <tbody>
+            <tr>
+              <td class="py-1 pr-4">{% trans "Medlemmar" %}</td>
+              <td>{{ dry_run_summary.members }}</td>
+            </tr>
+            <tr>
+              <td class="py-1 pr-4">{% trans "Deltagarrader" %}</td>
+              <td>{{ dry_run_summary.attendees }}</td>
+            </tr>
+            <tr>
+              <td class="py-1 pr-4">{% trans "Funktionärsnamn" %}</td>
+              <td>{{ dry_run_summary.functionaries_anonymized }}</td>
+            </tr>
+            <tr>
+              <td class="py-1 pr-4">{% trans "Trakasserianmälningar (e-post)" %}</td>
+              <td>{{ dry_run_summary.harassment_anonymized }}</td>
+            </tr>
+            <tr>
+              <td class="py-1 pr-4">{% trans "CTF-gissningar" %}</td>
+              <td>{{ dry_run_summary.guesses_deleted }}</td>
+            </tr>
+            <tr>
+              <td class="py-1 pr-4">{% trans "2FA-enheter" %}</td>
+              <td>{{ dry_run_summary.devices_deleted }}</td>
+            </tr>
+            <tr>
+              <td class="py-1 pr-4">{% trans "Alumntokens" %}</td>
+              <td>{{ dry_run_summary.tokens_deleted }}</td>
+            </tr>
+          </tbody>
+        </table>
+        {% if not confirm_erase %}
+          <p class="mt-2 text-sm text-font-subtle-light dark:text-font-subtle-dark">
+            {% trans "Det här är en förhandsgranskning. Inget har ändrats. Bekräfta raderingen genom att trycka på den röda knappen." %}
+          </p>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

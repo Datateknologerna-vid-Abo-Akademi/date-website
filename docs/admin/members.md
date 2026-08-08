@@ -30,6 +30,15 @@ Most people register themselves at `/members/signup/`. Those signups land in the
 ## Functionary Roles & Assignments
 Functionary roles and assignments are managed by the `functionaries` app. See the [Functionaries Admin Guide](functionaries.md).
 
+## GDPR
+GDPR export and erasure live under **Members › Members**, accessible via the **GDPR** button in the member list or directly at `/admin/members/member/gdpr/`. These pages are superuser-only.
+
+- **Export data (JSON)**: enter an email address to download all stored personal data for that person (member profile, signups with preferences, CTF, votes, invoices, harassment reports, and more).
+- **Förhandsgranska radering**: shows what would be anonymized or deleted without changing anything.
+- **Bekräfta och radera data**: applies the erasure. Only appears after a preview was shown. The member row is anonymized (not deleted), attendee rows are anonymized, and CTF guesses/2FA devices/alumni tokens are deleted.
+
+See `docs/dev/operations.md` → GDPR Requests for the full erasure policy.
+
 ## Front-Facing Pages
 - `/members/login/` – custom auth view using the `Member` model.
 - `/members/info/` – members can edit their profile (first/last name, address, etc.).
