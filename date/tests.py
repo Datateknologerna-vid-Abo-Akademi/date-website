@@ -263,13 +263,47 @@ class HomepageContextHelperTests(TestCase):
         payload = format_calendar_events([event])
 
         event_key = event_start.strftime("%Y-%m-%d")
+        day_events = payload[event_key]
+        self.assertEqual(len(day_events), 1)
         self.assertEqual(
-            payload[event_key]["link"],
+            day_events[0]["link"],
             reverse("events:detail", kwargs={"slug": event.slug}),
         )
-        self.assertEqual(payload[event_key]["modifier"], "calendar-eventday")
-        self.assertEqual(payload[event_key]["eventTitle"], event.title)
-        self.assertEqual(payload[event_key]["eventFullDate"], event.event_date_start)
+        self.assertEqual(day_events[0]["eventTitle"], event.title)
+        self.assertEqual(day_events[0]["eventFullDate"], event.event_date_start)
+
+    def test_format_calendar_events_keeps_all_events_on_the_same_day(self):
+        event_start = timezone.localtime(timezone.now()).replace(
+            hour=10, minute=0, second=0, microsecond=0
+        ) + timedelta(days=1)
+        first = Event.objects.create(
+            title="First Event",
+            slug="first-event",
+            author=self.author,
+            event_date_start=event_start,
+            event_date_end=event_start + timedelta(hours=1),
+        )
+        second = Event.objects.create(
+            title="Second Event",
+            slug="second-event",
+            author=self.author,
+            event_date_start=event_start + timedelta(hours=3),
+            event_date_end=event_start + timedelta(hours=4),
+        )
+
+        payload = format_calendar_events([first, second])
+
+        event_key = event_start.strftime("%Y-%m-%d")
+        day_events = payload[event_key]
+        self.assertEqual(len(day_events), 2)
+        self.assertEqual(
+            [event["eventTitle"] for event in day_events],
+            [first.title, second.title],
+        )
+        self.assertEqual(
+            day_events[1]["link"],
+            reverse("events:detail", kwargs={"slug": second.slug}),
+        )
 
 
 class AuditLogTestCase(TestCase):
