@@ -31,9 +31,8 @@ class AlbumAdminForm(forms.ModelForm):
         model = Album
         fields = '__all__'  # noqa: DJ007
 
-    def save(self, *args, **kwargs):
-        album = super().save(*args, **kwargs)
+    def _save_m2m(self):
+        super()._save_m2m()
         if hasattr(self.files, 'getlist'):
             for uploaded_file in self.files.getlist('images'):
-                Photo.objects.create(album=album, image=uploaded_file)
-        return album
+                Photo.objects.create(album=self.instance, image=uploaded_file)
