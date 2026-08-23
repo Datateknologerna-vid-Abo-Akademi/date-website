@@ -1,5 +1,7 @@
 from django import forms
 
+from core.upload_widgets import DirectUploadField
+
 from .models import Collection, Document, PublicFile
 
 
@@ -21,8 +23,13 @@ class MultipleFileField(forms.FileField):
         return result
 
 
+def _uploaded_files(field_value):
+    """Normalize cleaned data to a list of (UploadedFile | dict) entries."""
+    return field_value or []
+
+
 class DocumentAdminForm(forms.ModelForm):
-    files = MultipleFileField(label="Ladda upp flera dokument", required=False)  # type: ignore[assignment]
+    files = DirectUploadField(scope='admin', bucket='private', multi=True, label="Ladda upp flera dokument")
 
     class Meta:
         model = Collection
@@ -32,14 +39,16 @@ class DocumentAdminForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         collection = super().save(*args, **kwargs)
         collection.save()
-        if hasattr(self.files, 'getlist'):
-            for f in self.files.getlist('files'):
+        for f in _uploaded_files(self.cleaned_data.get('files')):
+            if isinstance(f, dict):
+                create_document_from_temp(collection, f)
+            else:
                 Document.objects.create(collection=collection, document=f, title=f)
         return collection
 
 
 class PublicAdminForm(forms.ModelForm):
-    files = MultipleFileField(label="Ladda upp flera filer", required=False)  # type: ignore[assignment]
+    files = DirectUploadField(scope='admin', bucket='public', multi=True, label="Ladda upp flera filer")
 
     class Meta:
         model = Collection
@@ -48,7 +57,41 @@ class PublicAdminForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         collection = super().save(*args, **kwargs)
         collection.save()
-        if hasattr(self.files, 'getlist'):
-            for f in self.files.getlist('files'):
+        for f in _uploaded_files(self.cleaned_data.get('files')):
+            if isinstance(f, dict):
+                create_public_file_from_temp(collection, f)
+            else:
                 PublicFile.objects.create(collection=collection, some_file=f)
         return collection
+
+
+def create_document_from_temp(collection, uploaded):
+    """Copy a direct-uploaded temp document to its final key and create the row."""
+    from core.uploads import finalize_upload
+
+    document = Document(collection=collection, title=uploaded['name'])
+    field = Document._meta.get_field('document')
+    document.document.name = finalize_upload(
+        uploaded['key'],
+        document,
+        field,
+        uploaded['name'],
+        expected_size=uploaded['size'],
+    )
+    document.save()
+
+
+def create_public_file_from_temp(collection, uploaded):
+    """Copy a direct-uploaded temp public file to its final key and create the row."""
+    from core.uploads import finalize_upload
+
+    public_file = PublicFile(collection=collection)
+    field = PublicFile._meta.get_field('some_file')
+    public_file.some_file.name = finalize_upload(
+        uploaded['key'],
+        public_file,
+        field,
+        uploaded['name'],
+        expected_size=uploaded['size'],
+    )
+    public_file.save()

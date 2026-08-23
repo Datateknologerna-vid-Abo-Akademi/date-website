@@ -1,5 +1,7 @@
 from django import forms
 
+from core.upload_widgets import DirectUploadField
+
 from .models import Album, Photo
 
 
@@ -19,13 +21,30 @@ class MultipleFileField(forms.FileField):
         return single_file_clean(data, initial)
 
 
+def create_photo_from_temp(album, uploaded):
+    """Copy a direct-uploaded temp photo to its final key and create the row."""
+    from core.uploads import finalize_upload
+
+    photo = Photo(album=album)
+    image_field = Photo._meta.get_field('image')
+    photo.image.name = finalize_upload(
+        uploaded['key'],
+        photo,
+        image_field,
+        uploaded['name'],
+        expected_size=uploaded['size'],
+    )
+    photo._skip_compress = True  # noqa: SLF001 - already compressed client-side
+    photo.save()
+
+
 class AlbumUploadForm(forms.Form):
     album = forms.CharField()
-    images = MultipleFileField(required=False)
+    images = DirectUploadField(scope='gallery', multi=True, label="Bilder")
 
 
 class AlbumAdminForm(forms.ModelForm):
-    images = MultipleFileField(label="Ladda upp flera bilder", required=False)
+    images = DirectUploadField(scope='gallery-admin', multi=True, label="Ladda upp flera bilder")
 
     class Meta:
         model = Album
@@ -33,6 +52,8 @@ class AlbumAdminForm(forms.ModelForm):
 
     def _save_m2m(self):
         super()._save_m2m()
-        if hasattr(self.files, 'getlist'):
-            for uploaded_file in self.files.getlist('images'):
+        for uploaded_file in self.cleaned_data.get('images') or []:
+            if isinstance(uploaded_file, dict):
+                create_photo_from_temp(self.instance, uploaded_file)
+            else:
                 Photo.objects.create(album=self.instance, image=uploaded_file)

@@ -33,3 +33,6 @@ The app intentionally renders the shared `archive/...` templates so the public a
 
 ## Navigation Visibility
 The `staticpages.context_processors._visible_urls_queryset` and `get_categories` helpers hide nav entries whose URL starts with `/archive/` when `ARCHIVE_ENABLED=False`. When `exambank` is in `INSTALLED_APPS`, entries under `/archive/exams/` are kept visible so the exam compatibility routes remain reachable from the menu. The trailing slash is significant — only `/archive/exams/...` is exempted, not unrelated prefixes such as `/archive/examined/`.
+
+## Uploads
+- Public and admin multi-uploads use `DirectUploadField` (see `dev/uploads.md`): with direct uploads enabled files go straight to the S3 endpoint and are finalized server-side on save; the signing scope for the exam bank reuses the `exam_bank_access_is_allowed` gate.

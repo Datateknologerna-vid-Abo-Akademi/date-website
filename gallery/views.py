@@ -7,7 +7,7 @@ from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 
-from .forms import AlbumUploadForm
+from .forms import AlbumUploadForm, create_photo_from_temp
 from .models import Album, Photo
 
 logger = logging.getLogger('date')
@@ -124,13 +124,16 @@ def can_upload_album(user):
 @user_passes_test(can_upload_album)
 def upload(request):
     if request.method == 'POST':
-        form = AlbumUploadForm(request.POST)
+        form = AlbumUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            if not request.FILES.getlist('images'):
+            if not form.cleaned_data['images']:
                 return redirect('archive:years')
-            album = Album.objects.create(title=form['album'].value())
-            for uploaded_file in request.FILES.getlist('images'):
-                Photo.objects.create(image=uploaded_file, album=album)
+            album = Album.objects.create(title=form.cleaned_data['album'])
+            for uploaded_file in form.cleaned_data['images']:
+                if isinstance(uploaded_file, dict):
+                    create_photo_from_temp(album, uploaded_file)
+                else:
+                    Photo.objects.create(image=uploaded_file, album=album)
         return redirect('archive:years')
 
-    return render(request, 'archive/upload.html', {'picture_form': AlbumUploadForm})
+    return render(request, 'archive/upload.html', {'picture_form': AlbumUploadForm()})

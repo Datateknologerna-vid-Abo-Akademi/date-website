@@ -13,6 +13,7 @@ from core.admin_widgets import (
     FlatpickrDateTimeAdminMixin,
     SafeAdminFileWidget,
 )
+from core.upload_widgets import DirectUploadAdminMediaMixin
 
 from .forms import AlbumAdminForm
 from .models import Album, Photo
@@ -50,7 +51,7 @@ class PhotoInline(TabularInline):
 
 
 @admin.register(Album)
-class AlbumAdmin(FlatpickrDateTimeAdminMixin, GalleryAdminMixin, ModelAdmin):
+class AlbumAdmin(FlatpickrDateTimeAdminMixin, GalleryAdminMixin, DirectUploadAdminMediaMixin, ModelAdmin):
     save_on_top = True
     form = AlbumAdminForm
     inlines = [PhotoInline]

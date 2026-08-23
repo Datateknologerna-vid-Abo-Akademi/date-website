@@ -16,6 +16,7 @@ from core.admin_widgets import (
     FlatpickrDateTimeAdminMixin,
     SafeAdminFileWidget,
 )
+from core.upload_widgets import DirectUploadAdminMediaMixin
 
 from .forms import ExamArchiveAdminForm, ExamBankAccessSettingsAdminForm
 from .models import ExamArchive, ExamBankAccessSettings, ExamFile
@@ -62,7 +63,7 @@ class ExamFileInline(TabularInline):
 
 
 @admin.register(ExamArchive)
-class ExamArchiveAdmin(FlatpickrDateTimeAdminMixin, ExamBankAdminMixin, ModelAdmin):
+class ExamArchiveAdmin(FlatpickrDateTimeAdminMixin, ExamBankAdminMixin, DirectUploadAdminMediaMixin, ModelAdmin):
     save_on_top = True
     form = ExamArchiveAdminForm
     inlines = [ExamFileInline]

@@ -1,0 +1,367 @@
+import json
+import os
+from types import SimpleNamespace
+from unittest.mock import patch
+
+from django.contrib.auth.models import Permission
+from django.test import TestCase, override_settings
+from django.urls import reverse
+
+from core import uploads
+from gallery.models import Album, Photo
+from members.models import Member
+
+ENABLED = dict(USE_S3=True, DIRECT_UPLOADS_ENABLED=True)
+
+
+class FakeS3Client:
+    def __init__(self):
+        self.calls = []
+        self.objects = {}
+
+    def record(self, name, **kwargs):
+        self.calls.append((name, kwargs))
+
+    def generate_presigned_url(self, operation_name, Params=None, ExpiresIn=None, HttpMethod=None):
+        self.record('presign', operation=operation_name, Params=Params, ExpiresIn=ExpiresIn)
+        return 'https://s3.example.test/presigned-put'
+
+    def head_object(self, **kwargs):
+        self.record('head_object', **kwargs)
+        key = kwargs['Key']
+        if key not in self.objects:
+            raise KeyError('NoSuchKey')
+        return {'ContentLength': self.objects[key]}
+
+    def copy_object(self, **kwargs):
+        self.record('copy_object', **kwargs)
+        self.objects[kwargs['Key']] = self.objects[kwargs['CopySource']['Key']]
+
+    def delete_object(self, **kwargs):
+        self.record('delete_object', **kwargs)
+        self.objects.pop(kwargs['Key'], None)
+
+
+class FakeS3Storage:
+    bucket_name = 'date-private'
+    location = 'media'
+
+    def __init__(self):
+        self.client = FakeS3Client()
+        self.connection = SimpleNamespace(meta=SimpleNamespace(client=self.client))
+        self.existing_names = set()
+
+    def _normalize_name(self, name):
+        if self.location and not name.startswith(self.location):
+            return os.path.join(self.location, name)
+        return name
+
+    def exists(self, name):
+        return name in self.existing_names
+
+    def get_available_name(self, name, max_length=None):
+        if name not in self.existing_names:
+            return name
+        base, ext = os.path.splitext(name)
+        counter = 1
+        while f'{base}_{counter}{ext}' in self.existing_names:
+            counter += 1
+        return f'{base}_{counter}{ext}'
+
+
+def create_user(username='uploader', **kwargs):
+    return Member.objects.create_user(username=username, **kwargs)
+
+
+def grant_gallery_upload(user):
+    permission = Permission.objects.get(codename='add_album', content_type__app_label='gallery')
+    user.user_permissions.add(permission)
+
+
+def post_sign(client, **payload):
+    return client.post(reverse('direct-upload-sign'), payload)
+
+
+class SignUploadDisabledTests(TestCase):
+    def test_returns_400_when_disabled(self):
+        response = post_sign(
+            self.client,
+            scope='admin',
+            bucket='private',
+            name='test.jpg',
+            size='100',
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('not enabled', response.json()['error'])
+
+
+@override_settings(**ENABLED)
+class SignUploadTests(TestCase):
+    def setUp(self):
+        self.storage = FakeS3Storage()
+        self.storage_patcher = patch('core.uploads._storage_for_bucket', return_value=self.storage)
+        self.storage_patcher.start()
+        self.addCleanup(self.storage_patcher.stop)
+
+    def sign(self, **payload):
+        defaults = {'scope': 'admin', 'bucket': 'private', 'name': 'test.jpg', 'size': '1024'}
+        defaults.update(payload)
+        return post_sign(self.client, **defaults)
+
+    def test_anonymous_requires_authentication(self):
+        response = self.sign()
+        self.assertEqual(response.status_code, 403)
+
+    def test_admin_scope_requires_staff(self):
+        member = create_user()
+        self.client.force_login(member)
+        response = self.sign()
+        self.assertEqual(response.status_code, 403)
+
+    def test_admin_scope_allows_staff(self):
+        staff = create_user(username='staff', is_superuser=True)
+        self.client.force_login(staff)
+        response = self.sign()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['method'], 'PUT')
+
+    def test_gallery_scope_requires_permission(self):
+        member = create_user()
+        self.client.force_login(member)
+        response = self.sign(scope='gallery')
+        self.assertEqual(response.status_code, 403)
+
+        grant_gallery_upload(member)
+        response = self.sign(scope='gallery')
+        self.assertEqual(response.status_code, 200)
+
+    def test_exambank_scope_uses_access_settings(self):
+        from exambank.models import ExamBankAccessSettings
+
+        ExamBankAccessSettings.objects.create(require_sign_in=False)
+        member = create_user()
+        self.client.force_login(member)
+        response = self.sign(scope='exambank')
+        self.assertEqual(response.status_code, 200)
+
+    def test_exambank_scope_allows_anonymous_when_open(self):
+        from exambank.models import ExamBankAccessSettings
+
+        ExamBankAccessSettings.objects.create(require_sign_in=False)
+        response = self.sign(scope='exambank')
+        self.assertEqual(response.status_code, 200)
+
+    def test_exambank_scope_requires_gate_when_signin_required(self):
+        from exambank.models import ExamBankAccessSettings
+
+        ExamBankAccessSettings.objects.create(require_sign_in=True)
+        response = self.sign(scope='exambank')
+        self.assertEqual(response.status_code, 403)
+
+    def test_unknown_scope_rejected(self):
+        staff = create_user(username='staff2', is_superuser=True)
+        self.client.force_login(staff)
+        response = self.sign(scope='nope')
+        self.assertEqual(response.status_code, 400)
+
+    def test_extension_allowlist_enforced(self):
+        staff = create_user(username='staff3', is_superuser=True)
+        self.client.force_login(staff)
+        self.assertEqual(self.sign(name='evil.exe').status_code, 400)
+        self.assertEqual(self.sign(name='photo.JPG').status_code, 200)
+        self.assertEqual(self.sign(name='noextension').status_code, 400)
+
+    def test_size_limits_enforced(self):
+        staff = create_user(username='staff4', is_superuser=True)
+        self.client.force_login(staff)
+        self.assertEqual(self.sign(size='0').status_code, 400)
+        self.assertEqual(self.sign(size='not-a-number').status_code, 400)
+        admin_max = uploads.SCOPES['admin']['max_bytes']
+        self.assertEqual(self.sign(size=str(admin_max + 1)).status_code, 400)
+        self.assertEqual(self.sign(size=str(admin_max)).status_code, 200)
+
+    def test_bucket_validated(self):
+        staff = create_user(username='staff5', is_superuser=True)
+        self.client.force_login(staff)
+        response = self.sign(bucket='elsewhere')
+        self.assertEqual(response.status_code, 400)
+
+    def test_public_bucket_uses_public_storage(self):
+        staff = create_user(username='staff6', is_superuser=True)
+        self.client.force_login(staff)
+        with patch('core.uploads._storage_for_bucket') as storage_for_bucket:
+            storage_for_bucket.return_value = self.storage
+            response = self.sign(bucket='public')
+        self.assertEqual(response.status_code, 200)
+        storage_for_bucket.assert_called_once_with('public')
+
+    def test_presigned_put_url_shape(self):
+        staff = create_user(username='staff7', is_superuser=True)
+        self.client.force_login(staff)
+        response = self.sign(name='photo.jpg', size='2048')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['url'], 'https://s3.example.test/presigned-put')
+        self.assertRegex(data['key'], uploads.TMP_KEY_PATTERN)
+        self.assertTrue(data['key'].endswith('.jpg'))
+
+        operation, params, expires = self.storage.client.calls[0][1].values()
+        self.assertEqual(operation, 'put_object')
+        self.assertEqual(params['Bucket'], 'date-private')
+        self.assertEqual(params['Key'], data['key'])
+        self.assertEqual(expires, uploads.SIGNATURE_EXPIRES)
+
+
+@override_settings(**ENABLED)
+class FinalizeUploadTests(TestCase):
+    def setUp(self):
+        self.album = Album.objects.create(title='Test album')
+        self.storage = FakeS3Storage()
+        self.storage.client.objects['tmp/abcdef1234567890abcdef1234567890.jpg'] = 100
+
+    def _field(self):
+        from django.core.files.storage import FileSystemStorage
+        from gallery.models import upload_to
+
+        class FakeField:
+            storage = self.storage
+            max_length = 100
+
+            def __init__(self, upload_to):
+                self.upload_to = upload_to
+
+            def generate_filename(self, instance, filename):
+                return FileSystemStorage().generate_filename(self.upload_to(instance, filename))
+
+        return FakeField(upload_to)
+
+    def test_copies_temp_to_final_key_and_deletes_temp(self):
+        photo = Photo(album=self.album)
+        final_name = uploads.finalize_upload(
+            'tmp/abcdef1234567890abcdef1234567890.jpg',
+            photo,
+            self._field(),
+            'My Photo.jpg',
+            expected_size=100,
+        )
+
+        self.assertEqual(final_name, '2026/test-album/my-photo.jpg')
+        calls = [call[0] for call in self.storage.client.calls]
+        self.assertEqual(calls, ['head_object', 'copy_object', 'delete_object'])
+        copy_call = self.storage.client.calls[1]
+        self.assertEqual(copy_call[1]['Bucket'], 'date-private')
+        self.assertEqual(copy_call[1]['CopySource'], {'Bucket': 'date-private', 'Key': 'tmp/abcdef1234567890abcdef1234567890.jpg'})
+        self.assertEqual(copy_call[1]['Key'], 'media/2026/test-album/my-photo.jpg')
+        delete_call = self.storage.client.calls[2]
+        self.assertEqual(delete_call[1]['Key'], 'tmp/abcdef1234567890abcdef1234567890.jpg')
+
+    def test_rejects_non_temp_keys_without_side_effects(self):
+        photo = Photo(album=self.album)
+        with self.assertRaises(ValueError):
+            uploads.finalize_upload('media/2026/other/photo.jpg', photo, self._field(), 'photo.jpg')
+        self.assertEqual([call[0] for call in self.storage.client.calls], [])
+
+    def test_rejects_size_mismatch_without_copy_or_delete(self):
+        photo = Photo(album=self.album)
+        with self.assertRaises(ValueError):
+            uploads.finalize_upload(
+                'tmp/abcdef1234567890abcdef1234567890.jpg',
+                photo,
+                self._field(),
+                'photo.jpg',
+                expected_size=999,
+            )
+        calls = [call[0] for call in self.storage.client.calls]
+        self.assertEqual(calls, ['head_object'])
+        self.assertIn('tmp/abcdef1234567890abcdef1234567890.jpg', self.storage.client.objects)
+
+    def test_resolves_collisions_like_storage_does(self):
+        self.storage.existing_names.add('2026/test-album/my-photo.jpg')
+        photo = Photo(album=self.album)
+        final_name = uploads.finalize_upload(
+            'tmp/abcdef1234567890abcdef1234567890.jpg',
+            photo,
+            self._field(),
+            'My Photo.jpg',
+            expected_size=100,
+        )
+        self.assertEqual(final_name, '2026/test-album/my-photo_1.jpg')
+        self.assertEqual(
+            self.storage.client.calls[1][1]['Key'],
+            'media/2026/test-album/my-photo_1.jpg',
+        )
+
+
+class ParseUploadedFilesTests(TestCase):
+    def test_empty_and_absent_values(self):
+        self.assertEqual(uploads.parse_uploaded_files(''), [])
+        self.assertEqual(uploads.parse_uploaded_files(None), [])
+
+    def test_valid_payload(self):
+        payload = json.dumps([
+            {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': 100},
+            {'key': 'tmp/' + 'b' * 32 + '.pdf', 'name': 'doc.pdf', 'size': 200},
+        ])
+        result = uploads.parse_uploaded_files(payload, scope='admin')
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0], {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': 100})
+        self.assertEqual(result[1]['size'], 200)
+
+    def test_scope_checks_extension_and_size(self):
+        payload = json.dumps([
+            {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': 100},
+        ])
+        self.assertEqual(len(uploads.parse_uploaded_files(payload, scope='gallery')), 1)
+        # Extension not allowed for the scope
+        payload_exe = json.dumps([
+            {'key': 'tmp/' + 'a' * 32 + '.exe', 'name': 'photo.exe', 'size': 100},
+        ])
+        with self.assertRaises(ValueError):
+            uploads.parse_uploaded_files(payload_exe, scope='gallery')
+        # Oversized for the scope
+        payload_big = json.dumps([
+            {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': uploads.SCOPES['gallery']['max_bytes'] + 1},
+        ])
+        with self.assertRaises(ValueError):
+            uploads.parse_uploaded_files(payload_big, scope='gallery')
+
+    def test_canonical_key_pattern_enforced(self):
+        # A key pointing at an existing media object must be rejected.
+        for key in (
+            'media/2026/album/photo.jpg',
+            'public/2026/doc.pdf',
+            'tmp/short.jpg',
+            'tmp/' + 'A' * 32 + '.jpg',
+            'tmp/' + 'a' * 32,
+            '',
+            'tmp/' + 'a' * 32 + '.jpg\n',
+        ):
+            payload = json.dumps([{'key': key, 'name': 'photo.jpg', 'size': 100}])
+            with self.assertRaises(ValueError):
+                uploads.parse_uploaded_files(payload, scope='admin')
+
+    def test_missing_or_non_int_size_rejected(self):
+        for entry in (
+            {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg'},
+            {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': '100'},
+            {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': 0},
+        ):
+            with self.assertRaises(ValueError):
+                uploads.parse_uploaded_files(json.dumps([entry]), scope='admin')
+
+    def test_invalid_payloads(self):
+        for payload in (
+            'not-json',
+            '{"key": 1}',
+            '[{"name": "no-key"}]',
+            '[42]',
+            '[{"key": 1, "name": "x.jpg", "size": 1}]',
+        ):
+            with self.assertRaises(ValueError):
+                uploads.parse_uploaded_files(payload, scope='admin')
+
+    def test_payload_without_scope_only_checks_shape(self):
+        payload = json.dumps([
+            {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': 100},
+        ])
+        self.assertEqual(len(uploads.parse_uploaded_files(payload)), 1)

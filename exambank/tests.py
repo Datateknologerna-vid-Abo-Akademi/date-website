@@ -327,3 +327,37 @@ class ExamBankAppIndexLegacyPermissionTests(TestCase):
         response = self.client.get('/admin/exambank/')
 
         self.assertEqual(response.status_code, 200)
+
+
+@override_settings(USE_S3=True, DIRECT_UPLOADS_ENABLED=True)
+class DirectUploadTests(TestCase):
+    def setUp(self):
+        from members.models import ORDINARY_MEMBER, MembershipType
+
+        membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.member = Member.objects.create_user(
+            username='exam-uploader',
+            password='pwd',
+            membership_type=membership_type,
+        )
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+        self.archive = ExamArchive.objects.create(title='Math 1')
+        ExamBankAccessSettings.objects.create(require_sign_in=False)
+
+    def test_public_direct_upload_uses_form_title(self):
+        import json
+        from unittest.mock import patch
+
+        payload = json.dumps([{'key': 'tmp/' + 'c' * 32 + '.pdf', 'name': 'tent.pdf', 'size': 123}])
+        with patch('core.uploads.finalize_upload', return_value='2026/math-1/tent.pdf') as finalize:
+            response = self.client.post(
+                reverse('archive:exam_upload', args=[self.archive.pk]),
+                {'title': 'Tent 23.08.2026', 'exam': payload},
+            )
+
+        self.assertRedirects(response, reverse('archive:exams_detail', args=[self.archive.pk]))
+        exam_file = ExamFile.objects.get()
+        self.assertEqual(exam_file.title, 'Tent 23.08.2026')
+        self.assertEqual(exam_file.document.name, '2026/math-1/tent.pdf')
+        finalize.assert_called_once()
+        self.assertEqual(finalize.call_args[1]['expected_size'], 123)

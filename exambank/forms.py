@@ -1,6 +1,8 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from core.upload_widgets import DirectUploadField
+
 from .models import ExamArchive, ExamBankAccessSettings, ExamFile
 
 
@@ -22,7 +24,7 @@ class MultipleFileField(forms.FileField):
 
 class ExamUploadForm(forms.Form):
     title = forms.CharField()
-    exam = MultipleFileField(required=False)
+    exam = DirectUploadField(scope='exambank', multi=True, label="Tentor")
 
 
 class ExamArchiveUploadForm(forms.Form):
@@ -30,7 +32,7 @@ class ExamArchiveUploadForm(forms.Form):
 
 
 class ExamArchiveAdminForm(forms.ModelForm):
-    files = MultipleFileField(label="Ladda upp flera dokument", required=False)  # type: ignore[assignment]
+    files = DirectUploadField(scope='admin', bucket='private', multi=True, label="Ladda upp flera dokument")
 
     class Meta:
         model = ExamArchive
@@ -38,8 +40,10 @@ class ExamArchiveAdminForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         archive = super().save(*args, **kwargs)
-        if hasattr(self.files, 'getlist'):
-            for uploaded_file in self.files.getlist('files'):
+        for uploaded_file in self.cleaned_data.get('files') or []:
+            if isinstance(uploaded_file, dict):
+                create_exam_file_from_temp(archive, uploaded_file)
+            else:
                 ExamFile.objects.create(archive=archive, document=uploaded_file, title=uploaded_file)
         return archive
 
@@ -92,3 +96,23 @@ class ExamBankPasswordForm(forms.Form):
         if not self.access_settings or not self.access_settings.check_password(password):
             raise forms.ValidationError(_('Fel lösenord.'))
         return password
+
+
+def create_exam_file_from_temp(archive, uploaded, title=None):
+    """Copy a direct-uploaded temp exam file to its final key and create the row.
+
+    The public upload flow passes the form's title; admin bulk uploads default
+    to the filename, matching the classic behavior.
+    """
+    from core.uploads import finalize_upload
+
+    exam_file = ExamFile(archive=archive, title=title or uploaded['name'])
+    field = ExamFile._meta.get_field('document')
+    exam_file.document.name = finalize_upload(
+        uploaded['key'],
+        exam_file,
+        field,
+        uploaded['name'],
+        expected_size=uploaded['size'],
+    )
+    exam_file.save()

@@ -11,7 +11,7 @@ Manage photo albums shown under `/archive/pictures/`.
    - **Pub date**: determines which year bucket the gallery appears under and uses the shared calendar/time picker.
    - **Göm för gulisar**: hide sensitive albums from freshmen.
 4. Upload photos in the inline table or with the multi-upload field.
-5. Save. Images are auto-compressed to 1600px width for performance.
+5. Save. With direct uploads enabled, images are compressed client-side before upload; otherwise the server compresses them to 1600px width for performance.
 
 ## Notes
 - Public URLs remain `/archive/pictures/<year>/...`.
