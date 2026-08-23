@@ -32,7 +32,7 @@ class ExamArchiveUploadForm(forms.Form):
 
 
 class ExamArchiveAdminForm(forms.ModelForm):
-    files = DirectUploadField(scope='admin', bucket='private', multi=True, label="Ladda upp flera dokument")
+    files = DirectUploadField(scope='admin', bucket='private', multi=True, label="Ladda upp flera dokument")  # type: ignore[assignment]
 
     class Meta:
         model = ExamArchive

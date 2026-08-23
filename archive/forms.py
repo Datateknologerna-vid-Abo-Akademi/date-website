@@ -29,7 +29,7 @@ def _uploaded_files(field_value):
 
 
 class DocumentAdminForm(forms.ModelForm):
-    files = DirectUploadField(scope='admin', bucket='private', multi=True, label="Ladda upp flera dokument")
+    files = DirectUploadField(scope='admin', bucket='private', multi=True, label="Ladda upp flera dokument")  # type: ignore[assignment]
 
     class Meta:
         model = Collection
@@ -48,7 +48,7 @@ class DocumentAdminForm(forms.ModelForm):
 
 
 class PublicAdminForm(forms.ModelForm):
-    files = DirectUploadField(scope='admin', bucket='public', multi=True, label="Ladda upp flera filer")
+    files = DirectUploadField(scope='admin', bucket='public', multi=True, label="Ladda upp flera filer")  # type: ignore[assignment]
 
     class Meta:
         model = Collection
