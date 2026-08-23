@@ -19,16 +19,17 @@ from core.admin_base import (
     ModelAdmin,
     PublicUrlAdminMixin,
     TabularInline,
+    UnfoldFormMixin,
 )
 from core.admin_ui import AdminLink
-from core.admin_widgets import SafeAdminFileWidget
+from core.admin_widgets import SafeAdminFileWidget, SafeAdminImageWidget
 
 from .models import PDFFile, PublicationCollection
 
 logger = logging.getLogger('date')
 
 
-class PublicationCollectionAdminForm(forms.ModelForm):
+class PublicationCollectionAdminForm(UnfoldFormMixin, forms.ModelForm):
     password = forms.CharField(
         label='Password',
         required=False,
@@ -226,7 +227,7 @@ class PublicationInline(TabularInline):
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
         models.FileField: {'widget': SafeAdminFileWidget},
-        models.ImageField: {'widget': SafeAdminFileWidget},
+        models.ImageField: {'widget': SafeAdminImageWidget},
     }
 
     def get_formset(self, request, obj=None, **kwargs):
@@ -409,7 +410,7 @@ class PDFFileAdmin(PublicUrlAdminMixin, PublicationAdminMixin, ModelAdmin):
         suffix = f" ({'; '.join(str(item) for item in extra)})" if extra else ''
         return format_html(
             '<div id="publication-collection-access-summary" data-url-template="{}">'
-            '<strong>{}</strong>: {}{} &nbsp; <a href="{}">{}</a>'
+            '<strong>{}</strong>: {}{} &nbsp; <a class="admin-inline-action" href="{}">{}</a>'
             '</div>',
             data_url,
             details['title'],

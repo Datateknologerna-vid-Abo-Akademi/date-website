@@ -28,6 +28,7 @@
     const editLink = document.createElement("a");
     editLink.href = details.edit_url;
     editLink.textContent = "Edit collection access";
+    editLink.className = "admin-inline-action";
     container.append(editLink);
   }
 

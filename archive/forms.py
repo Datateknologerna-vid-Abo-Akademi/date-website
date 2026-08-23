@@ -1,5 +1,7 @@
 from django import forms
 
+from core.admin_widgets import SafeAdminMultipleFileWidget
+
 from .models import Collection, Document, PublicFile
 
 
@@ -22,7 +24,11 @@ class MultipleFileField(forms.FileField):
 
 
 class DocumentAdminForm(forms.ModelForm):
-    files = MultipleFileField(label="Ladda upp flera dokument", required=False)  # type: ignore[assignment]
+    files = MultipleFileField(
+        label="Ladda upp flera dokument",
+        required=False,
+        widget=SafeAdminMultipleFileWidget(),
+    )  # type: ignore[assignment]
 
     class Meta:
         model = Collection
@@ -39,7 +45,11 @@ class DocumentAdminForm(forms.ModelForm):
 
 
 class PublicAdminForm(forms.ModelForm):
-    files = MultipleFileField(label="Ladda upp flera filer", required=False)  # type: ignore[assignment]
+    files = MultipleFileField(
+        label="Ladda upp flera filer",
+        required=False,
+        widget=SafeAdminMultipleFileWidget(),
+    )  # type: ignore[assignment]
 
     class Meta:
         model = Collection

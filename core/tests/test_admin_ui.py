@@ -1,4 +1,5 @@
 from django.apps import apps
+from django.conf import settings
 from django.contrib import admin as django_admin
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase, override_settings
@@ -12,6 +13,7 @@ from core.admin_ui import (
     get_sidebar_navigation,
     get_topbar_quick_create_links,
 )
+from core.admin_widgets import SafeAdminFileWidget, SafeAdminImageWidget, SafeAdminMultipleFileWidget
 from core.settings.common import _get_unfold_environment
 
 
@@ -175,7 +177,48 @@ class UnfoldFormMixinTests(TestCase):
 
         class _SampleForm(UnfoldFormMixin, forms.Form):
             name = forms.CharField()
+            password = forms.CharField(widget=forms.PasswordInput)
             url = forms.URLField()
 
-        form = _SampleForm(data={'name': 'test', 'url': 'https://example.com'})
+        form = _SampleForm(data={'name': 'test', 'password': 'secret', 'url': 'https://example.com'})
         self.assertTrue(form.is_valid())
+        if settings.USE_UNFOLD:
+            self.assertIn('Toggle password visibility', form['password'].as_widget())
+
+
+class AdminFileWidgetTests(TestCase):
+    def test_file_widget_renders_an_upload_control(self):
+        rendered = SafeAdminFileWidget().render('file', None, {'id': 'id_file'})
+
+        self.assertIn('type="file"', rendered)
+        if settings.USE_UNFOLD:
+            self.assertIn('file_upload', rendered)
+
+    def test_multiple_file_widget_preserves_multiple_selection(self):
+        rendered = SafeAdminMultipleFileWidget().render('files', None, {'id': 'id_files'})
+
+        self.assertIn('type="file"', rendered)
+        self.assertIn('multiple', rendered)
+
+    def test_image_widget_keeps_unfold_image_template(self):
+        rendered = SafeAdminImageWidget().render('image', None, {'id': 'id_image'})
+
+        self.assertIn('type="file"', rendered)
+        if settings.USE_UNFOLD:
+            self.assertIn('>upload<', rendered)
+
+    def test_public_multi_upload_forms_do_not_use_admin_markup(self):
+        from exambank.forms import ExamArchiveAdminForm, ExamUploadForm
+        from gallery.forms import AlbumAdminForm, AlbumUploadForm
+
+        public_widgets = (AlbumUploadForm()['images'].as_widget(), ExamUploadForm()['exam'].as_widget())
+        admin_widgets = (
+            AlbumAdminForm()['images'].as_widget(),
+            ExamArchiveAdminForm()['files'].as_widget(),
+        )
+
+        for widget in public_widgets:
+            self.assertNotIn('file_upload', widget)
+        if settings.USE_UNFOLD:
+            for widget in admin_widgets:
+                self.assertIn('file_upload', widget)
