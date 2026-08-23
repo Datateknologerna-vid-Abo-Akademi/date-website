@@ -33,11 +33,11 @@ class _SafeAdminFileWidgetMixin:
             return False
 
 
-class SafeAdminFileWidget(_SafeAdminFileWidgetMixin, _SafeAdminFileWidgetBase):
+class SafeAdminFileWidget(_SafeAdminFileWidgetMixin, _SafeAdminFileWidgetBase):  # type: ignore[misc, valid-type]
     pass
 
 
-class SafeAdminImageWidget(_SafeAdminFileWidgetMixin, _SafeAdminImageWidgetBase):
+class SafeAdminImageWidget(_SafeAdminFileWidgetMixin, _SafeAdminImageWidgetBase):  # type: ignore[misc, valid-type]
     """Keep image fields on Unfold's image-specific upload widget."""
 
     pass
