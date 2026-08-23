@@ -11,7 +11,7 @@ from core.admin_widgets import (
     FLATPICKR_ADMIN_CSS,
     FLATPICKR_ADMIN_JS,
     FlatpickrDateTimeAdminMixin,
-    SafeAdminFileWidget,
+    SafeAdminImageWidget,
 )
 
 from .forms import AlbumAdminForm
@@ -42,7 +42,7 @@ class PhotoInline(TabularInline):
     extra = 0
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
-        models.ImageField: {'widget': SafeAdminFileWidget},
+        models.ImageField: {'widget': SafeAdminImageWidget},
     }
 
     def preview_image(self, obj):

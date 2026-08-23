@@ -259,7 +259,8 @@ class EventAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, EventTran
     @admin.display(description="Deltagarlista")
     def account_actions(self, obj):
         return format_html(
-            '<a class="button" href="{}">Deltagarlista</a>&nbsp;', reverse('admin:registration_list', args=[obj.pk])
+            '<a class="button admin-inline-action" href="{}">Deltagarlista</a>&nbsp;',
+            reverse('admin:registration_list', args=[obj.pk]),
         )
 
     def has_delete_attendees_permission(self, request):

@@ -96,7 +96,7 @@ class EventBillingConfigurationAdmin(ExtraChangeListLinksMixin, ModelAdmin):
     @admin.display(description="Exportera data")
     def ref_export(self, obj):
         return format_html(
-            '<a class="button" href="{}">Exportera data</a>&nbsp;',
+            '<a class="button admin-inline-action" href="{}">Exportera data</a>&nbsp;',
             reverse('admin:billing_ref_numbers', args=[obj.pk]),
         )
 
