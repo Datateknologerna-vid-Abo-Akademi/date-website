@@ -221,6 +221,7 @@ class FinalizeUploadTests(TestCase):
 
     def _field(self):
         from django.core.files.storage import FileSystemStorage
+
         from gallery.models import upload_to
 
         class FakeField:
@@ -250,7 +251,9 @@ class FinalizeUploadTests(TestCase):
         self.assertEqual(calls, ['head_object', 'copy_object', 'delete_object'])
         copy_call = self.storage.client.calls[1]
         self.assertEqual(copy_call[1]['Bucket'], 'date-private')
-        self.assertEqual(copy_call[1]['CopySource'], {'Bucket': 'date-private', 'Key': 'tmp/abcdef1234567890abcdef1234567890.jpg'})
+        self.assertEqual(
+            copy_call[1]['CopySource'], {'Bucket': 'date-private', 'Key': 'tmp/abcdef1234567890abcdef1234567890.jpg'}
+        )
         self.assertEqual(copy_call[1]['Key'], 'media/2026/test-album/my-photo.jpg')
         delete_call = self.storage.client.calls[2]
         self.assertEqual(delete_call[1]['Key'], 'tmp/abcdef1234567890abcdef1234567890.jpg')
@@ -298,30 +301,42 @@ class ParseUploadedFilesTests(TestCase):
         self.assertEqual(uploads.parse_uploaded_files(None), [])
 
     def test_valid_payload(self):
-        payload = json.dumps([
-            {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': 100},
-            {'key': 'tmp/' + 'b' * 32 + '.pdf', 'name': 'doc.pdf', 'size': 200},
-        ])
+        payload = json.dumps(
+            [
+                {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': 100},
+                {'key': 'tmp/' + 'b' * 32 + '.pdf', 'name': 'doc.pdf', 'size': 200},
+            ]
+        )
         result = uploads.parse_uploaded_files(payload, scope='admin')
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0], {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': 100})
         self.assertEqual(result[1]['size'], 200)
 
     def test_scope_checks_extension_and_size(self):
-        payload = json.dumps([
-            {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': 100},
-        ])
+        payload = json.dumps(
+            [
+                {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': 100},
+            ]
+        )
         self.assertEqual(len(uploads.parse_uploaded_files(payload, scope='gallery')), 1)
         # Extension not allowed for the scope
-        payload_exe = json.dumps([
-            {'key': 'tmp/' + 'a' * 32 + '.exe', 'name': 'photo.exe', 'size': 100},
-        ])
+        payload_exe = json.dumps(
+            [
+                {'key': 'tmp/' + 'a' * 32 + '.exe', 'name': 'photo.exe', 'size': 100},
+            ]
+        )
         with self.assertRaises(ValueError):
             uploads.parse_uploaded_files(payload_exe, scope='gallery')
         # Oversized for the scope
-        payload_big = json.dumps([
-            {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': uploads.SCOPES['gallery']['max_bytes'] + 1},
-        ])
+        payload_big = json.dumps(
+            [
+                {
+                    'key': 'tmp/' + 'a' * 32 + '.jpg',
+                    'name': 'photo.jpg',
+                    'size': uploads.SCOPES['gallery']['max_bytes'] + 1,
+                },
+            ]
+        )
         with self.assertRaises(ValueError):
             uploads.parse_uploaded_files(payload_big, scope='gallery')
 
@@ -361,7 +376,9 @@ class ParseUploadedFilesTests(TestCase):
                 uploads.parse_uploaded_files(payload, scope='admin')
 
     def test_payload_without_scope_only_checks_shape(self):
-        payload = json.dumps([
-            {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': 100},
-        ])
+        payload = json.dumps(
+            [
+                {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': 100},
+            ]
+        )
         self.assertEqual(len(uploads.parse_uploaded_files(payload)), 1)

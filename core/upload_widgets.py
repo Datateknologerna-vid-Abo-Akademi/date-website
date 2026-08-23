@@ -17,8 +17,7 @@ import json
 
 from django import forms
 from django.core.exceptions import ValidationError
-from django.forms.utils import flatatt
-from django.utils.html import escape, mark_safe
+from django.utils.html import format_html, format_html_join
 from django.utils.translation import gettext_lazy as _
 
 from .uploads import SCOPES, parse_uploaded_files, uploads_enabled
@@ -49,11 +48,16 @@ class DirectUploadWidget(forms.Widget):
         self.max_bytes = max_bytes or SCOPES[scope]['max_bytes']
         super().__init__(attrs)
 
+    @staticmethod
+    def _attrs_html(attrs):
+        """Render attributes safely (each name/value escaped)."""
+        return format_html_join('', ' {}="{}"', sorted(attrs.items()))
+
     def _classic_input(self, name, attrs=None):
         input_attrs = self.build_attrs(attrs, {'type': 'file', 'name': name})
         if self.multi:
             input_attrs['multiple'] = 'multiple'
-        return f'<input{flatatt(input_attrs)}>'
+        return format_html('<input{}>', self._attrs_html(input_attrs))
 
     def _direct_inputs(self, name, value, attrs=None):
         if value is None:
@@ -61,7 +65,7 @@ class DirectUploadWidget(forms.Widget):
         if not isinstance(value, str):
             value = json.dumps(value)
         hidden_attrs = self.build_attrs(attrs, {'type': 'hidden', 'name': name})
-        hidden = f'<input{flatatt(hidden_attrs)} value="{escape(value)}">'
+        hidden = format_html('<input{} value="{}">', self._attrs_html(hidden_attrs), value)
         container_attrs = self.build_attrs(
             {
                 'class': 'django-uppy-widget',
@@ -75,12 +79,13 @@ class DirectUploadWidget(forms.Widget):
                 'data-uppy-allowed-extensions': ','.join(self.allowed_extensions),
             }
         )
-        return hidden + f'<div{flatatt(container_attrs)}></div>'
+        container = format_html('<div{}></div>', self._attrs_html(container_attrs))
+        return format_html('{}{}', hidden, container)
 
     def render(self, name, value, attrs=None, renderer=None):
         if uploads_enabled():
-            return mark_safe(self._direct_inputs(name, value, attrs))
-        return mark_safe(self._classic_input(name, attrs))
+            return self._direct_inputs(name, value, attrs)
+        return self._classic_input(name, attrs)
 
     def value_from_datadict(self, data, files, name):
         if uploads_enabled():

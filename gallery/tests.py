@@ -81,7 +81,10 @@ class DirectUploadViewTests(TestCase):
     def test_direct_upload_rejects_malformed_payload(self):
         response = self.client.post(
             reverse('archive:upload'),
-            {'album': 'Test album', 'images': json.dumps([{'key': 'media/2026/album/photo.jpg', 'name': 'photo.jpg', 'size': 1}])},
+            {
+                'album': 'Test album',
+                'images': json.dumps([{'key': 'media/2026/album/photo.jpg', 'name': 'photo.jpg', 'size': 1}]),
+            },
         )
         self.assertRedirects(response, reverse('archive:years'))
         self.assertEqual(Album.objects.count(), 0)
@@ -108,4 +111,3 @@ class DirectUploadViewTests(TestCase):
         self.assertRedirects(response, reverse('archive:years'))
         photo = Photo.objects.get()
         self.assertTrue(photo.image.name.startswith('2026/classic-album/classic'))
-

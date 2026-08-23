@@ -155,8 +155,8 @@ def sign_upload(request):
         return _error('File type not allowed.', 400)
 
     try:
-        size = int(request.POST.get('size', 0))
-    except (TypeError, ValueError):
+        size = int(request.POST.get('size') or 0)
+    except ValueError:
         return _error('Invalid file size.', 400)
     if not 0 < size <= scope_config['max_bytes']:
         return _error('File size not allowed.', 400)
@@ -168,13 +168,15 @@ def sign_upload(request):
         Params={'Bucket': storage.bucket_name, 'Key': key},
         ExpiresIn=SIGNATURE_EXPIRES,
     )
-    return JsonResponse({
-        'method': 'PUT',
-        'url': url,
-        'key': key,
-        'expires': SIGNATURE_EXPIRES,
-        'compress': scope_config['compress'],
-    })
+    return JsonResponse(
+        {
+            'method': 'PUT',
+            'url': url,
+            'key': key,
+            'expires': SIGNATURE_EXPIRES,
+            'compress': scope_config['compress'],
+        }
+    )
 
 
 def _validated_temp_key(key, scope_config):

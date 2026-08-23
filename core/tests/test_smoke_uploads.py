@@ -1,8 +1,8 @@
+from django.contrib.auth.models import Permission
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from django.contrib.auth.models import Permission
+
 from members.models import Member
-from gallery.models import Album
 
 
 @override_settings(USE_S3=True, DIRECT_UPLOADS_ENABLED=True)
