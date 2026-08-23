@@ -7,6 +7,7 @@ The `gallery` app owns photo albums and uploaded photos. It replaced the previou
 - `Album` stores the album title, publication date, and `hide_for_gulis` access flag.
 - `Photo` stores image files and compresses newly uploaded images to 1600px-wide JPEGs in `Photo.save()`.
 - Upload paths stay compatible with the previous archive layout: `<year>/<album>/<filename>`.
+- `AlbumAdminForm` creates multi-uploaded photos in its `save_m2m()` callback so new albums are inserted before their photos reference them.
 
 ## Migration Notes
 - `archive.0008_remove_picture_collection_delete_examcollection_and_more` copies legacy `archive.Collection(type="Pictures")` rows into `gallery_album` and related `archive.Picture` rows into `gallery_photo`.
