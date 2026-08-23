@@ -137,8 +137,10 @@ class PublicationCollectionAdminTests(TestCase):
         self.assertContains(response, "Access Control")
         self.assertContains(response, "Annual Magazine")
         self.assertContains(response, "id_publications-0-title")
-        self.assertContains(response, "id_publications-0-file")
-        self.assertContains(response, "disabled")
+        self.assertRegex(
+            response.content.decode(),
+            r'<input\b(?=[^>]*\bid="id_publications-0-file")(?=[^>]*\bdisabled\b)[^>]*>',
+        )
         self.assertContains(response, "Publication list")
 
     def test_changelist_uses_singular_publication_count_label(self):

@@ -410,7 +410,7 @@ class PDFFileAdmin(PublicUrlAdminMixin, PublicationAdminMixin, ModelAdmin):
         suffix = f" ({'; '.join(str(item) for item in extra)})" if extra else ''
         return format_html(
             '<div id="publication-collection-access-summary" data-url-template="{}">'
-            '<strong>{}</strong>: {}{} &nbsp; <a class="admin-inline-action" href="{}">{}</a>'
+            '<strong>{}</strong>: {}{} &nbsp; <a class="button admin-inline-action" href="{}">{}</a>'
             '</div>',
             data_url,
             details['title'],
