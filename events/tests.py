@@ -399,6 +399,9 @@ class EventTestCase(TestCase):
         self.assertContains(response, '<td>True</td>', count=1)
 
     def test_max_participants(self):
+        # Parent/standalone events have no hard cap: once full they keep accepting
+        # signups as reserve-list overflow (see EventCapacityTests for the child-event
+        # hard-block case).
         self.event.sign_up_max_participants = 1
         self.event.save()
         c = Client()
@@ -407,8 +410,8 @@ class EventTestCase(TestCase):
         self.content['email'] = 'person2@test.com'
         response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(self.event.get_registrations().count(), 1)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.event.get_registrations().count(), 2)
 
     def test_avec_signup_saves_custom_field_preferences_for_both_attendees(self):
         self.event.sign_up_avec = True
@@ -1104,7 +1107,7 @@ class EventCapacityTests(TestCase):
 
         self.assertEqual(child.remaining_places(), 1)
 
-    def test_parent_event_rejects_signup_when_full(self):
+    def test_parent_event_allows_overflow_signup_when_full(self):
         event = Event.objects.create(
             title="Full Parent Event",
             slug="full-parent-event",
@@ -1125,14 +1128,14 @@ class EventCapacityTests(TestCase):
         response = self.client.post(
             reverse("events:detail", args=[event.slug]),
             {
-                "user": "Blocked",
-                "email": "blocked-parent@example.com",
+                "user": "Reserve",
+                "email": "reserve-parent@example.com",
                 "terms_accepted": "on",
             },
         )
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(event.get_registrations().count(), 1)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(event.get_registrations().count(), 2)
 
     def test_child_event_rejects_signup_when_full(self):
         parent = Event.objects.create(
@@ -1194,7 +1197,7 @@ class EventCapacityTests(TestCase):
         self.assertContains(response, "Det finns 7 platser kvar!")
         self.assertNotContains(response, "Det finns 8 platser kvar!")
 
-    def test_full_event_detail_page_hides_form_and_shows_warning(self):
+    def test_full_parent_event_detail_page_keeps_form_and_shows_reserve_list_warning(self):
         event = Event.objects.create(
             title="Full Rendered Event",
             slug="full-rendered-event",
@@ -1216,10 +1219,10 @@ class EventCapacityTests(TestCase):
             response = self.client.get(reverse("events:detail", args=[event.slug]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, 'name="user"')
-        self.assertNotContains(response, 'name="email"')
+        self.assertContains(response, 'name="user"')
+        self.assertContains(response, 'name="email"')
         self.assertContains(response, "Evenemanget är tyvärr fullt")
-        self.assertNotContains(response, "reservlistan")
+        self.assertContains(response, "reservlistan")
 
     def test_full_child_event_detail_page_hides_form_and_shows_warning(self):
         parent = Event.objects.create(
