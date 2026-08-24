@@ -4,10 +4,12 @@ import logging
 from admin_ordering.admin import OrderableAdmin
 from django.conf import settings
 from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Count, IntegerField, JSONField, OuterRef, Subquery, TextField, Value
 from django.db.models.functions import Coalesce
+from django.forms.models import BaseInlineFormSet
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from django.template.response import TemplateResponse
 from django.urls import re_path, reverse
 from django.utils.html import format_html
@@ -49,9 +51,23 @@ class AvecAwareMixin:
         return bool(event and event.sign_up_avec)
 
 
+class EventRegistrationFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        names = set()
+        for form in self.forms:
+            if not hasattr(form, 'cleaned_data') or form.cleaned_data.get('DELETE'):
+                continue
+            name = (form.cleaned_data.get('name') or '').strip()
+            if name in names:
+                raise ValidationError(_('Fältnamnen måste vara unika inom evenemanget.'))
+            names.add(name)
+
+
 class EventRegistrationFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationInlineBase):
     line_numbering = 0
     model = EventRegistrationForm
+    formset = EventRegistrationFormSet
     fk_name = 'event'
     extra = 0
     can_delete = True
@@ -138,6 +154,10 @@ class EventAttendeesAdmin(ModelAdmin):
     list_select_related = ('event', 'original_event', 'avec_for')
     ordering = ('-time_registered',)
     date_hierarchy = 'time_registered'
+    formfield_overrides = {
+        **UNFOLD_FORMFIELD_OVERRIDES,
+        JSONField: {'widget': PrettyJSONWidget(attrs={'initial': 'parsed'})},
+    }
 
 
 class EventPublicationFilter(admin.SimpleListFilter):
@@ -242,7 +262,14 @@ class EventAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, EventTran
             '<a class="button" href="{}">Deltagarlista</a>&nbsp;', reverse('admin:registration_list', args=[obj.pk])
         )
 
-    @admin.action(description="Delete all attendees for selected events")
+    def has_delete_attendees_permission(self, request):
+        attendee_admin = self.admin_site._registry[EventAttendees]
+        return attendee_admin.has_delete_permission(request)
+
+    @admin.action(
+        description="Delete all attendees for selected events",
+        permissions=['delete_attendees'],
+    )
     def delete_participants(self, request, queryset):
         queryset = queryset.prefetch_related('eventattendees_set')
         attendees_to_delete = []
@@ -264,9 +291,14 @@ class EventAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, EventTran
         return render(request, 'admin/events/delete_participants_confirmation.html', context)
 
     def process_list(self, request, event_id, *args, **kwargs):
+        attendee_admin = self.admin_site._registry[EventAttendees]
+        if not self.has_view_permission(request) or not attendee_admin.has_view_permission(request):
+            raise PermissionDenied
+
         context = self.admin_site.each_context(request)
-        event = self.get_object(request, event_id)
+        event = get_object_or_404(self.get_queryset(request), pk=event_id)
         context['event'] = event
+        context['attendees'] = event.get_registrations()
         rf = event.get_registration_form()
         context["form"] = [x.name for x in rf][::-1] if rf else None
         return TemplateResponse(request, 'events/list.html', context)

@@ -18,3 +18,6 @@ The `gallery` app owns photo albums and uploaded photos. It replaced the previou
 Public routes are still exposed through `archive.urls` under `/archive/pictures/...` with the existing `archive:years`, `archive:pictures`, `archive:detail`, and `archive:upload` names.
 
 The app intentionally renders the shared `archive/...` templates so the public gallery pages keep their historical layout while the data ownership lives in `gallery`.
+
+## Admin Permissions
+Legacy picture-collection permissions grant the same module and inline photo access in classic admin and Unfold during the permission migration period.

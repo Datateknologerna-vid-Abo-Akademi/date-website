@@ -19,7 +19,7 @@
       <img id="qr-link"
            src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ request.get_host }}{% url 'events:detail' event.slug %}">
       <h5>{% translate "Datum:" %} {{ event.event_date_start }}</h5>
-      {% if event.get_registrations %}
+      {% if attendees %}
         <table id="attendeeList">
           <thead>
             <tr>
@@ -68,7 +68,7 @@
             </tr>
           </thead>
           <tbody>
-            {% for attendee in event.get_registrations %}
+            {% for attendee in attendees %}
               <tr>
                 <td>{{ forloop.counter }}</td>
                 <td>{{ attendee.user }}</td>

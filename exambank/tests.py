@@ -1,6 +1,9 @@
 import shutil
 import tempfile
+from types import SimpleNamespace
+from unittest.mock import Mock
 
+from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -8,6 +11,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from exambank.admin import ExamFileInline
 from exambank.forms import ExamArchiveAdminForm, ExamBankAccessSettingsAdminForm
 from exambank.models import ExamArchive, ExamBankAccessSettings, ExamFile
 from members.models import ORDINARY_MEMBER, Member, MembershipType
@@ -203,6 +207,29 @@ class ExamArchiveAdminFormTests(TestCase):
         form = ExamArchiveAdminForm()
 
         self.assertIn('hide_for_gulis', form.fields)
+
+    def test_legacy_collection_permission_applies_to_file_inline(self):
+        request = SimpleNamespace(
+            user=SimpleNamespace(
+                has_perm=Mock(
+                    side_effect=lambda perm: (
+                        perm
+                        in {
+                            'archive.view_document',
+                            'archive.add_document',
+                            'archive.change_document',
+                            'archive.delete_document',
+                        }
+                    )
+                )
+            )
+        )
+        inline = ExamFileInline(ExamArchive, admin.site)
+
+        self.assertTrue(inline.has_view_permission(request))
+        self.assertTrue(inline.has_add_permission(request))
+        self.assertTrue(inline.has_change_permission(request))
+        self.assertTrue(inline.has_delete_permission(request))
 
 
 class ExamBankAccessSettingsAdminFormTests(TestCase):

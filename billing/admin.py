@@ -1,8 +1,10 @@
 import csv
 
 from django.contrib import admin
+from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.urls import re_path, reverse
 from django.utils.html import format_html
 from django.utils.http import urlencode
@@ -124,7 +126,11 @@ class EventBillingConfigurationAdmin(ExtraChangeListLinksMixin, ModelAdmin):
         )
 
     def ref_numbers(self, request, conf_id):
-        bconfig = self.get_object(request, conf_id)
+        invoice_admin = self.admin_site._registry[EventInvoice]
+        if not self.has_view_permission(request) or not invoice_admin.has_view_permission(request):
+            raise PermissionDenied
+
+        bconfig = get_object_or_404(self.get_queryset(request), pk=conf_id)
         event = bconfig.event
 
         response = HttpResponse(

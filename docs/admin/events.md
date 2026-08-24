@@ -35,7 +35,7 @@ Each event can have dynamic questions managed inline:
    - **Typ** – `Text`, `Multiple choice`, or `Kryssryta`.
    - **Krävd** – mark required answers.
    - **Öppen info** – include responses in the public attendee list.
-   - **Alternativ** – comma-separated choices for select/check fields. This field is only editable when **Typ** is `Multiple choice`; it enables/disables automatically as you change **Typ**, including on rows you just added with "Add another" — if it stays greyed out after picking `Multiple choice`, that's a bug, not expected behavior.
+   - **Alternativ** - comma-separated choices for multiple-choice fields. Empty or duplicate options are rejected, and surrounding spaces are removed when saving. This field is only editable when **Typ** is `Multiple choice`; it enables/disables automatically as you change **Typ**, including on rows you just added with "Add another". If it stays greyed out after picking `Multiple choice`, that is a bug, not expected behavior.
    - **Göm för avec** – hide this field from partner signups.
 4. Save the event to persist form fields.
 
@@ -44,6 +44,7 @@ Each event can have dynamic questions managed inline:
 2. If **Avec** is active or the event has child instances, extra columns ("Avec till", "Ursprungligt evenemang") appear automatically.
 3. To export a pretty list, click **Deltagarlista** in the main event row; this opens a printable view with the public answers.
 4. Bulk deletion: select events in the changelist → choose **Delete all attendees for selected events**. You will get a confirmation screen before anything is removed.
+5. Question names must be unique within an event. Names used by standard signup fields, such as `email`, `user`, and avec fields, are rejected to prevent invalid registrations.
 
 ## Handling Waiting Lists / Child Events
 - The **Parent** dropdown lets you chain events together. Registrations for child events roll up to the parent so attendee numbers stay consistent.

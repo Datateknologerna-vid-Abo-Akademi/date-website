@@ -4,7 +4,9 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
+from django.forms.models import inlineformset_factory
 from django.test import Client, TestCase, override_settings
 from django.test.client import RequestFactory
 from django.urls import reverse
@@ -13,6 +15,7 @@ from django.utils.formats import date_format
 from django.utils.translation import gettext
 from django_ckeditor_5.widgets import CKEditor5Widget
 
+from events.admin import EventRegistrationFormSet
 from events.forms import EventCreationForm, EventEditForm
 from events.models import Event, EventAttendees, EventRegistrationForm
 from events.routing import websocket_urlpatterns
@@ -889,6 +892,125 @@ class EventAdminTests(TestCase):
         self.assertContains(response, 'src="/assets/admin/img/icon-yes.svg"')
         self.assertContains(response, 'alt="True"')
         self.assertNotContains(response, "True</td>")
+
+    def test_registration_list_returns_404_for_missing_event(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:registration_list", args=[999999]))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_registration_list_requires_event_and_attendee_view_permissions(self):
+        staff_group = Group.objects.create(name='admin')
+        staff_user = Member.objects.create_user(username='limited-event-admin', password='pwd')
+        staff_user.groups.add(staff_group)
+        staff_user.user_permissions.add(Permission.objects.get(codename='view_event'))
+        self.client.force_login(staff_user)
+
+        response = self.client.get(reverse("admin:registration_list", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_delete_participants_action_requires_attendee_delete_permission(self):
+        staff_group = Group.objects.create(name='admin')
+        staff_user = Member.objects.create_user(username='event-editor', password='pwd')
+        staff_user.groups.add(staff_group)
+        staff_user.user_permissions.add(
+            Permission.objects.get(codename='view_event'),
+            Permission.objects.get(codename='change_event'),
+        )
+        request = RequestFactory().get(reverse('admin:events_event_changelist'))
+        request.user = staff_user
+        event_admin = admin.site._registry[Event]
+
+        self.assertNotIn('delete_participants', event_admin.get_actions(request))
+
+
+class EventRegistrationFormValidationTests(TestCase):
+    def setUp(self):
+        self.author = Member.objects.create_user(username='question-author', password='pwd')
+        self.event = Event.objects.create(title='Questions', slug='questions', author=self.author, sign_up=True)
+
+    def test_rejects_reserved_question_names(self):
+        for name in ('email', 'avec_email'):
+            with self.subTest(name=name):
+                question = EventRegistrationForm(event=self.event, name=name, type='text')
+                with self.assertRaises(ValidationError):
+                    question.full_clean()
+
+    def test_multiple_choice_options_are_normalized(self):
+        question = EventRegistrationForm(
+            event=self.event,
+            name='Meal',
+            type='select',
+            choice_list=' fish, vegetarian ',
+        )
+
+        question.full_clean()
+        question.save()
+
+        self.assertEqual(question.choice_list, 'fish,vegetarian')
+        self.assertEqual(
+            list(self.event.make_registration_form().base_fields['Meal'].choices),
+            [('fish', 'fish'), ('vegetarian', 'vegetarian')],
+        )
+
+    def test_multiple_choice_requires_unique_nonempty_options(self):
+        for choices in ('', 'fish,fish'):
+            with self.subTest(choices=choices):
+                question = EventRegistrationForm(
+                    event=self.event,
+                    name='Meal',
+                    type='select',
+                    choice_list=choices,
+                )
+                with self.assertRaises(ValidationError):
+                    question.full_clean()
+
+    def test_inline_formset_rejects_duplicate_question_names(self):
+        formset_class = inlineformset_factory(
+            Event,
+            EventRegistrationForm,
+            formset=EventRegistrationFormSet,
+            fields=('name', 'type', 'choice_list'),
+            extra=2,
+        )
+        formset = formset_class(
+            instance=self.event,
+            data={
+                'eventregistrationform_set-TOTAL_FORMS': '2',
+                'eventregistrationform_set-INITIAL_FORMS': '0',
+                'eventregistrationform_set-MIN_NUM_FORMS': '0',
+                'eventregistrationform_set-MAX_NUM_FORMS': '1000',
+                'eventregistrationform_set-0-name': 'Meal',
+                'eventregistrationform_set-0-type': 'text',
+                'eventregistrationform_set-0-choice_list': '',
+                'eventregistrationform_set-1-name': 'Meal',
+                'eventregistrationform_set-1-type': 'text',
+                'eventregistrationform_set-1-choice_list': '',
+            },
+        )
+
+        self.assertFalse(formset.is_valid())
+        self.assertIn('unika', str(formset.non_form_errors()))
+
+    def test_child_registration_query_excludes_sibling_attendees(self):
+        sibling = Event.objects.create(title='Sibling', slug='sibling', author=self.author, parent=self.event)
+        child = Event.objects.create(title='Child', slug='child', author=self.author, parent=self.event)
+        own_attendee = EventAttendees.objects.create(
+            event=self.event,
+            original_event=child,
+            user='Own attendee',
+            email='own@example.com',
+        )
+        EventAttendees.objects.create(
+            event=self.event,
+            original_event=sibling,
+            user='Sibling attendee',
+            email='sibling@example.com',
+        )
+
+        self.assertEqual(list(child.get_registrations()), [own_attendee])
 
 
 class TranslationAdminRegressionTests(TestCase):

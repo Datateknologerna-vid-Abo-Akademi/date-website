@@ -48,6 +48,21 @@ class PhotoInline(TabularInline):
     def preview_image(self, obj):
         return safe_image_preview(obj.image)
 
+    def _has_legacy_permission(self, request, action):
+        return request.user.has_perm(f'archive.{action}_picture')
+
+    def has_view_permission(self, request, obj=None):
+        return super().has_view_permission(request, obj) or self._has_legacy_permission(request, 'view')
+
+    def has_add_permission(self, request, obj=None):
+        return super().has_add_permission(request, obj) or self._has_legacy_permission(request, 'add')
+
+    def has_change_permission(self, request, obj=None):
+        return super().has_change_permission(request, obj) or self._has_legacy_permission(request, 'change')
+
+    def has_delete_permission(self, request, obj=None):
+        return super().has_delete_permission(request, obj) or self._has_legacy_permission(request, 'delete')
+
 
 @admin.register(Album)
 class AlbumAdmin(FlatpickrDateTimeAdminMixin, GalleryAdminMixin, ModelAdmin):
@@ -69,6 +84,11 @@ class AlbumAdmin(FlatpickrDateTimeAdminMixin, GalleryAdminMixin, ModelAdmin):
 
     def _has_legacy_permission(self, request, action):
         return request.user.has_perm(self.legacy_permission_map[action])
+
+    def has_module_permission(self, request):
+        if super().has_module_permission(request):
+            return True
+        return any(self._has_legacy_permission(request, action) for action in self.legacy_permission_map)
 
     def has_view_permission(self, request, obj=None):
         return super().has_view_permission(request, obj) or self._has_legacy_permission(request, 'view')
