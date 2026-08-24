@@ -1,5 +1,6 @@
 from typing import Any
 
+from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.utils import flatten_fieldsets
@@ -24,6 +25,7 @@ if getattr(settings, 'USE_UNFOLD', False):
     from unfold.widgets import (
         UnfoldAdminEmailInputWidget,
         UnfoldAdminIntegerFieldWidget,
+        UnfoldAdminPasswordToggleWidget,
         UnfoldAdminTextInputWidget,
         UnfoldAdminURLInputWidget,
     )
@@ -37,6 +39,7 @@ if getattr(settings, 'USE_UNFOLD', False):
         'URLInput': UnfoldAdminURLInputWidget,
         'EmailInput': UnfoldAdminEmailInputWidget,
         'NumberInput': UnfoldAdminIntegerFieldWidget,
+        'PasswordInput': UnfoldAdminPasswordToggleWidget,
     }
 else:
     ModelAdmin = admin.ModelAdmin
@@ -58,7 +61,13 @@ class UnfoldFormMixin:
         for field in self.fields.values():
             replacement = _WIDGET_MAP.get(type(field.widget).__name__)
             if replacement is not None:
-                field.widget = replacement()
+                if isinstance(field.widget, forms.PasswordInput):
+                    field.widget = replacement(
+                        attrs=field.widget.attrs,
+                        render_value=field.widget.render_value,
+                    )
+                else:
+                    field.widget = replacement(attrs=field.widget.attrs)
 
 
 class PublicUrlAdminMixin:

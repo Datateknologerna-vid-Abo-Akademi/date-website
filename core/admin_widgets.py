@@ -1,6 +1,7 @@
 import logging
 
 from django import forms
+from django.conf import settings
 from django.contrib.admin import widgets as admin_widgets
 from django.utils import timezone
 from django.utils.html import format_html
@@ -9,7 +10,17 @@ from django.utils.translation import gettext_lazy as _
 logger = logging.getLogger("date")
 
 
-class SafeAdminFileWidget(admin_widgets.AdminFileWidget):
+if getattr(settings, "USE_UNFOLD", False):
+    from unfold.widgets import UnfoldAdminFileFieldWidget, UnfoldAdminImageFieldWidget
+
+    _SafeAdminFileWidgetBase = UnfoldAdminFileFieldWidget
+    _SafeAdminImageWidgetBase = UnfoldAdminImageFieldWidget
+else:
+    _SafeAdminFileWidgetBase = admin_widgets.AdminFileWidget
+    _SafeAdminImageWidgetBase = admin_widgets.AdminFileWidget
+
+
+class _SafeAdminFileWidgetMixin:
     """Avoid crashing admin forms when a stored file cannot resolve a URL."""
 
     def is_initial(self, value):
@@ -20,6 +31,22 @@ class SafeAdminFileWidget(admin_widgets.AdminFileWidget):
         except Exception as exc:
             logger.warning("Unable to resolve admin file widget URL: %s", exc)
             return False
+
+
+class SafeAdminFileWidget(_SafeAdminFileWidgetMixin, _SafeAdminFileWidgetBase):  # type: ignore[misc, valid-type]
+    pass
+
+
+class SafeAdminImageWidget(_SafeAdminFileWidgetMixin, _SafeAdminImageWidgetBase):  # type: ignore[misc, valid-type]
+    """Keep image fields on Unfold's image-specific upload widget."""
+
+    pass
+
+
+class SafeAdminMultipleFileWidget(SafeAdminFileWidget):
+    """Safe file widget that keeps the multi-file upload affordance visible."""
+
+    allow_multiple_selected = True
 
 
 # Flatpickr-based datetime input shared across admin forms (events, news, polls, ctf, lucia).

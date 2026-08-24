@@ -17,6 +17,36 @@ from core.admin_ui import AdminLink
 
 from .models import Functionary, FunctionaryRole
 
+
+class LegacyFunctionaryPermissionMixin:
+    legacy_model_name = ''
+
+    def _has_legacy_permission(self, request, action):
+        return request.user.has_perm(f'members.{action}_{self.legacy_model_name}')
+
+    def has_module_permission(self, request):
+        if super().has_module_permission(request):
+            return True
+        return any(self._has_legacy_permission(request, action) for action in ('view', 'add', 'change', 'delete'))
+
+    def has_view_permission(self, request, obj=None):
+        return super().has_view_permission(request, obj) or self._has_legacy_permission(request, 'view')
+
+    def has_add_permission(self, request, obj=None):
+        current_permission = (
+            super().has_add_permission(request, obj)
+            if isinstance(self, admin.options.InlineModelAdmin)
+            else super().has_add_permission(request)
+        )
+        return current_permission or self._has_legacy_permission(request, 'add')
+
+    def has_change_permission(self, request, obj=None):
+        return super().has_change_permission(request, obj) or self._has_legacy_permission(request, 'change')
+
+    def has_delete_permission(self, request, obj=None):
+        return super().has_delete_permission(request, obj) or self._has_legacy_permission(request, 'delete')
+
+
 if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
 
     class FunctionaryRoleTranslationAdminBase(
@@ -27,7 +57,8 @@ else:
     FunctionaryRoleTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
-class FunctionaryInline(TabularInline):
+class FunctionaryInline(LegacyFunctionaryPermissionMixin, TabularInline):
+    legacy_model_name = 'functionary'
     model = Functionary
     fk_name = 'functionary_role'
     extra = 1
@@ -37,7 +68,8 @@ class FunctionaryInline(TabularInline):
 
 
 @admin.register(Functionary)
-class FunctionaryAdmin(ModelAdmin):
+class FunctionaryAdmin(LegacyFunctionaryPermissionMixin, ModelAdmin):
+    legacy_model_name = 'functionary'
     list_display = ('get_display_name', 'functionary_role_link', 'year')
     list_filter = ('functionary_role', 'year')
     search_fields = (
@@ -69,14 +101,18 @@ class FunctionaryAdmin(ModelAdmin):
 
 @admin.register(FunctionaryRole)
 class FunctionaryRoleAdmin(
-    ExtraChangeListLinksMixin, TranslationCompletionAdminMixin, FunctionaryRoleTranslationAdminBase
+    LegacyFunctionaryPermissionMixin,
+    ExtraChangeListLinksMixin,
+    TranslationCompletionAdminMixin,
+    FunctionaryRoleTranslationAdminBase,
 ):
+    legacy_model_name = 'functionaryrole'
     changelist_links = (
         AdminLink(
             _('All assignments'),
             icon='manage_accounts',
             url_name='admin:functionaries_functionary_changelist',
-            permission='functionaries.view_functionary',
+            any_permissions=('functionaries.view_functionary', 'members.view_functionary'),
         ),
     )
     save_on_top = True
@@ -85,6 +121,15 @@ class FunctionaryRoleAdmin(
     search_fields = ('title', 'functionary__name', 'functionary__member__first_name', 'functionary__member__last_name')
     ordering = ['title']
     inlines = [FunctionaryInline]
+
+    def get_list_display(self, request):
+        list_display = list(super().get_list_display(request))
+        if not hasattr(request, 'user'):
+            return list_display
+        assignment_admin = self.admin_site._registry[Functionary]
+        if not assignment_admin.has_view_permission(request):
+            list_display.remove('functionary_count')
+        return list_display
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(functionary_total=Count('functionary', distinct=True))

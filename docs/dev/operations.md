@@ -253,7 +253,7 @@ Before running `manage.py remove_stale_contenttypes` after this split, grant the
 - `harassment.*` for harassment reports and recipients
 - `functionaries.*` for functionary roles and assignments
 
-The admin keeps temporary fallbacks to the old `archive`, `social`, and `members` permissions while the stale content types still exist. Those fallbacks disappear once stale content types and their permissions are removed.
+The admin keeps temporary fallbacks to the old `archive`, `social`, and `members` permissions while the stale content types still exist. This includes gallery and exam-bank collections/files, Instagram URLs, harassment reports/recipients, and functionary roles/assignments. Those fallbacks disappear once stale content types and their permissions are removed.
 
 ### Before destructive operations
 

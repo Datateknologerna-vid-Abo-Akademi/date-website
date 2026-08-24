@@ -1,14 +1,18 @@
 import shutil
 import tempfile
 from io import BytesIO
+from types import SimpleNamespace
+from unittest.mock import Mock
 
+from django.contrib import admin
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, TestCase, override_settings
 from django.utils.datastructures import MultiValueDict
 from PIL import Image
 
+from .admin import AlbumAdmin, PhotoInline
 from .forms import AlbumAdminForm
-from .models import Photo
+from .models import Album, Photo
 
 
 class AlbumAdminFormTests(TestCase):
@@ -49,3 +53,34 @@ class AlbumAdminFormTests(TestCase):
         image.save(image_bytes, format='JPEG')
         image.close()
         return SimpleUploadedFile(name=name, content=image_bytes.getvalue(), content_type='image/jpeg')
+
+
+class GalleryLegacyAdminPermissionTests(TestCase):
+    def setUp(self):
+        self.request = RequestFactory().get('/admin/gallery/album/')
+        self.request.user = SimpleNamespace(
+            has_module_perms=Mock(return_value=False),
+            has_perm=Mock(
+                side_effect=lambda perm: (
+                    perm
+                    in {
+                        'archive.view_picturecollection',
+                        'archive.view_picture',
+                        'archive.add_picture',
+                        'archive.change_picture',
+                        'archive.delete_picture',
+                    }
+                )
+            ),
+        )
+
+    def test_legacy_permission_exposes_standard_admin_module(self):
+        self.assertTrue(AlbumAdmin(Album, admin.site).has_module_permission(self.request))
+
+    def test_legacy_permission_applies_to_photo_inline(self):
+        inline = PhotoInline(Album, admin.site)
+
+        self.assertTrue(inline.has_view_permission(self.request))
+        self.assertTrue(inline.has_add_permission(self.request))
+        self.assertTrue(inline.has_change_permission(self.request))
+        self.assertTrue(inline.has_delete_permission(self.request))

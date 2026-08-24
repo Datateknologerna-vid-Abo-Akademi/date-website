@@ -1,5 +1,7 @@
 from django import forms
 
+from core.admin_widgets import SafeAdminMultipleFileWidget
+
 from .models import Album, Photo
 
 
@@ -25,7 +27,7 @@ class AlbumUploadForm(forms.Form):
 
 
 class AlbumAdminForm(forms.ModelForm):
-    images = MultipleFileField(label="Ladda upp flera bilder", required=False)
+    images = MultipleFileField(label="Ladda upp flera bilder", required=False, widget=SafeAdminMultipleFileWidget())
 
     class Meta:
         model = Album

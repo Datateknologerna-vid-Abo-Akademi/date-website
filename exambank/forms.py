@@ -1,6 +1,9 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from core.admin_base import UnfoldFormMixin
+from core.admin_widgets import SafeAdminMultipleFileWidget
+
 from .models import ExamArchive, ExamBankAccessSettings, ExamFile
 
 
@@ -30,21 +33,24 @@ class ExamArchiveUploadForm(forms.Form):
 
 
 class ExamArchiveAdminForm(forms.ModelForm):
-    files = MultipleFileField(label="Ladda upp flera dokument", required=False)  # type: ignore[assignment]
+    files = MultipleFileField(
+        label="Ladda upp flera dokument",
+        required=False,
+        widget=SafeAdminMultipleFileWidget(),
+    )  # type: ignore[assignment]
 
     class Meta:
         model = ExamArchive
         fields = '__all__'  # noqa: DJ007
 
-    def save(self, *args, **kwargs):
-        archive = super().save(*args, **kwargs)
+    def _save_m2m(self):
+        super()._save_m2m()
         if hasattr(self.files, 'getlist'):
             for uploaded_file in self.files.getlist('files'):
-                ExamFile.objects.create(archive=archive, document=uploaded_file, title=uploaded_file)
-        return archive
+                ExamFile.objects.create(archive=self.instance, document=uploaded_file, title=uploaded_file)
 
 
-class ExamBankAccessSettingsAdminForm(forms.ModelForm):
+class ExamBankAccessSettingsAdminForm(UnfoldFormMixin, forms.ModelForm):
     PASSWORD_PLACEHOLDER = '********'  # noqa: S105
 
     password = forms.CharField(

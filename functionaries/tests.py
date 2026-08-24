@@ -1,11 +1,47 @@
+from types import SimpleNamespace
+from unittest.mock import Mock
+
+from django.contrib import admin
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, TestCase
 from django.utils import timezone
 
+from functionaries.admin import FunctionaryAdmin, FunctionaryInline, FunctionaryRoleAdmin
 from functionaries.forms import FunctionaryForm
 from functionaries.models import Functionary, FunctionaryRole
 from functionaries.selectors import get_filtered_functionaries, get_selected_role, get_selected_year
 from members.models import ORDINARY_MEMBER, Member, MembershipType
+
+
+class FunctionaryLegacyAdminPermissionTests(TestCase):
+    def test_legacy_permissions_preserve_role_and_assignment_workflows(self):
+        request = SimpleNamespace(
+            user=SimpleNamespace(
+                has_module_perms=Mock(return_value=False),
+                has_perm=Mock(side_effect=lambda permission: permission.startswith('members.')),
+            )
+        )
+
+        role_admin = FunctionaryRoleAdmin(FunctionaryRole, admin.site)
+        assignment_admin = FunctionaryAdmin(Functionary, admin.site)
+        inline = FunctionaryInline(FunctionaryRole, admin.site)
+
+        self.assertTrue(role_admin.has_module_permission(request))
+        self.assertTrue(role_admin.has_change_permission(request))
+        self.assertTrue(assignment_admin.has_change_permission(request))
+        self.assertTrue(inline.has_add_permission(request))
+        self.assertTrue(role_admin.get_changelist_links(request))
+
+    def test_role_list_hides_assignment_link_without_assignment_permission(self):
+        request = SimpleNamespace(
+            user=SimpleNamespace(
+                has_module_perms=Mock(return_value=False),
+                has_perm=Mock(side_effect=lambda permission: permission == 'members.view_functionaryrole'),
+            )
+        )
+        role_admin = FunctionaryRoleAdmin(FunctionaryRole, admin.site)
+
+        self.assertNotIn('functionary_count', role_admin.get_list_display(request))
 
 
 class FunctionaryFormTests(TestCase):

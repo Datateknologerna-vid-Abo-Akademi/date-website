@@ -26,6 +26,6 @@
 - Alumni messages are plain text and therefore use `.txt` templates. Django renders them normally, while the extension prevents the HTML formatter from changing user-visible whitespace. Reserve `.html` for messages that are sent as HTML.
 
 ## Extending
-- To expose recipient management in admin, register `AlumniEmailRecipient` with a simple `ModelAdmin` (currently unregistered).
+- `AlumniEmailRecipientAdmin` uses the shared admin base so its forms and layout remain compatible with both classic admin and Unfold.
 - Consider encrypting the token payload or adding rate limiting to avoid brute-force attempts.
 - For better observability, persist audit logs inside Django in addition to Google Sheets.
