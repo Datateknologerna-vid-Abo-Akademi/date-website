@@ -74,6 +74,11 @@ def register_event_signup(event, cleaned_data):
 
 
 def _ensure_capacity(event, required_places):
+    # Only child events enforce a hard capacity limit. A full parent/standalone
+    # event keeps accepting signups as an overflow/reserve list (see
+    # templates/common/events/registering.html for the matching UI message).
+    if not event.parent:
+        return
     if event.sign_up_max_participants == 0:
         return
     if event.remaining_places() < required_places:
