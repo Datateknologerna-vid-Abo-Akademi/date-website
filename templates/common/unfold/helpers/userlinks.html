@@ -1,4 +1,4 @@
-{% load admin_ui i18n static unfold %}
+{% load i18n static unfold %}
 <div class="flex flex-row gap-3 items-center ml-auto">
   {% if environment %}
     {% include "unfold/helpers/label.html" with text=environment.0 type=environment.1 %}
@@ -27,32 +27,6 @@
       <span class="material-symbols-outlined text-base">open_in_new</span>
       <span>{% trans "View site" %}</span>
     </a>
-  {% endif %}
-  {% admin_topbar_quick_create_links as quick_create_links %}
-  {% if quick_create_links %}
-    <div class="relative" x-data="{ openQuickCreate: false }">
-      <button type="button"
-              class="flex items-center gap-1 px-2 py-1 rounded-default text-sm hover:bg-base-100 hover:text-base-700 dark:hover:bg-base-700 dark:hover:text-base-200"
-              x-on:click="openQuickCreate = !openQuickCreate"
-              x-bind:aria-expanded="openQuickCreate.toString()"
-              aria-haspopup="true">
-        <span class="material-symbols-outlined text-base">add_circle</span>
-        <span class="hidden md:inline">{% trans "Create" %}</span>
-      </button>
-      <nav class="absolute bg-white border border-base-200 flex flex-col leading-none py-1 -right-2 rounded-default shadow-lg top-8 w-44 z-50 dark:bg-base-800 dark:border-base-700"
-           x-cloak
-           x-show="openQuickCreate"
-           x-transition
-           x-on:click.outside="openQuickCreate = false">
-        {% for link in quick_create_links %}
-          <a href="{{ link.href }}"
-             class="flex items-center gap-2 mx-1 px-3 py-2 rounded-default hover:bg-base-100 hover:text-base-700 dark:hover:bg-base-700 dark:hover:text-base-200">
-            {% if link.icon %}<span class="material-symbols-outlined text-base">{{ link.icon }}</span>{% endif %}
-            <span>{{ link.label }}</span>
-          </a>
-        {% endfor %}
-      </nav>
-    </div>
   {% endif %}
   {% include "unfold/helpers/theme_switch_dropdown.html" %}
   {% action_list %}

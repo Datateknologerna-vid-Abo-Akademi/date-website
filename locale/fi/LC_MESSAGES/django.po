@@ -2193,9 +2193,9 @@ msgstr "Tämä poistaa ylimääräisen vahvistusvaiheen tililtäsi."
 msgid "Disable"
 msgstr "Poista käytöstä"
 
-#: templates/common/unfold/helpers/userlinks.html:39
-msgid "Create"
-msgstr "Luo"
+#: templates/common/unfold/helpers/app_list_default.html:29
+msgid "View all"
+msgstr "Näytä kaikki"
 
 #: templates/date/date/components/about.html:4
 msgid "Om oss"

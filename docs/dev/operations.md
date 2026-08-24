@@ -21,6 +21,8 @@ Set `USE_UNFOLD=True` in `.env` to run Django admin with the Unfold theme. Leave
 
 Changing this value requires restarting or recreating the Django containers, because admin apps, widgets, templates, and static assets are selected when Django starts.
 
+Unfold keeps create actions next to the object they affect. Model lists and edit pages show a labeled **Add &lt;model&gt;** button beside the page title, while the admin dashboard uses explicit **View all** and **Add** links for each model. The global header is reserved for site-wide controls such as environment, language, site access, theme, and account actions.
+
 ## Fixture Reset and Local Seed Data
 
 ### `date-cleaninit` / `scripts/clean_init.sh`

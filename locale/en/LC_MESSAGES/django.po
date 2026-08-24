@@ -2182,9 +2182,9 @@ msgstr "This removes the extra verification step from your account."
 msgid "Disable"
 msgstr "Disable"
 
-#: templates/common/unfold/helpers/userlinks.html:39
-msgid "Create"
-msgstr "Create"
+#: templates/common/unfold/helpers/app_list_default.html:29
+msgid "View all"
+msgstr "View all"
 
 #: templates/date/date/components/about.html:4
 msgid "Om oss"

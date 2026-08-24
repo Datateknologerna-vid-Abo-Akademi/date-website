@@ -10,9 +10,7 @@ from django.utils import translation
 from core.admin_base import PublicUrlAdminMixin, UnfoldFormMixin
 from core.admin_ui import (
     SIDEBAR_NAVIGATION,
-    TOPBAR_QUICK_CREATE_LINKS,
     get_sidebar_navigation,
-    get_topbar_quick_create_links,
 )
 from core.admin_widgets import SafeAdminFileWidget, SafeAdminImageWidget, SafeAdminMultipleFileWidget
 from core.settings.common import _get_unfold_environment
@@ -21,30 +19,6 @@ from core.settings.common import _get_unfold_environment
 class AdminUiRegistryTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
-
-    def test_quick_create_links_require_permissions(self):
-        request = self.factory.get("/admin/")
-        request.user = get_user_model().objects.create_user(
-            username="member",
-            password="pass",
-            email="member@example.com",
-        )
-
-        self.assertEqual(get_topbar_quick_create_links(request), [])
-
-    def test_superuser_gets_registered_quick_create_links(self):
-        request = self.factory.get("/admin/")
-        request.user = get_user_model().objects.create_superuser(
-            username="admin",
-            password="pass",
-            email="admin@example.com",
-        )
-
-        hrefs = {link["href"] for link in get_topbar_quick_create_links(request)}
-
-        self.assertIn("/admin/events/event/add/", hrefs)
-        self.assertIn("/admin/news/post/add/", hrefs)
-        self.assertIn("/admin/staticpages/staticpage/add/", hrefs)
 
     def test_sidebar_registry_resolves_expected_groups(self):
         request = self.factory.get("/admin/")
@@ -126,9 +100,7 @@ class AdminUiRegistryTests(TestCase):
         self.assertEqual(variant, "success")
 
     def test_registry_permission_strings_match_models(self):
-        links = list(TOPBAR_QUICK_CREATE_LINKS)
-        for group in SIDEBAR_NAVIGATION:
-            links.extend(group.items)
+        links = [link for group in SIDEBAR_NAVIGATION for link in group.items]
 
         for link in links:
             if not link.permission:
@@ -144,6 +116,34 @@ class AdminUiRegistryTests(TestCase):
             with self.subTest(permission=link.permission):
                 self.assertIn(action, {"add", "change", "delete", "view"})
                 self.assertIsNotNone(apps.get_model(app_label, model_name))
+
+
+class UnfoldActionHierarchyTests(TestCase):
+    def setUp(self):
+        if not settings.USE_UNFOLD:
+            self.skipTest("Unfold is disabled")
+        self.user = get_user_model().objects.create_superuser(
+            username="unfold-admin",
+            password="pass",
+            email="unfold@example.com",
+        )
+        self.client.force_login(self.user)
+
+    @override_settings(LANGUAGE_CODE="en")
+    def test_changelist_uses_labeled_contextual_add_action(self):
+        response = self.client.get(reverse("admin:members_member_changelist"))
+
+        self.assertContains(response, "Add member")
+        self.assertTemplateUsed(response, "unfold/helpers/add_link.html")
+        self.assertNotContains(response, "openQuickCreate")
+
+    @override_settings(LANGUAGE_CODE="en")
+    def test_dashboard_uses_explicit_model_actions(self):
+        response = self.client.get(reverse("admin:index"))
+
+        self.assertContains(response, "View all")
+        self.assertContains(response, "Add")
+        self.assertTemplateUsed(response, "unfold/helpers/app_list_default.html")
 
 
 class PublicUrlAdminMixinTests(TestCase):

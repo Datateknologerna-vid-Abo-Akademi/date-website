@@ -2188,9 +2188,9 @@ msgstr "Detta tar bort det extra verifieringssteget från ditt konto."
 msgid "Disable"
 msgstr "Stäng av"
 
-#: templates/common/unfold/helpers/userlinks.html:39
-msgid "Create"
-msgstr "Skapa"
+#: templates/common/unfold/helpers/app_list_default.html:29
+msgid "View all"
+msgstr "Visa alla"
 
 #: templates/date/date/components/about.html:4
 msgid "Om oss"
