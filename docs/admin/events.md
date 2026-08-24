@@ -35,7 +35,7 @@ Each event can have dynamic questions managed inline:
    - **Typ** – `Text`, `Multiple choice`, or `Kryssryta`.
    - **Krävd** – mark required answers.
    - **Öppen info** – include responses in the public attendee list.
-   - **Alternativ** – comma-separated choices for select/check fields.
+   - **Alternativ** – comma-separated choices for select/check fields. This field is only editable when **Typ** is `Multiple choice`; it enables/disables automatically as you change **Typ**, including on rows you just added with "Add another" — if it stays greyed out after picking `Multiple choice`, that's a bug, not expected behavior.
    - **Göm för avec** – hide this field from partner signups.
 4. Save the event to persist form fields.
 
