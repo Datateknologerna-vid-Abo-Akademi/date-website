@@ -1,9 +1,10 @@
 from datetime import date, timedelta
 from unittest.mock import patch
 
+from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -84,6 +85,11 @@ class BillingAdminTests(BillingBaseTestCase):
         response = self.client.get(reverse('admin:billing_ref_numbers', args=[self.config.pk]))
 
         self.assertEqual(response.status_code, 403)
+        request = RequestFactory().get(reverse('admin:billing_eventbillingconfiguration_changelist'))
+        request.user = staff_user
+        list_display = admin.site._registry[EventBillingConfiguration].get_list_display(request)
+        self.assertNotIn('invoice_count', list_display)
+        self.assertNotIn('ref_export', list_display)
 
 
 class HandleEventBillingTests(BillingBaseTestCase):

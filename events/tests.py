@@ -910,6 +910,11 @@ class EventAdminTests(TestCase):
         response = self.client.get(reverse("admin:registration_list", args=[self.event.pk]))
 
         self.assertEqual(response.status_code, 403)
+        request = RequestFactory().get(reverse('admin:events_event_changelist'))
+        request.user = staff_user
+        list_display = admin.site._registry[Event].get_list_display(request)
+        self.assertNotIn('get_attendee_count', list_display)
+        self.assertNotIn('account_actions', list_display)
 
     def test_delete_participants_action_requires_attendee_delete_permission(self):
         staff_group = Group.objects.create(name='admin')
@@ -994,6 +999,50 @@ class EventRegistrationFormValidationTests(TestCase):
         self.assertFalse(formset.is_valid())
         self.assertIn('unika', str(formset.non_form_errors()))
 
+    def test_unchanged_legacy_question_configuration_remains_editable(self):
+        question = EventRegistrationForm.objects.create(
+            event=self.event,
+            name='',
+            type='select',
+            choice_list='',
+        )
+        question.required = True
+
+        question.full_clean()
+
+        self.assertTrue(question.required)
+
+    def test_legacy_duplicate_names_do_not_block_unrelated_inline_edits(self):
+        first = EventRegistrationForm.objects.create(event=self.event, name='Legacy', type='text')
+        second = EventRegistrationForm.objects.create(event=self.event, name='Legacy', type='text')
+        formset_class = inlineformset_factory(
+            Event,
+            EventRegistrationForm,
+            formset=EventRegistrationFormSet,
+            fields=('name', 'type', 'choice_list', 'required'),
+            extra=0,
+        )
+        formset = formset_class(
+            instance=self.event,
+            data={
+                'eventregistrationform_set-TOTAL_FORMS': '2',
+                'eventregistrationform_set-INITIAL_FORMS': '2',
+                'eventregistrationform_set-MIN_NUM_FORMS': '0',
+                'eventregistrationform_set-MAX_NUM_FORMS': '1000',
+                'eventregistrationform_set-0-id': str(first.pk),
+                'eventregistrationform_set-0-name': 'Legacy',
+                'eventregistrationform_set-0-type': 'text',
+                'eventregistrationform_set-0-choice_list': '',
+                'eventregistrationform_set-0-required': 'on',
+                'eventregistrationform_set-1-id': str(second.pk),
+                'eventregistrationform_set-1-name': 'Legacy',
+                'eventregistrationform_set-1-type': 'text',
+                'eventregistrationform_set-1-choice_list': '',
+            },
+        )
+
+        self.assertTrue(formset.is_valid(), formset.errors)
+
     def test_child_registration_query_excludes_sibling_attendees(self):
         sibling = Event.objects.create(title='Sibling', slug='sibling', author=self.author, parent=self.event)
         child = Event.objects.create(title='Child', slug='child', author=self.author, parent=self.event)
@@ -1011,6 +1060,26 @@ class EventRegistrationFormValidationTests(TestCase):
         )
 
         self.assertEqual(list(child.get_registrations()), [own_attendee])
+
+    def test_attendee_cannot_reference_itself_or_another_event_as_avec(self):
+        attendee = EventAttendees.objects.create(
+            event=self.event,
+            user='Avec attendee',
+            email='avec-attendee@example.com',
+        )
+        attendee.avec_for = attendee
+        with self.assertRaises(ValidationError):
+            attendee.full_clean()
+
+        other_event = Event.objects.create(title='Other', slug='other', author=self.author)
+        other_attendee = EventAttendees.objects.create(
+            event=other_event,
+            user='Other attendee',
+            email='other-attendee@example.com',
+        )
+        attendee.avec_for = other_attendee
+        with self.assertRaises(ValidationError):
+            attendee.full_clean()
 
 
 class TranslationAdminRegressionTests(TestCase):

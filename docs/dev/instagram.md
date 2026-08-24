@@ -13,3 +13,4 @@ The `instagram` app owns the Instagram post URLs used by the home page embed are
 ## Migration Notes
 - Data was split out from `social.IgUrl` into `instagram.IgUrl`.
 - The split migration preserves primary keys and drops the legacy `social_igurl` table after copying.
+- Legacy `social` Instagram URL permissions continue to grant equivalent admin access while stale content types are being migrated.

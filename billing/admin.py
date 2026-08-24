@@ -79,6 +79,16 @@ class EventBillingConfigurationAdmin(ExtraChangeListLinksMixin, ModelAdmin):
     list_select_related = ('event',)
     ordering = ('event',)
 
+    def get_list_display(self, request):
+        list_display = list(super().get_list_display(request))
+        if not hasattr(request, 'user'):
+            return list_display
+        invoice_admin = self.admin_site._registry[EventInvoice]
+        if not invoice_admin.has_view_permission(request):
+            list_display.remove('invoice_count')
+            list_display.remove('ref_export')
+        return list_display
+
     def get_queryset(self, request):
         return (
             super()

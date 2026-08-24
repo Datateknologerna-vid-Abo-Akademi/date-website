@@ -21,6 +21,8 @@ Failed password submissions are rate-limited per session: after `EXAM_BANK_PASSW
 
 Legacy exam-collection permissions also apply to inline exam files, preserving the complete editor workflow in classic admin and Unfold during the permission migration period.
 
+Multi-file uploads are created from the form's `save_m2m()` phase, after the new archive has been saved. This ordering is required by Django admin's `commit=False` save flow.
+
 ## Migration Notes
 - `archive.0008_remove_picture_collection_delete_examcollection_and_more` copies legacy `archive.Collection(type="Exams")` rows into `exambank_examarchive` and related `archive.Document` rows into `exambank_examfile`.
 - Primary keys are preserved where possible.

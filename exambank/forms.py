@@ -43,12 +43,11 @@ class ExamArchiveAdminForm(forms.ModelForm):
         model = ExamArchive
         fields = '__all__'  # noqa: DJ007
 
-    def save(self, *args, **kwargs):
-        archive = super().save(*args, **kwargs)
+    def _save_m2m(self):
+        super()._save_m2m()
         if hasattr(self.files, 'getlist'):
             for uploaded_file in self.files.getlist('files'):
-                ExamFile.objects.create(archive=archive, document=uploaded_file, title=uploaded_file)
-        return archive
+                ExamFile.objects.create(archive=self.instance, document=uploaded_file, title=uploaded_file)
 
 
 class ExamBankAccessSettingsAdminForm(UnfoldFormMixin, forms.ModelForm):

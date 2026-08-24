@@ -384,6 +384,11 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
 
     def clean(self):
         super().clean()
+        if self.pk:
+            stored = EventRegistrationForm.objects.filter(pk=self.pk).values('name', 'type', 'choice_list').first()
+            if stored and all(stored[field] == getattr(self, field) for field in stored):
+                return
+
         name = self.name.strip()
         if not name:
             raise ValidationError({'name': _('Ange ett namn för anmälningsfältet.')})
@@ -450,6 +455,15 @@ class EventAttendees(models.Model):  # type: ignore[django-manager-missing]
     @register.filter
     def get_preference(self, key):
         return self.preferences.get(str(key), "")
+
+    def clean(self):
+        super().clean()
+        if not self.avec_for_id:
+            return
+        if self.pk and self.avec_for_id == self.pk:
+            raise ValidationError({'avec_for': _('En deltagare kan inte vara sin egen avec.')})
+        if self.event_id and self.avec_for.event_id != self.event_id:
+            raise ValidationError({'avec_for': _('Avec-deltagaren måste höra till samma evenemang.')})
 
     def save(self, *args, **kwargs):  # noqa: DJ012
         if self.attendee_nr is None:

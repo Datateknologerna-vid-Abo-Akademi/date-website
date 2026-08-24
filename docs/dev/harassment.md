@@ -23,6 +23,7 @@ The old public route and reverse name stay available as `/social/harassment/` an
 ## Migration Notes
 - Data was split out from `social.Harassment` and `social.HarassmentEmailRecipient`.
 - The split migration preserves primary keys and drops the legacy social tables after copying.
+- Legacy `social` harassment and recipient permissions continue to grant equivalent admin access while stale content types are being migrated.
 
 ## Extending
 - Add status fields such as `is_reviewed` or `assigned_to` here if case management becomes more formal.

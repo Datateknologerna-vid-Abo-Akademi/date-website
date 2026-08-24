@@ -2,6 +2,7 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib import admin as django_admin
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import NoReverseMatch, reverse
 from django.utils import translation
@@ -78,6 +79,19 @@ class AdminUiRegistryTests(TestCase):
         )
 
         self.assertEqual(get_sidebar_navigation(request), [])
+
+    def test_sidebar_accepts_change_permission_as_view_access(self):
+        request = self.factory.get('/admin/')
+        request.user = get_user_model().objects.create_user(
+            username='change-only-admin',
+            password='pass',
+            email='change-only@example.com',
+        )
+        request.user.user_permissions.add(Permission.objects.get(codename='change_event'))
+
+        links = {item['link'] for group in get_sidebar_navigation(request) for item in group['items']}
+
+        self.assertIn('/admin/events/event/', links)
 
     def test_sidebar_registry_omits_missing_urls(self):
         request = self.factory.get("/admin/")
@@ -184,6 +198,17 @@ class UnfoldFormMixinTests(TestCase):
         self.assertTrue(form.is_valid())
         if settings.USE_UNFOLD:
             self.assertIn('Toggle password visibility', form['password'].as_widget())
+
+    def test_mixin_preserves_widget_attributes(self):
+        from django import forms
+
+        class _SampleForm(UnfoldFormMixin, forms.Form):
+            value = forms.CharField(widget=forms.TextInput(attrs={'placeholder': 'Example', 'data-test': 'kept'}))
+
+        widget = _SampleForm().fields['value'].widget
+
+        self.assertEqual(widget.attrs['placeholder'], 'Example')
+        self.assertEqual(widget.attrs['data-test'], 'kept')
 
 
 class AdminFileWidgetTests(TestCase):

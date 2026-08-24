@@ -144,6 +144,16 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ExtraChangeListLinksMixin,
     )
     inlines: list[type[TabularInline]] = []
 
+    def get_list_display(self, request):
+        list_display = list(super().get_list_display(request))
+        if not hasattr(request, 'user'):
+            return list_display
+        publication_admin = self.admin_site._registry[PDFFile]
+        if not publication_admin.has_view_permission(request):
+            list_display.remove('publication_count')
+            list_display.remove('manage_publications')
+        return list_display
+
     def get_prepopulated_fields(self, request, obj=None):
         if obj is None:
             return self.prepopulated_fields

@@ -54,14 +54,18 @@ class AvecAwareMixin:
 class EventRegistrationFormSet(BaseInlineFormSet):
     def clean(self):
         super().clean()
-        names = set()
+        forms_by_name = {}
         for form in self.forms:
             if not hasattr(form, 'cleaned_data') or form.cleaned_data.get('DELETE'):
                 continue
             name = (form.cleaned_data.get('name') or '').strip()
-            if name in names:
+            forms_by_name.setdefault(name, []).append(form)
+
+        for duplicate_forms in forms_by_name.values():
+            if len(duplicate_forms) > 1 and any(
+                form.instance._state.adding or 'name' in form.changed_data for form in duplicate_forms
+            ):
                 raise ValidationError(_('Fältnamnen måste vara unika inom evenemanget.'))
-            names.add(name)
 
 
 class EventRegistrationFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationInlineBase):
@@ -215,6 +219,16 @@ class EventAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, EventTran
     form = forms.EventCreationForm
 
     inlines = [EventRegistrationFormInline, EventAttendeesFormInline]
+
+    def get_list_display(self, request):
+        list_display = list(super().get_list_display(request))
+        if not hasattr(request, 'user'):
+            return list_display
+        attendee_admin = self.admin_site._registry[EventAttendees]
+        if not attendee_admin.has_view_permission(request):
+            list_display.remove('get_attendee_count')
+            list_display.remove('account_actions')
+        return list_display
 
     def get_queryset(self, request):
         attendee_sq = (

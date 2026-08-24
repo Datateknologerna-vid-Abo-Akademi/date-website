@@ -67,7 +67,7 @@ class UnfoldFormMixin:
                         render_value=field.widget.render_value,
                     )
                 else:
-                    field.widget = replacement()
+                    field.widget = replacement(attrs=field.widget.attrs)
 
 
 class PublicUrlAdminMixin:

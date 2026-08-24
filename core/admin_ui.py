@@ -14,10 +14,21 @@ class AdminLink:
     permission: str = ''
     any_permissions: tuple[str, ...] = ()
 
+    @staticmethod
+    def _has_permission(user, permission):
+        if user.has_perm(permission):
+            return True
+        app_label, codename = permission.split('.', 1)
+        if codename.startswith('view_'):
+            return user.has_perm(f'{app_label}.change_{codename.removeprefix("view_")}')
+        return False
+
     def resolve(self, request):
-        if self.permission and not request.user.has_perm(self.permission):
+        if self.permission and not self._has_permission(request.user, self.permission):
             return None
-        if self.any_permissions and not any(request.user.has_perm(permission) for permission in self.any_permissions):
+        if self.any_permissions and not any(
+            self._has_permission(request.user, permission) for permission in self.any_permissions
+        ):
             return None
 
         href = self.url
@@ -125,7 +136,7 @@ SIDEBAR_NAVIGATION = (
                 _('Functionary Roles'),
                 icon='work',
                 url_name='admin:functionaries_functionaryrole_changelist',
-                permission='functionaries.view_functionaryrole',
+                any_permissions=('functionaries.view_functionaryrole', 'members.view_functionaryrole'),
             ),
         ),
     ),
@@ -207,19 +218,22 @@ SIDEBAR_NAVIGATION = (
                 _('Instagram URLs'),
                 icon='photo_camera',
                 url_name='admin:instagram_igurl_changelist',
-                permission='instagram.view_igurl',
+                any_permissions=('instagram.view_igurl', 'social.view_igurl'),
             ),
             AdminLink(
                 _('Harassment Reports'),
                 icon='report',
                 url_name='admin:harassment_harassment_changelist',
-                permission='harassment.view_harassment',
+                any_permissions=('harassment.view_harassment', 'social.view_harassment'),
             ),
             AdminLink(
                 _('Report Recipients'),
                 icon='mail',
                 url_name='admin:harassment_harassmentemailrecipient_changelist',
-                permission='harassment.view_harassmentemailrecipient',
+                any_permissions=(
+                    'harassment.view_harassmentemailrecipient',
+                    'social.view_harassmentemailrecipient',
+                ),
             ),
         ),
     ),

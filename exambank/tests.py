@@ -10,6 +10,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.datastructures import MultiValueDict
 
 from exambank.admin import ExamFileInline
 from exambank.forms import ExamArchiveAdminForm, ExamBankAccessSettingsAdminForm
@@ -208,6 +209,23 @@ class ExamArchiveAdminFormTests(TestCase):
 
         self.assertIn('hide_for_gulis', form.fields)
 
+    def test_multi_upload_is_deferred_until_archive_is_saved(self):
+        with tempfile.TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
+            form = ExamArchiveAdminForm(
+                data={'title': 'Admin uploads', 'pub_date': '2026-08-24 12:00:00'},
+                files=MultiValueDict({'files': [SimpleUploadedFile('exam.pdf', b'%PDF-1.4')]}),
+            )
+
+            self.assertTrue(form.is_valid(), form.errors)
+            archive = form.save(commit=False)
+            self.assertIsNone(archive.pk)
+            self.assertEqual(ExamFile.objects.count(), 0)
+
+            archive.save()
+            form.save_m2m()
+
+            self.assertTrue(ExamFile.objects.filter(archive=archive, document__endswith='exam.pdf').exists())
+
     def test_legacy_collection_permission_applies_to_file_inline(self):
         request = SimpleNamespace(
             user=SimpleNamespace(
@@ -285,6 +303,26 @@ class ExamArchiveAdminTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'flatpickr-datetime')
         self.assertContains(response, 'core/js/flatpickr.min.js')
+
+    def test_admin_add_with_multi_upload_creates_archive_and_file(self):
+        with tempfile.TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
+            response = self.client.post(
+                reverse('admin:exambank_examarchive_add'),
+                {
+                    'title': 'Admin upload archive',
+                    'pub_date': '2026-08-24 12:00',
+                    'files': SimpleUploadedFile('admin-exam.pdf', b'%PDF-1.4'),
+                    'examfile_set-TOTAL_FORMS': '0',
+                    'examfile_set-INITIAL_FORMS': '0',
+                    'examfile_set-MIN_NUM_FORMS': '0',
+                    'examfile_set-MAX_NUM_FORMS': '1000',
+                    '_save': 'Save',
+                },
+            )
+
+            self.assertEqual(response.status_code, 302)
+            archive = ExamArchive.objects.get(title='Admin upload archive')
+            self.assertTrue(ExamFile.objects.filter(archive=archive, document__endswith='admin-exam.pdf').exists())
 
     def test_changelist_links_to_access_settings(self):
         access_settings = ExamBankAccessSettings.get_solo()
