@@ -43,6 +43,16 @@ services:
       - redis
     networks:
         - internal
+  celery-beat:
+    env_file: .env
+    restart: always
+    image: ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}
+    command: celery -A core beat -l info
+    depends_on:
+      - db
+      - redis
+    networks:
+        - internal
   redis:
     restart: always
     image: valkey/valkey:7.2-alpine

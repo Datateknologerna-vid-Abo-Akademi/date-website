@@ -200,9 +200,10 @@ the chart — deploys happen in the operator repository. Image/tag rules:
 migrations are zero-downtime safe; destructive migrations must ship as two
 releases (expand, then contract). Full flow: `docs/dev/kubernetes.md`.
 
-`docker-compose.prod.yml` remains the self-hosted / standalone option
+`docker-compose.prod.yml` remains as a local production-shape preview stack
 (compose + `DATE_IMG_TAG`; prefer immutable SHA or release tags — `qa`,
-`prod`, `latest` are moving aliases).
+`prod`, `latest` are moving aliases). Production itself does not run Compose;
+it deploys via the Helm chart + GitOps.
 
 Run one Helm release per association because each release needs its own
 `PROJECT_NAME`, settings, static/template paths, hostnames, media prefixes,
