@@ -399,6 +399,9 @@ class EventTestCase(TestCase):
         self.assertContains(response, '<td>True</td>', count=1)
 
     def test_max_participants(self):
+        # Parent/standalone events have no hard cap: once full they keep accepting
+        # signups as reserve-list overflow (see EventCapacityTests for the child-event
+        # hard-block case).
         self.event.sign_up_max_participants = 1
         self.event.save()
         c = Client()
@@ -407,8 +410,8 @@ class EventTestCase(TestCase):
         self.content['email'] = 'person2@test.com'
         response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(self.event.get_registrations().count(), 1)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.event.get_registrations().count(), 2)
 
     def test_avec_signup_saves_custom_field_preferences_for_both_attendees(self):
         self.event.sign_up_avec = True
