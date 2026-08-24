@@ -69,7 +69,9 @@
 {% if event.parent and event.event_is_full %}
   <p class="warning">{% translate "Evenemanget är tyvärr fullt! Vänligen kontakta evenemangets kontaktperson" %}</p>
 {% elif event.event_is_full %}
-  <p class="warning">{% translate "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan och meddelas om du får plats." %}</p>
+  <p class="warning">
+    {% translate "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på reservlistan och meddelas om du får plats." %}
+  </p>
 {% endif %}
 <script>
     updateAvecForm();
