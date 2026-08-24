@@ -20,7 +20,8 @@ __all__ = [
 ]
 
 if getattr(settings, 'USE_UNFOLD', False):
-    from unfold.admin import ModelAdmin, StackedInline, TabularInline
+    from unfold.admin import ModelAdmin as _ModelAdminBase
+    from unfold.admin import StackedInline, TabularInline
     from unfold.overrides import FORMFIELD_OVERRIDES
     from unfold.widgets import (
         UnfoldAdminEmailInputWidget,
@@ -42,11 +43,16 @@ if getattr(settings, 'USE_UNFOLD', False):
         'PasswordInput': UnfoldAdminPasswordToggleWidget,
     }
 else:
-    ModelAdmin = admin.ModelAdmin
+    _ModelAdminBase = admin.ModelAdmin  # type: ignore[misc, assignment]
     TabularInline = admin.TabularInline
     StackedInline = admin.StackedInline
     UNFOLD_FORMFIELD_OVERRIDES = {}
     _WIDGET_MAP = {}
+
+
+class ModelAdmin(_ModelAdminBase):  # type: ignore[misc, valid-type]
+    change_form_show_cancel_button = getattr(settings, 'USE_UNFOLD', False)
+    unfold_enabled = getattr(settings, 'USE_UNFOLD', False)
 
 
 class UnfoldFormMixin:
@@ -88,13 +94,18 @@ class PublicUrlAdminMixin:
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj))
-        if obj and hasattr(obj, 'get_absolute_url') and self.public_url_field not in readonly_fields:
+        if (
+            not getattr(settings, 'USE_UNFOLD', False)
+            and obj
+            and hasattr(obj, 'get_absolute_url')
+            and self.public_url_field not in readonly_fields
+        ):
             readonly_fields.append(self.public_url_field)
         return readonly_fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = list(super().get_fieldsets(request, obj))
-        if not obj or not hasattr(obj, 'get_absolute_url'):
+        if getattr(settings, 'USE_UNFOLD', False) or not obj or not hasattr(obj, 'get_absolute_url'):
             return fieldsets
 
         if self.public_url_field in flatten_fieldsets(fieldsets) or not fieldsets:

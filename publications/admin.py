@@ -102,7 +102,6 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ExtraChangeListLinksMixin,
         'ordering',
         'is_active',
         'publication_count',
-        'manage_publications',
         'updated_at',
     )
     list_editable = ('ordering', 'is_active')
@@ -151,7 +150,6 @@ class PublicationCollectionAdmin(PublicUrlAdminMixin, ExtraChangeListLinksMixin,
         publication_admin = self.admin_site._registry[PDFFile]
         if not publication_admin.has_view_permission(request):
             list_display.remove('publication_count')
-            list_display.remove('manage_publications')
         return list_display
 
     def get_prepopulated_fields(self, request, obj=None):

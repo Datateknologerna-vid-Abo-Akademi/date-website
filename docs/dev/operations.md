@@ -23,6 +23,8 @@ Changing this value requires restarting or recreating the Django containers, bec
 
 Unfold keeps create actions next to the object they affect. Model lists and edit pages show a labeled **Add &lt;model&gt;** button beside the page title, while the admin dashboard uses explicit **View all** and **Add** links for each model. The global header is reserved for site-wide controls such as environment, language, site access, theme, and account actions.
 
+Search forms use a visible label and submit button, with model-specific search guidance kept below the field instead of hidden in its placeholder. Change forms include an explicit close action, and public-page links use Unfold's **View on site** object action instead of being inserted into an arbitrary form section.
+
 ## Fixture Reset and Local Seed Data
 
 ### `date-cleaninit` / `scripts/clean_init.sh`

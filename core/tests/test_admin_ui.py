@@ -134,7 +134,10 @@ class UnfoldActionHierarchyTests(TestCase):
         response = self.client.get(reverse("admin:members_member_changelist"))
 
         self.assertContains(response, "Add member")
+        self.assertContains(response, '<span>Search</span>', html=True)
+        self.assertContains(response, "Search by name, username, email")
         self.assertTemplateUsed(response, "unfold/helpers/add_link.html")
+        self.assertTemplateUsed(response, "admin/search_form.html")
         self.assertNotContains(response, "openQuickCreate")
 
     @override_settings(LANGUAGE_CODE="en")
@@ -144,6 +147,18 @@ class UnfoldActionHierarchyTests(TestCase):
         self.assertContains(response, "View all")
         self.assertContains(response, "Add")
         self.assertTemplateUsed(response, "unfold/helpers/app_list_default.html")
+
+    @override_settings(LANGUAGE_CODE="en")
+    def test_change_form_has_close_and_public_object_actions(self):
+        from staticpages.models import StaticPage
+
+        page = StaticPage.objects.create(slug="unfold-actions", members_only=False)
+        response = self.client.get(reverse("admin:staticpages_staticpage_change", args=[page.pk]))
+
+        self.assertContains(response, "Add another static page")
+        self.assertContains(response, "Close")
+        self.assertContains(response, "View on site")
+        self.assertNotContains(response, "Open public page")
 
 
 class PublicUrlAdminMixinTests(TestCase):
@@ -173,12 +188,16 @@ class PublicUrlAdminMixinTests(TestCase):
         self.assertIn('href=', result)
         self.assertIn(obj.get_absolute_url(), result)
 
-    def test_get_readonly_fields_includes_public_url_for_saved_object(self):
+    def test_get_readonly_fields_places_public_url_only_in_classic_admin(self):
         from staticpages.models import StaticPage
 
         obj = StaticPage.objects.create(slug='test-ro', members_only=False)
         request = self.factory.get('/')
-        self.assertIn('public_url', self.admin.get_readonly_fields(request, obj=obj))
+        readonly_fields = self.admin.get_readonly_fields(request, obj=obj)
+        if settings.USE_UNFOLD:
+            self.assertNotIn('public_url', readonly_fields)
+        else:
+            self.assertIn('public_url', readonly_fields)
 
     def test_get_readonly_fields_excludes_public_url_for_new_object(self):
         request = self.factory.get('/')

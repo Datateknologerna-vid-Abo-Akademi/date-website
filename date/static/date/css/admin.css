@@ -29,34 +29,6 @@
     opacity: 0.55;
 }
 
-/* Drag-to-resize handle on the sidebar's right edge */
-#sidebar-resize-handle {
-    position: absolute;
-    top: 0;
-    right: -3px;
-    bottom: 0;
-    width: 6px;
-    cursor: col-resize;
-    z-index: 50;
-}
-
-#sidebar-resize-handle::after {
-    content: '';
-    position: absolute;
-    inset: 0 0 0 2px;
-    width: 2px;
-    background: transparent;
-    transition: background-color 0.15s;
-}
-
-#sidebar-resize-handle:hover::after {
-    background-color: rgb(var(--color-primary-400));
-}
-
-.dark #sidebar-resize-handle:hover::after {
-    background-color: rgb(var(--color-primary-600));
-}
-
 /* Modeltranslation per-page language pill switcher */
 .mt-lang-switcher {
     display: inline-flex;
