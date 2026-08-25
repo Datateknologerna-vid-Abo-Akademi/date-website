@@ -202,3 +202,38 @@ class GalleryUploadViewTests(TestCase):
         album = Album.objects.get(title='HEIC upload')
         photo = Photo.objects.get(album=album)
         self.assertTrue(photo.image.name.endswith('.jpg'))
+
+
+@override_settings(ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY=True)
+class SFGalleryAccessTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        cls.member = Member.objects.create_user(
+            username='sf-gallery-member', password='pwd', membership_type=membership_type
+        )
+        cls.album = Album.objects.create(title='SF album')
+
+    def setUp(self):
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+
+    def test_ineligible_member_cannot_read_gallery_indexes_or_detail(self):
+        urls = (
+            reverse('archive:years'),
+            reverse('archive:pictures', args=[self.album.pub_date.year]),
+            reverse('archive:detail', args=[self.album.pub_date.year, self.album.title]),
+        )
+        for url in urls:
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 302)
+
+    def test_eligible_member_can_read_gallery_indexes_and_detail(self):
+        self.member.archive_access_eligible = True
+        self.member.save(update_fields=['archive_access_eligible'])
+        for url in (
+            reverse('archive:years'),
+            reverse('archive:pictures', args=[self.album.pub_date.year]),
+            reverse('archive:detail', args=[self.album.pub_date.year, self.album.title]),
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 200)

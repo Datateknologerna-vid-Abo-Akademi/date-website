@@ -20,7 +20,7 @@ from django.views import View
 from core.utils import enqueue_task_on_commit, send_email_task, validate_captcha
 
 from .forms import CustomPasswordResetForm, MemberEditForm, SignUpForm
-from .models import Member
+from .models import Member, MembershipType
 from .tokens import account_activation_token
 from .two_factor import member_has_2fa
 
@@ -96,6 +96,9 @@ def signup(request):
         if form.is_valid():
             # Create user
             user = form.save(commit=False)
+            default_membership = getattr(settings, 'MEMBERS_SIGNUP_DEFAULT_MEMBERSHIP_TYPE', None)
+            if default_membership and 'membership_type' not in form.cleaned_data:
+                user.membership_type = MembershipType.objects.filter(name=default_membership).order_by('pk').first()
             user.is_active = False
             user.password = make_password(form.cleaned_data['password'])
             user.save()

@@ -39,7 +39,44 @@ INSTALLED_APPS = get_installed_apps(
 
 ROOT_URLCONF = 'core.urls.sf'
 
-STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
+STAFF_GROUPS = get_staff_groups(['styrelse', 'skattis', 'sekre', 'Inauta', 'webbansvarig', 'admin'])
+
+MEMBERSHIP_TYPE_NAMES = ('Ordinarie medlem', 'Evig SF:are')
+MEMBERS_SIGNUP_FIELDS = (
+    'username',
+    'email',
+    'first_name',
+    'last_name',
+    'city',
+    'year_of_admission',
+    'password',
+)
+MEMBERS_SIGNUP_DEFAULT_MEMBERSHIP_TYPE = 'Ordinarie medlem'
+MEMBERSHIP_SUBSCRIPTIONS = {
+    'Ordinarie medlem': {
+        'price': '15.00',
+        'does_expire': True,
+        'renewal_scale': 'year',
+        'renewal_period': 1,
+    },
+    'Evig SF:are': {
+        'price': '40.00',
+        'does_expire': False,
+        'renewal_scale': None,
+        'renewal_period': None,
+    },
+}
+ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY = True
+MEMBER_ADMIN_RESTRICTED_GROUP = 'Inauta'
+MEMBER_ADMIN_RESTRICTED_MEMBERSHIP_TYPE = 'Evig SF:are'
+SF_ROLE_PERMISSION_SCOPES = {
+    'styrelse': 'all_except_members',
+    'skattis': 'all',
+    'sekre': 'all',
+    'Inauta': 'all_with_lifetime_members',
+    'webbansvarig': 'all',
+    'admin': 'all',
+}
 
 
 STATICFILES_DIRS = [

@@ -16,9 +16,7 @@ logger = logging.getLogger('date')
 
 
 def user_type(user):
-    if not user.is_authenticated:
-        return False
-    return user.membership_type.permission_profile != 3
+    return user.is_authenticated and user.has_archive_access()
 
 
 @user_passes_test(user_type, login_url='/members/login/')

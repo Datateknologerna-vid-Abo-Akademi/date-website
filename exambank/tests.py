@@ -203,6 +203,49 @@ class ExamBankAccessTests(TestCase):
         self.assertContains(response, 'Lösenord')
 
 
+@override_settings(ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY=True)
+class SFExamBankAccessTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        cls.member = Member.objects.create_user(
+            username='sf-exam-member', password='pwd', membership_type=membership_type
+        )
+        cls.archive = ExamArchive.objects.create(title='SF exams')
+
+    def setUp(self):
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+
+    def test_ineligible_member_cannot_read_exam_index_or_detail(self):
+        for url in (
+            reverse('archive:exams'),
+            reverse('archive:exams_detail', args=[self.archive.pk]),
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 302)
+
+    def test_eligible_member_can_read_exam_index_and_detail(self):
+        self.member.archive_access_eligible = True
+        self.member.save(update_fields=['archive_access_eligible'])
+        for url in (
+            reverse('archive:exams'),
+            reverse('archive:exams_detail', args=[self.archive.pk]),
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 200)
+
+    def test_shared_password_does_not_bypass_sf_member_eligibility(self):
+        access_settings = ExamBankAccessSettings.get_solo()
+        access_settings.require_sign_in = False
+        access_settings.set_password('stone')
+        access_settings.save()
+
+        response = self.client.post(reverse('archive:exams'), {'password': 'stone'})
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/members/login/', response['Location'])
+
+
 class ExamArchiveAdminFormTests(TestCase):
     def test_hide_for_gulis_is_editable(self):
         form = ExamArchiveAdminForm()
