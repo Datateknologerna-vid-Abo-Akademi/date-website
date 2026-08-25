@@ -109,9 +109,13 @@ MAX_FILES_PER_FORM = 1000
 # Fixed-window rate limit on the signing endpoint. Authenticated users are
 # keyed by user id; anonymous visitors (e.g. an open exam bank) are keyed by
 # their Django session. Staff scopes get a higher cap because bulk admin
-# uploads sign one URL per file.
+# uploads sign one URL per file; gallery is raised above a typical large
+# photo batch so the post-compression signing burst is not rejected.
+# The limit bounds temp-object churn, not server load: each sign creates a
+# tmp/ key the browser fills directly, and abandoned objects cost bucket
+# storage/transactions until the lifecycle rule cleans them.
 SIGN_RATE_LIMITS = {
-    'gallery': 120,
+    'gallery': 300,
     'gallery-admin': 600,
     'exambank': 120,
     'admin': 600,

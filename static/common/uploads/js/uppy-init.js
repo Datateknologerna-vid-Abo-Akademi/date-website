@@ -26,6 +26,31 @@
     return match ? match[1] : '';
   }
 
+  // Size compression and upload concurrency to the device: strong machines
+  // run near full speed, weak ones (craptops, old phones) stay gentle so a
+  // tab does not run out of memory or hammer the signing endpoint.
+  function deviceMemoryGB() {
+    var mem = navigator.deviceMemory;
+    var cores = navigator.hardwareConcurrency || 1;
+    if (mem === undefined) {
+      // Safari and Firefox do not expose deviceMemory; fall back on cores.
+      mem = cores >= 8 ? 8 : cores >= 4 ? 4 : 2;
+    }
+    return mem;
+  }
+
+  function compressionLimit() {
+    var mem = deviceMemoryGB();
+    var cores = navigator.hardwareConcurrency || 1;
+    // Each concurrent decode of a large photo can need roughly 1/3 GB.
+    return Math.max(1, Math.min(cores, Math.floor(mem / 3)));
+  }
+
+  function uploadLimit() {
+    // Uploads are streamed, not buffered; strong devices may run unlimited.
+    return deviceMemoryGB() >= 4 ? Infinity : 3;
+  }
+
   function signFile(uppy, file, options) {
     var body = new URLSearchParams();
     body.append('scope', options.scope);
@@ -78,6 +103,7 @@
     var Core = Uppy.Core || Uppy;
     var uppy = new Core({
       autoProceed: true,
+      limit: uploadLimit(),
       restrictions: {
         maxFileSize: maxBytes,
         allowedFileTypes: allowedExtensions.length ? allowedExtensions : null,
@@ -91,7 +117,7 @@
       uppy.use(Uppy.Compressor, {
         quality: 0.6,
         maxWidth: 1600,
-        limit: 1,
+        limit: compressionLimit(),
         compressorOptions: {
           convertTypes: [],
         },

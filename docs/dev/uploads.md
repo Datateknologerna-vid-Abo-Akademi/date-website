@@ -41,11 +41,15 @@ release CDN. The site-specific integration remains in
    to 512 bytes for type validation.
 
 4. Gallery photos are compressed client-side (`@uppy/compressor`, 1600px,
-   quality 60, one image at a time) before upload. Compression preserves the
-   input format so the signed key extension continues to match the uploaded
-   bytes. Direct-uploaded photos set `Photo._skip_compress` so the server does
-   not re-resize them. Large images can still require substantial browser
-   memory while decoded.
+   quality 60) before upload. Compression preserves the input format so the
+   signed key extension continues to match the uploaded bytes. Compression and
+   upload concurrency are sized to the device from `navigator.deviceMemory`
+   and `navigator.hardwareConcurrency`: strong machines compress several
+   images at once and upload without a concurrency cap, weak devices run one
+   compression and a few uploads at a time so the tab stays responsive and
+   memory stays bounded. Direct-uploaded photos set `Photo._skip_compress` so
+   the server does not re-resize them. Large images can still require
+   substantial browser memory while decoded.
 
 ## Enabling (per deployment)
 
@@ -91,9 +95,12 @@ release CDN. The site-specific integration remains in
   fixed-window counter in the cache, per user for authenticated callers and
   per Django session for anonymous ones.
   Limits are per scope (`SIGN_RATE_LIMITS` in `core/uploads.py`, staff scopes
-  higher for bulk admin uploads); the limiter runs after the scope gate, fails
+  higher for bulk admin uploads, gallery sized above a typical photo batch);
+  the limiter runs after the scope gate, fails
   open when the cache is unavailable, and a 429 is surfaced to the client as a
-  failed upload.
+  failed upload. The limits bound temp-object churn in the bucket, not server
+  load; `MAX_FILES_PER_FORM` separately caps how many temp keys one form
+  submission can finalize.
 - Extension allowlist and per-scope size caps are enforced server-side in
   `sign_upload`; Uppy `restrictions` are UX only.
 - Keys are always `tmp/<32 hex>.<ext>` generated server-side. Finalization
