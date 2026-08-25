@@ -2,6 +2,7 @@ import logging
 import time
 from functools import wraps
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.views import redirect_to_login
 from django.shortcuts import redirect, render
@@ -30,13 +31,13 @@ EXAM_BANK_PASSWORD_LOCKOUT_SECONDS = 15 * 60
 
 
 def user_type(user):
-    if not user.is_authenticated:
-        return False
-    return user.membership_type.permission_profile != 3
+    return user.is_authenticated and user.has_archive_access()
 
 
 def exam_bank_access_is_allowed(request, access_settings=None):
     access_settings = access_settings or ExamBankAccessSettings.get_solo()
+    if getattr(settings, 'ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY', False):
+        return user_type(request.user)
     if access_settings.require_sign_in:
         return user_type(request.user)
     if not access_settings.has_password:
@@ -96,7 +97,7 @@ def exam_bank_access_required(view_func):
         access_settings = ExamBankAccessSettings.get_solo()
         if exam_bank_access_is_allowed(request, access_settings):
             return view_func(request, *args, **kwargs)
-        if access_settings.require_sign_in:
+        if access_settings.require_sign_in or getattr(settings, 'ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY', False):
             return redirect_to_login(request.get_full_path(), login_url='/members/login/')
         return exam_bank_password_gate(request, access_settings)
 
