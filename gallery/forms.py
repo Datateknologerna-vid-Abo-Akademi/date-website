@@ -1,8 +1,12 @@
+import logging
+
 from django import forms
 
 from core.admin_widgets import SafeAdminMultipleFileWidget
 
-from .models import Album, Photo
+from .models import Album, ImageProcessingError, Photo
+
+logger = logging.getLogger('date')
 
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -35,6 +39,11 @@ class AlbumAdminForm(forms.ModelForm):
 
     def _save_m2m(self):
         super()._save_m2m()
+        self.skipped_images = []
         if hasattr(self.files, 'getlist'):
             for uploaded_file in self.files.getlist('images'):
-                Photo.objects.create(album=self.instance, image=uploaded_file)
+                try:
+                    Photo.objects.create(album=self.instance, image=uploaded_file)
+                except ImageProcessingError as exc:
+                    logger.warning(str(exc))
+                    self.skipped_images.append(uploaded_file.name)

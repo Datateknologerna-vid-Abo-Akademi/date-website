@@ -38,6 +38,7 @@ dependencies = [
     "gspread",
     "twisted[tls]>=26.4.0",
     "defusedxml>=0.7.1",
+    "pillow-heif>=1.5.0",
 ]
 
 [dependency-groups]
