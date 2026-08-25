@@ -148,7 +148,15 @@ def exam_upload(request, pk):
                     _('Kunde inte ladda upp följande filer: %(files)s') % {'files': ', '.join(skipped)},
                 )
             logger.debug(f"User: {request.user} added files to {archive.title}")
-        return redirect('archive:exams_detail', archive.pk)
+            return redirect('archive:exams_detail', archive.pk)
+        return render(
+            request,
+            'archive/exam_upload.html',
+            {
+                'collection': archive,
+                'exam_form': form,
+            },
+        )
 
     return render(
         request,

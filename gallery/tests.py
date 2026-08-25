@@ -248,7 +248,8 @@ class DirectUploadViewTests(TestCase):
                 'images': json.dumps([{'key': 'media/2026/album/photo.jpg', 'name': 'photo.jpg', 'size': 1}]),
             },
         )
-        self.assertRedirects(response, reverse('archive:years'))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('images', response.context['picture_form'].errors)
         self.assertEqual(Album.objects.count(), 0)
         self.assertEqual(Photo.objects.count(), 0)
 

@@ -73,6 +73,7 @@ class DirectUploadWidget(forms.Widget):
         return format_html('<input{}>', self._attrs_html(input_attrs))
 
     def _direct_inputs(self, name, value, attrs=None):
+        attrs = attrs or {}
         if value is None:
             value = ''
         if not isinstance(value, str):
@@ -93,7 +94,8 @@ class DirectUploadWidget(forms.Widget):
             }
         )
         container = format_html('<div{}></div>', self._attrs_html(container_attrs))
-        return format_html('{}{}', hidden, container)
+        fallback = format_html('<noscript>{}</noscript>', self._classic_input(name, attrs))
+        return format_html('{}{}{}', hidden, container, fallback)
 
     def render(self, name, value, attrs=None, renderer=None):
         if uploads_enabled():
@@ -102,6 +104,9 @@ class DirectUploadWidget(forms.Widget):
 
     def value_from_datadict(self, data, files, name):
         if uploads_enabled():
+            classic_files = files.getlist(name) if self.multi else files.get(name)
+            if classic_files:
+                return classic_files
             return data.get(name)
         if self.multi:
             return files.getlist(name)
@@ -143,7 +148,7 @@ class DirectUploadField(forms.Field):
 
     def clean(self, value):
         value = super().clean(value)
-        if not uploads_enabled():
+        if not uploads_enabled() or isinstance(value, (list, tuple)):
             if isinstance(value, (list, tuple)):
                 return list(value)
             return [value] if value else []

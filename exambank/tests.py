@@ -104,6 +104,7 @@ class ExamBankArchiveRouteTests(TestCase):
                 response = self.client.post(
                     reverse('archive:exam_upload', args=[archive.pk]),
                     {'title': 'tent 02.02.2024', 'exam': payload},
+                    follow=True,
                 )
 
         self.assertRedirects(response, reverse('archive:exams_detail', args=[archive.pk]))
@@ -111,7 +112,6 @@ class ExamBankArchiveRouteTests(TestCase):
         self.assertEqual([f.title for f in files], ['tent 02.02.2024'])
         self.assertEqual(files[0].document.name, '2024/networks/good.pdf')
 
-        response = self.client.get(reverse('archive:exams_detail', args=[archive.pk]))
         warnings = [m.message for m in response.context['messages']]
         self.assertTrue(any('bad.pdf' in message for message in warnings))
 

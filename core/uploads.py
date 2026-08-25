@@ -78,6 +78,7 @@ SCOPES = {
         'extensions': IMAGE_EXTENSIONS,
         'max_bytes': 100 * 1024 * 1024,
         'compress': True,
+        'buckets': {'private'},
     },
     # Admin photo uploads: staff-gated, but image-only with client-side
     # compression like the public gallery flow.
@@ -85,16 +86,19 @@ SCOPES = {
         'extensions': IMAGE_EXTENSIONS,
         'max_bytes': 100 * 1024 * 1024,
         'compress': True,
+        'buckets': {'private'},
     },
     'exambank': {
         'extensions': DOCUMENT_EXTENSIONS | IMAGE_EXTENSIONS,
         'max_bytes': 200 * 1024 * 1024,
         'compress': False,
+        'buckets': {'private'},
     },
     'admin': {
         'extensions': DOCUMENT_EXTENSIONS | IMAGE_EXTENSIONS,
         'max_bytes': 512 * 1024 * 1024,
         'compress': False,
+        'buckets': {'private', 'public'},
     },
 }
 
@@ -104,9 +108,8 @@ MAX_FILES_PER_FORM = 1000
 
 # Fixed-window rate limit on the signing endpoint. Authenticated users are
 # keyed by user id; anonymous visitors (e.g. an open exam bank) are keyed by
-# REMOTE_ADDR, which behind the load balancer is the proxy address, so
-# anonymous requests share one bucket per deployment. Staff scopes get a
-# higher cap because bulk admin uploads sign one URL per file.
+# their Django session. Staff scopes get a higher cap because bulk admin
+# uploads sign one URL per file.
 SIGN_RATE_LIMITS = {
     'gallery': 120,
     'gallery-admin': 600,
@@ -217,7 +220,9 @@ def _sign_rate_allowed(request, scope):
     if request.user.is_authenticated:
         key = f'upload-sign:{scope}:user:{request.user.pk}'
     else:
-        key = f"upload-sign:{scope}:ip:{request.META.get('REMOTE_ADDR') or 'unknown'}"
+        if not request.session.session_key:
+            request.session.create()
+        key = f'upload-sign:{scope}:session:{request.session.session_key}'
     try:
         if cache.add(key, 1, SIGN_RATE_WINDOW_SECONDS):
             return True
@@ -284,7 +289,7 @@ def sign_upload(request):
         return _error('Too many upload requests, try again later.', 429)
 
     bucket = request.POST.get('bucket', 'private')
-    if bucket not in ('private', 'public'):
+    if bucket not in scope_config['buckets']:
         return _error('Unknown bucket.', 400)
 
     name = request.POST.get('name', '')
@@ -357,6 +362,8 @@ def parse_uploaded_files(value, scope=None):
         size = entry['size']
         if not isinstance(key, str) or not isinstance(name, str):
             raise ValueError('Invalid upload payload.')
+        if not name or len(name) > 250:
+            raise ValueError('Invalid upload filename.')
         if not isinstance(size, int) or isinstance(size, bool) or not 0 < size:
             raise ValueError('Invalid upload payload.')
         if scope_config is not None:
@@ -420,7 +427,10 @@ def finalize_upload(temp_key, instance, field, filename, expected_size=None):
     copy_params.update(storage.get_object_parameters(full_key))
     if 'ACL' not in copy_params and getattr(storage, 'default_acl', None):
         copy_params['ACL'] = storage.default_acl
-    client.copy_object(**copy_params)
+    try:
+        client.copy_object(**copy_params)
+    except (ClientError, BotoCoreError) as exc:
+        raise ValueError(f'Could not finalize temporary upload: {temp_key}') from exc
     try:
         client.delete_object(Bucket=bucket, Key=temp_key)
     except (ClientError, BotoCoreError) as exc:

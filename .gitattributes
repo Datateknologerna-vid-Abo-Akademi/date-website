@@ -4,3 +4,4 @@
 # Override to CRLF for Windows-specific scripts
 *.bat text eol=crlf
 *.ps1 text eol=crlf
+static/common/uploads/vendor/uppy.min.js -whitespace

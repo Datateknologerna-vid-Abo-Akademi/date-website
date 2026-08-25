@@ -6,11 +6,14 @@ from unittest.mock import patch
 from botocore.exceptions import BotoCoreError, ClientError
 from django.contrib.auth.models import Permission
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from django.utils.datastructures import MultiValueDict
 from redis.exceptions import ConnectionError as RedisConnectionError
 
 from core import uploads
+from core.upload_widgets import DirectUploadField
 from gallery.models import Album, Photo
 from members.models import Member
 
@@ -166,6 +169,25 @@ class SignUploadTests(TestCase):
             self.assertEqual(self.sign(scope='exambank').status_code, 200)
             self.assertEqual(self.sign(scope='exambank').status_code, 429)
 
+    def test_anonymous_rate_limit_is_per_session(self):
+        from exambank.models import ExamBankAccessSettings
+
+        ExamBankAccessSettings.objects.create(require_sign_in=False)
+        other_client = Client()
+        with patch.dict(uploads.SIGN_RATE_LIMITS, {'exambank': 1}):
+            self.assertEqual(self.sign(scope='exambank').status_code, 200)
+            self.assertEqual(self.sign(scope='exambank').status_code, 429)
+            self.assertEqual(
+                post_sign(
+                    other_client,
+                    scope='exambank',
+                    bucket='private',
+                    name='test.jpg',
+                    size='1024',
+                ).status_code,
+                200,
+            )
+
     def test_sign_rate_limits_are_per_scope(self):
         staff = create_user(username='scopeuser', is_superuser=True)
         self.client.force_login(staff)
@@ -275,6 +297,17 @@ class SignUploadTests(TestCase):
         self.assertEqual(response.status_code, 200)
         storage_for_bucket.assert_called_once_with('public')
 
+    def test_non_admin_scopes_cannot_sign_public_bucket_uploads(self):
+        from exambank.models import ExamBankAccessSettings
+
+        ExamBankAccessSettings.objects.create(require_sign_in=False)
+        self.assertEqual(self.sign(scope='exambank', bucket='public').status_code, 400)
+
+        member = create_user(username='private-gallery')
+        grant_gallery_upload(member)
+        self.client.force_login(member)
+        self.assertEqual(self.sign(scope='gallery', bucket='public').status_code, 400)
+
     def test_presigned_put_url_shape(self):
         staff = create_user(username='staff7', is_superuser=True)
         self.client.force_login(staff)
@@ -360,6 +393,25 @@ class FinalizeUploadTests(TestCase):
         self.storage.client.head_object = broken_head
         photo = Photo(album=self.album)
         with self.assertRaisesRegex(ValueError, 'no longer exists'):
+            uploads.finalize_upload(
+                'tmp/abcdef1234567890abcdef1234567890.jpg',
+                photo,
+                self._field(),
+                'photo.jpg',
+                expected_size=100,
+            )
+        self.assertIn('tmp/abcdef1234567890abcdef1234567890.jpg', self.storage.client.objects)
+
+    def test_copy_error_raises_value_error_and_keeps_temp_object(self):
+        def broken_copy(**kwargs):
+            raise ClientError(
+                {'Error': {'Code': '500', 'Message': 'boom'}, 'ResponseMetadata': {'HTTPStatusCode': 500}},
+                'CopyObject',
+            )
+
+        self.storage.client.copy_object = broken_copy
+        photo = Photo(album=self.album)
+        with self.assertRaisesRegex(ValueError, 'Could not finalize'):
             uploads.finalize_upload(
                 'tmp/abcdef1234567890abcdef1234567890.jpg',
                 photo,
@@ -524,6 +576,15 @@ class ParseUploadedFilesTests(TestCase):
         self.assertEqual(result[0], {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': 100})
         self.assertEqual(result[1]['size'], 200)
 
+    def test_rejects_empty_or_oversized_filename(self):
+        key = 'tmp/' + 'a' * 32 + '.jpg'
+        for name in ('', f"{'a' * 247}.jpg"):
+            with self.assertRaisesRegex(ValueError, 'filename'):
+                uploads.parse_uploaded_files(
+                    json.dumps([{'key': key, 'name': name, 'size': 100}]),
+                    scope='admin',
+                )
+
     def test_scope_checks_extension_and_size(self):
         payload = json.dumps(
             [
@@ -594,3 +655,19 @@ class ParseUploadedFilesTests(TestCase):
             ]
         )
         self.assertEqual(len(uploads.parse_uploaded_files(payload)), 1)
+
+
+@override_settings(**ENABLED)
+class DirectUploadFallbackTests(TestCase):
+    def test_direct_widget_renders_noscript_file_input(self):
+        field = DirectUploadField(scope='gallery', multi=True)
+        html = field.widget.render('images', None)
+        self.assertIn('<noscript>', html)
+        self.assertIn('type="file"', html)
+        self.assertIn('multiple="multiple"', html)
+
+    def test_direct_widget_accepts_multipart_fallback(self):
+        field = DirectUploadField(scope='gallery', multi=True)
+        uploaded = SimpleUploadedFile('photo.jpg', JPEG_MAGIC + b'content', content_type='image/jpeg')
+        value = field.widget.value_from_datadict({}, MultiValueDict({'images': [uploaded]}), 'images')
+        self.assertEqual(field.clean(value), [uploaded])

@@ -151,6 +151,7 @@ def upload(request):
                     _('Kunde inte bearbeta följande bilder, de laddades inte upp: %(files)s')
                     % {'files': ', '.join(skipped)},
                 )
-        return redirect('archive:years')
+            return redirect('archive:years')
+        return render(request, 'archive/upload.html', {'picture_form': form})
 
     return render(request, 'archive/upload.html', {'picture_form': AlbumUploadForm()})

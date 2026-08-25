@@ -91,6 +91,10 @@
       uppy.use(Uppy.Compressor, {
         quality: 0.6,
         maxWidth: 1600,
+        limit: 1,
+        compressorOptions: {
+          convertTypes: [],
+        },
       });
     }
 
@@ -113,6 +117,7 @@
     var uploaded = [];
     var pendingIds = new Set();
     var failedIds = new Set();
+    var submitting = false;
 
     function submitButtons() {
       return form.querySelectorAll('button[type="submit"], input[type="submit"]');
@@ -137,6 +142,8 @@
       if (!status) {
         status = document.createElement('div');
         status.className = 'django-uppy-status';
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
         root.appendChild(status);
       }
       status.textContent = message;
@@ -158,6 +165,7 @@
 
     uppy.on('upload-success', function (file) {
       pendingIds.delete(file.id);
+      failedIds.delete(file.id);
       if (file.meta && file.meta.uploadKey) {
         uploaded = uploaded.filter(function (entry) {
           return entry.key !== file.meta.uploadKey;
@@ -188,13 +196,15 @@
     });
 
     uppy.on('complete', function (result) {
-      // Safety net: rebuild the payload from what actually succeeded, in case
-      // retries or removals left it stale.
-      uploaded = result.successful
-        .filter(function (file) {
-          return file.meta && file.meta.uploadKey;
-        })
-        .map(payloadEntry);
+      result.successful.forEach(function (file) {
+        failedIds.delete(file.id);
+        if (file.meta && file.meta.uploadKey) {
+          uploaded = uploaded.filter(function (entry) {
+            return entry.key !== file.meta.uploadKey;
+          });
+          uploaded.push(payloadEntry(file));
+        }
+      });
       result.failed.forEach(function (file) {
         failedIds.add(file.id);
       });
@@ -206,10 +216,15 @@
     });
 
     form.addEventListener('submit', function (event) {
-      if (pendingIds.size > 0 || failedIds.size > 0) {
+      if (submitting || pendingIds.size > 0 || failedIds.size > 0) {
         event.preventDefault();
-        showStatus('Vänta tills uppladdningen är klar, eller åtgärda fel innan du sparar.');
+        if (!submitting) {
+          showStatus('Vänta tills uppladdningen är klar, eller åtgärda fel innan du sparar.');
+        }
+        return;
       }
+      submitting = true;
+      setSubmittable(false);
     });
   }
 

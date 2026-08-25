@@ -36,12 +36,15 @@ see the license notice in `LICENSE-NOTICE.md`).
    the app's save path calls `core.uploads.finalize_upload`, which copies the
    temp object to the model's final key (`<year>/<album>/...` etc., computed
    by the same `upload_to` callables as before) and deletes the temp object.
-   No file bytes ever pass through the web process.
+   Full file bodies never pass through the web process. Finalization reads up
+   to 512 bytes for type validation.
 
 4. Gallery photos are compressed client-side (`@uppy/compressor`, 1600px,
-   quality 60) before upload, matching the previous server-side behaviour in
-   `Photo.save()`. Direct-uploaded photos set `Photo._skip_compress` so the
-   server does not re-resize them.
+   quality 60, one image at a time) before upload. Compression preserves the
+   input format so the signed key extension continues to match the uploaded
+   bytes. Direct-uploaded photos set `Photo._skip_compress` so the server does
+   not re-resize them. Large images can still require substantial browser
+   memory while decoded.
 
 ## Enabling (per deployment)
 
@@ -50,8 +53,7 @@ see the license notice in `LICENSE-NOTICE.md`).
   `DIRECT_UPLOADS_ENABLED`). Defaults to `False`; when off, all upload forms
   keep the classic file inputs.
 - Buckets must allow the browser to PUT from the site origin and must expire
-  abandoned temp objects. Applied once per bucket with the B2 CLI
-  (current state as of 2026-08, all 10 assoc buckets):
+  abandoned temp objects. Configure both rules before enabling the feature:
 
   ```json
   // CORS
@@ -75,10 +77,10 @@ see the license notice in `LICENSE-NOTICE.md`).
   }]
   ```
 
-  The exact commands used to apply these live in the operator repository's
-  B2 documentation; the previous bucket state was dumped to
-  `transfers/uppy-b2-backup/<bucket>.json` on the dev-mgmt workstation before
-  applying.
+- The storage credentials need `PutObject`, `HeadObject`, ranged `GetObject`,
+  `CopyObject`, and `DeleteObject` access under `tmp/`, plus write access to
+  the configured private and public media prefixes. Verify these operations
+  against each bucket before enabling the feature.
 
 ## Security model
 
@@ -86,8 +88,7 @@ see the license notice in `LICENSE-NOTICE.md`).
   exam-bank gate which also covers open/password-session access); CSRF stays
   on (JS sends the cookie token). Sign requests are rate limited with a
   fixed-window counter in the cache, per user for authenticated callers and
-  per `REMOTE_ADDR` for anonymous ones (behind the load balancer that is the
-  proxy address, so anonymous visitors share one bucket per deployment).
+  per Django session for anonymous ones.
   Limits are per scope (`SIGN_RATE_LIMITS` in `core/uploads.py`, staff scopes
   higher for bulk admin uploads); the limiter runs after the scope gate, fails
   open when the cache is unavailable, and a 429 is surfaced to the client as a
@@ -108,7 +109,8 @@ see the license notice in `LICENSE-NOTICE.md`).
   understated to bypass the caps. It then reads only the first 512 bytes (a
   ranged GET) and verifies the magic bytes match the declared extension
   (jpeg/png/webp/gif, pdf, zip-family office files, 7z, rar, gz, tar), so
-  mislabeled content never reaches the final media paths. The copy is a
+  common mislabeled content is rejected. This signature check is not a full
+  malware scan or complete image decode. The copy is a
   server-side `copy_object` within the same bucket, resolved through the
   storage's collision-free name (`get_available_name`, same semantics as
   classic uploads); it carries the same ACL and object parameters that
@@ -129,16 +131,12 @@ see the license notice in `LICENSE-NOTICE.md`).
 - Single-PUT uploads only (B2 single PUT supports up to 5 GiB; scope caps are
   far below that). Multipart signing endpoints can be added later if ever
   needed.
-- Gallery photos are compressed in the browser (downscale to 1600px, quality
-  60). Allowed gallery formats are jpg/jpeg/png/webp; animated GIFs and
-  camera-only formats (HEIC, TIFF) are not accepted through the direct path
-  (classic uploads still accept them via Pillow). The stored file keeps its
-  original extension even when the browser re-encodes the content.
+- Gallery photos are compressed in the browser without changing their format
+  (downscale to 1600px, quality 60 where supported). Allowed gallery inputs
+  are jpg/jpeg/png/webp; animated GIFs and camera-only formats (HEIC, TIFF)
+  are not accepted through the direct path.
 - The form blocks submission while uploads are pending or failed; failed
   files must be removed before saving.
 - Single-file admin fields (album thumbnails, publication PDFs, event and
   staticpage backgrounds, CKEditor inline images) still use the classic
   widget; the same machinery can be extended to them later.
-- Bucket CORS and lifecycle rules were applied to all association buckets on
-  2026-08-23; the media proxy Workers are unchanged (uploads go straight to
-  the B2 endpoint, not through the Worker).
