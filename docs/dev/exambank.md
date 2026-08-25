@@ -14,6 +14,8 @@ Exam views use the `exambank.views.exam_bank_access_required` gate instead of UR
 
 When `require_sign_in=True`, access follows the historical member check. When it is false and a password is configured, successful password entry stores the current password hash in the session so changing the password invalidates existing grants. When sign-in is disabled and no password is configured, the exam bank routes are public.
 
+For SF, `ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY` makes the individual member flag authoritative on exam index and detail reads. A public or shared-password exam-bank configuration cannot bypass that SF rule. Other associations retain their configured sign-in, password, or public behavior, and superusers retain access.
+
 Failed password submissions are rate-limited per session: after `EXAM_BANK_PASSWORD_ATTEMPT_LIMIT` (5) failures the gate returns HTTP 429 and refuses further attempts for `EXAM_BANK_PASSWORD_LOCKOUT_SECONDS` (15 minutes). A successful entry clears the counter.
 
 ## Admin
@@ -36,4 +38,4 @@ Association variants that install `exambank` without the full `archive` app, suc
 The app intentionally renders the shared `archive/...` templates so the public archive pages keep their historical layout while the data ownership lives in `exambank`.
 
 ## Navigation Visibility
-The `staticpages.context_processors._visible_urls_queryset` and `get_categories` helpers hide nav entries whose URL starts with `/archive/` when `ARCHIVE_ENABLED=False`. When `exambank` is in `INSTALLED_APPS`, entries under `/archive/exams/` are kept visible so the exam compatibility routes remain reachable from the menu. The trailing slash is significant — only `/archive/exams/...` is exempted, not unrelated prefixes such as `/archive/examined/`.
+The `staticpages.context_processors._visible_urls_queryset` and `get_categories` helpers hide nav entries whose URL starts with `/archive/` when `ARCHIVE_ENABLED=False`. When `exambank` is in `INSTALLED_APPS`, entries under `/archive/exams/` are kept visible so the exam compatibility routes remain reachable from the menu. The trailing slash is significant: only `/archive/exams/...` is exempted, not unrelated prefixes such as `/archive/examined/`.
