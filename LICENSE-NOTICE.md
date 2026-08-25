@@ -30,8 +30,3 @@ the association websites.
 
 Third-party libraries, vendored assets, and generated files keep their original
 licenses and notices.
-
-Vendored browser assets under `static/common/uploads/vendor/`:
-
-- Uppy (MIT), including its bundled plugins (Dashboard, AwsS3, Compressor and
-  dependencies), version 5.2.4. See `static/common/uploads/vendor/LICENSE-uppy`.
