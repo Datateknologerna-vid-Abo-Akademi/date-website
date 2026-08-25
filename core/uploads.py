@@ -26,10 +26,11 @@ content never reaches the final media paths.
 """
 
 import json
+import logging
 import re
 import secrets
 
-from botocore.exceptions import ClientError
+from botocore.exceptions import BotoCoreError, ClientError
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
@@ -37,6 +38,8 @@ from django.core.files.storage import default_storage, storages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from storages.utils import clean_name
+
+logger = logging.getLogger('date')
 
 IMAGE_EXTENSIONS = {
     'jpg',
@@ -98,16 +101,24 @@ SIGNATURE_EXPIRES = 300  # seconds; presigned URLs are bearer tokens
 TMP_KEY_PATTERN = re.compile(r'^tmp/([0-9a-f]{32})\.([a-z0-9]+)\Z')
 MAX_FILES_PER_FORM = 1000
 
-# Fixed-window rate limit on the signing endpoint, per user (or per IP for
-# anonymous visitors, e.g. an open exam bank). Bounds how many temp objects a
-# single caller can create and how often presigned URLs are issued.
-SIGN_RATE_LIMIT = 60
+# Fixed-window rate limit on the signing endpoint. Authenticated users are
+# keyed by user id; anonymous visitors (e.g. an open exam bank) are keyed by
+# REMOTE_ADDR, which behind the load balancer is the proxy address, so
+# anonymous requests share one bucket per deployment. Staff scopes get a
+# higher cap because bulk admin uploads sign one URL per file.
+SIGN_RATE_LIMITS = {
+    'gallery': 120,
+    'gallery-admin': 600,
+    'exambank': 120,
+    'admin': 600,
+}
+SIGN_RATE_LIMIT = 60  # fallback for unknown scopes
 SIGN_RATE_WINDOW_SECONDS = 60
 
 # Magic-byte signatures verified server-side at finalize for extensions with a
 # stable header. Alternatives are OR'd; within one alternative every (offset,
 # magic) pair must match. Extensions without an entry (txt, csv, legacy
-# office formats) are allowed through unchecked.
+# binary office formats) are allowed through unchecked.
 _MAGIC_SIGNATURES = {
     'jpg': (((0, b'\xff\xd8\xff'),),),
     'jpeg': (((0, b'\xff\xd8\xff'),),),
@@ -115,7 +126,43 @@ _MAGIC_SIGNATURES = {
     'webp': (((0, b'RIFF'), (8, b'WEBP')),),
     'gif': (((0, b'GIF8'),),),
     'pdf': (((0, b'%PDF'),),),
+    # ZIP containers: zip itself plus the OOXML/ODF office extensions.
     'zip': (
+        ((0, b'PK\x03\x04'),),
+        ((0, b'PK\x05\x06'),),
+        ((0, b'PK\x07\x08'),),
+    ),
+    'docx': (
+        ((0, b'PK\x03\x04'),),
+        ((0, b'PK\x05\x06'),),
+        ((0, b'PK\x07\x08'),),
+    ),
+    'docm': (
+        ((0, b'PK\x03\x04'),),
+        ((0, b'PK\x05\x06'),),
+        ((0, b'PK\x07\x08'),),
+    ),
+    'xlsx': (
+        ((0, b'PK\x03\x04'),),
+        ((0, b'PK\x05\x06'),),
+        ((0, b'PK\x07\x08'),),
+    ),
+    'pptx': (
+        ((0, b'PK\x03\x04'),),
+        ((0, b'PK\x05\x06'),),
+        ((0, b'PK\x07\x08'),),
+    ),
+    'odt': (
+        ((0, b'PK\x03\x04'),),
+        ((0, b'PK\x05\x06'),),
+        ((0, b'PK\x07\x08'),),
+    ),
+    'ods': (
+        ((0, b'PK\x03\x04'),),
+        ((0, b'PK\x05\x06'),),
+        ((0, b'PK\x07\x08'),),
+    ),
+    'odp': (
         ((0, b'PK\x03\x04'),),
         ((0, b'PK\x05\x06'),),
         ((0, b'PK\x07\x08'),),
@@ -159,21 +206,29 @@ def _error(message, status):
     return JsonResponse({'error': message}, status=status)
 
 
-def _sign_rate_allowed(request):
-    """Fixed-window counter in the cache; bounds sign calls per user/IP."""
+def _sign_rate_allowed(request, scope):
+    """Fixed-window counter in the cache; bounds sign calls per user/IP.
+
+    Fails open when the cache backend is unavailable so an outage never blocks
+    all uploads.
+    """
+    limit = SIGN_RATE_LIMITS.get(scope, SIGN_RATE_LIMIT)
     if request.user.is_authenticated:
         key = f'upload-sign:user:{request.user.pk}'
     else:
         key = f"upload-sign:ip:{request.META.get('REMOTE_ADDR') or 'unknown'}"
-    if cache.add(key, 1, SIGN_RATE_WINDOW_SECONDS):
-        return True
     try:
-        count = cache.incr(key)
-    except ValueError:
-        # Key expired between add and incr; start a fresh window.
-        cache.set(key, 1, SIGN_RATE_WINDOW_SECONDS)
+        if cache.add(key, 1, SIGN_RATE_WINDOW_SECONDS):
+            return True
+        try:
+            count = cache.incr(key)
+        except ValueError:
+            # Key expired between add and incr; start a fresh window.
+            cache.set(key, 1, SIGN_RATE_WINDOW_SECONDS)
+            return True
+    except ConnectionError, OSError:
         return True
-    return count <= SIGN_RATE_LIMIT
+    return count <= limit
 
 
 def _verify_magic_bytes(client, bucket, key, ext):
@@ -190,7 +245,7 @@ def _verify_magic_bytes(client, bucket, key, ext):
     try:
         response = client.get_object(Bucket=bucket, Key=key, Range=f'bytes=0-{_MAGIC_READ_BYTES - 1}')
         head = response['Body'].read(_MAGIC_READ_BYTES)
-    except (ClientError, KeyError) as exc:
+    except (ClientError, BotoCoreError) as exc:
         raise ValueError(f'Temporary upload is unreadable: {key}') from exc
     finally:
         if response is not None:
@@ -211,9 +266,6 @@ def sign_upload(request):
     if not uploads_enabled():
         return _error('Direct uploads are not enabled.', 400)
 
-    if not _sign_rate_allowed(request):
-        return _error('Too many upload requests, try again later.', 429)
-
     scope = request.POST.get('scope', '')
     scope_config = SCOPES.get(scope)
     if not scope_config:
@@ -224,6 +276,11 @@ def sign_upload(request):
             raise PermissionDenied
     except PermissionDenied:
         return _error('Not allowed.', 403)
+
+    # Count only requests that passed the scope gate, so unauthorized junk
+    # cannot exhaust the bucket.
+    if not _sign_rate_allowed(request, scope):
+        return _error('Too many upload requests, try again later.', 429)
 
     bucket = request.POST.get('bucket', 'private')
     if bucket not in ('private', 'public'):
@@ -336,13 +393,14 @@ def finalize_upload(temp_key, instance, field, filename, expected_size=None):
     client = storage.connection.meta.client
     bucket = storage.bucket_name
 
-    if not isinstance(temp_key, str) or not TMP_KEY_PATTERN.match(temp_key):
+    match = TMP_KEY_PATTERN.match(temp_key) if isinstance(temp_key, str) else None
+    if not match:
         raise ValueError('Invalid upload key.')
-    key_ext = TMP_KEY_PATTERN.match(temp_key).group(2)
+    key_ext = match.group(2)
 
     try:
         head = client.head_object(Bucket=bucket, Key=temp_key)
-    except (ClientError, KeyError) as exc:
+    except (ClientError, BotoCoreError) as exc:
         raise ValueError(f'Temporary upload no longer exists: {temp_key}') from exc
     actual_size = int(head.get('ContentLength', -1))
     if expected_size is not None and actual_size != expected_size:
@@ -359,8 +417,13 @@ def finalize_upload(temp_key, instance, field, filename, expected_size=None):
         'Key': full_key,
     }
     copy_params.update(storage.get_object_parameters(full_key))
-    if getattr(storage, 'default_acl', None):
+    if 'ACL' not in copy_params and getattr(storage, 'default_acl', None):
         copy_params['ACL'] = storage.default_acl
     client.copy_object(**copy_params)
-    client.delete_object(Bucket=bucket, Key=temp_key)
+    try:
+        client.delete_object(Bucket=bucket, Key=temp_key)
+    except (ClientError, BotoCoreError) as exc:
+        # The final object is already in place; the temp object is left for
+        # the bucket lifecycle rule.
+        logger.warning('Could not delete temp upload %s: %s', temp_key, exc)
     return name

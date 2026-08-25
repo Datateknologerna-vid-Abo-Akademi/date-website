@@ -143,19 +143,26 @@ class SignUploadTests(TestCase):
             {'scope': 'admin', 'bucket': 'private', 'name': 'test.jpg', 'size': '1024'},
         )
         self.assertEqual(response.status_code, 403)
+        # The rejection must come from the CSRF middleware, not the view's own
+        # permission gate (which would return JSON).
+        self.assertIn(b'CSRF', response.content)
+        self.assertNotEqual(response['Content-Type'].split(';')[0], 'application/json')
 
     def test_sign_rate_limited_per_user(self):
         staff = create_user(username='ratelimited', is_superuser=True)
         self.client.force_login(staff)
-        with patch.object(uploads, 'SIGN_RATE_LIMIT', 3):
+        with patch.dict(uploads.SIGN_RATE_LIMITS, {'admin': 3}):
             for _ in range(3):
                 self.assertEqual(self.sign().status_code, 200)
             self.assertEqual(self.sign().status_code, 429)
 
     def test_sign_rate_limited_per_ip_for_anonymous(self):
-        with patch.object(uploads, 'SIGN_RATE_LIMIT', 2):
-            self.assertEqual(self.sign(scope='exambank').status_code, 403)
-            self.assertEqual(self.sign(scope='exambank').status_code, 403)
+        from exambank.models import ExamBankAccessSettings
+
+        ExamBankAccessSettings.objects.create(require_sign_in=False)
+        with patch.dict(uploads.SIGN_RATE_LIMITS, {'exambank': 2}):
+            self.assertEqual(self.sign(scope='exambank').status_code, 200)
+            self.assertEqual(self.sign(scope='exambank').status_code, 200)
             self.assertEqual(self.sign(scope='exambank').status_code, 429)
 
     def test_anonymous_requires_authentication(self):
@@ -343,6 +350,86 @@ class FinalizeUploadTests(TestCase):
         with self.assertRaises(ValueError):
             uploads.finalize_upload('media/2026/other/photo.jpg', photo, self._field(), 'photo.jpg')
         self.assertEqual([call[0] for call in self.storage.client.calls], [])
+
+    def test_magic_bytes_accepted_for_supported_extensions(self):
+        cases = {
+            'png': b'\x89PNG\r\n\x1a\n' + b'\x00' * 20,
+            'webp': b'RIFF\x00\x00\x00\x00WEBP' + b'\x00' * 20,
+            'pdf': b'%PDF-1.4\n' + b'\x00' * 20,
+            'zip': b'PK\x03\x04' + b'\x00' * 20,
+            'docx': b'PK\x03\x04' + b'\x00' * 20,
+            '7z': b'7z\xbc\xaf\x27\x1c' + b'\x00' * 20,
+            'rar': b'Rar!\x1a\x07\x00' + b'\x00' * 20,
+            'gz': b'\x1f\x8b\x08\x00' + b'\x00' * 20,
+            'tar': b'\x00' * 257 + b'ustar' + b'\x00' * 20,
+        }
+        for ext, content in cases.items():
+            with self.subTest(ext=ext):
+                self.storage.client.calls.clear()
+                key = f"tmp/{'b' * 32}.{ext}"
+                self.storage.client.objects[key] = content
+                photo = Photo(album=self.album)
+                final_name = uploads.finalize_upload(
+                    key,
+                    photo,
+                    self._field(),
+                    f'file.{ext}',
+                    expected_size=len(content),
+                )
+                self.assertTrue(final_name.endswith(f'.{ext}'))
+                self.assertEqual(self.storage.client.calls[-1][0], 'delete_object')
+
+    def test_magic_check_allows_extensions_without_signature(self):
+        self.storage.client.objects['tmp/cccccccccccccccccccccccccccccccc.txt'] = b'any content at all'
+        photo = Photo(album=self.album)
+        final_name = uploads.finalize_upload(
+            'tmp/cccccccccccccccccccccccccccccccc.txt',
+            photo,
+            self._field(),
+            'notes.txt',
+            expected_size=len(b'any content at all'),
+        )
+        self.assertTrue(final_name.endswith('.txt'))
+
+    def test_unreadable_temp_object_raises_value_error(self):
+        def broken_get_object(**kwargs):
+            raise ClientError(
+                {'Error': {'Code': '500', 'Message': 'boom'}, 'ResponseMetadata': {'HTTPStatusCode': 500}},
+                'GetObject',
+            )
+
+        self.storage.client.get_object = broken_get_object
+        photo = Photo(album=self.album)
+        with self.assertRaisesRegex(ValueError, 'unreadable'):
+            uploads.finalize_upload(
+                'tmp/abcdef1234567890abcdef1234567890.jpg',
+                photo,
+                self._field(),
+                'photo.jpg',
+                expected_size=100,
+            )
+        self.assertIn('tmp/abcdef1234567890abcdef1234567890.jpg', self.storage.client.objects)
+
+    def test_delete_failure_does_not_block_finalize(self):
+        def broken_delete_object(**kwargs):
+            raise ClientError(
+                {'Error': {'Code': '500', 'Message': 'boom'}, 'ResponseMetadata': {'HTTPStatusCode': 500}},
+                'DeleteObject',
+            )
+
+        self.storage.client.delete_object = broken_delete_object
+        photo = Photo(album=self.album)
+        final_name = uploads.finalize_upload(
+            'tmp/abcdef1234567890abcdef1234567890.jpg',
+            photo,
+            self._field(),
+            'My Photo.jpg',
+            expected_size=100,
+        )
+        self.assertEqual(final_name, '2026/test-album/my-photo.jpg')
+        # Temp object is left for the lifecycle rule; the final copy exists.
+        self.assertIn('tmp/abcdef1234567890abcdef1234567890.jpg', self.storage.client.objects)
+        self.assertIn('media/2026/test-album/my-photo.jpg', self.storage.client.objects)
 
     def test_rejects_size_mismatch_without_copy_or_delete(self):
         photo = Photo(album=self.album)

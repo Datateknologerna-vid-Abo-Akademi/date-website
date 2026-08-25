@@ -2,9 +2,11 @@ import logging
 import time
 from functools import wraps
 
+from django.contrib import messages
 from django.contrib.auth.views import redirect_to_login
 from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext as _
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 
@@ -122,19 +124,29 @@ def exam_upload(request, pk):
         if form.is_valid():
             if not form.cleaned_data['exam']:
                 return redirect('archive:exams')
+            skipped = []
             for uploaded_file in form.cleaned_data['exam']:
                 if isinstance(uploaded_file, dict):
-                    create_exam_file_from_temp(
-                        archive,
-                        uploaded_file,
-                        title=form.cleaned_data['title'],
-                    )
+                    try:
+                        create_exam_file_from_temp(
+                            archive,
+                            uploaded_file,
+                            title=form.cleaned_data['title'],
+                        )
+                    except ValueError as exc:
+                        logger.warning(str(exc))
+                        skipped.append(uploaded_file['name'])
                 else:
                     ExamFile.objects.create(
                         document=uploaded_file,
                         title=form.cleaned_data['title'],
                         archive=archive,
                     )
+            if skipped:
+                messages.warning(
+                    request,
+                    _('Kunde inte ladda upp följande filer: %(files)s') % {'files': ', '.join(skipped)},
+                )
             logger.debug(f"User: {request.user} added files to {archive.title}")
         return redirect('archive:exams_detail', archive.pk)
 

@@ -119,6 +119,20 @@ class AlbumAdminFormTests(TestCase):
         self.assertTrue(Photo.objects.get().image.name.endswith('good.jpg'))
         self.assertEqual(form.skipped_images, ['bad.jpg'])
 
+    def test_skips_direct_upload_that_fails_finalize(self):
+        payload = json.dumps([{'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'broken.jpg', 'size': 100}])
+        with self.settings(USE_S3=True, DIRECT_UPLOADS_ENABLED=True):
+            form = AlbumAdminForm(
+                data={'title': 'Failing album', 'pub_date': '2026-08-23 14:00:00', 'images': payload},
+            )
+            self.assertTrue(form.is_valid(), form.errors)
+            album = form.save(commit=False)
+            album.save()
+            with patch('core.uploads.finalize_upload', side_effect=ValueError('boom')):
+                form.save_m2m()
+        self.assertEqual(Photo.objects.count(), 0)
+        self.assertEqual(form.skipped_images, ['broken.jpg'])
+
 
 class GalleryLegacyAdminPermissionTests(TestCase):
     def setUp(self):

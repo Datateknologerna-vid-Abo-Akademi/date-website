@@ -84,10 +84,14 @@ see the license notice in `LICENSE-NOTICE.md`).
 
 - The signing endpoint requires the scope's gate (session + permission, or the
   exam-bank gate which also covers open/password-session access); CSRF stays
-  on (JS sends the cookie token). Sign requests are rate limited per user (or
-  per IP for anonymous visitors) with a fixed-window counter in the cache
-  (`SIGN_RATE_LIMIT` / `SIGN_RATE_WINDOW_SECONDS` in `core/uploads.py`), which
-  bounds how many temp objects a single caller can create.
+  on (JS sends the cookie token). Sign requests are rate limited with a
+  fixed-window counter in the cache, per user for authenticated callers and
+  per `REMOTE_ADDR` for anonymous ones (behind the load balancer that is the
+  proxy address, so anonymous visitors share one bucket per deployment).
+  Limits are per scope (`SIGN_RATE_LIMITS` in `core/uploads.py`, staff scopes
+  higher for bulk admin uploads); the limiter runs after the scope gate, fails
+  open when the cache is unavailable, and a 429 is surfaced to the client as a
+  failed upload.
 - Extension allowlist and per-scope size caps are enforced server-side in
   `sign_upload`; Uppy `restrictions` are UX only.
 - Keys are always `tmp/<32 hex>.<ext>` generated server-side. Finalization
