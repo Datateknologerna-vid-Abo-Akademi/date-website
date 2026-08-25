@@ -25,9 +25,9 @@ from django.utils.translation import gettext_lazy as _
 
 from .uploads import SCOPES, parse_uploaded_files, uploads_enabled
 
-UPPY_MEDIA_CSS = ('https://releases.transloadit.com/uppy/v5.2.1/uppy.min.css',)
+UPPY_MEDIA_CSS = ('https://releases.transloadit.com/uppy/v5.2.4/uppy.min.css',)
 UPPY_MEDIA_JS = (
-    'https://releases.transloadit.com/uppy/v5.2.1/uppy.min.js',
+    'https://releases.transloadit.com/uppy/v5.2.4/uppy.min.js',
     'uploads/js/uppy-init.js',
 )
 

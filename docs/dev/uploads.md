@@ -10,7 +10,7 @@ S3-compatible endpoint (Backblaze B2 in production) using short-lived
 presigned URLs; the web process only issues the signatures and later moves the
 object from a temp key to its final key with a server-side copy.
 
-The feature uses the pinned Uppy 5.2.1 browser bundle from Transloadit's
+The feature uses the pinned Uppy 5.2.4 browser bundle from Transloadit's
 release CDN. The site-specific integration remains in
 `static/common/uploads/js/uppy-init.js`.
 

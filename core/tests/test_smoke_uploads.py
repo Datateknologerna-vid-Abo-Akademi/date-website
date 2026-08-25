@@ -19,7 +19,7 @@ class DirectUploadSmokeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
         self.assertIn('data-uppy-widget="1"', html)
-        self.assertIn('https://releases.transloadit.com/uppy/v5.2.1/uppy.min.js', html)
+        self.assertIn('https://releases.transloadit.com/uppy/v5.2.4/uppy.min.js', html)
         self.assertIn('data-uppy-scope="gallery-admin"', html)
         self.assertIn('data-uppy-compress="true"', html)
 
@@ -30,8 +30,8 @@ class DirectUploadSmokeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
         self.assertIn('data-uppy-widget="1"', html)
-        self.assertIn('https://releases.transloadit.com/uppy/v5.2.1/uppy.min.js', html)
-        self.assertIn('integrity="sha384-USskOeHHruJvx6lh5sjMWaKzZruHVick', html)
+        self.assertIn('https://releases.transloadit.com/uppy/v5.2.4/uppy.min.js', html)
+        self.assertIn('integrity="sha384-hl+zw0fpZ6cVAtnkwy96IFC3oGXSYqe8', html)
         self.assertIn('data-uppy-scope="gallery"', html)
         self.assertIn('data-uppy-compress="true"', html)
 
