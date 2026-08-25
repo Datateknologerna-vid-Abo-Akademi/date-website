@@ -253,3 +253,44 @@ class PictureDetailFragmentViewTests(TestCase):
                 'album': self.collection.title,
             },
         )
+
+
+@override_settings(USE_S3=True, DIRECT_UPLOADS_ENABLED=True)
+class DirectDocumentAdminFormTests(TestCase):
+    def test_direct_payload_creates_documents(self):
+        import json
+        from unittest.mock import patch
+
+        from .forms import DocumentAdminForm
+
+        payload = json.dumps([{'key': 'tmp/' + 'a' * 32 + '.pdf', 'name': 'notes.pdf', 'size': 2048}])
+        with patch('core.uploads.finalize_upload', return_value='documents/2026/docs/notes.pdf') as finalize:
+            form = DocumentAdminForm(
+                data={
+                    'title': 'Docs',
+                    'type': 'Documents',
+                    'pub_date': '2026-08-23 14:00:00',
+                    'files': payload,
+                }
+            )
+            self.assertTrue(form.is_valid(), form.errors)
+            form.save()
+
+        document = Document.objects.get()
+        self.assertEqual(document.title, 'notes.pdf')
+        self.assertEqual(document.document.name, 'documents/2026/docs/notes.pdf')
+        finalize.assert_called_once()
+        self.assertEqual(finalize.call_args[0][0], 'tmp/' + 'a' * 32 + '.pdf')
+
+    def test_direct_payload_rejects_malformed_json(self):
+        from .forms import DocumentAdminForm
+
+        form = DocumentAdminForm(
+            data={
+                'title': 'Docs',
+                'type': 'Documents',
+                'pub_date': '2026-08-23 14:00:00',
+                'files': 'not-json',
+            }
+        )
+        self.assertFalse(form.is_valid())

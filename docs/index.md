@@ -67,6 +67,7 @@ Use the sections below to jump to either editor-facing instructions or implement
 - [Static Pages Development Notes](dev/staticpages.md)
 - [Template System & Association Overrides](dev/templates.md)
 - [Translation System Notes](dev/translations.md)
+- [Direct-to-Storage Uploads (Uppy)](dev/uploads.md)
 
 ## Maintenance
 

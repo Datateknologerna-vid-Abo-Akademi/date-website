@@ -3,14 +3,21 @@ import time
 from functools import wraps
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.views import redirect_to_login
 from django.shortcuts import redirect, render
 from django.utils.decorators import method_decorator
+from django.utils.translation import gettext as _
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin
 
 from .filters import ExamFilter
-from .forms import ExamArchiveUploadForm, ExamBankPasswordForm, ExamUploadForm
+from .forms import (
+    ExamArchiveUploadForm,
+    ExamBankPasswordForm,
+    ExamUploadForm,
+    create_exam_file_from_temp,
+)
 from .models import ExamArchive, ExamBankAccessSettings, ExamFile
 from .tables import ExamFileTable
 
@@ -114,14 +121,43 @@ def exams_index(request):
 def exam_upload(request, pk):
     archive = ExamArchive.objects.filter(pk=pk).first()
     if request.method == 'POST' and archive:
-        form = ExamUploadForm(request.POST)
+        form = ExamUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            if not request.FILES.getlist('exam'):
+            if not form.cleaned_data['exam']:
                 return redirect('archive:exams')
-            for uploaded_file in request.FILES.getlist('exam'):
-                ExamFile.objects.create(document=uploaded_file, title=form.cleaned_data['title'], archive=archive)
+            skipped = []
+            for uploaded_file in form.cleaned_data['exam']:
+                if isinstance(uploaded_file, dict):
+                    try:
+                        create_exam_file_from_temp(
+                            archive,
+                            uploaded_file,
+                            title=form.cleaned_data['title'],
+                        )
+                    except ValueError as exc:
+                        logger.warning(str(exc))
+                        skipped.append(uploaded_file['name'])
+                else:
+                    ExamFile.objects.create(
+                        document=uploaded_file,
+                        title=form.cleaned_data['title'],
+                        archive=archive,
+                    )
+            if skipped:
+                messages.warning(
+                    request,
+                    _('Kunde inte ladda upp följande filer: %(files)s') % {'files': ', '.join(skipped)},
+                )
             logger.debug(f"User: {request.user} added files to {archive.title}")
-        return redirect('archive:exams_detail', archive.pk)
+            return redirect('archive:exams_detail', archive.pk)
+        return render(
+            request,
+            'archive/exam_upload.html',
+            {
+                'collection': archive,
+                'exam_form': form,
+            },
+        )
 
     return render(
         request,

@@ -147,6 +147,10 @@ media:
     # Leave empty to keep endpoint URLs.
     privateCustomDomain: ''
     publicCustomDomain: ''
+    # Direct browser-to-storage uploads (Uppy with presigned PUT URLs). Requires
+    # bucket CORS + a lifecycle rule on the tmp prefix (see docs/dev/uploads.md);
+    # uploads then bypass the web pods entirely.
+    directUploadsEnabled: false
   persistence:
     enabled: true
     storageClass: ''

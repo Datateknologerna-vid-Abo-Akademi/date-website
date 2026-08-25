@@ -1,31 +1,19 @@
+import logging
+
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
 from core.admin_base import UnfoldFormMixin
-from core.admin_widgets import SafeAdminMultipleFileWidget
+from core.upload_widgets import DirectUploadField
 
 from .models import ExamArchive, ExamBankAccessSettings, ExamFile
 
-
-class MultipleFileInput(forms.ClearableFileInput):
-    allow_multiple_selected = True
-
-
-class MultipleFileField(forms.FileField):
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("widget", MultipleFileInput())
-        super().__init__(*args, **kwargs)
-
-    def clean(self, data, initial=None):
-        single_file_clean = super().clean
-        if isinstance(data, (list, tuple)):
-            return [single_file_clean(d, initial) for d in data]
-        return single_file_clean(data, initial)
+logger = logging.getLogger('date')
 
 
 class ExamUploadForm(forms.Form):
     title = forms.CharField()
-    exam = MultipleFileField(required=False)
+    exam = DirectUploadField(scope='exambank', multi=True, label="Tentor")
 
 
 class ExamArchiveUploadForm(forms.Form):
@@ -33,11 +21,7 @@ class ExamArchiveUploadForm(forms.Form):
 
 
 class ExamArchiveAdminForm(forms.ModelForm):
-    files = MultipleFileField(
-        label="Ladda upp flera dokument",
-        required=False,
-        widget=SafeAdminMultipleFileWidget(),
-    )  # type: ignore[assignment]
+    files = DirectUploadField(scope='admin', bucket='private', multi=True, label="Ladda upp flera dokument")  # type: ignore[assignment]
 
     class Meta:
         model = ExamArchive
@@ -45,8 +29,13 @@ class ExamArchiveAdminForm(forms.ModelForm):
 
     def _save_m2m(self):
         super()._save_m2m()
-        if hasattr(self.files, 'getlist'):
-            for uploaded_file in self.files.getlist('files'):
+        for uploaded_file in self.cleaned_data.get('files') or []:
+            if isinstance(uploaded_file, dict):
+                try:
+                    create_exam_file_from_temp(self.instance, uploaded_file)
+                except ValueError as exc:
+                    logger.warning('Skipped exam file %s: %s', uploaded_file.get('name'), exc)
+            else:
                 ExamFile.objects.create(archive=self.instance, document=uploaded_file, title=uploaded_file)
 
 
@@ -98,3 +87,23 @@ class ExamBankPasswordForm(forms.Form):
         if not self.access_settings or not self.access_settings.check_password(password):
             raise forms.ValidationError(_('Fel lösenord.'))
         return password
+
+
+def create_exam_file_from_temp(archive, uploaded, title=None):
+    """Copy a direct-uploaded temp exam file to its final key and create the row.
+
+    The public upload flow passes the form's title; admin bulk uploads default
+    to the filename, matching the classic behavior.
+    """
+    from core.uploads import finalize_upload
+
+    exam_file = ExamFile(archive=archive, title=title or uploaded['name'])
+    field = ExamFile._meta.get_field('document')
+    exam_file.document.name = finalize_upload(
+        uploaded['key'],
+        exam_file,
+        field,
+        uploaded['name'],
+        expected_size=uploaded['size'],
+    )
+    exam_file.save()

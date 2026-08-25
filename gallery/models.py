@@ -102,7 +102,10 @@ class Photo(models.Model):
         return self.image.name
 
     def save(self, *args, **kwargs):
-        if not self.id:
+        # Direct-to-storage uploads are already compressed client-side, so the
+        # server-side resize is skipped for them (set `_skip_compress` before
+        # save). Classic form uploads keep the existing behaviour.
+        if not self.id and not getattr(self, '_skip_compress', False):
             self.image = compress_image(self.image)
         super().save(*args, **kwargs)
 

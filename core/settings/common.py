@@ -347,6 +347,17 @@ CAPTCHA_SITE_KEY = env("CF_TURNSTILE_SITE_KEY", str, "")
 # S3 conf using django storages
 USE_S3 = env('USE_S3', bool, False)
 
+# Direct browser-to-storage uploads (Uppy) with presigned URLs. Only relevant
+# when USE_S3 is enabled: uploads then bypass the web process entirely and go
+# straight to the S3-compatible endpoint (e.g. Backblaze B2), with a small
+# signing API as the only origin-side step. Off by default; enable per
+# deployment once the bucket CORS/lifecycle setup from docs/dev/uploads.md
+# is in place.
+DIRECT_UPLOADS_ENABLED = env('DIRECT_UPLOADS_ENABLED', bool, False)
+# Key prefix for uploads that have not been attached to a model row yet.
+# Buckets should expire this prefix (see docs/dev/uploads.md).
+DIRECT_UPLOAD_TMP_PREFIX = 'tmp/'
+
 STORAGES = {
     "default": {
         "BACKEND": 'django.core.files.storage.FileSystemStorage',

@@ -144,6 +144,22 @@
       "properties": {
         "s3": {
           "type": "object",
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "directUploadsEnabled": { "const": true }
+                },
+                "required": ["directUploadsEnabled"]
+              },
+              "then": {
+                "properties": {
+                  "enabled": { "const": true }
+                },
+                "required": ["enabled"]
+              }
+            }
+          ],
           "properties": {
             "enabled": {
               "type": "boolean"
@@ -174,6 +190,9 @@
             },
             "secretAccessKey": {
               "type": "string"
+            },
+            "directUploadsEnabled": {
+              "type": "boolean"
             }
           }
         }

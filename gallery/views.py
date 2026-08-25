@@ -9,7 +9,7 @@ from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.utils.translation import gettext as _
 
-from .forms import AlbumUploadForm
+from .forms import AlbumUploadForm, create_photo_from_temp
 from .models import Album, ImageProcessingError, Photo
 
 logger = logging.getLogger('date')
@@ -124,24 +124,32 @@ def can_upload_album(user):
 @user_passes_test(can_upload_album)
 def upload(request):
     if request.method == 'POST':
-        form = AlbumUploadForm(request.POST)
+        form = AlbumUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            if not request.FILES.getlist('images'):
+            if not form.cleaned_data['images']:
                 return redirect('archive:years')
-            album = Album.objects.create(title=form['album'].value())
+            album = Album.objects.create(title=form.cleaned_data['album'])
             skipped = []
-            for uploaded_file in request.FILES.getlist('images'):
-                try:
-                    Photo.objects.create(image=uploaded_file, album=album)
-                except ImageProcessingError as exc:
-                    logger.warning(str(exc))
-                    skipped.append(uploaded_file.name)
+            for uploaded_file in form.cleaned_data['images']:
+                if isinstance(uploaded_file, dict):
+                    try:
+                        create_photo_from_temp(album, uploaded_file)
+                    except ValueError as exc:
+                        logger.warning(str(exc))
+                        skipped.append(uploaded_file['name'])
+                else:
+                    try:
+                        Photo.objects.create(image=uploaded_file, album=album)
+                    except ImageProcessingError as exc:
+                        logger.warning(str(exc))
+                        skipped.append(uploaded_file.name)
             if skipped:
                 messages.warning(
                     request,
                     _('Kunde inte bearbeta följande bilder, de laddades inte upp: %(files)s')
                     % {'files': ', '.join(skipped)},
                 )
-        return redirect('archive:years')
+            return redirect('archive:years')
+        return render(request, 'archive/upload.html', {'picture_form': form})
 
-    return render(request, 'archive/upload.html', {'picture_form': AlbumUploadForm})
+    return render(request, 'archive/upload.html', {'picture_form': AlbumUploadForm()})

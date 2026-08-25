@@ -1,7 +1,8 @@
+import json
 import shutil
 import tempfile
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
@@ -81,6 +82,38 @@ class ExamBankArchiveRouteTests(TestCase):
         exam_file = ExamFile.objects.get(archive=archive)
         self.assertEqual(exam_file.title, 'tent 02.02.2024')
         self.assertEqual(exam_file.document.name, '2024/networks/networks.pdf')
+
+    def test_direct_upload_skips_files_that_fail_finalize_with_warning(self):
+        archive = ExamArchive.objects.create(
+            title='Networks',
+            pub_date=timezone.datetime(2024, 1, 1, tzinfo=timezone.UTC),
+        )
+        good = {'key': 'tmp/' + 'a' * 32 + '.pdf', 'name': 'good.pdf', 'size': 10}
+        bad = {'key': 'tmp/' + 'b' * 32 + '.pdf', 'name': 'bad.pdf', 'size': 10}
+        payload = json.dumps([good, bad])
+
+        def fake_finalize(temp_key, instance, field, filename, expected_size=None):
+            if temp_key == bad['key']:
+                raise ValueError('boom')
+            instance.document.name = f'2024/networks/{filename}'
+            instance.save()
+            return f'2024/networks/{filename}'
+
+        with self.settings(USE_S3=True, DIRECT_UPLOADS_ENABLED=True):
+            with patch('core.uploads.finalize_upload', side_effect=fake_finalize):
+                response = self.client.post(
+                    reverse('archive:exam_upload', args=[archive.pk]),
+                    {'title': 'tent 02.02.2024', 'exam': payload},
+                    follow=True,
+                )
+
+        self.assertRedirects(response, reverse('archive:exams_detail', args=[archive.pk]))
+        files = list(ExamFile.objects.filter(archive=archive).order_by('title'))
+        self.assertEqual([f.title for f in files], ['tent 02.02.2024'])
+        self.assertEqual(files[0].document.name, '2024/networks/good.pdf')
+
+        warnings = [m.message for m in response.context['messages']]
+        self.assertTrue(any('bad.pdf' in message for message in warnings))
 
     def test_legacy_archive_exam_archive_upload_adds_archive(self):
         response = self.client.post(
@@ -435,3 +468,37 @@ class ExamBankAppIndexLegacyPermissionTests(TestCase):
         response = self.client.get('/admin/exambank/')
 
         self.assertEqual(response.status_code, 200)
+
+
+@override_settings(USE_S3=True, DIRECT_UPLOADS_ENABLED=True)
+class DirectUploadTests(TestCase):
+    def setUp(self):
+        from members.models import ORDINARY_MEMBER, MembershipType
+
+        membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.member = Member.objects.create_user(
+            username='exam-uploader',
+            password='pwd',
+            membership_type=membership_type,
+        )
+        self.client.force_login(self.member, backend='members.backends.AuthBackend')
+        self.archive = ExamArchive.objects.create(title='Math 1')
+        ExamBankAccessSettings.objects.create(require_sign_in=False)
+
+    def test_public_direct_upload_uses_form_title(self):
+        import json
+        from unittest.mock import patch
+
+        payload = json.dumps([{'key': 'tmp/' + 'c' * 32 + '.pdf', 'name': 'tent.pdf', 'size': 123}])
+        with patch('core.uploads.finalize_upload', return_value='2026/math-1/tent.pdf') as finalize:
+            response = self.client.post(
+                reverse('archive:exam_upload', args=[self.archive.pk]),
+                {'title': 'Tent 23.08.2026', 'exam': payload},
+            )
+
+        self.assertRedirects(response, reverse('archive:exams_detail', args=[self.archive.pk]))
+        exam_file = ExamFile.objects.get()
+        self.assertEqual(exam_file.title, 'Tent 23.08.2026')
+        self.assertEqual(exam_file.document.name, '2026/math-1/tent.pdf')
+        finalize.assert_called_once()
+        self.assertEqual(finalize.call_args[1]['expected_size'], 123)

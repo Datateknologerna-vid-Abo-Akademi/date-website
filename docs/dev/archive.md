@@ -17,3 +17,4 @@ The `archive` app now owns document collections and public files only. Photo gal
 ## Storage Considerations
 - `Collection.delete()` removes the physical directory in `MEDIA_ROOT`. Ensure backups exist before mass deletions.
 - Public files require `USE_S3=True` because `PublicFileField` expects a storage backend with signed URLs.
+- Admin multi-uploads use `DirectUploadField` (see `dev/uploads.md`): with direct uploads enabled, files are uploaded straight to the S3 endpoint and finalized server-side on save; otherwise the classic file input is used.

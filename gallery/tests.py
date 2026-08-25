@@ -1,8 +1,9 @@
+import json
 import shutil
 import tempfile
 from io import BytesIO
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pillow_heif
 from django.contrib import admin
@@ -118,6 +119,20 @@ class AlbumAdminFormTests(TestCase):
         self.assertTrue(Photo.objects.get().image.name.endswith('good.jpg'))
         self.assertEqual(form.skipped_images, ['bad.jpg'])
 
+    def test_skips_direct_upload_that_fails_finalize(self):
+        payload = json.dumps([{'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'broken.jpg', 'size': 100}])
+        with self.settings(USE_S3=True, DIRECT_UPLOADS_ENABLED=True):
+            form = AlbumAdminForm(
+                data={'title': 'Failing album', 'pub_date': '2026-08-23 14:00:00', 'images': payload},
+            )
+            self.assertTrue(form.is_valid(), form.errors)
+            album = form.save(commit=False)
+            album.save()
+            with patch('core.uploads.finalize_upload', side_effect=ValueError('boom')):
+                form.save_m2m()
+        self.assertEqual(Photo.objects.count(), 0)
+        self.assertEqual(form.skipped_images, ['broken.jpg'])
+
 
 class GalleryLegacyAdminPermissionTests(TestCase):
     def setUp(self):
@@ -202,6 +217,63 @@ class GalleryUploadViewTests(TestCase):
         album = Album.objects.get(title='HEIC upload')
         photo = Photo.objects.get(album=album)
         self.assertTrue(photo.image.name.endswith('.jpg'))
+
+
+@override_settings(USE_S3=True, DIRECT_UPLOADS_ENABLED=True)
+class DirectUploadViewTests(TestCase):
+    def setUp(self):
+        self.user = Member.objects.create_user(username='uploader')
+        permission = Permission.objects.get(codename='add_album', content_type__app_label='gallery')
+        self.user.user_permissions.add(permission)
+        self.client.force_login(self.user)
+
+    def test_direct_upload_creates_photos_from_temp_keys(self):
+        payload = json.dumps([{'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': 12345}])
+        with patch('core.uploads.finalize_upload', return_value='2026/test-album/photo.jpg') as finalize:
+            response = self.client.post(reverse('archive:upload'), {'album': 'Test album', 'images': payload})
+
+        self.assertRedirects(response, reverse('archive:years'))
+        photo = Photo.objects.get()
+        self.assertEqual(photo.album.title, 'Test album')
+        self.assertEqual(photo.image.name, '2026/test-album/photo.jpg')
+        finalize.assert_called_once()
+        self.assertEqual(finalize.call_args[0][0], 'tmp/' + 'a' * 32 + '.jpg')
+        self.assertEqual(finalize.call_args[1]['expected_size'], 12345)
+
+    def test_direct_upload_rejects_malformed_payload(self):
+        response = self.client.post(
+            reverse('archive:upload'),
+            {
+                'album': 'Test album',
+                'images': json.dumps([{'key': 'media/2026/album/photo.jpg', 'name': 'photo.jpg', 'size': 1}]),
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('images', response.context['picture_form'].errors)
+        self.assertEqual(Album.objects.count(), 0)
+        self.assertEqual(Photo.objects.count(), 0)
+
+    def test_direct_upload_without_files_redirects_without_album(self):
+        response = self.client.post(reverse('archive:upload'), {'album': 'Empty album'})
+        self.assertRedirects(response, reverse('archive:years'))
+        self.assertEqual(Album.objects.count(), 0)
+
+    def test_classic_upload_still_works(self):
+        image = Image.new('RGB', (100, 100))
+        image_bytes = BytesIO()
+        image.save(image_bytes, format='JPEG')
+        image.close()
+        upload = SimpleUploadedFile('classic.jpg', image_bytes.getvalue(), content_type='image/jpeg')
+
+        with self.settings(USE_S3=False, DIRECT_UPLOADS_ENABLED=False):
+            response = self.client.post(
+                reverse('archive:upload'),
+                {'album': 'Classic album', 'images': upload},
+            )
+
+        self.assertRedirects(response, reverse('archive:years'))
+        photo = Photo.objects.get()
+        self.assertTrue(photo.image.name.startswith('2026/classic-album/classic'))
 
 
 @override_settings(ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY=True)

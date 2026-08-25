@@ -5,7 +5,7 @@ The `gallery` app owns photo albums and uploaded photos. It replaced the previou
 
 ## Models
 - `Album` stores the album title, publication date, and `hide_for_gulis` access flag.
-- `Photo` stores image files and compresses newly uploaded images to 1600px-wide JPEGs in `Photo.save()`.
+- `Photo` stores image files and compresses newly uploaded images to 1600px-wide JPEGs in `Photo.save()`. With direct uploads enabled (see `dev/uploads.md`) photos are compressed client-side before upload and `Photo.save()` skips recompression via the `_skip_compress` flag.
 - Upload paths stay compatible with the previous archive layout: `<year>/<album>/<filename>`.
 - `AlbumAdminForm` creates multi-uploaded photos in its `save_m2m()` callback so new albums are inserted before their photos reference them.
 - `compress_image()` (`gallery/models.py`) raises `ImageProcessingError` for uploads Pillow can't decode (corrupt files, unsupported formats, decompression bombs) instead of letting the exception crash the request. Both `AlbumAdminForm._save_m2m()` and the public `gallery.views.upload` view catch it per file, skip the bad upload, and keep the rest of the batch; skipped filenames are surfaced via `django.contrib.messages` (admin: `AlbumAdmin.save_related`, public view: a warning message shown on redirect) and `form.skipped_images` for tests.
