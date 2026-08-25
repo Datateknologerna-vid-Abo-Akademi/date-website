@@ -2449,3 +2449,8 @@ msgstr "The bot check failed, try again."
 #: klotterplanket/views.py
 msgid "Kontrollera pseudonymen och meddelandet."
 msgstr "Check the pseudonym and the message."
+
+#: exambank/views.py
+#, python-format
+msgid "Kunde inte ladda upp följande filer: %(files)s"
+msgstr "Could not upload the following files: %(files)s"

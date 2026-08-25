@@ -2482,3 +2482,8 @@ msgstr "Botintarkistus epäonnistui, yritä uudelleen."
 #: klotterplanket/views.py
 msgid "Kontrollera pseudonymen och meddelandet."
 msgstr "Tarkista pseudonyymi ja viesti."
+
+#: exambank/views.py
+#, python-format
+msgid "Kunde inte ladda upp följande filer: %(files)s"
+msgstr "Seuraavia tiedostoja ei voitu ladata: %(files)s"

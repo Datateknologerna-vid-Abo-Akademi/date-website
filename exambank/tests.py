@@ -1,7 +1,8 @@
+import json
 import shutil
 import tempfile
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
@@ -81,6 +82,38 @@ class ExamBankArchiveRouteTests(TestCase):
         exam_file = ExamFile.objects.get(archive=archive)
         self.assertEqual(exam_file.title, 'tent 02.02.2024')
         self.assertEqual(exam_file.document.name, '2024/networks/networks.pdf')
+
+    def test_direct_upload_skips_files_that_fail_finalize_with_warning(self):
+        archive = ExamArchive.objects.create(
+            title='Networks',
+            pub_date=timezone.datetime(2024, 1, 1, tzinfo=timezone.UTC),
+        )
+        good = {'key': 'tmp/' + 'a' * 32 + '.pdf', 'name': 'good.pdf', 'size': 10}
+        bad = {'key': 'tmp/' + 'b' * 32 + '.pdf', 'name': 'bad.pdf', 'size': 10}
+        payload = json.dumps([good, bad])
+
+        def fake_finalize(temp_key, instance, field, filename, expected_size=None):
+            if temp_key == bad['key']:
+                raise ValueError('boom')
+            instance.document.name = f'2024/networks/{filename}'
+            instance.save()
+            return f'2024/networks/{filename}'
+
+        with self.settings(USE_S3=True, DIRECT_UPLOADS_ENABLED=True):
+            with patch('core.uploads.finalize_upload', side_effect=fake_finalize):
+                response = self.client.post(
+                    reverse('archive:exam_upload', args=[archive.pk]),
+                    {'title': 'tent 02.02.2024', 'exam': payload},
+                )
+
+        self.assertRedirects(response, reverse('archive:exams_detail', args=[archive.pk]))
+        files = list(ExamFile.objects.filter(archive=archive).order_by('title'))
+        self.assertEqual([f.title for f in files], ['tent 02.02.2024'])
+        self.assertEqual(files[0].document.name, '2024/networks/good.pdf')
+
+        response = self.client.get(reverse('archive:exams_detail', args=[archive.pk]))
+        warnings = [m.message for m in response.context['messages']]
+        self.assertTrue(any('bad.pdf' in message for message in warnings))
 
     def test_legacy_archive_exam_archive_upload_adds_archive(self):
         response = self.client.post(

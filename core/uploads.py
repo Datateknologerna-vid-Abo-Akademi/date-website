@@ -37,6 +37,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.files.storage import default_storage, storages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from redis.exceptions import RedisError
 from storages.utils import clean_name
 
 logger = logging.getLogger('date')
@@ -207,16 +208,16 @@ def _error(message, status):
 
 
 def _sign_rate_allowed(request, scope):
-    """Fixed-window counter in the cache; bounds sign calls per user/IP.
+    """Fixed-window counter in the cache; bounds sign calls per user/IP/scope.
 
-    Fails open when the cache backend is unavailable so an outage never blocks
-    all uploads.
+    Fails open when the cache backend is unavailable (including redis-py
+    connection errors) so an outage never blocks all uploads.
     """
     limit = SIGN_RATE_LIMITS.get(scope, SIGN_RATE_LIMIT)
     if request.user.is_authenticated:
-        key = f'upload-sign:user:{request.user.pk}'
+        key = f'upload-sign:{scope}:user:{request.user.pk}'
     else:
-        key = f"upload-sign:ip:{request.META.get('REMOTE_ADDR') or 'unknown'}"
+        key = f"upload-sign:{scope}:ip:{request.META.get('REMOTE_ADDR') or 'unknown'}"
     try:
         if cache.add(key, 1, SIGN_RATE_WINDOW_SECONDS):
             return True
@@ -226,7 +227,7 @@ def _sign_rate_allowed(request, scope):
             # Key expired between add and incr; start a fresh window.
             cache.set(key, 1, SIGN_RATE_WINDOW_SECONDS)
             return True
-    except ConnectionError, OSError:
+    except OSError, RedisError:
         return True
     return count <= limit
 

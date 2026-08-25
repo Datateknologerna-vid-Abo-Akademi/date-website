@@ -2431,3 +2431,8 @@ msgstr "Botkontrollen misslyckades, försök igen."
 #: klotterplanket/views.py
 msgid "Kontrollera pseudonymen och meddelandet."
 msgstr "Kontrollera pseudonymen och meddelandet."
+
+#: exambank/views.py
+#, python-format
+msgid "Kunde inte ladda upp följande filer: %(files)s"
+msgstr "Kunde inte ladda upp följande filer: %(files)s"

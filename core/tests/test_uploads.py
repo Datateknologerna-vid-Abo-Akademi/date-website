@@ -3,11 +3,12 @@ import os
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from botocore.exceptions import ClientError
+from botocore.exceptions import BotoCoreError, ClientError
 from django.contrib.auth.models import Permission
 from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from redis.exceptions import ConnectionError as RedisConnectionError
 
 from core import uploads
 from gallery.models import Album, Photo
@@ -164,6 +165,28 @@ class SignUploadTests(TestCase):
             self.assertEqual(self.sign(scope='exambank').status_code, 200)
             self.assertEqual(self.sign(scope='exambank').status_code, 200)
             self.assertEqual(self.sign(scope='exambank').status_code, 429)
+
+    def test_sign_rate_limits_are_per_scope(self):
+        staff = create_user(username='scopeuser', is_superuser=True)
+        self.client.force_login(staff)
+        with patch.dict(uploads.SIGN_RATE_LIMITS, {'admin': 1, 'gallery-admin': 1}):
+            self.assertEqual(self.sign().status_code, 200)
+            self.assertEqual(self.sign(scope='gallery-admin').status_code, 200)
+
+    def test_sign_rate_limit_fails_open_when_cache_unavailable(self):
+        staff = create_user(username='cacheout', is_superuser=True)
+        self.client.force_login(staff)
+
+        class BrokenCache:
+            def add(self, *args, **kwargs):
+                raise RedisConnectionError('connection refused')
+
+            def incr(self, *args, **kwargs):
+                raise RedisConnectionError('connection refused')
+
+        with patch('core.uploads.cache', BrokenCache()):
+            response = self.sign()
+        self.assertEqual(response.status_code, 200)
 
     def test_anonymous_requires_authentication(self):
         response = self.sign()
@@ -330,6 +353,22 @@ class FinalizeUploadTests(TestCase):
         self.assertEqual(calls, ['head_object'])
         self.assertNotIn('media/2026/test-album/photo.jpg', self.storage.client.objects)
 
+    def test_transport_error_raising_botocore_error_raises_value_error(self):
+        def broken_head(**kwargs):
+            raise BotoCoreError()
+
+        self.storage.client.head_object = broken_head
+        photo = Photo(album=self.album)
+        with self.assertRaisesRegex(ValueError, 'no longer exists'):
+            uploads.finalize_upload(
+                'tmp/abcdef1234567890abcdef1234567890.jpg',
+                photo,
+                self._field(),
+                'photo.jpg',
+                expected_size=100,
+            )
+        self.assertIn('tmp/abcdef1234567890abcdef1234567890.jpg', self.storage.client.objects)
+
     def test_rejects_content_that_does_not_match_extension(self):
         self.storage.client.objects['tmp/abcdef1234567890abcdef1234567890.jpg'] = b'plain text, not a jpeg'
         photo = Photo(album=self.album)
@@ -358,6 +397,12 @@ class FinalizeUploadTests(TestCase):
             'pdf': b'%PDF-1.4\n' + b'\x00' * 20,
             'zip': b'PK\x03\x04' + b'\x00' * 20,
             'docx': b'PK\x03\x04' + b'\x00' * 20,
+            'docm': b'PK\x03\x04' + b'\x00' * 20,
+            'xlsx': b'PK\x03\x04' + b'\x00' * 20,
+            'pptx': b'PK\x03\x04' + b'\x00' * 20,
+            'odt': b'PK\x03\x04' + b'\x00' * 20,
+            'ods': b'PK\x03\x04' + b'\x00' * 20,
+            'odp': b'PK\x03\x04' + b'\x00' * 20,
             '7z': b'7z\xbc\xaf\x27\x1c' + b'\x00' * 20,
             'rar': b'Rar!\x1a\x07\x00' + b'\x00' * 20,
             'gz': b'\x1f\x8b\x08\x00' + b'\x00' * 20,
