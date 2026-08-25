@@ -19,6 +19,7 @@ The public routes remain under the members URL namespace for compatibility:
 ## Admin
 - `FunctionaryRoleAdmin` includes an inline `Functionary` table so role metadata and yearly assignments can be edited together. The full assignment list is available through an **All assignments** tool link rather than a separate sidebar entry.
 - `FunctionaryAdmin` links each assignment back to its role and supports searching by linked member or standalone display name.
+- Legacy `members` functionary and role permissions continue to grant equivalent admin and inline access while stale content types are being migrated.
 
 ## Migration Notes
 - Data was split out from `members.FunctionaryRole` and `members.Functionary`.

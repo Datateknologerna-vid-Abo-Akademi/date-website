@@ -1,8 +1,12 @@
+import logging
+
 from django import forms
 
 from core.upload_widgets import DirectUploadField
 
-from .models import Album, Photo
+from .models import Album, ImageProcessingError, Photo
+
+logger = logging.getLogger('date')
 
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -52,8 +56,13 @@ class AlbumAdminForm(forms.ModelForm):
 
     def _save_m2m(self):
         super()._save_m2m()
+        self.skipped_images = []
         for uploaded_file in self.cleaned_data.get('images') or []:
             if isinstance(uploaded_file, dict):
                 create_photo_from_temp(self.instance, uploaded_file)
             else:
-                Photo.objects.create(album=self.instance, image=uploaded_file)
+                try:
+                    Photo.objects.create(album=self.instance, image=uploaded_file)
+                except ImageProcessingError as exc:
+                    logger.warning(str(exc))
+                    self.skipped_images.append(uploaded_file.name)

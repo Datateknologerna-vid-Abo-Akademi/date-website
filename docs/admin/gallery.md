@@ -16,3 +16,5 @@ Manage photo albums shown under `/archive/pictures/`.
 ## Notes
 - Public URLs remain `/archive/pictures/<year>/...`.
 - The **Städa upp media** admin link still points to the shared archive cleanup route.
+- iPhone photos (HEIC/HEIF) are supported and get converted to JPEG like any other upload.
+- If a file can't be read as an image (corrupted upload, unsupported format), it's skipped and a warning naming the file is shown after saving — the rest of the uploaded photos still save normally.

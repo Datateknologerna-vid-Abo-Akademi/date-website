@@ -73,7 +73,16 @@ Use `python scripts/validate_translations.py` after translation-heavy work. Manu
 
 `core.settings.test` always uses the DaTe app set, so apps that are not installed for `date` (notably `lucia`, which is kk-only) will not be picked up by a bare `date-test`. Run those tests with `DJANGO_SETTINGS_MODULE` set to a settings module that installs the app, or via `PROJECT_NAME` on a manual `manage.py test` invocation.
 
-CI runs translation validation, `compilemessages`, the Django test suite, starts the Compose stack, and pings the web endpoint. There is no separate formatter/linter configured in `pyproject.toml`; follow the existing style and keep changes locally consistent.
+CI runs two jobs: `test_and_ping` (translation validation, `compilemessages`, the Django test suite, starts the Compose stack, and pings the web endpoint) and a separate `lint` job. Before opening a PR, run the same checks the `lint` job runs (`.github/workflows/web_startup.yaml`), so failures surface locally instead of in CI:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+uv run djlint --check templates/
+uv run mypy .
+```
+
+If `djlint --check` reports formatting issues, `uv run djlint --reformat templates/` (or scope it to the changed file) applies the same formatting CI expects. `ruff`/`djlint`/`mypy` config lives in `pyproject.toml` (`[tool.ruff]`, `[tool.djlint]`, `[tool.mypy]`).
 
 The optional pre-push hook under `.githooks/` runs `uv run python manage.py test` when `uv` is available, falls back to Docker tests when Docker is available, and otherwise warns without blocking. `date-setup` installs this hook path.
 

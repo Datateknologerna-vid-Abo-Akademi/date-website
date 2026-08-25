@@ -4,7 +4,9 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
+from django.forms.models import inlineformset_factory
 from django.test import Client, TestCase, override_settings
 from django.test.client import RequestFactory
 from django.urls import reverse
@@ -13,6 +15,7 @@ from django.utils.formats import date_format
 from django.utils.translation import gettext
 from django_ckeditor_5.widgets import CKEditor5Widget
 
+from events.admin import EventRegistrationFormSet
 from events.forms import EventCreationForm, EventEditForm
 from events.models import Event, EventAttendees, EventRegistrationForm
 from events.routing import websocket_urlpatterns
@@ -399,6 +402,9 @@ class EventTestCase(TestCase):
         self.assertContains(response, '<td>True</td>', count=1)
 
     def test_max_participants(self):
+        # Parent/standalone events have no hard cap: once full they keep accepting
+        # signups as reserve-list overflow (see EventCapacityTests for the child-event
+        # hard-block case).
         self.event.sign_up_max_participants = 1
         self.event.save()
         c = Client()
@@ -407,8 +413,8 @@ class EventTestCase(TestCase):
         self.content['email'] = 'person2@test.com'
         response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(self.event.get_registrations().count(), 1)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.event.get_registrations().count(), 2)
 
     def test_avec_signup_saves_custom_field_preferences_for_both_attendees(self):
         self.event.sign_up_avec = True
@@ -887,6 +893,194 @@ class EventAdminTests(TestCase):
         self.assertContains(response, 'alt="True"')
         self.assertNotContains(response, "True</td>")
 
+    def test_registration_list_returns_404_for_missing_event(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:registration_list", args=[999999]))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_registration_list_requires_event_and_attendee_view_permissions(self):
+        staff_group = Group.objects.create(name='admin')
+        staff_user = Member.objects.create_user(username='limited-event-admin', password='pwd')
+        staff_user.groups.add(staff_group)
+        staff_user.user_permissions.add(Permission.objects.get(codename='view_event'))
+        self.client.force_login(staff_user)
+
+        response = self.client.get(reverse("admin:registration_list", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 403)
+        request = RequestFactory().get(reverse('admin:events_event_changelist'))
+        request.user = staff_user
+        list_display = admin.site._registry[Event].get_list_display(request)
+        self.assertNotIn('get_attendee_count', list_display)
+        self.assertNotIn('account_actions', list_display)
+
+    def test_delete_participants_action_requires_attendee_delete_permission(self):
+        staff_group = Group.objects.create(name='admin')
+        staff_user = Member.objects.create_user(username='event-editor', password='pwd')
+        staff_user.groups.add(staff_group)
+        staff_user.user_permissions.add(
+            Permission.objects.get(codename='view_event'),
+            Permission.objects.get(codename='change_event'),
+        )
+        request = RequestFactory().get(reverse('admin:events_event_changelist'))
+        request.user = staff_user
+        event_admin = admin.site._registry[Event]
+
+        self.assertNotIn('delete_participants', event_admin.get_actions(request))
+
+
+class EventRegistrationFormValidationTests(TestCase):
+    def setUp(self):
+        self.author = Member.objects.create_user(username='question-author', password='pwd')
+        self.event = Event.objects.create(title='Questions', slug='questions', author=self.author, sign_up=True)
+
+    def test_rejects_reserved_question_names(self):
+        for name in ('email', 'avec_email'):
+            with self.subTest(name=name):
+                question = EventRegistrationForm(event=self.event, name=name, type='text')
+                with self.assertRaises(ValidationError):
+                    question.full_clean()
+
+    def test_multiple_choice_options_are_normalized(self):
+        question = EventRegistrationForm(
+            event=self.event,
+            name='Meal',
+            type='select',
+            choice_list=' fish, vegetarian ',
+        )
+
+        question.full_clean()
+        question.save()
+
+        self.assertEqual(question.choice_list, 'fish,vegetarian')
+        self.assertEqual(
+            list(self.event.make_registration_form().base_fields['Meal'].choices),
+            [('fish', 'fish'), ('vegetarian', 'vegetarian')],
+        )
+
+    def test_multiple_choice_requires_unique_nonempty_options(self):
+        for choices in ('', 'fish,fish'):
+            with self.subTest(choices=choices):
+                question = EventRegistrationForm(
+                    event=self.event,
+                    name='Meal',
+                    type='select',
+                    choice_list=choices,
+                )
+                with self.assertRaises(ValidationError):
+                    question.full_clean()
+
+    def test_inline_formset_rejects_duplicate_question_names(self):
+        formset_class = inlineformset_factory(
+            Event,
+            EventRegistrationForm,
+            formset=EventRegistrationFormSet,
+            fields=('name', 'type', 'choice_list'),
+            extra=2,
+        )
+        formset = formset_class(
+            instance=self.event,
+            data={
+                'eventregistrationform_set-TOTAL_FORMS': '2',
+                'eventregistrationform_set-INITIAL_FORMS': '0',
+                'eventregistrationform_set-MIN_NUM_FORMS': '0',
+                'eventregistrationform_set-MAX_NUM_FORMS': '1000',
+                'eventregistrationform_set-0-name': 'Meal',
+                'eventregistrationform_set-0-type': 'text',
+                'eventregistrationform_set-0-choice_list': '',
+                'eventregistrationform_set-1-name': 'Meal',
+                'eventregistrationform_set-1-type': 'text',
+                'eventregistrationform_set-1-choice_list': '',
+            },
+        )
+
+        self.assertFalse(formset.is_valid())
+        self.assertIn('unika', str(formset.non_form_errors()))
+
+    def test_unchanged_legacy_question_configuration_remains_editable(self):
+        question = EventRegistrationForm.objects.create(
+            event=self.event,
+            name='',
+            type='select',
+            choice_list='',
+        )
+        question.required = True
+
+        question.full_clean()
+
+        self.assertTrue(question.required)
+
+    def test_legacy_duplicate_names_do_not_block_unrelated_inline_edits(self):
+        first = EventRegistrationForm.objects.create(event=self.event, name='Legacy', type='text')
+        second = EventRegistrationForm.objects.create(event=self.event, name='Legacy', type='text')
+        formset_class = inlineformset_factory(
+            Event,
+            EventRegistrationForm,
+            formset=EventRegistrationFormSet,
+            fields=('name', 'type', 'choice_list', 'required'),
+            extra=0,
+        )
+        formset = formset_class(
+            instance=self.event,
+            data={
+                'eventregistrationform_set-TOTAL_FORMS': '2',
+                'eventregistrationform_set-INITIAL_FORMS': '2',
+                'eventregistrationform_set-MIN_NUM_FORMS': '0',
+                'eventregistrationform_set-MAX_NUM_FORMS': '1000',
+                'eventregistrationform_set-0-id': str(first.pk),
+                'eventregistrationform_set-0-name': 'Legacy',
+                'eventregistrationform_set-0-type': 'text',
+                'eventregistrationform_set-0-choice_list': '',
+                'eventregistrationform_set-0-required': 'on',
+                'eventregistrationform_set-1-id': str(second.pk),
+                'eventregistrationform_set-1-name': 'Legacy',
+                'eventregistrationform_set-1-type': 'text',
+                'eventregistrationform_set-1-choice_list': '',
+            },
+        )
+
+        self.assertTrue(formset.is_valid(), formset.errors)
+
+    def test_child_registration_query_excludes_sibling_attendees(self):
+        sibling = Event.objects.create(title='Sibling', slug='sibling', author=self.author, parent=self.event)
+        child = Event.objects.create(title='Child', slug='child', author=self.author, parent=self.event)
+        own_attendee = EventAttendees.objects.create(
+            event=self.event,
+            original_event=child,
+            user='Own attendee',
+            email='own@example.com',
+        )
+        EventAttendees.objects.create(
+            event=self.event,
+            original_event=sibling,
+            user='Sibling attendee',
+            email='sibling@example.com',
+        )
+
+        self.assertEqual(list(child.get_registrations()), [own_attendee])
+
+    def test_attendee_cannot_reference_itself_or_another_event_as_avec(self):
+        attendee = EventAttendees.objects.create(
+            event=self.event,
+            user='Avec attendee',
+            email='avec-attendee@example.com',
+        )
+        attendee.avec_for = attendee
+        with self.assertRaises(ValidationError):
+            attendee.full_clean()
+
+        other_event = Event.objects.create(title='Other', slug='other', author=self.author)
+        other_attendee = EventAttendees.objects.create(
+            event=other_event,
+            user='Other attendee',
+            email='other-attendee@example.com',
+        )
+        attendee.avec_for = other_attendee
+        with self.assertRaises(ValidationError):
+            attendee.full_clean()
+
 
 class TranslationAdminRegressionTests(TestCase):
     def setUp(self):
@@ -1104,7 +1298,7 @@ class EventCapacityTests(TestCase):
 
         self.assertEqual(child.remaining_places(), 1)
 
-    def test_parent_event_rejects_signup_when_full(self):
+    def test_parent_event_allows_overflow_signup_when_full(self):
         event = Event.objects.create(
             title="Full Parent Event",
             slug="full-parent-event",
@@ -1125,14 +1319,14 @@ class EventCapacityTests(TestCase):
         response = self.client.post(
             reverse("events:detail", args=[event.slug]),
             {
-                "user": "Blocked",
-                "email": "blocked-parent@example.com",
+                "user": "Reserve",
+                "email": "reserve-parent@example.com",
                 "terms_accepted": "on",
             },
         )
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(event.get_registrations().count(), 1)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(event.get_registrations().count(), 2)
 
     def test_child_event_rejects_signup_when_full(self):
         parent = Event.objects.create(
@@ -1194,7 +1388,7 @@ class EventCapacityTests(TestCase):
         self.assertContains(response, "Det finns 7 platser kvar!")
         self.assertNotContains(response, "Det finns 8 platser kvar!")
 
-    def test_full_event_detail_page_hides_form_and_shows_warning(self):
+    def test_full_parent_event_detail_page_keeps_form_and_shows_reserve_list_warning(self):
         event = Event.objects.create(
             title="Full Rendered Event",
             slug="full-rendered-event",
@@ -1216,10 +1410,10 @@ class EventCapacityTests(TestCase):
             response = self.client.get(reverse("events:detail", args=[event.slug]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, 'name="user"')
-        self.assertNotContains(response, 'name="email"')
+        self.assertContains(response, 'name="user"')
+        self.assertContains(response, 'name="email"')
         self.assertContains(response, "Evenemanget är tyvärr fullt")
-        self.assertNotContains(response, "reservlistan")
+        self.assertContains(response, "reservlistan")
 
     def test_full_child_event_detail_page_hides_form_and_shows_warning(self):
         parent = Event.objects.create(

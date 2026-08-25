@@ -13,7 +13,7 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.forms import TOTPDeviceForm
 
 from members.forms import MemberCreationForm, SignUpForm, SubscriptionPaymentForm
-from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription
+from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
 from members.two_factor import (
     INFERRED_REDIRECT_SESSION_KEY,
     MemberSetupView,
@@ -128,6 +128,21 @@ class MemberCreationFormSaveTests(TestCase):
         self.assertNotEqual(member.password, 'secret123')
         self.assertTrue(member.check_password('secret123'))
 
+    def test_blank_password_is_rejected(self):
+        form = MemberCreationForm(
+            data={
+                'username': 'blank_password',
+                'email': 'blank@example.com',
+                'first_name': 'Blank',
+                'last_name': 'Password',
+                'membership_type': self.membership_type.id,
+                'password': '',
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('password', form.errors)
+
 
 class SubscriptionPaymentFormTests(TestCase):
     def setUp(self):
@@ -188,6 +203,35 @@ class SubscriptionPaymentFormTests(TestCase):
         self.assertTrue(form.is_valid())
         payment = form.save()
         self.assertIsNone(payment.date_expires)
+
+    def test_changing_to_non_expiring_subscription_clears_old_expiry(self):
+        expiring = self._create_subscription('year')
+        lifetime = Subscription.objects.create(
+            name='lifetime-update',
+            does_expire=False,
+            renewal_scale=None,
+            renewal_period=None,
+            price=0,
+        )
+        payment = SubscriptionPayment.objects.create(
+            member=self.member,
+            subscription=expiring,
+            date_paid=timezone.now().date(),
+            date_expires=timezone.now().date() + relativedelta(years=1),
+            amount_paid=100,
+        )
+        form = SubscriptionPaymentForm(
+            data={
+                'member': self.member.id,
+                'subscription': lifetime.id,
+                'date_paid': payment.date_paid,
+                'amount_paid': '0',
+            },
+            instance=payment,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertIsNone(form.save().date_expires)
 
 
 class SignupViewTests(TestCase):

@@ -54,6 +54,19 @@ class AdminUxLinkTests(TestCase):
         self.assertContains(response, reverse("admin:billing_eventinvoice_changelist"))
         self.assertContains(response, "All invoices")
         self.assertContains(response, "1 invoice")
+        self.assertContains(response, "admin-inline-action")
+
+    def test_event_changelist_action_uses_shared_admin_style(self):
+        Event.objects.create(
+            title="Registration Event",
+            slug="registration-event",
+            author=self.admin_user,
+        )
+
+        response = self.client.get(reverse("admin:events_event_changelist"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "admin-inline-action")
 
     def test_functionary_role_page_includes_assignments_inline(self):
         role = FunctionaryRole.objects.create(title="Treasurer", board=True)

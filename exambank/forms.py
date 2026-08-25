@@ -1,6 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from core.admin_base import UnfoldFormMixin
 from core.upload_widgets import DirectUploadField
 
 from .models import ExamArchive, ExamBankAccessSettings, ExamFile
@@ -38,17 +39,16 @@ class ExamArchiveAdminForm(forms.ModelForm):
         model = ExamArchive
         fields = '__all__'  # noqa: DJ007
 
-    def save(self, *args, **kwargs):
-        archive = super().save(*args, **kwargs)
+    def _save_m2m(self):
+        super()._save_m2m()
         for uploaded_file in self.cleaned_data.get('files') or []:
             if isinstance(uploaded_file, dict):
-                create_exam_file_from_temp(archive, uploaded_file)
+                create_exam_file_from_temp(self.instance, uploaded_file)
             else:
-                ExamFile.objects.create(archive=archive, document=uploaded_file, title=uploaded_file)
-        return archive
+                ExamFile.objects.create(archive=self.instance, document=uploaded_file, title=uploaded_file)
 
 
-class ExamBankAccessSettingsAdminForm(forms.ModelForm):
+class ExamBankAccessSettingsAdminForm(UnfoldFormMixin, forms.ModelForm):
     PASSWORD_PLACEHOLDER = '********'  # noqa: S105
 
     password = forms.CharField(

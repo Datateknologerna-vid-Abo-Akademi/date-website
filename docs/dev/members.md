@@ -31,6 +31,7 @@
 - Plain-text email bodies use `.txt` template names, including activation and password-reset messages. Django template tags work independently of the filename extension; `.txt` keeps these message bodies out of djlint, whose HTML reformatter can otherwise change meaningful indentation and blank lines. Use `.html` only for actual HTML email alternatives.
 
 ## Admin Customizations
+- Admin-created members require a password of at least eight characters. Changing a payment to a non-expiring subscription clears any expiry date left by the previous subscription.
 - `UserAdmin` inherits from `auth_admin.UserAdmin` but swaps in custom forms and ordering.
 - Actions `activate_user`/`deactivate_user` bulk-toggle `is_active`.
 - `SubscriptionPaymentAdmin` uses a custom `ModelChoiceField` to show human-readable member names.

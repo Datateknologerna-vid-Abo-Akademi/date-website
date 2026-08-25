@@ -82,6 +82,7 @@ class PDFFileAdminTests(TestCase):
         self.assertContains(response, "Selected collection access")
         self.assertContains(response, "Password protected")
         self.assertContains(response, "Password configured")
+        self.assertContains(response, "admin-inline-action")
         self.assertContains(response, reverse("admin:publications_publicationcollection_change", args=[collection.pk]))
 
     def test_collection_access_endpoint_returns_selected_collection_details(self):
@@ -138,7 +139,7 @@ class PublicationCollectionAdminTests(TestCase):
         self.assertContains(response, "id_publications-0-title")
         self.assertRegex(
             response.content.decode(),
-            r'<input type="file" name="publications-0-file" disabled id="id_publications-0-file">',
+            r'<input\b(?=[^>]*\bid="id_publications-0-file")(?=[^>]*\bdisabled\b)[^>]*>',
         )
         self.assertContains(response, "Publication list")
 

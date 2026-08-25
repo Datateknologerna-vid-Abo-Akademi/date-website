@@ -35,7 +35,7 @@ class MemberCreationForm(UnfoldFormMixin, forms.ModelForm):
     )
 
     password = forms.CharField(
-        widget=forms.PasswordInput(), required=False, min_length=8, error_messages={'required': 'Password is required'}
+        widget=forms.PasswordInput(), required=True, min_length=8, error_messages={'required': 'Password is required'}
     )
 
     class Meta:
@@ -160,6 +160,8 @@ class SubscriptionPaymentForm(forms.ModelForm):
                 delta = relativedelta(years=+sub_duration)
             subscription_payment.date_expires = date_paid + delta
             logger.debug(f"Calculated expiry date for subscription: {subscription_payment.date_expires}")
+        else:
+            subscription_payment.date_expires = None
         if commit:
             subscription_payment.save()
             logger.debug("SubscriptionPayment saved")

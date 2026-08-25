@@ -13,6 +13,7 @@ from core.admin_widgets import (
     FLATPICKR_ADMIN_JS,
     FlatpickrDateTimeAdminMixin,
     SafeAdminFileWidget,
+    SafeAdminImageWidget,
 )
 from core.upload_widgets import DirectUploadAdminMediaMixin
 
@@ -45,7 +46,7 @@ class SafeFileInlineMixin:
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
         models.FileField: {'widget': SafeAdminFileWidget},
-        models.ImageField: {'widget': SafeAdminFileWidget},
+        models.ImageField: {'widget': SafeAdminImageWidget},
     }
 
 

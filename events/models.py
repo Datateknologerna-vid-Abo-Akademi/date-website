@@ -147,7 +147,7 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
 
     def get_registrations(self):
         if self.parent:
-            return self.parent.get_registrations()
+            return EventAttendees.objects.filter(event=self.parent, original_event=self).order_by('attendee_nr')
         return EventAttendees.objects.filter(event=self).order_by('attendee_nr')
 
     def get_highest_attendee_nr(self):
@@ -215,7 +215,7 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
             if registration_questions:
                 for question in registration_questions:
                     if question.type == "select":
-                        choices = question.choice_list.split(',')
+                        choices = question.get_choices()
                         fields[question.name] = forms.ChoiceField(
                             label=question.name,
                             # TODO this smells fishy, investigate
@@ -256,7 +256,7 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
                     for question in registration_questions:
                         if not question.hide_for_avec:
                             if question.type == "select":
-                                choices = question.choice_list.split(',')
+                                choices = question.get_choices()
                                 fields['avec_' + question.name] = forms.ChoiceField(
                                     label=question.name,
                                     choices=list(map(list, zip(choices, choices, strict=False))),  # noqa: E501
@@ -345,6 +345,17 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
 
 
 class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missing]
+    RESERVED_NAMES = {
+        'anonymous',
+        'avec',
+        'avec_anonymous',
+        'avec_email',
+        'avec_user',
+        'email',
+        'terms_accepted',
+        'user',
+    }
+
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
     choice_number = models.PositiveSmallIntegerField(_('#'), blank=True, default=0)
     name = models.CharField(_('Namn'), max_length=255, blank=True)
@@ -369,7 +380,30 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
         return str(self.name)
 
     def get_choices(self):
-        return str(self.choice_list).split(',')
+        return [choice.strip() for choice in str(self.choice_list).split(',') if choice.strip()]
+
+    def clean(self):
+        super().clean()
+        if self.pk:
+            stored = EventRegistrationForm.objects.filter(pk=self.pk).values('name', 'type', 'choice_list').first()
+            if stored and all(stored[field] == getattr(self, field) for field in stored):
+                return
+
+        name = self.name.strip()
+        if not name:
+            raise ValidationError({'name': _('Ange ett namn för anmälningsfältet.')})
+        if name in self.RESERVED_NAMES or name.startswith('avec_'):
+            raise ValidationError({'name': _('Detta namn används redan av anmälningsformuläret.')})
+        self.name = name
+        if self.type == 'select':
+            choices = self.get_choices()
+            if not choices:
+                raise ValidationError({'choice_list': _('Ange minst ett alternativ.')})
+            if len(set(choices)) != len(choices):
+                raise ValidationError({'choice_list': _('Alternativen måste vara unika.')})
+            self.choice_list = ','.join(choices)
+        else:
+            self.choice_list = ''
 
     def save(self, *args, **kwargs):  # noqa: DJ012
         # Only set choice_number if it's the default value (0).
@@ -421,6 +455,15 @@ class EventAttendees(models.Model):  # type: ignore[django-manager-missing]
     @register.filter
     def get_preference(self, key):
         return self.preferences.get(str(key), "")
+
+    def clean(self):
+        super().clean()
+        if not self.avec_for_id:
+            return
+        if self.pk and self.avec_for_id == self.pk:
+            raise ValidationError({'avec_for': _('En deltagare kan inte vara sin egen avec.')})
+        if self.event_id and self.avec_for.event_id != self.event_id:
+            raise ValidationError({'avec_for': _('Avec-deltagaren måste höra till samma evenemang.')})
 
     def save(self, *args, **kwargs):  # noqa: DJ012
         if self.attendee_nr is None:

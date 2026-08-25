@@ -170,6 +170,7 @@ web:
     port: 8000
   gunicorn:
     workers: 3
+    timeout: 120
     maxRequests: 1000
     maxRequestsJitter: 100
   migrateOnStartup: false

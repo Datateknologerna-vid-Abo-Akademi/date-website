@@ -61,6 +61,21 @@ class ExamFileInline(TabularInline):
         models.FileField: {'widget': SafeAdminFileWidget},
     }
 
+    def _has_legacy_permission(self, request, action):
+        return request.user.has_perm(f'archive.{action}_document')
+
+    def has_view_permission(self, request, obj=None):
+        return super().has_view_permission(request, obj) or self._has_legacy_permission(request, 'view')
+
+    def has_add_permission(self, request, obj=None):
+        return super().has_add_permission(request, obj) or self._has_legacy_permission(request, 'add')
+
+    def has_change_permission(self, request, obj=None):
+        return super().has_change_permission(request, obj) or self._has_legacy_permission(request, 'change')
+
+    def has_delete_permission(self, request, obj=None):
+        return super().has_delete_permission(request, obj) or self._has_legacy_permission(request, 'delete')
+
 
 @admin.register(ExamArchive)
 class ExamArchiveAdmin(FlatpickrDateTimeAdminMixin, ExamBankAdminMixin, DirectUploadAdminMediaMixin, ModelAdmin):

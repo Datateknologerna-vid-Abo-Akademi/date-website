@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from core.admin_base import UnfoldFormMixin
 from core.admin_widgets import (
     FLATPICKR_DATETIME_INPUT_FORMATS,
-    SafeAdminFileWidget,
+    SafeAdminImageWidget,
     flatpickr_datetime_field,
     flatpickr_datetime_widget,
 )
@@ -83,7 +83,7 @@ class EventCreationForm(UnfoldFormMixin, forms.ModelForm):
             self.fields['published_time'].help_text = _("Leave blank to keep the event hidden.")
         for field_name in ('image', 's3_image'):
             if field_name in self.fields:
-                self.fields[field_name].widget = SafeAdminFileWidget()
+                self.fields[field_name].widget = SafeAdminImageWidget()
         if 'require_registration_terms' in self.fields:
             if models.registration_terms_feature_enabled():
                 self.fields['require_registration_terms'].initial = True
@@ -175,7 +175,7 @@ class EventEditForm(UnfoldFormMixin, forms.ModelForm):
             self.fields['published_time'].help_text = _("Leave blank to keep the event hidden.")
         for field_name in ('image', 's3_image'):
             if field_name in self.fields:
-                self.fields[field_name].widget = SafeAdminFileWidget()
+                self.fields[field_name].widget = SafeAdminImageWidget()
         if 'require_registration_terms' in self.fields and not models.registration_terms_feature_enabled():
             self.fields.pop('require_registration_terms')
         if 'template' in self.fields:
