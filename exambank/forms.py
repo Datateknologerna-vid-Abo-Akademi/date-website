@@ -1,3 +1,5 @@
+import logging
+
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
@@ -6,21 +8,7 @@ from core.upload_widgets import DirectUploadField
 
 from .models import ExamArchive, ExamBankAccessSettings, ExamFile
 
-
-class MultipleFileInput(forms.ClearableFileInput):
-    allow_multiple_selected = True
-
-
-class MultipleFileField(forms.FileField):
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("widget", MultipleFileInput())
-        super().__init__(*args, **kwargs)
-
-    def clean(self, data, initial=None):
-        single_file_clean = super().clean
-        if isinstance(data, (list, tuple)):
-            return [single_file_clean(d, initial) for d in data]
-        return single_file_clean(data, initial)
+logger = logging.getLogger('date')
 
 
 class ExamUploadForm(forms.Form):
@@ -43,7 +31,10 @@ class ExamArchiveAdminForm(forms.ModelForm):
         super()._save_m2m()
         for uploaded_file in self.cleaned_data.get('files') or []:
             if isinstance(uploaded_file, dict):
-                create_exam_file_from_temp(self.instance, uploaded_file)
+                try:
+                    create_exam_file_from_temp(self.instance, uploaded_file)
+                except ValueError as exc:
+                    logger.warning('Skipped exam file %s: %s', uploaded_file.get('name'), exc)
             else:
                 ExamFile.objects.create(archive=self.instance, document=uploaded_file, title=uploaded_file)
 

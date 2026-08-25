@@ -1,26 +1,12 @@
+import logging
+
 from django import forms
 
 from core.upload_widgets import DirectUploadField
 
 from .models import Collection, Document, PublicFile
 
-
-class MultipleFileInput(forms.ClearableFileInput):
-    allow_multiple_selected = True
-
-
-class MultipleFileField(forms.FileField):
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("widget", MultipleFileInput())
-        super().__init__(*args, **kwargs)
-
-    def clean(self, data, initial=None):
-        single_file_clean = super().clean
-        if isinstance(data, (list, tuple)):
-            result = [single_file_clean(d, initial) for d in data]
-        else:
-            result = single_file_clean(data, initial)
-        return result
+logger = logging.getLogger('date')
 
 
 def _uploaded_files(field_value):
@@ -37,11 +23,17 @@ class DocumentAdminForm(forms.ModelForm):
         exclude = ('hide_for_gulis',)  # noqa: DJ006
 
     def save(self, *args, **kwargs):
+        # The admin flow calls save(commit=False) and persists the row itself,
+        # so the explicit save() below is what actually writes the collection;
+        # on the direct commit=True path it is a harmless second save.
         collection = super().save(*args, **kwargs)
         collection.save()
         for f in _uploaded_files(self.cleaned_data.get('files')):
             if isinstance(f, dict):
-                create_document_from_temp(collection, f)
+                try:
+                    create_document_from_temp(collection, f)
+                except ValueError as exc:
+                    logger.warning('Skipped document %s: %s', f.get('name'), exc)
             else:
                 Document.objects.create(collection=collection, document=f, title=f)
         return collection
@@ -55,11 +47,16 @@ class PublicAdminForm(forms.ModelForm):
         fields = '__all__'  # noqa: DJ007
 
     def save(self, *args, **kwargs):
+        # See DocumentAdminForm.save: the explicit save persists the collection
+        # on the admin commit=False path.
         collection = super().save(*args, **kwargs)
         collection.save()
         for f in _uploaded_files(self.cleaned_data.get('files')):
             if isinstance(f, dict):
-                create_public_file_from_temp(collection, f)
+                try:
+                    create_public_file_from_temp(collection, f)
+                except ValueError as exc:
+                    logger.warning('Skipped public file %s: %s', f.get('name'), exc)
             else:
                 PublicFile.objects.create(collection=collection, some_file=f)
         return collection

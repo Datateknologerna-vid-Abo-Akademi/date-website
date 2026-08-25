@@ -134,7 +134,11 @@ def upload(request):
             skipped = []
             for uploaded_file in form.cleaned_data['images']:
                 if isinstance(uploaded_file, dict):
-                    create_photo_from_temp(album, uploaded_file)
+                    try:
+                        create_photo_from_temp(album, uploaded_file)
+                    except ValueError as exc:
+                        logger.warning(str(exc))
+                        skipped.append(uploaded_file['name'])
                 else:
                     try:
                         Photo.objects.create(image=uploaded_file, album=album)

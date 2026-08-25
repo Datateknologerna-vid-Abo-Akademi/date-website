@@ -19,13 +19,19 @@ always ``tmp/<32 hex>.<ext>`` and the extension is the only client-derived
 fragment, validated against a per-scope allowlist. Finalization re-validates
 the canonical key pattern, so the hidden-form payload cannot be used to copy
 or delete arbitrary objects.
+
+Sign requests are rate limited per user/IP, and finalized objects get a
+server-side magic-byte check matching the declared extension, so mislabeled
+content never reaches the final media paths.
 """
 
 import json
 import re
 import secrets
 
+from botocore.exceptions import ClientError
 from django.conf import settings
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.files.storage import default_storage, storages
 from django.http import JsonResponse
@@ -92,6 +98,35 @@ SIGNATURE_EXPIRES = 300  # seconds; presigned URLs are bearer tokens
 TMP_KEY_PATTERN = re.compile(r'^tmp/([0-9a-f]{32})\.([a-z0-9]+)\Z')
 MAX_FILES_PER_FORM = 1000
 
+# Fixed-window rate limit on the signing endpoint, per user (or per IP for
+# anonymous visitors, e.g. an open exam bank). Bounds how many temp objects a
+# single caller can create and how often presigned URLs are issued.
+SIGN_RATE_LIMIT = 60
+SIGN_RATE_WINDOW_SECONDS = 60
+
+# Magic-byte signatures verified server-side at finalize for extensions with a
+# stable header. Alternatives are OR'd; within one alternative every (offset,
+# magic) pair must match. Extensions without an entry (txt, csv, legacy
+# office formats) are allowed through unchecked.
+_MAGIC_SIGNATURES = {
+    'jpg': (((0, b'\xff\xd8\xff'),),),
+    'jpeg': (((0, b'\xff\xd8\xff'),),),
+    'png': (((0, b'\x89PNG\r\n\x1a\n'),),),
+    'webp': (((0, b'RIFF'), (8, b'WEBP')),),
+    'gif': (((0, b'GIF8'),),),
+    'pdf': (((0, b'%PDF'),),),
+    'zip': (
+        ((0, b'PK\x03\x04'),),
+        ((0, b'PK\x05\x06'),),
+        ((0, b'PK\x07\x08'),),
+    ),
+    '7z': (((0, b'7z\xbc\xaf\x27\x1c'),),),
+    'rar': (((0, b'Rar!\x1a\x07'),),),
+    'gz': (((0, b'\x1f\x8b'),),),
+    'tar': (((257, b'ustar'),),),
+}
+_MAGIC_READ_BYTES = 512
+
 
 def uploads_enabled():
     """Direct uploads are only meaningful with S3-compatible storage."""
@@ -124,6 +159,48 @@ def _error(message, status):
     return JsonResponse({'error': message}, status=status)
 
 
+def _sign_rate_allowed(request):
+    """Fixed-window counter in the cache; bounds sign calls per user/IP."""
+    if request.user.is_authenticated:
+        key = f'upload-sign:user:{request.user.pk}'
+    else:
+        key = f"upload-sign:ip:{request.META.get('REMOTE_ADDR') or 'unknown'}"
+    if cache.add(key, 1, SIGN_RATE_WINDOW_SECONDS):
+        return True
+    try:
+        count = cache.incr(key)
+    except ValueError:
+        # Key expired between add and incr; start a fresh window.
+        cache.set(key, 1, SIGN_RATE_WINDOW_SECONDS)
+        return True
+    return count <= SIGN_RATE_LIMIT
+
+
+def _verify_magic_bytes(client, bucket, key, ext):
+    """Check the object's first bytes against the signature table for ``ext``.
+
+    Reads only the first few hundred bytes (a ranged GET), so file bytes never
+    traverse the app. Raises ValueError when the content does not match the
+    declared extension; extensions without a known signature pass.
+    """
+    signatures = _MAGIC_SIGNATURES.get(ext)
+    if not signatures:
+        return
+    response = None
+    try:
+        response = client.get_object(Bucket=bucket, Key=key, Range=f'bytes=0-{_MAGIC_READ_BYTES - 1}')
+        head = response['Body'].read(_MAGIC_READ_BYTES)
+    except (ClientError, KeyError) as exc:
+        raise ValueError(f'Temporary upload is unreadable: {key}') from exc
+    finally:
+        if response is not None:
+            response['Body'].close()
+    for alternative in signatures:
+        if all(head[offset : offset + len(magic)] == magic for offset, magic in alternative):
+            return
+    raise ValueError('File content does not match its declared type.')
+
+
 @require_POST
 def sign_upload(request):
     """Return a short-lived presigned PUT URL for a single file.
@@ -133,6 +210,9 @@ def sign_upload(request):
     """
     if not uploads_enabled():
         return _error('Direct uploads are not enabled.', 400)
+
+    if not _sign_rate_allowed(request):
+        return _error('Too many upload requests, try again later.', 429)
 
     scope = request.POST.get('scope', '')
     scope_config = SCOPES.get(scope)
@@ -236,13 +316,21 @@ def finalize_upload(temp_key, instance, field, filename, expected_size=None):
     """Move a direct-uploaded temp object to its final key.
 
     Verifies the temp key matches the canonical pattern, checks the stored
-    object's size when an expected size is given, copies server-side within the
-    same bucket (no bytes through the app) to a collision-free final key, then
+    object's size when an expected size is given, verifies the content's magic
+    bytes against the declared extension, copies server-side within the same
+    bucket (no bytes through the app) to a collision-free final key, then
     deletes the temp object. Returns the final storage name (relative to the
     storage location) for assignment to ``instance.<field>``.
 
-    Raises ValueError when the object is missing or its size does not match;
-    the temp object is left in place for the bucket lifecycle rule.
+    The temp object must live on the same storage as the model field: the
+    form's ``bucket`` (private|public) must match the storage backing the
+    field (private -> default storage, public -> ``public_media``). The copy
+    mirrors django-storages' write parameters (ACL + object parameters), so
+    public-bucket copies keep ``public-read``.
+
+    Raises ValueError when the object is missing, its size does not match, or
+    its content does not match the declared type; the temp object is left in
+    place for the bucket lifecycle rule.
     """
     storage = field.storage
     client = storage.connection.meta.client
@@ -250,19 +338,29 @@ def finalize_upload(temp_key, instance, field, filename, expected_size=None):
 
     if not isinstance(temp_key, str) or not TMP_KEY_PATTERN.match(temp_key):
         raise ValueError('Invalid upload key.')
+    key_ext = TMP_KEY_PATTERN.match(temp_key).group(2)
 
-    head = client.head_object(Bucket=bucket, Key=temp_key)
+    try:
+        head = client.head_object(Bucket=bucket, Key=temp_key)
+    except (ClientError, KeyError) as exc:
+        raise ValueError(f'Temporary upload no longer exists: {temp_key}') from exc
     actual_size = int(head.get('ContentLength', -1))
     if expected_size is not None and actual_size != expected_size:
         raise ValueError('Uploaded file size does not match.')
 
+    _verify_magic_bytes(client, bucket, temp_key, key_ext)
+
     name = field.generate_filename(instance, filename)
     name = storage.get_available_name(name, max_length=field.max_length or 100)
     full_key = storage._normalize_name(clean_name(name))  # noqa: SLF001 - storage API used by django-storages
-    client.copy_object(
-        Bucket=bucket,
-        CopySource={'Bucket': bucket, 'Key': temp_key},
-        Key=full_key,
-    )
+    copy_params = {
+        'Bucket': bucket,
+        'CopySource': {'Bucket': bucket, 'Key': temp_key},
+        'Key': full_key,
+    }
+    copy_params.update(storage.get_object_parameters(full_key))
+    if getattr(storage, 'default_acl', None):
+        copy_params['ACL'] = storage.default_acl
+    client.copy_object(**copy_params)
     client.delete_object(Bucket=bucket, Key=temp_key)
     return name

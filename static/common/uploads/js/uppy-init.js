@@ -32,7 +32,6 @@
     body.append('bucket', options.bucket);
     body.append('name', file.name);
     body.append('size', String(file.size));
-    body.append('type', file.type || '');
 
     return fetch(SIGN_URL, {
       method: 'POST',
@@ -58,7 +57,7 @@
     var name = root.dataset.uppyName;
     if (!form || !name) return;
 
-    var hidden = form.querySelector('input[name="' + name + '"]');
+    var hidden = form.elements[name];
     if (!hidden) return;
 
     var options = {
@@ -148,7 +147,6 @@
         key: file.meta.uploadKey,
         name: file.name,
         size: file.size,
-        type: file.type || '',
       };
     }
 

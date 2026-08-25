@@ -3,8 +3,10 @@ import os
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from botocore.exceptions import ClientError
 from django.contrib.auth.models import Permission
-from django.test import TestCase, override_settings
+from django.core.cache import cache
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from core import uploads
@@ -12,6 +14,8 @@ from gallery.models import Album, Photo
 from members.models import Member
 
 ENABLED = dict(USE_S3=True, DIRECT_UPLOADS_ENABLED=True)
+
+JPEG_MAGIC = b'\xff\xd8\xff'
 
 
 class FakeS3Client:
@@ -26,12 +30,32 @@ class FakeS3Client:
         self.record('presign', operation=operation_name, Params=Params, ExpiresIn=ExpiresIn)
         return 'https://s3.example.test/presigned-put'
 
+    def _content(self, key):
+        content = self.objects[key]
+        if isinstance(content, int):
+            return b'\x00' * content
+        return content
+
+    def _not_found(self, operation):
+        return ClientError(
+            {'Error': {'Code': '404', 'Message': 'Not Found'}, 'ResponseMetadata': {'HTTPStatusCode': 404}},
+            operation,
+        )
+
     def head_object(self, **kwargs):
         self.record('head_object', **kwargs)
         key = kwargs['Key']
         if key not in self.objects:
-            raise KeyError('NoSuchKey')
-        return {'ContentLength': self.objects[key]}
+            raise self._not_found('HeadObject')
+        return {'ContentLength': len(self._content(key))}
+
+    def get_object(self, **kwargs):
+        self.record('get_object', **kwargs)
+        key = kwargs['Key']
+        if key not in self.objects:
+            raise self._not_found('GetObject')
+        content = self._content(key)
+        return {'Body': SimpleNamespace(read=lambda size: content[:size], close=lambda: None)}
 
     def copy_object(self, **kwargs):
         self.record('copy_object', **kwargs)
@@ -45,6 +69,7 @@ class FakeS3Client:
 class FakeS3Storage:
     bucket_name = 'date-private'
     location = 'media'
+    default_acl = 'private'
 
     def __init__(self):
         self.client = FakeS3Client()
@@ -67,6 +92,9 @@ class FakeS3Storage:
         while f'{base}_{counter}{ext}' in self.existing_names:
             counter += 1
         return f'{base}_{counter}{ext}'
+
+    def get_object_parameters(self, name):
+        return {}
 
 
 def create_user(username='uploader', **kwargs):
@@ -98,6 +126,7 @@ class SignUploadDisabledTests(TestCase):
 @override_settings(**ENABLED)
 class SignUploadTests(TestCase):
     def setUp(self):
+        cache.clear()
         self.storage = FakeS3Storage()
         self.storage_patcher = patch('core.uploads._storage_for_bucket', return_value=self.storage)
         self.storage_patcher.start()
@@ -107,6 +136,27 @@ class SignUploadTests(TestCase):
         defaults = {'scope': 'admin', 'bucket': 'private', 'name': 'test.jpg', 'size': '1024'}
         defaults.update(payload)
         return post_sign(self.client, **defaults)
+
+    def test_sign_requires_csrf_token(self):
+        response = Client(enforce_csrf_checks=True).post(
+            reverse('direct-upload-sign'),
+            {'scope': 'admin', 'bucket': 'private', 'name': 'test.jpg', 'size': '1024'},
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_sign_rate_limited_per_user(self):
+        staff = create_user(username='ratelimited', is_superuser=True)
+        self.client.force_login(staff)
+        with patch.object(uploads, 'SIGN_RATE_LIMIT', 3):
+            for _ in range(3):
+                self.assertEqual(self.sign().status_code, 200)
+            self.assertEqual(self.sign().status_code, 429)
+
+    def test_sign_rate_limited_per_ip_for_anonymous(self):
+        with patch.object(uploads, 'SIGN_RATE_LIMIT', 2):
+            self.assertEqual(self.sign(scope='exambank').status_code, 403)
+            self.assertEqual(self.sign(scope='exambank').status_code, 403)
+            self.assertEqual(self.sign(scope='exambank').status_code, 429)
 
     def test_anonymous_requires_authentication(self):
         response = self.sign()
@@ -217,7 +267,7 @@ class FinalizeUploadTests(TestCase):
     def setUp(self):
         self.album = Album.objects.create(title='Test album')
         self.storage = FakeS3Storage()
-        self.storage.client.objects['tmp/abcdef1234567890abcdef1234567890.jpg'] = 100
+        self.storage.client.objects['tmp/abcdef1234567890abcdef1234567890.jpg'] = JPEG_MAGIC + b'\x00' * 97
 
     def _field(self):
         from django.core.files.storage import FileSystemStorage
@@ -248,15 +298,45 @@ class FinalizeUploadTests(TestCase):
 
         self.assertEqual(final_name, '2026/test-album/my-photo.jpg')
         calls = [call[0] for call in self.storage.client.calls]
-        self.assertEqual(calls, ['head_object', 'copy_object', 'delete_object'])
-        copy_call = self.storage.client.calls[1]
+        self.assertEqual(calls, ['head_object', 'get_object', 'copy_object', 'delete_object'])
+        copy_call = self.storage.client.calls[2]
         self.assertEqual(copy_call[1]['Bucket'], 'date-private')
         self.assertEqual(
             copy_call[1]['CopySource'], {'Bucket': 'date-private', 'Key': 'tmp/abcdef1234567890abcdef1234567890.jpg'}
         )
         self.assertEqual(copy_call[1]['Key'], 'media/2026/test-album/my-photo.jpg')
-        delete_call = self.storage.client.calls[2]
+        self.assertEqual(copy_call[1]['ACL'], 'private')
+        delete_call = self.storage.client.calls[3]
         self.assertEqual(delete_call[1]['Key'], 'tmp/abcdef1234567890abcdef1234567890.jpg')
+
+    def test_missing_temp_object_raises_value_error(self):
+        photo = Photo(album=self.album)
+        with self.assertRaisesRegex(ValueError, 'no longer exists'):
+            uploads.finalize_upload(
+                'tmp/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.jpg',
+                photo,
+                self._field(),
+                'photo.jpg',
+                expected_size=100,
+            )
+        calls = [call[0] for call in self.storage.client.calls]
+        self.assertEqual(calls, ['head_object'])
+        self.assertNotIn('media/2026/test-album/photo.jpg', self.storage.client.objects)
+
+    def test_rejects_content_that_does_not_match_extension(self):
+        self.storage.client.objects['tmp/abcdef1234567890abcdef1234567890.jpg'] = b'plain text, not a jpeg'
+        photo = Photo(album=self.album)
+        with self.assertRaisesRegex(ValueError, 'does not match'):
+            uploads.finalize_upload(
+                'tmp/abcdef1234567890abcdef1234567890.jpg',
+                photo,
+                self._field(),
+                'photo.jpg',
+                expected_size=len(b'plain text, not a jpeg'),
+            )
+        calls = [call[0] for call in self.storage.client.calls]
+        self.assertEqual(calls, ['head_object', 'get_object'])
+        self.assertIn('tmp/abcdef1234567890abcdef1234567890.jpg', self.storage.client.objects)
 
     def test_rejects_non_temp_keys_without_side_effects(self):
         photo = Photo(album=self.album)
@@ -290,7 +370,7 @@ class FinalizeUploadTests(TestCase):
         )
         self.assertEqual(final_name, '2026/test-album/my-photo_1.jpg')
         self.assertEqual(
-            self.storage.client.calls[1][1]['Key'],
+            self.storage.client.calls[2][1]['Key'],
             'media/2026/test-album/my-photo_1.jpg',
         )
 

@@ -84,7 +84,10 @@ see the license notice in `LICENSE-NOTICE.md`).
 
 - The signing endpoint requires the scope's gate (session + permission, or the
   exam-bank gate which also covers open/password-session access); CSRF stays
-  on (JS sends the cookie token).
+  on (JS sends the cookie token). Sign requests are rate limited per user (or
+  per IP for anonymous visitors) with a fixed-window counter in the cache
+  (`SIGN_RATE_LIMIT` / `SIGN_RATE_WINDOW_SECONDS` in `core/uploads.py`), which
+  bounds how many temp objects a single caller can create.
 - Extension allowlist and per-scope size caps are enforced server-side in
   `sign_upload`; Uppy `restrictions` are UX only.
 - Keys are always `tmp/<32 hex>.<ext>` generated server-side. Finalization
@@ -98,15 +101,20 @@ see the license notice in `LICENSE-NOTICE.md`).
   tokens: never log them.
 - Finalization `head_object`s the temp object and rejects a size mismatch with
   the declared value before copying, so the client-supplied size cannot be
-  understated to bypass the caps. The copy is a server-side `copy_object`
-  within the same bucket, resolved through the storage's collision-free name
-  (`get_available_name`, same semantics as classic uploads), then the temp
-  object is deleted.
+  understated to bypass the caps. It then reads only the first 512 bytes (a
+  ranged GET) and verifies the magic bytes match the declared extension
+  (jpeg/png/webp/gif, pdf, zip-family office files, 7z, rar, gz, tar), so
+  mislabeled content never reaches the final media paths. The copy is a
+  server-side `copy_object` within the same bucket, resolved through the
+  storage's collision-free name (`get_available_name`, same semantics as
+  classic uploads); it carries the same ACL and object parameters that
+  django-storages applies on classic writes (public-bucket files stay
+  `public-read`). The temp object is then deleted.
+- A missing temp object (already finalized or expired by the lifecycle rule)
+  or a failed magic-byte check raises `ValueError`, which the upload views and
+  admin forms surface as a skipped file with a warning instead of a 500.
 - Temporary objects that are never finalized (abandoned forms, rejected
   copies) are cleaned by the bucket lifecycle rule.
-- Content is not magic-byte validated server-side yet; the extension
-  allowlist is the current boundary (same trust level as the previous file
-  inputs). A Celery verification task is a possible follow-up.
 - Collision handling uses the same `get_available_name` semantics as classic
   uploads (django-storages), including its inherent check-then-copy race for
   concurrent uploads of identically named files; the final copy wins, exactly
