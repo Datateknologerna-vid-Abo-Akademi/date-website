@@ -1,6 +1,6 @@
 import logging
 
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db import models
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -74,6 +74,16 @@ class AlbumAdmin(FlatpickrDateTimeAdminMixin, GalleryAdminMixin, ModelAdmin):
     ordering = ('-pub_date',)
     date_hierarchy = 'pub_date'
     flatpickr_datetime_fields = ('pub_date',)
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        skipped = getattr(form, 'skipped_images', None)
+        if skipped:
+            messages.warning(
+                request,
+                _('Kunde inte bearbeta följande bilder, de laddades inte upp: %(files)s')
+                % {'files': ', '.join(skipped)},
+            )
 
     legacy_permission_map = {
         'view': 'archive.view_picturecollection',

@@ -1,14 +1,16 @@
 import logging
 
+from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Count, OuterRef, Subquery
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
+from django.utils.translation import gettext as _
 
 from .forms import AlbumUploadForm
-from .models import Album, Photo
+from .models import Album, ImageProcessingError, Photo
 
 logger = logging.getLogger('date')
 
@@ -129,8 +131,19 @@ def upload(request):
             if not request.FILES.getlist('images'):
                 return redirect('archive:years')
             album = Album.objects.create(title=form['album'].value())
+            skipped = []
             for uploaded_file in request.FILES.getlist('images'):
-                Photo.objects.create(image=uploaded_file, album=album)
+                try:
+                    Photo.objects.create(image=uploaded_file, album=album)
+                except ImageProcessingError as exc:
+                    logger.warning(str(exc))
+                    skipped.append(uploaded_file.name)
+            if skipped:
+                messages.warning(
+                    request,
+                    _('Kunde inte bearbeta följande bilder, de laddades inte upp: %(files)s')
+                    % {'files': ', '.join(skipped)},
+                )
         return redirect('archive:years')
 
     return render(request, 'archive/upload.html', {'picture_form': AlbumUploadForm})
