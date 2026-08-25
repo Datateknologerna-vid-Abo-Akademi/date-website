@@ -6,7 +6,10 @@ payload of uploaded temp keys. On form save the app calls
 ``core.uploads.finalize_upload`` to move each temp object to its final key.
 
 When direct uploads are disabled the widget degrades to a classic file input so
-behavior (and tests) stay unchanged for local/self-hosted setups.
+behavior (and tests) stay unchanged for local/self-hosted setups. For upload
+scopes used by the Django admin (``admin``, ``gallery-admin``) the classic input
+is rendered through the admin file widget, keeping the Unfold upload styling and
+the broken-file safety from ``core.admin_widgets``.
 
 The mode is decided at render/clean time (not field construction) because form
 field instances are class attributes and Django settings may differ between
@@ -24,6 +27,11 @@ from .uploads import SCOPES, parse_uploaded_files, uploads_enabled
 
 UPPY_MEDIA_CSS = ('uploads/vendor/uppy.min.css',)
 UPPY_MEDIA_JS = ('uploads/vendor/uppy.min.js', 'uploads/js/uppy-init.js')
+
+# Scopes used from Django admin change forms. Their classic-mode input keeps the
+# admin upload widget so the Unfold markup and safe-widget behavior are
+# preserved when direct uploads are disabled.
+ADMIN_UPLOAD_SCOPES = frozenset({'admin', 'gallery-admin'})
 
 
 class DirectUploadWidget(forms.Widget):
@@ -44,6 +52,7 @@ class DirectUploadWidget(forms.Widget):
         self.bucket = bucket
         self.multi = multi
         self.compress = compress
+        self.admin = scope in ADMIN_UPLOAD_SCOPES
         self.allowed_extensions = allowed_extensions or sorted(SCOPES[scope]['extensions'])
         self.max_bytes = max_bytes or SCOPES[scope]['max_bytes']
         super().__init__(attrs)
@@ -53,7 +62,11 @@ class DirectUploadWidget(forms.Widget):
         """Render attributes safely (each name/value escaped)."""
         return format_html_join('', ' {}="{}"', sorted(attrs.items()))
 
-    def _classic_input(self, name, attrs=None):
+    def _classic_input(self, name, attrs=None, renderer=None):
+        if self.admin:
+            from core.admin_widgets import SafeAdminMultipleFileWidget
+
+            return SafeAdminMultipleFileWidget(attrs=attrs).render(name, None, renderer=renderer)
         input_attrs = self.build_attrs(attrs, {'type': 'file', 'name': name})
         if self.multi:
             input_attrs['multiple'] = 'multiple'
@@ -85,7 +98,7 @@ class DirectUploadWidget(forms.Widget):
     def render(self, name, value, attrs=None, renderer=None):
         if uploads_enabled():
             return self._direct_inputs(name, value, attrs)
-        return self._classic_input(name, attrs)
+        return self._classic_input(name, attrs, renderer=renderer)
 
     def value_from_datadict(self, data, files, name):
         if uploads_enabled():
