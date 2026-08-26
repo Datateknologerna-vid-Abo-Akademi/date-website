@@ -600,18 +600,6 @@ div.calendar-container a {
     object-fit: contain;
 }
 
-.partner-cta {
-    display: block;
-    color: var(--linkColorDark);
-    margin-top: 0.9rem;
-    text-align: center;
-    font-weight: 600;
-}
-
-.partner-cta:hover {
-    color: var(--linkColorDarkHover);
-}
-
 /*Logos end*/
 
 /* Generic animations*/
