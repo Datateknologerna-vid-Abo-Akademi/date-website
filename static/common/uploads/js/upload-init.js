@@ -30,6 +30,12 @@
  * The selected-file list is kept in sync with the input through a DataTransfer
  * object so the browser submits exactly the files still listed.
  *
+ * Submit gating is coordinated once per form: every direct widget on the same
+ * form shares one submit listener, so an idle widget cannot permanently block
+ * the form while another widget still has pending or failed uploads. When the
+ * Uppy bundle fails to load, the widget falls back to a classic file input
+ * instead of leaving the form silently unusable.
+ *
  * The signing endpoint (POST /_uploads/sign/) enforces auth, extension
  * allowlist and size caps server-side; the restrictions below are UX only.
  */
@@ -37,6 +43,9 @@
   'use strict';
 
   var SIGN_URL = '/_uploads/sign/';
+
+  // One submit listener per form, coordinating all direct widgets on it.
+  var formStates = new WeakMap();
 
   function csrfToken() {
     var match = document.cookie.match(/csrftoken=([^;]+)/);
@@ -89,6 +98,62 @@
     }
   }
 
+  function showStatus(root, message) {
+    var status = root.querySelector('.django-uppy-status');
+    if (!status) {
+      status = document.createElement('div');
+      status.className = 'django-uppy-status';
+      status.setAttribute('role', 'status');
+      status.setAttribute('aria-live', 'polite');
+      root.appendChild(status);
+    }
+    status.textContent = message;
+  }
+
+  function submitButtons(form) {
+    return form.querySelectorAll('button[type="submit"], input[type="submit"]');
+  }
+
+  function formBlocking(state) {
+    return state.widgets.some(function (widget) {
+      return widget.pendingIds.size > 0 || widget.failedIds.size > 0;
+    });
+  }
+
+  function setFormSubmittable(state, enabled) {
+    submitButtons(state.form).forEach(function (button) {
+      button.disabled = !enabled;
+    });
+  }
+
+  function handleFormSubmit(event, state) {
+    if (state.submitted || formBlocking(state)) {
+      event.preventDefault();
+      if (!state.submitted) {
+        state.widgets.forEach(function (widget) {
+          if (widget.pendingIds.size > 0 || widget.failedIds.size > 0) {
+            widget.showStatus('Vänta tills uppladdningen är klar, eller åtgärda fel innan du sparar.');
+          }
+        });
+      }
+      return;
+    }
+    state.submitted = true;
+    setFormSubmittable(state, false);
+  }
+
+  function getFormState(form) {
+    var state = formStates.get(form);
+    if (!state) {
+      state = { form: form, widgets: [], submitted: false };
+      formStates.set(form, state);
+      form.addEventListener('submit', function (event) {
+        handleFormSubmit(event, state);
+      });
+    }
+    return state;
+  }
+
   function signFile(uppy, file, options) {
     var body = new URLSearchParams();
     body.append('scope', options.scope);
@@ -138,7 +203,7 @@
   function initDirect(root) {
     var form = root.closest('form');
     var name = root.dataset.uppyName;
-    if (!form || !name || typeof window.Uppy === 'undefined') return;
+    if (!form || !name) return;
 
     var hidden = form.elements[name];
     if (!hidden) return;
@@ -153,6 +218,16 @@
       multi: root.dataset.uppyMulti !== 'false',
       compress: root.dataset.uppyCompress === 'true',
     };
+
+    var missingPlugins =
+      !window.Uppy ||
+      !window.Uppy.AwsS3 ||
+      !window.Uppy.Dashboard ||
+      (options.compress && !window.Uppy.Compressor);
+    if (missingPlugins) {
+      classicFallback(root, 'Direktuppladdningen kunde inte laddas in, använd filväljaren nedan istället.');
+      return;
+    }
 
     var maxBytes = parseInt(root.dataset.uppyMaxBytes || '0', 10) || null;
     var allowedExtensions = (root.dataset.uppyAllowedExtensions || '')
@@ -205,20 +280,18 @@
     var uploaded = parsePayload(hidden.value);
     var pendingIds = new Set();
     var failedIds = new Set();
-    var submitting = false;
-
-    function submitButtons() {
-      return form.querySelectorAll('button[type="submit"], input[type="submit"]');
-    }
-
-    function setSubmittable(enabled) {
-      submitButtons().forEach(function (button) {
-        button.disabled = !enabled;
-      });
-    }
+    var state = getFormState(form);
+    var widget = {
+      pendingIds: pendingIds,
+      failedIds: failedIds,
+      showStatus: function (message) {
+        showStatus(root, message);
+      },
+    };
+    state.widgets.push(widget);
 
     function refresh() {
-      setSubmittable(pendingIds.size === 0 && failedIds.size === 0);
+      setFormSubmittable(state, !formBlocking(state));
     }
 
     function renderUploaded() {
@@ -251,18 +324,6 @@
       writePayload();
     }
 
-    function showStatus(message) {
-      var status = root.querySelector('.django-uppy-status');
-      if (!status) {
-        status = document.createElement('div');
-        status.className = 'django-uppy-status';
-        status.setAttribute('role', 'status');
-        status.setAttribute('aria-live', 'polite');
-        root.appendChild(status);
-      }
-      status.textContent = message;
-    }
-
     function payloadEntry(file) {
       return {
         key: file.meta.uploadKey,
@@ -278,8 +339,14 @@
     });
 
     uppy.on('file-added', function (file) {
+      if (!options.multi && uploaded.length > 0) {
+        // Single-file widget: a replacement upload drops the previous entry
+        // so the payload never holds two files.
+        uploaded = [];
+        writePayload();
+      }
       pendingIds.add(file.id);
-      showStatus('');
+      showStatus(root, '');
       refresh();
     });
 
@@ -299,7 +366,7 @@
     uppy.on('upload-error', function (file) {
       pendingIds.delete(file.id);
       failedIds.add(file.id);
-      showStatus('En fil kunde inte laddas upp. Ta bort den eller försök igen innan du sparar.');
+      showStatus(root, 'En fil kunde inte laddas upp. Ta bort den eller försök igen innan du sparar.');
       refresh();
     });
 
@@ -331,23 +398,40 @@
       writePayload();
       refresh();
       if (failedIds.size > 0) {
-        showStatus('Vissa filer kunde inte laddas upp. Ta bort dem eller försök igen innan du sparar.');
+        showStatus(root, 'Vissa filer kunde inte laddas upp. Ta bort dem eller försök igen innan du sparar.');
       }
-    });
-
-    form.addEventListener('submit', function (event) {
-      if (submitting || pendingIds.size > 0 || failedIds.size > 0) {
-        event.preventDefault();
-        if (!submitting) {
-          showStatus('Vänta tills uppladdningen är klar, eller åtgärda fel innan du sparar.');
-        }
-        return;
-      }
-      submitting = true;
-      setSubmittable(false);
     });
 
     renderUploaded();
+  }
+
+  function classicFallback(root, message) {
+    // Uppy assets failed to load (or plugins are missing): replace the empty
+    // dashboard with a classic file input so the form stays usable. The
+    // server already accepts multipart files from the direct widget.
+    var mount = root.querySelector('[data-uppy-mount]');
+    var uploadedList = root.querySelector('[data-uppy-uploaded]');
+    if (mount) mount.style.display = 'none';
+    if (uploadedList) uploadedList.style.display = 'none';
+
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.name = root.dataset.uppyName;
+    input.className = 'django-uppy-fallback';
+    if (root.dataset.uppyMulti !== 'false') {
+      input.multiple = true;
+    }
+
+    var list = document.createElement('ul');
+    list.className = 'django-uppy-files';
+    list.dataset.uppySelected = '1';
+    root.appendChild(input);
+    root.appendChild(list);
+
+    if (message) {
+      showStatus(root, message);
+    }
+    initClassic(root);
   }
 
   function initClassic(root) {

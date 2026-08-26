@@ -22,7 +22,9 @@ Uppy mode and the classic fallback) with shared styling in
    When enabled it renders a Uppy Dashboard container plus a hidden input; when
    disabled it degrades to a classic file input with a removable list of the
    selected files, so local and self-hosted setups behave as before while
-   keeping the same file management UX.
+   keeping the same file management UX. If the Uppy bundle fails to load, the
+   direct widget falls back to that classic input with a status message
+   instead of leaving the page silently unusable.
 2. `POST /_uploads/sign/` (`core/uploads.py`, mounted by
    `core/urls/common.py` for every association) validates the request and
    returns a presigned PUT URL for a server-generated key under `tmp/`.
