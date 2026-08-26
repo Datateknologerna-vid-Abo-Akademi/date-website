@@ -1,15 +1,22 @@
-"""Form field/widget for direct browser-to-storage uploads (Uppy).
+"""Form field/widget for browser-to-storage uploads (Uppy).
 
 When direct uploads are enabled (``USE_S3`` + ``DIRECT_UPLOADS_ENABLED``) the
 widget renders a Uppy Dashboard container plus a hidden input holding the JSON
-payload of uploaded temp keys. On form save the app calls
+payload of uploaded temp keys, and a removable list of the files already
+uploaded to the temp prefix. On form save the app calls
 ``core.uploads.finalize_upload`` to move each temp object to its final key.
+The uploaded list is rehydrated from the hidden payload on every render, so
+files survive reloads and validation errors and can be removed individually.
 
-When direct uploads are disabled the widget degrades to a classic file input so
-behavior (and tests) stay unchanged for local/self-hosted setups. For upload
-scopes used by the Django admin (``admin``, ``gallery-admin``) the classic input
-is rendered through the admin file widget, keeping the Unfold upload styling and
-the broken-file safety from ``core.admin_widgets``.
+When direct uploads are disabled the widget degrades to a classic file input
+wrapped in a container that lists the selected files and lets the user remove
+them before submitting. For upload scopes used by the Django admin (``admin``,
+``gallery-admin``) the classic input is rendered through the admin file widget,
+keeping the Unfold upload styling and the broken-file safety from
+``core.admin_widgets``.
+
+The widget only manages temp uploads; files already attached to model rows are
+managed through the normal admin inlines.
 
 The mode is decided at render/clean time (not field construction) because form
 field instances are class attributes and Django settings may differ between
@@ -25,11 +32,13 @@ from django.utils.translation import gettext_lazy as _
 
 from .uploads import SCOPES, parse_uploaded_files, uploads_enabled
 
+# Always loaded wherever a DirectUploadField renders, so both modes get the
+# file-list behavior (Uppy assets are CDN-only and loaded on top when enabled).
+UPLOAD_WIDGET_CSS = ('uploads/css/upload-widget.css',)
+UPLOAD_WIDGET_JS = ('uploads/js/upload-init.js',)
+
 UPPY_MEDIA_CSS = ('https://releases.transloadit.com/uppy/v5.2.4/uppy.min.css',)
-UPPY_MEDIA_JS = (
-    'https://releases.transloadit.com/uppy/v5.2.4/uppy.min.js',
-    'uploads/js/uppy-init.js',
-)
+UPPY_MEDIA_JS = ('https://releases.transloadit.com/uppy/v5.2.4/uppy.min.js',)
 
 # Scopes used from Django admin change forms. Their classic-mode input keeps the
 # admin upload widget so the Unfold markup and safe-widget behavior are
@@ -70,7 +79,7 @@ class DirectUploadWidget(forms.Widget):
             from core.admin_widgets import SafeAdminMultipleFileWidget
 
             return SafeAdminMultipleFileWidget(attrs=attrs).render(name, None, renderer=renderer)
-        input_attrs = self.build_attrs(attrs, {'type': 'file', 'name': name})
+        input_attrs = self.build_attrs(attrs or {}, {'type': 'file', 'name': name})
         if self.multi:
             input_attrs['multiple'] = 'multiple'
         return format_html('<input{}>', self._attrs_html(input_attrs))
@@ -87,6 +96,7 @@ class DirectUploadWidget(forms.Widget):
             {
                 'class': 'django-uppy-widget',
                 'data-uppy-widget': '1',
+                'data-uppy-mode': 'direct',
                 'data-uppy-scope': self.scope,
                 'data-uppy-bucket': self.bucket,
                 'data-uppy-multi': 'true' if self.multi else 'false',
@@ -96,14 +106,26 @@ class DirectUploadWidget(forms.Widget):
                 'data-uppy-allowed-extensions': ','.join(self.allowed_extensions),
             }
         )
-        container = format_html('<div{}></div>', self._attrs_html(container_attrs))
+        container = format_html(
+            '<div{}><div data-uppy-mount="1"></div><ul class="django-uppy-files" data-uppy-uploaded="1"></ul></div>',
+            self._attrs_html(container_attrs),
+        )
         fallback = format_html('<noscript>{}</noscript>', self._classic_input(name, attrs))
         return format_html('{}{}{}', hidden, container, fallback)
+
+    def _classic_inputs(self, name, attrs=None, renderer=None):
+        container = format_html(
+            '<div class="django-uppy-widget" data-uppy-widget="1" data-uppy-mode="classic">'
+            '{}<ul class="django-uppy-files" data-uppy-selected="1"></ul>'
+            '</div>',
+            self._classic_input(name, attrs, renderer=renderer),
+        )
+        return container
 
     def render(self, name, value, attrs=None, renderer=None):
         if uploads_enabled():
             return self._direct_inputs(name, value, attrs)
-        return self._classic_input(name, attrs, renderer=renderer)
+        return self._classic_inputs(name, attrs, renderer=renderer)
 
     def value_from_datadict(self, data, files, name):
         if uploads_enabled():
@@ -165,14 +187,17 @@ class DirectUploadField(forms.Field):
 
 
 class DirectUploadAdminMediaMixin:
-    """Add the Uppy assets to an admin changeform only when direct uploads are
-    enabled. Admin Media classes are merged into ``ModelAdmin.media``; this
-    mixin appends the Uppy assets conditionally on top of whatever the admin
-    declares (e.g. flatpickr)."""
+    """Add the upload-widget assets to an admin changeform.
+
+    Admin Media classes are merged into ``ModelAdmin.media``; this mixin
+    appends the file-list behavior always (both upload modes need it) and the
+    Uppy CDN assets only when direct uploads are enabled, on top of whatever
+    the admin declares (e.g. flatpickr)."""
 
     @property
     def media(self):
         media = super().media
+        media += forms.Media(css={'all': UPLOAD_WIDGET_CSS}, js=UPLOAD_WIDGET_JS)
         if uploads_enabled():
             media += forms.Media(css={'all': UPPY_MEDIA_CSS}, js=UPPY_MEDIA_JS)
         return media

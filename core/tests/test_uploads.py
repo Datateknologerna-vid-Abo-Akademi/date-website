@@ -666,8 +666,47 @@ class DirectUploadFallbackTests(TestCase):
         self.assertIn('type="file"', html)
         self.assertIn('multiple="multiple"', html)
 
+    def test_direct_widget_renders_uploaded_list_container(self):
+        field = DirectUploadField(scope='gallery', multi=True)
+        html = field.widget.render('images', None)
+        self.assertIn('data-uppy-mode="direct"', html)
+        self.assertIn('data-uppy-mount="1"', html)
+        self.assertIn('data-uppy-uploaded="1"', html)
+
+    def test_direct_widget_round_trips_payload_value(self):
+        payload = json.dumps(
+            [
+                {'key': 'tmp/' + 'a' * 32 + '.jpg', 'name': 'photo.jpg', 'size': 100},
+            ]
+        )
+        field = DirectUploadField(scope='gallery', multi=True)
+        html = field.widget.render('images', payload)
+        self.assertIn('type="hidden"', html)
+        self.assertIn('name="images"', html)
+        self.assertIn(payload.replace('"', '&quot;'), html)
+
     def test_direct_widget_accepts_multipart_fallback(self):
         field = DirectUploadField(scope='gallery', multi=True)
         uploaded = SimpleUploadedFile('photo.jpg', JPEG_MAGIC + b'content', content_type='image/jpeg')
         value = field.widget.value_from_datadict({}, MultiValueDict({'images': [uploaded]}), 'images')
         self.assertEqual(field.clean(value), [uploaded])
+
+
+@override_settings(USE_S3=False, DIRECT_UPLOADS_ENABLED=False)
+class ClassicUploadWidgetTests(TestCase):
+    def test_classic_widget_renders_selected_list(self):
+        field = DirectUploadField(scope='gallery', multi=True)
+        html = field.widget.render('images', None)
+        self.assertIn('data-uppy-widget="1"', html)
+        self.assertIn('data-uppy-mode="classic"', html)
+        self.assertIn('data-uppy-selected="1"', html)
+        self.assertIn('type="file"', html)
+        self.assertIn('multiple="multiple"', html)
+        self.assertNotIn('type="hidden"', html)
+        self.assertNotIn('data-uppy-scope', html)
+
+    def test_classic_widget_single_file_has_no_multiple(self):
+        field = DirectUploadField(scope='gallery', multi=False)
+        html = field.widget.render('images', None)
+        self.assertIn('type="file"', html)
+        self.assertNotIn('multiple', html)

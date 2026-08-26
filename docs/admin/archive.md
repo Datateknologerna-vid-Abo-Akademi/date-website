@@ -6,7 +6,7 @@ Manage document archives and public files. Photo galleries are managed in **Gall
 ## Document Collections
 1. Open **Archive › Document collections**.
 2. Create a collection with title and publication date. The publication date uses the shared calendar/time picker.
-3. Use the multi-upload field to upload one or many files (drag-and-drop when direct uploads are enabled; classic file picker otherwise).
+3. Use the multi-upload field to upload one or many files (drag-and-drop when direct uploads are enabled; classic file picker otherwise). Uploaded files stay listed below the field until the form is saved, and can be removed individually; files already attached to the collection are managed in the inline table below.
 4. Save. Files are stored under `media/documents/<year>/<slug>/`.
 
 ## Public Files (S3 only)

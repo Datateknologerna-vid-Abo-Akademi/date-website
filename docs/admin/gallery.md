@@ -10,7 +10,7 @@ Manage photo albums shown under `/archive/pictures/`.
    - **Namn**: gallery title, also used in media folder paths.
    - **Pub date**: determines which year bucket the gallery appears under and uses the shared calendar/time picker.
    - **Göm för gulisar**: hide sensitive albums from freshmen.
-4. Upload photos in the inline table or with the multi-upload field.
+4. Upload photos in the inline table or with the multi-upload field. Uploaded photos stay listed below the field until the form is saved, and can be removed individually; photos already in the album are managed in the inline table below.
 5. Save. With direct uploads enabled, images are compressed client-side before upload; otherwise the server compresses them to 1600px width for performance.
 
 ## Notes

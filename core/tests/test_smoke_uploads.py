@@ -19,6 +19,9 @@ class DirectUploadSmokeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
         self.assertIn('data-uppy-widget="1"', html)
+        self.assertIn('data-uppy-mode="direct"', html)
+        self.assertIn('data-uppy-mount="1"', html)
+        self.assertIn('uploads/js/upload-init.js', html)
         self.assertIn('https://releases.transloadit.com/uppy/v5.2.4/uppy.min.js', html)
         self.assertIn('data-uppy-scope="gallery-admin"', html)
         self.assertIn('data-uppy-compress="true"', html)
@@ -30,6 +33,8 @@ class DirectUploadSmokeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
         self.assertIn('data-uppy-widget="1"', html)
+        self.assertIn('data-uppy-mode="direct"', html)
+        self.assertIn('uploads/js/upload-init.js', html)
         self.assertIn('https://releases.transloadit.com/uppy/v5.2.4/uppy.min.js', html)
         self.assertIn('integrity="sha384-hl+zw0fpZ6cVAtnkwy96IFC3oGXSYqe8', html)
         self.assertIn('data-uppy-scope="gallery"', html)
@@ -67,11 +72,15 @@ class DirectUploadSmokeTests(TestCase):
             self.assertEqual(response.status_code, 200)
             html = response.content.decode()
             self.assertNotIn('uppy.min.js', html)
-            self.assertNotIn('data-uppy-widget', html)
+            self.assertIn('data-uppy-widget="1"', html)
+            self.assertIn('data-uppy-mode="classic"', html)
+            self.assertIn('uploads/js/upload-init.js', html)
+            self.assertNotIn('data-uppy-scope', html)
 
             admin_response = self.client.get(reverse('admin:gallery_album_add'))
             self.assertNotIn('uppy.min.js', admin_response.content.decode())
-            self.assertNotIn('data-uppy-widget', admin_response.content.decode())
+            self.assertIn('data-uppy-mode="classic"', admin_response.content.decode())
+            self.assertIn('uploads/js/upload-init.js', admin_response.content.decode())
 
 
 @override_settings(USE_S3=False, DIRECT_UPLOADS_ENABLED=False)
@@ -80,11 +89,14 @@ class ClassicModeSmokeTests(TestCase):
         self.user = Member.objects.create_superuser(username='smoke-admin2', password='pwd', email='b@example.com')
         self.client.force_login(self.user)
 
-    def test_upload_page_uses_classic_input_when_disabled(self):
+    def test_upload_page_uses_classic_widget_when_disabled(self):
         album_perm = Permission.objects.get(codename='add_album', content_type__app_label='gallery')
         self.user.user_permissions.add(album_perm)
         response = self.client.get(reverse('archive:upload'))
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
         self.assertIn('type="file"', html)
-        self.assertNotIn('data-uppy-widget', html)
+        self.assertIn('data-uppy-widget="1"', html)
+        self.assertIn('data-uppy-mode="classic"', html)
+        self.assertIn('data-uppy-selected="1"', html)
+        self.assertNotIn('data-uppy-scope', html)

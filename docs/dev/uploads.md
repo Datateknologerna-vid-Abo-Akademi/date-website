@@ -12,14 +12,19 @@ object from a temp key to its final key with a server-side copy.
 
 The feature uses the pinned Uppy 5.2.4 browser bundle from Transloadit's
 release CDN. The site-specific integration remains in
-`static/common/uploads/js/uppy-init.js`.
+`static/common/uploads/js/upload-init.js` (one file serving both the direct
+Uppy mode and the classic fallback) with shared styling in
+`static/common/uploads/css/upload-widget.css`.
 
 ## How it fits together
 
 1. Forms that upload files use `DirectUploadField` (see `core/upload_widgets.py`).
-   When enabled it renders a Uppy Dashboard container plus a hidden input;
-   when disabled it degrades to the classic multi-file input, so local and
-   self-hosted setups behave exactly as before.
+   When enabled it renders a Uppy Dashboard container plus a hidden input; when
+   disabled it degrades to a classic file input with a removable list of the
+   selected files, so local and self-hosted setups behave as before while
+   keeping the same file management UX. If the Uppy bundle fails to load, the
+   direct widget falls back to that classic input with a status message
+   instead of leaving the page silently unusable.
 2. `POST /_uploads/sign/` (`core/uploads.py`, mounted by
    `core/urls/common.py` for every association) validates the request and
    returns a presigned PUT URL for a server-generated key under `tmp/`.
@@ -40,7 +45,15 @@ release CDN. The site-specific integration remains in
    Full file bodies never pass through the web process. Finalization reads up
    to 512 bytes for type validation.
 
-4. Gallery photos are compressed client-side (`@uppy/compressor`, 1600px,
+4. The widget only manages temp uploads. Below the Dashboard it renders the
+   list of files already uploaded to the temp prefix, rehydrated from the
+   hidden input on every page load, so uploaded files stay visible and
+   removable across reloads and validation errors; removing an entry drops it
+   from the payload (the temp object is left for the bucket lifecycle rule).
+   Files already attached to model rows are not listed: those are managed
+   through the admin inlines and the normal model delete flows.
+
+5. Gallery photos are compressed client-side (`@uppy/compressor`, 1600px,
    quality 60) before upload. Compression preserves the input format so the
    signed key extension continues to match the uploaded bytes. Compression and
    upload concurrency are sized to the device from `navigator.deviceMemory`
@@ -145,6 +158,9 @@ release CDN. The site-specific integration remains in
   are not accepted through the direct path.
 - The form blocks submission while uploads are pending or failed; failed
   files must be removed before saving.
+- Uploaded (temp) files are shown and removable in the widget; removing one
+  only drops it from the form payload, it does not delete the temp object
+  (the bucket lifecycle rule cleans it up).
 - Single-file admin fields (album thumbnails, publication PDFs, event and
   staticpage backgrounds, CKEditor inline images) still use the classic
   widget; the same machinery can be extended to them later.
