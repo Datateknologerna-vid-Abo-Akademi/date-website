@@ -48,24 +48,8 @@ class AdminLink:
         }
 
 
-TOPBAR_QUICK_CREATE_LINKS = (
-    AdminLink(_('Event'), icon='event', url_name='admin:events_event_add', permission='events.add_event'),
-    AdminLink(_('News'), icon='article', url_name='admin:news_post_add', permission='news.add_post'),
-    AdminLink(
-        _('Static Page'),
-        icon='web',
-        url_name='admin:staticpages_staticpage_add',
-        permission='staticpages.add_staticpage',
-    ),
-)
-
-
 def resolve_admin_links(items, request):
     return [link for item in items if (link := item.resolve(request)) is not None]
-
-
-def get_topbar_quick_create_links(request):
-    return resolve_admin_links(TOPBAR_QUICK_CREATE_LINKS, request)
 
 
 @dataclass(frozen=True)
