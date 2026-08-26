@@ -15,7 +15,7 @@ from django.utils.formats import date_format
 from django.utils.translation import gettext
 from django_ckeditor_5.widgets import CKEditor5Widget
 
-from events.admin import EventRegistrationFormSet
+from events.admin import EventAttendeesFormInline, EventRegistrationFormSet
 from events.forms import EventCreationForm, EventEditForm
 from events.models import Event, EventAttendees, EventRegistrationForm
 from events.routing import websocket_urlpatterns
@@ -674,6 +674,24 @@ class EventAdminTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'column-original_event')
+
+    @patch("modeltranslation.admin.TranslationInlineModelAdmin.get_formset")
+    def test_attendees_inline_formset_passes_complete_exclude_list(self, get_formset):
+        """The dynamic avec exclusion must preserve readonly exclusions.
+
+        Production runs without translation inlines, so the exclude list our
+        override passes up reaches Django's InlineModelAdmin.get_formset,
+        which applies kwargs after its defaults and would otherwise drop the
+        readonly-field exclusion and leave time_registered required.
+        """
+        request = RequestFactory().get("/admin/events/event/change/")
+        request.user = self.admin_user
+        inline = EventAttendeesFormInline(Event, admin.site)
+
+        inline.get_formset(request, obj=self.event)
+
+        _, kwargs = get_formset.call_args
+        self.assertCountEqual(kwargs["exclude"], ["time_registered", "avec_for"])
 
     def test_change_page_hides_hide_for_avec_when_avec_is_disabled(self):
         EventRegistrationForm.objects.create(
