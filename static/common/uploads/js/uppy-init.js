@@ -100,7 +100,7 @@
         return '.' + ext.trim();
       });
 
-    var Core = Uppy.Core || Uppy;
+    var Core = Uppy.Uppy || Uppy;
     var uppy = new Core({
       autoProceed: true,
       limit: uploadLimit(),
