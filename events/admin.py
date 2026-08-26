@@ -128,9 +128,15 @@ class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationI
         return readonly_fields
 
     def get_formset(self, request, obj=None, **kwargs):
+        # Note: the exclude list passed via kwargs ends up overriding the
+        # readonly-field exclusion Django computes in
+        # InlineModelAdmin.get_formset (the kwargs dict is applied after the
+        # defaults). Include readonly fields here explicitly, otherwise they
+        # stay on the form as required fields and any save fails validation.
+        exclude = [*kwargs.get('exclude', []), *self.get_readonly_fields(request, obj)]
         if not self._event_uses_avec(obj):
-            kwargs.setdefault('exclude', [])
-            kwargs['exclude'] = [*kwargs['exclude'], 'avec_for']
+            exclude.append('avec_for')
+        kwargs['exclude'] = exclude
         return super().get_formset(request, obj, **kwargs)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
