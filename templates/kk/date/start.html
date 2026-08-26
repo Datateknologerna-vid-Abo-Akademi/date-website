@@ -26,8 +26,10 @@
     <section id="news" class="news-events">
       <div id="main" class="main-container">
         {% include "date/components/news.html" %}
-        {% include "date/components/events.html" %}
-        {% include "date/components/partners.html" %}
+        <div class="sidebar-container">
+          {% include "date/components/events.html" %}
+          {% include "date/components/partners.html" %}
+        </div>
         {% include "date/components/instagram.html" %}
       </div>
     </section>

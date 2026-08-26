@@ -175,12 +175,13 @@
     grid-template-columns: 1fr 850px 350px 1fr;
     grid-template-rows: auto;
     grid-template-areas: 
-      ". news events ."
-      ". news extras ."
-      ". news logos ."
-      ". ig-scroll ig-scroll .";
+      ". news sidebar .";
     grid-column-gap: 3vw;
     align-items: start;
+}
+
+.sidebar-container {
+    grid-area: sidebar;
 }
 
 .text-size{
@@ -647,6 +648,10 @@ div.calendar-container a {
           ". extras ."
           ". logos ."
           ". ig-scroll .";
+    }
+
+    .sidebar-container {
+        display: contents;
     }
 
     .partner-sidebar {
