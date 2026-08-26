@@ -13,7 +13,7 @@ Use **Exam bank › Exam archives › Åtkomstinställningar** to choose how the
 ## Adding Exam Archives
 1. Visit **Exam bank › Exam archives**.
 2. Create an archive with a title and publication date. The publication date uses the shared calendar/time picker.
-3. Use the inline table or multi-upload field to upload exam files (drag-and-drop when direct uploads are enabled).
+3. Use the inline table or multi-upload field to upload exam files (drag-and-drop when direct uploads are enabled). Uploaded files stay listed below the field until the form is saved, and can be removed individually; files already attached to the archive are managed in the inline table below.
 4. Provide a descriptive **Namn** for each file.
 5. Save. Files are stored under `media/<year>/<slug>/`.
 

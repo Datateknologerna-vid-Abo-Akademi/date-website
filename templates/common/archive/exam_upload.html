@@ -10,9 +10,7 @@
   <link rel="stylesheet"
         href="{% static 'archive/css/document.css' %}"
         type="text/css">
-  {% if DIRECT_UPLOADS_ENABLED %}
-    {% include 'uploads/_uppy_assets.html' %}
-  {% endif %}
+  {% include 'uploads/_uppy_assets.html' %}
 {% endblock %}
 {% block content %}
   <div class="container-md min-vh-100 container-margin-top p-1">

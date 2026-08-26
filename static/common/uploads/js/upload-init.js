@@ -1,17 +1,34 @@
 /**
- * Uppy direct-to-storage upload wiring for DaTe Website.
+ * Upload widget wiring for DaTe Website (direct Uppy mode + classic mode).
  *
  * Expected DOM (rendered by core.upload_widgets.DirectUploadWidget):
  *
- *   <div class="django-uppy-widget" data-uppy-widget="1" data-uppy-scope="..."
- *        data-uppy-bucket="..." data-uppy-multi="true|false"
- *        data-uppy-compress="true|false" data-uppy-name="..." ...></div>
+ * Direct mode:
+ *
+ *   <div class="django-uppy-widget" data-uppy-widget="1" data-uppy-mode="direct"
+ *        data-uppy-scope="..." data-uppy-bucket="..." data-uppy-multi="true|false"
+ *        data-uppy-compress="true|false" data-uppy-name="..." ...>
+ *     <div data-uppy-mount="1"></div>
+ *     <ul class="django-uppy-files" data-uppy-uploaded="1"></ul>
+ *   </div>
  *   <input type="hidden" name="..." value="...">
  *
  * On upload completion the JSON payload [{key, name, size}, ...] is written
  * into the sibling hidden input; the Django form parses it on submit. The
  * payload is updated on success and removal, and the form is blocked while
- * uploads are pending or failed.
+ * uploads are pending or failed. The "uploaded" list is rehydrated from the
+ * hidden input on load, so already-uploaded temp files stay visible and
+ * removable across reloads and validation errors.
+ *
+ * Classic mode (direct uploads disabled):
+ *
+ *   <div class="django-uppy-widget" data-uppy-widget="1" data-uppy-mode="classic">
+ *     <input type="file" ...>
+ *     <ul class="django-uppy-files" data-uppy-selected="1"></ul>
+ *   </div>
+ *
+ * The selected-file list is kept in sync with the input through a DataTransfer
+ * object so the browser submits exactly the files still listed.
  *
  * The signing endpoint (POST /_uploads/sign/) enforces auth, extension
  * allowlist and size caps server-side; the restrictions below are UX only.
@@ -51,6 +68,27 @@
     return deviceMemoryGB() >= 4 ? Infinity : 3;
   }
 
+  function formatSize(bytes) {
+    if (!bytes && bytes !== 0) return '';
+    if (bytes < 1024) return bytes + ' B';
+    var units = ['KB', 'MB', 'GB'];
+    var i = -1;
+    do {
+      bytes /= 1024;
+      i += 1;
+    } while (bytes >= 1024 && i < units.length - 1);
+    return bytes.toFixed(1) + ' ' + units[i];
+  }
+
+  function parsePayload(raw) {
+    try {
+      var parsed = JSON.parse(raw || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
   function signFile(uppy, file, options) {
     var body = new URLSearchParams();
     body.append('scope', options.scope);
@@ -77,13 +115,37 @@
     });
   }
 
-  function initWidget(root) {
+  function fileRow(file) {
+    var li = document.createElement('li');
+    li.className = 'django-uppy-file';
+    var name = document.createElement('span');
+    name.className = 'django-uppy-name';
+    name.textContent = file.name;
+    var size = document.createElement('span');
+    size.className = 'django-uppy-size';
+    size.textContent = formatSize(file.size);
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'django-uppy-remove';
+    button.textContent = '\u00d7';
+    button.setAttribute('aria-label', 'Ta bort ' + file.name);
+    li.appendChild(name);
+    li.appendChild(size);
+    li.appendChild(button);
+    return li;
+  }
+
+  function initDirect(root) {
     var form = root.closest('form');
     var name = root.dataset.uppyName;
-    if (!form || !name) return;
+    if (!form || !name || typeof window.Uppy === 'undefined') return;
 
     var hidden = form.elements[name];
     if (!hidden) return;
+
+    var mount = root.querySelector('[data-uppy-mount]');
+    var uploadedList = root.querySelector('[data-uppy-uploaded]');
+    if (!mount || !uploadedList) return;
 
     var options = {
       scope: root.dataset.uppyScope || 'admin',
@@ -100,7 +162,7 @@
         return '.' + ext.trim();
       });
 
-    var Core = Uppy.Uppy || Uppy;
+    var Core = window.Uppy.Uppy || window.Uppy;
     var uppy = new Core({
       autoProceed: true,
       limit: uploadLimit(),
@@ -114,7 +176,7 @@
     if (options.compress) {
       // Matches the server-side behaviour gallery photos used to apply:
       // downscale to 1600px wide, JPEG quality 60, before upload.
-      uppy.use(Uppy.Compressor, {
+      uppy.use(window.Uppy.Compressor, {
         quality: 0.6,
         maxWidth: 1600,
         limit: compressionLimit(),
@@ -124,23 +186,23 @@
       });
     }
 
-    uppy.use(Uppy.AwsS3, {
+    uppy.use(window.Uppy.AwsS3, {
       shouldUseMultipart: false,
       getUploadParameters: function (file) {
         return signFile(uppy, file, options);
       },
     });
 
-    uppy.use(Uppy.Dashboard, {
+    uppy.use(window.Uppy.Dashboard, {
       inline: true,
-      target: root,
+      target: mount,
       height: options.multi ? 300 : 200,
       hideUploadButton: true,
       proudlyDisplayPoweredByUppy: false,
       showProgressDetails: true,
     });
 
-    var uploaded = [];
+    var uploaded = parsePayload(hidden.value);
     var pendingIds = new Set();
     var failedIds = new Set();
     var submitting = false;
@@ -159,8 +221,34 @@
       setSubmittable(pendingIds.size === 0 && failedIds.size === 0);
     }
 
+    function renderUploaded() {
+      uploadedList.textContent = '';
+      uploaded.forEach(function (entry) {
+        if (!entry || typeof entry !== 'object') return;
+        var li = fileRow(entry);
+        var button = li.querySelector('.django-uppy-remove');
+        button.dataset.uppyRemoveKey = entry.key;
+        li.dataset.uppyKey = entry.key;
+        uploadedList.appendChild(li);
+      });
+    }
+
     function writePayload() {
       hidden.value = JSON.stringify(uploaded);
+      renderUploaded();
+    }
+
+    function removeByKey(key) {
+      uploaded = uploaded.filter(function (entry) {
+        return entry.key !== key;
+      });
+      // Best effort: drop the matching in-dashboard file (if any) too.
+      uppy.getFiles().forEach(function (file) {
+        if (file.meta && file.meta.uploadKey === key) {
+          uppy.removeFile(file.id);
+        }
+      });
+      writePayload();
     }
 
     function showStatus(message) {
@@ -182,6 +270,12 @@
         size: file.size,
       };
     }
+
+    uploadedList.addEventListener('click', function (event) {
+      var button = event.target.closest('[data-uppy-remove-key]');
+      if (!button) return;
+      removeByKey(button.dataset.uppyRemoveKey);
+    });
 
     uppy.on('file-added', function (file) {
       pendingIds.add(file.id);
@@ -252,6 +346,48 @@
       submitting = true;
       setSubmittable(false);
     });
+
+    renderUploaded();
+  }
+
+  function initClassic(root) {
+    var input = root.querySelector('input[type="file"]');
+    var list = root.querySelector('[data-uppy-selected]');
+    if (!input || !list) return;
+
+    function renderSelected() {
+      list.textContent = '';
+      Array.prototype.forEach.call(input.files, function (file, index) {
+        var li = fileRow(file);
+        var button = li.querySelector('.django-uppy-remove');
+        button.dataset.uppyRemoveIndex = String(index);
+        list.appendChild(li);
+      });
+    }
+
+    list.addEventListener('click', function (event) {
+      var button = event.target.closest('[data-uppy-remove-index]');
+      if (!button || typeof window.DataTransfer === 'undefined') return;
+      var index = parseInt(button.dataset.uppyRemoveIndex, 10);
+      if (Number.isNaN(index)) return;
+      var dt = new DataTransfer();
+      Array.prototype.forEach.call(input.files, function (file, i) {
+        if (i !== index) dt.items.add(file);
+      });
+      input.files = dt.files;
+      renderSelected();
+    });
+
+    input.addEventListener('change', renderSelected);
+    renderSelected();
+  }
+
+  function initWidget(root) {
+    if (root.dataset.uppyMode === 'classic') {
+      initClassic(root);
+    } else {
+      initDirect(root);
+    }
   }
 
   function init() {

@@ -1,11 +1,16 @@
 {% load static %}
 <link rel="stylesheet"
-      href="https://releases.transloadit.com/uppy/v5.2.4/uppy.min.css"
-      integrity="sha384-NzIdpCBvjrLNO5q++7oATl82kfw2215yoGwNXl2rBMEJUgfDnr8ARb5Cun15j4Fl"
-      crossorigin="anonymous"
+      href="{% static 'uploads/css/upload-widget.css' %}"
       type="text/css">
-<script src="https://releases.transloadit.com/uppy/v5.2.4/uppy.min.js"
-        integrity="sha384-hl+zw0fpZ6cVAtnkwy96IFC3oGXSYqe8O8yMtUiSKhfHXST3vg5wvbieKwocAzM9"
+<script src="{% static 'uploads/js/upload-init.js' %}" defer></script>
+{% if DIRECT_UPLOADS_ENABLED %}
+  <link rel="stylesheet"
+        href="https://releases.transloadit.com/uppy/v5.2.4/uppy.min.css"
+        integrity="sha384-NzIdpCBvjrLNO5q++7oATl82kfw2215yoGwNXl2rBMEJUgfDnr8ARb5Cun15j4Fl"
         crossorigin="anonymous"
-        defer></script>
-<script src="{% static 'uploads/js/uppy-init.js' %}" defer></script>
+        type="text/css">
+  <script src="https://releases.transloadit.com/uppy/v5.2.4/uppy.min.js"
+          integrity="sha384-hl+zw0fpZ6cVAtnkwy96IFC3oGXSYqe8O8yMtUiSKhfHXST3vg5wvbieKwocAzM9"
+          crossorigin="anonymous"
+          defer></script>
+{% endif %}
