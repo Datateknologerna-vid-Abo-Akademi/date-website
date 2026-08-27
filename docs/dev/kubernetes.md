@@ -142,18 +142,34 @@ standby migrates — not at cutover. Therefore:
 
 ## Graceful termination
 
-Each component gets a deliberate drain policy:
+Each component gets a deliberate shutdown policy:
 
 - **web** (`terminationGracePeriodSeconds: 130`, `preStopSleepSeconds: 5`):
-  the preStop sleep lets the ingress remove the pod from rotation while it
-  keeps serving, then gunicorn's graceful timeout (120s) finishes in-flight
-  requests before SIGTERM force-kills.
-- **asgi** (60s grace, 5s preStop): stops accepting new WebSocket
-  connections, then drains in-flight ones within the grace period.
-- **celery** (120s grace): celery's warm shutdown finishes active tasks on
-  SIGTERM; the grace period must exceed the longest task (email/alumni
-  work). The grace period is the floor; a task that exceeds it is
-  interrupted.
+  the preStop sleep gives the ingress time to observe endpoint termination
+  and stop routing new requests; on SIGTERM gunicorn drains in-flight
+  requests for `gunicorn.gracefulTimeout` (120s, configured explicitly; the
+  default graceful timeout is only 30s) before killing workers.
+- **asgi** (60s grace, 5s preStop): the preStop sleep gives the ingress time
+  to stop routing new connections; Daphne closes remaining WebSockets on
+  SIGTERM within the grace period. Daphne has no application-level drain
+  hook, so a longer drain is not available without custom code.
+- **celery** (120s grace): celery finishes active tasks on SIGTERM. With
+  `CELERY_TASK_ACKS_LATE` and `CELERY_TASK_REJECT_ON_WORKER_LOST`, work that
+  was acknowledged but not finished is requeued on worker loss instead of
+  being dropped; tasks must tolerate redelivery. The grace period is the
+  floor and should exceed the longest task; the 120s default is a starting
+  point, not a guarantee.
+
+### Verification
+
+Before relying on this, verify once per environment:
+
+- Web: tail `web` logs during a rollout; confirm gunicorn logs graceful
+  worker shutdown and no 5xx for in-flight requests.
+- Celery: enqueue a slow task, roll the worker, confirm it finishes (or is
+  requeued and runs again) and nothing is dropped silently.
+- ASGI: hold a WebSocket open through an asgi rollout and confirm it
+  closes cleanly (client sees a close frame, not a hang).
 
 ## Secrets
 

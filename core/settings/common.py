@@ -218,6 +218,12 @@ REDIS_SERVER = env("REDIS_SERVER", str, "redis://redis:6379")
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", str, "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", str, CELERY_BROKER_URL)
 
+# Acknowledge tasks only after execution and requeue on worker loss, so a
+# worker killed mid-task (rollout, node drain, OOM) does not silently drop
+# the task. Tasks must tolerate redelivery (emails can be re-sent).
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+
 
 CHANNEL_LAYERS = {
     'default': {
