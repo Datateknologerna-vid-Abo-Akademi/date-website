@@ -113,10 +113,17 @@ Static assets are collected during the image build with the build arg
 `PROJECT_NAME` (default `date`, matching the published image). The web pod
 startup collection (`web.collectstaticOnStartup`) therefore stays enabled
 by default: associations whose assets differ from the date-built image
-(kk, pulterit, biocum, sf, ...) must collect their own static. Sites that
-use the date-built image (or publish per-association images with their own
-`PROJECT_NAME` build arg) can set the flag to false and skip startup
-collection entirely.
+(kk, pulterit, biocum, sf, ...) collect their own static at pod start with
+`--clear`. Sites that use the date-built image can set the flag to false
+and skip startup collection entirely.
+
+Per-association images (one build arg per site) are deliberately not the
+plan: they multiply CI builds and registry storage for a few seconds of
+startup work, and they couple the image to the variant. If startup
+collection ever becomes a real cost for non-date sites, serve static from
+S3/CDN with per-association prefixes instead (`StaticStorage` in
+`core/storage_backends.py`), which removes collection from every pod for
+every variant while keeping one generic image.
 
 The operator repository holds:
 
