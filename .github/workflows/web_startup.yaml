@@ -10,11 +10,16 @@ on:
       - '**/*.js'
       - '**/*.css'
       - 'Dockerfile'
+      - '.dockerignore'
       - 'docker-compose.yml'
       - 'docker-compose.prod.yml'
+      - 'docker-compose.dev-all.yml'
+      - 'fixtures/**'
       - 'locale/**'
       - 'pyproject.toml'
       - 'scripts/validate_translations.py'
+      - 'scripts/clean_init.sh'
+      - 'scripts/load_all_fixtures.sh'
       - 'uv.lock'
       - '.env.example'
       - 'env.sh'
@@ -28,11 +33,16 @@ on:
       - '**/*.js'
       - '**/*.css'
       - 'Dockerfile'
+      - '.dockerignore'
       - 'docker-compose.yml'
       - 'docker-compose.prod.yml'
+      - 'docker-compose.dev-all.yml'
+      - 'fixtures/**'
       - 'locale/**'
       - 'pyproject.toml'
       - 'scripts/validate_translations.py'
+      - 'scripts/clean_init.sh'
+      - 'scripts/load_all_fixtures.sh'
       - 'uv.lock'
       - '.env.example'
       - 'env.sh'
@@ -54,6 +64,14 @@ jobs:
     defaults:
       run:
         shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: default
+            extra_env: ""
+          - label: unfold
+            extra_env: "-e USE_UNFOLD=True"
 
     steps:
       - name: Checkout repository
@@ -77,6 +95,11 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # PR SHAs have no prebuilt image; skip login and pull retries.
+            echo "compose_file=docker-compose.yml" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
           REPO_LOWER="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
           CI_IMAGE="ghcr.io/${REPO_LOWER}:${GITHUB_SHA}"
 
@@ -118,14 +141,13 @@ jobs:
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           docker-compose run --rm --no-deps web python scripts/validate_translations.py
           docker-compose run --rm --no-deps web python manage.py compilemessages
-          # Test settings use in-memory SQLite/Channels/cache, so skip service startup.
-          docker-compose run --rm --no-deps -e TEST=1 web python /code/manage.py test
 
-      - name: Run tests with Unfold enabled
+      - name: Run django unit tests (${{ matrix.label }})
         run: |
           set -euo pipefail
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
-          docker-compose run --rm --no-deps -e TEST=1 -e USE_UNFOLD=True web python /code/manage.py test
+          # Test settings use in-memory SQLite/Channels/cache, so skip service startup.
+          docker-compose run --rm --no-deps -e TEST=1 ${{ matrix.extra_env }} web python /code/manage.py test
 
       - name: Build and run Docker Compose
         run: |
