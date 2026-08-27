@@ -1,9 +1,12 @@
 # Runs all associations simultaneously for style comparison.
-# Each association gets its own web container on a dedicated port, all sharing
-# the same Postgres database and Redis instance.
+# Each association gets its own web container on a dedicated port, its own
+# PostgreSQL database, and its own Redis logical database, so variants do not
+# collide on shared state.
 #
 # Usage:
-#   docker compose -f docker-compose.dev-all.yml up --build
+#   docker compose -f docker-compose.dev-all.yml --profile all up --build
+#   docker compose -f docker-compose.dev-all.yml --profile kk up --build  # one variant
+#   docker compose -f docker-compose.dev-all.yml --profile all down
 #
 # Association ports:
 #   biocum   → http://localhost:8001
@@ -47,6 +50,16 @@ services:
     ports:
       - "5433:5432"
 
+  # Creates one database per association so dev variants do not share rows.
+  db-init:
+    image: postgres:${DATE_POSTGRESQL_VERSION}-alpine
+    restart: "no"
+    environment:
+      PGPASSWORD: ${DATE_DB_PASSWORD}
+    command: /bin/bash -c "for db in date kk biocum pulterit sf impuls demo; do psql -h db -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname='${db}'\" | grep -q 1 || createdb -h db -U postgres ${db}; done"
+    depends_on:
+      - db
+
   pgadmin:
     image: dpage/pgadmin4:latest
     profiles:
@@ -68,74 +81,107 @@ services:
     volumes:
       - dev_all_redis_data:/data
 
-  # Runs once: migrate + compilemessages (using 'date' as the representative
-  # project). All web containers wait for this to finish before starting.
-  # collectstatic is skipped — WHITENOISE_USE_FINDERS=True (set when DEBUG) has
-  # each container serve static files directly from its own STATICFILES_DIRS.
+  # Runs once: migrates each variant against its own database (so
+  # association-only apps like lucia and klotterplanket get their tables),
+  # then compiles translations. All web containers wait for this to finish.
+  # collectstatic is skipped — WHITENOISE_USE_FINDERS=True (set when DEBUG)
+  # has each container serve static files directly from its own
+  # STATICFILES_DIRS.
   init:
     env_file: .env
     build: .
     restart: "no"
-    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python manage.py migrate --noinput && python manage.py compilemessages -l en -l fi -l sv --verbosity 0"
+    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && for entry in 'date date' 'kk kk' 'biocum biocum' 'pulterit pulterit' 'sf sf' 'impuls impuls' 'demo demo'; do set -- $${entry}; PROJECT_NAME=$${1} DB_DATABASE=$${2} python manage.py migrate --noinput || exit 1; done && python manage.py compilemessages -l en -l fi -l sv --verbosity 0"
     volumes:
       - .:/code
     environment:
       <<: *web-env
       PROJECT_NAME: date
     depends_on:
-      - db
+      db:
+        condition: service_started
+      db-init:
+        condition: service_completed_successfully
 
   # Named 'web' so clean_init.sh can run fixtures against it.
   # Uses PROJECT_NAME=date because it's the only association with the ctf app.
   web:
     <<: *web-common
+    profiles:
+      - all
+      - date
     ports:
       - "8002:8000"
     environment:
       <<: *web-env
       PROJECT_NAME: date
+      DB_DATABASE: date
+      REDIS_SERVER: redis://redis:6379/0
 
   web-biocum:
     <<: *web-common
+    profiles:
+      - all
+      - biocum
     ports:
       - "8001:8000"
     environment:
       <<: *web-env
       PROJECT_NAME: biocum
-
-  # web-date is covered by the 'web' service above (port 8002).
+      DB_DATABASE: biocum
+      REDIS_SERVER: redis://redis:6379/2
 
   web-kk:
     <<: *web-common
+    profiles:
+      - all
+      - kk
     ports:
       - "8003:8000"
     environment:
       <<: *web-env
       PROJECT_NAME: kk
+      DB_DATABASE: kk
+      REDIS_SERVER: redis://redis:6379/1
 
   web-pulterit:
     <<: *web-common
+    profiles:
+      - all
+      - pulterit
     ports:
       - "8004:8000"
     environment:
       <<: *web-env
       PROJECT_NAME: pulterit
+      DB_DATABASE: pulterit
+      REDIS_SERVER: redis://redis:6379/3
 
   web-sf:
     <<: *web-common
+    profiles:
+      - all
+      - sf
     ports:
       - "8005:8000"
     environment:
       <<: *web-env
       PROJECT_NAME: sf
+      DB_DATABASE: sf
+      REDIS_SERVER: redis://redis:6379/4
 
   web-impuls:
     <<: *web-common
+    profiles:
+      - all
+      - impuls
     ports:
       - "8006:8000"
     environment:
       <<: *web-env
       PROJECT_NAME: impuls
+      DB_DATABASE: impuls
+      REDIS_SERVER: redis://redis:6379/5
 
 volumes:
   date_postgres_data:

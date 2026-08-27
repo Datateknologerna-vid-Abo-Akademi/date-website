@@ -133,12 +133,22 @@ date-all() {
     docker compose --project-directory "$project_dir" -f "$project_dir/docker-compose.dev-all.yml" "$@"
 }
 
+# Manage a single association's web container: date-all-manage kk <cmd>
 date-all-manage() {
-    date-all run web python /code/manage.py "$@"
+    local variant="$1"
+    shift
+    date-all run --profile "$variant" "web-${variant}" python /code/manage.py "$@"
 }
 
 date-all-start() {
-    date-all up --build "$@"
+    date-all --profile all up --build "$@"
+}
+
+# Start one association: date-all-start-variant kk
+date-all-start-variant() {
+    local variant="$1"
+    shift
+    date-all --profile "$variant" up --build "$@"
 }
 
 date-all-stop() {
@@ -152,11 +162,11 @@ date-all-cleaninit() {
 }
 
 date-all-seed-gallery() {
-    date-all-manage seed_gallery "$@"
+    date-all-manage date seed_gallery "$@"
 }
 
 date-all-seed-gallery-clear() {
-    date-all-manage seed_gallery --clear "$@"
+    date-all-manage date seed_gallery --clear "$@"
 }
 
 date-backup() {
