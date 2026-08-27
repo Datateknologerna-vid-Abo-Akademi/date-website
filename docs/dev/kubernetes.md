@@ -157,6 +157,8 @@ standby migrates — not at cutover. Therefore:
   managed in restic.
 - The chart's backup CronJob is **not** used in production (the cluster-level
   pipeline supersedes it); it remains available for self-hosted installs.
+  It supports `startingDeadlineSeconds` / `activeDeadlineSeconds` /
+  `timeZone` to bound missed and hung runs.
 - Restore is a documented, tested drill in the operator repository.
 
 ## Operational notes

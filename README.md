@@ -251,6 +251,12 @@ Although Django 6 ships with the new Tasks framework, this project still uses Ce
 
 The Kubernetes deployment path uses the Helm chart in `charts/date-website/`. The current target is k3s on Hetzner Cloud with Traefik Gateway API, `hcloud-volumes` for persistent workloads when they run in-cluster, and Backblaze B2 through the S3-compatible API for media and PostgreSQL backups.
 
+The example below is the **self-hosted profile**: the chart owns the Gateway
+and the backup CronJob. Production instead runs one Argo CD release per
+association with an external cluster-level backup pipeline and externally
+managed ingress (see [docs/dev/kubernetes.md](docs/dev/kubernetes.md)); only
+one authoritative backup pipeline should own each database.
+
 Use these values files together:
 
 ```bash
