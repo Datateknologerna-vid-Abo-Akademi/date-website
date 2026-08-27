@@ -95,11 +95,12 @@ spec:
             - name: http
               containerPort: 8000
               protocol: TCP
-          # startupProbe gates liveness during slow starts (migrateOnStartup
-          # cold boot: wait-for-postgres + migrate + collectstatic can exceed
-          # 2 min under the web CPU limit; a 30x2s budget is too tight because
-          # refused probes fail instantly -> ~60s floor). 90x2s = ~180s floor,
-          # measured after the 2026-08-07 worker-reboot incident.
+          # startupProbe gates liveness during slow starts (cold boot:
+          # wait-for-postgres under the web CPU limit can exceed 2 min; a
+          # 30x2s budget is too tight because refused probes fail instantly
+          # -> ~60s floor). 90x2s = ~180s floor, measured after the
+          # 2026-08-07 worker-reboot incident. Migrate/collectstatic are off
+          # by default, so the budget can be tightened when measured.
           startupProbe:
             httpGet:
               path: /healthz/

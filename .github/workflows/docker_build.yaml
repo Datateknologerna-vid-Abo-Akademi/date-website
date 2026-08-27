@@ -76,6 +76,11 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.tags.outputs.value }}
+          # Build-time collectstatic runs for the date variant (the default
+          # image). Association-specific images can pass their own
+          # PROJECT_NAME, which also sets the runtime default.
+          build-args: |
+            PROJECT_NAME=date
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

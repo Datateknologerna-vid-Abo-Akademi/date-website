@@ -107,6 +107,16 @@ into the migration Job so two pods cannot race.
    syncs the release.
 4. Verify: site responds over HTTPS, `/healthz/` and `/readyz/` are green.
 
+## Static files
+
+Static assets are collected during the image build with the build arg
+`PROJECT_NAME` (default `date`, matching the published image). The web pod
+therefore does not run `collectstatic` at startup: `collectstaticOnStartup`
+defaults to false. Associations that do not use the date-built image (e.g.
+kk, pulterit, biocum) keep `web.collectstaticOnStartup: true` in their
+values, or publish per-association images with their own `PROJECT_NAME`
+build arg and disable the flag.
+
 The operator repository holds:
 
 - the Argo CD Application per site (chart source + per-site values)

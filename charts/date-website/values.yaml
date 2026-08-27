@@ -174,7 +174,10 @@ web:
     maxRequests: 1000
     maxRequestsJitter: 100
   migrateOnStartup: false
-  collectstaticOnStartup: true
+  # False by default: images are built with collectstatic already run
+  # (PROJECT_NAME=date unless built per association). Enable only when the
+  # deployed image was not built with this variant's PROJECT_NAME.
+  collectstaticOnStartup: false
   resources: {}
   strategy:
     type: RollingUpdate
