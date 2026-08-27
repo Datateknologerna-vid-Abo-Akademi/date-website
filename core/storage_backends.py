@@ -7,9 +7,11 @@ from whitenoise.storage import CompressedManifestStaticFilesStorage
 
 
 class NonStrictManifestStaticFilesStorage(CompressedManifestStaticFilesStorage):
-    # Vendored assets (e.g. the jquery sourcemap reference) reference files
-    # that do not exist in the tree; fall back to the unhashed path instead of
-    # failing collectstatic.
+    # manifest_strict = False makes runtime {% static %} lookups fall back to
+    # computing a hashed name when the manifest has no entry, instead of
+    # raising. collectstatic still fails on references to files that do not
+    # exist (the vendored jquery sourcemap reference is fixed by shipping the
+    # map file), which is the desired strictness for deployments.
     manifest_strict = False
 
 
