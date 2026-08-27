@@ -5,13 +5,13 @@ import sys
 from django.test import SimpleTestCase
 
 EXPECTED_PREFIXES = {
-    "date": ["/news/", "/archive/", "/ctf/", "/alumni/", "/publications/"],
-    "kk": ["/lucia/", "/publications/", "/alumni/"],
-    "biocum": ["/publications/"],
-    "pulterit": ["/publications/", "/archive/"],
-    "sf": ["/klotterplanket/", "/publications/"],
-    "impuls": ["/alumni/", "/publications/"],
-    "demo": ["/news/"],
+    "date": ["news/", "archive/", "ctf/", "alumni/", "publications/"],
+    "kk": ["lucia/", "publications/", "alumni/"],
+    "biocum": ["publications/"],
+    "pulterit": ["publications/", "archive/"],
+    "sf": ["klotterplanket/", "publications/"],
+    "impuls": ["alumni/", "publications/"],
+    "demo": ["news/"],
 }
 
 CODE = """
@@ -20,8 +20,8 @@ import os
 import sys
 
 variant = sys.argv[1]
-os.environ.setdefault("PROJECT_NAME", variant)
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", f"core.settings.{variant}")
+os.environ["PROJECT_NAME"] = variant
+os.environ["DJANGO_SETTINGS_MODULE"] = f"core.settings.{variant}"
 import django
 
 django.setup()
