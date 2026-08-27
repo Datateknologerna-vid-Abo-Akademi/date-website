@@ -18,11 +18,11 @@ fi
 
 unalias date date-manage date-migrate date-makemigrations date-collectstatic \
     date-cleaninit date-stop date-start date-start-detached date-rebuild \
-    date-rebuild-detached date-createsuperuser \
+    date-rebuild-detached date-build date-createsuperuser \
     date-pull date-seed-gallery date-seed-gallery-clear date-all date-all-manage \
-    date-all-start date-all-stop date-all-cleaninit date-all-seed-gallery \
-    date-all-seed-gallery-clear date-backup date-restore date-sync-dev-env \
-    date-sync-prod-env date-setup 2>/dev/null || true
+    date-all-start date-all-rebuild date-all-stop date-all-cleaninit \
+    date-all-seed-gallery date-all-seed-gallery-clear date-backup date-restore \
+    date-sync-dev-env date-sync-prod-env date-setup 2>/dev/null || true
 
 # Resolve the checkout to operate on. This lets globally installed helpers
 # follow the current working directory while still having DATE_WEBSITE_DIR as a
@@ -130,6 +130,11 @@ date-rebuild-detached() {
     fi
 }
 
+# Build images without starting the stack.
+date-build() {
+    date build "$@"
+}
+
 date-createsuperuser() {
     date-manage createsuperuser "$@"
 }
@@ -157,6 +162,12 @@ date-all-manage() {
 }
 
 date-all-start() {
+    date-all up "$@"
+}
+
+# Rebuild dev-all images and start all containers; needed after dependency or
+# Dockerfile changes.
+date-all-rebuild() {
     date-all up --build "$@"
 }
 

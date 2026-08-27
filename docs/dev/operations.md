@@ -86,7 +86,7 @@ The database is exposed on host port `5433` to avoid conflicting with the regula
 The helpers use the nearest `date-website` checkout from your current directory, falling back to `DATE_WEBSITE_DIR` when you are outside a checkout.
 
 ```bash
-date-all-start       # build and start all containers
+date-all-start       # start all containers (rebuild with date-all-rebuild)
 date-all-stop        # tear everything down
 date-all-cleaninit   # reset to fixture data against the dev-all stack
 ```

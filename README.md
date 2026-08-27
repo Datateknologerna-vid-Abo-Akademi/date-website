@@ -104,8 +104,9 @@ The script defines the `date-*` aliases used throughout this README:
 
 | Command | Description |
 | --- | --- |
-| `date-start` / `date-start-detached` | Start the stack without rebuilding (foreground or detached). |
+| `date-start` / `date-start-detached` | Start the stack without forcing a rebuild (foreground or detached). |
 | `date-rebuild` / `date-rebuild-detached` | Rebuild images and start the stack; needed after `pyproject.toml`, `uv.lock`, or `Dockerfile` changes. |
+| `date-build` | Build images without starting the stack. |
 | `date-stop` | Shut down the Compose stack. |
 | `date-manage <cmd>` | Run `python manage.py <cmd>` inside the web container. |
 | `date-makemigrations`, `date-migrate`, `date-collectstatic`, `date-createsuperuser` | Convenience wrappers around common `manage.py` commands. |
