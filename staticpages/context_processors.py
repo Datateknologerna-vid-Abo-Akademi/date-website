@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.utils.translation import get_language
 
@@ -13,19 +14,27 @@ NAV_VERSION_KEY = "staticpages:navigation:version"
 
 def _nav_version():
     version = cache.get(NAV_VERSION_KEY)
-    if version is None:
-        cache.add(NAV_VERSION_KEY, 1)
-        return 1
-    return version
+    if version is not None:
+        return version
+    # Initialize atomically and without expiry: an expiring version key could
+    # reset to 1 while stale version-1 navigation entries still exist.
+    cache.add(NAV_VERSION_KEY, 1, timeout=None)
+    # Another process may have initialized a different value in the meantime.
+    return cache.get(NAV_VERSION_KEY) or 1
 
 
 def invalidate_nav_cache(**kwargs):
-    # Bump the version so keys built before the change are never read again.
-    # incr on a missing key (e.g. cache flush) raises; fall back to setting 2.
-    try:
-        cache.incr(NAV_VERSION_KEY)
-    except ValueError:
-        cache.set(NAV_VERSION_KEY, 2)
+    # Bump the version after the transaction commits, so another request can
+    # never populate the new version from pre-commit database state.
+    def _bump():
+        try:
+            cache.incr(NAV_VERSION_KEY)
+        except ValueError:
+            # Missing key (e.g. after a cache flush); start at 2 so no
+            # existing version-1 entry is reused.
+            cache.add(NAV_VERSION_KEY, 2, timeout=None)
+
+    transaction.on_commit(_bump)
 
 
 def _visible_urls_queryset(user=None):

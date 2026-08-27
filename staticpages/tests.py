@@ -6,6 +6,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
+from django.utils import translation
 
 from staticpages.context_processors import get_categories, get_urls, navigation
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
@@ -281,11 +282,21 @@ class NavigationProcessorTests(TestCase):
 
     def test_admin_edit_invalidates_the_cache(self):
         navigation(self.request)
-        self.url.title = "Front page"
-        self.url.save()
+        with self.captureOnCommitCallbacks(execute=True):
+            self.url.title = "Front page"
+            self.url.save()
         with self.assertNumQueries(3):
             context = navigation(self.request)
         self.assertEqual([u.title for u in context["urls"]], ["Front page"])
+
+    def test_cache_key_is_isolated_by_language(self):
+        navigation(self.request)
+        with self.captureOnCommitCallbacks(execute=True):
+            pass
+        # A different active language must not reuse the Swedish entry.
+        with translation.override("fi"):
+            with self.assertNumQueries(3):
+                navigation(self.request)
 
     def test_logged_in_users_are_not_cached(self):
         self.request.user = MagicMock()
