@@ -150,6 +150,39 @@ standby migrates — not at cutover. Therefore:
 - After rotating a secret, restart the site's deployments (pod checksum
   annotations do not see external secret changes).
 
+## Static on S3 (optional)
+
+Static files can be served from the same per-association public bucket as
+media (prefix `static`, CDN in front via the public custom domain) instead
+of the pod filesystem. Enable per site:
+
+```yaml
+media:
+  s3:
+    staticEnabled: true
+    staticCustomDomain: ""   # defaults to publicCustomDomain
+migrations:
+  job:
+    enabled: true            # required: the Job performs the upload
+```
+
+**Rollout ordering (critical):** the migration Job (sync wave 0, from
+#1113) uploads static before application pods start. Enabling
+`staticEnabled` and the upload must happen in the same release, so pods
+never render S3 URLs before the bucket is populated. Rollback: flip
+`staticEnabled` back; the image still carries the build-time static trees,
+so old pods serve from the pod filesystem again.
+
+Bucket requirements (one-time):
+
+- CORS: cross-origin fonts need `Access-Control-Allow-Origin: *` on the
+  bucket (or the CDN origin) for @font-face.
+- Cache: hashed filenames are immutable; set
+  `Cache-Control: public, max-age=31536000, immutable` on the `static`
+  prefix. Old hashes expire naturally, no CDN invalidation needed.
+- The CDN must serve the `static` prefix; the public custom domain already
+  serves `media/public`, so the same domain works.
+
 ## Backups
 
 - The cluster runs nightly restic backups to Backblaze B2, taken from the
