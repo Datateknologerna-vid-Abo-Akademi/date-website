@@ -16,10 +16,3 @@ RUN mkdir /code
 WORKDIR /code
 ADD . /code/
 RUN python manage.py compilemessages -l en -l fi -l sv
-# Collect static at build time so web pods start without running
-# collectstatic. The default image ships the date variant's assets;
-# build with --build-arg PROJECT_NAME=<variant> for association-specific
-# images (or enable collectstaticOnStartup in the chart for other variants).
-ARG PROJECT_NAME=date
-ENV PROJECT_NAME=$PROJECT_NAME
-RUN python manage.py collectstatic --noinput
