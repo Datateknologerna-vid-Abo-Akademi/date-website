@@ -128,7 +128,7 @@ The fixture reset flow uses `scripts/load_all_fixtures.sh` and `scripts/generate
 
 ## Tests & QA
 
-The CI and reviewer expectation is that `python manage.py test` passes before you open a pull request. The test settings mock external services (in-memory SQLite, in-memory Channels, locmem cache), so no Redis or PostgreSQL is required on the host or in the test container.
+The CI and reviewer expectation is that `python manage.py test` passes before you open a pull request. The test settings replace service-backed components with in-memory backends (SQLite, in-memory Channels, locmem cache), so no Redis or PostgreSQL is required on the host or in the test container.
 
 Two equivalent ways to run the suite:
 
@@ -345,7 +345,7 @@ To generate the translation file, called `django.po`
 is done by executing the following command **in the root directory of the project**
 
 ```bash
-$ django-admin makemessages -l en -l fi -l sv
+$ uv run django-admin makemessages -l en -l fi -l sv
 ```
 
 This creates/updates the `django.po` 
@@ -357,7 +357,7 @@ such as `Poedit`.
 To compile the translations to `django.mo`, use the following command
 
 ```bash
-$ django-admin compilemessages
+$ uv run django-admin compilemessages
 ``` 
 
 ### Django modeltranslations (translation of dynamic content)

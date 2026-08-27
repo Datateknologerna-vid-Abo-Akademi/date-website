@@ -52,12 +52,12 @@ Locale files live here:
 - `locale/en/LC_MESSAGES/djangojs.po`
 - `locale/fi/LC_MESSAGES/djangojs.po`
 
-Common workflow:
+Common workflow (run natively with `uv run` after `uv sync`):
 
 ```bash
-django-admin makemessages -l sv -l en -l fi
-django-admin makemessages -l sv -l en -l fi -d djangojs -i "**/vendor/**" -i "core/static/**"
-django-admin compilemessages
+uv run django-admin makemessages -l sv -l en -l fi
+uv run django-admin makemessages -l sv -l en -l fi -d djangojs -i "**/vendor/**" -i "core/static/**"
+uv run django-admin compilemessages
 ```
 
 What this does:
@@ -258,11 +258,11 @@ When you change translation behavior, cover at least these cases:
 ### Translating static strings
 
 1. Mark strings with Django translation helpers.
-2. Depending on what you are translating, run one or both of:
-    - `django-admin makemessages -l sv -l en -l fi -d djangojs -i "**/vendor/**" -i "core/static/**"` for JavaScript code
-    - `django-admin makemessages -l sv -l en -l fi` for Python code/templates
+2. Depending on what you are translating, run one or both of (via `uv run` for native execution):
+    - `uv run django-admin makemessages -l sv -l en -l fi -d djangojs -i "**/vendor/**" -i "core/static/**"` for JavaScript code
+    - `uv run django-admin makemessages -l sv -l en -l fi` for Python code/templates
 3. Edit the `.po` files.
-4. Run `django-admin compilemessages`.
+4. Run `uv run django-admin compilemessages`.
 5. Smoke-test pages in Swedish and at least one non-default language on the same unprefixed URL.
 
 ### Translating existing model content
