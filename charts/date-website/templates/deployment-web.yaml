@@ -68,7 +68,7 @@ spec:
               {{- if .Values.web.migrateOnStartup }}
               python /code/manage.py migrate --noinput
               {{- end }}
-              {{- if .Values.web.collectstaticOnStartup }}
+              {{- if and .Values.web.collectstaticOnStartup (not .Values.media.s3.staticEnabled) }}
               python /code/manage.py collectstatic --noinput
               {{- end }}
               exec gunicorn \
