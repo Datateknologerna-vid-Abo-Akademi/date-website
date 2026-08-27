@@ -174,10 +174,17 @@ web:
     maxRequests: 1000
     maxRequestsJitter: 100
   migrateOnStartup: false
-  # False by default: images are built with collectstatic already run
-  # (PROJECT_NAME=date unless built per association). Enable only when the
-  # deployed image was not built with this variant's PROJECT_NAME.
-  collectstaticOnStartup: false
+  # Collect static at pod startup. The published image is built with
+  # PROJECT_NAME=date and already contains date's collected static, so the
+  # date site (and any site using a per-association image) can set this to
+  # false. All other associations must keep it true.
+  collectstaticOnStartup: true
+  startupProbe:
+    # 90x2s = ~180s floor, measured after the 2026-08-07 worker-reboot
+    # incident. Tighten once migrate/collectstatic are off (date site: 30x2s).
+    failureThreshold: 90
+    periodSeconds: 2
+    timeoutSeconds: 5
   resources: {}
   strategy:
     type: RollingUpdate

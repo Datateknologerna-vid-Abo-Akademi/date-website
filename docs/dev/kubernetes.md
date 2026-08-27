@@ -111,11 +111,12 @@ into the migration Job so two pods cannot race.
 
 Static assets are collected during the image build with the build arg
 `PROJECT_NAME` (default `date`, matching the published image). The web pod
-therefore does not run `collectstatic` at startup: `collectstaticOnStartup`
-defaults to false. Associations that do not use the date-built image (e.g.
-kk, pulterit, biocum) keep `web.collectstaticOnStartup: true` in their
-values, or publish per-association images with their own `PROJECT_NAME`
-build arg and disable the flag.
+startup collection (`web.collectstaticOnStartup`) therefore stays enabled
+by default: associations whose assets differ from the date-built image
+(kk, pulterit, biocum, sf, ...) must collect their own static. Sites that
+use the date-built image (or publish per-association images with their own
+`PROJECT_NAME` build arg) can set the flag to false and skip startup
+collection entirely.
 
 The operator repository holds:
 

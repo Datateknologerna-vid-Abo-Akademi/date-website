@@ -12,6 +12,10 @@ web:
   # or another single-run migration step.
   replicaCount: 1
   migrateOnStartup: true
+  # The published image is built with PROJECT_NAME=date and ships collected
+  # static, so the date site skips startup collection. Tighten
+  # web.startupProbe after migrateOnStartup is disabled.
+  collectstaticOnStartup: false
   resources:
     requests:
       cpu: 100m
