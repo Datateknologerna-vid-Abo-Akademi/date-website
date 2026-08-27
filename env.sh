@@ -216,5 +216,8 @@ date-setup() {
 date-test() {
     local project_dir
     project_dir="$(_date_website_project_dir)" || return
-    docker compose --project-directory "$project_dir" run -e TEST=1 web /bin/bash -c './wait-for-postgres.sh db:5432 && python /code/manage.py test "$@"' -- "$@"
+    # Test settings use in-memory SQLite/Channels/cache, so skip database and
+    # Redis service startup entirely. Use `uv run python manage.py test` for an
+    # even faster native loop; this alias is the container parity path.
+    docker compose --project-directory "$project_dir" run --rm --no-deps -e TEST=1 web python /code/manage.py test "$@"
 }
