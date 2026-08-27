@@ -22,4 +22,4 @@ RUN python manage.py compilemessages -l en -l fi -l sv
 # images (or enable collectstaticOnStartup in the chart for other variants).
 ARG PROJECT_NAME=date
 ENV PROJECT_NAME=$PROJECT_NAME
-RUN python manage.py collectstatic --noinput
+RUN python manage.py collectstatic --noinput --clear

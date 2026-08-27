@@ -69,7 +69,9 @@ spec:
               python /code/manage.py migrate --noinput
               {{- end }}
               {{- if .Values.web.collectstaticOnStartup }}
-              python /code/manage.py collectstatic --noinput
+              # --clear: the image may contain date-built static, so wipe
+              # STATIC_ROOT before collecting this variant's assets.
+              python /code/manage.py collectstatic --noinput --clear
               {{- end }}
               exec gunicorn \
                 -w {{ .Values.web.gunicorn.workers }} \
