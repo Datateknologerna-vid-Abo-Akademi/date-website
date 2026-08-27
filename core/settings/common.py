@@ -340,6 +340,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 PROJECT_NAME = os.environ.get("PROJECT_NAME", "date")
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# The runtime image is built with each association's static collected into
+# /code/static-collected/<PROJECT_NAME>; pick that tree when present so every
+# variant serves build-time static with no startup collection. Local
+# development (no such directory) falls back to the source tree default.
+STATIC_ROOT = env_alias(
+    'STATIC_ROOT',
+    default=(
+        f"/code/static-collected/{PROJECT_NAME}"
+        if os.path.isdir(f"/code/static-collected/{PROJECT_NAME}")
+        else os.path.join(PROJECT_DIR, 'static')
+    ),
+)
+
 # Cloudflare captcha config
 TURNSTILE_SECRET_KEY = env("CF_TURNSTILE_SECRET_KEY", str, "")
 CAPTCHA_SITE_KEY = env("CF_TURNSTILE_SITE_KEY", str, "")
@@ -450,7 +463,6 @@ else:
     PUBLIC_MEDIA_LOCATION = 'media/public'
     AWS_STORAGE_BUCKET_NAME = "media"
 
-STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
 STATIC_URL = '/static/'
 
 LOGOUT_REDIRECT_URL = 'index'

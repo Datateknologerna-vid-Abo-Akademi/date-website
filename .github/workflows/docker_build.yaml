@@ -76,9 +76,10 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.tags.outputs.value }}
-          # Build-time collectstatic runs for the date variant (the default
-          # image). Association-specific images can pass their own
-          # PROJECT_NAME, which also sets the runtime default.
+          # The image collects static for every association at build time
+          # (one tree per variant under /code/static-collected). PROJECT_NAME
+          # sets the runtime default only; the chart/compose always pass the
+          # site's variant explicitly.
           build-args: |
             PROJECT_NAME=date
           cache-from: type=gha

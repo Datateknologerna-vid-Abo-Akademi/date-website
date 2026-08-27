@@ -16,10 +16,16 @@ RUN mkdir /code
 WORKDIR /code
 ADD . /code/
 RUN python manage.py compilemessages -l en -l fi -l sv
-# Collect static at build time so web pods start without running
-# collectstatic. The default image ships the date variant's assets;
-# build with --build-arg PROJECT_NAME=<variant> for association-specific
-# images (or enable collectstaticOnStartup in the chart for other variants).
+# Collect static at build time for every association, each into its own tree
+# under /code/static-collected/<variant>. Each variant's STATICFILES_DIRS
+# produce variant-specific collected output (e.g. date/css/homepage.css
+# differs per association), so a single merged tree would not work; separate
+# roots keep one generic image that serves every variant without startup
+# collection. Settings pick the tree matching the runtime PROJECT_NAME.
 ARG PROJECT_NAME=date
 ENV PROJECT_NAME=$PROJECT_NAME
-RUN python manage.py collectstatic --noinput --clear
+RUN for variant in date kk pulterit biocum sf impuls demo; do \
+      echo "Collecting static for ${variant}"; \
+      PROJECT_NAME="${variant}" STATIC_ROOT="/code/static-collected/${variant}" \
+        python manage.py collectstatic --noinput --clear || exit 1; \
+    done

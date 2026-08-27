@@ -109,21 +109,23 @@ into the migration Job so two pods cannot race.
 
 ## Static files
 
-Static assets are collected during the image build with the build arg
-`PROJECT_NAME` (default `date`, matching the published image). The web pod
-startup collection (`web.collectstaticOnStartup`) therefore stays enabled
-by default: associations whose assets differ from the date-built image
-(kk, pulterit, biocum, sf, ...) collect their own static at pod start with
-`--clear`. Sites that use the date-built image can set the flag to false
-and skip startup collection entirely.
+Every association's static is collected into the image at build time, one
+tree per variant under `/code/static-collected/<PROJECT_NAME>`. Settings
+pick the tree matching the runtime `PROJECT_NAME`, so every site serves
+build-time static and no web pod runs `collectstatic` at startup
+(`web.collectstaticOnStartup` defaults to false; keep it only for images
+built before this layout).
 
-Per-association images (one build arg per site) are deliberately not the
-plan: they multiply CI builds and registry storage for a few seconds of
-startup work, and they couple the image to the variant. If startup
-collection ever becomes a real cost for non-date sites, serve static from
-S3/CDN with per-association prefixes instead (`StaticStorage` in
-`core/storage_backends.py`), which removes collection from every pod for
-every variant while keeping one generic image.
+Separate trees are required because variants define the same logical paths
+with different content (e.g. `date/css/homepage.css` differs per
+association); a single merged collection would silently overwrite assets.
+This keeps one generic image for all variants: no per-association images,
+no startup collection, no way for an image and its values to disagree on
+the variant.
+
+If static-on-S3 (see issue) lands, collection moves from the image build to
+a release-time upload into the existing per-association media bucket, and
+pods stop carrying static entirely.
 
 The operator repository holds:
 
