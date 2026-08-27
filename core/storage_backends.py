@@ -3,6 +3,14 @@ from urllib.parse import urlsplit, urlunsplit
 from django.conf import settings
 from storages.backends.s3boto3 import S3Boto3Storage
 from storages.utils import clean_name
+from whitenoise.storage import CompressedManifestStaticFilesStorage
+
+
+class NonStrictManifestStaticFilesStorage(CompressedManifestStaticFilesStorage):
+    # Vendored assets (e.g. the jquery sourcemap reference) reference files
+    # that do not exist in the tree; fall back to the unhashed path instead of
+    # failing collectstatic.
+    manifest_strict = False
 
 
 class StaticStorage(S3Boto3Storage):

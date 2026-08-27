@@ -15,6 +15,14 @@ DATABASES = {
     }
 }
 
+# No collected static in tests: resolve {% static %} to plain paths.
+STORAGES = {
+    **STORAGES,
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
