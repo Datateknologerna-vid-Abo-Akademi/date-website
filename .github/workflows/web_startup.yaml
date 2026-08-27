@@ -118,13 +118,14 @@ jobs:
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           docker-compose run --rm --no-deps web python scripts/validate_translations.py
           docker-compose run --rm --no-deps web python manage.py compilemessages
-          docker-compose run -e TEST=1 web /bin/bash -c './wait-for-postgres.sh db:5432 && python /code/manage.py test'
+          # Test settings use in-memory SQLite/Channels/cache, so skip service startup.
+          docker-compose run --rm --no-deps -e TEST=1 web python /code/manage.py test
 
       - name: Run tests with Unfold enabled
         run: |
           set -euo pipefail
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
-          docker-compose run -e TEST=1 -e USE_UNFOLD=True web /bin/bash -c './wait-for-postgres.sh db:5432 && python /code/manage.py test'
+          docker-compose run --rm --no-deps -e TEST=1 -e USE_UNFOLD=True web python /code/manage.py test
 
       - name: Build and run Docker Compose
         run: |

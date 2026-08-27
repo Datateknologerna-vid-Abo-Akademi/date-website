@@ -10,7 +10,7 @@ DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.
 - Docker 24+ plus the Docker Compose plugin (`docker compose`). Follow Docker's official guides for [Ubuntu](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) or [Debian](https://docs.docker.com/engine/install/debian/#install-using-the-repository) to install both the engine and the Compose plugin.
 - Bash-compatible shell (the helper script `env.sh` defines aliases such as `date-start`)
 - Access to `docker` without sudo (add yourself to the `docker` group if needed)
-- Local `django-admin` (e.g., via `pipx install django`) when editing translations outside the container
+- [uv](https://docs.astral.sh/uv/) for native test, lint, and translation commands outside Docker (install it via `pipx install uv` or the standalone installer). Run `uv sync` once after cloning, then `uv run python manage.py test` and `uv run django-admin makemessages ...` work without containers.
 
 > Windows developers should run the project inside WSL 2 to match the expected Linux tooling: sourcing `env.sh`, running Bash scripts, and keeping LF line endings all work reliably there. Follow Microsoft's [WSL installation guide](https://learn.microsoft.com/windows/wsl/install) first, then install [Docker Desktop](https://www.docker.com/products/docker-desktop/) (which automatically connects Docker to your default WSL distro).
 
@@ -128,16 +128,27 @@ The fixture reset flow uses `scripts/load_all_fixtures.sh` and `scripts/generate
 
 ## Tests & QA
 
-The CI and reviewer expectation is that `python manage.py test` (or the `date-test` alias) passes before you open a pull request. The test settings mock external services, so no Redis or PostgreSQL on the host is required.
+The CI and reviewer expectation is that `python manage.py test` passes before you open a pull request. The test settings mock external services (in-memory SQLite, in-memory Channels, locmem cache), so no Redis or PostgreSQL is required on the host or in the test container.
+
+Two equivalent ways to run the suite:
+
+```bash
+uv sync                       # install dependencies once (native, no Docker)
+uv run python manage.py test  # fast native loop, no containers started
+date-test                     # container parity: same suite inside Docker
+```
 
 Examples:
 
 ```bash
 date-test                   # run the full suite inside Docker
 date-test members.tests     # run a specific module
+uv run python manage.py test events.tests   # specific module, native
 date-manage check           # static checks (migrations, settings sanity)
 uv run python scripts/check_project_variants.py
 ```
+
+The `date-test` alias runs with `--no-deps`, so it does not start the database or Redis services; `date-test` is useful as a parity check when native `uv` dependencies behave differently from the container build.
 
 Manually verify user-facing flows (forms, background jobs, Channels endpoints) when implementing a feature; a lot of work in this repo still benefits from a quick human smoke test after the automated checks pass.
 
