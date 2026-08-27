@@ -80,25 +80,28 @@ spec:
             - secretRef:
                 name: {{ include "date-website.secretName" . }}
           # startupProbe gates liveness during slow starts (worker boot +
-          # Django import can exceed the liveness initialDelay).
+          # Django import + broker registration). The inspect-ping is
+          # expensive (full Django import per attempt) but runs only until
+          # the worker is ready, then stops.
           startupProbe:
             exec:
               command:
                 - /bin/bash
                 - -c
                 - celery -A core inspect ping -d "celery@${HOSTNAME}" | grep -q OK
-            failureThreshold: 30
-            periodSeconds: 2
-            timeoutSeconds: 30
-          # Liveness via `celery inspect ping`: a real worker-response check,
-          # but each invocation imports the whole Django app (~3s user CPU on
-          # prod). Keep the cadence coarse (default 300s) — see values.yaml.
+            failureThreshold: {{ .Values.celery.startupProbe.failureThreshold }}
+            periodSeconds: {{ .Values.celery.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.celery.startupProbe.timeoutSeconds }}
+          # Liveness is a cheap process check (no Django import, no broker
+          # dependency): a broker outage must not restart the worker, since a
+          # restart cannot repair the broker. A wedged-but-alive worker is
+          # surfaced by queue-depth monitoring instead.
           livenessProbe:
             exec:
               command:
-                - /bin/bash
+                - /bin/sh
                 - -c
-                - celery -A core inspect ping -d "celery@${HOSTNAME}" | grep -q OK
+                - kill -0 1
             initialDelaySeconds: 10
             periodSeconds: {{ .Values.celery.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.celery.livenessProbe.timeoutSeconds }}

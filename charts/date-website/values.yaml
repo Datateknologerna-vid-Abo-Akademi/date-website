@@ -197,10 +197,17 @@ celery:
   replicaCount: 1
   concurrency: 2
   logLevel: info
+  # Expensive broker+worker check (full Django import); runs only during
+  # startup until the worker registers.
+  startupProbe:
+    periodSeconds: 10
+    timeoutSeconds: 30
+    failureThreshold: 30
+  # Cheap process check; a broker outage must not restart the worker.
   livenessProbe:
     initialDelaySeconds: 60
     periodSeconds: 300
-    timeoutSeconds: 30
+    timeoutSeconds: 5
     failureThreshold: 3
   resources: {}
   strategy:
