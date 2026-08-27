@@ -128,6 +128,9 @@ class StaticPageViewTests(TestCase):
 class StaticUrlTests(TestCase):
     def setUp(self):
         self.category = StaticPageNav.objects.create(category_name="Menu")
+        # The navigation cache is process-wide; isolate tests from entries
+        # created by earlier tests in the same run.
+        cache.clear()
 
     def test_blank_leaf_url_is_allowed_for_draft_menu_items(self):
         nav_url = StaticUrl(title="Empty", category=self.category, url="")

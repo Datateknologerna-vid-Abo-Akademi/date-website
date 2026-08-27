@@ -7,7 +7,7 @@
 
 ## Views & Routing
 - `StaticPageView` (`staticpages/views.py`) is the only view. It loads the page by slug, checks `members_only`, and either renders `staticpages/staticpage.html` or redirects unauthenticated users to `/members/login`.
-- Navigation menus are built in templates using `StaticPageNav` + `StaticUrl`; `staticpages.context_processors` injects both querysets into every template.
+- Navigation menus are built in templates using `StaticPageNav` + `StaticUrl`; the merged `staticpages.context_processors.navigation` injects `categories` and `urls` into every template in a single load (3 queries). Anonymous navigation is cached per project/language/archive-mode and invalidated on `StaticUrl`/`StaticPageNav` saves or deletes; development uses the dummy cache, so caching is off there. The legacy `get_categories`/`get_urls` names remain as thin wrappers.
 - Language-aware internal links should go through the `localized_url` template filter (`staticpages/templatetags/localized_urls.py`) so stored URLs keep the current locale prefix when language features are enabled.
 - Routes are wrapped by the shared localized URL builder in `core/urls/common.py`, so static pages can live under language prefixes without duplicating route declarations.
 
