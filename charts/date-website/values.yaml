@@ -211,9 +211,17 @@ celery:
 migrations:
   job:
     enabled: false
+    # Helm hook lifecycle (post-install,post-upgrade), or empty for a plain
+    # Job tracked by GitOps. Plain Jobs run under Argo sync waves, which
+    # guarantees migration completion before application pods start.
     hook: post-install,post-upgrade
     hookDeletePolicy: before-hook-creation,hook-succeeded
     backoffLimit: 3
+    # Additional annotations merged onto the Job (e.g.
+    # argocd.argoproj.io/sync-wave: "0").
+    annotations: {}
+    activeDeadlineSeconds: 600
+    ttlSecondsAfterFinished: 3600
     resources: {}
 ingress:
   enabled: true

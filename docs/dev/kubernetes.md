@@ -67,9 +67,22 @@ The chart deploys:
 - Traefik-compatible `Ingress`, or Gateway API resources
 - optional migration Job
 
-The web deployment runs `migrateOnStartup` in the production values. If the
-web replica count is ever raised above 1, move migrations out of startup
-into the migration Job so two pods cannot race.
+Migrations run as a single migration Job before application pods start.
+Two modes:
+
+- **Helm hook** (default): the Job uses `post-install,post-upgrade` hooks.
+  This works for plain `helm install/upgrade`, but hook timing under
+  GitOps reconciliation is less predictable.
+- **Plain Job + Argo sync waves** (production values): set
+  `migrations.job.hook: ""` and add `argocd.argoproj.io/sync-wave: "0"` via
+  `migrations.job.annotations`, with later waves on the web/asgi/celery
+  deployments. Argo then runs migrations to completion before rolling the
+  application, and the Job is a normal tracked resource.
+
+Never enable `web.migrateOnStartup` in production: it couples schema
+mutation to pod readiness, re-runs on every pod restart, and races when the
+replica count is above one. Keep expand-contract migration rules so old and
+new pods can overlap during rollouts.
 
 ## How production actually runs (summary)
 
