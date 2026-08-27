@@ -340,6 +340,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 PROJECT_NAME = os.environ.get("PROJECT_NAME", "date")
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Association capabilities. Prefer these over direct PROJECT_NAME checks in
+# application code so a new association can enable behavior via settings.
+APRIL_HOMEPAGE_ENABLED = False
+REGISTRATION_TERMS_ENABLED = False
+EQUALITY_PLAN_ENABLED = False
+KK_EVENT_TEMPLATES_ENABLED = False
+
 # Cloudflare captcha config
 TURNSTILE_SECRET_KEY = env("CF_TURNSTILE_SECRET_KEY", str, "")
 CAPTCHA_SITE_KEY = env("CF_TURNSTILE_SITE_KEY", str, "")
