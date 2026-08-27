@@ -17,7 +17,8 @@ if [ -n "${1:-}" ]; then
 fi
 
 unalias date date-manage date-migrate date-makemigrations date-collectstatic \
-    date-cleaninit date-stop date-start date-start-detached date-createsuperuser \
+    date-cleaninit date-stop date-start date-start-detached date-rebuild \
+    date-rebuild-detached date-createsuperuser \
     date-pull date-seed-gallery date-seed-gallery-clear date-all date-all-manage \
     date-all-start date-all-stop date-all-cleaninit date-all-seed-gallery \
     date-all-seed-gallery-clear date-backup date-restore date-sync-dev-env \
@@ -99,11 +100,29 @@ date-start() {
     if _date_is_prod_stack; then
         date up --pull always "$@"
     else
-        date up --build "$@"
+        date up "$@"
     fi
 }
 
 date-start-detached() {
+    if _date_is_prod_stack; then
+        date up -d --pull always "$@"
+    else
+        date up -d "$@"
+    fi
+}
+
+# Rebuild images and start the stack. Needed after pyproject.toml, uv.lock,
+# or Dockerfile changes; the source bind mount covers ordinary code edits.
+date-rebuild() {
+    if _date_is_prod_stack; then
+        date up --pull always "$@"
+    else
+        date up --build "$@"
+    fi
+}
+
+date-rebuild-detached() {
     if _date_is_prod_stack; then
         date up -d --pull always "$@"
     else

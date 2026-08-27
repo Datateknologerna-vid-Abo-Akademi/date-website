@@ -22,7 +22,7 @@ cd date-website
 git checkout main
 cp .env.example .env            # adjust passwords, ports, S3, etc.
 source env.sh                   # registers helper aliases
-date-start-detached             # builds containers, runs migrations, collects static files
+date-start-detached             # starts the stack (use date-rebuild after dependency changes)
 date-createsuperuser            # creates your admin account
 open http://localhost:8000      # admin lives at /admin
 ```
@@ -104,7 +104,8 @@ The script defines the `date-*` aliases used throughout this README:
 
 | Command | Description |
 | --- | --- |
-| `date-start` / `date-start-detached` | Pull images, rebuild, apply migrations, collect static files, and start the stack (foreground or detached). |
+| `date-start` / `date-start-detached` | Start the stack without rebuilding (foreground or detached). |
+| `date-rebuild` / `date-rebuild-detached` | Rebuild images and start the stack; needed after `pyproject.toml`, `uv.lock`, or `Dockerfile` changes. |
 | `date-stop` | Shut down the Compose stack. |
 | `date-manage <cmd>` | Run `python manage.py <cmd>` inside the web container. |
 | `date-makemigrations`, `date-migrate`, `date-collectstatic`, `date-createsuperuser` | Convenience wrappers around common `manage.py` commands. |
