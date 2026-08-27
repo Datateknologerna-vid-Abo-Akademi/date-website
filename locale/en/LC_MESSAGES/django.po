@@ -2111,21 +2111,19 @@ msgid "Rapportera trakasserier"
 msgstr "Report harassment"
 
 #: templates/impuls/social/harassment_form.html:3
-#, python-format
 msgid ""
 "Du kan rapportera trakasserier antingen anonymt eller ange din "
 "kontaktinformation. Vi tar alla former av trakasserier på allvar och kommer "
 "att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för "
-"alla medlemmar. %(association_name)ss trygghetspersoner behandlar alla "
-"rapporteringar av trakasserier och tar kontakt till %(association_short)ss "
-"styrelse och/eller ÅAS trakasseriombud om det så önskas."
+"alla medlemmar. Impuls trygghetspersoner behandlar alla rapporteringar av "
+"trakasserier och tar kontakt till Impuls styrelse och/eller ÅAS "
+"trakasseriombud om det så önskas."
 msgstr ""
 "You can report harassment anonymously or by providing your contact "
 "information. We take all forms of harassment seriously and will act to "
-"maintain a safe and respectful environment for all members. "
-"%(association_name)ss safety contacts handle all harassment reports and can "
-"contact the %(association_short)ss board and/or the student union harassment "
-"contacts if requested."
+"maintain a safe and respectful environment for all members. Impuls safety "
+"contacts handle all harassment reports and can contact Impuls board and/or "
+"the student union harassment contacts if requested."
 
 #: templates/common/social/harassment_form.html:26
 msgid "Ange din Email om du vill bli kontaktad"
@@ -2257,7 +2255,7 @@ msgstr ""
 
 #: templates/impuls/date/components/extras.html:6
 msgid ""
-"Om du upplever trakasserier i samband med Impulss verksamhet, vänligen"
+"Om du upplever trakasserier i samband med Impuls verksamhet, vänligen"
 msgstr ""
 "If you encounter harassment during the activity of Impuls, please"
 
