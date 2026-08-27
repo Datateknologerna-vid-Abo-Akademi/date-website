@@ -1,22 +1,6 @@
 from .common import *  # noqa
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            'templates/sf',
-            'templates/date',
-            *COMMON_TEMPLATE_DIRS,
-        ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                *COMMON_CONTEXT_PROCESSORS,
-                # Add project context processors here
-            ],
-        },
-    },
-]
+TEMPLATES = build_templates('sf', parent_variants=('date',))
 
 INSTALLED_APPS = get_installed_apps(
     [
@@ -79,11 +63,7 @@ SF_ROLE_PERMISSION_SCOPES = {
 }
 
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/sf'),
-    os.path.join(BASE_DIR, 'static/common'),
-]
-
+STATICFILES_DIRS = build_static_dirs('sf')
 
 CONTENT_VARIABLES = {
     "SITE_URL": "https://example.com",
