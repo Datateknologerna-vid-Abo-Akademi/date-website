@@ -56,9 +56,10 @@ services:
     restart: "no"
     environment:
       PGPASSWORD: ${DATE_DB_PASSWORD}
-    command: /bin/bash -c "for db in date kk biocum pulterit sf impuls demo; do psql -h db -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname='${db}'\" | grep -q 1 || createdb -h db -U postgres ${db}; done"
+    command: /bin/bash -c "set -e; until pg_isready -h db -U postgres -q; do sleep 1; done; for db in date kk biocum pulterit sf impuls demo; do psql -h db -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname='$${db}'\" | grep -q 1 || createdb -h db -U postgres $${db}; done"
     depends_on:
-      - db
+      db:
+        condition: service_started
 
   pgadmin:
     image: dpage/pgadmin4:latest

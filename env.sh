@@ -133,11 +133,29 @@ date-all() {
     docker compose --project-directory "$project_dir" -f "$project_dir/docker-compose.dev-all.yml" "$@"
 }
 
+_date_all_variants() {
+    printf '%s\n' date kk biocum pulterit sf impuls demo
+}
+
+_date_all_service_for() {
+    # The DaTe service is named 'web' (clean_init.sh targets it).
+    if [ "$1" = "date" ]; then
+        printf '%s\n' web
+    else
+        printf 'web-%s\n' "$1"
+    fi
+}
+
 # Manage a single association's web container: date-all-manage kk <cmd>
 date-all-manage() {
     local variant="$1"
+    [ $# -ge 2 ] || { echo "usage: date-all-manage <variant> <cmd> [args...]"; return 1; }
+    case " $(_date_all_variants) " in
+        *" $variant "*) ;;
+        *) echo "unknown variant: $variant (supported: $(_date_all_variants))"; return 1 ;;
+    esac
     shift
-    date-all run --profile "$variant" "web-${variant}" python /code/manage.py "$@"
+    date-all --profile "$variant" run "$(_date_all_service_for "$variant")" python /code/manage.py "$@"
 }
 
 date-all-start() {
@@ -147,6 +165,11 @@ date-all-start() {
 # Start one association: date-all-start-variant kk
 date-all-start-variant() {
     local variant="$1"
+    [ $# -ge 1 ] || { echo "usage: date-all-start-variant <variant>"; return 1; }
+    case " $(_date_all_variants) " in
+        *" $variant "*) ;;
+        *) echo "unknown variant: $variant (supported: $(_date_all_variants))"; return 1 ;;
+    esac
     shift
     date-all --profile "$variant" up --build "$@"
 }

@@ -51,6 +51,13 @@ read_compose_file_from_env() {
 
 COMPOSE_FILE_PATH="${COMPOSE_FILE_PATH:-$(read_compose_file_from_env)}"
 COMPOSE_FILE_PATH="${COMPOSE_FILE_PATH:-docker-compose.yml}"
+
+# The dev-all stack gives each variant its own database; the 'web' service
+# (date) uses DB_DATABASE=date there. The main stack keeps 'postgres'.
+DATABASE="${DATABASE:-postgres}"
+if [[ "$COMPOSE_FILE_PATH" == *"dev-all"* ]]; then
+    DATABASE="date"
+fi
 if [[ "$COMPOSE_FILE_PATH" = /* ]]; then
     COMPOSE_PATH="$COMPOSE_FILE_PATH"
 else
@@ -111,12 +118,15 @@ docker_compose up -d db
 
 wait_for_db
 
-echo "Recreating database..."
-docker_compose exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS temp;" 2>/dev/null || true
-docker_compose exec -T db psql -U postgres -c "CREATE DATABASE temp;"
-docker_compose exec -T db psql -U postgres -d temp -c "DROP DATABASE postgres;"
-docker_compose exec -T db psql -U postgres -d temp -c "CREATE DATABASE postgres;"
-docker_compose exec -T db psql -U postgres -c "DROP DATABASE temp;"
+echo "Recreating database ${DATABASE}..."
+docker_compose exec -T db psql -U postgres -v ON_ERROR_STOP=1 -v dbname="$DATABASE" <<'SQL'
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'dbname' AND pid <> pg_backend_pid();
+DROP DATABASE IF EXISTS temp;
+CREATE DATABASE temp;
+DROP DATABASE :'dbname';
+CREATE DATABASE :'dbname';
+DROP DATABASE temp;
+SQL
 
 echo "Database cleared."
 

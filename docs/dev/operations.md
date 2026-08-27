@@ -86,20 +86,33 @@ The database is exposed on host port `5433` to avoid conflicting with the regula
 The helpers use the nearest `date-website` checkout from your current directory, falling back to `DATE_WEBSITE_DIR` when you are outside a checkout.
 
 ```bash
-date-all-start       # build and start all containers
-date-all-stop        # tear everything down
-date-all-cleaninit   # reset to fixture data against the dev-all stack
+date-all-start              # build and start all containers (--profile all)
+date-all-start-variant kk   # start a single association
+date-all-manage kk <cmd>    # manage one association's web container
+date-all-stop               # tear everything down
+date-all-cleaninit          # reset to fixture data against the dev-all stack
 ```
 
 #### How it works
 
-An `init` container runs once on startup — it waits for PostgreSQL, then runs `migrate`, `collectstatic`, and `compilemessages` using `PROJECT_NAME=date`. All web containers wait for `init` to complete before accepting requests.
+Each association has its own Compose profile plus the `all` profile, its
+own PostgreSQL database (created by the `db-init` service), and its own
+Redis logical database, so variants never share rows or cache/channels
+keys. An `init` container runs once on startup: it waits for PostgreSQL,
+migrates every variant against its own database (association-only apps
+like `lucia` and `klotterplanket` included), and compiles translations.
+All web containers wait for `init` to complete before accepting requests.
+`collectstatic` is skipped: debug mode serves static from
+`STATICFILES_DIRS` via the WhiteNoise finder.
 
-The `web` service (port 8002) is named `web` specifically so `clean_init.sh` can target it when running `date-all-cleaninit`.
+The `web` service (port 8002, the DaTe variant) is named `web` specifically
+so `clean_init.sh` can target it when running `date-all-cleaninit`; it
+resets the `date` database for that stack.
 
 #### Notes
 
-- Static files are collected once by `init` at startup. If you change CSS or JS, restart with `date-all-start` to pick up the changes.
+- Static files are served from source, so CSS/JS edits are picked up without a restart.
+- After pulling code with new migrations, run `date-all-manage <variant> migrate` or recreate the stack, since `init` does not re-run once it has succeeded.
 - The `date-all-cleaninit` alias passes `COMPOSE_FILE_PATH=docker-compose.dev-all.yml` directly to `clean_init.sh` so it targets the dev-all stack.
 
 ## Backups and Database Upgrades
