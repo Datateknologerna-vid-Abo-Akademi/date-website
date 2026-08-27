@@ -140,6 +140,21 @@ standby migrates — not at cutover. Therefore:
   after the standby migrates and aborts + restores the dump if the live site
   broke, but it cannot make a destructive migration zero-downtime.
 
+## Graceful termination
+
+Each component gets a deliberate drain policy:
+
+- **web** (`terminationGracePeriodSeconds: 130`, `preStopSleepSeconds: 5`):
+  the preStop sleep lets the ingress remove the pod from rotation while it
+  keeps serving, then gunicorn's graceful timeout (120s) finishes in-flight
+  requests before SIGTERM force-kills.
+- **asgi** (60s grace, 5s preStop): stops accepting new WebSocket
+  connections, then drains in-flight ones within the grace period.
+- **celery** (120s grace): celery's warm shutdown finishes active tasks on
+  SIGTERM; the grace period must exceed the longest task (email/alumni
+  work). The grace period is the floor; a task that exceeds it is
+  interrupted.
+
 ## Secrets
 
 - Production secrets live in Kubernetes secrets created out-of-band; site

@@ -174,6 +174,11 @@ web:
     maxRequests: 1000
     maxRequestsJitter: 100
   migrateOnStartup: false
+  # Graceful shutdown: preStop sleep lets the ingress remove the pod from
+  # rotation while it keeps serving; the grace period covers in-flight
+  # requests after SIGTERM (gunicorn graceful timeout is 120s).
+  terminationGracePeriodSeconds: 130
+  preStopSleepSeconds: 5
   collectstaticOnStartup: true
   resources: {}
   strategy:
@@ -187,6 +192,10 @@ asgi:
     type: ClusterIP
     port: 8000
   wsPath: /ws
+  # WebSockets need a deliberate drain: preStop sleep to stop new
+  # connections, grace period to finish in-flight ones.
+  terminationGracePeriodSeconds: 60
+  preStopSleepSeconds: 5
   resources: {}
   strategy:
     type: RollingUpdate
@@ -197,6 +206,9 @@ celery:
   replicaCount: 1
   concurrency: 2
   logLevel: info
+  # Warm shutdown: celery finishes active tasks on SIGTERM; the grace period
+  # must exceed the longest task. 120s covers the email/alumni tasks.
+  terminationGracePeriodSeconds: 120
   livenessProbe:
     initialDelaySeconds: 60
     periodSeconds: 300

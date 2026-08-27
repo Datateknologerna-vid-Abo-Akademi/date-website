@@ -236,6 +236,14 @@
           "type": "integer",
           "minimum": 0
         },
+        "terminationGracePeriodSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "preStopSleepSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
         "strategy": {
           "type": "object"
         }
@@ -245,6 +253,14 @@
       "type": "object",
       "properties": {
         "replicaCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "terminationGracePeriodSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "preStopSleepSeconds": {
           "type": "integer",
           "minimum": 0
         },
@@ -263,6 +279,10 @@
         "replicaCount": {
           "type": "integer",
           "minimum": 0
+        },
+        "terminationGracePeriodSeconds": {
+          "type": "integer",
+          "minimum": 1
         },
         "concurrency": {
           "type": "integer",
