@@ -68,6 +68,10 @@ class Command(BaseCommand):
                         f"static override (differs from common): {rel} in {sorted(owners)}"
                     )
                 )
+            elif tree == "static":
+                self.stdout.write(
+                    self.style.WARNING(f"static path differs between variants: {rel} in {sorted(owners)}")
+                )
             else:
                 self.stdout.write(
                     self.style.WARNING(f"template defined in multiple variants: {rel} in {sorted(owners)}")

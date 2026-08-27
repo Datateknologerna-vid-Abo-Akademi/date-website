@@ -17,7 +17,13 @@ class StaticOverridesReportTests(SimpleTestCase):
         out = StringIO()
         call_command("static_overrides_report", "--tree", "static", stdout=out)
         result = out.getvalue()
-        self.assertNotIn("date-root.css", result)
+        self.assertNotIn("vanilla-calendar.min.css", result)
+
+    def test_variant_only_static_files_are_labeled_as_static(self):
+        out = StringIO()
+        call_command("static_overrides_report", "--tree", "static", stdout=out)
+        result = out.getvalue()
+        self.assertIn("static path differs between variants: date/css/homepage.css", result)
 
     def test_template_multi_variant_definitions_are_reported(self):
         out = StringIO()
