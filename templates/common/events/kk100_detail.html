@@ -19,7 +19,7 @@
             background:transparent url("{% static 'core/images/twinkling.png' %}") repeat top center;
             }
             .stars {
-            background:#030826 url("{% static 'core/images/twinklingstars.png' %}") repeat top center;
+            background:#030826 image-set(url("{% static 'core/images/twinklingstars.webp' %}") type("image/webp"), url("{% static 'core/images/twinklingstars.png' %}") type("image/png")) repeat top center;
             }
   </style>
 {% endblock %}
