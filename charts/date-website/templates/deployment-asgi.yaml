@@ -16,10 +16,7 @@ spec:
   # replica -> the old pod dies while the new one is still migrating,
   # causing a real outage window on every rollout (2026-08-05).
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+    {{- toYaml .Values.asgi.strategy | nindent 4 }}
   template:
     metadata:
       labels:
