@@ -1,8 +1,12 @@
 {{- if .Values.migrations.job.enabled -}}
+{{- $jobName := printf "%s-migrate" (include "date-website.fullname" .) -}}
+{{- if not .Values.migrations.job.hook -}}
+{{- $jobName = printf "%s-%s" $jobName (printf "%d" .Release.Revision) -}}
+{{- end -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "date-website.fullname" . }}-migrate
+  name: {{ $jobName }}
   labels:
     {{- include "date-website.labels" . | nindent 4 }}
     app.kubernetes.io/component: migrate
@@ -16,10 +20,8 @@ metadata:
     {{- end }}
 spec:
   backoffLimit: {{ .Values.migrations.job.backoffLimit }}
-  {{- if .Values.migrations.job.activeDeadlineSeconds }}
   activeDeadlineSeconds: {{ .Values.migrations.job.activeDeadlineSeconds }}
-  {{- end }}
-  {{- if .Values.migrations.job.ttlSecondsAfterFinished }}
+  {{- if and .Values.migrations.job.hook .Values.migrations.job.ttlSecondsAfterFinished }}
   ttlSecondsAfterFinished: {{ .Values.migrations.job.ttlSecondsAfterFinished }}
   {{- end }}
   template:

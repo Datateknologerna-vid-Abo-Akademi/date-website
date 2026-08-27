@@ -236,6 +236,12 @@
           "type": "integer",
           "minimum": 0
         },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "strategy": {
           "type": "object"
         }
@@ -247,6 +253,12 @@
         "replicaCount": {
           "type": "integer",
           "minimum": 0
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "wsPath": {
           "type": "string",
@@ -263,6 +275,12 @@
         "replicaCount": {
           "type": "integer",
           "minimum": 0
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "concurrency": {
           "type": "integer",

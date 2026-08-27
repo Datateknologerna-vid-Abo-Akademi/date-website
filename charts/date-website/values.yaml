@@ -175,6 +175,9 @@ web:
     maxRequestsJitter: 100
   migrateOnStartup: false
   collectstaticOnStartup: true
+  # Merged onto the Deployment metadata (e.g.
+  # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
+  annotations: {}
   resources: {}
   strategy:
     type: RollingUpdate
@@ -187,6 +190,9 @@ asgi:
     type: ClusterIP
     port: 8000
   wsPath: /ws
+  # Merged onto the Deployment metadata (e.g.
+  # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
+  annotations: {}
   resources: {}
   strategy:
     type: RollingUpdate
@@ -197,6 +203,9 @@ celery:
   replicaCount: 1
   concurrency: 2
   logLevel: info
+  # Merged onto the Deployment metadata (e.g.
+  # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
+  annotations: {}
   livenessProbe:
     initialDelaySeconds: 60
     periodSeconds: 300
@@ -212,8 +221,10 @@ migrations:
   job:
     enabled: false
     # Helm hook lifecycle (post-install,post-upgrade), or empty for a plain
-    # Job tracked by GitOps. Plain Jobs run under Argo sync waves, which
-    # guarantees migration completion before application pods start.
+    # Job tracked by GitOps. Plain Jobs get a revision-suffixed name and run
+    # under Argo sync waves, which guarantees migration completion before
+    # application pods start; they must NOT set ttlSecondsAfterFinished,
+    # because Argo keeps the completed Job as desired state.
     hook: post-install,post-upgrade
     hookDeletePolicy: before-hook-creation,hook-succeeded
     backoffLimit: 3
@@ -221,6 +232,7 @@ migrations:
     # argocd.argoproj.io/sync-wave: "0").
     annotations: {}
     activeDeadlineSeconds: 600
+    # Only rendered in hook mode; plain Jobs stay until Argo prunes them.
     ttlSecondsAfterFinished: 3600
     resources: {}
 ingress:
