@@ -243,7 +243,7 @@ DATABASES = {
         # Keep PostgreSQL connections alive between requests to avoid
         # connection setup latency; must live inside the database config.
         'CONN_MAX_AGE': env('DB_CONN_MAX_AGE', int, 600),
-        # Re-verify pooled connections so they survive database restarts.
+        # Re-verify persistent connections so they survive database restarts.
         'CONN_HEALTH_CHECKS': True,
     }
 }
