@@ -177,6 +177,51 @@ jobs:
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           docker-compose down -v
 
+  variant_checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Prepare environment file
+        run: cp .env.example .env
+
+      - name: Ensure docker-compose command exists
+        run: |
+          set -euo pipefail
+          if ! command -v docker-compose >/dev/null 2>&1; then
+            printf '#!/usr/bin/env bash\ndocker compose "$@"\n' | sudo tee /usr/local/bin/docker-compose >/dev/null
+            sudo chmod +x /usr/local/bin/docker-compose
+          fi
+          docker-compose version
+
+      - name: Build image
+        run: |
+          set -euo pipefail
+          docker-compose build web
+
+      - name: Fresh-process checks for every association
+        run: |
+          set -euo pipefail
+          for variant in date kk biocum pulterit sf impuls demo; do
+            echo "== ${variant}: manage.py check"
+            docker-compose run --rm --no-deps -e PROJECT_NAME="${variant}" web python manage.py check
+          done
+
+      - name: Migration graph check for every app set
+        run: |
+          set -euo pipefail
+          # Distinct app sets: date (broadest), kk (lucia), sf (klotterplanket).
+          for variant in date kk sf; do
+            echo "== ${variant}: makemigrations --check"
+            docker-compose run --rm --no-deps -e PROJECT_NAME="${variant}" web python manage.py makemigrations --check --dry-run
+          done
+
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 5
