@@ -136,7 +136,7 @@
         },
         "externalUrl": {
           "type": "string",
-          "pattern": "^redis://[^/]+$"
+          "pattern": "^$|^redis://[^/]+$"
         },
         "database": {
           "type": "integer",
