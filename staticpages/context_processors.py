@@ -1,7 +1,31 @@
 from django.conf import settings
+from django.core.cache import cache
 from django.db.models import Prefetch, Q
+from django.utils.translation import get_language
 
 from .models import StaticPageNav, StaticUrl
+
+# Backstop TTL; admin edits invalidate immediately via signals, so a missed
+# invalidation never persists longer than this.
+NAV_CACHE_TTL = 300
+NAV_VERSION_KEY = "staticpages:navigation:version"
+
+
+def _nav_version():
+    version = cache.get(NAV_VERSION_KEY)
+    if version is None:
+        cache.add(NAV_VERSION_KEY, 1)
+        return 1
+    return version
+
+
+def invalidate_nav_cache(**kwargs):
+    # Bump the version so keys built before the change are never read again.
+    # incr on a missing key (e.g. cache flush) raises; fall back to setting 2.
+    try:
+        cache.incr(NAV_VERSION_KEY)
+    except ValueError:
+        cache.set(NAV_VERSION_KEY, 2)
 
 
 def _visible_urls_queryset(user=None):
@@ -28,9 +52,8 @@ def _filtered_urls_queryset(request=None):
     )
 
 
-def get_categories(request):
-    filtered_urls = _filtered_urls_queryset(request)
-    visible_category_ids = set(filtered_urls.values_list('category_id', flat=True))
+def _categories_for(urls_list):
+    visible_category_ids = {url.category_id for url in urls_list}
     categories = StaticPageNav.objects.all().order_by('nav_element')
     if not getattr(settings, 'ARCHIVE_ENABLED', True):
         if 'exambank' in settings.INSTALLED_APPS:
@@ -39,11 +62,41 @@ def get_categories(request):
             )
         else:
             categories = categories.exclude(use_category_url=True, url__startswith='/archive/')
-    categories = [
-        category for category in categories if category.use_category_url or category.id in visible_category_ids
-    ]
-    return {'categories': categories}
+    return [category for category in categories if category.use_category_url or category.id in visible_category_ids]
+
+
+def navigation(request):
+    """One navigation load per request (or per TTL for anonymous visitors).
+
+    Combines the former get_categories + get_urls processors so the URL
+    queryset is evaluated once and category visibility is derived from it.
+    Cached only for anonymous users, keyed by project, language, archive
+    mode, and a version that is bumped whenever StaticUrl/StaticPageNav
+    change in the admin. Development uses the dummy cache, so caching is
+    off there.
+    """
+    user = getattr(request, 'user', None)
+    cache_key = None
+    if user is None or not user.is_authenticated:
+        cache_key = (
+            f"staticpages:navigation:{settings.PROJECT_NAME}:{get_language()}:"
+            f"{getattr(settings, 'ARCHIVE_ENABLED', True)}:{_nav_version()}"
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+    urls_list = list(_filtered_urls_queryset(request))
+    context = {'categories': _categories_for(urls_list), 'urls': urls_list}
+
+    if cache_key is not None:
+        cache.set(cache_key, context, NAV_CACHE_TTL)
+    return context
+
+
+def get_categories(request):
+    return {'categories': navigation(request)['categories']}
 
 
 def get_urls(request):
-    return {'urls': _filtered_urls_queryset(request)}
+    return {'urls': navigation(request)['urls']}
