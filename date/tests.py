@@ -1,5 +1,6 @@
 import importlib
 import re
+import time
 from datetime import date, timedelta
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -816,17 +817,39 @@ class HomepageQueryTests(TestCase):
 
     def test_cache_serves_latest_events_after_ttl_expiry(self):
         cache.clear()
-        self.client.get("/")
-        author = get_user_model().objects.create_user(username="event-author-2")
-        Event.objects.create(
-            title="Fresh Event",
-            slug="fresh-event",
-            author=author,
-            event_date_start=timezone.now(),
-            event_date_end=timezone.now() + timedelta(days=1),
-        )
-        # Simulate the TTL elapsing: drop the cached context, then the next
-        # anonymous load must include the new event.
+        with patch("date.views.HOMEPAGE_CACHE_TTL", 1):
+            self.client.get("/")
+            author = get_user_model().objects.create_user(username="event-author-2")
+            Event.objects.create(
+                title="Fresh Event",
+                slug="fresh-event",
+                author=author,
+                event_date_start=timezone.now(),
+                event_date_end=timezone.now() + timedelta(days=1),
+            )
+            # Wait out the 1s TTL: the cached context must expire and the
+            # next anonymous load must include the new event. Assert on the
+            # view context; the template fragment cache would mask the HTML.
+            time.sleep(1.1)
+            response = self.client.get("/")
+        self.assertIn("Fresh Event", [event.title for event in response.context["events"]])
+
+    def test_cache_key_is_isolated_by_language(self):
         cache.clear()
-        response = self.client.get("/")
-        self.assertContains(response, "Fresh Event")
+        with self.assertNumQueries(7):
+            self.client.get("/")
+        # A different active language must not reuse the Swedish entry (set
+        # via the language cookie; the locale middleware drives get_language).
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "fi"
+        with self.assertNumQueries(7):
+            self.client.get("/")
+
+    def test_dummy_cache_never_caches(self):
+        cache.clear()
+        with override_settings(
+            CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+        ):
+            with self.assertNumQueries(7):
+                self.client.get("/")
+            with self.assertNumQueries(7):
+                self.client.get("/")
