@@ -2106,6 +2106,25 @@ msgstr ""
 "and can contact the %(association_short)ss board and/or the student union "
 "harassment contacts if requested."
 
+#: templates/impuls/social/harassment_form.html:1
+msgid "Rapportera trakasserier"
+msgstr "Report harassment"
+
+#: templates/impuls/social/harassment_form.html:3
+msgid ""
+"Du kan rapportera trakasserier antingen anonymt eller ange din "
+"kontaktinformation. Vi tar alla former av trakasserier på allvar och kommer "
+"att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för "
+"alla medlemmar. Impuls trygghetspersoner behandlar alla rapporteringar av "
+"trakasserier och tar kontakt till Impuls styrelse och/eller ÅAS "
+"trakasseriombud om det så önskas."
+msgstr ""
+"You can report harassment anonymously or by providing your contact "
+"information. We take all forms of harassment seriously and will act to "
+"maintain a safe and respectful environment for all members. Impuls safety "
+"contacts handle all harassment reports and can contact Impuls board and/or "
+"the student union harassment contacts if requested."
+
 #: templates/common/social/harassment_form.html:26
 msgid "Ange din Email om du vill bli kontaktad"
 msgstr "Input your email in case you want to be contacted"
@@ -2233,6 +2252,12 @@ msgstr ""
 "this via the website. We take all forms of harrasment very seriously and "
 "will take the necessary steps for ensuring a safe and respectful environment "
 "for all members."
+
+#: templates/impuls/date/components/extras.html:6
+msgid ""
+"Om du upplever trakasserier i samband med Impuls verksamhet, vänligen"
+msgstr ""
+"If you encounter harassment during the activity of Impuls, please"
 
 #: templates/date/date/components/header.html:8
 msgid "Datateknologerna"

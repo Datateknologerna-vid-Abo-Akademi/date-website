@@ -2117,6 +2117,26 @@ msgstr ""
 "haluttaessa yhteyttä %(association_short)ss hallitukseen ja/tai ÅAS:n "
 "häirintäyhdyshenkilöihin."
 
+#: templates/impuls/social/harassment_form.html:1
+msgid "Rapportera trakasserier"
+msgstr "Ilmoita häirinnästä"
+
+#: templates/impuls/social/harassment_form.html:3
+msgid ""
+"Du kan rapportera trakasserier antingen anonymt eller ange din "
+"kontaktinformation. Vi tar alla former av trakasserier på allvar och kommer "
+"att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för "
+"alla medlemmar. Impuls trygghetspersoner behandlar alla rapporteringar av "
+"trakasserier och tar kontakt till Impuls styrelse och/eller ÅAS "
+"trakasseriombud om det så önskas."
+msgstr ""
+"Voit ilmoittaa häirinnästä joko anonyymisti tai antamalla yhteystietosi. "
+"Suhtaudumme kaikkeen häirintään vakavasti ja ryhdymme toimiin turvallisen ja "
+"kunnioittavan ympäristön ylläpitämiseksi kaikille jäsenille. Impulssin "
+"turvallisuushenkilöt käsittelevät kaikki häirintäilmoitukset ja ottavat "
+"haluttaessa yhteyttä Impulssin hallitukseen ja/tai ÅAS:n "
+"häirintäyhdyshenkilöihin."
+
 #: templates/common/social/harassment_form.html:26
 msgid "Ange din Email om du vill bli kontaktad"
 msgstr "Anna sähköpostiosoitteesi, jos haluat että sinuun otetaan yhteyttä"
@@ -2245,6 +2265,12 @@ msgstr ""
 "asiasta verkkosivumme kautta. Suhtaudumme kaikenlaisen epäasiallisen "
 "käytöksen kohtaan vakavasti ja ryhdymme toimiin ylläpitääksemme turvallista "
 "ja kunnioittavaa ympäristöä kaikille jäsenille."
+
+#: templates/impuls/date/components/extras.html:6
+msgid ""
+"Om du upplever trakasserier i samband med Impuls verksamhet, vänligen"
+msgstr ""
+"Jos koet epäasiallista käytöstä Impulssin toiminnan aikana, voit"
 
 #: templates/date/date/components/header.html:8
 msgid "Datateknologerna"

@@ -98,31 +98,3 @@
         calendarPopups.init();
     });
 </script>
-<script>
-    if (document.querySelector("#joke-string")) {
-        async function getJoke() {
-            return await fetch("https://icanhazdadjoke.com", {
-                headers: {
-                    "Accept": "application/json"
-                }
-            })
-            .then(response => response.json())
-            .then(function(data) {
-                return data ? data.joke : ""
-            })
-            .catch(function(e) {
-                document.querySelectorAll("#joke-header")
-                    .forEach(function(elem) {
-                        elem.innerText = "";
-                    });
-                return ""
-            }) ||
-            "";
-        }
-        getJoke().then((joke) => {
-            document.querySelectorAll("#joke-string").forEach(function(elem) {
-                elem.innerText = joke;
-            })
-        })
-    }
-</script>
