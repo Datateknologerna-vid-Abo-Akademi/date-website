@@ -367,6 +367,12 @@ STORAGES = {
     },
 }
 
+# Serve static from the per-association public S3 bucket (same bucket as
+# media, 'static' prefix, CDN via the public custom domain) instead of the
+# pod filesystem. Requires a release-time collectstatic upload before the
+# flag is enabled on a site.
+STATIC_S3_ENABLED = env('STATIC_S3_ENABLED', bool, False)
+
 if USE_S3:
     # aws settings
     AWS_S3_ENDPOINT_URL = env_alias('S3_ENDPOINT_URL', 'AWS_S3_ENDPOINT_URL')
@@ -397,6 +403,11 @@ if USE_S3:
     )
     AWS_S3_PRIVATE_CUSTOM_DOMAIN = (
         env_alias('S3_PRIVATE_CUSTOM_DOMAIN', 'AWS_S3_PRIVATE_CUSTOM_DOMAIN', default='') or None
+    )
+    # Optional dedicated CDN domain for static; defaults to the public media
+    # domain (both serve the same bucket).
+    AWS_S3_STATIC_CUSTOM_DOMAIN = (
+        env_alias('S3_STATIC_CUSTOM_DOMAIN', 'AWS_S3_STATIC_CUSTOM_DOMAIN', default='') or None
     )
     AWS_QUERYSTRING_AUTH = True
     AWS_QUERYSTRING_EXPIRE = 3600
@@ -440,6 +451,17 @@ if USE_S3:
             AWS_S3_PUBLIC_CUSTOM_DOMAIN,
         ),
     }
+
+    if STATIC_S3_ENABLED:
+        STORAGES["staticfiles"] = {
+            "BACKEND": "core.storage_backends.StaticStorage",
+            "OPTIONS": get_s3_storage_options(
+                AWS_STORAGE_BUCKET_NAME,
+                "static",
+                False,
+                AWS_S3_STATIC_CUSTOM_DOMAIN or AWS_S3_PUBLIC_CUSTOM_DOMAIN,
+            ),
+        }
 
 else:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

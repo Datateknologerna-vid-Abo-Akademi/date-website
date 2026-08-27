@@ -3,11 +3,24 @@ from urllib.parse import urlsplit, urlunsplit
 from django.conf import settings
 from storages.backends.s3boto3 import S3Boto3Storage
 from storages.utils import clean_name
+from whitenoise.storage import CompressedManifestStaticFilesStorage
 
 
-class StaticStorage(S3Boto3Storage):
-    location = 'static'
+class StaticStorage(S3Boto3Storage, CompressedManifestStaticFilesStorage):
+    # Served from the same per-association bucket as public media under the
+    # 'static' prefix (set via STORAGES OPTIONS). Hashed filenames (manifest
+    # storage) make CDN caching immutable.
     default_acl = 'public-read'
+    # Vendored assets reference files that do not exist (jquery sourcemap);
+    # fall back to the unhashed path instead of failing collectstatic.
+    manifest_strict = False
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # S3Boto3Storage.url() prepends the protocol, so the domain must be
+        # scheme-less; accept the scheme'd form the codebase uses elsewhere.
+        if self.custom_domain and "//" in self.custom_domain:
+            self.custom_domain = self.custom_domain.split("//", 1)[1]
 
 
 class PrivateMediaStorage(S3Boto3Storage):
