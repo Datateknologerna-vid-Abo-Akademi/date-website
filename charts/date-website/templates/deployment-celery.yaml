@@ -1,3 +1,4 @@
+{{- if .Values.celery.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -113,3 +114,4 @@ spec:
           {{- end }}
           {{- include "date-website.mediaVolumeMount" . | nindent 10 }}
       {{- include "date-website.mediaVolume" . | nindent 6 }}
+{{- end }}

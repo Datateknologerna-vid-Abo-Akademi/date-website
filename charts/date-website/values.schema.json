@@ -244,6 +244,9 @@
     "asgi": {
       "type": "object",
       "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
         "replicaCount": {
           "type": "integer",
           "minimum": 0
@@ -260,6 +263,9 @@
     "celery": {
       "type": "object",
       "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
         "replicaCount": {
           "type": "integer",
           "minimum": 0

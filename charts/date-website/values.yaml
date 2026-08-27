@@ -182,6 +182,9 @@ web:
       maxUnavailable: 0
       maxSurge: 1
 asgi:
+  # Disable for associations that do not use event WebSockets; the WS
+  # ingress/gateway route is omitted too.
+  enabled: true
   replicaCount: 1
   service:
     type: ClusterIP
@@ -194,6 +197,9 @@ asgi:
       maxUnavailable: 0
       maxSurge: 1
 celery:
+  # Disable for associations that cannot enqueue tasks (no email/alumni
+  # flows); queued work would otherwise accumulate silently.
+  enabled: true
   replicaCount: 1
   concurrency: 2
   logLevel: info
