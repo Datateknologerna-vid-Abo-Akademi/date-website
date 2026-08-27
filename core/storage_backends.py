@@ -1,15 +1,17 @@
 from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
+from django.contrib.staticfiles.storage import ManifestFilesMixin
 from storages.backends.s3boto3 import S3Boto3Storage
 from storages.utils import clean_name
-from whitenoise.storage import CompressedManifestStaticFilesStorage
 
 
-class StaticStorage(S3Boto3Storage, CompressedManifestStaticFilesStorage):
-    # Served from the same per-association bucket as public media under the
+class StaticStorage(ManifestFilesMixin, S3Boto3Storage):
+    # Served from the same per-association public bucket as media under the
     # 'static' prefix (set via STORAGES OPTIONS). Hashed filenames (manifest
-    # storage) make CDN caching immutable.
+    # storage) make CDN caching immutable. WhiteNoise's compressed storage is
+    # intentionally not used here: its compression stage needs local
+    # filesystem paths, which S3 does not provide.
     default_acl = 'public-read'
     # Vendored assets reference files that do not exist (jquery sourcemap);
     # fall back to the unhashed path instead of failing collectstatic.
@@ -21,6 +23,15 @@ class StaticStorage(S3Boto3Storage, CompressedManifestStaticFilesStorage):
         # scheme-less; accept the scheme'd form the codebase uses elsewhere.
         if self.custom_domain and "//" in self.custom_domain:
             self.custom_domain = self.custom_domain.split("//", 1)[1]
+
+    def load_manifest(self):
+        # The manifest lives in S3 (uploaded by the release-time collectstatic).
+        # Tolerate missing/transient states and fall back to the non-strict
+        # hashed-name path instead of failing every {% static %} lookup.
+        try:
+            return super().load_manifest()
+        except Exception:
+            return {}, ""
 
 
 class PrivateMediaStorage(S3Boto3Storage):

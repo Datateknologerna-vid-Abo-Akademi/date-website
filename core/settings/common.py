@@ -456,7 +456,7 @@ if USE_S3:
         STORAGES["staticfiles"] = {
             "BACKEND": "core.storage_backends.StaticStorage",
             "OPTIONS": get_s3_storage_options(
-                AWS_STORAGE_BUCKET_NAME,
+                AWS_PUBLIC_STORAGE_BUCKET_NAME,
                 "static",
                 False,
                 AWS_S3_STATIC_CUSTOM_DOMAIN or AWS_S3_PUBLIC_CUSTOM_DOMAIN,
@@ -472,7 +472,11 @@ else:
     PUBLIC_MEDIA_LOCATION = 'media/public'
     AWS_STORAGE_BUCKET_NAME = "media"
 
-STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
+# Development always serves static from the local finders, even when a site
+# opts into S3 static (the flag is for deployment environments).
+if DEBUG:
+    STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.StaticFilesStorage"
+
 STATIC_URL = '/static/'
 
 LOGOUT_REDIRECT_URL = 'index'
