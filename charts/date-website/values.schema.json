@@ -136,6 +136,10 @@
         },
         "externalUrl": {
           "type": "string"
+        },
+        "database": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },

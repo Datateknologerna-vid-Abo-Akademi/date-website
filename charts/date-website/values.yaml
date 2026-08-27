@@ -112,6 +112,11 @@ backups:
 redis:
   enabled: true
   externalUrl: ''
+  # Logical database used for cache, Channels, and Celery (broker +
+  # results). With a cluster-wide Redis shared by associations, give each
+  # association its own database number to avoid key/queue collisions.
+  # externalUrl should be pathless; this value selects the database.
+  database: 0
   nodeSelector: {}
   tolerations: []
   affinity: {}

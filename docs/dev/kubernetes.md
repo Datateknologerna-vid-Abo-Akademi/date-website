@@ -114,6 +114,26 @@ The operator repository holds:
 - the blue-green standbys and the ingress manifests
 - the deploy tooling (see below)
 
+## Redis ownership
+
+PostgreSQL is shared across associations per database, and Redis must be
+treated the same way. Two sanctioned layouts:
+
+- **One Redis per association**, shared by its live and standby releases.
+  The live release keeps `redis.enabled: true`; the standby sets
+  `redis.enabled: false` and `redis.externalUrl` to the live release's
+  Redis service. Live and standby must never get separate Redis instances:
+  a separate standby broker strands queued Celery tasks and splits Channels
+  group state during cutover.
+- **One cluster-wide Redis** with a per-association logical database:
+  `redis.enabled: false` + a pathless `redis.externalUrl` per site, with a
+  unique `redis.database` number per association (0 is the default). The
+  database number is applied to the cache, Channels, and Celery broker and
+  result backend, so queues and keys cannot collide.
+
+Ephemeral Redis implies an accepted task-loss model on broker loss; keep
+the backup/restore pipeline for anything that must survive.
+
 ## Blue-green deploys (zero-downtime)
 
 Every site has a **standby release** (same chart, `fullnameOverride`,
