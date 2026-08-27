@@ -581,8 +581,6 @@ class EventRegistrationWindowTests(TestCase):
 
 
 class EventAdminTests(TestCase):
-    NON_DATE_PROJECTS = ("kk", "on", "pulterit", "biocum", "demo")
-
     def setUp(self):
         self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
         self.admin_user = Member.objects.create_superuser(
@@ -792,14 +790,14 @@ class EventAdminTests(TestCase):
         )
 
     @override_settings(KK_EVENT_TEMPLATES_ENABLED=True)
-    def test_admin_forms_accept_kk_only_template_choice(self):
+    def test_admin_forms_accept_kk_template_choice_when_enabled(self):
         edit_form = EventEditForm(instance=self.event)
         self.assertEqual(
             edit_form.fields["template"].clean("events/wappmiddag.html"),
             "events/wappmiddag.html",
         )
 
-    def test_admin_forms_reject_kk_only_template_for_other_associations(self):
+    def test_admin_forms_reject_kk_template_choice_when_disabled(self):
         edit_form = EventEditForm(instance=self.event)
         with self.assertRaises(ValidationError):
             edit_form.fields["template"].clean("events/wappmiddag.html")
@@ -827,21 +825,19 @@ class EventAdminTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'name="require_registration_terms"')
 
-    def test_non_date_projects_hide_registration_terms_field_on_add_page(self):
+    @override_settings(REGISTRATION_TERMS_ENABLED=False)
+    def test_registration_terms_field_hidden_on_add_page_when_disabled(self):
         self.client.force_login(self.admin_user)
-        for project_name in self.NON_DATE_PROJECTS:
-            with self.subTest(project_name=project_name), override_settings(REGISTRATION_TERMS_ENABLED=False):
-                response = self.client.get(reverse("admin:events_event_add"))
-                self.assertEqual(response.status_code, 200)
-                self.assertNotContains(response, 'name="require_registration_terms"', status_code=200)
+        response = self.client.get(reverse("admin:events_event_add"))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="require_registration_terms"', status_code=200)
 
-    def test_non_date_projects_hide_registration_terms_field_on_change_page(self):
+    @override_settings(REGISTRATION_TERMS_ENABLED=False)
+    def test_registration_terms_field_hidden_on_change_page_when_disabled(self):
         self.client.force_login(self.admin_user)
-        for project_name in self.NON_DATE_PROJECTS:
-            with self.subTest(project_name=project_name), override_settings(REGISTRATION_TERMS_ENABLED=False):
-                response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
-                self.assertEqual(response.status_code, 200)
-                self.assertNotContains(response, 'name="require_registration_terms"', status_code=200)
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="require_registration_terms"', status_code=200)
 
     def test_change_page_renders_when_image_url_cannot_be_resolved(self):
         self.event.image = "events/broken.jpg"
@@ -1540,7 +1536,7 @@ class EventFormBuilderTests(TestCase):
         self.assertNotIn("terms_accepted", form.base_fields)
 
     @override_settings(REGISTRATION_TERMS_ENABLED=False)
-    def test_terms_field_is_date_only(self):
+    def test_terms_field_absent_when_feature_disabled(self):
         form_class = self.event.make_registration_form()
         form = form_class()
 
