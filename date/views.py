@@ -1,6 +1,5 @@
 import logging
 import secrets
-from itertools import chain
 from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
@@ -10,6 +9,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone, translation
+from django.utils.translation import get_language
 
 from ads.models import AdUrl
 from events.models import Event
@@ -70,6 +70,7 @@ def get_recent_albins_angels_post(now=None):
             published_time__lte=now,
             published_time__gt=cutoff,
         )
+        .select_related('category')
         .order_by('-published_time')
         .first()
     )
@@ -89,29 +90,48 @@ def format_calendar_events(all_events):
     return calendar_events
 
 
-def index(request):
-    events_old_events_included = (
+# Same freshness bound as the template fragment cache: admin content changes
+# appear within this window. Development uses the dummy cache, so caching is
+# off there.
+HOMEPAGE_CACHE_TTL = 300
+
+
+def _homepage_context(now=None):
+    now = now or timezone.now()
+    # Evaluate each queryset exactly once; derive upcoming events in Python.
+    recent_events = list(
         Event.objects.published()
-        .filter(
-            event_date_end__gte=(timezone.now() - timezone.timedelta(days=31)),
-        )
+        .filter(event_date_end__gte=now - timezone.timedelta(days=31))
         .exclude(slug="")
         .exclude(slug__isnull=True)
         .order_by('event_date_start')
     )
-    events = events_old_events_included.filter(event_date_end__gte=timezone.now())
-    news = Post.objects.published().filter(category__isnull=True).reverse()[:3]
+    upcoming_events = [event for event in recent_events if event.event_date_end >= now]
+    news = list(Post.objects.published().filter(category__isnull=True).reverse()[:3])
 
-    context = {
-        'calendar_events': format_calendar_events(events_old_events_included),
-        'events': events,
+    return {
+        'calendar_events': format_calendar_events(recent_events),
+        'events': upcoming_events,
         'news': news,
-        'news_events': list(chain(events, news)),
-        'ads': AdUrl.objects.all(),
-        'posts': IgUrl.objects.all(),
-        'aa_post': get_recent_albins_angels_post(),
+        'ads': list(AdUrl.objects.all()),
+        'posts': list(IgUrl.objects.all()),
+        'aa_post': get_recent_albins_angels_post(now=now),
     }
 
+
+def index(request):
+    cache_key = None
+    if not request.user.is_authenticated:
+        cache_key = (
+            f"homepage:{settings.PROJECT_NAME}:{get_language()}:{getattr(settings, 'APRIL_HOMEPAGE_ENABLED', False)}"
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return render(request, get_homepage_template_name(), cached)
+
+    context = _homepage_context()
+    if cache_key is not None:
+        cache.set(cache_key, context, HOMEPAGE_CACHE_TTL)
     return render(request, get_homepage_template_name(), context)
 
 

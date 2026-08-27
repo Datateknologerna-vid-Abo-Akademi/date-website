@@ -9,16 +9,18 @@ from django.contrib import admin
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.db import connection
 from django.template import Context, Template
 from django.template.loader import render_to_string
 from django.test import RequestFactory, TestCase
-from django.test.utils import override_settings
+from django.test.utils import CaptureQueriesContext, override_settings
 from django.urls import clear_url_caches, reverse, set_urlconf
 from django.utils import timezone, translation
 
 from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
 from date.views import (
+    _homepage_context,
     format_calendar_events,
     get_homepage_template_name,
     get_recent_albins_angels_post,
@@ -766,3 +768,65 @@ class AssociationHomepageSmokeTests(TestCase):
         response = self._get_association_homepage("kk")
 
         self.assertEqual(response.status_code, 200)
+
+
+class HomepageQueryTests(TestCase):
+    """The homepage evaluates each data queryset exactly once and caches the
+    assembled context for anonymous visitors (300s, same freshness bound as
+    the template fragment cache; off in development via the dummy cache)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.author = get_user_model().objects.create_user(username="homepage-query-author")
+        cls.albins_angels = Category.objects.create(name="Albins Angels", slug="albins-angels")
+        Post.objects.create(
+            title="Uncategorized news",
+            slug="uncategorized-news",
+            author=cls.author,
+            category=None,
+            published_time=timezone.now(),
+        )
+
+    def test_homepage_context_uses_five_queries(self):
+        cache.clear()
+        with self.assertNumQueries(5):
+            _homepage_context()
+
+    def test_anonymous_homepage_is_cached_after_first_load(self):
+        cache.clear()
+        with CaptureQueriesContext(connection) as first:
+            self.client.get("/")
+        with CaptureQueriesContext(connection) as second:
+            response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        # Second load skips the five context queries; only navigation runs
+        # (urls + categories; the children prefetch is skipped when empty).
+        self.assertLess(len(second), len(first))
+        self.assertEqual(len(second), 2)
+
+    def test_logged_in_homepage_is_not_cached(self):
+        cache.clear()
+        user = get_user_model().objects.create_user(username="member-user", password="pass")
+        self.client.force_login(user)
+        with CaptureQueriesContext(connection) as first:
+            self.client.get("/")
+        with CaptureQueriesContext(connection) as second:
+            self.client.get("/")
+        self.assertEqual(len(first), len(second))
+
+    def test_cache_serves_latest_events_after_ttl_expiry(self):
+        cache.clear()
+        self.client.get("/")
+        author = get_user_model().objects.create_user(username="event-author-2")
+        Event.objects.create(
+            title="Fresh Event",
+            slug="fresh-event",
+            author=author,
+            event_date_start=timezone.now(),
+            event_date_end=timezone.now() + timedelta(days=1),
+        )
+        # Simulate the TTL elapsing: drop the cached context, then the next
+        # anonymous load must include the new event.
+        cache.clear()
+        response = self.client.get("/")
+        self.assertContains(response, "Fresh Event")
