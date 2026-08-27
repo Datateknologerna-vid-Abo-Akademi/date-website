@@ -218,6 +218,10 @@ REDIS_SERVER = env("REDIS_SERVER", str, "redis://redis:6379")
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", str, "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", str, CELERY_BROKER_URL)
 
+# No caller consumes task results (AsyncResult), so do not write them to the
+# broker Redis.
+CELERY_TASK_IGNORE_RESULT = True
+
 
 CHANNEL_LAYERS = {
     'default': {
