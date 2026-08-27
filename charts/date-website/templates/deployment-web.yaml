@@ -56,7 +56,7 @@ spec:
       {{- end }}
       containers:
         - name: web
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "date-website.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - /bin/bash

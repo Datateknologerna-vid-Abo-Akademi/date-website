@@ -107,3 +107,9 @@ volumeMounts:
     mountPath: /code/media
 {{- end }}
 {{- end }}
+
+{{- define "date-website.image" -}}
+{{- $tag := .Values.image.tag | default .Chart.AppVersion -}}
+{{- printf "%s:%s" .Values.image.repository $tag -}}
+{{- if .Values.image.digest }}{{ printf "@%s" .Values.image.digest }}{{ end -}}
+{{- end -}}

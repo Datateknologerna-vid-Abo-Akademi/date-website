@@ -618,5 +618,42 @@
         ]
       }
     }
+,
+    {
+      "if": {
+        "properties": {
+          "image": {
+            "properties": {
+              "pinInProduction": {
+                "const": true
+              },
+              "tag": {
+                "enum": [
+                  "prod",
+                  "latest",
+                  "qa",
+                  "dev"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "image": {
+            "required": [
+              "digest"
+            ],
+            "properties": {
+              "digest": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    }
   ]
 }

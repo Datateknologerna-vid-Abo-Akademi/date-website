@@ -2,6 +2,10 @@
 image:
   repository: ghcr.io/datateknologerna-vid-abo-akademi/date-website
   tag: prod
+  # Pin immutable tags (or image.digest) for production sites; the schema
+  # rejects moving aliases (prod/latest/qa/dev) when this is true.
+  pinInProduction: false
+  digest: ''
   pullPolicy: IfNotPresent
 imagePullSecrets: []
 nameOverride: ''
