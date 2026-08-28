@@ -29,3 +29,9 @@ backups:
   objectStorage:
     bucketName: "kk-website-backups"
     prefix: "kk-website/postgresql"
+
+# The published image is built with PROJECT_NAME=date, so non-date variants
+# re-collect static at pod startup with their own asset dirs. Build per-site
+# images (--build-arg PROJECT_NAME=kk) to drop this and disable the flag.
+web:
+  collectstaticOnStartup: true
