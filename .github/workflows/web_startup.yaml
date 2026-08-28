@@ -94,7 +94,7 @@ jobs:
           if [ "${logged_in}" -eq 1 ]; then
             for attempt in 1 2 3; do
               if docker pull "${CI_IMAGE}"; then
-                printf 'services:\n  web:\n    image: %s\n  celery:\n    image: %s\n' "${CI_IMAGE}" "${CI_IMAGE}" > docker-compose.ci.yml
+                printf 'services:\n  init:\n    image: %s\n  web:\n    image: %s\n  celery:\n    image: %s\n' "${CI_IMAGE}" "${CI_IMAGE}" "${CI_IMAGE}" > docker-compose.ci.yml
                 echo "compose_file=docker-compose.yml:docker-compose.ci.yml" >> "${GITHUB_OUTPUT}"
                 exit 0
               fi
@@ -118,13 +118,14 @@ jobs:
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           docker-compose run --rm --no-deps web python scripts/validate_translations.py
           docker-compose run --rm --no-deps web python manage.py compilemessages
-          docker-compose run -e TEST=1 web /bin/bash -c './wait-for-postgres.sh db:5432 && python /code/manage.py test'
+          # Test settings use in-memory SQLite/Channels/cache, so skip service startup.
+          docker-compose run --rm --no-deps -e TEST=1 web python /code/manage.py test
 
       - name: Run tests with Unfold enabled
         run: |
           set -euo pipefail
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
-          docker-compose run -e TEST=1 -e USE_UNFOLD=True web /bin/bash -c './wait-for-postgres.sh db:5432 && python /code/manage.py test'
+          docker-compose run --rm --no-deps -e TEST=1 -e USE_UNFOLD=True web python /code/manage.py test
 
       - name: Build and run Docker Compose
         run: |

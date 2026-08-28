@@ -18,8 +18,12 @@ permissions:
   pages: write
   id-token: write
 
+# Per-ref groups: many PRs touch docs concurrently, and a single shared
+# group with cancel-in-progress makes them cancel each other. Main deploys
+# keep their own group; GitHub's Pages environment serializes deployments
+# repo-wide regardless.
 concurrency:
-  group: 'github-pages'
+  group: 'github-pages-${{ github.ref }}'
   cancel-in-progress: true
 
 jobs:
