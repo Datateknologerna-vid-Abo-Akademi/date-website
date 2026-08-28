@@ -398,10 +398,11 @@ STORAGES = {
     },
 }
 
-# Development serves static through the WhiteNoise finders without a
-# collected manifest, so {% static %} must resolve to plain paths there.
-if DEBUG:
-    STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.StaticFilesStorage"
+# Serve static from the per-association public S3 bucket (same bucket as
+# media, 'static' prefix, CDN via the public custom domain) instead of the
+# pod filesystem. Requires a release-time collectstatic upload before the
+# flag is enabled on a site.
+STATIC_S3_ENABLED = env('STATIC_S3_ENABLED', bool, False)
 
 if USE_S3:
     # aws settings
@@ -433,6 +434,11 @@ if USE_S3:
     )
     AWS_S3_PRIVATE_CUSTOM_DOMAIN = (
         env_alias('S3_PRIVATE_CUSTOM_DOMAIN', 'AWS_S3_PRIVATE_CUSTOM_DOMAIN', default='') or None
+    )
+    # Optional dedicated CDN domain for static; defaults to the public media
+    # domain (both serve the same bucket).
+    AWS_S3_STATIC_CUSTOM_DOMAIN = (
+        env_alias('S3_STATIC_CUSTOM_DOMAIN', 'AWS_S3_STATIC_CUSTOM_DOMAIN', default='') or None
     )
     AWS_QUERYSTRING_AUTH = True
     AWS_QUERYSTRING_EXPIRE = 3600
@@ -477,6 +483,17 @@ if USE_S3:
         ),
     }
 
+    if STATIC_S3_ENABLED:
+        STORAGES["staticfiles"] = {
+            "BACKEND": "core.storage_backends.StaticStorage",
+            "OPTIONS": get_s3_storage_options(
+                AWS_PUBLIC_STORAGE_BUCKET_NAME,
+                "static",
+                False,
+                AWS_S3_STATIC_CUSTOM_DOMAIN or AWS_S3_PUBLIC_CUSTOM_DOMAIN,
+            ),
+        }
+
 else:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
     MEDIA_URL = '/media/'
@@ -485,6 +502,12 @@ else:
     PRIVATE_MEDIA_LOCATION = 'media/private'
     PUBLIC_MEDIA_LOCATION = 'media/public'
     AWS_STORAGE_BUCKET_NAME = "media"
+
+# Development serves static from the local finders by default; an explicit
+# STATIC_S3_ENABLED wins so S3 URLs are used even when DEBUG is on (e.g. CI
+# containers inherit DATE_DEBUG from .env).
+if DEBUG and not STATIC_S3_ENABLED:
+    STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 STATIC_URL = '/static/'
 
