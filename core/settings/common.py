@@ -472,9 +472,10 @@ else:
     PUBLIC_MEDIA_LOCATION = 'media/public'
     AWS_STORAGE_BUCKET_NAME = "media"
 
-# Development always serves static from the local finders, even when a site
-# opts into S3 static (the flag is for deployment environments).
-if DEBUG:
+# Development serves static from the local finders by default; an explicit
+# STATIC_S3_ENABLED wins so S3 URLs are used even when DEBUG is on (e.g. CI
+# containers inherit DATE_DEBUG from .env).
+if DEBUG and not STATIC_S3_ENABLED:
     STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 STATIC_URL = '/static/'
