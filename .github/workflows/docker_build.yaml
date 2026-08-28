@@ -76,6 +76,12 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.tags.outputs.value }}
+          # The image collects static for every association at build time
+          # (one tree per variant under /code/static-collected). PROJECT_NAME
+          # sets the runtime default only; the chart/compose always pass the
+          # site's variant explicitly.
+          build-args: |
+            PROJECT_NAME=date
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

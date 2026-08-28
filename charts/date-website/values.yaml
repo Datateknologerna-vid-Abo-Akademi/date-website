@@ -174,7 +174,16 @@ web:
     maxRequests: 1000
     maxRequestsJitter: 100
   migrateOnStartup: false
-  collectstaticOnStartup: true
+  # Every variant's static is collected into the image at build time
+  # (/code/static-collected/<PROJECT_NAME>), so pods do not collect at
+  # startup. Keep this flag for images built before the multi-tree layout.
+  collectstaticOnStartup: false
+  startupProbe:
+    # 90x2s = ~180s floor, measured after the 2026-08-07 worker-reboot
+    # incident. Tighten once migrate/collectstatic are off (date site: 30x2s).
+    failureThreshold: 90
+    periodSeconds: 2
+    timeoutSeconds: 5
   # Merged onto the Deployment metadata (e.g.
   # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
   annotations: {}

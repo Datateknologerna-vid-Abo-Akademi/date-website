@@ -73,7 +73,9 @@ spec:
               python /code/manage.py migrate --noinput
               {{- end }}
               {{- if .Values.web.collectstaticOnStartup }}
-              python /code/manage.py collectstatic --noinput
+              # --clear: the image may contain date-built static, so wipe
+              # STATIC_ROOT before collecting this variant's assets.
+              python /code/manage.py collectstatic --noinput --clear
               {{- end }}
               exec gunicorn \
                 -w {{ .Values.web.gunicorn.workers }} \
@@ -99,11 +101,12 @@ spec:
             - name: http
               containerPort: 8000
               protocol: TCP
-          # startupProbe gates liveness during slow starts (migrateOnStartup
-          # cold boot: wait-for-postgres + migrate + collectstatic can exceed
-          # 2 min under the web CPU limit; a 30x2s budget is too tight because
-          # refused probes fail instantly -> ~60s floor). 90x2s = ~180s floor,
-          # measured after the 2026-08-07 worker-reboot incident.
+          # startupProbe gates liveness during slow starts (cold boot:
+          # wait-for-postgres + optional migrate/collectstatic under the web
+          # CPU limit can exceed 2 min; a 30x2s budget is too tight because
+          # refused probes fail instantly -> ~60s floor). Budget is
+          # configurable via web.startupProbe; tighten once startup work is
+          # off (image-built static, migration Job).
           startupProbe:
             httpGet:
               path: /healthz/
@@ -111,9 +114,9 @@ spec:
               httpHeaders:
                 - name: Host
                   value: {{ include "date-website.probeHost" . | quote }}
-            failureThreshold: 90
-            periodSeconds: 2
-            timeoutSeconds: 5
+            failureThreshold: {{ .Values.web.startupProbe.failureThreshold }}
+            periodSeconds: {{ .Values.web.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.web.startupProbe.timeoutSeconds }}
           livenessProbe:
             httpGet:
               path: /healthz/

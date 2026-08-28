@@ -122,6 +122,26 @@ new pods can overlap during rollouts.
    syncs the release.
 4. Verify: site responds over HTTPS, `/healthz/` and `/readyz/` are green.
 
+## Static files
+
+Every association's static is collected into the image at build time, one
+tree per variant under `/code/static-collected/<PROJECT_NAME>`. Settings
+pick the tree matching the runtime `PROJECT_NAME`, so every site serves
+build-time static and no web pod runs `collectstatic` at startup
+(`web.collectstaticOnStartup` defaults to false; keep it only for images
+built before this layout).
+
+Separate trees are required because variants define the same logical paths
+with different content (e.g. `date/css/homepage.css` differs per
+association); a single merged collection would silently overwrite assets.
+This keeps one generic image for all variants: no per-association images,
+no startup collection, no way for an image and its values to disagree on
+the variant.
+
+If static-on-S3 (see issue) lands, collection moves from the image build to
+a release-time upload into the existing per-association media bucket, and
+pods stop carrying static entirely.
+
 The operator repository holds:
 
 - the Argo CD Application per site (chart source + per-site values)
