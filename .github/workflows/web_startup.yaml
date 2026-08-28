@@ -94,7 +94,7 @@ jobs:
           if [ "${logged_in}" -eq 1 ]; then
             for attempt in 1 2 3; do
               if docker pull "${CI_IMAGE}"; then
-                printf 'services:\n  web:\n    image: %s\n  celery:\n    image: %s\n' "${CI_IMAGE}" "${CI_IMAGE}" > docker-compose.ci.yml
+                printf 'services:\n  init:\n    image: %s\n  web:\n    image: %s\n  celery:\n    image: %s\n' "${CI_IMAGE}" "${CI_IMAGE}" "${CI_IMAGE}" > docker-compose.ci.yml
                 echo "compose_file=docker-compose.yml:docker-compose.ci.yml" >> "${GITHUB_OUTPUT}"
                 exit 0
               fi

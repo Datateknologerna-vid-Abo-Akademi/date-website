@@ -120,6 +120,7 @@ Once the aliases are registered, the `date-*` commands are the normal way to wor
 
 ## Database, migrations, and seed data
 
+- The dev stack runs migrations and translation compilation once in an `init` service when the stack is first created; the web container starts only after it succeeds. After pulling code with new migrations, run `date-migrate` (or `docker compose down` followed by `date-start`, which recreates `init`) to apply them.
 - Use `date-makemigrations` and `date-migrate` for schema changes. Commit the generated migration files; do not rewrite published migrations.
 - `date-cleaninit` (alias for `./scripts/clean_init.sh`) drops and recreates the development database volumes, loads the local fixture set, generates sample media, and resets the `admin`, `freshman`, and `member` passwords to `admin`. **All local data will be deleted.**
 - If your shell does not expose aliases, run `/bin/bash ./scripts/clean_init.sh` directly.
