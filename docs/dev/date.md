@@ -10,7 +10,7 @@
 
 ## Homepage Variants
 - `get_homepage_template_name()` returns the standard `date/start.html` template for most sites.
-- For `PROJECT_NAME=kk`, it occasionally serves `date/april_start.html` on April 1st.
+- With `APRIL_HOMEPAGE_ENABLED=True` (kk), it occasionally serves `date/april_start.html` on April 1st.
 - Keep variant-specific homepage behavior here rather than scattering date checks through templates.
 
 ## Calendar Data Structure

@@ -39,7 +39,7 @@ EVENT_TEMPLATE_CHOICES = EVENT_TEMPLATE_CHOICES_COMMON + EVENT_TEMPLATE_CHOICES_
 
 
 def registration_terms_feature_enabled():
-    return settings.PROJECT_NAME == "date"
+    return settings.REGISTRATION_TERMS_ENABLED
 
 
 class EventQuerySet(models.QuerySet):

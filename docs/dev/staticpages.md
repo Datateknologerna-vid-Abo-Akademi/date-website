@@ -7,6 +7,7 @@
 
 ## Views & Routing
 - `StaticPageView` (`staticpages/views.py`) is the only view. It loads the page by slug, checks `members_only`, and either renders `staticpages/staticpage.html` or redirects unauthenticated users to `/members/login`.
+- Policy pages (`equality_plan_view`, `registration_terms_view`) 404 unless the matching capability is enabled: `EQUALITY_PLAN_ENABLED` / `REGISTRATION_TERMS_ENABLED` (both set for `date` in its settings module; defaults are False in `core/settings/common.py`).
 - Navigation menus are built in templates using `StaticPageNav` + `StaticUrl`; `staticpages.context_processors` injects both querysets into every template.
 - Language-aware internal links should go through the `localized_url` template filter (`staticpages/templatetags/localized_urls.py`) so stored URLs keep the current locale prefix when language features are enabled.
 - Routes are wrapped by the shared localized URL builder in `core/urls/common.py`, so static pages can live under language prefixes without duplicating route declarations.
