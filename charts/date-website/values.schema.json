@@ -244,6 +244,12 @@
           "type": "integer",
           "minimum": 0
         },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "strategy": {
           "type": "object"
         }
@@ -263,6 +269,12 @@
         "preStopSleepSeconds": {
           "type": "integer",
           "minimum": 0
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "wsPath": {
           "type": "string",
@@ -284,12 +296,58 @@
           "type": "integer",
           "minimum": 1
         },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "concurrency": {
           "type": "integer",
           "minimum": 1
         },
         "strategy": {
           "type": "object"
+        }
+      }
+    },
+    "migrations": {
+      "type": "object",
+      "properties": {
+        "job": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "hook": {
+              "type": "string"
+            },
+            "hookDeletePolicy": {
+              "type": "string"
+            },
+            "backoffLimit": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "annotations": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "activeDeadlineSeconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "ttlSecondsAfterFinished": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "resources": {
+              "type": "object"
+            }
+          }
         }
       }
     },

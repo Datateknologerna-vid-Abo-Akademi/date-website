@@ -5,6 +5,10 @@ metadata:
   labels:
     {{- include "date-website.labels" . | nindent 4 }}
     app.kubernetes.io/component: celery
+  {{- with .Values.celery.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.celery.replicaCount }}
   selector:

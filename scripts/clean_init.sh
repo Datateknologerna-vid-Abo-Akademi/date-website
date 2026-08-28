@@ -121,7 +121,7 @@ docker_compose exec -T db psql -U postgres -c "DROP DATABASE temp;"
 echo "Database cleared."
 
 echo "Running migrations and loading fixtures..."
-docker_compose run --rm web /bin/bash -c "
+docker_compose run --rm --no-deps web /bin/bash -c "
     ./wait-for-postgres.sh db:5432 && \
     python /code/manage.py migrate --noinput && \
     ./scripts/load_all_fixtures.sh && \

@@ -182,7 +182,19 @@ web:
   # then covers gunicorn's graceful timeout.
   terminationGracePeriodSeconds: 130
   preStopSleepSeconds: 5
-  collectstaticOnStartup: true
+  # Every variant's static is collected into the image at build time
+  # (/code/static-collected/<PROJECT_NAME>), so pods do not collect at
+  # startup. Keep this flag for images built before the multi-tree layout.
+  collectstaticOnStartup: false
+  startupProbe:
+    # 90x2s = ~180s floor, measured after the 2026-08-07 worker-reboot
+    # incident. Tighten once migrate/collectstatic are off (date site: 30x2s).
+    failureThreshold: 90
+    periodSeconds: 2
+    timeoutSeconds: 5
+  # Merged onto the Deployment metadata (e.g.
+  # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
+  annotations: {}
   resources: {}
   strategy:
     type: RollingUpdate
@@ -201,6 +213,9 @@ asgi:
   # application-level drain hook, which Daphne does not provide.
   terminationGracePeriodSeconds: 60
   preStopSleepSeconds: 5
+  # Merged onto the Deployment metadata (e.g.
+  # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
+  annotations: {}
   resources: {}
   strategy:
     type: RollingUpdate
@@ -217,6 +232,9 @@ celery:
   # task. The 120s default is a starting point; verify against task
   # durations and adjust.
   terminationGracePeriodSeconds: 120
+  # Merged onto the Deployment metadata (e.g.
+  # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
+  annotations: {}
   livenessProbe:
     initialDelaySeconds: 60
     periodSeconds: 300
@@ -231,9 +249,20 @@ celery:
 migrations:
   job:
     enabled: false
+    # Helm hook lifecycle (post-install,post-upgrade), or empty for a plain
+    # Job tracked by GitOps. Plain Jobs get a revision-suffixed name and run
+    # under Argo sync waves, which guarantees migration completion before
+    # application pods start; they must NOT set ttlSecondsAfterFinished,
+    # because Argo keeps the completed Job as desired state.
     hook: post-install,post-upgrade
     hookDeletePolicy: before-hook-creation,hook-succeeded
     backoffLimit: 3
+    # Additional annotations merged onto the Job (e.g.
+    # argocd.argoproj.io/sync-wave: "0").
+    annotations: {}
+    activeDeadlineSeconds: 600
+    # Only rendered in hook mode; plain Jobs stay until Argo prunes them.
+    ttlSecondsAfterFinished: 3600
     resources: {}
 ingress:
   enabled: true

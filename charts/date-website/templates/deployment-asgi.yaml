@@ -5,6 +5,10 @@ metadata:
   labels:
     {{- include "date-website.labels" . | nindent 4 }}
     app.kubernetes.io/component: asgi
+  {{- with .Values.asgi.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.asgi.replicaCount }}
   selector:
