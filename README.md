@@ -10,7 +10,7 @@ DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.
 - Docker 24+ plus the Docker Compose plugin (`docker compose`). Follow Docker's official guides for [Ubuntu](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) or [Debian](https://docs.docker.com/engine/install/debian/#install-using-the-repository) to install both the engine and the Compose plugin.
 - Bash-compatible shell (the helper script `env.sh` defines aliases such as `date-start`)
 - Access to `docker` without sudo (add yourself to the `docker` group if needed)
-- Local `django-admin` (e.g., via `pipx install django`) when editing translations outside the container
+- [uv](https://docs.astral.sh/uv/) for native test, lint, and translation commands outside Docker (install it via `pipx install uv` or the standalone installer). Run `uv sync` once after cloning, then `uv run python manage.py test` and `uv run django-admin makemessages ...` work without containers.
 
 > Windows developers should run the project inside WSL 2 to match the expected Linux tooling: sourcing `env.sh`, running Bash scripts, and keeping LF line endings all work reliably there. Follow Microsoft's [WSL installation guide](https://learn.microsoft.com/windows/wsl/install) first, then install [Docker Desktop](https://www.docker.com/products/docker-desktop/) (which automatically connects Docker to your default WSL distro).
 
@@ -22,7 +22,7 @@ cd date-website
 git checkout main
 cp .env.example .env            # adjust passwords, ports, S3, etc.
 source env.sh                   # registers helper aliases
-date-start-detached             # builds containers, runs migrations, collects static files
+date-start-detached             # starts the stack (use date-rebuild after dependency changes)
 date-createsuperuser            # creates your admin account
 open http://localhost:8000      # admin lives at /admin
 ```
@@ -104,7 +104,9 @@ The script defines the `date-*` aliases used throughout this README:
 
 | Command | Description |
 | --- | --- |
-| `date-start` / `date-start-detached` | Pull images, rebuild, apply migrations, collect static files, and start the stack (foreground or detached). |
+| `date-start` / `date-start-detached` | Start the stack without forcing a rebuild (foreground or detached). |
+| `date-rebuild` / `date-rebuild-detached` | Rebuild images and start the stack; needed after `pyproject.toml`, `uv.lock`, or `Dockerfile` changes. |
+| `date-build` | Build images without starting the stack. |
 | `date-stop` | Shut down the Compose stack. |
 | `date-manage <cmd>` | Run `python manage.py <cmd>` inside the web container. |
 | `date-makemigrations`, `date-migrate`, `date-collectstatic`, `date-createsuperuser` | Convenience wrappers around common `manage.py` commands. |
@@ -118,6 +120,7 @@ Once the aliases are registered, the `date-*` commands are the normal way to wor
 
 ## Database, migrations, and seed data
 
+- The dev stack runs migrations and translation compilation once in an `init` service when the stack is first created; the web container starts only after it succeeds. After pulling code with new migrations, run `date-migrate` (or `docker compose down` followed by `date-start`, which recreates `init`) to apply them.
 - Use `date-makemigrations` and `date-migrate` for schema changes. Commit the generated migration files; do not rewrite published migrations.
 - `date-cleaninit` (alias for `./scripts/clean_init.sh`) drops and recreates the development database volumes, loads the local fixture set, generates sample media, and resets the `admin`, `freshman`, and `member` passwords to `admin`. **All local data will be deleted.**
 - If your shell does not expose aliases, run `/bin/bash ./scripts/clean_init.sh` directly.
@@ -128,16 +131,27 @@ The fixture reset flow uses `scripts/load_all_fixtures.sh` and `scripts/generate
 
 ## Tests & QA
 
-The CI and reviewer expectation is that `python manage.py test` (or the `date-test` alias) passes before you open a pull request. The test settings mock external services, so no Redis or PostgreSQL on the host is required.
+The CI and reviewer expectation is that `python manage.py test` passes before you open a pull request. The test settings replace service-backed components with in-memory backends (SQLite, in-memory Channels, locmem cache), so no Redis or PostgreSQL is required on the host or in the test container.
+
+Two equivalent ways to run the suite:
+
+```bash
+uv sync                       # install dependencies once (native, no Docker)
+uv run python manage.py test  # fast native loop, no containers started
+date-test                     # container parity: same suite inside Docker
+```
 
 Examples:
 
 ```bash
 date-test                   # run the full suite inside Docker
 date-test members.tests     # run a specific module
+uv run python manage.py test events.tests   # specific module, native
 date-manage check           # static checks (migrations, settings sanity)
 uv run python scripts/check_project_variants.py
 ```
+
+The `date-test` alias runs with `--no-deps`, so it does not start the database or Redis services; `date-test` is useful as a parity check when native `uv` dependencies behave differently from the container build.
 
 Manually verify user-facing flows (forms, background jobs, Channels endpoints) when implementing a feature; a lot of work in this repo still benefits from a quick human smoke test after the automated checks pass.
 
@@ -334,7 +348,7 @@ To generate the translation file, called `django.po`
 is done by executing the following command **in the root directory of the project**
 
 ```bash
-$ django-admin makemessages -l en -l fi -l sv
+$ uv run django-admin makemessages -l en -l fi -l sv
 ```
 
 This creates/updates the `django.po` 
@@ -346,7 +360,7 @@ such as `Poedit`.
 To compile the translations to `django.mo`, use the following command
 
 ```bash
-$ django-admin compilemessages
+$ uv run django-admin compilemessages
 ``` 
 
 ### Django modeltranslations (translation of dynamic content)

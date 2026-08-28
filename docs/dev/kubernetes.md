@@ -67,9 +67,24 @@ The chart deploys:
 - Traefik-compatible `Ingress`, or Gateway API resources
 - optional migration Job
 
-The web deployment runs `migrateOnStartup` in the production values. If the
-web replica count is ever raised above 1, move migrations out of startup
-into the migration Job so two pods cannot race.
+Migrations run as a single migration Job per release. Two modes:
+
+- **Helm hook** (default): the Job uses `post-install,post-upgrade` hooks
+  and is deleted after success. This works for plain `helm
+  install/upgrade`, but hook timing under GitOps reconciliation is less
+  predictable and the Job does not strictly gate application startup.
+- **Plain Job + Argo sync waves** (production values): set
+  `migrations.job.hook: ""` and add `argocd.argoproj.io/sync-wave: "0"` via
+  `migrations.job.annotations`, with `argocd.argoproj.io/sync-wave: "1"` on
+  the web/asgi/celery Deployments (`.Values.<component>.annotations`).
+  Argo then runs migrations to completion before rolling the application.
+  The Job gets a revision-suffixed name, stays completed as desired state
+  (no TTL), and the previous revision's Job is pruned on the next sync.
+
+Never enable `web.migrateOnStartup` in production: it couples schema
+mutation to pod readiness, re-runs on every pod restart, and races when the
+replica count is above one. Keep expand-contract migration rules so old and
+new pods can overlap during rollouts.
 
 ## How production actually runs (summary)
 
@@ -107,12 +122,63 @@ into the migration Job so two pods cannot race.
    syncs the release.
 4. Verify: site responds over HTTPS, `/healthz/` and `/readyz/` are green.
 
+## Static files
+
+Every association's static is collected into the image at build time, one
+tree per variant under `/code/static-collected/<PROJECT_NAME>`. Settings
+pick the tree matching the runtime `PROJECT_NAME`, so every site serves
+build-time static and no web pod runs `collectstatic` at startup
+(`web.collectstaticOnStartup` defaults to false; keep it only for images
+built before this layout).
+
+Separate trees are required because variants define the same logical paths
+with different content (e.g. `date/css/homepage.css` differs per
+association); a single merged collection would silently overwrite assets.
+This keeps one generic image for all variants: no per-association images,
+no startup collection, no way for an image and its values to disagree on
+the variant.
+
+If static-on-S3 (see issue) lands, collection moves from the image build to
+a release-time upload into the existing per-association media bucket, and
+pods stop carrying static entirely.
+
 The operator repository holds:
 
 - the Argo CD Application per site (chart source + per-site values)
 - per-site values files (secrets are referenced by name, never inline)
 - the blue-green standbys and the ingress manifests
 - the deploy tooling (see below)
+
+## Redis ownership
+
+PostgreSQL is shared across associations per database, and Redis must be
+treated the same way. Two sanctioned layouts:
+
+- **One Redis per association**, shared by its live and standby releases.
+  The live release keeps `redis.enabled: true`; the standby sets
+  `redis.enabled: false` and `redis.externalUrl` to the live release's
+  Redis service (e.g. `redis://<live-release>-redis:6379`). Live and
+  standby must never get separate Redis instances: a separate standby
+  broker strands queued Celery tasks and splits Channels group state
+  during cutover. When roles switch, the Redis service itself does not
+  move: the old live's Redis keeps serving, and only the deployments
+  change.
+- **One shared standalone Redis instance** (not Redis Cluster: it does not
+  support logical databases beyond 0) with a per-association logical
+  database: `redis.enabled: false` + a pathless `redis.externalUrl` per
+  site, with a unique `redis.database` number per association (0-15, the
+  default Redis range). The database number is applied to the cache,
+  Channels, and Celery broker and result backend, so queues and keys
+  cannot collide.
+
+Example: with one cluster Redis at `redis://redis.internal:6379`, site A
+uses `redis.database: 0`, site B `redis.database: 1`, and both releases of
+each site point at the same URL.
+
+Ephemeral Redis implies an accepted task-loss model on broker loss: the
+database backup does not preserve queued Celery tasks. Tasks that must
+survive need a durable source of truth with reconciliation/re-enqueue, or
+a durable broker; keep the backup/restore pipeline for database data only.
 
 ## Blue-green deploys (zero-downtime)
 
@@ -121,8 +187,9 @@ shares the site's database and secrets, no ingress) that is scaled to zero
 between deploys. A deploy:
 
 1. dumps the site's database first (the rollback mechanism)
-2. sets the new image tag on the standby → Argo syncs it → the standby runs
-   migrations on startup while the live site keeps serving
+2. sets the new image tag on the standby → Argo syncs it → the ordered
+   migration Job runs first (sync wave 0), then the standby application
+   pods start (sync wave 1) while the live site keeps serving
 3. smoke-tests the standby, then flips the ingress backend service names to
    the standby (in-place, no traffic gap)
 4. soaks, keeping the old stack as the rollback target, then scales the old
