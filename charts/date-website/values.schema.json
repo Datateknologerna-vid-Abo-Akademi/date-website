@@ -242,6 +242,14 @@
           "type": "integer",
           "minimum": 0
         },
+        "terminationGracePeriodSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "preStopSleepSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
         "annotations": {
           "type": "object",
           "additionalProperties": {
@@ -257,6 +265,14 @@
       "type": "object",
       "properties": {
         "replicaCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "terminationGracePeriodSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "preStopSleepSeconds": {
           "type": "integer",
           "minimum": 0
         },
@@ -281,6 +297,10 @@
         "replicaCount": {
           "type": "integer",
           "minimum": 0
+        },
+        "terminationGracePeriodSeconds": {
+          "type": "integer",
+          "minimum": 1
         },
         "annotations": {
           "type": "object",

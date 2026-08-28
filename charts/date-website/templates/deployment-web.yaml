@@ -58,10 +58,17 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.web.terminationGracePeriodSeconds }}
       containers:
         - name: web
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.web.preStopSleepSeconds }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep {{ .Values.web.preStopSleepSeconds }}"]
+          {{- end }}
           command:
             - /bin/bash
             - -c
@@ -80,6 +87,7 @@ spec:
               exec gunicorn \
                 -w {{ .Values.web.gunicorn.workers }} \
                 --timeout {{ .Values.web.gunicorn.timeout }} \
+                --graceful-timeout {{ .Values.web.gunicorn.gracefulTimeout }} \
                 --max-requests {{ .Values.web.gunicorn.maxRequests }} \
                 --max-requests-jitter {{ .Values.web.gunicorn.maxRequestsJitter }} \
                 --bind=0.0.0.0:8000 \
