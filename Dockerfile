@@ -29,3 +29,11 @@ RUN for variant in date kk pulterit biocum sf impuls demo; do \
       PROJECT_NAME="${variant}" STATIC_ROOT="/code/static-collected/${variant}" \
         python manage.py collectstatic --noinput --clear || exit 1; \
     done
+# The trees share ~99% of their files (common assets plus third-party static
+# such as CKEditor), so deduplicate identical files with hardlinks: ~350 MiB
+# of collected output collapses to ~55 MiB on disk. The source static/ dir is
+# then removed; it is only input for collectstatic, and prod serves the
+# collected trees (dev compose bind-mounts the repo). Any release-time static
+# upload (S3) must push these trees, not re-run collectstatic from sources.
+RUN python scripts/dedup_static.py /code/static-collected \
+ && rm -rf static/
