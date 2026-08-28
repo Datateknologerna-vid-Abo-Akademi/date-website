@@ -8,10 +8,13 @@ gateway:
     enabled: true
 
 web:
-  # Do not increase without disabling migrateOnStartup and using a migration Job
-  # or another single-run migration step.
+  # Migration is handled by the plain migration Job below (Argo sync wave 0),
+  # so the web deployment must not migrate: multiple replicas or a restart
+  # would otherwise race or re-run migrations.
   replicaCount: 1
-  migrateOnStartup: true
+  migrateOnStartup: false
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
   resources:
     requests:
       cpu: 100m
@@ -21,6 +24,8 @@ web:
 
 asgi:
   replicaCount: 1
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
   resources:
     requests:
       cpu: 50m
@@ -30,6 +35,8 @@ asgi:
 
 celery:
   replicaCount: 1
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
   resources:
     requests:
       cpu: 100m
@@ -39,7 +46,12 @@ celery:
 
 migrations:
   job:
-    enabled: false
+    enabled: true
+    # Plain Job (no Helm hook): Argo sync waves order it (wave 0) before the
+    # application deployments (wave 1, set via the annotations above).
+    hook: ""
+    annotations:
+      argocd.argoproj.io/sync-wave: "0"
     resources:
       requests:
         cpu: 100m
