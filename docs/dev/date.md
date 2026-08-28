@@ -30,7 +30,6 @@
 
 ## Middleware Notes
 - `HTCPCPMiddleware` serves the custom `418` page for coffee-themed easter-egg routes.
-- `CDNRewriteMiddleware` rewrites known storage hostnames in non-streaming responses. If you introduce new public asset hostnames, add them to `CDN_URL_TRANSFORMATIONS` in settings.
 
 ## Extending
 - If more widgets are added to the home page, keep the aggregation work inside `index()` minimal; heavy data should be fetched via dedicated services or cached.

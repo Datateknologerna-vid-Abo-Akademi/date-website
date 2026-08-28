@@ -204,7 +204,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'date.middleware.LangMiddleware',
     'date.middleware.HTCPCPMiddleware',
-    'date.middleware.CDNRewriteMiddleware',
 ]
 
 SERVER_TIMING_ENABLED = DEVELOP
@@ -590,13 +589,6 @@ LOGGING = {
 }
 
 EXPERIMENTAL_FEATURES = []
-
-
-# CDN settings
-CDN_URL_TRANSFORMATIONS = [
-    ("fra1.digitaloceanspaces.com/albin-storage/", "albin-storage.cdn.datateknologerna.org/"),
-    ("albin-storage.fra1.digitaloceanspaces.com/", "albin-storage.cdn.datateknologerna.org/"),
-]
 
 # Re-export every public name so that `from .common import *` in a
 # variant settings module brings along imported helpers (os, BASE_DIR,
