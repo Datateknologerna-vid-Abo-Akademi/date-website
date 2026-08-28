@@ -4,6 +4,16 @@ from django.conf import settings
 from django.contrib.staticfiles.storage import ManifestFilesMixin
 from storages.backends.s3boto3 import S3Boto3Storage
 from storages.utils import clean_name
+from whitenoise.storage import CompressedManifestStaticFilesStorage
+
+
+class NonStrictManifestStaticFilesStorage(CompressedManifestStaticFilesStorage):
+    # manifest_strict = False makes runtime {% static %} lookups fall back to
+    # computing a hashed name when the manifest has no entry, instead of
+    # raising. collectstatic still fails on references to files that do not
+    # exist (the vendored jquery sourcemap reference is fixed by shipping the
+    # map file), which is the desired strictness for deployments.
+    manifest_strict = False
 
 
 class StaticStorage(ManifestFilesMixin, S3Boto3Storage):

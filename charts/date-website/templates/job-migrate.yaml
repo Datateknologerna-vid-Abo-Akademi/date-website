@@ -1,16 +1,29 @@
 {{- if .Values.migrations.job.enabled -}}
+{{- $jobName := printf "%s-migrate" (include "date-website.fullname" .) -}}
+{{- if not .Values.migrations.job.hook -}}
+{{- $jobName = printf "%s-%s" $jobName (printf "%d" .Release.Revision) -}}
+{{- end -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "date-website.fullname" . }}-migrate
+  name: {{ $jobName }}
   labels:
     {{- include "date-website.labels" . | nindent 4 }}
     app.kubernetes.io/component: migrate
   annotations:
+    {{- if .Values.migrations.job.hook }}
     "helm.sh/hook": {{ .Values.migrations.job.hook | quote }}
     "helm.sh/hook-delete-policy": {{ .Values.migrations.job.hookDeletePolicy | quote }}
+    {{- end }}
+    {{- with .Values.migrations.job.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   backoffLimit: {{ .Values.migrations.job.backoffLimit }}
+  activeDeadlineSeconds: {{ .Values.migrations.job.activeDeadlineSeconds }}
+  {{- if and .Values.migrations.job.hook .Values.migrations.job.ttlSecondsAfterFinished }}
+  ttlSecondsAfterFinished: {{ .Values.migrations.job.ttlSecondsAfterFinished }}
+  {{- end }}
   template:
     metadata:
       labels:
