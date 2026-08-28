@@ -178,15 +178,17 @@ web:
     timeout: 120
     # On SIGTERM gunicorn waits this long for in-flight requests before
     # killing workers; must fit inside terminationGracePeriodSeconds.
-    gracefulTimeout: 120
+    gracefulTimeout: 60
     maxRequests: 1000
     maxRequestsJitter: 100
   migrateOnStartup: false
-  # Graceful shutdown: the preStop sleep gives the ingress time to observe
-  # endpoint termination and stop routing new requests; the grace period
-  # then covers gunicorn's graceful timeout.
-  terminationGracePeriodSeconds: 130
-  preStopSleepSeconds: 5
+  # Graceful shutdown: the short preStop sleep gives the ingress time to
+  # observe endpoint termination and stop routing new requests; the grace
+  # period then covers gunicorn's graceful timeout. Both are kept small to
+  # bound deploy duration; longer in-flight requests are cut off at the
+  # graceful timeout instead of held open.
+  terminationGracePeriodSeconds: 70
+  preStopSleepSeconds: 2
   # Every variant's static is collected into the image at build time
   # (/code/static-collected/<PROJECT_NAME>), so pods do not collect at
   # startup. Keep this flag for images built before the multi-tree layout.
@@ -212,12 +214,12 @@ asgi:
     type: ClusterIP
     port: 8000
   wsPath: /ws
-  # The preStop sleep gives the ingress time to stop routing new
+  # The short preStop sleep gives the ingress time to stop routing new
   # connections; Daphne closes remaining WebSockets on SIGTERM, and the
   # grace period covers that shutdown. A longer drain would require an
   # application-level drain hook, which Daphne does not provide.
-  terminationGracePeriodSeconds: 60
-  preStopSleepSeconds: 5
+  terminationGracePeriodSeconds: 35
+  preStopSleepSeconds: 2
   # Merged onto the Deployment metadata (e.g.
   # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
   annotations: {}
@@ -233,10 +235,9 @@ celery:
   logLevel: info
   # Warm shutdown: celery finishes active tasks on SIGTERM and (with
   # task_acks_late) requeues acknowledged-but-unfinished work on worker
-  # loss; the grace period is the floor and should exceed the longest
-  # task. The 120s default is a starting point; verify against task
-  # durations and adjust.
-  terminationGracePeriodSeconds: 120
+  # loss; the grace period bounds the roll stall. Short tasks finish,
+  # longer ones requeue to the new worker instead of being waited out.
+  terminationGracePeriodSeconds: 60
   # Merged onto the Deployment metadata (e.g.
   # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
   annotations: {}
