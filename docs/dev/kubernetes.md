@@ -207,6 +207,40 @@ standby migrates — not at cutover. Therefore:
   after the standby migrates and aborts + restores the dump if the live site
   broke, but it cannot make a destructive migration zero-downtime.
 
+## Graceful termination
+
+Each component gets a deliberate shutdown policy:
+
+- **web** (`terminationGracePeriodSeconds: 70`, `preStopSleepSeconds: 2`):
+  the short preStop sleep gives the ingress time to observe endpoint
+  termination and stop routing new requests; on SIGTERM gunicorn drains
+  in-flight requests for `gunicorn.gracefulTimeout` (60s, configured
+  explicitly; the default graceful timeout is only 30s) before killing
+  workers. Requests longer than the graceful timeout are cut off at the cap
+  so a deploy is never held open indefinitely.
+- **asgi** (35s grace, 2s preStop): the short preStop sleep gives the
+  ingress time to stop routing new connections; Daphne closes remaining
+  WebSockets on SIGTERM within the grace period. Daphne has no
+  application-level drain hook, so a longer drain is not available without
+  custom code.
+- **celery** (60s grace): celery finishes active tasks on SIGTERM. With
+  `CELERY_TASK_ACKS_LATE` and `CELERY_TASK_REJECT_ON_WORKER_LOST`, work that
+  was acknowledged but not finished is requeued on worker loss instead of
+  being dropped; tasks must tolerate redelivery. The grace period bounds
+  the roll stall: short tasks finish in place, longer ones requeue to the
+  new worker instead of being waited out.
+
+### Verification
+
+Before relying on this, verify once per environment:
+
+- Web: tail `web` logs during a rollout; confirm gunicorn logs graceful
+  worker shutdown and no 5xx for in-flight requests.
+- Celery: enqueue a slow task, roll the worker, confirm it finishes (or is
+  requeued and runs again) and nothing is dropped silently.
+- ASGI: hold a WebSocket open through an asgi rollout and confirm it
+  closes cleanly (client sees a close frame, not a hang).
+
 ## Secrets
 
 - Production secrets live in Kubernetes secrets created out-of-band; site

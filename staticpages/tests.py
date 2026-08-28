@@ -55,7 +55,7 @@ class PolicyViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "<h1>Anmälningsvillkor gällande evenemang</h1>", html=True)
 
-    @override_settings(PROJECT_NAME="kk")
+    @override_settings(EQUALITY_PLAN_ENABLED=False, REGISTRATION_TERMS_ENABLED=False)
     def test_policy_views_are_date_only(self):
         equality_response = self.client.get(reverse("staticpages:equality_plan"))
         terms_response = self.client.get(reverse("staticpages:registration_terms"))

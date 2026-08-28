@@ -222,6 +222,12 @@ CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", str, CELERY_BROKER_URL)
 # broker Redis.
 CELERY_TASK_IGNORE_RESULT = True
 
+# Acknowledge tasks only after execution and requeue on worker loss, so a
+# worker killed mid-task (rollout, node drain, OOM) does not silently drop
+# the task. Tasks must tolerate redelivery (emails can be re-sent).
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
+
 
 CHANNEL_LAYERS = {
     'default': {
@@ -347,6 +353,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 PROJECT_NAME = os.environ.get("PROJECT_NAME", "date")
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Association capabilities. Prefer these over direct PROJECT_NAME checks in
+# application code so a new association can enable behavior via settings.
+APRIL_HOMEPAGE_ENABLED = False
+REGISTRATION_TERMS_ENABLED = False
+EQUALITY_PLAN_ENABLED = False
+KK_EVENT_TEMPLATES_ENABLED = False
+
 # The runtime image is built with each association's static collected into
 # /code/static-collected/<PROJECT_NAME>; pick that tree when present so every
 # variant serves build-time static with no startup collection. Local
@@ -389,10 +402,11 @@ STORAGES = {
     },
 }
 
-# Development serves static through the WhiteNoise finders without a
-# collected manifest, so {% static %} must resolve to plain paths there.
-if DEBUG:
-    STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.StaticFilesStorage"
+# Serve static from the per-association public S3 bucket (same bucket as
+# media, 'static' prefix, CDN via the public custom domain) instead of the
+# pod filesystem. Requires a release-time collectstatic upload before the
+# flag is enabled on a site.
+STATIC_S3_ENABLED = env('STATIC_S3_ENABLED', bool, False)
 
 if USE_S3:
     # aws settings
@@ -424,6 +438,11 @@ if USE_S3:
     )
     AWS_S3_PRIVATE_CUSTOM_DOMAIN = (
         env_alias('S3_PRIVATE_CUSTOM_DOMAIN', 'AWS_S3_PRIVATE_CUSTOM_DOMAIN', default='') or None
+    )
+    # Optional dedicated CDN domain for static; defaults to the public media
+    # domain (both serve the same bucket).
+    AWS_S3_STATIC_CUSTOM_DOMAIN = (
+        env_alias('S3_STATIC_CUSTOM_DOMAIN', 'AWS_S3_STATIC_CUSTOM_DOMAIN', default='') or None
     )
     AWS_QUERYSTRING_AUTH = True
     AWS_QUERYSTRING_EXPIRE = 3600
@@ -468,6 +487,17 @@ if USE_S3:
         ),
     }
 
+    if STATIC_S3_ENABLED:
+        STORAGES["staticfiles"] = {
+            "BACKEND": "core.storage_backends.StaticStorage",
+            "OPTIONS": get_s3_storage_options(
+                AWS_PUBLIC_STORAGE_BUCKET_NAME,
+                "static",
+                False,
+                AWS_S3_STATIC_CUSTOM_DOMAIN or AWS_S3_PUBLIC_CUSTOM_DOMAIN,
+            ),
+        }
+
 else:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
     MEDIA_URL = '/media/'
@@ -476,6 +506,12 @@ else:
     PRIVATE_MEDIA_LOCATION = 'media/private'
     PUBLIC_MEDIA_LOCATION = 'media/public'
     AWS_STORAGE_BUCKET_NAME = "media"
+
+# Development serves static from the local finders by default; an explicit
+# STATIC_S3_ENABLED wins so S3 URLs are used even when DEBUG is on (e.g. CI
+# containers inherit DATE_DEBUG from .env).
+if DEBUG and not STATIC_S3_ENABLED:
+    STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 STATIC_URL = '/static/'
 
