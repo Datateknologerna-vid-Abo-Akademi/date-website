@@ -478,6 +478,7 @@ else:
 if DEBUG and not STATIC_S3_ENABLED:
     STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
+STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
 STATIC_URL = '/static/'
 
 LOGOUT_REDIRECT_URL = 'index'
