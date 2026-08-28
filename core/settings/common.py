@@ -240,10 +240,13 @@ DATABASES = {
         'PASSWORD': env_alias('DATE_DB_PASSWORD', 'DB_PASSWORD', default=''),
         'HOST': env('DB_HOST', str, 'db'),
         'PORT': env('DB_PORT', int, 5432),
+        # Keep PostgreSQL connections alive between requests to avoid
+        # connection setup latency; must live inside the database config.
+        'CONN_MAX_AGE': env('DB_CONN_MAX_AGE', int, 600),
+        # Re-verify persistent connections so they survive database restarts.
+        'CONN_HEALTH_CHECKS': True,
     }
 }
-
-CONN_MAX_AGE = 600
 
 # Caches
 # https://docs.djangoproject.com/en/5.2/topics/cache/
