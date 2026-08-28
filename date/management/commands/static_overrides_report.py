@@ -34,9 +34,7 @@ class Command(BaseCommand):
         base = os.path.join(settings.BASE_DIR, tree)
 
         variants = sorted(
-            name
-            for name in os.listdir(base)
-            if os.path.isdir(os.path.join(base, name)) and name != "common"
+            name for name in os.listdir(base) if os.path.isdir(os.path.join(base, name)) and name != "common"
         )
         roots = {"common": os.path.join(base, "common"), **{v: os.path.join(base, v) for v in variants}}
 
@@ -64,9 +62,7 @@ class Command(BaseCommand):
                 continue
             if tree == "static" and "common" in owners:
                 self.stdout.write(
-                    self.style.WARNING(
-                        f"static override (differs from common): {rel} in {sorted(owners)}"
-                    )
+                    self.style.WARNING(f"static override (differs from common): {rel} in {sorted(owners)}")
                 )
             elif tree == "static":
                 self.stdout.write(
