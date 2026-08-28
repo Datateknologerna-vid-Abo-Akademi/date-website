@@ -1,4 +1,3 @@
-import importlib
 import os
 import subprocess
 import sys
@@ -56,10 +55,28 @@ class StaticStorageTests(SimpleTestCase):
 
 class StaticS3SettingsTests(SimpleTestCase):
     def test_static_s3_disabled_by_default(self):
-        common = importlib.import_module("core.settings.common")
-        self.assertFalse(common.STATIC_S3_ENABLED)
+        # The DEBUG branch runs at import time, so check both states in fresh
+        # processes instead of depending on the test runner's env (CI sets
+        # DATE_DEBUG, a bare local run does not).
+        env = {**os.environ, "DATE_DEBUG": "true"}
+        code = (
+            "import os, importlib\n"
+            "os.environ['DJANGO_SETTINGS_MODULE'] = 'core.settings.common'\n"
+            "common = importlib.import_module('core.settings.common')\n"
+            "print(common.STATIC_S3_ENABLED)\n"
+            "print(common.STORAGES['staticfiles']['BACKEND'])\n"
+        )
+        result = subprocess.run(
+            [sys.executable, "-c", code],
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        lines = result.stdout.strip().splitlines()
+        self.assertEqual(lines[0], "False")
         self.assertEqual(
-            common.STORAGES["staticfiles"]["BACKEND"],
+            lines[1],
             "django.contrib.staticfiles.storage.StaticFilesStorage",
         )
 
