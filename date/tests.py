@@ -846,9 +846,7 @@ class HomepageQueryTests(TestCase):
 
     def test_dummy_cache_never_caches(self):
         cache.clear()
-        with override_settings(
-            CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
-        ):
+        with override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}):
             with self.assertNumQueries(7):
                 self.client.get("/")
             with self.assertNumQueries(7):
