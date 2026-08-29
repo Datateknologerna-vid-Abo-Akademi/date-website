@@ -1,5 +1,6 @@
 import importlib
 import re
+import time
 from datetime import date, timedelta
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -9,16 +10,19 @@ from django.contrib import admin
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.db import connection
 from django.template import Context, Template
 from django.template.loader import render_to_string
 from django.test import RequestFactory, TestCase
-from django.test.utils import override_settings
+from django.test.utils import CaptureQueriesContext, override_settings
 from django.urls import clear_url_caches, reverse, set_urlconf
 from django.utils import timezone, translation
 
 from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
 from date.views import (
+    _homepage_context,
+    _homepage_version_key,
     format_calendar_events,
     get_homepage_template_name,
     get_recent_albins_angels_post,
@@ -770,3 +774,148 @@ class AssociationHomepageSmokeTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "date/april_start.html")
+
+
+class HomepageQueryTests(TestCase):
+    """The homepage evaluates each data queryset exactly once and caches the
+    assembled context for anonymous visitors. The version key is bumped on
+    every Event/Post/AdUrl/IgUrl save or delete, so admin edits invalidate
+    the cache immediately and the 300s TTL is only a backstop; development
+    uses the dummy cache, so caching is off there."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.author = get_user_model().objects.create_user(username="homepage-query-author")
+        cls.albins_angels = Category.objects.create(name="Albins Angels", slug="albins-angels")
+        Post.objects.create(
+            title="Uncategorized news",
+            slug="uncategorized-news",
+            author=cls.author,
+            category=None,
+            published_time=timezone.now(),
+        )
+
+    def test_homepage_context_uses_five_queries(self):
+        cache.clear()
+        with self.assertNumQueries(5):
+            _homepage_context()
+
+    def test_anonymous_homepage_is_cached_after_first_load(self):
+        cache.clear()
+        with CaptureQueriesContext(connection) as first:
+            self.client.get("/")
+        with CaptureQueriesContext(connection) as second:
+            response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        # Second load is a pure cache hit: the homepage context and the
+        # anonymous navigation are both cached.
+        self.assertLess(len(second), len(first))
+        self.assertEqual(len(second), 0)
+
+    def test_logged_in_homepage_is_not_cached(self):
+        cache.clear()
+        user = get_user_model().objects.create_user(username="member-user", password="pass")
+        self.client.force_login(user)
+        with CaptureQueriesContext(connection) as first:
+            self.client.get("/")
+        with CaptureQueriesContext(connection) as second:
+            self.client.get("/")
+        self.assertEqual(len(first), len(second))
+
+    def test_cache_serves_latest_events_after_ttl_expiry(self):
+        cache.clear()
+        with patch("date.views.HOMEPAGE_CACHE_TTL", 1):
+            self.client.get("/")
+            author = get_user_model().objects.create_user(username="event-author-2")
+            Event.objects.create(
+                title="Fresh Event",
+                slug="fresh-event",
+                author=author,
+                event_date_start=timezone.now(),
+                event_date_end=timezone.now() + timedelta(days=1),
+            )
+            # Wait out the 1s TTL: the cached context must expire and the
+            # next anonymous load must include the new event. Assert on the
+            # view context; the template fragment cache would mask the HTML.
+            time.sleep(1.1)
+            response = self.client.get("/")
+        self.assertIn("Fresh Event", [event.title for event in response.context["events"]])
+
+    def test_cache_key_is_isolated_by_language(self):
+        cache.clear()
+        with self.assertNumQueries(7):
+            self.client.get("/")
+        # A different active language must not reuse the Swedish entry (set
+        # via the language cookie; the locale middleware drives get_language).
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "fi"
+        with self.assertNumQueries(7):
+            self.client.get("/")
+
+    def test_admin_edit_invalidates_anonymous_cache(self):
+        cache.clear()
+        self.client.get("/")
+        author = get_user_model().objects.create_user(username="invalidation-author")
+        with self.captureOnCommitCallbacks(execute=True):
+            Post.objects.create(
+                title="Fresh Invalidation News",
+                slug="fresh-invalidation-news",
+                author=author,
+                category=None,
+                published_time=timezone.now(),
+            )
+        # The version key was bumped on commit, so the next anonymous load
+        # rebuilds the context and shows the new post without waiting out
+        # the TTL.
+        response = self.client.get("/")
+        self.assertIn(
+            "Fresh Invalidation News",
+            [post.title for post in response.context["news"]],
+        )
+
+    def test_event_save_invalidates_anonymous_cache(self):
+        cache.clear()
+        self.client.get("/")
+        author = get_user_model().objects.create_user(username="invalidation-event-author")
+        with self.captureOnCommitCallbacks(execute=True):
+            Event.objects.create(
+                title="Fresh Invalidation Event",
+                slug="fresh-invalidation-event",
+                author=author,
+                event_date_start=timezone.now(),
+                event_date_end=timezone.now() + timedelta(days=1),
+            )
+        response = self.client.get("/")
+        self.assertIn(
+            "Fresh Invalidation Event",
+            [event.title for event in response.context["events"]],
+        )
+
+    def test_admin_delete_invalidates_anonymous_cache(self):
+        cache.clear()
+        self.client.get("/")
+        with self.captureOnCommitCallbacks(execute=True):
+            Post.objects.filter(slug="uncategorized-news").delete()
+        response = self.client.get("/")
+        self.assertNotIn(
+            "Uncategorized news",
+            [post.title for post in response.context["news"]],
+        )
+
+    def test_version_key_eviction_never_resurrects_stale_entries(self):
+        cache.clear()
+        self.client.get("/")
+        # Simulate the version key being evicted while the homepage entry
+        # is still alive: the next load must not reuse the old generation.
+        cache.delete(_homepage_version_key())
+        # The context rebuilds from scratch (5 queries); the navigation is
+        # still served from its own cache.
+        with self.assertNumQueries(5):
+            self.client.get("/")
+
+    def test_dummy_cache_never_caches(self):
+        cache.clear()
+        with override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}):
+            with self.assertNumQueries(7):
+                self.client.get("/")
+            with self.assertNumQueries(7):
+                self.client.get("/")

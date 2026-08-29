@@ -1,15 +1,16 @@
 import logging
 import secrets
-from itertools import chain
+import time
 from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
 from django.core.cache import cache
-from django.db import connection
+from django.db import connection, transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone, translation
+from django.utils.translation import get_language
 
 from ads.models import AdUrl
 from events.models import Event
@@ -70,6 +71,7 @@ def get_recent_albins_angels_post(now=None):
             published_time__lte=now,
             published_time__gt=cutoff,
         )
+        .select_related('category')
         .order_by('-published_time')
         .first()
     )
@@ -89,29 +91,81 @@ def format_calendar_events(all_events):
     return calendar_events
 
 
-def index(request):
-    events_old_events_included = (
+# The TTL is only a backstop: every Event/Post/AdUrl/IgUrl save or delete
+# bumps HOMEPAGE_VERSION_KEY (see date/apps.py), so admin edits invalidate
+# cached anonymous homepages immediately. Development uses the dummy cache,
+# so caching is off there.
+HOMEPAGE_CACHE_TTL = 300
+
+
+def _homepage_version_key():
+    return f"homepage-version:{settings.PROJECT_NAME}"
+
+
+def _homepage_version():
+    version = cache.get(_homepage_version_key())
+    if version is not None:
+        return version
+    # Initialize atomically and without expiry, with a nanosecond-time value:
+    # an evicted key must never restart at a generation whose cached entries
+    # may still exist (second-granularity time would collide within the same
+    # second), or stale homepages would be served again.
+    cache.add(_homepage_version_key(), time.time_ns(), timeout=None)
+    # Another process may have initialized a different value in the meantime.
+    return cache.get(_homepage_version_key()) or 1
+
+
+def bump_homepage_version(**kwargs):
+    """Invalidate cached anonymous homepages after the transaction commits."""
+
+    def _bump():
+        try:
+            cache.incr(_homepage_version_key())
+        except ValueError:
+            # Evicted (or never set): start a fresh generation that cannot
+            # collide with any still-live entry (see _homepage_version).
+            cache.add(_homepage_version_key(), time.time_ns(), timeout=None)
+
+    transaction.on_commit(_bump)
+
+
+def _homepage_context(now=None):
+    now = now or timezone.now()
+    # Evaluate each queryset exactly once; derive upcoming events in Python.
+    recent_events = list(
         Event.objects.published()
-        .filter(
-            event_date_end__gte=(timezone.now() - timezone.timedelta(days=31)),
-        )
+        .filter(event_date_end__gte=now - timezone.timedelta(days=31))
         .exclude(slug="")
         .exclude(slug__isnull=True)
         .order_by('event_date_start')
     )
-    events = events_old_events_included.filter(event_date_end__gte=timezone.now())
-    news = Post.objects.published().filter(category__isnull=True).reverse()[:3]
+    upcoming_events = [event for event in recent_events if event.event_date_end >= now]
+    news = list(Post.objects.published().filter(category__isnull=True).reverse()[:3])
 
-    context = {
-        'calendar_events': format_calendar_events(events_old_events_included),
-        'events': events,
+    return {
+        'calendar_events': format_calendar_events(recent_events),
+        'events': upcoming_events,
         'news': news,
-        'news_events': list(chain(events, news)),
-        'ads': AdUrl.objects.all(),
-        'posts': IgUrl.objects.all(),
-        'aa_post': get_recent_albins_angels_post(),
+        'ads': list(AdUrl.objects.all()),
+        'posts': list(IgUrl.objects.all()),
+        'aa_post': get_recent_albins_angels_post(now=now),
     }
 
+
+def index(request):
+    cache_key = None
+    if not request.user.is_authenticated:
+        cache_key = (
+            f"homepage:{settings.PROJECT_NAME}:{get_language()}:"
+            f"{getattr(settings, 'APRIL_HOMEPAGE_ENABLED', False)}:{_homepage_version()}"
+        )
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return render(request, get_homepage_template_name(), cached)
+
+    context = _homepage_context()
+    if cache_key is not None:
+        cache.set(cache_key, context, HOMEPAGE_CACHE_TTL)
     return render(request, get_homepage_template_name(), context)
 
 
