@@ -1,21 +1,6 @@
 from .common import *  # noqa
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            'templates/biocum',
-            'templates/date',
-            *COMMON_TEMPLATE_DIRS,
-        ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                *COMMON_CONTEXT_PROCESSORS,
-            ],
-        },
-    },
-]
+TEMPLATES = build_templates('biocum', parent_variants=('date',))
 
 INSTALLED_APPS = get_installed_apps(
     [
@@ -39,10 +24,7 @@ USE_ACCEPT_LANGUAGE_HEADER = False
 
 STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/biocum'),
-    os.path.join(BASE_DIR, 'static/common'),
-]
+STATICFILES_DIRS = build_static_dirs('biocum')
 
 CONTENT_VARIABLES = {
     "SITE_URL": "https://biologica.fi",

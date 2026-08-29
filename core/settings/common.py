@@ -178,6 +178,43 @@ COMMON_TEMPLATE_DIRS = [
 ]
 
 
+def build_templates(variant, parent_variants=()):
+    """Template config for a variant, inheriting parent template dirs first.
+
+    The variant's own dir precedes its parents' dirs, then the shared
+    common dirs, matching Django template loader precedence.
+    """
+    return [
+        {
+            'BACKEND': 'django.template.backends.django.DjangoTemplates',
+            'DIRS': [
+                *[f'templates/{name}' for name in (variant, *parent_variants)],
+                *COMMON_TEMPLATE_DIRS,
+            ],
+            'APP_DIRS': True,
+            'OPTIONS': {
+                'context_processors': [
+                    *COMMON_CONTEXT_PROCESSORS,
+                    # Add project context processors here
+                ],
+            },
+        },
+    ]
+
+
+def build_static_dirs(variant, parent_variants=()):
+    """STATICFILES_DIRS for a variant.
+
+    Only the variant's own dir (plus explicitly listed parents) precedes the
+    shared common dir; template inheritance does not automatically extend to
+    static dirs.
+    """
+    return [
+        *[os.path.join(BASE_DIR, f'static/{name}') for name in (variant, *parent_variants)],
+        os.path.join(BASE_DIR, 'static/common'),
+    ]
+
+
 COMMON_CONTEXT_PROCESSORS = [
     'django.template.context_processors.debug',
     'django.template.context_processors.request',
