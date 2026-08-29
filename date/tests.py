@@ -777,8 +777,10 @@ class AssociationHomepageSmokeTests(TestCase):
 
 class HomepageQueryTests(TestCase):
     """The homepage evaluates each data queryset exactly once and caches the
-    assembled context for anonymous visitors (300s, same freshness bound as
-    the template fragment cache; off in development via the dummy cache)."""
+    assembled context for anonymous visitors. The version key is bumped on
+    every Event/Post/AdUrl/IgUrl save or delete, so admin edits invalidate
+    the cache immediately and the 300s TTL is only a backstop; development
+    uses the dummy cache, so caching is off there."""
 
     @classmethod
     def setUpTestData(cls):
@@ -804,10 +806,10 @@ class HomepageQueryTests(TestCase):
         with CaptureQueriesContext(connection) as second:
             response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        # Second load skips the five context queries; only navigation runs
-        # (urls + categories; the children prefetch is skipped when empty).
+        # Second load is a pure cache hit: the homepage context and the
+        # anonymous navigation are both cached.
         self.assertLess(len(second), len(first))
-        self.assertEqual(len(second), 2)
+        self.assertEqual(len(second), 0)
 
     def test_logged_in_homepage_is_not_cached(self):
         cache.clear()
@@ -847,6 +849,27 @@ class HomepageQueryTests(TestCase):
         self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "fi"
         with self.assertNumQueries(7):
             self.client.get("/")
+
+    def test_admin_edit_invalidates_anonymous_cache(self):
+        cache.clear()
+        self.client.get("/")
+        author = get_user_model().objects.create_user(username="invalidation-author")
+        with self.captureOnCommitCallbacks(execute=True):
+            Post.objects.create(
+                title="Fresh Invalidation News",
+                slug="fresh-invalidation-news",
+                author=author,
+                category=None,
+                published_time=timezone.now(),
+            )
+        # The version key was bumped on commit, so the next anonymous load
+        # rebuilds the context and shows the new post without waiting out
+        # the TTL.
+        response = self.client.get("/")
+        self.assertIn(
+            "Fresh Invalidation News",
+            [post.title for post in response.context["news"]],
+        )
 
     def test_dummy_cache_never_caches(self):
         cache.clear()

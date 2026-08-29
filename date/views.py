@@ -4,7 +4,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
 from django.core.cache import cache
-from django.db import connection
+from django.db import connection, transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -90,10 +90,26 @@ def format_calendar_events(all_events):
     return calendar_events
 
 
-# Same freshness bound as the template fragment cache: admin content changes
-# appear within this window. Development uses the dummy cache, so caching is
-# off there.
+# The TTL is only a backstop: every Event/Post/AdUrl/IgUrl save or delete
+# bumps HOMEPAGE_VERSION_KEY (see date/apps.py), so admin edits invalidate
+# cached anonymous homepages immediately. Development uses the dummy cache,
+# so caching is off there.
 HOMEPAGE_CACHE_TTL = 300
+HOMEPAGE_VERSION_KEY = f"homepage-version:{settings.PROJECT_NAME}"
+
+
+def bump_homepage_version(**kwargs):
+    """Invalidate cached anonymous homepages after the transaction commits."""
+
+    def _bump():
+        try:
+            cache.incr(HOMEPAGE_VERSION_KEY)
+        except ValueError:
+            # Missing key (e.g. after a cache flush); start at 2 so no
+            # existing version-1 entry is reused.
+            cache.add(HOMEPAGE_VERSION_KEY, 2, timeout=None)
+
+    transaction.on_commit(_bump)
 
 
 def _homepage_context(now=None):
@@ -122,8 +138,10 @@ def _homepage_context(now=None):
 def index(request):
     cache_key = None
     if not request.user.is_authenticated:
+        version = cache.get(HOMEPAGE_VERSION_KEY) or 1
         cache_key = (
-            f"homepage:{settings.PROJECT_NAME}:{get_language()}:{getattr(settings, 'APRIL_HOMEPAGE_ENABLED', False)}"
+            f"homepage:{settings.PROJECT_NAME}:{get_language()}:"
+            f"{getattr(settings, 'APRIL_HOMEPAGE_ENABLED', False)}:{version}"
         )
         cached = cache.get(cache_key)
         if cached is not None:
