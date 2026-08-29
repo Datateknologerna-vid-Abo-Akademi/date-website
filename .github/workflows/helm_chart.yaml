@@ -68,19 +68,42 @@ jobs:
           # (batch.kubernetes.io/job-name); label values are capped at
           # 63 bytes, so an over-long name renders but is rejected by the
           # API server (2026-08-29 regression caught on the cluster).
-          name="$(
+          job_name() { # job_name <args...> -> prints the migration Job name
             helm template ci "${CHART_PATH}" \
-              -f "${CHART_PATH}/values-hetzner.yaml" \
               --set secret.existingSecret=ci-secrets \
               --set gateway.https.secretName=ci-tls \
               --set database.external.host=db.internal \
               --set-string image.tag=prod \
               --set-string image.digest=sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \
+              "$@" \
               | awk '/kind: Job/{getline; getline; gsub(/^  name: /, ""); print; exit}'
-          )"
-          len="${#name}"
-          echo "migration Job name: ${name} (${len} bytes)"
-          [ "${len}" -le 63 ] || { echo "migration Job name exceeds 63 bytes"; exit 1; }
+          }
+          check_job_name() { # check_job_name <label> <args...>
+            local label="$1"; shift
+            local name
+            name="$(job_name "$@")"
+            [ -n "${name}" ] || { echo "${label}: no migration Job rendered"; exit 1; }
+            [[ "${name}" =~ ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ ]] \
+              || { echo "${label}: Job name not a valid DNS subdomain: ${name}"; exit 1; }
+            [ "${#name}" -le 63 ] \
+              || { echo "${label}: migration Job name exceeds 63 bytes: ${name}"; exit 1; }
+            echo "${label}: ${name} (${#name} bytes)"
+          }
+          check_job_name "digest-pinned" \
+            -f "${CHART_PATH}/values-hetzner.yaml"
+          check_job_name "semver tag, no digest" \
+            -f "${CHART_PATH}/values-hetzner.yaml" \
+            --set-string image.tag=v1.9.4 --set-string image.digest=""
+          check_job_name "long fullname fallback" \
+            -f "${CHART_PATH}/values-hetzner.yaml" \
+            --set-string fullnameOverride=abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz
+          # tags that sanitize identically must still produce distinct names
+          # (base values: pinInProduction false accepts arbitrary tags)
+          a="$(job_name --set 'migrations.job.enabled=true' --set 'migrations.job.hook=' --set-string image.tag=v1.9.4 --set-string image.digest="")"
+          b="$(job_name --set 'migrations.job.enabled=true' --set 'migrations.job.hook=' --set-string image.tag=v1-9-4 --set-string image.digest="")"
+          [ -n "${a}" ] && [ -n "${b}" ] || { echo "collision render failed: '${a}' vs '${b}'"; exit 1; }
+          [ "${a}" != "${b}" ] || { echo "sanitization collision: ${a} == ${b}"; exit 1; }
+          echo "collision pair distinct: ${a} != ${b}"
 
       - name: Package chart
         id: package
