@@ -48,7 +48,18 @@ jobs:
             --set secret.existingSecret=date-website-ci-secrets \
             --set gateway.https.secretName=date-website-ci-tls \
             --set database.external.host=db.internal \
-            --set image.tag=ci
+            --set-string image.tag=v1.9.3 \
+            --set-string image.digest=sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+          if helm lint "${CHART_PATH}" \
+            -f "${CHART_PATH}/values-hetzner.yaml" \
+            -f "${CHART_PATH}/values-backblaze-b2.example.yaml" \
+            --set secret.existingSecret=date-website-ci-secrets \
+            --set gateway.https.secretName=date-website-ci-tls \
+            --set database.external.host=db.internal \
+            --set-string image.tag=prod; then
+            echo "Production lint accepted a moving image tag without a digest."
+            exit 1
+          fi
 
       - name: Package chart
         id: package

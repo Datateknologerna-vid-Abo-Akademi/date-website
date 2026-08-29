@@ -282,8 +282,14 @@ helm upgrade --install date-website charts/date-website \
   --set secret.existingSecret=date-website-prod-secrets \
   --set gateway.https.secretName='<tls-secret-name>' \
   --set database.external.host='<bastion-private-ip-or-dns>' \
-  --set image.tag='<release-tag>'
+  --set-string image.tag='v1.9.3' \
+  --set-string image.digest='sha256:<manifest-digest>'
 ```
+
+The Hetzner values enable production image pinning. The release tag remains
+visible to operators, while the digest selects the exact image manifest. An
+exact `vX.Y.Z` or 40-character commit SHA tag may be used without a digest;
+moving or custom tags require one.
 
 Do not commit real production bucket names, app keys, or Django secrets in values files. Create a Kubernetes Secret first and pass it through `secret.existingSecret`.
 

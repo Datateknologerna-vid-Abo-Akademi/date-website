@@ -59,7 +59,7 @@ spec:
       terminationGracePeriodSeconds: {{ .Values.asgi.terminationGracePeriodSeconds }}
       containers:
         - name: asgi
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "date-website.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           {{- if .Values.asgi.preStopSleepSeconds }}
           lifecycle:

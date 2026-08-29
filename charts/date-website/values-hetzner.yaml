@@ -3,6 +3,10 @@
 # production runs one Argo CD release per association with an external
 # backup pipeline and externally managed ingress, per docs/dev/kubernetes.md.
 # Here the chart owns the Gateway and the backup CronJob.
+image:
+  # Require an immutable commit/release tag or an image digest in production.
+  pinInProduction: true
+
 ingress:
   enabled: false
 

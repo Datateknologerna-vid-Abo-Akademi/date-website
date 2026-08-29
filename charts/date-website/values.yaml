@@ -2,6 +2,10 @@
 image:
   repository: ghcr.io/datateknologerna-vid-abo-akademi/date-website
   tag: prod
+  # Production values set this true. Keep a readable tag alongside image.digest
+  # when the tag may move.
+  pinInProduction: false
+  digest: ''
   pullPolicy: IfNotPresent
 imagePullSecrets: []
 nameOverride: ''
