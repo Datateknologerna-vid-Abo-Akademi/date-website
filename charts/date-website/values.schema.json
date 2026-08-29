@@ -519,45 +519,6 @@
     {
       "if": {
         "properties": {
-          "secret": {
-            "properties": {
-              "existingSecret": {
-                "const": ""
-              }
-            }
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "django": {
-            "required": [
-              "secretKey"
-            ],
-            "properties": {
-              "secretKey": {
-                "type": "string",
-                "minLength": 1
-              }
-            }
-          },
-          "database": {
-            "required": [
-              "password"
-            ],
-            "properties": {
-              "password": {
-                "type": "string",
-                "minLength": 1
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
           "postgresql": {
             "properties": {
               "enabled": {
