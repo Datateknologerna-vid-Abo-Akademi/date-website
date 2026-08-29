@@ -38,7 +38,7 @@ Association variants that install `exambank` without the full `archive` app, suc
 The app intentionally renders the shared `archive/...` templates so the public archive pages keep their historical layout while the data ownership lives in `exambank`.
 
 ## Navigation Visibility
-The `staticpages.context_processors._visible_urls_queryset` and `get_categories` helpers hide nav entries whose URL starts with `/archive/` when `ARCHIVE_ENABLED=False`. When `exambank` is in `INSTALLED_APPS`, entries under `/archive/exams/` are kept visible so the exam compatibility routes remain reachable from the menu. The trailing slash is significant: only `/archive/exams/...` is exempted, not unrelated prefixes such as `/archive/examined/`.
+The `staticpages.context_processors._visible_urls_queryset` and the `navigation` processor hide nav entries whose URL starts with `/archive/` when `ARCHIVE_ENABLED=False`. When `exambank` is in `INSTALLED_APPS`, entries under `/archive/exams/` are kept visible so the exam compatibility routes remain reachable from the menu. The trailing slash is significant: only `/archive/exams/...` is exempted, not unrelated prefixes such as `/archive/examined/`.
 
 ## Uploads
 - Public and admin multi-uploads use `DirectUploadField` (see `dev/uploads.md`): with direct uploads enabled files go straight to the S3 endpoint and are finalized server-side on save; the signing scope for the exam bank reuses the `exam_bank_access_is_allowed` gate.

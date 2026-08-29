@@ -81,3 +81,7 @@ CONTENT_VARIABLES = {
     # Events
     "INTERNATIONAL_EVENT_SLUGS": ["teekkarikaste_teknologdop"],
 }
+
+# Association capabilities
+REGISTRATION_TERMS_ENABLED = True
+EQUALITY_PLAN_ENABLED = True

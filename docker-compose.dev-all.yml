@@ -68,15 +68,17 @@ services:
     volumes:
       - dev_all_redis_data:/data
 
-  # Runs once: migrate + compilemessages (using 'date' as the representative
-  # project). All web containers wait for this to finish before starting.
+  # Runs once: migrate + compilemessages. Migrations run for the distinct app
+  # sets so association-only apps (lucia for kk, klotterplanket for sf) get
+  # their tables in the shared dev database; overlapping apps migrate once.
+  # All web containers wait for this to finish before starting.
   # collectstatic is skipped — WHITENOISE_USE_FINDERS=True (set when DEBUG) has
   # each container serve static files directly from its own STATICFILES_DIRS.
   init:
     env_file: .env
     build: .
     restart: "no"
-    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python manage.py migrate --noinput && python manage.py compilemessages -l en -l fi -l sv --verbosity 0"
+    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && for variant in date kk sf; do PROJECT_NAME=\${variant} python manage.py migrate --noinput || exit 1; done && python manage.py compilemessages -l en -l fi -l sv --verbosity 0"
     volumes:
       - .:/code
     environment:
