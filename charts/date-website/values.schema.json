@@ -12,6 +12,20 @@
         "tag": {
           "type": "string"
         },
+        "pinInProduction": {
+          "type": "boolean"
+        },
+        "digest": {
+          "type": "string",
+          "anyOf": [
+            {
+              "const": ""
+            },
+            {
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            }
+          ]
+        },
         "pullPolicy": {
           "type": "string",
           "enum": [
@@ -617,23 +631,20 @@
           }
         ]
       }
-    }
-,
+    },
     {
       "if": {
+        "required": [
+          "image"
+        ],
         "properties": {
           "image": {
+            "required": [
+              "pinInProduction"
+            ],
             "properties": {
               "pinInProduction": {
                 "const": true
-              },
-              "tag": {
-                "enum": [
-                  "prod",
-                  "latest",
-                  "qa",
-                  "dev"
-                ]
               }
             }
           }
@@ -642,15 +653,35 @@
       "then": {
         "properties": {
           "image": {
-            "required": [
-              "digest"
-            ],
-            "properties": {
-              "digest": {
-                "type": "string",
-                "minLength": 1
+            "anyOf": [
+              {
+                "required": [
+                  "digest"
+                ],
+                "properties": {
+                  "digest": {
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              {
+                "required": [
+                  "tag"
+                ],
+                "properties": {
+                  "tag": {
+                    "anyOf": [
+                      {
+                        "pattern": "^[0-9a-f]{40}$"
+                      },
+                      {
+                        "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+                      }
+                    ]
+                  }
+                }
               }
-            }
+            ]
           }
         }
       }

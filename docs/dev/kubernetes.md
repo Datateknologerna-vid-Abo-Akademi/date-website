@@ -42,8 +42,12 @@ Use this together with:
 
 Notes:
 
-- `qa`, `prod`, and `latest` are moving aliases — code should not assume they
-  are immutable. Deployment targets pin what they want (see below).
+- `qa`, `prod`, `latest`, `vX`, and `vX.Y` are moving aliases. Production values
+  set `image.pinInProduction: true`; these aliases must be paired with
+  `image.digest`.
+- Exact `vX.Y.Z` release tags and 40-character commit SHA tags are accepted as
+  immutable tag forms. A digest can also be supplied to retain both the
+  readable tag and the exact manifest identity.
 - The release-tag job waits for the SHA-tagged image from the `main` build,
   then reuses that digest instead of rebuilding — tag the commit whose
   `main` build went green.
@@ -101,7 +105,8 @@ into the migration Job so two pods cannot race.
 1. A SemVer tag is cut (or `promote_production` is run) — the image is now
    available as `prod`/`latest`.
 2. In the operator repository, the site's values file pins the image tag
-   (`image.tag`). A release that includes database migrations carries that
+   (`image.tag`) and, for moving or custom tags, the image digest
+   (`image.digest`). A release that includes database migrations carries that
    pin together with its migrations.
 3. Commit + push to the operator repository. Argo CD detects the change and
    syncs the release.
