@@ -54,6 +54,12 @@ class Post(models.Model):
         verbose_name = _('nyhet')
         verbose_name_plural = _('nyheter')
         ordering = ('id',)
+        indexes = [
+            # Homepage/news listing: category-scoped publication lookups and
+            # the uncategorized homepage feed.
+            models.Index(fields=['category', 'published_time'], name='post_cat_pub_idx'),
+            models.Index(fields=['published_time'], name='post_pub_idx'),
+        ]
 
     def __str__(self):
         return self.title
