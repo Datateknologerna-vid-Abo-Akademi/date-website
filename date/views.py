@@ -96,20 +96,23 @@ def format_calendar_events(all_events):
 # cached anonymous homepages immediately. Development uses the dummy cache,
 # so caching is off there.
 HOMEPAGE_CACHE_TTL = 300
-HOMEPAGE_VERSION_KEY = f"homepage-version:{settings.PROJECT_NAME}"
+
+
+def _homepage_version_key():
+    return f"homepage-version:{settings.PROJECT_NAME}"
 
 
 def _homepage_version():
-    version = cache.get(HOMEPAGE_VERSION_KEY)
+    version = cache.get(_homepage_version_key())
     if version is not None:
         return version
     # Initialize atomically and without expiry, with a nanosecond-time value:
     # an evicted key must never restart at a generation whose cached entries
     # may still exist (second-granularity time would collide within the same
     # second), or stale homepages would be served again.
-    cache.add(HOMEPAGE_VERSION_KEY, time.time_ns(), timeout=None)
+    cache.add(_homepage_version_key(), time.time_ns(), timeout=None)
     # Another process may have initialized a different value in the meantime.
-    return cache.get(HOMEPAGE_VERSION_KEY) or 1
+    return cache.get(_homepage_version_key()) or 1
 
 
 def bump_homepage_version(**kwargs):
@@ -117,11 +120,11 @@ def bump_homepage_version(**kwargs):
 
     def _bump():
         try:
-            cache.incr(HOMEPAGE_VERSION_KEY)
+            cache.incr(_homepage_version_key())
         except ValueError:
             # Evicted (or never set): start a fresh generation that cannot
             # collide with any still-live entry (see _homepage_version).
-            cache.add(HOMEPAGE_VERSION_KEY, time.time_ns(), timeout=None)
+            cache.add(_homepage_version_key(), time.time_ns(), timeout=None)
 
     transaction.on_commit(_bump)
 

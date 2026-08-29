@@ -21,8 +21,8 @@ from django.utils import timezone, translation
 from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
 from date.views import (
-    HOMEPAGE_VERSION_KEY,
     _homepage_context,
+    _homepage_version_key,
     format_calendar_events,
     get_homepage_template_name,
     get_recent_albins_angels_post,
@@ -906,7 +906,7 @@ class HomepageQueryTests(TestCase):
         self.client.get("/")
         # Simulate the version key being evicted while the homepage entry
         # is still alive: the next load must not reuse the old generation.
-        cache.delete(HOMEPAGE_VERSION_KEY)
+        cache.delete(_homepage_version_key())
         # The context rebuilds from scratch (5 queries); the navigation is
         # still served from its own cache.
         with self.assertNumQueries(5):
