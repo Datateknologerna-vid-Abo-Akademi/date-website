@@ -86,7 +86,7 @@ uv run mypy .
 
 If `djlint --check` reports formatting issues, `uv run djlint --reformat templates/` (or scope it to the changed file) applies the same formatting CI expects. `ruff`/`djlint`/`mypy` config lives in `pyproject.toml` (`[tool.ruff]`, `[tool.djlint]`, `[tool.mypy]`).
 
-The optional pre-push hook under `.githooks/` runs the same checks as the CI lint job (`ruff check`, `ruff format --check`, `djlint --check`, `mypy`) when `uv` is available, and otherwise warns without blocking. `date-setup` installs this hook path.
+The optional pre-push hook under `.githooks/` runs `uv run python manage.py test` when `uv` is available, falls back to Docker tests when Docker is available, and otherwise warns without blocking. `date-setup` installs this hook path.
 
 ## Dependencies
 
