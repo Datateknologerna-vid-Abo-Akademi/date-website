@@ -61,6 +61,27 @@ jobs:
             exit 1
           fi
 
+      - name: Check migration Job name stays under 63 bytes
+        run: |
+          set -euo pipefail
+          # Kubernetes copies the Job name into a pod-template label
+          # (batch.kubernetes.io/job-name); label values are capped at
+          # 63 bytes, so an over-long name renders but is rejected by the
+          # API server (2026-08-29 regression caught on the cluster).
+          name="$(
+            helm template ci "${CHART_PATH}" \
+              -f "${CHART_PATH}/values-hetzner.yaml" \
+              --set secret.existingSecret=ci-secrets \
+              --set gateway.https.secretName=ci-tls \
+              --set database.external.host=db.internal \
+              --set-string image.tag=prod \
+              --set-string image.digest=sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \
+              | awk '/kind: Job/{getline; getline; gsub(/^  name: /, ""); print; exit}'
+          )"
+          len="${#name}"
+          echo "migration Job name: ${name} (${len} bytes)"
+          [ "${len}" -le 63 ] || { echo "migration Job name exceeds 63 bytes"; exit 1; }
+
       - name: Package chart
         id: package
         run: |

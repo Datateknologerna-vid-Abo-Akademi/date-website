@@ -6,13 +6,22 @@
   Job stays as desired state, so the name must change whenever the image
   changes, or the next sync fails with "field is immutable" (Job pod
   templates are immutable). Helm's Release.Revision does NOT work under
-  Argo CD (it always renders as 1). Suffix with the pinned tag + digest
-  instead: a fresh name per image, stable across no-op re-syncs.
+  Argo CD (it always renders as 1).
+  Suffix with the sanitized tag + a short hash of the raw tag|digest pair:
+  deterministic per image, fresh on image change, collision-safe for tags
+  that differ only in characters sanitization collapses (v1.9.4 vs
+  v1-9-4). The whole name must stay <= 63 bytes: Kubernetes copies the
+  Job name into a pod-template label (batch.kubernetes.io/job-name), and
+  label values are capped at 63 bytes. Fall back to just the suffix if the
+  fullname would overflow.
 */ -}}
-{{- $suffix := .Values.image.tag -}}
-{{- if .Values.image.digest }}{{ $suffix = printf "%s-%s" $suffix .Values.image.digest }}{{ end -}}
-{{- $suffix = regexReplaceAll "[^a-z0-9-]" (lower $suffix) "-" -}}
+{{- $raw := printf "%s|%s" .Values.image.tag .Values.image.digest -}}
+{{- $hash := substr 0 12 (sha256sum $raw) -}}
+{{- $tagPart := trimAll "-" (regexReplaceAll "[^a-z0-9-]" (lower .Values.image.tag) "-") -}}
+{{- if gt (len $tagPart) 12 }}{{ $tagPart = substr 0 12 $tagPart }}{{ end -}}
+{{- $suffix := printf "%s-%s" $tagPart $hash -}}
 {{- $jobName = printf "%s-%s" $jobName $suffix -}}
+{{- if gt (len $jobName) 63 }}{{ $jobName = printf "migrate-%s" $suffix }}{{ end -}}
 {{- end -}}
 apiVersion: batch/v1
 kind: Job
