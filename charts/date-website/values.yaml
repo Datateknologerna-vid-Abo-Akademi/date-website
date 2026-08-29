@@ -162,6 +162,13 @@ media:
     # Leave empty to keep endpoint URLs.
     privateCustomDomain: ''
     publicCustomDomain: ''
+    # Serve static from the same public bucket (prefix 'static') instead of
+    # the pod filesystem. The release migration Job uploads static before
+    # application pods start, so enabling this flag and the upload happen in
+    # the same release. Static URLs use staticCustomDomain (defaults to
+    # publicCustomDomain).
+    staticEnabled: false
+    staticCustomDomain: ''
     # Direct browser-to-storage uploads (Uppy with presigned PUT URLs). Requires
     # bucket CORS + a lifecycle rule on the tmp prefix (see docs/dev/uploads.md);
     # uploads then bypass the web pods entirely.

@@ -16,7 +16,7 @@
   <style>
             /*
             .background-img{
-                background: url("{% static 'core/images/stars.png' %}") no-repeat center center fixed;
+                background: image-set(url("{% static 'core/images/stars.webp' %}") type("image/webp"), url("{% static 'core/images/stars.png' %}") type("image/png")) no-repeat center center fixed;
                 -webkit-background-size: cover;
                 -moz-background-size: cover;
                 -o-background-size: cover;
@@ -26,7 +26,7 @@
             background:transparent url("{% static 'core/images/twinkling.png' %}") repeat top center;
             }
             .stars {
-            background:#030826 url("{% static 'core/images/twinklingstars.png' %}") repeat top center;
+            background:#030826 image-set(url("{% static 'core/images/twinklingstars.webp' %}") type("image/webp"), url("{% static 'core/images/twinklingstars.png' %}") type("image/png")) repeat top center;
             }
   </style>
 {% endblock %}

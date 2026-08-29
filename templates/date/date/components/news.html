@@ -5,7 +5,11 @@
     {% if aa_post %}
       <div class="aa-img">
         <a href="{% url 'news:detail' aa_post.category.slug aa_post.slug %}">
-          <img src="{% static 'core/images/albins-angels.png' %}" />
+          <picture>
+            <source srcset="{% static 'core/images/albins-angels.webp' %}"
+                    type="image/webp">
+            <img src="{% static 'core/images/albins-angels.png' %}" />
+          </picture>
         </a>
       </div>
     {% endif %}

@@ -101,6 +101,10 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
         verbose_name = _('evenemang')
         verbose_name_plural = _('evenemang')
         ordering = ('id',)
+        indexes = [
+            # Homepage/listing filters: published events by end date.
+            models.Index(fields=['published_time', 'event_date_end'], name='event_pub_end_idx'),
+        ]
 
     def __str__(self):
         return self.title

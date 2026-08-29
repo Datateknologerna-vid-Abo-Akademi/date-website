@@ -178,6 +178,14 @@
       "properties": {
         "s3": {
           "type": "object",
+          "properties": {
+            "staticEnabled": {
+              "type": "boolean"
+            },
+            "staticCustomDomain": {
+              "type": "string"
+            }
+          },
           "allOf": [
             {
               "if": {
