@@ -76,6 +76,12 @@ backups:
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   backoffLimit: 2
+  # Skip a run when the cluster was down past this deadline; abort a hung
+  # dump after this long.
+  startingDeadlineSeconds: 3600
+  activeDeadlineSeconds: 3600
+  # Empty uses the cluster's default timezone (UTC).
+  timeZone: Europe/Helsinki
   ttlSecondsAfterFinished: 86400
   nodeSelector: {}
   tolerations: []
