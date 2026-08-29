@@ -1,18 +1,12 @@
 #!/bin/sh
 set -e
 
-if ! command -v uv >/dev/null 2>&1; then
-    echo "Warning: uv not available, skipping pre-push lint checks."
-    exit 0
+if command -v uv >/dev/null 2>&1; then
+    echo "Running tests with uv..."
+    uv run python manage.py test
+elif docker info >/dev/null 2>&1; then
+    echo "Running tests in Docker (uv not found locally)..."
+    docker compose run --rm web python manage.py test
+else
+    echo "Warning: neither uv nor Docker available, skipping pre-push tests."
 fi
-
-# Same checks as the CI lint job (.github/workflows/web_startup.yaml), kept
-# deliberately free of the test suite so pushes stay fast.
-echo "Running ruff check..."
-uv run ruff check .
-echo "Running ruff format check..."
-uv run ruff format --check .
-echo "Running djlint..."
-uv run djlint --check templates/
-echo "Running mypy..."
-uv run mypy .
