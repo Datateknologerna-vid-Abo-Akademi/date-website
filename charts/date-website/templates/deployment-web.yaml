@@ -82,13 +82,14 @@ spec:
               python /code/manage.py collectstatic --noinput --clear
               {{- end }}
               exec gunicorn \
+                -k {{ .Values.web.gunicorn.workerClass }} \
                 -w {{ .Values.web.gunicorn.workers }} \
                 --timeout {{ .Values.web.gunicorn.timeout }} \
                 --graceful-timeout {{ .Values.web.gunicorn.gracefulTimeout }} \
                 --max-requests {{ .Values.web.gunicorn.maxRequests }} \
                 --max-requests-jitter {{ .Values.web.gunicorn.maxRequestsJitter }} \
                 --bind=0.0.0.0:8000 \
-                core.wsgi
+                core.asgi:application
           env:
             {{- if .Values.django.alumniSettingsSecretName }}
             - name: ALUMNI_SETTINGS

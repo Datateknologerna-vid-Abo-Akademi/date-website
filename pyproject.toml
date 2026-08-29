@@ -32,6 +32,7 @@ dependencies = [
     "daphne",
     "celery[redis]",
     "gunicorn",
+    "uvicorn[standard]",
     "gspread",
     "twisted[tls]>=26.4.0",
     "defusedxml>=0.7.1",

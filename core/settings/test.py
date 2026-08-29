@@ -40,9 +40,21 @@ PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    # Silence Django's default loggers explicitly: configure_logging applies
+    # Django's DEFAULT_LOGGING first, which gives 'django' and 'django.server'
+    # console handlers at INFO that the CRITICAL root level cannot gate.
+    # Keep disable_existing_loggers=False: Django 6 re-runs
+    # configure_logging() on every django.setup() call (e.g. when a test
+    # module imports the ASGI application), and disabling existing loggers
+    # would permanently disable loggers created at import time (like
+    # 'date'), breaking assertLogs-based tests.
+    'disable_existing_loggers': False,
     'handlers': {
         'console': {'class': 'logging.StreamHandler'},
+    },
+    'loggers': {
+        'django': {'level': 'CRITICAL', 'propagate': False},
+        'django.server': {'level': 'CRITICAL', 'propagate': False},
     },
     'root': {
         'handlers': ['console'],

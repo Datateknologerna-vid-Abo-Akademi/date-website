@@ -1,6 +1,6 @@
 {{- if .Values.pdb.enabled -}}
 {{- $root := . -}}
-{{- range $component := list "web" "asgi" "celery" }}
+{{- range $component := list "web" "celery" }}
 {{- $componentConfig := index $root.Values $component -}}
 {{- $componentEnabled := or (not (hasKey $componentConfig "enabled")) $componentConfig.enabled -}}
 {{- if and $componentEnabled (gt (int $componentConfig.replicaCount) 1) }}

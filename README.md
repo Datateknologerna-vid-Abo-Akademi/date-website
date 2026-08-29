@@ -1,6 +1,6 @@
 # DaTe Website 2.0
 
-DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.fi)'s public site, membership tools, alumni portal, polls, and a handful of seasonal or one-off apps. The stack is Django 6.0 running on Python 3.14 inside Docker Compose with Celery workers, Channels/Daphne, PostgreSQL, Valkey (Redis compatible), and S3-compatible storage.
+DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.fi)'s public site, membership tools, alumni portal, polls, and a handful of seasonal or one-off apps. The stack is Django 6.0 running on Python 3.14 inside Docker Compose with Celery workers, Channels, PostgreSQL, Valkey (Redis compatible), and S3-compatible storage.
 
 > Active development happens on `main`. QA and production are environments, not branches; production is promoted from an image already tested in QA.
 
@@ -211,7 +211,7 @@ The script rewrites `.env` using the example file's comments and ordering, keeps
 
 For development checkouts, use `date-sync-dev-env` to sync `.env` from `.env.example` with the same preserve-existing-values behavior. This helper refuses to run when the current `.env` looks like production; use `date-sync-prod-env` there instead.
 
-The stack brings up the `web` (Gunicorn), `asgi` (Daphne/Channels), `celery`, `db`, `redis`, and `nginx` services. Rolling deploys usually build a new GHCR image in CI, update `DATE_IMG_TAG`, then restart `web`, `asgi`, and `celery`.
+The stack brings up the `web` (Gunicorn with a Uvicorn worker, serving HTTP and WebSockets), `celery`, `db`, `redis`, and `nginx` services. Rolling deploys usually build a new GHCR image in CI, update `DATE_IMG_TAG`, then restart `web` and `celery`.
 
 ### Shared Compose monitoring
 
