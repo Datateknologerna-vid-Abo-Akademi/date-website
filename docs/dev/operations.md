@@ -68,7 +68,10 @@ Treat the generated fixture output as disposable development data.
 
 Use this when you need to run all associations simultaneously for style comparison or cross-association testing.
 
-Each association gets its own web container on a dedicated port, sharing one PostgreSQL database and one Redis instance:
+The default shared-data mode gives every association the same fixture-backed
+PostgreSQL database and Redis instance. Use it for side-by-side visual
+comparison. The isolated overlay gives each association its own PostgreSQL
+database and Redis logical database when separate state is required.
 
 | Association | URL                   |
 |-------------|-----------------------|
@@ -89,19 +92,38 @@ The helpers use the nearest `date-website` checkout from your current directory,
 date-all-start       # start all containers (rebuild with date-all-rebuild)
 date-all-stop        # tear everything down
 date-all-cleaninit   # reset to fixture data against the dev-all stack
+
+date-all-isolated-start                  # start all isolated variants
+date-all-isolated-rebuild                # rebuild and start all isolated variants
+date-all-isolated-start-variant kk       # start one isolated variant
+date-all-isolated-manage kk <cmd>        # manage one isolated variant
+date-all-isolated-cleaninit              # reset the isolated DaTe database
+date-all-isolated-stop                   # tear down the isolated stack
 ```
 
 #### How it works
 
-An `init` container runs once on startup — it waits for PostgreSQL, then runs `migrate` and `compilemessages` using `PROJECT_NAME=date`. All web containers wait for `init` to complete before accepting requests. `collectstatic` is intentionally skipped: debug mode serves static files directly from each association's `STATICFILES_DIRS` via the WhiteNoise finder.
+In shared-data mode, an `init` container runs once on startup. It waits for
+PostgreSQL, migrates the distinct `date`, `kk`, and `sf` app sets, and compiles
+translations. This ensures association-only apps have tables while all sites
+continue to use the same fixture data. All web containers wait for `init` to
+complete before accepting requests.
+
+The isolated overlay creates a database for every association and migrates each
+one independently. Its `all` profile starts every variant. A variant profile,
+such as `kk`, starts only that web container.
+
+`collectstatic` is intentionally skipped: debug mode serves static files
+directly from each association's `STATICFILES_DIRS` via the WhiteNoise finder.
 
 The `web` service (port 8002) is named `web` specifically so `clean_init.sh` can target it when running `date-all-cleaninit`.
 
 #### Notes
 
 - Static files are served from source, so CSS/JS edits are picked up without a restart.
-- After pulling code with new migrations, run `date-all-manage migrate` (or `date-migrate` against the standard stack) or recreate the stack, since `init` does not re-run once it has succeeded.
+- After pulling code with new migrations, recreate the relevant stack. `init` does not re-run once it has succeeded.
 - The `date-all-cleaninit` alias passes `COMPOSE_FILE_PATH=docker-compose.dev-all.yml` directly to `clean_init.sh` so it targets the dev-all stack.
+- `date-all-isolated-cleaninit` resets only the DaTe database. Other isolated databases intentionally remain independent.
 
 ## Backups and Database Upgrades
 
