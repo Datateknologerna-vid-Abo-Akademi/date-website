@@ -14,9 +14,18 @@ spec:
   concurrencyPolicy: {{ .Values.backups.concurrencyPolicy }}
   successfulJobsHistoryLimit: {{ .Values.backups.successfulJobsHistoryLimit }}
   failedJobsHistoryLimit: {{ .Values.backups.failedJobsHistoryLimit }}
+  {{- if .Values.backups.startingDeadlineSeconds }}
+  startingDeadlineSeconds: {{ .Values.backups.startingDeadlineSeconds }}
+  {{- end }}
+  {{- if .Values.backups.timeZone }}
+  timeZone: {{ .Values.backups.timeZone | quote }}
+  {{- end }}
   jobTemplate:
     spec:
       backoffLimit: {{ .Values.backups.backoffLimit }}
+      {{- if .Values.backups.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ .Values.backups.activeDeadlineSeconds }}
+      {{- end }}
       {{- if .Values.backups.ttlSecondsAfterFinished }}
       ttlSecondsAfterFinished: {{ .Values.backups.ttlSecondsAfterFinished }}
       {{- end }}

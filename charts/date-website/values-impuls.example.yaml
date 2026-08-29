@@ -1,0 +1,33 @@
+# Example per-association values for Impuls.
+# Use after values-hetzner.yaml and values-backblaze-b2.example.yaml.
+#
+# Placeholders: replace the host/domain examples, and set the real SITE_URL
+# in core/settings/impuls.py CONTENT_VARIABLES (it is a settings value, not
+# an env var).
+
+django:
+  projectName: impuls
+  allowedHosts:
+    - impuls.example.org
+  allowedOrigins:
+    - https://impuls.example.org
+
+ingress:
+  hosts:
+    - host: impuls.example.org
+      paths:
+        - path: /
+          pathType: Prefix
+
+media:
+  s3:
+    bucketName: "impuls-website-media"
+    privateBucketName: "impuls-website-private"
+    publicBucketName: "impuls-website-public"
+    privateLocation: "impuls/media"
+    publicLocation: "impuls/public"
+
+backups:
+  objectStorage:
+    bucketName: "impuls-website-backups"
+    prefix: "impuls-website/postgresql"

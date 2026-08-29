@@ -2,6 +2,12 @@
   "$schema": "https://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
+    "extraEnv": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
     "image": {
       "type": "object",
       "properties": {
@@ -55,7 +61,15 @@
       "properties": {
         "projectName": {
           "type": "string",
-          "minLength": 1
+          "enum": [
+            "date",
+            "kk",
+            "biocum",
+            "demo",
+            "pulterit",
+            "sf",
+            "impuls"
+          ]
         },
         "secretKey": {
           "type": "string"

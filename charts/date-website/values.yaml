@@ -80,6 +80,12 @@ backups:
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   backoffLimit: 2
+  # Skip a run when the cluster was down past this deadline; abort a hung
+  # dump after this long.
+  startingDeadlineSeconds: 3600
+  activeDeadlineSeconds: 3600
+  # Empty uses the cluster's default timezone (UTC).
+  timeZone: Europe/Helsinki
   ttlSecondsAfterFinished: 86400
   nodeSelector: {}
   tolerations: []
@@ -249,6 +255,13 @@ celery:
   replicaCount: 1
   concurrency: 2
   logLevel: info
+  # Expensive broker+worker check (full Django import); runs only during
+  # startup until the worker registers.
+  startupProbe:
+    periodSeconds: 10
+    timeoutSeconds: 30
+    failureThreshold: 30
+  # Cheap process check; a broker outage must not restart the worker.
   # Warm shutdown: celery finishes active tasks on SIGTERM and (with
   # task_acks_late) requeues acknowledged-but-unfinished work on worker
   # loss; the grace period bounds the roll stall. Short tasks finish,
@@ -264,7 +277,7 @@ celery:
   livenessProbe:
     initialDelaySeconds: 60
     periodSeconds: 300
-    timeoutSeconds: 30
+    timeoutSeconds: 5
     failureThreshold: 3
   strategy:
     type: RollingUpdate
