@@ -2,6 +2,12 @@
   "$schema": "https://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
+    "extraEnv": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
     "image": {
       "type": "object",
       "properties": {
@@ -11,6 +17,20 @@
         },
         "tag": {
           "type": "string"
+        },
+        "pinInProduction": {
+          "type": "boolean"
+        },
+        "digest": {
+          "type": "string",
+          "anyOf": [
+            {
+              "const": ""
+            },
+            {
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            }
+          ]
         },
         "pullPolicy": {
           "type": "string",
@@ -41,7 +61,15 @@
       "properties": {
         "projectName": {
           "type": "string",
-          "minLength": 1
+          "enum": [
+            "date",
+            "kk",
+            "biocum",
+            "demo",
+            "pulterit",
+            "sf",
+            "impuls"
+          ]
         },
         "secretKey": {
           "type": "string"
@@ -135,7 +163,13 @@
           "type": "boolean"
         },
         "externalUrl": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^$|^redis://[^/]+$"
+        },
+        "database": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15
         }
       }
     },
@@ -156,15 +190,23 @@
             {
               "if": {
                 "properties": {
-                  "directUploadsEnabled": { "const": true }
+                  "directUploadsEnabled": {
+                    "const": true
+                  }
                 },
-                "required": ["directUploadsEnabled"]
+                "required": [
+                  "directUploadsEnabled"
+                ]
               },
               "then": {
                 "properties": {
-                  "enabled": { "const": true }
+                  "enabled": {
+                    "const": true
+                  }
                 },
-                "required": ["enabled"]
+                "required": [
+                  "enabled"
+                ]
               }
             }
           ],
@@ -244,17 +286,64 @@
           "type": "integer",
           "minimum": 0
         },
+        "terminationGracePeriodSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "preStopSleepSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "strategy": {
           "type": "object"
+        },
+        "resources": {
+          "type": "object",
+          "properties": {
+            "requests": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string"
+                },
+                "memory": {
+                  "type": "string"
+                }
+              }
+            }
+          }
         }
       }
     },
     "asgi": {
       "type": "object",
       "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
         "replicaCount": {
           "type": "integer",
           "minimum": 0
+        },
+        "terminationGracePeriodSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "preStopSleepSeconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "wsPath": {
           "type": "string",
@@ -262,15 +351,44 @@
         },
         "strategy": {
           "type": "object"
+        },
+        "resources": {
+          "type": "object",
+          "properties": {
+            "requests": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string"
+                },
+                "memory": {
+                  "type": "string"
+                }
+              }
+            }
+          }
         }
       }
     },
     "celery": {
       "type": "object",
       "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
         "replicaCount": {
           "type": "integer",
           "minimum": 0
+        },
+        "terminationGracePeriodSeconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         },
         "concurrency": {
           "type": "integer",
@@ -278,6 +396,62 @@
         },
         "strategy": {
           "type": "object"
+        },
+        "resources": {
+          "type": "object",
+          "properties": {
+            "requests": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "string"
+                },
+                "memory": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "migrations": {
+      "type": "object",
+      "properties": {
+        "job": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "hook": {
+              "type": "string"
+            },
+            "hookDeletePolicy": {
+              "type": "string"
+            },
+            "backoffLimit": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "annotations": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "activeDeadlineSeconds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "ttlSecondsAfterFinished": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "resources": {
+              "type": "object"
+            }
+          }
         }
       }
     },
@@ -363,48 +537,21 @@
           }
         }
       }
+    },
+    "pdb": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "minAvailable": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
     }
   },
   "allOf": [
-    {
-      "if": {
-        "properties": {
-          "secret": {
-            "properties": {
-              "existingSecret": {
-                "const": ""
-              }
-            }
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "django": {
-            "required": [
-              "secretKey"
-            ],
-            "properties": {
-              "secretKey": {
-                "type": "string",
-                "minLength": 1
-              }
-            }
-          },
-          "database": {
-            "required": [
-              "password"
-            ],
-            "properties": {
-              "password": {
-                "type": "string",
-                "minLength": 1
-              }
-            }
-          }
-        }
-      }
-    },
     {
       "if": {
         "properties": {
@@ -624,6 +771,60 @@
             }
           }
         ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "image"
+        ],
+        "properties": {
+          "image": {
+            "required": [
+              "pinInProduction"
+            ],
+            "properties": {
+              "pinInProduction": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "image": {
+            "anyOf": [
+              {
+                "required": [
+                  "digest"
+                ],
+                "properties": {
+                  "digest": {
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              {
+                "required": [
+                  "tag"
+                ],
+                "properties": {
+                  "tag": {
+                    "anyOf": [
+                      {
+                        "pattern": "^[0-9a-f]{40}$"
+                      },
+                      {
+                        "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
       }
     }
   ]

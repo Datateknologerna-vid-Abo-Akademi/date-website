@@ -42,8 +42,12 @@ Use this together with:
 
 Notes:
 
-- `qa`, `prod`, and `latest` are moving aliases — code should not assume they
-  are immutable. Deployment targets pin what they want (see below).
+- `qa`, `prod`, `latest`, `vX`, and `vX.Y` are moving aliases. Production values
+  set `image.pinInProduction: true`; these aliases must be paired with
+  `image.digest`.
+- Exact `vX.Y.Z` release tags and 40-character commit SHA tags are accepted as
+  immutable tag forms. A digest can also be supplied to retain both the
+  readable tag and the exact manifest identity.
 - The release-tag job waits for the SHA-tagged image from the `main` build,
   then reuses that digest instead of rebuilding — tag the commit whose
   `main` build went green.
@@ -67,9 +71,24 @@ The chart deploys:
 - Traefik-compatible `Ingress`, or Gateway API resources
 - optional migration Job
 
-The web deployment runs `migrateOnStartup` in the production values. If the
-web replica count is ever raised above 1, move migrations out of startup
-into the migration Job so two pods cannot race.
+Migrations run as a single migration Job per release. Two modes:
+
+- **Helm hook** (default): the Job uses `post-install,post-upgrade` hooks
+  and is deleted after success. This works for plain `helm
+  install/upgrade`, but hook timing under GitOps reconciliation is less
+  predictable and the Job does not strictly gate application startup.
+- **Plain Job + Argo sync waves** (production values): set
+  `migrations.job.hook: ""` and add `argocd.argoproj.io/sync-wave: "0"` via
+  `migrations.job.annotations`, with `argocd.argoproj.io/sync-wave: "1"` on
+  the web/asgi/celery Deployments (`.Values.<component>.annotations`).
+  Argo then runs migrations to completion before rolling the application.
+  The Job gets a revision-suffixed name, stays completed as desired state
+  (no TTL), and the previous revision's Job is pruned on the next sync.
+
+Never enable `web.migrateOnStartup` in production: it couples schema
+mutation to pod readiness, re-runs on every pod restart, and races when the
+replica count is above one. Keep expand-contract migration rules so old and
+new pods can overlap during rollouts.
 
 ## How production actually runs (summary)
 
@@ -101,11 +120,32 @@ into the migration Job so two pods cannot race.
 1. A SemVer tag is cut (or `promote_production` is run) — the image is now
    available as `prod`/`latest`.
 2. In the operator repository, the site's values file pins the image tag
-   (`image.tag`). A release that includes database migrations carries that
+   (`image.tag`) and, for moving or custom tags, the image digest
+   (`image.digest`). A release that includes database migrations carries that
    pin together with its migrations.
 3. Commit + push to the operator repository. Argo CD detects the change and
    syncs the release.
 4. Verify: site responds over HTTPS, `/healthz/` and `/readyz/` are green.
+
+## Static files
+
+Every association's static is collected into the image at build time, one
+tree per variant under `/code/static-collected/<PROJECT_NAME>`. Settings
+pick the tree matching the runtime `PROJECT_NAME`, so every site serves
+build-time static and no web pod runs `collectstatic` at startup
+(`web.collectstaticOnStartup` defaults to false; keep it only for images
+built before this layout).
+
+Separate trees are required because variants define the same logical paths
+with different content (e.g. `date/css/homepage.css` differs per
+association); a single merged collection would silently overwrite assets.
+This keeps one generic image for all variants: no per-association images,
+no startup collection, no way for an image and its values to disagree on
+the variant.
+
+If static-on-S3 (see issue) lands, collection moves from the image build to
+a release-time upload into the existing per-association media bucket, and
+pods stop carrying static entirely.
 
 The operator repository holds:
 
@@ -114,6 +154,37 @@ The operator repository holds:
 - the blue-green standbys and the ingress manifests
 - the deploy tooling (see below)
 
+## Redis ownership
+
+PostgreSQL is shared across associations per database, and Redis must be
+treated the same way. Two sanctioned layouts:
+
+- **One Redis per association**, shared by its live and standby releases.
+  The live release keeps `redis.enabled: true`; the standby sets
+  `redis.enabled: false` and `redis.externalUrl` to the live release's
+  Redis service (e.g. `redis://<live-release>-redis:6379`). Live and
+  standby must never get separate Redis instances: a separate standby
+  broker strands queued Celery tasks and splits Channels group state
+  during cutover. When roles switch, the Redis service itself does not
+  move: the old live's Redis keeps serving, and only the deployments
+  change.
+- **One shared standalone Redis instance** (not Redis Cluster: it does not
+  support logical databases beyond 0) with a per-association logical
+  database: `redis.enabled: false` + a pathless `redis.externalUrl` per
+  site, with a unique `redis.database` number per association (0-15, the
+  default Redis range). The database number is applied to the cache,
+  Channels, and Celery broker and result backend, so queues and keys
+  cannot collide.
+
+Example: with one cluster Redis at `redis://redis.internal:6379`, site A
+uses `redis.database: 0`, site B `redis.database: 1`, and both releases of
+each site point at the same URL.
+
+Ephemeral Redis implies an accepted task-loss model on broker loss: the
+database backup does not preserve queued Celery tasks. Tasks that must
+survive need a durable source of truth with reconciliation/re-enqueue, or
+a durable broker; keep the backup/restore pipeline for database data only.
+
 ## Blue-green deploys (zero-downtime)
 
 Every site has a **standby release** (same chart, `fullnameOverride`,
@@ -121,8 +192,9 @@ shares the site's database and secrets, no ingress) that is scaled to zero
 between deploys. A deploy:
 
 1. dumps the site's database first (the rollback mechanism)
-2. sets the new image tag on the standby → Argo syncs it → the standby runs
-   migrations on startup while the live site keeps serving
+2. sets the new image tag on the standby → Argo syncs it → the ordered
+   migration Job runs first (sync wave 0), then the standby application
+   pods start (sync wave 1) while the live site keeps serving
 3. smoke-tests the standby, then flips the ingress backend service names to
    the standby (in-place, no traffic gap)
 4. soaks, keeping the old stack as the rollback target, then scales the old
@@ -140,6 +212,40 @@ standby migrates — not at cutover. Therefore:
   after the standby migrates and aborts + restores the dump if the live site
   broke, but it cannot make a destructive migration zero-downtime.
 
+## Graceful termination
+
+Each component gets a deliberate shutdown policy:
+
+- **web** (`terminationGracePeriodSeconds: 70`, `preStopSleepSeconds: 2`):
+  the short preStop sleep gives the ingress time to observe endpoint
+  termination and stop routing new requests; on SIGTERM gunicorn drains
+  in-flight requests for `gunicorn.gracefulTimeout` (60s, configured
+  explicitly; the default graceful timeout is only 30s) before killing
+  workers. Requests longer than the graceful timeout are cut off at the cap
+  so a deploy is never held open indefinitely.
+- **asgi** (35s grace, 2s preStop): the short preStop sleep gives the
+  ingress time to stop routing new connections; Daphne closes remaining
+  WebSockets on SIGTERM within the grace period. Daphne has no
+  application-level drain hook, so a longer drain is not available without
+  custom code.
+- **celery** (60s grace): celery finishes active tasks on SIGTERM. With
+  `CELERY_TASK_ACKS_LATE` and `CELERY_TASK_REJECT_ON_WORKER_LOST`, work that
+  was acknowledged but not finished is requeued on worker loss instead of
+  being dropped; tasks must tolerate redelivery. The grace period bounds
+  the roll stall: short tasks finish in place, longer ones requeue to the
+  new worker instead of being waited out.
+
+### Verification
+
+Before relying on this, verify once per environment:
+
+- Web: tail `web` logs during a rollout; confirm gunicorn logs graceful
+  worker shutdown and no 5xx for in-flight requests.
+- Celery: enqueue a slow task, roll the worker, confirm it finishes (or is
+  requeued and runs again) and nothing is dropped silently.
+- ASGI: hold a WebSocket open through an asgi rollout and confirm it
+  closes cleanly (client sees a close frame, not a hang).
+
 ## Secrets
 
 - Production secrets live in Kubernetes secrets created out-of-band; site
@@ -150,6 +256,39 @@ standby migrates — not at cutover. Therefore:
 - After rotating a secret, restart the site's deployments (pod checksum
   annotations do not see external secret changes).
 
+## Static on S3 (optional)
+
+Static files can be served from the same per-association public bucket as
+media (prefix `static`, CDN in front via the public custom domain) instead
+of the pod filesystem. Enable per site:
+
+```yaml
+media:
+  s3:
+    staticEnabled: true
+    staticCustomDomain: ""   # defaults to publicCustomDomain
+migrations:
+  job:
+    enabled: true            # required: the Job performs the upload
+```
+
+**Rollout ordering (critical):** the migration Job (sync wave 0, from
+#1113) uploads static before application pods start. Enabling
+`staticEnabled` and the upload must happen in the same release, so pods
+never render S3 URLs before the bucket is populated. Rollback: flip
+`staticEnabled` back; the image still carries the build-time static trees,
+so old pods serve from the pod filesystem again.
+
+Bucket requirements (one-time):
+
+- CORS: cross-origin fonts need `Access-Control-Allow-Origin: *` on the
+  bucket (or the CDN origin) for @font-face.
+- Cache: hashed filenames are immutable; set
+  `Cache-Control: public, max-age=31536000, immutable` on the `static`
+  prefix. Old hashes expire naturally, no CDN invalidation needed.
+- The CDN must serve the `static` prefix; the public custom domain already
+  serves `media/public`, so the same domain works.
+
 ## Backups
 
 - The cluster runs nightly restic backups to Backblaze B2, taken from the
@@ -157,6 +296,8 @@ standby migrates — not at cutover. Therefore:
   managed in restic.
 - The chart's backup CronJob is **not** used in production (the cluster-level
   pipeline supersedes it); it remains available for self-hosted installs.
+  It supports `startingDeadlineSeconds` / `activeDeadlineSeconds` /
+  `timeZone` to bound missed and hung runs.
 - Restore is a documented, tested drill in the operator repository.
 
 ## Operational notes

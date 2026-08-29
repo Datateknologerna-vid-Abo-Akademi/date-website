@@ -1,3 +1,4 @@
+{{- if .Values.celery.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,6 +6,10 @@ metadata:
   labels:
     {{- include "date-website.labels" . | nindent 4 }}
     app.kubernetes.io/component: celery
+  {{- with .Values.celery.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.celery.replicaCount }}
   selector:
@@ -16,10 +21,7 @@ spec:
   # replica -> the old pod dies while the new one is still migrating,
   # causing a real outage window on every rollout (2026-08-05).
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+    {{- toYaml .Values.celery.strategy | nindent 4 }}
   template:
     metadata:
       labels:
@@ -54,9 +56,10 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.celery.terminationGracePeriodSeconds }}
       containers:
         - name: celery
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "date-website.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command:
             - /bin/bash
@@ -80,25 +83,28 @@ spec:
             - secretRef:
                 name: {{ include "date-website.secretName" . }}
           # startupProbe gates liveness during slow starts (worker boot +
-          # Django import can exceed the liveness initialDelay).
+          # Django import + broker registration). The inspect-ping is
+          # expensive (full Django import per attempt) but runs only until
+          # the worker is ready, then stops.
           startupProbe:
             exec:
               command:
                 - /bin/bash
                 - -c
                 - celery -A core inspect ping -d "celery@${HOSTNAME}" | grep -q OK
-            failureThreshold: 30
-            periodSeconds: 2
-            timeoutSeconds: 30
-          # Liveness via `celery inspect ping`: a real worker-response check,
-          # but each invocation imports the whole Django app (~3s user CPU on
-          # prod). Keep the cadence coarse (default 300s) — see values.yaml.
+            failureThreshold: {{ .Values.celery.startupProbe.failureThreshold }}
+            periodSeconds: {{ .Values.celery.startupProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.celery.startupProbe.timeoutSeconds }}
+          # Liveness is a cheap process check (no Django import, no broker
+          # dependency): a broker outage must not restart the worker, since a
+          # restart cannot repair the broker. A wedged-but-alive worker is
+          # surfaced by queue-depth monitoring instead.
           livenessProbe:
             exec:
               command:
-                - /bin/bash
+                - /bin/sh
                 - -c
-                - celery -A core inspect ping -d "celery@${HOSTNAME}" | grep -q OK
+                - kill -0 1
             initialDelaySeconds: 10
             periodSeconds: {{ .Values.celery.livenessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.celery.livenessProbe.timeoutSeconds }}
@@ -113,3 +119,4 @@ spec:
           {{- end }}
           {{- include "date-website.mediaVolumeMount" . | nindent 10 }}
       {{- include "date-website.mediaVolume" . | nindent 6 }}
+{{- end }}

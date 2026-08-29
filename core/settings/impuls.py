@@ -1,21 +1,6 @@
 from .common import *  # noqa
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            'templates/impuls',
-            'templates/date',
-            *COMMON_TEMPLATE_DIRS,
-        ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                *COMMON_CONTEXT_PROCESSORS,
-            ],
-        },
-    },
-]
+TEMPLATES = build_templates('impuls', parent_variants=('date',))
 
 INSTALLED_APPS = get_installed_apps(
     [
@@ -50,10 +35,7 @@ LANGUAGES = (
 
 STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/impuls'),
-    os.path.join(BASE_DIR, 'static/common'),
-]
+STATICFILES_DIRS = build_static_dirs('impuls')
 
 CONTENT_VARIABLES = {
     "SITE_URL": "https://example.com",

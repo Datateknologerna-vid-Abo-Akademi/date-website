@@ -86,20 +86,21 @@ The database is exposed on host port `5433` to avoid conflicting with the regula
 The helpers use the nearest `date-website` checkout from your current directory, falling back to `DATE_WEBSITE_DIR` when you are outside a checkout.
 
 ```bash
-date-all-start       # build and start all containers
+date-all-start       # start all containers (rebuild with date-all-rebuild)
 date-all-stop        # tear everything down
 date-all-cleaninit   # reset to fixture data against the dev-all stack
 ```
 
 #### How it works
 
-An `init` container runs once on startup — it waits for PostgreSQL, then runs `migrate`, `collectstatic`, and `compilemessages` using `PROJECT_NAME=date`. All web containers wait for `init` to complete before accepting requests.
+An `init` container runs once on startup — it waits for PostgreSQL, then runs `migrate` and `compilemessages` using `PROJECT_NAME=date`. All web containers wait for `init` to complete before accepting requests. `collectstatic` is intentionally skipped: debug mode serves static files directly from each association's `STATICFILES_DIRS` via the WhiteNoise finder.
 
 The `web` service (port 8002) is named `web` specifically so `clean_init.sh` can target it when running `date-all-cleaninit`.
 
 #### Notes
 
-- Static files are collected once by `init` at startup. If you change CSS or JS, restart with `date-all-start` to pick up the changes.
+- Static files are served from source, so CSS/JS edits are picked up without a restart.
+- After pulling code with new migrations, run `date-all-manage migrate` (or `date-migrate` against the standard stack) or recreate the stack, since `init` does not re-run once it has succeeded.
 - The `date-all-cleaninit` alias passes `COMPOSE_FILE_PATH=docker-compose.dev-all.yml` directly to `clean_init.sh` so it targets the dev-all stack.
 
 ## Backups and Database Upgrades

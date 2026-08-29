@@ -10,7 +10,7 @@
 
 ## Homepage Variants
 - `get_homepage_template_name()` returns the standard `date/start.html` template for most sites.
-- For `PROJECT_NAME=kk`, it occasionally serves `date/april_start.html` on April 1st.
+- With `APRIL_HOMEPAGE_ENABLED=True` (kk), it occasionally serves `date/april_start.html` on April 1st.
 - Keep variant-specific homepage behavior here rather than scattering date checks through templates.
 
 ## Calendar Data Structure
@@ -30,7 +30,6 @@
 
 ## Middleware Notes
 - `HTCPCPMiddleware` serves the custom `418` page for coffee-themed easter-egg routes.
-- `CDNRewriteMiddleware` rewrites known storage hostnames in non-streaming responses. If you introduce new public asset hostnames, add them to `CDN_URL_TRANSFORMATIONS` in settings.
 
 ## Extending
 - If more widgets are added to the home page, keep the aggregation work inside `index()` minimal; heavy data should be fetched via dedicated services or cached.
