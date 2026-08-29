@@ -1,7 +1,18 @@
 {{- if .Values.migrations.job.enabled -}}
 {{- $jobName := printf "%s-migrate" (include "date-website.fullname" .) -}}
 {{- if not .Values.migrations.job.hook -}}
-{{- $jobName = printf "%s-%s" $jobName (printf "%d" .Release.Revision) -}}
+{{- /*
+  Plain Jobs are tracked by GitOps (Argo CD sync waves) and the completed
+  Job stays as desired state, so the name must change whenever the image
+  changes, or the next sync fails with "field is immutable" (Job pod
+  templates are immutable). Helm's Release.Revision does NOT work under
+  Argo CD (it always renders as 1). Suffix with the pinned tag + digest
+  instead: a fresh name per image, stable across no-op re-syncs.
+*/ -}}
+{{- $suffix := .Values.image.tag -}}
+{{- if .Values.image.digest }}{{ $suffix = printf "%s-%s" $suffix .Values.image.digest }}{{ end -}}
+{{- $suffix = regexReplaceAll "[^a-z0-9-]" (lower $suffix) "-" -}}
+{{- $jobName = printf "%s-%s" $jobName $suffix -}}
 {{- end -}}
 apiVersion: batch/v1
 kind: Job
