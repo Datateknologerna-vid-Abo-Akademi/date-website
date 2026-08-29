@@ -61,6 +61,11 @@ spec:
               set -e
               ./wait-for-postgres.sh "${DB_HOST}:${DB_PORT}"
               python /code/manage.py migrate --noinput
+              {{- if .Values.media.s3.staticEnabled }}
+              # Upload static to the public bucket before application pods
+              # start serving S3 URLs (STATIC_S3_ENABLED from the configmap).
+              python /code/manage.py collectstatic --noinput
+              {{- end }}
           env:
             {{- if .Values.django.alumniSettingsSecretName }}
             - name: ALUMNI_SETTINGS
