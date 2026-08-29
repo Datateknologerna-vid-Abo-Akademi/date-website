@@ -1,0 +1,33 @@
+# Example per-association values for Studerandeföreningen.
+# Use after values-hetzner.yaml and values-backblaze-b2.example.yaml.
+#
+# Placeholders: replace the host/domain examples, and set the real SITE_URL
+# in core/settings/sf.py CONTENT_VARIABLES (it is a settings value, not an
+# env var).
+
+django:
+  projectName: sf
+  allowedHosts:
+    - sf.example.org
+  allowedOrigins:
+    - https://sf.example.org
+
+ingress:
+  hosts:
+    - host: sf.example.org
+      paths:
+        - path: /
+          pathType: Prefix
+
+media:
+  s3:
+    bucketName: "sf-website-media"
+    privateBucketName: "sf-website-private"
+    publicBucketName: "sf-website-public"
+    privateLocation: "sf/media"
+    publicLocation: "sf/public"
+
+backups:
+  objectStorage:
+    bucketName: "sf-website-backups"
+    prefix: "sf-website/postgresql"
