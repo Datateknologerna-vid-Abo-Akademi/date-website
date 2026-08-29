@@ -19,10 +19,7 @@ dependencies = [
     "whitenoise",
     "channels",
     "channels-redis",
-    "websocket-client",
     "six",
-    "instaloader",
-    "schedule",
     "boto3",
     "django-storages",
     "django-tables2",
@@ -39,6 +36,14 @@ dependencies = [
     "twisted[tls]>=26.4.0",
     "defusedxml>=0.7.1",
     "pillow-heif>=1.5.0",
+]
+
+[project.optional-dependencies]
+# Standalone Instagram updater (instagram/igupdate.py); not part of the
+# web/worker runtime. Install with: uv sync --extra instagram
+instagram = [
+    "instaloader",
+    "schedule",
 ]
 
 [dependency-groups]

@@ -1,3 +1,4 @@
+{{- if .Values.asgi.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,6 +6,10 @@ metadata:
   labels:
     {{- include "date-website.labels" . | nindent 4 }}
     app.kubernetes.io/component: asgi
+  {{- with .Values.asgi.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.asgi.replicaCount }}
   selector:
@@ -16,10 +21,7 @@ spec:
   # replica -> the old pod dies while the new one is still migrating,
   # causing a real outage window on every rollout (2026-08-05).
   strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 0
-      maxSurge: 1
+    {{- toYaml .Values.asgi.strategy | nindent 4 }}
   template:
     metadata:
       labels:
@@ -54,10 +56,17 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.asgi.terminationGracePeriodSeconds }}
       containers:
         - name: asgi
           image: {{ include "date-website.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.asgi.preStopSleepSeconds }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep {{ .Values.asgi.preStopSleepSeconds }}"]
+          {{- end }}
           command:
             - /bin/bash
             - -c
@@ -125,3 +134,4 @@ spec:
           {{- end }}
           {{- include "date-website.mediaVolumeMount" . | nindent 10 }}
       {{- include "date-website.mediaVolume" . | nindent 6 }}
+{{- end }}

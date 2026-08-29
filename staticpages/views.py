@@ -17,7 +17,7 @@ def get_current_language_code():
 
 
 def equality_plan_view(request):
-    if settings.PROJECT_NAME != "date":
+    if not settings.EQUALITY_PLAN_ENABLED:
         raise Http404()
     try:
         response = requests.get(EQUALITY_PLAN_URL, timeout=10)
@@ -35,7 +35,7 @@ def equality_plan_view(request):
 
 
 def registration_terms_view(request):
-    if settings.PROJECT_NAME != "date":
+    if not settings.REGISTRATION_TERMS_ENABLED:
         raise Http404()
     language_code = get_current_language_code()
     localized_content = REGISTRATION_TERMS_CONTENT.get(language_code, REGISTRATION_TERMS_CONTENT["sv"])

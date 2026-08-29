@@ -17,11 +17,12 @@ if [ -n "${1:-}" ]; then
 fi
 
 unalias date date-manage date-migrate date-makemigrations date-collectstatic \
-    date-cleaninit date-stop date-start date-start-detached date-createsuperuser \
+    date-cleaninit date-stop date-start date-start-detached date-rebuild \
+    date-rebuild-detached date-build date-createsuperuser \
     date-pull date-seed-gallery date-seed-gallery-clear date-all date-all-manage \
-    date-all-start date-all-stop date-all-cleaninit date-all-seed-gallery \
-    date-all-seed-gallery-clear date-backup date-restore date-sync-dev-env \
-    date-sync-prod-env date-setup 2>/dev/null || true
+    date-all-start date-all-rebuild date-all-stop date-all-cleaninit \
+    date-all-seed-gallery date-all-seed-gallery-clear date-backup date-restore \
+    date-sync-dev-env date-sync-prod-env date-setup 2>/dev/null || true
 
 # Resolve the checkout to operate on. This lets globally installed helpers
 # follow the current working directory while still having DATE_WEBSITE_DIR as a
@@ -99,7 +100,7 @@ date-start() {
     if _date_is_prod_stack; then
         date up --pull always "$@"
     else
-        date up --build "$@"
+        date up "$@"
     fi
 }
 
@@ -107,8 +108,31 @@ date-start-detached() {
     if _date_is_prod_stack; then
         date up -d --pull always "$@"
     else
+        date up -d "$@"
+    fi
+}
+
+# Rebuild images and start the stack. Needed after pyproject.toml, uv.lock,
+# or Dockerfile changes; the source bind mount covers ordinary code edits.
+date-rebuild() {
+    if _date_is_prod_stack; then
+        date up --pull always "$@"
+    else
+        date up --build "$@"
+    fi
+}
+
+date-rebuild-detached() {
+    if _date_is_prod_stack; then
+        date up -d --pull always "$@"
+    else
         date up -d --build "$@"
     fi
+}
+
+# Build images without starting the stack.
+date-build() {
+    date build "$@"
 }
 
 date-createsuperuser() {
@@ -138,6 +162,12 @@ date-all-manage() {
 }
 
 date-all-start() {
+    date-all up "$@"
+}
+
+# Rebuild dev-all images and start all containers; needed after dependency or
+# Dockerfile changes.
+date-all-rebuild() {
     date-all up --build "$@"
 }
 
@@ -216,5 +246,8 @@ date-setup() {
 date-test() {
     local project_dir
     project_dir="$(_date_website_project_dir)" || return
-    docker compose --project-directory "$project_dir" run -e TEST=1 web /bin/bash -c './wait-for-postgres.sh db:5432 && python /code/manage.py test "$@"' -- "$@"
+    # Test settings use in-memory SQLite/Channels/cache, so skip database and
+    # Redis service startup entirely. Use `uv run python manage.py test` for an
+    # even faster native loop; this alias is the container parity path.
+    docker compose --project-directory "$project_dir" run --rm --no-deps -e TEST=1 web python /code/manage.py test "$@"
 }
