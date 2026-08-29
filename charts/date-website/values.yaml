@@ -182,6 +182,10 @@ web:
     maxRequests: 1000
     maxRequestsJitter: 100
   migrateOnStartup: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
   # Graceful shutdown: the short preStop sleep gives the ingress time to
   # observe endpoint termination and stop routing new requests; the grace
   # period then covers gunicorn's graceful timeout. Both are kept small to
@@ -202,7 +206,6 @@ web:
   # Merged onto the Deployment metadata (e.g.
   # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
   annotations: {}
-  resources: {}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -226,7 +229,10 @@ asgi:
   # Merged onto the Deployment metadata (e.g.
   # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
   annotations: {}
-  resources: {}
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -247,17 +253,26 @@ celery:
   # Merged onto the Deployment metadata (e.g.
   # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
   annotations: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
   livenessProbe:
     initialDelaySeconds: 60
     periodSeconds: 300
     timeoutSeconds: 30
     failureThreshold: 3
-  resources: {}
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 0
       maxSurge: 1
+pdb:
+  # PodDisruptionBudget per component (web/asgi/celery). The template only
+  # renders a PDB for enabled components with replicaCount >= 2; a PDB on a
+  # single replica (minAvailable: 1) would block node drains indefinitely.
+  enabled: false
+  minAvailable: 1
 migrations:
   job:
     enabled: false
