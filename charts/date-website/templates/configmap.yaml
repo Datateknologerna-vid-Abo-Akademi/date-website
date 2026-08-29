@@ -19,9 +19,9 @@ data:
   DB_USERNAME: {{ .Values.database.username | quote }}
   DB_HOST: {{ include "date-website.dbHost" . | quote }}
   DB_PORT: {{ include "date-website.dbPort" . | quote }}
-  REDIS_SERVER: {{ include "date-website.redisUrl" . | quote }}
-  CELERY_BROKER_URL: {{ printf "%s/0" (include "date-website.redisUrl" .) | quote }}
-  CELERY_RESULT_BACKEND: {{ printf "%s/0" (include "date-website.redisUrl" .) | quote }}
+  REDIS_SERVER: {{ printf "%s/%d" (include "date-website.redisUrl" .) (int .Values.redis.database) | quote }}
+  CELERY_BROKER_URL: {{ printf "%s/%d" (include "date-website.redisUrl" .) (int .Values.redis.database) | quote }}
+  CELERY_RESULT_BACKEND: {{ printf "%s/%d" (include "date-website.redisUrl" .) (int .Values.redis.database) | quote }}
   USE_S3: {{ .Values.media.s3.enabled | quote }}
   AWS_S3_ENDPOINT_URL: {{ if .Values.media.s3.enabled }}{{ required "media.s3.endpointUrl is required when media.s3.enabled=true" .Values.media.s3.endpointUrl | quote }}{{ else }}{{ .Values.media.s3.endpointUrl | quote }}{{ end }}
   AWS_S3_REGION_NAME: {{ if .Values.media.s3.enabled }}{{ required "media.s3.regionName is required when media.s3.enabled=true" .Values.media.s3.regionName | quote }}{{ else }}{{ .Values.media.s3.regionName | quote }}{{ end }}

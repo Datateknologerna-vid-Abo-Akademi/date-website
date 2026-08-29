@@ -70,3 +70,7 @@ CONTENT_VARIABLES = {
     "ALUMNI_ASSOCIATION_NAME_SHORT": "ASG",
     "ALUMNI_ASSOCIATION_EMAIL": "asg@kemistklubben.org",
 }
+
+# Association capabilities
+APRIL_HOMEPAGE_ENABLED = True
+KK_EVENT_TEMPLATES_ENABLED = True

@@ -1,3 +1,4 @@
+{{- if .Values.asgi.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,6 +6,10 @@ metadata:
   labels:
     {{- include "date-website.labels" . | nindent 4 }}
     app.kubernetes.io/component: asgi
+  {{- with .Values.asgi.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.asgi.replicaCount }}
   selector:
@@ -51,10 +56,17 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.asgi.terminationGracePeriodSeconds }}
       containers:
         - name: asgi
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.asgi.preStopSleepSeconds }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep {{ .Values.asgi.preStopSleepSeconds }}"]
+          {{- end }}
           command:
             - /bin/bash
             - -c
@@ -122,3 +134,4 @@ spec:
           {{- end }}
           {{- include "date-website.mediaVolumeMount" . | nindent 10 }}
       {{- include "date-website.mediaVolume" . | nindent 6 }}
+{{- end }}

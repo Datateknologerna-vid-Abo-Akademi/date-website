@@ -38,6 +38,7 @@
 - `events/consumers.py` and `websocket_utils.py` push attendee updates via channels. Ensure the slug used in `ws_send` matches the subscription on the front end.
 
 ## Extending / Gotchas
+- Association capabilities: `REGISTRATION_TERMS_ENABLED` (date) adds the terms checkbox to registration forms and the admin field; `KK_EVENT_TEMPLATES_ENABLED` (kk) adds the kk event-template choices to the admin forms. Defaults live in `core/settings/common.py`; enable them per association in its settings module rather than adding `PROJECT_NAME` checks.
 - Any changes to registration fields must keep `Event.make_registration_form()` in sync; inconsistent `choice_list` formatting breaks multiple-choice inputs.
 - When altering attendee serialization, update both the model and the JS that renders real-time updates.
 - Parent/child events rely on consistent `parent` assignments; deleting a parent cascades to children and could orphan registrations.
