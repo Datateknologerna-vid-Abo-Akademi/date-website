@@ -1,6 +1,9 @@
 {{- if .Values.pdb.enabled -}}
 {{- $root := . -}}
 {{- range $component := list "web" "asgi" "celery" }}
+{{- $componentConfig := index $root.Values $component -}}
+{{- $componentEnabled := or (not (hasKey $componentConfig "enabled")) $componentConfig.enabled -}}
+{{- if and $componentEnabled (gt (int $componentConfig.replicaCount) 1) }}
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
@@ -15,5 +18,6 @@ spec:
     matchLabels:
       {{- include "date-website.selectorLabels" $root | nindent 6 }}
       app.kubernetes.io/component: {{ $component }}
+{{- end -}}
 {{- end -}}
 {{- end -}}

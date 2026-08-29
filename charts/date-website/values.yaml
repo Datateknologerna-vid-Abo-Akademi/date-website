@@ -268,9 +268,9 @@ celery:
       maxUnavailable: 0
       maxSurge: 1
 pdb:
-  # PodDisruptionBudget per component (web/asgi/celery). Enable only when
-  # replicaCount >= 2; with a single replica minAvailable: 1 blocks node
-  # drains indefinitely.
+  # PodDisruptionBudget per component (web/asgi/celery). The template only
+  # renders a PDB for enabled components with replicaCount >= 2; a PDB on a
+  # single replica (minAvailable: 1) would block node drains indefinitely.
   enabled: false
   minAvailable: 1
 migrations:
