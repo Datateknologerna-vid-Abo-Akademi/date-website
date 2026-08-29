@@ -51,14 +51,29 @@ read_compose_file_from_env() {
 
 COMPOSE_FILE_PATH="${COMPOSE_FILE_PATH:-$(read_compose_file_from_env)}"
 COMPOSE_FILE_PATH="${COMPOSE_FILE_PATH:-docker-compose.yml}"
-if [[ "$COMPOSE_FILE_PATH" = /* ]]; then
-    COMPOSE_PATH="$COMPOSE_FILE_PATH"
-else
-    COMPOSE_PATH="$PROJECT_DIR/$COMPOSE_FILE_PATH"
+COMPOSE_OVERRIDE_PATH="${COMPOSE_OVERRIDE_PATH:-}"
+
+resolve_compose_path() {
+    if [[ "$1" = /* ]]; then
+        printf '%s' "$1"
+    else
+        printf '%s/%s' "$PROJECT_DIR" "$1"
+    fi
+}
+
+COMPOSE_PATH="$(resolve_compose_path "$COMPOSE_FILE_PATH")"
+if [[ -n "$COMPOSE_OVERRIDE_PATH" ]]; then
+    COMPOSE_OVERRIDE_PATH="$(resolve_compose_path "$COMPOSE_OVERRIDE_PATH")"
 fi
 
+DATABASE="${DATABASE:-postgres}"
+
 docker_compose() {
-    docker compose --project-directory "$PROJECT_DIR" -f "$COMPOSE_PATH" "$@"
+    local compose_args=(-f "$COMPOSE_PATH")
+    if [[ -n "$COMPOSE_OVERRIDE_PATH" ]]; then
+        compose_args+=(-f "$COMPOSE_OVERRIDE_PATH")
+    fi
+    docker compose --project-directory "$PROJECT_DIR" "${compose_args[@]}" "$@"
 }
 
 validate_fixtures() {
@@ -111,13 +126,15 @@ docker_compose up -d db
 
 wait_for_db
 
-echo "Recreating database..."
-docker_compose exec -T db psql -U postgres -v ON_ERROR_STOP=1 <<'SQL'
-SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'postgres' AND pid <> pg_backend_pid();
+echo "Recreating database ${DATABASE}..."
+docker_compose exec -T db psql -U postgres -v ON_ERROR_STOP=1 -v dbname="$DATABASE" <<'SQL'
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'dbname' AND pid <> pg_backend_pid();
 DROP DATABASE IF EXISTS temp;
 CREATE DATABASE temp;
-DROP DATABASE postgres;
-CREATE DATABASE postgres;
+\connect temp
+DROP DATABASE IF EXISTS :"dbname";
+CREATE DATABASE :"dbname";
+\connect postgres
 DROP DATABASE temp;
 SQL
 

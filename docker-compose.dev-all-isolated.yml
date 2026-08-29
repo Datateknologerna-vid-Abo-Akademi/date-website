@@ -1,0 +1,75 @@
+# Overlay for isolated multi-association development. Use this with
+# docker-compose.dev-all.yml through the date-all-isolated-* helpers.
+#
+# Each variant has its own PostgreSQL database and Redis logical database.
+# The shared dev-all file remains the fixture-backed visual comparison mode.
+
+services:
+  # Create one database per association before migrations run.
+  db-init:
+    image: postgres:${DATE_POSTGRESQL_VERSION}-alpine
+    restart: "no"
+    environment:
+      PGPASSWORD: ${DATE_DB_PASSWORD}
+    command: /bin/bash -c "set -e; until pg_isready -h db -U postgres -q; do sleep 1; done; for db in date kk biocum pulterit sf impuls; do psql -h db -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname='$${db}'\" | grep -q 1 || createdb -h db -U postgres $${db}; done"
+    depends_on:
+      db:
+        condition: service_started
+
+  init:
+    # Each database needs its own migration history. This covers variants with
+    # association-only apps as well as the shared app set.
+    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && for entry in 'date date' 'kk kk' 'biocum biocum' 'pulterit pulterit' 'sf sf' 'impuls impuls'; do set -- $${entry}; PROJECT_NAME=$${1} DB_DATABASE=$${2} python manage.py migrate --noinput || exit 1; done && python manage.py compilemessages -l en -l fi -l sv --verbosity 0"
+    depends_on:
+      db:
+        condition: service_started
+      db-init:
+        condition: service_completed_successfully
+
+  web:
+    profiles:
+      - all
+      - date
+    environment:
+      DB_DATABASE: date
+      REDIS_SERVER: redis://redis:6379/0
+
+  web-biocum:
+    profiles:
+      - all
+      - biocum
+    environment:
+      DB_DATABASE: biocum
+      REDIS_SERVER: redis://redis:6379/2
+
+  web-kk:
+    profiles:
+      - all
+      - kk
+    environment:
+      DB_DATABASE: kk
+      REDIS_SERVER: redis://redis:6379/1
+
+  web-pulterit:
+    profiles:
+      - all
+      - pulterit
+    environment:
+      DB_DATABASE: pulterit
+      REDIS_SERVER: redis://redis:6379/3
+
+  web-sf:
+    profiles:
+      - all
+      - sf
+    environment:
+      DB_DATABASE: sf
+      REDIS_SERVER: redis://redis:6379/4
+
+  web-impuls:
+    profiles:
+      - all
+      - impuls
+    environment:
+      DB_DATABASE: impuls
+      REDIS_SERVER: redis://redis:6379/5
