@@ -82,11 +82,13 @@ Migrations run as a single migration Job per release. Two modes:
   `migrations.job.annotations`, with `argocd.argoproj.io/sync-wave: "1"` on
   the web/asgi/celery Deployments (`.Values.<component>.annotations`).
   Argo then runs migrations to completion before rolling the application.
-  The Job gets a name suffixed with the pinned image tag + digest, stays
-  completed as desired state (no TTL), and the previous image's Job is
-  pruned on the next sync. (Helm's Release.Revision cannot suffix the name:
-  Argo CD renders it as 1, so the name would never change and the second
-  sync would fail on the immutable Job pod template.)
+  The Job gets a name suffixed with the sanitized tag + a short hash of the
+  tag/digest pair (kept under 63 bytes: Kubernetes mirrors the Job name
+  into a pod-template label), stays completed as desired state (no TTL),
+  and the previous image's Job is pruned on the next sync. (Helm's
+  Release.Revision cannot suffix the name: Argo CD renders it as 1, so the
+  name would never change and the second sync would fail on the immutable
+  Job pod template.)
 
 Never enable `web.migrateOnStartup` in production: it couples schema
 mutation to pod readiness, re-runs on every pod restart, and races when the
