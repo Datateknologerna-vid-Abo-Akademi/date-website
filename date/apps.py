@@ -14,12 +14,12 @@ class CoreConfig(AppConfig):
         from date.views import bump_homepage_version
         from events.models import Event
         from instagram.models import IgUrl
-        from news.models import Post
+        from news.models import Category, Post
 
         # The cached anonymous homepage context (date/views.py) depends on
         # these models; bump the version so admin edits show up immediately
         # instead of waiting out the TTL backstop.
-        for model in (Event, Post, AdUrl, IgUrl):
+        for model in (Event, Post, Category, AdUrl, IgUrl):
             label = model._meta.label_lower
             post_save.connect(
                 bump_homepage_version,

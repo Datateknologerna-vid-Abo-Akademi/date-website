@@ -21,6 +21,7 @@ from django.utils import timezone, translation
 from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
 from date.views import (
+    HOMEPAGE_VERSION_KEY,
     _homepage_context,
     format_calendar_events,
     get_homepage_template_name,
@@ -870,6 +871,46 @@ class HomepageQueryTests(TestCase):
             "Fresh Invalidation News",
             [post.title for post in response.context["news"]],
         )
+
+    def test_event_save_invalidates_anonymous_cache(self):
+        cache.clear()
+        self.client.get("/")
+        author = get_user_model().objects.create_user(username="invalidation-event-author")
+        with self.captureOnCommitCallbacks(execute=True):
+            Event.objects.create(
+                title="Fresh Invalidation Event",
+                slug="fresh-invalidation-event",
+                author=author,
+                event_date_start=timezone.now(),
+                event_date_end=timezone.now() + timedelta(days=1),
+            )
+        response = self.client.get("/")
+        self.assertIn(
+            "Fresh Invalidation Event",
+            [event.title for event in response.context["events"]],
+        )
+
+    def test_admin_delete_invalidates_anonymous_cache(self):
+        cache.clear()
+        self.client.get("/")
+        with self.captureOnCommitCallbacks(execute=True):
+            Post.objects.filter(slug="uncategorized-news").delete()
+        response = self.client.get("/")
+        self.assertNotIn(
+            "Uncategorized news",
+            [post.title for post in response.context["news"]],
+        )
+
+    def test_version_key_eviction_never_resurrects_stale_entries(self):
+        cache.clear()
+        self.client.get("/")
+        # Simulate the version key being evicted while the homepage entry
+        # is still alive: the next load must not reuse the old generation.
+        cache.delete(HOMEPAGE_VERSION_KEY)
+        # The context rebuilds from scratch (5 queries); the navigation is
+        # still served from its own cache.
+        with self.assertNumQueries(5):
+            self.client.get("/")
 
     def test_dummy_cache_never_caches(self):
         cache.clear()

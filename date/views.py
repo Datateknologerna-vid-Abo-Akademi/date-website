@@ -1,5 +1,6 @@
 import logging
 import secrets
+import time
 from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
@@ -98,6 +99,19 @@ HOMEPAGE_CACHE_TTL = 300
 HOMEPAGE_VERSION_KEY = f"homepage-version:{settings.PROJECT_NAME}"
 
 
+def _homepage_version():
+    version = cache.get(HOMEPAGE_VERSION_KEY)
+    if version is not None:
+        return version
+    # Initialize atomically and without expiry, with a nanosecond-time value:
+    # an evicted key must never restart at a generation whose cached entries
+    # may still exist (second-granularity time would collide within the same
+    # second), or stale homepages would be served again.
+    cache.add(HOMEPAGE_VERSION_KEY, time.time_ns(), timeout=None)
+    # Another process may have initialized a different value in the meantime.
+    return cache.get(HOMEPAGE_VERSION_KEY) or 1
+
+
 def bump_homepage_version(**kwargs):
     """Invalidate cached anonymous homepages after the transaction commits."""
 
@@ -105,9 +119,9 @@ def bump_homepage_version(**kwargs):
         try:
             cache.incr(HOMEPAGE_VERSION_KEY)
         except ValueError:
-            # Missing key (e.g. after a cache flush); start at 2 so no
-            # existing version-1 entry is reused.
-            cache.add(HOMEPAGE_VERSION_KEY, 2, timeout=None)
+            # Evicted (or never set): start a fresh generation that cannot
+            # collide with any still-live entry (see _homepage_version).
+            cache.add(HOMEPAGE_VERSION_KEY, time.time_ns(), timeout=None)
 
     transaction.on_commit(_bump)
 
@@ -138,10 +152,9 @@ def _homepage_context(now=None):
 def index(request):
     cache_key = None
     if not request.user.is_authenticated:
-        version = cache.get(HOMEPAGE_VERSION_KEY) or 1
         cache_key = (
             f"homepage:{settings.PROJECT_NAME}:{get_language()}:"
-            f"{getattr(settings, 'APRIL_HOMEPAGE_ENABLED', False)}:{version}"
+            f"{getattr(settings, 'APRIL_HOMEPAGE_ENABLED', False)}:{_homepage_version()}"
         )
         cached = cache.get(cache_key)
         if cached is not None:
