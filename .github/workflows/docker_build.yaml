@@ -13,6 +13,8 @@ on:
 permissions:
   contents: read
   packages: write
+  # for the purge-build-cache step (Actions cache delete API)
+  actions: write
 jobs:
   build:
     concurrency:
@@ -84,6 +86,28 @@ jobs:
             PROJECT_NAME=date
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Self-heal the build cache. A corrupt gha cache entry makes every
+      # subsequent build fail the same way (2026-08-29: compilemessages
+      # SIGILL, exit 132, and a shipped image that crashed at runtime with
+      # Illegal instruction on older CPUs). Green builds keep the cache;
+      # a failing build purges the buildkit entries so the next run starts
+      # clean. The delete-by-key API matches ~30 entries per call, so loop
+      # until none are left.
+      - name: Purge build cache on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for attempt in $(seq 1 30); do
+            N="$(curl -sS -X DELETE \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/caches?key=buildkit" \
+              | python3 -c 'import json,sys; print(json.load(sys.stdin).get("total_count", 0))' 2>/dev/null || echo 0)"
+            echo "purged ${N} cache entries"
+            [ "${N}" = "0" ] && break
+            sleep 2
+          done
 
   tag_release_image:
     concurrency:
