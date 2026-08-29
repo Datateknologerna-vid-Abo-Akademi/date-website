@@ -184,8 +184,7 @@ COMMON_CONTEXT_PROCESSORS = [
     'django.template.context_processors.i18n',
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
-    'staticpages.context_processors.get_categories',
-    'staticpages.context_processors.get_urls',
+    'staticpages.context_processors.navigation',
     'core.context_processors.captcha_context',
     'core.context_processors.apply_content_variables',
 ]
