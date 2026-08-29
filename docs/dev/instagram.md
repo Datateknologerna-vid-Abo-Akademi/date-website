@@ -28,9 +28,13 @@ The script calls `django.setup()` itself and defaults to
 `core.settings.date`; set `PROJECT_NAME` (or `DJANGO_SETTINGS_MODULE`) when
 running it for another association.
 
-The current production runner lives outside this repository (operator
-deployment or host cron); it must install the `instagram` extra in whatever
-environment executes the script.
+**As of 2026-08, no runner is wired anywhere**: the web/worker image excludes
+the `instagram` extra, and neither this repository (compose services, chart,
+Celery tasks, workflows) nor the operator infrastructure (CronJobs, host
+cron, systemd) starts the updater. The feed is refreshed only when someone
+runs the script manually. If the embed should stay fresh, wire a runner
+(e.g. a chart CronJob) that installs the `instagram` extra and executes
+`python instagram/igupdate.py` daily.
 
 Caveats:
 
