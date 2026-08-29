@@ -102,21 +102,24 @@ if [[ "$DELETE_MEDIA" == "true" ]]; then
     echo "Media files deleted."
 fi
 
-echo "Shutting down containers..."
+echo "Stopping the stack (keeps volumes)..."
 docker_compose down --remove-orphans
 
-echo "Building required images and starting database container..."
-docker_compose build db web
+echo "Building the web image and starting the database container..."
+docker_compose build web
 docker_compose up -d db
 
 wait_for_db
 
 echo "Recreating database..."
-docker_compose exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS temp;" 2>/dev/null || true
-docker_compose exec -T db psql -U postgres -c "CREATE DATABASE temp;"
-docker_compose exec -T db psql -U postgres -d temp -c "DROP DATABASE postgres;"
-docker_compose exec -T db psql -U postgres -d temp -c "CREATE DATABASE postgres;"
-docker_compose exec -T db psql -U postgres -c "DROP DATABASE temp;"
+docker_compose exec -T db psql -U postgres -v ON_ERROR_STOP=1 <<'SQL'
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'postgres' AND pid <> pg_backend_pid();
+DROP DATABASE IF EXISTS temp;
+CREATE DATABASE temp;
+DROP DATABASE postgres;
+CREATE DATABASE postgres;
+DROP DATABASE temp;
+SQL
 
 echo "Database cleared."
 
@@ -135,8 +138,6 @@ print('Passwords set for all users.')
 \"
 "
 
-docker_compose down --remove-orphans
-
 echo ""
 echo "============================================"
 echo "Clean init completed successfully!"
@@ -147,6 +148,15 @@ echo "  - admin (superuser)    password: admin"
 echo "  - freshman             password: admin"
 echo "  - member               password: admin"
 echo ""
+echo "Starting the stack..."
 echo "Login at: http://localhost:8000/admin"
 echo ""
-echo "Run 'date-start' or 'docker compose up -d' to start the server."
+
+# Leave the stack running: start (no rebuild; the image was built above)
+# unless the caller only wanted the reset (--no-start).
+if [[ "$*" != *"--no-start"* ]]; then
+    docker_compose up -d
+    echo "Stack started. Web: http://localhost:8000"
+else
+    echo "--no-start given; run 'date-start' or 'docker compose up -d' to start."
+fi
