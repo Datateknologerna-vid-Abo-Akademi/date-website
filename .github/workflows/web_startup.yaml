@@ -10,11 +10,16 @@ on:
       - '**/*.js'
       - '**/*.css'
       - 'Dockerfile'
+      - '.dockerignore'
       - 'docker-compose.yml'
       - 'docker-compose.prod.yml'
+      - 'docker-compose.dev-all.yml'
+      - 'fixtures/**'
       - 'locale/**'
       - 'pyproject.toml'
       - 'scripts/validate_translations.py'
+      - 'scripts/clean_init.sh'
+      - 'scripts/load_all_fixtures.sh'
       - 'uv.lock'
       - '.env.example'
       - 'env.sh'
@@ -28,11 +33,16 @@ on:
       - '**/*.js'
       - '**/*.css'
       - 'Dockerfile'
+      - '.dockerignore'
       - 'docker-compose.yml'
       - 'docker-compose.prod.yml'
+      - 'docker-compose.dev-all.yml'
+      - 'fixtures/**'
       - 'locale/**'
       - 'pyproject.toml'
       - 'scripts/validate_translations.py'
+      - 'scripts/clean_init.sh'
+      - 'scripts/load_all_fixtures.sh'
       - 'uv.lock'
       - '.env.example'
       - 'env.sh'
@@ -54,6 +64,14 @@ jobs:
     defaults:
       run:
         shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: default
+            extra_env: ""
+          - label: unfold
+            extra_env: "-e USE_UNFOLD=True"
 
     steps:
       - name: Checkout repository
@@ -77,6 +95,11 @@ jobs:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # PR SHAs have no prebuilt image; skip login and pull retries.
+            echo "compose_file=docker-compose.yml" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
           REPO_LOWER="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
           CI_IMAGE="ghcr.io/${REPO_LOWER}:${GITHUB_SHA}"
 
@@ -94,7 +117,7 @@ jobs:
           if [ "${logged_in}" -eq 1 ]; then
             for attempt in 1 2 3; do
               if docker pull "${CI_IMAGE}"; then
-                printf 'services:\n  web:\n    image: %s\n  celery:\n    image: %s\n' "${CI_IMAGE}" "${CI_IMAGE}" > docker-compose.ci.yml
+                printf 'services:\n  init:\n    image: %s\n  web:\n    image: %s\n  celery:\n    image: %s\n' "${CI_IMAGE}" "${CI_IMAGE}" "${CI_IMAGE}" > docker-compose.ci.yml
                 echo "compose_file=docker-compose.yml:docker-compose.ci.yml" >> "${GITHUB_OUTPUT}"
                 exit 0
               fi
@@ -118,13 +141,13 @@ jobs:
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           docker-compose run --rm --no-deps web python scripts/validate_translations.py
           docker-compose run --rm --no-deps web python manage.py compilemessages
-          docker-compose run -e TEST=1 web /bin/bash -c './wait-for-postgres.sh db:5432 && python /code/manage.py test'
 
-      - name: Run tests with Unfold enabled
+      - name: Run django unit tests (${{ matrix.label }})
         run: |
           set -euo pipefail
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
-          docker-compose run -e TEST=1 -e USE_UNFOLD=True web /bin/bash -c './wait-for-postgres.sh db:5432 && python /code/manage.py test'
+          # Test settings use in-memory SQLite/Channels/cache, so skip service startup.
+          docker-compose run --rm --no-deps -e TEST=1 ${{ matrix.extra_env }} web python /code/manage.py test
 
       - name: Build and run Docker Compose
         run: |
@@ -176,6 +199,51 @@ jobs:
           set -euo pipefail
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           docker-compose down -v
+
+  variant_checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Prepare environment file
+        run: cp .env.example .env
+
+      - name: Ensure docker-compose command exists
+        run: |
+          set -euo pipefail
+          if ! command -v docker-compose >/dev/null 2>&1; then
+            printf '#!/usr/bin/env bash\ndocker compose "$@"\n' | sudo tee /usr/local/bin/docker-compose >/dev/null
+            sudo chmod +x /usr/local/bin/docker-compose
+          fi
+          docker-compose version
+
+      - name: Build image
+        run: |
+          set -euo pipefail
+          docker-compose build web
+
+      - name: Fresh-process checks for every association
+        run: |
+          set -euo pipefail
+          for variant in date kk biocum pulterit sf impuls demo; do
+            echo "== ${variant}: manage.py check"
+            docker-compose run --rm --no-deps -e PROJECT_NAME="${variant}" web python manage.py check
+          done
+
+      - name: Migration graph check for every app set
+        run: |
+          set -euo pipefail
+          # Distinct app sets: date (broadest), kk (lucia), sf (klotterplanket).
+          for variant in date kk sf; do
+            echo "== ${variant}: makemigrations --check"
+            docker-compose run --rm --no-deps -e PROJECT_NAME="${variant}" web python manage.py makemigrations --check --dry-run
+          done
 
   lint:
     runs-on: ubuntu-latest

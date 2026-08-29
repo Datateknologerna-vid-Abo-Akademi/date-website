@@ -39,7 +39,9 @@ date-createsuperuser
 Common helpers after `source env.sh`:
 
 - `date <docker compose args>`: project-aware wrapper around `docker compose`.
-- `date-start` / `date-start-detached`: build/start, migrate, collect static.
+- `date-start` / `date-start-detached`: start the stack (foreground or detached) without forcing a rebuild.
+- `date-rebuild` / `date-rebuild-detached`: rebuild images and start, needed after dependency or Dockerfile changes.
+- `date-build`: build images without starting.
 - `date-stop`: stop the stack.
 - `date-manage <cmd>`: run `python manage.py <cmd>` in the web container.
 - `date-makemigrations`, `date-migrate`, `date-collectstatic`, `date-createsuperuser`.

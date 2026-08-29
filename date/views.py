@@ -50,7 +50,7 @@ def readyz(request):
 
 def get_homepage_template_name():
     """Return the homepage template for the active association."""
-    if settings.PROJECT_NAME != 'kk':
+    if not settings.APRIL_HOMEPAGE_ENABLED:
         return 'date/start.html'
 
     today = timezone.localdate()

@@ -689,27 +689,26 @@ class LanguageSelectionTests(TestCase):
 
 
 class HomepageTemplateSelectionTests(TestCase):
-    @override_settings(PROJECT_NAME="kk")
+    @override_settings(APRIL_HOMEPAGE_ENABLED=True)
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
     @patch("date.views.secrets.randbelow", return_value=0)
-    def test_kk_uses_april_template_on_april_first_when_roll_matches(self, _randrange, _localdate):
+    def test_april_template_served_on_april_first_when_roll_matches(self, _randrange, _localdate):
         self.assertEqual(get_homepage_template_name(), "date/april_start.html")
 
-    @override_settings(PROJECT_NAME="kk")
+    @override_settings(APRIL_HOMEPAGE_ENABLED=True)
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
     @patch("date.views.secrets.randbelow", return_value=1)
-    def test_kk_uses_regular_template_on_april_first_when_roll_misses(self, _randrange, _localdate):
+    def test_regular_template_served_on_april_first_when_roll_misses(self, _randrange, _localdate):
         self.assertEqual(get_homepage_template_name(), "date/start.html")
 
-    @override_settings(PROJECT_NAME="kk")
+    @override_settings(APRIL_HOMEPAGE_ENABLED=True)
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 2))
-    def test_kk_uses_regular_template_outside_april_first(self, _localdate):
+    def test_regular_template_served_outside_april_first(self, _localdate):
         self.assertEqual(get_homepage_template_name(), "date/start.html")
 
-    @override_settings(PROJECT_NAME="date")
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
     @patch("date.views.secrets.randbelow", return_value=0)
-    def test_non_kk_never_uses_april_template(self, _randrange, _localdate):
+    def test_april_template_never_served_when_disabled(self, _randrange, _localdate):
         self.assertEqual(get_homepage_template_name(), "date/start.html")
 
 
@@ -738,6 +737,10 @@ class AssociationHomepageSmokeTests(TestCase):
             "MEMBERS_SIGNUP_ENABLED": getattr(settings_module, "MEMBERS_SIGNUP_ENABLED", True),
             "BILLING_CONTEXT": getattr(settings_module, "BILLING_CONTEXT", {}),
             "EXPERIMENTAL_FEATURES": getattr(settings_module, "EXPERIMENTAL_FEATURES", []),
+            "APRIL_HOMEPAGE_ENABLED": getattr(settings_module, "APRIL_HOMEPAGE_ENABLED", False),
+            "REGISTRATION_TERMS_ENABLED": getattr(settings_module, "REGISTRATION_TERMS_ENABLED", False),
+            "EQUALITY_PLAN_ENABLED": getattr(settings_module, "EQUALITY_PLAN_ENABLED", False),
+            "KK_EVENT_TEMPLATES_ENABLED": getattr(settings_module, "KK_EVENT_TEMPLATES_ENABLED", False),
         }
         return overrides
 
@@ -769,6 +772,7 @@ class AssociationHomepageSmokeTests(TestCase):
         response = self._get_association_homepage("kk")
 
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "date/april_start.html")
 
 
 class HomepageQueryTests(TestCase):
@@ -851,3 +855,4 @@ class HomepageQueryTests(TestCase):
                 self.client.get("/")
             with self.assertNumQueries(7):
                 self.client.get("/")
+

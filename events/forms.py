@@ -58,7 +58,7 @@ def unique_event_slug(slug, title, instance=None):
 
 
 def _template_choices():
-    if settings.PROJECT_NAME == 'kk':
+    if settings.KK_EVENT_TEMPLATES_ENABLED:
         return EVENT_TEMPLATE_CHOICES_COMMON + EVENT_TEMPLATE_CHOICES_KK
     return EVENT_TEMPLATE_CHOICES_COMMON
 
