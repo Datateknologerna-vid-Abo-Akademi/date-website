@@ -855,4 +855,3 @@ class HomepageQueryTests(TestCase):
                 self.client.get("/")
             with self.assertNumQueries(7):
                 self.client.get("/")
-
