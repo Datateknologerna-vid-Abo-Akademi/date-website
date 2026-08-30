@@ -52,8 +52,7 @@ class ModeltranslationLanguageTests(SimpleTestCase):
                 )
                 self.assertTrue(
                     (common_static / path).is_file(),
-                    f'{admin_class.__name__}.Media references {path}, which '
-                    f'does not exist under {common_static}',
+                    f'{admin_class.__name__}.Media references {path}, which does not exist under {common_static}',
                 )
 
     @override_settings(ENABLE_LANGUAGE_FEATURES=False)
