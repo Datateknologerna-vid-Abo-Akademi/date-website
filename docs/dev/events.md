@@ -14,6 +14,8 @@
 - Captcha integration uses `core.utils.validate_captcha` and expects Cloudflare Turnstile responses in `cf-turnstile-response`.
 - Websocket notifications: `ws_send(slug, form, public_info)` broadcasts new registrations (except during tests). The slug is derived from the parent event if present.
 - Billing hook: when `settings.EXPERIMENTAL_FEATURES` contains `event_billing`, `billing.handlers.handle_event_billing()` runs after a successful signup to generate invoices or send confirmations.
+- Concurrency: `register_event_signup` runs in a transaction; the event row is only locked (`select_for_update`) when the event can actually be full (child event with `sign_up_max_participants > 0`). Unlimited parent/standalone events skip the lock so concurrent signups to the same event proceed in parallel; duplicate emails are still caught by the `unique_together` constraint on `(event, email)` (surfaced as a friendly error via `IntegrityError` in `_create_attendee`).
+- Duplicate-email validation (`Event.validate_unique_email`) uses an indexed `exists()` query, not a full attendee scan (the scan became a bottleneck at scale on the shared postgres; measured on qa 2026-08-30).
 
 ## Admin Customizations
 - `EventAdmin` swaps between `EventCreationForm` and `EventEditForm`, injecting `request.user` so the `author`/`modified_time` fields update correctly.

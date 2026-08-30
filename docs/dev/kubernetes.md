@@ -162,6 +162,25 @@ If static-on-S3 (see issue) lands, collection moves from the image build to
 a release-time upload into the existing per-association media bucket, and
 pods stop carrying static entirely.
 
+With static-on-S3 the runtime `{% static %}` lookups resolve through the
+manifest stored in the bucket (hashed filenames, immutable CDN caching).
+Two operational rules:
+
+- Web pods must roll AFTER the release-time collectstatic upload (the
+  migration Job runs at sync wave 0, web at wave 1; a failed/retried Job
+  can still leave the manifest missing at web boot).
+- `StaticStorage` tolerates a missing manifest: it falls back to computing
+  hashed names per `{% static %}` tag, which costs one S3 round trip per
+  tag (measured on qa 2026-08-30: ~70 serial calls, ~2.3 s per page
+  render). The fallback result is cached with a 60-second retry interval
+  (`manifest_retry_interval`), so a worker that booted too early self-heals
+  on the next interval instead of staying slow until restart.
+
+The web deployment probes are values-templated
+(`web.livenessProbe`/`web.readinessProbe`): default timeout 10 s and 5
+failures, so a busy render cannot kill the pod through the probe budget
+(measured death spiral on qa 2026-08-30 with the old hardcoded 5 s/3).
+
 The operator repository holds:
 
 - the Argo CD Application per site (chart source + per-site values)

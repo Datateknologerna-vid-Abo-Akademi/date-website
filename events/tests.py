@@ -1075,6 +1075,21 @@ class EventRegistrationFormValidationTests(TestCase):
 
         self.assertEqual(list(child.get_registrations()), [own_attendee])
 
+    def test_validate_unique_email_scopes_to_the_child_event(self):
+        sibling = Event.objects.create(title='Sibling', slug='sibling', author=self.author, parent=self.event)
+        child = Event.objects.create(title='Child', slug='child', author=self.author, parent=self.event)
+        EventAttendees.objects.create(
+            event=self.event,
+            original_event=child,
+            user='Child attendee',
+            email='shared@example.com',
+        )
+
+        with self.assertRaisesMessage(ValidationError, 'Det finns redan någon anmäld med denna email'):
+            child.validate_unique_email('shared@example.com')
+
+        sibling.validate_unique_email('shared@example.com')
+
     def test_attendee_cannot_reference_itself_or_another_event_as_avec(self):
         attendee = EventAttendees.objects.create(
             event=self.event,

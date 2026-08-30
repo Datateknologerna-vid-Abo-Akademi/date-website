@@ -324,11 +324,13 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
         return self.event_date_end > now() + timedelta(-1)
 
     def validate_unique_email(self, email):
-        attendees = self.get_registrations()
-        for attendee in attendees:
-            if email == attendee.email:
-                logger.debug("SAME EMAIL")
-                raise ValidationError(_("Det finns redan någon anmäld med denna email"))
+        # Indexed existence check instead of scanning every attendee row on
+        # each signup (the unique_together constraint on (event, email) is the
+        # real guard; races surface as IntegrityError in _create_attendee).
+        registrations = self.get_registrations()
+        if registrations.filter(email=email).exists():
+            logger.debug("SAME EMAIL")
+            raise ValidationError(_("Det finns redan någon anmäld med denna email"))
 
     def get_sign_up_max_participants(self):
         if self.sign_up_max_participants == 0:

@@ -132,8 +132,8 @@ spec:
                   value: {{ include "date-website.probeHost" . | quote }}
             initialDelaySeconds: 10
             periodSeconds: 30
-            timeoutSeconds: 5
-            failureThreshold: 3
+            timeoutSeconds: {{ .Values.web.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.web.livenessProbe.failureThreshold }}
           readinessProbe:
             httpGet:
               path: /readyz/
@@ -143,8 +143,8 @@ spec:
                   value: {{ include "date-website.probeHost" . | quote }}
             initialDelaySeconds: 10
             periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
+            timeoutSeconds: {{ .Values.web.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.web.readinessProbe.failureThreshold }}
           {{- with .Values.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}

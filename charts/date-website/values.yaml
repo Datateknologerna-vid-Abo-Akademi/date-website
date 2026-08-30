@@ -235,6 +235,17 @@ web:
     failureThreshold: 90
     periodSeconds: 2
     timeoutSeconds: 5
+  livenessProbe:
+    # 10s timeout / 5 failures: a busy page render (or a slow dependency
+    # round trip) must not kill the pod through the probe budget (measured
+    # on qa 2026-08-30: sync workers stuck on per-request B2 static
+    # lookups tripped the old 5s/3 budget and the kubelet restarted the
+    # pod). Overridable per site.
+    timeoutSeconds: 10
+    failureThreshold: 5
+  readinessProbe:
+    timeoutSeconds: 10
+    failureThreshold: 5
   # Merged onto the Deployment metadata (e.g.
   # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
   annotations: {}

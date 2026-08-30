@@ -1,3 +1,5 @@
+import threading
+import time
 from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
@@ -26,8 +28,20 @@ class StaticStorage(ManifestFilesMixin, S3Boto3Storage):
     # Vendored assets reference files that do not exist (jquery sourcemap);
     # fall back to the unhashed path instead of failing collectstatic.
     manifest_strict = False
+    # How long a worker waits before re-attempting a failed manifest load.
+    # Long-lived workers that boot before the release-time collectstatic
+    # upload would otherwise fall back to an S3 HEAD+GET per {% static %}
+    # tag for the whole process lifetime (~70 serial calls, ~2.3 s per page
+    # render, measured on qa 2026-08-30). The retry gate bounds the slow
+    # fallback to one interval after the upload appears.
+    manifest_retry_interval = 60
+    _manifest_retry_at = 0.0
 
     def __init__(self, *args, **kwargs):
+        # The mixin loads the manifest during super().__init__(), so the lock
+        # must exist before that. Sync Django views run in a threadpool under
+        # the async gunicorn worker, so manifest reloads must be serialized.
+        self._manifest_lock = threading.RLock()
         super().__init__(*args, **kwargs)
         # S3Boto3Storage.url() prepends the protocol, so the domain must be
         # scheme-less; accept the scheme'd form the codebase uses elsewhere.
@@ -36,12 +50,36 @@ class StaticStorage(ManifestFilesMixin, S3Boto3Storage):
 
     def load_manifest(self):
         # The manifest lives in S3 (uploaded by the release-time collectstatic).
-        # Tolerate missing/transient states and fall back to the non-strict
-        # hashed-name path instead of failing every {% static %} lookup.
-        try:
-            return super().load_manifest()
-        except Exception:
-            return {}, ""
+        # Tolerate missing/transient states: while the manifest is unavailable,
+        # return the (empty) loaded state cheaply and only re-attempt the load
+        # once per retry interval, so a worker that booted before the upload
+        # self-heals instead of hitting S3 for every {% static %} lookup.
+        if time.monotonic() < self._manifest_retry_at:
+            return getattr(self, "hashed_files", {}), getattr(self, "manifest_hash", "")
+        with self._manifest_lock:
+            # Double-checked: another thread may have reloaded while waiting.
+            if time.monotonic() < self._manifest_retry_at:
+                return self.hashed_files, self.manifest_hash
+            try:
+                paths, manifest_hash = super().load_manifest()
+            except Exception:
+                paths, manifest_hash = {}, ""
+            if paths:
+                self._manifest_retry_at = 0.0
+                self.hashed_files, self.manifest_hash = paths, manifest_hash
+            else:
+                self._manifest_retry_at = time.monotonic() + self.manifest_retry_interval
+            return paths, manifest_hash
+
+    def stored_name(self, name):
+        # The manifest mixin only loads once at construction; when it came up
+        # empty (upload not finished yet), retry periodically so the worker
+        # picks up the manifest without a restart.
+        if not self.hashed_files and time.monotonic() >= self._manifest_retry_at:
+            with self._manifest_lock:
+                if not self.hashed_files and time.monotonic() >= self._manifest_retry_at:
+                    self.hashed_files, self.manifest_hash = self.load_manifest()
+        return super().stored_name(name)
 
 
 class PrivateMediaStorage(S3Boto3Storage):
