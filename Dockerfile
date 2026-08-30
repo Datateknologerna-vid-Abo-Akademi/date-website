@@ -47,9 +47,9 @@ RUN pids=""; \
     for pid in ${pids}; do wait "${pid}" || exit 1; done
 # The trees share ~99% of their files (common assets plus third-party static
 # such as CKEditor), so deduplicate identical files with hardlinks: ~350 MiB
-# of collected output collapses to ~55 MiB on disk. The source static/ dir is
-# then removed; it is only input for collectstatic, and prod serves the
-# collected trees (dev compose bind-mounts the repo). Any release-time static
-# upload (S3) must push these trees, not re-run collectstatic from sources.
-RUN python scripts/dedup_static.py /code/static-collected \
- && rm -rf static/
+# of collected output collapses to ~55 MiB on disk. The source static/ dir
+# stays in the image: it is the input for the release-time collectstatic
+# upload when a site serves static from S3 (STATIC_S3_ENABLED, migration Job
+# runs collectstatic before the app pods roll), and prod serves the collected
+# trees (dev compose bind-mounts the repo).
+RUN python scripts/dedup_static.py /code/static-collected
