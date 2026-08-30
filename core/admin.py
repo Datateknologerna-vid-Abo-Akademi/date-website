@@ -27,8 +27,8 @@ class LanguageTabbedTranslationAdmin(TranslationAdmin):
     """
 
     class Media:
-        css = {"all": ("common/css/admin_translation_tabs.css",)}
-        js = ("common/js/admin_translation_tabs.js",)
+        css = {"all": ("css/admin_translation_tabs.css",)}
+        js = ("js/admin_translation_tabs.js",)
 
 
 class ActiveLanguageTranslationAdminMixin:

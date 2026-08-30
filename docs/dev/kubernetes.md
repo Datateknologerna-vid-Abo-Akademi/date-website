@@ -134,10 +134,11 @@ new pods can overlap during rollouts.
 
 ## Static files
 
-Every association's static is collected into the image at build time, one
-tree per variant under `/code/static-collected/<PROJECT_NAME>`. Settings
-pick the tree matching the runtime `PROJECT_NAME`, so every site serves
-build-time static and no web pod runs `collectstatic` at startup
+Every production association's static is collected into the image at build
+time, one tree per variant under `/code/static-collected/<PROJECT_NAME>`
+(the dev-only demo variant gets no tree). Settings pick the tree matching
+the runtime `PROJECT_NAME`, so every site serves build-time static and no
+web pod runs `collectstatic` at startup
 (`web.collectstaticOnStartup` defaults to false; keep it only for images
 built before this layout).
 
@@ -148,12 +149,14 @@ This keeps one generic image for all variants: no per-association images,
 no startup collection, no way for an image and its values to disagree on
 the variant.
 
-The build collects `django-unfold` static only for the variants that run the
-unfold admin skin (`USE_UNFOLD=True`: date incl. qa, pulterit, sf, impuls);
-kk, biocum and demo keep the stock admin. `collectstatic` only discovers app
-static dirs for apps in `INSTALLED_APPS`, so a variant collected without
-`USE_UNFOLD=True` renders the unfold admin with 500s on the missing
-`unfold/fonts/inter/styles.css` manifest entry (2026-08-30).
+The build collects each variant's static concurrently into its own tree, and
+collects `django-unfold` static only for the variants that run the unfold
+admin skin (`USE_UNFOLD=True`: date incl. qa, pulterit, sf, impuls); kk and
+biocum keep the stock admin and the dev-only demo variant gets no collected
+tree. `collectstatic` only discovers app static dirs for apps in
+`INSTALLED_APPS`, so a variant collected without `USE_UNFOLD=True` renders
+the unfold admin with 500s on the missing `unfold/fonts/inter/styles.css`
+manifest entry (2026-08-30).
 
 If static-on-S3 (see issue) lands, collection moves from the image build to
 a release-time upload into the existing per-association media bucket, and

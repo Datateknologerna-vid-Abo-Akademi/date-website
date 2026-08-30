@@ -126,7 +126,7 @@ class AdminUxLinkTests(TestCase):
         self.assertContains(page_response, "/pages/about/")
         self.assertContains(page_response, "sv: 1/2; en: 0/2; fi: 0/2")
         self.assertEqual(page_change_response.status_code, 200)
-        self.assertContains(page_change_response, "common/js/admin_translation_tabs.js")
+        self.assertContains(page_change_response, "js/admin_translation_tabs.js")
         self.assertNotContains(page_change_response, "ajax.googleapis.com/ajax/libs/jqueryui")
         self.assertEqual(nav_response.status_code, 200)
         self.assertContains(nav_response, "About page")
