@@ -20,7 +20,8 @@ Publish capture-the-flag competitions, manage individual flags, and review guess
    - **Flag** – the exact secret string that validates the challenge (case-sensitive).
    - **Slug** – used in URLs (`/ctf/<ctf_slug>/<flag_slug>/`).
    - **Content** – CKEditor field text with challenge text and optional hints.
-   - **Solver / Solved date** – filled automatically when a member solves the flag. Leave empty when creating.
+   - **Solver** – filled automatically when a member solves the flag. Leave empty when creating; you can also set or change it by hand from the member dropdown to credit a solve manually.
+   - **Solved date** – set automatically alongside the automatic solver. Not editable here.
 3. Save the CTF to persist flag entries.
 
 <img alt="img.png" src="images/ctf.png" width="1600"/>

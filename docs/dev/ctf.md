@@ -21,6 +21,7 @@
 
 ## Admin
 - `FlagInline` sits inside `CtfAdmin`, excluding `solved_date` so staff can’t set it manually.
+- `solver` is an autocomplete field (also on the standalone `FlagAdmin`). It is normally filled automatically when a member solves the flag, but staff can set or clear it by hand. The member dropdown works for CTF editors without `members.view_member` thanks to `core.admin.ReferringObjectAutocompleteJsonView`; see `docs/dev/members.md`.
 - `GuessAdmin` exposes filtering/search across guesses for auditing. The full guess list is available through an **All guesses** tool link on the CTF changelist rather than a separate sidebar entry.
 
 ## Extending
