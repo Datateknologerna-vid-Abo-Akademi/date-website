@@ -18,7 +18,7 @@ class ModeltranslationLanguageTests(SimpleTestCase):
         self.assertIn('title_sv', form.base_fields)
         self.assertIn('title_en', form.base_fields)
         self.assertNotIn('title_fi', form.base_fields)
-        self.assertIn('common/js/admin_translation_tabs.js', str(model_admin.media))
+        self.assertIn('js/admin_translation_tabs.js', str(model_admin.media))
         self.assertNotIn('ajax.googleapis.com/ajax/libs/jqueryui', str(model_admin.media))
         self.assertEqual(model_admin.translation_status(FunctionaryRole(title_sv='Chair')), 'sv: 1/1; en: 0/1')
 

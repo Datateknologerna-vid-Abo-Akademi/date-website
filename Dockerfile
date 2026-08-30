@@ -26,21 +26,25 @@ RUN python manage.py compilemessages -l en -l fi -l sv
 # collection. Settings pick the tree matching the runtime PROJECT_NAME.
 ARG PROJECT_NAME=date
 ENV PROJECT_NAME=$PROJECT_NAME
-# Prod runs the unfold admin skin (USE_UNFOLD=True via extraEnv) on the date
-# (incl. qa), pulterit, sf and impuls variants; kk, biocum and demo keep the
-# stock admin. collectstatic only discovers app static dirs for apps in
-# INSTALLED_APPS, so unfold's files must be collected with USE_UNFOLD=True or
-# every unfold admin template render 500s on the missing manifest entry
-# (2026-08-30).
-RUN for variant in date kk pulterit biocum sf impuls demo; do \
+# Collect each variant's static concurrently into its own tree. Prod runs the
+# unfold admin skin (USE_UNFOLD=True via extraEnv) on the date (incl. qa),
+# pulterit, sf and impuls variants; kk and biocum keep the stock admin.
+# collectstatic only discovers app static dirs for apps in INSTALLED_APPS, so
+# unfold's files must be collected with USE_UNFOLD=True or every unfold admin
+# template render 500s on the missing manifest entry (2026-08-30). demo is a
+# dev-only variant and needs no collected tree in the image.
+RUN pids=""; \
+    for variant in date kk pulterit biocum sf impuls; do \
       echo "Collecting static for ${variant}"; \
       case "${variant}" in \
         date|pulterit|sf|impuls) UNFOLD=True ;; \
         *) UNFOLD=False ;; \
       esac; \
-      USE_UNFOLD="${UNFOLD}" PROJECT_NAME="${variant}" STATIC_ROOT="/code/static-collected/${variant}" \
-        python manage.py collectstatic --noinput --clear || exit 1; \
-    done
+      ( USE_UNFOLD="${UNFOLD}" PROJECT_NAME="${variant}" STATIC_ROOT="/code/static-collected/${variant}" \
+          python manage.py collectstatic --noinput --clear ) & \
+      pids="${pids} $!"; \
+    done; \
+    for pid in ${pids}; do wait "${pid}" || exit 1; done
 # The trees share ~99% of their files (common assets plus third-party static
 # such as CKEditor), so deduplicate identical files with hardlinks: ~350 MiB
 # of collected output collapses to ~55 MiB on disk. The source static/ dir is

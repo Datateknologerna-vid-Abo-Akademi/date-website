@@ -464,4 +464,4 @@ class PDFFileAdmin(PublicUrlAdminMixin, PublicationAdminMixin, ModelAdmin):
         return obj.collection.get_visibility_display()
 
     class Media:
-        js = ('common/publications/js/admin-collection-access.js',)
+        js = ('publications/js/admin-collection-access.js',)
