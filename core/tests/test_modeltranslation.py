@@ -1,3 +1,6 @@
+from pathlib import Path
+
+from django.conf import settings
 from django.contrib import admin
 from django.test import RequestFactory, SimpleTestCase, override_settings
 
@@ -5,6 +8,7 @@ from core.admin import LanguageTabbedTranslationAdmin
 from core.modeltranslation import get_translation_languages
 from functionaries.admin import FunctionaryRoleAdmin
 from functionaries.models import FunctionaryRole
+from publications.admin import PDFFileAdmin
 
 
 class ModeltranslationLanguageTests(SimpleTestCase):
@@ -21,6 +25,36 @@ class ModeltranslationLanguageTests(SimpleTestCase):
         self.assertIn('js/admin_translation_tabs.js', str(model_admin.media))
         self.assertNotIn('ajax.googleapis.com/ajax/libs/jqueryui', str(model_admin.media))
         self.assertEqual(model_admin.translation_status(FunctionaryRole(title_sv='Chair')), 'sv: 1/1; en: 0/1')
+
+    def test_admin_media_paths_resolve_in_the_static_layout(self):
+        """Admin Media paths must match the collected static layout.
+
+        STATICFILES_DIRS collects static/common contents without the common/
+        prefix (static/common/js/admin_translation_tabs.js is served as
+        js/admin_translation_tabs.js), and every template references common
+        assets unprefixed. A common/... Media reference (or a missing file)
+        makes the manifest lookup fail and 500s every admin page using that
+        Media class (2026-08-30).
+        """
+        common_static = Path(settings.BASE_DIR) / 'static/common'
+
+        for admin_class in (LanguageTabbedTranslationAdmin, PDFFileAdmin):
+            media = admin_class.Media
+            paths = [*getattr(media, 'js', ())]
+            for group in getattr(media, 'css', {}).values():
+                paths.extend(group)
+            self.assertTrue(paths, f'{admin_class.__name__}.Media declares no paths')
+            for path in paths:
+                self.assertFalse(
+                    path.startswith('common/'),
+                    f'{admin_class.__name__}.Media references {path} with the '
+                    'common/ prefix, which the static layout strips',
+                )
+                self.assertTrue(
+                    (common_static / path).is_file(),
+                    f'{admin_class.__name__}.Media references {path}, which '
+                    f'does not exist under {common_static}',
+                )
 
     @override_settings(ENABLE_LANGUAGE_FEATURES=False)
     def test_translation_coverage_is_hidden_when_language_features_are_disabled(self):

@@ -134,10 +134,11 @@ new pods can overlap during rollouts.
 
 ## Static files
 
-Every association's static is collected into the image at build time, one
-tree per variant under `/code/static-collected/<PROJECT_NAME>`. Settings
-pick the tree matching the runtime `PROJECT_NAME`, so every site serves
-build-time static and no web pod runs `collectstatic` at startup
+Every production association's static is collected into the image at build
+time, one tree per variant under `/code/static-collected/<PROJECT_NAME>`
+(the dev-only demo variant gets no tree). Settings pick the tree matching
+the runtime `PROJECT_NAME`, so every site serves build-time static and no
+web pod runs `collectstatic` at startup
 (`web.collectstaticOnStartup` defaults to false; keep it only for images
 built before this layout).
 
