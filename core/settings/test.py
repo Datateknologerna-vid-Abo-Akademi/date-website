@@ -53,8 +53,11 @@ LOGGING = {
         'console': {'class': 'logging.StreamHandler'},
     },
     'loggers': {
-        'django': {'level': 'CRITICAL', 'propagate': False},
-        'django.server': {'level': 'CRITICAL', 'propagate': False},
+        # Keep Django's own loggers quiet but not silent: a CRITICAL handler
+        # still surfaces fatal framework errors, unlike dropping the loggers
+        # entirely (no handler + no propagation swallows CRITICAL too).
+        'django': {'level': 'CRITICAL', 'handlers': ['console'], 'propagate': False},
+        'django.server': {'level': 'CRITICAL', 'handlers': ['console'], 'propagate': False},
     },
     'root': {
         'handlers': ['console'],

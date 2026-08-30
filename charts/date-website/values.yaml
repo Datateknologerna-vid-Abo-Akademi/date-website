@@ -195,8 +195,9 @@ web:
     # Async worker: one process serves many concurrent HTTP requests and
     # WebSocket connections (Channels app from core.asgi). The sync worker
     # class cannot be used: a sync worker blocks on a single long-lived
-    # WebSocket and would starve HTTP.
-    workerClass: uvicorn.workers.UvicornWorker
+    # WebSocket and would starve HTTP. uvicorn.workers is deprecated
+    # upstream; the uvicorn-worker package provides the same class.
+    workerClass: uvicorn_worker.UvicornWorker
     timeout: 120
     # On SIGTERM gunicorn waits this long for in-flight requests before
     # killing workers; must fit inside terminationGracePeriodSeconds.
