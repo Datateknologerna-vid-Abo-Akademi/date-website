@@ -148,6 +148,13 @@ This keeps one generic image for all variants: no per-association images,
 no startup collection, no way for an image and its values to disagree on
 the variant.
 
+The build collects `django-unfold` static only for the variants that run the
+unfold admin skin (`USE_UNFOLD=True`: date incl. qa, pulterit, sf, impuls);
+kk, biocum and demo keep the stock admin. `collectstatic` only discovers app
+static dirs for apps in `INSTALLED_APPS`, so a variant collected without
+`USE_UNFOLD=True` renders the unfold admin with 500s on the missing
+`unfold/fonts/inter/styles.css` manifest entry (2026-08-30).
+
 If static-on-S3 (see issue) lands, collection moves from the image build to
 a release-time upload into the existing per-association media bucket, and
 pods stop carrying static entirely.

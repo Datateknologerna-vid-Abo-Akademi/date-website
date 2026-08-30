@@ -26,9 +26,19 @@ RUN python manage.py compilemessages -l en -l fi -l sv
 # collection. Settings pick the tree matching the runtime PROJECT_NAME.
 ARG PROJECT_NAME=date
 ENV PROJECT_NAME=$PROJECT_NAME
+# Prod runs the unfold admin skin (USE_UNFOLD=True via extraEnv) on the date
+# (incl. qa), pulterit, sf and impuls variants; kk, biocum and demo keep the
+# stock admin. collectstatic only discovers app static dirs for apps in
+# INSTALLED_APPS, so unfold's files must be collected with USE_UNFOLD=True or
+# every unfold admin template render 500s on the missing manifest entry
+# (2026-08-30).
 RUN for variant in date kk pulterit biocum sf impuls demo; do \
       echo "Collecting static for ${variant}"; \
-      PROJECT_NAME="${variant}" STATIC_ROOT="/code/static-collected/${variant}" \
+      case "${variant}" in \
+        date|pulterit|sf|impuls) UNFOLD=True ;; \
+        *) UNFOLD=False ;; \
+      esac; \
+      USE_UNFOLD="${UNFOLD}" PROJECT_NAME="${variant}" STATIC_ROOT="/code/static-collected/${variant}" \
         python manage.py collectstatic --noinput --clear || exit 1; \
     done
 # The trees share ~99% of their files (common assets plus third-party static
