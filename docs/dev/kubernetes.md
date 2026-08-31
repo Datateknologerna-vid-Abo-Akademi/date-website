@@ -329,5 +329,15 @@ Bucket requirements (one-time):
   so the `/ws` ingress/gateway route and the asgi Service are gone. Per-site
   operator values must drop their `asgi:` overrides; WebSocket traffic
   follows the normal `/` path to the web service.
+- DB connections close at the end of every request under the ASGI handler
+  (`CONN_MAX_AGE = 0`, `DB_CONN_MAX_AGE` env): each request's sync work runs
+  on a per-request executor thread that asgiref destroys when the request
+  finishes, so a positive `CONN_MAX_AGE` leaves the thread-local connection
+  open on a dead thread, leaking PostgreSQL backends and 500ing later
+  requests with `InterfaceError: connection already closed` (2026-08-31).
+  `handler404`/`handler500` call `close_old_connections()` so the error
+  path never reuses a poisoned connection. Long-lived processes (celery,
+  management commands) may opt back into persistent connections via
+  `DB_CONN_MAX_AGE`.
 - Media must stay on S3-compatible storage before web replicas are ever
   scaled up; a local RWO PVC would block scaling and failover.

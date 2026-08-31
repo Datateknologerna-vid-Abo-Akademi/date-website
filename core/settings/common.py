@@ -285,10 +285,17 @@ DATABASES = {
         'PASSWORD': env_alias('DATE_DB_PASSWORD', 'DB_PASSWORD', default=''),
         'HOST': env('DB_HOST', str, 'db'),
         'PORT': env('DB_PORT', int, 5432),
-        # Keep PostgreSQL connections alive between requests to avoid
-        # connection setup latency; must live inside the database config.
-        'CONN_MAX_AGE': env('DB_CONN_MAX_AGE', int, 600),
-        # Re-verify persistent connections so they survive database restarts.
+        # Close the connection at the end of every request (0). The web tier
+        # serves ASGI (core.asgi), where each request's sync work runs on a
+        # per-request executor thread that asgiref destroys when the request
+        # finishes; a positive CONN_MAX_AGE leaves the thread-local connection
+        # open on a dead thread, leaking PostgreSQL backends and 500ing later
+        # requests with "connection already closed" (2026-08-31). Long-lived
+        # processes (celery workers, management commands) can opt back into
+        # persistent connections via DB_CONN_MAX_AGE.
+        'CONN_MAX_AGE': env('DB_CONN_MAX_AGE', int, 0),
+        # Re-verify persistent connections so they survive database restarts
+        # (only applies when DB_CONN_MAX_AGE is positive).
         'CONN_HEALTH_CHECKS': True,
     }
 }

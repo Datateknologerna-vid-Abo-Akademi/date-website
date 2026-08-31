@@ -26,6 +26,7 @@ from date.views import (
     format_calendar_events,
     get_homepage_template_name,
     get_recent_albins_angels_post,
+    handler404,
     handler500,
 )
 from events.models import Event
@@ -541,6 +542,16 @@ class LanguageSelectionTests(TestCase):
             response = handler500(request)
         self.assertEqual(response.status_code, 500)
         self.assertContains(response, "Serverfel", status_code=500)
+
+    def test_error_handlers_close_stale_connections_before_rendering(self):
+        # The ASGI error path can reuse a connection that died on a previous
+        # per-request thread; the handlers must close it before rendering so
+        # the error page itself does not 500 with "connection already closed".
+        request = self.factory.get("/")
+        with patch("date.views.close_old_connections") as close:
+            handler404(request)
+            handler500(request)
+        self.assertEqual(close.call_count, 2)
 
     @override_settings(
         ENABLE_LANGUAGE_FEATURES=False,
