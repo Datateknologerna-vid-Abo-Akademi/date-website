@@ -31,6 +31,17 @@ web:
     limits:
       memory: 1Gi
 
+asgi:
+  replicaCount: 1
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+
 celery:
   replicaCount: 1
   annotations:

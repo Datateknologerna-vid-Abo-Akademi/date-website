@@ -192,37 +192,22 @@ web:
     port: 8000
   gunicorn:
     workers: 3
-    # Async worker: one process serves many concurrent HTTP requests and
-    # WebSocket connections (Channels app from core.asgi). The sync worker
-    # class cannot be used: a sync worker blocks on a single long-lived
-    # WebSocket and would starve HTTP. uvicorn.workers is deprecated
-    # upstream; the uvicorn-worker package provides the same class.
-    workerClass: uvicorn_worker.UvicornWorker
     timeout: 120
     # On SIGTERM gunicorn waits this long for in-flight requests before
     # killing workers; must fit inside terminationGracePeriodSeconds.
     gracefulTimeout: 60
-    # Worker recycling (maxRequests > 0) is disabled: a recycle kills every
-    # WebSocket attached to that worker. The old split kept long-lived
-    # Daphne connections immune to WSGI-worker rotation; with one worker
-    # pool serving both, recycling would drop event-page connections on a
-    # routine basis. The async workers' memory profile is stable (the old
-    # Daphne process ran without recycling), so only re-enable this if
-    # memory drift appears.
-    maxRequests: 0
-    maxRequestsJitter: 0
+    maxRequests: 1000
+    maxRequestsJitter: 100
   migrateOnStartup: false
   resources:
     requests:
       cpu: 100m
-      memory: 512Mi
+      memory: 256Mi
   # Graceful shutdown: the short preStop sleep gives the ingress time to
   # observe endpoint termination and stop routing new requests; the grace
   # period then covers gunicorn's graceful timeout. Both are kept small to
   # bound deploy duration; longer in-flight requests are cut off at the
-  # graceful timeout instead of held open. WebSockets are closed when the
-  # worker is killed at the graceful timeout; there is no application-level
-  # drain hook (the old separate asgi pod behaved the same).
+  # graceful timeout instead of held open.
   terminationGracePeriodSeconds: 70
   preStopSleepSeconds: 2
   # Every variant's static is collected into the image at build time
@@ -238,6 +223,33 @@ web:
   # Merged onto the Deployment metadata (e.g.
   # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
   annotations: {}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+asgi:
+  # Disable for associations that do not use event WebSockets; the WS
+  # ingress/gateway route is omitted too.
+  enabled: true
+  replicaCount: 1
+  service:
+    type: ClusterIP
+    port: 8000
+  wsPath: /ws
+  # The short preStop sleep gives the ingress time to stop routing new
+  # connections; Daphne closes remaining WebSockets on SIGTERM, and the
+  # grace period covers that shutdown. A longer drain would require an
+  # application-level drain hook, which Daphne does not provide.
+  terminationGracePeriodSeconds: 35
+  preStopSleepSeconds: 2
+  # Merged onto the Deployment metadata (e.g.
+  # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
+  annotations: {}
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -280,7 +292,7 @@ celery:
       maxUnavailable: 0
       maxSurge: 1
 pdb:
-  # PodDisruptionBudget per component (web/celery). The template only
+  # PodDisruptionBudget per component (web/asgi/celery). The template only
   # renders a PDB for enabled components with replicaCount >= 2; a PDB on a
   # single replica (minAvailable: 1) would block node drains indefinitely.
   enabled: false

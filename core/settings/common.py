@@ -625,11 +625,6 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
-        'uvicorn': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': True,
-        },
     },
 }
 

@@ -63,8 +63,8 @@ deployments pin the immutable chart version.
 
 The chart deploys:
 
-- Django/Gunicorn web deployment (Uvicorn async worker) serving HTTP and
-  WebSockets from one process pool via `core.asgi`
+- Django/Gunicorn web deployment
+- Daphne ASGI deployment for WebSocket traffic
 - Celery worker deployment
 - Optional PostgreSQL StatefulSet (disabled in production — see below)
 - Valkey/Redis StatefulSet
@@ -80,7 +80,7 @@ Migrations run as a single migration Job per release. Two modes:
 - **Plain Job + Argo sync waves** (production values): set
   `migrations.job.hook: ""` and add `argocd.argoproj.io/sync-wave: "0"` via
   `migrations.job.annotations`, with `argocd.argoproj.io/sync-wave: "1"` on
-  the web/celery Deployments (`.Values.<component>.annotations`).
+  the web/asgi/celery Deployments (`.Values.<component>.annotations`).
   Argo then runs migrations to completion before rolling the application.
   The Job gets a name suffixed with the sanitized tag + a short hash of the
   tag/digest pair (kept under 63 bytes: Kubernetes mirrors the Job name
@@ -237,10 +237,12 @@ Each component gets a deliberate shutdown policy:
   in-flight requests for `gunicorn.gracefulTimeout` (60s, configured
   explicitly; the default graceful timeout is only 30s) before killing
   workers. Requests longer than the graceful timeout are cut off at the cap
-  so a deploy is never held open indefinitely. WebSockets are closed when
-  the worker is killed at the graceful timeout: the Uvicorn worker stops
-  accepting new connections on SIGTERM and there is no application-level
-  drain hook (the removed separate asgi pod behaved the same way).
+  so a deploy is never held open indefinitely.
+- **asgi** (35s grace, 2s preStop): the short preStop sleep gives the
+  ingress time to stop routing new connections; Daphne closes remaining
+  WebSockets on SIGTERM within the grace period. Daphne has no
+  application-level drain hook, so a longer drain is not available without
+  custom code.
 - **celery** (60s grace): celery finishes active tasks on SIGTERM. With
   `CELERY_TASK_ACKS_LATE` and `CELERY_TASK_REJECT_ON_WORKER_LOST`, work that
   was acknowledged but not finished is requeued on worker loss instead of
@@ -254,10 +256,10 @@ Before relying on this, verify once per environment:
 
 - Web: tail `web` logs during a rollout; confirm gunicorn logs graceful
   worker shutdown and no 5xx for in-flight requests.
-- Web (WebSockets): hold a WebSocket open through a `web` rollout and
-  confirm it closes cleanly (client sees a close frame, not a hang).
 - Celery: enqueue a slow task, roll the worker, confirm it finishes (or is
   requeued and runs again) and nothing is dropped silently.
+- ASGI: hold a WebSocket open through an asgi rollout and confirm it
+  closes cleanly (client sees a close frame, not a hang).
 
 ## Secrets
 
@@ -321,13 +323,7 @@ Bucket requirements (one-time):
 - Redis persistence is disabled in production values — queued Celery tasks
   can be lost if Redis restarts. Celery retries/cron are the backstop.
 - Resource requests in `values-hetzner.yaml` are based on observed
-  production usage: web is the largest process (~300-450Mi, plus a small
-  increment for the Channels stack now that it also serves WebSockets),
-  Celery ~250Mi. Revisit after sustained traffic or big uploads.
-- Chart 0.4.0 removed the separate asgi deployment: the web deployment
-  serves both HTTP and WebSockets (gunicorn Uvicorn worker on `core.asgi`),
-  so the `/ws` ingress/gateway route and the asgi Service are gone. Per-site
-  operator values must drop their `asgi:` overrides; WebSocket traffic
-  follows the normal `/` path to the web service.
+  production usage: web is the largest process (~300–450Mi), Celery ~250Mi,
+  ASGI ~90Mi. Revisit after sustained traffic or big uploads.
 - Media must stay on S3-compatible storage before web replicas are ever
   scaled up; a local RWO PVC would block scaling and failover.

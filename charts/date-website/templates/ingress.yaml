@@ -22,6 +22,15 @@ spec:
     - host: {{ .host | quote }}
       http:
         paths:
+          {{- if $.Values.asgi.enabled }}
+          - path: {{ $.Values.asgi.wsPath | quote }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "date-website.fullname" $ }}-asgi
+                port:
+                  name: http
+          {{- end }}
           {{- range .paths }}
           - path: {{ .path }}
             pathType: {{ .pathType }}

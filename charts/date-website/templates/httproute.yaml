@@ -18,6 +18,15 @@ spec:
     - {{ .host | quote }}
     {{- end }}
   rules:
+    {{- if .Values.asgi.enabled }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: {{ .Values.asgi.wsPath | quote }}
+      backendRefs:
+        - name: {{ include "date-website.fullname" . }}-asgi
+          port: {{ .Values.asgi.service.port }}
+    {{- end }}
     {{- range .Values.ingress.hosts }}
     {{- range .paths }}
     - matches:
