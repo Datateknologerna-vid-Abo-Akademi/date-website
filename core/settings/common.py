@@ -229,9 +229,10 @@ COMMON_CONTEXT_PROCESSORS = [
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     # Must run on the same executor thread as the views: under ASGI the
-    # request_finished signal fires on the event loop thread, so Django's
-    # own close_old_connections never closes the thread-local connection.
-    'date.middleware.CloseConnectionsMiddleware',
+    # request_started/request_finished signals fire on the event loop
+    # thread, so Django's own close_old_connections never touches the
+    # thread-local connection. This enforces the lifecycle where it lives.
+    'date.middleware.ConnectionLifecycleMiddleware',
     'date.middleware.ServerTimingMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'date.middleware.LanguageStateMiddleware',
@@ -289,18 +290,18 @@ DATABASES = {
         'PASSWORD': env_alias('DATE_DB_PASSWORD', 'DB_PASSWORD', default=''),
         'HOST': env('DB_HOST', str, 'db'),
         'PORT': env('DB_PORT', int, 5432),
-        # Close the connection at the end of every request (0). The web tier
-        # serves ASGI (core.asgi): sync middleware and views run on asgiref
-        # executor threads, but the request_finished signal is sent on the
-        # event loop thread, so Django's close_old_connections never runs on
-        # the thread that owns the connection. CloseConnectionsMiddleware
-        # (outermost after WhiteNoise) closes it on the executor thread
-        # instead; 0 here is the same policy for paths outside the middleware
-        # and for long-lived processes unless they opt back in via
-        # DB_CONN_MAX_AGE (2026-08-31).
-        'CONN_MAX_AGE': env('DB_CONN_MAX_AGE', int, 0),
-        # Re-verify persistent connections so they survive database restarts
-        # (only applies when DB_CONN_MAX_AGE is positive).
+        # Keep PostgreSQL connections alive between requests (600 s) to
+        # amortize connection setup, like the pre-ASGI WSGI behavior.
+        # Persistent connections are only safe because
+        # ConnectionLifecycleMiddleware runs close_old_connections on the
+        # executor thread that owns the connection at request start and end
+        # (under ASGI the request_started/request_finished signals fire on
+        # the event loop thread and never see it); without the middleware a
+        # positive CONN_MAX_AGE leaks backends and 500s with "connection
+        # already closed" (2026-08-31). The executor threads are long-lived
+        # and reused, so the pool stays bounded by threads, not requests.
+        'CONN_MAX_AGE': env('DB_CONN_MAX_AGE', int, 600),
+        # Re-verify persistent connections so they survive database restarts.
         'CONN_HEALTH_CHECKS': True,
     }
 }

@@ -189,8 +189,8 @@ def set_language(request):
 
 def handler404(request, *args, **argv):
     # The ASGI error path can reuse a connection that died on a previous
-    # per-request thread; close before rendering so the error page itself
-    # does not 500 with "connection already closed".
+    # request on this thread; close obsolete/poisoned connections before
+    # rendering (healthy young connections are kept, so no extra setup).
     close_old_connections()
     response = render(request, 'core/404.html', {})
     response.status_code = 404

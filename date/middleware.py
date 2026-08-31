@@ -11,24 +11,30 @@ from django.utils.translation import get_language_from_request
 from .language_utils import resolve_language
 
 
-class CloseConnectionsMiddleware:
-    """Close the request thread's DB connection when the request finishes.
+class ConnectionLifecycleMiddleware:
+    """Enforce Django's DB connection lifecycle on the request's own thread.
 
-    Under Django's ASGI handler (web serves core.asgi), sync middleware and
-    views run on asgiref executor threads, while the ``request_finished``
-    signal is sent asynchronously on the event loop thread, so
-    ``close_old_connections`` never runs on the thread that owns the
-    connection. Every request therefore leaked its thread-local PostgreSQL
-    connection; once the server reaped the idle connection, the next request
-    on that thread 500ed with "connection already closed" (2026-08-31).
-    ``CONN_MAX_AGE`` cannot fix this (no cleanup ever runs on the owning
-    thread), so close unconditionally here, on the same thread as the view.
+    Under Django's ASGI handler (web serves core.asgi), the
+    ``request_started`` / ``request_finished`` signals are dispatched on the
+    event loop thread, so ``close_old_connections`` never runs on the
+    executor thread that owns the thread-local connection. Without it, a
+    connection is never closed and never health-checked: it lingers until
+    the server reaps it, then the next request on that thread 500s with
+    "connection already closed" (2026-08-31).
+
+    This middleware runs on the same thread-sensitive executor thread as
+    the sync middleware and views, and runs Django's normal lifecycle
+    there: before the request (drop obsolete/poisoned connections before
+    use) and after it (close if beyond CONN_MAX_AGE, otherwise keep for
+    reuse). Long-lived executor threads make reuse safe: the pool is
+    bounded by threads, not by requests.
     """
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
+        close_old_connections()
         try:
             response = self.get_response(request)
         finally:

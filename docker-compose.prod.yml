@@ -19,10 +19,9 @@ services:
     restart: always
     command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python /code/manage.py migrate --noinput && exec gunicorn -k uvicorn_worker.UvicornWorker -w 3 --timeout 120 --max-requests 0 --max-requests-jitter 0 --bind=0.0.0.0 core.asgi:application"
     environment:
-      # ASGI web: close DB connections at request end (each request runs on
-      # a per-request thread, so persistent connections leak). Takes
-      # precedence over DB_CONN_MAX_AGE from .env.
-      DB_CONN_MAX_AGE: "0"
+      # Connection reuse (600 s) is safe with the ASGI lifecycle middleware;
+      # wins over DB_CONN_MAX_AGE from .env.
+      DB_CONN_MAX_AGE: "600"
     depends_on:
       - db
       - redis
