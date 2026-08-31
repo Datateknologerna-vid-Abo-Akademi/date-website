@@ -46,8 +46,8 @@ CONTENT_VARIABLES = {
     "ASSOCIATION_NAME_SHORT": "DaTe",
     "EVENT_TEMPLATE_LOGO": "core/images/headerlogo.png",
     "ASSOCIATION_EMAIL": "date@abo.fi",
-    "ASSOCIATION_ADDRESS_L1": "Åbo Akademi, Agora",
-    "ASSOCIATION_ADDRESS_L2": "Vattenborgsvägen 5",
+    "ASSOCIATION_ADDRESS_L1": "Arken, B313",
+    "ASSOCIATION_ADDRESS_L2": "Fabriksgatan 2",
     "ASSOCIATION_POSTAL_CODE": "20500 Åbo",
     "SOCIAL_BUTTONS": [
         ["fa-facebook-f", "https://www.facebook.com/HerrKanin/"],
