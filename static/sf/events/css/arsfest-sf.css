@@ -75,6 +75,10 @@ html body {
   background: linear-gradient(90deg, transparent, var(--primaryColorLighter), transparent);
 }
 
+.ball-nav {
+  flex-wrap: wrap;
+}
+
 .ball-nav a {
   border-radius: 999px;
   padding: 0.55rem 1.35rem;
