@@ -21,7 +21,7 @@ from django.utils import timezone, translation
 
 from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
-from date.middleware import CloseConnectionsMiddleware
+from date.middleware import ConnectionLifecycleMiddleware
 from date.views import (
     _homepage_context,
     _homepage_version_key,
@@ -702,29 +702,31 @@ class LanguageSelectionTests(TestCase):
         self.assertNotIn('href=""', rendered)
 
 
-class CloseConnectionsMiddlewareTests(SimpleTestCase):
+class ConnectionLifecycleMiddlewareTests(SimpleTestCase):
     def setUp(self):
         self.factory = RequestFactory()
 
-    def test_closes_connection_after_response(self):
-        # Django's ASGI handler sends request_finished on the event loop
-        # thread, so close_old_connections must also run on the executor
-        # thread that owns the connection, via this middleware.
-        middleware = CloseConnectionsMiddleware(lambda request: HttpResponse("ok"))
+    def test_runs_lifecycle_around_response(self):
+        # Django's ASGI handler dispatches request_started/request_finished
+        # on the event loop thread, so close_old_connections must also run
+        # on the executor thread that owns the connection, via this
+        # middleware: once before the request (drop obsolete/poisoned
+        # connections) and once after (close or keep per CONN_MAX_AGE).
+        middleware = ConnectionLifecycleMiddleware(lambda request: HttpResponse("ok"))
         with patch("date.middleware.close_old_connections") as close:
             response = middleware(self.factory.get("/"))
         self.assertEqual(response.status_code, 200)
-        close.assert_called_once_with()
+        self.assertEqual(close.call_count, 2)
 
-    def test_closes_connection_when_view_raises(self):
+    def test_runs_lifecycle_when_view_raises(self):
         def boom(request):
             raise RuntimeError("boom")
 
-        middleware = CloseConnectionsMiddleware(boom)
+        middleware = ConnectionLifecycleMiddleware(boom)
         with patch("date.middleware.close_old_connections") as close:
             with self.assertRaises(RuntimeError):
                 middleware(self.factory.get("/"))
-        close.assert_called_once_with()
+        self.assertEqual(close.call_count, 2)
 
 
 class HomepageTemplateSelectionTests(TestCase):
