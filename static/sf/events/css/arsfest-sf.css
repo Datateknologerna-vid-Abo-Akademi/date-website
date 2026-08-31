@@ -19,11 +19,11 @@ html body {
   left: 0;
   width: 100%;
   height: calc(100% + 40px);
-  background: radial-gradient(circle at bottom, var(--primaryColor) 0%, var(--primaryColorLighter) 100%);
+  background: radial-gradient(circle, var(--primaryColor) 0%, var(--primaryColorLighter) 100%);
   z-index: -1;
-  opacity: 0.4;
-  filter: blur(28px);
-  transform: translateY(-12px);
+  opacity: 0.32;
+  filter: blur(30px);
+  transform: translateY(-8px);
   pointer-events: none;
 }
 
