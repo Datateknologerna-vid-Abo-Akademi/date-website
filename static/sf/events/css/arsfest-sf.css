@@ -37,10 +37,15 @@ html body {
 }
 
 .event-template-logo {
-  max-width: min(320px, 70vw);
-  max-height: 160px;
+  width: min(260px, 62vw);
   filter: drop-shadow(0 0 18px rgba(230, 107, 113, 0.35));
   animation: fadeIn ease 1.2s;
+}
+
+.event-template-logo svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .baal-header {
