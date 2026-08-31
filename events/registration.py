@@ -15,6 +15,19 @@ class EventSignupError(Exception):
         super().__init__(message)
 
 
+class _AttendeeNrCollision(Exception):
+    # Raised when attendee_nr allocation hits the unique constraint; the
+    # whole signup is retried by register_event_signup.
+    pass
+
+
+# How many times a rolled-back signup is retried after an attendee_nr
+# allocation collision before giving up.
+_MAX_ATTENDEE_NR_RETRIES = 5
+
+_ATTENDEE_NR_CONSTRAINT_NAME = 'unique_attendee_nr_per_event'
+
+
 @dataclass
 class EventSignupResult:
     attendee: EventAttendees
@@ -48,6 +61,20 @@ def register_event_signup(event, cleaned_data):
 
     questions = get_registration_questions(event)
 
+    # attendee_nr is allocated as max+10 from an unlocked read for unlimited
+    # events (they skip the row lock), so concurrent signups can pick the same
+    # next number. The unique constraint on (event, attendee_nr) turns that
+    # race into a retryable conflict; retry the whole (rolled back) attempt,
+    # bounded, since each retry re-reads the current maximum.
+    for _attempt in range(_MAX_ATTENDEE_NR_RETRIES):
+        try:
+            return _register_event_signup_once(event, cleaned_data, required_places, questions)
+        except _AttendeeNrCollision:
+            continue
+    raise EventSignupError(_("Det gick inte att anmäla dig just nu, försök igen."))
+
+
+def _register_event_signup_once(event, cleaned_data, required_places, questions):
     with transaction.atomic():
         # The caller's Event object may be stale (it was loaded before the
         # request), so refresh the row first and decide the locking strategy
@@ -81,19 +108,12 @@ def register_event_signup(event, cleaned_data):
                 duplicate_field='avec_email',
             )
 
-    # Known trade-off of skipping the lock for unlimited events:
-    # EventAttendees.save() allocates attendee_nr as max+10 without
-    # serialization, so extreme concurrency can hand two signups the same
-    # number (no unique constraint on (event, attendee_nr)). That makes
-    # attendee-list ordering nondeterministic for those rows; no data
-    # loss. A dedicated allocation scheme (unique constraint + bounded
-    # IntegrityError retry) is the follow-up if it ever matters.
-    #
     # Residual race: an event changed from unlimited to capacity-limited
     # between the fresh read and the insert can slip past _ensure_capacity
     # without the lock. This requires an admin edit in that window, is not
-    # serialized, and is accepted; the next signup locks and enforces the
-    # new limit.
+    # serialized, and is accepted as a consistency boundary: capacity changes
+    # take effect from the next signup on. Avoid changing the capacity mode
+    # while registrations are active if strict atomicity is required.
 
     return EventSignupResult(attendee=attendee, avec_attendee=avec_attendee)
 
@@ -131,9 +151,25 @@ def _create_attendee(event, user, email, anonymous, preferences, avec_for=None, 
             original_event=event,
         )
     except IntegrityError as exc:
+        if _is_attendee_nr_collision(exc):
+            raise _AttendeeNrCollision from exc
         raise EventSignupError(
             _("Det finns redan någon anmäld med denna email"),
             field=duplicate_field,
         ) from exc
     except ValidationError as exc:
         raise EventSignupError(exc.messages[0] if exc.messages else str(exc), field=duplicate_field) from exc
+
+
+def _is_attendee_nr_collision(exc):
+    # Distinguish a (event, attendee_nr) allocation conflict (retryable race
+    # on the unlocked max+10 allocation) from a duplicate (event, email)
+    # (a real user error). Django wraps the driver error in IntegrityError;
+    # psycopg exposes the constraint name via diag, SQLite only the message.
+    cause = exc.__cause__
+    if cause is None:
+        return False
+    constraint = getattr(getattr(cause, 'diag', None), 'constraint_name', None)
+    if constraint:
+        return constraint == _ATTENDEE_NR_CONSTRAINT_NAME
+    return 'attendee_nr' in str(cause)

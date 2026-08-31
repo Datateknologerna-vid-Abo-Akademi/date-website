@@ -6,7 +6,8 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
-from django.db import connection
+from django.db import IntegrityError, connection
+from django.db.models import QuerySet
 from django.forms.models import inlineformset_factory
 from django.test import Client, TestCase, override_settings
 from django.test.client import RequestFactory
@@ -20,7 +21,7 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 from events.admin import EventAttendeesFormInline, EventRegistrationFormSet
 from events.forms import EventCreationForm, EventEditForm
 from events.models import Event, EventAttendees, EventRegistrationForm
-from events.registration import register_event_signup
+from events.registration import EventSignupError, register_event_signup
 from events.routing import websocket_urlpatterns
 from events.websocket_utils import ws_data, ws_send
 from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
@@ -1493,13 +1494,99 @@ class EventCapacityTests(TestCase):
         )
         stale = Event(pk=child.pk, title='Lock Child', slug='lock-child', author_id=self.author.pk)
 
-        with CaptureQueriesContext(connection) as ctx:
-            register_event_signup(stale, {'user': 'Locked', 'email': 'locked@example.com', 'anonymous': False})
+        real_select_for_update = QuerySet.select_for_update
+        locked_kwargs = []
+
+        def locked_side_effect(self, *args, **kwargs):
+            locked_kwargs.append(kwargs)
+            return real_select_for_update(self, *args, **kwargs)
+
+        with patch.object(QuerySet, 'select_for_update', autospec=True, side_effect=locked_side_effect):
+            with CaptureQueriesContext(connection) as ctx:
+                register_event_signup(stale, {'user': 'Locked', 'email': 'locked@example.com', 'anonymous': False})
+
+        # The locked re-read must actually go through select_for_update, not
+        # just be a second unlocked read.
+        self.assertEqual(locked_kwargs, [{'of': ('self',)}])
 
         event_selects = [
             q for q in ctx.captured_queries if q['sql'].startswith('SELECT') and '"events_event"' in q['sql']
         ]
         self.assertEqual(len(event_selects), 2, 'capacity-limited child must fresh-read then locked re-read')
+        # SQLite ignores select_for_update entirely (no FOR UPDATE emitted),
+        # so the row-lock SQL can only be asserted against a supporting
+        # backend; the wraps assertion above covers every backend.
+        if connection.vendor == 'postgresql':
+            self.assertTrue(
+                any('FOR UPDATE' in q['sql'] for q in event_selects),
+                'the locked re-read must carry SELECT ... FOR UPDATE',
+            )
+
+    def test_attendee_nr_collision_is_retried(self):
+        # Unlimited events skip the row lock, so the max+10 attendee_nr
+        # allocation can race; the unique constraint must turn that into a
+        # retried signup, not a duplicate-email error.
+        parent = Event.objects.create(title='Race Parent', slug='race-parent', author=self.author)
+        event = Event.objects.create(
+            title='Race Event',
+            slug='race-event',
+            author=self.author,
+            parent=parent,
+        )
+        real_create = EventAttendees.objects.create
+        attempts = {'n': 0}
+
+        def flaky_create(*args, **kwargs):
+            attempts['n'] += 1
+            if attempts['n'] == 1:
+                cause = Exception('simulated unique violation')
+                cause.diag = SimpleNamespace(constraint_name='unique_attendee_nr_per_event')
+                raise IntegrityError('duplicate key value violates unique constraint') from cause
+            return real_create(*args, **kwargs)
+
+        with patch.object(EventAttendees.objects, 'create', side_effect=flaky_create):
+            result = register_event_signup(event, {'user': 'Racer', 'email': 'racer@example.com', 'anonymous': False})
+
+        self.assertEqual(attempts['n'], 2, 'an attendee_nr collision must retry the whole signup')
+        self.assertEqual(result.attendee.email, 'racer@example.com')
+        self.assertEqual(result.attendee.attendee_nr, 10)
+
+    def test_attendee_nr_collision_gives_up_after_retries(self):
+        parent = Event.objects.create(title='Race Parent Exhausted', slug='race-parent-exhausted', author=self.author)
+        event = Event.objects.create(
+            title='Race Event Exhausted',
+            slug='race-event-exhausted',
+            author=self.author,
+            parent=parent,
+        )
+
+        def always_collides(*args, **kwargs):
+            cause = Exception('simulated unique violation')
+            cause.diag = SimpleNamespace(constraint_name='unique_attendee_nr_per_event')
+            raise IntegrityError('duplicate key value violates unique constraint') from cause
+
+        with patch.object(EventAttendees.objects, 'create', side_effect=always_collides):
+            with self.assertRaises(EventSignupError):
+                register_event_signup(event, {'user': 'Racer', 'email': 'racer@example.com', 'anonymous': False})
+
+    def test_duplicate_email_still_reported_not_retried(self):
+        # An IntegrityError on the (event, email) constraint is a user error
+        # and must surface as such, never as an attendee_nr retry.
+        parent = Event.objects.create(title='Dup Parent', slug='dup-parent', author=self.author)
+        event = Event.objects.create(
+            title='Dup Event',
+            slug='dup-event',
+            author=self.author,
+            parent=parent,
+        )
+
+        def email_collides(*args, **kwargs):
+            raise IntegrityError('UNIQUE constraint failed: events_eventattendees.email') from Exception('sqlite')
+
+        with patch.object(EventAttendees.objects, 'create', side_effect=email_collides):
+            with self.assertRaises(EventSignupError) as ctx:
+                register_event_signup(event, {'user': 'Dup', 'email': 'dup@example.com', 'anonymous': False})
+        self.assertIn('Det finns redan någon anmäld med denna email', str(ctx.exception.message))
 
     def test_unlimited_event_signup_skips_the_row_lock(self):
         event = Event.objects.create(title='Unlocked', slug='unlocked', author=self.author)

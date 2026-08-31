@@ -113,6 +113,31 @@ class StaticStorageTests(SimpleTestCase):
             self.assertEqual(len(calls), 1, "exactly one reload after the window")
             self.assertIn("css/a.css", storage.hashed_files)
 
+    def test_manifest_load_failure_is_logged(self):
+        # A permanent failure (auth, permissions, misconfigured storage) must
+        # be observable, not silently swallowed by the self-healing retry.
+        import tempfile
+
+        from django.core.files.storage import FileSystemStorage
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            manifest_fs = FileSystemStorage(location=tmpdir)
+            with self.assertLogs("core.storage_backends", level="WARNING") as logs:
+                storage = StaticStorage(
+                    bucket_name="site-media",
+                    location="static",
+                    querystring_auth=False,
+                    manifest_storage=manifest_fs,
+                )
+            self.assertEqual(storage.hashed_files, {})
+            self.assertTrue(
+                any("Static manifest not available" in line for line in logs.output),
+                logs.output,
+            )
+            # The retry gate still suppresses the next load attempt.
+            with self.assertNoLogs("core.storage_backends", level="WARNING"):
+                storage.load_manifest()
+
     def test_concurrent_reload_is_serialized(self):
         # Sync Django views run in the worker threadpool; a retry boundary
         # must not stampede the S3 manifest GET.

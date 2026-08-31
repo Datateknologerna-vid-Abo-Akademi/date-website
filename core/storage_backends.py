@@ -1,3 +1,4 @@
+import logging
 import threading
 import time
 from urllib.parse import urlsplit, urlunsplit
@@ -7,6 +8,8 @@ from django.contrib.staticfiles.storage import ManifestFilesMixin
 from storages.backends.s3boto3 import S3Boto3Storage
 from storages.utils import clean_name
 from whitenoise.storage import CompressedManifestStaticFilesStorage
+
+logger = logging.getLogger(__name__)
 
 
 class NonStrictManifestStaticFilesStorage(CompressedManifestStaticFilesStorage):
@@ -62,13 +65,26 @@ class StaticStorage(ManifestFilesMixin, S3Boto3Storage):
                 return self.hashed_files, self.manifest_hash
             try:
                 paths, manifest_hash = super().load_manifest()
-            except Exception:
+            except Exception as exc:
+                logger.warning(
+                    "Static manifest load failed (%s); retrying in %ss",
+                    exc,
+                    self.manifest_retry_interval,
+                )
                 paths, manifest_hash = {}, ""
             if paths:
                 self._manifest_retry_at = 0.0
                 self.hashed_files, self.manifest_hash = paths, manifest_hash
             else:
                 self._manifest_retry_at = time.monotonic() + self.manifest_retry_interval
+                # Also surfaces permanent deployment errors (misconfigured
+                # storage, missing manifest object) at most once per retry
+                # interval, so self-healing failures are observable.
+                logger.warning(
+                    "Static manifest not available; static lookups fall back to "
+                    "S3 per tag until it appears (retry in %ss)",
+                    self.manifest_retry_interval,
+                )
             return paths, manifest_hash
 
     def stored_name(self, name):

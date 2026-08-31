@@ -454,6 +454,12 @@ class EventAttendees(models.Model):  # type: ignore[django-manager-missing]
         verbose_name_plural = _('deltagare')
         ordering = ['attendee_nr']
         unique_together = ('event', 'email')
+        constraints = [
+            models.UniqueConstraint(
+                fields=('event', 'attendee_nr'),
+                name='unique_attendee_nr_per_event',
+            ),
+        ]
 
     def __str__(self):
         return str(self.user)

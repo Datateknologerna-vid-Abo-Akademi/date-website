@@ -583,6 +583,10 @@ msgstr "Email"
 msgid "Anonymt"
 msgstr "Anonymously"
 
+#: events/registration.py:74
+msgid "Det gick inte att anmäla dig just nu, försök igen."
+msgstr "Couldn't sign you up right now, please try again."
+
 #: events/models.py:322 events/registration.py:105
 msgid "Det finns redan någon anmäld med denna email"
 msgstr "There is already someone registered with this email"
