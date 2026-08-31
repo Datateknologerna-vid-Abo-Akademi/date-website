@@ -5,3 +5,7 @@
        src="{% static 'core/images/SF_logo_Tran.svg' %}"
        alt="{{ ASSOCIATION_NAME }} logo">
 {% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'events/css/arsfest-sf.css' %}">
+{% endblock %}

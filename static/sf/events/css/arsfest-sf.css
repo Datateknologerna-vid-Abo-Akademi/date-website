@@ -1,0 +1,71 @@
+/* SF-specific årsfest styling, layered on top of the shared arsfest.css */
+
+html body {
+  background: linear-gradient(180deg, #140506 0%, #3b0c11 55%, #1d0709 100%);
+  background-attachment: fixed;
+}
+
+.container-size,
+.text-content {
+  position: relative;
+  z-index: 1;
+}
+
+.container-size::after,
+.text-content::after {
+  content: "";
+  position: absolute;
+  top: -20px;
+  left: 0;
+  width: 100%;
+  height: calc(100% + 40px);
+  background: radial-gradient(circle at bottom, var(--primaryColor) 0%, var(--primaryColorLighter) 100%);
+  z-index: -1;
+  opacity: 0.55;
+  filter: blur(24px);
+  transform: translateY(-16px);
+  pointer-events: none;
+}
+
+.content {
+  border-radius: 14px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45), 0 0 44px rgba(177, 18, 27, 0.16);
+}
+
+.header-box {
+  padding: 2.2rem 1.5rem 1.6rem;
+}
+
+.event-template-logo {
+  max-width: min(320px, 70vw);
+  max-height: 160px;
+  filter: drop-shadow(0 0 24px rgba(230, 107, 113, 0.45));
+  animation: fadeIn ease 1.2s;
+}
+
+.baal-header {
+  font-family: "Cinzel", "Georgia", serif;
+  font-size: clamp(2.1rem, 5vw, 3.4rem);
+  letter-spacing: 0.1em;
+  color: #ffffff;
+  text-shadow: 0 0 26px rgba(230, 107, 113, 0.6), 0 2px 8px rgba(0, 0, 0, 0.55);
+  margin: 0.5rem 0 1.5rem;
+  animation: fadeIn ease 1.2s;
+}
+
+.baal-header::after {
+  content: "";
+  display: block;
+  width: min(420px, 60vw);
+  height: 2px;
+  margin: 1.1rem auto 0;
+  background: linear-gradient(90deg, transparent, var(--primaryColorLighter), transparent);
+}
+
+.ball-nav a {
+  border-radius: 999px;
+  padding: 0.55rem 1.35rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
