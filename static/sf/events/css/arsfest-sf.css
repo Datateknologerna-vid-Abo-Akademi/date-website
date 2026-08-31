@@ -38,6 +38,9 @@ html body {
 
 .event-template-logo {
   width: min(260px, 62vw);
+  max-width: none;
+  max-height: none;
+  margin: 0 auto 1rem;
   filter: drop-shadow(0 0 18px rgba(230, 107, 113, 0.35));
   animation: fadeIn ease 1.2s;
 }
