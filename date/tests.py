@@ -11,15 +11,17 @@ from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db import connection
+from django.http import HttpResponse
 from django.template import Context, Template
 from django.template.loader import render_to_string
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, SimpleTestCase, TestCase
 from django.test.utils import CaptureQueriesContext, override_settings
 from django.urls import clear_url_caches, reverse, set_urlconf
 from django.utils import timezone, translation
 
 from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
+from date.middleware import CloseConnectionsMiddleware
 from date.views import (
     _homepage_context,
     _homepage_version_key,
@@ -698,6 +700,31 @@ class LanguageSelectionTests(TestCase):
         )
         self.assertIn("https://example.com/facebook", rendered)
         self.assertNotIn('href=""', rendered)
+
+
+class CloseConnectionsMiddlewareTests(SimpleTestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_closes_connection_after_response(self):
+        # Django's ASGI handler sends request_finished on the event loop
+        # thread, so close_old_connections must also run on the executor
+        # thread that owns the connection, via this middleware.
+        middleware = CloseConnectionsMiddleware(lambda request: HttpResponse("ok"))
+        with patch("date.middleware.close_old_connections") as close:
+            response = middleware(self.factory.get("/"))
+        self.assertEqual(response.status_code, 200)
+        close.assert_called_once_with()
+
+    def test_closes_connection_when_view_raises(self):
+        def boom(request):
+            raise RuntimeError("boom")
+
+        middleware = CloseConnectionsMiddleware(boom)
+        with patch("date.middleware.close_old_connections") as close:
+            with self.assertRaises(RuntimeError):
+                middleware(self.factory.get("/"))
+        close.assert_called_once_with()
 
 
 class HomepageTemplateSelectionTests(TestCase):

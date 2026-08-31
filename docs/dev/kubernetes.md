@@ -330,14 +330,18 @@ Bucket requirements (one-time):
   operator values must drop their `asgi:` overrides; WebSocket traffic
   follows the normal `/` path to the web service.
 - DB connections close at the end of every request under the ASGI handler
-  (`CONN_MAX_AGE = 0`, `DB_CONN_MAX_AGE` env): each request's sync work runs
-  on a per-request executor thread that asgiref destroys when the request
-  finishes, so a positive `CONN_MAX_AGE` leaves the thread-local connection
-  open on a dead thread, leaking PostgreSQL backends and 500ing later
-  requests with `InterfaceError: connection already closed` (2026-08-31).
-  `handler404`/`handler500` call `close_old_connections()` so the error
-  path never reuses a poisoned connection. Long-lived processes (celery,
-  management commands) may opt back into persistent connections via
-  `DB_CONN_MAX_AGE`.
+  (2026-08-31). Sync middleware and views run on asgiref executor threads,
+  but Django's ASGI handler sends the `request_finished` signal on the event
+  loop thread, so `close_old_connections` never runs on the thread that owns
+  the thread-local connection. Every request leaked its PostgreSQL
+  connection; once the server reaped the idle connection, the next request
+  on that thread 500ed with `InterfaceError: connection already closed`
+  (`CONN_MAX_AGE`/`CONN_HEALTH_CHECKS` cannot fix this, the cleanup never
+  runs on the owning thread). Fix: `date.middleware.CloseConnectionsMiddleware`
+  (outermost after WhiteNoise) closes the connection on the executor thread
+  after every request, `handler404`/`handler500` close before rendering the
+  error page, and `CONN_MAX_AGE = 0` is the settings default for paths
+  outside the middleware. Long-lived processes (celery, management commands)
+  may opt back into persistent connections via `DB_CONN_MAX_AGE`.
 - Media must stay on S3-compatible storage before web replicas are ever
   scaled up; a local RWO PVC would block scaling and failover.
