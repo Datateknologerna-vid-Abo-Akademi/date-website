@@ -2,13 +2,38 @@ import time
 from contextlib import ExitStack
 
 from django.conf import settings
-from django.db import connections
+from django.db import close_old_connections, connections
 from django.shortcuts import render
 from django.utils import translation
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.translation import get_language_from_request
 
 from .language_utils import resolve_language
+
+
+class CloseConnectionsMiddleware:
+    """Close the request thread's DB connection when the request finishes.
+
+    Under Django's ASGI handler (web serves core.asgi), sync middleware and
+    views run on asgiref executor threads, while the ``request_finished``
+    signal is sent asynchronously on the event loop thread, so
+    ``close_old_connections`` never runs on the thread that owns the
+    connection. Every request therefore leaked its thread-local PostgreSQL
+    connection; once the server reaped the idle connection, the next request
+    on that thread 500ed with "connection already closed" (2026-08-31).
+    ``CONN_MAX_AGE`` cannot fix this (no cleanup ever runs on the owning
+    thread), so close unconditionally here, on the same thread as the view.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        try:
+            response = self.get_response(request)
+        finally:
+            close_old_connections()
+        return response
 
 
 class LanguageStateMiddleware(MiddlewareMixin):

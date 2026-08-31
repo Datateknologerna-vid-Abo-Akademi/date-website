@@ -5,7 +5,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 from django.conf import settings
 from django.core.cache import cache
-from django.db import connection, transaction
+from django.db import close_old_connections, connection, transaction
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -188,12 +188,17 @@ def set_language(request):
 
 
 def handler404(request, *args, **argv):
+    # The ASGI error path can reuse a connection that died on a previous
+    # per-request thread; close before rendering so the error page itself
+    # does not 500 with "connection already closed".
+    close_old_connections()
     response = render(request, 'core/404.html', {})
     response.status_code = 404
     return response
 
 
 def handler500(request, *args, **argv):
+    close_old_connections()
     response = render(request, 'core/500.html', {})
     response.status_code = 500
     return response

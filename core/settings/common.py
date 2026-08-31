@@ -228,6 +228,10 @@ COMMON_CONTEXT_PROCESSORS = [
 
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    # Must run on the same executor thread as the views: under ASGI the
+    # request_finished signal fires on the event loop thread, so Django's
+    # own close_old_connections never closes the thread-local connection.
+    'date.middleware.CloseConnectionsMiddleware',
     'date.middleware.ServerTimingMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'date.middleware.LanguageStateMiddleware',
@@ -285,10 +289,18 @@ DATABASES = {
         'PASSWORD': env_alias('DATE_DB_PASSWORD', 'DB_PASSWORD', default=''),
         'HOST': env('DB_HOST', str, 'db'),
         'PORT': env('DB_PORT', int, 5432),
-        # Keep PostgreSQL connections alive between requests to avoid
-        # connection setup latency; must live inside the database config.
-        'CONN_MAX_AGE': env('DB_CONN_MAX_AGE', int, 600),
-        # Re-verify persistent connections so they survive database restarts.
+        # Close the connection at the end of every request (0). The web tier
+        # serves ASGI (core.asgi): sync middleware and views run on asgiref
+        # executor threads, but the request_finished signal is sent on the
+        # event loop thread, so Django's close_old_connections never runs on
+        # the thread that owns the connection. CloseConnectionsMiddleware
+        # (outermost after WhiteNoise) closes it on the executor thread
+        # instead; 0 here is the same policy for paths outside the middleware
+        # and for long-lived processes unless they opt back in via
+        # DB_CONN_MAX_AGE (2026-08-31).
+        'CONN_MAX_AGE': env('DB_CONN_MAX_AGE', int, 0),
+        # Re-verify persistent connections so they survive database restarts
+        # (only applies when DB_CONN_MAX_AGE is positive).
         'CONN_HEALTH_CHECKS': True,
     }
 }

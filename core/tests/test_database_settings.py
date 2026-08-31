@@ -15,5 +15,9 @@ class DatabaseSettingsTests(SimpleTestCase):
         default_db = common.DATABASES["default"]
 
         self.assertIn("CONN_MAX_AGE", default_db)
-        self.assertGreater(default_db["CONN_MAX_AGE"], 0)
+        # The ASGI web tier runs each request on a per-request thread, so a
+        # persistent connection is left open on a thread that asgiref then
+        # destroys: it leaks PostgreSQL backends and 500s later requests.
+        # 0 closes the connection at request end on the same thread.
+        self.assertEqual(default_db["CONN_MAX_AGE"], 0)
         self.assertTrue(default_db["CONN_HEALTH_CHECKS"])
