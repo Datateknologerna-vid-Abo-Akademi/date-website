@@ -6,9 +6,11 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
+from django.db import connection
 from django.forms.models import inlineformset_factory
 from django.test import Client, TestCase, override_settings
 from django.test.client import RequestFactory
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.formats import date_format
@@ -18,6 +20,7 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 from events.admin import EventAttendeesFormInline, EventRegistrationFormSet
 from events.forms import EventCreationForm, EventEditForm
 from events.models import Event, EventAttendees, EventRegistrationForm
+from events.registration import register_event_signup
 from events.routing import websocket_urlpatterns
 from events.websocket_utils import ws_data, ws_send
 from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
@@ -1475,6 +1478,39 @@ class EventCapacityTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'name="user"')
         self.assertContains(response, "Evenemanget är tyvärr fullt")
+
+    def test_capacity_child_signup_takes_row_lock_based_on_db_state(self):
+        # The lock decision must come from a fresh database read, not the
+        # caller's (possibly stale) event object: a capacity-limited child
+        # requires the lock even if the caller's instance says otherwise.
+        parent = Event.objects.create(title='Lock Parent', slug='lock-parent', author=self.author)
+        child = Event.objects.create(
+            title='Lock Child',
+            slug='lock-child',
+            author=self.author,
+            parent=parent,
+            sign_up_max_participants=2,
+        )
+        stale = Event(pk=child.pk, title='Lock Child', slug='lock-child', author_id=self.author.pk)
+
+        with CaptureQueriesContext(connection) as ctx:
+            register_event_signup(stale, {'user': 'Locked', 'email': 'locked@example.com', 'anonymous': False})
+
+        event_selects = [
+            q for q in ctx.captured_queries if q['sql'].startswith('SELECT') and '"events_event"' in q['sql']
+        ]
+        self.assertEqual(len(event_selects), 2, 'capacity-limited child must fresh-read then locked re-read')
+
+    def test_unlimited_event_signup_skips_the_row_lock(self):
+        event = Event.objects.create(title='Unlocked', slug='unlocked', author=self.author)
+
+        with CaptureQueriesContext(connection) as ctx:
+            register_event_signup(event, {'user': 'Unlocked', 'email': 'unlocked@example.com', 'anonymous': False})
+
+        event_selects = [
+            q for q in ctx.captured_queries if q['sql'].startswith('SELECT') and '"events_event"' in q['sql']
+        ]
+        self.assertEqual(len(event_selects), 1, 'unlimited event must only fresh-read, no locked re-read')
 
 
 @override_settings(CONTENT_VARIABLES={**settings.CONTENT_VARIABLES, "INTERNATIONAL_EVENT_SLUGS": ["intl-slug"]})

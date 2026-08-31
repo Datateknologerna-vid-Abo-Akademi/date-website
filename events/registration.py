@@ -49,24 +49,18 @@ def register_event_signup(event, cleaned_data):
     questions = get_registration_questions(event)
 
     with transaction.atomic():
-        # Only capacity-limited child events need the row lock: their
-        # capacity check must be atomic against concurrent signups. Unlimited
-        # parent/standalone events keep accepting an overflow list, so skip
-        # the lock and let concurrent signups to the same event proceed in
-        # parallel (duplicate emails are still caught by the unique
-        # constraint on (event, email)).
-        #
-        # Known cosmetic trade-off of skipping the lock: EventAttendees.save()
-        # allocates attendee_nr as max+10 without serialization, so extreme
-        # concurrency can hand two signups the same number (no unique
-        # constraint on (event, attendee_nr); affects list ordering only, no
-        # data loss). A dedicated allocation scheme (unique constraint +
-        # bounded IntegrityError retry) is the follow-up if it ever matters.
-        needs_capacity_lock = event.parent is not None and event.sign_up_max_participants != 0
+        # The caller's Event object may be stale (it was loaded before the
+        # request), so refresh the row first and decide the locking strategy
+        # from the current database state. Only capacity-limited child events
+        # need the row lock: their capacity check must be atomic against
+        # concurrent signups. Unlimited parent/standalone events keep
+        # accepting an overflow list, so skip the lock and let concurrent
+        # signups to the same event proceed in parallel (duplicate emails
+        # are still caught by the unique constraint on (event, email)).
         qs = event.__class__.objects.select_related('parent')
-        if needs_capacity_lock:
-            qs = qs.select_for_update(of=('self',))
         event = qs.get(pk=event.pk)
+        if event.parent is not None and event.sign_up_max_participants != 0:
+            event = qs.select_for_update(of=('self',)).get(pk=event.pk)
         _ensure_capacity(event, required_places)
         attendee = _create_attendee(
             event=event,
@@ -86,6 +80,14 @@ def register_event_signup(event, cleaned_data):
                 avec_for=attendee,
                 duplicate_field='avec_email',
             )
+
+    # Known trade-off of skipping the lock for unlimited events:
+    # EventAttendees.save() allocates attendee_nr as max+10 without
+    # serialization, so extreme concurrency can hand two signups the same
+    # number (no unique constraint on (event, attendee_nr)). That makes
+    # attendee-list ordering nondeterministic for those rows; no data
+    # loss. A dedicated allocation scheme (unique constraint + bounded
+    # IntegrityError retry) is the follow-up if it ever matters.
 
     return EventSignupResult(attendee=attendee, avec_attendee=avec_attendee)
 

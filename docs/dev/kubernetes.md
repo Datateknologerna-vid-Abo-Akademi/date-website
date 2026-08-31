@@ -173,9 +173,10 @@ Two operational rules:
 - `StaticStorage` tolerates a missing manifest: it falls back to computing
   hashed names per `{% raw %}{% static %}{% endraw %}` tag, which costs one
   S3 round trip per tag (measured on qa 2026-08-30: ~70 serial calls, ~2.3 s
-  per page render). The fallback result is cached with a 60-second retry
-  interval (`manifest_retry_interval`), so a worker that booted too early
-  self-heals on the next interval instead of staying slow until restart.
+  per page render). The fallback result itself is not cached; only manifest
+  reload attempts are gated to one per `manifest_retry_interval` (60 s). A
+  worker that booted too early stays slow until the next retry boundary
+  after the upload appears, then self-heals without a restart.
 
 The web deployment probes are values-templated
 (`web.livenessProbe`/`web.readinessProbe`): default timeout 10 s and 5
