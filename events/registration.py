@@ -88,6 +88,12 @@ def register_event_signup(event, cleaned_data):
     # attendee-list ordering nondeterministic for those rows; no data
     # loss. A dedicated allocation scheme (unique constraint + bounded
     # IntegrityError retry) is the follow-up if it ever matters.
+    #
+    # Residual race: an event changed from unlimited to capacity-limited
+    # between the fresh read and the insert can slip past _ensure_capacity
+    # without the lock. This requires an admin edit in that window, is not
+    # serialized, and is accepted; the next signup locks and enforces the
+    # new limit.
 
     return EventSignupResult(attendee=attendee, avec_attendee=avec_attendee)
 
