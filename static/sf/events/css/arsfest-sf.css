@@ -1,7 +1,7 @@
 /* SF-specific årsfest styling, layered on top of the shared arsfest.css */
 
 html body {
-  background: linear-gradient(180deg, #120506 0%, #2b0a0e 55%, #1a0608 100%);
+  background: linear-gradient(180deg, #170607 0%, #3a0c11 55%, #24080a 100%);
   background-attachment: fixed;
 }
 
@@ -21,15 +21,15 @@ html body {
   height: calc(100% + 40px);
   background: radial-gradient(circle at bottom, var(--primaryColor) 0%, var(--primaryColorLighter) 100%);
   z-index: -1;
-  opacity: 0.28;
-  filter: blur(30px);
+  opacity: 0.4;
+  filter: blur(28px);
   transform: translateY(-12px);
   pointer-events: none;
 }
 
 .content {
   border-radius: 14px;
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45), 0 0 28px rgba(177, 18, 27, 0.12);
 }
 
 .header-box {
@@ -39,7 +39,7 @@ html body {
 .event-template-logo {
   max-width: min(320px, 70vw);
   max-height: 160px;
-  filter: drop-shadow(0 0 14px rgba(230, 107, 113, 0.3));
+  filter: drop-shadow(0 0 18px rgba(230, 107, 113, 0.35));
   animation: fadeIn ease 1.2s;
 }
 
@@ -48,7 +48,7 @@ html body {
   font-size: clamp(2.1rem, 5vw, 3.4rem);
   letter-spacing: 0.1em;
   color: #ffffff;
-  text-shadow: 0 0 14px rgba(230, 107, 113, 0.35), 0 2px 8px rgba(0, 0, 0, 0.55);
+  text-shadow: 0 0 18px rgba(230, 107, 113, 0.45), 0 2px 8px rgba(0, 0, 0, 0.55);
   margin: 0.5rem 0 1.5rem;
   animation: fadeIn ease 1.2s;
 }
