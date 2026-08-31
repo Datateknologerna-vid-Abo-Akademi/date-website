@@ -1,7 +1,7 @@
 /* SF-specific årsfest styling, layered on top of the shared arsfest.css */
 
 html body {
-  background: linear-gradient(180deg, #170607 0%, #3a0c11 55%, #24080a 100%);
+  background: linear-gradient(180deg, #1f0709 0%, #5c1119 55%, #2e0a0d 100%);
   background-attachment: fixed;
 }
 
