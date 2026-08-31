@@ -1,3 +1,4 @@
+import importlib
 import logging
 from types import SimpleNamespace
 from unittest.mock import MagicMock, PropertyMock, patch
@@ -1719,6 +1720,26 @@ class EventTemplateSelectionTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertTemplateUsed(response, "events/arsfest.html")
+
+    def test_sf_arsfest_uses_sf_branding_not_date_fallback(self):
+        sf_settings = importlib.import_module("core.settings.sf")
+
+        event = Event.objects.create(
+            title="SF:s Årsfest",
+            slug="arsfest",
+            author=self.author,
+        )
+        with override_settings(
+            TEMPLATES=sf_settings.TEMPLATES,
+            STATICFILES_DIRS=sf_settings.STATICFILES_DIRS,
+        ):
+            response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertTemplateUsed(response, "events/arsfest.html")
+        self.assertContains(response, "SF_logo_Tran.svg")
+        self.assertContains(response, "SF:s Årsfest")
+        self.assertNotContains(response, "DaTe XXVII")
+        self.assertNotContains(response, "albin.png")
 
     def test_passcode_template_used_when_locked(self):
         event = Event.objects.create(
