@@ -37,7 +37,7 @@ html body {
 }
 
 .event-template-logo {
-  width: min(260px, 62vw);
+  width: min(320px, 70vw);
   max-width: none;
   max-height: none;
   margin: 0 auto 1rem;
