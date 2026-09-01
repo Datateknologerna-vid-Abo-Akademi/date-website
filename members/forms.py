@@ -69,6 +69,8 @@ class MemberCreationForm(UnfoldFormMixin, forms.ModelForm):
         membership_names = getattr(settings, 'MEMBERSHIP_TYPE_NAMES', None)
         if membership_names:
             self.fields['membership_type'].queryset = MembershipType.objects.filter(name__in=membership_names)
+        if not getattr(settings, 'ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY', False):
+            self.fields.pop('archive_access_eligible', None)
 
     def save(self, commit=True):
         member = super().save(commit=False)
@@ -119,6 +121,8 @@ class AdminMemberUpdateForm(UnfoldFormMixin, forms.ModelForm):
         membership_names = getattr(settings, 'MEMBERSHIP_TYPE_NAMES', None)
         if membership_names:
             self.fields['membership_type'].queryset = MembershipType.objects.filter(name__in=membership_names)
+        if not getattr(settings, 'ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY', False):
+            self.fields.pop('archive_access_eligible', None)
 
     def save(self, commit=True):
         member = super().save(commit=False)
@@ -240,6 +244,10 @@ class SignUpForm(forms.ModelForm):
         membership_names = getattr(settings, 'MEMBERSHIP_TYPE_NAMES', None)
         if membership_names and 'membership_type' in self.fields:
             self.fields['membership_type'].queryset = MembershipType.objects.filter(name__in=membership_names)
+
+        city_label = getattr(settings, 'MEMBERS_SIGNUP_CITY_LABEL', None)
+        if city_label and 'city' in self.fields:
+            self.fields['city'].label = city_label
 
 
 class SubscriptionPaymentChoiceField(forms.ModelChoiceField):

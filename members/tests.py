@@ -12,7 +12,7 @@ from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.forms import TOTPDeviceForm
 
-from members.forms import MemberCreationForm, SignUpForm, SubscriptionPaymentForm
+from members.forms import AdminMemberUpdateForm, MemberCreationForm, SignUpForm, SubscriptionPaymentForm
 from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
 from members.two_factor import (
     INFERRED_REDIRECT_SESSION_KEY,
@@ -105,6 +105,10 @@ class UsernameValidatorTest(TestCase):
         )
         self.assertFalse(form.is_valid())
         self.assertIn('username', form.errors)
+
+    def test_gulispass_checkbox_is_hidden_for_non_sf_associations(self):
+        self.assertNotIn('archive_access_eligible', MemberCreationForm().fields)
+        self.assertNotIn('archive_access_eligible', AdminMemberUpdateForm().fields)
 
 
 class MemberCreationFormSaveTests(TestCase):

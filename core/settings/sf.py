@@ -1,3 +1,5 @@
+from django.utils.translation import gettext_lazy as _
+
 from .common import *  # noqa
 
 TEMPLATES = build_templates('sf', parent_variants=('date',))
@@ -32,10 +34,12 @@ MEMBERS_SIGNUP_FIELDS = (
     'first_name',
     'last_name',
     'city',
+    'membership_type',
     'year_of_admission',
     'password',
 )
 MEMBERS_SIGNUP_DEFAULT_MEMBERSHIP_TYPE = 'Ordinarie medlem'
+MEMBERS_SIGNUP_CITY_LABEL = _('Hemort')
 MEMBERSHIP_SUBSCRIPTIONS = {
     'Ordinarie medlem': {
         'price': '15.00',

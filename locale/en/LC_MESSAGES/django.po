@@ -343,6 +343,9 @@ msgstr "Development"
 msgid "Production"
 msgstr "Production"
 
+#: core/settings/sf.py:40
+msgid "Hemort"
+msgstr "Home town"
 #: ctf/admin.py:22 events/admin.py:142 lucia/admin.py:30 news/admin.py:31
 #: polls/admin.py:54
 msgid "publicering"

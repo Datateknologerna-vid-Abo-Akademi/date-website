@@ -343,6 +343,9 @@ msgstr "Kehitys"
 msgid "Production"
 msgstr "Tuotanto"
 
+#: core/settings/sf.py:40
+msgid "Hemort"
+msgstr "Kotipaikka"
 #: ctf/admin.py:22 events/admin.py:142 lucia/admin.py:30 news/admin.py:31
 #: polls/admin.py:54
 msgid "publicering"
