@@ -7,6 +7,7 @@ from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Count, IntegerField, JSONField, OuterRef, Subquery, TextField, Value
 from django.db.models.functions import Coalesce
+from django.forms import ModelForm
 from django.forms.models import BaseInlineFormSet
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
@@ -96,10 +97,76 @@ class EventRegistrationFormInline(AvecAwareMixin, OrderableAdmin, EventTranslati
         return super().get_formset(request, obj, **kwargs)
 
 
+class EventAttendeesForm(ModelForm):
+    class Meta:
+        model = EventAttendees
+        fields = ['event', 'attendee_nr', 'user', 'email', 'preferences', 'anonymous', 'avec_for', 'original_event']
+
+    def _get_validation_exclusions(self):
+        exclude = super()._get_validation_exclusions()
+        # The (event, attendee_nr) unique constraint is validated against the
+        # database state as it is *before* the formset saves, which still
+        # holds the pre-reorder numbers while a drag-and-drop reorder is
+        # being submitted, so every moved row would look like a duplicate.
+        # Skip the constraint here; EventAttendeesInlineFormSet renumbers in
+        # one atomic pass and the database constraint still guards the final
+        # state. The (event, email) unique_together check stays active, and
+        # the smallint range is still enforced by the database column.
+        exclude.add('attendee_nr')
+        return exclude
+
+
+class EventAttendeesInlineFormSet(BaseInlineFormSet):
+    def save(self, commit=True):
+        # The admin_ordering drag reorder writes the final attendee_nr values
+        # (10, 20, ...) into the forms in original row order, so a drag can
+        # assign a number that another row still holds, violating the
+        # (event, attendee_nr) unique constraint mid-save. Move every
+        # existing row of the event to a non-conflicting band (5, 15, 25,
+        # ...) first; the per-row saves then write the final values without
+        # ever colliding. Rows whose forms did not change are restored
+        # afterwards, because Django skips saving unchanged forms.
+        self._shifted = False
+        if commit and self._attendee_nr_reordered():
+            self._shift_attendee_nrs()
+        result = super().save(commit=commit)
+        if commit and self._shifted:
+            self._restore_unchanged_attendee_nrs()
+        return result
+
+    def _attendee_nr_reordered(self):
+        if not self.instance.pk:
+            return False
+        return any('attendee_nr' in form.changed_data for form in self.forms)
+
+    def _shift_attendee_nrs(self):
+        # Band values are k*10+5: never a multiple of 10, so they cannot
+        # collide with real or final values (all multiples of 10), and they
+        # stay within the smallint range for any event whose numbers fit
+        # (k*10+5 <= 32755 for the 3276-row step-10 ceiling).
+        rows = list(
+            EventAttendees.objects.filter(event=self.instance)
+            .order_by('attendee_nr', 'pk')
+            .values_list('pk', 'attendee_nr')
+        )
+        self._original_nrs = {pk: nr for pk, nr in rows}
+        for index, (pk, _nr) in enumerate(rows):
+            EventAttendees.objects.filter(pk=pk).update(attendee_nr=index * 10 + 5)
+        self._shifted = True
+
+    def _restore_unchanged_attendee_nrs(self):
+        saved_pks = {obj.pk for obj, _changed_data in self.changed_objects}
+        for pk, nr in self._original_nrs.items():
+            if pk not in saved_pks:
+                EventAttendees.objects.filter(pk=pk).update(attendee_nr=nr)
+
+
 class EventAttendeesFormInline(AvecAwareMixin, OrderableAdmin, EventTranslationInlineBase):
     ordering_field = 'attendee_nr'
     ordering_field_hide_input = True
     model = EventAttendees
+    form = EventAttendeesForm
+    formset = EventAttendeesInlineFormSet
     fk_name = 'event'
     extra = 0
     list_editable = ('user', 'email', 'preferences')

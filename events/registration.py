@@ -22,7 +22,7 @@ class _AttendeeNrCollision(Exception):
 
 
 # How many times a rolled-back signup is retried after an attendee_nr
-# allocation collision before giving up.
+# allocation collision, on top of the initial attempt, before giving up.
 _MAX_ATTENDEE_NR_RETRIES = 5
 
 _ATTENDEE_NR_CONSTRAINT_NAME = 'unique_attendee_nr_per_event'
@@ -66,7 +66,7 @@ def register_event_signup(event, cleaned_data):
     # next number. The unique constraint on (event, attendee_nr) turns that
     # race into a retryable conflict; retry the whole (rolled back) attempt,
     # bounded, since each retry re-reads the current maximum.
-    for _attempt in range(_MAX_ATTENDEE_NR_RETRIES):
+    for _attempt in range(_MAX_ATTENDEE_NR_RETRIES + 1):
         try:
             return _register_event_signup_once(event, cleaned_data, required_places, questions)
         except _AttendeeNrCollision:
