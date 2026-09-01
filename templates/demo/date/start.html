@@ -19,23 +19,23 @@
   {% get_current_language as LANGUAGE_CODE %}
   {% load static %}
   {% cache 300 main_page_fixed LANGUAGE_CODE %}
-  <div class="container-fluid p-2 min-vh-100">
-    {% include "demo/date/components/header.html" %}
-    {% include "demo/date/components/about.html" %}
-    <section id="news" class="news-events">
-      <div id="main" class="main-container">
-        {% include "demo/date/components/news.html" %}
-        <div class="sidebar-container">
-          {% include "demo/date/components/events.html" %}
-          {% include "demo/date/components/extras.html" %}
+    <div class="container-fluid p-2 min-vh-100">
+      {% include "demo/date/components/header.html" %}
+      {% include "demo/date/components/about.html" %}
+      <section id="news" class="news-events">
+        <div id="main" class="main-container">
+          {% include "demo/date/components/news.html" %}
+          <div class="sidebar-container">
+            {% include "demo/date/components/events.html" %}
+            {% include "demo/date/components/extras.html" %}
+          </div>
+          {% include "demo/date/components/mobile.html" %}
+          {% include "demo/date/components/partners.html" %}
         </div>
-        {% include "demo/date/components/mobile.html" %}
-        {% include "demo/date/components/partners.html" %}
-      </div>
-    </section>
-    <section id="reklam" class="text-size">
-    </section>
-  </div>
-  {% include "demo/date/components/scripts.html" %}
-{% endcache %}
+      </section>
+      <section id="reklam" class="text-size">
+      </section>
+    </div>
+    {% include "demo/date/components/scripts.html" %}
+  {% endcache %}
 {% endblock %}
