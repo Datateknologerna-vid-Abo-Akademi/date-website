@@ -88,101 +88,101 @@
                     {% endif %}
                   {% endfor %}
                 </ul>
-              {% endfor %}
-            </ul>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      <div class="april-content-container">
+        <div class="april-main-col">
+          <div class="april-news-container">
+            {% for ne in news %}
+              <div class="april-news-content">
+                <h3 class="april-news-title">{{ ne.title }}</h3>
+                <small class="april-news-date">{{ ne.published_time }}</small>
+                <div class="april-news-text">{{ ne.content|safe|truncatewords_html:"50" }}</div>
+                <a class="april-news-button" href="{% url 'news:detail' ne.slug %}">{% trans 'Läs mera' %}...</a>
+              </div>
+            {% empty %}
+              <h3>{% trans 'inga nyheter hittades' %}...</h3>
+            {% endfor %}
+            <a class="april-more-news" href="{{ '/news/'|localized_url }}">{% trans "Mera nyheter" %}...</a>
           </div>
         </div>
-        <div class="april-content-container">
-          <div class="april-main-col">
-            <div class="april-news-container">
-              {% for ne in news %}
-                <div class="april-news-content">
-                  <h3 class="april-news-title">{{ ne.title }}</h3>
-                  <small class="april-news-date">{{ ne.published_time }}</small>
-                  <div class="april-news-text">{{ ne.content|safe|truncatewords_html:"50" }}</div>
-                  <a class="april-news-button" href="{% url 'news:detail' ne.slug %}">{% trans 'Läs mera' %}...</a>
-                </div>
-              {% empty %}
-                <h3>{% trans 'inga nyheter hittades' %}...</h3>
-              {% endfor %}
-              <a class="april-more-news" href="{{ '/news/'|localized_url }}">{% trans "Mera nyheter" %}...</a>
+        <div class="april-side-col">
+          <div class='box div_style'>
+            <img class='jep'
+                 src='https://kemistklubben.abo.fi/images/date.png'
+                 alt='{% trans "Evenemang" %}'
+                 width='16'
+                 height='16' />
+            {% trans "Evenemang" %}
+          </div>
+          <div class="april-events">
+            {% for ev in events|slice:":4" %}
+              <a href="{% url 'events:detail' ev.slug %}" class="">
+                <strong>{{ ev.title }}</strong>
+              </a>
+            {% empty %}
+              <h6>{% trans 'inga aktiva evenemang hittades' %}...</h6>
+            {% endfor %}
+          </div>
+          <div class="box div_style">
+            <img class="jep"
+                 src="https://kemistklubben.abo.fi/images/calendar.png"
+                 alt="Händelsekalender"
+                 width="16"
+                 height="16" />
+            Kalender
+          </div>
+          <div class="april-calendar-container">
+            <div class="april-calendar-box">
+              <table class="april-calendar">
+                {% autoescape off %}
+                  {{ calendar }}
+                {% endautoescape %}
+              </table>
             </div>
           </div>
-          <div class="april-side-col">
-            <div class='box div_style'>
-              <img class='jep'
-                   src='https://kemistklubben.abo.fi/images/date.png'
-                   alt='{% trans "Evenemang" %}'
-                   width='16'
-                   height='16' />
-              {% trans "Evenemang" %}
+          <div class="logo-container">
+            <div class="mt-3">{% trans "Samarbetspartners" %}</div>
+            <div class="carousel-logos">
+              <ul>
+                {% for ad in ads %}
+                  <li class="company-logo text-center">
+                    <a href="{{ ad.company_url }}">
+                      <img src="{{ ad.ad_url }}" alt="img">
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
             </div>
-            <div class="april-events">
-              {% for ev in events|slice:":4" %}
-                <a href="{% url 'events:detail' ev.slug %}" class="">
-                  <strong>{{ ev.title }}</strong>
-                </a>
-              {% empty %}
-                <h6>{% trans 'inga aktiva evenemang hittades' %}...</h6>
-              {% endfor %}
-            </div>
-            <div class="box div_style">
-              <img class="jep"
-                   src="https://kemistklubben.abo.fi/images/calendar.png"
-                   alt="Händelsekalender"
-                   width="16"
-                   height="16" />
-              Kalender
-            </div>
-            <div class="april-calendar-container">
-              <div class="april-calendar-box">
-                <table class="april-calendar">
-                  {% autoescape off %}
-                    {{ calendar }}
-                  {% endautoescape %}
-                </table>
-              </div>
-            </div>
-            <div class="logo-container">
-              <div class="mt-3">{% trans "Samarbetspartners" %}</div>
-              <div class="carousel-logos">
-                <ul>
-                  {% for ad in ads %}
-                    <li class="company-logo text-center">
-                      <a href="{{ ad.company_url }}">
-                        <img src="{{ ad.ad_url }}" alt="img">
-                      </a>
-                    </li>
-                  {% endfor %}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="april-footer">
-          <div class="lefttext">
-            Kemistklubben vid Åbo Akademi r.f.
-            <br />
-            Aurum
-            <br />
-            Henriksgatan 2
-            <br />
-            20500 Åbo
-            <br />
-          </div>
-          <h6 style="text-align: center; padding-top: 30px; font-size: 10px;">Glad 1 April, önskar DaTe 💚🖤</h6>
-          <div class="righttext">
-            Kanslitid Må - Ti 12-13
-            <br />
-            E-post: kk(at)abo.fi
-          </div>
-          <div class="clearer">
-            <!-- -->
           </div>
         </div>
       </div>
+      <div class="april-footer">
+        <div class="lefttext">
+          Kemistklubben vid Åbo Akademi r.f.
+          <br />
+          Aurum
+          <br />
+          Henriksgatan 2
+          <br />
+          20500 Åbo
+          <br />
+        </div>
+        <h6 style="text-align: center; padding-top: 30px; font-size: 10px;">Glad 1 April, önskar DaTe 💚🖤</h6>
+        <div class="righttext">
+          Kanslitid Må - Ti 12-13
+          <br />
+          E-post: kk(at)abo.fi
+        </div>
+        <div class="clearer">
+          <!-- -->
+        </div>
+      </div>
     </div>
-    <script>
+  </div>
+  <script>
         (function () {
             const initPartnerCarousel = function (carousel) {
                 const $carousel = $(carousel);
@@ -231,5 +231,5 @@
             $(window).on("load resize", initVisiblePartnerCarousels);
             $(initVisiblePartnerCarousels);
         }());
-    </script>
-  {% endblock %}
+  </script>
+{% endblock %}

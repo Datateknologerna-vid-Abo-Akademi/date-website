@@ -6,31 +6,31 @@
   {% translate "Nyheter" %}
 {% endblock %}
 {% cache 60 news_index LANGUAGE_CODE %}
-{% block extra_head %}
-  {{ block.super }}
-  <link rel="stylesheet" href="{% static 'news/css/style.css' %}">
-{% endblock %}
-{% block content %}
-  <div class="container-md container-margin-top min-vh-100 p-1">
-    <div class="container-size break-words">
-      {% for news_item in latest_news_items %}
-        <div class="content overflow-auto">
-          <a href=" {% if news_item.category %} {% url 'news:detail' news_item.category.slug news_item.slug %} {% else %} {% url 'news:detail' news_item.slug %} {% endif %} ">
-            <h2>{{ news_item.title }}</h2>
-          </a>
-          <h4 class="help-text">{{ news_item.author }}, {{ news_item.published_time }}</h4>
-          <div>{{ news_item.content | safe | truncatewords_html:"50" }}</div>
-          {% if news_item.content|wordcount > 50 %}
+  {% block extra_head %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'news/css/style.css' %}">
+  {% endblock %}
+  {% block content %}
+    <div class="container-md container-margin-top min-vh-100 p-1">
+      <div class="container-size break-words">
+        {% for news_item in latest_news_items %}
+          <div class="content overflow-auto">
             <a href=" {% if news_item.category %} {% url 'news:detail' news_item.category.slug news_item.slug %} {% else %} {% url 'news:detail' news_item.slug %} {% endif %} ">
-              <p class="more-button">{% trans 'Läs mera...' %}</p>
+              <h2>{{ news_item.title }}</h2>
             </a>
-          {% endif %}
-        </div>
-      {% empty %}
-        <h4 class="text-center">{% trans "Inga nyheter hittades..." %}</h4>
-      {% endfor %}
-      {% include 'news/partials/pagination.html' with page_obj=latest_news_items %}
+            <h4 class="help-text">{{ news_item.author }}, {{ news_item.published_time }}</h4>
+            <div>{{ news_item.content | safe | truncatewords_html:"50" }}</div>
+            {% if news_item.content|wordcount > 50 %}
+              <a href=" {% if news_item.category %} {% url 'news:detail' news_item.category.slug news_item.slug %} {% else %} {% url 'news:detail' news_item.slug %} {% endif %} ">
+                <p class="more-button">{% trans 'Läs mera...' %}</p>
+              </a>
+            {% endif %}
+          </div>
+        {% empty %}
+          <h4 class="text-center">{% trans "Inga nyheter hittades..." %}</h4>
+        {% endfor %}
+        {% include 'news/partials/pagination.html' with page_obj=latest_news_items %}
+      </div>
     </div>
-  </div>
-{% endblock %}
+  {% endblock %}
 {% endcache %}

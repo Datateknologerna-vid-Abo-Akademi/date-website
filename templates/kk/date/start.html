@@ -20,22 +20,22 @@
 {% block content %}
   {% get_current_language as LANGUAGE_CODE %}
   {% cache 300 main_page_fixed LANGUAGE_CODE %}
-  {% load static %}
-  <div class="container-fluid p-2 min-vh-100">
-    {% include "date/components/header.html" %}
-    <section id="news" class="news-events">
-      <div id="main" class="main-container">
-        {% include "date/components/news.html" %}
-        <div class="sidebar-container">
-          {% include "date/components/events.html" %}
-          {% include "date/components/partners.html" %}
+    {% load static %}
+    <div class="container-fluid p-2 min-vh-100">
+      {% include "date/components/header.html" %}
+      <section id="news" class="news-events">
+        <div id="main" class="main-container">
+          {% include "date/components/news.html" %}
+          <div class="sidebar-container">
+            {% include "date/components/events.html" %}
+            {% include "date/components/partners.html" %}
+          </div>
+          {% include "date/components/instagram.html" %}
         </div>
-        {% include "date/components/instagram.html" %}
-      </div>
-    </section>
-    <section id="reklam" class="text-size">
-    </section>
-  </div>
-  {% include "date/components/scripts.html" %}
-{% endcache %}
+      </section>
+      <section id="reklam" class="text-size">
+      </section>
+    </div>
+    {% include "date/components/scripts.html" %}
+  {% endcache %}
 {% endblock %}
