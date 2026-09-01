@@ -3,7 +3,8 @@
 ## Models
 - `StaticPageNav` stores menu categories. `use_category_url` shortcuts the category click to a custom `url`. `nav_element` defines ordering.
 - `StaticPage` is the CKEditor-backed page content. `members_only` gates access, and `slug` is unique (max 50 chars). `update()` stamps `modified_time`.
-- `StaticUrl` represents dropdown entries linked to a `StaticPageNav`. `logged_in_only` hides links from anonymous users, and `dropdown_element` controls ordering for the admin ordering widget.
+- `StaticUrl` represents dropdown entries linked to a `StaticPageNav`. `logged_in_only` hides links from anonymous users, and `dropdown_element` controls ordering for the admin ordering widget. A `parent` self-relation lets a `StaticUrl` carry nested children.
+- Nested navigation is rendered by `templates/common/core/header_nav_items.html` only when the header include passes `show_submenus=True` (pulterit, sf, impuls). Associations enabling it also need submenu styles in their header CSS, since the shared `core/css/header.css` has none.
 
 ## Views & Routing
 - `StaticPageView` (`staticpages/views.py`) is the only view. It loads the page by slug, checks `members_only`, and either renders `staticpages/staticpage.html` or redirects unauthenticated users to `/members/login`.

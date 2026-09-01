@@ -7,6 +7,9 @@
 
 django:
   projectName: impuls
+  # Exposes Swedish and English in the language switcher; without this only
+  # Swedish is served.
+  enableLanguageFeatures: true
   allowedHosts:
     - impuls.example.org
   allowedOrigins:
