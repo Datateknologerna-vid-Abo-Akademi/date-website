@@ -15,8 +15,9 @@ Swedish (`sv`) is the default language. The exact non-default languages exposed 
 - Default language: `sv`
 - Shared locale catalogs in the repo: `sv`, `en`, `fi`
 - DaTe runtime languages: `sv`, `en`
+- Impuls runtime languages: `sv`, `en`
 - Some other associations still expose `fi`
-- Settings sources: `core/settings/common.py`, `core/settings/date.py`
+- Settings sources: `core/settings/common.py`, `core/settings/date.py`, `core/settings/impuls.py`
 
 Important settings:
 
