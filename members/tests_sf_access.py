@@ -92,6 +92,62 @@ class SFSignupTests(TestCase):
         self.assertIn('archive_access_eligible', MemberCreationForm().fields)
         self.assertIn('archive_access_eligible', AdminMemberUpdateForm().fields)
 
+    def test_gulispass_checkbox_is_present_on_sf_admin_pages(self):
+        ordinary = MembershipType.objects.get(name='Ordinarie medlem')
+        admin_user = Member.objects.create_superuser(
+            username='admintest',
+            email='admintest@example.com',
+            password='secret12345',
+            membership_type=ordinary,
+        )
+        member = Member.objects.create_user(
+            username='target',
+            email='target@example.com',
+            password='secret12345',
+            membership_type=ordinary,
+        )
+        self.client.force_login(admin_user, backend='members.backends.AuthBackend')
+
+        add_response = self.client.get(reverse('admin:members_member_add'))
+        self.assertEqual(add_response.status_code, 200)
+        self.assertContains(add_response, 'Gulispass')
+
+        change_response = self.client.get(reverse('admin:members_member_change', args=[member.pk]))
+        self.assertEqual(change_response.status_code, 200)
+        self.assertContains(change_response, 'Gulispass')
+
+    @patch('members.views.validate_captcha', return_value=True)
+    def test_signup_without_membership_selector_falls_back_to_default_type(self, _validate_captcha):
+        ordinary = MembershipType.objects.get(name='Ordinarie medlem')
+        with override_settings(
+            MEMBERS_SIGNUP_FIELDS=(
+                'username',
+                'email',
+                'first_name',
+                'last_name',
+                'city',
+                'year_of_admission',
+                'password',
+            )
+        ):
+            self.assertNotIn('membership_type', SignUpForm().fields)
+            response = self.client.post(
+                reverse('members:signup'),
+                {
+                    'username': 'fallback-member',
+                    'email': 'fallback@example.com',
+                    'first_name': 'Fall',
+                    'last_name': 'Back',
+                    'city': 'Åbo',
+                    'year_of_admission': 2026,
+                    'password': 'safe-password',
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        member = Member.objects.get(username='fallback-member')
+        self.assertEqual(member.membership_type, ordinary)
+
     @patch('members.views.validate_captcha', return_value=True)
     def test_signup_saves_inactive_member_with_chosen_sf_type(self, _validate_captcha):
         ordinary = MembershipType.objects.get(name='Ordinarie medlem')

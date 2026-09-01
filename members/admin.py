@@ -85,11 +85,22 @@ else:
 
 @admin.register(Member)
 class UserAdmin(_UserAdminBase):
-    fieldsets = ((None, {'fields': AdminMemberUpdateForm.Meta.fields}),)
-    add_fieldsets = ((None, {'fields': MemberCreationForm.Meta.fields}),)
-
     form = AdminMemberUpdateForm
     add_form = MemberCreationForm
+
+    def get_fieldsets(self, request, obj=None):
+        # The archive eligibility ("Gulispass") checkbox only exists on
+        # associations that gate archive access on it; keep it out of both
+        # add and change fieldsets everywhere else, or the rendered admin
+        # form would look up a field the form no longer carries.
+        if obj is None:
+            fields = MemberCreationForm.Meta.fields
+        else:
+            fields = AdminMemberUpdateForm.Meta.fields
+        if not getattr(settings, 'ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY', False):
+            fields = tuple(name for name in fields if name != 'archive_access_eligible')
+        return ((None, {'fields': fields}),)
+
     list_display = (
         'username',
         'first_name',

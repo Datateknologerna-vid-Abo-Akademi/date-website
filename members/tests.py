@@ -110,6 +110,32 @@ class UsernameValidatorTest(TestCase):
         self.assertNotIn('archive_access_eligible', MemberCreationForm().fields)
         self.assertNotIn('archive_access_eligible', AdminMemberUpdateForm().fields)
 
+    def test_signup_keeps_postanstalt_label_for_non_sf_associations(self):
+        self.assertEqual(str(SignUpForm().fields['city'].label), 'Postanstalt')
+
+    def test_gulispass_checkbox_is_absent_from_non_sf_admin_pages(self):
+        admin_user = Member.objects.create_superuser(
+            username='admintest',
+            email='admintest@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+        )
+        member = Member.objects.create_user(
+            username='target',
+            email='target@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+        )
+        self.client.force_login(admin_user, backend='members.backends.AuthBackend')
+
+        add_response = self.client.get(reverse('admin:members_member_add'))
+        self.assertEqual(add_response.status_code, 200)
+        self.assertNotContains(add_response, 'Gulispass')
+
+        change_response = self.client.get(reverse('admin:members_member_change', args=[member.pk]))
+        self.assertEqual(change_response.status_code, 200)
+        self.assertNotContains(change_response, 'Gulispass')
+
 
 class MemberCreationFormSaveTests(TestCase):
     @classmethod
