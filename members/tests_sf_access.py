@@ -18,10 +18,12 @@ SF_SETTINGS = {
         'first_name',
         'last_name',
         'city',
+        'membership_type',
         'year_of_admission',
         'password',
     ),
     'MEMBERS_SIGNUP_DEFAULT_MEMBERSHIP_TYPE': 'Ordinarie medlem',
+    'MEMBERS_SIGNUP_CITY_LABEL': 'Hemort',
     'MEMBERSHIP_SUBSCRIPTIONS': {
         'Ordinarie medlem': {
             'price': '15.00',
@@ -57,9 +59,24 @@ class SFSignupTests(TestCase):
         MembershipType.objects.update_or_create(name='Evig SF:are', defaults={'permission_profile': ORDINARY_MEMBER})
 
     def test_signup_exposes_only_sf_public_fields(self):
+        form = SignUpForm()
         self.assertEqual(
-            tuple(SignUpForm().fields),
-            ('username', 'email', 'first_name', 'last_name', 'city', 'year_of_admission', 'password'),
+            tuple(form.fields),
+            (
+                'username',
+                'email',
+                'first_name',
+                'last_name',
+                'city',
+                'membership_type',
+                'year_of_admission',
+                'password',
+            ),
+        )
+        self.assertEqual(str(form.fields['city'].label), 'Hemort')
+        self.assertEqual(
+            set(form.fields['membership_type'].queryset.values_list('name', flat=True)),
+            {'Ordinarie medlem', 'Evig SF:are'},
         )
 
     def test_admin_membership_choices_are_limited_to_sf_types(self):
@@ -71,10 +88,70 @@ class SFSignupTests(TestCase):
             set(AdminMemberUpdateForm().fields['membership_type'].queryset.values_list('name', flat=True)), expected
         )
 
-    @patch('members.views.validate_captcha', return_value=True)
-    def test_signup_saves_inactive_ordinary_member_with_only_sf_fields(self, _validate_captcha):
+    def test_admin_forms_expose_gulispass_checkbox(self):
+        self.assertIn('archive_access_eligible', MemberCreationForm().fields)
+        self.assertIn('archive_access_eligible', AdminMemberUpdateForm().fields)
+
+    def test_gulispass_checkbox_is_present_on_sf_admin_pages(self):
         ordinary = MembershipType.objects.get(name='Ordinarie medlem')
-        MembershipType.objects.create(name='Ordinarie medlem', permission_profile=ORDINARY_MEMBER)
+        admin_user = Member.objects.create_superuser(
+            username='admintest',
+            email='admintest@example.com',
+            password='secret12345',
+            membership_type=ordinary,
+        )
+        member = Member.objects.create_user(
+            username='target',
+            email='target@example.com',
+            password='secret12345',
+            membership_type=ordinary,
+        )
+        self.client.force_login(admin_user, backend='members.backends.AuthBackend')
+
+        add_response = self.client.get(reverse('admin:members_member_add'))
+        self.assertEqual(add_response.status_code, 200)
+        self.assertContains(add_response, 'Gulispass')
+
+        change_response = self.client.get(reverse('admin:members_member_change', args=[member.pk]))
+        self.assertEqual(change_response.status_code, 200)
+        self.assertContains(change_response, 'Gulispass')
+
+    @patch('members.views.validate_captcha', return_value=True)
+    def test_signup_without_membership_selector_falls_back_to_default_type(self, _validate_captcha):
+        ordinary = MembershipType.objects.get(name='Ordinarie medlem')
+        with override_settings(
+            MEMBERS_SIGNUP_FIELDS=(
+                'username',
+                'email',
+                'first_name',
+                'last_name',
+                'city',
+                'year_of_admission',
+                'password',
+            )
+        ):
+            self.assertNotIn('membership_type', SignUpForm().fields)
+            response = self.client.post(
+                reverse('members:signup'),
+                {
+                    'username': 'fallback-member',
+                    'email': 'fallback@example.com',
+                    'first_name': 'Fall',
+                    'last_name': 'Back',
+                    'city': 'Åbo',
+                    'year_of_admission': 2026,
+                    'password': 'safe-password',
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        member = Member.objects.get(username='fallback-member')
+        self.assertEqual(member.membership_type, ordinary)
+
+    @patch('members.views.validate_captcha', return_value=True)
+    def test_signup_saves_inactive_member_with_chosen_sf_type(self, _validate_captcha):
+        ordinary = MembershipType.objects.get(name='Ordinarie medlem')
+        lifetime = MembershipType.objects.create(name='Evig SF:are', permission_profile=ORDINARY_MEMBER)
 
         response = self.client.post(
             reverse('members:signup'),
@@ -84,6 +161,7 @@ class SFSignupTests(TestCase):
                 'first_name': 'New',
                 'last_name': 'Member',
                 'city': 'Åbo',
+                'membership_type': lifetime.id,
                 'year_of_admission': 2026,
                 'password': 'safe-password',
             },
@@ -91,9 +169,10 @@ class SFSignupTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         member = Member.objects.get(username='new-sf-member')
-        self.assertEqual(member.membership_type, ordinary)
+        self.assertEqual(member.membership_type, lifetime)
         self.assertFalse(member.is_active)
         self.assertEqual(member.city, 'Åbo')
+        self.assertNotEqual(member.membership_type, ordinary)
 
 
 @override_settings(**SF_SETTINGS)

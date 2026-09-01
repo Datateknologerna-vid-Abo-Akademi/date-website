@@ -342,6 +342,9 @@ msgstr "Utveckling"
 msgid "Production"
 msgstr "Produktion"
 
+#: core/settings/sf.py:40
+msgid "Hemort"
+msgstr "Hemort"
 #: ctf/admin.py:22 events/admin.py:142 lucia/admin.py:30 news/admin.py:31
 #: polls/admin.py:54
 msgid "publicering"
