@@ -78,16 +78,21 @@ def get_recent_albins_angels_post(now=None):
 
 
 def format_calendar_events(all_events):
-    """Return event metadata keyed by YYYY-MM-DD for the front-end calendar."""
+    """Return event metadata keyed by YYYY-MM-DD for the front-end calendar.
+
+    A day may hold several events, so each key maps to a list of events.
+    """
     calendar_events = {}
     for event in all_events:
         event_url = reverse("events:detail", kwargs={"slug": event.slug})
-        calendar_events[event.event_date_start.strftime("%Y-%m-%d")] = {
-            "link": event_url,
-            "modifier": "calendar-eventday",
-            "eventFullDate": event.event_date_start,
-            "eventTitle": event.title,
-        }
+        key = event.event_date_start.strftime("%Y-%m-%d")
+        calendar_events.setdefault(key, []).append(
+            {
+                "link": event_url,
+                "eventFullDate": event.event_date_start,
+                "eventTitle": event.title,
+            }
+        )
     return calendar_events
 
 
