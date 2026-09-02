@@ -7,7 +7,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from members.models import ORDINARY_MEMBER, SENIOR_MEMBER, MembershipType
+from members.models import NON_VOTING_MEMBER, ORDINARY_MEMBER, SENIOR_MEMBER, MembershipType
 from publications.admin import PublicationCollectionAdminForm
 from publications.models import PDFFile, PublicationCollection
 
@@ -339,6 +339,35 @@ class PDFFileListTests(TestCase):
 
         self.assertRedirects(response, only.get_absolute_url())
 
+    def test_membership_collection_is_visible_for_extra_member_when_ordinary_is_allowed(self):
+        ordinary = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        extra_type = MembershipType.objects.create(name="Extra medlem", permission_profile=NON_VOTING_MEMBER)
+        collection = create_collection(
+            title="Members Magazine",
+            slug="members-magazine",
+            visibility=PublicationCollection.VISIBILITY_MEMBERSHIP,
+        )
+        collection.allowed_membership_types.add(ordinary)
+        PDFFile.objects.create(
+            collection=collection,
+            title="Members Magazine Issue",
+            slug="members-magazine-issue",
+            redirect_url="https://issuu.com/sfklubben/docs/members-magazine",
+        )
+        user = get_user_model().objects.create_user(
+            username="extra-member",
+            password="pwd",
+            membership_type=extra_type,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("publications:pdf_list"))
+
+        self.assertRedirects(response, collection.get_absolute_url(), fetch_redirect_response=False)
+        response = self.client.get(collection.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Members Magazine")
+
     def test_index_hides_empty_collections(self):
         create_collection(title="Empty", slug="empty")
 
@@ -431,6 +460,50 @@ class PDFFileDetailTests(TestCase):
             username="ordinary",
             password="pwd",
             membership_type=ordinary,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(pdf_file.get_absolute_url())
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_membership_collection_granted_to_extra_member_when_ordinary_is_allowed(self):
+        ordinary = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        extra_type = MembershipType.objects.create(name="Extra medlem", permission_profile=NON_VOTING_MEMBER)
+        collection = create_collection(visibility=PublicationCollection.VISIBILITY_MEMBERSHIP)
+        collection.allowed_membership_types.add(ordinary)
+        pdf_file = PDFFile.objects.create(
+            collection=collection,
+            title="Members Magazine",
+            slug="members-magazine",
+            redirect_url="https://issuu.com/sfklubben/docs/members",
+        )
+        user = get_user_model().objects.create_user(
+            username="extra-member",
+            password="pwd",
+            membership_type=extra_type,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(pdf_file.get_absolute_url())
+
+        self.assertRedirects(response, "https://issuu.com/sfklubben/docs/members", fetch_redirect_response=False)
+
+    def test_membership_collection_still_rejects_extra_member_without_ordinary_allowlist(self):
+        senior = MembershipType.objects.get(pk=SENIOR_MEMBER)
+        extra_type = MembershipType.objects.create(name="Extra medlem", permission_profile=NON_VOTING_MEMBER)
+        collection = create_collection(visibility=PublicationCollection.VISIBILITY_MEMBERSHIP)
+        collection.allowed_membership_types.add(senior)
+        pdf_file = PDFFile.objects.create(
+            collection=collection,
+            title="Senior Magazine",
+            slug="senior-magazine",
+            redirect_url="https://issuu.com/sfklubben/docs/senior",
+        )
+        user = get_user_model().objects.create_user(
+            username="extra-member",
+            password="pwd",
+            membership_type=extra_type,
         )
         self.client.force_login(user)
 

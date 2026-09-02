@@ -5,7 +5,7 @@
 - Fields include contact info, `membership_type` FK, `year_of_admission`, and helper props (`is_staff`, `full_name`, `active_payment`).
 - `MemberManager` (see `members/managers.py`) handles user creation.
 - `membership_type.permission_profile` ties into other apps for access control.
-- `NON_VOTING_MEMBER` is an ordinary-member profile minus voting: members with it are treated like ordinary members for member content, archive, and events, but `polls` rejects them for `Endast ordinarie medlemmar` and `Endast röstberättigade medlemmar` questions. SF maps its `Extra medlem` type to this profile.
+- `NON_VOTING_MEMBER` is an ordinary-member profile minus voting: members with it are treated like ordinary members for member content, archive, events, and membership-restricted publications (a publication allowlist containing any ordinary-profile type admits them), but `polls` rejects them for `Endast ordinarie medlemmar` and `Endast röstberättigade medlemmar` questions. SF maps its `Extra medlem` type to this profile.
 - `archive_access_eligible` records completion of an association-specific duty or pass. It is only required for archive access when `ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY` is enabled, and the admin forms only expose the checkbox when that setting is on (currently SF).
 
 ## Membership & Payments
