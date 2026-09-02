@@ -6,7 +6,7 @@ from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
+from members.models import NON_VOTING_MEMBER, ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
 
 from . import views
 from .models import Choice, Question
@@ -99,6 +99,38 @@ class AuthorizationLogicTests(TestCase):
         other_member = Member.objects.create_user(username="other", password="pwd", membership_type=non_member_type)
         self.assertTrue(is_user_authorized_to_vote(self.question, self.member))
         self.assertFalse(is_user_authorized_to_vote(self.question, other_member))
+
+    def test_non_voting_members_are_excluded_from_restricted_polls(self):
+        non_voting_type = MembershipType.objects.create(name="Extra medlem", permission_profile=NON_VOTING_MEMBER)
+        extra_member = Member.objects.create_user(username="extra", password="pwd", membership_type=non_voting_type)
+        subscription = Subscription.objects.create(
+            name="Annual",
+            does_expire=True,
+            renewal_scale='year',
+            renewal_period=1,
+            price=0,
+        )
+        SubscriptionPayment.objects.create(
+            member=extra_member,
+            subscription=subscription,
+            date_paid=timezone.now().date(),
+            date_expires=timezone.now().date() + timezone.timedelta(days=1),
+        )
+
+        self.question.voting_options = ORDINARY_MEMBERS_ONLY
+        self.question.save()
+        self.assertFalse(is_user_authorized_to_vote(self.question, extra_member))
+
+        self.question.voting_options = VOTE_MEMBERS_ONLY
+        self.question.save()
+        self.assertFalse(is_user_authorized_to_vote(self.question, extra_member))
+
+    def test_non_voting_members_can_vote_in_members_only_polls(self):
+        non_voting_type = MembershipType.objects.create(name="Extra medlem", permission_profile=NON_VOTING_MEMBER)
+        extra_member = Member.objects.create_user(username="extra", password="pwd", membership_type=non_voting_type)
+        self.question.voting_options = MEMBERS_ONLY
+        self.question.save()
+        self.assertTrue(is_user_authorized_to_vote(self.question, extra_member))
 
     def test_vote_members_only_requires_active_subscription(self):
         self.question.voting_options = VOTE_MEMBERS_ONLY

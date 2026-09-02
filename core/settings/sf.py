@@ -27,7 +27,7 @@ ROOT_URLCONF = 'core.urls.sf'
 
 STAFF_GROUPS = get_staff_groups(['styrelse', 'skattis', 'sekre', 'Inauta', 'webbansvarig', 'admin'])
 
-MEMBERSHIP_TYPE_NAMES = ('Ordinarie medlem', 'Evig SF:are')
+MEMBERSHIP_TYPE_NAMES = ('Ordinarie medlem', 'Evig SF:are', 'Extra medlem')
 MEMBERS_SIGNUP_FIELDS = (
     'username',
     'email',
@@ -52,6 +52,12 @@ MEMBERSHIP_SUBSCRIPTIONS = {
         'does_expire': False,
         'renewal_scale': None,
         'renewal_period': None,
+    },
+    'Extra medlem': {
+        'price': '15.00',
+        'does_expire': True,
+        'renewal_scale': 'year',
+        'renewal_period': 1,
     },
 }
 ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY = True

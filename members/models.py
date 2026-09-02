@@ -18,12 +18,14 @@ FRESHMAN = 1
 ORDINARY_MEMBER = 2
 SUPPORTING_MEMBER = 3
 SENIOR_MEMBER = 4
+NON_VOTING_MEMBER = 5
 
 PERMISSION_PROFILES = (
     (FRESHMAN, _('Gulnäbb')),
     (ORDINARY_MEMBER, _('Ordinarie medlem')),
     (SUPPORTING_MEMBER, _('Stödjande medlem')),
     (SENIOR_MEMBER, _('Seniormedlem')),
+    (NON_VOTING_MEMBER, _('Medlem utan rösträtt')),
 )
 
 

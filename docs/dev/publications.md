@@ -25,6 +25,7 @@
 - `pdf_view` serves `/publications/<collection-slug>/<publication-slug>/`. It enforces collection access first, then the per-publication checks, and only then redirects to `redirect_url` or renders the internal viewer.
 - Legacy one-segment publication URLs (`/publications/<publication-slug>/`) are handled by `collection_detail` as a compatibility path. If the slug is not a collection but matches a publication, the same access checks run before a permanent redirect to the canonical collection URL.
 - Collection access intentionally raises 404 for hidden collections and membership mismatches so unauthorized users cannot discover the collection or linked external URL from a direct request. Login-required collections redirect anonymous visitors to `settings.LOGIN_URL`; password-protected collections show a password form.
+- Selected-membership collections admit a member whose own type is in the allowlist by primary key. As a profile-level widening, an allowlist containing any type with the ordinary permission profile also admits members whose own profile is the ordinary-minus-voting one (`NON_VOTING_MEMBER`, e.g. SF's `Extra medlem`); this keeps those members on par with ordinary members outside voting without requiring allowlist edits per site. See `_allowed_membership_types_grant` in `publications/views.py`.
 
 ## Templates
 - `publications/index.html` expects `collections` and renders the collection index, using `collection.cover_url` when available and falling back to an icon otherwise.

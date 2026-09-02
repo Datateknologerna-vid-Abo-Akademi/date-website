@@ -4,7 +4,7 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import Group, Permission
 
-from .models import ORDINARY_MEMBER, MembershipType, Subscription
+from .models import NON_VOTING_MEMBER, ORDINARY_MEMBER, MembershipType, Subscription
 
 
 def _update_first_or_create(model, name, defaults):
@@ -26,6 +26,7 @@ def provision_membership_access(**kwargs):
     profiles = {
         'Ordinarie medlem': ORDINARY_MEMBER,
         'Evig SF:are': ORDINARY_MEMBER,
+        'Extra medlem': NON_VOTING_MEMBER,
     }
     for name in membership_names:
         _update_first_or_create(MembershipType, name, {'permission_profile': profiles[name]})
