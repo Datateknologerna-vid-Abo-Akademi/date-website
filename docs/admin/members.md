@@ -12,15 +12,15 @@ Most people register themselves at `/members/signup/`. Those signups land in the
    - Set a temporary password. Tick **Send email** if you plan to notify the member manually (system does not send the password automatically).
 3. **Edit member**:
     - Update contact info, membership type, or group assignments as needed.
-    - On SF, tick **Gulispass utfört** after the member completes the required duty/pass. Until then, both ordinary and lifetime SF members are blocked from the picture and exam archives. The checkbox only appears on SF.
+    - On SF, tick **Gulispass utfört** after the member completes the required duty/pass. Until then, ordinary, lifetime, and extra SF members are blocked from the picture and exam archives. The checkbox only appears on SF.
    - Use the actions menu to bulk **Activate** or **Deactivate** selected users.
    - `is_staff` is computed automatically from group membership (groups listed in `settings.STAFF_GROUPS`).
 4. **Password resets**: direct members to the "Forgot password" link on the login page, which uses the custom reset form.
 
 ## Membership Types
-- Found under **Members › Membership types**. Each type has a description and a `Behörighetsprofil` (Freshman, Ordinary, Supporting, Senior). These profiles are referenced by other apps (e.g., Polls, Archive) to enforce permissions.
-- SF signup asks applicants to choose **Ordinarie medlem** or **Evig SF:are**, and member administration offers the same two types. Both use ordinary-member behavior outside the separate archive eligibility checkbox. Provisioning does not delete historical membership types that may still be attached to existing records.
-- **Ordinarie medlem** costs 15 euro and expires after one year. **Evig SF:are** costs 40 euro and does not expire.
+- Found under **Members › Membership types**. Each type has a description and a `Behörighetsprofil` (Freshman, Ordinary, Supporting, Senior, Member without voting rights). These profiles are referenced by other apps (e.g., Polls, Archive) to enforce permissions.
+- SF signup asks applicants to choose **Ordinarie medlem**, **Evig SF:are**, or **Extra medlem**, and member administration offers the same three types. `Ordinarie medlem` and `Evig SF:are` use ordinary-member behavior outside the separate archive eligibility checkbox. `Extra medlem` behaves like an ordinary member everywhere except polls: they cannot vote in questions restricted to ordinary members or voting-entitled members (`Endast ordinarie medlemmar` / `Endast röstberättigade medlemmar`) because their profile has no voting rights. Provisioning does not delete historical membership types that may still be attached to existing records.
+- **Ordinarie medlem** costs 15 euro and expires after one year. **Evig SF:are** costs 40 euro and does not expire. **Extra medlem** costs 15 euro and expires after one year.
 
 ## SF Staff Access
 - `styrelse` can administer all site app models except the complete members app.

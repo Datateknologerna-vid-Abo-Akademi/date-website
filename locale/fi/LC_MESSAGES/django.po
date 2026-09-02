@@ -850,6 +850,10 @@ msgstr "Tukeva jäsen"
 msgid "Seniormedlem"
 msgstr "Seniorijäsen"
 
+#: members/models.py:28
+msgid "Medlem utan rösträtt"
+msgstr "Jäsen ilman äänioikeutta"
+
 #: members/models.py:37
 msgid "Postkod"
 msgstr "Postinumero"

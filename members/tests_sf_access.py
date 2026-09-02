@@ -7,11 +7,11 @@ from django.urls import reverse
 
 from members.admin import UserAdmin
 from members.forms import AdminMemberUpdateForm, MemberCreationForm, SignUpForm
-from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription
+from members.models import NON_VOTING_MEMBER, ORDINARY_MEMBER, Member, MembershipType, Subscription
 from members.provisioning import provision_membership_access
 
 SF_SETTINGS = {
-    'MEMBERSHIP_TYPE_NAMES': ('Ordinarie medlem', 'Evig SF:are'),
+    'MEMBERSHIP_TYPE_NAMES': ('Ordinarie medlem', 'Evig SF:are', 'Extra medlem'),
     'MEMBERS_SIGNUP_FIELDS': (
         'username',
         'email',
@@ -37,6 +37,12 @@ SF_SETTINGS = {
             'renewal_scale': None,
             'renewal_period': None,
         },
+        'Extra medlem': {
+            'price': '15.00',
+            'does_expire': True,
+            'renewal_scale': 'year',
+            'renewal_period': 1,
+        },
     },
     'ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY': True,
     'MEMBER_ADMIN_RESTRICTED_GROUP': 'Inauta',
@@ -57,6 +63,7 @@ class SFSignupTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         MembershipType.objects.update_or_create(name='Evig SF:are', defaults={'permission_profile': ORDINARY_MEMBER})
+        MembershipType.objects.update_or_create(name='Extra medlem', defaults={'permission_profile': NON_VOTING_MEMBER})
 
     def test_signup_exposes_only_sf_public_fields(self):
         form = SignUpForm()
@@ -76,11 +83,11 @@ class SFSignupTests(TestCase):
         self.assertEqual(str(form.fields['city'].label), 'Hemort')
         self.assertEqual(
             set(form.fields['membership_type'].queryset.values_list('name', flat=True)),
-            {'Ordinarie medlem', 'Evig SF:are'},
+            {'Ordinarie medlem', 'Evig SF:are', 'Extra medlem'},
         )
 
     def test_admin_membership_choices_are_limited_to_sf_types(self):
-        expected = {'Ordinarie medlem', 'Evig SF:are'}
+        expected = {'Ordinarie medlem', 'Evig SF:are', 'Extra medlem'}
         self.assertEqual(
             set(MemberCreationForm().fields['membership_type'].queryset.values_list('name', flat=True)), expected
         )
@@ -174,6 +181,30 @@ class SFSignupTests(TestCase):
         self.assertEqual(member.city, 'Åbo')
         self.assertNotEqual(member.membership_type, ordinary)
 
+    @patch('members.views.validate_captcha', return_value=True)
+    def test_signup_saves_inactive_member_with_extra_medlem_type(self, _validate_captcha):
+        extra = MembershipType.objects.create(name='Extra medlem', permission_profile=NON_VOTING_MEMBER)
+
+        response = self.client.post(
+            reverse('members:signup'),
+            {
+                'username': 'extra-sf-member',
+                'email': 'extra@example.com',
+                'first_name': 'Extra',
+                'last_name': 'Member',
+                'city': 'Åbo',
+                'membership_type': extra.id,
+                'year_of_admission': 2026,
+                'password': 'safe-password',
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        member = Member.objects.get(username='extra-sf-member')
+        self.assertEqual(member.membership_type, extra)
+        self.assertFalse(member.is_active)
+        self.assertEqual(member.membership_type.permission_profile, NON_VOTING_MEMBER)
+
 
 @override_settings(**SF_SETTINGS)
 class SFProvisioningTests(TestCase):
@@ -187,12 +218,17 @@ class SFProvisioningTests(TestCase):
         self.assertEqual(MembershipType.objects.get(name='Ordinarie medlem').permission_profile, ORDINARY_MEMBER)
         duplicate.refresh_from_db()
         self.assertEqual(duplicate.permission_profile, ORDINARY_MEMBER)
+        extra = MembershipType.objects.get(name='Extra medlem')
+        self.assertEqual(extra.permission_profile, NON_VOTING_MEMBER)
         annual = Subscription.objects.get(name='Ordinarie medlem')
         lifetime = Subscription.objects.get(name='Evig SF:are')
+        extra_sub = Subscription.objects.get(name='Extra medlem')
         self.assertEqual(str(annual.price), '15.00')
         self.assertEqual((annual.does_expire, annual.renewal_scale, annual.renewal_period), (True, 'year', 1))
         self.assertEqual(str(lifetime.price), '40.00')
         self.assertEqual((lifetime.does_expire, lifetime.renewal_scale, lifetime.renewal_period), (False, None, None))
+        self.assertEqual(str(extra_sub.price), '15.00')
+        self.assertEqual((extra_sub.does_expire, extra_sub.renewal_scale, extra_sub.renewal_period), (True, 'year', 1))
         expected_groups = set(SF_SETTINGS['SF_ROLE_PERMISSION_SCOPES'])
         self.assertEqual(
             expected_groups,

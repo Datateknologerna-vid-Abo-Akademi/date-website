@@ -845,6 +845,10 @@ msgstr "Stödjande medlem"
 msgid "Seniormedlem"
 msgstr "Seniormedlem"
 
+#: members/models.py:28
+msgid "Medlem utan rösträtt"
+msgstr "Medlem utan rösträtt"
+
 #: members/models.py:37
 msgid "Postkod"
 msgstr "Postkod"
