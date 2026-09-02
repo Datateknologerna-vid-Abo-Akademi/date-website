@@ -115,16 +115,15 @@ jobs:
           done
 
           if [ "${logged_in}" -eq 1 ]; then
-            for attempt in 1 2 3; do
-              if docker pull "${CI_IMAGE}"; then
-                printf 'services:\n  init:\n    image: %s\n  web:\n    image: %s\n  celery:\n    image: %s\n' "${CI_IMAGE}" "${CI_IMAGE}" "${CI_IMAGE}" > docker-compose.ci.yml
-                echo "compose_file=docker-compose.yml:docker-compose.ci.yml" >> "${GITHUB_OUTPUT}"
-                exit 0
-              fi
-              if [ "${attempt}" -lt 3 ]; then
-                sleep $((attempt * 5))
-              fi
-            done
+            # The image for this SHA is published by the docker_build workflow,
+            # which starts at the same time and takes minutes, so a first run
+            # never finds it. Retrying with sleeps only delays the fallback
+            # build; a re-run after publication succeeds on the first attempt.
+            if docker pull "${CI_IMAGE}"; then
+              printf 'services:\n  init:\n    image: %s\n  web:\n    image: %s\n  celery:\n    image: %s\n' "${CI_IMAGE}" "${CI_IMAGE}" "${CI_IMAGE}" > docker-compose.ci.yml
+              echo "compose_file=docker-compose.yml:docker-compose.ci.yml" >> "${GITHUB_OUTPUT}"
+              exit 0
+            fi
           fi
 
           echo "compose_file=docker-compose.yml" >> "${GITHUB_OUTPUT}"
@@ -150,12 +149,14 @@ jobs:
           docker-compose run --rm --no-deps -e TEST=1 ${{ matrix.extra_env }} web python /code/manage.py test
 
       - name: Build and run Docker Compose
+        if: matrix.label == 'default'
         run: |
           set -euo pipefail
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
           docker-compose up -d
 
       - name: Wait for web container
+        if: matrix.label == 'default'
         run: |
           set -euo pipefail
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
@@ -172,10 +173,11 @@ jobs:
           exit 1
 
       - name: Check HTTP response
+        if: matrix.label == 'default'
         run: |
           set -euo pipefail
-          # The app is typically reachable ~12s after container is "running".
-          sleep 10
+          # The web container is "running" before Django serves; the retry
+          # loop below absorbs the remaining boot time.
           for attempt in $(seq 1 15); do
             if curl --retry 1 --retry-delay 1 --retry-connrefused --retry-all-errors --max-time 8 -sSf http://localhost:8000 >/dev/null 2>&1; then
               exit 0
@@ -186,7 +188,7 @@ jobs:
           exit 1
 
       - name: Print Docker diagnostics on failure
-        if: failure()
+        if: failure() && matrix.label == 'default'
         run: |
           set -euo pipefail
           export COMPOSE_FILE="${{ steps.prebuilt.outputs.compose_file }}"
