@@ -1,15 +1,22 @@
 import importlib
 import logging
+import threading
+import time
 from types import SimpleNamespace
+from unittest import skipUnless
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError, connection, transaction
+from django.db.migrations.executor import MigrationExecutor
+from django.db.models import QuerySet
 from django.forms.models import inlineformset_factory
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.test.client import RequestFactory
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.formats import date_format
@@ -19,6 +26,7 @@ from django_ckeditor_5.widgets import CKEditor5Widget
 from events.admin import EventAttendeesFormInline, EventRegistrationFormSet
 from events.forms import EventCreationForm, EventEditForm
 from events.models import Event, EventAttendees, EventRegistrationForm
+from events.registration import _MAX_ATTENDEE_NR_RETRIES, EventSignupError, register_event_signup
 from events.routing import websocket_urlpatterns
 from events.websocket_utils import ws_data, ws_send
 from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
@@ -692,6 +700,130 @@ class EventAdminTests(TestCase):
         _, kwargs = get_formset.call_args
         self.assertCountEqual(kwargs["exclude"], ["time_registered", "avec_for"])
 
+    def _attendees_formset(self, rows):
+        data = {
+            "eventattendees_set-TOTAL_FORMS": len(rows),
+            "eventattendees_set-INITIAL_FORMS": len(rows),
+            "eventattendees_set-MIN_NUM_FORMS": "0",
+            "eventattendees_set-MAX_NUM_FORMS": "1000",
+        }
+        for row in rows:
+            data.update(row)
+        request = RequestFactory().get("/admin/events/event/change/")
+        request.user = self.admin_user
+        inline = EventAttendeesFormInline(Event, admin.site)
+        formset_class = inline.get_formset(request, obj=self.event)
+        return formset_class(
+            data=data,
+            instance=self.event,
+            queryset=EventAttendees.objects.filter(event=self.event),
+            prefix="eventattendees_set",
+        )
+
+    def _attendee_row(self, index, pk, nr, user, email):
+        return {
+            f"eventattendees_set-{index}-id": pk,
+            f"eventattendees_set-{index}-event": self.event.pk,
+            f"eventattendees_set-{index}-attendee_nr": nr,
+            f"eventattendees_set-{index}-user": user,
+            f"eventattendees_set-{index}-email": email,
+        }
+
+    def _ordered_attendee_rows(self):
+        return list(
+            EventAttendees.objects.filter(event=self.event).order_by("attendee_nr").values_list("user", "attendee_nr")
+        )
+
+    def test_drag_reorder_writes_final_numbers_without_unique_violation(self):
+        # The admin_ordering drag submits the final values (10, 20, ...) in
+        # the new visual order while the form indices keep the original
+        # order. Here C(30) is dragged to the top, so the sequential per-row
+        # saves would collide (B's final 30 vs C's current 30) without the
+        # formset's pre-save band shift.
+        for nr, user, email in (
+            (10, "A", "a@example.com"),
+            (20, "B", "b@example.com"),
+            (30, "C", "c@example.com"),
+        ):
+            EventAttendees.objects.create(
+                event=self.event,
+                user=user,
+                email=email,
+                attendee_nr=nr,
+                preferences={},
+            )
+        a, b, c = EventAttendees.objects.filter(event=self.event).order_by("attendee_nr")
+
+        formset = self._attendees_formset(
+            [
+                self._attendee_row(0, a.pk, 20, "A", "a@example.com"),
+                self._attendee_row(1, b.pk, 30, "B", "b@example.com"),
+                self._attendee_row(2, c.pk, 10, "C", "c@example.com"),
+            ]
+        )
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+
+        self.assertEqual(self._ordered_attendee_rows(), [("C", 10), ("A", 20), ("B", 30)])
+
+    def test_drag_reorder_preserves_unchanged_rows(self):
+        # Dragging C(30) between A(10) and B(20) leaves A's number unchanged;
+        # Django skips saving unchanged forms, so the band shift must restore
+        # A instead of leaving it on a shifted value.
+        for nr, user, email in (
+            (10, "A", "a@example.com"),
+            (20, "B", "b@example.com"),
+            (30, "C", "c@example.com"),
+        ):
+            EventAttendees.objects.create(
+                event=self.event,
+                user=user,
+                email=email,
+                attendee_nr=nr,
+                preferences={},
+            )
+        a, b, c = EventAttendees.objects.filter(event=self.event).order_by("attendee_nr")
+
+        formset = self._attendees_formset(
+            [
+                self._attendee_row(0, a.pk, 10, "A", "a@example.com"),
+                self._attendee_row(1, b.pk, 30, "B", "b@example.com"),
+                self._attendee_row(2, c.pk, 20, "C", "c@example.com"),
+            ]
+        )
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+
+        self.assertEqual(self._ordered_attendee_rows(), [("A", 10), ("C", 20), ("B", 30)])
+
+    def test_save_without_reorder_leaves_numbers_untouched(self):
+        EventAttendees.objects.create(
+            event=self.event,
+            user="A",
+            email="a@example.com",
+            attendee_nr=10,
+            preferences={},
+        )
+        EventAttendees.objects.create(
+            event=self.event,
+            user="B",
+            email="b@example.com",
+            attendee_nr=20,
+            preferences={},
+        )
+        a, b = EventAttendees.objects.filter(event=self.event).order_by("attendee_nr")
+
+        formset = self._attendees_formset(
+            [
+                self._attendee_row(0, a.pk, 10, "A", "a@example.com"),
+                self._attendee_row(1, b.pk, 20, "B", "b@example.com"),
+            ]
+        )
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+
+        self.assertEqual(self._ordered_attendee_rows(), [("A", 10), ("B", 20)])
+
     def test_change_page_hides_hide_for_avec_when_avec_is_disabled(self):
         EventRegistrationForm.objects.create(
             event=self.event,
@@ -1075,6 +1207,21 @@ class EventRegistrationFormValidationTests(TestCase):
         )
 
         self.assertEqual(list(child.get_registrations()), [own_attendee])
+
+    def test_validate_unique_email_scopes_to_the_child_event(self):
+        sibling = Event.objects.create(title='Sibling', slug='sibling', author=self.author, parent=self.event)
+        child = Event.objects.create(title='Child', slug='child', author=self.author, parent=self.event)
+        EventAttendees.objects.create(
+            event=self.event,
+            original_event=child,
+            user='Child attendee',
+            email='shared@example.com',
+        )
+
+        with self.assertRaisesMessage(ValidationError, 'Det finns redan någon anmäld med denna email'):
+            child.validate_unique_email('shared@example.com')
+
+        sibling.validate_unique_email('shared@example.com')
 
     def test_attendee_cannot_reference_itself_or_another_event_as_avec(self):
         attendee = EventAttendees.objects.create(
@@ -1461,6 +1608,544 @@ class EventCapacityTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'name="user"')
         self.assertContains(response, "Evenemanget är tyvärr fullt")
+
+    def test_capacity_child_signup_takes_row_lock_based_on_db_state(self):
+        # The lock decision must come from a fresh database read, not the
+        # caller's (possibly stale) event object: a capacity-limited child
+        # requires the lock even if the caller's instance says otherwise.
+        parent = Event.objects.create(title='Lock Parent', slug='lock-parent', author=self.author)
+        child = Event.objects.create(
+            title='Lock Child',
+            slug='lock-child',
+            author=self.author,
+            parent=parent,
+            sign_up_max_participants=2,
+        )
+        stale = Event(pk=child.pk, title='Lock Child', slug='lock-child', author_id=self.author.pk)
+
+        real_select_for_update = QuerySet.select_for_update
+        locked_kwargs = []
+
+        def locked_side_effect(self, *args, **kwargs):
+            locked_kwargs.append(kwargs)
+            return real_select_for_update(self, *args, **kwargs)
+
+        with patch.object(QuerySet, 'select_for_update', autospec=True, side_effect=locked_side_effect):
+            with CaptureQueriesContext(connection) as ctx:
+                register_event_signup(stale, {'user': 'Locked', 'email': 'locked@example.com', 'anonymous': False})
+
+        # The locked re-read must actually go through select_for_update, not
+        # just be a second unlocked read.
+        self.assertEqual(locked_kwargs, [{'of': ('self',)}])
+
+        event_selects = [
+            q for q in ctx.captured_queries if q['sql'].startswith('SELECT') and '"events_event"' in q['sql']
+        ]
+        self.assertEqual(len(event_selects), 2, 'capacity-limited child must fresh-read then locked re-read')
+        # SQLite ignores select_for_update entirely (no FOR UPDATE emitted),
+        # so the row-lock SQL can only be asserted against a supporting
+        # backend; the wraps assertion above covers every backend.
+        if connection.vendor == 'postgresql':
+            self.assertTrue(
+                any('FOR UPDATE' in q['sql'] for q in event_selects),
+                'the locked re-read must carry SELECT ... FOR UPDATE',
+            )
+
+    def test_attendee_nr_collision_is_retried(self):
+        # Unlimited events skip the row lock, so the max+10 attendee_nr
+        # allocation can race; the unique constraint must turn that into a
+        # retried signup, not a duplicate-email error.
+        parent = Event.objects.create(title='Race Parent', slug='race-parent', author=self.author)
+        event = Event.objects.create(
+            title='Race Event',
+            slug='race-event',
+            author=self.author,
+            parent=parent,
+        )
+        real_create = EventAttendees.objects.create
+        attempts = {'n': 0}
+
+        def flaky_create(*args, **kwargs):
+            attempts['n'] += 1
+            if attempts['n'] == 1:
+                cause = Exception('simulated unique violation')
+                cause.diag = SimpleNamespace(constraint_name='unique_attendee_nr_per_event')
+                raise IntegrityError('duplicate key value violates unique constraint') from cause
+            return real_create(*args, **kwargs)
+
+        with patch.object(EventAttendees.objects, 'create', side_effect=flaky_create):
+            result = register_event_signup(event, {'user': 'Racer', 'email': 'racer@example.com', 'anonymous': False})
+
+        self.assertEqual(attempts['n'], 2, 'an attendee_nr collision must retry the whole signup')
+        self.assertEqual(result.attendee.email, 'racer@example.com')
+        self.assertEqual(result.attendee.attendee_nr, 10)
+
+    def test_attendee_nr_collision_gives_up_after_retries(self):
+        parent = Event.objects.create(title='Race Parent Exhausted', slug='race-parent-exhausted', author=self.author)
+        event = Event.objects.create(
+            title='Race Event Exhausted',
+            slug='race-event-exhausted',
+            author=self.author,
+            parent=parent,
+        )
+
+        attempts = {'n': 0}
+
+        def always_collides(*args, **kwargs):
+            attempts['n'] += 1
+            cause = Exception('simulated unique violation')
+            cause.diag = SimpleNamespace(constraint_name='unique_attendee_nr_per_event')
+            raise IntegrityError('duplicate key value violates unique constraint') from cause
+
+        with patch.object(EventAttendees.objects, 'create', side_effect=always_collides):
+            with self.assertRaises(EventSignupError):
+                register_event_signup(event, {'user': 'Racer', 'email': 'racer@example.com', 'anonymous': False})
+        self.assertEqual(
+            attempts['n'],
+            _MAX_ATTENDEE_NR_RETRIES + 1,
+            'one initial attempt plus the full retry budget must be tried before giving up',
+        )
+
+    def test_duplicate_email_still_reported_not_retried(self):
+        # An IntegrityError on the (event, email) constraint is a user error
+        # and must surface as such, never as an attendee_nr retry.
+        parent = Event.objects.create(title='Dup Parent', slug='dup-parent', author=self.author)
+        event = Event.objects.create(
+            title='Dup Event',
+            slug='dup-event',
+            author=self.author,
+            parent=parent,
+        )
+
+        def email_collides(*args, **kwargs):
+            raise IntegrityError('UNIQUE constraint failed: events_eventattendees.email') from Exception('sqlite')
+
+        with patch.object(EventAttendees.objects, 'create', side_effect=email_collides):
+            with self.assertRaises(EventSignupError) as ctx:
+                register_event_signup(event, {'user': 'Dup', 'email': 'dup@example.com', 'anonymous': False})
+        self.assertIn('Det finns redan någon anmäld med denna email', str(ctx.exception.message))
+
+    def test_unlimited_event_signup_skips_the_row_lock(self):
+        event = Event.objects.create(title='Unlocked', slug='unlocked', author=self.author)
+
+        with CaptureQueriesContext(connection) as ctx:
+            register_event_signup(event, {'user': 'Unlocked', 'email': 'unlocked@example.com', 'anonymous': False})
+
+        event_selects = [
+            q for q in ctx.captured_queries if q['sql'].startswith('SELECT') and '"events_event"' in q['sql']
+        ]
+        self.assertEqual(len(event_selects), 1, 'unlimited event must only fresh-read, no locked re-read')
+
+
+class AttendeeNrMigrationTests(TransactionTestCase):
+    # Unapplies and reapplies events migration 0025, so it cannot run inside a
+    # shared transaction; TransactionTestCase keeps the other tests isolated.
+    # serialized_rollback restores the migration-seeded rows (membership types
+    # etc.) that truncation removes, so later TestCase tests keep working.
+    serialized_rollback = True
+
+    def test_0025_repairs_duplicate_attendee_nrs(self):
+        author = Member.objects.create_user(
+            username="mig-author",
+            password="pwd",
+            email="mig-author@example.com",
+        )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0024_event_event_pub_end_idx')])
+        old_apps = executor.loader.project_state([('events', '0024_event_event_pub_end_idx')]).apps
+        OldEvent = old_apps.get_model('events', 'Event')
+        OldAttendee = old_apps.get_model('events', 'EventAttendees')
+        parent = OldEvent.objects.create(title='Mig Parent', slug='mig-parent', author_id=author.pk)
+        child = OldEvent.objects.create(title='Mig Child', slug='mig-child', author_id=author.pk, parent_id=parent.pk)
+        for user, email, nr in [
+            ('A', 'a@example.com', 10),
+            ('B', 'b@example.com', 10),
+            ('C', 'c@example.com', 20),
+            ('D', 'd@example.com', 10),
+        ]:
+            OldAttendee.objects.create(
+                event_id=parent.pk,
+                original_event_id=child.pk,
+                user=user,
+                email=email,
+                attendee_nr=nr,
+                time_registered=timezone.now(),
+            )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0025_eventattendees_unique_attendee_nr_per_event')])
+        new_apps = executor.loader.project_state([('events', '0025_eventattendees_unique_attendee_nr_per_event')]).apps
+        NewAttendee = new_apps.get_model('events', 'EventAttendees')
+
+        rows = list(NewAttendee.objects.filter(event_id=parent.pk).order_by('pk').values_list('user', 'attendee_nr'))
+        self.assertEqual(rows, [('A', 10), ('B', 20), ('C', 40), ('D', 30)])
+        display_order = list(
+            NewAttendee.objects.filter(event_id=parent.pk).order_by('attendee_nr').values_list('user', flat=True)
+        )
+        self.assertEqual(display_order, ['A', 'B', 'D', 'C'], 'repair must preserve the pre-repair display order')
+
+        # The constraint must now actually exist and reject a colliding insert.
+        with self.assertRaises(IntegrityError):
+            NewAttendee.objects.create(
+                event_id=parent.pk,
+                original_event_id=child.pk,
+                user='E',
+                email='e@example.com',
+                attendee_nr=rows[0][1],
+                time_registered=timezone.now(),
+            )
+
+    def test_0025_repairs_duplicates_at_the_smallint_ceiling(self):
+        # PositiveSmallIntegerField tops out at 32767; a duplicate at the top
+        # of the range leaves no step-10 slot above it, so the whole event is
+        # compacted into a fresh monotonic sequence instead of writing an
+        # out-of-range value.
+        author = Member.objects.create_user(
+            username="mig-ceiling-author",
+            password="pwd",
+            email="mig-ceiling-author@example.com",
+        )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0024_event_event_pub_end_idx')])
+        old_apps = executor.loader.project_state([('events', '0024_event_event_pub_end_idx')]).apps
+        OldEvent = old_apps.get_model('events', 'Event')
+        OldAttendee = old_apps.get_model('events', 'EventAttendees')
+        parent = OldEvent.objects.create(title='Mig Ceiling Parent', slug='mig-ceiling-parent', author_id=author.pk)
+        for user, nr in [('X', 32750), ('Y', 32760), ('Z', 32760)]:
+            OldAttendee.objects.create(
+                event_id=parent.pk,
+                user=user,
+                email=f'{user.lower()}@example.com',
+                attendee_nr=nr,
+                time_registered=timezone.now(),
+            )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0025_eventattendees_unique_attendee_nr_per_event')])
+        new_apps = executor.loader.project_state([('events', '0025_eventattendees_unique_attendee_nr_per_event')]).apps
+        NewAttendee = new_apps.get_model('events', 'EventAttendees')
+
+        rows = list(NewAttendee.objects.filter(event_id=parent.pk).order_by('pk').values_list('user', 'attendee_nr'))
+        self.assertEqual(rows, [('X', 10), ('Y', 20), ('Z', 30)])
+
+        with self.assertRaises(IntegrityError):
+            NewAttendee.objects.create(
+                event_id=parent.pk,
+                user='W',
+                email='w@example.com',
+                attendee_nr=10,
+                time_registered=timezone.now(),
+            )
+
+    def test_0025_repairs_three_duplicates_at_the_smallint_ceiling(self):
+        # Compaction must handle more than two duplicates of the same ceiling
+        # number: a naive "wrap to the lowest free slot" would leave the third
+        # copy untouched and AddConstraint would still fail.
+        author = Member.objects.create_user(
+            username="mig-triple-author",
+            password="pwd",
+            email="mig-triple-author@example.com",
+        )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0024_event_event_pub_end_idx')])
+        old_apps = executor.loader.project_state([('events', '0024_event_event_pub_end_idx')]).apps
+        OldEvent = old_apps.get_model('events', 'Event')
+        OldAttendee = old_apps.get_model('events', 'EventAttendees')
+        parent = OldEvent.objects.create(
+            title='Mig Ceiling Triple Parent', slug='mig-ceiling-triple-parent', author_id=author.pk
+        )
+        for user, nr in [('X', 32750), ('Y', 32760), ('Z', 32760), ('W', 32760)]:
+            OldAttendee.objects.create(
+                event_id=parent.pk,
+                user=user,
+                email=f'{user.lower()}@example.com',
+                attendee_nr=nr,
+                time_registered=timezone.now(),
+            )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0025_eventattendees_unique_attendee_nr_per_event')])
+        new_apps = executor.loader.project_state([('events', '0025_eventattendees_unique_attendee_nr_per_event')]).apps
+        NewAttendee = new_apps.get_model('events', 'EventAttendees')
+
+        rows = list(NewAttendee.objects.filter(event_id=parent.pk).order_by('pk').values_list('user', 'attendee_nr'))
+        self.assertEqual(rows, [('X', 10), ('Y', 20), ('Z', 30), ('W', 40)])
+
+    def test_0025_keeps_unique_numbers_including_zero(self):
+        # Only repeated numbers are renumbered; a unique attendee_nr of 0 is a
+        # valid PositiveSmallIntegerField value and must be left alone.
+        author = Member.objects.create_user(
+            username="mig-zero-author",
+            password="pwd",
+            email="mig-zero-author@example.com",
+        )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0024_event_event_pub_end_idx')])
+        old_apps = executor.loader.project_state([('events', '0024_event_event_pub_end_idx')]).apps
+        OldEvent = old_apps.get_model('events', 'Event')
+        OldAttendee = old_apps.get_model('events', 'EventAttendees')
+        parent = OldEvent.objects.create(title='Mig Zero Parent', slug='mig-zero-parent', author_id=author.pk)
+        for user, nr in [('A', 0), ('B', 10), ('C', 10)]:
+            OldAttendee.objects.create(
+                event_id=parent.pk,
+                user=user,
+                email=f'{user.lower()}@example.com',
+                attendee_nr=nr,
+                time_registered=timezone.now(),
+            )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0025_eventattendees_unique_attendee_nr_per_event')])
+        new_apps = executor.loader.project_state([('events', '0025_eventattendees_unique_attendee_nr_per_event')]).apps
+        NewAttendee = new_apps.get_model('events', 'EventAttendees')
+
+        rows = list(NewAttendee.objects.filter(event_id=parent.pk).order_by('pk').values_list('user', 'attendee_nr'))
+        self.assertEqual(rows, [('A', 0), ('B', 10), ('C', 20)])
+
+
+class AttendeeNrConcurrencyTests(TransactionTestCase):
+    # Real concurrency coverage for the unlocked max+10 allocation: the main
+    # connection holds an uncommitted attendee_nr while the signup thread runs,
+    # so the thread's identical max+10 insert must block on the unique index.
+    # The wait is confirmed by polling pg_stat_activity on a separate
+    # autocommit connection (pg_stat_activity snapshots are cached for the
+    # duration of a transaction on PG 15+, so the holding connection could
+    # never see it), then the row is released, the attempt fails and rolls
+    # back, and the retry inserts with the new committed maximum. The thread's
+    # query log proves the rollback happened (a ROLLBACK between two BEGINs).
+    # SQLite cannot run concurrent transactions, so these tests only run on
+    # PostgreSQL (e.g. the dev stack's postgres via
+    # DJANGO_SETTINGS_MODULE=core.settings.date). serialized_rollback restores
+    # the migration-seeded rows (membership types etc.) that truncation
+    # removes, so later TestCase tests keep working.
+    serialized_rollback = True
+
+    def setUp(self):
+        self.author = Member.objects.create_user(
+            username="concurrency-author",
+            password="pwd",
+            email="concurrency-author@example.com",
+        )
+
+    def _start_signup_thread(self, event, cleaned_data):
+        outcome = {}
+
+        def run():
+            try:
+                from django.db import connection as thread_connection
+
+                thread_connection.force_debug_cursor = True
+                with thread_connection.cursor() as cursor:
+                    cursor.execute('SELECT pg_backend_pid()')
+                    outcome['pid'] = cursor.fetchone()[0]
+                outcome['result'] = register_event_signup(event, cleaned_data)
+                outcome['queries'] = [q['sql'] for q in thread_connection.queries]
+            except Exception as exc:
+                outcome['error'] = exc
+            finally:
+                from django.db import connection as thread_connection
+
+                thread_connection.close()
+
+        thread = threading.Thread(target=run)
+        thread.start()
+        return thread, outcome
+
+    def _poll_connection(self):
+        # A fresh wrapper over the test database settings: the connection is
+        # autocommit, so each pg_stat_activity read is its own transaction and
+        # gets a fresh stats snapshot.
+        from django.db.backends.postgresql.base import DatabaseWrapper
+
+        return DatabaseWrapper(connection.settings_dict.copy(), alias='default')
+
+    def _wait_for_blocked_attendee_insert(self, pid, poll_conn, timeout=15):
+        # The poll targets the signup thread's exact backend PID: pg_stat_activity
+        # snapshots are cached for the duration of a transaction (PG 15+
+        # stats_fetch_consistency), so polling on the holding connection would
+        # never see the wait, and a pid-scoped query cannot false-positive on
+        # unrelated backends in the same database.
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            with poll_conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT count(*)
+                    FROM pg_stat_activity
+                    WHERE pid = %s
+                      AND datname = current_database()
+                      AND wait_event_type = 'Lock'
+                    """,
+                    [pid],
+                )
+                if cursor.fetchone()[0] > 0:
+                    return True
+            time.sleep(0.05)
+        return False
+
+    def _assert_rollback_between_begins(self, queries):
+        # The thread query log must show the colliding attempt rolled back
+        # (a BEGIN ... ROLLBACK) and the retry committing (BEGIN ... COMMIT).
+        self.assertIn('ROLLBACK', queries, 'the colliding first attempt must be rolled back')
+        rollback_index = queries.index('ROLLBACK')
+        self.assertIn('BEGIN', queries[:rollback_index], 'the failed attempt must have started a transaction')
+        self.assertIn('BEGIN', queries[rollback_index:], 'the retry must start a new transaction')
+        self.assertIn('COMMIT', queries[rollback_index:], 'the retried attempt must commit')
+
+    @skipUnless(connection.vendor == 'postgresql', 'requires PostgreSQL for concurrent transactions')
+    def test_collision_retries_with_next_number(self):
+        parent = Event.objects.create(title='Race Parent', slug='race-parent-pg', author=self.author)
+        event = Event.objects.create(title='Race Event', slug='race-event-pg', author=self.author, parent=parent)
+
+        thread = None
+        poll_conn = self._poll_connection()
+        try:
+            with transaction.atomic():
+                # Hold (event, 10) uncommitted while the signup runs: its
+                # max+10 allocation reads 10 as the maximum and its insert of
+                # 10 must block on the unique index until the row is released,
+                # then fail, roll back, and retry with 20.
+                EventAttendees.objects.create(
+                    event=parent,
+                    original_event=event,
+                    user='Holder',
+                    email='holder@example.com',
+                    attendee_nr=10,
+                    time_registered=timezone.now(),
+                )
+                thread, outcome = self._start_signup_thread(
+                    event, {'user': 'Racer', 'email': 'racer@example.com', 'anonymous': False}
+                )
+                while 'pid' not in outcome and thread.is_alive():
+                    time.sleep(0.01)
+                blocked = (
+                    self._wait_for_blocked_attendee_insert(outcome['pid'], poll_conn) if 'pid' in outcome else False
+                )
+        finally:
+            if thread is not None:
+                thread.join(timeout=30)
+            poll_conn.close()
+
+        self.assertFalse(thread.is_alive(), 'signup thread must finish')
+        self.assertNotIn('error', outcome, f'signup thread failed: {outcome.get("error")}')
+        self.assertTrue(blocked, 'the signup insert must block on the unique index before the hold is released')
+        self._assert_rollback_between_begins(outcome['queries'])
+        self.assertEqual(outcome['result'].attendee.attendee_nr, 20, 'the retry must re-read the committed maximum')
+        nrs = list(
+            EventAttendees.objects.filter(event=parent).order_by('attendee_nr').values_list('attendee_nr', flat=True)
+        )
+        self.assertEqual(nrs, [10, 20])
+
+    @skipUnless(connection.vendor == 'postgresql', 'requires PostgreSQL for concurrent transactions')
+    def test_avec_collision_rolls_back_whole_attempt(self):
+        parent = Event.objects.create(title='Avec Parent', slug='avec-parent-pg', author=self.author)
+        event = Event.objects.create(title='Avec Event', slug='avec-event-pg', author=self.author, parent=parent)
+
+        thread = None
+        poll_conn = self._poll_connection()
+        try:
+            with transaction.atomic():
+                # The signup allocates 10 for the attendee and 20 for the avec;
+                # holding 20 uncommitted makes only the second insert collide,
+                # so the whole first attempt (including the nr-10 row) must
+                # roll back before the retry inserts 30/40.
+                EventAttendees.objects.create(
+                    event=parent,
+                    original_event=event,
+                    user='Holder',
+                    email='holder@example.com',
+                    attendee_nr=20,
+                    time_registered=timezone.now(),
+                )
+                thread, outcome = self._start_signup_thread(
+                    event,
+                    {
+                        'user': 'Racer',
+                        'email': 'racer@example.com',
+                        'anonymous': False,
+                        'avec': True,
+                        'avec_user': 'Plus One',
+                        'avec_email': 'plus@example.com',
+                        'avec_anonymous': False,
+                    },
+                )
+                while 'pid' not in outcome and thread.is_alive():
+                    time.sleep(0.01)
+                blocked = (
+                    self._wait_for_blocked_attendee_insert(outcome['pid'], poll_conn) if 'pid' in outcome else False
+                )
+        finally:
+            if thread is not None:
+                thread.join(timeout=30)
+            poll_conn.close()
+
+        self.assertFalse(thread.is_alive(), 'signup thread must finish')
+        self.assertNotIn('error', outcome, f'signup thread failed: {outcome.get("error")}')
+        self.assertTrue(blocked, 'the avec insert must block on the unique index before the hold is released')
+        self._assert_rollback_between_begins(outcome['queries'])
+        self.assertEqual(outcome['result'].attendee.attendee_nr, 30)
+        self.assertEqual(outcome['result'].avec_attendee.attendee_nr, 40)
+        self.assertEqual(
+            EventAttendees.objects.filter(event=parent, attendee_nr=10).count(),
+            0,
+            'the rolled-back first attempt must leave no nr-10 row behind',
+        )
+        nrs = list(
+            EventAttendees.objects.filter(event=parent).order_by('attendee_nr').values_list('attendee_nr', flat=True)
+        )
+        self.assertEqual(nrs, [20, 30, 40])
+
+    @skipUnless(connection.vendor == 'postgresql', 'requires PostgreSQL for concurrent transactions')
+    def test_final_child_event_place_is_serialized_by_row_lock(self):
+        # Two signups racing for the last remaining child-event place: the
+        # locked re-read must serialize the capacity check on the child row,
+        # so the second signup blocks while the lock is held and only one
+        # attendee ends up occupying the final place. Without the lock the
+        # second signup could pass the capacity check against a stale count
+        # and oversubscribe the event.
+        parent = Event.objects.create(title='Cap Parent', slug='cap-parent-pg', author=self.author)
+        child = Event.objects.create(
+            title='Cap Child',
+            slug='cap-child-pg',
+            author=self.author,
+            parent=parent,
+            sign_up_max_participants=1,
+        )
+
+        thread = None
+        poll_conn = self._poll_connection()
+        try:
+            with transaction.atomic():
+                # Hold the child's row lock; the signup's locked re-read must
+                # block here instead of checking capacity against an
+                # unlocked read.
+                Event.objects.select_for_update().get(pk=child.pk)
+                thread, outcome = self._start_signup_thread(
+                    child, {'user': 'First', 'email': 'first@example.com', 'anonymous': False}
+                )
+                while 'pid' not in outcome and thread.is_alive():
+                    time.sleep(0.01)
+                blocked = (
+                    self._wait_for_blocked_attendee_insert(outcome['pid'], poll_conn) if 'pid' in outcome else False
+                )
+        finally:
+            if thread is not None:
+                thread.join(timeout=30)
+            poll_conn.close()
+
+        self.assertFalse(thread.is_alive(), 'signup thread must finish')
+        self.assertNotIn('error', outcome, f'signup thread failed: {outcome.get("error")}')
+        self.assertTrue(blocked, 'the signup must block on the child row lock until the hold is released')
+        self.assertEqual(outcome['result'].attendee.attendee_nr, 10)
+        self.assertEqual(EventAttendees.objects.filter(event=parent).count(), 1)
+        self.assertEqual(child.remaining_places(), 0)
+
+        with self.assertRaises(EventSignupError):
+            register_event_signup(child, {'user': 'Second', 'email': 'second@example.com', 'anonymous': False})
 
 
 @override_settings(CONTENT_VARIABLES={**settings.CONTENT_VARIABLES, "INTERNATIONAL_EVENT_SLUGS": ["intl-slug"]})

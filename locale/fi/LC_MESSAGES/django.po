@@ -588,6 +588,10 @@ msgstr "Sähköposti"
 msgid "Anonymt"
 msgstr "Anonyymisesti"
 
+#: events/registration.py:74
+msgid "Det gick inte att anmäla dig just nu, försök igen."
+msgstr "Ilmoittautuminen ei onnistunut juuri nyt, yritä uudelleen."
+
 #: events/models.py:322 events/registration.py:105
 msgid "Det finns redan någon anmäld med denna email"
 msgstr "Tällä sähköpostiosoitteella on jo ilmoittautuminen."
