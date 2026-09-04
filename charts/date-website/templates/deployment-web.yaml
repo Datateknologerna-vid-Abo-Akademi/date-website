@@ -91,6 +91,12 @@ spec:
                 --bind=0.0.0.0:8000 \
                 core.asgi:application
           env:
+            - name: ASGI_HTTP_CONCURRENCY
+              value: {{ .Values.web.asgi.maxConcurrentHttpRequestsPerWorker | quote }}
+            # Django 6 destroys its thread-sensitive executor after each ASGI
+            # request, so persistent thread-local connections cannot be reused.
+            - name: DB_CONN_MAX_AGE
+              value: "0"
             {{- if .Values.django.alumniSettingsSecretName }}
             - name: ALUMNI_SETTINGS
               valueFrom:

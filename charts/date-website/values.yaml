@@ -187,6 +187,11 @@ email:
   password: ''
 web:
   replicaCount: 1
+  asgi:
+    # Hard per-Gunicorn-worker bound for concurrent HTTP requests. WebSocket
+    # connections bypass this limit. Total HTTP capacity per pod is workers
+    # multiplied by this value.
+    maxConcurrentHttpRequestsPerWorker: 8
   service:
     type: ClusterIP
     port: 8000

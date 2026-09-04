@@ -278,6 +278,15 @@
           "type": "integer",
           "minimum": 0
         },
+        "asgi": {
+          "type": "object",
+          "properties": {
+            "maxConcurrentHttpRequestsPerWorker": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
         "terminationGracePeriodSeconds": {
           "type": "integer",
           "minimum": 1

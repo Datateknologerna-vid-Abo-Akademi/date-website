@@ -14,20 +14,13 @@ from .language_utils import resolve_language
 class ConnectionLifecycleMiddleware:
     """Enforce Django's DB connection lifecycle on the request's own thread.
 
-    Under Django's ASGI handler (web serves core.asgi), the
-    ``request_started`` / ``request_finished`` signals are dispatched on the
-    event loop thread, so ``close_old_connections`` never runs on the
-    executor thread that owns the thread-local connection. Without it, a
-    connection is never closed and never health-checked: it lingers until
-    the server reaps it, then the next request on that thread 500s with
-    "connection already closed" (2026-08-31).
-
     This middleware runs on the same thread-sensitive executor thread as
     the sync middleware and views, and runs Django's normal lifecycle
-    there: before the request (drop obsolete/poisoned connections before
-    use) and after it (close if beyond CONN_MAX_AGE, otherwise keep for
-    reuse). Long-lived executor threads make reuse safe: the pool is
-    bounded by threads, not by requests.
+    there before and after the request. Normal Django ASGI request signals
+    also perform cleanup, but this outer layer protects exceptional
+    disconnect/error paths. Django 6 destroys the executor after each ASGI
+    request, so web deployments use CONN_MAX_AGE=0 rather than attempt to
+    persist its thread-local connection.
     """
 
     def __init__(self, get_response):
