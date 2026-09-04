@@ -61,6 +61,25 @@ jobs:
             exit 1
           fi
 
+      - name: Check web concurrency bound
+        run: |
+          set -euo pipefail
+          rendered="$(helm template ci "${CHART_PATH}" \
+            --set django.secretKey=ci-secret-key \
+            --set database.password=ci-database-password \
+            --set web.asgi.maxConcurrentHttpRequestsPerWorker=12 \
+            --set-string extraEnv.ASGI_HTTP_CONCURRENCY=99 \
+            --set-string extraEnv.DB_CONN_MAX_AGE=300)"
+          grep -A1 -- '- name: ASGI_HTTP_CONCURRENCY' <<<"${rendered}" | grep -q 'value: "12"'
+          grep -A1 -- '- name: DB_CONN_MAX_AGE' <<<"${rendered}" | grep -q 'value: "0"'
+          if helm lint "${CHART_PATH}" \
+            --set django.secretKey=ci-secret-key \
+            --set database.password=ci-database-password \
+            --set web.asgi.maxConcurrentHttpRequestsPerWorker=0; then
+            echo "Chart accepted a non-positive HTTP concurrency limit."
+            exit 1
+          fi
+
       - name: Check migration Job name stays under 63 bytes
         run: |
           set -euo pipefail

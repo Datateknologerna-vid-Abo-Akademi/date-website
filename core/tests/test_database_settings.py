@@ -15,9 +15,7 @@ class DatabaseSettingsTests(SimpleTestCase):
         default_db = common.DATABASES["default"]
 
         self.assertIn("CONN_MAX_AGE", default_db)
-        # Persistent connections (600 s) amortize setup and are safe because
-        # ConnectionLifecycleMiddleware enforces the connection lifecycle on
-        # the executor thread that owns the connection; without it a
-        # positive CONN_MAX_AGE leaks backends under ASGI (2026-08-31).
-        self.assertEqual(default_db["CONN_MAX_AGE"], 600)
+        # Django's ASGI handler destroys its per-request executor thread, so a
+        # persistent thread-local connection cannot be safely reused.
+        self.assertEqual(default_db["CONN_MAX_AGE"], 0)
         self.assertTrue(default_db["CONN_HEALTH_CHECKS"])

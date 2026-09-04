@@ -350,20 +350,24 @@ Bucket requirements (one-time):
   so the `/ws` ingress/gateway route and the asgi Service are gone. Per-site
   operator values must drop their `asgi:` overrides; WebSocket traffic
   follows the normal `/` path to the web service.
-- DB connections are reused between requests (CONN_MAX_AGE 600) with the
-  lifecycle enforced by `date.middleware.ConnectionLifecycleMiddleware`
-  (outermost after WhiteNoise, 2026-08-31). Under Django's ASGI handler,
-  sync middleware and views run on asgiref executor threads but the
-  `request_started` / `request_finished` signals are dispatched on the
-  event loop thread, so Django's own `close_old_connections` never runs on
-  the thread that owns the thread-local connection: without the middleware
-  a positive `CONN_MAX_AGE` leaks PostgreSQL backends and 500s with
-  `InterfaceError: connection already closed`. The middleware runs
-  `close_old_connections()` at request start and end on the owning thread,
-  so obsolete/poisoned connections are dropped before use and young ones
-  are kept for reuse (the executor threads are long-lived, so the pool is
-  bounded by threads, not requests). `handler404`/`handler500` also close
-  obsolete connections before rendering. Set `DB_CONN_MAX_AGE=0` to
-  disable persistence (per-request setup instead).
+- Django 6 creates a thread-sensitive executor per ASGI HTTP request. The
+  chart bounds concurrent requests with
+  `web.asgi.maxConcurrentHttpRequestsPerWorker` (default 8); WebSockets do
+  not consume slots. With the default 3 Gunicorn workers, one pod therefore
+  runs at most 24 concurrent Django HTTP executor threads. Replica count and
+  rollout surge multiply that bound. A slot covers the complete ASGI HTTP
+  exchange, including request input and response streaming, so slow clients
+  consume capacity rather than bypass the memory/connection bound. Configure
+  finite ingress request and response timeouts accordingly.
+- Web deployments set `CONN_MAX_AGE=0`: a connection cannot be reused after
+  Django destroys its request executor, so keeping it open would strand the
+  thread-local backend until PostgreSQL reaps it. The outer
+  `date.middleware.ConnectionLifecycleMiddleware` runs
+  `close_old_connections()` on the owning thread at request start and end;
+  it remains defense-in-depth for exceptional disconnect/error paths beyond
+  Django's normal request-signal cleanup. Celery, migrations and
+  administrative sessions are outside the web concurrency bound. PgBouncer
+  is the recommended way to amortize PostgreSQL connection setup without
+  persistent application connections.
 - Media must stay on S3-compatible storage before web replicas are ever
   scaled up; a local RWO PVC would block scaling and failover.

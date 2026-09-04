@@ -228,10 +228,8 @@ COMMON_CONTEXT_PROCESSORS = [
 
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    # Must run on the same executor thread as the views: under ASGI the
-    # request_started/request_finished signals fire on the event loop
-    # thread, so Django's own close_old_connections never touches the
-    # thread-local connection. This enforces the lifecycle where it lives.
+    # Run connection cleanup on the same executor thread as the views. This
+    # remains defense-in-depth for exceptional ASGI disconnect/error paths.
     'date.middleware.ConnectionLifecycleMiddleware',
     'date.middleware.ServerTimingMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -251,7 +249,8 @@ SERVER_TIMING_ENABLED = DEVELOP
 
 
 WSGI_APPLICATION = 'core.wsgi.application'
-ASGI_APPLICATION = 'core.routing.application'
+ASGI_APPLICATION = 'core.asgi.application'
+ASGI_HTTP_CONCURRENCY = env('ASGI_HTTP_CONCURRENCY', int, 8)
 
 
 REDIS_SERVER = env("REDIS_SERVER", str, "redis://redis:6379")
@@ -290,17 +289,12 @@ DATABASES = {
         'PASSWORD': env_alias('DATE_DB_PASSWORD', 'DB_PASSWORD', default=''),
         'HOST': env('DB_HOST', str, 'db'),
         'PORT': env('DB_PORT', int, 5432),
-        # Keep PostgreSQL connections alive between requests (600 s) to
-        # amortize connection setup, like the pre-ASGI WSGI behavior.
-        # Persistent connections are only safe because
-        # ConnectionLifecycleMiddleware runs close_old_connections on the
-        # executor thread that owns the connection at request start and end
-        # (under ASGI the request_started/request_finished signals fire on
-        # the event loop thread and never see it); without the middleware a
-        # positive CONN_MAX_AGE leaks backends and 500s with "connection
-        # already closed" (2026-08-31). The executor threads are long-lived
-        # and reused, so the pool stays bounded by threads, not requests.
-        'CONN_MAX_AGE': env('DB_CONN_MAX_AGE', int, 600),
+        # Django 6 creates a thread-sensitive executor per ASGI request. A
+        # persistent connection would remain attached to the destroyed thread
+        # and accumulate until PostgreSQL reaps it. Close web-safe connections
+        # at request completion; deployments may override this for non-ASGI
+        # processes that have a reusable thread lifecycle.
+        'CONN_MAX_AGE': env('DB_CONN_MAX_AGE', int, 0),
         # Re-verify persistent connections so they survive database restarts.
         'CONN_HEALTH_CHECKS': True,
     }
