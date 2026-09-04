@@ -17,11 +17,28 @@ $(function() {
         ws_url = ws_scheme + '://' + window.location.host + '/ws' + window.location.pathname;
     }
 
+    // Only run where there is an attendee table to update (event pages with
+    // signup). Templates without the list markup (kk100 index pages, detail
+    // pages with sign_up off) must not open idle sockets.
+    if (!attendeeListEl && !document.getElementById('attendees')) {
+        return;
+    }
+
     let socket = null;
+    let reconnectTimer = null;
     let reconnectDelay = 1000;
     let closedByPage = false;
 
     function connect() {
+        if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+        }
+        // Single-flight: never stack a second socket on an open/connecting
+        // one (a pending pageshow or retry timer can race a live socket).
+        if (socket && (socket.readyState === WebSocket.CONNECTING || socket.readyState === WebSocket.OPEN)) {
+            return;
+        }
         socket = new WebSocket(ws_url);
 
         socket.onmessage = function(e) {
@@ -50,7 +67,15 @@ $(function() {
         };
 
         socket.onopen = function() {
-            reconnectDelay = 1000;
+            const opened = socket;
+            // Reset the backoff only once the connection has proven stable: a
+            // worker that accepts and then dies (rolling deploy, crash loop)
+            // must keep backing off instead of retrying every second.
+            setTimeout(function() {
+                if (opened.readyState === WebSocket.OPEN) {
+                    reconnectDelay = 1000;
+                }
+            }, 5000);
         };
 
         socket.onclose = function() {
@@ -60,8 +85,10 @@ $(function() {
             // Worker recycling, deploys and network blips close the socket;
             // keep the live list refreshing instead of going stale silently.
             // Retry with capped exponential backoff (1s doubling to 30s).
+            // Broadcasts received while disconnected are not replayed and the
+            // local row counter is not re-based: reload the page to resync.
             console.warn('Event socket closed; reconnecting in ' + reconnectDelay + 'ms');
-            setTimeout(connect, reconnectDelay);
+            reconnectTimer = setTimeout(connect, reconnectDelay);
             reconnectDelay = Math.min(reconnectDelay * 2, 30000);
         };
 
@@ -75,7 +102,9 @@ $(function() {
     // Stop retrying once the page is being left.
     window.addEventListener('beforeunload', function() {
         closedByPage = true;
-        socket.close();
+        if (socket) {
+            socket.close();
+        }
     });
 
     // Back/forward cache restore keeps the page alive but the socket died

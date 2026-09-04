@@ -46,9 +46,12 @@
 - Websocket notifications: `ws_send(slug, form, public_info)` broadcasts new
   registrations (except during tests). The slug is derived from the parent event
   if present. The client (`static/common/core/js/live-attendee-list.js`)
-  auto-reconnects with capped exponential backoff (1s doubling to 30s) after a
-  close or error, so worker recycling, deploys and network blips do not leave
-  the live list stale.
+  auto-reconnects with capped exponential backoff (1s doubling to 30s, reset
+  only after a connection has stayed open) after a close or error, so worker
+  recycling, deploys and network blips do not leave the live list stale.
+  Broadcasts received while disconnected are not replayed and the row counter
+  is local, so the list can show gaps after a longer outage until the page is
+  reloaded.
 - Billing hook: when `settings.EXPERIMENTAL_FEATURES` contains `event_billing`,
   `billing.handlers.handle_event_billing()` runs after a successful signup to
   generate invoices or send confirmations.
