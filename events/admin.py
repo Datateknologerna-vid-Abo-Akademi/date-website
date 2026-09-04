@@ -111,7 +111,7 @@ class EventAttendeesForm(ModelForm):
         # Skip the constraint here; EventAttendeesInlineFormSet renumbers in
         # one atomic pass and the database constraint still guards the final
         # state. The (event, email) unique_together check stays active, and
-        # the smallint range is still enforced by the database column.
+        # the positive integer range is still enforced by the database column.
         exclude.add('attendee_nr')
         return exclude
 
@@ -142,8 +142,7 @@ class EventAttendeesInlineFormSet(BaseInlineFormSet):
     def _shift_attendee_nrs(self):
         # Band values are k*10+5: never a multiple of 10, so they cannot
         # collide with real or final values (all multiples of 10), and they
-        # stay within the smallint range for any event whose numbers fit
-        # (k*10+5 <= 32755 for the 3276-row step-10 ceiling).
+        # stay within the positive integer range for any practical event.
         rows = list(
             EventAttendees.objects.filter(event=self.instance)
             .order_by('attendee_nr', 'pk')

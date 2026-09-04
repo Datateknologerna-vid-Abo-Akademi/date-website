@@ -6,7 +6,7 @@ from datetime import timedelta
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import connections, models, router
 from django.db.models import JSONField, Max
 from django.template.defaulttags import register
 from django.urls import reverse
@@ -67,6 +67,7 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
     event_date_end = models.DateTimeField(_('Slutdatum'), default=now)
     sign_up_max_participants = models.IntegerField(_('Maximal antal deltagare (0 för ingen begränsning)'), default=0)
     sign_up = models.BooleanField(_('Anmälning'), default=True)
+    attendee_nr_counter = models.PositiveBigIntegerField(default=0, editable=False)
     sign_up_members = models.DateTimeField(_('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=now)
     sign_up_others = models.DateTimeField(_('Anmälan öppnas (övriga)'), null=True, blank=True, default=now)
     sign_up_deadline = models.DateTimeField(_('Anmälningen stängs'), null=True, blank=True, default=now)
@@ -156,6 +157,47 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
 
     def get_highest_attendee_nr(self):
         return EventAttendees.objects.filter(event=self).aggregate(Max('attendee_nr'))
+
+    def reserve_attendee_nrs(self, count=1):
+        if count < 1:
+            raise ValueError('count must be positive')
+
+        db_alias = self._state.db or router.db_for_write(type(self), instance=self)
+        connection = connections[db_alias]
+        table = connection.ops.quote_name(self._meta.db_table)
+        attendee_table = connection.ops.quote_name(EventAttendees._meta.db_table)
+        counter = connection.ops.quote_name('attendee_nr_counter')
+        pk_column = connection.ops.quote_name(self._meta.pk.column)
+        attendee_event_column = connection.ops.quote_name(EventAttendees._meta.get_field('event').column)
+        attendee_nr_column = connection.ops.quote_name(EventAttendees._meta.get_field('attendee_nr').column)
+        greatest = 'MAX' if connection.vendor == 'sqlite' else 'GREATEST'
+        increment = count * 10
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f'''
+                UPDATE {table}
+                SET {counter} = (
+                    {greatest}(
+                        {counter},
+                        COALESCE(
+                            (SELECT MAX({attendee_nr_column}) FROM {attendee_table}
+                             WHERE {attendee_event_column} = %s),
+                            0
+                        )
+                    ) / 10
+                ) * 10 + %s
+                WHERE {pk_column} = %s
+                RETURNING {counter}
+                ''',  # noqa: S608
+                [self.pk, increment, self.pk],
+            )
+            row = cursor.fetchone()
+        if row is None:
+            raise type(self).DoesNotExist(f'Event {self.pk} no longer exists')
+
+        end = row[0]
+        self.attendee_nr_counter = end
+        return list(range(end - increment + 10, end + 1, 10))
 
     def cancel_event_attendance(self, user):
         if self.sign_up:
@@ -431,7 +473,7 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
 
 class EventAttendees(models.Model):  # type: ignore[django-manager-missing]
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
-    attendee_nr = models.PositiveSmallIntegerField(_('#'), blank=True)
+    attendee_nr = models.PositiveBigIntegerField(_('#'), blank=True)
     user = models.CharField(_('Namn'), blank=False, max_length=255)
     email = models.EmailField(  # noqa: DJ001
         _('E-postadress'), blank=False, null=True, unique=False
@@ -479,12 +521,7 @@ class EventAttendees(models.Model):  # type: ignore[django-manager-missing]
 
     def save(self, *args, **kwargs):  # noqa: DJ012
         if self.attendee_nr is None:
-            # attendee_nr increments by 10, e.g 10,20,30,40...
-            # this is needed so the admin sorting library will work.
-            self.attendee_nr = (self.event.get_registrations().count() + 1) * 10
-            # Add ten from highest attendee_nr so signups dont get in weird order after deletions.
-            if self.event.get_highest_attendee_nr().get('attendee_nr__max'):
-                self.attendee_nr = self.event.get_highest_attendee_nr().get('attendee_nr__max') + 10
+            self.attendee_nr = self.event.reserve_attendee_nrs()[0]
         if self.time_registered is None:
             self.time_registered = now()
         if isinstance(self.preferences, list):
