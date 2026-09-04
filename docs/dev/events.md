@@ -45,7 +45,10 @@
   Turnstile responses in `cf-turnstile-response`.
 - Websocket notifications: `ws_send(slug, form, public_info)` broadcasts new
   registrations (except during tests). The slug is derived from the parent event
-  if present.
+  if present. The client (`static/common/core/js/live-attendee-list.js`)
+  auto-reconnects with capped exponential backoff (1s doubling to 30s) after a
+  close or error, so worker recycling, deploys and network blips do not leave
+  the live list stale.
 - Billing hook: when `settings.EXPERIMENTAL_FEATURES` contains `event_billing`,
   `billing.handlers.handle_event_billing()` runs after a successful signup to
   generate invoices or send confirmations.
