@@ -4,10 +4,17 @@ $(function() {
     // for HTTPS also use WSS.
     const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
 
-    let ws_url = ws_scheme + '://' + window.location.host + '/ws' + window.location.pathname;
+    const attendeeListEl = document.getElementById('attendee-list');
+    const parentSlug = attendeeListEl ? attendeeListEl.dataset.parentSlug : '';
 
-    if (document.getElementById('attendee-list').dataset.parentSlug) {
-        ws_url = ws_scheme + '://' + window.location.host + '/ws/' + document.getElementById('attendee-list').dataset.parentSlug + '/';
+    // Child events store their attendees on the parent and ws_send broadcasts
+    // to the parent slug's group, so both branches must hit the single
+    // ws/events/<slug>/ route (event routing only knows that path).
+    let ws_url;
+    if (parentSlug) {
+        ws_url = ws_scheme + '://' + window.location.host + '/ws/events/' + parentSlug + '/';
+    } else {
+        ws_url = ws_scheme + '://' + window.location.host + '/ws' + window.location.pathname;
     }
 
     let socket = null;
@@ -69,6 +76,17 @@ $(function() {
     window.addEventListener('beforeunload', function() {
         closedByPage = true;
         socket.close();
+    });
+
+    // Back/forward cache restore keeps the page alive but the socket died
+    // with the freeze; resume updates instead of staying permanently closed
+    // (closedByPage is still set from the beforeunload that preceded it).
+    window.addEventListener('pageshow', function() {
+        closedByPage = false;
+        if (!socket || socket.readyState === WebSocket.CLOSED) {
+            reconnectDelay = 1000;
+            connect();
+        }
     });
 
 });
