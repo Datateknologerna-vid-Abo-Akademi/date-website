@@ -17,10 +17,10 @@ $(function() {
         ws_url = ws_scheme + '://' + window.location.host + '/ws' + window.location.pathname;
     }
 
-    // Only run where there is an attendee table to update (event pages with
-    // signup). Templates without the list markup (kk100 index pages, detail
-    // pages with sign_up off) must not open idle sockets.
-    if (!attendeeListEl && !document.getElementById('attendees')) {
+    // Only run where there is an attendee table to update. The #attendee-list
+    // wrapper also renders without a table (signup closed, list hidden for old
+    // events, kk100 index/anmalan pages), so the table itself is the gate.
+    if (!document.getElementById('attendees')) {
         return;
     }
 
@@ -30,6 +30,9 @@ $(function() {
     let closedByPage = false;
 
     function connect() {
+        if (closedByPage) {
+            return;
+        }
         if (reconnectTimer) {
             clearTimeout(reconnectTimer);
             reconnectTimer = null;
@@ -102,6 +105,10 @@ $(function() {
     // Stop retrying once the page is being left.
     window.addEventListener('beforeunload', function() {
         closedByPage = true;
+        if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+        }
         if (socket) {
             socket.close();
         }

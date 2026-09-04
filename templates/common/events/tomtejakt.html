@@ -79,7 +79,9 @@
           <h2 id="sign-up">{% trans "Anmälning" %}</h2>
           {% include 'events/registration_state.html' %}
         </div>
-        <div class="content overflow-auto">
+        <div id="attendee-list"
+             class="content overflow-auto"
+             data-parent-slug="{{ event.parent.slug|default:'' }}">
           {% if event|show_attendee_list %}
             {% if event.sign_up_max_participants != 0 %}<p>{{ event.remaining_places|localized_remaining_places }}</p>{% endif %}
             <h2>{% trans "Anmälda" %}</h2>
