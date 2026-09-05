@@ -13,8 +13,36 @@ html body{
 }
 
 .association-footer-brand .footer-img {
-    max-height: 150px;
+    max-height: 160px;
     object-fit: contain;
+}
+
+.footer-partner-logo svg {
+    max-height: 155px;   /* was 155px — this is the one knob to eyeball-tune */
+    max-width: 100%;    /* prevents overflow on narrow windows, see earlier fix */
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.footer-partner-link {
+    display: inline-block;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.footer-partner-link:hover {
+    transform: scale(1.03);
+    opacity: 0.75;
+}
+
+.footer-credit-link {
+    transition: opacity 0.2s, filter 0.2s;
+}
+
+.footer-credit-link:hover {
+    opacity: 0.85;
+    color: var(--linkColorLightHover) !important;
+    filter: drop-shadow(0 0 8px var(--linkColorLightHover)) drop-shadow(0 0 16px var(--linkColorLight));
 }
 
 .content img{
@@ -24,6 +52,17 @@ html body{
     width: auto !important;
     height: auto !important;
     border-radius: var(--defaultRadius);
+}
+
+/* Only images the editor wrapped in a link (CKEditor: image -> link
+ * properties) get the hover effect, same as the footer partner logo. */
+.content a img {
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.content a:hover img {
+    transform: scale(1.03);
+    opacity: 0.75;
 }
 
 /* Link colors */
@@ -122,7 +161,12 @@ div a:hover{
     .association-footer-brand .footer-img {
         margin-left: 8px;
     }
+
+    .footer-partner-logo svg {
+        max-height: 120px; /* tune by eye to match the Impuls logo's visual size on mobile */
+    }
 }
+
 
 /* Basic table colors */
 table.table {

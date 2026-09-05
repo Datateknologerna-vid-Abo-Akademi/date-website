@@ -1,7 +1,34 @@
 {% extends "core/footer.html" %}
 {% load static %}
+{% load i18n %}
 {% block footer_logo %}
   <img class="footer-img img-fluid"
        alt="{{ ASSOCIATION_NAME_FULL }} logo"
        src="{% static 'core/images/impuls-logo-transparent.png' %}">
+{% endblock %}
+{% block footer_right %}
+  <div class="col-12 col-md-4 text-center footer-partner-logo">
+    <a class="footer-partner-link"
+       href="https://psykologianopiskelijat.com/"
+       target="_blank"
+       rel="noopener"
+       aria-label="SPOL ry logo">{% include "svg/uuslogo.svg" %}</a>
+  </div>
+{% endblock %}
+{% block extra_footer %}
+  <p class="text-center mb-2 mt-3">
+    <small>{% trans "Website developed and maintained by" %}  <a class="footer-credit-link"
+     href="https://datateknologerna.org/"
+     target="_blank"
+     rel="noopener">DaTe</a>
+      <br>
+      <a class="footer-credit-link"
+         href="https://datateknologerna.org/"
+         target="_blank"
+         rel="noopener">
+        <img src="{% static 'core/images/Sp_Albin.png' %}"
+             alt="DaTe logo"
+             style="max-height: 40px">
+      </a></small>
+    </p>
 {% endblock %}
