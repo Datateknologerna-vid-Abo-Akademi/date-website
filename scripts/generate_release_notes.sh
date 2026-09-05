@@ -1,18 +1,21 @@
 #!/bin/bash
-# Generate GitHub release notes from the conventional-commit titles of
-# squash-merged pull requests between two release tags.
+# Generate GitHub release notes for squash-merged pull requests between
+# two release tags.
 #
 # Requires a checkout with the full tag history (actions/checkout with
 # fetch-depth: 0), the gh CLI authenticated for the repository, and jq.
 #
-# Every squash merge lands on main as one commit whose subject is the PR
-# title at merge time. That subject drives the release notes: its
-# conventional-commit prefix (feat, fix, docs, dependency scopes,
-# maintenance types) decides the section, mirroring the previous
-# label-based release notes, so PRs do not need category labels. PRs
-# labeled "ignore-for-release" are skipped. Each commit is matched to its
-# pull request through the GitHub API for the number, author, and labels;
-# the PR title itself is not used, so titles edited after the merge do not
+# Each merged PR lands on main as one commit whose subject is the PR
+# title at merge time. A PR is categorized by its release-category labels
+# when it carries them (feature/enhancement -> Added, bug/fix -> Fixed,
+# documentation/docs -> Documentation, dependencies -> Dependencies,
+# chore/refactor -> Maintenance, mirroring the old label-based notes);
+# otherwise the conventional-commit prefix of the merge subject decides
+# the section (feat, fix, docs, dependency scopes, maintenance types), so
+# unlabeled PRs still land in the right place. PRs labeled
+# "ignore-for-release" are skipped. Each commit is matched to its pull
+# request through the GitHub API for the number, author, and labels; the
+# PR title itself is not used, so titles edited after the merge do not
 # rewrite the release history. Commits that cannot be matched to a pull
 # request (for example direct pushes) fall back to their commit subject.
 #
@@ -73,6 +76,23 @@ for SHA in "${COMMITS[@]}"; do
         continue
     fi
 
+    SECTION=""
+    if [ -n "${LABELS}" ]; then
+        IFS=',' read -r -a PR_LABELS <<< "${LABELS}"
+        for PR_LABEL in "${PR_LABELS[@]}"; do
+            case "${PR_LABEL}" in
+                feature|enhancement) SECTION="added" ;;
+                bug|fix) SECTION="fixed" ;;
+                documentation|docs) SECTION="documentation" ;;
+                dependencies) SECTION="dependencies" ;;
+                chore|refactor|maintenance) SECTION="maintenance" ;;
+            esac
+            if [ -n "${SECTION}" ]; then
+                break
+            fi
+        done
+    fi
+
     TITLE="${SUBJECT}"
     if [ -n "${NUMBER}" ]; then
         TITLE="$(sed -E 's/[[:space:]]+\(#[0-9]+\)$//' <<<"${SUBJECT}")"
@@ -88,26 +108,37 @@ for SHA in "${COMMITS[@]}"; do
         ITEM="* ${TITLE}"
     fi
 
-    TYPE=""
-    SCOPE=""
-    if [[ "${TITLE}" =~ ^([A-Za-z][A-Za-z0-9-]*)(\(([A-Za-z0-9_.-]+)\))?(!)?:[[:space:]]*(.*)$ ]]; then
-        TYPE="${BASH_REMATCH[1],,}"
-        SCOPE="${BASH_REMATCH[3],,}"
+    if [ -z "${SECTION}" ]; then
+        TYPE=""
+        SCOPE=""
+        if [[ "${TITLE}" =~ ^([A-Za-z][A-Za-z0-9-]*)(\(([A-Za-z0-9_.-]+)\))?(!)?:[[:space:]]*(.*)$ ]]; then
+            TYPE="${BASH_REMATCH[1],,}"
+            SCOPE="${BASH_REMATCH[3],,}"
+        fi
+
+        if [ "${SCOPE}" = "deps" ] || [ "${SCOPE}" = "deps-dev" ] || [ "${TYPE}" = "deps" ]; then
+            SECTION="dependencies"
+        elif [ "${TYPE}" = "feat" ] || [ "${TYPE}" = "feature" ]; then
+            SECTION="added"
+        elif [ "${TYPE}" = "fix" ]; then
+            SECTION="fixed"
+        elif [ "${TYPE}" = "docs" ]; then
+            SECTION="documentation"
+        elif [[ "${TYPE}" =~ ^(build|chart|chore|ci|devx|docker|k8s|perf|refactor|revert|security|style|test)$ ]]; then
+            SECTION="maintenance"
+        else
+            SECTION="other"
+        fi
     fi
 
-    if [ "${SCOPE}" = "deps" ] || [ "${SCOPE}" = "deps-dev" ] || [ "${TYPE}" = "deps" ]; then
-        DEPENDENCIES+=("${ITEM}")
-    elif [ "${TYPE}" = "feat" ] || [ "${TYPE}" = "feature" ]; then
-        ADDED+=("${ITEM}")
-    elif [ "${TYPE}" = "fix" ]; then
-        FIXED+=("${ITEM}")
-    elif [ "${TYPE}" = "docs" ]; then
-        DOCUMENTATION+=("${ITEM}")
-    elif [[ "${TYPE}" =~ ^(build|chart|chore|ci|devx|docker|k8s|perf|refactor|revert|security|style|test)$ ]]; then
-        MAINTENANCE+=("${ITEM}")
-    else
-        OTHER+=("${ITEM}")
-    fi
+    case "${SECTION}" in
+        added) ADDED+=("${ITEM}") ;;
+        fixed) FIXED+=("${ITEM}") ;;
+        documentation) DOCUMENTATION+=("${ITEM}") ;;
+        dependencies) DEPENDENCIES+=("${ITEM}") ;;
+        maintenance) MAINTENANCE+=("${ITEM}") ;;
+        *) OTHER+=("${ITEM}") ;;
+    esac
 done
 
 section() {
