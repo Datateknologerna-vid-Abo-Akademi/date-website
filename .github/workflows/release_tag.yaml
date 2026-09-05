@@ -152,18 +152,19 @@ jobs:
             exit 0
           fi
 
-          ARGS=(
-            "${NEXT_TAG}"
-            --title "${NEXT_TAG}"
-            --verify-tag
-            --generate-notes
-          )
+          NOTES_FILE="$(mktemp)"
+          ./scripts/generate_release_notes.sh "${LAST_TAG}" "${NEXT_TAG}" > "${NOTES_FILE}"
 
-          if [ "${LAST_TAG}" != "none" ]; then
-            ARGS+=(--notes-start-tag "${LAST_TAG}")
-          fi
+          {
+            echo "## Generated release notes"
+            echo ""
+            cat "${NOTES_FILE}"
+          } >> "${GITHUB_STEP_SUMMARY}"
 
-          gh release create "${ARGS[@]}"
+          gh release create "${NEXT_TAG}" \
+            --title "${NEXT_TAG}" \
+            --verify-tag \
+            --notes-file "${NOTES_FILE}"
 
       - name: Dispatch Docker release tagging workflow
         env:
