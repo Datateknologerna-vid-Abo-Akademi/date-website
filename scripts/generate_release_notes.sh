@@ -37,11 +37,18 @@ NEXT_REF="${2:-HEAD}"
 
 REPO="${GITHUB_REPOSITORY:-}"
 if [ -z "${REPO}" ]; then
-    REPO="$(git remote get-url origin | sed -E 's#.*github\.com[:/]([^/:]+/[^/.]+)(\.git)?$#\1#')"
+    REMOTE="$(git remote get-url origin)"
+    REMOTE="${REMOTE#*github.com}"
+    REMOTE="${REMOTE#[:/]}"
+    REPO="${REMOTE%.git}"
+fi
+if [[ ! "${REPO}" =~ ^[^/]+/[^/]+$ ]]; then
+    echo "error: could not determine owner/repo (got '${REPO}')" >&2
+    exit 1
 fi
 
 if [ "${LAST_TAG}" = "none" ]; then
-    mapfile -t COMMITS < <(git log --first-parent --format='%H')
+    mapfile -t COMMITS < <(git log --first-parent --format='%H' "${NEXT_REF}")
 else
     mapfile -t COMMITS < <(git log --first-parent --format='%H' "${LAST_TAG}..${NEXT_REF}")
 fi
@@ -62,14 +69,15 @@ for SHA in "${COMMITS[@]}"; do
     AUTHOR=""
     LABELS=""
 
-    PR_JSON="$(gh api "repos/${REPO}/commits/${SHA}/pulls" 2>/dev/null || true)"
-    if [ -n "${PR_JSON}" ]; then
-        COUNT="$(jq -r 'if type == "array" then length else 0 end' <<<"${PR_JSON}")"
-        if [ "${COUNT}" -gt 0 ]; then
-            NUMBER="$(jq -r '.[0].number' <<<"${PR_JSON}")"
-            AUTHOR="$(jq -r '.[0].user.login // empty' <<<"${PR_JSON}")"
-            LABELS="$(jq -r '[.[0].labels[].name] | join(",")' <<<"${PR_JSON}")"
-        fi
+    if ! PR_JSON="$(gh api "repos/${REPO}/commits/${SHA}/pulls")"; then
+        echo "error: could not look up the pull request for commit ${SHA} (${SUBJECT})" >&2
+        exit 1
+    fi
+    COUNT="$(jq -r 'if type == "array" then length else 0 end' <<<"${PR_JSON}")"
+    if [ "${COUNT}" -gt 0 ]; then
+        NUMBER="$(jq -r '.[0].number' <<<"${PR_JSON}")"
+        AUTHOR="$(jq -r '.[0].user.login // empty' <<<"${PR_JSON}")"
+        LABELS="$(jq -r '[.[0].labels[].name] | join(",")' <<<"${PR_JSON}")"
     fi
 
     if [[ ",${LABELS}," == *",ignore-for-release,"* ]]; then

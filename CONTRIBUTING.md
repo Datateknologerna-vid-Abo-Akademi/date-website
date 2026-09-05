@@ -8,7 +8,7 @@ Keep it simple.
 - Run the relevant tests and checks for your change.
 - Update docs or config examples if your change affects them.
 - **Squash merge into `main`**. A feature, fix, docs change, or cleanup branch should normally land as one commit on `main`.
-- Give the pull request title a conventional-commit prefix (`feat:`, `fix:`, `docs:`, `ci:`, `build(deps):`, ...). Release notes are grouped from these prefixes, so the prefix decides which section the change appears under. A release-category label (`bug`, `feature`, `docs`, `dependencies`, `chore`, `refactor`) still takes precedence when applied. Add the `ignore-for-release` label if a PR should stay out of the release notes.
+- Give the pull request title a conventional-commit prefix (`feat:`, `fix:`, `docs:`, `ci:`, `build(deps):`, ...). Release notes are grouped from these prefixes as recorded on `main` when the PR is squash-merged, so the prefix decides which section the change appears under. A release-category label (`bug`, `feature`, `docs`, `dependencies`, `chore`, `refactor`) still takes precedence when applied. Add the `ignore-for-release` label if a PR should stay out of the release notes.
 
 By contributing, you agree that your software source code contributions are
 licensed under this repository's AGPL-3.0-or-later software license. Non-code
