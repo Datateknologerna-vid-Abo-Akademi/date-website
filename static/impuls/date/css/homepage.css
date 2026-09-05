@@ -317,11 +317,15 @@ div.news-content a:hover{
 }
 
 .more-news{
-    color: var(--linkColorDark);
+    /* Sits directly on the navy page background, not a white card, so this
+     * uses --linkColorDeepHover rather than --linkColorDeep: the fully dark
+     * shade only clears ~1.6:1 contrast here, well under WCAG's 3:1 minimum
+     * for text. --linkColorDeepHover already clears 3.8:1. */
+    color: var(--linkColorDeepHover);
 }
 
 .more-news:hover{
-    color: var(--linkColorDarkHover);
+    color: #7f95b4; /* one step lighter still, ~6.2:1 on navy */
 }
 
 .news-header{
@@ -407,18 +411,18 @@ div.news-content a:hover{
   }
   
 .event-card a{
-    color: var(--linkColorDark);
-    border-top: 2px solid var(--linkColorDark);
+    color: var(--linkColorDeep);
+    border-top: 2px solid var(--linkColorDeep);
   }
-  
+
 .event-card a:active{
-    color: var(--linkColorDark);
+    color: var(--linkColorDeep);
   }
-  
+
 .event-card a:hover{
     background-color: inherit;
-    border-top: 2px solid var(--linkColorDarkHover);
-    color: var(--linkColorDarkHover);
+    border-top: 2px solid var(--linkColorDeepHover);
+    color: var(--linkColorDeepHover);
   }
   
 .event-card a:focus{
@@ -506,13 +510,13 @@ div.news-content a:hover{
 
 .more-events-button{
     display: inline-block;
-    color: var(--linkColorDark)
+    color: var(--linkColorLight)
 }
 
 .more-events-button:hover{
     transition: 0.2s;
     scale: 1.01;
-    color: var(--linkColorDarkHover);
+    color: var(--linkColorLightHover);
 }
 /*Events end*/
 
@@ -563,13 +567,17 @@ div.calendar-container a {
   box-shadow: 0 0 0 0;
 }
 
-.vanilla-calendar-day__btn_today {
+/* "Today" only gets its own highlight when it has no event that day —
+ * matching the site's own background makes it read as an absence of the
+ * usual white day-circle rather than a competing color. When an event
+ * also lands on today, .calendar-eventday below takes over instead. */
+.vanilla-calendar-day__btn_today:not(.calendar-eventday) {
     color: var(--textColorLight) !important;
-    background-color: #545454 !important;
+    background-color: var(--primaryColor) !important;
 }
 
-.vanilla-calendar-day__btn_today:hover {
-    background-color: #282828 !important;
+.vanilla-calendar-day__btn_today:not(.calendar-eventday):hover {
+    background-color: var(--primaryColorLighte) !important;
 }
 
 .vanilla-calendar-day__btn_selected {
@@ -595,22 +603,22 @@ div.calendar-container a {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
   color: white !important;
-  background-color: var(--linkColorDark) !important;
+  background-color: var(--linkColorDeep) !important;
 }
 
 .calendar-eventday:hover {
-    background-color: var(--linkColorDarkHover) !important;
+    background-color: var(--linkColorDeepHover) !important;
 }
 
 .calendar-eventday-popup {
   /* Override vanilla calendar default
    * Dont use this class for anything else*/
-  color: var(--linkColorDark);
+  color: var(--linkColorDeep);
   font-size: 0.75rem;
 }
 
 .calendar-eventday-popup:hover {
-    color: var(--linkColorDarkHover);
+    color: var(--linkColorDeepHover);
 }
 
 /*Calendar end*/

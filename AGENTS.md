@@ -133,6 +133,7 @@ Do not commit real secrets, production bucket names, API keys, or filled product
 - `core.fields.PublicFileField` picks public S3 storage only when `USE_S3=True`; otherwise it behaves like a normal file field.
 - Public/archive/publication file deletion logic has local-vs-S3 branches. Check the app guide before changing delete behavior.
 - Do not run `seed_gallery` with `USE_S3=True`; the command refuses because it would upload fake images to S3.
+- Forms that accept uploads (gallery, exam bank, archive) can use `core.upload_widgets.DirectUploadField` to PUT files straight to S3-compatible storage via a presigned URL instead of routing the body through the web process; it degrades to a classic file input when direct uploads are disabled or the Uppy bundle fails to load. See `docs/dev/uploads.md` before changing upload forms or the `core.uploads` signing/finalize endpoints.
 
 ## Translations
 
@@ -166,10 +167,13 @@ django-admin compilemessages
 - `ctf`: seasonal CTFs, flags, guesses, and solving flow.
 - `date`: homepage composition, calendar data, language switching, middleware, error views.
 - `events`: events, dynamic registration forms, capacity/sign-up windows, passcodes, captcha, child events, WebSocket attendee updates.
-- `lucia`: candidate pages and admin-managed seasonal content.
+- `exambank`: exam archive collections and files (replaced `archive.Collection(type="Exams")`); own sign-in/password access gate shared across `archive`, `exambank.archive_urls`, and `exambank.urls`.
 - `functionaries`: yearly functionary roles and assignments, member self-service history, public functionary listing.
+- `gallery`: photo albums and uploads (replaced `archive.Collection(type="Pictures")`); compresses/converts images, including HEIC/HEIF, on save.
 - `harassment`: harassment report form, stored submissions, recipient list, and notification emails.
 - `instagram`: Instagram embed URLs used on the home page.
+- `klotterplanket`: public anonymous "scribble board" posts with captcha-gated submission.
+- `lucia`: candidate pages and admin-managed seasonal content.
 - `members`: custom user model, membership/subscription state, auth, two-factor, GitHub login.
 - `news`: posts, categories, feeds, homepage/news listing behavior.
 - `polls`: questions, choices, votes, membership-aware vote validation.

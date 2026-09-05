@@ -21,6 +21,8 @@
     --linkColorDarkHover: #00102E;
     --linkColorLight: #eeee22;
     --linkColorLightHover: #ffff77;
+    --linkColorDeep: #0a3570;
+    --linkColorDeepHover: #54729b;
     --warning: rgb(216, 153, 146);
     --warning-darker: rgb(213, 91, 78);
     --navClickHighlight: rgba(255, 255, 255, 0.25);
