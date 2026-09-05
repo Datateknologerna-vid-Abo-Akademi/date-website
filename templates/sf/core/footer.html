@@ -73,7 +73,23 @@
       </div>
     </div>
     <!-- Copyright -->
-    {% block extra_footer %}{% endblock %}
+    {% block extra_footer %}
+      <p class="text-center mb-2 mt-3">
+        <small>{% trans "Website developed and maintained by" %}  <a class="footer-credit-link"
+     href="https://datateknologerna.org/"
+     target="_blank"
+     rel="noopener">DaTe</a>
+          <br>
+          <a class="footer-credit-link"
+             href="https://datateknologerna.org/"
+             target="_blank"
+             rel="noopener">
+            <img src="{% static 'core/images/Sp_Albin.png' %}"
+                 alt="DaTe logo"
+                 style="max-height: 40px">
+          </a></small>
+        </p>
+    {% endblock %}
     <div class="text-center p-3">&copy; {% now "Y" %}</div>
     <!-- Copyright -->
     <!-- Grid container -->
