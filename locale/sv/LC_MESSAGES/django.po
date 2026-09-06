@@ -2422,11 +2422,11 @@ msgstr "Impuls"
 
 #: templates/impuls/date/components/about.html:8
 msgid ""
-"Impuls rf är ämnesföreningen för psykologi vid Åbo Akademi. Föreningen "
+"Impuls r.f. är ämnesföreningen för psykologi vid Åbo Akademi. Föreningen "
 "strävar efter att förbättra och fördjupa undervisningen i psykologi, samt "
 "öka samvaron och trivseln för våra psykologistuderande."
 msgstr ""
-"Impuls rf är ämnesföreningen för psykologi vid Åbo Akademi. Föreningen "
+"Impuls r.f. är ämnesföreningen för psykologi vid Åbo Akademi. Föreningen "
 "strävar efter att förbättra och fördjupa undervisningen i psykologi, samt "
 "öka samvaron och trivseln för våra psykologistuderande."
 

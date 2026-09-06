@@ -21,6 +21,12 @@
     --linkColorDarkHover: #00102E;
     --linkColorLight: #eeee22;
     --linkColorLightHover: #ffff77;
+    --linkColorDeep: #0a3570;
+    --linkColorDeepHover: #54729b;
+    /* One step lighter than --linkColorDeepHover; only readable-on-navy
+     * shade in this family, used for text sitting directly on the page
+     * background rather than a white card (see .more-news). */
+    --linkColorDeepLight: #7f95b4;
     --warning: rgb(216, 153, 146);
     --warning-darker: rgb(213, 91, 78);
     --navClickHighlight: rgba(255, 255, 255, 0.25);
