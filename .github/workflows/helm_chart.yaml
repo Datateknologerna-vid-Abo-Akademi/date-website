@@ -124,6 +124,20 @@ jobs:
           [ "${a}" != "${b}" ] || { echo "sanitization collision: ${a} == ${b}"; exit 1; }
           echo "collision pair distinct: ${a} != ${b}"
 
+      - name: Check migration database route
+        run: |
+          set -euo pipefail
+          rendered="$(helm template ci "${CHART_PATH}" \
+            --set secret.existingSecret=ci-secrets \
+            --set postgresql.enabled=false \
+            --set database.external.host=pool.internal \
+            --set migrations.job.enabled=true \
+            --set migrations.job.databaseHost=postgres.internal \
+            --set migrations.job.databasePort=6432)"
+          grep -q 'DB_HOST: "pool.internal"' <<<"${rendered}"
+          grep -A1 -- '- name: DB_HOST' <<<"${rendered}" | grep -q 'value: "postgres.internal"'
+          grep -A1 -- '- name: DB_PORT' <<<"${rendered}" | grep -q 'value: "6432"'
+
       - name: Package chart
         id: package
         run: |

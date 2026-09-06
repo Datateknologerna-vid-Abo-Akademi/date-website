@@ -304,9 +304,14 @@ pdb:
 migrations:
   job:
     enabled: false
+    # Optional direct database endpoint for schema migrations when application
+    # traffic uses a transaction pooler such as PgBouncer. Empty falls back to
+    # database.external.host/port.
+    databaseHost: ""
+    databasePort: 5432
     # Helm hook lifecycle (post-install,post-upgrade), or empty for a plain
     # Job tracked by GitOps. Plain Jobs get a name suffixed with the pinned
-    # image tag + a short hash of the tag/digest pair and run under Argo
+    # image tag + a short hash of the tag/digest/chart-version tuple and run under Argo
     # sync waves, which guarantees
     # migration completion before application pods start; they must NOT set
     # ttlSecondsAfterFinished, because Argo keeps the completed Job as
