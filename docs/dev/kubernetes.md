@@ -83,12 +83,21 @@ Migrations run as a single migration Job per release. Two modes:
   the web/celery Deployments (`.Values.<component>.annotations`).
   Argo then runs migrations to completion before rolling the application.
   The Job gets a name suffixed with the sanitized tag + a short hash of the
-  tag/digest pair (kept under 63 bytes: Kubernetes mirrors the Job name
+  tag/digest/chart-version tuple (kept under 63 bytes: Kubernetes mirrors the Job name
   into a pod-template label), stays completed as desired state (no TTL),
   and the previous image's Job is pruned on the next sync. (Helm's
   Release.Revision cannot suffix the name: Argo CD renders it as 1, so the
   name would never change and the second sync would fail on the immutable
-  Job pod template.)
+  Job pod template.) Including the chart version also makes chart-only changes
+  create a fresh Job instead of trying to mutate the completed Job.
+
+When runtime database traffic uses a transaction pooler, set
+`migrations.job.databaseHost` and `migrations.job.databasePort` to a direct
+PostgreSQL endpoint. These values override `DB_HOST`/`DB_PORT` only in the
+migration Job; web and celery continue using `database.external`. Leaving the
+migration host empty preserves the existing behavior. Direct routing protects
+schema migrations that need session-level PostgreSQL state from transaction
+pooling semantics.
 
 Never enable `web.migrateOnStartup` in production: it couples schema
 mutation to pod readiness, re-runs on every pod restart, and races when the

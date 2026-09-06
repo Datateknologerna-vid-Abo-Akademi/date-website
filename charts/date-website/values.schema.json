@@ -447,6 +447,14 @@
             "enabled": {
               "type": "boolean"
             },
+            "databaseHost": {
+              "type": "string"
+            },
+            "databasePort": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535
+            },
             "hook": {
               "type": "string"
             },
