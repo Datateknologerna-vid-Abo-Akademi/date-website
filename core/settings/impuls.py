@@ -40,7 +40,7 @@ STATICFILES_DIRS = build_static_dirs('impuls')
 CONTENT_VARIABLES = {
     "SITE_URL": "https://example.com",
     "ASSOCIATION_NAME": "Impuls",
-    "ASSOCIATION_NAME_FULL": "Impuls",
+    "ASSOCIATION_NAME_FULL": "Impuls r.f.",
     "ASSOCIATION_NAME_SHORT": "Impuls",
     "EVENT_TEMPLATE_LOGO": "core/images/impuls-logo.png",
     "ASSOCIATION_EMAIL": "impuls@abo.fi",

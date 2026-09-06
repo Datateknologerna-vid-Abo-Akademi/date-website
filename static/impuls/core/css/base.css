@@ -18,8 +18,8 @@ html body{
 }
 
 .footer-partner-logo svg {
-    max-height: 155px;   /* was 155px — this is the one knob to eyeball-tune */
-    max-width: 100%;    /* prevents overflow on narrow windows, see earlier fix */
+    max-height: 155px;
+    max-width: 100%;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -48,14 +48,12 @@ html body{
 .content img{
     max-height: 35vh;
     max-width: 100%;
-    /* keep img ratio correct */
     width: auto !important;
     height: auto !important;
     border-radius: var(--defaultRadius);
 }
 
-/* Only images the editor wrapped in a link (CKEditor: image -> link
- * properties) get the hover effect, same as the footer partner logo. */
+
 .content a img {
     transition: transform 0.2s, opacity 0.2s;
 }
@@ -63,6 +61,17 @@ html body{
 .content a:hover img {
     transform: scale(1.03);
     opacity: 0.75;
+}
+
+.content a img.editor-img-no-hover,
+.content figure.editor-img-no-hover a img {
+    transition: none;
+}
+
+.content a:hover img.editor-img-no-hover,
+.content figure.editor-img-no-hover a:hover img {
+    transform: none;
+    opacity: 1;
 }
 
 /* Link colors */
@@ -108,6 +117,7 @@ div a:hover{
     background-color: var(--primaryColorLight);
     padding: var(--defaultPadding);
     border-radius: var(--defaultRadius);
+    overflow: hidden;
 }
 
 /*  BUTTON */
@@ -163,7 +173,7 @@ div a:hover{
     }
 
     .footer-partner-logo svg {
-        max-height: 120px; /* tune by eye to match the Impuls logo's visual size on mobile */
+        max-height: 120px;
     }
 }
 

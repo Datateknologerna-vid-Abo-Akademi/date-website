@@ -2435,11 +2435,11 @@ msgstr "Impuls"
 
 #: templates/impuls/date/components/about.html:8
 msgid ""
-"Impuls rf är ämnesföreningen för psykologi vid Åbo Akademi. Föreningen "
+"Impuls r.f. är ämnesföreningen för psykologi vid Åbo Akademi. Föreningen "
 "strävar efter att förbättra och fördjupa undervisningen i psykologi, samt "
 "öka samvaron och trivseln för våra psykologistuderande."
 msgstr ""
-"Impuls rf is the student association for psychology at Åbo Akademi "
+"Impuls r.f. is the student association for psychology at Åbo Akademi "
 "University. The association works to improve and deepen psychology education "
 "and to strengthen community and well-being among psychology students."
 

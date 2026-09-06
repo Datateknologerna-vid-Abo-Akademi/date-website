@@ -325,7 +325,7 @@ div.news-content a:hover{
 }
 
 .more-news:hover{
-    color: #7f95b4; /* one step lighter still, ~6.2:1 on navy */
+    color: var(--linkColorDeepLight); /* ~6.2:1 on navy */
 }
 
 .news-header{
@@ -578,6 +578,13 @@ div.calendar-container a {
 
 .vanilla-calendar-day__btn_today:not(.calendar-eventday):hover {
     background-color: var(--primaryColorLighte) !important;
+}
+
+/* Today + an event on the same day: keep the event's own color (it's the
+ * more important signal) but add a ring so the day doesn't lose its "this
+ * is today" affordance entirely. */
+.vanilla-calendar-day__btn_today.calendar-eventday {
+    box-shadow: inset 0 0 0 2px var(--textColorLight) !important;
 }
 
 .vanilla-calendar-day__btn_selected {
