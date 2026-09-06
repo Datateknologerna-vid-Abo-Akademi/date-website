@@ -17,6 +17,16 @@ html body{
     border-radius: var(--defaultRadius);
 }
 
+.footer-credit-link {
+    transition: opacity 0.2s, filter 0.2s;
+}
+
+.footer-credit-link:hover {
+    opacity: 0.85;
+    color: var(--linkColorLightHover) !important;
+    filter: drop-shadow(0 0 8px var(--linkColorLightHover)) drop-shadow(0 0 16px var(--linkColorLight));
+}
+
 /* Link colors */
 div a{
     color: var(--linkColorLight);
