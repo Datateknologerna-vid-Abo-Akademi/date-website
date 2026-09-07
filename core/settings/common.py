@@ -297,6 +297,9 @@ DATABASES = {
         'CONN_MAX_AGE': env('DB_CONN_MAX_AGE', int, 0),
         # Re-verify persistent connections so they survive database restarts.
         'CONN_HEALTH_CHECKS': True,
+        # Transaction poolers can assign a different PostgreSQL session
+        # between cursor declaration and fetch, invalidating named cursors.
+        'DISABLE_SERVER_SIDE_CURSORS': env('DB_DISABLE_SERVER_SIDE_CURSORS', bool, False),
     }
 }
 
