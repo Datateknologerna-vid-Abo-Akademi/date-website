@@ -19,3 +19,4 @@ class DatabaseSettingsTests(SimpleTestCase):
         # persistent thread-local connection cannot be safely reused.
         self.assertEqual(default_db["CONN_MAX_AGE"], 0)
         self.assertTrue(default_db["CONN_HEALTH_CHECKS"])
+        self.assertFalse(default_db["DISABLE_SERVER_SIDE_CURSORS"])

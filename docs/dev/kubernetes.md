@@ -99,6 +99,12 @@ migration host empty preserves the existing behavior. Direct routing protects
 schema migrations that need session-level PostgreSQL state from transaction
 pooling semantics.
 
+Also set `DB_DISABLE_SERVER_SIDE_CURSORS=True` for web and worker processes
+that use transaction pooling. Django's named server-side cursors are scoped to
+one PostgreSQL session, while a transaction pooler may assign a different
+session when the queryset fetches its next batch. Direct database connections
+retain the default (`False`).
+
 Never enable `web.migrateOnStartup` in production: it couples schema
 mutation to pod readiness, re-runs on every pod restart, and races when the
 replica count is above one. Keep expand-contract migration rules so old and
