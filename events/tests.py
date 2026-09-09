@@ -2486,6 +2486,14 @@ class EventRoutingTests(TestCase):
         self.assertIsNotNone(match)
         self.assertEqual(match.group("event_name"), "valentines-sitsit")
 
+    def test_websocket_route_accepts_optional_trailing_slash(self):
+        with_slash = websocket_urlpatterns[0].pattern.regex.fullmatch("ws/events/valentines-sitsit/")
+        without_slash = websocket_urlpatterns[0].pattern.regex.fullmatch("ws/events/valentines-sitsit")
+
+        self.assertIsNotNone(with_slash)
+        self.assertIsNotNone(without_slash)
+        self.assertEqual(with_slash.group("event_name"), without_slash.group("event_name"))
+
 
 class EventWebsocketUtilsTests(TestCase):
     class PublicInfo:
