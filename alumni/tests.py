@@ -43,6 +43,10 @@ class AlumniViewRegressionTests(TestCase):
         response = self.client.get(reverse("alumni:alumni_update"))
         self.assertEqual(response.status_code, 200)
 
+    def test_update_verify_head_request_returns_405_not_500(self):
+        response = self.client.head(reverse("alumni:alumni_update"))
+        self.assertEqual(response.status_code, 405)
+
     @override_settings(ALUMNI_SETTINGS="not-json")
     @patch("alumni.views.handle_alumni_signup.delay")
     @patch("alumni.views.validate_captcha", return_value=True)
