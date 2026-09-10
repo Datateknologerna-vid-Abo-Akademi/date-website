@@ -907,6 +907,80 @@ class EventAdminTests(TestCase):
         self.assertEqual(len(set(numbers.values())), 3)
         self.assertTrue(EventAttendees.objects.filter(pk=x.pk, attendee_nr=30).exists())
 
+    def test_reorder_avoids_legacy_non_step_10_number_outside_formset(self):
+        # The temporary band must not collide with a legacy/manual
+        # non-step-10 number held by a row that is not part of the formset.
+        a = EventAttendees.objects.create(
+            event=self.event,
+            user="A",
+            email="a@example.com",
+            attendee_nr=10,
+            preferences={},
+        )
+        b = EventAttendees.objects.create(
+            event=self.event,
+            user="B",
+            email="b@example.com",
+            attendee_nr=20,
+            preferences={},
+        )
+        x = EventAttendees.objects.create(
+            event=self.event,
+            user="X",
+            email="x@example.com",
+            attendee_nr=15,
+            preferences={},
+        )
+        formset = self._attendees_formset(
+            [
+                self._attendee_row(0, a.pk, 10, "A", "a@example.com"),
+                self._attendee_row(1, b.pk, 30, "B", "b@example.com"),
+            ],
+            initial_forms=2,
+        )
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+
+        numbers = dict(EventAttendees.objects.filter(event=self.event).values_list("user", "attendee_nr"))
+        self.assertEqual(numbers["A"], 10)
+        self.assertEqual(numbers["B"], 30)
+        self.assertEqual(numbers["X"], 15)
+        self.assertTrue(EventAttendees.objects.filter(pk=x.pk, attendee_nr=15).exists())
+
+    def test_deleted_row_frees_its_number_for_another_row(self):
+        # A row marked for deletion only holds its number until the delete, so
+        # another form row may take that number without being renumbered.
+        a = EventAttendees.objects.create(
+            event=self.event,
+            user="A",
+            email="a@example.com",
+            attendee_nr=10,
+            preferences={},
+        )
+        b = EventAttendees.objects.create(
+            event=self.event,
+            user="B",
+            email="b@example.com",
+            attendee_nr=20,
+            preferences={},
+        )
+        deleted_row = self._attendee_row(1, b.pk, 20, "B", "b@example.com")
+        deleted_row["eventattendees_set-1-DELETE"] = "on"
+        formset = self._attendees_formset(
+            [
+                self._attendee_row(0, a.pk, 20, "A", "a@example.com"),
+                deleted_row,
+            ],
+            initial_forms=2,
+        )
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+
+        numbers = dict(EventAttendees.objects.filter(event=self.event).values_list("user", "attendee_nr"))
+        self.assertEqual(numbers["A"], 20)
+        self.assertNotIn("B", numbers)
+        self.assertFalse(EventAttendees.objects.filter(pk=b.pk).exists())
+
     def test_change_page_hides_hide_for_avec_when_avec_is_disabled(self):
         EventRegistrationForm.objects.create(
             event=self.event,

@@ -5,7 +5,7 @@ from admin_ordering.admin import OrderableAdmin
 from django.conf import settings
 from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db.models import Count, IntegerField, JSONField, OuterRef, Subquery, TextField, Value
+from django.db.models import Count, IntegerField, JSONField, Max, OuterRef, Subquery, TextField, Value
 from django.db.models.functions import Coalesce
 from django.forms import ModelForm
 from django.forms.models import BaseInlineFormSet
@@ -122,10 +122,10 @@ class EventAttendeesInlineFormSet(BaseInlineFormSet):
         # (10, 20, ...) into the forms in original row order, so a drag can
         # assign a number that another row still holds, violating the
         # (event, attendee_nr) unique constraint mid-save. Move every formset
-        # row of the event to a non-conflicting band (5, 15, 25, ...) first;
-        # the per-row saves then write the final values without ever
-        # colliding. Rows whose forms did not change are restored afterwards,
-        # because Django skips saving unchanged forms.
+        # row of the event to a temporary band above all existing and
+        # submitted numbers first; the per-row saves then write the final
+        # values without ever colliding. Rows whose forms did not change are
+        # restored afterwards, because Django skips saving unchanged forms.
         #
         # Rows outside the submitted formset (signups created between the
         # page load and this save) are never touched: they keep the number
@@ -150,22 +150,43 @@ class EventAttendeesInlineFormSet(BaseInlineFormSet):
         return {form.instance.pk for form in self.forms if form.instance.pk}
 
     def _form_will_save(self, form):
+        # Mirror BaseModelFormSet.save_existing_objects/save_new_objects:
+        # changed extra forms and changed initial forms with a set pk are
+        # saved; unchanged, deleted and pk-less initial forms are not.
         cleaned_data = getattr(form, 'cleaned_data', None)
-        return bool(cleaned_data) and not cleaned_data.get('DELETE') and form.has_changed()
+        if not cleaned_data or cleaned_data.get('DELETE') or not form.has_changed():
+            return False
+        return not (form in self.initial_forms and form.instance.pk is None)
 
     def _shift_attendee_nrs(self):
-        # Band values are k*10+5: never a multiple of 10, so they cannot
-        # collide with real or final values (all multiples of 10), and they
-        # stay within the positive integer range for any practical event.
+        # Band values are the next values ending in 5 above everything that
+        # exists or is about to be written (base, base+10, ...): they are
+        # never a multiple of 10, so they cannot collide with counter
+        # allocations or step-10 numbers, and being above the current maximum
+        # keeps them clear of legacy/manual non-step-10 rows outside the
+        # formset.
         rows = list(
             EventAttendees.objects.filter(event=self.instance, pk__in=self._form_pks())
             .order_by('attendee_nr', 'pk')
             .values_list('pk', 'attendee_nr')
         )
         self._original_nrs = {pk: nr for pk, nr in rows}
+        base = self._band_base()
         for index, (pk, _nr) in enumerate(rows):
-            EventAttendees.objects.filter(pk=pk).update(attendee_nr=index * 10 + 5)
+            EventAttendees.objects.filter(pk=pk).update(attendee_nr=base + index * 10)
         self._shifted = True
+
+    def _band_base(self):
+        existing_max = (
+            EventAttendees.objects.filter(event=self.instance).aggregate(max_nr=Max('attendee_nr'))['max_nr'] or 0
+        )
+        submitted_max = max(
+            (form.cleaned_data.get('attendee_nr') or 0 for form in self.forms if self._form_will_save(form)),
+            default=0,
+        )
+        ceiling = max(existing_max, submitted_max)
+        base = ceiling - ceiling % 10 + 5
+        return base if base > ceiling else base + 10
 
     def _resolve_attendee_nr_conflicts(self):
         # Numbers that will exist outside the saved form rows: concurrent
@@ -179,9 +200,12 @@ class EventAttendeesInlineFormSet(BaseInlineFormSet):
             .values_list('attendee_nr', flat=True)
         )
         for form in self.forms:
-            if self._form_will_save(form):
+            cleaned_data = getattr(form, 'cleaned_data', None)
+            if not cleaned_data or cleaned_data.get('DELETE') or self._form_will_save(form):
                 continue
-            nr = form.cleaned_data.get('attendee_nr')
+            if form.instance.pk is None:
+                continue
+            nr = cleaned_data.get('attendee_nr')
             if nr is not None:
                 taken.add(nr)
         for form in self.forms:
