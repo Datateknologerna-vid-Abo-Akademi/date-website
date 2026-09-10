@@ -89,11 +89,16 @@
 - Inline classes `EventRegistrationFormInline` and `EventAttendeesFormInline`
   leverage `admin_ordering`. Attendee inline fields vary depending on
   `sign_up_avec` and whether the event has children. The attendee inline uses
-  `EventAttendeesInlineFormSet`, which pre-shifts all `attendee_nr` values of
-  the event into a non-conflicting band before saving so a drag-and-drop reorder
+  `EventAttendeesInlineFormSet`, which pre-shifts the formset's `attendee_nr`
+  values into a non-conflicting band before saving so a drag-and-drop reorder
   can never violate `unique_attendee_nr_per_event` mid-save (the sortable JS
   writes the final numbers in original row order, which would otherwise
-  collide).
+  collide). Rows created by concurrent signups after the admin page loaded are
+  not part of the formset and are never shifted: they keep the number the
+  signup flow allocated and showed. A stale form row that claims one of those
+  numbers is renumbered from `Event.attendee_nr_counter` (and logged as a
+  warning) instead of failing the save, so an admin saving during a signup
+  rush cannot 500.
 - Custom admin action `delete_participants` prompts for confirmation before
   removing attendee rows.
 - Extra admin URL `/list/` renders `events/list.html` for an event, showing

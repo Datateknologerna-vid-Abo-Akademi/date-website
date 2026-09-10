@@ -121,14 +121,21 @@ class EventAttendeesInlineFormSet(BaseInlineFormSet):
         # The admin_ordering drag reorder writes the final attendee_nr values
         # (10, 20, ...) into the forms in original row order, so a drag can
         # assign a number that another row still holds, violating the
-        # (event, attendee_nr) unique constraint mid-save. Move every
-        # existing row of the event to a non-conflicting band (5, 15, 25,
-        # ...) first; the per-row saves then write the final values without
-        # ever colliding. Rows whose forms did not change are restored
-        # afterwards, because Django skips saving unchanged forms.
+        # (event, attendee_nr) unique constraint mid-save. Move every formset
+        # row of the event to a non-conflicting band (5, 15, 25, ...) first;
+        # the per-row saves then write the final values without ever
+        # colliding. Rows whose forms did not change are restored afterwards,
+        # because Django skips saving unchanged forms.
+        #
+        # Rows outside the submitted formset (signups created between the
+        # page load and this save) are never touched: they keep the number
+        # the signup flow allocated and showed. A stale form row claiming one
+        # of those numbers is renumbered from the event counter instead of
+        # failing the save on the unique constraint.
         self._shifted = False
         if commit and self._attendee_nr_reordered():
             self._shift_attendee_nrs()
+            self._resolve_attendee_nr_conflicts()
         result = super().save(commit=commit)
         if commit and self._shifted:
             self._restore_unchanged_attendee_nrs()
@@ -139,12 +146,19 @@ class EventAttendeesInlineFormSet(BaseInlineFormSet):
             return False
         return any('attendee_nr' in form.changed_data for form in self.forms)
 
+    def _form_pks(self):
+        return {form.instance.pk for form in self.forms if form.instance.pk}
+
+    def _form_will_save(self, form):
+        cleaned_data = getattr(form, 'cleaned_data', None)
+        return bool(cleaned_data) and not cleaned_data.get('DELETE') and form.has_changed()
+
     def _shift_attendee_nrs(self):
         # Band values are k*10+5: never a multiple of 10, so they cannot
         # collide with real or final values (all multiples of 10), and they
         # stay within the positive integer range for any practical event.
         rows = list(
-            EventAttendees.objects.filter(event=self.instance)
+            EventAttendees.objects.filter(event=self.instance, pk__in=self._form_pks())
             .order_by('attendee_nr', 'pk')
             .values_list('pk', 'attendee_nr')
         )
@@ -152,6 +166,50 @@ class EventAttendeesInlineFormSet(BaseInlineFormSet):
         for index, (pk, _nr) in enumerate(rows):
             EventAttendees.objects.filter(pk=pk).update(attendee_nr=index * 10 + 5)
         self._shifted = True
+
+    def _resolve_attendee_nr_conflicts(self):
+        # Numbers that will exist outside the saved form rows: concurrent
+        # signups and unchanged form rows (restored to their original numbers
+        # afterwards). A saved form row whose submitted number is already
+        # claimed there gets a fresh number from the event counter instead of
+        # tripping the unique constraint.
+        taken = set(
+            EventAttendees.objects.filter(event=self.instance)
+            .exclude(pk__in=self._form_pks())
+            .values_list('attendee_nr', flat=True)
+        )
+        for form in self.forms:
+            if self._form_will_save(form):
+                continue
+            nr = form.cleaned_data.get('attendee_nr')
+            if nr is not None:
+                taken.add(nr)
+        for form in self.forms:
+            if not self._form_will_save(form):
+                continue
+            nr = form.cleaned_data.get('attendee_nr')
+            if nr is None:
+                continue
+            if nr in taken:
+                new_nr = self._reserve_free_attendee_nr(taken)
+                logger.warning(
+                    'Attendee %s of event %s renumbered from %s to %s: '
+                    'the submitted number was taken by a concurrent signup.',
+                    form.instance.pk,
+                    self.instance.pk,
+                    nr,
+                    new_nr,
+                )
+                form.cleaned_data['attendee_nr'] = new_nr
+                form.instance.attendee_nr = new_nr
+                nr = new_nr
+            taken.add(nr)
+
+    def _reserve_free_attendee_nr(self, taken):
+        while True:
+            nr = self.instance.reserve_attendee_nrs(1)[0]
+            if nr not in taken:
+                return nr
 
     def _restore_unchanged_attendee_nrs(self):
         saved_pks = {obj.pk for obj, _changed_data in self.changed_objects}

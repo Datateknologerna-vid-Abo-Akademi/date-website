@@ -700,10 +700,10 @@ class EventAdminTests(TestCase):
         _, kwargs = get_formset.call_args
         self.assertCountEqual(kwargs["exclude"], ["time_registered", "avec_for"])
 
-    def _attendees_formset(self, rows):
+    def _attendees_formset(self, rows, initial_forms=None):
         data = {
             "eventattendees_set-TOTAL_FORMS": len(rows),
-            "eventattendees_set-INITIAL_FORMS": len(rows),
+            "eventattendees_set-INITIAL_FORMS": len(rows) if initial_forms is None else initial_forms,
             "eventattendees_set-MIN_NUM_FORMS": "0",
             "eventattendees_set-MAX_NUM_FORMS": "1000",
         }
@@ -823,6 +823,89 @@ class EventAdminTests(TestCase):
         formset.save()
 
         self.assertEqual(self._ordered_attendee_rows(), [("A", 10), ("B", 20)])
+
+    def test_save_with_concurrent_signup_renumbers_stale_form_row(self):
+        # A signup created after the admin page was loaded is not part of the
+        # submitted formset but already holds attendee_nr 20. The stale form
+        # row also claims 20; the save must renumber the stale row instead of
+        # tripping unique_attendee_nr_per_event in the post-save restore.
+        a = EventAttendees.objects.create(
+            event=self.event,
+            user="A",
+            email="a@example.com",
+            attendee_nr=10,
+            preferences={},
+        )
+        x = EventAttendees.objects.create(
+            event=self.event,
+            user="X",
+            email="x@example.com",
+            attendee_nr=20,
+            preferences={},
+        )
+        formset = self._attendees_formset(
+            [
+                self._attendee_row(0, a.pk, 10, "A", "a@example.com"),
+                {
+                    "eventattendees_set-1-event": self.event.pk,
+                    "eventattendees_set-1-attendee_nr": 20,
+                    "eventattendees_set-1-user": "B",
+                    "eventattendees_set-1-email": "b@example.com",
+                },
+            ],
+            initial_forms=1,
+        )
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+
+        numbers = dict(EventAttendees.objects.filter(event=self.event).values_list("user", "attendee_nr"))
+        self.assertEqual(numbers["A"], 10)
+        self.assertEqual(numbers["X"], 20)
+        self.assertNotEqual(numbers["B"], 20)
+        self.assertEqual(len(set(numbers.values())), 3)
+        self.assertTrue(EventAttendees.objects.filter(pk=x.pk, attendee_nr=20).exists())
+
+    def test_drag_reorder_renumbers_row_claiming_concurrent_signup_number(self):
+        # A drag submits final numbers for the rendered rows while a signup
+        # created after the page load already holds one of them. The dragged
+        # row must be renumbered; the signup keeps its allocated number.
+        a = EventAttendees.objects.create(
+            event=self.event,
+            user="A",
+            email="a@example.com",
+            attendee_nr=10,
+            preferences={},
+        )
+        b = EventAttendees.objects.create(
+            event=self.event,
+            user="B",
+            email="b@example.com",
+            attendee_nr=20,
+            preferences={},
+        )
+        x = EventAttendees.objects.create(
+            event=self.event,
+            user="X",
+            email="x@example.com",
+            attendee_nr=30,
+            preferences={},
+        )
+        formset = self._attendees_formset(
+            [
+                self._attendee_row(0, a.pk, 10, "A", "a@example.com"),
+                self._attendee_row(1, b.pk, 30, "B", "b@example.com"),
+            ],
+            initial_forms=2,
+        )
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+
+        numbers = dict(EventAttendees.objects.filter(event=self.event).values_list("user", "attendee_nr"))
+        self.assertEqual(numbers["A"], 10)
+        self.assertEqual(numbers["X"], 30)
+        self.assertNotEqual(numbers["B"], 30)
+        self.assertEqual(len(set(numbers.values())), 3)
+        self.assertTrue(EventAttendees.objects.filter(pk=x.pk, attendee_nr=30).exists())
 
     def test_change_page_hides_hide_for_avec_when_avec_is_disabled(self):
         EventRegistrationForm.objects.create(
