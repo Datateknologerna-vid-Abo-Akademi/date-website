@@ -35,6 +35,22 @@ from date.views import (
 from events.models import Event
 from news.models import Category, Post
 
+ASSOCIATION_SETTINGS_MODULES = {
+    "date": "core.settings.date",
+    "kk": "core.settings.kk",
+    "biocum": "core.settings.biocum",
+    "demo": "core.settings.demo",
+    "pulterit": "core.settings.pulterit",
+    "sf": "core.settings.sf",
+}
+
+# The Font Awesome compatible build of Line Awesome. Shared templates use fa-* /
+# fas / far classes, which the plain line-awesome build does not define.
+FA_COMPATIBLE_ICON_CSS = (
+    "https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/font-awesome-line-awesome/css/all.min.css"
+)
+FA_COMPATIBLE_ICON_CSS_SRI = "sha384-snzOGIbz+keYJBq8ozkYChzFE6HnRT5PIEwo25BGyLtpC4G3qF/YAP4vRkinYp7+"
+
 
 def localized_reverse(name, language_code, *args, **kwargs):
     with translation.override(language_code):
@@ -73,15 +89,23 @@ class SiteShellTemplateTests(TestCase):
 
     def test_base_template_loads_font_awesome_compatibility_css(self):
         rendered = render_to_string("core/base.html", self._content_context())
+        self.assertIn(FA_COMPATIBLE_ICON_CSS, rendered)
+        self.assertIn(FA_COMPATIBLE_ICON_CSS_SRI, rendered)
 
-        self.assertIn(
-            "https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/font-awesome-line-awesome/css/all.min.css",
-            rendered,
-        )
-        self.assertIn(
-            "sha384-snzOGIbz+keYJBq8ozkYChzFE6HnRT5PIEwo25BGyLtpC4G3qF/YAP4vRkinYp7+",
-            rendered,
-        )
+    def test_every_association_shell_loads_font_awesome_compatibility_css(self):
+        # Each association resolves core/base.html through its own template dirs, so
+        # rendering only under the default variant misses variant-level overrides of
+        # the icon_head block. sf overrides it, and the plain Line Awesome build it
+        # once pointed at does not define the fa-* classes the shared templates use.
+        plain_line_awesome = "line-awesome/1.3.0/line-awesome/css/line-awesome.min.css"
+        for association, settings_module in ASSOCIATION_SETTINGS_MODULES.items():
+            with self.subTest(association=association):
+                module = importlib.import_module(settings_module)
+                with override_settings(PROJECT_NAME=association, TEMPLATES=module.TEMPLATES):
+                    rendered = render_to_string("core/base.html", self._content_context())
+                self.assertIn(FA_COMPATIBLE_ICON_CSS, rendered)
+                self.assertIn(FA_COMPATIBLE_ICON_CSS_SRI, rendered)
+                self.assertNotIn(plain_line_awesome, rendered)
 
     def test_header_uses_unique_dropdown_ids_for_categories(self):
         categories = [
@@ -789,14 +813,7 @@ class HomepageTemplateSelectionTests(TestCase):
 
 
 class AssociationHomepageSmokeTests(TestCase):
-    association_settings_modules = {
-        "date": "core.settings.date",
-        "kk": "core.settings.kk",
-        "biocum": "core.settings.biocum",
-        "demo": "core.settings.demo",
-        "pulterit": "core.settings.pulterit",
-        "sf": "core.settings.sf",
-    }
+    association_settings_modules = ASSOCIATION_SETTINGS_MODULES
 
     def _association_overrides(self, association):
         settings_module = importlib.import_module(self.association_settings_modules[association])
