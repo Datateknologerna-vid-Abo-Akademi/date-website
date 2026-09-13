@@ -2,6 +2,7 @@ import importlib
 import re
 import time
 from datetime import date, timedelta
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -993,3 +994,54 @@ class HomepageQueryTests(TestCase):
                 self.client.get("/")
             with self.assertNumQueries(7):
                 self.client.get("/")
+
+
+class CalendarClickDayCompatibilityTests(SimpleTestCase):
+    """Bind the calendar handler to the vendored library's own call signature.
+
+    The homepage handler previously read the selected day without checking what
+    the library passes as the callback's second argument. vanilla-calendar 1.x
+    passes the selected dates array, 2.x passes the calendar instance, so the
+    handler must accept either. Reading the signature out of the vendored file
+    makes this fail loudly if the library is swapped without updating the
+    handler, rather than only failing in a browser when a day is clicked.
+    """
+
+    repo_root = Path(__file__).resolve().parent.parent
+    library_path = repo_root / "static/common/date/js/vanilla-calendar.min.js"
+    partial_path = repo_root / "templates/common/date/partials/calendar_scripts.html"
+
+    def _library_click_day_argument(self):
+        source = self.library_path.read_text(encoding="utf-8")
+        match = re.search(r"actions\.clickDay\s*&&\s*[\w$.]+\.clickDay\(([^)]*)\)", source)
+        if match is None:
+            self.fail(
+                "Could not find the clickDay invocation in "
+                f"{self.library_path.relative_to(self.repo_root)}; update this test "
+                "if the minified output changed."
+            )
+        arguments = [part.strip() for part in match.group(1).split(",")]
+        if len(arguments) != 2:
+            self.fail(f"Expected clickDay to be called with two arguments, got {arguments!r}")
+        return arguments[1]
+
+    def test_handler_matches_the_vendored_library_callback(self):
+        second_argument = self._library_click_day_argument()
+        handler = self.partial_path.read_text(encoding="utf-8")
+
+        if second_argument.endswith(".selectedDates"):
+            self.assertIn(
+                "date.selectedDates",
+                handler,
+                "The vendored calendar passes its instance, so the handler must read date.selectedDates.",
+            )
+        else:
+            self.assertIn(
+                "Array.isArray(date)",
+                handler,
+                f"The vendored calendar passes {second_argument!r}, so the handler must "
+                "accept the selected dates array.",
+            )
+
+        # Whichever shape arrives, the handler must accept both rather than assume one.
+        self.assertIn("Array.isArray(date)", handler)

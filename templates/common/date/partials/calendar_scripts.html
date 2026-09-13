@@ -72,9 +72,14 @@
             const calendarPopups = new VanillaCalendar(calendarElement, {
                 actions: {
                     clickDay(event, date) {
-                        // VanillaCalendar 2.x passes the calendar instance as the second
-                        // argument, so the selected day comes from its selectedDates list.
-                        const day = events_json[date.selectedDates[0]];
+                        // The second argument depends on the library version: 1.x passes the
+                        // selected dates array, 2.x passes the calendar instance. Accept either
+                        // so this keeps working across the vanilla-calendar upgrade.
+                        const selectedDates = Array.isArray(date) ? date : (date && date.selectedDates);
+                        if (!Array.isArray(selectedDates) || selectedDates.length === 0) {
+                            return;
+                        }
+                        const day = events_json[selectedDates[0]];
                         if (day !== undefined && day.events.length === 1) {
                             const rawUrl = (day.events[0].link || '').trim();
                             if (isValidInternalUrl(rawUrl)) {
