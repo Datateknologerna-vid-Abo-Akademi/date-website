@@ -485,20 +485,20 @@ div.calendar-container a {
   box-shadow: 0 0 0 0;
 }
 
-.vanilla-calendar-day__btn_today {
+.vc-date[data-vc-date-today] .vc-date__btn {
     color: var(--textColorLight) !important;
     background-color: var(--primaryColor) !important;
 }
 
-.vanilla-calendar-day__btn_today:hover {
+.vc-date[data-vc-date-today] .vc-date__btn:hover {
     background-color: var(--primaryColorLight) !important;
 }
 
-.vanilla-calendar-day__btn_selected {
+.vc-date[data-vc-date-selected] .vc-date__btn {
     background-color: var(--primaryColor) !important;
 }
 
-.vanilla-calendar-day__btn_selected:hover {
+.vc-date[data-vc-date-selected] .vc-date__btn:hover {
     background-color: var(--primaryColorLight) !important;
 }
 

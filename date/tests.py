@@ -1013,56 +1013,74 @@ class HomepageQueryTests(TestCase):
                 self.client.get("/")
 
 
-class CalendarClickDayCompatibilityTests(SimpleTestCase):
-    """Bind the calendar handler to the vendored library's own call signature.
+class CalendarHandlerCompatibilityTests(SimpleTestCase):
+    """Bind the homepage calendar handler to the vendored library's own contract.
 
-    The homepage handler previously read the selected day without checking what
-    the library passes as the callback's second argument. vanilla-calendar 1.x
-    passes the selected dates array, 2.x passes the calendar instance, so the
-    handler must accept either. Reading the signature out of the vendored file
-    makes this fail loudly if the library is swapped without updating the
-    handler, rather than only failing in a browser when a day is clicked.
+    The handler has been broken twice by library upgrades that changed how the
+    clicked day reaches it: 1.x passes the selected dates array as the callback's
+    second argument, 2.x passes the calendar instance (and 3.x runs the callback
+    before its own selectedDates is updated, so the day has to come from the
+    clicked cell). Reading the contract out of the vendored file makes a swap
+    without a matching handler fail in CI rather than only in a browser.
     """
 
     repo_root = Path(__file__).resolve().parent.parent
     library_path = repo_root / "static/common/date/js/vanilla-calendar.min.js"
     partial_path = repo_root / "templates/common/date/partials/calendar_scripts.html"
 
-    _click_day_pattern = re.compile(r"actions\.clickDay\s*&&\s*[\w$.]+\.clickDay\(([^)]*)\)")
+    def _handler(self):
+        return self.partial_path.read_text(encoding="utf-8")
 
-    def _click_day_second_argument(self, source):
-        match = self._click_day_pattern.search(source)
-        if match is None:
-            self.fail(
-                "Could not find the clickDay invocation in "
-                f"{self.library_path.relative_to(self.repo_root)}; update this test "
-                "if the minified output changed."
-            )
-        arguments = [part.strip() for part in match.group(1).split(",")]
-        if len(arguments) != 2:
-            self.fail(f"Expected clickDay to be called with two arguments, got {arguments!r}")
-        return arguments[1]
+    def _library_source(self):
+        return self.library_path.read_text(encoding="utf-8")
 
-    def test_handler_matches_the_vendored_library_callback(self):
-        source = self.library_path.read_text(encoding="utf-8")
-        second_argument = self._click_day_second_argument(source)
-        handler = self.partial_path.read_text(encoding="utf-8")
+    def test_handler_matches_the_vendored_library(self):
+        source = self._library_source()
+        handler = self._handler()
 
-        # The handler must read whichever shape the vendored library passes. A
-        # property access on the instance means the second argument is the calendar
-        # itself, so the handler reads its selectedDates; a bare expression means
-        # the argument already is the dates, and the handler must accept an array.
-        if second_argument.split(".")[-1] == "selectedDates":
-            self.assertIn(
-                "Array.isArray(date)",
-                handler,
-                f"The vendored calendar passes {second_argument!r}, which is already the "
-                "selected dates array, so the handler must accept an array.",
-            )
-        else:
-            self.assertIn(
-                "date.selectedDates",
-                handler,
-                f"The vendored calendar passes {second_argument!r}, so the handler must "
-                "read the dates from that object.",
-            )
+        legacy = re.search(r"actions\.clickDay\s*&&\s*[\w$.]+\.clickDay\(([^)]*)\)", source)
+        if legacy:
+            argument = [part.strip() for part in legacy.group(1).split(",")][1]
+            if argument.split(".")[-1] == "selectedDates":
+                # The argument already is the dates array, so the handler must accept it.
+                self.assertIn(
+                    "Array.isArray(date)",
+                    handler,
+                    "This calendar version passes the selected dates array, so the handler must accept an array.",
+                )
+            else:
+                self.assertIn(
+                    "date.selectedDates",
+                    handler,
+                    f"This calendar version passes {argument!r}, so the handler must read the dates from that object.",
+                )
+            return
+
+        # 3.x exports its constructor as Calendar on a VanillaCalendarPro global and
+        # renamed the callback. The bundle is minified, so identify it by the export
+        # it performs rather than by any identifier the template happens to use.
+        exported = re.search(r"\.Calendar\s*=", source)
+        self.assertIsNotNone(
+            exported,
+            "Unrecognised calendar build: neither a clickDay invocation nor a Calendar "
+            "export is present in the vendored library.",
+        )
+        self.assertIn(
+            "VanillaCalendarPro.Calendar",
+            handler,
+            "This build exports Calendar on the VanillaCalendarPro global, so the handler "
+            "must construct it from there.",
+        )
+        self.assertIn(
+            "onClickDate",
+            handler,
+            "This build reports day clicks through onClickDate.",
+        )
+        # 3.x runs onClickDate before updating its selection, so the handler cannot read
+        # the clicked day from selectedDates and must take it from the clicked cell.
+        self.assertIn(
+            "data-vc-date",
+            handler,
+            "This build has not updated selectedDates when the callback runs, so the "
+            "handler must read the date from the clicked cell.",
+        )
