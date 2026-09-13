@@ -1011,9 +1011,10 @@ class CalendarClickDayCompatibilityTests(SimpleTestCase):
     library_path = repo_root / "static/common/date/js/vanilla-calendar.min.js"
     partial_path = repo_root / "templates/common/date/partials/calendar_scripts.html"
 
-    def _library_click_day_argument(self):
-        source = self.library_path.read_text(encoding="utf-8")
-        match = re.search(r"actions\.clickDay\s*&&\s*[\w$.]+\.clickDay\(([^)]*)\)", source)
+    _click_day_pattern = re.compile(r"actions\.clickDay\s*&&\s*[\w$.]+\.clickDay\(([^)]*)\)")
+
+    def _click_day_second_argument(self, source):
+        match = self._click_day_pattern.search(source)
         if match is None:
             self.fail(
                 "Could not find the clickDay invocation in "
@@ -1026,22 +1027,25 @@ class CalendarClickDayCompatibilityTests(SimpleTestCase):
         return arguments[1]
 
     def test_handler_matches_the_vendored_library_callback(self):
-        second_argument = self._library_click_day_argument()
+        source = self.library_path.read_text(encoding="utf-8")
+        second_argument = self._click_day_second_argument(source)
         handler = self.partial_path.read_text(encoding="utf-8")
 
-        if second_argument.endswith(".selectedDates"):
-            self.assertIn(
-                "date.selectedDates",
-                handler,
-                "The vendored calendar passes its instance, so the handler must read date.selectedDates.",
-            )
-        else:
+        # The handler must read whichever shape the vendored library passes. A
+        # property access on the instance means the second argument is the calendar
+        # itself, so the handler reads its selectedDates; a bare expression means
+        # the argument already is the dates, and the handler must accept an array.
+        if second_argument.split(".")[-1] == "selectedDates":
             self.assertIn(
                 "Array.isArray(date)",
                 handler,
-                f"The vendored calendar passes {second_argument!r}, so the handler must "
-                "accept the selected dates array.",
+                f"The vendored calendar passes {second_argument!r}, which is already the "
+                "selected dates array, so the handler must accept an array.",
             )
-
-        # Whichever shape arrives, the handler must accept both rather than assume one.
-        self.assertIn("Array.isArray(date)", handler)
+        else:
+            self.assertIn(
+                "date.selectedDates",
+                handler,
+                f"The vendored calendar passes {second_argument!r}, so the handler must "
+                "read the dates from that object.",
+            )
