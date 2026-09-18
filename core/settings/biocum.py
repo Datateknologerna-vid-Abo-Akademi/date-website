@@ -5,6 +5,7 @@ TEMPLATES = build_templates('biocum', parent_variants=('date',))
 INSTALLED_APPS = get_installed_apps(
     [
         'staticpages',
+        'feedback',
         'news',
         'events',
         'ads',

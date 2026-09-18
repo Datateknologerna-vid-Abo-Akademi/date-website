@@ -1,0 +1,2 @@
+En ny feedback har inkommit
+{{ submission_url }}
