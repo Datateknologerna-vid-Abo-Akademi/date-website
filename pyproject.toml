@@ -115,6 +115,7 @@ module = [
     "staticpages.models",
     "members.models",
     "gallery.models",
+    "feedback.models",
 ]
 disable_error_code = ["django-manager-missing"]
 

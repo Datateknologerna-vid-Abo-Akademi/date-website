@@ -219,6 +219,24 @@ SIDEBAR_NAVIGATION = (
                     'social.view_harassmentemailrecipient',
                 ),
             ),
+            AdminLink(
+                _('Feedback'),
+                icon='forum',
+                url_name='admin:feedback_feedbacksubmission_changelist',
+                permission='feedback.view_feedbacksubmission',
+            ),
+            AdminLink(
+                _('Feedback Recipients'),
+                icon='mail',
+                url_name='admin:feedback_feedbackemailrecipient_changelist',
+                permission='feedback.view_feedbackemailrecipient',
+            ),
+            AdminLink(
+                _('Feedback Settings'),
+                icon='edit_note',
+                url_name='admin:feedback_feedbackformsettings_changelist',
+                permission='feedback.view_feedbackformsettings',
+            ),
         ),
     ),
     AdminSidebarGroup(
