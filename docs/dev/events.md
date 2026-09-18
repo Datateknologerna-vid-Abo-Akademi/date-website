@@ -147,6 +147,16 @@
   (passcode validation + signup). On success it redirects back to the detail
   page with anchor fragments for certain event types (Årsfest, etc.). Template
   overrides can be triggered by event title or slug for special layouts.
+- `events/api.py::upcoming_events` (`GET /events/api/upcoming/`, route name
+  `events:upcoming-events-api`) is a public, unauthenticated JSON endpoint
+  listing published events with `event_date_end` in the future. It excludes
+  `members_only` events, matching `EventDetailView._requires_member_login`
+  (anonymous visitors cannot view those detail pages, so they are left out of
+  the public listing too). Each entry has `id`, `title`, `slug`, an absolute
+  `url`, ISO-8601 `event_date_start`/`event_date_end`, `content`, and `image`
+  (`background_image_url`). Responses carry a 60s public `Cache-Control`
+  header; there is no per-request auth or CSRF requirement since it is
+  read-only and public.
 
 ## Websocket Layer
 

@@ -156,6 +156,55 @@ class EventTestCase(TestCase):
         response = c.get(reverse('events:detail', args=['no-such-event']))
         self.assertEqual(response.status_code, 404)
 
+    def test_upcoming_events_api_returns_published_upcoming_event(self):
+        self.event.event_date_start = timezone.now() + timezone.timedelta(days=1)
+        self.event.event_date_end = timezone.now() + timezone.timedelta(days=1, hours=2)
+        self.event.save()
+
+        c = Client()
+        response = c.get(reverse('events:upcoming-events-api'))
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(len(payload["events"]), 1)
+        entry = payload["events"][0]
+        self.assertEqual(entry["slug"], self.event.slug)
+        self.assertEqual(entry["title"], self.event.title)
+        self.assertEqual(
+            entry["event_date_start"],
+            self.event.event_date_start.isoformat(),
+        )
+        self.assertTrue(entry["url"].endswith(reverse('events:detail', args=[self.event.slug])))
+
+    def test_upcoming_events_api_does_not_require_authentication(self):
+        response = self.client.get(reverse('events:upcoming-events-api'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_upcoming_events_api_excludes_unpublished_event(self):
+        self.event.published_time = None
+        self.event.save()
+
+        response = self.client.get(reverse('events:upcoming-events-api'))
+
+        self.assertEqual(response.json()["events"], [])
+
+    def test_upcoming_events_api_excludes_past_event(self):
+        self.event.event_date_start = timezone.now() - timezone.timedelta(days=2)
+        self.event.event_date_end = timezone.now() - timezone.timedelta(days=1)
+        self.event.save()
+
+        response = self.client.get(reverse('events:upcoming-events-api'))
+
+        self.assertEqual(response.json()["events"], [])
+
+    def test_upcoming_events_api_excludes_members_only_event(self):
+        self.event.members_only = True
+        self.event.save()
+
+        response = self.client.get(reverse('events:upcoming-events-api'))
+
+        self.assertEqual(response.json()["events"], [])
+
     def test_scheduled_event_is_hidden_until_publish_time(self):
         self.event.published_time = timezone.now() + timezone.timedelta(days=1)
         self.event.save()
