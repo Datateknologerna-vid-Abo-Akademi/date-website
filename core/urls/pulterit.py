@@ -15,6 +15,7 @@ urlpatterns = build_urlpatterns(
     'two_factor',
     'archive_exams' if not getattr(settings, 'ARCHIVE_ENABLED', True) else 'archive',
     'events',
+    'api',
     'pages',
     'ads',
     'social',

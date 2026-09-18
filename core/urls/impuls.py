@@ -15,6 +15,7 @@ urlpatterns = build_urlpatterns(
     'two_factor',
     'archive',
     'events',
+    'api',
     'pages',
     'ads',
     'social',

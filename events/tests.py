@@ -162,7 +162,7 @@ class EventTestCase(TestCase):
         self.event.save()
 
         c = Client()
-        response = c.get(reverse('events:upcoming-events-api'))
+        response = c.get(reverse('api:events:upcoming'))
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()
@@ -177,14 +177,14 @@ class EventTestCase(TestCase):
         self.assertTrue(entry["url"].endswith(reverse('events:detail', args=[self.event.slug])))
 
     def test_upcoming_events_api_does_not_require_authentication(self):
-        response = self.client.get(reverse('events:upcoming-events-api'))
+        response = self.client.get(reverse('api:events:upcoming'))
         self.assertEqual(response.status_code, 200)
 
     def test_upcoming_events_api_excludes_unpublished_event(self):
         self.event.published_time = None
         self.event.save()
 
-        response = self.client.get(reverse('events:upcoming-events-api'))
+        response = self.client.get(reverse('api:events:upcoming'))
 
         self.assertEqual(response.json()["events"], [])
 
@@ -193,7 +193,7 @@ class EventTestCase(TestCase):
         self.event.event_date_end = timezone.now() - timezone.timedelta(days=1)
         self.event.save()
 
-        response = self.client.get(reverse('events:upcoming-events-api'))
+        response = self.client.get(reverse('api:events:upcoming'))
 
         self.assertEqual(response.json()["events"], [])
 
@@ -201,7 +201,7 @@ class EventTestCase(TestCase):
         self.event.members_only = True
         self.event.save()
 
-        response = self.client.get(reverse('events:upcoming-events-api'))
+        response = self.client.get(reverse('api:events:upcoming'))
 
         self.assertEqual(response.json()["events"], [])
 

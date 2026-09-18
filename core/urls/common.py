@@ -19,6 +19,7 @@ ROUTES = {
     'archive': lambda: path('archive/', include('archive.urls')),
     'archive_exams': lambda: path('archive/', include('exambank.archive_urls')),
     'events': lambda: path('events/', include('events.urls')),
+    'api': lambda: path('api/', include('core.api_urls')),
     'pages': lambda: path('pages/', include('staticpages.urls')),
     'ads': lambda: path('ads/', include('ads.urls')),
     'social': lambda: path('social/', include('social.urls')),
