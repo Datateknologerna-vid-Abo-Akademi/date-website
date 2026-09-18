@@ -149,13 +149,16 @@
   overrides can be triggered by event title or slug for special layouts.
 - `events/api.py::upcoming_events` (`GET /api/events/upcoming/`, route name
   `api:events:upcoming`) is a public, unauthenticated JSON endpoint listing
-  published events with `event_date_end` in the future. It is wired in
-  through `core/api_urls.py`, the global API root included from
-  `core.urls.common.ROUTES['api']` (added per association alongside
-  `'events'`) — see that module's docstring before adding another app's API
-  there. It excludes `members_only` events, matching
-  `EventDetailView._requires_member_login`
-  (anonymous visitors cannot view those detail pages, so they are left out of
+  published events with `event_date_end` in the future. It is wired in from
+  `events/api_urls.py` via `core.urls.common.API_ROUTES['events']`. The
+  shared `/api/` root is assembled automatically in `build_urlpatterns()`
+  from whichever `API_ROUTES` keys were also requested from `ROUTES`, so an
+  association that leaves `'events'` out of its route list gets neither the
+  HTML routes nor `events.api_urls` imported — no separate toggle to
+  remember. See that dict's docstring in `core/urls/common.py` before adding
+  another app's API. It excludes `members_only` events, matching
+  `EventDetailView._requires_member_login` (anonymous visitors cannot view
+  those detail pages, so they are left out of
   the public listing too). Each entry has `id`, `title`, `slug`, an absolute
   `url`, ISO-8601 `event_date_start`/`event_date_end`, `content`, and `image`
   (`background_image_url`). Responses carry a 60s public `Cache-Control`

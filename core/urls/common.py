@@ -19,7 +19,6 @@ ROUTES = {
     'archive': lambda: path('archive/', include('archive.urls')),
     'archive_exams': lambda: path('archive/', include('exambank.archive_urls')),
     'events': lambda: path('events/', include('events.urls')),
-    'api': lambda: path('api/', include('core.api_urls')),
     'pages': lambda: path('pages/', include('staticpages.urls')),
     'ads': lambda: path('ads/', include('ads.urls')),
     'social': lambda: path('social/', include('social.urls')),
@@ -33,6 +32,17 @@ ROUTES = {
     'klotterplanket': lambda: path('klotterplanket/', include('klotterplanket.urls')),
 }
 
+# JSON API routes, keyed by the same route name as the capability they belong
+# to. A key here is only ever included when that same key was also requested
+# from ROUTES, so disabling a capability for a variant (by leaving its key
+# out of build_urlpatterns' arguments) removes its API surface for free and
+# never imports that app's api_urls module. Collected under one shared
+# `/api/` root (namespace `api`) rather than as one-off per-app routes, so
+# `reverse()` targets look like `api:events:upcoming`.
+API_ROUTES = {
+    'events': lambda: path('events/', include('events.api_urls')),
+}
+
 
 def build_urlpatterns(*routes):
     """Build the canonical URL patterns from ordered route keys.
@@ -43,11 +53,20 @@ def build_urlpatterns(*routes):
     unknown = set(routes) - set(ROUTES)
     if unknown:
         raise ValueError(f"Unknown route keys: {sorted(unknown)}")
-    return [
+
+    urlpatterns = [
         path("healthz/", date_views.healthz, name="healthz"),
         path("readyz/", date_views.readyz, name="readyz"),
         *(ROUTES[route]() for route in routes),
+    ]
+
+    api_patterns = [API_ROUTES[route]() for route in routes if route in API_ROUTES]
+    if api_patterns:
+        urlpatterns.append(path("api/", include((api_patterns, "api"))))
+
+    urlpatterns += [
         path("set_lang/", date_views.set_language, name="set_lang"),
         path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
         path("_uploads/sign/", uploads_views.sign_upload, name="direct-upload-sign"),
     ]
+    return urlpatterns
