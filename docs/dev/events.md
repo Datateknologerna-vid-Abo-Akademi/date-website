@@ -155,15 +155,24 @@
   from whichever `API_ROUTES` keys were also requested from `ROUTES`, so an
   association that leaves `'events'` out of its route list gets neither the
   HTML routes nor `events.api_urls` imported — no separate toggle to
-  remember. See that dict's docstring in `core/urls/common.py` before adding
-  another app's API. It excludes `members_only` events, matching
-  `EventDetailView._requires_member_login` (anonymous visitors cannot view
-  those detail pages, so they are left out of
-  the public listing too). Each entry has `id`, `title`, `slug`, an absolute
-  `url`, ISO-8601 `event_date_start`/`event_date_end`, `content`, and `image`
-  (`background_image_url`). Responses carry a 60s public `Cache-Control`
-  header; there is no per-request auth or CSRF requirement since it is
-  read-only and public.
+  remember. See the comment above `API_ROUTES` in `core/urls/common.py`
+  before adding another app's API. It excludes `members_only` events
+  (matching `EventDetailView._requires_member_login`) and passcode-protected
+  events (matching the passcode gate in `EventDetailView.get`/
+  `handle_passcode`) — anonymous visitors cannot view either kind of detail
+  page in full, so both are left out of this public listing too. Each entry
+  has `id`, `title`, `slug`, an absolute `url`, ISO-8601
+  `event_date_start`/`event_date_end`, `content` (raw CKEditor HTML, unlike
+  the `.ics` feed which strips tags), an absolute `image`
+  (`background_image_url`), and `redirect_link`. Results are capped at 200
+  and ordered by `(event_date_start, id)` for a stable order. `title`/
+  `content` follow the site's cookie-based language by default (see
+  `date/middleware.py`; `Accept-Language` is ignored); pass `?lang=` to pick
+  a language explicitly instead, e.g. for machine clients that do not carry
+  the `django_language` cookie. Responses carry a 60s public `Cache-Control`
+  header plus `Vary: Cookie`, since the body depends on the language cookie.
+  There is no per-request auth or CSRF requirement since it is read-only and
+  public.
 
 ## Websocket Layer
 

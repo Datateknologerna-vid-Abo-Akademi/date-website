@@ -39,6 +39,14 @@ ROUTES = {
 # never imports that app's api_urls module. Collected under one shared
 # `/api/` root (namespace `api`) rather than as one-off per-app routes, so
 # `reverse()` targets look like `api:events:upcoming`.
+#
+# The 1:1 keying to ROUTES is deliberate, not an accident of the lazy
+# lookup: today no association wants an app's HTML pages without also
+# publishing its JSON API. If one ever does, give that app a second,
+# distinct ROUTES/API_ROUTES key pair (the way 'archive' vs 'archive_exams'
+# already split one app into two selectable route shapes) rather than
+# threading an extra flag through build_urlpatterns for a case nobody has
+# hit yet.
 API_ROUTES = {
     'events': lambda: path('events/', include('events.api_urls')),
 }
