@@ -659,10 +659,14 @@ div.calendar-container a {
 .logo-container a {
     color: var(--linkColorDark);
     margin-top: 20px;
+    display: inline-block;
+    transition: transform 0.2s, opacity 0.2s, color 0.2s;
 }
 
 .logo-container a:hover {
     color: var(--linkColorDarkHover);
+    transform: scale(1.03);
+    opacity: 0.75;
 }
 
 .logo-container img {
