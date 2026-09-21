@@ -631,6 +631,51 @@ class EventsUpcomingApiTests(TestCase):
         response = self.client.get(reverse('api:events:upcoming'), {'lang': 'not-a-real-language'})
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["events"][0]["title"], self.event.title)
+
+    def test_head_request_is_allowed(self):
+        response = self.client.head(reverse('api:events:upcoming'))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_orders_tied_events_by_id(self):
+        earlier_id_event = self.event
+        later_id_event = Event.objects.create(
+            title='Perftest 2',
+            slug='perftest-api-2',
+            author=self.author,
+            event_date_start=earlier_id_event.event_date_start,
+            event_date_end=earlier_id_event.event_date_end,
+        )
+        self.assertLess(earlier_id_event.pk, later_id_event.pk)
+
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertEqual(
+            [entry["slug"] for entry in response.json()["events"]],
+            [earlier_id_event.slug, later_id_event.slug],
+        )
+
+    def test_response_is_not_truncated_below_the_cap(self):
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertFalse(response.json()["truncated"])
+
+    def test_response_reports_truncation_above_the_cap(self):
+        Event.objects.create(
+            title='Perftest 2',
+            slug='perftest-api-2',
+            author=self.author,
+            event_date_start=self.event.event_date_start,
+            event_date_end=self.event.event_date_end,
+        )
+
+        with patch('events.api.MAX_RESULTS', 1):
+            response = self.client.get(reverse('api:events:upcoming'))
+
+        payload = response.json()
+        self.assertEqual(len(payload["events"]), 1)
+        self.assertTrue(payload["truncated"])
 
 
 class EventRegistrationWindowTests(TestCase):

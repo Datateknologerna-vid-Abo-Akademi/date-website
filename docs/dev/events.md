@@ -164,8 +164,10 @@
   has `id`, `title`, `slug`, an absolute `url`, ISO-8601
   `event_date_start`/`event_date_end`, `content` (raw CKEditor HTML, unlike
   the `.ics` feed which strips tags), an absolute `image`
-  (`background_image_url`), and `redirect_link`. Results are capped at 200
-  and ordered by `(event_date_start, id)` for a stable order. `title`/
+  (`background_image_url`), and `redirect_link`. The top-level response also
+  has `truncated`: `events` is capped at `MAX_RESULTS` (200) and ordered by
+  `(event_date_start, id)` for a stable order, and `truncated` is `true`
+  when more events exist beyond that cap. `title`/
   `content` follow the site's cookie-based language by default (see
   `date/middleware.py`; `Accept-Language` is ignored); pass `?lang=` to pick
   a language explicitly instead, e.g. for machine clients that do not carry
