@@ -545,6 +545,139 @@ class EventTestCase(TestCase):
         mock_handle_event_billing.assert_called_once_with(attendee)
 
 
+class EventsUpcomingApiTests(TestCase):
+    def setUp(self):
+        self.author = Member.objects.create_user(username="api-test-author")
+        self.event = Event.objects.create(
+            title='Perftest',
+            slug='perftest-api',
+            author=self.author,
+            event_date_start=timezone.now() + timezone.timedelta(days=1),
+            event_date_end=timezone.now() + timezone.timedelta(days=1, hours=2),
+        )
+
+    def test_returns_published_upcoming_event(self):
+        c = Client()
+        response = c.get(reverse('api:events:upcoming'))
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(len(payload["events"]), 1)
+        entry = payload["events"][0]
+        self.assertEqual(entry["slug"], self.event.slug)
+        self.assertEqual(entry["title"], self.event.title)
+        self.assertEqual(entry["event_date_start"], self.event.event_date_start.isoformat())
+        self.assertEqual(entry["event_date_end"], self.event.event_date_end.isoformat())
+        self.assertEqual(entry["content"], self.event.content)
+        self.assertEqual(entry["redirect_link"], self.event.redirect_link)
+        self.assertTrue(entry["url"].endswith(reverse('events:detail', args=[self.event.slug])))
+
+    def test_does_not_require_authentication(self):
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([entry["slug"] for entry in response.json()["events"]], [self.event.slug])
+
+    def test_excludes_unpublished_event(self):
+        self.event.published_time = None
+        self.event.save()
+
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertEqual(response.json()["events"], [])
+
+    def test_excludes_past_event(self):
+        self.event.event_date_start = timezone.now() - timezone.timedelta(days=2)
+        self.event.event_date_end = timezone.now() - timezone.timedelta(days=1)
+        self.event.save()
+
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertEqual(response.json()["events"], [])
+
+    def test_excludes_members_only_event(self):
+        self.event.members_only = True
+        self.event.save()
+
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertEqual(response.json()["events"], [])
+
+    def test_excludes_passcode_protected_event(self):
+        self.event.passcode = 'secret'
+        self.event.save()
+
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertEqual(response.json()["events"], [])
+
+    def test_sets_public_cache_control_with_vary_cookie(self):
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertIn('max-age=60', response.headers['Cache-Control'])
+        self.assertIn('public', response.headers['Cache-Control'])
+        self.assertIn('Cookie', response.headers['Vary'])
+
+    def test_lang_parameter_overrides_cookie_language(self):
+        self.event.title_en = 'English title'
+        self.event.title_sv = 'Svensk titel'
+        self.event.save()
+
+        response = self.client.get(reverse('api:events:upcoming'), {'lang': 'en'})
+
+        self.assertEqual(response.json()["events"][0]["title"], 'English title')
+
+    def test_unknown_lang_parameter_is_ignored(self):
+        response = self.client.get(reverse('api:events:upcoming'), {'lang': 'not-a-real-language'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["events"][0]["title"], self.event.title)
+
+    def test_head_request_is_allowed(self):
+        response = self.client.head(reverse('api:events:upcoming'))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_orders_tied_events_by_id(self):
+        earlier_id_event = self.event
+        later_id_event = Event.objects.create(
+            title='Perftest 2',
+            slug='perftest-api-2',
+            author=self.author,
+            event_date_start=earlier_id_event.event_date_start,
+            event_date_end=earlier_id_event.event_date_end,
+        )
+        self.assertLess(earlier_id_event.pk, later_id_event.pk)
+
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertEqual(
+            [entry["slug"] for entry in response.json()["events"]],
+            [earlier_id_event.slug, later_id_event.slug],
+        )
+
+    def test_response_is_not_truncated_below_the_cap(self):
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertFalse(response.json()["truncated"])
+
+    def test_response_reports_truncation_above_the_cap(self):
+        Event.objects.create(
+            title='Perftest 2',
+            slug='perftest-api-2',
+            author=self.author,
+            event_date_start=self.event.event_date_start,
+            event_date_end=self.event.event_date_end,
+        )
+
+        with patch('events.api.MAX_RESULTS', 1):
+            response = self.client.get(reverse('api:events:upcoming'))
+
+        payload = response.json()
+        self.assertEqual(len(payload["events"]), 1)
+        self.assertTrue(payload["truncated"])
+
+
 class EventRegistrationWindowTests(TestCase):
     def setUp(self):
         self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)

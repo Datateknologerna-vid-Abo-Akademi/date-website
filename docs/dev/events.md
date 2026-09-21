@@ -147,6 +147,34 @@
   (passcode validation + signup). On success it redirects back to the detail
   page with anchor fragments for certain event types (Årsfest, etc.). Template
   overrides can be triggered by event title or slug for special layouts.
+- `events/api.py::upcoming_events` (`GET /api/events/upcoming/`, route name
+  `api:events:upcoming`) is a public, unauthenticated JSON endpoint listing
+  published events with `event_date_end` in the future. It is wired in from
+  `events/api_urls.py` via `core.urls.common.API_ROUTES['events']`. The
+  shared `/api/` root is assembled automatically in `build_urlpatterns()`
+  from whichever `API_ROUTES` keys were also requested from `ROUTES`, so an
+  association that leaves `'events'` out of its route list gets neither the
+  HTML routes nor `events.api_urls` imported — no separate toggle to
+  remember. See the comment above `API_ROUTES` in `core/urls/common.py`
+  before adding another app's API. It excludes `members_only` events
+  (matching `EventDetailView._requires_member_login`) and passcode-protected
+  events (matching the passcode gate in `EventDetailView.get`/
+  `handle_passcode`) — anonymous visitors cannot view either kind of detail
+  page in full, so both are left out of this public listing too. Each entry
+  has `id`, `title`, `slug`, an absolute `url`, ISO-8601
+  `event_date_start`/`event_date_end`, `content` (raw CKEditor HTML, unlike
+  the `.ics` feed which strips tags), an absolute `image`
+  (`background_image_url`), and `redirect_link`. The top-level response also
+  has `truncated`: `events` is capped at `MAX_RESULTS` (200) and ordered by
+  `(event_date_start, id)` for a stable order, and `truncated` is `true`
+  when more events exist beyond that cap. `title`/
+  `content` follow the site's cookie-based language by default (see
+  `date/middleware.py`; `Accept-Language` is ignored); pass `?lang=` to pick
+  a language explicitly instead, e.g. for machine clients that do not carry
+  the `django_language` cookie. Responses carry a 60s public `Cache-Control`
+  header plus `Vary: Cookie`, since the body depends on the language cookie.
+  There is no per-request auth or CSRF requirement since it is read-only and
+  public.
 
 ## Websocket Layer
 

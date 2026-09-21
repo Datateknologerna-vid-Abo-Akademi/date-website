@@ -32,6 +32,25 @@ ROUTES = {
     'klotterplanket': lambda: path('klotterplanket/', include('klotterplanket.urls')),
 }
 
+# JSON API routes, keyed by the same route name as the capability they belong
+# to. A key here is only ever included when that same key was also requested
+# from ROUTES, so disabling a capability for a variant (by leaving its key
+# out of build_urlpatterns' arguments) removes its API surface for free and
+# never imports that app's api_urls module. Collected under one shared
+# `/api/` root (namespace `api`) rather than as one-off per-app routes, so
+# `reverse()` targets look like `api:events:upcoming`.
+#
+# The 1:1 keying to ROUTES is deliberate, not an accident of the lazy
+# lookup: today no association wants an app's HTML pages without also
+# publishing its JSON API. If one ever does, give that app a second,
+# distinct ROUTES/API_ROUTES key pair (the way 'archive' vs 'archive_exams'
+# already split one app into two selectable route shapes) rather than
+# threading an extra flag through build_urlpatterns for a case nobody has
+# hit yet.
+API_ROUTES = {
+    'events': lambda: path('events/', include('events.api_urls')),
+}
+
 
 def build_urlpatterns(*routes):
     """Build the canonical URL patterns from ordered route keys.
@@ -42,11 +61,20 @@ def build_urlpatterns(*routes):
     unknown = set(routes) - set(ROUTES)
     if unknown:
         raise ValueError(f"Unknown route keys: {sorted(unknown)}")
-    return [
+
+    urlpatterns = [
         path("healthz/", date_views.healthz, name="healthz"),
         path("readyz/", date_views.readyz, name="readyz"),
         *(ROUTES[route]() for route in routes),
+    ]
+
+    api_patterns = [API_ROUTES[route]() for route in routes if route in API_ROUTES]
+    if api_patterns:
+        urlpatterns.append(path("api/", include((api_patterns, "api"))))
+
+    urlpatterns += [
         path("set_lang/", date_views.set_language, name="set_lang"),
         path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
         path("_uploads/sign/", uploads_views.sign_upload, name="direct-upload-sign"),
     ]
+    return urlpatterns

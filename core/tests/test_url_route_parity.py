@@ -4,7 +4,13 @@ import sys
 
 from django.test import SimpleTestCase
 
+from core.urls.common import build_urlpatterns
+
 COMMON_PREFIXES = ["healthz/", "readyz/"]
+# Every current variant requests 'events', which has an API_ROUTES entry, so
+# the shared api/ root is assembled right before the trailing group in all of
+# them. See core.urls.common.build_urlpatterns.
+API_PREFIXES = ["api/"]
 TRAILING_PREFIXES = ["set_lang/", "jsi18n/", "_uploads/sign/"]
 
 EXPECTED_PREFIXES = {
@@ -25,6 +31,7 @@ EXPECTED_PREFIXES = {
         "ckeditor5/",
         "publications/",
         "alumni/",
+        *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
     "kk": [
@@ -44,6 +51,7 @@ EXPECTED_PREFIXES = {
         "ckeditor5/",
         "publications/",
         "alumni/",
+        *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
     "biocum": [
@@ -61,6 +69,7 @@ EXPECTED_PREFIXES = {
         "admin/",
         "ckeditor5/",
         "publications/",
+        *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
     "pulterit": [
@@ -78,6 +87,7 @@ EXPECTED_PREFIXES = {
         "admin/",
         "ckeditor5/",
         "publications/",
+        *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
     "sf": [
@@ -96,6 +106,7 @@ EXPECTED_PREFIXES = {
         "ckeditor5/",
         "publications/",
         "klotterplanket/",
+        *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
     "impuls": [
@@ -114,6 +125,7 @@ EXPECTED_PREFIXES = {
         "ckeditor5/",
         "publications/",
         "alumni/",
+        *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
     "demo": [
@@ -130,18 +142,32 @@ EXPECTED_PREFIXES = {
         "polls/",
         "admin/",
         "ckeditor5/",
+        *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
 }
 
 EXPECTED_URL_NAMES = {
-    "date": ["news:index", "archive:years", "ctf:index", "publications:pdf_list", "alumni:alumni_signup"],
-    "kk": ["news:index", "lucia:index", "publications:pdf_list", "alumni:alumni_signup"],
-    "biocum": ["news:index", "archive:years", "publications:pdf_list"],
-    "pulterit": ["news:index", "archive:exams", "publications:pdf_list"],
-    "sf": ["news:index", "archive:years", "publications:pdf_list", "klotterplanket:index"],
-    "impuls": ["news:index", "archive:years", "publications:pdf_list", "alumni:alumni_signup"],
-    "demo": ["news:index", "archive:years"],
+    "date": [
+        "news:index",
+        "archive:years",
+        "ctf:index",
+        "publications:pdf_list",
+        "alumni:alumni_signup",
+        "api:events:upcoming",
+    ],
+    "kk": ["news:index", "lucia:index", "publications:pdf_list", "alumni:alumni_signup", "api:events:upcoming"],
+    "biocum": ["news:index", "archive:years", "publications:pdf_list", "api:events:upcoming"],
+    "pulterit": ["news:index", "archive:exams", "publications:pdf_list", "api:events:upcoming"],
+    "sf": ["news:index", "archive:years", "publications:pdf_list", "klotterplanket:index", "api:events:upcoming"],
+    "impuls": [
+        "news:index",
+        "archive:years",
+        "publications:pdf_list",
+        "alumni:alumni_signup",
+        "api:events:upcoming",
+    ],
+    "demo": ["news:index", "archive:years", "api:events:upcoming"],
 }
 
 FORBIDDEN_URL_NAMES = {
@@ -213,3 +239,19 @@ class VariantRouteParityTests(SimpleTestCase):
                     env={**os.environ, "PROJECT_NAME": variant},
                 )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+class ApiRootCompositionTests(SimpleTestCase):
+    """The shared /api/ root only appears for routes with an API_ROUTES
+    entry that were also requested, so leaving a capability's key out of
+    build_urlpatterns(...) removes its API surface too, with no separate
+    toggle to remember and no import of the disabled app's api_urls module.
+    """
+
+    def test_api_root_present_when_events_requested(self):
+        patterns = build_urlpatterns('index', 'events')
+        self.assertIn("api/", [str(p.pattern) for p in patterns])
+
+    def test_api_root_absent_when_events_not_requested(self):
+        patterns = build_urlpatterns('index')
+        self.assertNotIn("api/", [str(p.pattern) for p in patterns])
