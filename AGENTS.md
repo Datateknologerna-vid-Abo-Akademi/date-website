@@ -222,3 +222,4 @@ Shared monitoring is in `monitoring/` plus the `docker-compose.monitoring.yml` a
 - Run relevant tests/checks and mention anything not run.
 - Update docs and config examples together with code behavior.
 - Keep `main` history clean and readable.
+- Do not add Claude/AI co-author attribution (e.g. `Co-Authored-By: Claude ...`) to commit messages or PR descriptions.
