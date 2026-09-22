@@ -2,6 +2,7 @@ from functools import reduce
 
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.admin.models import LogEntry
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Permission
 from django.db.models import CharField, Exists, F, OuterRef, Q, Value
@@ -195,6 +196,20 @@ class UserAdmin(_UserAdminBase):
 
     def has_delete_permission(self, request, obj=None):
         return self._has_restricted_object_access(request, obj) and super().has_delete_permission(request, obj)
+
+    def get_deleted_objects(self, objs, request):
+        # Deleting a member cascades into that member's admin log entries
+        # (LogEntry.user is a CASCADE foreign key) and the log admin is
+        # deliberately read-only, so Django's related-object permission check
+        # would refuse every member deletion, superusers included. The log rows
+        # are collateral of the deletion rather than objects the operator has to
+        # be allowed to delete on their own, so drop that single label from the
+        # check and let the cascade remove the rows. Django's set identifies
+        # models by their active-language label only, which is why this is a
+        # label discard rather than a model comparison.
+        to_delete, model_count, perms_needed, protected = super().get_deleted_objects(objs, request)
+        perms_needed.discard(LogEntry._meta.verbose_name)
+        return to_delete, model_count, perms_needed, protected
 
     def get_search_results(self, request, queryset, search_term):
         base_queryset = queryset
