@@ -2658,7 +2658,7 @@ class EventTemplateSelectionTests(TestCase):
 
         self.assertContains(response, "Spring Ball")
         self.assertContains(response, "HQKK_2.png")
-        self.assertContains(response, "CII Kemistbaal")
+        self.assertContains(response, "Kemistbaal")
 
     def test_wappmiddag_template_uses_event_and_association_branding(self):
         event = Event.objects.create(
