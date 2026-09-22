@@ -164,7 +164,7 @@ django-admin compilemessages
 - `alumni`: Google Sheets-backed alumni signup/update flow, Celery side effects, token emails.
 - `archive`: photo/document/exam/public-file collections, bulk uploads, access checks.
 - `billing`: event invoices and reference-number generation behind the event billing integration.
-- `ctf`: seasonal CTFs, flags, guesses, and solving flow.
+- `ctf`: seasonal CTFs, flags, guesses, solving flow, and published post-mortems.
 - `date`: homepage composition, calendar data, language switching, middleware, error views.
 - `events`: events, dynamic registration forms, capacity/sign-up windows, passcodes, captcha, child events, WebSocket attendee updates.
 - `exambank`: exam archive collections and files (replaced `archive.Collection(type="Exams")`); own sign-in/password access gate shared across `archive`, `exambank.archive_urls`, and `exambank.urls`.

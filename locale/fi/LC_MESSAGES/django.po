@@ -452,6 +452,76 @@ msgstr "Aika"
 msgid "Gissningar"
 msgstr "Arvaukset"
 
+#: core/admin_ui.py:188
+msgid "CTF Post-mortems"
+msgstr "CTF-jälkianalysit"
+
+#: ctf/admin.py:56
+#: templates/common/ctf/post_mortem_index.html:13
+msgid "Post-mortems"
+msgstr "Jälkianalysit"
+
+#: ctf/models.py:74
+msgid "Översikt"
+msgstr "Yleiskatsaus"
+
+#: ctf/models.py:80
+msgid ""
+"Lämna tomt för att dölja efteranalysen. Välj en framtida tid för schemalagd "
+"publicering."
+msgstr ""
+"Jätä tyhjäksi piilottaaksesi jälkianalyysin. Valitse tuleva ajankohta "
+"ajastettua julkaisua varten."
+
+#: ctf/models.py:86
+msgid "post-mortem"
+msgstr "jälkianalyysi"
+
+#: ctf/models.py:87
+msgid "post-mortems"
+msgstr "jälkianalysit"
+
+#: ctf/models.py:112 templates/common/ctf/post_mortem_detail.html:46
+msgid "Solution"
+msgstr "Ratkaisu"
+
+#: templates/common/ctf/detail.html:28
+#: templates/common/ctf/post_mortem_detail.html:13
+msgid "Post-mortem"
+msgstr "Jälkianalyysi"
+
+#: templates/common/ctf/post_mortem_detail.html:15
+msgid "Data"
+msgstr "Tiedot"
+
+#: templates/common/ctf/post_mortem_detail.html:16
+msgid "Total guesses"
+msgstr "Arvauksia yhteensä"
+
+#: templates/common/ctf/post_mortem_detail.html:19
+msgid "Number of inputs"
+msgstr "Syötteiden määrä"
+
+#: templates/common/ctf/post_mortem_detail.html:22
+msgid "Full logs"
+msgstr "Täydelliset lokit"
+
+#: templates/common/ctf/post_mortem_detail.html:31
+msgid "Solved by"
+msgstr "Ratkaissut"
+
+#: templates/common/ctf/post_mortem_detail.html:34
+msgid "Solve time"
+msgstr "Ratkaisuaika"
+
+#: templates/common/ctf/post_mortem_detail.html:41
+msgid "Unsolved"
+msgstr "Ratkaisematon"
+
+#: templates/common/ctf/post_mortem_index.html:20
+msgid "No post-mortems have been published yet."
+msgstr "Jälkianalyyseja ei ole vielä julkaistu."
+
 #: events/forms.py:81 events/forms.py:174
 msgid "Leave blank to keep the event hidden."
 msgstr "Jätä tyhjäksi pitääksesi tapahtuman piilotettuna."

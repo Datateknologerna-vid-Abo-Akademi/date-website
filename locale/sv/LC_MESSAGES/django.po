@@ -451,6 +451,76 @@ msgstr "Tid"
 msgid "Gissningar"
 msgstr "Gissningar"
 
+#: core/admin_ui.py:188
+msgid "CTF Post-mortems"
+msgstr "CTF-efteranalyser"
+
+#: ctf/admin.py:56
+#: templates/common/ctf/post_mortem_index.html:13
+msgid "Post-mortems"
+msgstr "Efteranalyser"
+
+#: ctf/models.py:74
+msgid "Översikt"
+msgstr "Översikt"
+
+#: ctf/models.py:80
+msgid ""
+"Lämna tomt för att dölja efteranalysen. Välj en framtida tid för schemalagd "
+"publicering."
+msgstr ""
+"Lämna tomt för att dölja efteranalysen. Välj en framtida tid för schemalagd "
+"publicering."
+
+#: ctf/models.py:86
+msgid "post-mortem"
+msgstr "efteranalys"
+
+#: ctf/models.py:87
+msgid "post-mortems"
+msgstr "efteranalyser"
+
+#: ctf/models.py:112 templates/common/ctf/post_mortem_detail.html:46
+msgid "Solution"
+msgstr "Lösning"
+
+#: templates/common/ctf/detail.html:28
+#: templates/common/ctf/post_mortem_detail.html:13
+msgid "Post-mortem"
+msgstr "Efteranalys"
+
+#: templates/common/ctf/post_mortem_detail.html:15
+msgid "Data"
+msgstr "Data"
+
+#: templates/common/ctf/post_mortem_detail.html:16
+msgid "Total guesses"
+msgstr "Gissningar totalt"
+
+#: templates/common/ctf/post_mortem_detail.html:19
+msgid "Number of inputs"
+msgstr "Antal inmatningar"
+
+#: templates/common/ctf/post_mortem_detail.html:22
+msgid "Full logs"
+msgstr "Fullständiga loggar"
+
+#: templates/common/ctf/post_mortem_detail.html:31
+msgid "Solved by"
+msgstr "Löst av"
+
+#: templates/common/ctf/post_mortem_detail.html:34
+msgid "Solve time"
+msgstr "Lösningstid"
+
+#: templates/common/ctf/post_mortem_detail.html:41
+msgid "Unsolved"
+msgstr "Olöst"
+
+#: templates/common/ctf/post_mortem_index.html:20
+msgid "No post-mortems have been published yet."
+msgstr "Inga efteranalyser har publicerats ännu."
+
 #: events/forms.py:81 events/forms.py:174
 msgid "Leave blank to keep the event hidden."
 msgstr "Lämna tomt för att hålla evenemanget dolt."
