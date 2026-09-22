@@ -761,6 +761,33 @@ class LanguageSelectionTests(TestCase):
         self.assertNotIn('href=""', rendered)
 
 
+class AssociationLanguageSettingsTests(SimpleTestCase):
+    """Biocum narrows the shared language list to Swedish and English, like
+    date and impuls do, so the published flag never exposes Finnish."""
+
+    def _biocum_languages(self, enable_language_features):
+        common = importlib.import_module("core.settings.common")
+        biocum = importlib.import_module("core.settings.biocum")
+        # The module reads ENABLE_LANGUAGE_FEATURES at import time, so reload
+        # it under the requested flag and restore its import-time state after
+        # the test.
+        self.addCleanup(importlib.reload, biocum)
+        with patch.object(common, "ENABLE_LANGUAGE_FEATURES", enable_language_features):
+            return importlib.reload(biocum).LANGUAGES
+
+    def test_biocum_offers_swedish_and_english_when_language_features_enabled(self):
+        self.assertEqual(
+            self._biocum_languages(True),
+            (("sv", "Svenska"), ("en", "English")),
+        )
+
+    def test_biocum_offers_swedish_only_when_language_features_disabled(self):
+        self.assertEqual(
+            self._biocum_languages(False),
+            (("sv", "Svenska"),),
+        )
+
+
 class ConnectionLifecycleMiddlewareTests(SimpleTestCase):
     def setUp(self):
         self.factory = RequestFactory()
@@ -841,10 +868,10 @@ class AssociationHomepageSmokeTests(TestCase):
         clear_url_caches()
         set_urlconf(None)
 
-    def _get_association_homepage(self, association):
+    def _get_association_homepage(self, association, **extra_overrides):
         default_admin_registry = admin.site._registry.copy()
         custom_admin_registry = admin_site._registry.copy()
-        with override_settings(**self._association_overrides(association)):
+        with override_settings(**self._association_overrides(association), **extra_overrides):
             self._clear_routing_caches()
             try:
                 return self.client.get("/")
@@ -858,6 +885,23 @@ class AssociationHomepageSmokeTests(TestCase):
             with self.subTest(association=association):
                 response = self._get_association_homepage(association)
                 self.assertEqual(response.status_code, 200)
+
+    def test_biocum_homepage_offers_swedish_and_english_only(self):
+        biocum_settings = importlib.import_module("core.settings.biocum")
+        cache.clear()
+        response = self._get_association_homepage(
+            "biocum",
+            ENABLE_LANGUAGE_FEATURES=True,
+            LANGUAGES=biocum_settings.DATE_LANGUAGES,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'action="/set_lang/"')
+        self.assertContains(response, 'name="lang"')
+        self.assertContains(response, "Svenska")
+        self.assertContains(response, "English")
+        self.assertNotContains(response, "Suomi")
+        self.assertNotContains(response, 'value="fi"')
 
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
     @patch("date.views.secrets.randbelow", return_value=0)
