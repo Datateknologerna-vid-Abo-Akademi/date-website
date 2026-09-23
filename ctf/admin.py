@@ -16,7 +16,7 @@ from core.admin_widgets import (
     FlatpickrDateTimeAdminMixin,
 )
 
-from .models import Ctf, Flag, Guess
+from .models import Ctf, Flag, Guess, PostMortem
 
 if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
 
@@ -71,6 +71,12 @@ class CtfAdmin(
             url_name='admin:ctf_guess_changelist',
             permission='ctf.view_guess',
         ),
+        AdminLink(
+            _('Post-mortems'),
+            icon='flag',
+            url_name='admin:ctf_postmortem_changelist',
+            any_permissions=('ctf.add_ctf', 'ctf.change_ctf', 'ctf.add_flag', 'ctf.change_flag'),
+        ),
     )
     model = Ctf
     save_on_top = True
@@ -91,6 +97,52 @@ class CtfAdmin(
         if obj.published_time > now():
             return _('Schemalagd')
         return _('Publicerad')
+
+    class Media:
+        css = {'all': FLATPICKR_ADMIN_CSS}
+        js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS
+
+
+CTF_EDITOR_PERMISSIONS = ('ctf.add_ctf', 'ctf.change_ctf', 'ctf.add_flag', 'ctf.change_flag')
+
+
+@admin.register(PostMortem)
+class PostMortemAdmin(FlatpickrDateTimeAdminMixin, PublicUrlAdminMixin, ModelAdmin):
+    model = PostMortem
+    save_on_top = True
+    list_display = ('ctf', 'published_time', 'publication_status')
+    list_filter = (CtfPublicationFilter,)
+    search_fields = ('ctf__title', 'ctf__slug')
+    autocomplete_fields = ('ctf',)
+    list_select_related = ('ctf',)
+    ordering = ('-ctf__start_date',)
+    flatpickr_datetime_fields = ('published_time',)  # type: ignore[assignment]
+
+    def _is_ctf_editor(self, request):
+        return any(request.user.has_perm(permission) for permission in CTF_EDITOR_PERMISSIONS)
+
+    @admin.display(description=_('Publicering'), ordering='published_time')
+    def publication_status(self, obj):
+        if obj.published_time is None:
+            return _('Dold')
+        if obj.published_time > now():
+            return _('Schemalagd')
+        return _('Publicerad')
+
+    def has_module_permission(self, request):
+        return self._is_ctf_editor(request) or super().has_module_permission(request)
+
+    def has_view_permission(self, request, obj=None):
+        return self._is_ctf_editor(request) or super().has_view_permission(request, obj)
+
+    def has_add_permission(self, request):
+        return self._is_ctf_editor(request) or super().has_add_permission(request)
+
+    def has_change_permission(self, request, obj=None):
+        return self._is_ctf_editor(request) or super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return self._is_ctf_editor(request) or super().has_delete_permission(request, obj)
 
     class Media:
         css = {'all': FLATPICKR_ADMIN_CSS}

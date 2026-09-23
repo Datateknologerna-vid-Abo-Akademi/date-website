@@ -185,6 +185,12 @@ SIDEBAR_NAVIGATION = (
         (
             AdminLink(_('CTF'), icon='military_tech', url_name='admin:ctf_ctf_changelist', permission='ctf.view_ctf'),
             AdminLink(
+                _('CTF Post-mortems'),
+                icon='flag',
+                url_name='admin:ctf_postmortem_changelist',
+                any_permissions=('ctf.add_ctf', 'ctf.change_ctf', 'ctf.add_flag', 'ctf.change_flag'),
+            ),
+            AdminLink(
                 _('Lucia'), icon='stars', url_name='admin:lucia_candidate_changelist', permission='lucia.view_candidate'
             ),
         ),

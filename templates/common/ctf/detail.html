@@ -24,6 +24,9 @@
         </ul>
         <h2 class="header">{{ ctf.title }}</h2>
         <p>{{ ctf.content | safe }}</p>
+        {% if ctf.post_mortem.is_visible %}
+          <p><a href="{{ ctf.post_mortem.get_absolute_url }}">{% trans "Post-mortem" %}</a></p>
+        {% endif %}
       </div>
     </div>
   </div>

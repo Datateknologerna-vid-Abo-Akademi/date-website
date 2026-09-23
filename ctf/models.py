@@ -59,6 +59,51 @@ class Ctf(models.Model):
         return now() > self.end_date
 
 
+class PostMortemQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(published_time__isnull=False, published_time__lte=now())
+
+    def visible(self):
+        return self.published().filter(ctf__end_date__lt=now())
+
+
+class PostMortem(models.Model):
+    ctf = models.OneToOneField(
+        Ctf,
+        on_delete=models.CASCADE,
+        related_name='post_mortem',
+        verbose_name=_('CTF'),
+    )
+    overview = CKEditor5Field(_('Översikt'), blank=True)
+    published_time = models.DateTimeField(
+        _('Publiceras'),
+        null=True,
+        blank=True,
+        default=None,
+        help_text=_('Lämna tomt för att dölja efteranalysen. Välj en framtida tid för schemalagd publicering.'),
+    )
+
+    objects = PostMortemQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = _('post-mortem')
+        verbose_name_plural = _('post-mortems')
+
+    def __str__(self):
+        return f'{self.ctf.title} post-mortem'
+
+    def get_absolute_url(self):
+        return reverse('ctf:post_mortem_detail', args=[self.ctf.slug])
+
+    @property
+    def published(self):
+        return self.published_time is not None and self.published_time <= now()
+
+    @property
+    def is_visible(self):
+        return self.published and self.ctf.ctf_ended()
+
+
 class Flag(models.Model):
     # uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     ctf = models.ForeignKey(Ctf, on_delete=models.CASCADE)
@@ -67,6 +112,7 @@ class Flag(models.Model):
     flag = models.CharField(max_length=200)
     solved_date = models.DateTimeField(blank=True, null=True)
     clues = CKEditor5Field(_('Clue'), blank=True)
+    solution = CKEditor5Field(_('Solution'), blank=True)
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
 
     class Meta:
