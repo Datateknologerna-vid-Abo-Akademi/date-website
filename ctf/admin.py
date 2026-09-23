@@ -1,7 +1,13 @@
+from django.conf import settings
 from django.contrib import admin
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
+from core.admin import (
+    ActiveLanguageTranslationAdminMixin,
+    LanguageTabbedTranslationAdmin,
+    TranslationCompletionAdminMixin,
+)
 from core.admin_base import ExtraChangeListLinksMixin, ModelAdmin, PublicUrlAdminMixin, StackedInline
 from core.admin_ui import AdminLink
 from core.admin_widgets import (
@@ -11,6 +17,13 @@ from core.admin_widgets import (
 )
 
 from .models import Ctf, Flag, Guess
+
+if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
+
+    class CtfTranslationAdminBase(ActiveLanguageTranslationAdminMixin, LanguageTabbedTranslationAdmin, ModelAdmin):
+        pass
+else:
+    CtfTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
 class FlagInline(StackedInline):
@@ -44,7 +57,13 @@ class CtfPublicationFilter(admin.SimpleListFilter):
 
 
 @admin.register(Ctf)
-class CtfAdmin(FlatpickrDateTimeAdminMixin, ExtraChangeListLinksMixin, PublicUrlAdminMixin, ModelAdmin):
+class CtfAdmin(
+    FlatpickrDateTimeAdminMixin,
+    ExtraChangeListLinksMixin,
+    PublicUrlAdminMixin,
+    TranslationCompletionAdminMixin,
+    CtfTranslationAdminBase,
+):
     changelist_links = (
         AdminLink(
             _('All guesses'),
@@ -55,7 +74,7 @@ class CtfAdmin(FlatpickrDateTimeAdminMixin, ExtraChangeListLinksMixin, PublicUrl
     )
     model = Ctf
     save_on_top = True
-    list_display = ('title', 'start_date', 'end_date', 'publication_status', 'published_time')
+    list_display = ('title', 'translation_status', 'start_date', 'end_date', 'publication_status', 'published_time')
     list_filter = (CtfPublicationFilter,)
     search_fields = ('title', 'slug')
     ordering = ('-start_date',)

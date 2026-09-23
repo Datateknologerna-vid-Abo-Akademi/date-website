@@ -6,6 +6,13 @@
 - `Flag`: FK to `Ctf`, optional FK to `Member` (solver), plaintext `flag` string, optional `clues`, slug, and `solved_date`.
 - `Guess`: records every submission with references to the CTF, flag, member, guessed string, correctness, and timestamp.
 
+## Translations
+- `ctf/translation.py` registers `Ctf.title` and `Ctf.content` with `django-modeltranslation`, so editors can maintain the CTF heading and description per language. `Flag.title` and `Flag.clues` stay single-language.
+- The translated columns are `title_sv`/`title_en`/`title_fi` and `content_sv`/`content_en`/`content_fi`. They exist for every association because the shared schema keeps the full modeltranslation language set.
+- `CtfAdmin` follows the `events` pattern: a language-tabbed change form plus a `translation_status` coverage column in the changelist (hidden when `ENABLE_LANGUAGE_FEATURES=False`).
+- Rows created before the translated columns existed are copied into the Swedish columns by `ctf/migrations/0006_backfill_ctf_default_translations.py`. Without that backfill the public pages render an empty title and body, because the modeltranslation descriptor only reads the `*_<language>` columns.
+- Public pages read the active language and fall back to Swedish when a translation is missing.
+
 ## Views & Flow
 - `IndexView` (ListView) returns the five newest ctfs.
 - `DetailView` adds all related flags to the context for display.

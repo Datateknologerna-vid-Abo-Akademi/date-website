@@ -13,6 +13,8 @@ Publish capture-the-flag competitions, manage individual flags, and review guess
    - **Publiceras** – timestamp when the CTF should become visible. Leave empty to keep it hidden, or pick a future time to schedule publication; a past time publishes immediately.
 4. Save to unlock the inline **Flags** table.
 
+When language features are enabled, **Titel** and **Innehåll** get one tab per language. Swedish is the source version, and a language without its own value falls back to Swedish on the public page. The CTFs list shows the coverage per language, for example `sv: 2/2; en: 1/2`. Flag titles and clues stay single-language.
+
 ## Add Flags to a CTF
 1. In the **Flags** inline, click **Add another Flag** for each challenge.
 2. Fields include:
