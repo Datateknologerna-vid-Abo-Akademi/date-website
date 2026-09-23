@@ -33,7 +33,10 @@ class Ctf(models.Model):
         help_text=_('Lämna tomt för att dölja CTF:n. Välj en framtida tid för schemalagd publicering.'),
     )
 
-    objects = CtfQuerySet.as_manager()
+    # modeltranslation patches the runtime manager once Ctf is registered in
+    # ctf/translation.py, which django-stubs cannot resolve statically. Same
+    # ignore as the other translated models that build their manager this way.
+    objects = CtfQuerySet.as_manager()  # type: ignore[django-manager-missing]
 
     class Meta:
         verbose_name = _('ctf')
