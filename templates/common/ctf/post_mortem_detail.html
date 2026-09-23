@@ -8,13 +8,13 @@
 {% endblock %}
 {% block content %}
   <div class="container-md min-vh-100 container-margin-top">
-    <div class="container-size text-center" style="max-width: 500px;">
-      <div class="content">
-        <h2 class="header">{{ ctf.title }} {% trans "Post-mortem" %}</h2>
-        {% if post_mortem.overview %}{{ post_mortem.overview|safe }}{% endif %}
+    <div class="ctf-page">
+      <div class="content ctf-content">
+        <h2 class="ctf-title ctf-centered">{{ ctf.title }} {% trans "Post-mortem" %}</h2>
+        {% if post_mortem.overview %}<div class="ctf-clue">{{ post_mortem.overview | safe }}</div>{% endif %}
         <h4>{% trans "Data" %}</h4>
         <p>{% trans "Total guesses" %}: {{ total_guesses }}</p>
-        <ul class="list-unstyled">
+        <ul class="list-unstyled ctf-flags">
           {% for challenge in challenges %}
             <li>FLAG: {{ challenge.flag.title }} - {% trans "Number of inputs" %}: {{ challenge.inputs }}</li>
           {% endfor %}
@@ -23,7 +23,7 @@
         {% for challenge in challenges %}
           <div class="m-1">
             <h5>{{ challenge.flag.title }}</h5>
-            {% if challenge.flag.clues %}{{ challenge.flag.clues|safe }}{% endif %}
+            {% if challenge.flag.clues %}<div class="ctf-clue">{{ challenge.flag.clues | safe }}</div>{% endif %}
             {% if challenge.flag.solver %}
               <p>
                 <span class="valid">[SOLVED]</span>
@@ -44,11 +44,14 @@
               </p>
             {% endif %}
             <h6>{% trans "Solution" %}</h6>
-            {{ challenge.flag.solution|safe }}
+            <div class="ctf-clue">{{ challenge.flag.solution | safe }}</div>
           </div>
         {% endfor %}
-        <p>
-          <a href="{% url 'ctf:post_mortem_index' %}"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
+        <p class="ctf-back ctf-centered">
+          <a href="{% url 'ctf:post_mortem_index' %}"
+             aria-label="Tillbaka till post-mortems">
+            <i class="fa fa-arrow-left" aria-hidden="true"></i>
+          </a>
         </p>
       </div>
     </div>

@@ -8,28 +8,58 @@
 {% endblock %}
 {% block content %}
   <div class="container-md min-vh-100 container-margin-top">
-    <div class="container-size text-center" style="max-width: 500px;">
-      <div class="content">
-        {% if ctf.ctf_is_open %}
-          <a href="{% url 'ctf:detail' ctf.slug %}"><i class="fa fa-arrow-left" aria-hidden="true"></i></a>
-          <h2 class="header">{{ flag.title }}</h2>
-          <p>{{ flag.clues | safe }}</p>
-          {% if valid %}<p class='valid'>{{ valid }}</p>{% endif %}
-          {% if invalid %}<p class='invalid'>{{ invalid }}</p>{% endif %}
-          {% if flag.solver or solved %}
-            <p>
-              <span class="valid">[SOLVED]</span>
-              <br>
-              av: {{ flag.solver }}
-              <br>
-              tid: {{ flag.solved_date|timeuntil:ctf.start_date }}
-            </p>
+    <div class="ctf-page">
+      <div class="content ctf-content">
+        {% if flag %}
+          <p class="ctf-back ctf-centered">
+            <a href="{% url 'ctf:detail' ctf.slug %}"
+               aria-label="Tillbaka till flagglistan">
+              <i class="fa fa-arrow-left" aria-hidden="true"></i>
+            </a>
+          </p>
+        {% else %}
+          <p class="ctf-back ctf-centered">
+            <a href="{% url 'ctf:index' %}" aria-label="Tillbaka till CTF-listan">
+              <i class="fa fa-arrow-left" aria-hidden="true"></i>
+            </a>
+          </p>
+        {% endif %}
+        {% if flag %}
+          <h2 class="ctf-title ctf-centered">{{ flag.title }}</h2>
+          {% if not ctf.ctf_is_open %}
+            <p class="ctf-message ctf-centered">CTF:n har inte öppnat än.</p>
+          {% else %}
+            {% if ctf.ctf_ended %}
+              <p class="ctf-message ctf-centered">CTF:n är avslutad.</p>
+            {% endif %}
+            <div class="ctf-clue">{{ flag.clues | safe }}</div>
+            {% if flag.solver or solved %}
+              <p class="ctf-status">
+                <span class="valid">[SOLVED]</span>
+                <br>
+                av: {{ flag.solver }}
+                {% if flag.solved_date %}
+                  <br>
+                  tid: {{ flag.solved_date|timeuntil:ctf.start_date }}
+                {% endif %}
+              </p>
+            {% endif %}
+            <form class="ctf-form" method="post">
+              {% csrf_token %}
+              <label for="id_flag">Flagga</label>
+              {{ form.flag }}
+              {{ form.flag.errors }}
+              <button type="submit" class="theme-button">Submit</button>
+            </form>
+            {% if valid %}
+              <p class="ctf-message valid" role="status">{{ valid }}</p>
+            {% endif %}
+            {% if invalid %}
+              <p class="ctf-message invalid" role="status">{{ invalid }}</p>
+            {% endif %}
           {% endif %}
-          <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <input type="submit" value="Submit">
-          </form>
+        {% else %}
+          <p class="ctf-message ctf-centered">Flaggan hittades inte.</p>
         {% endif %}
       </div>
     </div>
