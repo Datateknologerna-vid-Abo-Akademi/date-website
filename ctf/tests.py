@@ -1,9 +1,11 @@
+from importlib import import_module
+
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.db import connection
-from django.db.migrations.executor import MigrationExecutor
-from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
+from django.db.migrations.loader import MigrationLoader
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django_ckeditor_5.widgets import CKEditor5Widget
 
@@ -114,63 +116,59 @@ class CtfPublicTranslationTests(TestCase):
         self.assertContains(response, "Svensk text")
 
 
-class CtfTranslationBackfillMigrationTests(TransactionTestCase):
+class CtfTranslationBackfillTests(TestCase):
     """Cover the 0006 backfill of the translated columns.
 
     ``Ctf.title`` and ``Ctf.content`` resolve through the modeltranslation
     descriptor, which only reads the ``*_<language>`` columns, so rows that
     predate the translated columns would render blank without the backfill.
+
+    The historical model from the migration state is used on purpose: it has a
+    plain manager, exactly like the model the migration runs against, while the
+    live model's manager rewrites ``F("title")`` to the translated column and
+    would turn the backfill into a no-op.
     """
 
-    migrate_from = ("ctf", "0005_ctf_content_en_ctf_content_fi_ctf_content_sv_and_more")
-    migrate_to = ("ctf", "0006_backfill_ctf_default_translations")
+    migration = "0005_ctf_content_en_ctf_content_fi_ctf_content_sv_and_more"
 
     def setUp(self):
         super().setUp()
-        self.executor = MigrationExecutor(connection)
-        self.executor.migrate([self.migrate_from])
+        state = MigrationLoader(connection, ignore_no_migrations=True).project_state([("ctf", self.migration)])
+        self.migration_apps = state.apps
+        self.legacy_ctf = state.apps.get_model("ctf", "Ctf")
 
-    def tearDown(self):
-        # Restore the latest schema so the tests that follow see the current models.
-        executor = MigrationExecutor(connection)
-        executor.migrate(executor.loader.graph.leaf_nodes())
-        super().tearDown()
-
-    def _create_legacy_ctf(self, **kwargs):
-        """Create a row the way the pre-translation model would have written it."""
-        ctf_model = self.executor.loader.project_state([self.migrate_from]).apps.get_model("ctf", "Ctf")
-
-        return ctf_model, ctf_model.objects.create(**kwargs)
-
-    def _apply_backfill(self):
-        executor = MigrationExecutor(connection)
-        executor.migrate([self.migrate_to])
-
-        return executor.loader.project_state([self.migrate_to]).apps.get_model("ctf", "Ctf")
+    def _run_backfill(self):
+        module = import_module("ctf.migrations.0006_backfill_ctf_default_translations")
+        module.backfill_ctf_default_translations(self.migration_apps, None)
 
     def test_backfill_copies_legacy_values_into_the_swedish_columns(self):
-        _ctf_model, _ctf = self._create_legacy_ctf(
+        ctf = self.legacy_ctf.objects.create(
             title="Legacy CTF",
             content="<p>Legacy text</p>",
             slug="legacy-ctf",
         )
+        # Guard the test against becoming vacuous: a row written before the
+        # translated columns existed has no Swedish values yet.
+        self.assertIsNone(self.legacy_ctf.objects.values_list("title_sv", flat=True).get(pk=ctf.pk))
 
-        ctf_model = self._apply_backfill()
-        row = ctf_model.objects.values("title", "title_sv", "content_sv").get(slug="legacy-ctf")
+        self._run_backfill()
 
+        row = self.legacy_ctf.objects.values("title_sv", "content_sv").get(pk=ctf.pk)
         self.assertEqual(row["title_sv"], "Legacy CTF")
         self.assertEqual(row["content_sv"], "<p>Legacy text</p>")
+        # The public page reads through the live descriptor.
+        self.assertEqual(Ctf.objects.get(pk=ctf.pk).title, "Legacy CTF")
 
     def test_backfill_keeps_existing_swedish_values(self):
-        ctf_model, ctf = self._create_legacy_ctf(
+        ctf = self.legacy_ctf.objects.create(
             title="Legacy CTF",
             content="<p>Legacy text</p>",
             slug="translated-ctf",
         )
-        ctf_model.objects.filter(pk=ctf.pk).update(title_sv="Översatt titel", content_sv="<p>Översatt</p>")
+        self.legacy_ctf.objects.filter(pk=ctf.pk).update(title_sv="Översatt titel", content_sv="<p>Översatt</p>")
 
-        migrated_ctf_model = self._apply_backfill()
-        row = migrated_ctf_model.objects.values("title_sv", "content_sv").get(slug="translated-ctf")
+        self._run_backfill()
 
+        row = self.legacy_ctf.objects.values("title_sv", "content_sv").get(pk=ctf.pk)
         self.assertEqual(row["title_sv"], "Översatt titel")
         self.assertEqual(row["content_sv"], "<p>Översatt</p>")
