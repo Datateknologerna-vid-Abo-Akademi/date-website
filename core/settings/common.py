@@ -604,6 +604,18 @@ LOGGING = {
         },
         'simple': {'()': 'core.redaction.RedactingFormatter', 'format': '%(levelname)s %(message)s'},
     },
+    'filters': {
+        # Python 3.14 reports exceptions from shielded futures that nobody
+        # retrieves through the event loop exception handler, which logs them on
+        # the 'asyncio' logger at ERROR. A client disconnect cancels the request
+        # task while asgiref's sync bridge is often awaiting asyncio.shield(...),
+        # so the shielded future finishes with a harmless CancelledError. The
+        # filter drops only those cancellation records; any other shielded-future
+        # failure still reaches the log.
+        'shielded_future_cancellation': {
+            '()': 'core.redaction.ShieldedFutureCancellationFilter',
+        },
+    },
     'handlers': {
         'console': {'level': 'NOTSET', 'class': 'logging.StreamHandler', 'formatter': 'simple'},
         'console_debug': {'level': 'DEBUG', 'class': 'logging.StreamHandler', 'formatter': 'simple'},
@@ -639,6 +651,18 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
+        },
+        # Without an entry here the record falls through to logging.lastResort
+        # and prints unformatted. Keep the handler and an INFO level so genuine
+        # asyncio errors and warnings stay visible with normal formatting, and
+        # gate only the benign shielded-future cancellations with the filter.
+        # The filter belongs on this logger: a filter on an ancestor logger does
+        # not gate records that propagate up to it, and asyncio logs on itself.
+        'asyncio': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'filters': ['shielded_future_cancellation'],
+            'propagate': False,
         },
     },
 }

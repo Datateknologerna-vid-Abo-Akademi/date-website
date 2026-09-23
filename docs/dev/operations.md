@@ -25,6 +25,24 @@ Unfold keeps create actions next to the object they affect. Model lists and edit
 
 Search forms use a visible label and submit button, with model-specific search guidance kept below the field instead of hidden in its placeholder. Change forms include an explicit close action, and public-page links use Unfold's **View on site** object action instead of being inserted into an arbitrary form section.
 
+## Logging
+
+Application logging is configured by `LOGGING` in `core/settings/common.py`. Output goes through `core.redaction.RedactingFormatter`, which strips private keys and service-account values, and Django error reports use `core.redaction.DateExceptionReporterFilter` for the same settings.
+
+### Benign asyncio shielded-future cancellations
+
+Python 3.14 makes `asyncio.shield()` report an exception that nobody retrieves through the event loop exception handler, which logs it on the `asyncio` logger at ERROR. Our ASGI stack cancels the in-flight request task when a client disconnects, and asgiref's sync bridge is often awaiting `asyncio.shield(...)` at that moment. The shielded future then finishes with `asyncio.CancelledError`, so the log gets a `CancelledError exception in shielded future` record whose traceback is the whole inner request. A scanner probe such as `/.env` that is dropped while Django is building the 404 is enough to produce one.
+
+The record is not an application error, but it is costly: log-based alerting counts the inner exception as an unhandled traceback and it hides real failures. `core.redaction.ShieldedFutureCancellationFilter` drops only that record, and the `asyncio` logger in `LOGGING` keeps a console handler at INFO so genuine asyncio problems stay visible with normal formatting:
+
+- `Task exception was never retrieved`
+- transport failures
+- slow-callback warnings
+
+A shielded future that finishes with anything other than `asyncio.CancelledError` is still logged in full, because a never-retrieved exception there is a real problem.
+
+Keep the filter attached to the `asyncio` logger itself. A filter on an ancestor logger does not gate records that propagate up to it, and asyncio emits these records on `asyncio` directly.
+
 ## Fixture Reset and Local Seed Data
 
 ### `date-cleaninit` / `scripts/clean_init.sh`
