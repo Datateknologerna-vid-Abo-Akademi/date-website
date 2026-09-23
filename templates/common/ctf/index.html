@@ -8,13 +8,13 @@
 {% endblock %}
 {% block content %}
   <div class="container-md min-vh-100 container-margin-top">
-    <div class="container-size text-center" style="max-width: 500px;">
-      <div class="content">
-        <h3>
-          <i class="fas fa-flag"></i> {{ ASSOCIATION_NAME_SHORT }} CTF <i class="fas fa-flag"></i>
+    <div class="ctf-page">
+      <div class="content ctf-content">
+        <h3 class="ctf-title ctf-centered">
+          <i class="fas fa-flag" aria-hidden="true"></i> {{ ASSOCIATION_NAME_SHORT }} CTF <i class="fas fa-flag" aria-hidden="true"></i>
         </h3>
         {% if latest_ctf_list %}
-          <ul class="list-unstyled">
+          <ul class="list-unstyled ctf-flags">
             {% for ctf in latest_ctf_list %}
               {% if ctf.published %}
                 <li class="m-1">
@@ -24,7 +24,7 @@
             {% endfor %}
           </ul>
         {% else %}
-          <p>No CTF's are available.</p>
+          <p class="ctf-message ctf-centered">No CTF's are available.</p>
         {% endif %}
       </div>
     </div>
