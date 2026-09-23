@@ -84,6 +84,7 @@ Static UI strings are not enough for this project because editors need translate
 
 The project registers translated fields in these files:
 
+- `ctf/translation.py`
 - `events/translation.py`
 - `functionaries/translation.py`
 - `news/translation.py`
@@ -92,6 +93,7 @@ The project registers translated fields in these files:
 
 Examples of translated model fields:
 
+- `Ctf.title`, `Ctf.content`
 - `Event.title`, `Event.content`
 - `FunctionaryRole.title`
 - `Post.title`, `Post.content`
