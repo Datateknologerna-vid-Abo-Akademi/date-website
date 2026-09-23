@@ -42,8 +42,14 @@ class ShieldedFutureCancellationFilter(logging.Filter):
         if not self.shielded_future_message.search(message):
             return True
 
+        # Only well-formed logger exception info is dropped. A malformed tuple
+        # that happens to carry a cancellation must still be kept.
         exc_info = getattr(record, "exc_info", None)
-        if not exc_info or not isinstance(exc_info, tuple) or len(exc_info) < 2:
+        if not isinstance(exc_info, tuple) or len(exc_info) != 3:
+            return True
+
+        exception_type = exc_info[0]
+        if not isinstance(exception_type, type) or not issubclass(exception_type, asyncio.CancelledError):
             return True
 
         return not isinstance(exc_info[1], asyncio.CancelledError)

@@ -188,6 +188,32 @@ class ShieldedFutureCancellationFilterTests(SimpleTestCase):
 
                 self.assertTrue(self.log_filter.filter(record))
 
+    def test_keeps_shielded_future_message_with_malformed_full_length_exc_info(self):
+        # A full-length tuple whose middle element is a cancellation is still not
+        # logger-produced exception information, so the record must be kept.
+        for exc_info in (
+            (None, asyncio.CancelledError(), None),
+            (RuntimeError, asyncio.CancelledError(), None),
+            ("asyncio.CancelledError", asyncio.CancelledError(), None),
+        ):
+            with self.subTest(exc_info=exc_info):
+                record = make_record(
+                    "CancelledError exception in shielded future",
+                    exc_info=exc_info,
+                )
+
+                self.assertTrue(self.log_filter.filter(record))
+
+    def test_drops_shielded_future_cancellation_with_normalized_exc_info(self):
+        # Logger._log normalizes the exception into (type, value, traceback);
+        # this well-formed form is the production record and stays dropped.
+        record = make_record(
+            "CancelledError exception in shielded future",
+            exc_info=(asyncio.CancelledError, asyncio.CancelledError(), None),
+        )
+
+        self.assertFalse(self.log_filter.filter(record))
+
     def test_keeps_record_when_message_cannot_be_formatted(self):
         # getMessage() raises TypeError because the message has no placeholders;
         # the filter must keep the record instead of breaking logging.
