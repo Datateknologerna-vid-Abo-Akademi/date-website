@@ -250,6 +250,10 @@ between deploys. A deploy:
    the standby (in-place, no traffic gap)
 4. soaks, keeping the old stack as the rollback target, then scales the old
    stack to zero
+5. runs any post-cutover data cleanup the release documents, now that no pod
+   runs the old code: for example `python manage.py redact_harassment_logs`
+   after the release that stopped writing harassment report text into the admin
+   log (see `operations.md`)
 
 **Database migration rule (important):** the standby *shares* the site's
 database, so a destructive migration breaks the live site the moment the
