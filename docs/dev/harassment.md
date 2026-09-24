@@ -9,6 +9,14 @@ The old public route and reverse name stay available as `/social/harassment/` an
 - `Harassment` captures anonymous or attributed reports with optional email plus a free-text message.
 - `HarassmentEmailRecipient` stores the notification recipient list.
 
+## Admin Log Redaction
+- `Harassment.__str__` returns a content-free label from `harassment.redaction.report_label`, for example `Trakasserianmälan #12`. Never make it return `self.message`.
+- The reason is `django_admin_log`: Django stores `str(obj)[:200]` in `LogEntry.object_repr` for every add, change, and delete, and the admin log page (Admin › Log entries) is readable by staff who are not report recipients. The same value reaches the admin success message, which the messages framework keeps in the session and the cookie.
+- The label is not translated, because it is stored as an audit record and must not vary with the language active when the row was written. That also lets the cleanup command recognise an already-redacted row exactly.
+- `harassment/migrations/0002_redact_admin_log_reports.py` rewrites report text that earlier releases stored in `object_repr`. Rows keep the report id, so the audit trail still shows which report was touched. It covers `harassment.harassment` and the pre-split `social.harassment` content type; both are listed in `harassment.redaction.REPORT_CONTENT_TYPES`.
+- `python manage.py redact_harassment_logs` applies the same rewrite on demand and is idempotent. Migrations run before the application rolls, and a blue-green standby shares the database with the live release, so a pod running the older image can write one more content-bearing row after the migration has passed. Run the command once the old pods are gone (it is a release step, see `operations.md`), and again after any release that touched report logging. Pre-deploy database dumps still contain the text; redacting them needs the operator's backup policy, not application code.
+- Keep `message_preview` on `HarassmentAdmin` as the place where authorised staff read a report, and keep the full message out of `list_display`, admin actions, and logging.
+
 ## Forms & Views
 - `HarassmentForm` is a simple `ModelForm` that adds Bootstrap classes. The captcha token is read directly from `request.POST['cf-turnstile-response']`.
 - `harassment.views.harassment_form` handles the PRG flow:

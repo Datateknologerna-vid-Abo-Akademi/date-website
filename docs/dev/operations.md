@@ -221,6 +221,20 @@ It checks each required locale catalog for:
 
 This is useful after `makemessages`, after large translation edits, and before release branches.
 
+## Privacy Maintenance
+
+### `redact_harassment_logs`
+
+Admin log entries for harassment reports used to store the beginning of the report text in `django_admin_log.object_repr`, because the report model returned its own message from `__str__`. The release that stopped that ships a migration which rewrites the rows that already existed, so every row written before the deploy is covered.
+
+A deploy migrates before the application rolls, and the standby shares the database with the live release, so a pod still running the older image can write one more content-bearing row after the migration has passed. Run the command once the old pods are gone:
+
+```bash
+python manage.py redact_harassment_logs
+```
+
+It replaces report text in the log with a label such as `Trakasserianmälan #12`, keeps the report id, and reports how many entries it changed. It is safe to run repeatedly and reports `0` when the log is already clean. Backup dumps taken before the deploy still contain the text; decide separately whether those need to expire earlier than the normal retention.
+
 ## Data Import / Export Helpers
 
 These scripts are more task-specific and should usually be run only by someone familiar with the target app and data shape:
