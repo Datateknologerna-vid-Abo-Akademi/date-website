@@ -1,0 +1,11 @@
+{% extends "core/footer.html" %}
+{% load static localized_urls %}
+{% block footer_right %}
+  <div class="col-12 col-md-4 text-center date-footer-partner">
+    <a class="partner-link" href="{{ '/news/aa/'|localized_url }}">
+      <img class="footer-img img-fluid"
+           alt="AA logo"
+           src="{% static 'core/images/aa-logo-small.png' %}">
+    </a>
+  </div>
+{% endblock %}
