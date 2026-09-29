@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-16 23:19+0300\n"
+"POT-Creation-Date: 2026-09-29 20:04+0300\n"
 "PO-Revision-Date: 2025-09-16 20:27+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -2560,3 +2560,192 @@ msgstr "Check the pseudonym and the message."
 #, python-format
 msgid "Kunde inte ladda upp följande filer: %(files)s"
 msgstr "Could not upload the following files: %(files)s"
+
+
+#: booking/admin.py:26 booking/models.py:51
+#: templates/date/date/components/bookings.html:5
+msgid "Bokningar"
+msgstr "Bookings"
+
+#: booking/admin.py:49 booking/models.py:74
+msgid "Extern bokning"
+msgstr "External booking"
+
+#: booking/admin.py:53 booking/models.py:36
+msgid "Bokare"
+msgstr "Booked by"
+
+#: booking/admin.py:67
+msgid ""
+"Bokningskoden genereras automatiskt och kan inte skrivas in här. Den visas "
+"nedan."
+msgstr ""
+"The booking code is generated automatically and cannot be entered here. It "
+"is shown below."
+
+#: booking/admin.py:71 booking/admin.py:84
+msgid "Aktuell bokningskod"
+msgstr "Current booking code"
+
+#: booking/admin.py:88
+msgid "Koden byts ut"
+msgstr "Code changes"
+
+#: booking/emails.py:26
+#, python-format
+msgid "Bokningsbekräftelse för %(room)s"
+msgstr "Booking confirmation for %(room)s"
+
+#: booking/forms.py:32 templates/common/booking/password.html:17
+#: templates/common/booking/room_detail.html:44
+msgid "Bokningskod"
+msgstr "Booking code"
+
+#: booking/forms.py:45
+msgid "Fel kod."
+msgstr "Incorrect code."
+
+#: booking/forms.py:50 booking/models.py:44
+msgid "Starttid"
+msgstr "Start time"
+
+#: booking/forms.py:51 booking/models.py:45
+msgid "Sluttid"
+msgstr "End time"
+
+#: booking/forms.py:82 booking/models.py:84
+msgid "Ange namnet på den som bokar."
+msgstr "Enter the name of the person making the booking."
+
+#: booking/forms.py:87
+msgid "Ange en e-postadress så att vi kan nå dig."
+msgstr "Enter an email address so we can reach you."
+
+#: booking/models.py:13
+msgid "Aktiv"
+msgstr "Active"
+
+#: booking/models.py:15
+msgid "Endast aktiva utrymmen visas för besökare på webbplatsen."
+msgstr "Only active rooms are shown to visitors on the website."
+
+#: booking/models.py:19 booking/models.py:30
+msgid "Utrymme"
+msgstr "Room"
+
+#: booking/models.py:20
+msgid "Utrymmen"
+msgstr "Rooms"
+
+#: booking/models.py:50 templates/common/booking/index.html:5
+#: templates/common/booking/password.html:5
+#: templates/common/booking/room_detail.html:5
+msgid "Bokning"
+msgstr "Booking"
+
+#: booking/models.py:81
+msgid "Sluttiden måste vara efter starttiden."
+msgstr "The end time must be after the start time."
+
+#: booking/models.py:95
+msgid "Utrymmet är redan bokat under denna tid."
+msgstr "The room is already booked for this time."
+
+#: booking/models.py:112
+msgid "Dagligen"
+msgstr "Daily"
+
+#: booking/models.py:113
+msgid "Veckovis"
+msgstr "Weekly"
+
+#: booking/models.py:114
+msgid "Månadsvis"
+msgstr "Monthly"
+
+#: booking/models.py:118
+msgid "Kodens rotationsperiod"
+msgstr "Code rotation period"
+
+#: booking/models.py:122
+msgid ""
+"Hur ofta bokningskoden byts ut. Koden genereras automatiskt och kan inte "
+"ställas in manuellt."
+msgstr ""
+"How often the booking code is replaced. The code is generated automatically "
+"and cannot be set manually."
+
+#: booking/models.py:126 booking/models.py:127 booking/models.py:130
+msgid "Bokningsinställningar"
+msgstr "Booking settings"
+
+#: booking/views.py:82
+msgid "Tack! Din bokning är registrerad."
+msgstr "Thank you! Your booking has been registered."
+
+#: templates/common/booking/booking_confirmation_email.txt:2
+#, python-format
+msgid ""
+"Din bokning av %(room)s är registrerad.\n"
+"\n"
+"Tid: %(start)s - %(end)s\n"
+"\n"
+"Om tiden inte passar, kontakta styrelsen så att bokningen kan ändras eller "
+"tas bort."
+msgstr ""
+"Your booking of %(room)s is registered.\n"
+"\n"
+"Time: %(start)s - %(end)s\n"
+"\n"
+"If the time does not suit you, contact the board so the booking can be "
+"changed or removed."
+
+#: templates/common/booking/index.html:17
+msgid "Bokbara utrymmen"
+msgstr "Bookable rooms"
+
+#: templates/common/booking/index.html:29
+msgid "Inga utrymmen är bokbara just nu."
+msgstr "No rooms are bookable right now."
+
+#: templates/common/booking/index.html:33
+#: templates/common/booking/room_detail.html:30
+msgid "Kommande bokningar"
+msgstr "Upcoming bookings"
+
+#: templates/common/booking/index.html:42
+#: templates/common/booking/room_detail.html:38
+msgid "Inga kommande bokningar."
+msgstr "No upcoming bookings."
+
+#: templates/common/booking/partials/code_form.html:4
+#, python-format
+msgid "För många försök. Försök igen om %(minutes)s minut."
+msgid_plural "För många försök. Försök igen om %(minutes)s minuter."
+msgstr[0] "Too many attempts. Try again in %(minutes)s minute."
+msgstr[1] "Too many attempts. Try again in %(minutes)s minutes."
+
+#: templates/common/booking/password.html:18
+msgid "Ange bokningskoden för att kunna boka ett utrymme."
+msgstr "Enter the booking code to book a room."
+
+#: templates/common/booking/password.html:21
+#: templates/common/booking/room_detail.html:27
+msgid "Tillbaka till utrymmena"
+msgstr "Back to the rooms"
+
+#: templates/common/booking/room_detail.html:49
+msgid "Boka utrymmet"
+msgstr "Book the room"
+
+#: templates/common/booking/room_detail.html:78
+msgid "Boka"
+msgstr "Book"
+
+#: templates/common/booking/room_detail.html:81
+msgid "E-postadressen används bara för att skicka en bokningsbekräftelse."
+msgstr "The email address is only used to send a booking confirmation."
+
+#: templates/date/date/components/bookings.html:39
+msgid "Inga kommande bokningar hittades"
+msgstr "No upcoming bookings found"
