@@ -1,0 +1,6 @@
+{% load i18n %}
+{% blocktrans with room=room.name start=start end=end %}Din bokning av {{ room }} är registrerad.
+
+Tid: {{ start }} - {{ end }}
+
+Om tiden inte passar, kontakta styrelsen så att bokningen kan ändras eller tas bort.{% endblocktrans %}

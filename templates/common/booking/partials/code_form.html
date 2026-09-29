@@ -1,0 +1,24 @@
+{% load i18n %}
+{% if lockout_minutes %}
+  <p class="booking-lockout">
+    {% blocktrans count minutes=lockout_minutes trimmed %}
+      För många försök. Försök igen om {{ minutes }} minut.
+    {% plural %}
+      För många försök. Försök igen om {{ minutes }} minuter.
+    {% endblocktrans %}
+  </p>
+{% else %}
+  <form method="post" class="booking-code-form">
+    {% csrf_token %}
+    <p>
+      {{ code_form.code.label_tag }}
+      {{ code_form.code }}
+    </p>
+    {% for error in code_form.code.errors %}
+      <div class="booking-error">
+        <strong>{{ error|escape }}</strong>
+      </div>
+    {% endfor %}
+    <button class="button" type="submit">{% trans "Fortsätt" %}</button>
+  </form>
+{% endif %}

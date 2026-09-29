@@ -1,48 +1,49 @@
 {% extends 'core/base.html' %}
-{% load cache %}
 {% load static %}
 {% load i18n %}
-{% block title %}{{ ASSOCIATION_NAME_SHORT }} - {% trans "Bokning" %}{% endblock %}
-
+{% block title %}
+  {% trans "Bokning" %}
+{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet"
+        href="{% static 'booking/css/booking.css' %}"
+        type="text/css">
+{% endblock %}
 {% block content %}
-{% cache 60 room_index %}
-<head>
-    <link rel="stylesheet" href="{% static 'booking/css/style.css' %}"type="text/css">
-    <link rel="stylesheet" href="{% static 'booking/css/room-card.css' %}"type="text/css">
-</head>
-
-<div class="container-md min-vh-100 container-margin-top">
+  <div class="container-md min-vh-100 container-margin-top">
     <div class="container-size break-words">
-        <div class="row">
-            <div class="col-md-12">
-                <h2 class="text-center"><span>{% trans "Bokbara utrymmen" %}</span></h2>
-                {% for room in room_list %}
-                <div class="card-group event-card text-light mb-2">
-                    <div class="card mb-0 p-1">
-                        <div class="card-body py-1">
-                            <div class="row">
-                                <div style="margin: auto;" class="col-4 col-sm-2">
-                                </div>
-                                <div class="col-8 col-sm-6">
-                                    <div class="d-flex flex-column">
-                                        <h3 class="card-title text-uppercase mt-0">
-                                            <strong>{{ room.title }}</strong>
-                                        </h3>
-                                        <div class="card-text">
-                                            {{ room.content|safe|striptags|truncatewords_html:"20"}}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% empty %}
-                <h5 class="text-center">{% trans "Inga Utrymmen" %}</h5>
-                {% endfor %}
+      <div class="content">
+        <h1 class="booking-heading">{% trans "Bokbara utrymmen" %}</h1>
+        <div class="booking-rooms">
+          {% for room in room_list %}
+            <div class="booking-room-card">
+              <a href="{% url 'booking:room_detail' room.pk %}">
+                <h2 class="booking-heading">{{ room.name }}</h2>
+                {% if room.description %}
+                  <p class="booking-room-description">{{ room.description|striptags|truncatewords:30 }}</p>
+                {% endif %}
+              </a>
             </div>
+          {% empty %}
+            <p>{% trans "Inga utrymmen är bokbara just nu." %}</p>
+          {% endfor %}
         </div>
+        <section class="booking-upcoming">
+          <h2 class="booking-heading">{% trans "Kommande bokningar" %}</h2>
+          <ul class="booking-list">
+            {% for booking in bookings %}
+              <li class="booking-list-item">
+                <span class="booking-badge">{{ booking.start|date:"d.m" }}</span>
+                <span class="booking-time">{{ booking.start|date:"H:i" }} - {{ booking.end|date:"H:i" }}</span>
+                <span class="booking-room-name">{{ booking.room.name }}</span>
+              </li>
+            {% empty %}
+              <li class="booking-list-item">{% trans "Inga kommande bokningar." %}</li>
+            {% endfor %}
+          </ul>
+        </section>
+      </div>
     </div>
-</div>
-{% endcache %}
+  </div>
 {% endblock %}

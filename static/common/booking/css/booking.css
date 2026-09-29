@@ -1,0 +1,74 @@
+/* Booking rooms and booking lists. Only custom properties that already exist
+   in the site root stylesheet are used, and nothing global is restyled. */
+
+.booking-heading {
+    margin-bottom: 0.5rem;
+}
+
+.booking-rooms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.booking-room-card {
+    flex: 1 1 16rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--defaultRadius);
+    background: var(--primaryColorLight);
+}
+
+.booking-room-card a {
+    display: block;
+    color: var(--linkColorLight);
+    text-decoration: none;
+}
+
+.booking-room-card a:hover {
+    color: var(--linkColorLightHover);
+}
+
+.booking-room-description {
+    color: var(--helpText);
+    font-size: 14px;
+}
+
+.booking-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.booking-list-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    color: var(--helpText);
+    font-size: 14px;
+}
+
+.booking-badge {
+    padding: 0 0.4rem;
+    border-radius: var(--defaultRadius);
+    background: var(--helpText);
+    color: var(--primaryColorLight);
+}
+
+.booking-time,
+.booking-room-name {
+    white-space: nowrap;
+}
+
+.booking-code-form,
+.booking-form {
+    max-width: 32rem;
+}
+
+.booking-error {
+    color: var(--primaryColorLight);
+}
+
+.booking-help {
+    color: var(--helpText);
+}
