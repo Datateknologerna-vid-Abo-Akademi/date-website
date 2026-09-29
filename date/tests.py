@@ -20,6 +20,8 @@ from django.test.utils import CaptureQueriesContext, override_settings
 from django.urls import clear_url_caches, reverse, set_urlconf
 from django.utils import timezone, translation
 
+from booking import access
+from booking.models import Booking, Room
 from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
 from date.middleware import ConnectionLifecycleMiddleware
@@ -867,6 +869,9 @@ class AssociationHomepageSmokeTests(TestCase):
             "REGISTRATION_TERMS_ENABLED": getattr(settings_module, "REGISTRATION_TERMS_ENABLED", False),
             "EQUALITY_PLAN_ENABLED": getattr(settings_module, "EQUALITY_PLAN_ENABLED", False),
             "KK_EVENT_TEMPLATES_ENABLED": getattr(settings_module, "KK_EVENT_TEMPLATES_ENABLED", False),
+            # Only DaTe installs the booking app; without this the test
+            # settings' True would leak into the other variants' homepages.
+            "BOOKING_ENABLED": getattr(settings_module, "BOOKING_ENABLED", False),
         }
         return overrides
 
@@ -937,9 +942,11 @@ class HomepageQueryTests(TestCase):
             published_time=timezone.now(),
         )
 
-    def test_homepage_context_uses_five_queries(self):
+    def test_homepage_context_uses_six_queries(self):
         cache.clear()
-        with self.assertNumQueries(5):
+        # One query per homepage source: events, news, ads, instagram posts,
+        # Albins Angels, and the booking block (DaTe has BOOKING_ENABLED on).
+        with self.assertNumQueries(6):
             _homepage_context()
 
     def test_anonymous_homepage_is_cached_after_first_load(self):
@@ -985,12 +992,12 @@ class HomepageQueryTests(TestCase):
 
     def test_cache_key_is_isolated_by_language(self):
         cache.clear()
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             self.client.get("/")
         # A different active language must not reuse the Swedish entry (set
         # via the language cookie; the locale middleware drives get_language).
         self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "fi"
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             self.client.get("/")
 
     def test_admin_edit_invalidates_anonymous_cache(self):
@@ -1049,17 +1056,17 @@ class HomepageQueryTests(TestCase):
         # Simulate the version key being evicted while the homepage entry
         # is still alive: the next load must not reuse the old generation.
         cache.delete(_homepage_version_key())
-        # The context rebuilds from scratch (5 queries); the navigation is
+        # The context rebuilds from scratch (6 queries); the navigation is
         # still served from its own cache.
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             self.client.get("/")
 
     def test_dummy_cache_never_caches(self):
         cache.clear()
         with override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}):
-            with self.assertNumQueries(7):
+            with self.assertNumQueries(8):
                 self.client.get("/")
-            with self.assertNumQueries(7):
+            with self.assertNumQueries(8):
                 self.client.get("/")
 
 
@@ -1116,3 +1123,153 @@ class CalendarClickDayCompatibilityTests(SimpleTestCase):
                 f"The vendored calendar passes {second_argument!r}, so the handler must "
                 "read the dates from that object.",
             )
+
+
+class HomepageBookingTests(TestCase):
+    """The homepage booking block: active rooms, the next 7 days, five entries.
+
+    The assertions read ``response.context``: templates/date/date/start.html
+    wraps the body in a 300 second ``{% cache %}`` fragment whose key does not
+    carry the homepage version, so the HTML can lag behind an invalidation.
+    Only DaTe installs the booking app, so this class runs with the capability
+    on (core.settings.test pins BOOKING_ENABLED = True).
+    """
+
+    def setUp(self):
+        cache.clear()
+        self.now = timezone.now()
+        self.room = Room.objects.create(name="Bastun")
+
+    def _booking(self, room, start, **kwargs):
+        return Booking.objects.create(room=room, start=start, end=start + timedelta(hours=1), **kwargs)
+
+    def _booking_ids(self, response):
+        return [booking.pk for booking in response.context["bookings"]]
+
+    def test_homepage_context_includes_bookings_within_the_next_week(self):
+        booking = self._booking(self.room, self.now + timedelta(days=2))
+
+        self.assertEqual(self._booking_ids(self.client.get("/")), [booking.pk])
+
+    def test_homepage_context_excludes_later_bookings(self):
+        self._booking(self.room, self.now + timedelta(days=8))
+
+        self.assertEqual(_homepage_context(now=self.now)["bookings"], [])
+
+    def test_homepage_context_keeps_a_booking_exactly_seven_days_ahead(self):
+        booking = self._booking(self.room, self.now + timedelta(days=7))
+
+        self.assertEqual(
+            [entry.pk for entry in _homepage_context(now=self.now)["bookings"]],
+            [booking.pk],
+        )
+
+    def test_homepage_context_excludes_bookings_of_inactive_rooms(self):
+        inactive = Room.objects.create(name="Stängt utrymme", is_active=False)
+        self._booking(inactive, self.now + timedelta(days=1))
+        visible = self._booking(self.room, self.now + timedelta(days=2))
+
+        self.assertEqual(
+            [entry.pk for entry in _homepage_context(now=self.now)["bookings"]],
+            [visible.pk],
+        )
+
+    def test_homepage_context_returns_at_most_five_bookings(self):
+        starts = [self.now + timedelta(days=1, hours=index) for index in range(6)]
+        bookings = [self._booking(self.room, start) for start in starts]
+
+        self.assertEqual(
+            [entry.pk for entry in _homepage_context(now=self.now)["bookings"]],
+            [booking.pk for booking in bookings[:5]],
+        )
+
+    @override_settings(BOOKING_ENABLED=False)
+    def test_homepage_context_has_no_bookings_without_the_capability(self):
+        self._booking(self.room, self.now + timedelta(days=2))
+
+        self.assertEqual(_homepage_context(now=self.now)["bookings"], [])
+
+    @override_settings(BOOKING_ENABLED=False)
+    def test_homepage_hides_the_booking_block_without_the_capability(self):
+        self._booking(self.room, self.now + timedelta(days=2))
+
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Bastun")
+
+    def test_homepage_render_never_exposes_private_booking_data(self):
+        start = self.now + timedelta(days=2)
+        Booking.objects.create(
+            room=self.room,
+            start=start,
+            end=start + timedelta(hours=1),
+            booker_name="Hemlig Bokare",
+            booker_email="hemlig@example.com",
+            description="Hemlig beskrivning",
+        )
+
+        response = self.client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.room.name)
+        self.assertEqual(
+            [booking.room.name for booking in response.context["bookings"]],
+            [self.room.name],
+        )
+        self.assertNotContains(response, access.current_code())
+        self.assertNotContains(response, "Hemlig Bokare")
+        self.assertNotContains(response, "hemlig@example.com")
+        self.assertNotContains(response, "Hemlig beskrivning")
+
+    def test_booking_save_invalidates_anonymous_cache(self):
+        cache.clear()
+        primed = self.client.get("/")
+        self.assertEqual(primed.context["bookings"], [])
+        start = self.now + timedelta(days=2)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            booking = self._booking(self.room, start)
+
+        self.assertEqual(self._booking_ids(self.client.get("/")), [booking.pk])
+
+    def test_booking_delete_invalidates_anonymous_cache(self):
+        cache.clear()
+        booking = self._booking(self.room, self.now + timedelta(days=2))
+        self.assertEqual(self._booking_ids(self.client.get("/")), [booking.pk])
+
+        with self.captureOnCommitCallbacks(execute=True):
+            booking.delete()
+
+        self.assertEqual(self.client.get("/").context["bookings"], [])
+
+    def test_room_save_invalidates_anonymous_cache(self):
+        cache.clear()
+        self._booking(self.room, self.now + timedelta(days=2))
+        self.assertEqual(
+            [booking.room.name for booking in self.client.get("/").context["bookings"]],
+            ["Bastun"],
+        )
+
+        with self.captureOnCommitCallbacks(execute=True):
+            self.room.name = "Ombyggd bastu"
+            self.room.save()
+
+        self.assertEqual(
+            [booking.room.name for booking in self.client.get("/").context["bookings"]],
+            ["Ombyggd bastu"],
+        )
+
+    def test_room_delete_invalidates_anonymous_cache(self):
+        cache.clear()
+        empty_room = Room.objects.create(name="Tomt utrymme")
+        self.client.get("/")
+        version_key = _homepage_version_key()
+        version_before = cache.get(version_key)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            empty_room.delete()
+
+        # A room without bookings has no homepage-visible effect of its own, so
+        # the invalidation is asserted on the version the context cache keys on.
+        self.assertNotEqual(cache.get(version_key), version_before)
