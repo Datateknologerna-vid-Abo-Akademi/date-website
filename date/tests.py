@@ -1,11 +1,13 @@
 import importlib
 import re
 import time
+import unittest
 from datetime import date, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from django.apps import apps
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.models import ADDITION, LogEntry
@@ -20,8 +22,6 @@ from django.test.utils import CaptureQueriesContext, override_settings
 from django.urls import clear_url_caches, reverse, set_urlconf
 from django.utils import timezone, translation
 
-from booking import access
-from booking.models import Booking, Room
 from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
 from date.middleware import ConnectionLifecycleMiddleware
@@ -1125,6 +1125,7 @@ class CalendarClickDayCompatibilityTests(SimpleTestCase):
             )
 
 
+@unittest.skipUnless(apps.is_installed('booking'), 'the booking app is not installed for this association')
 class HomepageBookingTests(TestCase):
     """The homepage booking block: active rooms, the next 7 days, five entries.
 
@@ -1136,12 +1137,22 @@ class HomepageBookingTests(TestCase):
     """
 
     def setUp(self):
+        # Imported here rather than at module level: `date` is installed for
+        # every association while only DaTe installs the booking app, so a
+        # module-level import would break the suite under any other settings
+        # module. The class is skipped when the app is absent.
+        from booking import access
+        from booking.models import Booking, Room
+
+        self.access = access
+        self.Booking = Booking
+        self.Room = Room
         cache.clear()
         self.now = timezone.now()
-        self.room = Room.objects.create(name="Bastun")
+        self.room = self.Room.objects.create(name="Bastun")
 
     def _booking(self, room, start, **kwargs):
-        return Booking.objects.create(room=room, start=start, end=start + timedelta(hours=1), **kwargs)
+        return self.Booking.objects.create(room=room, start=start, end=start + timedelta(hours=1), **kwargs)
 
     def _booking_ids(self, response):
         return [booking.pk for booking in response.context["bookings"]]
@@ -1165,7 +1176,7 @@ class HomepageBookingTests(TestCase):
         )
 
     def test_homepage_context_excludes_bookings_of_inactive_rooms(self):
-        inactive = Room.objects.create(name="Stängt utrymme", is_active=False)
+        inactive = self.Room.objects.create(name="Stängt utrymme", is_active=False)
         self._booking(inactive, self.now + timedelta(days=1))
         visible = self._booking(self.room, self.now + timedelta(days=2))
 
@@ -1200,7 +1211,7 @@ class HomepageBookingTests(TestCase):
 
     def test_homepage_render_never_exposes_private_booking_data(self):
         start = self.now + timedelta(days=2)
-        Booking.objects.create(
+        self.Booking.objects.create(
             room=self.room,
             start=start,
             end=start + timedelta(hours=1),
@@ -1217,7 +1228,7 @@ class HomepageBookingTests(TestCase):
             [booking.room.name for booking in response.context["bookings"]],
             [self.room.name],
         )
-        self.assertNotContains(response, access.current_code())
+        self.assertNotContains(response, self.access.current_code())
         self.assertNotContains(response, "Hemlig Bokare")
         self.assertNotContains(response, "hemlig@example.com")
         self.assertNotContains(response, "Hemlig beskrivning")
@@ -1262,7 +1273,7 @@ class HomepageBookingTests(TestCase):
 
     def test_room_delete_invalidates_anonymous_cache(self):
         cache.clear()
-        empty_room = Room.objects.create(name="Tomt utrymme")
+        empty_room = self.Room.objects.create(name="Tomt utrymme")
         self.client.get("/")
         version_key = _homepage_version_key()
         version_before = cache.get(version_key)

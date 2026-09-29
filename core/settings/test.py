@@ -6,6 +6,12 @@ ensure_compiled_translations()
 PROJECT_NAME = "date"
 ENABLE_LANGUAGE_FEATURES = True
 LANGUAGES = ALL_LANGUAGES
+# Pinned so the suite is deterministic whatever the environment holds: the
+# shared settings read the secret from DATE_SECRET_KEY, which the
+# docker-compose path supplies from .env. Anything derived from it (account
+# activation tokens, the booking code) would otherwise change with the
+# environment and pin a different value in CI than on a developer's machine.
+SECRET_KEY = "SECRET_KEY"  # noqa: S105 (pinned test secret, never a real credential)
 # Pinned so the suite is deterministic: this module inherits from date (where
 # the capability is on by default) and CI copies .env.example to .env, so
 # reading the environment here would make the tests depend on the developer's

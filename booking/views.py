@@ -75,7 +75,13 @@ def room_detail(request, pk):
                 allowed = form.is_valid()
             else:
                 form = form_class(request.POST, room=locked_room)
-                allowed = form.is_valid() and validate_captcha(request.POST.get('cf-turnstile-response'))
+                allowed = form.is_valid()
+                if allowed and not validate_captcha(request.POST.get('cf-turnstile-response')):
+                    # Say so, rather than re-rendering a valid-looking form and
+                    # leaving the visitor to retry it forever.
+                    logger.warning('Booking captcha rejected for room %s', room.pk)
+                    form.add_error(None, _('Kunde inte verifiera att du inte är en robot. Försök igen.'))
+                    allowed = False
             if allowed:
                 booking = form.save()
                 emails.notify_external_booker(booking)

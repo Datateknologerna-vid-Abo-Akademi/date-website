@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 20:04+0300\n"
+"POT-Creation-Date: 2026-09-29 20:21+0300\n"
 "PO-Revision-Date: 2025-09-16 20:27+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -2562,20 +2562,20 @@ msgid "Kunde inte ladda upp följande filer: %(files)s"
 msgstr "Could not upload the following files: %(files)s"
 
 
-#: booking/admin.py:26 booking/models.py:51
+#: booking/admin.py:31 booking/models.py:51
 #: templates/date/date/components/bookings.html:5
 msgid "Bokningar"
 msgstr "Bookings"
 
-#: booking/admin.py:49 booking/models.py:74
+#: booking/admin.py:54 booking/models.py:74
 msgid "Extern bokning"
 msgstr "External booking"
 
-#: booking/admin.py:53 booking/models.py:36
+#: booking/admin.py:58 booking/models.py:36
 msgid "Bokare"
 msgstr "Booked by"
 
-#: booking/admin.py:67
+#: booking/admin.py:72
 msgid ""
 "Bokningskoden genereras automatiskt och kan inte skrivas in här. Den visas "
 "nedan."
@@ -2583,11 +2583,11 @@ msgstr ""
 "The booking code is generated automatically and cannot be entered here. It "
 "is shown below."
 
-#: booking/admin.py:71 booking/admin.py:84
+#: booking/admin.py:76 booking/admin.py:89
 msgid "Aktuell bokningskod"
 msgstr "Current booking code"
 
-#: booking/admin.py:88
+#: booking/admin.py:93
 msgid "Koden byts ut"
 msgstr "Code changes"
 
@@ -2596,8 +2596,7 @@ msgstr "Code changes"
 msgid "Bokningsbekräftelse för %(room)s"
 msgstr "Booking confirmation for %(room)s"
 
-#: booking/forms.py:32 templates/common/booking/password.html:17
-#: templates/common/booking/room_detail.html:44
+#: booking/forms.py:32 templates/common/booking/room_detail.html:44
 msgid "Bokningskod"
 msgstr "Booking code"
 
@@ -2638,7 +2637,6 @@ msgid "Utrymmen"
 msgstr "Rooms"
 
 #: booking/models.py:50 templates/common/booking/index.html:5
-#: templates/common/booking/password.html:5
 #: templates/common/booking/room_detail.html:5
 msgid "Bokning"
 msgstr "Booking"
@@ -2679,7 +2677,11 @@ msgstr ""
 msgid "Bokningsinställningar"
 msgstr "Booking settings"
 
-#: booking/views.py:82
+#: booking/views.py:83
+msgid "Kunde inte verifiera att du inte är en robot. Försök igen."
+msgstr "We could not verify that you are not a robot. Please try again."
+
+#: booking/views.py:88
 msgid "Tack! Din bokning är registrerad."
 msgstr "Thank you! Your booking has been registered."
 
@@ -2725,11 +2727,6 @@ msgid_plural "För många försök. Försök igen om %(minutes)s minuter."
 msgstr[0] "Too many attempts. Try again in %(minutes)s minute."
 msgstr[1] "Too many attempts. Try again in %(minutes)s minutes."
 
-#: templates/common/booking/password.html:18
-msgid "Ange bokningskoden för att kunna boka ett utrymme."
-msgstr "Enter the booking code to book a room."
-
-#: templates/common/booking/password.html:21
 #: templates/common/booking/room_detail.html:27
 msgid "Tillbaka till utrymmena"
 msgstr "Back to the rooms"

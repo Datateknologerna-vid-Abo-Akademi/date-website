@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 20:04+0300\n"
+"POT-Creation-Date: 2026-09-29 20:21+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2545,20 +2545,20 @@ msgid "Kunde inte ladda upp följande filer: %(files)s"
 msgstr "Kunde inte ladda upp följande filer: %(files)s"
 
 
-#: booking/admin.py:26 booking/models.py:51
+#: booking/admin.py:31 booking/models.py:51
 #: templates/date/date/components/bookings.html:5
 msgid "Bokningar"
 msgstr "Bokningar"
 
-#: booking/admin.py:49 booking/models.py:74
+#: booking/admin.py:54 booking/models.py:74
 msgid "Extern bokning"
 msgstr "Extern bokning"
 
-#: booking/admin.py:53 booking/models.py:36
+#: booking/admin.py:58 booking/models.py:36
 msgid "Bokare"
 msgstr "Bokare"
 
-#: booking/admin.py:67
+#: booking/admin.py:72
 msgid ""
 "Bokningskoden genereras automatiskt och kan inte skrivas in här. Den visas "
 "nedan."
@@ -2566,11 +2566,11 @@ msgstr ""
 "Bokningskoden genereras automatiskt och kan inte skrivas in här. Den visas "
 "nedan."
 
-#: booking/admin.py:71 booking/admin.py:84
+#: booking/admin.py:76 booking/admin.py:89
 msgid "Aktuell bokningskod"
 msgstr "Aktuell bokningskod"
 
-#: booking/admin.py:88
+#: booking/admin.py:93
 msgid "Koden byts ut"
 msgstr "Koden byts ut"
 
@@ -2579,8 +2579,7 @@ msgstr "Koden byts ut"
 msgid "Bokningsbekräftelse för %(room)s"
 msgstr "Bokningsbekräftelse för %(room)s"
 
-#: booking/forms.py:32 templates/common/booking/password.html:17
-#: templates/common/booking/room_detail.html:44
+#: booking/forms.py:32 templates/common/booking/room_detail.html:44
 msgid "Bokningskod"
 msgstr "Bokningskod"
 
@@ -2621,7 +2620,6 @@ msgid "Utrymmen"
 msgstr "Utrymmen"
 
 #: booking/models.py:50 templates/common/booking/index.html:5
-#: templates/common/booking/password.html:5
 #: templates/common/booking/room_detail.html:5
 msgid "Bokning"
 msgstr "Bokning"
@@ -2662,7 +2660,11 @@ msgstr ""
 msgid "Bokningsinställningar"
 msgstr "Bokningsinställningar"
 
-#: booking/views.py:82
+#: booking/views.py:83
+msgid "Kunde inte verifiera att du inte är en robot. Försök igen."
+msgstr "Kunde inte verifiera att du inte är en robot. Försök igen."
+
+#: booking/views.py:88
 msgid "Tack! Din bokning är registrerad."
 msgstr "Tack! Din bokning är registrerad."
 
@@ -2708,11 +2710,6 @@ msgid_plural "För många försök. Försök igen om %(minutes)s minuter."
 msgstr[0] "För många försök. Försök igen om %(minutes)s minut."
 msgstr[1] "För många försök. Försök igen om %(minutes)s minuter."
 
-#: templates/common/booking/password.html:18
-msgid "Ange bokningskoden för att kunna boka ett utrymme."
-msgstr "Ange bokningskoden för att kunna boka ett utrymme."
-
-#: templates/common/booking/password.html:21
 #: templates/common/booking/room_detail.html:27
 msgid "Tillbaka till utrymmena"
 msgstr "Tillbaka till utrymmena"

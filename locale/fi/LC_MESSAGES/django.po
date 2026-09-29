@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 20:04+0300\n"
+"POT-Creation-Date: 2026-09-29 20:21+0300\n"
 "PO-Revision-Date: 2025-09-16 19:33+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -2596,20 +2596,20 @@ msgid "Kunde inte ladda upp följande filer: %(files)s"
 msgstr "Seuraavia tiedostoja ei voitu ladata: %(files)s"
 
 
-#: booking/admin.py:26 booking/models.py:51
+#: booking/admin.py:31 booking/models.py:51
 #: templates/date/date/components/bookings.html:5
 msgid "Bokningar"
 msgstr "Varaukset"
 
-#: booking/admin.py:49 booking/models.py:74
+#: booking/admin.py:54 booking/models.py:74
 msgid "Extern bokning"
 msgstr "Ulkoinen varaus"
 
-#: booking/admin.py:53 booking/models.py:36
+#: booking/admin.py:58 booking/models.py:36
 msgid "Bokare"
 msgstr "Varaaja"
 
-#: booking/admin.py:67
+#: booking/admin.py:72
 msgid ""
 "Bokningskoden genereras automatiskt och kan inte skrivas in här. Den visas "
 "nedan."
@@ -2617,11 +2617,11 @@ msgstr ""
 "Varauskoodi luodaan automaattisesti, eikä sitä voi syöttää tähän. Se näkyy "
 "alla."
 
-#: booking/admin.py:71 booking/admin.py:84
+#: booking/admin.py:76 booking/admin.py:89
 msgid "Aktuell bokningskod"
 msgstr "Nykyinen varauskoodi"
 
-#: booking/admin.py:88
+#: booking/admin.py:93
 msgid "Koden byts ut"
 msgstr "Koodi vaihtuu"
 
@@ -2630,8 +2630,7 @@ msgstr "Koodi vaihtuu"
 msgid "Bokningsbekräftelse för %(room)s"
 msgstr "Varausvahvistus: %(room)s"
 
-#: booking/forms.py:32 templates/common/booking/password.html:17
-#: templates/common/booking/room_detail.html:44
+#: booking/forms.py:32 templates/common/booking/room_detail.html:44
 msgid "Bokningskod"
 msgstr "Varauskoodi"
 
@@ -2672,7 +2671,6 @@ msgid "Utrymmen"
 msgstr "Tilat"
 
 #: booking/models.py:50 templates/common/booking/index.html:5
-#: templates/common/booking/password.html:5
 #: templates/common/booking/room_detail.html:5
 msgid "Bokning"
 msgstr "Varaus"
@@ -2713,7 +2711,11 @@ msgstr ""
 msgid "Bokningsinställningar"
 msgstr "Varausasetukset"
 
-#: booking/views.py:82
+#: booking/views.py:83
+msgid "Kunde inte verifiera att du inte är en robot. Försök igen."
+msgstr "Emme voineet vahvistaa, ettet ole robotti. Yritä uudelleen."
+
+#: booking/views.py:88
 msgid "Tack! Din bokning är registrerad."
 msgstr "Kiitos! Varauksesi on rekisteröity."
 
@@ -2761,11 +2763,6 @@ msgstr[0] ""
 msgstr[1] ""
 "Liian monta yritystä. Yritä uudelleen %(minutes)s minuutin kuluttua."
 
-#: templates/common/booking/password.html:18
-msgid "Ange bokningskoden för att kunna boka ett utrymme."
-msgstr "Syötä varauskoodi, jotta voit varata tilan."
-
-#: templates/common/booking/password.html:21
 #: templates/common/booking/room_detail.html:27
 msgid "Tillbaka till utrymmena"
 msgstr "Takaisin tiloihin"

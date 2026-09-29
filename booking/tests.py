@@ -794,6 +794,23 @@ class BookingSettingsAdminTests(PinnedNowMixin, TestCase):
         booking_settings.refresh_from_db()
         self.assertEqual(booking_settings.rotation_period, BookingSettings.ROTATION_WEEKLY)
 
+    def test_first_row_is_created_by_saving_the_add_form(self):
+        BookingSettings.objects.all().delete()
+        add_url = reverse('admin:booking_bookingsettings_add')
+
+        response = self.client.get(add_url)
+
+        # Rendering the add page must not store the row: doing so would flip
+        # has_add_permission to False and refuse the POST the admin just filled
+        # in with a 403.
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(BookingSettings.objects.exists())
+
+        response = self.client.post(add_url, {'rotation_period': BookingSettings.ROTATION_MONTHLY})
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(BookingSettings.get_solo().rotation_period, BookingSettings.ROTATION_MONTHLY)
+
     def test_singleton_refuses_deletion(self):
         booking_settings = BookingSettings.get_solo()
         delete_url = reverse('admin:booking_bookingsettings_delete', args=[booking_settings.pk])

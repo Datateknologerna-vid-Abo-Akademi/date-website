@@ -12,7 +12,7 @@ Where the code lives:
 - `booking/views.py`, `booking/forms.py`, `booking/urls.py`: the public pages.
 - `booking/admin.py`: the admin registrations.
 - `booking/emails.py`: the confirmation email for an external booker.
-- `templates/common/booking/`: `index.html`, `room_detail.html`, `partials/code_form.html`, `booking_confirmation_email.txt`, and `password.html` (see the routes section).
+- `templates/common/booking/`: `index.html`, `room_detail.html`, `partials/code_form.html` and `booking_confirmation_email.txt` (see the routes section).
 - `static/common/booking/css/booking.css`: the shared stylesheet the templates pull in.
 
 ## Data model (`booking/models.py`)
@@ -99,7 +99,7 @@ The result is always six digits, with leading zeros kept.
 - On success the booking is saved, `emails.notify_external_booker(booking)` runs, a success message is added, and the view redirects back to the same room page (POST/redirect/GET). On a validation error the page is re-rendered with the bound form and its field errors, at status 200.
 - The public templates render room names and start/end times only. The booking description, the booker name and the booker email are never rendered on the public pages.
 
-`templates/common/booking/index.html` renders the room cards and the upcoming-booking list. `room_detail.html` doubles as the code-gate page: it still shows the room name, its description and the upcoming bookings, and swaps the booking form for the code form. `partials/code_form.html` renders either the code input or, during a lockout, the "too many attempts" message with no form at all. `password.html` is a standalone code prompt that no view renders today.
+`templates/common/booking/index.html` renders the room cards and the upcoming-booking list. `room_detail.html` doubles as the code-gate page: it still shows the room name, its description and the upcoming bookings, and swaps the booking form for the code form. `partials/code_form.html` renders either the code input or, during a lockout, the "too many attempts" message with no form at all.
 
 `booking/emails.py` sends one confirmation per external booking, through the Celery task `core.utils.send_email_task` and `core.utils.enqueue_task_on_commit`, so the mail is queued after the transaction commits. It returns early unless the booking is external and has an email address, so member bookings and nameless bookings send nothing. The body is `templates/common/booking/booking_confirmation_email.txt`.
 
@@ -156,7 +156,7 @@ The rotating code is testable without `freezegun` because of the seams above: pa
 
 ## Risks and gotchas
 - The homepage block sits inside `{% cache 300 main_page_fixed LANGUAGE_CODE %}` in `templates/date/date/start.html`, so flipping `BOOKING_ENABLED` can take up to five minutes to show on the homepage. A stale fragment can even hold a link to a now unmounted route for that long. The app's own pages are not cached and change on the next request.
-- The lockout counter is per session, so clearing cookies resets it to zero attempts.
+- The attempt counter and the lockout live in the session, which limits a browser but not a script: a client that never returns the session cookie starts from zero attempts on every request, so the five-attempt limit does not bound an automated guesser. What bounds one today is the captcha on the anonymous POST and the fact that the code rotates. A server-side rate limit is the missing piece, and it needs a decision about client addresses first: behind an ingress that rewrites the source address, every visitor shares one key and a low threshold would lock out all of them. Note also that `core.utils.validate_captcha` fails open when `CF_TURNSTILE_SECRET_KEY` is empty, so an association that has not configured Turnstile has no captcha either.
 - Direct edits to rooms and bookings in the admin appear on the public booking pages immediately because those views query the database on every request. Only the homepage block is cached.
 - `select_for_update` is a no-op on SQLite, so the tests cannot cover the race that the room lock exists to prevent. Verify that path against PostgreSQL.
 - The code is derived from `SECRET_KEY`, so rotating the secret changes every code and invalidates every unlock at once.

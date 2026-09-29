@@ -174,15 +174,11 @@ def session_token(at=None, access_settings=None) -> str:
     """
     rotation_period = _rotation_period(access_settings)
     slot, _start = slot_for(rotation_period, at)
-    return (
-        hmac.new(
-            _secret_bytes(),
-            f'booking-session:{slot}'.encode(),
-            hashlib.sha256,
-        )
-        .digest()[:32]
-        .hex()
-    )
+    return hmac.new(
+        _secret_bytes(),
+        f'booking-session:{slot}'.encode(),
+        hashlib.sha256,
+    ).hexdigest()
 
 
 def _stored_token(value) -> str:

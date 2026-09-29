@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db.models import Count
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -23,9 +24,13 @@ class RoomAdmin(ModelAdmin):
     search_fields = ('name',)
     inlines = [BookingInline]
 
-    @admin.display(description=_('Bokningar'))
+    def get_queryset(self, request):
+        # Annotated so the changelist does not run one COUNT per room.
+        return super().get_queryset(request).annotate(bookings_total=Count('bookings'))
+
+    @admin.display(description=_('Bokningar'), ordering='bookings_total')
     def booking_count(self, obj):
-        return obj.bookings.count()
+        return obj.bookings_total
 
 
 @admin.register(Booking)
@@ -83,8 +88,16 @@ class BookingSettingsAdmin(ModelAdmin):
 
     @admin.display(description=_('Aktuell bokningskod'))
     def current_code(self, obj):
-        return access.current_code(access_settings=obj if obj and obj.pk else None)
+        return access.current_code(access_settings=self._settings_for(obj))
 
     @admin.display(description=_('Koden byts ut'))
     def next_rotation(self, obj):
-        return access.next_rotation(access_settings=obj if obj and obj.pk else None)
+        return access.next_rotation(access_settings=self._settings_for(obj))
+
+    @staticmethod
+    def _settings_for(obj):
+        # Never get_solo() while rendering: the add page has no stored row yet,
+        # and creating one here would make has_add_permission refuse the very
+        # POST the admin just filled in. An unsaved instance carries the model
+        # default period, and only rotation_period is ever read.
+        return obj if obj and obj.pk else BookingSettings()
