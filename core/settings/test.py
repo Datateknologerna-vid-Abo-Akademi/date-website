@@ -6,6 +6,11 @@ ensure_compiled_translations()
 PROJECT_NAME = "date"
 ENABLE_LANGUAGE_FEATURES = True
 LANGUAGES = ALL_LANGUAGES
+# Pinned so the suite is deterministic: this module inherits from date (where
+# the capability is on by default) and CI copies .env.example to .env, so
+# reading the environment here would make the tests depend on the developer's
+# .env. Tests that need the capability off use @override_settings.
+BOOKING_ENABLED = True
 
 # Use in-memory sqlite database for tests
 DATABASES = {

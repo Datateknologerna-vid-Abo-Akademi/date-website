@@ -31,6 +31,7 @@ EXPECTED_PREFIXES = {
         "ckeditor5/",
         "publications/",
         "alumni/",
+        "booking/",
         *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
@@ -154,6 +155,7 @@ EXPECTED_URL_NAMES = {
         "ctf:index",
         "publications:pdf_list",
         "alumni:alumni_signup",
+        "booking:index",
         "api:events:upcoming",
     ],
     "kk": ["news:index", "lucia:index", "publications:pdf_list", "alumni:alumni_signup", "api:events:upcoming"],
@@ -171,7 +173,12 @@ EXPECTED_URL_NAMES = {
 }
 
 FORBIDDEN_URL_NAMES = {
-    "pulterit": ["archive:years"],
+    "kk": ["booking:index"],
+    "biocum": ["booking:index"],
+    "pulterit": ["archive:years", "booking:index"],
+    "sf": ["booking:index"],
+    "impuls": ["booking:index"],
+    "demo": ["booking:index"],
 }
 
 CODE = """
@@ -236,7 +243,12 @@ class VariantRouteParityTests(SimpleTestCase):
                     ],
                     capture_output=True,
                     text=True,
-                    env={**os.environ, "PROJECT_NAME": variant},
+                    # BOOKING_ENABLED is dropped so the inventory describes each
+                    # settings module's default instead of the developer's .env.
+                    env={
+                        **{k: v for k, v in os.environ.items() if k != "BOOKING_ENABLED"},
+                        "PROJECT_NAME": variant,
+                    },
                 )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 

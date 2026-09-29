@@ -3,6 +3,7 @@ import secrets
 import time
 from urllib.parse import urlsplit, urlunsplit
 
+from django.apps import apps
 from django.conf import settings
 from django.core.cache import cache
 from django.db import close_old_connections, connection, transaction
@@ -147,6 +148,22 @@ def _homepage_context(now=None):
     upcoming_events = [event for event in recent_events if event.event_date_end >= now]
     news = list(Post.objects.published().filter(category__isnull=True).reverse()[:3])
 
+    bookings = []
+    if getattr(settings, 'BOOKING_ENABLED', False) and apps.is_installed('booking'):
+        # Imported lazily on purpose: core/urls/common.py imports this module
+        # for every association and only DaTe installs the booking app.
+        from booking.models import Booking
+
+        bookings = list(
+            Booking.objects.filter(
+                room__is_active=True,
+                start__gte=now,
+                start__lte=now + timezone.timedelta(days=7),
+            )
+            .select_related('room')
+            .order_by('start')[:5]
+        )
+
     return {
         'calendar_events': format_calendar_events(recent_events),
         'events': upcoming_events,
@@ -154,6 +171,7 @@ def _homepage_context(now=None):
         'ads': list(AdUrl.objects.all()),
         'posts': list(IgUrl.objects.all()),
         'aa_post': get_recent_albins_angels_post(now=now),
+        'bookings': bookings,
     }
 
 

@@ -15,6 +15,7 @@ def apply_content_variables(_):
         ),
         "ENABLE_LANGUAGE_FEATURES": settings.ENABLE_LANGUAGE_FEATURES,
         "MEMBERS_SIGNUP_ENABLED": getattr(settings, "MEMBERS_SIGNUP_ENABLED", True),
+        "BOOKING_ENABLED": getattr(settings, "BOOKING_ENABLED", False),
         "GITHUB_CLIENT_ID": getattr(settings, "GITHUB_CLIENT_ID", ""),
         "DIRECT_UPLOADS_ENABLED": getattr(settings, "USE_S3", False)
         and getattr(settings, "DIRECT_UPLOADS_ENABLED", False),
