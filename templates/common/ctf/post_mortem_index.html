@@ -8,16 +8,16 @@
 {% endblock %}
 {% block content %}
   <div class="container-md min-vh-100 container-margin-top">
-    <div class="container-size text-center" style="max-width: 500px;">
-      <div class="content">
-        <h3>{% trans "Post-mortems" %}</h3>
-        <ul class="list-unstyled">
+    <div class="ctf-page">
+      <div class="content ctf-content">
+        <h3 class="ctf-title ctf-centered">{% trans "Post-mortems" %}</h3>
+        <ul class="list-unstyled ctf-flags">
           {% for post_mortem in post_mortems %}
             <li class="m-1">
               <a href="{{ post_mortem.get_absolute_url }}">{{ post_mortem.ctf.title }}</a>
             </li>
           {% empty %}
-            <li>{% trans "No post-mortems have been published yet." %}</li>
+            <li class="ctf-message ctf-centered">{% trans "No post-mortems have been published yet." %}</li>
           {% endfor %}
         </ul>
       </div>
