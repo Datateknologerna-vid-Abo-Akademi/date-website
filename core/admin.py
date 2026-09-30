@@ -1,6 +1,10 @@
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.admin.options import InlineModelAdmin
+from django.contrib.admin.views.autocomplete import AutocompleteJsonView
+from django.utils.translation import gettext_lazy as _
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from modeltranslation.admin import TranslationAdmin
 from two_factor.admin import AdminSiteOTPRequiredMixin
 
 if getattr(settings, 'USE_UNFOLD', False):
@@ -15,6 +19,18 @@ def get_admin_translation_languages() -> tuple[str, ...]:
     """Return language codes that should be shown in modeltranslation admin UI."""
     configured_languages = getattr(settings, "LANGUAGES", ())
     return tuple(code for code, _label in configured_languages)
+
+
+class LanguageTabbedTranslationAdmin(TranslationAdmin):
+    """Translation admin with local, form-wide language tabs.
+
+    django-modeltranslation's bundled tabbed admin depends on jQuery UI from a
+    CDN. Keep the editor usable without that external dependency.
+    """
+
+    class Media:
+        css = {"all": ("css/admin_translation_tabs.css",)}
+        js = ("js/admin_translation_tabs.js",)
 
 
 class ActiveLanguageTranslationAdminMixin:
@@ -65,8 +81,89 @@ class ActiveLanguageTranslationAdminMixin:
         return filtered_fieldsets
 
 
+class TranslationCompletionAdminMixin:
+    """Show how many translated fields are complete for each active language."""
+
+    def get_list_display(self, request):
+        list_display = super().get_list_display(request)
+        if settings.ENABLE_LANGUAGE_FEATURES:
+            return list_display
+        return tuple(field for field in list_display if field != "translation_status")
+
+    @admin.display(description=_("Language"))
+    def translation_status(self, obj):
+        trans_opts = getattr(self, "trans_opts", None)
+        if trans_opts is None:
+            return "-"
+        translated_fields = tuple(trans_opts.all_fields)
+        if not translated_fields:
+            return "-"
+
+        statuses = []
+        for language in self.get_admin_translation_languages(None):
+            completed = sum(
+                bool(str(getattr(obj, f"{field_name}_{language}", "") or "").strip())
+                for field_name in translated_fields
+            )
+            statuses.append(f"{language}: {completed}/{len(translated_fields)}")
+        return "; ".join(statuses)
+
+
+class ReferringObjectAutocompleteJsonView(AutocompleteJsonView):
+    """Also allow autocomplete for editors of the object that owns the field.
+
+    Django's ``AutocompleteJsonView`` only answers when the user holds view
+    permission on the *related* model. Several models here point at
+    ``members.Member`` through ``autocomplete_fields`` (``Flag.solver``,
+    ``Event.author``, ``Functionary.member``, ``EventInvoice.participant`` ...),
+    and the editors who maintain those objects are deliberately not trusted with
+    the full member registry. Without this, their member dropdowns come back
+    empty ("no results").
+
+    Being allowed to add or change the referring object is treated as enough to
+    search the related model for choices. The related ``ModelAdmin`` still owns
+    ``get_queryset``/``get_search_results``, so per-group row restrictions such
+    as ``MEMBER_ADMIN_RESTRICTED_GROUP`` keep applying to the returned rows.
+    """
+
+    def has_perm(self, request, obj=None):
+        if super().has_perm(request, obj=obj):
+            return True
+        return self._referring_admin_grants_access(request)
+
+    def _referring_admin_grants_access(self, request):
+        source_model = self.source_field.model
+        field_name = self.source_field.name
+        for model_admin in self.admin_site._registry.values():
+            for candidate in self._referring_candidates(model_admin, source_model):
+                if field_name not in candidate.get_autocomplete_fields(request):
+                    continue
+                if self._can_write(request, candidate):
+                    return True
+        return False
+
+    @staticmethod
+    def _referring_candidates(model_admin, source_model):
+        if model_admin.model is source_model:
+            yield model_admin
+        for inline_class in model_admin.inlines:
+            if inline_class.model is source_model:
+                yield inline_class(model_admin.model, model_admin.admin_site)
+
+    @staticmethod
+    def _can_write(request, candidate):
+        if candidate.has_change_permission(request):
+            return True
+        if isinstance(candidate, InlineModelAdmin):
+            return candidate.has_add_permission(request, None)
+        return candidate.has_add_permission(request)
+
+
 class FixedLanguageAdminSite(AdminSiteOTPRequiredMixin, _AdminSiteBase):  # type: ignore[misc, valid-type]
     """Mirror the default admin site while preserving normal locale resolution."""
+
+    def autocomplete_view(self, request):
+        return ReferringObjectAutocompleteJsonView.as_view(admin_site=self)(request)
 
     def has_permission(self, request):
         if not admin.AdminSite.has_permission(self, request):

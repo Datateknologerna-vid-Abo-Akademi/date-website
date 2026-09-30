@@ -14,7 +14,16 @@ Exam views use the `exambank.views.exam_bank_access_required` gate instead of UR
 
 When `require_sign_in=True`, access follows the historical member check. When it is false and a password is configured, successful password entry stores the current password hash in the session so changing the password invalidates existing grants. When sign-in is disabled and no password is configured, the exam bank routes are public.
 
+For SF, `ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY` makes the individual member flag authoritative on exam index and detail reads. A public or shared-password exam-bank configuration cannot bypass that SF rule. Other associations retain their configured sign-in, password, or public behavior, and superusers retain access.
+
 Failed password submissions are rate-limited per session: after `EXAM_BANK_PASSWORD_ATTEMPT_LIMIT` (5) failures the gate returns HTTP 429 and refuses further attempts for `EXAM_BANK_PASSWORD_LOCKOUT_SECONDS` (15 minutes). A successful entry clears the counter.
+
+## Admin
+`ExamBankAccessSettings` is edited through an **Åtkomstinställningar** tool link on the `ExamArchiveAdmin` changelist. The singleton settings model is hidden from the app index/sidebar so editors manage exams and their access policy from one exam-bank entry point.
+
+Legacy exam-collection permissions also apply to inline exam files, preserving the complete editor workflow in classic admin and Unfold during the permission migration period.
+
+Multi-file uploads are created from the form's `save_m2m()` phase, after the new archive has been saved. This ordering is required by Django admin's `commit=False` save flow.
 
 ## Migration Notes
 - `archive.0008_remove_picture_collection_delete_examcollection_and_more` copies legacy `archive.Collection(type="Exams")` rows into `exambank_examarchive` and related `archive.Document` rows into `exambank_examfile`.
@@ -29,4 +38,7 @@ Association variants that install `exambank` without the full `archive` app, suc
 The app intentionally renders the shared `archive/...` templates so the public archive pages keep their historical layout while the data ownership lives in `exambank`.
 
 ## Navigation Visibility
-The `staticpages.context_processors._visible_urls_queryset` and `get_categories` helpers hide nav entries whose URL starts with `/archive/` when `ARCHIVE_ENABLED=False`. When `exambank` is in `INSTALLED_APPS`, entries under `/archive/exams/` are kept visible so the exam compatibility routes remain reachable from the menu. The trailing slash is significant — only `/archive/exams/...` is exempted, not unrelated prefixes such as `/archive/examined/`.
+The `staticpages.context_processors._visible_urls_queryset` and the `navigation` processor hide nav entries whose URL starts with `/archive/` when `ARCHIVE_ENABLED=False`. When `exambank` is in `INSTALLED_APPS`, entries under `/archive/exams/` are kept visible so the exam compatibility routes remain reachable from the menu. The trailing slash is significant: only `/archive/exams/...` is exempted, not unrelated prefixes such as `/archive/examined/`.
+
+## Uploads
+- Public and admin multi-uploads use `DirectUploadField` (see `dev/uploads.md`): with direct uploads enabled files go straight to the S3 endpoint and are finalized server-side on save; the signing scope for the exam bank reuses the `exam_bank_access_is_allowed` gate.

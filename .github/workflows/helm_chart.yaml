@@ -24,10 +24,10 @@ jobs:
       CHART_REGISTRY: oci://ghcr.io/datateknologerna-vid-abo-akademi/charts
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
 
       - name: Log in to GHCR
         env:
@@ -39,7 +39,104 @@ jobs:
       - name: Lint chart
         run: |
           set -euo pipefail
-          helm lint "${CHART_PATH}"
+          helm lint "${CHART_PATH}" \
+            --set django.secretKey=ci-secret-key \
+            --set database.password=ci-database-password
+          helm lint "${CHART_PATH}" \
+            -f "${CHART_PATH}/values-hetzner.yaml" \
+            -f "${CHART_PATH}/values-backblaze-b2.example.yaml" \
+            --set secret.existingSecret=date-website-ci-secrets \
+            --set gateway.https.secretName=date-website-ci-tls \
+            --set database.external.host=db.internal \
+            --set-string image.tag=v1.9.3 \
+            --set-string image.digest=sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+          if helm lint "${CHART_PATH}" \
+            -f "${CHART_PATH}/values-hetzner.yaml" \
+            -f "${CHART_PATH}/values-backblaze-b2.example.yaml" \
+            --set secret.existingSecret=date-website-ci-secrets \
+            --set gateway.https.secretName=date-website-ci-tls \
+            --set database.external.host=db.internal \
+            --set-string image.tag=prod; then
+            echo "Production lint accepted a moving image tag without a digest."
+            exit 1
+          fi
+
+      - name: Check web concurrency bound
+        run: |
+          set -euo pipefail
+          rendered="$(helm template ci "${CHART_PATH}" \
+            --set django.secretKey=ci-secret-key \
+            --set database.password=ci-database-password \
+            --set web.asgi.maxConcurrentHttpRequestsPerWorker=12 \
+            --set-string extraEnv.ASGI_HTTP_CONCURRENCY=99 \
+            --set-string extraEnv.DB_CONN_MAX_AGE=300)"
+          grep -A1 -- '- name: ASGI_HTTP_CONCURRENCY' <<<"${rendered}" | grep -q 'value: "12"'
+          grep -A1 -- '- name: DB_CONN_MAX_AGE' <<<"${rendered}" | grep -q 'value: "0"'
+          if helm lint "${CHART_PATH}" \
+            --set django.secretKey=ci-secret-key \
+            --set database.password=ci-database-password \
+            --set web.asgi.maxConcurrentHttpRequestsPerWorker=0; then
+            echo "Chart accepted a non-positive HTTP concurrency limit."
+            exit 1
+          fi
+
+      - name: Check migration Job name stays under 63 bytes
+        run: |
+          set -euo pipefail
+          # Kubernetes copies the Job name into a pod-template label
+          # (batch.kubernetes.io/job-name); label values are capped at
+          # 63 bytes, so an over-long name renders but is rejected by the
+          # API server (2026-08-29 regression caught on the cluster).
+          job_name() { # job_name <args...> -> prints the migration Job name
+            helm template ci "${CHART_PATH}" \
+              --set secret.existingSecret=ci-secrets \
+              --set gateway.https.secretName=ci-tls \
+              --set database.external.host=db.internal \
+              --set-string image.tag=prod \
+              --set-string image.digest=sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \
+              "$@" \
+              | awk '/kind: Job/{getline; getline; gsub(/^  name: /, ""); print; exit}'
+          }
+          check_job_name() { # check_job_name <label> <args...>
+            local label="$1"; shift
+            local name
+            name="$(job_name "$@")"
+            [ -n "${name}" ] || { echo "${label}: no migration Job rendered"; exit 1; }
+            [[ "${name}" =~ ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ ]] \
+              || { echo "${label}: Job name not a valid DNS subdomain: ${name}"; exit 1; }
+            [ "${#name}" -le 63 ] \
+              || { echo "${label}: migration Job name exceeds 63 bytes: ${name}"; exit 1; }
+            echo "${label}: ${name} (${#name} bytes)"
+          }
+          check_job_name "digest-pinned" \
+            -f "${CHART_PATH}/values-hetzner.yaml"
+          check_job_name "semver tag, no digest" \
+            -f "${CHART_PATH}/values-hetzner.yaml" \
+            --set-string image.tag=v1.9.4 --set-string image.digest=""
+          check_job_name "long fullname fallback" \
+            -f "${CHART_PATH}/values-hetzner.yaml" \
+            --set-string fullnameOverride=abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz
+          # tags that sanitize identically must still produce distinct names
+          # (base values: pinInProduction false accepts arbitrary tags)
+          a="$(job_name --set 'migrations.job.enabled=true' --set 'migrations.job.hook=' --set-string image.tag=v1.9.4 --set-string image.digest="")"
+          b="$(job_name --set 'migrations.job.enabled=true' --set 'migrations.job.hook=' --set-string image.tag=v1-9-4 --set-string image.digest="")"
+          [ -n "${a}" ] && [ -n "${b}" ] || { echo "collision render failed: '${a}' vs '${b}'"; exit 1; }
+          [ "${a}" != "${b}" ] || { echo "sanitization collision: ${a} == ${b}"; exit 1; }
+          echo "collision pair distinct: ${a} != ${b}"
+
+      - name: Check migration database route
+        run: |
+          set -euo pipefail
+          rendered="$(helm template ci "${CHART_PATH}" \
+            --set secret.existingSecret=ci-secrets \
+            --set postgresql.enabled=false \
+            --set database.external.host=pool.internal \
+            --set migrations.job.enabled=true \
+            --set migrations.job.databaseHost=postgres.internal \
+            --set migrations.job.databasePort=6432)"
+          grep -q 'DB_HOST: "pool.internal"' <<<"${rendered}"
+          grep -A1 -- '- name: DB_HOST' <<<"${rendered}" | grep -q 'value: "postgres.internal"'
+          grep -A1 -- '- name: DB_PORT' <<<"${rendered}" | grep -q 'value: "6432"'
 
       - name: Package chart
         id: package

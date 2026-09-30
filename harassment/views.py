@@ -30,7 +30,7 @@ def harassment_form(request):
             enqueue_task_on_commit(
                 send_email_task,
                 "Ny trakasserianmälan har inkommit",
-                render_to_string('social/harassment_admin_email.html', email_ctx),
+                render_to_string('social/harassment_admin_email.txt', email_ctx),
                 settings.DEFAULT_FROM_EMAIL,
                 harassment_receivers,
             )

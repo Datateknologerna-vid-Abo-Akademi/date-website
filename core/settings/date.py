@@ -1,21 +1,6 @@
 from .common import *  # noqa
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            'templates/date',
-            *COMMON_TEMPLATE_DIRS,
-        ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                *COMMON_CONTEXT_PROCESSORS,
-                # Add project context processors here
-            ],
-        },
-    },
-]
+TEMPLATES = build_templates('date')
 
 INSTALLED_APPS = get_installed_apps(
     [
@@ -34,7 +19,6 @@ INSTALLED_APPS = get_installed_apps(
         'publications',
         'alumni',
         'billing',
-        'booking',
     ]
 )
 
@@ -53,11 +37,7 @@ LANGUAGES = (
 STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/date'),
-    os.path.join(BASE_DIR, 'static/common'),
-]
-
+STATICFILES_DIRS = build_static_dirs('date')
 
 CONTENT_VARIABLES = {
     "SITE_URL": "https://datateknologerna.org",
@@ -66,8 +46,8 @@ CONTENT_VARIABLES = {
     "ASSOCIATION_NAME_SHORT": "DaTe",
     "EVENT_TEMPLATE_LOGO": "core/images/headerlogo.png",
     "ASSOCIATION_EMAIL": "date@abo.fi",
-    "ASSOCIATION_ADDRESS_L1": "Åbo Akademi, Agora",
-    "ASSOCIATION_ADDRESS_L2": "Vattenborgsvägen 5",
+    "ASSOCIATION_ADDRESS_L1": "Arken, B313",
+    "ASSOCIATION_ADDRESS_L2": "Fabriksgatan 2",
     "ASSOCIATION_POSTAL_CODE": "20500 Åbo",
     "SOCIAL_BUTTONS": [
         ["fa-facebook-f", "https://www.facebook.com/HerrKanin/"],
@@ -82,3 +62,7 @@ CONTENT_VARIABLES = {
     # Events
     "INTERNATIONAL_EVENT_SLUGS": ["teekkarikaste_teknologdop"],
 }
+
+# Association capabilities
+REGISTRATION_TERMS_ENABLED = True
+EQUALITY_PLAN_ENABLED = True

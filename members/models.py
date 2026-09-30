@@ -18,12 +18,14 @@ FRESHMAN = 1
 ORDINARY_MEMBER = 2
 SUPPORTING_MEMBER = 3
 SENIOR_MEMBER = 4
+NON_VOTING_MEMBER = 5
 
 PERMISSION_PROFILES = (
     (FRESHMAN, _('Gulnäbb')),
     (ORDINARY_MEMBER, _('Ordinarie medlem')),
     (SUPPORTING_MEMBER, _('Stödjande medlem')),
     (SENIOR_MEMBER, _('Seniormedlem')),
+    (NON_VOTING_MEMBER, _('Medlem utan rösträtt')),
 )
 
 
@@ -41,6 +43,7 @@ class Member(AbstractBaseUser, PermissionsMixin):  # type: ignore[django-manager
         "members.MembershipType", default=FRESHMAN, blank=False, on_delete=models.CASCADE
     )
     year_of_admission = models.IntegerField(_('Inskrivningsår'), blank=True, null=True)
+    archive_access_eligible = models.BooleanField(_('Gulispass utfört'), default=False)
     github_id = models.BigIntegerField(_('GitHub ID'), unique=True, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     objects = MemberManager()
@@ -90,6 +93,15 @@ class Member(AbstractBaseUser, PermissionsMixin):  # type: ignore[django-manager
 
     def get_str_membership_type(self):
         return self.membership_type.name
+
+    def has_archive_access(self):
+        if self.is_superuser:
+            return True
+        if not self.is_authenticated or self.membership_type.permission_profile == SUPPORTING_MEMBER:
+            return False
+        if getattr(settings, 'ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY', False):
+            return self.archive_access_eligible
+        return True
 
 
 class MembershipType(models.Model):

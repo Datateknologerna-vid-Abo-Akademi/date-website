@@ -343,6 +343,9 @@ msgstr "Kehitys"
 msgid "Production"
 msgstr "Tuotanto"
 
+#: core/settings/sf.py:40
+msgid "Hemort"
+msgstr "Kotipaikka"
 #: ctf/admin.py:22 events/admin.py:142 lucia/admin.py:30 news/admin.py:31
 #: polls/admin.py:54
 msgid "publicering"
@@ -448,6 +451,76 @@ msgstr "Aika"
 #: ctf/models.py:86
 msgid "Gissningar"
 msgstr "Arvaukset"
+
+#: core/admin_ui.py:188
+msgid "CTF Post-mortems"
+msgstr "CTF-jälkianalysit"
+
+#: ctf/admin.py:56
+#: templates/common/ctf/post_mortem_index.html:13
+msgid "Post-mortems"
+msgstr "Jälkianalysit"
+
+#: ctf/models.py:74
+msgid "Översikt"
+msgstr "Yleiskatsaus"
+
+#: ctf/models.py:80
+msgid ""
+"Lämna tomt för att dölja efteranalysen. Välj en framtida tid för schemalagd "
+"publicering."
+msgstr ""
+"Jätä tyhjäksi piilottaaksesi jälkianalyysin. Valitse tuleva ajankohta "
+"ajastettua julkaisua varten."
+
+#: ctf/models.py:86
+msgid "post-mortem"
+msgstr "jälkianalyysi"
+
+#: ctf/models.py:87
+msgid "post-mortems"
+msgstr "jälkianalysit"
+
+#: ctf/models.py:112 templates/common/ctf/post_mortem_detail.html:46
+msgid "Solution"
+msgstr "Ratkaisu"
+
+#: templates/common/ctf/detail.html:28
+#: templates/common/ctf/post_mortem_detail.html:13
+msgid "Post-mortem"
+msgstr "Jälkianalyysi"
+
+#: templates/common/ctf/post_mortem_detail.html:15
+msgid "Data"
+msgstr "Tiedot"
+
+#: templates/common/ctf/post_mortem_detail.html:16
+msgid "Total guesses"
+msgstr "Arvauksia yhteensä"
+
+#: templates/common/ctf/post_mortem_detail.html:19
+msgid "Number of inputs"
+msgstr "Syötteiden määrä"
+
+#: templates/common/ctf/post_mortem_detail.html:22
+msgid "Full logs"
+msgstr "Täydelliset lokit"
+
+#: templates/common/ctf/post_mortem_detail.html:31
+msgid "Solved by"
+msgstr "Ratkaissut"
+
+#: templates/common/ctf/post_mortem_detail.html:34
+msgid "Solve time"
+msgstr "Ratkaisuaika"
+
+#: templates/common/ctf/post_mortem_detail.html:41
+msgid "Unsolved"
+msgstr "Ratkaisematon"
+
+#: templates/common/ctf/post_mortem_index.html:20
+msgid "No post-mortems have been published yet."
+msgstr "Jälkianalyyseja ei ole vielä julkaistu."
 
 #: events/forms.py:81 events/forms.py:174
 msgid "Leave blank to keep the event hidden."
@@ -584,6 +657,10 @@ msgstr "Sähköposti"
 #: templates/pulterit/events/arsfest.html:94
 msgid "Anonymt"
 msgstr "Anonyymisesti"
+
+#: events/registration.py:74
+msgid "Det gick inte att anmäla dig just nu, försök igen."
+msgstr "Ilmoittautuminen ei onnistunut juuri nyt, yritä uudelleen."
 
 #: events/models.py:322 events/registration.py:105
 msgid "Det finns redan någon anmäld med denna email"
@@ -846,6 +923,10 @@ msgstr "Tukeva jäsen"
 #: members/models.py:26
 msgid "Seniormedlem"
 msgstr "Seniorijäsen"
+
+#: members/models.py:28
+msgid "Medlem utan rösträtt"
+msgstr "Jäsen ilman äänioikeutta"
 
 #: members/models.py:37
 msgid "Postkod"
@@ -1848,26 +1929,26 @@ msgstr ""
 msgid "Gå till Startsidan"
 msgstr "Kotisivulle"
 
-#: templates/common/members/registration/password_reset_email.html:3
+#: templates/common/members/registration/password_reset_email.txt:3
 #, python-format
 msgid "För att inleda lösenordsåterställningen för kontot %(username)s,"
 msgstr "Aloittaaksesi tilin %(username)s salasanan palautuksen,"
 
-#: templates/common/members/registration/password_reset_email.html:4
+#: templates/common/members/registration/password_reset_email.txt:4
 msgid "klicka på länken nedan:"
 msgstr "klikkaa alla olevaa linkkiä:"
 
-#: templates/common/members/registration/password_reset_email.html:8
+#: templates/common/members/registration/password_reset_email.txt:8
 msgid ""
 "Ifall det inte går att klicka på länken, vänligen kopiera och klistra in "
 "länken i din webbläsare."
 msgstr "Jos linkkiä ei voi klikata, kopioi ja liitä se selaimeesi."
 
-#: templates/common/members/registration/password_reset_email.html:10
+#: templates/common/members/registration/password_reset_email.txt:10
 msgid "Om ytterligare frågor uppstår, vänligen kontakta styrelsen."
 msgstr "Jos sinulla on lisäkysymyksiä, ota yhteyttä hallitukseen."
 
-#: templates/common/members/registration/password_reset_email.html:13
+#: templates/common/members/registration/password_reset_email.txt:13
 msgid "Mvh,"
 msgstr "Ystävällisin terveisin,"
 
@@ -2117,6 +2198,26 @@ msgstr ""
 "haluttaessa yhteyttä %(association_short)ss hallitukseen ja/tai ÅAS:n "
 "häirintäyhdyshenkilöihin."
 
+#: templates/impuls/social/harassment_form.html:1
+msgid "Rapportera trakasserier"
+msgstr "Ilmoita häirinnästä"
+
+#: templates/impuls/social/harassment_form.html:3
+msgid ""
+"Du kan rapportera trakasserier antingen anonymt eller ange din "
+"kontaktinformation. Vi tar alla former av trakasserier på allvar och kommer "
+"att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för "
+"alla medlemmar. Impuls trygghetspersoner behandlar alla rapporteringar av "
+"trakasserier och tar kontakt till Impuls styrelse och/eller ÅAS "
+"trakasseriombud om det så önskas."
+msgstr ""
+"Voit ilmoittaa häirinnästä joko anonyymisti tai antamalla yhteystietosi. "
+"Suhtaudumme kaikkeen häirintään vakavasti ja ryhdymme toimiin turvallisen ja "
+"kunnioittavan ympäristön ylläpitämiseksi kaikille jäsenille. Impulssin "
+"turvallisuushenkilöt käsittelevät kaikki häirintäilmoitukset ja ottavat "
+"haluttaessa yhteyttä Impulssin hallitukseen ja/tai ÅAS:n "
+"häirintäyhdyshenkilöihin."
+
 #: templates/common/social/harassment_form.html:26
 msgid "Ange din Email om du vill bli kontaktad"
 msgstr "Anna sähköpostiosoitteesi, jos haluat että sinuun otetaan yhteyttä"
@@ -2193,9 +2294,9 @@ msgstr "Tämä poistaa ylimääräisen vahvistusvaiheen tililtäsi."
 msgid "Disable"
 msgstr "Poista käytöstä"
 
-#: templates/common/unfold/helpers/userlinks.html:39
-msgid "Create"
-msgstr "Luo"
+#: templates/common/unfold/helpers/app_list_default.html:29
+msgid "View all"
+msgstr "Näytä kaikki"
 
 #: templates/date/date/components/about.html:4
 msgid "Om oss"
@@ -2245,6 +2346,12 @@ msgstr ""
 "asiasta verkkosivumme kautta. Suhtaudumme kaikenlaisen epäasiallisen "
 "käytöksen kohtaan vakavasti ja ryhdymme toimiin ylläpitääksemme turvallista "
 "ja kunnioittavaa ympäristöä kaikille jäsenille."
+
+#: templates/impuls/date/components/extras.html:6
+msgid ""
+"Om du upplever trakasserier i samband med Impuls verksamhet, vänligen"
+msgstr ""
+"Jos koet epäasiallista käytöstä Impulssin toiminnan aikana, voit"
 
 #: templates/date/date/components/header.html:8
 msgid "Datateknologerna"
@@ -2453,3 +2560,37 @@ msgstr ""
 "Keskeinen osa Impulsin toimintaa on erilaisten tapahtumien järjestäminen "
 "jäsenilleen sekä aktiivinen toiminta tiedekunta- ja yhdistysrajojen yli, "
 "niin psykologian kuin muidenkin oppiaineiden parissa."
+
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Klotterplanket"
+msgstr "Kommenttiseinä"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Skriv ett inlägg anonymt med en pseudonym. Inlägg som bryter mot reglerna för webbplatsen kan tas bort."
+msgstr "Kirjoita viesti anonyymisti pseudonyymillä. Sivuston sääntöjä rikkovat viestit voidaan poistaa."
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Pseudonym"
+msgstr "Pseudonyymi"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Meddelande"
+msgstr "Viesti"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Inlägg"
+msgstr "Viestit"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Inga inlägg ännu. Skriv det första!"
+msgstr "Ei viestejä vielä. Kirjoita ensimmäinen!"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Ditt inlägg har lagts till!"
+msgstr "Viestisi on lisätty!"
+
+#: klotterplanket/views.py
+msgid "Botkontrollen misslyckades, försök igen."
+msgstr "Botintarkistus epäonnistui, yritä uudelleen."
+#: klotterplanket/views.py
+msgid "Kontrollera pseudonymen och meddelandet."
+msgstr "Tarkista pseudonyymi ja viesti."
+
+#: exambank/views.py
+#, python-format
+msgid "Kunde inte ladda upp följande filer: %(files)s"
+msgstr "Seuraavia tiedostoja ei voitu ladata: %(files)s"

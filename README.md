@@ -1,6 +1,6 @@
 # DaTe Website 2.0
 
-DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.fi)'s public site, membership tools, alumni portal, polls, and a handful of seasonal or one-off apps. The stack is Django 6.0 running on Python 3.14 inside Docker Compose with Celery workers, Channels/Daphne, PostgreSQL, Valkey (Redis compatible), and S3-compatible storage.
+DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.fi)'s public site, membership tools, alumni portal, polls, and a handful of seasonal or one-off apps. The stack is Django 6.0 running on Python 3.14 inside Docker Compose with Celery workers, Channels, PostgreSQL, Valkey (Redis compatible), and S3-compatible storage.
 
 > Active development happens on `main`. QA and production are environments, not branches; production is promoted from an image already tested in QA.
 
@@ -10,7 +10,7 @@ DaTe Website 2.0 powers [Datateknologerna vid Åbo Akademi rf](https://date.abo.
 - Docker 24+ plus the Docker Compose plugin (`docker compose`). Follow Docker's official guides for [Ubuntu](https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository) or [Debian](https://docs.docker.com/engine/install/debian/#install-using-the-repository) to install both the engine and the Compose plugin.
 - Bash-compatible shell (the helper script `env.sh` defines aliases such as `date-start`)
 - Access to `docker` without sudo (add yourself to the `docker` group if needed)
-- Local `django-admin` (e.g., via `pipx install django`) when editing translations outside the container
+- [uv](https://docs.astral.sh/uv/) for native test, lint, and translation commands outside Docker (install it via `pipx install uv` or the standalone installer). Run `uv sync` once after cloning, then `uv run python manage.py test` and `uv run django-admin makemessages ...` work without containers.
 
 > Windows developers should run the project inside WSL 2 to match the expected Linux tooling: sourcing `env.sh`, running Bash scripts, and keeping LF line endings all work reliably there. Follow Microsoft's [WSL installation guide](https://learn.microsoft.com/windows/wsl/install) first, then install [Docker Desktop](https://www.docker.com/products/docker-desktop/) (which automatically connects Docker to your default WSL distro).
 
@@ -22,7 +22,7 @@ cd date-website
 git checkout main
 cp .env.example .env            # adjust passwords, ports, S3, etc.
 source env.sh                   # registers helper aliases
-date-start-detached             # builds containers, runs migrations, collects static files
+date-start-detached             # starts the stack (use date-rebuild after dependency changes)
 date-createsuperuser            # creates your admin account
 open http://localhost:8000      # admin lives at /admin
 ```
@@ -104,7 +104,9 @@ The script defines the `date-*` aliases used throughout this README:
 
 | Command | Description |
 | --- | --- |
-| `date-start` / `date-start-detached` | Pull images, rebuild, apply migrations, collect static files, and start the stack (foreground or detached). |
+| `date-start` / `date-start-detached` | Start the stack without forcing a rebuild (foreground or detached). |
+| `date-rebuild` / `date-rebuild-detached` | Rebuild images and start the stack; needed after `pyproject.toml`, `uv.lock`, or `Dockerfile` changes. |
+| `date-build` | Build images without starting the stack. |
 | `date-stop` | Shut down the Compose stack. |
 | `date-manage <cmd>` | Run `python manage.py <cmd>` inside the web container. |
 | `date-makemigrations`, `date-migrate`, `date-collectstatic`, `date-createsuperuser` | Convenience wrappers around common `manage.py` commands. |
@@ -118,8 +120,9 @@ Once the aliases are registered, the `date-*` commands are the normal way to wor
 
 ## Database, migrations, and seed data
 
+- The dev stack runs migrations and translation compilation once in an `init` service when the stack is first created; the web container starts only after it succeeds. After pulling code with new migrations, run `date-migrate` (or `docker compose down` followed by `date-start`, which recreates `init`) to apply them.
 - Use `date-makemigrations` and `date-migrate` for schema changes. Commit the generated migration files; do not rewrite published migrations.
-- `date-cleaninit` (alias for `./scripts/clean_init.sh`) drops and recreates the development database volumes, loads the local fixture set, generates sample media, and resets the `admin`, `freshman`, and `member` passwords to `admin`. **All local data will be deleted.**
+- `date-cleaninit` (alias for `./scripts/clean_init.sh`) drops and recreates the development database, loads the local fixture set, generates sample media, resets the `admin`, `freshman`, and `member` passwords to `admin`, and leaves the stack running (pass `--no-start` to only reset). **All local data will be deleted.**
 - If your shell does not expose aliases, run `/bin/bash ./scripts/clean_init.sh` directly.
 - To inspect data manually, open a shell in the container: `docker compose run --rm web python manage.py shell`.
 - Re-run `date-createsuperuser` after resetting the database so you keep admin access.
@@ -128,17 +131,31 @@ The fixture reset flow uses `scripts/load_all_fixtures.sh` and `scripts/generate
 
 ## Tests & QA
 
-The CI and reviewer expectation is that `python manage.py test` (or the `date-test` alias) passes before you open a pull request. The test settings mock external services, so no Redis or PostgreSQL on the host is required.
+The CI and reviewer expectation is that `python manage.py test` passes before you open a pull request. The test settings replace service-backed components with in-memory backends (SQLite, in-memory Channels, locmem cache), so no Redis or PostgreSQL is required on the host or in the test container.
+
+Two equivalent ways to run the suite:
+
+```bash
+uv sync                       # install dependencies once (native, no Docker)
+uv run python manage.py test  # fast native loop, no containers started
+date-test                     # container parity: same suite inside Docker
+```
 
 Examples:
 
 ```bash
 date-test                   # run the full suite inside Docker
 date-test members.tests     # run a specific module
+uv run python manage.py test events.tests   # specific module, native
 date-manage check           # static checks (migrations, settings sanity)
+uv run python scripts/check_project_variants.py
 ```
 
+The `date-test` alias runs with `--no-deps`, so it does not start the database or Redis services; `date-test` is useful as a parity check when native `uv` dependencies behave differently from the container build.
+
 Manually verify user-facing flows (forms, background jobs, Channels endpoints) when implementing a feature; a lot of work in this repo still benefits from a quick human smoke test after the automated checks pass.
+
+Use `scripts/check_project_variants.py` after changing shared settings, templates, static paths, URL configuration, or apps that are not installed for every association. It runs `manage.py check` for `date`, `kk`, `biocum`, and `pulterit`; pass project names as arguments to narrow the run.
 
 If you touch translations, templates, or language-aware navigation, also smoke-test the default Swedish site plus at least one non-default language selected through the language switcher with `ENABLE_LANGUAGE_FEATURES=True`.
 
@@ -149,9 +166,33 @@ The `docs/` directory contains both developer notes (`docs/dev/*.md`) and conten
 Use [docs/index.md](docs/index.md) as the landing page for the published documentation site. Update it when you add a new app guide or rename an existing one.
 For translation architecture and workflow, see [docs/dev/translations.md](docs/dev/translations.md).
 
-## Deployment (`docker-compose.prod.yml`)
+## Deployment
 
-The production stack relies on the published container image at `ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}` plus managed PostgreSQL/Valkey volumes. Typical flow:
+### Production: Kubernetes + GitOps
+
+The association's production sites (date, kk, biocum, pulterit, sf, qa)
+run on a Kubernetes cluster managed with **GitOps**: Argo CD watches a
+private operator repository and deploys the published Helm chart + per-site
+values. You do not deploy to production from this repository — you publish
+an image and promote it:
+
+1. Push to `main` → CI builds `ghcr.io/.../date-website:<sha>` and `:qa`.
+2. Test the image as `qa`.
+3. Cut a SemVer tag (`vX.Y.Z`) or run the `promote_production` workflow →
+   the image becomes `:prod` / `:latest`.
+4. The operator repository pins that tag for the sites being updated; Argo CD
+   rolls them out (blue-green, zero-downtime).
+
+See [`docs/dev/kubernetes.md`](docs/dev/kubernetes.md) for the full
+deployment flow, image/tag rules, and the database-migration rules that
+apply to blue-green deploys. Cluster access details are intentionally not in
+this repository — they live in the private operator repository.
+
+### Self-hosted: `docker-compose.prod.yml`
+
+The compose stack is retained as the self-hosted / standalone deployment
+option (e.g. a single VPS not on the cluster). It relies on the published
+container image at `ghcr.io/datateknologerna-vid-abo-akademi/date-website:${DATE_IMG_TAG}` plus managed PostgreSQL/Valkey volumes. Typical flow:
 
 1. Copy `.env.prod.example` to `.env` on the deployment host and replace every placeholder.
 2. Ensure the external Docker network referenced by the compose file exists once:
@@ -170,7 +211,7 @@ The script rewrites `.env` using the example file's comments and ordering, keeps
 
 For development checkouts, use `date-sync-dev-env` to sync `.env` from `.env.example` with the same preserve-existing-values behavior. This helper refuses to run when the current `.env` looks like production; use `date-sync-prod-env` there instead.
 
-The stack brings up the `web` (Gunicorn), `asgi` (Daphne/Channels), `celery`, `db`, `redis`, and `nginx` services. Rolling deploys usually build a new GHCR image in CI, update `DATE_IMG_TAG`, then restart `web`, `asgi`, and `celery`.
+The stack brings up the `web` (Gunicorn with a Uvicorn worker, serving HTTP and WebSockets), `celery`, `db`, `redis`, and `nginx` services. Rolling deploys usually build a new GHCR image in CI, update `DATE_IMG_TAG`, then restart `web` and `celery`.
 
 ### Shared Compose monitoring
 
@@ -210,7 +251,7 @@ CI image publishing and release tagging are separate on purpose:
 - Pushes to `main` publish an immutable commit-SHA tag plus the moving `qa` tag.
 - QA should deploy `qa` automatically or deploy the immutable commit-SHA tag produced from `main`.
 - Release tags are created manually through `.github/workflows/release_tag.yaml` with `patch` as the default bump and optional `minor` / `major` overrides.
-- Each release tag also publishes generated GitHub Release notes, which are the release history for the project.
+- Each release tag also publishes GitHub Release notes, which are the release history for the project. The release workflow groups merged PRs by their release-category labels when present (`bug`, `feature`, `docs`, `dependencies`, `chore`, `refactor`) and otherwise by the conventional-commit prefix of their title as squash-merged onto `main` (`feat:`, `fix:`, `docs:`, dependency scopes, maintenance types), so PRs do not need labels; PRs labeled `ignore-for-release` are left out.
 - When a release tag is created, CI reuses the already-published commit image and adds the SemVer, `prod`, and `latest` tags to the same image instead of rebuilding.
 - Production can also be promoted manually through `.github/workflows/promote_production.yaml` by entering the already-tested image tag, usually the commit SHA currently running in QA.
 
@@ -224,6 +265,12 @@ Although Django 6 ships with the new Tasks framework, this project still uses Ce
 
 The Kubernetes deployment path uses the Helm chart in `charts/date-website/`. The current target is k3s on Hetzner Cloud with Traefik Gateway API, `hcloud-volumes` for persistent workloads when they run in-cluster, and Backblaze B2 through the S3-compatible API for media and PostgreSQL backups.
 
+The example below is the **self-hosted profile**: the chart owns the Gateway
+and the backup CronJob. Production instead runs one Argo CD release per
+association with an external cluster-level backup pipeline and externally
+managed ingress (see [docs/dev/kubernetes.md](docs/dev/kubernetes.md)); only
+one authoritative backup pipeline should own each database.
+
 Use these values files together:
 
 ```bash
@@ -233,9 +280,16 @@ helm upgrade --install date-website charts/date-website \
   -f charts/date-website/values-hetzner.yaml \
   -f charts/date-website/values-backblaze-b2.example.yaml \
   --set secret.existingSecret=date-website-prod-secrets \
+  --set gateway.https.secretName='<tls-secret-name>' \
   --set database.external.host='<bastion-private-ip-or-dns>' \
-  --set image.tag='<release-tag>'
+  --set-string image.tag='v1.9.3' \
+  --set-string image.digest='sha256:<manifest-digest>'
 ```
+
+The Hetzner values enable production image pinning. The release tag remains
+visible to operators, while the digest selects the exact image manifest. An
+exact `vX.Y.Z` or 40-character commit SHA tag may be used without a digest;
+moving or custom tags require one.
 
 Do not commit real production bucket names, app keys, or Django secrets in values files. Create a Kubernetes Secret first and pass it through `secret.existingSecret`.
 
@@ -306,7 +360,7 @@ To generate the translation file, called `django.po`
 is done by executing the following command **in the root directory of the project**
 
 ```bash
-$ django-admin makemessages -l en -l fi -l sv
+$ uv run django-admin makemessages -l en -l fi -l sv
 ```
 
 This creates/updates the `django.po` 
@@ -318,7 +372,7 @@ such as `Poedit`.
 To compile the translations to `django.mo`, use the following command
 
 ```bash
-$ django-admin compilemessages
+$ uv run django-admin compilemessages
 ``` 
 
 ### Django modeltranslations (translation of dynamic content)
@@ -445,4 +499,10 @@ Restart the stack afterward so containers use the updated `.env`.
 
 ## License
 
-All content in this repository is released under [CC0 1.0](LICENSE).
+The software source code in this repository is licensed under the GNU Affero
+General Public License v3.0 or later. See [LICENSE](LICENSE).
+
+Association branding, logos, images, fixture content, documentation, and other
+non-code materials are not included in that software license unless explicitly
+stated otherwise. See [LICENSE-NOTICE.md](LICENSE-NOTICE.md) for the full scope
+notice.

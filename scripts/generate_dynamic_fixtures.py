@@ -190,7 +190,6 @@ def generate():
                     "content": content,
                     "slug": slug,
                     "author": 1,
-                    "published": True,
                     "created_time": dt(days=days),
                     "published_time": dt(days=days),
                 },
@@ -211,7 +210,7 @@ def generate():
                 "event_date_end": dt(days=-59, hours=4),
                 "sign_up": False,
                 "author": 1,
-                "published": True,
+                "published_time": dt(days=-60, hours=18),
             },
         }
     )
@@ -229,7 +228,7 @@ def generate():
                 "sign_up": True,
                 "sign_up_max_participants": 80,
                 "author": 1,
-                "published": True,
+                "published_time": dt(days=-1),
                 "sign_up_members": dt(days=-10),
                 "sign_up_others": dt(days=-8),
                 "sign_up_deadline": dt(days=3),
@@ -271,7 +270,7 @@ def generate():
             "fields": {
                 "question_text": "Vad vill du ha för program?",
                 "pub_date": dt(days=-5),
-                "published": True,
+                "published_time": dt(days=-5),
                 "show_results": True,
             },
         }
@@ -300,7 +299,7 @@ def generate():
                 "title": "DaTe CTF 2026",
                 "content": "<h1>CTF!</h1>",
                 "slug": "date-ctf-2026",
-                "published": True,
+                "published_time": dt(days=-30),
                 "start_date": dt(days=-30),
                 "end_date": dt(days=30),
                 "pub_date": dt(days=-30),
@@ -324,11 +323,10 @@ def generate():
     # --- ARCHIVE ---
     data.append(
         {
-            "model": "archive.collection",
+            "model": "gallery.album",
             "pk": 1,
             "fields": {
                 "title": "Årsfest 2025",
-                "type": "Pictures",
                 "pub_date": dt(days=-60),
                 "hide_for_gulis": False,
             },
@@ -351,10 +349,10 @@ def generate():
     for i in range(1, 4):
         data.append(
             {
-                "model": "archive.picture",
+                "model": "gallery.photo",
                 "pk": i,
                 "fields": {
-                    "collection": 1,
+                    "album": 1,
                     "image": "archive/test/dummy.svg",
                     "favorite": (i == 1),
                 },

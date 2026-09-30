@@ -6,7 +6,7 @@ from datetime import timedelta
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import connections, models, router
 from django.db.models import JSONField, Max
 from django.template.defaulttags import register
 from django.urls import reverse
@@ -39,7 +39,7 @@ EVENT_TEMPLATE_CHOICES = EVENT_TEMPLATE_CHOICES_COMMON + EVENT_TEMPLATE_CHOICES_
 
 
 def registration_terms_feature_enabled():
-    return settings.PROJECT_NAME == "date"
+    return settings.REGISTRATION_TERMS_ENABLED
 
 
 class EventQuerySet(models.QuerySet):
@@ -67,6 +67,7 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
     event_date_end = models.DateTimeField(_('Slutdatum'), default=now)
     sign_up_max_participants = models.IntegerField(_('Maximal antal deltagare (0 för ingen begränsning)'), default=0)
     sign_up = models.BooleanField(_('Anmälning'), default=True)
+    attendee_nr_counter = models.PositiveBigIntegerField(default=0, editable=False)
     sign_up_members = models.DateTimeField(_('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=now)
     sign_up_others = models.DateTimeField(_('Anmälan öppnas (övriga)'), null=True, blank=True, default=now)
     sign_up_deadline = models.DateTimeField(_('Anmälningen stängs'), null=True, blank=True, default=now)
@@ -101,6 +102,10 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
         verbose_name = _('evenemang')
         verbose_name_plural = _('evenemang')
         ordering = ('id',)
+        indexes = [
+            # Homepage/listing filters: published events by end date.
+            models.Index(fields=['published_time', 'event_date_end'], name='event_pub_end_idx'),
+        ]
 
     def __str__(self):
         return self.title
@@ -147,11 +152,52 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
 
     def get_registrations(self):
         if self.parent:
-            return self.parent.get_registrations()
+            return EventAttendees.objects.filter(event=self.parent, original_event=self).order_by('attendee_nr')
         return EventAttendees.objects.filter(event=self).order_by('attendee_nr')
 
     def get_highest_attendee_nr(self):
         return EventAttendees.objects.filter(event=self).aggregate(Max('attendee_nr'))
+
+    def reserve_attendee_nrs(self, count=1):
+        if count < 1:
+            raise ValueError('count must be positive')
+
+        db_alias = self._state.db or router.db_for_write(type(self), instance=self)
+        connection = connections[db_alias]
+        table = connection.ops.quote_name(self._meta.db_table)
+        attendee_table = connection.ops.quote_name(EventAttendees._meta.db_table)
+        counter = connection.ops.quote_name('attendee_nr_counter')
+        pk_column = connection.ops.quote_name(self._meta.pk.column)
+        attendee_event_column = connection.ops.quote_name(EventAttendees._meta.get_field('event').column)
+        attendee_nr_column = connection.ops.quote_name(EventAttendees._meta.get_field('attendee_nr').column)
+        greatest = 'MAX' if connection.vendor == 'sqlite' else 'GREATEST'
+        increment = count * 10
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f'''
+                UPDATE {table}
+                SET {counter} = (
+                    {greatest}(
+                        {counter},
+                        COALESCE(
+                            (SELECT MAX({attendee_nr_column}) FROM {attendee_table}
+                             WHERE {attendee_event_column} = %s),
+                            0
+                        )
+                    ) / 10
+                ) * 10 + %s
+                WHERE {pk_column} = %s
+                RETURNING {counter}
+                ''',  # noqa: S608
+                [self.pk, increment, self.pk],
+            )
+            row = cursor.fetchone()
+        if row is None:
+            raise type(self).DoesNotExist(f'Event {self.pk} no longer exists')
+
+        end = row[0]
+        self.attendee_nr_counter = end
+        return list(range(end - increment + 10, end + 1, 10))
 
     def cancel_event_attendance(self, user):
         if self.sign_up:
@@ -215,7 +261,7 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
             if registration_questions:
                 for question in registration_questions:
                     if question.type == "select":
-                        choices = question.choice_list.split(',')
+                        choices = question.get_choices()
                         fields[question.name] = forms.ChoiceField(
                             label=question.name,
                             # TODO this smells fishy, investigate
@@ -256,7 +302,7 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
                     for question in registration_questions:
                         if not question.hide_for_avec:
                             if question.type == "select":
-                                choices = question.choice_list.split(',')
+                                choices = question.get_choices()
                                 fields['avec_' + question.name] = forms.ChoiceField(
                                     label=question.name,
                                     choices=list(map(list, zip(choices, choices, strict=False))),  # noqa: E501
@@ -320,11 +366,13 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
         return self.event_date_end > now() + timedelta(-1)
 
     def validate_unique_email(self, email):
-        attendees = self.get_registrations()
-        for attendee in attendees:
-            if email == attendee.email:
-                logger.debug("SAME EMAIL")
-                raise ValidationError(_("Det finns redan någon anmäld med denna email"))
+        # Indexed existence check instead of scanning every attendee row on
+        # each signup (the unique_together constraint on (event, email) is the
+        # real guard; races surface as IntegrityError in _create_attendee).
+        registrations = self.get_registrations()
+        if registrations.filter(email=email).exists():
+            logger.debug("SAME EMAIL")
+            raise ValidationError(_("Det finns redan någon anmäld med denna email"))
 
     def get_sign_up_max_participants(self):
         if self.sign_up_max_participants == 0:
@@ -345,6 +393,17 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
 
 
 class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missing]
+    RESERVED_NAMES = {
+        'anonymous',
+        'avec',
+        'avec_anonymous',
+        'avec_email',
+        'avec_user',
+        'email',
+        'terms_accepted',
+        'user',
+    }
+
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
     choice_number = models.PositiveSmallIntegerField(_('#'), blank=True, default=0)
     name = models.CharField(_('Namn'), max_length=255, blank=True)
@@ -369,7 +428,30 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
         return str(self.name)
 
     def get_choices(self):
-        return str(self.choice_list).split(',')
+        return [choice.strip() for choice in str(self.choice_list).split(',') if choice.strip()]
+
+    def clean(self):
+        super().clean()
+        if self.pk:
+            stored = EventRegistrationForm.objects.filter(pk=self.pk).values('name', 'type', 'choice_list').first()
+            if stored and all(stored[field] == getattr(self, field) for field in stored):
+                return
+
+        name = self.name.strip()
+        if not name:
+            raise ValidationError({'name': _('Ange ett namn för anmälningsfältet.')})
+        if name in self.RESERVED_NAMES or name.startswith('avec_'):
+            raise ValidationError({'name': _('Detta namn används redan av anmälningsformuläret.')})
+        self.name = name
+        if self.type == 'select':
+            choices = self.get_choices()
+            if not choices:
+                raise ValidationError({'choice_list': _('Ange minst ett alternativ.')})
+            if len(set(choices)) != len(choices):
+                raise ValidationError({'choice_list': _('Alternativen måste vara unika.')})
+            self.choice_list = ','.join(choices)
+        else:
+            self.choice_list = ''
 
     def save(self, *args, **kwargs):  # noqa: DJ012
         # Only set choice_number if it's the default value (0).
@@ -391,7 +473,7 @@ class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missin
 
 class EventAttendees(models.Model):  # type: ignore[django-manager-missing]
     event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
-    attendee_nr = models.PositiveSmallIntegerField(_('#'), blank=True)
+    attendee_nr = models.PositiveBigIntegerField(_('#'), blank=True)
     user = models.CharField(_('Namn'), blank=False, max_length=255)
     email = models.EmailField(  # noqa: DJ001
         _('E-postadress'), blank=False, null=True, unique=False
@@ -414,6 +496,12 @@ class EventAttendees(models.Model):  # type: ignore[django-manager-missing]
         verbose_name_plural = _('deltagare')
         ordering = ['attendee_nr']
         unique_together = ('event', 'email')
+        constraints = [
+            models.UniqueConstraint(
+                fields=('event', 'attendee_nr'),
+                name='unique_attendee_nr_per_event',
+            ),
+        ]
 
     def __str__(self):
         return str(self.user)
@@ -422,14 +510,18 @@ class EventAttendees(models.Model):  # type: ignore[django-manager-missing]
     def get_preference(self, key):
         return self.preferences.get(str(key), "")
 
+    def clean(self):
+        super().clean()
+        if not self.avec_for_id:
+            return
+        if self.pk and self.avec_for_id == self.pk:
+            raise ValidationError({'avec_for': _('En deltagare kan inte vara sin egen avec.')})
+        if self.event_id and self.avec_for.event_id != self.event_id:
+            raise ValidationError({'avec_for': _('Avec-deltagaren måste höra till samma evenemang.')})
+
     def save(self, *args, **kwargs):  # noqa: DJ012
         if self.attendee_nr is None:
-            # attendee_nr increments by 10, e.g 10,20,30,40...
-            # this is needed so the admin sorting library will work.
-            self.attendee_nr = (self.event.get_registrations().count() + 1) * 10
-            # Add ten from highest attendee_nr so signups dont get in weird order after deletions.
-            if self.event.get_highest_attendee_nr().get('attendee_nr__max'):
-                self.attendee_nr = self.event.get_highest_attendee_nr().get('attendee_nr__max') + 10
+            self.attendee_nr = self.event.reserve_attendee_nrs()[0]
         if self.time_registered is None:
             self.time_registered = now()
         if isinstance(self.preferences, list):

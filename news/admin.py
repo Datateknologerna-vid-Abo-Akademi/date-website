@@ -5,24 +5,26 @@ from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django_ckeditor_5.widgets import CKEditor5Widget
 
-from core.admin import ActiveLanguageTranslationAdminMixin
+from core.admin import (
+    ActiveLanguageTranslationAdminMixin,
+    LanguageTabbedTranslationAdmin,
+    TranslationCompletionAdminMixin,
+)
 from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin, PublicUrlAdminMixin
 from core.admin_widgets import FLATPICKR_ADMIN_CSS, FLATPICKR_ADMIN_JS
 from news import forms
 from news.models import Category, Post
 
 if settings.ENABLE_LANGUAGE_FEATURES:  # type: ignore[misc]
-    from modeltranslation.admin import TabbedTranslationAdmin
 
-    # MRO when USE_UNFOLD=True: Mixin → TabbedTranslation → unfold.ModelAdmin → admin.ModelAdmin
-    class NewsTranslationAdminBase(ActiveLanguageTranslationAdminMixin, TabbedTranslationAdmin, ModelAdmin):
+    class NewsTranslationAdminBase(ActiveLanguageTranslationAdminMixin, LanguageTabbedTranslationAdmin, ModelAdmin):
         pass
 else:
     NewsTranslationAdminBase = ModelAdmin  # type: ignore[misc, assignment]
 
 
-class CategoryAdmin(PublicUrlAdminMixin, NewsTranslationAdminBase):
-    list_display = ('name',)
+class CategoryAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, NewsTranslationAdminBase):
+    list_display = ('name', 'translation_status')
     search_fields = ('name', 'slug')
     ordering = ('name',)
 
@@ -49,7 +51,7 @@ class PostPublicationFilter(admin.SimpleListFilter):
         return queryset
 
 
-class PostAdmin(PublicUrlAdminMixin, NewsTranslationAdminBase):
+class PostAdmin(PublicUrlAdminMixin, TranslationCompletionAdminMixin, NewsTranslationAdminBase):
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
         TextField: {'widget': CKEditor5Widget},
@@ -60,6 +62,7 @@ class PostAdmin(PublicUrlAdminMixin, NewsTranslationAdminBase):
     ]
     list_display = (
         'title',
+        'translation_status',
         'author',
         'category',
         'created_time',

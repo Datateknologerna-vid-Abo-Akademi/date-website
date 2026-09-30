@@ -6,6 +6,7 @@ from unittest.mock import PropertyMock, patch
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -13,6 +14,7 @@ from django.utils import timezone
 from PIL import Image
 
 from archive.models import Collection, Document
+from archive.views import user_type
 from gallery.models import Album, Photo
 from members.models import ORDINARY_MEMBER, Member, MembershipType
 
@@ -138,6 +140,32 @@ class ArchiveAdminTests(TestCase):
         self.assertContains(response, "Broken document")
 
 
+class ArchiveAccessTests(TestCase):
+    def test_user_type_rejects_anonymous_users(self):
+        self.assertFalse(user_type(AnonymousUser()))
+
+    def test_user_type_rejects_users_without_membership_type(self):
+        user = get_user_model()(username="no-membership")
+        user.membership_type = None
+
+        self.assertFalse(user_type(user))
+
+    def test_user_type_allows_non_supporting_members(self):
+        membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        member = Member(username="archive-member", membership_type=membership_type)
+
+        self.assertTrue(user_type(member))
+
+    def test_user_type_rejects_supporting_members(self):
+        membership_type = MembershipType.objects.create(
+            name="Supporting",
+            permission_profile=3,
+        )
+        member = Member(username="archive-supporting", membership_type=membership_type)
+
+        self.assertFalse(user_type(member))
+
+
 class PictureDetailFragmentViewTests(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -225,3 +253,44 @@ class PictureDetailFragmentViewTests(TestCase):
                 'album': self.collection.title,
             },
         )
+
+
+@override_settings(USE_S3=True, DIRECT_UPLOADS_ENABLED=True)
+class DirectDocumentAdminFormTests(TestCase):
+    def test_direct_payload_creates_documents(self):
+        import json
+        from unittest.mock import patch
+
+        from .forms import DocumentAdminForm
+
+        payload = json.dumps([{'key': 'tmp/' + 'a' * 32 + '.pdf', 'name': 'notes.pdf', 'size': 2048}])
+        with patch('core.uploads.finalize_upload', return_value='documents/2026/docs/notes.pdf') as finalize:
+            form = DocumentAdminForm(
+                data={
+                    'title': 'Docs',
+                    'type': 'Documents',
+                    'pub_date': '2026-08-23 14:00:00',
+                    'files': payload,
+                }
+            )
+            self.assertTrue(form.is_valid(), form.errors)
+            form.save()
+
+        document = Document.objects.get()
+        self.assertEqual(document.title, 'notes.pdf')
+        self.assertEqual(document.document.name, 'documents/2026/docs/notes.pdf')
+        finalize.assert_called_once()
+        self.assertEqual(finalize.call_args[0][0], 'tmp/' + 'a' * 32 + '.pdf')
+
+    def test_direct_payload_rejects_malformed_json(self):
+        from .forms import DocumentAdminForm
+
+        form = DocumentAdminForm(
+            data={
+                'title': 'Docs',
+                'type': 'Documents',
+                'pub_date': '2026-08-23 14:00:00',
+                'files': 'not-json',
+            }
+        )
+        self.assertFalse(form.is_valid())

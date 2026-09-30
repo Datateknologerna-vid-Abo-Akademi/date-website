@@ -5,7 +5,8 @@ Publish downloadable PDFs or external publication links (meeting minutes, magazi
 
 ## Access
 1. Sign in to `/admin`.
-2. Open **Publications › Publication collections** (`/admin/publications/publicationcollection/`) or **Publications › Pdf files** (`/admin/publications/pdffile/`).
+2. Open **Publications › Publication collections** (`/admin/publications/publicationcollection/`) for the normal workflow. A collection page contains both the collection access settings and its publication rows.
+3. Use **All PDF publications** from the collection list when you need global search, date filters, or to find publications across many collections.
 
 ## Create a Collection
 1. Open **Publication collections** and click **Add publication collection**.
@@ -24,10 +25,11 @@ Publish downloadable PDFs or external publication links (meeting minutes, magazi
      - **Hidden** – not listed and direct links return not found.
    - **Allowed membership types** – used only for selected-membership visibility.
    - **Password** / **Clear password** – set, replace, or remove the password. The plaintext password is not shown again.
-3. Save.
+3. Use the publications table at the bottom of the same page to add or edit publications in that collection. Click the inline change link when you need the full publication form.
+4. Save.
 
 ## Add a New PDF
-1. Click **Add pdf file**.
+1. Open the collection that should contain the publication. Use the inline publications table there for the quickest path, or click **Add pdf file** from the global PDF list if you need the full form first.
 2. Complete the form:
    - **Collection** – choose the group where the publication should appear.
    - **Title** – shown on listings and in the viewer.
@@ -37,6 +39,7 @@ Publish downloadable PDFs or external publication links (meeting minutes, magazi
    - **File** – upload the PDF (stored under `media/pdfs/<slug>/`) when the publication should use the internal reader.
    - **Redirect URL** – optional external reader link, such as an Issuu URL. When set, visitors are sent there instead of the internal reader. Use this instead of **File** for external-only publications.
    - **Cover image** – optional thumbnail shown in the publication list, useful for external-only publications.
+   - **Selected collection access** – shows the currently selected collection's access rule and links to the collection edit page. It updates when you choose a different collection.
    - **Public Access** – keep checked unless this individual publication should be hidden inside its collection.
    - **Requires Login** – forces a member login for this individual publication, in addition to the collection access rule.
 3. Save. Upload time stamps are recorded automatically.
@@ -47,6 +50,8 @@ Publish downloadable PDFs or external publication links (meeting minutes, magazi
 
 ## Review Access Settings
 - Review collection visibility first; this is the main access rule.
+- The collection list shows an **Access** summary and links directly to each collection's publication list.
+- The PDF list shows the parent collection and collection access setting so you can jump back to the right access controls.
 - List filters let you quickly find hidden PDFs (`Public Access = No`), PDF-level login requirements, or publications in a specific collection.
 - Use the search bar to locate files by title or slug.
 

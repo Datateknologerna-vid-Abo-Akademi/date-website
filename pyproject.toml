@@ -1,10 +1,11 @@
 [project]
 name = "date-website"
 version = "0.1.0"
+license = "AGPL-3.0-or-later"
 requires-python = ">=3.14"
 dependencies = [
     "Django~=6.0",
-    "django-unfold>=0.92.0,<0.93",
+    "django-unfold>=0.102.0,<0.103",
     "asgiref",
     "django-ckeditor-5",
     "requests",
@@ -18,10 +19,7 @@ dependencies = [
     "whitenoise",
     "channels",
     "channels-redis",
-    "websocket-client",
     "six",
-    "instaloader",
-    "schedule",
     "boto3",
     "django-storages",
     "django-tables2",
@@ -34,18 +32,29 @@ dependencies = [
     "daphne",
     "celery[redis]",
     "gunicorn",
+    "uvicorn[standard]",
     "gspread",
-    "twisted[tls]>=26.4.0rc2",
+    "twisted[tls]>=26.4.0",
     "defusedxml>=0.7.1",
+    "pillow-heif>=1.5.0",
+    "uvicorn-worker>=0.4.0",
+]
+
+[project.optional-dependencies]
+# Standalone Instagram updater (instagram/igupdate.py); not part of the
+# web/worker runtime. Install with: uv sync --extra instagram
+instagram = [
+    "instaloader",
+    "schedule",
 ]
 
 [dependency-groups]
 dev = [
-    "django-stubs>=6.0.4",
-    "djlint>=1.36.4",
-    "mypy>=2.1.0",
-    "pre-commit>=4.6.0",
-    "ruff>=0.15.13",
+    "django-stubs>=6.0.5",
+    "djlint==1.44.2",
+    "mypy>=2.3.0",
+    "pre-commit>=4.6.2",
+    "ruff>=0.15.20",
     "types-requests>=2.33.0.20260518",
 ]
 

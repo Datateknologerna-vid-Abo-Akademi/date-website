@@ -1,59 +1,61 @@
+
 image:
   repository: ghcr.io/datateknologerna-vid-abo-akademi/date-website
   tag: prod
+  # Production values set this true. Keep a readable tag alongside image.digest
+  # when the tag may move.
+  pinInProduction: false
+  digest: ''
   pullPolicy: IfNotPresent
-
 imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
-
+nameOverride: ''
+fullnameOverride: ''
 serviceAccount:
   create: true
   annotations: {}
-  name: ""
-
+  name: ''
 podAnnotations: {}
 podSecurityContext: {}
 securityContext:
   allowPrivilegeEscalation: false
   capabilities:
     drop:
-      - ALL
-  # Do not set runAsNonRoot until the application image defines a non-root USER.
-  # The current Dockerfile does not, and forcing it here would break startup.
+    - ALL
 nodeSelector: {}
 tolerations: []
 affinity: {}
-
 secret:
-  existingSecret: ""
-
+  existingSecret: ''
+  extraEnv: {}
 django:
   projectName: date
-  secretKey: ""
+  secretKey: ''
   debug: false
   develop: false
   enableLanguageFeatures: false
   allowedHosts:
-    - datateknologerna.org
+  - datateknologerna.org
   allowedOrigins:
-    - https://datateknologerna.org
+  - https://datateknologerna.org
   useXForwardedHost: true
   trustXForwardedProto: true
   extraStaffGroups: []
-  alumniSettings: "{}"
+  alumniSettings: '{}'
+  alumniSettingsSecretName: ''
   turnstile:
-    siteKey: ""
-    secretKey: ""
-
+    siteKey: ''
+    secretKey: ''
+  github:
+    clientId: ''
+    clientSecret: ''
+    mfaPolicy: enrolled
 database:
   name: postgres
   username: postgres
-  password: ""
+  password: ''
   external:
-    host: ""
+    host: ''
     port: 5432
-
 postgresql:
   enabled: true
   nodeSelector: {}
@@ -61,165 +63,285 @@ postgresql:
   affinity: {}
   image:
     repository: postgres
-    tag: "16-alpine"
+    tag: 16-alpine
     pullPolicy: IfNotPresent
   persistence:
     enabled: true
-    storageClass: ""
+    storageClass: ''
     accessModes:
-      - ReadWriteOnce
+    - ReadWriteOnce
     size: 8Gi
   resources: {}
-
 backups:
   enabled: false
-  schedule: "17 2 * * *"
-  # Only prunes the local /backups directory. Configure B2/object-storage
-  # lifecycle rules separately for remote backup retention.
+  schedule: 17 2 * * *
   retentionDays: 14
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   backoffLimit: 2
+  # Skip a run when the cluster was down past this deadline; abort a hung
+  # dump after this long.
+  startingDeadlineSeconds: 3600
+  activeDeadlineSeconds: 3600
+  # Empty uses the cluster's default timezone (UTC).
+  timeZone: Europe/Helsinki
   ttlSecondsAfterFinished: 86400
   nodeSelector: {}
   tolerations: []
   affinity: {}
   image:
     repository: postgres
-    tag: "16-alpine"
+    tag: 16-alpine
     pullPolicy: IfNotPresent
   persistence:
     enabled: true
-    storageClass: ""
+    storageClass: ''
     accessModes:
-      - ReadWriteOnce
+    - ReadWriteOnce
     size: 8Gi
   objectStorage:
     enabled: false
-    endpointUrl: ""
-    regionName: ""
-    bucketName: ""
-    prefix: "date-website/postgresql"
-    accessKeyId: ""
-    secretAccessKey: ""
-    # Requires backups.securityContext.runAsUser=0 when using an Alpine image,
-    # because apk add --no-cache aws-cli needs package-install privileges.
+    endpointUrl: ''
+    regionName: ''
+    bucketName: ''
+    prefix: date-website/postgresql
+    accessKeyId: ''
+    secretAccessKey: ''
     installAwsCli: false
   securityContext:
     allowPrivilegeEscalation: false
     capabilities:
       drop:
-        - ALL
+      - ALL
     runAsUser: 999
     runAsGroup: 999
   podSecurityContext:
     fsGroup: 999
   resources: {}
-
 redis:
   enabled: true
-  externalUrl: ""
+  externalUrl: ''
+  # Logical database used for cache, Channels, and Celery (broker +
+  # results). With a cluster-wide Redis shared by associations, give each
+  # association its own database number to avoid key/queue collisions.
+  # externalUrl should be pathless; this value selects the database.
+  database: 0
   nodeSelector: {}
   tolerations: []
   affinity: {}
   image:
     repository: valkey/valkey
-    tag: "7.2-alpine"
+    tag: 7.2-alpine
     pullPolicy: IfNotPresent
   persistence:
     enabled: true
-    storageClass: ""
+    storageClass: ''
     accessModes:
-      - ReadWriteOnce
+    - ReadWriteOnce
     size: 1Gi
   resources: {}
-
 media:
   s3:
     enabled: false
-    endpointUrl: ""
-    regionName: ""
-    signatureVersion: "s3v4"
-    addressingStyle: "path"
-    accessKeyId: ""
-    secretAccessKey: ""
-    bucketName: ""
-    privateBucketName: ""
-    publicBucketName: ""
-    privateLocation: "date/media"
-    publicLocation: "date/public"
+    endpointUrl: ''
+    regionName: ''
+    signatureVersion: s3v4
+    addressingStyle: path
+    accessKeyId: ''
+    secretAccessKey: ''
+    bucketName: ''
+    privateBucketName: ''
+    publicBucketName: ''
+    privateLocation: date/media
+    publicLocation: date/public
+    # Optional custom media domains (host only, no scheme) served by a reverse proxy
+    # (e.g. a Cloudflare Worker) that forwards to the S3 endpoint, rewriting the Host
+    # header to the S3 endpoint host and preserving path + query. Public media uses
+    # unsigned URLs; private media URLs stay presigned with only the host swapped.
+    # Leave empty to keep endpoint URLs.
+    privateCustomDomain: ''
+    publicCustomDomain: ''
+    # Serve static from the same public bucket (prefix 'static') instead of
+    # the pod filesystem. The release migration Job uploads static before
+    # application pods start, so enabling this flag and the upload happen in
+    # the same release. Static URLs use staticCustomDomain (defaults to
+    # publicCustomDomain).
+    staticEnabled: false
+    staticCustomDomain: ''
+    # Direct browser-to-storage uploads (Uppy with presigned PUT URLs). Requires
+    # bucket CORS + a lifecycle rule on the tmp prefix (see docs/dev/uploads.md);
+    # uploads then bypass the web pods entirely.
+    directUploadsEnabled: false
   persistence:
     enabled: true
-    storageClass: ""
+    storageClass: ''
     accessModes:
-      - ReadWriteOnce
+    - ReadWriteOnce
     size: 5Gi
-
 email:
   hostReceiver: info@datateknologerna.org
   defaultFrom: admin@datateknologerna.org
   host: smtp.gmail.com
-  username: ""
-  password: ""
-
+  username: ''
+  password: ''
 web:
-  # Do not increase without disabling migrateOnStartup and using a migration Job
-  # or another single-run migration step.
   replicaCount: 1
+  asgi:
+    # Hard per-Gunicorn-worker bound for concurrent HTTP requests. WebSocket
+    # connections bypass this limit. Total HTTP capacity per pod is workers
+    # multiplied by this value.
+    maxConcurrentHttpRequestsPerWorker: 8
   service:
     type: ClusterIP
     port: 8000
   gunicorn:
     workers: 3
-    maxRequests: 1000
-    maxRequestsJitter: 100
+    # Async worker: one process serves many concurrent HTTP requests and
+    # WebSocket connections (Channels app from core.asgi). The sync worker
+    # class cannot be used: a sync worker blocks on a single long-lived
+    # WebSocket and would starve HTTP. uvicorn.workers is deprecated
+    # upstream; the uvicorn-worker package provides the same class.
+    workerClass: uvicorn_worker.UvicornWorker
+    timeout: 120
+    # On SIGTERM gunicorn waits this long for in-flight requests before
+    # killing workers; must fit inside terminationGracePeriodSeconds.
+    gracefulTimeout: 60
+    # Worker recycling (maxRequests > 0) is disabled: a recycle kills every
+    # WebSocket attached to that worker. The old split kept long-lived
+    # Daphne connections immune to WSGI-worker rotation; with one worker
+    # pool serving both, recycling would drop event-page connections on a
+    # routine basis. The async workers' memory profile is stable (the old
+    # Daphne process ran without recycling), so only re-enable this if
+    # memory drift appears.
+    maxRequests: 0
+    maxRequestsJitter: 0
   migrateOnStartup: false
-  collectstaticOnStartup: true
-  resources: {}
-
-asgi:
-  replicaCount: 1
-  service:
-    type: ClusterIP
-    port: 8000
-  wsPath: /ws
-  resources: {}
-
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+  # Graceful shutdown: the short preStop sleep gives the ingress time to
+  # observe endpoint termination and stop routing new requests; the grace
+  # period then covers gunicorn's graceful timeout. Both are kept small to
+  # bound deploy duration; longer in-flight requests are cut off at the
+  # graceful timeout instead of held open. WebSockets are closed when the
+  # worker is killed at the graceful timeout; there is no application-level
+  # drain hook (the old separate asgi pod behaved the same).
+  terminationGracePeriodSeconds: 70
+  preStopSleepSeconds: 2
+  # Every variant's static is collected into the image at build time
+  # (/code/static-collected/<PROJECT_NAME>), so pods do not collect at
+  # startup. Keep this flag for images built before the multi-tree layout.
+  collectstaticOnStartup: false
+  startupProbe:
+    # 90x2s = ~180s floor, measured after the 2026-08-07 worker-reboot
+    # incident. Tighten once migrate/collectstatic are off (date site: 30x2s).
+    failureThreshold: 90
+    periodSeconds: 2
+    timeoutSeconds: 5
+  livenessProbe:
+    # 10s timeout / 5 failures: a busy page render (or a slow dependency
+    # round trip) must not kill the pod through the probe budget (measured
+    # on qa 2026-08-30: sync workers stuck on per-request B2 static
+    # lookups tripped the old 5s/3 budget and the kubelet restarted the
+    # pod). Overridable per site.
+    timeoutSeconds: 10
+    failureThreshold: 5
+  readinessProbe:
+    timeoutSeconds: 10
+    failureThreshold: 5
+  # Merged onto the Deployment metadata (e.g.
+  # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
+  annotations: {}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
 celery:
+  # Disable for associations that cannot enqueue tasks (no email/alumni
+  # flows); queued work would otherwise accumulate silently.
+  enabled: true
   replicaCount: 1
   concurrency: 2
   logLevel: info
+  # Expensive broker+worker check (full Django import); runs only during
+  # startup until the worker registers.
+  startupProbe:
+    periodSeconds: 10
+    timeoutSeconds: 30
+    failureThreshold: 30
+  # Cheap process check; a broker outage must not restart the worker.
+  # Warm shutdown: celery finishes active tasks on SIGTERM and (with
+  # task_acks_late) requeues acknowledged-but-unfinished work on worker
+  # loss; the grace period bounds the roll stall. Short tasks finish,
+  # longer ones requeue to the new worker instead of being waited out.
+  terminationGracePeriodSeconds: 60
+  # Merged onto the Deployment metadata (e.g.
+  # argocd.argoproj.io/sync-wave: "1" to run after the migration Job).
+  annotations: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
   livenessProbe:
     initialDelaySeconds: 60
-    periodSeconds: 60
-    timeoutSeconds: 10
+    periodSeconds: 300
+    timeoutSeconds: 5
     failureThreshold: 3
-  resources: {}
-
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+pdb:
+  # PodDisruptionBudget per component (web/celery). The template only
+  # renders a PDB for enabled components with replicaCount >= 2; a PDB on a
+  # single replica (minAvailable: 1) would block node drains indefinitely.
+  enabled: false
+  minAvailable: 1
 migrations:
   job:
     enabled: false
+    # Optional direct database endpoint for schema migrations when application
+    # traffic uses a transaction pooler such as PgBouncer. Empty falls back to
+    # database.external.host/port.
+    databaseHost: ""
+    databasePort: 5432
+    # Helm hook lifecycle (post-install,post-upgrade), or empty for a plain
+    # Job tracked by GitOps. Plain Jobs get a name suffixed with the pinned
+    # image tag + a short hash of the tag/digest/chart-version tuple and run under Argo
+    # sync waves, which guarantees
+    # migration completion before application pods start; they must NOT set
+    # ttlSecondsAfterFinished, because Argo keeps the completed Job as
+    # desired state. (Helm's Release.Revision is NOT usable here: Argo CD
+    # renders it as 1, so a revision-suffixed name never changes and the
+    # second sync fails on the immutable Job pod template.)
     hook: post-install,post-upgrade
     hookDeletePolicy: before-hook-creation,hook-succeeded
     backoffLimit: 3
+    # Additional annotations merged onto the Job (e.g.
+    # argocd.argoproj.io/sync-wave: "0").
+    annotations: {}
+    activeDeadlineSeconds: 600
+    # Only rendered in hook mode; plain Jobs stay until Argo prunes them.
+    ttlSecondsAfterFinished: 3600
     resources: {}
-
 ingress:
   enabled: true
   className: traefik
   annotations: {}
   hosts:
-    - host: datateknologerna.org
-      paths:
-        - path: /
-          pathType: Prefix
+  - host: datateknologerna.org
+    paths:
+    - path: /
+      pathType: Prefix
   tls: []
-
 gateway:
   enabled: false
   className: traefik
-  name: ""
+  name: ''
   annotations: {}
   http:
     enabled: true
@@ -227,8 +349,7 @@ gateway:
   https:
     enabled: false
     port: 443
-    secretName: ""
+    secretName: ''
   route:
     annotations: {}
-
 extraEnv: {}

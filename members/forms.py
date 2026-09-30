@@ -11,7 +11,14 @@ from django.utils.translation import gettext_lazy as _
 
 from core.admin_base import UnfoldFormMixin
 from core.utils import send_email_task
-from members.models import SUB_RE_SCALE_DAY, SUB_RE_SCALE_MONTH, SUB_RE_SCALE_YEAR, Member, SubscriptionPayment
+from members.models import (
+    SUB_RE_SCALE_DAY,
+    SUB_RE_SCALE_MONTH,
+    SUB_RE_SCALE_YEAR,
+    Member,
+    MembershipType,
+    SubscriptionPayment,
+)
 
 logger = logging.getLogger('date')
 
@@ -35,7 +42,7 @@ class MemberCreationForm(UnfoldFormMixin, forms.ModelForm):
     )
 
     password = forms.CharField(
-        widget=forms.PasswordInput(), required=False, min_length=8, error_messages={'required': 'Password is required'}
+        widget=forms.PasswordInput(), required=True, min_length=8, error_messages={'required': 'Password is required'}
     )
 
     class Meta:
@@ -52,9 +59,18 @@ class MemberCreationForm(UnfoldFormMixin, forms.ModelForm):
             'country',
             'membership_type',
             'year_of_admission',
+            'archive_access_eligible',
             'password',
             'groups',
         )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        membership_names = getattr(settings, 'MEMBERSHIP_TYPE_NAMES', None)
+        if membership_names:
+            self.fields['membership_type'].queryset = MembershipType.objects.filter(name__in=membership_names)
+        if not getattr(settings, 'ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY', False):
+            self.fields.pop('archive_access_eligible', None)
 
     def save(self, commit=True):
         member = super().save(commit=False)
@@ -94,10 +110,19 @@ class AdminMemberUpdateForm(UnfoldFormMixin, forms.ModelForm):
             'city',
             'country',
             'membership_type',
+            'archive_access_eligible',
             'groups',
             'github_id',
             'password',
         )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        membership_names = getattr(settings, 'MEMBERSHIP_TYPE_NAMES', None)
+        if membership_names:
+            self.fields['membership_type'].queryset = MembershipType.objects.filter(name__in=membership_names)
+        if not getattr(settings, 'ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY', False):
+            self.fields.pop('archive_access_eligible', None)
 
     def save(self, commit=True):
         member = super().save(commit=False)
@@ -160,6 +185,8 @@ class SubscriptionPaymentForm(forms.ModelForm):
                 delta = relativedelta(years=+sub_duration)
             subscription_payment.date_expires = date_paid + delta
             logger.debug(f"Calculated expiry date for subscription: {subscription_payment.date_expires}")
+        else:
+            subscription_payment.date_expires = None
         if commit:
             subscription_payment.save()
             logger.debug("SubscriptionPayment saved")
@@ -204,6 +231,23 @@ class SignUpForm(forms.ModelForm):
             'year_of_admission',
             'password',
         )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        signup_fields = getattr(settings, 'MEMBERS_SIGNUP_FIELDS', None)
+        if signup_fields:
+            allowed_fields = set(signup_fields)
+            for field_name in tuple(self.fields):
+                if field_name not in allowed_fields:
+                    self.fields.pop(field_name)
+
+        membership_names = getattr(settings, 'MEMBERSHIP_TYPE_NAMES', None)
+        if membership_names and 'membership_type' in self.fields:
+            self.fields['membership_type'].queryset = MembershipType.objects.filter(name__in=membership_names)
+
+        city_label = getattr(settings, 'MEMBERS_SIGNUP_CITY_LABEL', None)
+        if city_label and 'city' in self.fields:
+            self.fields['city'].label = city_label
 
 
 class SubscriptionPaymentChoiceField(forms.ModelChoiceField):

@@ -1,12 +1,14 @@
 from unittest.mock import PropertyMock, patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from members.models import ORDINARY_MEMBER, SENIOR_MEMBER, MembershipType
+from members.models import NON_VOTING_MEMBER, ORDINARY_MEMBER, SENIOR_MEMBER, MembershipType
+from publications.admin import PublicationCollectionAdminForm
 from publications.models import PDFFile, PublicationCollection
 
 
@@ -62,6 +64,163 @@ class PDFFileAdminTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "pdfs/broken.pdf")
+
+    def test_change_page_shows_selected_collection_access_details(self):
+        collection = create_collection(visibility=PublicationCollection.VISIBILITY_PASSWORD)
+        collection.set_password("secret")
+        collection.save()
+        pdf_file = PDFFile.objects.create(
+            collection=collection,
+            title="Locked Magazine",
+            slug="locked-magazine",
+            redirect_url="https://issuu.com/sfklubben/docs/locked",
+        )
+
+        response = self.client.get(reverse("admin:publications_pdffile_change", args=[pdf_file.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Selected collection access")
+        self.assertContains(response, "Password protected")
+        self.assertContains(response, "Password configured")
+        self.assertContains(response, "admin-inline-action")
+        self.assertContains(response, reverse("admin:publications_publicationcollection_change", args=[collection.pk]))
+
+    def test_collection_access_endpoint_returns_selected_collection_details(self):
+        senior = MembershipType.objects.get(pk=SENIOR_MEMBER)
+        collection = create_collection(visibility=PublicationCollection.VISIBILITY_MEMBERSHIP)
+        collection.allowed_membership_types.add(senior)
+
+        response = self.client.get(reverse("admin:publications_pdffile_collection_access", args=[collection.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["title"], collection.title)
+        self.assertEqual(response.json()["visibility"], PublicationCollection.VISIBILITY_MEMBERSHIP)
+        self.assertEqual(response.json()["memberships"], [senior.name])
+
+    def test_collection_access_endpoint_requires_publication_permission(self):
+        staff_group = Group.objects.create(name="admin")
+        staff_user = get_user_model().objects.create_user(
+            username="staff-no-pubs",
+            password="pwd",
+            email="staff-no-pubs@example.com",
+        )
+        staff_user.groups.add(staff_group)
+        self.client.force_login(staff_user)
+        collection = create_collection()
+
+        response = self.client.get(reverse("admin:publications_pdffile_collection_access", args=[collection.pk]))
+
+        self.assertEqual(response.status_code, 403)
+
+
+class PublicationCollectionAdminTests(TestCase):
+    def setUp(self):
+        self.admin_user = get_user_model().objects.create_superuser(
+            username="collection-admin",
+            password="pwd",
+            email="collection-admin@example.com",
+        )
+        self.client.force_login(self.admin_user)
+
+    def test_change_page_manages_collection_access_and_publications_together(self):
+        collection = create_collection()
+        PDFFile.objects.create(
+            collection=collection,
+            title="Annual Magazine",
+            slug="annual-magazine",
+            redirect_url="https://issuu.com/sfklubben/docs/annual",
+        )
+
+        response = self.client.get(reverse("admin:publications_publicationcollection_change", args=[collection.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Access Control")
+        self.assertContains(response, "Annual Magazine")
+        self.assertContains(response, "id_publications-0-title")
+        self.assertRegex(
+            response.content.decode(),
+            r'<input\b(?=[^>]*\bid="id_publications-0-file")(?=[^>]*\bdisabled\b)[^>]*>',
+        )
+        self.assertContains(response, "Publication list")
+
+    def test_changelist_uses_singular_publication_count_label(self):
+        collection = create_collection()
+        PDFFile.objects.create(
+            collection=collection,
+            title="Annual Magazine",
+            slug="annual-magazine",
+            redirect_url="https://issuu.com/sfklubben/docs/annual",
+        )
+
+        response = self.client.get(reverse("admin:publications_publicationcollection_changelist"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "1 publication")
+        self.assertNotContains(response, "1 publications")
+
+    def test_change_page_inline_renders_when_file_url_cannot_be_resolved(self):
+        timestamp = timezone.now()
+        PDFFile.objects.bulk_create(
+            [
+                PDFFile(
+                    collection=create_collection(),
+                    title="Broken PDF",
+                    slug="broken-pdf",
+                    file="pdfs/broken.pdf",
+                    uploaded_at=timestamp,
+                    updated_at=timestamp,
+                )
+            ]
+        )
+        collection = PublicationCollection.objects.get(slug="publications")
+
+        with patch(
+            "django.db.models.fields.files.FieldFile.url",
+            new_callable=PropertyMock,
+            side_effect=RuntimeError("broken storage"),
+        ):
+            response = self.client.get(reverse("admin:publications_publicationcollection_change", args=[collection.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Broken PDF")
+
+    def test_password_visibility_requires_password(self):
+        form = PublicationCollectionAdminForm(
+            data={
+                "title": "Locked",
+                "slug": "locked",
+                "description": "",
+                "visibility": PublicationCollection.VISIBILITY_PASSWORD,
+                "cover_image": "",
+                "allowed_membership_types": [],
+                "password": "",
+                "clear_password": "",
+                "ordering": 0,
+                "is_active": "on",
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("password", form.errors)
+
+    def test_membership_visibility_requires_membership_type(self):
+        form = PublicationCollectionAdminForm(
+            data={
+                "title": "Members",
+                "slug": "members",
+                "description": "",
+                "visibility": PublicationCollection.VISIBILITY_MEMBERSHIP,
+                "cover_image": "",
+                "allowed_membership_types": [],
+                "password": "",
+                "clear_password": "",
+                "ordering": 0,
+                "is_active": "on",
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("allowed_membership_types", form.errors)
 
 
 class PDFFileListTests(TestCase):
@@ -180,6 +339,35 @@ class PDFFileListTests(TestCase):
 
         self.assertRedirects(response, only.get_absolute_url())
 
+    def test_membership_collection_is_visible_for_extra_member_when_ordinary_is_allowed(self):
+        ordinary = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        extra_type = MembershipType.objects.create(name="Extra medlem", permission_profile=NON_VOTING_MEMBER)
+        collection = create_collection(
+            title="Members Magazine",
+            slug="members-magazine",
+            visibility=PublicationCollection.VISIBILITY_MEMBERSHIP,
+        )
+        collection.allowed_membership_types.add(ordinary)
+        PDFFile.objects.create(
+            collection=collection,
+            title="Members Magazine Issue",
+            slug="members-magazine-issue",
+            redirect_url="https://issuu.com/sfklubben/docs/members-magazine",
+        )
+        user = get_user_model().objects.create_user(
+            username="extra-member",
+            password="pwd",
+            membership_type=extra_type,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("publications:pdf_list"))
+
+        self.assertRedirects(response, collection.get_absolute_url(), fetch_redirect_response=False)
+        response = self.client.get(collection.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Members Magazine")
+
     def test_index_hides_empty_collections(self):
         create_collection(title="Empty", slug="empty")
 
@@ -272,6 +460,50 @@ class PDFFileDetailTests(TestCase):
             username="ordinary",
             password="pwd",
             membership_type=ordinary,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(pdf_file.get_absolute_url())
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_membership_collection_granted_to_extra_member_when_ordinary_is_allowed(self):
+        ordinary = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        extra_type = MembershipType.objects.create(name="Extra medlem", permission_profile=NON_VOTING_MEMBER)
+        collection = create_collection(visibility=PublicationCollection.VISIBILITY_MEMBERSHIP)
+        collection.allowed_membership_types.add(ordinary)
+        pdf_file = PDFFile.objects.create(
+            collection=collection,
+            title="Members Magazine",
+            slug="members-magazine",
+            redirect_url="https://issuu.com/sfklubben/docs/members",
+        )
+        user = get_user_model().objects.create_user(
+            username="extra-member",
+            password="pwd",
+            membership_type=extra_type,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(pdf_file.get_absolute_url())
+
+        self.assertRedirects(response, "https://issuu.com/sfklubben/docs/members", fetch_redirect_response=False)
+
+    def test_membership_collection_still_rejects_extra_member_without_ordinary_allowlist(self):
+        senior = MembershipType.objects.get(pk=SENIOR_MEMBER)
+        extra_type = MembershipType.objects.create(name="Extra medlem", permission_profile=NON_VOTING_MEMBER)
+        collection = create_collection(visibility=PublicationCollection.VISIBILITY_MEMBERSHIP)
+        collection.allowed_membership_types.add(senior)
+        pdf_file = PDFFile.objects.create(
+            collection=collection,
+            title="Senior Magazine",
+            slug="senior-magazine",
+            redirect_url="https://issuu.com/sfklubben/docs/senior",
+        )
+        user = get_user_model().objects.create_user(
+            username="extra-member",
+            password="pwd",
+            membership_type=extra_type,
         )
         self.client.force_login(user)
 

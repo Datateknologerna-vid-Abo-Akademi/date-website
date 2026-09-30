@@ -1,21 +1,6 @@
 from .common import *  # noqa
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            'templates/demo',
-            *COMMON_TEMPLATE_DIRS,
-        ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                *COMMON_CONTEXT_PROCESSORS,
-                # Add project context processors here
-            ],
-        },
-    },
-]
+TEMPLATES = build_templates('demo')
 
 INSTALLED_APPS = get_installed_apps(
     [
@@ -38,11 +23,7 @@ ROOT_URLCONF = 'core.urls.demo'
 STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/demo'),
-    os.path.join(BASE_DIR, 'static/common'),
-]
-
+STATICFILES_DIRS = build_static_dirs('demo')
 
 CONTENT_VARIABLES = {
     "SITE_URL": "https://demo.datateknologerna.org",

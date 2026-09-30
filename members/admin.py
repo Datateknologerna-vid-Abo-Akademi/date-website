@@ -2,6 +2,7 @@ from functools import reduce
 
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.admin.models import LogEntry
 from django.contrib.auth import admin as auth_admin
 from django.contrib.auth.models import Permission
 from django.db.models import CharField, Exists, F, OuterRef, Q, Value
@@ -72,7 +73,7 @@ SENIOR_MEMBER = 4
 
 
 # Direct `class UserAdmin(ModelAdmin, auth_admin.UserAdmin)` would fail when
-# USE_UNFOLD=False because ModelAdmin then IS admin.ModelAdmin — placing it before
+# USE_UNFOLD=False because ModelAdmin then IS admin.ModelAdmin. Placing it before
 # its own subclass (auth_admin.UserAdmin) violates C3 MRO. The shim is only
 # introduced when Unfold's ModelAdmin is a distinct class that sits above both.
 if getattr(settings, 'USE_UNFOLD', False):
@@ -85,11 +86,22 @@ else:
 
 @admin.register(Member)
 class UserAdmin(_UserAdminBase):
-    fieldsets = ((None, {'fields': AdminMemberUpdateForm.Meta.fields}),)
-    add_fieldsets = ((None, {'fields': MemberCreationForm.Meta.fields}),)
-
     form = AdminMemberUpdateForm
     add_form = MemberCreationForm
+
+    def get_fieldsets(self, request, obj=None):
+        # The archive eligibility ("Gulispass") checkbox only exists on
+        # associations that gate archive access on it; keep it out of both
+        # add and change fieldsets everywhere else, or the rendered admin
+        # form would look up a field the form no longer carries.
+        if obj is None:
+            fields = MemberCreationForm.Meta.fields
+        else:
+            fields = AdminMemberUpdateForm.Meta.fields
+        if not getattr(settings, 'ARCHIVE_ACCESS_REQUIRES_ELIGIBILITY', False):
+            fields = tuple(name for name in fields if name != 'archive_access_eligible')
+        return ((None, {'fields': fields}),)
+
     list_display = (
         'username',
         'first_name',
@@ -134,12 +146,70 @@ class UserAdmin(_UserAdminBase):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
+        restricted_group = getattr(settings, 'MEMBER_ADMIN_RESTRICTED_GROUP', None)
+        restricted_membership = getattr(settings, 'MEMBER_ADMIN_RESTRICTED_MEMBERSHIP_TYPE', None)
+        if (
+            not request.user.is_superuser
+            and restricted_group
+            and restricted_membership
+            and request.user.groups.filter(name=restricted_group).exists()
+        ):
+            queryset = queryset.filter(membership_type__name=restricted_membership)
         confirmed_devices = TOTPDevice.objects.filter(user=OuterRef('pk'), confirmed=True)
         return (
             queryset.select_related('membership_type')
             .prefetch_related('groups')
             .annotate(_has_two_factor=Exists(confirmed_devices))
         )
+
+    def _has_restricted_object_access(self, request, obj):
+        restricted_group = getattr(settings, 'MEMBER_ADMIN_RESTRICTED_GROUP', None)
+        restricted_membership = getattr(settings, 'MEMBER_ADMIN_RESTRICTED_MEMBERSHIP_TYPE', None)
+        if request.user.is_superuser or not restricted_group or not restricted_membership:
+            return True
+        if not request.user.groups.filter(name=restricted_group).exists() or obj is None:
+            return True
+        return obj.membership_type.name == restricted_membership
+
+    def _has_restricted_member_access(self, request):
+        restricted_group = getattr(settings, 'MEMBER_ADMIN_RESTRICTED_GROUP', None)
+        return (
+            not request.user.is_superuser
+            and restricted_group
+            and request.user.groups.filter(name=restricted_group).exists()
+        )
+
+    def has_add_permission(self, request):
+        return not self._has_restricted_member_access(request) and super().has_add_permission(request)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = super().get_readonly_fields(request, obj)
+        if self._has_restricted_member_access(request):
+            return (*readonly_fields, 'membership_type', 'groups')
+        return readonly_fields
+
+    def has_view_permission(self, request, obj=None):
+        return self._has_restricted_object_access(request, obj) and super().has_view_permission(request, obj)
+
+    def has_change_permission(self, request, obj=None):
+        return self._has_restricted_object_access(request, obj) and super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return self._has_restricted_object_access(request, obj) and super().has_delete_permission(request, obj)
+
+    def get_deleted_objects(self, objs, request):
+        # Deleting a member cascades into that member's admin log entries
+        # (LogEntry.user is a CASCADE foreign key) and the log admin is
+        # deliberately read-only, so Django's related-object permission check
+        # would refuse every member deletion, superusers included. The log rows
+        # are collateral of the deletion rather than objects the operator has to
+        # be allowed to delete on their own, so drop that single label from the
+        # check and let the cascade remove the rows. Django's set identifies
+        # models by their active-language label only, which is why this is a
+        # label discard rather than a model comparison.
+        to_delete, model_count, perms_needed, protected = super().get_deleted_objects(objs, request)
+        perms_needed.discard(LogEntry._meta.verbose_name)
+        return to_delete, model_count, perms_needed, protected
 
     def get_search_results(self, request, queryset, search_term):
         base_queryset = queryset

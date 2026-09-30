@@ -3,6 +3,9 @@ from inspect import signature
 from unittest.mock import MagicMock, patch
 
 from dateutil.relativedelta import relativedelta
+from django.conf import settings
+from django.contrib.admin.models import CHANGE, LogEntry
+from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -12,13 +15,40 @@ from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.forms import TOTPDeviceForm
 
-from members.forms import MemberCreationForm, SignUpForm, SubscriptionPaymentForm
-from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription
+from events.models import Event
+from members.forms import AdminMemberUpdateForm, MemberCreationForm, SignUpForm, SubscriptionPaymentForm
+from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
 from members.two_factor import (
     INFERRED_REDIRECT_SESSION_KEY,
     MemberSetupView,
     StrictTOTPDeviceForm,
 )
+
+
+class PasswordResetFlowTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        cls.member = Member.objects.create_user(
+            username='resetuser',
+            email='reset@example.com',
+            password='testpass123',
+            membership_type=cls.membership_type,
+        )
+
+    @patch('members.forms.send_email_task.delay')
+    def test_password_reset_renders_email_and_redirects(self, mock_delay):
+        response = self.client.post(
+            reverse('members:password_reset'),
+            data={'email': 'reset@example.com'},
+        )
+        self.assertEqual(response.status_code, 302)
+        mock_delay.assert_called_once()
+        body = mock_delay.call_args[0][1]
+        self.assertIn('/members/reset/', body)
+        self.assertIn('klicka på länken nedan:\n\n', body)
+        self.assertIn('\n\nOm ytterligare frågor uppstår', body)
+        self.assertFalse(body.startswith('  '))
 
 
 class UsernameValidatorTest(TestCase):
@@ -80,6 +110,36 @@ class UsernameValidatorTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('username', form.errors)
 
+    def test_gulispass_checkbox_is_hidden_for_non_sf_associations(self):
+        self.assertNotIn('archive_access_eligible', MemberCreationForm().fields)
+        self.assertNotIn('archive_access_eligible', AdminMemberUpdateForm().fields)
+
+    def test_signup_keeps_postanstalt_label_for_non_sf_associations(self):
+        self.assertEqual(str(SignUpForm().fields['city'].label), 'Postanstalt')
+
+    def test_gulispass_checkbox_is_absent_from_non_sf_admin_pages(self):
+        admin_user = Member.objects.create_superuser(
+            username='admintest',
+            email='admintest@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+        )
+        member = Member.objects.create_user(
+            username='target',
+            email='target@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+        )
+        self.client.force_login(admin_user, backend='members.backends.AuthBackend')
+
+        add_response = self.client.get(reverse('admin:members_member_add'))
+        self.assertEqual(add_response.status_code, 200)
+        self.assertNotContains(add_response, 'Gulispass')
+
+        change_response = self.client.get(reverse('admin:members_member_change', args=[member.pk]))
+        self.assertEqual(change_response.status_code, 200)
+        self.assertNotContains(change_response, 'Gulispass')
+
 
 class MemberCreationFormSaveTests(TestCase):
     @classmethod
@@ -101,6 +161,21 @@ class MemberCreationFormSaveTests(TestCase):
         member = form.save()
         self.assertNotEqual(member.password, 'secret123')
         self.assertTrue(member.check_password('secret123'))
+
+    def test_blank_password_is_rejected(self):
+        form = MemberCreationForm(
+            data={
+                'username': 'blank_password',
+                'email': 'blank@example.com',
+                'first_name': 'Blank',
+                'last_name': 'Password',
+                'membership_type': self.membership_type.id,
+                'password': '',
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('password', form.errors)
 
 
 class SubscriptionPaymentFormTests(TestCase):
@@ -162,6 +237,35 @@ class SubscriptionPaymentFormTests(TestCase):
         self.assertTrue(form.is_valid())
         payment = form.save()
         self.assertIsNone(payment.date_expires)
+
+    def test_changing_to_non_expiring_subscription_clears_old_expiry(self):
+        expiring = self._create_subscription('year')
+        lifetime = Subscription.objects.create(
+            name='lifetime-update',
+            does_expire=False,
+            renewal_scale=None,
+            renewal_period=None,
+            price=0,
+        )
+        payment = SubscriptionPayment.objects.create(
+            member=self.member,
+            subscription=expiring,
+            date_paid=timezone.now().date(),
+            date_expires=timezone.now().date() + relativedelta(years=1),
+            amount_paid=100,
+        )
+        form = SubscriptionPaymentForm(
+            data={
+                'member': self.member.id,
+                'subscription': lifetime.id,
+                'date_paid': payment.date_paid,
+                'amount_paid': '0',
+            },
+            instance=payment,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertIsNone(form.save().date_expires)
 
 
 class SignupViewTests(TestCase):
@@ -873,3 +977,155 @@ class GitHubDisconnectViewTests(TestCase):
         self.assertRedirects(response, reverse('members:info'), fetch_redirect_response=False)
         messages_list = list(response.wsgi_request._messages)
         self.assertTrue(any('Inget GitHub' in str(m) for m in messages_list))
+
+
+class MemberAdminDeleteTests(TestCase):
+    """Deleting a member must not be blocked by the read-only admin log admin.
+
+    LogEntry.user cascades from the member, and the log admin denies delete
+    permission on purpose, so Django's related-object check used to refuse every
+    member deletion, superusers included.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        cls.admin_user = Member.objects.create_superuser(
+            username='memberdeleter',
+            email='memberdeleter@example.com',
+            password='pass',
+            membership_type=cls.membership_type,
+        )
+        cls.target = Member.objects.create_user(
+            username='doomedmember',
+            email='doomed@example.com',
+            password='pass',
+            membership_type=cls.membership_type,
+        )
+
+    def _log_admin_action_by_target(self):
+        LogEntry.objects.log_actions(
+            user_id=self.target.pk,
+            queryset=Member.objects.filter(pk=self.target.pk),
+            action_flag=CHANGE,
+            change_message='member admin delete test',
+            single_object=True,
+        )
+        return LogEntry.objects.filter(user_id=self.target.pk).count()
+
+    def _create_staff_user(self, username, permissions=('delete_member',)):
+        staff_user = Member.objects.create_user(
+            username=username,
+            email=f'{username}@example.com',
+            password='pass',
+            membership_type=self.membership_type,
+        )
+        staff_user.groups.add(Group.objects.create(name=settings.STAFF_GROUPS[0]))
+        for codename in permissions:
+            staff_user.user_permissions.add(
+                Permission.objects.get(content_type__app_label='members', codename=codename)
+            )
+        return staff_user
+
+    def _delete_url(self):
+        return reverse('admin:members_member_delete', args=[self.target.pk])
+
+    def _confirm_delete(self):
+        return self.client.post(self._delete_url(), {'post': 'yes'})
+
+    def test_delete_confirmation_does_not_claim_missing_log_permission(self):
+        self.assertGreater(self._log_admin_action_by_target(), 0)
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self._delete_url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('doomedmember', response.content.decode())
+        self.assertEqual(response.context['perms_lacking'], set())
+        # The log rows stay visible among the objects the deletion removes.
+        self.assertIn(
+            str(LogEntry._meta.verbose_name_plural),
+            [str(label) for label, _count in response.context['model_count']],
+        )
+
+    def test_superuser_can_delete_member_that_has_admin_log_entries(self):
+        self.assertGreater(self._log_admin_action_by_target(), 0)
+        self.client.force_login(self.admin_user)
+
+        response = self._confirm_delete()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Member.objects.filter(pk=self.target.pk).exists())
+        # The member's audit rows are collateral of the deletion.
+        self.assertEqual(LogEntry.objects.filter(user_id=self.target.pk).count(), 0)
+
+    def test_deleting_a_member_keeps_other_users_log_entries(self):
+        LogEntry.objects.log_actions(
+            user_id=self.admin_user.pk,
+            queryset=Member.objects.filter(pk=self.admin_user.pk),
+            action_flag=CHANGE,
+            change_message='deleter admin action',
+            single_object=True,
+        )
+        self.assertGreater(self._log_admin_action_by_target(), 0)
+        self.client.force_login(self.admin_user)
+
+        response = self._confirm_delete()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(LogEntry.objects.filter(user_id=self.target.pk).count(), 0)
+        self.assertGreater(LogEntry.objects.filter(user_id=self.admin_user.pk).count(), 0)
+
+    def test_superuser_can_delete_member_while_english_is_active(self):
+        self.assertGreater(self._log_admin_action_by_target(), 0)
+        self.client.force_login(self.admin_user)
+        # The request language drives the label comparison in the override, and
+        # the middleware takes it from the cookie rather than from the test.
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = 'en'
+
+        response = self._confirm_delete()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.wsgi_request.LANGUAGE_CODE, 'en')
+        self.assertFalse(Member.objects.filter(pk=self.target.pk).exists())
+
+    def test_staff_user_with_delete_permission_can_delete_member(self):
+        staff_user = self._create_staff_user('memberadmin')
+        self.assertGreater(self._log_admin_action_by_target(), 0)
+        self.client.force_login(staff_user)
+
+        response = self._confirm_delete()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Member.objects.filter(pk=self.target.pk).exists())
+
+    def test_bulk_delete_selected_can_remove_member_with_log_entries(self):
+        self.assertGreater(self._log_admin_action_by_target(), 0)
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse('admin:members_member_changelist'),
+            {
+                'action': 'delete_selected',
+                '_selected_action': [str(self.target.pk)],
+                'post': 'yes',
+            },
+        )
+
+        # The bulk action redirects back to the changelist when it succeeds, so
+        # the point is that it is no longer refused with 403.
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Member.objects.filter(pk=self.target.pk).exists())
+
+    def test_member_with_content_the_deleter_cannot_delete_is_still_blocked(self):
+        Event.objects.create(title='Authored event', slug='authored-event', author=self.target)
+        staff_user = self._create_staff_user('limitedmemberadmin')
+        self.assertGreater(self._log_admin_action_by_target(), 0)
+        self.client.force_login(staff_user)
+
+        response = self._confirm_delete()
+
+        # The exemption is narrow: a cascade target whose delete permission the
+        # operator lacks still blocks the deletion.
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Member.objects.filter(pk=self.target.pk).exists())

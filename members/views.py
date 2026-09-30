@@ -10,7 +10,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
@@ -20,7 +20,7 @@ from django.views import View
 from core.utils import enqueue_task_on_commit, send_email_task, validate_captcha
 
 from .forms import CustomPasswordResetForm, MemberEditForm, SignUpForm
-from .models import Member
+from .models import Member, MembershipType
 from .tokens import account_activation_token
 from .two_factor import member_has_2fa
 
@@ -96,6 +96,9 @@ def signup(request):
         if form.is_valid():
             # Create user
             user = form.save(commit=False)
+            default_membership = getattr(settings, 'MEMBERS_SIGNUP_DEFAULT_MEMBERSHIP_TYPE', None)
+            if default_membership and 'membership_type' not in form.cleaned_data:
+                user.membership_type = MembershipType.objects.filter(name=default_membership).order_by('pk').first()
             user.is_active = False
             user.password = make_password(form.cleaned_data['password'])
             user.save()
@@ -103,7 +106,7 @@ def signup(request):
             current_site = get_current_site(request)
             mail_subject = 'A new account has been created and required your attention.'
             message = render_to_string(
-                'members/acc_active_email.html',
+                'members/acc_active_email.txt',
                 {
                     'user': user,
                     'domain': current_site.domain,
@@ -144,7 +147,10 @@ def activate(request, uidb64, token):
 
 class CustomPasswordResetView(PasswordResetView):
     form_class = CustomPasswordResetForm
+    email_template_name = 'members/registration/password_reset_email.txt'
+    success_url = reverse_lazy('members:password_reset_done')
 
 
 class CustomPasswordChangeView(PasswordChangeView):
     template_name = "members/registration/password_change_form.html"
+    success_url = reverse_lazy('members:password_change_done')

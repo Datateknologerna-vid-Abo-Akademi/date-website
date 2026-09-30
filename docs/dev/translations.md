@@ -15,14 +15,16 @@ Swedish (`sv`) is the default language. The exact non-default languages exposed 
 - Default language: `sv`
 - Shared locale catalogs in the repo: `sv`, `en`, `fi`
 - DaTe runtime languages: `sv`, `en`
+- Impuls runtime languages: `sv`, `en`
+- Biocum runtime languages: `sv`, `en`
 - Some other associations still expose `fi`
-- Settings sources: `core/settings/common.py`, `core/settings/date.py`
+- Settings sources: `core/settings/common.py`, `core/settings/date.py`, `core/settings/impuls.py`, `core/settings/biocum.py`
 
 Important settings:
 
 - `LANGUAGE_CODE = "sv"`
 - `ALL_LANGUAGES = (("sv", "Svenska"), ("en", "English"), ("fi", "Suomi"))`
-- `DATE_LANGUAGES = (("sv", "Svenska"), ("en", "English"))` overrides DaTe's active language list
+- `DATE_LANGUAGES = (("sv", "Svenska"), ("en", "English"))` narrows an association's active language list (DaTe, Impuls, Biocum)
 - `ENABLE_LANGUAGE_FEATURES` controls whether the project exposes the active association's full language set or only Swedish
 - `LOCALE_PATHS = ("locale",)` points Django to the `.po` and `.mo` files
 
@@ -52,12 +54,12 @@ Locale files live here:
 - `locale/en/LC_MESSAGES/djangojs.po`
 - `locale/fi/LC_MESSAGES/djangojs.po`
 
-Common workflow:
+Common workflow (run natively with `uv run` after `uv sync`):
 
 ```bash
-django-admin makemessages -l sv -l en -l fi
-django-admin makemessages -l sv -l en -l fi -d djangojs -i "**/vendor/**" -i "core/static/**"
-django-admin compilemessages
+uv run django-admin makemessages -l sv -l en -l fi
+uv run django-admin makemessages -l sv -l en -l fi -d djangojs -i "**/vendor/**" -i "core/static/**"
+uv run django-admin compilemessages
 ```
 
 What this does:
@@ -82,6 +84,7 @@ Static UI strings are not enough for this project because editors need translate
 
 The project registers translated fields in these files:
 
+- `ctf/translation.py`
 - `events/translation.py`
 - `functionaries/translation.py`
 - `news/translation.py`
@@ -90,6 +93,7 @@ The project registers translated fields in these files:
 
 Examples of translated model fields:
 
+- `Ctf.title`, `Ctf.content`
 - `Event.title`, `Event.content`
 - `FunctionaryRole.title`
 - `Post.title`, `Post.content`
@@ -208,7 +212,7 @@ The admin adapts based on `ENABLE_LANGUAGE_FEATURES`.
 
 When enabled:
 
-- translated models use `TabbedTranslationAdmin` or `TranslationTabularInline`
+- translated models use the project's local language-tab admin or `TranslationTabularInline`
 - the custom admin template shows a language switcher
 - editors can fill language-specific content from the admin UI
 
@@ -258,11 +262,11 @@ When you change translation behavior, cover at least these cases:
 ### Translating static strings
 
 1. Mark strings with Django translation helpers.
-2. Depending on what you are translating, run one or both of:
-    - `django-admin makemessages -l sv -l en -l fi -d djangojs -i "**/vendor/**" -i "core/static/**"` for JavaScript code
-    - `django-admin makemessages -l sv -l en -l fi` for Python code/templates
+2. Depending on what you are translating, run one or both of (via `uv run` for native execution):
+    - `uv run django-admin makemessages -l sv -l en -l fi -d djangojs -i "**/vendor/**" -i "core/static/**"` for JavaScript code
+    - `uv run django-admin makemessages -l sv -l en -l fi` for Python code/templates
 3. Edit the `.po` files.
-4. Run `django-admin compilemessages`.
+4. Run `uv run django-admin compilemessages`.
 5. Smoke-test pages in Swedish and at least one non-default language on the same unprefixed URL.
 
 ### Translating existing model content

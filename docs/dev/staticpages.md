@@ -3,17 +3,19 @@
 ## Models
 - `StaticPageNav` stores menu categories. `use_category_url` shortcuts the category click to a custom `url`. `nav_element` defines ordering.
 - `StaticPage` is the CKEditor-backed page content. `members_only` gates access, and `slug` is unique (max 50 chars). `update()` stamps `modified_time`.
-- `StaticUrl` represents dropdown entries linked to a `StaticPageNav`. `logged_in_only` hides links from anonymous users, and `dropdown_element` controls ordering for the admin ordering widget.
+- `StaticUrl` represents dropdown entries linked to a `StaticPageNav`. `logged_in_only` hides links from anonymous users, and `dropdown_element` controls ordering for the admin ordering widget. A `parent` self-relation lets a `StaticUrl` carry nested children.
+- Nested navigation is rendered by `templates/common/core/header_nav_items.html` only when the header include passes `show_submenus=True` (pulterit, sf, impuls). Associations enabling it also need submenu styles in their header CSS, since the shared `core/css/header.css` has none.
 
 ## Views & Routing
 - `StaticPageView` (`staticpages/views.py`) is the only view. It loads the page by slug, checks `members_only`, and either renders `staticpages/staticpage.html` or redirects unauthenticated users to `/members/login`.
-- Navigation menus are built in templates using `StaticPageNav` + `StaticUrl`; `staticpages.context_processors` injects both querysets into every template.
+- Policy pages (`equality_plan_view`, `registration_terms_view`) 404 unless the matching capability is enabled: `EQUALITY_PLAN_ENABLED` / `REGISTRATION_TERMS_ENABLED` (both set for `date` in its settings module; defaults are False in `core/settings/common.py`).
+- Navigation menus are built in templates using `StaticPageNav` + `StaticUrl`; the merged `staticpages.context_processors.navigation` injects `categories` and `urls` into every template in a single load (3 queries). Anonymous navigation is cached per project/language/archive-mode and invalidated on `StaticUrl`/`StaticPageNav` saves or deletes; development uses the dummy cache, so caching is off there. The legacy `get_categories`/`get_urls` names remain as thin wrappers.
 - Language-aware internal links should go through the `localized_url` template filter (`staticpages/templatetags/localized_urls.py`) so stored URLs keep the current locale prefix when language features are enabled.
 - Routes are wrapped by the shared localized URL builder in `core/urls/common.py`, so static pages can live under language prefixes without duplicating route declarations.
 
 ## Admin/Ordering
-- `StaticPageNavAdmin` allows inline management of `StaticUrl` rows using `admin-ordering`. Dragging rows updates the `dropdown_element`.
-- `StaticPageAdmin` lists pages with `members_only` badge for quick auditing.
+- `StaticPageNavAdmin` allows inline management of `StaticUrl` rows using `admin-ordering`. Dragging rows updates the `dropdown_element`; category and dropdown URLs render quick open links for checking destinations.
+- `StaticPageAdmin` lists pages with `members_only` badge, per-language translation coverage, and public-page links for quick auditing. The slug field is prepopulated from the title on new pages. When language features are enabled, the local language tabs show one translated title/content version at a time without relying on an external JavaScript CDN.
 
 ## Extending the App
 - Distinguish between external URLs and internal paths when adding menu links. External URLs should remain absolute; internal paths should stay relative so `localized_url` can rewrite them.

@@ -1,0 +1,11 @@
+{% extends 'events/arsfest_base.html' %}
+{% load static %}
+{% block arsfest_logo %}
+  <div class="event-template-logo"
+       role="img"
+       aria-label="{{ ASSOCIATION_NAME }} logo">{% include "date/svg/logo.svg" %}</div>
+{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'events/css/arsfest-sf.css' %}">
+{% endblock %}

@@ -37,29 +37,29 @@
         {% for field in form %}
           {% if field.is_hidden %}
             <p class="hidden">
-            {% else %}
-              <p>
-              {% endif %}
-              {{ field.label_tag }}
-              <br>
-              {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
-              {{ field }}
-              {% for error in field.errors %}<p style="color: red">{{ error }}</p>{% endfor %}
-            </p>
-          {% endfor %}
-          <p class="consent-form-group">
-            <input type="checkbox" name="consent" required />
-            {% translate "Jag godkänner" %}
-            <a href="https://{{ request.get_host }}/pages/registerbeskrivning/"
-               target="_blank">
-              {% translate "villkoren" %} <i class="fa fa-external-link" aria-hidden="true"></i>
-            </a>
+          {% else %}
+            <p>
+          {% endif %}
+            {{ field.label_tag }}
+            <br>
+            {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+            {{ field }}
+            {% for error in field.errors %}<p style="color: red">{{ error }}</p>{% endfor %}
           </p>
-          <div class="cf-turnstile"
-               data-sitekey="{{ CAPTCHA_SITE_KEY }}"
-               data-callback="javascriptCallback"></div>
-          <button class="button" type="submit">{% trans "Registrera dig" %}</button>
-        </form>
-      </div>
+        {% endfor %}
+        <p class="consent-form-group">
+          <input type="checkbox" name="consent" required />
+          {% translate "Jag godkänner" %}
+          <a href="https://{{ request.get_host }}/pages/registerbeskrivning/"
+             target="_blank">
+            {% translate "villkoren" %} <i class="fa fa-external-link" aria-hidden="true"></i>
+          </a>
+        </p>
+        <div class="cf-turnstile"
+             data-sitekey="{{ CAPTCHA_SITE_KEY }}"
+             data-callback="javascriptCallback"></div>
+        <button class="button" type="submit">{% trans "Registrera dig" %}</button>
+      </form>
     </div>
-  {% endblock %}
+  </div>
+{% endblock %}

@@ -10,14 +10,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"
           integrity="sha384-FtJyC+/3fgtPbqlacLHdGwBrmPjKoYBsiqNF5/BEprsnIXB4xtXLCJRx7Xx+TWKP"
           crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js"
-          integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.slim.min.js"
+          integrity="sha384-5AkRS45j4ukf+JbWAfHL8P4onPA9p0KwwP7pUdjSQA3ss9edbJUJc/XcYAiheSSz"
           crossorigin="anonymous"></script>
   <script src="{% static 'core/js/live-attendee-list.js' %}"></script>
   <style>
             /*
             .background-img{
-                background: url("{% static 'core/images/stars.png' %}") no-repeat center center fixed;
+                background: image-set(url("{% static 'core/images/stars.webp' %}") type("image/webp"), url("{% static 'core/images/stars.png' %}") type("image/png")) no-repeat center center fixed;
                 -webkit-background-size: cover;
                 -moz-background-size: cover;
                 -o-background-size: cover;
@@ -27,7 +27,7 @@
             background:transparent url("{% static 'core/images/twinkling.png' %}") repeat top center;
             }
             .stars {
-            background:#030826 url("{% static 'core/images/twinklingstars.png' %}") repeat top center;
+            background:#030826 image-set(url("{% static 'core/images/twinklingstars.webp' %}") type("image/webp"), url("{% static 'core/images/twinklingstars.png' %}") type("image/png")) repeat top center;
             }
   </style>
 {% endblock %}

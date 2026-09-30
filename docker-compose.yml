@@ -25,19 +25,36 @@ services:
       - pgadmin_data:/var/lib/pgadmin
     depends_on:
       - db
+  # Runs once per stack creation: waits for PostgreSQL, migrates, and compiles
+  # translations. The web service starts only after this succeeds.
+  # collectstatic is skipped: debug mode serves static from STATICFILES_DIRS.
+  # After pulling code with new migrations, run `date-migrate` (or recreate the
+  # stack) to apply them.
+  init:
+    env_file: .env
+    build: .
+    restart: "no"
+    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python manage.py migrate --noinput && python manage.py compilemessages -l en -l fi -l sv --verbosity 0"
+    volumes:
+      - .:/code
+    depends_on:
+      - db
   web:
     env_file: .env
     build: .
     restart: unless-stopped
-    #igSheduler startup command (nohup python /code/social/igupdate.py &) &&
-    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && python /code/manage.py migrate --noinput && python manage.py compilemessages -l en -l fi -l sv && python manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8000"
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
     ports:
       - ${DATE_DJANGO_PORT}:8000
     depends_on:
-      - db
-      - redis
+      init:
+        condition: service_completed_successfully
+      db:
+        condition: service_started
+      redis:
+        condition: service_started
   celery:
     env_file: .env
     restart: unless-stopped

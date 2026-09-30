@@ -16,26 +16,27 @@
   }
 
 .event-card > .card .badge {
-    background: var(--primaryColorLighter);
+    background: var(--primaryColor);
+    color: var(--textColorLight);
   }
 
 .event-card > .card {
-    background: var(--primaryColorLight);
+    background: var(--secondaryColor);
   }
 
 .card-body a{
-    color: var(--linkColorDark);
-    border-color: var(--linkColorDark);
+    color: var(--primaryColor);
+    border-color: var(--primaryColor);
   }
 
 .card-body a:active{
-    color: var(--linkColorDark);
+    color: var(--primaryColor);
   }
 
 .card-body a:hover{
     background-color: inherit;
-    color: var(--linkColorDarkHover);
-    border-color: var(--linkColorDarkHover);
+    color: var(--primaryColorLight);
+    border-color: var(--primaryColorLight);
   }
 
 .card-body a:focus{

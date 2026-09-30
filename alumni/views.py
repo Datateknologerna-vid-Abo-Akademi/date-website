@@ -1,5 +1,6 @@
 import logging
 
+from django.http import HttpResponseNotAllowed
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
@@ -84,7 +85,7 @@ def alumni_update_form(request, token):
             },
             status=400,
         )
-    return 405
+    return HttpResponseNotAllowed(['GET', 'POST'])
 
 
 def alumni_update_verify(request):
@@ -104,4 +105,4 @@ def alumni_update_verify(request):
     elif request.method == 'GET':
         form = AlumniEmailVerificationForm()
         return render(request, 'alumni/update_verify.html', {'form': form})
-    return 405
+    return HttpResponseNotAllowed(['GET', 'POST'])

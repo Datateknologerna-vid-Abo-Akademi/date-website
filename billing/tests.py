@@ -1,7 +1,11 @@
 from datetime import date, timedelta
 from unittest.mock import patch
 
-from django.test import TestCase, override_settings
+from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
+from django.test import RequestFactory, TestCase, override_settings
+from django.urls import reverse
 from django.utils import timezone
 
 from billing.handlers import handle_event_billing
@@ -52,6 +56,40 @@ class BillingBaseTestCase(TestCase):
         }
         defaults.update(overrides)
         return EventBillingConfiguration.objects.create(**defaults)
+
+
+class BillingAdminTests(BillingBaseTestCase):
+    def setUp(self):
+        super().setUp()
+        self.config = self.configure_billing()
+
+    def test_export_returns_404_for_missing_configuration(self):
+        admin_user = get_user_model().objects.create_superuser(
+            username='billing-admin',
+            password='pwd',
+            email='billing-admin@example.com',
+        )
+        self.client.force_login(admin_user)
+
+        response = self.client.get(reverse('admin:billing_ref_numbers', args=[999999]))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_export_requires_configuration_and_invoice_view_permissions(self):
+        staff_group = Group.objects.create(name='admin')
+        staff_user = get_user_model().objects.create_user(username='limited-billing-admin', password='pwd')
+        staff_user.groups.add(staff_group)
+        staff_user.user_permissions.add(Permission.objects.get(codename='view_eventbillingconfiguration'))
+        self.client.force_login(staff_user)
+
+        response = self.client.get(reverse('admin:billing_ref_numbers', args=[self.config.pk]))
+
+        self.assertEqual(response.status_code, 403)
+        request = RequestFactory().get(reverse('admin:billing_eventbillingconfiguration_changelist'))
+        request.user = staff_user
+        list_display = admin.site._registry[EventBillingConfiguration].get_list_display(request)
+        self.assertNotIn('invoice_count', list_display)
+        self.assertNotIn('ref_export', list_display)
 
 
 class HandleEventBillingTests(BillingBaseTestCase):

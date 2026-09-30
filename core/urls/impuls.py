@@ -1,30 +1,28 @@
-"""Impuls URL configuration."""
+"""URL configuration for the impuls site."""
 
 from django.conf import settings
 from django.conf.urls.static import static
-from django.urls import include, path
 
-from core.admin import admin_site
 from core.urls.common import build_urlpatterns
 from date import views as date
 
 app_name = 'core'
 
 urlpatterns = build_urlpatterns(
-    path('', date.index, name='index'),
-    path('news/', include('news.urls')),
-    path('members/', include('members.urls')),
-    path('members/two-factor/', include(('members.two_factor_urls', 'two_factor'), namespace='two_factor')),
-    path('archive/', include('archive.urls')),
-    path('events/', include('events.urls')),
-    path('pages/', include('staticpages.urls')),
-    path('ads/', include('ads.urls')),
-    path('social/', include('social.urls')),
-    path('polls/', include('polls.urls')),
-    path('admin/', admin_site.urls),
-    path("ckeditor5/", include('django_ckeditor_5.urls')),
-    path('publications/', include('publications.urls')),
-    path('alumni/', include('alumni.urls')),
+    'index',
+    'news',
+    'members',
+    'two_factor',
+    'archive',
+    'events',
+    'pages',
+    'ads',
+    'social',
+    'polls',
+    'admin',
+    'ckeditor',
+    'publications',
+    'alumni',
 )
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

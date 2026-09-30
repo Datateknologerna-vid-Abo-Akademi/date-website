@@ -11,13 +11,23 @@ Most people register themselves at `/members/signup/`. Those signups land in the
    - Fill in username (letters/underscore/hyphen only), contact details, membership type, and optional groups.
    - Set a temporary password. Tick **Send email** if you plan to notify the member manually (system does not send the password automatically).
 3. **Edit member**:
-   - Update contact info, membership type, or group assignments as needed.
+    - Update contact info, membership type, or group assignments as needed.
+    - On SF, tick **Gulispass utfört** after the member completes the required duty/pass. Until then, ordinary, lifetime, and extra SF members are blocked from the picture and exam archives. The checkbox only appears on SF.
    - Use the actions menu to bulk **Activate** or **Deactivate** selected users.
    - `is_staff` is computed automatically from group membership (groups listed in `settings.STAFF_GROUPS`).
-4. **Password resets** – direct members to the "Forgot password" link on the login page, which uses the custom reset form.
+4. **Password resets**: direct members to the "Forgot password" link on the login page, which uses the custom reset form.
+5. **Delete member**: deleting an account also permanently deletes the admin log entries where that member was the acting user, because the audit log points at the member record; entries recorded for other users stay untouched. Everything else that cascades from the member (subscription payments, votes, authored content) is deleted too, so you need the matching delete permission for those registered models, while a superuser is unrestricted. The history of a deleted member cannot be recovered, so deactivate instead of deleting whenever you only mean to revoke access.
 
 ## Membership Types
-- Found under **Members › Membership types**. Each type has a description and a `Behörighetsprofil` (Freshman, Ordinary, Supporting, Senior). These profiles are referenced by other apps (e.g., Polls, Archive) to enforce permissions.
+- Found under **Members › Membership types**. Each type has a description and a `Behörighetsprofil` (Freshman, Ordinary, Supporting, Senior, Member without voting rights). These profiles are referenced by other apps (e.g., Polls, Archive) to enforce permissions.
+- SF signup asks applicants to choose **Ordinarie medlem**, **Evig SF:are**, or **Extra medlem**, and member administration offers the same three types. `Ordinarie medlem` and `Evig SF:are` use ordinary-member behavior outside the separate archive eligibility checkbox. `Extra medlem` behaves like an ordinary member everywhere except polls: they cannot vote in questions restricted to ordinary members or voting-entitled members (`Endast ordinarie medlemmar` / `Endast röstberättigade medlemmar`) because their profile has no voting rights. Publication collections restricted to selected membership types admit `Extra medlem` whenever the allowlist contains `Ordinarie medlem` (or `Evig SF:are`, which shares its profile), so no allowlist edits are needed. Provisioning does not delete historical membership types that may still be attached to existing records.
+- **Ordinarie medlem** costs 15 euro and expires after one year. **Evig SF:are** costs 40 euro and does not expire. **Extra medlem** costs 15 euro and expires after one year.
+
+## SF Staff Access
+- `styrelse` can administer all site app models except the complete members app.
+- `skattis`, `sekre`, `webbansvarig`, and `admin` have full site app model permissions without becoming superusers.
+- `Inauta` has full permissions outside the members app. In the member registry it can only show and edit **Evig SF:are** members. Inauta cannot access membership products or payments, create members, change membership types, or change member groups.
+- Superusers remain unrestricted.
 
 ## Subscription Products & Payments
 1. **Subscriptions** define name, price, renewal cadence (days/months/years), and whether they expire.
@@ -31,10 +41,10 @@ Most people register themselves at `/members/signup/`. Those signups land in the
 Functionary roles and assignments are managed by the `functionaries` app. See the [Functionaries Admin Guide](functionaries.md).
 
 ## Front-Facing Pages
-- `/members/login/` – custom auth view using the `Member` model.
-- `/members/info/` – members can edit their profile (first/last name, address, etc.).
-- `/members/signup/` – collects new member requests (kept inactive until an admin activates them).
-- `/members/functionaries/` – public functionary listing owned by the `functionaries` app.
+- `/members/login/`: custom auth view using the `Member` model.
+- `/members/info/`: members can edit their profile (first/last name, address, etc.).
+- `/members/signup/`: collects new member requests (kept inactive until an admin activates them).
+- `/members/functionaries/`: public functionary listing owned by the `functionaries` app.
 
 ## Tips
 - When demoting a member (e.g., from Ordinary to Senior), consider their access in other apps (archive, polls) that rely on `permission_profile`.

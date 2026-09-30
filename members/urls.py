@@ -1,7 +1,7 @@
 import django.views.generic
 from django.conf import settings
 from django.contrib.auth import views as auth_views
-from django.urls import path, re_path
+from django.urls import path, re_path, reverse_lazy
 
 from functionaries import views as functionary_views
 
@@ -19,7 +19,11 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('password_reset/', views.CustomPasswordResetView.as_view(), name='password_reset'),
     path('password_reset/done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),
-    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path(
+        'reset/<uidb64>/<token>/',
+        auth_views.PasswordResetConfirmView.as_view(success_url=reverse_lazy('members:password_reset_complete')),
+        name='password_reset_confirm',
+    ),
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
     path('password_change/', views.CustomPasswordChangeView.as_view(), name='password_change'),
     path('password_change/done/', auth_views.PasswordChangeDoneView.as_view(), name='password_change_done'),

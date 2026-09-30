@@ -16,6 +16,10 @@ from PIL import Image
 logger = logging.getLogger('date')
 
 
+class ImageProcessingError(Exception):
+    """Raised when an uploaded file cannot be decoded/processed as an image."""
+
+
 def upload_to(instance, filename):
     filename_base, filename_ext = os.path.splitext(filename)
     return "{year}/{album}/{filename}{extension}".format(
@@ -28,13 +32,16 @@ def upload_to(instance, filename):
 
 def compress_image(uploaded_image):
     basewidth = 1600
-    img = Image.open(uploaded_image)
-    output_io_stream = BytesIO()
-    img = img.convert('RGB')
-    wpercent = basewidth / float(img.size[0])
-    hsize = int(float(img.size[1]) * float(wpercent))
-    img = img.resize((basewidth, hsize), Image.LANCZOS)
-    img.save(output_io_stream, format='JPEG', quality=60)
+    try:
+        img = Image.open(uploaded_image)
+        img = img.convert('RGB')
+        wpercent = basewidth / float(img.size[0])
+        hsize = int(float(img.size[1]) * float(wpercent))
+        img = img.resize((basewidth, hsize), Image.LANCZOS)
+        output_io_stream = BytesIO()
+        img.save(output_io_stream, format='JPEG', quality=60)
+    except (OSError, Image.DecompressionBombError) as exc:
+        raise ImageProcessingError(f"Could not process image '{uploaded_image.name}': {exc}") from exc
     output_io_stream.seek(0)
     return InMemoryUploadedFile(
         output_io_stream,
@@ -95,7 +102,10 @@ class Photo(models.Model):
         return self.image.name
 
     def save(self, *args, **kwargs):
-        if not self.id:
+        # Direct-to-storage uploads are already compressed client-side, so the
+        # server-side resize is skipped for them (set `_skip_compress` before
+        # save). Classic form uploads keep the existing behaviour.
+        if not self.id and not getattr(self, '_skip_compress', False):
             self.image = compress_image(self.image)
         super().save(*args, **kwargs)
 

@@ -10,11 +10,11 @@
 
 ## Homepage Variants
 - `get_homepage_template_name()` returns the standard `date/start.html` template for most sites.
-- For `PROJECT_NAME=kk`, it occasionally serves `date/april_start.html` on April 1st.
+- With `APRIL_HOMEPAGE_ENABLED=True` (kk), it occasionally serves `date/april_start.html` on April 1st.
 - Keep variant-specific homepage behavior here rather than scattering date checks through templates.
 
 ## Calendar Data Structure
-- `calendar_format()` converts the event queryset into a `dict["YYYY-MM-DD"] = {...}` used by the front-end calendar widget. Keys include `link`, `modifier`, `eventFullDate`, `eventTitle`, and partial HTML stub.
+- `format_calendar_events()` converts the event queryset into a `dict["YYYY-MM-DD"] = [event, ...]` used by the front-end calendar widget. Each date maps to a list because several events can share a day; each event includes `link`, `eventFullDate`, and `eventTitle`. The calendar JS builds the popup HTML (and the `modifier`) itself.
 
 ## Language Handling
 - `set_language(request)` reads `POST["lang"]`, normalizes it through `date.language_utils.resolve_language()`, stores the choice in Django's language cookie, and redirects back to the referrer.
@@ -30,7 +30,6 @@
 
 ## Middleware Notes
 - `HTCPCPMiddleware` serves the custom `418` page for coffee-themed easter-egg routes.
-- `CDNRewriteMiddleware` rewrites known storage hostnames in non-streaming responses. If you introduce new public asset hostnames, add them to `CDN_URL_TRANSFORMATIONS` in settings.
 
 ## Extending
 - If more widgets are added to the home page, keep the aggregation work inside `index()` minimal; heavy data should be fetched via dedicated services or cached.

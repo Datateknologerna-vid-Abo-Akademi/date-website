@@ -343,6 +343,9 @@ msgstr "Development"
 msgid "Production"
 msgstr "Production"
 
+#: core/settings/sf.py:40
+msgid "Hemort"
+msgstr "Home town"
 #: ctf/admin.py:22 events/admin.py:142 lucia/admin.py:30 news/admin.py:31
 #: polls/admin.py:54
 msgid "publicering"
@@ -447,6 +450,76 @@ msgstr "Time"
 #: ctf/models.py:86
 msgid "Gissningar"
 msgstr "Guesses"
+
+#: core/admin_ui.py:188
+msgid "CTF Post-mortems"
+msgstr "CTF post-mortems"
+
+#: ctf/admin.py:56
+#: templates/common/ctf/post_mortem_index.html:13
+msgid "Post-mortems"
+msgstr "Post-mortems"
+
+#: ctf/models.py:74
+msgid "Översikt"
+msgstr "Overview"
+
+#: ctf/models.py:80
+msgid ""
+"Lämna tomt för att dölja efteranalysen. Välj en framtida tid för schemalagd "
+"publicering."
+msgstr ""
+"Leave blank to hide the post-mortem. Choose a future time for scheduled "
+"publishing."
+
+#: ctf/models.py:86
+msgid "post-mortem"
+msgstr "post-mortem"
+
+#: ctf/models.py:87
+msgid "post-mortems"
+msgstr "post-mortems"
+
+#: ctf/models.py:112 templates/common/ctf/post_mortem_detail.html:46
+msgid "Solution"
+msgstr "Solution"
+
+#: templates/common/ctf/detail.html:28
+#: templates/common/ctf/post_mortem_detail.html:13
+msgid "Post-mortem"
+msgstr "Post-mortem"
+
+#: templates/common/ctf/post_mortem_detail.html:15
+msgid "Data"
+msgstr "Data"
+
+#: templates/common/ctf/post_mortem_detail.html:16
+msgid "Total guesses"
+msgstr "Total guesses"
+
+#: templates/common/ctf/post_mortem_detail.html:19
+msgid "Number of inputs"
+msgstr "Number of inputs"
+
+#: templates/common/ctf/post_mortem_detail.html:22
+msgid "Full logs"
+msgstr "Full logs"
+
+#: templates/common/ctf/post_mortem_detail.html:31
+msgid "Solved by"
+msgstr "Solved by"
+
+#: templates/common/ctf/post_mortem_detail.html:34
+msgid "Solve time"
+msgstr "Solve time"
+
+#: templates/common/ctf/post_mortem_detail.html:41
+msgid "Unsolved"
+msgstr "Unsolved"
+
+#: templates/common/ctf/post_mortem_index.html:20
+msgid "No post-mortems have been published yet."
+msgstr "No post-mortems have been published yet."
 
 #: events/forms.py:81 events/forms.py:174
 msgid "Leave blank to keep the event hidden."
@@ -582,6 +655,10 @@ msgstr "Email"
 #: templates/pulterit/events/arsfest.html:94
 msgid "Anonymt"
 msgstr "Anonymously"
+
+#: events/registration.py:74
+msgid "Det gick inte att anmäla dig just nu, försök igen."
+msgstr "Couldn't sign you up right now, please try again."
 
 #: events/models.py:322 events/registration.py:105
 msgid "Det finns redan någon anmäld med denna email"
@@ -840,6 +917,10 @@ msgstr "Supporting member"
 #: members/models.py:26
 msgid "Seniormedlem"
 msgstr "Senior member"
+
+#: members/models.py:28
+msgid "Medlem utan rösträtt"
+msgstr "Member without voting rights"
 
 #: members/models.py:37
 msgid "Postkod"
@@ -1838,16 +1919,16 @@ msgstr ""
 msgid "Gå till Startsidan"
 msgstr "Go to homepage"
 
-#: templates/common/members/registration/password_reset_email.html:3
+#: templates/common/members/registration/password_reset_email.txt:3
 #, python-format
 msgid "För att inleda lösenordsåterställningen för kontot %(username)s,"
 msgstr "To start the password reset for the account %(username)s,"
 
-#: templates/common/members/registration/password_reset_email.html:4
+#: templates/common/members/registration/password_reset_email.txt:4
 msgid "klicka på länken nedan:"
 msgstr "click the link below:"
 
-#: templates/common/members/registration/password_reset_email.html:8
+#: templates/common/members/registration/password_reset_email.txt:8
 msgid ""
 "Ifall det inte går att klicka på länken, vänligen kopiera och klistra in "
 "länken i din webbläsare."
@@ -1855,11 +1936,11 @@ msgstr ""
 "If clicking the link does not work, please copy and paste the link into your "
 "browser."
 
-#: templates/common/members/registration/password_reset_email.html:10
+#: templates/common/members/registration/password_reset_email.txt:10
 msgid "Om ytterligare frågor uppstår, vänligen kontakta styrelsen."
 msgstr "If you have any further questions, please contact the board."
 
-#: templates/common/members/registration/password_reset_email.html:13
+#: templates/common/members/registration/password_reset_email.txt:13
 msgid "Mvh,"
 msgstr "Best regards,"
 
@@ -2106,6 +2187,25 @@ msgstr ""
 "and can contact the %(association_short)ss board and/or the student union "
 "harassment contacts if requested."
 
+#: templates/impuls/social/harassment_form.html:1
+msgid "Rapportera trakasserier"
+msgstr "Report harassment"
+
+#: templates/impuls/social/harassment_form.html:3
+msgid ""
+"Du kan rapportera trakasserier antingen anonymt eller ange din "
+"kontaktinformation. Vi tar alla former av trakasserier på allvar och kommer "
+"att vidta åtgärder för att upprätthålla en trygg och respektfull miljö för "
+"alla medlemmar. Impuls trygghetspersoner behandlar alla rapporteringar av "
+"trakasserier och tar kontakt till Impuls styrelse och/eller ÅAS "
+"trakasseriombud om det så önskas."
+msgstr ""
+"You can report harassment anonymously or by providing your contact "
+"information. We take all forms of harassment seriously and will act to "
+"maintain a safe and respectful environment for all members. Impuls safety "
+"contacts handle all harassment reports and can contact Impuls board and/or "
+"the student union harassment contacts if requested."
+
 #: templates/common/social/harassment_form.html:26
 msgid "Ange din Email om du vill bli kontaktad"
 msgstr "Input your email in case you want to be contacted"
@@ -2182,9 +2282,9 @@ msgstr "This removes the extra verification step from your account."
 msgid "Disable"
 msgstr "Disable"
 
-#: templates/common/unfold/helpers/userlinks.html:39
-msgid "Create"
-msgstr "Create"
+#: templates/common/unfold/helpers/app_list_default.html:29
+msgid "View all"
+msgstr "View all"
 
 #: templates/date/date/components/about.html:4
 msgid "Om oss"
@@ -2233,6 +2333,12 @@ msgstr ""
 "this via the website. We take all forms of harrasment very seriously and "
 "will take the necessary steps for ensuring a safe and respectful environment "
 "for all members."
+
+#: templates/impuls/date/components/extras.html:6
+msgid ""
+"Om du upplever trakasserier i samband med Impuls verksamhet, vänligen"
+msgstr ""
+"If you encounter harassment during the activity of Impuls, please"
 
 #: templates/date/date/components/header.html:8
 msgid "Datateknologerna"
@@ -2403,11 +2509,11 @@ msgstr "Impuls"
 
 #: templates/impuls/date/components/about.html:8
 msgid ""
-"Impuls rf är ämnesföreningen för psykologi vid Åbo Akademi. Föreningen "
+"Impuls r.f. är ämnesföreningen för psykologi vid Åbo Akademi. Föreningen "
 "strävar efter att förbättra och fördjupa undervisningen i psykologi, samt "
 "öka samvaron och trivseln för våra psykologistuderande."
 msgstr ""
-"Impuls rf is the student association for psychology at Åbo Akademi "
+"Impuls r.f. is the student association for psychology at Åbo Akademi "
 "University. The association works to improve and deepen psychology education "
 "and to strengthen community and well-being among psychology students."
 
@@ -2420,3 +2526,37 @@ msgstr ""
 "A central part of Impuls' work is arranging events for its members and being "
 "active across faculty and association boundaries, both within psychology and "
 "with other subjects."
+
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Klotterplanket"
+msgstr "Scribble board"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Skriv ett inlägg anonymt med en pseudonym. Inlägg som bryter mot reglerna för webbplatsen kan tas bort."
+msgstr "Write a post anonymously with a pseudonym. Posts that break the website rules may be removed."
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Pseudonym"
+msgstr "Pseudonym"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Meddelande"
+msgstr "Message"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Inlägg"
+msgstr "Posts"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Inga inlägg ännu. Skriv det första!"
+msgstr "No posts yet. Write the first one!"
+#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+msgid "Ditt inlägg har lagts till!"
+msgstr "Your post has been added!"
+
+#: klotterplanket/views.py
+msgid "Botkontrollen misslyckades, försök igen."
+msgstr "The bot check failed, try again."
+#: klotterplanket/views.py
+msgid "Kontrollera pseudonymen och meddelandet."
+msgstr "Check the pseudonym and the message."
+
+#: exambank/views.py
+#, python-format
+msgid "Kunde inte ladda upp följande filer: %(files)s"
+msgstr "Could not upload the following files: %(files)s"

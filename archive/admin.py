@@ -13,7 +13,9 @@ from core.admin_widgets import (
     FLATPICKR_ADMIN_JS,
     FlatpickrDateTimeAdminMixin,
     SafeAdminFileWidget,
+    SafeAdminImageWidget,
 )
+from core.upload_widgets import DirectUploadAdminMediaMixin
 
 from .forms import DocumentAdminForm, PublicAdminForm
 from .models import Document, DocumentCollection, PublicCollection, PublicFile
@@ -44,7 +46,7 @@ class SafeFileInlineMixin:
     formfield_overrides = {
         **UNFOLD_FORMFIELD_OVERRIDES,
         models.FileField: {'widget': SafeAdminFileWidget},
-        models.ImageField: {'widget': SafeAdminFileWidget},
+        models.ImageField: {'widget': SafeAdminImageWidget},
     }
 
 
@@ -67,7 +69,12 @@ class PublicFileInline(SafeFileInlineMixin, TabularInline):
 
 
 @admin.register(DocumentCollection)
-class DocumentCollectionAdmin(FlatpickrDateTimeAdminMixin, ArchiveCollectionAdminMixin, ModelAdmin):
+class DocumentCollectionAdmin(
+    FlatpickrDateTimeAdminMixin,
+    ArchiveCollectionAdminMixin,
+    DirectUploadAdminMediaMixin,
+    ModelAdmin,
+):
     model = DocumentCollection
     save_on_top = True
     form = DocumentAdminForm
@@ -93,7 +100,12 @@ class DocumentCollectionAdmin(FlatpickrDateTimeAdminMixin, ArchiveCollectionAdmi
 if settings.USE_S3:  # type: ignore[misc]
 
     @admin.register(PublicCollection)
-    class PublicCollectionAdmin(FlatpickrDateTimeAdminMixin, ArchiveCollectionAdminMixin, ModelAdmin):
+    class PublicCollectionAdmin(
+        FlatpickrDateTimeAdminMixin,
+        ArchiveCollectionAdminMixin,
+        DirectUploadAdminMediaMixin,
+        ModelAdmin,
+    ):
         model = PublicCollection
         save_on_top = True
         form = PublicAdminForm

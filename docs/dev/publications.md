@@ -10,9 +10,10 @@
 - Migration `0004` creates a default `Publications` collection with slug `publications` and assigns existing PDF rows to it.
 
 ## Admin (`publications/admin.py`)
-- `PublicationCollectionAdmin` lets admins create and reorder collections, set visibility, choose allowed membership types, and set/clear a password without storing plaintext.
-- Custom `PDFFileAdmin` prepopulates slugs for new objects, exposes the collection field and secondary access controls, and locks the `file` field when editing to avoid accidental replacements.
-- Fieldsets group metadata, collection access, per-publication access control, and timestamps for clarity.
+- `PublicationCollectionAdmin` is the primary management surface. It lets admins create and reorder collections, set visibility, choose allowed membership types, and set/clear a password without storing plaintext. The change form also includes an inline table for the collection's publications so editors can manage collection access and publication-level flags in one place. The linked publication count opens the filtered publication list without a duplicate management column. The global PDF list is available through an **All PDF publications** tool link rather than a separate sidebar entry.
+- The collection admin validates access combinations: password-protected collections must have a password, and selected-membership collections must select at least one membership type.
+- Custom `PDFFileAdmin` prepopulates slugs for new objects, exposes collection/access columns, links back to the parent collection access settings, and locks the `file` field when editing to avoid accidental replacements. The PDF form shows a selected-collection access summary; `static/common/publications/js/admin-collection-access.js` refreshes that summary when the collection dropdown changes.
+- Fieldsets group metadata, collection access, per-publication access control, and timestamps for clarity. The PDF changelist includes a shortcut back to collection/access management for editors who start from the publication list.
 
 ## Views/URLs (`publications/views.py`)
 - The app is installed for DaTe, KK, Biologica/biocum, and Pulterit. Each of those variants exposes the public list at `/publications/`.
@@ -24,6 +25,7 @@
 - `pdf_view` serves `/publications/<collection-slug>/<publication-slug>/`. It enforces collection access first, then the per-publication checks, and only then redirects to `redirect_url` or renders the internal viewer.
 - Legacy one-segment publication URLs (`/publications/<publication-slug>/`) are handled by `collection_detail` as a compatibility path. If the slug is not a collection but matches a publication, the same access checks run before a permanent redirect to the canonical collection URL.
 - Collection access intentionally raises 404 for hidden collections and membership mismatches so unauthorized users cannot discover the collection or linked external URL from a direct request. Login-required collections redirect anonymous visitors to `settings.LOGIN_URL`; password-protected collections show a password form.
+- Selected-membership collections admit a member whose own type is in the allowlist by primary key. As a profile-level widening, an allowlist containing any type with the ordinary permission profile also admits members whose own profile is the ordinary-minus-voting one (`NON_VOTING_MEMBER`, e.g. SF's `Extra medlem`); this keeps those members on par with ordinary members outside voting without requiring allowlist edits per site. See `_allowed_membership_types_grant` in `publications/views.py`.
 
 ## Templates
 - `publications/index.html` expects `collections` and renders the collection index, using `collection.cover_url` when available and falling back to an icon otherwise.

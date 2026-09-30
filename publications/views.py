@@ -7,6 +7,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 
+from members.models import NON_VOTING_MEMBER, ORDINARY_MEMBER
+
 from .models import PDFFile, PublicationCollection
 
 
@@ -49,6 +51,20 @@ def _collection_session_token(collection):
     return collection.password_hash[:32]
 
 
+def _allowed_membership_types_grant(allowed_types, membership_type):
+    """Grant a member's own type by pk, and let any allowed type with the
+    ordinary profile also admit a member whose own profile is the
+    ordinary-minus-voting one (e.g. SF's ``Extra medlem``). Those members
+    keep ordinary access everywhere outside voting without each allowlist
+    having to list their type."""
+    allowed = tuple(allowed_types.all())
+    if any(mt.pk == membership_type.pk for mt in allowed):
+        return True
+    if membership_type.permission_profile != NON_VOTING_MEMBER:
+        return False
+    return any(mt.permission_profile == ORDINARY_MEMBER for mt in allowed)
+
+
 def _collection_is_visible(collection, user):
     if not collection.is_active or collection.visibility == PublicationCollection.VISIBILITY_HIDDEN:
         return False
@@ -62,7 +78,7 @@ def _collection_is_visible(collection, user):
         return True
     if collection.visibility == PublicationCollection.VISIBILITY_MEMBERSHIP:
         # Iterate the prefetched list rather than re-querying.
-        return any(mt.pk == user.membership_type_id for mt in collection.allowed_membership_types.all())
+        return _allowed_membership_types_grant(collection.allowed_membership_types, user.membership_type)
     return False
 
 
@@ -81,7 +97,7 @@ def _collection_access_response(request, collection):
     if collection.visibility == PublicationCollection.VISIBILITY_MEMBERSHIP:
         if not request.user.is_authenticated:
             return redirect_to_login(request.get_full_path(), login_url=settings.LOGIN_URL)
-        if collection.allowed_membership_types.filter(pk=request.user.membership_type_id).exists():
+        if _allowed_membership_types_grant(collection.allowed_membership_types, request.user.membership_type):
             return None
         raise Http404
 

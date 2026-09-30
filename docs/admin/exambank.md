@@ -4,7 +4,7 @@
 Manage exam archives shown under `/archive/exams/`.
 
 ## Access Settings
-Use **Exam bank › Åtkomst till tentarkiv** to choose how the public exam bank is protected.
+Use **Exam bank › Exam archives › Åtkomstinställningar** to choose how the public exam bank is protected.
 
 - **Kräv inloggning** is enabled by default and keeps the historical behavior: visitors must sign in as members.
 - When sign-in is disabled, an optional password can protect `/archive/exams/` and the related exam upload/detail routes. Leaving the password empty makes the exam bank public.
@@ -13,7 +13,7 @@ Use **Exam bank › Åtkomst till tentarkiv** to choose how the public exam bank
 ## Adding Exam Archives
 1. Visit **Exam bank › Exam archives**.
 2. Create an archive with a title and publication date. The publication date uses the shared calendar/time picker.
-3. Use the inline table or multi-upload field to upload exam files.
+3. Use the inline table or multi-upload field to upload exam files (drag-and-drop when direct uploads are enabled). Uploaded files stay listed below the field until the form is saved, and can be removed individually; files already attached to the archive are managed in the inline table below.
 4. Provide a descriptive **Namn** for each file.
 5. Save. Files are stored under `media/<year>/<slug>/`.
 

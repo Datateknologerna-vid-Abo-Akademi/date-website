@@ -14,10 +14,21 @@ class AdminLink:
     permission: str = ''
     any_permissions: tuple[str, ...] = ()
 
+    @staticmethod
+    def _has_permission(user, permission):
+        if user.has_perm(permission):
+            return True
+        app_label, codename = permission.split('.', 1)
+        if codename.startswith('view_'):
+            return user.has_perm(f'{app_label}.change_{codename.removeprefix("view_")}')
+        return False
+
     def resolve(self, request):
-        if self.permission and not request.user.has_perm(self.permission):
+        if self.permission and not self._has_permission(request.user, self.permission):
             return None
-        if self.any_permissions and not any(request.user.has_perm(permission) for permission in self.any_permissions):
+        if self.any_permissions and not any(
+            self._has_permission(request.user, permission) for permission in self.any_permissions
+        ):
             return None
 
         href = self.url
@@ -37,24 +48,8 @@ class AdminLink:
         }
 
 
-TOPBAR_QUICK_CREATE_LINKS = (
-    AdminLink(_('Event'), icon='event', url_name='admin:events_event_add', permission='events.add_event'),
-    AdminLink(_('News'), icon='article', url_name='admin:news_post_add', permission='news.add_post'),
-    AdminLink(
-        _('Static Page'),
-        icon='web',
-        url_name='admin:staticpages_staticpage_add',
-        permission='staticpages.add_staticpage',
-    ),
-)
-
-
 def resolve_admin_links(items, request):
     return [link for item in items if (link := item.resolve(request)) is not None]
-
-
-def get_topbar_quick_create_links(request):
-    return resolve_admin_links(TOPBAR_QUICK_CREATE_LINKS, request)
 
 
 @dataclass(frozen=True)
@@ -95,12 +90,6 @@ SIDEBAR_NAVIGATION = (
                 url_name='admin:billing_eventbillingconfiguration_changelist',
                 permission='billing.view_eventbillingconfiguration',
             ),
-            AdminLink(
-                _('Invoices'),
-                icon='receipt',
-                url_name='admin:billing_eventinvoice_changelist',
-                permission='billing.view_eventinvoice',
-            ),
         ),
     ),
     AdminSidebarGroup(
@@ -128,16 +117,10 @@ SIDEBAR_NAVIGATION = (
                 permission='members.view_subscriptionpayment',
             ),
             AdminLink(
-                _('Functionaries'),
-                icon='manage_accounts',
-                url_name='admin:functionaries_functionary_changelist',
-                permission='functionaries.view_functionary',
-            ),
-            AdminLink(
                 _('Functionary Roles'),
                 icon='work',
                 url_name='admin:functionaries_functionaryrole_changelist',
-                permission='functionaries.view_functionaryrole',
+                any_permissions=('functionaries.view_functionaryrole', 'members.view_functionaryrole'),
             ),
         ),
     ),
@@ -178,12 +161,6 @@ SIDEBAR_NAVIGATION = (
                 permission='publications.view_publicationcollection',
             ),
             AdminLink(
-                _('PDF Publications'),
-                icon='picture_as_pdf',
-                url_name='admin:publications_pdffile_changelist',
-                permission='publications.view_pdffile',
-            ),
-            AdminLink(
                 _('Photo Albums'),
                 icon='photo_library',
                 url_name='admin:gallery_album_changelist',
@@ -201,12 +178,6 @@ SIDEBAR_NAVIGATION = (
                 url_name='admin:exambank_examarchive_changelist',
                 any_permissions=('exambank.view_examarchive', 'archive.view_examcollection'),
             ),
-            AdminLink(
-                _('Exam Access'),
-                icon='password',
-                url_name='admin:exambank_exambankaccesssettings_changelist',
-                permission='exambank.view_exambankaccesssettings',
-            ),
         ),
     ),
     AdminSidebarGroup(
@@ -214,7 +185,10 @@ SIDEBAR_NAVIGATION = (
         (
             AdminLink(_('CTF'), icon='military_tech', url_name='admin:ctf_ctf_changelist', permission='ctf.view_ctf'),
             AdminLink(
-                _('CTF Guesses'), icon='flag', url_name='admin:ctf_guess_changelist', permission='ctf.view_guess'
+                _('CTF Post-mortems'),
+                icon='flag',
+                url_name='admin:ctf_postmortem_changelist',
+                any_permissions=('ctf.add_ctf', 'ctf.change_ctf', 'ctf.add_flag', 'ctf.change_flag'),
             ),
             AdminLink(
                 _('Lucia'), icon='stars', url_name='admin:lucia_candidate_changelist', permission='lucia.view_candidate'
@@ -234,19 +208,22 @@ SIDEBAR_NAVIGATION = (
                 _('Instagram URLs'),
                 icon='photo_camera',
                 url_name='admin:instagram_igurl_changelist',
-                permission='instagram.view_igurl',
+                any_permissions=('instagram.view_igurl', 'social.view_igurl'),
             ),
             AdminLink(
                 _('Harassment Reports'),
                 icon='report',
                 url_name='admin:harassment_harassment_changelist',
-                permission='harassment.view_harassment',
+                any_permissions=('harassment.view_harassment', 'social.view_harassment'),
             ),
             AdminLink(
                 _('Report Recipients'),
                 icon='mail',
                 url_name='admin:harassment_harassmentemailrecipient_changelist',
-                permission='harassment.view_harassmentemailrecipient',
+                any_permissions=(
+                    'harassment.view_harassmentemailrecipient',
+                    'social.view_harassmentemailrecipient',
+                ),
             ),
         ),
     ),
