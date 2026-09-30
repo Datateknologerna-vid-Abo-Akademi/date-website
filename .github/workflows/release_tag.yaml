@@ -27,7 +27,7 @@ jobs:
       next_tag: ${{ steps.version.outputs.next_tag }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: main
@@ -48,8 +48,9 @@ jobs:
             exit 0
           fi
 
-          # Follow main's own history instead of picking the highest tag anywhere in the repo.
-          LAST_TAG="$(git describe --tags --abbrev=0 --first-parent --match 'v[0-9]*.[0-9]*.[0-9]*' main 2>/dev/null || true)"
+          # Use the highest release tag reachable from main. git describe can select an
+          # older tag when multiple release tags point to the same commit.
+          LAST_TAG="$(git tag --merged main --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -n 1 || true)"
           if [ -z "${LAST_TAG}" ]; then
             LAST_TAG="none"
           fi
@@ -87,12 +88,22 @@ jobs:
       - name: Release summary
         shell: bash
         run: |
+          LAST_TAG="${{ steps.version.outputs.last_tag }}"
+
           {
             echo "## Release proposal"
-            echo "- Last tag: \`${{ steps.version.outputs.last_tag }}\`"
+            echo "- Last tag: \`${LAST_TAG}\`"
             echo "- Suggested bump: \`${{ steps.version.outputs.bump }}\`"
             echo "- Next tag: \`${{ steps.version.outputs.next_tag }}\`"
             echo "- Should create release tag: \`${{ steps.version.outputs.should_release }}\`"
+            echo ""
+            echo "### Commits since last tag"
+            echo ""
+            if [ "${LAST_TAG}" = "none" ]; then
+              git log --first-parent --oneline main
+            else
+              git log --first-parent --oneline "${LAST_TAG}..main"
+            fi
           } >> "${GITHUB_STEP_SUMMARY}"
 
   create_release_tag:
@@ -101,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: main
@@ -141,18 +152,19 @@ jobs:
             exit 0
           fi
 
-          ARGS=(
-            "${NEXT_TAG}"
-            --title "${NEXT_TAG}"
-            --verify-tag
-            --generate-notes
-          )
+          NOTES_FILE="$(mktemp)"
+          ./scripts/generate_release_notes.sh "${LAST_TAG}" "${NEXT_TAG}" > "${NOTES_FILE}"
 
-          if [ "${LAST_TAG}" != "none" ]; then
-            ARGS+=(--notes-start-tag "${LAST_TAG}")
-          fi
+          {
+            echo "## Generated release notes"
+            echo ""
+            cat "${NOTES_FILE}"
+          } >> "${GITHUB_STEP_SUMMARY}"
 
-          gh release create "${ARGS[@]}"
+          gh release create "${NEXT_TAG}" \
+            --title "${NEXT_TAG}" \
+            --verify-tag \
+            --notes-file "${NOTES_FILE}"
 
       - name: Dispatch Docker release tagging workflow
         env:

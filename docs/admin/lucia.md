@@ -13,12 +13,12 @@ Showcase Lucia candidates, their bios, and the related poll links during the ann
    - **Bild URL** – paste a publicly accessible image URL (square images look best).
    - **Titel** – candidate name and class year if desired.
    - **Innehåll** – bio text (supports rich formatting via CKEditor).
-   - **Publicera** – uncheck to hide the candidate while drafting.
+   - **Publiceras** – timestamp when the candidate should become visible. Leave empty to keep the entry hidden, or pick a future time to schedule publication; a past time publishes immediately.
    - **Slug** – lowercase identifier for detail URLs (`/lucia/<slug>/`). Must be unique.
    - **Poll URL** – link to the external poll (usually a Google Form or internal Polls view).
 3. Click **Save**. Published candidates appear automatically on `/lucia/` and `/lucia/<slug>/`.
 
 ## Publishing Workflow Tips
-- Draft entries with **Publicera** unchecked until copy and images are approved.
+- Draft entries with **Publiceras** left empty until copy and images are approved.
 - Reuse the previous year’s entry by duplicating it (use the **Save as new** button) and then updating text/URLs.
 - The list page orders candidates by creation order; use consistent naming if you want a particular display order.

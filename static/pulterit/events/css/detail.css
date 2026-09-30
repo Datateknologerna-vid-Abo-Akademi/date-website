@@ -1,3 +1,12 @@
+body {
+    background: url("/static/core/images/Pulterit-mineral.jpg") no-repeat center center fixed;
+    background-size: cover;
+}
+
+footer.association-footer {
+    background-color: var(--primaryColor);
+}
+
 table {
     border-collapse: collapse;
 }

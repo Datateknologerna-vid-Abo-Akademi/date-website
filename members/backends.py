@@ -10,7 +10,6 @@ logger = logging.getLogger('date')
 
 
 class AuthBackend(ModelBackend):
-
     def authenticate(self, request, username=None, password=None, **kwargs):
         try:
             user = User.objects.get(email=username)

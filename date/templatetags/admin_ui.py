@@ -1,13 +1,6 @@
 from django import template
 
-from core.admin_ui import get_topbar_quick_create_links
-
 register = template.Library()
-
-
-@register.simple_tag(takes_context=True)
-def admin_topbar_quick_create_links(context):
-    return get_topbar_quick_create_links(context['request'])
 
 
 @register.simple_tag(takes_context=True)

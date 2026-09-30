@@ -18,8 +18,12 @@ permissions:
   pages: write
   id-token: write
 
+# Per-ref groups: many PRs touch docs concurrently, and a single shared
+# group with cancel-in-progress makes them cancel each other. Main deploys
+# keep their own group; GitHub's Pages environment serializes deployments
+# repo-wide regardless.
 concurrency:
-  group: 'github-pages'
+  group: 'github-pages-${{ github.ref }}'
   cancel-in-progress: true
 
 jobs:
@@ -27,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Configure GitHub Pages
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -51,8 +55,14 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment_retry.outputs.page_url || steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+
+      - name: Retry GitHub Pages deploy once
+        if: steps.deployment.outcome == 'failure'
+        id: deployment_retry
         uses: actions/deploy-pages@v5

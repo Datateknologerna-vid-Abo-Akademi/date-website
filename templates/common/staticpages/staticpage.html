@@ -2,13 +2,14 @@
 {% load static %}
 {% load i18n %}
 {% block title %}{{ page.title }}{% endblock %}
-
 {% block extra_head %}
-    {{ block.super }}
-    <link rel="stylesheet" href="{% static 'staticpages/css/staticpage.css' %}" type="text/css">
-    {% with background_image_url=page.background_image_url %}
+  {{ block.super }}
+  <link rel="stylesheet"
+        href="{% static 'staticpages/css/staticpage.css' %}"
+        type="text/css">
+  {% with background_image_url=page.background_image_url %}
     {% if background_image_url %}
-        <style>
+      <style>
             .background-img {
                 background: url("{{ background_image_url }}") no-repeat center center fixed;
                 -webkit-background-size: cover;
@@ -16,39 +17,32 @@
                 -o-background-size: cover;
                 background-size: cover;
             }
-        </style>
+      </style>
     {% endif %}
-    {% endwith %}
+  {% endwith %}
 {% endblock %}
-
 {% block content %}
-
-    <div class="container-md min-vh-100 container-margin-top p-1 background-img">
-        <div class="container-size break-words">
-            {% if show_content %}
-                <div class="content">
-                    {% if document_html %}
-                        {% if show_document_title %}
-                            <h1>{{ page.title }}</h1>
-                        {% endif %}
-                        {{ document_html|safe }}
-                        {% if fetch_error %}
-                            <p>
-                                <a href="{{ fetch_error }}" target="_blank" rel="noopener noreferrer">
-                                    {% trans "Öppna originaldokumentet" %}
-                                </a>
-                            </p>
-                        {% endif %}
-                    {% else %}
-                        {{ page.content|safe }}
-                    {% endif %}
-                </div>
-            {% else %}
-                <div class="content">
-                    <h5>{% trans "Logga in för att se den här sidan" %}</h5>
-                </div>
+  <div class="container-md min-vh-100 container-margin-top p-1 background-img">
+    <div class="container-size break-words">
+      {% if show_content %}
+        <div class="content">
+          {% if document_html %}
+            {% if show_document_title %}<h1>{{ page.title }}</h1>{% endif %}
+            {{ document_html|safe }}
+            {% if fetch_error %}
+              <p>
+                <a href="{{ fetch_error }}" target="_blank" rel="noopener noreferrer">{% trans "Öppna originaldokumentet" %}</a>
+              </p>
             {% endif %}
+          {% else %}
+            {{ page.content|safe }}
+          {% endif %}
         </div>
+      {% else %}
+        <div class="content">
+          <h5>{% trans "Logga in för att se den här sidan" %}</h5>
+        </div>
+      {% endif %}
     </div>
-   
+  </div>
 {% endblock %}

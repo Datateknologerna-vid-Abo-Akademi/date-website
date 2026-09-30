@@ -3,37 +3,35 @@
 {% load static %}
 {% load i18n %}
 {% block extra_head %}
-    {{ block.super }}
-    <link rel="stylesheet" href="{% static 'archive/css/style.css' %}" type="text/css">
-    <link rel="stylesheet" href="{% static 'archive/css/detailed.css' %}" type="text/css">
-    <link
-        rel="stylesheet"
+  {{ block.super }}
+  <link rel="stylesheet"
+        href="{% static 'archive/css/style.css' %}"
+        type="text/css">
+  <link rel="stylesheet"
+        href="{% static 'archive/css/detailed.css' %}"
+        type="text/css">
+  <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/glightbox@3.3.1/dist/css/glightbox.min.css"
         integrity="sha384-GPAzSuZc0kFvdIev6wm9zg8gnafE8tLso7rsAYQfc9hAdWCpOcpcNI5W9lWkYcsd"
         crossorigin="anonymous">
 {% endblock %}
-
 {% block content %}
-    <div class="container-md min-vh-100 container-margin-top p-1">
-        <div
-            id="gallery-config"
-            data-album-total-count="{{ total_count }}"
-            data-next-fragment-url="{% if pictures.has_next %}?page={{ pictures.next_page_number }}&fragment=1{% endif %}"
-            data-counter-page-label="{% trans 'Sida' %}"
-            data-counter-image-label="{% trans 'Bild' %}"
-            data-share-action-label="{% trans 'Dela eller kopiera länk' %}"
-            data-share-working-label="{% trans 'Delar...' %}"
-            data-share-success-label="{% trans 'Länk delad' %}"
-            data-copy-success-label="{% trans 'Länk kopierad' %}"
-            data-share-error-label="{% trans 'Kunde inte dela eller kopiera länk' %}"
-            data-loading-more-label="{% trans 'Laddar fler bilder...' %}"
-            data-load-more-error-label="{% trans 'Kunde inte ladda fler bilder.' %}"
-            data-download-label="{% trans 'Ladda ner aktuell bild' %}">
-        </div>
-
-        {% include 'archive/partials/detail_header.html' %}
-        {% include 'archive/partials/detail_gallery_shell.html' %}
-    </div>
-
-    {% include 'archive/partials/detail_scripts.html' %}
+  <div class="container-md min-vh-100 container-margin-top p-1">
+    <div id="gallery-config"
+         data-album-total-count="{{ total_count }}"
+         data-next-fragment-url="{% if pictures.has_next %}?page={{ pictures.next_page_number }}&fragment=1{% endif %}"
+         data-counter-page-label="{% trans 'Sida' %}"
+         data-counter-image-label="{% trans 'Bild' %}"
+         data-share-action-label="{% trans 'Dela eller kopiera länk' %}"
+         data-share-working-label="{% trans 'Delar...' %}"
+         data-share-success-label="{% trans 'Länk delad' %}"
+         data-copy-success-label="{% trans 'Länk kopierad' %}"
+         data-share-error-label="{% trans 'Kunde inte dela eller kopiera länk' %}"
+         data-loading-more-label="{% trans 'Laddar fler bilder...' %}"
+         data-load-more-error-label="{% trans 'Kunde inte ladda fler bilder.' %}"
+         data-download-label="{% trans 'Ladda ner aktuell bild' %}"></div>
+    {% include 'archive/partials/detail_header.html' %}
+    {% include 'archive/partials/detail_gallery_shell.html' %}
+  </div>
+  {% include 'archive/partials/detail_scripts.html' %}
 {% endblock %}

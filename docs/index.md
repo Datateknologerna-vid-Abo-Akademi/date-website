@@ -27,6 +27,11 @@ Use the sections below to jump to either editor-facing instructions or implement
 - [CTF Admin Guide](admin/ctf.md)
 - [Site Shell (date app) Admin Guide](admin/date.md)
 - [Events Admin Guide](admin/events.md)
+- [Exam Bank Admin Guide](admin/exambank.md)
+- [Functionaries Admin Guide](admin/functionaries.md)
+- [Gallery Admin Guide](admin/gallery.md)
+- [Harassment Admin Guide](admin/harassment.md)
+- [Instagram Admin Guide](admin/instagram.md)
 - [Lucia Admin Guide](admin/lucia.md)
 - [Members Admin Guide](admin/members.md)
 - [News Admin Guide](admin/news.md)
@@ -45,6 +50,12 @@ Use the sections below to jump to either editor-facing instructions or implement
 - [CTF Development Notes](dev/ctf.md)
 - [Site Shell (date app) Development Notes](dev/date.md)
 - [Events Development Notes](dev/events.md)
+- [Exam Bank Development Notes](dev/exambank.md)
+- [Functionaries Development Notes](dev/functionaries.md)
+- [Gallery Development Notes](dev/gallery.md)
+- [Harassment Development Notes](dev/harassment.md)
+- [Instagram Development Notes](dev/instagram.md)
+- [Klotterplanket Development Notes](dev/klotterplanket.md)
 - [Lucia Development Notes](dev/lucia.md)
 - [Members Development Notes](dev/members.md)
 - [News Development Notes](dev/news.md)
@@ -56,6 +67,7 @@ Use the sections below to jump to either editor-facing instructions or implement
 - [Static Pages Development Notes](dev/staticpages.md)
 - [Template System & Association Overrides](dev/templates.md)
 - [Translation System Notes](dev/translations.md)
+- [Direct-to-Storage Uploads (Uppy)](dev/uploads.md)
 
 ## Maintenance
 

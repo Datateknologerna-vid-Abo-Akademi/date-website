@@ -17,10 +17,14 @@ if [ -n "${1:-}" ]; then
 fi
 
 unalias date date-manage date-migrate date-makemigrations date-collectstatic \
-    date-cleaninit date-stop date-start date-start-detached date-createsuperuser \
+    date-cleaninit date-stop date-start date-start-detached date-rebuild \
+    date-rebuild-detached date-build date-createsuperuser \
     date-pull date-seed-gallery date-seed-gallery-clear date-all date-all-manage \
-    date-all-start date-all-stop date-all-cleaninit date-all-seed-gallery \
-    date-all-seed-gallery-clear date-backup date-restore date-sync-dev-env \
+    date-all-start date-all-rebuild date-all-stop date-all-cleaninit \
+    date-all-seed-gallery date-all-seed-gallery-clear date-all-isolated \
+    date-all-isolated-start date-all-isolated-rebuild date-all-isolated-stop \
+    date-all-isolated-cleaninit date-all-isolated-start-variant \
+    date-all-isolated-manage date-backup date-restore date-sync-dev-env \
     date-sync-prod-env date-setup 2>/dev/null || true
 
 # Resolve the checkout to operate on. This lets globally installed helpers
@@ -79,15 +83,59 @@ date-stop() {
     date down "$@"
 }
 
+_date_compose_file() {
+    local project_dir="$1"
+    if [ -n "${COMPOSE_FILE:-}" ]; then
+        printf '%s\n' "$COMPOSE_FILE"
+        return 0
+    fi
+    [ -f "$project_dir/.env" ] || return 0
+    grep -E '^COMPOSE_FILE=' "$project_dir/.env" | tail -1 | cut -d= -f2- | tr -d "\"'"
+}
+
+_date_is_prod_stack() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return 1
+    [[ "$(_date_compose_file "$project_dir")" == *prod* ]]
+}
+
 date-start() {
-    date-pull
-    date-stop
-    date up --build "$@"
+    if _date_is_prod_stack; then
+        date up --pull always "$@"
+    else
+        date up "$@"
+    fi
 }
 
 date-start-detached() {
-    date-pull
-    date up -d --build "$@"
+    if _date_is_prod_stack; then
+        date up -d --pull always "$@"
+    else
+        date up -d "$@"
+    fi
+}
+
+# Rebuild images and start the stack. Needed after pyproject.toml, uv.lock,
+# or Dockerfile changes; the source bind mount covers ordinary code edits.
+date-rebuild() {
+    if _date_is_prod_stack; then
+        date up --pull always "$@"
+    else
+        date up --build "$@"
+    fi
+}
+
+date-rebuild-detached() {
+    if _date_is_prod_stack; then
+        date up -d --pull always "$@"
+    else
+        date up -d --build "$@"
+    fi
+}
+
+# Build images without starting the stack.
+date-build() {
+    date build "$@"
 }
 
 date-createsuperuser() {
@@ -120,6 +168,12 @@ date-all-start() {
     date-all up "$@"
 }
 
+# Rebuild dev-all images and start all containers; needed after dependency or
+# Dockerfile changes.
+date-all-rebuild() {
+    date-all up --build "$@"
+}
+
 date-all-stop() {
     date-all down "$@"
 }
@@ -136,6 +190,77 @@ date-all-seed-gallery() {
 
 date-all-seed-gallery-clear() {
     date-all-manage seed_gallery --clear "$@"
+}
+
+date-all-isolated() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+    docker compose --project-directory "$project_dir" \
+        -f "$project_dir/docker-compose.dev-all.yml" \
+        -f "$project_dir/docker-compose.dev-all-isolated.yml" "$@"
+}
+
+_date_all_variants() {
+    printf '%s\n' "date kk biocum pulterit sf impuls"
+}
+
+_date_all_service_for() {
+    if [ "$1" = "date" ]; then
+        printf '%s\n' web
+    else
+        printf 'web-%s\n' "$1"
+    fi
+}
+
+_date_all_validate_variant() {
+    case "$1" in
+        date|kk|biocum|pulterit|sf|impuls) ;;
+        *)
+            echo "unknown variant: $1 (supported: $(_date_all_variants))" >&2
+            return 1
+            ;;
+    esac
+}
+
+# Start all variants with separate databases and Redis logical databases.
+date-all-isolated-start() {
+    date-all-isolated --profile all up "$@"
+}
+
+date-all-isolated-rebuild() {
+    date-all-isolated --profile all up --build "$@"
+}
+
+# Start one isolated association: date-all-isolated-start-variant kk
+date-all-isolated-start-variant() {
+    [ $# -ge 1 ] || { echo "usage: date-all-isolated-start-variant <variant>" >&2; return 1; }
+    local variant="$1"
+    _date_all_validate_variant "$variant" || return
+    shift
+    date-all-isolated --profile "$variant" up "$@"
+}
+
+# Manage one isolated association: date-all-isolated-manage kk <cmd>
+date-all-isolated-manage() {
+    [ $# -ge 2 ] || { echo "usage: date-all-isolated-manage <variant> <cmd> [args...]" >&2; return 1; }
+    local variant="$1"
+    _date_all_validate_variant "$variant" || return
+    shift
+    date-all-isolated --profile "$variant" run "$(_date_all_service_for "$variant")" python /code/manage.py "$@"
+}
+
+date-all-isolated-stop() {
+    date-all-isolated down "$@"
+}
+
+# Reset the isolated DaTe database to the shared fixture set.
+date-all-isolated-cleaninit() {
+    local project_dir
+    project_dir="$(_date_website_project_dir)" || return
+    COMPOSE_FILE_PATH="docker-compose.dev-all.yml" \
+        COMPOSE_OVERRIDE_PATH="docker-compose.dev-all-isolated.yml" \
+        COMPOSE_PROFILES="date" DATABASE="date" \
+        "$project_dir/scripts/clean_init.sh" "$@"
 }
 
 date-backup() {
@@ -195,5 +320,8 @@ date-setup() {
 date-test() {
     local project_dir
     project_dir="$(_date_website_project_dir)" || return
-    docker compose --project-directory "$project_dir" run -e TEST=1 web /bin/bash -c './wait-for-postgres.sh db:5432 && python /code/manage.py test "$@"' -- "$@"
+    # Test settings use in-memory SQLite/Channels/cache, so skip database and
+    # Redis service startup entirely. Use `uv run python manage.py test` for an
+    # even faster native loop; this alias is the container parity path.
+    docker compose --project-directory "$project_dir" run --rm --no-deps -e TEST=1 web python /code/manage.py test "$@"
 }

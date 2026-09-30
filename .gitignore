@@ -12,6 +12,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.ruff_cache/
+.mypy_cache/
 core/static/
 core/templates/static/admin
 core/templates/static/ckeditor
@@ -27,6 +29,13 @@ storage
 # Database dumps from backup
 *.bck
 backups/
+
+# Local site export/import archives
+*.WordPress.*.xml
+*-export-local/
+wordpress-export*/
+wordpress-import*/
+wordpress-import-report*.json
 
 # CSV files
 *.csv

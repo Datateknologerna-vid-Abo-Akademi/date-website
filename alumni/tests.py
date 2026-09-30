@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock, patch
 
-from django.utils import timezone
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from alumni.config import get_alumni_sheet_config
 from alumni.models import AlumniUpdateToken
@@ -42,6 +42,19 @@ class AlumniViewRegressionTests(TestCase):
     def test_update_verify_page_renders_with_invalid_alumni_settings(self):
         response = self.client.get(reverse("alumni:alumni_update"))
         self.assertEqual(response.status_code, 200)
+
+    def test_update_verify_head_request_returns_405_not_500(self):
+        response = self.client.head(reverse("alumni:alumni_update"))
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.headers["Allow"], "GET, POST")
+
+    def test_update_form_unsupported_method_returns_405(self):
+        token = AlumniUpdateToken.objects.create(email="ada@example.com")
+
+        response = self.client.put(reverse("alumni:alumni_update_with_token", args=[token.token]))
+
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response.headers["Allow"], "GET, POST")
 
     @override_settings(ALUMNI_SETTINGS="not-json")
     @patch("alumni.views.handle_alumni_signup.delay")

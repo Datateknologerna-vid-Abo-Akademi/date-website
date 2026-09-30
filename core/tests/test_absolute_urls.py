@@ -1,9 +1,9 @@
 from django.test import SimpleTestCase
 
-from ctf.models import Ctf, Flag
+from ctf.models import Ctf, Flag, PostMortem
 from events.models import Event
 from news.models import Category, Post
-from publications.models import PDFFile
+from publications.models import PDFFile, PublicationCollection
 from staticpages.models import StaticPage
 
 
@@ -28,4 +28,9 @@ class SlugAbsoluteUrlTests(SimpleTestCase):
         self.assertEqual(Category(slug="updates").get_absolute_url(), "/news/updates/")
         self.assertEqual(ctf.get_absolute_url(), "/ctf/puzzle-hunt")
         self.assertEqual(Flag(ctf=ctf, slug="first-flag").get_absolute_url(), "/ctf/puzzle-hunt/first-flag")
-        self.assertEqual(PDFFile(title="Guide", slug="guide").get_absolute_url(), "/publications/guide/")
+        self.assertEqual(PostMortem(ctf=ctf).get_absolute_url(), "/ctf/post-mortem/puzzle-hunt")
+        collection = PublicationCollection(title="Guides", slug="guides")
+        self.assertEqual(
+            PDFFile(title="Guide", slug="guide", collection=collection).get_absolute_url(),
+            "/publications/guides/guide/",
+        )

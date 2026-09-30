@@ -8,7 +8,7 @@ def divide(value, arg):
     try:
         result = int(value) / int(arg)
         return int(result)
-    except (ValueError, ZeroDivisionError):
+    except ValueError, ZeroDivisionError:
         return None
 
 

@@ -3,8 +3,10 @@ from inspect import signature
 from unittest.mock import MagicMock, patch
 
 from dateutil.relativedelta import relativedelta
-from django.contrib.auth.models import AnonymousUser
-from django.test import Client, RequestFactory, TestCase, override_settings
+from django.conf import settings
+from django.contrib.admin.models import CHANGE, LogEntry
+from django.contrib.auth.models import Group, Permission
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django_otp import DEVICE_ID_SESSION_KEY
@@ -13,16 +15,40 @@ from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.forms import TOTPDeviceForm
 
-from members.forms import (FunctionaryForm, MemberCreationForm, SignUpForm,
-                           SubscriptionPaymentForm)
-from members.functionary import get_selected_role, get_selected_year
-from members.models import (Functionary, FunctionaryRole, Member,
-                            MembershipType, ORDINARY_MEMBER, Subscription)
+from events.models import Event
+from members.forms import AdminMemberUpdateForm, MemberCreationForm, SignUpForm, SubscriptionPaymentForm
+from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
 from members.two_factor import (
     INFERRED_REDIRECT_SESSION_KEY,
     MemberSetupView,
     StrictTOTPDeviceForm,
 )
+
+
+class PasswordResetFlowTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        cls.member = Member.objects.create_user(
+            username='resetuser',
+            email='reset@example.com',
+            password='testpass123',
+            membership_type=cls.membership_type,
+        )
+
+    @patch('members.forms.send_email_task.delay')
+    def test_password_reset_renders_email_and_redirects(self, mock_delay):
+        response = self.client.post(
+            reverse('members:password_reset'),
+            data={'email': 'reset@example.com'},
+        )
+        self.assertEqual(response.status_code, 302)
+        mock_delay.assert_called_once()
+        body = mock_delay.call_args[0][1]
+        self.assertIn('/members/reset/', body)
+        self.assertIn('klicka på länken nedan:\n\n', body)
+        self.assertIn('\n\nOm ytterligare frågor uppstår', body)
+        self.assertFalse(body.startswith('  '))
 
 
 class UsernameValidatorTest(TestCase):
@@ -31,50 +57,88 @@ class UsernameValidatorTest(TestCase):
         cls.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
 
     def test_member_creation_form_accepts_valid_username(self):
-        form = MemberCreationForm(data={
-            'username': 'valid_user123',
-            'email': 'valid@example.com',
-            'first_name': 'Valid',
-            'last_name': 'User',
-            'membership_type': self.membership_type.id,
-            'password': 'secret123',
-        })
+        form = MemberCreationForm(
+            data={
+                'username': 'valid_user123',
+                'email': 'valid@example.com',
+                'first_name': 'Valid',
+                'last_name': 'User',
+                'membership_type': self.membership_type.id,
+                'password': 'secret123',
+            }
+        )
         self.assertTrue(form.is_valid())
 
     def test_member_creation_form_rejects_invalid_username(self):
-        form = MemberCreationForm(data={
-            'username': 'invalid user',
-            'email': 'user@example.com',
-            'first_name': 'Invalid',
-            'last_name': 'User',
-            'membership_type': self.membership_type.id,
-            'password': 'secret123',
-        })
+        form = MemberCreationForm(
+            data={
+                'username': 'invalid user',
+                'email': 'user@example.com',
+                'first_name': 'Invalid',
+                'last_name': 'User',
+                'membership_type': self.membership_type.id,
+                'password': 'secret123',
+            }
+        )
         self.assertFalse(form.is_valid())
         self.assertIn('username', form.errors)
 
     def test_member_creation_form_accepts_dotted_username(self):
-        form = MemberCreationForm(data={
-            'username': 'first.last',
-            'email': 'dotted@example.com',
-            'first_name': 'Dot',
-            'last_name': 'User',
-            'membership_type': self.membership_type.id,
-            'password': 'secret123',
-        })
+        form = MemberCreationForm(
+            data={
+                'username': 'first.last',
+                'email': 'dotted@example.com',
+                'first_name': 'Dot',
+                'last_name': 'User',
+                'membership_type': self.membership_type.id,
+                'password': 'secret123',
+            }
+        )
         self.assertTrue(form.is_valid())
 
     def test_signup_form_rejects_invalid_username(self):
-        form = SignUpForm(data={
-            'username': 'bad!name',
-            'email': 'user@example.com',
-            'first_name': 'Bad',
-            'last_name': 'Name',
-            'membership_type': self.membership_type.id,
-            'password': 'secret123',
-        })
+        form = SignUpForm(
+            data={
+                'username': 'bad!name',
+                'email': 'user@example.com',
+                'first_name': 'Bad',
+                'last_name': 'Name',
+                'membership_type': self.membership_type.id,
+                'password': 'secret123',
+            }
+        )
         self.assertFalse(form.is_valid())
         self.assertIn('username', form.errors)
+
+    def test_gulispass_checkbox_is_hidden_for_non_sf_associations(self):
+        self.assertNotIn('archive_access_eligible', MemberCreationForm().fields)
+        self.assertNotIn('archive_access_eligible', AdminMemberUpdateForm().fields)
+
+    def test_signup_keeps_postanstalt_label_for_non_sf_associations(self):
+        self.assertEqual(str(SignUpForm().fields['city'].label), 'Postanstalt')
+
+    def test_gulispass_checkbox_is_absent_from_non_sf_admin_pages(self):
+        admin_user = Member.objects.create_superuser(
+            username='admintest',
+            email='admintest@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+        )
+        member = Member.objects.create_user(
+            username='target',
+            email='target@example.com',
+            password='secret12345',
+            membership_type=self.membership_type,
+        )
+        self.client.force_login(admin_user, backend='members.backends.AuthBackend')
+
+        add_response = self.client.get(reverse('admin:members_member_add'))
+        self.assertEqual(add_response.status_code, 200)
+        self.assertNotContains(add_response, 'Gulispass')
+
+        change_response = self.client.get(reverse('admin:members_member_change', args=[member.pk]))
+        self.assertEqual(change_response.status_code, 200)
+        self.assertNotContains(change_response, 'Gulispass')
 
 
 class MemberCreationFormSaveTests(TestCase):
@@ -83,18 +147,35 @@ class MemberCreationFormSaveTests(TestCase):
         cls.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
 
     def test_save_hashes_password(self):
-        form = MemberCreationForm(data={
-            'username': 'hash_user',
-            'email': 'hash@example.com',
-            'first_name': 'Hash',
-            'last_name': 'User',
-            'membership_type': self.membership_type.id,
-            'password': 'secret123',
-        })
+        form = MemberCreationForm(
+            data={
+                'username': 'hash_user',
+                'email': 'hash@example.com',
+                'first_name': 'Hash',
+                'last_name': 'User',
+                'membership_type': self.membership_type.id,
+                'password': 'secret123',
+            }
+        )
         self.assertTrue(form.is_valid())
         member = form.save()
         self.assertNotEqual(member.password, 'secret123')
         self.assertTrue(member.check_password('secret123'))
+
+    def test_blank_password_is_rejected(self):
+        form = MemberCreationForm(
+            data={
+                'username': 'blank_password',
+                'email': 'blank@example.com',
+                'first_name': 'Blank',
+                'last_name': 'Password',
+                'membership_type': self.membership_type.id,
+                'password': '',
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('password', form.errors)
 
 
 class SubscriptionPaymentFormTests(TestCase):
@@ -125,12 +206,14 @@ class SubscriptionPaymentFormTests(TestCase):
         for scale, delta in cases:
             with self.subTest(scale=scale):
                 subscription = self._create_subscription(scale)
-                form = SubscriptionPaymentForm(data={
-                    'member': self.member.id,
-                    'subscription': subscription.id,
-                    'date_paid': base_date,
-                    'amount_paid': '100.00',
-                })
+                form = SubscriptionPaymentForm(
+                    data={
+                        'member': self.member.id,
+                        'subscription': subscription.id,
+                        'date_paid': base_date,
+                        'amount_paid': '100.00',
+                    }
+                )
                 self.assertTrue(form.is_valid())
                 payment = form.save()
                 self.assertEqual(payment.date_expires, base_date + delta)
@@ -143,72 +226,46 @@ class SubscriptionPaymentFormTests(TestCase):
             renewal_period=None,
             price=0,
         )
-        form = SubscriptionPaymentForm(data={
-            'member': self.member.id,
-            'subscription': subscription.id,
-            'date_paid': timezone.now().date(),
-            'amount_paid': '0',
-        })
+        form = SubscriptionPaymentForm(
+            data={
+                'member': self.member.id,
+                'subscription': subscription.id,
+                'date_paid': timezone.now().date(),
+                'amount_paid': '0',
+            }
+        )
         self.assertTrue(form.is_valid())
         payment = form.save()
         self.assertIsNone(payment.date_expires)
 
-
-class FunctionaryFormTests(TestCase):
-    def setUp(self):
-        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
-        self.member = Member.objects.create_user(
-            username='functionary',
-            password='pwd',
-            membership_type=self.membership_type,
+    def test_changing_to_non_expiring_subscription_clears_old_expiry(self):
+        expiring = self._create_subscription('year')
+        lifetime = Subscription.objects.create(
+            name='lifetime-update',
+            does_expire=False,
+            renewal_scale=None,
+            renewal_period=None,
+            price=0,
         )
-        self.role = FunctionaryRole.objects.create(title='Chair', board=True)
-
-    def test_prevents_duplicate_year_role(self):
-        Functionary.objects.create(member=self.member, functionary_role=self.role, year=2024)
-        form = FunctionaryForm(data={
-            'functionary_role': self.role.id,
-            'year': 2024,
-        }, member=self.member)
-        self.assertFalse(form.is_valid())
-        self.assertIn('Du har redan lagt till den här funktionärsposten', form.errors['__all__'][0])
-
-    def test_allows_unique_entries(self):
-        form = FunctionaryForm(data={
-            'functionary_role': self.role.id,
-            'year': 2023,
-        }, member=self.member)
-        self.assertTrue(form.is_valid())
-        functionary = form.save(commit=False)
-        functionary.member = self.member
-        functionary.save()
-        self.assertEqual(Functionary.objects.count(), 1)
-
-    def test_snapshots_member_name_for_deleted_member_display(self):
-        self.member.first_name = 'Function'
-        self.member.last_name = 'Ary'
-        self.member.save()
-        functionary = Functionary.objects.create(
+        payment = SubscriptionPayment.objects.create(
             member=self.member,
-            functionary_role=self.role,
-            year=2024,
+            subscription=expiring,
+            date_paid=timezone.now().date(),
+            date_expires=timezone.now().date() + relativedelta(years=1),
+            amount_paid=100,
+        )
+        form = SubscriptionPaymentForm(
+            data={
+                'member': self.member.id,
+                'subscription': lifetime.id,
+                'date_paid': payment.date_paid,
+                'amount_paid': '0',
+            },
+            instance=payment,
         )
 
-        self.member.delete()
-        functionary.refresh_from_db()
-
-        self.assertIsNone(functionary.member)
-        self.assertEqual(functionary.name, 'Function Ary')
-        self.assertEqual(functionary.get_full_name(), 'Function Ary')
-
-    def test_uses_username_when_member_name_is_blank(self):
-        functionary = Functionary.objects.create(
-            member=self.member,
-            functionary_role=self.role,
-            year=2024,
-        )
-
-        self.assertEqual(functionary.name, 'functionary')
+        self.assertTrue(form.is_valid(), form.errors)
+        self.assertIsNone(form.save().date_expires)
 
 
 class SignupViewTests(TestCase):
@@ -255,65 +312,6 @@ class MembersAuthUrlTests(TestCase):
         self.assertEqual(reverse('members:password_change'), '/members/password_change/')
 
 
-class FunctionaryHelperTests(TestCase):
-    def setUp(self):
-        self.factory = RequestFactory()
-        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
-        self.member = Member.objects.create_user(
-            username='helper',
-            password='pwd',
-            membership_type=self.membership_type,
-        )
-        self.role = FunctionaryRole.objects.create(title='Secretary', board=False)
-        Functionary.objects.create(member=self.member, functionary_role=self.role, year=2023)
-        Functionary.objects.create(member=self.member, functionary_role=self.role, year=2024)
-
-    def test_get_selected_year_defaults_to_current(self):
-        request = self.factory.get('/funktionarer/')
-        request.user = self.member
-        years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')
-        selected, all_years = get_selected_year(request, years)
-        self.assertEqual(selected, timezone.now().year)
-        self.assertFalse(all_years)
-
-    def test_get_selected_year_allows_all_years_filter(self):
-        request = self.factory.get('/funktionarer/?year=all')
-        request.user = self.member
-        years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')
-        selected, all_years = get_selected_year(request, years)
-        self.assertEqual(list(selected), list(years))
-        self.assertTrue(all_years)
-
-    def test_get_selected_year_ignores_parameters_for_anonymous_user(self):
-        request = self.factory.get('/funktionarer/?year=2020')
-        request.user = AnonymousUser()
-        years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')
-        selected, _ = get_selected_year(request, years)
-        self.assertEqual(selected, timezone.now().year)
-
-    def test_get_selected_role_supports_all_and_specific_roles(self):
-        request_all = self.factory.get('/funktionarer/?role=all')
-        request_all.user = self.member
-        roles = FunctionaryRole.objects.all()
-        selected, all_roles = get_selected_role(request_all, roles)
-        self.assertTrue(all_roles)
-        self.assertEqual(list(selected), list(roles))
-
-        request_specific = self.factory.get(f'/funktionarer/?role={self.role.title}')
-        request_specific.user = self.member
-        selected_role, all_roles_flag = get_selected_role(request_specific, roles)
-        self.assertFalse(all_roles_flag)
-        self.assertEqual(selected_role, self.role)
-
-    def test_get_selected_role_ignores_anonymous_requests(self):
-        request = self.factory.get('/funktionarer/?role=all')
-        request.user = AnonymousUser()
-        roles = FunctionaryRole.objects.all()
-        selected, all_roles = get_selected_role(request, roles)
-        self.assertIsNone(selected)
-        self.assertFalse(all_roles)
-
-
 class TwoFactorIntegrationTests(TestCase):
     def setUp(self):
         self.client = Client()
@@ -340,20 +338,26 @@ class TwoFactorIntegrationTests(TestCase):
         response = self.client.get(reverse('members:login'))
         prefix = self._wizard_prefix(response)
 
-        response = self.client.post(reverse('members:login'), data={
-            f'{prefix}-current_step': 'auth',
-            'auth-username': self.member.email,
-            'auth-password': 'secret12345',
-        })
+        response = self.client.post(
+            reverse('members:login'),
+            data={
+                f"{prefix}-current_step": 'auth',
+                'auth-username': self.member.email,
+                'auth-password': 'secret12345',
+            },
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['wizard']['steps'].current, 'token')
 
         prefix = self._wizard_prefix(response)
-        response = self.client.post(reverse('members:login'), data={
-            f'{prefix}-current_step': 'token',
-            'token-otp_token': self._totp_token(device),
-        })
+        response = self.client.post(
+            reverse('members:login'),
+            data={
+                f"{prefix}-current_step": 'token',
+                'token-otp_token': self._totp_token(device),
+            },
+        )
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], reverse('index'))
@@ -365,11 +369,14 @@ class TwoFactorIntegrationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         prefix = self._wizard_prefix(response)
 
-        response = self.client.post(login_url, data={
-            f'{prefix}-current_step': 'auth',
-            'auth-username': self.member.email,
-            'auth-password': 'secret12345',
-        })
+        response = self.client.post(
+            login_url,
+            data={
+                f"{prefix}-current_step": 'auth',
+                'auth-username': self.member.email,
+                'auth-password': 'secret12345',
+            },
+        )
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], '/events/?page=2')
@@ -391,11 +398,14 @@ class TwoFactorIntegrationTests(TestCase):
         response = self.client.get(login_url, HTTP_REFERER='https://evil.example/phish')
         prefix = self._wizard_prefix(response)
 
-        response = self.client.post(login_url, data={
-            f'{prefix}-current_step': 'auth',
-            'auth-username': self.member.email,
-            'auth-password': 'secret12345',
-        })
+        response = self.client.post(
+            login_url,
+            data={
+                f"{prefix}-current_step": 'auth',
+                'auth-username': self.member.email,
+                'auth-password': 'secret12345',
+            },
+        )
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], reverse('index'))
@@ -431,7 +441,9 @@ class TwoFactorIntegrationTests(TestCase):
 
     def test_setup_view_uses_strict_totp_form_for_generator_method(self):
         view = MemberSetupView()
-        with patch('members.two_factor.SetupView.get_form_list', return_value={'generator': TOTPDeviceForm, 'welcome': object}):
+        with patch(
+            'members.two_factor.SetupView.get_form_list', return_value={'generator': TOTPDeviceForm, 'welcome': object}
+        ):
             form_list = view.get_form_list()
 
         self.assertIs(form_list['generator'], StrictTOTPDeviceForm)
@@ -442,9 +454,12 @@ class TwoFactorIntegrationTests(TestCase):
         response = self.client.get(reverse('two_factor:setup'))
         prefix = self._wizard_prefix(response)
 
-        response = self.client.post(reverse('two_factor:setup'), data={
-            f'{prefix}-current_step': 'welcome',
-        })
+        response = self.client.post(
+            reverse('two_factor:setup'),
+            data={
+                f"{prefix}-current_step": 'welcome',
+            },
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['wizard']['steps'].current, 'generator')
@@ -497,11 +512,14 @@ class TwoFactorIntegrationTests(TestCase):
         response = self.client.get(f"{reverse('members:login')}?next={reverse('admin:index')}")
         prefix = self._wizard_prefix(response)
 
-        response = self.client.post(f"{reverse('members:login')}?next={reverse('admin:index')}", data={
-            f'{prefix}-current_step': 'auth',
-            'auth-username': admin_user.email,
-            'auth-password': 'secret12345',
-        })
+        response = self.client.post(
+            f"{reverse('members:login')}?next={reverse('admin:index')}",
+            data={
+                f"{prefix}-current_step": 'auth',
+                'auth-username': admin_user.email,
+                'auth-password': 'secret12345',
+            },
+        )
 
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.headers['Location'], reverse('admin:index'))
@@ -581,15 +599,18 @@ class TwoFactorIntegrationTests(TestCase):
 
     def test_invalid_profile_post_keeps_editor_open_with_errors(self):
         self.client.force_login(self.member, backend='members.backends.AuthBackend')
-        response = self.client.post(reverse('members:info'), data={
-            'first_name': '',
-            'last_name': self.member.last_name,
-            'phone': self.member.phone,
-            'address': self.member.address,
-            'zip_code': self.member.zip_code,
-            'city': self.member.city,
-            'country': self.member.country,
-        })
+        response = self.client.post(
+            reverse('members:info'),
+            data={
+                'first_name': '',
+                'last_name': self.member.last_name,
+                'phone': self.member.phone,
+                'address': self.member.address,
+                'zip_code': self.member.zip_code,
+                'city': self.member.city,
+                'country': self.member.country,
+            },
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'id_first_name_error', html=False)
@@ -718,7 +739,7 @@ class GitHubCallbackViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            f'{reverse("members:login")}?next=%2Fevents%2F',
+            f"{reverse("members:login")}?next=%2Fevents%2F",
             fetch_redirect_response=False,
         )
         self.assertNotIn('_auth_user_id', self.client.session)
@@ -770,7 +791,7 @@ class GitHubCallbackViewTests(TestCase):
 
         self.assertRedirects(
             response,
-            f'{reverse("members:login")}?next=%2Fmembers%2Finfo%2F',
+            f"{reverse("members:login")}?next=%2Fmembers%2Finfo%2F",
             fetch_redirect_response=False,
         )
         self.assertNotIn('_auth_user_id', self.client.session)
@@ -811,7 +832,7 @@ class GitHubCallbackViewTests(TestCase):
         self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_inactive_member_cannot_login(self):
-        inactive = Member.objects.create_user(
+        Member.objects.create_user(
             username='inactive',
             email='inactive@example.com',
             password='secret123',
@@ -956,3 +977,155 @@ class GitHubDisconnectViewTests(TestCase):
         self.assertRedirects(response, reverse('members:info'), fetch_redirect_response=False)
         messages_list = list(response.wsgi_request._messages)
         self.assertTrue(any('Inget GitHub' in str(m) for m in messages_list))
+
+
+class MemberAdminDeleteTests(TestCase):
+    """Deleting a member must not be blocked by the read-only admin log admin.
+
+    LogEntry.user cascades from the member, and the log admin denies delete
+    permission on purpose, so Django's related-object check used to refuse every
+    member deletion, superusers included.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        cls.admin_user = Member.objects.create_superuser(
+            username='memberdeleter',
+            email='memberdeleter@example.com',
+            password='pass',
+            membership_type=cls.membership_type,
+        )
+        cls.target = Member.objects.create_user(
+            username='doomedmember',
+            email='doomed@example.com',
+            password='pass',
+            membership_type=cls.membership_type,
+        )
+
+    def _log_admin_action_by_target(self):
+        LogEntry.objects.log_actions(
+            user_id=self.target.pk,
+            queryset=Member.objects.filter(pk=self.target.pk),
+            action_flag=CHANGE,
+            change_message='member admin delete test',
+            single_object=True,
+        )
+        return LogEntry.objects.filter(user_id=self.target.pk).count()
+
+    def _create_staff_user(self, username, permissions=('delete_member',)):
+        staff_user = Member.objects.create_user(
+            username=username,
+            email=f'{username}@example.com',
+            password='pass',
+            membership_type=self.membership_type,
+        )
+        staff_user.groups.add(Group.objects.create(name=settings.STAFF_GROUPS[0]))
+        for codename in permissions:
+            staff_user.user_permissions.add(
+                Permission.objects.get(content_type__app_label='members', codename=codename)
+            )
+        return staff_user
+
+    def _delete_url(self):
+        return reverse('admin:members_member_delete', args=[self.target.pk])
+
+    def _confirm_delete(self):
+        return self.client.post(self._delete_url(), {'post': 'yes'})
+
+    def test_delete_confirmation_does_not_claim_missing_log_permission(self):
+        self.assertGreater(self._log_admin_action_by_target(), 0)
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self._delete_url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('doomedmember', response.content.decode())
+        self.assertEqual(response.context['perms_lacking'], set())
+        # The log rows stay visible among the objects the deletion removes.
+        self.assertIn(
+            str(LogEntry._meta.verbose_name_plural),
+            [str(label) for label, _count in response.context['model_count']],
+        )
+
+    def test_superuser_can_delete_member_that_has_admin_log_entries(self):
+        self.assertGreater(self._log_admin_action_by_target(), 0)
+        self.client.force_login(self.admin_user)
+
+        response = self._confirm_delete()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Member.objects.filter(pk=self.target.pk).exists())
+        # The member's audit rows are collateral of the deletion.
+        self.assertEqual(LogEntry.objects.filter(user_id=self.target.pk).count(), 0)
+
+    def test_deleting_a_member_keeps_other_users_log_entries(self):
+        LogEntry.objects.log_actions(
+            user_id=self.admin_user.pk,
+            queryset=Member.objects.filter(pk=self.admin_user.pk),
+            action_flag=CHANGE,
+            change_message='deleter admin action',
+            single_object=True,
+        )
+        self.assertGreater(self._log_admin_action_by_target(), 0)
+        self.client.force_login(self.admin_user)
+
+        response = self._confirm_delete()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(LogEntry.objects.filter(user_id=self.target.pk).count(), 0)
+        self.assertGreater(LogEntry.objects.filter(user_id=self.admin_user.pk).count(), 0)
+
+    def test_superuser_can_delete_member_while_english_is_active(self):
+        self.assertGreater(self._log_admin_action_by_target(), 0)
+        self.client.force_login(self.admin_user)
+        # The request language drives the label comparison in the override, and
+        # the middleware takes it from the cookie rather than from the test.
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = 'en'
+
+        response = self._confirm_delete()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.wsgi_request.LANGUAGE_CODE, 'en')
+        self.assertFalse(Member.objects.filter(pk=self.target.pk).exists())
+
+    def test_staff_user_with_delete_permission_can_delete_member(self):
+        staff_user = self._create_staff_user('memberadmin')
+        self.assertGreater(self._log_admin_action_by_target(), 0)
+        self.client.force_login(staff_user)
+
+        response = self._confirm_delete()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Member.objects.filter(pk=self.target.pk).exists())
+
+    def test_bulk_delete_selected_can_remove_member_with_log_entries(self):
+        self.assertGreater(self._log_admin_action_by_target(), 0)
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse('admin:members_member_changelist'),
+            {
+                'action': 'delete_selected',
+                '_selected_action': [str(self.target.pk)],
+                'post': 'yes',
+            },
+        )
+
+        # The bulk action redirects back to the changelist when it succeeds, so
+        # the point is that it is no longer refused with 403.
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Member.objects.filter(pk=self.target.pk).exists())
+
+    def test_member_with_content_the_deleter_cannot_delete_is_still_blocked(self):
+        Event.objects.create(title='Authored event', slug='authored-event', author=self.target)
+        staff_user = self._create_staff_user('limitedmemberadmin')
+        self.assertGreater(self._log_admin_action_by_target(), 0)
+        self.client.force_login(staff_user)
+
+        response = self._confirm_delete()
+
+        # The exemption is narrow: a cascade target whose delete permission the
+        # operator lacks still blocks the deletion.
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Member.objects.filter(pk=self.target.pk).exists())

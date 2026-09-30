@@ -51,14 +51,29 @@ read_compose_file_from_env() {
 
 COMPOSE_FILE_PATH="${COMPOSE_FILE_PATH:-$(read_compose_file_from_env)}"
 COMPOSE_FILE_PATH="${COMPOSE_FILE_PATH:-docker-compose.yml}"
-if [[ "$COMPOSE_FILE_PATH" = /* ]]; then
-    COMPOSE_PATH="$COMPOSE_FILE_PATH"
-else
-    COMPOSE_PATH="$PROJECT_DIR/$COMPOSE_FILE_PATH"
+COMPOSE_OVERRIDE_PATH="${COMPOSE_OVERRIDE_PATH:-}"
+
+resolve_compose_path() {
+    if [[ "$1" = /* ]]; then
+        printf '%s' "$1"
+    else
+        printf '%s/%s' "$PROJECT_DIR" "$1"
+    fi
+}
+
+COMPOSE_PATH="$(resolve_compose_path "$COMPOSE_FILE_PATH")"
+if [[ -n "$COMPOSE_OVERRIDE_PATH" ]]; then
+    COMPOSE_OVERRIDE_PATH="$(resolve_compose_path "$COMPOSE_OVERRIDE_PATH")"
 fi
 
+DATABASE="${DATABASE:-postgres}"
+
 docker_compose() {
-    docker compose --project-directory "$PROJECT_DIR" -f "$COMPOSE_PATH" "$@"
+    local compose_args=(-f "$COMPOSE_PATH")
+    if [[ -n "$COMPOSE_OVERRIDE_PATH" ]]; then
+        compose_args+=(-f "$COMPOSE_OVERRIDE_PATH")
+    fi
+    docker compose --project-directory "$PROJECT_DIR" "${compose_args[@]}" "$@"
 }
 
 validate_fixtures() {
@@ -102,26 +117,31 @@ if [[ "$DELETE_MEDIA" == "true" ]]; then
     echo "Media files deleted."
 fi
 
-echo "Shutting down containers..."
+echo "Stopping the stack (keeps volumes)..."
 docker_compose down --remove-orphans
 
-echo "Building required images and starting database container..."
-docker_compose build db web
+echo "Building the web image and starting the database container..."
+docker_compose build web
 docker_compose up -d db
 
 wait_for_db
 
-echo "Recreating database..."
-docker_compose exec -T db psql -U postgres -c "DROP DATABASE IF EXISTS temp;" 2>/dev/null || true
-docker_compose exec -T db psql -U postgres -c "CREATE DATABASE temp;"
-docker_compose exec -T db psql -U postgres -d temp -c "DROP DATABASE postgres;"
-docker_compose exec -T db psql -U postgres -d temp -c "CREATE DATABASE postgres;"
-docker_compose exec -T db psql -U postgres -c "DROP DATABASE temp;"
+echo "Recreating database ${DATABASE}..."
+docker_compose exec -T db psql -U postgres -v ON_ERROR_STOP=1 -v dbname="$DATABASE" <<'SQL'
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'dbname' AND pid <> pg_backend_pid();
+DROP DATABASE IF EXISTS temp;
+CREATE DATABASE temp;
+\connect temp
+DROP DATABASE IF EXISTS :"dbname";
+CREATE DATABASE :"dbname";
+\connect postgres
+DROP DATABASE temp;
+SQL
 
 echo "Database cleared."
 
 echo "Running migrations and loading fixtures..."
-docker_compose run --rm web /bin/bash -c "
+docker_compose run --rm --no-deps web /bin/bash -c "
     ./wait-for-postgres.sh db:5432 && \
     python /code/manage.py migrate --noinput && \
     ./scripts/load_all_fixtures.sh && \
@@ -135,8 +155,6 @@ print('Passwords set for all users.')
 \"
 "
 
-docker_compose down --remove-orphans
-
 echo ""
 echo "============================================"
 echo "Clean init completed successfully!"
@@ -147,6 +165,15 @@ echo "  - admin (superuser)    password: admin"
 echo "  - freshman             password: admin"
 echo "  - member               password: admin"
 echo ""
+echo "Starting the stack..."
 echo "Login at: http://localhost:8000/admin"
 echo ""
-echo "Run 'date-start' or 'docker compose up -d' to start the server."
+
+# Leave the stack running: start (no rebuild; the image was built above)
+# unless the caller only wanted the reset (--no-start).
+if [[ "$*" != *"--no-start"* ]]; then
+    docker_compose up -d
+    echo "Stack started. Web: http://localhost:8000"
+else
+    echo "--no-start given; run 'date-start' or 'docker compose up -d' to start."
+fi

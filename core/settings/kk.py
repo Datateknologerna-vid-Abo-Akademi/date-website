@@ -1,51 +1,34 @@
 from .common import *  # noqa
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            'templates/kk',
-            *COMMON_TEMPLATE_DIRS,
-        ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                *COMMON_CONTEXT_PROCESSORS,
-                # Add project context processors here
-            ],
-        },
-    },
-]
+TEMPLATES = build_templates('kk')
 
-INSTALLED_APPS = get_installed_apps([
-    'news',
-    'archive.apps.ArchiveConfig',
-    'events',
-    'polls',
-    'ads',
-    'social',
-    'staticpages',
-    'lucia',
-    'alumni',
-    'billing',
-])
+INSTALLED_APPS = get_installed_apps(
+    [
+        'news',
+        'gallery',
+        'exambank',
+        'archive',
+        'events',
+        'polls',
+        'ads',
+        'instagram',
+        'harassment',
+        'social',
+        'staticpages',
+        'lucia',
+        'publications',
+        'alumni',
+        'billing',
+    ]
+)
 
 ROOT_URLCONF = 'core.urls.kk'
 USE_ACCEPT_LANGUAGE_HEADER = False
 
-STAFF_GROUPS = get_staff_groups([
-        'styrelse',
-        'admin',
-        'fotograf',
-        'rösträknare'
-    ])
+STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/kk'),
-    os.path.join(BASE_DIR, 'static/common'),
-]
-
+STATICFILES_DIRS = build_static_dirs('kk')
 
 CONTENT_VARIABLES = {
     "SITE_URL": "https://kemistklubben.org",
@@ -63,9 +46,12 @@ CONTENT_VARIABLES = {
         ["fa-instagram", "https://www.instagram.com/kemistklubben/"],
         ["fa-linkedin-in", "https://www.linkedin.com/company/kemistklubben-vid-%C3%A5bo-akademi-rf/"],
     ],
-
     # Alumni
     "ALUMNI_ASSOCIATION_NAME": "Axels och Stinas Gamyler",
     "ALUMNI_ASSOCIATION_NAME_SHORT": "ASG",
     "ALUMNI_ASSOCIATION_EMAIL": "asg@kemistklubben.org",
 }
+
+# Association capabilities
+APRIL_HOMEPAGE_ENABLED = True
+KK_EVENT_TEMPLATES_ENABLED = True

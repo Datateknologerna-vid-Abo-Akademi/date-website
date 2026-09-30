@@ -1,16 +1,21 @@
 import logging
 
-from django_ckeditor_5.fields import CKEditor5Field
 from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from django_ckeditor_5.fields import CKEditor5Field
 
 from members.models import Member
 
 logger = logging.getLogger('date')
 
 POST_SLUG_MAX_LENGTH = 50
+
+
+class CtfQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(published_time__isnull=False, published_time__lte=now())
 
 
 class Ctf(models.Model):
@@ -20,7 +25,18 @@ class Ctf(models.Model):
     end_date = models.DateTimeField(_('Slutdatum'), default=now)
     pub_date = models.DateTimeField(auto_now_add=True)
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
-    published = models.BooleanField(_('Publicera'), default=True)
+    published_time = models.DateTimeField(
+        _('Publiceras'),
+        null=True,
+        blank=True,
+        default=now,
+        help_text=_('Lämna tomt för att dölja CTF:n. Välj en framtida tid för schemalagd publicering.'),
+    )
+
+    # modeltranslation patches the runtime manager once Ctf is registered in
+    # ctf/translation.py, which django-stubs cannot resolve statically. Same
+    # ignore as the other translated models that build their manager this way.
+    objects = CtfQuerySet.as_manager()  # type: ignore[django-manager-missing]
 
     class Meta:
         verbose_name = _('ctf')
@@ -32,11 +48,60 @@ class Ctf(models.Model):
     def get_absolute_url(self):
         return reverse('ctf:detail', args=[self.slug])
 
+    @property
+    def published(self):
+        return self.published_time is not None and self.published_time <= now()
+
     def ctf_is_open(self):
         return now() >= self.start_date
 
     def ctf_ended(self):
         return now() > self.end_date
+
+
+class PostMortemQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(published_time__isnull=False, published_time__lte=now())
+
+    def visible(self):
+        return self.published().filter(ctf__end_date__lt=now())
+
+
+class PostMortem(models.Model):
+    ctf = models.OneToOneField(
+        Ctf,
+        on_delete=models.CASCADE,
+        related_name='post_mortem',
+        verbose_name=_('CTF'),
+    )
+    overview = CKEditor5Field(_('Översikt'), blank=True)
+    published_time = models.DateTimeField(
+        _('Publiceras'),
+        null=True,
+        blank=True,
+        default=None,
+        help_text=_('Lämna tomt för att dölja efteranalysen. Välj en framtida tid för schemalagd publicering.'),
+    )
+
+    objects = PostMortemQuerySet.as_manager()
+
+    class Meta:
+        verbose_name = _('post-mortem')
+        verbose_name_plural = _('post-mortems')
+
+    def __str__(self):
+        return f'{self.ctf.title} post-mortem'
+
+    def get_absolute_url(self):
+        return reverse('ctf:post_mortem_detail', args=[self.ctf.slug])
+
+    @property
+    def published(self):
+        return self.published_time is not None and self.published_time <= now()
+
+    @property
+    def is_visible(self):
+        return self.published and self.ctf.ctf_ended()
 
 
 class Flag(models.Model):
@@ -47,6 +112,7 @@ class Flag(models.Model):
     flag = models.CharField(max_length=200)
     solved_date = models.DateTimeField(blank=True, null=True)
     clues = CKEditor5Field(_('Clue'), blank=True)
+    solution = CKEditor5Field(_('Solution'), blank=True)
     slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH)
 
     class Meta:
@@ -73,4 +139,4 @@ class Guess(models.Model):
         verbose_name_plural = _('Gissningar')
 
     def __str__(self):
-        return f'{self.ctf.title} - {self.flag.title} - {self.user.username} - {self.guess}'
+        return f"{self.ctf.title} - {self.flag.title} - {self.user.username} - {self.guess}"

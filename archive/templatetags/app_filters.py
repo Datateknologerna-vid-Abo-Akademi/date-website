@@ -9,7 +9,7 @@ def divide(value, arg):
     try:
         result = int(value) / int(arg)
         return int(result)
-    except (ValueError, ZeroDivisionError):
+    except ValueError, ZeroDivisionError:
         return None
 
 
@@ -22,6 +22,7 @@ def in_group(user, group_name):
         print("ERROR, No group", group_name)  # should not happen if server setup right.
         return False
 
+
 @register.filter(name='is_photographer')
 def is_photographer(user):
     try:
@@ -30,7 +31,8 @@ def is_photographer(user):
     except Group.DoesNotExist:
         print("ERROR, No group", 'fotograf')  # should not happen if server setup right.
         return False
-    
+
+
 @register.filter(name='is_board')
 def is_board(user):
     try:
@@ -39,7 +41,8 @@ def is_board(user):
     except Group.DoesNotExist:
         print("ERROR, No group", 'styrelse')  # should not happen if server setup right.
         return False
-    
+
+
 @register.filter(name='is_admin')
 def is_admin(user):
     try:
@@ -48,7 +51,8 @@ def is_admin(user):
     except Group.DoesNotExist:
         print("ERROR, No group", 'admin')  # should not happen if server setup right.
         return False
-    
+
+
 @register.filter(name='is_counter')
 def is_counter(user):
     try:

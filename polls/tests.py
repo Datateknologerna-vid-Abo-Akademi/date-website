@@ -1,19 +1,27 @@
-from django.contrib.auth.models import AnonymousUser
-from django.test import RequestFactory, TestCase
-from django.urls import reverse
-from django.http import HttpResponse
 from unittest.mock import patch
 
+from django.contrib.auth.models import AnonymousUser
+from django.http import HttpResponse
+from django.test import RequestFactory, TestCase
+from django.urls import reverse
 from django.utils import timezone
 
-from members.models import (Member, MembershipType, ORDINARY_MEMBER,
-                            Subscription, SubscriptionPayment)
-from .models import Question, Choice
+from members.models import NON_VOTING_MEMBER, ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
+
 from . import views
-from .vote import (ANYONE, MEMBERS_ONLY, ORDINARY_MEMBERS_ONLY,
-                   VOTE_MEMBERS_ONLY, ERROR_MESSAGES, handle_selected_choices,
-                   handle_vote, is_user_authorized_to_vote,
-                   required_multiple_choices_matches_selected, validate_vote)
+from .models import Choice, Question
+from .vote import (
+    ANYONE,
+    ERROR_MESSAGES,
+    MEMBERS_ONLY,
+    ORDINARY_MEMBERS_ONLY,
+    VOTE_MEMBERS_ONLY,
+    handle_selected_choices,
+    handle_vote,
+    is_user_authorized_to_vote,
+    required_multiple_choices_matches_selected,
+    validate_vote,
+)
 
 
 class QuestionModelTests(TestCase):
@@ -43,7 +51,10 @@ class VoteViewTests(TestCase):
     @patch("polls.views.handle_vote")
     def test_vote_calls_handle_vote_authenticated(self, mock_handle_vote):
         mock_handle_vote.return_value = HttpResponse("ok")
-        request = self.factory.post(reverse("polls:vote", args=[self.question.id]), {"choice": [str(self.choice1.id), str(self.choice2.id), str(self.choice1.id)]})
+        request = self.factory.post(
+            reverse("polls:vote", args=[self.question.id]),
+            {"choice": [str(self.choice1.id), str(self.choice2.id), str(self.choice1.id)]},
+        )
         request.user = self.member
         response = views.vote(request, self.question.id)
         selected = mock_handle_vote.call_args.args[3]
@@ -55,6 +66,7 @@ class VoteViewTests(TestCase):
         mock_handle_vote.return_value = HttpResponse("ok")
         request = self.factory.post(reverse("polls:vote", args=[self.question.id]), {"choice": [str(self.choice1.id)]})
         from django.contrib.auth.models import AnonymousUser
+
         request.user = AnonymousUser()
         response = views.vote(request, self.question.id)
         selected = mock_handle_vote.call_args.args[3]
@@ -87,6 +99,38 @@ class AuthorizationLogicTests(TestCase):
         other_member = Member.objects.create_user(username="other", password="pwd", membership_type=non_member_type)
         self.assertTrue(is_user_authorized_to_vote(self.question, self.member))
         self.assertFalse(is_user_authorized_to_vote(self.question, other_member))
+
+    def test_non_voting_members_are_excluded_from_restricted_polls(self):
+        non_voting_type = MembershipType.objects.create(name="Extra medlem", permission_profile=NON_VOTING_MEMBER)
+        extra_member = Member.objects.create_user(username="extra", password="pwd", membership_type=non_voting_type)
+        subscription = Subscription.objects.create(
+            name="Annual",
+            does_expire=True,
+            renewal_scale='year',
+            renewal_period=1,
+            price=0,
+        )
+        SubscriptionPayment.objects.create(
+            member=extra_member,
+            subscription=subscription,
+            date_paid=timezone.now().date(),
+            date_expires=timezone.now().date() + timezone.timedelta(days=1),
+        )
+
+        self.question.voting_options = ORDINARY_MEMBERS_ONLY
+        self.question.save()
+        self.assertFalse(is_user_authorized_to_vote(self.question, extra_member))
+
+        self.question.voting_options = VOTE_MEMBERS_ONLY
+        self.question.save()
+        self.assertFalse(is_user_authorized_to_vote(self.question, extra_member))
+
+    def test_non_voting_members_can_vote_in_members_only_polls(self):
+        non_voting_type = MembershipType.objects.create(name="Extra medlem", permission_profile=NON_VOTING_MEMBER)
+        extra_member = Member.objects.create_user(username="extra", password="pwd", membership_type=non_voting_type)
+        self.question.voting_options = MEMBERS_ONLY
+        self.question.save()
+        self.assertTrue(is_user_authorized_to_vote(self.question, extra_member))
 
     def test_vote_members_only_requires_active_subscription(self):
         self.question.voting_options = VOTE_MEMBERS_ONLY
@@ -129,7 +173,9 @@ class RequiredChoicesTests(TestCase):
 class ValidateVoteTests(TestCase):
     def setUp(self):
         self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
-        self.member = Member.objects.create_user(username="validator", password="pwd", membership_type=self.membership_type)
+        self.member = Member.objects.create_user(
+            username="validator", password="pwd", membership_type=self.membership_type
+        )
         self.question = Question.objects.create(question_text="Validate me")
         self.choice = Choice.objects.create(question=self.question, choice_text="yes")
 
@@ -169,7 +215,9 @@ class ValidateVoteTests(TestCase):
 class HandleVoteWorkflowTests(TestCase):
     def setUp(self):
         self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
-        self.member = Member.objects.create_user(username="workflow", password="pwd", membership_type=self.membership_type)
+        self.member = Member.objects.create_user(
+            username="workflow", password="pwd", membership_type=self.membership_type
+        )
         self.question = Question.objects.create(question_text="Workflow")
         self.choice = Choice.objects.create(question=self.question, choice_text="option")
         self.factory = RequestFactory()

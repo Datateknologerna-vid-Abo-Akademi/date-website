@@ -1,3 +1,7 @@
+.handelser {
+    color: var(--textColorDark);
+    text-shadow: 0 1px 4px rgba(255, 255, 255, 1.0);
+}
 .content-past {
     padding: 5px;
     border-radius: var(--defaultRadius);
@@ -10,12 +14,12 @@
 
 .content-past,
 .content-past h4 {
-    color: var(--accentColor);
+    color: #ffffff;
 }
 
 .content-past:hover,
 .content-past:hover h4 {
-    color: var(--accentColorHover);
+    color: var(--accentColorBrightHover);
 }
 
 .card {

@@ -39,7 +39,9 @@ date-createsuperuser
 Common helpers after `source env.sh`:
 
 - `date <docker compose args>`: project-aware wrapper around `docker compose`.
-- `date-start` / `date-start-detached`: build/start, migrate, collect static.
+- `date-start` / `date-start-detached`: start the stack (foreground or detached) without forcing a rebuild.
+- `date-rebuild` / `date-rebuild-detached`: rebuild images and start, needed after dependency or Dockerfile changes.
+- `date-build`: build images without starting.
 - `date-stop`: stop the stack.
 - `date-manage <cmd>`: run `python manage.py <cmd>` in the web container.
 - `date-makemigrations`, `date-migrate`, `date-collectstatic`, `date-createsuperuser`.
@@ -73,7 +75,16 @@ Use `python scripts/validate_translations.py` after translation-heavy work. Manu
 
 `core.settings.test` always uses the DaTe app set, so apps that are not installed for `date` (notably `lucia`, which is kk-only) will not be picked up by a bare `date-test`. Run those tests with `DJANGO_SETTINGS_MODULE` set to a settings module that installs the app, or via `PROJECT_NAME` on a manual `manage.py test` invocation.
 
-CI runs translation validation, `compilemessages`, the Django test suite, starts the Compose stack, and pings the web endpoint. There is no separate formatter/linter configured in `pyproject.toml`; follow the existing style and keep changes locally consistent.
+CI runs two jobs: `test_and_ping` (translation validation, `compilemessages`, the Django test suite, starts the Compose stack, and pings the web endpoint) and a separate `lint` job. Before opening a PR, run the same checks the `lint` job runs (`.github/workflows/web_startup.yaml`), so failures surface locally instead of in CI:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+uv run djlint --check templates/
+uv run mypy .
+```
+
+If `djlint --check` reports formatting issues, `uv run djlint --reformat templates/` (or scope it to the changed file) applies the same formatting CI expects. `ruff`/`djlint`/`mypy` config lives in `pyproject.toml` (`[tool.ruff]`, `[tool.djlint]`, `[tool.mypy]`).
 
 The optional pre-push hook under `.githooks/` runs `uv run python manage.py test` when `uv` is available, falls back to Docker tests when Docker is available, and otherwise warns without blocking. `date-setup` installs this hook path.
 
@@ -122,6 +133,7 @@ Do not commit real secrets, production bucket names, API keys, or filled product
 - `core.fields.PublicFileField` picks public S3 storage only when `USE_S3=True`; otherwise it behaves like a normal file field.
 - Public/archive/publication file deletion logic has local-vs-S3 branches. Check the app guide before changing delete behavior.
 - Do not run `seed_gallery` with `USE_S3=True`; the command refuses because it would upload fake images to S3.
+- Forms that accept uploads (gallery, exam bank, archive) can use `core.upload_widgets.DirectUploadField` to PUT files straight to S3-compatible storage via a presigned URL instead of routing the body through the web process; it degrades to a classic file input when direct uploads are disabled or the Uppy bundle fails to load. See `docs/dev/uploads.md` before changing upload forms or the `core.uploads` signing/finalize endpoints.
 
 ## Translations
 
@@ -152,15 +164,21 @@ django-admin compilemessages
 - `alumni`: Google Sheets-backed alumni signup/update flow, Celery side effects, token emails.
 - `archive`: photo/document/exam/public-file collections, bulk uploads, access checks.
 - `billing`: event invoices and reference-number generation behind the event billing integration.
-- `ctf`: seasonal CTFs, flags, guesses, and solving flow.
+- `ctf`: seasonal CTFs, flags, guesses, solving flow, and published post-mortems.
 - `date`: homepage composition, calendar data, language switching, middleware, error views.
 - `events`: events, dynamic registration forms, capacity/sign-up windows, passcodes, captcha, child events, WebSocket attendee updates.
+- `exambank`: exam archive collections and files (replaced `archive.Collection(type="Exams")`); own sign-in/password access gate shared across `archive`, `exambank.archive_urls`, and `exambank.urls`.
+- `functionaries`: yearly functionary roles and assignments, member self-service history, public functionary listing.
+- `gallery`: photo albums and uploads (replaced `archive.Collection(type="Pictures")`); compresses/converts images, including HEIC/HEIF, on save.
+- `harassment`: harassment report form, stored submissions, recipient list, and notification emails.
+- `instagram`: Instagram embed URLs used on the home page.
+- `klotterplanket`: public anonymous "scribble board" posts with captcha-gated submission.
 - `lucia`: candidate pages and admin-managed seasonal content.
-- `members`: custom user model, membership/subscription state, functionaries, auth, two-factor, GitHub login.
+- `members`: custom user model, membership/subscription state, auth, two-factor, GitHub login.
 - `news`: posts, categories, feeds, homepage/news listing behavior.
 - `polls`: questions, choices, votes, membership-aware vote validation.
 - `publications`: PDF metadata, access controls, viewer/list pages.
-- `social`: Instagram embeds and harassment report form/email flow.
+- `social`: compatibility routes for legacy social URLs.
 - `staticpages`: CKEditor pages, dropdown navigation, stored internal URLs.
 
 Read the corresponding `docs/dev/<app>.md` before changing app internals.
@@ -170,7 +188,7 @@ Read the corresponding `docs/dev/<app>.md` before changing app internals.
 - Preserve user data. Make backups before destructive database or media operations.
 - Never use `update-postgres.sh` for minor PostgreSQL upgrades. It is only for major upgrades and is destructive if misused.
 - Do not rewrite published migrations. Add new migrations.
-- Generate migration files with Django (`date-makemigrations` / `python manage.py makemigrations`) unless the migration needs custom data movement or another operation Django cannot infer automatically.
+- Generate migration files with Django (`date-makemigrations` / `python manage.py makemigrations`) first. If the migration needs custom data movement or another operation Django cannot infer automatically, edit the newly generated migration rather than creating one from scratch.
 - Keep branch changes focused. Update docs/config examples when behavior or setup changes.
 - Do not add secrets to source, fixtures, docs, or Helm values.
 - Be careful with admin/editor flows; many features are operated by non-developers through Django admin.
@@ -179,9 +197,22 @@ Read the corresponding `docs/dev/<app>.md` before changing app internals.
 
 ## Deployment Notes
 
-Compose production uses `docker-compose.prod.yml` and the GHCR image selected by `DATE_IMG_TAG`. Prefer immutable commit SHA or release tags for production rollouts. `qa`, `prod`, and `latest` are moving aliases managed by workflows.
+Production (the association sites) runs on Kubernetes with GitOps: Argo CD
+deploys the published Helm chart (`charts/date-website/`) + per-site values
+from a private operator repository. This repo only *publishes* images and
+the chart — deploys happen in the operator repository. Image/tag rules:
+`main` → `<sha>` + `qa`; SemVer tag or `promote_production` → `prod` /
+`latest`. Blue-green deploys with shared databases: additive (expand-contract)
+migrations are zero-downtime safe; destructive migrations must ship as two
+releases (expand, then contract). Full flow: `docs/dev/kubernetes.md`.
 
-Kubernetes deployment uses the Helm chart in `charts/date-website/`. Run one Helm release per association because each release needs its own `PROJECT_NAME`, settings, static/template paths, hostnames, media prefixes, database, and backup prefix.
+`docker-compose.prod.yml` remains the self-hosted / standalone option
+(compose + `DATE_IMG_TAG`; prefer immutable SHA or release tags — `qa`,
+`prod`, `latest` are moving aliases).
+
+Run one Helm release per association because each release needs its own
+`PROJECT_NAME`, settings, static/template paths, hostnames, media prefixes,
+database, and backup prefix.
 
 Shared monitoring is in `monitoring/` plus the `docker-compose.monitoring.yml` app overlay. Keep Prometheus/Grafana bound to localhost unless there is a trusted authenticated access path.
 

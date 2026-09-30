@@ -1,23 +1,21 @@
-from __future__ import unicode_literals
-
 import logging
 import os
 import re
 from datetime import timedelta
 
-from django.utils import timezone
 from django import forms
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models
-from django.db.models import Max, JSONField
+from django.db import connections, models, router
+from django.db.models import JSONField, Max
 from django.template.defaulttags import register
-from django.utils.text import slugify
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.html import format_html
+from django.utils.text import slugify
+from django.utils.timezone import now
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
-from django.utils.timezone import now
 
 from core.fields import PublicFileField
 
@@ -41,19 +39,22 @@ EVENT_TEMPLATE_CHOICES = EVENT_TEMPLATE_CHOICES_COMMON + EVENT_TEMPLATE_CHOICES_
 
 
 def registration_terms_feature_enabled():
-    return settings.PROJECT_NAME == "date"
+    return settings.REGISTRATION_TERMS_ENABLED
+
+
+class EventQuerySet(models.QuerySet):
+    def published(self):
+        return self.filter(published_time__isnull=False, published_time__lte=now())
+
 
 def upload_to(instance, filename):
     filename_base, filename_ext = os.path.splitext(filename)
 
-    file_location = "events/{filename}{extension}".format(
-        filename=slugify(filename_base),
-        extension=filename_ext.lower(),
-    )
+    file_location = f"events/{slugify(filename_base)}{filename_ext.lower()}"
     return file_location
 
 
-class Event(models.Model):
+class Event(models.Model):  # type: ignore[django-manager-missing]
     title = models.CharField(_('Titel'), max_length=255, blank=False)
     content = models.TextField(_('Innehåll'), blank=True)
     template = models.CharField(
@@ -66,50 +67,55 @@ class Event(models.Model):
     event_date_end = models.DateTimeField(_('Slutdatum'), default=now)
     sign_up_max_participants = models.IntegerField(_('Maximal antal deltagare (0 för ingen begränsning)'), default=0)
     sign_up = models.BooleanField(_('Anmälning'), default=True)
-    sign_up_members = models.DateTimeField(
-        _('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=now)
-    sign_up_others = models.DateTimeField(
-        _('Anmälan öppnas (övriga)'), null=True, blank=True, default=now)
-    sign_up_deadline = models.DateTimeField(
-        _('Anmälningen stängs'), null=True, blank=True, default=now)
+    attendee_nr_counter = models.PositiveBigIntegerField(default=0, editable=False)
+    sign_up_members = models.DateTimeField(_('Anmälan öppnas (medlemmar)'), null=True, blank=True, default=now)
+    sign_up_others = models.DateTimeField(_('Anmälan öppnas (övriga)'), null=True, blank=True, default=now)
+    sign_up_deadline = models.DateTimeField(_('Anmälningen stängs'), null=True, blank=True, default=now)
     sign_up_cancelling = models.BooleanField(_('Avanmälning'), default=True)
-    sign_up_cancelling_deadline = models.DateTimeField(
-        _('Avanmälningen stängs'), null=True, blank=True, default=now)
-    author = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    sign_up_cancelling_deadline = models.DateTimeField(_('Avanmälningen stängs'), null=True, blank=True, default=now)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_time = models.DateTimeField(_('Skapad'), default=now)
     published_time = models.DateTimeField(
-        _('Publicerad'), editable=False, null=True, blank=True)
-    modified_time = models.DateTimeField(
-        _('Modifierad'), editable=False, null=True, blank=True)
-    published = models.BooleanField(_('Publicera'), default=True)
-    slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False,
-                            max_length=POST_SLUG_MAX_LENGTH, blank=True)
-    sign_up_avec = models.BooleanField(_('Avec'), default=False)
-    require_registration_terms = models.BooleanField(
-        _('Kräv godkännande av anmälningsvillkor'), default=True
+        _('Publiceras'),
+        null=True,
+        blank=True,
+        default=now,
+        help_text=_('Lämna tomt för att dölja evenemanget. Välj en framtida tid för schemalagd publicering.'),
     )
-    members_only = models.BooleanField(
-        _('Kräv inloggning för innehåll'), default=False)
+    modified_time = models.DateTimeField(_('Modifierad'), editable=False, null=True, blank=True)
+    slug = models.SlugField(_('Slug'), unique=True, allow_unicode=False, max_length=POST_SLUG_MAX_LENGTH, blank=True)
+    sign_up_avec = models.BooleanField(_('Avec'), default=False)
+    require_registration_terms = models.BooleanField(_('Kräv godkännande av anmälningsvillkor'), default=True)
+    members_only = models.BooleanField(_('Kräv inloggning för innehåll'), default=False)
     passcode = models.CharField(_('Passcode'), max_length=255, blank=True)
-    image = models.ImageField(
-        _('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
-    s3_image = PublicFileField(verbose_name=_(
-        'Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
+    image = models.ImageField(_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
+    s3_image = PublicFileField(verbose_name=_('Bakgrundsbild'), null=True, blank=True, upload_to=upload_to)
     captcha = models.BooleanField(_('Captcha'), default=False)
     redirect_link = models.URLField(_('Redirect Link'), blank=True)
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children', default=None)
+    parent = models.ForeignKey(
+        'self', on_delete=models.CASCADE, null=True, blank=True, related_name='children', default=None
+    )  # noqa: E501
+
+    objects = EventQuerySet.as_manager()  # type: ignore[django-manager-missing]
 
     class Meta:
         verbose_name = _('evenemang')
         verbose_name_plural = _('evenemang')
         ordering = ('id',)
+        indexes = [
+            # Homepage/listing filters: published events by end date.
+            models.Index(fields=['published_time', 'event_date_end'], name='event_pub_end_idx'),
+        ]
 
     def __str__(self):
         return self.title
 
     def get_absolute_url(self):
         return reverse('events:detail', args=[self.slug])
+
+    @property
+    def published(self):
+        return self.published_time is not None and self.published_time <= now()
 
     @property
     def background_image_url(self):
@@ -134,11 +140,10 @@ class Event(models.Model):
 
     def publish(self):
         self.published_time = now()
-        self.published = True
         self.save()
 
     def unpublish(self):
-        self.published = False
+        self.published_time = None
         self.save()
 
     def update(self):
@@ -147,11 +152,52 @@ class Event(models.Model):
 
     def get_registrations(self):
         if self.parent:
-            return self.parent.get_registrations()
+            return EventAttendees.objects.filter(event=self.parent, original_event=self).order_by('attendee_nr')
         return EventAttendees.objects.filter(event=self).order_by('attendee_nr')
 
     def get_highest_attendee_nr(self):
         return EventAttendees.objects.filter(event=self).aggregate(Max('attendee_nr'))
+
+    def reserve_attendee_nrs(self, count=1):
+        if count < 1:
+            raise ValueError('count must be positive')
+
+        db_alias = self._state.db or router.db_for_write(type(self), instance=self)
+        connection = connections[db_alias]
+        table = connection.ops.quote_name(self._meta.db_table)
+        attendee_table = connection.ops.quote_name(EventAttendees._meta.db_table)
+        counter = connection.ops.quote_name('attendee_nr_counter')
+        pk_column = connection.ops.quote_name(self._meta.pk.column)
+        attendee_event_column = connection.ops.quote_name(EventAttendees._meta.get_field('event').column)
+        attendee_nr_column = connection.ops.quote_name(EventAttendees._meta.get_field('attendee_nr').column)
+        greatest = 'MAX' if connection.vendor == 'sqlite' else 'GREATEST'
+        increment = count * 10
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f'''
+                UPDATE {table}
+                SET {counter} = (
+                    {greatest}(
+                        {counter},
+                        COALESCE(
+                            (SELECT MAX({attendee_nr_column}) FROM {attendee_table}
+                             WHERE {attendee_event_column} = %s),
+                            0
+                        )
+                    ) / 10
+                ) * 10 + %s
+                WHERE {pk_column} = %s
+                RETURNING {counter}
+                ''',  # noqa: S608
+                [self.pk, increment, self.pk],
+            )
+            row = cursor.fetchone()
+        if row is None:
+            raise type(self).DoesNotExist(f'Event {self.pk} no longer exists')
+
+        end = row[0]
+        self.attendee_nr_counter = end
+        return list(range(end - increment + 10, end + 1, 10))
 
     def cancel_event_attendance(self, user):
         if self.sign_up:
@@ -177,7 +223,10 @@ class Event(models.Model):
         if self.sign_up_max_participants == 0:
             return False
         elif self.parent:
-            return EventAttendees.objects.filter(event=self.parent, original_event=self).count() >= self.sign_up_max_participants
+            return (
+                EventAttendees.objects.filter(event=self.parent, original_event=self).count()
+                >= self.sign_up_max_participants
+            )  # noqa: E501
         return EventAttendees.objects.filter(event=self).count() >= self.sign_up_max_participants
 
     def remaining_places(self):
@@ -198,26 +247,29 @@ class Event(models.Model):
     def make_registration_form(self, data=None):
         if self.sign_up:
             registration_questions = list(self.get_registration_form())
-            fields = {'user': forms.CharField(label=_('Namn'), max_length=255),
-                      'email': forms.EmailField(label=_('Email'), validators=[self.validate_unique_email], max_length=320),
-                      'anonymous': forms.BooleanField(label=_('Anonymt'), required=False)}
+            fields = {
+                'user': forms.CharField(label=_('Namn'), max_length=255),
+                'email': forms.EmailField(label=_('Email'), validators=[self.validate_unique_email], max_length=320),  # noqa: E501
+                'anonymous': forms.BooleanField(label=_('Anonymt'), required=False),
+            }
             if self.slug in settings.CONTENT_VARIABLES.get('INTERNATIONAL_EVENT_SLUGS', []):
                 fields['user'] = forms.CharField(label='Nimi/Namn/Name', max_length=255)
-                fields['email'] = forms.EmailField(label='Sähköposti/E-post/Email',
-                                                   validators=[self.validate_unique_email],
-                                                   max_length=320)
+                fields['email'] = forms.EmailField(
+                    label='Sähköposti/E-post/Email', validators=[self.validate_unique_email], max_length=320
+                )
                 fields['anonymous'] = forms.BooleanField(label='Anonyymi/Anonym/Anonymous', required=False)
             if registration_questions:
                 for question in registration_questions:
                     if question.type == "select":
-                        choices = question.choice_list.split(',')
-                        fields[question.name] = forms.ChoiceField(label=question.name,
-                                                                  # TODO this smells fishy, investigate
-                                                                  choices=list(map(list, zip(choices, choices))),
-                                                                  required=question.required)
+                        choices = question.get_choices()
+                        fields[question.name] = forms.ChoiceField(
+                            label=question.name,
+                            # TODO this smells fishy, investigate
+                            choices=list(map(list, zip(choices, choices, strict=False))),
+                            required=question.required,
+                        )
                     elif question.type == "checkbox":
-                        fields[question.name] = forms.BooleanField(
-                            label=question.name, required=question.required)
+                        fields[question.name] = forms.BooleanField(label=question.name, required=question.required)
                     elif question.type == "text":
                         fields[question.name] = forms.CharField(
                             label=question.name,
@@ -232,38 +284,49 @@ class Event(models.Model):
                     widget=forms.CheckboxInput(attrs={'class': 'terms-checkbox'}),
                 )
             if self.sign_up_avec:
-                fields['avec'] = forms.BooleanField(
-                    label='Avec', required=False)
-                fields['avec_user'] = forms.CharField(label='Namn', max_length=255, required=False,
-                                                      widget=forms.TextInput(attrs={'class': "avec-field"}))
-                fields['avec_email'] = forms.EmailField(label='Email', validators=[self.validate_unique_email],
-                                                        required=False,
-                                                        widget=forms.TextInput(
-                                                            attrs={'class': "avec-field"}),
-                                                        max_length=320)
-                fields['avec_anonymous'] = forms.BooleanField(label='Anonymt', required=False, widget=forms
-                                                              .CheckboxInput(attrs={'class': "avec-field"}))
+                fields['avec'] = forms.BooleanField(label='Avec', required=False)
+                fields['avec_user'] = forms.CharField(
+                    label='Namn', max_length=255, required=False, widget=forms.TextInput(attrs={'class': "avec-field"})
+                )
+                fields['avec_email'] = forms.EmailField(
+                    label='Email',
+                    validators=[self.validate_unique_email],
+                    required=False,
+                    widget=forms.TextInput(attrs={'class': "avec-field"}),
+                    max_length=320,
+                )
+                fields['avec_anonymous'] = forms.BooleanField(
+                    label='Anonymt', required=False, widget=forms.CheckboxInput(attrs={'class': "avec-field"})
+                )
                 if registration_questions:
                     for question in registration_questions:
                         if not question.hide_for_avec:
                             if question.type == "select":
-                                choices = question.choice_list.split(',')
-                                fields['avec_' + question.name] = forms.ChoiceField(label=question.name,
-                                                                                    choices=list(map(list, zip(choices,
-                                                                                                               choices))),
-                                                                                    required=False, widget=forms.Select(
-                                                                                        attrs={'class': "avec-field"}))
+                                choices = question.get_choices()
+                                fields['avec_' + question.name] = forms.ChoiceField(
+                                    label=question.name,
+                                    choices=list(map(list, zip(choices, choices, strict=False))),  # noqa: E501
+                                    required=False,
+                                    widget=forms.Select(attrs={'class': "avec-field"}),
+                                )
                             elif question.type == "checkbox":
-                                fields['avec_' + question.name] = forms.BooleanField(label=question.name,
-                                                                                     required=False,
-                                                                                     widget=forms.CheckboxInput(
-                                                                                         attrs={'class': "avec-field"}))
+                                fields['avec_' + question.name] = forms.BooleanField(
+                                    label=question.name,
+                                    required=False,
+                                    widget=forms.CheckboxInput(attrs={'class': "avec-field"}),
+                                )
                             elif question.type == "text":
-                                fields['avec_' + question.name] = forms.CharField(label=question.name, required=False,
-                                                                                  widget=forms.TextInput(
-                                                                                      attrs={'class': "avec-field"}),
-                                                                                  max_length=255)
-            return type('EventAttendeeForm', (forms.BaseForm,), {'base_fields': fields, 'data': data}, )
+                                fields['avec_' + question.name] = forms.CharField(
+                                    label=question.name,
+                                    required=False,
+                                    widget=forms.TextInput(attrs={'class': "avec-field"}),
+                                    max_length=255,
+                                )
+            return type(
+                'EventAttendeeForm',
+                (forms.BaseForm,),
+                {'base_fields': fields, 'data': data},
+            )
 
     def get_registration_terms_label(self):
         language = LANGUAGE_CODE_PATTERN.match(get_language() or "")
@@ -303,15 +366,16 @@ class Event(models.Model):
         return self.event_date_end > now() + timedelta(-1)
 
     def validate_unique_email(self, email):
-        attendees = self.get_registrations()
-        for attendee in attendees:
-            if email == attendee.email:
-                logger.debug("SAME EMAIL")
-                raise ValidationError(
-                    _("Det finns redan någon anmäld med denna email"))
+        # Indexed existence check instead of scanning every attendee row on
+        # each signup (the unique_together constraint on (event, email) is the
+        # real guard; races surface as IntegrityError in _create_attendee).
+        registrations = self.get_registrations()
+        if registrations.filter(email=email).exists():
+            logger.debug("SAME EMAIL")
+            raise ValidationError(_("Det finns redan någon anmäld med denna email"))
 
     def get_sign_up_max_participants(self):
-        if (self.sign_up_max_participants == 0):
+        if self.sign_up_max_participants == 0:
             return "Ingen Begränsning"
         return self.sign_up_max_participants
 
@@ -322,23 +386,34 @@ class Event(models.Model):
 
     def in_past_event_list(self):
         today = timezone.now()
-        past_events = Event.objects.filter(
-            event_date_end__lte=today).order_by('-event_date_end')[:5]
+        past_events = Event.objects.published().filter(event_date_end__lte=today).order_by('-event_date_end')[:5]
         logger.debug(past_events)
         logger.debug(self)
         return self in past_events
 
 
-class EventRegistrationForm(models.Model):
-    event = models.ForeignKey(
-        Event, verbose_name='Event', on_delete=models.CASCADE)
-    choice_number = models.PositiveSmallIntegerField(
-        _('#'), blank=True, default=0)
+class EventRegistrationForm(models.Model):  # type: ignore[django-manager-missing]
+    RESERVED_NAMES = {
+        'anonymous',
+        'avec',
+        'avec_anonymous',
+        'avec_email',
+        'avec_user',
+        'email',
+        'terms_accepted',
+        'user',
+    }
+
+    event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
+    choice_number = models.PositiveSmallIntegerField(_('#'), blank=True, default=0)
     name = models.CharField(_('Namn'), max_length=255, blank=True)
-    type = models.CharField(_('Typ'),
-                            choices=(
-                                ("text", "Text"), ("select", "Multiple choice"), ("checkbox", "Kryssryta")),
-                            blank=True, max_length=255, null=True)
+    type = models.CharField(  # noqa: DJ001
+        _('Typ'),
+        choices=(("text", "Text"), ("select", "Multiple choice"), ("checkbox", "Kryssryta")),
+        blank=True,
+        max_length=255,
+        null=True,
+    )
     required = models.BooleanField(_('Krävd'), default=False)
     public_info = models.BooleanField(_('Öppen info'), default=False)
     choice_list = models.CharField(_('Alternativ'), max_length=255, blank=True)
@@ -353,14 +428,38 @@ class EventRegistrationForm(models.Model):
         return str(self.name)
 
     def get_choices(self):
-        return str(self.choice_list).split(',')
+        return [choice.strip() for choice in str(self.choice_list).split(',') if choice.strip()]
 
-    def save(self, *args, **kwargs):
+    def clean(self):
+        super().clean()
+        if self.pk:
+            stored = EventRegistrationForm.objects.filter(pk=self.pk).values('name', 'type', 'choice_list').first()
+            if stored and all(stored[field] == getattr(self, field) for field in stored):
+                return
+
+        name = self.name.strip()
+        if not name:
+            raise ValidationError({'name': _('Ange ett namn för anmälningsfältet.')})
+        if name in self.RESERVED_NAMES or name.startswith('avec_'):
+            raise ValidationError({'name': _('Detta namn används redan av anmälningsformuläret.')})
+        self.name = name
+        if self.type == 'select':
+            choices = self.get_choices()
+            if not choices:
+                raise ValidationError({'choice_list': _('Ange minst ett alternativ.')})
+            if len(set(choices)) != len(choices):
+                raise ValidationError({'choice_list': _('Alternativen måste vara unika.')})
+            self.choice_list = ','.join(choices)
+        else:
+            self.choice_list = ''
+
+    def save(self, *args, **kwargs):  # noqa: DJ012
         # Only set choice_number if it's the default value (0).
         if self.choice_number == 0:
             # Get the current maximum choice_number for the related event.
-            max_choice_number = EventRegistrationForm.objects.filter(
-                event=self.event).aggregate(Max('choice_number'))['choice_number__max']
+            max_choice_number = EventRegistrationForm.objects.filter(event=self.event).aggregate(Max('choice_number'))[
+                'choice_number__max'
+            ]
 
             if max_choice_number is None:
                 # If there are no records, start from 10.
@@ -369,27 +468,40 @@ class EventRegistrationForm(models.Model):
                 # Increment the max choice_number by 10.
                 self.choice_number = max_choice_number + 10
 
-        super(EventRegistrationForm, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
 
-class EventAttendees(models.Model):
-    event = models.ForeignKey(
-        Event, verbose_name='Event', on_delete=models.CASCADE)
-    attendee_nr = models.PositiveSmallIntegerField(_('#'), blank=True)
+class EventAttendees(models.Model):  # type: ignore[django-manager-missing]
+    event = models.ForeignKey(Event, verbose_name='Event', on_delete=models.CASCADE)
+    attendee_nr = models.PositiveBigIntegerField(_('#'), blank=True)
     user = models.CharField(_('Namn'), blank=False, max_length=255)
-    email = models.EmailField(
-        _('E-postadress'), blank=False, null=True, unique=False)
+    email = models.EmailField(  # noqa: DJ001
+        _('E-postadress'), blank=False, null=True, unique=False
+    )
     preferences = JSONField(_('Svar'), default=list, blank=True)
     anonymous = models.BooleanField(_('Anonymt'), default=False)
     time_registered = models.DateTimeField(_('Registrerad'))
     avec_for = models.ForeignKey("self", verbose_name=_('Avec till'), null=True, blank=True, on_delete=models.SET_NULL)
-    original_event = models.ForeignKey(Event, verbose_name=_('Ursprungligt evenemang'), related_name='original_event', null=True, blank=True, on_delete=models.SET_NULL)
+    original_event = models.ForeignKey(
+        Event,
+        verbose_name=_('Ursprungligt evenemang'),
+        related_name='original_event',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )  # noqa: E501
 
     class Meta:
         verbose_name = _('deltagare')
         verbose_name_plural = _('deltagare')
         ordering = ['attendee_nr']
         unique_together = ('event', 'email')
+        constraints = [
+            models.UniqueConstraint(
+                fields=('event', 'attendee_nr'),
+                name='unique_attendee_nr_per_event',
+            ),
+        ]
 
     def __str__(self):
         return str(self.user)
@@ -398,17 +510,20 @@ class EventAttendees(models.Model):
     def get_preference(self, key):
         return self.preferences.get(str(key), "")
 
-    def save(self, *args, **kwargs):
+    def clean(self):
+        super().clean()
+        if not self.avec_for_id:
+            return
+        if self.pk and self.avec_for_id == self.pk:
+            raise ValidationError({'avec_for': _('En deltagare kan inte vara sin egen avec.')})
+        if self.event_id and self.avec_for.event_id != self.event_id:
+            raise ValidationError({'avec_for': _('Avec-deltagaren måste höra till samma evenemang.')})
+
+    def save(self, *args, **kwargs):  # noqa: DJ012
         if self.attendee_nr is None:
-            # attendee_nr increments by 10, e.g 10,20,30,40...
-            # this is needed so the admin sorting library will work.
-            self.attendee_nr = (
-                self.event.get_registrations().count() + 1) * 10
-            # Add ten from highest attendee_nr so signups dont get in weird order after deletions.
-            if self.event.get_highest_attendee_nr().get('attendee_nr__max'):
-                self.attendee_nr = self.event.get_highest_attendee_nr().get('attendee_nr__max') + 10
+            self.attendee_nr = self.event.reserve_attendee_nrs()[0]
         if self.time_registered is None:
             self.time_registered = now()
         if isinstance(self.preferences, list):
             self.preferences = {}
-        super(EventAttendees, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)

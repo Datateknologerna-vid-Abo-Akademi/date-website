@@ -13,6 +13,11 @@ media:
     publicBucketName: "date-website-public"
     privateLocation: "date/media"
     publicLocation: "date/public"
+    # Optional: serve media through a custom domain (e.g. via a Cloudflare Worker
+    # that forwards to the B2 endpoint, rewriting the Host header to the B2
+    # endpoint host). Host only, no scheme.
+    # privateCustomDomain: "media.example.com"
+    # publicCustomDomain: "media.example.com"
 
 backups:
   securityContext:

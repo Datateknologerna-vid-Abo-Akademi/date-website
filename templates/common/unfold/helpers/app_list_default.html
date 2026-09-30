@@ -1,0 +1,55 @@
+{% load i18n %}
+{% if app_list %}
+  {% for app in app_list %}
+    <div class="app-{{ app.app_label }} module{% if app.app_url in request.path %} current-app{% endif %}">
+      <div class="bg-base-50 mb-6 rounded-default p-3 dark:bg-base-800">
+        <table class="border border-base-400/10 border-spacing-none border-separate rounded-default overflow-hidden shadow-xs w-full dark:border-base-800">
+          <caption class="font-semibold mb-3 text-base-900 text-left dark:text-base-100">
+            <a href="{{ app.app_url }}"
+               class="section"
+               title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">{{ app.name }}</a>
+          </caption>
+          {% for model in app.models %}
+            <tr class="bg-white dark:bg-base-900 model-{{ model.object_name|lower }}{% if model.admin_url in request.path %} current-model{% endif %}">
+              <th scope="row"
+                  class="font-normal p-3 text-left {% if not forloop.last %}border-b border-base-100 dark:border-base-800{% endif %}">
+                {% if model.admin_url %}
+                  <a href="{{ model.admin_url }}"
+                     {% if model.admin_url in request.path %}aria-current="page"{% endif %}>{{ model.name }}</a>
+                {% else %}
+                  {{ model.name }}
+                {% endif %}
+              </th>
+              <td class="{% if not forloop.last %}border-b border-base-100 dark:border-base-800{% endif %} p-3 text-right">
+                <div class="flex flex-row flex-wrap items-center ml-auto gap-4 justify-end">
+                  {% if model.admin_url %}
+                    <a href="{{ model.admin_url }}"
+                       class="viewlink font-medium text-primary-600 hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400">
+                      {% if model.view_only %}
+                        {% translate "View" %}
+                      {% else %}
+                        {% translate "View all" %}
+                      {% endif %}
+                    </a>
+                  {% endif %}
+                  {% if model.add_url %}
+                    <a href="{{ model.add_url }}"
+                       class="addlink flex font-medium gap-1 items-center text-primary-600 hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400">
+                      <span class="material-symbols-outlined text-base">add</span>
+                      <span>{% translate "Add" %}</span>
+                    </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+  {% endfor %}
+{% else %}
+  <p>
+    {% trans "You don’t have permission to view or edit anything." as error_message %}
+    {% include "unfold/helpers/messages/error.html" with message=error_message %}
+  </p>
+{% endif %}

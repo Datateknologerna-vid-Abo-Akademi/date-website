@@ -1,0 +1,26 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - CTF{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'ctf/css/style.css' %}">
+{% endblock %}
+{% block content %}
+  <div class="container-md min-vh-100 container-margin-top">
+    <div class="ctf-page">
+      <div class="content ctf-content">
+        <h3 class="ctf-title ctf-centered">{% trans "Post-mortems" %}</h3>
+        <ul class="list-unstyled ctf-flags">
+          {% for post_mortem in post_mortems %}
+            <li class="m-1">
+              <a href="{{ post_mortem.get_absolute_url }}">{{ post_mortem.ctf.title }}</a>
+            </li>
+          {% empty %}
+            <li class="ctf-message ctf-centered">{% trans "No post-mortems have been published yet." %}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+{% endblock %}

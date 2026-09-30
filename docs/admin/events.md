@@ -20,7 +20,8 @@ Create public event pages, manage registration windows, collect attendee data, a
    - **Background image** – upload locally (`Bakgrundsbild`) or to S3 (`s3_image`) depending on deployment settings.
    - **Redirect Link** – skip the internal page entirely and send visitors to another URL like another student association's event page.
 3. Publishing:
-   - Leave **Publicera** checked so the event stays visible; uncheck it to hide the page until you’re ready to republish.
+   - Set **Publiceras** to the date and time when the event should become visible.
+   - Leave **Publiceras** empty to keep the event hidden. A future timestamp keeps it hidden until that time; a past timestamp publishes it immediately.
    - `Slug` can stay blank; it auto-fills from the title and becomes the URL path segment (`/events/<slug>/`), so keep it short, readable, and unique.
 4. Save to create the event and unlock the inline sections described below.
 
@@ -34,7 +35,7 @@ Each event can have dynamic questions managed inline:
    - **Typ** – `Text`, `Multiple choice`, or `Kryssryta`.
    - **Krävd** – mark required answers.
    - **Öppen info** – include responses in the public attendee list.
-   - **Alternativ** – comma-separated choices for select/check fields.
+   - **Alternativ** - comma-separated choices for multiple-choice fields. Empty or duplicate options are rejected, and surrounding spaces are removed when saving. This field is only editable when **Typ** is `Multiple choice`; it enables/disables automatically as you change **Typ**, including on rows you just added with "Add another". If it stays greyed out after picking `Multiple choice`, that is a bug, not expected behavior.
    - **Göm för avec** – hide this field from partner signups.
 4. Save the event to persist form fields.
 
@@ -43,6 +44,7 @@ Each event can have dynamic questions managed inline:
 2. If **Avec** is active or the event has child instances, extra columns ("Avec till", "Ursprungligt evenemang") appear automatically.
 3. To export a pretty list, click **Deltagarlista** in the main event row; this opens a printable view with the public answers.
 4. Bulk deletion: select events in the changelist → choose **Delete all attendees for selected events**. You will get a confirmation screen before anything is removed.
+5. Question names must be unique within an event. Names used by standard signup fields, such as `email`, `user`, and avec fields, are rejected to prevent invalid registrations.
 
 ## Handling Waiting Lists / Child Events
 - The **Parent** dropdown lets you chain events together. Registrations for child events roll up to the parent so attendee numbers stay consistent.

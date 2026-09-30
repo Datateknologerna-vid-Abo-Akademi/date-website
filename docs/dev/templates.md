@@ -2,19 +2,23 @@
 
 ## How Templates Are Loaded
 
-The project supports multiple site variants selected by `PROJECT_NAME`. Each variant has its own settings file under `core/settings/<variant>.py`, which controls the Django `TEMPLATES` `DIRS` list:
+The project supports multiple site variants selected by `PROJECT_NAME`. Each variant has its own settings file under `core/settings/<variant>.py`, which builds the Django `TEMPLATES` `DIRS` list with the shared helpers in `core/settings/common.py`:
 
 ```python
-TEMPLATES = [{
-    'DIRS': [
-        'templates/<association>',
-        *COMMON_TEMPLATE_DIRS,  # includes 'templates/common'
-    ],
-    ...
-}]
+# Variant with no inherited templates (date, kk, pulterit, demo):
+TEMPLATES = build_templates('date')
+
+# Variant inheriting another variant's templates (biocum, sf, impuls):
+TEMPLATES = build_templates('biocum', parent_variants=('date',))
 ```
 
-The association-specific directory is listed **first**, so Django finds association templates before falling back to `templates/common`.
+`build_templates(variant, parent_variants=())` puts the variant's own
+directory **first**, then the inherited parents, then the shared common
+dirs, so Django finds association templates before falling back to
+`templates/common`. Use the helpers when adding a variant; do not
+construct `TEMPLATES` by hand. Static dirs are built the same way with
+`build_static_dirs(variant)`; note that static dirs do **not** inherit
+parent variants.
 
 ## Override Pattern
 
@@ -33,6 +37,7 @@ Django resolves the path in `{% raw %}{% extends %}{% endraw %}` by skipping the
 This means:
 - `templates/common/` defines the base structure and all available `{% raw %}{% block %}{% endraw %}` slots.
 - `templates/<association>/` overrides only the blocks it needs; everything else falls through to the common template.
+- Associations can also layer another association's templates before common templates. For example, Impuls uses `templates/impuls`, then `templates/date`, then `templates/common` so it can reuse the DaTe homepage layout while overriding only Impuls branding and copy.
 
 ## Adding New Block Slots
 

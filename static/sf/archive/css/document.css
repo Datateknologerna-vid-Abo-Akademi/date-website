@@ -1,0 +1,58 @@
+.form-group{
+    margin-bottom: 5px;
+}
+
+table tbody{
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding-left: 0;
+    gap: 4px;
+    margin: 30px 0 16px;
+    justify-content: center;
+}
+
+.pagination li {
+    display: inline-block;
+}
+
+.pagination a {
+    display: inline-block;
+    color: var(--primaryColor);
+    background-color: var(--secondaryColor, #fff);
+    padding: 8px 14px;
+    text-decoration: none;
+    transition: background-color .2s, color .2s;
+    border: 1px solid var(--primaryColorLighter);
+    border-radius: var(--defaultRadius);
+    min-width: 38px;
+    text-align: center;
+}
+
+.pagination .active a {
+    background-color: var(--primaryColor);
+    border-color: var(--primaryColor);
+    color: var(--textColorLight);
+}
+
+.pagination .disabled a,
+.pagination .disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.pagination a:hover:not(.disabled a) {
+    background-color: var(--primaryColorLighter);
+    color: var(--textColorLight);
+}
+
+.pagination a:focus-visible {
+    outline: 3px solid var(--primaryColor);
+    outline-offset: 2px;
+}

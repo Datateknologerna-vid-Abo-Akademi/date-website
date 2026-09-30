@@ -1,3 +1,6 @@
+from typing import Any
+
+from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.utils import flatten_fieldsets
@@ -6,16 +9,28 @@ from django.utils.translation import gettext_lazy as _
 
 from core.admin_ui import resolve_admin_links
 
+__all__ = [
+    "ModelAdmin",
+    "TabularInline",
+    "StackedInline",
+    "UNFOLD_FORMFIELD_OVERRIDES",
+    "UnfoldFormMixin",
+    "PublicUrlAdminMixin",
+    "ExtraChangeListLinksMixin",
+]
+
 if getattr(settings, 'USE_UNFOLD', False):
-    from unfold.admin import ModelAdmin, TabularInline, StackedInline
+    from unfold.admin import ModelAdmin as _ModelAdminBase
+    from unfold.admin import StackedInline, TabularInline
     from unfold.overrides import FORMFIELD_OVERRIDES
     from unfold.widgets import (
-        UnfoldAdminSplitDateTimeWidget as AdminSplitDateTimeWidget,
-        UnfoldAdminTextInputWidget,
-        UnfoldAdminURLInputWidget,
         UnfoldAdminEmailInputWidget,
         UnfoldAdminIntegerFieldWidget,
+        UnfoldAdminPasswordToggleWidget,
+        UnfoldAdminTextInputWidget,
+        UnfoldAdminURLInputWidget,
     )
+
     # Base dict to spread into any admin that defines its own formfield_overrides,
     # so Unfold's datetime/field widget overrides are not accidentally shadowed.
     UNFOLD_FORMFIELD_OVERRIDES = FORMFIELD_OVERRIDES
@@ -25,14 +40,19 @@ if getattr(settings, 'USE_UNFOLD', False):
         'URLInput': UnfoldAdminURLInputWidget,
         'EmailInput': UnfoldAdminEmailInputWidget,
         'NumberInput': UnfoldAdminIntegerFieldWidget,
+        'PasswordInput': UnfoldAdminPasswordToggleWidget,
     }
 else:
-    from django.contrib.admin.widgets import AdminSplitDateTime as AdminSplitDateTimeWidget
-    ModelAdmin = admin.ModelAdmin
+    _ModelAdminBase = admin.ModelAdmin  # type: ignore[misc, assignment]
     TabularInline = admin.TabularInline
     StackedInline = admin.StackedInline
     UNFOLD_FORMFIELD_OVERRIDES = {}
     _WIDGET_MAP = {}
+
+
+class ModelAdmin(_ModelAdminBase):  # type: ignore[misc, valid-type]
+    change_form_show_cancel_button = getattr(settings, 'USE_UNFOLD', False)
+    unfold_enabled = getattr(settings, 'USE_UNFOLD', False)
 
 
 class UnfoldFormMixin:
@@ -47,7 +67,13 @@ class UnfoldFormMixin:
         for field in self.fields.values():
             replacement = _WIDGET_MAP.get(type(field.widget).__name__)
             if replacement is not None:
-                field.widget = replacement()
+                if isinstance(field.widget, forms.PasswordInput):
+                    field.widget = replacement(
+                        attrs=field.widget.attrs,
+                        render_value=field.widget.render_value,
+                    )
+                else:
+                    field.widget = replacement(attrs=field.widget.attrs)
 
 
 class PublicUrlAdminMixin:
@@ -55,6 +81,7 @@ class PublicUrlAdminMixin:
 
     public_url_field = 'public_url'
 
+    @admin.display(description=_("Public page"))
     def public_url(self, obj):
         if not obj or not getattr(obj, 'pk', None) or not hasattr(obj, 'get_absolute_url'):
             return '-'
@@ -65,17 +92,20 @@ class PublicUrlAdminMixin:
             _('Open public page'),
         )
 
-    public_url.short_description = _('Public page')
-
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj))
-        if obj and hasattr(obj, 'get_absolute_url') and self.public_url_field not in readonly_fields:
+        if (
+            not getattr(settings, 'USE_UNFOLD', False)
+            and obj
+            and hasattr(obj, 'get_absolute_url')
+            and self.public_url_field not in readonly_fields
+        ):
             readonly_fields.append(self.public_url_field)
         return readonly_fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = list(super().get_fieldsets(request, obj))
-        if not obj or not hasattr(obj, 'get_absolute_url'):
+        if getattr(settings, 'USE_UNFOLD', False) or not obj or not hasattr(obj, 'get_absolute_url'):
             return fieldsets
 
         if self.public_url_field in flatten_fieldsets(fieldsets) or not fieldsets:
@@ -92,8 +122,10 @@ class PublicUrlAdminMixin:
 class ExtraChangeListLinksMixin:
     """Render declarative extra buttons beside the default changelist tools."""
 
-    change_list_template = 'admin/core/change_list_with_extra_tools.html'
-    changelist_links = ()
+    # django-modeltranslation accepts a template object or a sequence here,
+    # while Django's base admin only exposes a narrower runtime type.
+    change_list_template: Any = 'admin/core/change_list_with_extra_tools.html'
+    changelist_links: tuple = ()
 
     def get_changelist_links(self, request):
         return resolve_admin_links(self.changelist_links, request)

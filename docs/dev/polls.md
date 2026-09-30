@@ -1,7 +1,8 @@
 # Polls Development Notes
 
 ## Models
-- `Question` stores text, publish flags, multiple-choice settings, and `voting_options` (mapped to constants `ANYONE`, `MEMBERS_ONLY`, `ORDINARY_MEMBERS_ONLY`, `VOTE_MEMBERS_ONLY`). A `ManyToManyField` to `Member` via `Vote` tracks who voted.
+- `Question` stores text, `published_time`, multiple-choice settings, and `voting_options` (mapped to constants `ANYONE`, `MEMBERS_ONLY`, `ORDINARY_MEMBERS_ONLY`, `VOTE_MEMBERS_ONLY`). A `ManyToManyField` to `Member` via `Vote` tracks who voted.
+- Publication follows the same `published_time` pattern as events/news: `NULL` is hidden, future is scheduled, past is public. Use `Question.objects.published()` (or the `Question.published` property) for public-facing lookups.
 - `Choice` belongs to a question and keeps an integer `votes` counter plus a helper `get_vote_percentage()`.
 - `Vote` stores which `Member` voted on which `Question` at `voted_at` time (only used when the poll isn’t anonymous).
 
@@ -27,5 +28,5 @@
 
 ## Extending
 - Consider recording anonymous voters’ IP hash if abuse becomes a concern when `ANYONE` polls are used.
-- Add scheduling fields (`opens_at`, `closes_at`) if manual toggling of `published` and `end_vote` becomes error-prone.
+- Add an explicit `closes_at` if manual toggling of `end_vote` becomes error-prone (publication scheduling already lives on `published_time`).
 - Results caching could be useful for high-traffic polls; currently every refresh hits the database and recalculates totals.

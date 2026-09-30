@@ -1,3 +1,12 @@
+body {
+    background: url("/static/core/images/Pulterit-mineral.jpg") no-repeat center center fixed;
+    background-size: cover;
+}
+
+footer.association-footer {
+    background-color: var(--primaryColor);
+}
+
 .card {
     border-radius: var(--defaultRadius);
     color: var(--textColorDarkish);
@@ -18,7 +27,7 @@
 }
 
 .event-card > .card .badge {
-    background: #6d6d69;
+    background: var(--accentColor);
     color: var(--secondaryColor);
 }
 
@@ -48,4 +57,13 @@
 
 .event-date-txt {
     white-space: nowrap;
+}
+
+.container-size {
+    background: rgba(109, 40, 217, 0.15);
+    backdrop-filter: blur(6px);
+    border-radius: var(--defaultRadius);
+    padding: 20px;
+    border: 1px solid rgba(109, 40, 217, 0.3);
+    color: #ffffff;
 }

@@ -1,46 +1,39 @@
 from .common import *  # noqa
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            'templates/biocum',
-            'templates/date',
-            *COMMON_TEMPLATE_DIRS,
-        ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                *COMMON_CONTEXT_PROCESSORS,
-            ],
-        },
-    },
-]
+TEMPLATES = build_templates('biocum', parent_variants=('date',))
 
-INSTALLED_APPS = get_installed_apps([
-    'staticpages',
-    'news',
-    'events',
-    'ads',
-    'social',
-    'polls',
-    'archive.apps.ArchiveConfig',
-])
+INSTALLED_APPS = get_installed_apps(
+    [
+        'staticpages',
+        'news',
+        'events',
+        'ads',
+        'instagram',
+        'harassment',
+        'social',
+        'polls',
+        'gallery',
+        'exambank',
+        'archive',
+        'publications',
+    ]
+)
 
 ROOT_URLCONF = 'core.urls.biocum'
 USE_ACCEPT_LANGUAGE_HEADER = False
+DATE_LANGUAGES = (
+    ("sv", "Svenska"),
+    ("en", "English"),
+)
+LANGUAGES = (
+    DATE_LANGUAGES
+    if ENABLE_LANGUAGE_FEATURES
+    else tuple(language for language in DATE_LANGUAGES if language[0] == LANGUAGE_CODE)
+)
 
-STAFF_GROUPS = get_staff_groups([
-        'styrelse',
-        'admin',
-        'fotograf',
-        'rösträknare'
-    ])
+STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/biocum'),
-    os.path.join(BASE_DIR, 'static/common'),
-]
+STATICFILES_DIRS = build_static_dirs('biocum')
 
 CONTENT_VARIABLES = {
     "SITE_URL": "https://biologica.fi",

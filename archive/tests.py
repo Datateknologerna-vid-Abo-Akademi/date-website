@@ -4,39 +4,42 @@ import tempfile
 from io import BytesIO
 from unittest.mock import PropertyMock, patch
 
-from PIL import Image
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from PIL import Image
 
-from archive.models import TYPE_CHOICES, Collection, Document, Picture, PictureCollection
-from members.models import Member, MembershipType, ORDINARY_MEMBER
+from archive.models import Collection, Document
+from archive.views import user_type
+from gallery.models import Album, Photo
+from members.models import ORDINARY_MEMBER, Member, MembershipType
 
 
 def create_collection(title="Test collection", collection_type=None):
     return Collection.objects.create(title=title, pub_date=timezone.now(), type=collection_type)
 
 
+def create_album(title="Test album"):
+    return Album.objects.create(title=title, pub_date=timezone.now())
+
+
 def create_picture(favorite=False):
-    collection = create_collection(collection_type=TYPE_CHOICES[0][1])
+    album = create_album()
     img = Image.new('RGB', (100, 100))
     img.save(os.path.join(settings.MEDIA_ROOT, 'test_image.jpg'))
     img.close()
-    img_file = open(os.path.join(settings.MEDIA_ROOT, 'test_image.jpg'),"rb")
-    img_data = img_file.read()
-    img_file.close()
-    test_image = SimpleUploadedFile(name='test_image.jpg',
-                                    content=img_data,
-                                    content_type='image/jpg')
-    return Picture.objects.create(collection=collection, image=test_image, favorite=favorite)
+    with open(os.path.join(settings.MEDIA_ROOT, 'test_image.jpg'), "rb") as img_file:
+        img_data = img_file.read()
+    test_image = SimpleUploadedFile(name='test_image.jpg', content=img_data, content_type='image/jpg')
+    return Photo.objects.create(album=album, image=test_image, favorite=favorite)
 
 
 def create_document(title="Test document"):
-    collection = create_collection(collection_type=TYPE_CHOICES[1][1])
+    collection = create_collection(collection_type='Documents')
 
     # Create a temporary file with some test data
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
@@ -61,15 +64,16 @@ class CollectionTestCase(TestCase):
         cls._media_override.disable()
         shutil.rmtree(cls._media_root, ignore_errors=True)
         super().tearDownClass()
+
     def test_collection_creation(self):
-        c = create_collection(collection_type=TYPE_CHOICES[0][1])
+        c = create_collection(collection_type='Documents')
         self.assertTrue(isinstance(c, Collection))
         self.assertEqual(c.__str__(), c.title)
-        self.assertEqual(c.type, TYPE_CHOICES[0][1])
+        self.assertEqual(c.type, 'Documents')
 
     def test_picture_creation(self):
         p = create_picture(favorite=False)
-        self.assertTrue(isinstance(p, Picture))
+        self.assertTrue(isinstance(p, Photo))
         self.assertEqual(p.__str__(), p.image.name)
         self.assertEqual(p.favorite, False)
 
@@ -77,7 +81,7 @@ class CollectionTestCase(TestCase):
         d = create_document()
         self.assertTrue(isinstance(d, Document))
         self.assertEqual(d.__str__(), d.title)
-        self.assertEqual(d.collection.type, TYPE_CHOICES[1][1])
+        self.assertEqual(d.collection.type, 'Documents')
 
 
 class ArchiveAdminTests(TestCase):
@@ -89,25 +93,26 @@ class ArchiveAdminTests(TestCase):
         )
         self.client.force_login(self.admin_user)
 
-    def test_picture_collection_change_page_renders_when_image_url_cannot_be_resolved(self):
-        collection = PictureCollection.objects.create(
+    def test_album_change_page_renders_when_image_url_cannot_be_resolved(self):
+        album = Album.objects.create(
             title="Broken Picture Admin Collection",
             pub_date=timezone.now(),
-            type="Pictures",
         )
-        Picture.objects.bulk_create([
-            Picture(
-                collection=collection,
-                image="archive/broken.jpg",
-            )
-        ])
+        Photo.objects.bulk_create(
+            [
+                Photo(
+                    album=album,
+                    image="archive/broken.jpg",
+                )
+            ]
+        )
 
         with patch(
             "django.db.models.fields.files.FieldFile.url",
             new_callable=PropertyMock,
             side_effect=RuntimeError("broken storage"),
         ):
-            response = self.client.get(reverse("admin:archive_picturecollection_change", args=[collection.pk]))
+            response = self.client.get(reverse("admin:gallery_album_change", args=[album.pk]))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "archive/broken.jpg")
@@ -135,6 +140,32 @@ class ArchiveAdminTests(TestCase):
         self.assertContains(response, "Broken document")
 
 
+class ArchiveAccessTests(TestCase):
+    def test_user_type_rejects_anonymous_users(self):
+        self.assertFalse(user_type(AnonymousUser()))
+
+    def test_user_type_rejects_users_without_membership_type(self):
+        user = get_user_model()(username="no-membership")
+        user.membership_type = None
+
+        self.assertFalse(user_type(user))
+
+    def test_user_type_allows_non_supporting_members(self):
+        membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        member = Member(username="archive-member", membership_type=membership_type)
+
+        self.assertTrue(user_type(member))
+
+    def test_user_type_rejects_supporting_members(self):
+        membership_type = MembershipType.objects.create(
+            name="Supporting",
+            permission_profile=3,
+        )
+        member = Member(username="archive-supporting", membership_type=membership_type)
+
+        self.assertFalse(user_type(member))
+
+
 class PictureDetailFragmentViewTests(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -157,16 +188,15 @@ class PictureDetailFragmentViewTests(TestCase):
             password='pwd',
             membership_type=cls.membership_type,
         )
-        cls.collection = create_collection(
+        cls.collection = create_album(
             title='Fragment Album',
-            collection_type=TYPE_CHOICES[0][0],
         )
 
     def setUp(self):
         for index in range(13):
-            Picture.objects.create(
-                collection=self.collection,
-                image=self._uploaded_image(f'fragment-{index}.jpg'),
+            Photo.objects.create(
+                album=self.collection,
+                image=self._uploaded_image(f"fragment-{index}.jpg"),
             )
 
     def _uploaded_image(self, name):
@@ -223,3 +253,44 @@ class PictureDetailFragmentViewTests(TestCase):
                 'album': self.collection.title,
             },
         )
+
+
+@override_settings(USE_S3=True, DIRECT_UPLOADS_ENABLED=True)
+class DirectDocumentAdminFormTests(TestCase):
+    def test_direct_payload_creates_documents(self):
+        import json
+        from unittest.mock import patch
+
+        from .forms import DocumentAdminForm
+
+        payload = json.dumps([{'key': 'tmp/' + 'a' * 32 + '.pdf', 'name': 'notes.pdf', 'size': 2048}])
+        with patch('core.uploads.finalize_upload', return_value='documents/2026/docs/notes.pdf') as finalize:
+            form = DocumentAdminForm(
+                data={
+                    'title': 'Docs',
+                    'type': 'Documents',
+                    'pub_date': '2026-08-23 14:00:00',
+                    'files': payload,
+                }
+            )
+            self.assertTrue(form.is_valid(), form.errors)
+            form.save()
+
+        document = Document.objects.get()
+        self.assertEqual(document.title, 'notes.pdf')
+        self.assertEqual(document.document.name, 'documents/2026/docs/notes.pdf')
+        finalize.assert_called_once()
+        self.assertEqual(finalize.call_args[0][0], 'tmp/' + 'a' * 32 + '.pdf')
+
+    def test_direct_payload_rejects_malformed_json(self):
+        from .forms import DocumentAdminForm
+
+        form = DocumentAdminForm(
+            data={
+                'title': 'Docs',
+                'type': 'Documents',
+                'pub_date': '2026-08-23 14:00:00',
+                'files': 'not-json',
+            }
+        )
+        self.assertFalse(form.is_valid())

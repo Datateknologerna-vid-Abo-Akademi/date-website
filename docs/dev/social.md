@@ -1,28 +1,16 @@
 # Social Development Notes
 
-## Models
-- `IgUrl` – stores `url` and `shortcode` for Instagram embeds used on the home page.
-- `Harassment` – captures anonymous or attributed reports with optional email + free-text message.
-- `HarassmentEmailRecipient` – mailing list for notifications.
+## Responsibility
+`social` is now a compatibility app for legacy public URLs.
 
-## Forms & Views
-- `HarassmentForm` is a simple `ModelForm` that adds Bootstrap classes. No captcha field is defined in the form; the view reads `cf-turnstile-response` directly from `request.POST`.
-- `social.views.harassment_form` handles GET/POST:
-  - Checks a session flag (`harass_submitted`) to show the success page once and then reset it.
-  - On POST + valid captcha, saves the form, schedules the notification email after commit via `core.utils.enqueue_task_on_commit()`, sets the session flag, and redirects to self (PRG pattern).
-- `socialIndex` currently renders a placeholder template.
+## Routes
+- `/social/` renders the existing placeholder page.
+- `/social/harassment/` delegates to `harassment.views.harassment_form` while preserving the `social:harassment` reverse name used by templates.
 
-## Email Template
-- `templates/social/harassment_admin_email.html` receives `harassment` and `harassment_url`. The URL targets the admin detail view so staff can respond.
+## Split Apps
+- Instagram embeds live in `instagram`.
+- Harassment reporting lives in `harassment`.
 
-## Admin
-- All models registered with default `ModelAdmin` for quick CRUD. Consider adding filters/search if the list grows.
-
-## Integrations
-- Email sending relies on Celery. The view defers enqueueing until the harassment report transaction commits, so the worker never sees a job for a report that failed to save.
-- `settings.CONTENT_VARIABLES['SITE_URL']` must be configured so the email includes a correct absolute link.
-
-## Extending
-- Add status fields (e.g., `is_reviewed`, `assigned_to`) to `Harassment` for better case management.
-- For IG embeds, consider fetching metadata automatically via Instagram Basic Display API instead of manual shortcodes.
-- Add throttling or rate limiting if the harassment form sees abuse.
+## Migration Notes
+- The legacy social models were copied into their focused apps.
+- The legacy social database tables are dropped by the split migration after data is copied.

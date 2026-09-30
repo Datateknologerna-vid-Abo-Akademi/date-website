@@ -27,4 +27,12 @@
     --navHoverHighlight: rgba(255, 255, 255, 0.15);
     --defaultPadding: 20px;
     --defaultRadius: 5px;
+
+    /* Publication card opt-in: keep DaTe's dark cards. Other associations
+       inherit the common-CSS light card defaults. */
+    --pubCardBg: var(--primaryColorLight);
+    --pubCardFg: var(--textColorLightish);
+    --pubCardFgSoft: var(--helpText);
+    --pubCardThumbBg: var(--primaryColorLighte);
+    --pubCardThumbShimmer: var(--primaryColorLighter);
 }

@@ -509,37 +509,6 @@ div.calendar-container a {
     display: block;
 }
 
-.carousel-logos{
-    border-top: solid;
-    border-bottom: solid;
-    border-width: 2px;
-    border-color: rgb(180, 180, 180);
-}
-
-div.carousel-logos {
-    overflow: hidden;
-  }
-
-div.carousel-logos img{
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    width: 50%;
-}
-
-ul#logo-list {
-    list-style-type: none;
-    padding: 0;
-}
-
-.company-logo img{
-    max-height: 100px;
-    max-width: 100%;
-    /* keep img ratio correct */
-    width: auto !important;
-    height: auto !important;
-}
-
 .extra-container a {
     color: var(--linkColorDark);
 }
@@ -562,10 +531,14 @@ ul#logo-list {
 .logo-container a {
     color: var(--linkColorDark);
     margin-top: 20px;
+    display: inline-block;
+    transition: transform 0.2s, opacity 0.2s, color 0.2s;
 }
 
 .logo-container a:hover {
     color: var(--linkColorDarkHover);
+    transform: scale(1.03);
+    opacity: 0.75;
 }
 
 .logo-container img {

@@ -1,6 +1,8 @@
-from datetime import date, timedelta
 import importlib
 import re
+import time
+from datetime import date, timedelta
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -9,18 +11,45 @@ from django.contrib import admin
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.db import connection
+from django.http import HttpResponse
 from django.template import Context, Template
 from django.template.loader import render_to_string
-from django.test import RequestFactory, TestCase
-from django.test.utils import override_settings
+from django.test import RequestFactory, SimpleTestCase, TestCase
+from django.test.utils import CaptureQueriesContext, override_settings
 from django.urls import clear_url_caches, reverse, set_urlconf
-from django.utils import timezone
-from django.utils import translation
+from django.utils import timezone, translation
 
 from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
-from date.views import get_homepage_template_name, handler500
+from date.middleware import ConnectionLifecycleMiddleware
+from date.views import (
+    _homepage_context,
+    _homepage_version_key,
+    format_calendar_events,
+    get_homepage_template_name,
+    get_recent_albins_angels_post,
+    handler404,
+    handler500,
+)
 from events.models import Event
+from news.models import Category, Post
+
+ASSOCIATION_SETTINGS_MODULES = {
+    "date": "core.settings.date",
+    "kk": "core.settings.kk",
+    "biocum": "core.settings.biocum",
+    "demo": "core.settings.demo",
+    "pulterit": "core.settings.pulterit",
+    "sf": "core.settings.sf",
+}
+
+# The Font Awesome compatible build of Line Awesome. Shared templates use fa-* /
+# fas / far classes, which the plain line-awesome build does not define.
+FA_COMPATIBLE_ICON_CSS = (
+    "https://cdnjs.cloudflare.com/ajax/libs/line-awesome/1.3.0/font-awesome-line-awesome/css/all.min.css"
+)
+FA_COMPATIBLE_ICON_CSS_SRI = "sha384-snzOGIbz+keYJBq8ozkYChzFE6HnRT5PIEwo25BGyLtpC4G3qF/YAP4vRkinYp7+"
 
 
 def localized_reverse(name, language_code, *args, **kwargs):
@@ -58,16 +87,40 @@ class SiteShellTemplateTests(TestCase):
         self.assertLess(rendered.index("<body>"), rendered.index("<nav"))
         self.assertLess(rendered.index("core/js/external-links.js"), rendered.index("</body>"))
 
+    def test_base_template_loads_font_awesome_compatibility_css(self):
+        rendered = render_to_string("core/base.html", self._content_context())
+        self.assertIn(FA_COMPATIBLE_ICON_CSS, rendered)
+        self.assertIn(FA_COMPATIBLE_ICON_CSS_SRI, rendered)
+
+    def test_every_association_shell_loads_font_awesome_compatibility_css(self):
+        # Each association resolves core/base.html through its own template dirs, so
+        # rendering only under the default variant misses variant-level overrides of
+        # the icon_head block. sf overrides it, and the plain Line Awesome build it
+        # once pointed at does not define the fa-* classes the shared templates use.
+        plain_line_awesome = "line-awesome/1.3.0/line-awesome/css/line-awesome.min.css"
+        for association, settings_module in ASSOCIATION_SETTINGS_MODULES.items():
+            with self.subTest(association=association):
+                module = importlib.import_module(settings_module)
+                with override_settings(PROJECT_NAME=association, TEMPLATES=module.TEMPLATES):
+                    rendered = render_to_string("core/base.html", self._content_context())
+                self.assertIn(FA_COMPATIBLE_ICON_CSS, rendered)
+                self.assertIn(FA_COMPATIBLE_ICON_CSS_SRI, rendered)
+                self.assertNotIn(plain_line_awesome, rendered)
+
     def test_header_uses_unique_dropdown_ids_for_categories(self):
         categories = [
             SimpleNamespace(category_name="About", use_category_url=False, url=""),
             SimpleNamespace(category_name="Members", use_category_url=False, url=""),
         ]
         template = Template("{% include 'core/header.html' %}")
-        rendered = template.render(Context({
-            **self._content_context(),
-            "categories": categories,
-        }))
+        rendered = template.render(
+            Context(
+                {
+                    **self._content_context(),
+                    "categories": categories,
+                }
+            )
+        )
 
         dropdown_ids = re.findall(r'id="(navbarDropdownMenuLink\d+)"', rendered)
         self.assertEqual(dropdown_ids, ["navbarDropdownMenuLink0", "navbarDropdownMenuLink1"])
@@ -84,12 +137,16 @@ class SiteShellTemplateTests(TestCase):
             STATICFILES_DIRS=pulterit_settings.STATICFILES_DIRS,
         ):
             template = Template("{% include 'core/header.html' %}")
-            rendered = template.render(Context({
-                **self._content_context(),
-                "ASSOCIATION_NAME": "Pulterit",
-                "ENABLE_LANGUAGE_FEATURES": True,
-                "LANGUAGES": (("sv", "Svenska"), ("en", "English")),
-            }))
+            rendered = template.render(
+                Context(
+                    {
+                        **self._content_context(),
+                        "ASSOCIATION_NAME": "Pulterit",
+                        "ENABLE_LANGUAGE_FEATURES": True,
+                        "LANGUAGES": (("sv", "Svenska"), ("en", "English")),
+                    }
+                )
+            )
 
         self.assertIn("container-fluid px-3", rendered)
         self.assertIn("pulterit-white-wo-text.svg", rendered)
@@ -102,12 +159,15 @@ class SiteShellTemplateTests(TestCase):
             TEMPLATES=pulterit_settings.TEMPLATES,
             STATICFILES_DIRS=pulterit_settings.STATICFILES_DIRS,
         ):
-            rendered = render_to_string("core/base.html", {
-                **self._content_context(),
-                "ASSOCIATION_NAME": "Pulterit",
-                "ENABLE_LANGUAGE_FEATURES": True,
-                "LANGUAGES": (("sv", "Svenska"), ("en", "English")),
-            })
+            rendered = render_to_string(
+                "core/base.html",
+                {
+                    **self._content_context(),
+                    "ASSOCIATION_NAME": "Pulterit",
+                    "ENABLE_LANGUAGE_FEATURES": True,
+                    "LANGUAGES": (("sv", "Svenska"), ("en", "English")),
+                },
+            )
 
         shared_header_css = "core/css/header.css"
         pulterit_header_css = "core/css/header-overrides.css"
@@ -115,7 +175,28 @@ class SiteShellTemplateTests(TestCase):
         self.assertIn(pulterit_header_css, rendered)
         self.assertLess(rendered.index(shared_header_css), rendered.index(pulterit_header_css))
 
+    def test_pulterit_footer_keeps_shared_and_association_classes_separate(self):
+        pulterit_settings = importlib.import_module("core.settings.pulterit")
 
+        with override_settings(
+            TEMPLATES=pulterit_settings.TEMPLATES,
+            STATICFILES_DIRS=pulterit_settings.STATICFILES_DIRS,
+        ):
+            template = Template("{% include 'core/footer.html' %}")
+            rendered = template.render(Context(self._content_context()))
+
+        self.assertIn('class="container association-footer pulterit-footer"', rendered)
+        self.assertIn(
+            'class="association-footer-shell pulterit-footer-shell"',
+            rendered,
+        )
+        self.assertIn(
+            "association-footer-content pulterit-footer-content",
+            rendered,
+        )
+        self.assertIn("association-footer-brand pulterit-footer-brand", rendered)
+        self.assertIn("association-footer-copy pulterit-footer-copy", rendered)
+        self.assertNotIn("association-footerpulterit-footer", rendered)
 
     def test_language_picker_hides_when_disabled_in_header_template(self):
         template = Template("{% include 'core/header.html' %}")
@@ -126,13 +207,17 @@ class SiteShellTemplateTests(TestCase):
 
     def test_footer_handles_blank_social_urls_and_office_hours(self):
         template = Template("{% include 'core/footer.html' %}")
-        rendered = template.render(Context({
-            **self._content_context(),
-            "SOCIAL_BUTTONS": [
-                ["fa-facebook-f", "https://example.com/facebook"],
-                ["fa-github", ""],
-            ],
-        }))
+        rendered = template.render(
+            Context(
+                {
+                    **self._content_context(),
+                    "SOCIAL_BUTTONS": [
+                        ["fa-facebook-f", "https://example.com/facebook"],
+                        ["fa-github", ""],
+                    ],
+                }
+            )
+        )
 
         self.assertIn("https://example.com/facebook", rendered)
         self.assertNotIn('href=""', rendered)
@@ -156,6 +241,101 @@ class HealthCheckTests(TestCase):
         response = self.client.get(reverse("readyz"))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "ok"})
+
+
+class HomepageContextHelperTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.author = get_user_model().objects.create_user(
+            username="homepage-author",
+            password="pass",
+            email="homepage-author@example.com",
+        )
+        cls.albins_angels = Category.objects.create(
+            name="Albins Angels",
+            slug="albins-angels",
+        )
+
+    def _post(self, title, published_time, published=True):
+        return Post.objects.create(
+            title=title,
+            slug=title.lower().replace(" ", "-"),
+            category=self.albins_angels,
+            author=self.author,
+            published_time=published_time if published else None,
+        )
+
+    def test_recent_albins_angels_post_returns_newest_recent_published_post(self):
+        now = timezone.now()
+        older = self._post("Older recent", now - timedelta(days=2))
+        newest = self._post("Newest recent", now - timedelta(hours=1))
+        self._post("Too old", now - timedelta(days=11))
+        self._post("Draft recent", now - timedelta(minutes=30), published=False)
+        self._post("Scheduled future", now + timedelta(hours=1))
+
+        self.assertEqual(get_recent_albins_angels_post(now=now), newest)
+        self.assertNotEqual(get_recent_albins_angels_post(now=now), older)
+
+    def test_recent_albins_angels_post_returns_none_without_recent_posts(self):
+        now = timezone.now()
+        self._post("Too old", now - timedelta(days=11))
+
+        self.assertIsNone(get_recent_albins_angels_post(now=now))
+
+    def test_format_calendar_events_keys_by_start_date(self):
+        event_start = timezone.now() + timedelta(days=1)
+        event = Event.objects.create(
+            title="Calendar Event",
+            slug="calendar-event",
+            author=self.author,
+            event_date_start=event_start,
+            event_date_end=event_start + timedelta(hours=2),
+        )
+
+        payload = format_calendar_events([event])
+
+        event_key = event_start.strftime("%Y-%m-%d")
+        day_events = payload[event_key]
+        self.assertEqual(len(day_events), 1)
+        self.assertEqual(
+            day_events[0]["link"],
+            reverse("events:detail", kwargs={"slug": event.slug}),
+        )
+        self.assertEqual(day_events[0]["eventTitle"], event.title)
+        self.assertEqual(day_events[0]["eventFullDate"], event.event_date_start)
+
+    def test_format_calendar_events_keeps_all_events_on_the_same_day(self):
+        event_start = timezone.localtime(timezone.now()).replace(
+            hour=10, minute=0, second=0, microsecond=0
+        ) + timedelta(days=1)
+        first = Event.objects.create(
+            title="First Event",
+            slug="first-event",
+            author=self.author,
+            event_date_start=event_start,
+            event_date_end=event_start + timedelta(hours=1),
+        )
+        second = Event.objects.create(
+            title="Second Event",
+            slug="second-event",
+            author=self.author,
+            event_date_start=event_start + timedelta(hours=3),
+            event_date_end=event_start + timedelta(hours=4),
+        )
+
+        payload = format_calendar_events([first, second])
+
+        event_key = event_start.strftime("%Y-%m-%d")
+        day_events = payload[event_key]
+        self.assertEqual(len(day_events), 2)
+        self.assertEqual(
+            [event["eventTitle"] for event in day_events],
+            [first.title, second.title],
+        )
+        self.assertEqual(
+            day_events[1]["link"],
+            reverse("events:detail", kwargs={"slug": second.slug}),
+        )
 
 
 class AuditLogTestCase(TestCase):
@@ -424,6 +604,16 @@ class LanguageSelectionTests(TestCase):
         self.assertEqual(response.status_code, 500)
         self.assertContains(response, "Serverfel", status_code=500)
 
+    def test_error_handlers_close_stale_connections_before_rendering(self):
+        # The ASGI error path can reuse a connection that died on a previous
+        # per-request thread; the handlers must close it before rendering so
+        # the error page itself does not 500 with "connection already closed".
+        request = self.factory.get("/")
+        with patch("date.views.close_old_connections") as close:
+            handler404(request)
+            handler500(request)
+        self.assertEqual(close.call_count, 2)
+
     @override_settings(
         ENABLE_LANGUAGE_FEATURES=False,
         LANGUAGES=(("sv", "Svenska"),),
@@ -551,62 +741,110 @@ class LanguageSelectionTests(TestCase):
 
     def test_footer_skips_social_buttons_without_urls(self):
         template = Template("{% include 'core/footer.html' %}")
-        rendered = template.render(Context({
-            "SOCIAL_BUTTONS": [
-                ["fa-facebook-f", "https://example.com/facebook"],
-                ["fa-github", ""],
-            ],
-            "ASSOCIATION_NAME_FULL": "Test Association",
-            "ASSOCIATION_EMAIL": "test@example.com",
-            "ASSOCIATION_ADDRESS_L1": "Line 1",
-            "ASSOCIATION_ADDRESS_L2": "Line 2",
-            "ASSOCIATION_POSTAL_CODE": "12345",
-            "ASSOCIATION_OFFICE_HOURS": "",
-        }))
+        rendered = template.render(
+            Context(
+                {
+                    "SOCIAL_BUTTONS": [
+                        ["fa-facebook-f", "https://example.com/facebook"],
+                        ["fa-github", ""],
+                    ],
+                    "ASSOCIATION_NAME_FULL": "Test Association",
+                    "ASSOCIATION_EMAIL": "test@example.com",
+                    "ASSOCIATION_ADDRESS_L1": "Line 1",
+                    "ASSOCIATION_ADDRESS_L2": "Line 2",
+                    "ASSOCIATION_POSTAL_CODE": "12345",
+                    "ASSOCIATION_OFFICE_HOURS": "",
+                }
+            )
+        )
         self.assertIn("https://example.com/facebook", rendered)
         self.assertNotIn('href=""', rendered)
 
 
+class AssociationLanguageSettingsTests(SimpleTestCase):
+    """Biocum narrows the shared language list to Swedish and English, like
+    date and impuls do, so the published flag never exposes Finnish."""
+
+    def _biocum_languages(self, enable_language_features):
+        common = importlib.import_module("core.settings.common")
+        biocum = importlib.import_module("core.settings.biocum")
+        # The module reads ENABLE_LANGUAGE_FEATURES at import time, so reload
+        # it under the requested flag and restore its import-time state after
+        # the test.
+        self.addCleanup(importlib.reload, biocum)
+        with patch.object(common, "ENABLE_LANGUAGE_FEATURES", enable_language_features):
+            return importlib.reload(biocum).LANGUAGES
+
+    def test_biocum_offers_swedish_and_english_when_language_features_enabled(self):
+        self.assertEqual(
+            self._biocum_languages(True),
+            (("sv", "Svenska"), ("en", "English")),
+        )
+
+    def test_biocum_offers_swedish_only_when_language_features_disabled(self):
+        self.assertEqual(
+            self._biocum_languages(False),
+            (("sv", "Svenska"),),
+        )
+
+
+class ConnectionLifecycleMiddlewareTests(SimpleTestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_runs_lifecycle_around_response(self):
+        # Django's ASGI handler dispatches request_started/request_finished
+        # on the event loop thread, so close_old_connections must also run
+        # on the executor thread that owns the connection, via this
+        # middleware: once before the request (drop obsolete/poisoned
+        # connections) and once after (close or keep per CONN_MAX_AGE).
+        middleware = ConnectionLifecycleMiddleware(lambda request: HttpResponse("ok"))
+        with patch("date.middleware.close_old_connections") as close:
+            response = middleware(self.factory.get("/"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(close.call_count, 2)
+
+    def test_runs_lifecycle_when_view_raises(self):
+        def boom(request):
+            raise RuntimeError("boom")
+
+        middleware = ConnectionLifecycleMiddleware(boom)
+        with patch("date.middleware.close_old_connections") as close:
+            with self.assertRaises(RuntimeError):
+                middleware(self.factory.get("/"))
+        self.assertEqual(close.call_count, 2)
+
+
 class HomepageTemplateSelectionTests(TestCase):
-    @override_settings(PROJECT_NAME="kk")
+    @override_settings(APRIL_HOMEPAGE_ENABLED=True)
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
-    @patch("date.views.random.randrange", return_value=0)
-    def test_kk_uses_april_template_on_april_first_when_roll_matches(self, _randrange, _localdate):
+    @patch("date.views.secrets.randbelow", return_value=0)
+    def test_april_template_served_on_april_first_when_roll_matches(self, _randrange, _localdate):
         self.assertEqual(get_homepage_template_name(), "date/april_start.html")
 
-    @override_settings(PROJECT_NAME="kk")
+    @override_settings(APRIL_HOMEPAGE_ENABLED=True)
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
-    @patch("date.views.random.randrange", return_value=1)
-    def test_kk_uses_regular_template_on_april_first_when_roll_misses(self, _randrange, _localdate):
+    @patch("date.views.secrets.randbelow", return_value=1)
+    def test_regular_template_served_on_april_first_when_roll_misses(self, _randrange, _localdate):
         self.assertEqual(get_homepage_template_name(), "date/start.html")
 
-    @override_settings(PROJECT_NAME="kk")
+    @override_settings(APRIL_HOMEPAGE_ENABLED=True)
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 2))
-    def test_kk_uses_regular_template_outside_april_first(self, _localdate):
+    def test_regular_template_served_outside_april_first(self, _localdate):
         self.assertEqual(get_homepage_template_name(), "date/start.html")
 
-    @override_settings(PROJECT_NAME="date")
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
-    @patch("date.views.random.randrange", return_value=0)
-    def test_non_kk_never_uses_april_template(self, _randrange, _localdate):
+    @patch("date.views.secrets.randbelow", return_value=0)
+    def test_april_template_never_served_when_disabled(self, _randrange, _localdate):
         self.assertEqual(get_homepage_template_name(), "date/start.html")
 
 
 class AssociationHomepageSmokeTests(TestCase):
-    association_settings_modules = {
-        "date": "core.settings.date",
-        "kk": "core.settings.kk",
-        "biocum": "core.settings.biocum",
-        "demo": "core.settings.demo",
-        "pulterit": "core.settings.pulterit",
-    }
+    association_settings_modules = ASSOCIATION_SETTINGS_MODULES
 
     def _association_overrides(self, association):
         settings_module = importlib.import_module(self.association_settings_modules[association])
-        installed_apps = [
-            app for app in settings_module.INSTALLED_APPS
-            if app != "django_cleanup"
-        ]
+        installed_apps = [app for app in settings_module.INSTALLED_APPS if app != "django_cleanup"]
         overrides = {
             "PROJECT_NAME": association,
             "INSTALLED_APPS": installed_apps,
@@ -619,6 +857,10 @@ class AssociationHomepageSmokeTests(TestCase):
             "MEMBERS_SIGNUP_ENABLED": getattr(settings_module, "MEMBERS_SIGNUP_ENABLED", True),
             "BILLING_CONTEXT": getattr(settings_module, "BILLING_CONTEXT", {}),
             "EXPERIMENTAL_FEATURES": getattr(settings_module, "EXPERIMENTAL_FEATURES", []),
+            "APRIL_HOMEPAGE_ENABLED": getattr(settings_module, "APRIL_HOMEPAGE_ENABLED", False),
+            "REGISTRATION_TERMS_ENABLED": getattr(settings_module, "REGISTRATION_TERMS_ENABLED", False),
+            "EQUALITY_PLAN_ENABLED": getattr(settings_module, "EQUALITY_PLAN_ENABLED", False),
+            "KK_EVENT_TEMPLATES_ENABLED": getattr(settings_module, "KK_EVENT_TEMPLATES_ENABLED", False),
         }
         return overrides
 
@@ -626,10 +868,10 @@ class AssociationHomepageSmokeTests(TestCase):
         clear_url_caches()
         set_urlconf(None)
 
-    def _get_association_homepage(self, association):
+    def _get_association_homepage(self, association, **extra_overrides):
         default_admin_registry = admin.site._registry.copy()
         custom_admin_registry = admin_site._registry.copy()
-        with override_settings(**self._association_overrides(association)):
+        with override_settings(**self._association_overrides(association), **extra_overrides):
             self._clear_routing_caches()
             try:
                 return self.client.get("/")
@@ -644,9 +886,227 @@ class AssociationHomepageSmokeTests(TestCase):
                 response = self._get_association_homepage(association)
                 self.assertEqual(response.status_code, 200)
 
+    def test_biocum_homepage_offers_swedish_and_english_only(self):
+        biocum_settings = importlib.import_module("core.settings.biocum")
+        cache.clear()
+        response = self._get_association_homepage(
+            "biocum",
+            ENABLE_LANGUAGE_FEATURES=True,
+            LANGUAGES=biocum_settings.DATE_LANGUAGES,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'action="/set_lang/"')
+        self.assertContains(response, 'name="lang"')
+        self.assertContains(response, "Svenska")
+        self.assertContains(response, "English")
+        self.assertNotContains(response, "Suomi")
+        self.assertNotContains(response, 'value="fi"')
+
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
-    @patch("date.views.random.randrange", return_value=0)
+    @patch("date.views.secrets.randbelow", return_value=0)
     def test_kk_april_homepage_renders(self, _randrange, _localdate):
         response = self._get_association_homepage("kk")
 
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "date/april_start.html")
+
+
+class HomepageQueryTests(TestCase):
+    """The homepage evaluates each data queryset exactly once and caches the
+    assembled context for anonymous visitors. The version key is bumped on
+    every Event/Post/AdUrl/IgUrl save or delete, so admin edits invalidate
+    the cache immediately and the 300s TTL is only a backstop; development
+    uses the dummy cache, so caching is off there."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.author = get_user_model().objects.create_user(username="homepage-query-author")
+        cls.albins_angels = Category.objects.create(name="Albins Angels", slug="albins-angels")
+        Post.objects.create(
+            title="Uncategorized news",
+            slug="uncategorized-news",
+            author=cls.author,
+            category=None,
+            published_time=timezone.now(),
+        )
+
+    def test_homepage_context_uses_five_queries(self):
+        cache.clear()
+        with self.assertNumQueries(5):
+            _homepage_context()
+
+    def test_anonymous_homepage_is_cached_after_first_load(self):
+        cache.clear()
+        with CaptureQueriesContext(connection) as first:
+            self.client.get("/")
+        with CaptureQueriesContext(connection) as second:
+            response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        # Second load is a pure cache hit: the homepage context and the
+        # anonymous navigation are both cached.
+        self.assertLess(len(second), len(first))
+        self.assertEqual(len(second), 0)
+
+    def test_logged_in_homepage_is_not_cached(self):
+        cache.clear()
+        user = get_user_model().objects.create_user(username="member-user", password="pass")
+        self.client.force_login(user)
+        with CaptureQueriesContext(connection) as first:
+            self.client.get("/")
+        with CaptureQueriesContext(connection) as second:
+            self.client.get("/")
+        self.assertEqual(len(first), len(second))
+
+    def test_cache_serves_latest_events_after_ttl_expiry(self):
+        cache.clear()
+        with patch("date.views.HOMEPAGE_CACHE_TTL", 1):
+            self.client.get("/")
+            author = get_user_model().objects.create_user(username="event-author-2")
+            Event.objects.create(
+                title="Fresh Event",
+                slug="fresh-event",
+                author=author,
+                event_date_start=timezone.now(),
+                event_date_end=timezone.now() + timedelta(days=1),
+            )
+            # Wait out the 1s TTL: the cached context must expire and the
+            # next anonymous load must include the new event. Assert on the
+            # view context; the template fragment cache would mask the HTML.
+            time.sleep(1.1)
+            response = self.client.get("/")
+        self.assertIn("Fresh Event", [event.title for event in response.context["events"]])
+
+    def test_cache_key_is_isolated_by_language(self):
+        cache.clear()
+        with self.assertNumQueries(7):
+            self.client.get("/")
+        # A different active language must not reuse the Swedish entry (set
+        # via the language cookie; the locale middleware drives get_language).
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "fi"
+        with self.assertNumQueries(7):
+            self.client.get("/")
+
+    def test_admin_edit_invalidates_anonymous_cache(self):
+        cache.clear()
+        self.client.get("/")
+        author = get_user_model().objects.create_user(username="invalidation-author")
+        with self.captureOnCommitCallbacks(execute=True):
+            Post.objects.create(
+                title="Fresh Invalidation News",
+                slug="fresh-invalidation-news",
+                author=author,
+                category=None,
+                published_time=timezone.now(),
+            )
+        # The version key was bumped on commit, so the next anonymous load
+        # rebuilds the context and shows the new post without waiting out
+        # the TTL.
+        response = self.client.get("/")
+        self.assertIn(
+            "Fresh Invalidation News",
+            [post.title for post in response.context["news"]],
+        )
+
+    def test_event_save_invalidates_anonymous_cache(self):
+        cache.clear()
+        self.client.get("/")
+        author = get_user_model().objects.create_user(username="invalidation-event-author")
+        with self.captureOnCommitCallbacks(execute=True):
+            Event.objects.create(
+                title="Fresh Invalidation Event",
+                slug="fresh-invalidation-event",
+                author=author,
+                event_date_start=timezone.now(),
+                event_date_end=timezone.now() + timedelta(days=1),
+            )
+        response = self.client.get("/")
+        self.assertIn(
+            "Fresh Invalidation Event",
+            [event.title for event in response.context["events"]],
+        )
+
+    def test_admin_delete_invalidates_anonymous_cache(self):
+        cache.clear()
+        self.client.get("/")
+        with self.captureOnCommitCallbacks(execute=True):
+            Post.objects.filter(slug="uncategorized-news").delete()
+        response = self.client.get("/")
+        self.assertNotIn(
+            "Uncategorized news",
+            [post.title for post in response.context["news"]],
+        )
+
+    def test_version_key_eviction_never_resurrects_stale_entries(self):
+        cache.clear()
+        self.client.get("/")
+        # Simulate the version key being evicted while the homepage entry
+        # is still alive: the next load must not reuse the old generation.
+        cache.delete(_homepage_version_key())
+        # The context rebuilds from scratch (5 queries); the navigation is
+        # still served from its own cache.
+        with self.assertNumQueries(5):
+            self.client.get("/")
+
+    def test_dummy_cache_never_caches(self):
+        cache.clear()
+        with override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}):
+            with self.assertNumQueries(7):
+                self.client.get("/")
+            with self.assertNumQueries(7):
+                self.client.get("/")
+
+
+class CalendarClickDayCompatibilityTests(SimpleTestCase):
+    """Bind the calendar handler to the vendored library's own call signature.
+
+    The homepage handler previously read the selected day without checking what
+    the library passes as the callback's second argument. vanilla-calendar 1.x
+    passes the selected dates array, 2.x passes the calendar instance, so the
+    handler must accept either. Reading the signature out of the vendored file
+    makes this fail loudly if the library is swapped without updating the
+    handler, rather than only failing in a browser when a day is clicked.
+    """
+
+    repo_root = Path(__file__).resolve().parent.parent
+    library_path = repo_root / "static/common/date/js/vanilla-calendar.min.js"
+    partial_path = repo_root / "templates/common/date/partials/calendar_scripts.html"
+
+    _click_day_pattern = re.compile(r"actions\.clickDay\s*&&\s*[\w$.]+\.clickDay\(([^)]*)\)")
+
+    def _click_day_second_argument(self, source):
+        match = self._click_day_pattern.search(source)
+        if match is None:
+            self.fail(
+                "Could not find the clickDay invocation in "
+                f"{self.library_path.relative_to(self.repo_root)}; update this test "
+                "if the minified output changed."
+            )
+        arguments = [part.strip() for part in match.group(1).split(",")]
+        if len(arguments) != 2:
+            self.fail(f"Expected clickDay to be called with two arguments, got {arguments!r}")
+        return arguments[1]
+
+    def test_handler_matches_the_vendored_library_callback(self):
+        source = self.library_path.read_text(encoding="utf-8")
+        second_argument = self._click_day_second_argument(source)
+        handler = self.partial_path.read_text(encoding="utf-8")
+
+        # The handler must read whichever shape the vendored library passes. A
+        # property access on the instance means the second argument is the calendar
+        # itself, so the handler reads its selectedDates; a bare expression means
+        # the argument already is the dates, and the handler must accept an array.
+        if second_argument.split(".")[-1] == "selectedDates":
+            self.assertIn(
+                "Array.isArray(date)",
+                handler,
+                f"The vendored calendar passes {second_argument!r}, which is already the "
+                "selected dates array, so the handler must accept an array.",
+            )
+        else:
+            self.assertIn(
+                "date.selectedDates",
+                handler,
+                f"The vendored calendar passes {second_argument!r}, so the handler must "
+                "read the dates from that object.",
+            )

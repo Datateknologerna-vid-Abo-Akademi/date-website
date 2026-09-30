@@ -1,14 +1,14 @@
 import logging
 from urllib.parse import urlsplit, urlunsplit
 
+import django_otp
 from django.contrib.auth.forms import AuthenticationForm
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, resolve_url
-from django.utils.http import url_has_allowed_host_and_scheme
 from django.urls import resolve, reverse_lazy
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
-import django_otp
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from two_factor.forms import AuthenticationTokenForm, BackupTokenForm, TOTPDeviceForm
 from two_factor.views import (
@@ -34,12 +34,7 @@ def should_redirect_to_two_factor_setup(user, target):
         return False
 
     resolver_match = resolve(target)
-    if (
-        resolver_match.namespace == 'admin'
-        and user.is_active
-        and user.is_staff
-        and not member_has_2fa(user)
-    ):
+    if resolver_match.namespace == 'admin' and user.is_active and user.is_staff and not member_has_2fa(user):
         return False
 
     return True

@@ -1,19 +1,21 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% load i18n %}
-{% block title %}{% trans "Server error" %}{% endblock %}
-
-{% block extra_head %}
-    {{ block.super }}
-    <link href="{% static 'core/css/error-view.css' %}" rel="stylesheet">
+{% block title %}
+  {% trans "Server error" %}
 {% endblock %}
-
+{% block extra_head %}
+  {{ block.super }}
+  <link href="{% static 'core/css/error-view.css' %}" rel="stylesheet">
+{% endblock %}
 {% block content %}
-    <div class="container-soft">
-        <div class="text-wrapper">
-            <h1>- 500 -</h1>
-            <h2>{% trans 'Serverfel, försök igen om en stund' %}</h2>
-            <p><a href="{% url 'index' %}">{% trans 'Till startsidan' %}</a></p>
-        </div>
+  <div class="container-soft">
+    <div class="text-wrapper">
+      <h1>- 500 -</h1>
+      <h2>{% trans 'Serverfel, försök igen om en stund' %}</h2>
+      <p>
+        <a href="{% url 'index' %}">{% trans 'Till startsidan' %}</a>
+      </p>
     </div>
+  </div>
 {% endblock %}

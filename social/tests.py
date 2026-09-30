@@ -3,15 +3,15 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.urls import reverse
 
-from social.models import Harassment, HarassmentEmailRecipient
+from harassment.models import Harassment, HarassmentEmailRecipient
 
 
 class HarassmentViewTests(TestCase):
     def setUp(self):
         HarassmentEmailRecipient.objects.create(recipient_email="admin@example.com")
 
-    @patch("social.views.send_email_task")
-    @patch("social.views.validate_captcha", return_value=True)
+    @patch("harassment.views.send_email_task")
+    @patch("harassment.views.validate_captcha", return_value=True)
     def test_valid_submission_saves_report_and_enqueues_email_on_commit(
         self,
         _mock_validate_captcha,

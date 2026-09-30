@@ -1,4 +1,8 @@
 ingress:
+  enabled: false
+
+gateway:
+  enabled: true
   className: traefik
 
 postgresql:

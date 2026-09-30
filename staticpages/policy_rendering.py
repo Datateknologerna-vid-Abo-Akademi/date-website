@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 from django.shortcuts import render
 from django.utils.html import escape
-from django.utils.safestring import mark_safe
+from django.utils.safestring import SafeString
 
 MARKDOWN_HEADING_RE = re.compile(r'^(#{1,6})\s+(.*)$')
 
@@ -54,7 +54,8 @@ def render_markdown_to_html(markdown_text):
 
     flush_paragraph()
     flush_list()
-    return mark_safe("\n".join(blocks))
+    # All text runs through escape() in _render_inline_markdown — no raw user input in blocks.
+    return SafeString("\n".join(blocks))
 
 
 def render_policy_document(request, title, markdown_text, fetch_error=None, show_page_title=False):

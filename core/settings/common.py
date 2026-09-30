@@ -11,18 +11,14 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 # update
 
-import os
 import json
+import os
+
+import environ
 from django.templatetags.static import static
 from django.utils.translation import gettext_lazy as _
 
-import environ
-
 from .dependencies.ckeditor import *  # noqa
-
-# Makes more complicated typeings work at runtime
-import django_stubs_ext
-django_stubs_ext.monkeypatch()
 
 env = environ.Env(
     # set casting, default value
@@ -65,6 +61,7 @@ USE_UNFOLD = env('USE_UNFOLD', bool, False)
 
 def _get_unfold_sidebar_navigation(request):
     from core.admin_ui import get_sidebar_navigation
+
     return get_sidebar_navigation(request)
 
 
@@ -90,6 +87,7 @@ def _get_unfold_environment(request):
     # tests can override them via @override_settings without depending on env at
     # import time.
     from django.conf import settings as django_settings
+
     if getattr(django_settings, "DEVELOP", False) or getattr(django_settings, "DEBUG", False):
         return _("Development"), "warning"
 
@@ -111,7 +109,7 @@ UNFOLD = {
     },
     "COLORS": {
         "primary": {
-            "50":  "239 246 255",
+            "50": "239 246 255",
             "100": "219 234 254",
             "200": "191 219 254",
             "300": "147 197 253",
@@ -148,6 +146,7 @@ def get_installed_apps(proj_apps):
         'daphne',
         'date',
         'members.apps.MemberConfig',
+        'functionaries',
         *proj_apps,
         'modeltranslation',
         *(['unfold', 'unfold.contrib.filters', 'unfold.contrib.forms', 'unfold.contrib.inlines'] if USE_UNFOLD else []),
@@ -179,20 +178,60 @@ COMMON_TEMPLATE_DIRS = [
 ]
 
 
+def build_templates(variant, parent_variants=()):
+    """Template config for a variant, inheriting parent template dirs first.
+
+    The variant's own dir precedes its parents' dirs, then the shared
+    common dirs, matching Django template loader precedence.
+    """
+    return [
+        {
+            'BACKEND': 'django.template.backends.django.DjangoTemplates',
+            'DIRS': [
+                *[f'templates/{name}' for name in (variant, *parent_variants)],
+                *COMMON_TEMPLATE_DIRS,
+            ],
+            'APP_DIRS': True,
+            'OPTIONS': {
+                'context_processors': [
+                    *COMMON_CONTEXT_PROCESSORS,
+                    # Add project context processors here
+                ],
+            },
+        },
+    ]
+
+
+def build_static_dirs(variant, parent_variants=()):
+    """STATICFILES_DIRS for a variant.
+
+    Only the variant's own dir (plus explicitly listed parents) precedes the
+    shared common dir; template inheritance does not automatically extend to
+    static dirs.
+    """
+    return [
+        *[os.path.join(BASE_DIR, f'static/{name}') for name in (variant, *parent_variants)],
+        os.path.join(BASE_DIR, 'static/common'),
+    ]
+
+
 COMMON_CONTEXT_PROCESSORS = [
     'django.template.context_processors.debug',
     'django.template.context_processors.request',
     'django.template.context_processors.i18n',
     'django.contrib.auth.context_processors.auth',
     'django.contrib.messages.context_processors.messages',
-    'staticpages.context_processors.get_categories',
-    'staticpages.context_processors.get_urls',
+    'staticpages.context_processors.navigation',
     'core.context_processors.captcha_context',
     'core.context_processors.apply_content_variables',
 ]
 
 MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    # Run connection cleanup on the same executor thread as the views. This
+    # remains defense-in-depth for exceptional ASGI disconnect/error paths.
+    'date.middleware.ConnectionLifecycleMiddleware',
+    'date.middleware.ServerTimingMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'date.middleware.LanguageStateMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -204,17 +243,29 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'date.middleware.LangMiddleware',
     'date.middleware.HTCPCPMiddleware',
-    'date.middleware.CDNRewriteMiddleware'
 ]
+
+SERVER_TIMING_ENABLED = DEVELOP
 
 
 WSGI_APPLICATION = 'core.wsgi.application'
-ASGI_APPLICATION = 'core.routing.application'
+ASGI_APPLICATION = 'core.asgi.application'
+ASGI_HTTP_CONCURRENCY = env('ASGI_HTTP_CONCURRENCY', int, 8)
 
 
 REDIS_SERVER = env("REDIS_SERVER", str, "redis://redis:6379")
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", str, "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", str, CELERY_BROKER_URL)
+
+# No caller consumes task results (AsyncResult), so do not write them to the
+# broker Redis.
+CELERY_TASK_IGNORE_RESULT = True
+
+# Acknowledge tasks only after execution and requeue on worker loss, so a
+# worker killed mid-task (rollout, node drain, OOM) does not silently drop
+# the task. Tasks must tolerate redelivery (emails can be re-sent).
+CELERY_TASK_ACKS_LATE = True
+CELERY_TASK_REJECT_ON_WORKER_LOST = True
 
 
 CHANNEL_LAYERS = {
@@ -237,11 +288,20 @@ DATABASES = {
         'USER': env('DB_USERNAME', str, 'postgres'),
         'PASSWORD': env_alias('DATE_DB_PASSWORD', 'DB_PASSWORD', default=''),
         'HOST': env('DB_HOST', str, 'db'),
-        'PORT': env('DB_PORT', int, 5432)
+        'PORT': env('DB_PORT', int, 5432),
+        # Django 6 creates a thread-sensitive executor per ASGI request. A
+        # persistent connection would remain attached to the destroyed thread
+        # and accumulate until PostgreSQL reaps it. Close web-safe connections
+        # at request completion; deployments may override this for non-ASGI
+        # processes that have a reusable thread lifecycle.
+        'CONN_MAX_AGE': env('DB_CONN_MAX_AGE', int, 0),
+        # Re-verify persistent connections so they survive database restarts.
+        'CONN_HEALTH_CHECKS': True,
+        # Transaction poolers can assign a different PostgreSQL session
+        # between cursor declaration and fetch, invalidating named cursors.
+        'DISABLE_SERVER_SIDE_CURSORS': env('DB_DISABLE_SERVER_SIDE_CURSORS', bool, False),
     }
 }
-
-CONN_MAX_AGE = 600
 
 # Caches
 # https://docs.djangoproject.com/en/5.2/topics/cache/
@@ -284,17 +344,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTHENTICATION_BACKENDS = (
-    'members.backends.AuthBackend',
-)
+AUTHENTICATION_BACKENDS = ('members.backends.AuthBackend',)
 
 LOGIN_URL = 'members:login'
 LOGIN_REDIRECT_URL = 'members:info'
 
 # Make CKEditor5 Work with modeltranslations
-MODELTRANSLATION_CUSTOM_FIELDS = (
-    'CKEditor5Field',
-)
+MODELTRANSLATION_CUSTOM_FIELDS = ('CKEditor5Field',)
 
 
 def get_staff_groups(default_groups: list):
@@ -302,25 +358,22 @@ def get_staff_groups(default_groups: list):
     default_groups.extend(json.loads(os.environ.get('EXTRA_STAFF_GROUPS', '[]')))
     return default_groups
 
+
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
 
-LOCALE_PATHS = (
-    'locale',
-)
+LOCALE_PATHS = ('locale',)
 
-ALL_LANGUAGES = (
-    ('sv', ("Svenska")),
-    ('en', ("English")),
-    ('fi', ("Suomi"))
-)
+ALL_LANGUAGES = (('sv', ("Svenska")), ('en', ("English")), ('fi', ("Suomi")))
 
 LANGUAGE_CODE = 'sv'
 USE_ACCEPT_LANGUAGE_HEADER = False
 ENABLE_LANGUAGE_FEATURES = env('ENABLE_LANGUAGE_FEATURES', bool, False)
-LANGUAGES = ALL_LANGUAGES if ENABLE_LANGUAGE_FEATURES else (
-    tuple(language for language in ALL_LANGUAGES if language[0] == LANGUAGE_CODE)
+LANGUAGES = (
+    ALL_LANGUAGES
+    if ENABLE_LANGUAGE_FEATURES
+    else (tuple(language for language in ALL_LANGUAGES if language[0] == LANGUAGE_CODE))
 )
 # Keep modeltranslation's schema stable regardless of whether the multilingual
 # UI is currently enabled. Otherwise makemigrations can think translated fields
@@ -345,6 +398,26 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 PROJECT_NAME = os.environ.get("PROJECT_NAME", "date")
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# Association capabilities. Prefer these over direct PROJECT_NAME checks in
+# application code so a new association can enable behavior via settings.
+APRIL_HOMEPAGE_ENABLED = False
+REGISTRATION_TERMS_ENABLED = False
+EQUALITY_PLAN_ENABLED = False
+KK_EVENT_TEMPLATES_ENABLED = False
+
+# The runtime image is built with each association's static collected into
+# /code/static-collected/<PROJECT_NAME>; pick that tree when present so every
+# variant serves build-time static with no startup collection. Local
+# development (no such directory) falls back to the source tree default.
+STATIC_ROOT = env_alias(
+    'STATIC_ROOT',
+    default=(
+        f"/code/static-collected/{PROJECT_NAME}"
+        if os.path.isdir(f"/code/static-collected/{PROJECT_NAME}")
+        else os.path.join(PROJECT_DIR, 'static')
+    ),
+)
+
 # Cloudflare captcha config
 TURNSTILE_SECRET_KEY = env("CF_TURNSTILE_SECRET_KEY", str, "")
 CAPTCHA_SITE_KEY = env("CF_TURNSTILE_SITE_KEY", str, "")
@@ -352,14 +425,33 @@ CAPTCHA_SITE_KEY = env("CF_TURNSTILE_SITE_KEY", str, "")
 # S3 conf using django storages
 USE_S3 = env('USE_S3', bool, False)
 
+# Direct browser-to-storage uploads (Uppy) with presigned URLs. Only relevant
+# when USE_S3 is enabled: uploads then bypass the web process entirely and go
+# straight to the S3-compatible endpoint (e.g. Backblaze B2), with a small
+# signing API as the only origin-side step. Off by default; enable per
+# deployment once the bucket CORS/lifecycle setup from docs/dev/uploads.md
+# is in place.
+DIRECT_UPLOADS_ENABLED = env('DIRECT_UPLOADS_ENABLED', bool, False)
+# Key prefix for uploads that have not been attached to a model row yet.
+# Buckets should expire this prefix (see docs/dev/uploads.md).
+DIRECT_UPLOAD_TMP_PREFIX = 'tmp/'
+
 STORAGES = {
     "default": {
         "BACKEND": 'django.core.files.storage.FileSystemStorage',
     },
     "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    }
+        # Content-hashed filenames let browsers cache static assets
+        # indefinitely; the manifest is generated by collectstatic.
+        "BACKEND": "core.storage_backends.NonStrictManifestStaticFilesStorage",
+    },
 }
+
+# Serve static from the per-association public S3 bucket (same bucket as
+# media, 'static' prefix, CDN via the public custom domain) instead of the
+# pod filesystem. Requires a release-time collectstatic upload before the
+# flag is enabled on a site.
+STATIC_S3_ENABLED = env('STATIC_S3_ENABLED', bool, False)
 
 if USE_S3:
     # aws settings
@@ -372,30 +464,43 @@ if USE_S3:
             'S3_PRIVATE_BUCKET_NAME',
             'AWS_PRIVATE_STORAGE_BUCKET_NAME',
             default='',
-        ) or AWS_STORAGE_BUCKET_NAME
+        )
+        or AWS_STORAGE_BUCKET_NAME
     )
     AWS_PUBLIC_STORAGE_BUCKET_NAME = (
         env_alias(
             'S3_PUBLIC_BUCKET_NAME',
             'AWS_PUBLIC_STORAGE_BUCKET_NAME',
             default='',
-        ) or AWS_STORAGE_BUCKET_NAME
+        )
+        or AWS_STORAGE_BUCKET_NAME
     )
     AWS_S3_REGION_NAME = env_alias('S3_REGION_NAME', 'AWS_S3_REGION_NAME', default=None)
     AWS_S3_SIGNATURE_VERSION = env_alias('S3_SIGNATURE_VERSION', 'AWS_S3_SIGNATURE_VERSION', default=None)
     AWS_S3_ADDRESSING_STYLE = env_alias('S3_ADDRESSING_STYLE', 'AWS_S3_ADDRESSING_STYLE', default=None)
+    AWS_S3_PUBLIC_CUSTOM_DOMAIN = (
+        env_alias('S3_PUBLIC_CUSTOM_DOMAIN', 'AWS_S3_PUBLIC_CUSTOM_DOMAIN', default='') or None
+    )
+    AWS_S3_PRIVATE_CUSTOM_DOMAIN = (
+        env_alias('S3_PRIVATE_CUSTOM_DOMAIN', 'AWS_S3_PRIVATE_CUSTOM_DOMAIN', default='') or None
+    )
+    # Optional dedicated CDN domain for static; defaults to the public media
+    # domain (both serve the same bucket).
+    AWS_S3_STATIC_CUSTOM_DOMAIN = (
+        env_alias('S3_STATIC_CUSTOM_DOMAIN', 'AWS_S3_STATIC_CUSTOM_DOMAIN', default='') or None
+    )
     AWS_QUERYSTRING_AUTH = True
     AWS_QUERYSTRING_EXPIRE = 3600
 
     # s3 public media settings
     PRIVATE_MEDIA_LOCATION = env('PRIVATE_MEDIA_LOCATION')
     PUBLIC_MEDIA_LOCATION = env('PUBLIC_MEDIA_LOCATION')
-    MEDIA_URL = f'{AWS_S3_ENDPOINT_URL}/{AWS_PRIVATE_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/'
+    MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/{AWS_PRIVATE_STORAGE_BUCKET_NAME}/{PRIVATE_MEDIA_LOCATION}/"
 
-    def get_s3_storage_options(bucket_name, location, querystring_auth):
+    def get_s3_storage_options(bucket_name, location, querystring_auth, custom_domain=None):
         options = {
             "bucket_name": bucket_name,
-            "custom_domain": False,
+            "custom_domain": custom_domain or False,
             "location": location,
             "querystring_auth": querystring_auth,
         }
@@ -413,7 +518,9 @@ if USE_S3:
             AWS_PRIVATE_STORAGE_BUCKET_NAME,
             PRIVATE_MEDIA_LOCATION,
             AWS_QUERYSTRING_AUTH,
-        ) | {"querystring_expire": AWS_QUERYSTRING_EXPIRE},
+            AWS_S3_PRIVATE_CUSTOM_DOMAIN,
+        )
+        | {"querystring_expire": AWS_QUERYSTRING_EXPIRE},
     }
     STORAGES["public_media"] = {
         "BACKEND": "core.storage_backends.PublicMediaStorage",
@@ -421,8 +528,20 @@ if USE_S3:
             AWS_PUBLIC_STORAGE_BUCKET_NAME,
             PUBLIC_MEDIA_LOCATION,
             False,
+            AWS_S3_PUBLIC_CUSTOM_DOMAIN,
         ),
     }
+
+    if STATIC_S3_ENABLED:
+        STORAGES["staticfiles"] = {
+            "BACKEND": "core.storage_backends.StaticStorage",
+            "OPTIONS": get_s3_storage_options(
+                AWS_PUBLIC_STORAGE_BUCKET_NAME,
+                "static",
+                False,
+                AWS_S3_STATIC_CUSTOM_DOMAIN or AWS_S3_PUBLIC_CUSTOM_DOMAIN,
+            ),
+        }
 
 else:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -433,7 +552,12 @@ else:
     PUBLIC_MEDIA_LOCATION = 'media/public'
     AWS_STORAGE_BUCKET_NAME = "media"
 
-STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
+# Development serves static from the local finders by default; an explicit
+# STATIC_S3_ENABLED wins so S3 URLs are used even when DEBUG is on (e.g. CI
+# containers inherit DATE_DEBUG from .env).
+if DEBUG and not STATIC_S3_ENABLED:
+    STORAGES["staticfiles"]["BACKEND"] = "django.contrib.staticfiles.storage.StaticFilesStorage"
+
 STATIC_URL = '/static/'
 
 LOGOUT_REDIRECT_URL = 'index'
@@ -445,11 +569,12 @@ if DEBUG:
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
-EMAIL_USE_TLS = True
+EMAIL_USE_TLS = env('EMAIL_USE_TLS', bool, True)
+EMAIL_USE_SSL = env('EMAIL_USE_SSL', bool, False)
 EMAIL_HOST = env('EMAIL_HOST', str, '')
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', str, '')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', str, '')
-EMAIL_PORT = 587
+EMAIL_PORT = env('EMAIL_PORT', int, 587)
 
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', str, '')
 EMAIL_HOST_RECEIVER = env('EMAIL_HOST_RECEIVER', str, '')
@@ -475,29 +600,26 @@ LOGGING = {
     'formatters': {
         'verbose': {
             '()': 'core.redaction.RedactingFormatter',
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s',
         },
-        'simple': {
-            '()': 'core.redaction.RedactingFormatter',
-            'format': '%(levelname)s %(message)s'
+        'simple': {'()': 'core.redaction.RedactingFormatter', 'format': '%(levelname)s %(message)s'},
+    },
+    'filters': {
+        # Python 3.14 reports exceptions from shielded futures that nobody
+        # retrieves through the event loop exception handler, which logs them on
+        # the 'asyncio' logger at ERROR. A client disconnect cancels the request
+        # task while asgiref's sync bridge is often awaiting asyncio.shield(...),
+        # so the shielded future finishes with a harmless CancelledError. The
+        # filter drops only those cancellation records; any other shielded-future
+        # failure still reaches the log.
+        'shielded_future_cancellation': {
+            '()': 'core.redaction.ShieldedFutureCancellationFilter',
         },
     },
     'handlers': {
-        'console': {
-            'level': 'NOTSET',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple'
-        },
-        'console_debug': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple'
-        },
-        'console_error': {
-            'level': 'ERROR',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
-        },
+        'console': {'level': 'NOTSET', 'class': 'logging.StreamHandler', 'formatter': 'simple'},
+        'console_debug': {'level': 'DEBUG', 'class': 'logging.StreamHandler', 'formatter': 'simple'},
+        'console_error': {'level': 'ERROR', 'class': 'logging.StreamHandler', 'formatter': 'verbose'},
     },
     'loggers': {
         'django': {
@@ -524,15 +646,30 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
-        }
-    }
+        },
+        'uvicorn': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        # Without an entry here the record falls through to logging.lastResort
+        # and prints unformatted. Keep the handler and an INFO level so genuine
+        # asyncio errors and warnings stay visible with normal formatting, and
+        # gate only the benign shielded-future cancellations with the filter.
+        # The filter belongs on this logger: a filter on an ancestor logger does
+        # not gate records that propagate up to it, and asyncio logs on itself.
+        'asyncio': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'filters': ['shielded_future_cancellation'],
+            'propagate': False,
+        },
+    },
 }
 
 EXPERIMENTAL_FEATURES = []
 
-
-# CDN settings
-CDN_URL_TRANSFORMATIONS = [
-    ("fra1.digitaloceanspaces.com/albin-storage/", "albin-storage.cdn.datateknologerna.org/"),
-    ("albin-storage.fra1.digitaloceanspaces.com/", "albin-storage.cdn.datateknologerna.org/"),
-]
+# Re-export every public name so that `from .common import *` in a
+# variant settings module brings along imported helpers (os, BASE_DIR,
+# COMMON_TEMPLATE_DIRS, etc.) alongside the settings themselves.
+__all__ = [name for name in globals() if not name.startswith('_')]

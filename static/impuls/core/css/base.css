@@ -1,0 +1,193 @@
+html {
+    scroll-behavior: smooth;
+}
+
+html body{
+    background-color: var(--primaryColor);
+    color: var(--textColorLightish);
+    font-family: 'Josefin Sans', sans-serif;
+}
+
+.header-logo {
+    object-fit: contain;
+}
+
+.association-footer-brand .footer-img {
+    max-height: 160px;
+    object-fit: contain;
+}
+
+.footer-partner-logo svg {
+    max-height: 155px;
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.footer-partner-link {
+    display: inline-block;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.footer-partner-link:hover {
+    transform: scale(1.03);
+    opacity: 0.75;
+}
+
+.footer-credit-link {
+    transition: opacity 0.2s, filter 0.2s;
+}
+
+.footer-credit-link:hover {
+    opacity: 0.85;
+    color: var(--linkColorLightHover) !important;
+    filter: drop-shadow(0 0 8px var(--linkColorLightHover)) drop-shadow(0 0 16px var(--linkColorLight));
+}
+
+.content img{
+    max-height: 35vh;
+    max-width: 100%;
+    width: auto !important;
+    height: auto !important;
+    border-radius: var(--defaultRadius);
+}
+
+
+.content a img {
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.content a:hover img {
+    transform: scale(1.03);
+    opacity: 0.75;
+}
+
+.content a img.editor-img-no-hover,
+.content figure.editor-img-no-hover a img {
+    transition: none;
+}
+
+.content a:hover img.editor-img-no-hover,
+.content figure.editor-img-no-hover a:hover img {
+    transform: none;
+    opacity: 1;
+}
+
+/* Link colors */
+div a{
+    color: var(--linkColorLight);
+    display: inline-block;
+    text-decoration: none;
+}
+
+div a:hover{
+    transition: 0.3s;
+    color: var(--linkColorLightHover);
+}
+/* ---- */
+
+.break-words{
+    word-break: break-all;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+/* TEXT COLORS */
+.help-text{
+    color: var(--helpText);
+}
+
+.warning{
+    color: var(--warning);
+}
+/* ---- */
+
+.container-margin-top {
+    margin-top: 12vh;
+}
+
+.container-size{
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.content{
+    margin: 20px 2vw;
+    background-color: var(--primaryColorLight);
+    padding: var(--defaultPadding);
+    border-radius: var(--defaultRadius);
+    overflow: hidden;
+}
+
+/*  BUTTON */
+.theme-button {
+    background-color: var(--primaryColorLighter);
+    border: none;
+    color: var(--linkColorLight);
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 16px;
+    border-radius: 5px;
+    font-family: 'Josefin Sans', sans-serif;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    /* Additional styles for interactions */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    outline: none; /* Prevents focus outline */
+}
+
+.theme-button:hover {
+    background-color: var(--primaryColorLighte);
+    color: var(--linkColorLightHover);
+}
+
+.theme-button:active {
+    transform: scale(0.95); /* Adds a slight click effect */
+}
+
+.theme-button:disabled {
+    opacity: 0.6; /* Styles for disabled state */
+    cursor: not-allowed;
+}
+
+/* Additional hover effect */
+.theme-button.alt:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.theme-button .fa-chevron-right{
+    transition: .3s;
+  }
+
+.theme-button:hover .fa-chevron-right{
+    transform: translateX(10px);
+  }
+
+/* ---- */
+
+@media (max-width: 767.98px) {
+    .association-footer-brand .footer-img {
+        margin-left: 8px;
+    }
+
+    .footer-partner-logo svg {
+        max-height: 120px;
+    }
+}
+
+
+/* Basic table colors */
+table.table {
+    --bs-table-bg: #212529;
+    --bs-table-striped-bg: #2c3034;
+    --bs-table-striped-color: #fff;
+    --bs-table-active-bg: #373b3e;
+    --bs-table-active-color: #fff;
+    --bs-table-hover-bg: #323539;
+    --bs-table-hover-color: #fff;
+    color: #fff;
+    border-color: #373b3e;
+}
+/* ---- */

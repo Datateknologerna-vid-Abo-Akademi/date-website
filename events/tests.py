@@ -1,23 +1,35 @@
+import importlib
 import logging
+import threading
+import time
 from types import SimpleNamespace
+from unittest import skipUnless
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
-from django.test import Client, TestCase, override_settings
+from django.db import IntegrityError, connection, transaction
+from django.db.migrations.executor import MigrationExecutor
+from django.db.models import QuerySet
+from django.forms.models import inlineformset_factory
+from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.test.client import RequestFactory
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
-from django.utils.formats import date_format
 from django.utils import timezone, translation
+from django.utils.formats import date_format
 from django.utils.translation import gettext
 from django_ckeditor_5.widgets import CKEditor5Widget
 
+from events.admin import EventAttendeesFormInline, EventRegistrationFormSet
 from events.forms import EventCreationForm, EventEditForm
 from events.models import Event, EventAttendees, EventRegistrationForm
+from events.registration import EventSignupError, register_event_signup
 from events.routing import websocket_urlpatterns
 from events.websocket_utils import ws_data, ws_send
-from members.models import Member, ORDINARY_MEMBER, Subscription, SubscriptionPayment, MembershipType
+from members.models import ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
 from news.models import Category, Post
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
 
@@ -43,11 +55,7 @@ class EventTestCase(TestCase):
         )
 
         subscription = Subscription.objects.create(
-            name="Basic Subscription",
-            does_expire=True,
-            renewal_scale="year",
-            renewal_period=1,
-            price=100.00
+            name="Basic Subscription", does_expire=True, renewal_scale="year", renewal_period=1, price=100.00
         )
 
         self.subpay = SubscriptionPayment.objects.create(
@@ -55,14 +63,17 @@ class EventTestCase(TestCase):
             subscription=subscription,
             date_paid=timezone.now() - timezone.timedelta(days=1),
             date_expires=timezone.now() + timezone.timedelta(days=365),
-            amount_paid=100.00
+            amount_paid=100.00,
         )
 
-        self.event = Event.objects.create(title='Test event',
-                                          slug='test',
-                                          author_id=self.member.id,
-                                          sign_up_deadline=(timezone.now() + timezone.timedelta(days=7))
-                                          )
+        self.event = Event.objects.create(
+            title='Test event',
+            slug='test',
+            author_id=self.member.id,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
+        )
         self.content = {'user': 'person', 'email': 'person@test.com', 'terms_accepted': 'on'}
         self.assertIsNotNone(self.event)
         self.assertTrue(self.event.published)
@@ -90,8 +101,11 @@ class EventTestCase(TestCase):
         self.event.unpublish()
         self.assertEqual(self.event.get_registrations().count(), 0)
         c = Client()
-        response = c.post(reverse('events:detail', args=[self.event.slug]),
-                          {'user': 'person', 'email': 'person@test.com', 'terms_accepted': 'on'}, follow=True)
+        response = c.post(
+            reverse('events:detail', args=[self.event.slug]),
+            {'user': 'person', 'email': 'person@test.com', 'terms_accepted': 'on'},
+            follow=True,
+        )
         self.assertEqual(response.redirect_chain[0][1], 302)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.event.get_registrations().count(), 1)
@@ -141,6 +155,27 @@ class EventTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         response = c.get(reverse('events:detail', args=['no-such-event']))
         self.assertEqual(response.status_code, 404)
+
+    def test_scheduled_event_is_hidden_until_publish_time(self):
+        self.event.published_time = timezone.now() + timezone.timedelta(days=1)
+        self.event.save()
+
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get(reverse('events:index'))
+        self.assertNotIn(self.event, list(response.context["event_list"]))
+        self.assertNotIn(self.event, list(response.context["past_events"]))
+
+    def test_past_publish_time_makes_event_public(self):
+        self.event.published_time = timezone.now() - timezone.timedelta(minutes=1)
+        self.event.save()
+
+        response = self.client.get(reverse('events:detail', args=[self.event.slug]))
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get(reverse('events:index'))
+        self.assertIn(self.event, list(response.context["past_events"]))
 
     def test_event_detail_shows_closed_registration_message_after_deadline(self):
         self.event.sign_up_members = timezone.now() - timezone.timedelta(days=2)
@@ -308,6 +343,8 @@ class EventTestCase(TestCase):
             title='Biologica VII',
             slug='biologica-vii',
             author_id=self.member.id,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
         )
         c = Client()
@@ -320,6 +357,8 @@ class EventTestCase(TestCase):
             title='Årsfest 2026',
             slug='arsfest-2026',
             author_id=self.member.id,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
         )
         c = Client()
@@ -336,16 +375,24 @@ class EventTestCase(TestCase):
         self.assertEqual(self.event.get_registrations().last().anonymous, True)
         with translation.override(details.wsgi_request.LANGUAGE_CODE):
             anonymous_label = gettext("Anonymt")
-        self.assertContains(details, f'<i>{anonymous_label}</i>', count=1)
+        self.assertContains(details, f"<i>{anonymous_label}</i>", count=1)
 
     def test_custom_fields(self):
-        EventRegistrationForm(event=self.event, choice_number=1, name='field1',
-                              type='text', required=False, public_info=True).save()
-        EventRegistrationForm(event=self.event, choice_number=2, name='field2',
-                              type='select', required=False, public_info=True,
-                              choice_list='choice 1,choice 2,choice 3').save()
-        EventRegistrationForm(event=self.event, choice_number=3, name='field3',
-                              type='checkbox', required=False, public_info=True).save()
+        EventRegistrationForm(
+            event=self.event, choice_number=1, name='field1', type='text', required=False, public_info=True
+        ).save()
+        EventRegistrationForm(
+            event=self.event,
+            choice_number=2,
+            name='field2',
+            type='select',
+            required=False,
+            public_info=True,
+            choice_list='choice 1,choice 2,choice 3',
+        ).save()
+        EventRegistrationForm(
+            event=self.event, choice_number=3, name='field3', type='checkbox', required=False, public_info=True
+        ).save()
 
         c = Client()
         response = c.get(reverse('events:detail', args=[self.event.slug]))
@@ -364,6 +411,9 @@ class EventTestCase(TestCase):
         self.assertContains(response, '<td>True</td>', count=1)
 
     def test_max_participants(self):
+        # Parent/standalone events have no hard cap: once full they keep accepting
+        # signups as reserve-list overflow (see EventCapacityTests for the child-event
+        # hard-block case).
         self.event.sign_up_max_participants = 1
         self.event.save()
         c = Client()
@@ -372,8 +422,8 @@ class EventTestCase(TestCase):
         self.content['email'] = 'person2@test.com'
         response = c.post(reverse('events:detail', args=[self.event.slug]), self.content)
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(self.event.get_registrations().count(), 1)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.event.get_registrations().count(), 2)
 
     def test_avec_signup_saves_custom_field_preferences_for_both_attendees(self):
         self.event.sign_up_avec = True
@@ -381,15 +431,27 @@ class EventTestCase(TestCase):
         self.event.save()
 
         EventRegistrationForm.objects.create(
-            event=self.event, choice_number=1, name='meal', type='text', required=False,
+            event=self.event,
+            choice_number=1,
+            name='meal',
+            type='text',
+            required=False,
         )
         c = Client()
-        response = c.post(reverse('events:detail', args=[self.event.slug]), {
-            'user': 'Primary', 'email': 'primary@test.com', 'terms_accepted': 'on',
-            'meal': 'fish',
-            'avec': 'on', 'avec_user': 'Guest', 'avec_email': 'guest@test.com',
-            'avec_meal': 'veg',
-        }, follow=True)
+        response = c.post(
+            reverse('events:detail', args=[self.event.slug]),
+            {
+                'user': 'Primary',
+                'email': 'primary@test.com',
+                'terms_accepted': 'on',
+                'meal': 'fish',
+                'avec': 'on',
+                'avec_user': 'Guest',
+                'avec_email': 'guest@test.com',
+                'avec_meal': 'veg',
+            },
+            follow=True,
+        )
 
         self.assertEqual(response.status_code, 200)
         primary = self.event.get_registrations().get(email='primary@test.com')
@@ -426,7 +488,7 @@ class EventTestCase(TestCase):
             'user': 'person',
             'email': 'person@test.com',
             'terms_accepted': 'on',
-            'cf-turnstile-response': 'test'
+            'cf-turnstile-response': 'test',
         }
         response = c.post(reverse('events:detail', args=[self.event.slug]), content, follow=True)
         mock_validate_captcha.assert_called()
@@ -483,6 +545,139 @@ class EventTestCase(TestCase):
         mock_handle_event_billing.assert_called_once_with(attendee)
 
 
+class EventsUpcomingApiTests(TestCase):
+    def setUp(self):
+        self.author = Member.objects.create_user(username="api-test-author")
+        self.event = Event.objects.create(
+            title='Perftest',
+            slug='perftest-api',
+            author=self.author,
+            event_date_start=timezone.now() + timezone.timedelta(days=1),
+            event_date_end=timezone.now() + timezone.timedelta(days=1, hours=2),
+        )
+
+    def test_returns_published_upcoming_event(self):
+        c = Client()
+        response = c.get(reverse('api:events:upcoming'))
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(len(payload["events"]), 1)
+        entry = payload["events"][0]
+        self.assertEqual(entry["slug"], self.event.slug)
+        self.assertEqual(entry["title"], self.event.title)
+        self.assertEqual(entry["event_date_start"], self.event.event_date_start.isoformat())
+        self.assertEqual(entry["event_date_end"], self.event.event_date_end.isoformat())
+        self.assertEqual(entry["content"], self.event.content)
+        self.assertEqual(entry["redirect_link"], self.event.redirect_link)
+        self.assertTrue(entry["url"].endswith(reverse('events:detail', args=[self.event.slug])))
+
+    def test_does_not_require_authentication(self):
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([entry["slug"] for entry in response.json()["events"]], [self.event.slug])
+
+    def test_excludes_unpublished_event(self):
+        self.event.published_time = None
+        self.event.save()
+
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertEqual(response.json()["events"], [])
+
+    def test_excludes_past_event(self):
+        self.event.event_date_start = timezone.now() - timezone.timedelta(days=2)
+        self.event.event_date_end = timezone.now() - timezone.timedelta(days=1)
+        self.event.save()
+
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertEqual(response.json()["events"], [])
+
+    def test_excludes_members_only_event(self):
+        self.event.members_only = True
+        self.event.save()
+
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertEqual(response.json()["events"], [])
+
+    def test_excludes_passcode_protected_event(self):
+        self.event.passcode = 'secret'
+        self.event.save()
+
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertEqual(response.json()["events"], [])
+
+    def test_sets_public_cache_control_with_vary_cookie(self):
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertIn('max-age=60', response.headers['Cache-Control'])
+        self.assertIn('public', response.headers['Cache-Control'])
+        self.assertIn('Cookie', response.headers['Vary'])
+
+    def test_lang_parameter_overrides_cookie_language(self):
+        self.event.title_en = 'English title'
+        self.event.title_sv = 'Svensk titel'
+        self.event.save()
+
+        response = self.client.get(reverse('api:events:upcoming'), {'lang': 'en'})
+
+        self.assertEqual(response.json()["events"][0]["title"], 'English title')
+
+    def test_unknown_lang_parameter_is_ignored(self):
+        response = self.client.get(reverse('api:events:upcoming'), {'lang': 'not-a-real-language'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["events"][0]["title"], self.event.title)
+
+    def test_head_request_is_allowed(self):
+        response = self.client.head(reverse('api:events:upcoming'))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_orders_tied_events_by_id(self):
+        earlier_id_event = self.event
+        later_id_event = Event.objects.create(
+            title='Perftest 2',
+            slug='perftest-api-2',
+            author=self.author,
+            event_date_start=earlier_id_event.event_date_start,
+            event_date_end=earlier_id_event.event_date_end,
+        )
+        self.assertLess(earlier_id_event.pk, later_id_event.pk)
+
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertEqual(
+            [entry["slug"] for entry in response.json()["events"]],
+            [earlier_id_event.slug, later_id_event.slug],
+        )
+
+    def test_response_is_not_truncated_below_the_cap(self):
+        response = self.client.get(reverse('api:events:upcoming'))
+
+        self.assertFalse(response.json()["truncated"])
+
+    def test_response_reports_truncation_above_the_cap(self):
+        Event.objects.create(
+            title='Perftest 2',
+            slug='perftest-api-2',
+            author=self.author,
+            event_date_start=self.event.event_date_start,
+            event_date_end=self.event.event_date_end,
+        )
+
+        with patch('events.api.MAX_RESULTS', 1):
+            response = self.client.get(reverse('api:events:upcoming'))
+
+        payload = response.json()
+        self.assertEqual(len(payload["events"]), 1)
+        self.assertTrue(payload["truncated"])
+
+
 class EventRegistrationWindowTests(TestCase):
     def setUp(self):
         self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
@@ -528,8 +723,6 @@ class EventRegistrationWindowTests(TestCase):
 
 
 class EventAdminTests(TestCase):
-    NON_DATE_PROJECTS = ("kk", "on", "pulterit", "biocum", "demo")
-
     def setUp(self):
         self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
         self.admin_user = Member.objects.create_superuser(
@@ -622,6 +815,305 @@ class EventAdminTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'column-original_event')
 
+    @patch("modeltranslation.admin.TranslationInlineModelAdmin.get_formset")
+    def test_attendees_inline_formset_passes_complete_exclude_list(self, get_formset):
+        """The dynamic avec exclusion must preserve readonly exclusions.
+
+        Production runs without translation inlines, so the exclude list our
+        override passes up reaches Django's InlineModelAdmin.get_formset,
+        which applies kwargs after its defaults and would otherwise drop the
+        readonly-field exclusion and leave time_registered required.
+        """
+        request = RequestFactory().get("/admin/events/event/change/")
+        request.user = self.admin_user
+        inline = EventAttendeesFormInline(Event, admin.site)
+
+        inline.get_formset(request, obj=self.event)
+
+        _, kwargs = get_formset.call_args
+        self.assertCountEqual(kwargs["exclude"], ["time_registered", "avec_for"])
+
+    def _attendees_formset(self, rows, initial_forms=None):
+        data = {
+            "eventattendees_set-TOTAL_FORMS": len(rows),
+            "eventattendees_set-INITIAL_FORMS": len(rows) if initial_forms is None else initial_forms,
+            "eventattendees_set-MIN_NUM_FORMS": "0",
+            "eventattendees_set-MAX_NUM_FORMS": "1000",
+        }
+        for row in rows:
+            data.update(row)
+        request = RequestFactory().get("/admin/events/event/change/")
+        request.user = self.admin_user
+        inline = EventAttendeesFormInline(Event, admin.site)
+        formset_class = inline.get_formset(request, obj=self.event)
+        return formset_class(
+            data=data,
+            instance=self.event,
+            queryset=EventAttendees.objects.filter(event=self.event),
+            prefix="eventattendees_set",
+        )
+
+    def _attendee_row(self, index, pk, nr, user, email):
+        return {
+            f"eventattendees_set-{index}-id": pk,
+            f"eventattendees_set-{index}-event": self.event.pk,
+            f"eventattendees_set-{index}-attendee_nr": nr,
+            f"eventattendees_set-{index}-user": user,
+            f"eventattendees_set-{index}-email": email,
+        }
+
+    def _ordered_attendee_rows(self):
+        return list(
+            EventAttendees.objects.filter(event=self.event).order_by("attendee_nr").values_list("user", "attendee_nr")
+        )
+
+    def test_drag_reorder_writes_final_numbers_without_unique_violation(self):
+        # The admin_ordering drag submits the final values (10, 20, ...) in
+        # the new visual order while the form indices keep the original
+        # order. Here C(30) is dragged to the top, so the sequential per-row
+        # saves would collide (B's final 30 vs C's current 30) without the
+        # formset's pre-save band shift.
+        for nr, user, email in (
+            (10, "A", "a@example.com"),
+            (20, "B", "b@example.com"),
+            (30, "C", "c@example.com"),
+        ):
+            EventAttendees.objects.create(
+                event=self.event,
+                user=user,
+                email=email,
+                attendee_nr=nr,
+                preferences={},
+            )
+        a, b, c = EventAttendees.objects.filter(event=self.event).order_by("attendee_nr")
+
+        formset = self._attendees_formset(
+            [
+                self._attendee_row(0, a.pk, 20, "A", "a@example.com"),
+                self._attendee_row(1, b.pk, 30, "B", "b@example.com"),
+                self._attendee_row(2, c.pk, 10, "C", "c@example.com"),
+            ]
+        )
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+
+        self.assertEqual(self._ordered_attendee_rows(), [("C", 10), ("A", 20), ("B", 30)])
+
+    def test_drag_reorder_preserves_unchanged_rows(self):
+        # Dragging C(30) between A(10) and B(20) leaves A's number unchanged;
+        # Django skips saving unchanged forms, so the band shift must restore
+        # A instead of leaving it on a shifted value.
+        for nr, user, email in (
+            (10, "A", "a@example.com"),
+            (20, "B", "b@example.com"),
+            (30, "C", "c@example.com"),
+        ):
+            EventAttendees.objects.create(
+                event=self.event,
+                user=user,
+                email=email,
+                attendee_nr=nr,
+                preferences={},
+            )
+        a, b, c = EventAttendees.objects.filter(event=self.event).order_by("attendee_nr")
+
+        formset = self._attendees_formset(
+            [
+                self._attendee_row(0, a.pk, 10, "A", "a@example.com"),
+                self._attendee_row(1, b.pk, 30, "B", "b@example.com"),
+                self._attendee_row(2, c.pk, 20, "C", "c@example.com"),
+            ]
+        )
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+
+        self.assertEqual(self._ordered_attendee_rows(), [("A", 10), ("C", 20), ("B", 30)])
+
+    def test_save_without_reorder_leaves_numbers_untouched(self):
+        EventAttendees.objects.create(
+            event=self.event,
+            user="A",
+            email="a@example.com",
+            attendee_nr=10,
+            preferences={},
+        )
+        EventAttendees.objects.create(
+            event=self.event,
+            user="B",
+            email="b@example.com",
+            attendee_nr=20,
+            preferences={},
+        )
+        a, b = EventAttendees.objects.filter(event=self.event).order_by("attendee_nr")
+
+        formset = self._attendees_formset(
+            [
+                self._attendee_row(0, a.pk, 10, "A", "a@example.com"),
+                self._attendee_row(1, b.pk, 20, "B", "b@example.com"),
+            ]
+        )
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+
+        self.assertEqual(self._ordered_attendee_rows(), [("A", 10), ("B", 20)])
+
+    def test_save_with_concurrent_signup_renumbers_stale_form_row(self):
+        # A signup created after the admin page was loaded is not part of the
+        # submitted formset but already holds attendee_nr 20. The stale form
+        # row also claims 20; the save must renumber the stale row instead of
+        # tripping unique_attendee_nr_per_event in the post-save restore.
+        a = EventAttendees.objects.create(
+            event=self.event,
+            user="A",
+            email="a@example.com",
+            attendee_nr=10,
+            preferences={},
+        )
+        x = EventAttendees.objects.create(
+            event=self.event,
+            user="X",
+            email="x@example.com",
+            attendee_nr=20,
+            preferences={},
+        )
+        formset = self._attendees_formset(
+            [
+                self._attendee_row(0, a.pk, 10, "A", "a@example.com"),
+                {
+                    "eventattendees_set-1-event": self.event.pk,
+                    "eventattendees_set-1-attendee_nr": 20,
+                    "eventattendees_set-1-user": "B",
+                    "eventattendees_set-1-email": "b@example.com",
+                },
+            ],
+            initial_forms=1,
+        )
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+
+        numbers = dict(EventAttendees.objects.filter(event=self.event).values_list("user", "attendee_nr"))
+        self.assertEqual(numbers["A"], 10)
+        self.assertEqual(numbers["X"], 20)
+        self.assertNotEqual(numbers["B"], 20)
+        self.assertEqual(len(set(numbers.values())), 3)
+        self.assertTrue(EventAttendees.objects.filter(pk=x.pk, attendee_nr=20).exists())
+
+    def test_drag_reorder_renumbers_row_claiming_concurrent_signup_number(self):
+        # A drag submits final numbers for the rendered rows while a signup
+        # created after the page load already holds one of them. The dragged
+        # row must be renumbered; the signup keeps its allocated number.
+        a = EventAttendees.objects.create(
+            event=self.event,
+            user="A",
+            email="a@example.com",
+            attendee_nr=10,
+            preferences={},
+        )
+        b = EventAttendees.objects.create(
+            event=self.event,
+            user="B",
+            email="b@example.com",
+            attendee_nr=20,
+            preferences={},
+        )
+        x = EventAttendees.objects.create(
+            event=self.event,
+            user="X",
+            email="x@example.com",
+            attendee_nr=30,
+            preferences={},
+        )
+        formset = self._attendees_formset(
+            [
+                self._attendee_row(0, a.pk, 10, "A", "a@example.com"),
+                self._attendee_row(1, b.pk, 30, "B", "b@example.com"),
+            ],
+            initial_forms=2,
+        )
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+
+        numbers = dict(EventAttendees.objects.filter(event=self.event).values_list("user", "attendee_nr"))
+        self.assertEqual(numbers["A"], 10)
+        self.assertEqual(numbers["X"], 30)
+        self.assertNotEqual(numbers["B"], 30)
+        self.assertEqual(len(set(numbers.values())), 3)
+        self.assertTrue(EventAttendees.objects.filter(pk=x.pk, attendee_nr=30).exists())
+
+    def test_reorder_avoids_legacy_non_step_10_number_outside_formset(self):
+        # The temporary band must not collide with a legacy/manual
+        # non-step-10 number held by a row that is not part of the formset.
+        a = EventAttendees.objects.create(
+            event=self.event,
+            user="A",
+            email="a@example.com",
+            attendee_nr=10,
+            preferences={},
+        )
+        b = EventAttendees.objects.create(
+            event=self.event,
+            user="B",
+            email="b@example.com",
+            attendee_nr=20,
+            preferences={},
+        )
+        x = EventAttendees.objects.create(
+            event=self.event,
+            user="X",
+            email="x@example.com",
+            attendee_nr=15,
+            preferences={},
+        )
+        formset = self._attendees_formset(
+            [
+                self._attendee_row(0, a.pk, 10, "A", "a@example.com"),
+                self._attendee_row(1, b.pk, 30, "B", "b@example.com"),
+            ],
+            initial_forms=2,
+        )
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+
+        numbers = dict(EventAttendees.objects.filter(event=self.event).values_list("user", "attendee_nr"))
+        self.assertEqual(numbers["A"], 10)
+        self.assertEqual(numbers["B"], 30)
+        self.assertEqual(numbers["X"], 15)
+        self.assertTrue(EventAttendees.objects.filter(pk=x.pk, attendee_nr=15).exists())
+
+    def test_deleted_row_frees_its_number_for_another_row(self):
+        # A row marked for deletion only holds its number until the delete, so
+        # another form row may take that number without being renumbered.
+        a = EventAttendees.objects.create(
+            event=self.event,
+            user="A",
+            email="a@example.com",
+            attendee_nr=10,
+            preferences={},
+        )
+        b = EventAttendees.objects.create(
+            event=self.event,
+            user="B",
+            email="b@example.com",
+            attendee_nr=20,
+            preferences={},
+        )
+        deleted_row = self._attendee_row(1, b.pk, 20, "B", "b@example.com")
+        deleted_row["eventattendees_set-1-DELETE"] = "on"
+        formset = self._attendees_formset(
+            [
+                self._attendee_row(0, a.pk, 20, "A", "a@example.com"),
+                deleted_row,
+            ],
+            initial_forms=2,
+        )
+        self.assertTrue(formset.is_valid(), formset.errors)
+        formset.save()
+
+        numbers = dict(EventAttendees.objects.filter(event=self.event).values_list("user", "attendee_nr"))
+        self.assertEqual(numbers["A"], 20)
+        self.assertNotIn("B", numbers)
+        self.assertFalse(EventAttendees.objects.filter(pk=b.pk).exists())
+
     def test_change_page_hides_hide_for_avec_when_avec_is_disabled(self):
         EventRegistrationForm.objects.create(
             event=self.event,
@@ -664,6 +1156,25 @@ class EventAdminTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'name="template"')
 
+    def test_change_page_renders_publish_time_field(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="published_time"')
+        self.assertContains(response, "flatpickr-datetime")
+        self.assertContains(response, timezone.localtime(self.event.published_time).strftime("%Y-%m-%d %H:%M"))
+        self.assertContains(response, "core/js/flatpickr.min.js")
+        self.assertContains(response, "core/css/admin-datetime.css")
+        self.assertNotContains(response, "vDateField")
+        self.assertNotContains(response, "vTimeField")
+        self.assertContains(response, "Lämna tomt för att hålla evenemanget dolt.")
+        self.assertContains(response, "Publicera inte")
+        self.assertContains(response, 'data-clear-datetime="#id_published_time"')
+        self.assertContains(response, "Publicera nu")
+        self.assertContains(response, 'data-set-datetime="#id_published_time"')
+        self.assertContains(response, 'data-set-datetime-value="')
+
     def test_edit_form_preserves_existing_slug_when_field_is_cleared(self):
         form = EventEditForm(instance=self.event)
         form.cleaned_data = {"title": self.event.title, "slug": ""}
@@ -701,15 +1212,15 @@ class EventAdminTests(TestCase):
             "events/arsfest.html",
         )
 
-    @override_settings(PROJECT_NAME="kk")
-    def test_admin_forms_accept_kk_only_template_choice(self):
+    @override_settings(KK_EVENT_TEMPLATES_ENABLED=True)
+    def test_admin_forms_accept_kk_template_choice_when_enabled(self):
         edit_form = EventEditForm(instance=self.event)
         self.assertEqual(
             edit_form.fields["template"].clean("events/wappmiddag.html"),
             "events/wappmiddag.html",
         )
 
-    def test_admin_forms_reject_kk_only_template_for_other_associations(self):
+    def test_admin_forms_reject_kk_template_choice_when_disabled(self):
         edit_form = EventEditForm(instance=self.event)
         with self.assertRaises(ValidationError):
             edit_form.fields["template"].clean("events/wappmiddag.html")
@@ -721,7 +1232,7 @@ class EventAdminTests(TestCase):
         self.assertEqual(creation_form.fields["template"].clean(""), "")
         self.assertEqual(edit_form.fields["template"].clean(""), "")
 
-    @override_settings(PROJECT_NAME="date")
+    @override_settings(REGISTRATION_TERMS_ENABLED=True)
     def test_add_page_renders_registration_terms_field_when_feature_enabled(self):
         self.client.force_login(self.admin_user)
         response = self.client.get(reverse("admin:events_event_add"))
@@ -729,7 +1240,7 @@ class EventAdminTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'name="require_registration_terms"')
 
-    @override_settings(PROJECT_NAME="date")
+    @override_settings(REGISTRATION_TERMS_ENABLED=True)
     def test_change_page_renders_registration_terms_field_when_feature_enabled(self):
         self.client.force_login(self.admin_user)
         response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
@@ -737,21 +1248,19 @@ class EventAdminTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'name="require_registration_terms"')
 
-    def test_non_date_projects_hide_registration_terms_field_on_add_page(self):
+    @override_settings(REGISTRATION_TERMS_ENABLED=False)
+    def test_registration_terms_field_hidden_on_add_page_when_disabled(self):
         self.client.force_login(self.admin_user)
-        for project_name in self.NON_DATE_PROJECTS:
-            with self.subTest(project_name=project_name), override_settings(PROJECT_NAME=project_name):
-                response = self.client.get(reverse("admin:events_event_add"))
-                self.assertEqual(response.status_code, 200)
-                self.assertNotContains(response, 'name="require_registration_terms"', status_code=200)
+        response = self.client.get(reverse("admin:events_event_add"))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="require_registration_terms"', status_code=200)
 
-    def test_non_date_projects_hide_registration_terms_field_on_change_page(self):
+    @override_settings(REGISTRATION_TERMS_ENABLED=False)
+    def test_registration_terms_field_hidden_on_change_page_when_disabled(self):
         self.client.force_login(self.admin_user)
-        for project_name in self.NON_DATE_PROJECTS:
-            with self.subTest(project_name=project_name), override_settings(PROJECT_NAME=project_name):
-                response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
-                self.assertEqual(response.status_code, 200)
-                self.assertNotContains(response, 'name="require_registration_terms"', status_code=200)
+        response = self.client.get(reverse("admin:events_event_change", args=[self.event.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="require_registration_terms"', status_code=200)
 
     def test_change_page_renders_when_image_url_cannot_be_resolved(self):
         self.event.image = "events/broken.jpg"
@@ -796,6 +1305,233 @@ class EventAdminTests(TestCase):
         self.assertEqual(events[child_event.pk]._original_event_attendee_count, 2)
         self.assertEqual(event_admin.get_attendee_count(events[self.event.pk]), 2)
         self.assertEqual(event_admin.get_attendee_count(events[child_event.pk]), 2)
+
+    def test_registration_list_renders_boolean_preferences_as_icons(self):
+        EventRegistrationForm.objects.create(
+            event=self.event,
+            name="Attending dinner",
+            type="checkbox",
+            public_info=True,
+        )
+        EventAttendees.objects.create(
+            event=self.event,
+            user="Boolean Preference",
+            email="boolean-preference@example.com",
+            time_registered=timezone.now(),
+            preferences={"Attending dinner": True},
+        )
+        self.client.force_login(self.admin_user)
+
+        with override_settings(STATIC_URL="/assets/"):
+            response = self.client.get(reverse("admin:registration_list", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'src="/assets/admin/img/icon-yes.svg"')
+        self.assertContains(response, 'alt="True"')
+        self.assertNotContains(response, "True</td>")
+
+    def test_registration_list_returns_404_for_missing_event(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:registration_list", args=[999999]))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_registration_list_requires_event_and_attendee_view_permissions(self):
+        staff_group = Group.objects.create(name='admin')
+        staff_user = Member.objects.create_user(username='limited-event-admin', password='pwd')
+        staff_user.groups.add(staff_group)
+        staff_user.user_permissions.add(Permission.objects.get(codename='view_event'))
+        self.client.force_login(staff_user)
+
+        response = self.client.get(reverse("admin:registration_list", args=[self.event.pk]))
+
+        self.assertEqual(response.status_code, 403)
+        request = RequestFactory().get(reverse('admin:events_event_changelist'))
+        request.user = staff_user
+        list_display = admin.site._registry[Event].get_list_display(request)
+        self.assertNotIn('get_attendee_count', list_display)
+        self.assertNotIn('account_actions', list_display)
+
+    def test_delete_participants_action_requires_attendee_delete_permission(self):
+        staff_group = Group.objects.create(name='admin')
+        staff_user = Member.objects.create_user(username='event-editor', password='pwd')
+        staff_user.groups.add(staff_group)
+        staff_user.user_permissions.add(
+            Permission.objects.get(codename='view_event'),
+            Permission.objects.get(codename='change_event'),
+        )
+        request = RequestFactory().get(reverse('admin:events_event_changelist'))
+        request.user = staff_user
+        event_admin = admin.site._registry[Event]
+
+        self.assertNotIn('delete_participants', event_admin.get_actions(request))
+
+
+class EventRegistrationFormValidationTests(TestCase):
+    def setUp(self):
+        self.author = Member.objects.create_user(username='question-author', password='pwd')
+        self.event = Event.objects.create(title='Questions', slug='questions', author=self.author, sign_up=True)
+
+    def test_rejects_reserved_question_names(self):
+        for name in ('email', 'avec_email'):
+            with self.subTest(name=name):
+                question = EventRegistrationForm(event=self.event, name=name, type='text')
+                with self.assertRaises(ValidationError):
+                    question.full_clean()
+
+    def test_multiple_choice_options_are_normalized(self):
+        question = EventRegistrationForm(
+            event=self.event,
+            name='Meal',
+            type='select',
+            choice_list=' fish, vegetarian ',
+        )
+
+        question.full_clean()
+        question.save()
+
+        self.assertEqual(question.choice_list, 'fish,vegetarian')
+        self.assertEqual(
+            list(self.event.make_registration_form().base_fields['Meal'].choices),
+            [('fish', 'fish'), ('vegetarian', 'vegetarian')],
+        )
+
+    def test_multiple_choice_requires_unique_nonempty_options(self):
+        for choices in ('', 'fish,fish'):
+            with self.subTest(choices=choices):
+                question = EventRegistrationForm(
+                    event=self.event,
+                    name='Meal',
+                    type='select',
+                    choice_list=choices,
+                )
+                with self.assertRaises(ValidationError):
+                    question.full_clean()
+
+    def test_inline_formset_rejects_duplicate_question_names(self):
+        formset_class = inlineformset_factory(
+            Event,
+            EventRegistrationForm,
+            formset=EventRegistrationFormSet,
+            fields=('name', 'type', 'choice_list'),
+            extra=2,
+        )
+        formset = formset_class(
+            instance=self.event,
+            data={
+                'eventregistrationform_set-TOTAL_FORMS': '2',
+                'eventregistrationform_set-INITIAL_FORMS': '0',
+                'eventregistrationform_set-MIN_NUM_FORMS': '0',
+                'eventregistrationform_set-MAX_NUM_FORMS': '1000',
+                'eventregistrationform_set-0-name': 'Meal',
+                'eventregistrationform_set-0-type': 'text',
+                'eventregistrationform_set-0-choice_list': '',
+                'eventregistrationform_set-1-name': 'Meal',
+                'eventregistrationform_set-1-type': 'text',
+                'eventregistrationform_set-1-choice_list': '',
+            },
+        )
+
+        self.assertFalse(formset.is_valid())
+        self.assertIn('unika', str(formset.non_form_errors()))
+
+    def test_unchanged_legacy_question_configuration_remains_editable(self):
+        question = EventRegistrationForm.objects.create(
+            event=self.event,
+            name='',
+            type='select',
+            choice_list='',
+        )
+        question.required = True
+
+        question.full_clean()
+
+        self.assertTrue(question.required)
+
+    def test_legacy_duplicate_names_do_not_block_unrelated_inline_edits(self):
+        first = EventRegistrationForm.objects.create(event=self.event, name='Legacy', type='text')
+        second = EventRegistrationForm.objects.create(event=self.event, name='Legacy', type='text')
+        formset_class = inlineformset_factory(
+            Event,
+            EventRegistrationForm,
+            formset=EventRegistrationFormSet,
+            fields=('name', 'type', 'choice_list', 'required'),
+            extra=0,
+        )
+        formset = formset_class(
+            instance=self.event,
+            data={
+                'eventregistrationform_set-TOTAL_FORMS': '2',
+                'eventregistrationform_set-INITIAL_FORMS': '2',
+                'eventregistrationform_set-MIN_NUM_FORMS': '0',
+                'eventregistrationform_set-MAX_NUM_FORMS': '1000',
+                'eventregistrationform_set-0-id': str(first.pk),
+                'eventregistrationform_set-0-name': 'Legacy',
+                'eventregistrationform_set-0-type': 'text',
+                'eventregistrationform_set-0-choice_list': '',
+                'eventregistrationform_set-0-required': 'on',
+                'eventregistrationform_set-1-id': str(second.pk),
+                'eventregistrationform_set-1-name': 'Legacy',
+                'eventregistrationform_set-1-type': 'text',
+                'eventregistrationform_set-1-choice_list': '',
+            },
+        )
+
+        self.assertTrue(formset.is_valid(), formset.errors)
+
+    def test_child_registration_query_excludes_sibling_attendees(self):
+        sibling = Event.objects.create(title='Sibling', slug='sibling', author=self.author, parent=self.event)
+        child = Event.objects.create(title='Child', slug='child', author=self.author, parent=self.event)
+        own_attendee = EventAttendees.objects.create(
+            event=self.event,
+            original_event=child,
+            user='Own attendee',
+            email='own@example.com',
+        )
+        EventAttendees.objects.create(
+            event=self.event,
+            original_event=sibling,
+            user='Sibling attendee',
+            email='sibling@example.com',
+        )
+
+        self.assertEqual(list(child.get_registrations()), [own_attendee])
+
+    def test_validate_unique_email_scopes_to_the_child_event(self):
+        sibling = Event.objects.create(title='Sibling', slug='sibling', author=self.author, parent=self.event)
+        child = Event.objects.create(title='Child', slug='child', author=self.author, parent=self.event)
+        EventAttendees.objects.create(
+            event=self.event,
+            original_event=child,
+            user='Child attendee',
+            email='shared@example.com',
+        )
+
+        with self.assertRaisesMessage(ValidationError, 'Det finns redan någon anmäld med denna email'):
+            child.validate_unique_email('shared@example.com')
+
+        sibling.validate_unique_email('shared@example.com')
+
+    def test_attendee_cannot_reference_itself_or_another_event_as_avec(self):
+        attendee = EventAttendees.objects.create(
+            event=self.event,
+            user='Avec attendee',
+            email='avec-attendee@example.com',
+        )
+        attendee.avec_for = attendee
+        with self.assertRaises(ValidationError):
+            attendee.full_clean()
+
+        other_event = Event.objects.create(title='Other', slug='other', author=self.author)
+        other_attendee = EventAttendees.objects.create(
+            event=other_event,
+            user='Other attendee',
+            email='other-attendee@example.com',
+        )
+        attendee.avec_for = other_attendee
+        with self.assertRaises(ValidationError):
+            attendee.full_clean()
 
 
 class TranslationAdminRegressionTests(TestCase):
@@ -1014,12 +1750,14 @@ class EventCapacityTests(TestCase):
 
         self.assertEqual(child.remaining_places(), 1)
 
-    def test_parent_event_rejects_signup_when_full(self):
+    def test_parent_event_allows_overflow_signup_when_full(self):
         event = Event.objects.create(
             title="Full Parent Event",
             slug="full-parent-event",
             author=self.author,
             sign_up_max_participants=1,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
         )
         EventAttendees.objects.create(
@@ -1030,14 +1768,17 @@ class EventCapacityTests(TestCase):
             preferences={},
         )
 
-        response = self.client.post(reverse("events:detail", args=[event.slug]), {
-            "user": "Blocked",
-            "email": "blocked-parent@example.com",
-            "terms_accepted": "on",
-        })
+        response = self.client.post(
+            reverse("events:detail", args=[event.slug]),
+            {
+                "user": "Reserve",
+                "email": "reserve-parent@example.com",
+                "terms_accepted": "on",
+            },
+        )
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(event.get_registrations().count(), 1)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(event.get_registrations().count(), 2)
 
     def test_child_event_rejects_signup_when_full(self):
         parent = Event.objects.create(
@@ -1051,6 +1792,8 @@ class EventCapacityTests(TestCase):
             author=self.author,
             parent=parent,
             sign_up_max_participants=1,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
         )
         EventAttendees.objects.create(
@@ -1062,11 +1805,14 @@ class EventCapacityTests(TestCase):
             preferences={},
         )
 
-        response = self.client.post(reverse("events:detail", args=[child.slug]), {
-            "user": "Blocked",
-            "email": "blocked-child@example.com",
-            "terms_accepted": "on",
-        })
+        response = self.client.post(
+            reverse("events:detail", args=[child.slug]),
+            {
+                "user": "Blocked",
+                "email": "blocked-child@example.com",
+                "terms_accepted": "on",
+            },
+        )
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(parent.get_registrations().count(), 1)
@@ -1094,12 +1840,14 @@ class EventCapacityTests(TestCase):
         self.assertContains(response, "Det finns 7 platser kvar!")
         self.assertNotContains(response, "Det finns 8 platser kvar!")
 
-    def test_full_event_detail_page_hides_form_and_shows_warning(self):
+    def test_full_parent_event_detail_page_keeps_form_and_shows_reserve_list_warning(self):
         event = Event.objects.create(
             title="Full Rendered Event",
             slug="full-rendered-event",
             author=self.author,
             sign_up_max_participants=1,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
         )
         EventAttendees.objects.create(
@@ -1114,10 +1862,10 @@ class EventCapacityTests(TestCase):
             response = self.client.get(reverse("events:detail", args=[event.slug]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, 'name="user"')
-        self.assertNotContains(response, 'name="email"')
+        self.assertContains(response, 'name="user"')
+        self.assertContains(response, 'name="email"')
         self.assertContains(response, "Evenemanget är tyvärr fullt")
-        self.assertNotContains(response, "reservlistan")
+        self.assertContains(response, "reservlistan")
 
     def test_full_child_event_detail_page_hides_form_and_shows_warning(self):
         parent = Event.objects.create(
@@ -1131,6 +1879,8 @@ class EventCapacityTests(TestCase):
             author=self.author,
             parent=parent,
             sign_up_max_participants=1,
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=timezone.now() + timezone.timedelta(days=1),
         )
         EventAttendees.objects.create(
@@ -1148,6 +1898,553 @@ class EventCapacityTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'name="user"')
         self.assertContains(response, "Evenemanget är tyvärr fullt")
+
+    def test_capacity_child_signup_takes_row_lock_based_on_db_state(self):
+        # The lock decision must come from a fresh database read, not the
+        # caller's (possibly stale) event object: a capacity-limited child
+        # requires the lock even if the caller's instance says otherwise.
+        parent = Event.objects.create(title='Lock Parent', slug='lock-parent', author=self.author)
+        child = Event.objects.create(
+            title='Lock Child',
+            slug='lock-child',
+            author=self.author,
+            parent=parent,
+            sign_up_max_participants=2,
+        )
+        stale = Event(pk=child.pk, title='Lock Child', slug='lock-child', author_id=self.author.pk)
+
+        real_select_for_update = QuerySet.select_for_update
+        locked_kwargs = []
+
+        def locked_side_effect(self, *args, **kwargs):
+            locked_kwargs.append(kwargs)
+            return real_select_for_update(self, *args, **kwargs)
+
+        with patch.object(QuerySet, 'select_for_update', autospec=True, side_effect=locked_side_effect):
+            with CaptureQueriesContext(connection) as ctx:
+                register_event_signup(stale, {'user': 'Locked', 'email': 'locked@example.com', 'anonymous': False})
+
+        # The locked re-read must actually go through select_for_update, not
+        # just be a second unlocked read.
+        self.assertEqual(locked_kwargs, [{'of': ('self',)}])
+
+        event_selects = [
+            q for q in ctx.captured_queries if q['sql'].startswith('SELECT') and '"events_event"' in q['sql']
+        ]
+        self.assertEqual(len(event_selects), 2, 'capacity-limited child must fresh-read then locked re-read')
+        # SQLite ignores select_for_update entirely (no FOR UPDATE emitted),
+        # so the row-lock SQL can only be asserted against a supporting
+        # backend; the wraps assertion above covers every backend.
+        if connection.vendor == 'postgresql':
+            self.assertTrue(
+                any('FOR UPDATE' in q['sql'] for q in event_selects),
+                'the locked re-read must carry SELECT ... FOR UPDATE',
+            )
+
+    def test_avec_signup_reserves_both_attendee_numbers_at_once(self):
+        event = Event.objects.create(title='Avec Numbers', slug='avec-numbers', author=self.author)
+
+        with CaptureQueriesContext(connection) as ctx:
+            result = register_event_signup(
+                event,
+                {
+                    'user': 'Primary',
+                    'email': 'primary@example.com',
+                    'anonymous': False,
+                    'avec': True,
+                    'avec_user': 'Avec',
+                    'avec_email': 'avec@example.com',
+                    'avec_anonymous': False,
+                },
+            )
+
+        counter_updates = [
+            q for q in ctx.captured_queries if 'attendee_nr_counter' in q['sql'] and 'UPDATE' in q['sql']
+        ]
+        self.assertEqual(len(counter_updates), 1)
+        self.assertEqual(result.attendee.attendee_nr, 10)
+        self.assertEqual(result.avec_attendee.attendee_nr, 20)
+        event.refresh_from_db()
+        self.assertEqual(event.attendee_nr_counter, 20)
+
+    def test_allocator_advances_past_explicit_attendee_number(self):
+        event = Event.objects.create(title='Imported Numbers', slug='imported-numbers', author=self.author)
+        EventAttendees.objects.create(
+            event=event,
+            attendee_nr=100,
+            user='Imported',
+            email='imported@example.com',
+            time_registered=timezone.now(),
+        )
+
+        attendee = EventAttendees.objects.create(event=event, user='Next', email='next@example.com')
+
+        self.assertEqual(attendee.attendee_nr, 110)
+        event.refresh_from_db()
+        self.assertEqual(event.attendee_nr_counter, 110)
+
+    def test_allocator_normalizes_non_step_ten_number(self):
+        event = Event.objects.create(title='Legacy Numbers', slug='legacy-numbers', author=self.author)
+        EventAttendees.objects.create(
+            event=event,
+            attendee_nr=15,
+            user='Legacy',
+            email='legacy@example.com',
+        )
+
+        attendee = EventAttendees.objects.create(event=event, user='Next', email='next-legacy@example.com')
+
+        self.assertEqual(attendee.attendee_nr, 20)
+
+    def test_attendee_nr_collision_is_retried_for_mixed_version_rollout(self):
+        event = Event.objects.create(title='Race Event', slug='race-event', author=self.author)
+        real_save = EventAttendees.save
+        attempts = {'n': 0}
+
+        def flaky_save(instance, *args, **kwargs):
+            attempts['n'] += 1
+            if attempts['n'] == 1:
+                cause = Exception('simulated unique violation')
+                cause.diag = SimpleNamespace(constraint_name='unique_attendee_nr_per_event')
+                raise IntegrityError('duplicate key value violates unique constraint') from cause
+            return real_save(instance, *args, **kwargs)
+
+        with patch.object(EventAttendees, 'save', autospec=True, side_effect=flaky_save):
+            result = register_event_signup(event, {'user': 'Racer', 'email': 'racer@example.com', 'anonymous': False})
+
+        self.assertEqual(attempts['n'], 2)
+        self.assertEqual(result.attendee.attendee_nr, 10)
+
+    def test_duplicate_email_still_reported_not_retried(self):
+        # An IntegrityError on the (event, email) constraint is a user error
+        # and must surface as such, never as an attendee_nr retry.
+        parent = Event.objects.create(title='Dup Parent', slug='dup-parent', author=self.author)
+        event = Event.objects.create(
+            title='Dup Event',
+            slug='dup-event',
+            author=self.author,
+            parent=parent,
+        )
+
+        register_event_signup(event, {'user': 'First', 'email': 'dup@example.com', 'anonymous': False})
+        with self.assertRaises(EventSignupError) as ctx:
+            register_event_signup(event, {'user': 'Dup', 'email': 'dup@example.com', 'anonymous': False})
+        self.assertIn('Det finns redan någon anmäld med denna email', str(ctx.exception.message))
+
+    def test_unexpected_integrity_error_is_not_reported_as_duplicate_email(self):
+        event = Event.objects.create(title='Integrity Event', slug='integrity-event', author=self.author)
+        cause = Exception('other check constraint')
+        cause.diag = SimpleNamespace(constraint_name='some_other_constraint')
+
+        with patch.object(EventAttendees, 'save', autospec=True) as save:
+            save.side_effect = IntegrityError('check constraint failed')
+            save.side_effect.__cause__ = cause
+            with self.assertRaises(IntegrityError):
+                register_event_signup(event, {'user': 'User', 'email': 'user@example.com', 'anonymous': False})
+
+    def test_unlimited_event_signup_skips_the_row_lock(self):
+        event = Event.objects.create(title='Unlocked', slug='unlocked', author=self.author)
+
+        with CaptureQueriesContext(connection) as ctx:
+            register_event_signup(event, {'user': 'Unlocked', 'email': 'unlocked@example.com', 'anonymous': False})
+
+        event_selects = [
+            q for q in ctx.captured_queries if q['sql'].startswith('SELECT') and '"events_event"' in q['sql']
+        ]
+        self.assertEqual(len(event_selects), 1, 'unlimited event must only fresh-read, no locked re-read')
+
+
+class AttendeeNrMigrationTests(TransactionTestCase):
+    # Unapplies and reapplies events migration 0025, so it cannot run inside a
+    # shared transaction; TransactionTestCase keeps the other tests isolated.
+    # serialized_rollback restores the migration-seeded rows (membership types
+    # etc.) that truncation removes, so later TestCase tests keep working.
+    serialized_rollback = True
+
+    def test_0025_repairs_duplicate_attendee_nrs(self):
+        author = Member.objects.create_user(
+            username="mig-author",
+            password="pwd",
+            email="mig-author@example.com",
+        )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0024_event_event_pub_end_idx')])
+        old_apps = executor.loader.project_state([('events', '0024_event_event_pub_end_idx')]).apps
+        OldEvent = old_apps.get_model('events', 'Event')
+        OldAttendee = old_apps.get_model('events', 'EventAttendees')
+        parent = OldEvent.objects.create(title='Mig Parent', slug='mig-parent', author_id=author.pk)
+        child = OldEvent.objects.create(title='Mig Child', slug='mig-child', author_id=author.pk, parent_id=parent.pk)
+        for user, email, nr in [
+            ('A', 'a@example.com', 10),
+            ('B', 'b@example.com', 10),
+            ('C', 'c@example.com', 20),
+            ('D', 'd@example.com', 10),
+        ]:
+            OldAttendee.objects.create(
+                event_id=parent.pk,
+                original_event_id=child.pk,
+                user=user,
+                email=email,
+                attendee_nr=nr,
+                time_registered=timezone.now(),
+            )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0025_eventattendees_unique_attendee_nr_per_event')])
+        new_apps = executor.loader.project_state([('events', '0025_eventattendees_unique_attendee_nr_per_event')]).apps
+        NewAttendee = new_apps.get_model('events', 'EventAttendees')
+
+        rows = list(NewAttendee.objects.filter(event_id=parent.pk).order_by('pk').values_list('user', 'attendee_nr'))
+        self.assertEqual(rows, [('A', 10), ('B', 20), ('C', 40), ('D', 30)])
+        display_order = list(
+            NewAttendee.objects.filter(event_id=parent.pk).order_by('attendee_nr').values_list('user', flat=True)
+        )
+        self.assertEqual(display_order, ['A', 'B', 'D', 'C'], 'repair must preserve the pre-repair display order')
+
+        # The constraint must now actually exist and reject a colliding insert.
+        with self.assertRaises(IntegrityError):
+            NewAttendee.objects.create(
+                event_id=parent.pk,
+                original_event_id=child.pk,
+                user='E',
+                email='e@example.com',
+                attendee_nr=rows[0][1],
+                time_registered=timezone.now(),
+            )
+
+    def test_0025_repairs_duplicates_at_the_smallint_ceiling(self):
+        # PositiveSmallIntegerField tops out at 32767; a duplicate at the top
+        # of the range leaves no step-10 slot above it, so the whole event is
+        # compacted into a fresh monotonic sequence instead of writing an
+        # out-of-range value.
+        author = Member.objects.create_user(
+            username="mig-ceiling-author",
+            password="pwd",
+            email="mig-ceiling-author@example.com",
+        )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0024_event_event_pub_end_idx')])
+        old_apps = executor.loader.project_state([('events', '0024_event_event_pub_end_idx')]).apps
+        OldEvent = old_apps.get_model('events', 'Event')
+        OldAttendee = old_apps.get_model('events', 'EventAttendees')
+        parent = OldEvent.objects.create(title='Mig Ceiling Parent', slug='mig-ceiling-parent', author_id=author.pk)
+        for user, nr in [('X', 32750), ('Y', 32760), ('Z', 32760)]:
+            OldAttendee.objects.create(
+                event_id=parent.pk,
+                user=user,
+                email=f'{user.lower()}@example.com',
+                attendee_nr=nr,
+                time_registered=timezone.now(),
+            )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0025_eventattendees_unique_attendee_nr_per_event')])
+        new_apps = executor.loader.project_state([('events', '0025_eventattendees_unique_attendee_nr_per_event')]).apps
+        NewAttendee = new_apps.get_model('events', 'EventAttendees')
+
+        rows = list(NewAttendee.objects.filter(event_id=parent.pk).order_by('pk').values_list('user', 'attendee_nr'))
+        self.assertEqual(rows, [('X', 10), ('Y', 20), ('Z', 30)])
+
+        with self.assertRaises(IntegrityError):
+            NewAttendee.objects.create(
+                event_id=parent.pk,
+                user='W',
+                email='w@example.com',
+                attendee_nr=10,
+                time_registered=timezone.now(),
+            )
+
+    def test_0025_repairs_three_duplicates_at_the_smallint_ceiling(self):
+        # Compaction must handle more than two duplicates of the same ceiling
+        # number: a naive "wrap to the lowest free slot" would leave the third
+        # copy untouched and AddConstraint would still fail.
+        author = Member.objects.create_user(
+            username="mig-triple-author",
+            password="pwd",
+            email="mig-triple-author@example.com",
+        )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0024_event_event_pub_end_idx')])
+        old_apps = executor.loader.project_state([('events', '0024_event_event_pub_end_idx')]).apps
+        OldEvent = old_apps.get_model('events', 'Event')
+        OldAttendee = old_apps.get_model('events', 'EventAttendees')
+        parent = OldEvent.objects.create(
+            title='Mig Ceiling Triple Parent', slug='mig-ceiling-triple-parent', author_id=author.pk
+        )
+        for user, nr in [('X', 32750), ('Y', 32760), ('Z', 32760), ('W', 32760)]:
+            OldAttendee.objects.create(
+                event_id=parent.pk,
+                user=user,
+                email=f'{user.lower()}@example.com',
+                attendee_nr=nr,
+                time_registered=timezone.now(),
+            )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0025_eventattendees_unique_attendee_nr_per_event')])
+        new_apps = executor.loader.project_state([('events', '0025_eventattendees_unique_attendee_nr_per_event')]).apps
+        NewAttendee = new_apps.get_model('events', 'EventAttendees')
+
+        rows = list(NewAttendee.objects.filter(event_id=parent.pk).order_by('pk').values_list('user', 'attendee_nr'))
+        self.assertEqual(rows, [('X', 10), ('Y', 20), ('Z', 30), ('W', 40)])
+
+    def test_0025_keeps_unique_numbers_including_zero(self):
+        # Only repeated numbers are renumbered; a unique attendee_nr of 0 is a
+        # valid PositiveSmallIntegerField value and must be left alone.
+        author = Member.objects.create_user(
+            username="mig-zero-author",
+            password="pwd",
+            email="mig-zero-author@example.com",
+        )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0024_event_event_pub_end_idx')])
+        old_apps = executor.loader.project_state([('events', '0024_event_event_pub_end_idx')]).apps
+        OldEvent = old_apps.get_model('events', 'Event')
+        OldAttendee = old_apps.get_model('events', 'EventAttendees')
+        parent = OldEvent.objects.create(title='Mig Zero Parent', slug='mig-zero-parent', author_id=author.pk)
+        for user, nr in [('A', 0), ('B', 10), ('C', 10)]:
+            OldAttendee.objects.create(
+                event_id=parent.pk,
+                user=user,
+                email=f'{user.lower()}@example.com',
+                attendee_nr=nr,
+                time_registered=timezone.now(),
+            )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0025_eventattendees_unique_attendee_nr_per_event')])
+        new_apps = executor.loader.project_state([('events', '0025_eventattendees_unique_attendee_nr_per_event')]).apps
+        NewAttendee = new_apps.get_model('events', 'EventAttendees')
+
+        rows = list(NewAttendee.objects.filter(event_id=parent.pk).order_by('pk').values_list('user', 'attendee_nr'))
+        self.assertEqual(rows, [('A', 0), ('B', 10), ('C', 20)])
+
+    def test_0026_adds_counter_and_widens_attendee_number(self):
+        author = Member.objects.create_user(
+            username='mig-counter-author',
+            password='pwd',
+            email='mig-counter-author@example.com',
+        )
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0025_eventattendees_unique_attendee_nr_per_event')])
+        old_apps = executor.loader.project_state([('events', '0025_eventattendees_unique_attendee_nr_per_event')]).apps
+        OldEvent = old_apps.get_model('events', 'Event')
+        OldAttendee = old_apps.get_model('events', 'EventAttendees')
+        event = OldEvent.objects.create(title='Mig Counter', slug='mig-counter', author_id=author.pk)
+        OldAttendee.objects.create(
+            event_id=event.pk,
+            user='Existing',
+            email='existing@example.com',
+            attendee_nr=32760,
+            time_registered=timezone.now(),
+        )
+
+        executor = MigrationExecutor(connection)
+        executor.migrate([('events', '0026_event_attendee_nr_counter')])
+        new_apps = executor.loader.project_state([('events', '0026_event_attendee_nr_counter')]).apps
+        NewEvent = new_apps.get_model('events', 'Event')
+        NewAttendee = new_apps.get_model('events', 'EventAttendees')
+
+        self.assertEqual(NewEvent._meta.get_field('attendee_nr_counter').get_internal_type(), 'PositiveBigIntegerField')
+        self.assertEqual(NewAttendee._meta.get_field('attendee_nr').get_internal_type(), 'PositiveBigIntegerField')
+        self.assertEqual(NewEvent.objects.get(pk=event.pk).attendee_nr_counter, 0)
+        self.assertEqual(NewAttendee.objects.get(event_id=event.pk).attendee_nr, 32760)
+
+
+class AttendeeNrConcurrencyTests(TransactionTestCase):
+    # Real PostgreSQL coverage for atomic per-event number allocation and the
+    # capacity lock. The wait is confirmed by polling pg_stat_activity on a
+    # separate autocommit connection (PG 15+ caches stats snapshots inside a
+    # transaction, so the holding connection could never observe it).
+    # SQLite cannot run concurrent transactions, so these tests only run on
+    # PostgreSQL (e.g. the dev stack's postgres via
+    # DJANGO_SETTINGS_MODULE=core.settings.date). serialized_rollback restores
+    # the migration-seeded rows (membership types etc.) that truncation
+    # removes, so later TestCase tests keep working.
+    serialized_rollback = True
+
+    def setUp(self):
+        self.author = Member.objects.create_user(
+            username="concurrency-author",
+            password="pwd",
+            email="concurrency-author@example.com",
+        )
+
+    def _start_signup_thread(self, event, cleaned_data):
+        outcome = {}
+
+        def run():
+            try:
+                from django.db import connection as thread_connection
+
+                thread_connection.force_debug_cursor = True
+                with thread_connection.cursor() as cursor:
+                    cursor.execute('SELECT pg_backend_pid()')
+                    outcome['pid'] = cursor.fetchone()[0]
+                outcome['result'] = register_event_signup(event, cleaned_data)
+                outcome['queries'] = [q['sql'] for q in thread_connection.queries]
+            except Exception as exc:
+                outcome['error'] = exc
+            finally:
+                from django.db import connection as thread_connection
+
+                thread_connection.close()
+
+        thread = threading.Thread(target=run)
+        thread.start()
+        return thread, outcome
+
+    def _poll_connection(self):
+        # A fresh wrapper over the test database settings: the connection is
+        # autocommit, so each pg_stat_activity read is its own transaction and
+        # gets a fresh stats snapshot.
+        from django.db.backends.postgresql.base import DatabaseWrapper
+
+        return DatabaseWrapper(connection.settings_dict.copy(), alias='default')
+
+    def _wait_for_lock(self, pid, poll_conn, timeout=15):
+        # The poll targets the signup thread's exact backend PID: pg_stat_activity
+        # snapshots are cached for the duration of a transaction (PG 15+
+        # stats_fetch_consistency), so polling on the holding connection would
+        # never see the wait, and a pid-scoped query cannot false-positive on
+        # unrelated backends in the same database.
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            with poll_conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT count(*)
+                    FROM pg_stat_activity
+                    WHERE pid = %s
+                      AND datname = current_database()
+                      AND wait_event_type = 'Lock'
+                    """,
+                    [pid],
+                )
+                if cursor.fetchone()[0] > 0:
+                    return True
+            time.sleep(0.05)
+        return False
+
+    @skipUnless(connection.vendor == 'postgresql', 'requires PostgreSQL for concurrent transactions')
+    def test_counter_update_serializes_without_signup_retry(self):
+        parent = Event.objects.create(title='Race Parent', slug='race-parent-pg', author=self.author)
+        event = Event.objects.create(title='Race Event', slug='race-event-pg', author=self.author, parent=parent)
+
+        thread = None
+        poll_conn = self._poll_connection()
+        try:
+            with transaction.atomic():
+                Event.objects.filter(pk=parent.pk).update(attendee_nr_counter=10)
+                thread, outcome = self._start_signup_thread(
+                    event, {'user': 'Racer', 'email': 'racer@example.com', 'anonymous': False}
+                )
+                while 'pid' not in outcome and thread.is_alive():
+                    time.sleep(0.01)
+                blocked = self._wait_for_lock(outcome['pid'], poll_conn) if 'pid' in outcome else False
+        finally:
+            if thread is not None:
+                thread.join(timeout=30)
+            poll_conn.close()
+
+        self.assertFalse(thread.is_alive(), 'signup thread must finish')
+        self.assertNotIn('error', outcome, f'signup thread failed: {outcome.get("error")}')
+        self.assertTrue(blocked, 'the allocator must wait for the event counter row')
+        self.assertNotIn('ROLLBACK', outcome['queries'], 'atomic allocation must not retry the signup transaction')
+        self.assertEqual(outcome['result'].attendee.attendee_nr, 20)
+        parent.refresh_from_db()
+        self.assertEqual(parent.attendee_nr_counter, 20)
+
+    @skipUnless(connection.vendor == 'postgresql', 'requires PostgreSQL for concurrent transactions')
+    def test_avec_reserves_two_numbers_in_one_counter_update(self):
+        parent = Event.objects.create(title='Avec Parent', slug='avec-parent-pg', author=self.author)
+        event = Event.objects.create(title='Avec Event', slug='avec-event-pg', author=self.author, parent=parent)
+
+        thread = None
+        poll_conn = self._poll_connection()
+        try:
+            with transaction.atomic():
+                Event.objects.filter(pk=parent.pk).update(attendee_nr_counter=20)
+                thread, outcome = self._start_signup_thread(
+                    event,
+                    {
+                        'user': 'Racer',
+                        'email': 'racer@example.com',
+                        'anonymous': False,
+                        'avec': True,
+                        'avec_user': 'Plus One',
+                        'avec_email': 'plus@example.com',
+                        'avec_anonymous': False,
+                    },
+                )
+                while 'pid' not in outcome and thread.is_alive():
+                    time.sleep(0.01)
+                blocked = self._wait_for_lock(outcome['pid'], poll_conn) if 'pid' in outcome else False
+        finally:
+            if thread is not None:
+                thread.join(timeout=30)
+            poll_conn.close()
+
+        self.assertFalse(thread.is_alive(), 'signup thread must finish')
+        self.assertNotIn('error', outcome, f'signup thread failed: {outcome.get("error")}')
+        self.assertTrue(blocked, 'the allocator must wait for the event counter row')
+        self.assertNotIn('ROLLBACK', outcome['queries'])
+        self.assertEqual(outcome['result'].attendee.attendee_nr, 30)
+        self.assertEqual(outcome['result'].avec_attendee.attendee_nr, 40)
+        nrs = list(
+            EventAttendees.objects.filter(event=parent).order_by('attendee_nr').values_list('attendee_nr', flat=True)
+        )
+        self.assertEqual(nrs, [30, 40])
+
+    @skipUnless(connection.vendor == 'postgresql', 'requires PostgreSQL for concurrent transactions')
+    def test_final_child_event_place_is_serialized_by_row_lock(self):
+        # Two signups racing for the last remaining child-event place: the
+        # locked re-read must serialize the capacity check on the child row,
+        # so the second signup blocks while the lock is held and only one
+        # attendee ends up occupying the final place. Without the lock the
+        # second signup could pass the capacity check against a stale count
+        # and oversubscribe the event.
+        parent = Event.objects.create(title='Cap Parent', slug='cap-parent-pg', author=self.author)
+        child = Event.objects.create(
+            title='Cap Child',
+            slug='cap-child-pg',
+            author=self.author,
+            parent=parent,
+            sign_up_max_participants=1,
+        )
+
+        thread = None
+        poll_conn = self._poll_connection()
+        try:
+            with transaction.atomic():
+                # Hold the child's row lock; the signup's locked re-read must
+                # block here instead of checking capacity against an
+                # unlocked read.
+                Event.objects.select_for_update().get(pk=child.pk)
+                thread, outcome = self._start_signup_thread(
+                    child, {'user': 'First', 'email': 'first@example.com', 'anonymous': False}
+                )
+                while 'pid' not in outcome and thread.is_alive():
+                    time.sleep(0.01)
+                blocked = self._wait_for_lock(outcome['pid'], poll_conn) if 'pid' in outcome else False
+        finally:
+            if thread is not None:
+                thread.join(timeout=30)
+            poll_conn.close()
+
+        self.assertFalse(thread.is_alive(), 'signup thread must finish')
+        self.assertNotIn('error', outcome, f'signup thread failed: {outcome.get("error")}')
+        self.assertTrue(blocked, 'the signup must block on the child row lock until the hold is released')
+        self.assertEqual(outcome['result'].attendee.attendee_nr, 10)
+        self.assertEqual(EventAttendees.objects.filter(event=parent).count(), 1)
+        self.assertEqual(child.remaining_places(), 0)
+
+        with self.assertRaises(EventSignupError):
+            register_event_signup(child, {'user': 'Second', 'email': 'second@example.com', 'anonymous': False})
 
 
 @override_settings(CONTENT_VARIABLES={**settings.CONTENT_VARIABLES, "INTERNATIONAL_EVENT_SLUGS": ["intl-slug"]})
@@ -1223,8 +2520,8 @@ class EventFormBuilderTests(TestCase):
 
         self.assertNotIn("terms_accepted", form.base_fields)
 
-    @override_settings(PROJECT_NAME="kk")
-    def test_terms_field_is_date_only(self):
+    @override_settings(REGISTRATION_TERMS_ENABLED=False)
+    def test_terms_field_absent_when_feature_disabled(self):
         form_class = self.event.make_registration_form()
         form = form_class()
 
@@ -1306,6 +2603,22 @@ class EventNumberingTests(TestCase):
         self.assertEqual(attendee3.preferences, {})
         self.assertIsNotNone(attendee3.time_registered)
 
+    def test_attendee_numbers_continue_past_smallint_range(self):
+        EventAttendees.objects.create(
+            event=self.event,
+            attendee_nr=32770,
+            user='Large Event Attendee',
+            email='large@example.com',
+        )
+
+        attendee = EventAttendees.objects.create(
+            event=self.event,
+            user='Next Attendee',
+            email='next-large@example.com',
+        )
+
+        self.assertEqual(attendee.attendee_nr, 32780)
+
 
 class EventTemplateSelectionTests(TestCase):
     def setUp(self):
@@ -1345,7 +2658,7 @@ class EventTemplateSelectionTests(TestCase):
 
         self.assertContains(response, "Spring Ball")
         self.assertContains(response, "HQKK_2.png")
-        self.assertContains(response, "CII Kemistbaal")
+        self.assertContains(response, "Kemistbaal")
 
     def test_wappmiddag_template_uses_event_and_association_branding(self):
         event = Event.objects.create(
@@ -1396,6 +2709,9 @@ class EventTemplateSelectionTests(TestCase):
             title="Generic",
             slug="selected-arsfest-invalid",
             author=self.author,
+            published_time=timezone.now(),
+            sign_up_members=timezone.now() - timezone.timedelta(seconds=1),
+            sign_up_others=timezone.now() - timezone.timedelta(seconds=1),
             sign_up_deadline=(timezone.now() + timezone.timedelta(days=7)),
             template="events/arsfest.html",
         )
@@ -1404,6 +2720,26 @@ class EventTemplateSelectionTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertTemplateUsed(response, "events/arsfest.html")
+
+    def test_sf_arsfest_uses_sf_branding_not_date_fallback(self):
+        sf_settings = importlib.import_module("core.settings.sf")
+
+        event = Event.objects.create(
+            title="SF:s Årsfest",
+            slug="arsfest",
+            author=self.author,
+        )
+        with override_settings(
+            TEMPLATES=sf_settings.TEMPLATES,
+            STATICFILES_DIRS=sf_settings.STATICFILES_DIRS,
+        ):
+            response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertTemplateUsed(response, "events/arsfest.html")
+        self.assertContains(response, "SF_logo_Tran.svg")
+        self.assertContains(response, "SF:s Årsfest")
+        self.assertNotContains(response, "DaTe XXVII")
+        self.assertNotContains(response, "albin.png")
 
     def test_passcode_template_used_when_locked(self):
         event = Event.objects.create(
@@ -1440,6 +2776,14 @@ class EventRoutingTests(TestCase):
         self.assertIsNotNone(match)
         self.assertEqual(match.group("event_name"), "valentines-sitsit")
 
+    def test_websocket_route_accepts_optional_trailing_slash(self):
+        with_slash = websocket_urlpatterns[0].pattern.regex.fullmatch("ws/events/valentines-sitsit/")
+        without_slash = websocket_urlpatterns[0].pattern.regex.fullmatch("ws/events/valentines-sitsit")
+
+        self.assertIsNotNone(with_slash)
+        self.assertIsNotNone(without_slash)
+        self.assertEqual(with_slash.group("event_name"), without_slash.group("event_name"))
+
 
 class EventWebsocketUtilsTests(TestCase):
     class PublicInfo:
@@ -1450,20 +2794,24 @@ class EventWebsocketUtilsTests(TestCase):
             return self.name
 
     def test_ws_send_emits_messages_for_avec_signups(self):
-        form = SimpleNamespace(cleaned_data={
-            "user": "Primary",
-            "email": "primary@example.com",
-            "anonymous": False,
-            "avec": True,
-            "avec_user": "Guest",
-            "avec_email": "guest@example.com",
-            "meal": "veg",
-        })
+        form = SimpleNamespace(
+            cleaned_data={
+                "user": "Primary",
+                "email": "primary@example.com",
+                "anonymous": False,
+                "avec": True,
+                "avec_user": "Guest",
+                "avec_email": "guest@example.com",
+                "meal": "veg",
+            }
+        )
         public_info = [self.PublicInfo("meal")]
         group_send = MagicMock()
 
-        with patch("events.websocket_utils.get_channel_layer", return_value=SimpleNamespace(group_send=group_send)), \
-                patch("events.websocket_utils.async_to_sync", side_effect=lambda func: func):
+        with (
+            patch("events.websocket_utils.get_channel_layer", return_value=SimpleNamespace(group_send=group_send)),
+            patch("events.websocket_utils.async_to_sync", side_effect=lambda func: func),
+        ):
             ws_send("event-slug", form, public_info)
 
         self.assertEqual(group_send.call_count, 2)
@@ -1473,11 +2821,13 @@ class EventWebsocketUtilsTests(TestCase):
         self.assertEqual(second_payload["data"]["fields"][0], ("user", "Guest"))
 
     def test_ws_data_masks_anonymous_name_and_filters_public_info(self):
-        form = SimpleNamespace(cleaned_data={
-            "user": "Hidden",
-            "anonymous": True,
-            "allergies": "nuts",
-        })
+        form = SimpleNamespace(
+            cleaned_data={
+                "user": "Hidden",
+                "anonymous": True,
+                "allergies": "nuts",
+            }
+        )
         public_info = [self.PublicInfo("allergies")]
 
         with translation.override("fi"):

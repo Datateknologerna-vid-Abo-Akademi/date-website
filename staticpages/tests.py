@@ -2,12 +2,13 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
+from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.test import RequestFactory
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
+from django.utils import translation
 
-from staticpages.context_processors import get_urls
+from staticpages.context_processors import get_categories, get_urls, navigation
 from staticpages.models import StaticPage, StaticPageNav, StaticUrl
 
 
@@ -56,7 +57,7 @@ class PolicyViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "<h1>Anmälningsvillkor gällande evenemang</h1>", html=True)
 
-    @override_settings(PROJECT_NAME="kk")
+    @override_settings(EQUALITY_PLAN_ENABLED=False, REGISTRATION_TERMS_ENABLED=False)
     def test_policy_views_are_date_only(self):
         equality_response = self.client.get(reverse("staticpages:equality_plan"))
         terms_response = self.client.get(reverse("staticpages:registration_terms"))
@@ -127,6 +128,9 @@ class StaticPageViewTests(TestCase):
 class StaticUrlTests(TestCase):
     def setUp(self):
         self.category = StaticPageNav.objects.create(category_name="Menu")
+        # The navigation cache is process-wide; isolate tests from entries
+        # created by earlier tests in the same run.
+        cache.clear()
 
     def test_blank_leaf_url_is_allowed_for_draft_menu_items(self):
         nav_url = StaticUrl(title="Empty", category=self.category, url="")
@@ -162,6 +166,82 @@ class StaticUrlTests(TestCase):
 
         self.assertEqual([child.title for child in children], ["Visible child"])
 
+    def test_context_processor_keeps_exambank_urls_when_archive_is_disabled(self):
+        request = RequestFactory().get("/")
+        request.user = AnonymousUser()
+        parent = StaticUrl.objects.create(title="Parent", category=self.category, url="/parent/")
+        StaticUrl.objects.create(title="Exam child", category=self.category, parent=parent, url="/archive/exams/")
+        StaticUrl.objects.create(
+            title="Exam detail child", category=self.category, parent=parent, url="/archive/exams/1/"
+        )
+        StaticUrl.objects.create(title="Archive child", category=self.category, parent=parent, url="/archive/old/")
+        StaticUrl.objects.create(
+            title="Examined files", category=self.category, parent=parent, url="/archive/examined/"
+        )
+
+        installed_with_exambank = list(settings.INSTALLED_APPS)
+        if 'exambank' not in installed_with_exambank:
+            installed_with_exambank.append('exambank')
+
+        with (
+            override_settings(ARCHIVE_ENABLED=False),
+            patch.object(settings, 'INSTALLED_APPS', new=installed_with_exambank),
+        ):
+            urls = get_urls(request)["urls"]
+            children = list(urls[0].children.all())
+
+        self.assertEqual(
+            sorted(child.title for child in children),
+            ["Exam child", "Exam detail child"],
+        )
+
+    def test_context_processor_hides_all_archive_urls_when_exambank_not_installed(self):
+        request = RequestFactory().get("/")
+        request.user = AnonymousUser()
+        parent = StaticUrl.objects.create(title="Parent", category=self.category, url="/parent/")
+        StaticUrl.objects.create(title="Exam child", category=self.category, parent=parent, url="/archive/exams/")
+        StaticUrl.objects.create(title="Visible child", category=self.category, parent=parent, url="/current/")
+
+        installed_without_exambank = [app for app in settings.INSTALLED_APPS if app != 'exambank']
+
+        with (
+            override_settings(ARCHIVE_ENABLED=False),
+            patch.object(settings, 'INSTALLED_APPS', new=installed_without_exambank),
+        ):
+            urls = get_urls(request)["urls"]
+            children = list(urls[0].children.all())
+
+        self.assertEqual([child.title for child in children], ["Visible child"])
+
+    def test_get_categories_keeps_exambank_category_when_archive_is_disabled(self):
+        request = RequestFactory().get("/")
+        request.user = AnonymousUser()
+        exam_category = StaticPageNav.objects.create(
+            category_name="Exams",
+            nav_element=10,
+            use_category_url=True,
+            url="/archive/exams/",
+        )
+        StaticPageNav.objects.create(
+            category_name="Archive",
+            nav_element=20,
+            use_category_url=True,
+            url="/archive/old/",
+        )
+
+        installed_with_exambank = list(settings.INSTALLED_APPS)
+        if 'exambank' not in installed_with_exambank:
+            installed_with_exambank.append('exambank')
+
+        with (
+            override_settings(ARCHIVE_ENABLED=False),
+            patch.object(settings, 'INSTALLED_APPS', new=installed_with_exambank),
+        ):
+            categories = get_categories(request)["categories"]
+
+        self.assertIn(exam_category, categories)
+        self.assertFalse(any(category.url == "/archive/old/" for category in categories))
+
     def test_context_processor_filters_logged_in_only_children_for_anonymous_users(self):
         request = RequestFactory().get("/")
         request.user = AnonymousUser()
@@ -179,3 +259,52 @@ class StaticUrlTests(TestCase):
         children = list(urls[0].children.all())
 
         self.assertEqual([child.title for child in children], ["Visible child"])
+
+
+class NavigationProcessorTests(TestCase):
+    """The merged navigation processor: one load, cached for anonymous
+    visitors, invalidated on admin edits, off in development."""
+
+    def setUp(self):
+        self.request = RequestFactory().get("/")
+        self.request.user = AnonymousUser()
+        self.category = StaticPageNav.objects.create(category_name="Main", nav_element=1)
+        self.url = StaticUrl.objects.create(title="Home", category=self.category, url="/", dropdown_element=1)
+        cache.clear()
+
+    def test_navigation_returns_categories_and_urls_in_one_load(self):
+        with self.assertNumQueries(3):
+            context = navigation(self.request)
+        self.assertEqual([u.title for u in context["urls"]], ["Home"])
+        self.assertEqual([c.category_name for c in context["categories"]], ["Main"])
+
+    def test_anonymous_navigation_is_cached(self):
+        navigation(self.request)
+        with self.assertNumQueries(0):
+            navigation(self.request)
+
+    def test_admin_edit_invalidates_the_cache(self):
+        navigation(self.request)
+        with self.captureOnCommitCallbacks(execute=True):
+            self.url.title = "Front page"
+            self.url.save()
+        with self.assertNumQueries(3):
+            context = navigation(self.request)
+        self.assertEqual([u.title for u in context["urls"]], ["Front page"])
+
+    def test_cache_key_is_isolated_by_language(self):
+        navigation(self.request)
+        with self.captureOnCommitCallbacks(execute=True):
+            pass
+        # A different active language must not reuse the Swedish entry.
+        with translation.override("fi"):
+            with self.assertNumQueries(3):
+                navigation(self.request)
+
+    def test_logged_in_users_are_not_cached(self):
+        self.request.user = MagicMock()
+        self.request.user.is_authenticated = True
+        with self.assertNumQueries(3):
+            navigation(self.request)
+        with self.assertNumQueries(3):
+            navigation(self.request)

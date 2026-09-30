@@ -1,12 +1,11 @@
 from django.urls import path
-from django.views.generic import RedirectView
 
 from .two_factor import (
     MemberBackupTokensView,
     MemberDisableView,
     MemberQRGeneratorView,
-    MemberSetupView,
     MemberSetupCompleteView,
+    MemberSetupView,
     TwoFactorProfileRedirectView,
 )
 

@@ -2,11 +2,10 @@ import requests
 from django.conf import settings
 from django.contrib.auth.views import redirect_to_login
 from django.http import Http404
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.utils.translation import get_language
 from django.views import View
 
-import staticpages.models
 from . import models
 from .policy_content import EQUALITY_PLAN_URL, REGISTRATION_TERMS_CONTENT
 from .policy_rendering import render_policy_document
@@ -18,7 +17,7 @@ def get_current_language_code():
 
 
 def equality_plan_view(request):
-    if settings.PROJECT_NAME != "date":
+    if not settings.EQUALITY_PLAN_ENABLED:
         raise Http404()
     try:
         response = requests.get(EQUALITY_PLAN_URL, timeout=10)
@@ -36,7 +35,7 @@ def equality_plan_view(request):
 
 
 def registration_terms_view(request):
-    if settings.PROJECT_NAME != "date":
+    if not settings.REGISTRATION_TERMS_ENABLED:
         raise Http404()
     language_code = get_current_language_code()
     localized_content = REGISTRATION_TERMS_CONTENT.get(language_code, REGISTRATION_TERMS_CONTENT["sv"])

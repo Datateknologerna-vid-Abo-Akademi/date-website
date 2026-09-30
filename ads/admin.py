@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin
+
 from core.admin_base import ModelAdmin, UnfoldFormMixin
 
 from .models import AdUrl
@@ -11,7 +12,7 @@ class AdUrlAdminForm(UnfoldFormMixin, forms.ModelForm):
 
     class Meta:
         model = AdUrl
-        fields = "__all__"
+        fields = "__all__"  # noqa: DJ007
 
 
 @admin.register(AdUrl)

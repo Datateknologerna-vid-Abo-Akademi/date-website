@@ -1,6 +1,5 @@
 EQUALITY_PLAN_URL = (
-    "https://raw.githubusercontent.com/Datateknologerna-vid-Abo-Akademi/"
-    "styrdocs/refs/heads/main/j%C3%A4mlikhetsplan.md"
+    "https://raw.githubusercontent.com/Datateknologerna-vid-Abo-Akademi/styrdocs/refs/heads/main/j%C3%A4mlikhetsplan.md"
 )
 
 REGISTRATION_TERMS_CONTENT = {

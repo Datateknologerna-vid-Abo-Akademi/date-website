@@ -1,10 +1,9 @@
-from django import template
 import re
-from django.utils import timezone
-from django.utils.timesince import timeuntil
-from django.utils.timesince import timesince
-from django.utils.translation import get_language
 
+from django import template
+from django.utils import timezone
+from django.utils.timesince import timesince, timeuntil
+from django.utils.translation import get_language
 
 register = template.Library()
 

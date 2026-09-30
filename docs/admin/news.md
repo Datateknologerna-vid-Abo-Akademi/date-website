@@ -16,9 +16,9 @@ Publish and organize news articles that appear on the home page and `/news/` lis
    - **Titel** – headline. If translation features are enabled, fill the translated title/content tabs as needed.
    - **Kategori** – optional; un-categorized posts show on the home page by default.
    - **Innehåll** – CKEditor field for body text, images, embeds.
-   - **Publicera** – uncheck to keep as draft.
+   - **Publiceras** – set the date and time when the post should become visible. Leave empty to keep it hidden as a draft; pick a future time to schedule publication.
    - **Slug** – type a short identifier; auto-suggest isn’t enabled, so copy a clean version of the title.
-4. Save to publish immediately. `Skapad`, `Publicerad`, and `Modifierad` timestamps update automatically.
+4. Save to publish (or schedule). `Skapad`, `Publiceras`, and `Modifierad` timestamps update automatically.
 
 ## Editing Existing Posts
 - Use the changelist filters (by author/date) to find posts.

@@ -20,7 +20,7 @@ from .two_factor import MemberLoginView, member_has_2fa, should_redirect_to_two_
 logger = logging.getLogger('date')
 
 GITHUB_AUTHORIZE_URL = 'https://github.com/login/oauth/authorize'
-GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token'
+GITHUB_OAUTH_ACCESS_URL = 'https://github.com/login/oauth/access_token'
 GITHUB_USER_URL = 'https://api.github.com/user'
 GITHUB_EMAILS_URL = 'https://api.github.com/user/emails'
 GITHUB_MFA_POLICY_ENROLLED = 'enrolled'
@@ -31,7 +31,7 @@ GITHUB_MFA_POLICY_OFF = 'off'
 def _build_login_redirect(next_url=None):
     login_url = reverse('members:login')
     if next_url:
-        return f'{login_url}?{urlencode({"next": next_url})}'
+        return f"{login_url}?{urlencode({"next": next_url})}"
     return login_url
 
 
@@ -68,7 +68,9 @@ def _github_redirect(request, intent):
     request.session['github_oauth_state'] = state
     request.session['github_oauth_intent'] = intent
     next_url = request.GET.get('next', '')
-    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
         request.session['github_oauth_next'] = next_url
 
     params = {
@@ -76,7 +78,7 @@ def _github_redirect(request, intent):
         'scope': 'read:user user:email',
         'state': state,
     }
-    return redirect(f'{GITHUB_AUTHORIZE_URL}?{urlencode(params)}')
+    return redirect(f"{GITHUB_AUTHORIZE_URL}?{urlencode(params)}")
 
 
 def github_login(request):
@@ -105,7 +107,6 @@ def github_disconnect(request):
 
 
 def github_callback(request):
-    from .models import Member
 
     error = request.GET.get('error')
     if error:
@@ -136,7 +137,7 @@ def github_callback(request):
 
     try:
         token_response = requests.post(
-            GITHUB_TOKEN_URL,
+            GITHUB_OAUTH_ACCESS_URL,
             data={
                 'client_id': client_id,
                 'client_secret': client_secret,
@@ -163,7 +164,7 @@ def github_callback(request):
         user_response = requests.get(
             GITHUB_USER_URL,
             headers={
-                'Authorization': f'Bearer {access_token}',
+                'Authorization': f"Bearer {access_token}",
                 'Accept': 'application/vnd.github+json',
             },
             timeout=10,
@@ -189,7 +190,7 @@ def github_callback(request):
         emails_response = requests.get(
             GITHUB_EMAILS_URL,
             headers={
-                'Authorization': f'Bearer {access_token}',
+                'Authorization': f"Bearer {access_token}",
                 'Accept': 'application/vnd.github+json',
             },
             timeout=10,

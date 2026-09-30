@@ -15,21 +15,23 @@ class AdminSearchSmokeTests(TestCase):
     def test_changed_admin_searches_render(self):
         admin_url_names = [
             "admin:archive_documentcollection_changelist",
-            "admin:archive_examcollection_changelist",
-            "admin:archive_picturecollection_changelist",
+            "admin:exambank_examarchive_changelist",
+            "admin:gallery_album_changelist",
             "admin:billing_eventbillingconfiguration_changelist",
             "admin:billing_eventinvoice_changelist",
             "admin:ctf_ctf_changelist",
             "admin:ctf_flag_changelist",
             "admin:ctf_guess_changelist",
+            "admin:ctf_postmortem_changelist",
             "admin:events_event_changelist",
             "admin:events_eventattendees_changelist",
-            "admin:members_functionary_changelist",
+            "admin:functionaries_functionary_changelist",
             "admin:members_member_changelist",
             "admin:members_subscriptionpayment_changelist",
             "admin:news_category_changelist",
             "admin:news_post_changelist",
             "admin:polls_question_changelist",
+            "admin:publications_publicationcollection_changelist",
             "admin:publications_pdffile_changelist",
             "admin:staticpages_staticpage_changelist",
             "admin:staticpages_staticpagenav_changelist",
@@ -43,8 +45,8 @@ class AdminSearchSmokeTests(TestCase):
     def test_archive_cleanup_button_renders_on_archive_changelists(self):
         for url_name in [
             "admin:archive_documentcollection_changelist",
-            "admin:archive_examcollection_changelist",
-            "admin:archive_picturecollection_changelist",
+            "admin:exambank_examarchive_changelist",
+            "admin:gallery_album_changelist",
         ]:
             with self.subTest(url_name=url_name):
                 response = self.client.get(reverse(url_name))

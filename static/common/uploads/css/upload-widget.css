@@ -1,0 +1,45 @@
+/* File lists rendered by the upload widget (direct Uppy mode and classic mode). */
+
+.django-uppy-widget .django-uppy-files {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.django-uppy-file {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+.django-uppy-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.django-uppy-size {
+  flex-shrink: 0;
+  color: var(--color-base-600, #666);
+}
+
+.django-uppy-remove {
+  flex-shrink: 0;
+  margin-left: auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  line-height: 1;
+  border: 0;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--color-base-600, #666);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.django-uppy-remove:hover {
+  background: var(--color-danger-100, #fde2e1);
+  color: var(--color-danger-700, #b42318);
+}

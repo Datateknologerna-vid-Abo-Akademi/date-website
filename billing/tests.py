@@ -1,13 +1,16 @@
 from datetime import date, timedelta
 from unittest.mock import patch
 
-from django.test import TestCase, override_settings
+from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
+from django.test import RequestFactory, TestCase, override_settings
+from django.urls import reverse
 from django.utils import timezone
 
 from billing.handlers import handle_event_billing
 from billing.models import EventBillingConfiguration, EventInvoice
-from billing.util import (BillingIntegrations, get_selection_price,
-                          send_event_free_confirmation, send_event_invoice)
+from billing.util import BillingIntegrations, get_selection_price, send_event_free_confirmation, send_event_invoice
 from events.models import Event, EventAttendees, EventRegistrationForm
 from members.models import ORDINARY_MEMBER, Member, MembershipType
 
@@ -55,13 +58,49 @@ class BillingBaseTestCase(TestCase):
         return EventBillingConfiguration.objects.create(**defaults)
 
 
+class BillingAdminTests(BillingBaseTestCase):
+    def setUp(self):
+        super().setUp()
+        self.config = self.configure_billing()
+
+    def test_export_returns_404_for_missing_configuration(self):
+        admin_user = get_user_model().objects.create_superuser(
+            username='billing-admin',
+            password='pwd',
+            email='billing-admin@example.com',
+        )
+        self.client.force_login(admin_user)
+
+        response = self.client.get(reverse('admin:billing_ref_numbers', args=[999999]))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_export_requires_configuration_and_invoice_view_permissions(self):
+        staff_group = Group.objects.create(name='admin')
+        staff_user = get_user_model().objects.create_user(username='limited-billing-admin', password='pwd')
+        staff_user.groups.add(staff_group)
+        staff_user.user_permissions.add(Permission.objects.get(codename='view_eventbillingconfiguration'))
+        self.client.force_login(staff_user)
+
+        response = self.client.get(reverse('admin:billing_ref_numbers', args=[self.config.pk]))
+
+        self.assertEqual(response.status_code, 403)
+        request = RequestFactory().get(reverse('admin:billing_eventbillingconfiguration_changelist'))
+        request.user = staff_user
+        list_display = admin.site._registry[EventBillingConfiguration].get_list_display(request)
+        self.assertNotIn('invoice_count', list_display)
+        self.assertNotIn('ref_export', list_display)
+
+
 class HandleEventBillingTests(BillingBaseTestCase):
     def test_creates_invoice_and_sends_email(self):
         self.configure_billing(price="42")
         signup = self.create_attendee()
 
-        with patch("billing.handlers.send_event_invoice") as mock_send_invoice, \
-                patch("billing.handlers.generate_invoice_number", return_value=24000042):
+        with (
+            patch("billing.handlers.send_event_invoice") as mock_send_invoice,
+            patch("billing.handlers.generate_invoice_number", return_value=24000042),
+        ):
             handle_event_billing(signup)
 
         invoice = EventInvoice.objects.get(participant=signup)
@@ -83,8 +122,10 @@ class HandleEventBillingTests(BillingBaseTestCase):
         self.configure_billing(price="invalid-number")
         signup = self.create_attendee(email="missing@example.com")
 
-        with patch("billing.handlers.send_event_free_confirmation") as mock_free_confirmation, \
-                patch("billing.handlers.send_event_invoice") as mock_send_invoice:
+        with (
+            patch("billing.handlers.send_event_free_confirmation") as mock_free_confirmation,
+            patch("billing.handlers.send_event_invoice") as mock_send_invoice,
+        ):
             handle_event_billing(signup)
 
         self.assertFalse(EventInvoice.objects.exists())
@@ -104,8 +145,10 @@ class HandleEventBillingTests(BillingBaseTestCase):
             call_state["calls"] += 1
             return original_save(self, *args, **kwargs)
 
-        with patch("billing.handlers.EventInvoice.save", new=flaky_save), \
-                patch("billing.handlers.send_event_invoice") as mock_send_invoice:
+        with (
+            patch("billing.handlers.EventInvoice.save", new=flaky_save),
+            patch("billing.handlers.send_event_invoice") as mock_send_invoice,
+        ):
             handle_event_billing(signup)
 
         self.assertEqual(call_state["calls"], 2)

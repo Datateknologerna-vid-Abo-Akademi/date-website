@@ -21,6 +21,28 @@ Set `USE_UNFOLD=True` in `.env` to run Django admin with the Unfold theme. Leave
 
 Changing this value requires restarting or recreating the Django containers, because admin apps, widgets, templates, and static assets are selected when Django starts.
 
+Unfold keeps create actions next to the object they affect. Model lists and edit pages show a labeled **Add &lt;model&gt;** button beside the page title, while the admin dashboard uses explicit **View all** and **Add** links for each model. The global header is reserved for site-wide controls such as environment, language, site access, theme, and account actions.
+
+Search forms use a visible label and submit button, with model-specific search guidance kept below the field instead of hidden in its placeholder. Change forms include an explicit close action, and public-page links use Unfold's **View on site** object action instead of being inserted into an arbitrary form section.
+
+## Logging
+
+Application logging is configured by `LOGGING` in `core/settings/common.py`. Output goes through `core.redaction.RedactingFormatter`, which strips private keys and service-account values, and Django error reports use `core.redaction.DateExceptionReporterFilter` for the same settings.
+
+### Benign asyncio shielded-future cancellations
+
+Python 3.14 makes `asyncio.shield()` report an exception that nobody retrieves through the event loop exception handler, which logs it on the `asyncio` logger at ERROR. Our ASGI stack cancels the in-flight request task when a client disconnects, and asgiref's sync bridge is often awaiting `asyncio.shield(...)` at that moment. The shielded future then finishes with `asyncio.CancelledError`, so the log gets a `CancelledError exception in shielded future` record whose traceback is the whole inner request. A scanner probe such as `/.env` that is dropped while Django is building the 404 is enough to produce one.
+
+The record is not an application error, but it is costly: log-based alerting counts the inner exception as an unhandled traceback and it hides real failures. `core.redaction.ShieldedFutureCancellationFilter` drops only that record, and the `asyncio` logger in `LOGGING` keeps a console handler at INFO so genuine asyncio problems stay visible with normal formatting:
+
+- `Task exception was never retrieved`
+- transport failures
+- slow-callback warnings
+
+A shielded future that finishes with anything other than `asyncio.CancelledError` is still logged in full, because a never-retrieved exception there is a real problem.
+
+Keep the filter attached to the `asyncio` logger itself. A filter on an ancestor logger does not gate records that propagate up to it, and asyncio emits these records on `asyncio` directly.
+
 ## Fixture Reset and Local Seed Data
 
 ### `date-cleaninit` / `scripts/clean_init.sh`
@@ -64,7 +86,10 @@ Treat the generated fixture output as disposable development data.
 
 Use this when you need to run all associations simultaneously for style comparison or cross-association testing.
 
-Each association gets its own web container on a dedicated port, sharing one PostgreSQL database and one Redis instance:
+The default shared-data mode gives every association the same fixture-backed
+PostgreSQL database and Redis instance. Use it for side-by-side visual
+comparison. The isolated overlay gives each association its own PostgreSQL
+database and Redis logical database when separate state is required.
 
 | Association | URL                   |
 |-------------|-----------------------|
@@ -72,6 +97,8 @@ Each association gets its own web container on a dedicated port, sharing one Pos
 | date        | http://localhost:8002 |
 | kk          | http://localhost:8003 |
 | pulterit    | http://localhost:8004 |
+| sf          | http://localhost:8005 |
+| impuls      | http://localhost:8006 |
 
 The database is exposed on host port `5433` to avoid conflicting with the regular dev stack on `5432`.
 
@@ -80,21 +107,41 @@ The database is exposed on host port `5433` to avoid conflicting with the regula
 The helpers use the nearest `date-website` checkout from your current directory, falling back to `DATE_WEBSITE_DIR` when you are outside a checkout.
 
 ```bash
-date-all-start       # build and start all containers
+date-all-start       # start all containers (rebuild with date-all-rebuild)
 date-all-stop        # tear everything down
 date-all-cleaninit   # reset to fixture data against the dev-all stack
+
+date-all-isolated-start                  # start all isolated variants
+date-all-isolated-rebuild                # rebuild and start all isolated variants
+date-all-isolated-start-variant kk       # start one isolated variant
+date-all-isolated-manage kk <cmd>        # manage one isolated variant
+date-all-isolated-cleaninit              # reset the isolated DaTe database
+date-all-isolated-stop                   # tear down the isolated stack
 ```
 
 #### How it works
 
-An `init` container runs once on startup — it waits for PostgreSQL, then runs `migrate`, `collectstatic`, and `compilemessages` using `PROJECT_NAME=date`. All web containers wait for `init` to complete before accepting requests.
+In shared-data mode, an `init` container runs once on startup. It waits for
+PostgreSQL, migrates the distinct `date`, `kk`, and `sf` app sets, and compiles
+translations. This ensures association-only apps have tables while all sites
+continue to use the same fixture data. All web containers wait for `init` to
+complete before accepting requests.
+
+The isolated overlay creates a database for every association and migrates each
+one independently. Its `all` profile starts every variant. A variant profile,
+such as `kk`, starts only that web container.
+
+`collectstatic` is intentionally skipped: debug mode serves static files
+directly from each association's `STATICFILES_DIRS` via the WhiteNoise finder.
 
 The `web` service (port 8002) is named `web` specifically so `clean_init.sh` can target it when running `date-all-cleaninit`.
 
 #### Notes
 
-- Static files are collected once by `init` at startup. If you change CSS or JS, restart with `date-all-start` to pick up the changes.
+- Static files are served from source, so CSS/JS edits are picked up without a restart.
+- After pulling code with new migrations, recreate the relevant stack. `init` does not re-run once it has succeeded.
 - The `date-all-cleaninit` alias passes `COMPOSE_FILE_PATH=docker-compose.dev-all.yml` directly to `clean_init.sh` so it targets the dev-all stack.
+- `date-all-isolated-cleaninit` resets only the DaTe database. Other isolated databases intentionally remain independent.
 
 ## Backups and Database Upgrades
 
@@ -142,6 +189,20 @@ The Compose db service also wraps the upstream Postgres entrypoint so existing v
 
 This script is destructive if used incorrectly. Read the warnings in the README before running it.
 
+## Project Variant Checks
+
+### `scripts/check_project_variants.py`
+
+Use this after shared settings, template/static path, URL configuration, or
+cross-association app changes.
+
+```bash
+uv run python scripts/check_project_variants.py
+```
+
+It runs `manage.py check` for `date`, `kk`, `biocum`, and `pulterit`. Pass one
+or more project names as arguments to narrow the run.
+
 ## Translation Maintenance
 
 ### `scripts/validate_translations.py`
@@ -160,10 +221,25 @@ It checks each required locale catalog for:
 
 This is useful after `makemessages`, after large translation edits, and before release branches.
 
+## Privacy Maintenance
+
+### `redact_harassment_logs`
+
+Admin log entries for harassment reports used to store the beginning of the report text in `django_admin_log.object_repr`, because the report model returned its own message from `__str__`. The release that stopped that ships a migration which rewrites the rows that already existed, so every row written before the deploy is covered.
+
+A deploy migrates before the application rolls, and the standby shares the database with the live release, so a pod still running the older image can write one more content-bearing row after the migration has passed. Run the command once the old pods are gone:
+
+```bash
+python manage.py redact_harassment_logs
+```
+
+It replaces report text in the log with a label such as `Trakasserianmälan #12`, keeps the report id, and reports how many entries it changed. It is safe to run repeatedly and reports `0` when the log is already clean. Backup dumps taken before the deploy still contain the text; decide separately whether those need to expire earlier than the normal retention.
+
 ## Data Import / Export Helpers
 
 These scripts are more task-specific and should usually be run only by someone familiar with the target app and data shape:
 
+- `python manage.py import_wordpress_export <xml_path>`
 - `scripts/import_alumni.py`
 - `scripts/export_subscription_status.py`
 - `scripts/export_ctf_guesses.py`
@@ -182,7 +258,61 @@ Before using one of these on shared or production-like data:
 - confirm whether the script is idempotent
 - make a backup if the script mutates stored data
 
+### `import_wordpress_export`
+
+Use this management command as a one-off migration helper for moving the SF association site from WordPress into the existing Django content apps. It is not intended to be a reusable generic WordPress importer; several defaults and parsing rules assume the SF export shape and `sfklubben.fi` upload paths.
+
+It maps SF WordPress posts to `news.Post`, WordPress pages to `staticpages.StaticPage`, and the A&O/Politicus publication pages to `publications.PDFFile` rows grouped into their own publication collections. Other uploaded PDFs are copied as media and stay linked from imported pages, navigation, or app-specific importers such as `exambank`; they are not imported as publications. Local development writes to `MEDIA_ROOT`; when `USE_S3=True`, imported media uses the configured public media storage so links in imported CKEditor content remain public.
+
+Typical SF import:
+
+```bash
+PROJECT_NAME=sf python manage.py import_wordpress_export sf-klubben.WordPress.2026-05-09.xml \
+  --media-dir sfklubben-export-local/assets/sfklubben.fi \
+  --author wp-import \
+  --import-nav \
+  --replace-nav \
+  --import-gallery-redirects \
+  --replace-gallery-redirects \
+  --import-functionaries
+```
+
+Run `--dry-run` first to inspect planned counts. The command matches rows by slug; existing rows are skipped unless `--update-existing` is passed. Publications import reads Issuu links from the exported A&O page (`/ao/`) and stores them as external redirects with the table cover image as `cover_image` when that uploaded image is available. It also reads the exported Politicus page (`/politicus/`), stores Issuu years as external redirects, and stores older linked PDF years as local PDF-backed publications when the target PDF is available in imported media. A&O and Politicus each get their own publication collection and collection logo from the WordPress media library; pass `--skip-publications` to skip those rows. Navigation import reads the WordPress `actual` menu by default; use `--nav-menu <slug>` to import another exported menu. Gallery redirect import reads Google Photos/Drive links from the exported `bildgalleriet` and `gamla-bilder` pages and creates redirect-only `gallery.Album` rows. By default the importer also fetches each share URL's `og:image` preview and stores it as the album thumbnail; pass `--skip-gallery-thumbnails` to suppress those network calls (e.g. for offline imports). Albums that already have a thumbnail are left untouched, and fetch failures are logged and counted in the report rather than aborting the import. Pass `--import-exam-archive` to read the WordPress `tentarkiv` rtbs_tabs payload (a PHP-serialized list of subject tabs) and create one `exambank.ExamArchive` per tab, with one `exambank.ExamFile` per linked PDF (resolved to its already-imported storage path). Combine with `--replace-exam-archive` to clear existing exam archives first. Pass `--import-functionaries` to parse the WordPress `funktionarer` page into board `functionaries.FunctionaryRole` rows and name-only `functionaries.Functionary` rows; it preserves any existing matching member-linked functionary entries. Combine with `--replace-functionaries` only when you intentionally want to clear all existing functionaries first. It writes a JSON report next to the XML by default.
+
+### `import_impuls_static_archive`
+
+Use this one-off migration helper for the Impuls static WordPress archive stored in the repository root under `impuls/`. Unlike the SF importer, this reads the captured static tree: it prefers REST page JSON under `wp-json/wp/v2/pages/`, falls back to canonical HTML pages, parses the current blog listing into `news.Post` rows, imports referenced uploads into public media storage, and can recreate the captured WordPress navigation.
+
+Run a dry-run first:
+
+```bash
+PROJECT_NAME=impuls python manage.py import_impuls_static_archive --dry-run --import-nav
+```
+
+Then import into a disposable or backed-up target database:
+
+```bash
+PROJECT_NAME=impuls python manage.py import_impuls_static_archive \
+  --import-nav \
+  --replace-nav \
+  --author wp-import
+```
+
+The command matches pages and posts by slug. Existing rows are skipped unless `--update-existing` is passed. It writes `impuls/impuls-import-report.json` by default after a non-dry run.
+
 ## Recommended Operator Checklist
+
+### After splitting apps
+
+Before running `manage.py remove_stale_contenttypes` after this split, grant the replacement permissions for the new apps:
+
+- `gallery.*` for photo albums and photos
+- `exambank.*` for exam archives and files
+- `instagram.*` for Instagram URLs
+- `harassment.*` for harassment reports and recipients
+- `functionaries.*` for functionary roles and assignments
+
+The admin keeps temporary fallbacks to the old `archive`, `social`, and `members` permissions while the stale content types still exist. This includes gallery and exam-bank collections/files, Instagram URLs, harassment reports/recipients, and functionary roles/assignments. Those fallbacks disappear once stale content types and their permissions are removed.
 
 ### Before destructive operations
 

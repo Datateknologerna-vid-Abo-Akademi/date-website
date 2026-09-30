@@ -1,21 +1,32 @@
 import random
-
-from django.utils import timezone
 from io import BytesIO
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 from PIL import Image, ImageDraw
 
-from archive.models import Collection, Picture
+from gallery.models import Album, Photo
 
 SEED_PREFIX = "[Seed] "
 
 ALBUM_NAMES = [
-    "Mottagningen", "Sittning", "Gasque", "Nollning",
-    "Tentafest", "Pubrunda", "Sommarfest", "Vinterfest",
-    "Kickoff", "Avslutning", "Jubileum", "Afterwork",
-    "Pluggkväll", "Filmkväll", "Grillkväll", "Skidresa",
+    "Mottagningen",
+    "Sittning",
+    "Gasque",
+    "Nollning",
+    "Tentafest",
+    "Pubrunda",
+    "Sommarfest",
+    "Vinterfest",
+    "Kickoff",
+    "Avslutning",
+    "Jubileum",
+    "Afterwork",
+    "Pluggkväll",
+    "Filmkväll",
+    "Grillkväll",
+    "Skidresa",
 ]
 
 
@@ -98,18 +109,21 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         from django.conf import settings
+
         if not getattr(settings, 'DEVELOP', False):
-            raise CommandError("seed_gallery must not be run outside of a development environment (DEVELOP must be True).")
+            raise CommandError(
+                "seed_gallery must not be run outside of a development environment (DEVELOP must be True)."
+            )
         if getattr(settings, 'USE_S3', False):
             raise CommandError("seed_gallery must not be run with USE_S3=True — it would upload fake images to S3.")
 
         if options["clear"]:
-            collections = list(Collection.objects.filter(title__startswith=SEED_PREFIX))
-            count = len(collections)
-            for collection in collections:
-                for picture in collection.picture_set.all():
+            albums = list(Album.objects.filter(title__startswith=SEED_PREFIX))
+            count = len(albums)
+            for album in albums:
+                for picture in album.photo_set.all():
                     picture.delete()
-                collection.delete()
+                album.delete()
             self.stdout.write(self.style.WARNING(f"Cleared {count} seeded album(s)."))
 
         album_count = options["albums"]
@@ -118,9 +132,7 @@ class Command(BaseCommand):
         pool = ALBUM_NAMES * (album_count // len(ALBUM_NAMES) + 1)
         names = random.sample(pool, album_count)
 
-        self.stdout.write(
-            f"Seeding {album_count} album(s) × {image_count} image(s) each…"
-        )
+        self.stdout.write(f"Seeding {album_count} album(s) × {image_count} image(s) each…")
 
         for i, name in enumerate(names):
             year = random.randint(2021, 2025)
@@ -131,25 +143,21 @@ class Command(BaseCommand):
                 tzinfo=timezone.get_current_timezone(),
             )
 
-            collection = Collection.objects.create(
+            album = Album.objects.create(
                 title=f"{SEED_PREFIX}{name} {year}",
-                type="Pictures",
                 pub_date=pub_date,
             )
 
-            self.stdout.write(f'  [{i + 1}/{album_count}] "{collection.title}"', ending=" ")
+            self.stdout.write(f'  [{i + 1}/{album_count}] "{album.title}"', ending=" ")
 
             for j in range(image_count):
                 fake_img = _make_fake_image(i * image_count + j)
-                Picture(collection=collection, image=fake_img).save()
+                Photo(album=album, image=fake_img).save()
                 self.stdout.write(".", ending="")
                 self.stdout.flush()
 
             self.stdout.write(self.style.SUCCESS(" done"))
 
         self.stdout.write(
-            self.style.SUCCESS(
-                f"\nDone. {album_count} album(s) created."
-                f" Run with --clear to remove them."
-            )
+            self.style.SUCCESS(f"\nDone. {album_count} album(s) created. Run with --clear to remove them.")
         )

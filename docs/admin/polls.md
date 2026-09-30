@@ -16,8 +16,9 @@ Run quick votes or questionnaires for members. Each poll ("Fråga") contains mul
      - *Endast medlemmar* – requires login.
      - *Ordinarie medlemmar* – only ordinary members (permission profile 2).
      - *Endast röstberättigade* – ordinary members with an active subscription.
+     - Members whose profile has no voting rights (for example SF *Extra medlem*) are excluded from the last two options but may still join polls open to all members.
    - **Flerval** – allow selecting multiple answers. If enabled, optionally set **Antal flerval som krävs** to force exactly N picks.
-   - **Publicera** – unchecked polls stay hidden.
+   - **Publiceras** – timestamp when the poll should become visible. Leave empty to keep it hidden, or pick a future time to schedule publication; a past time publishes immediately.
    - **Visa resultat** – enable public results at `/polls/<id>/results/`.
    - **Avsluta röstande** – locks the poll (even admins cannot reopen without editing).
 3. Save the question to reveal the inline **Choices** table.
@@ -38,4 +39,4 @@ Run quick votes or questionnaires for members. Each poll ("Fråga") contains mul
 
 ## Tips
 - Keep polls short—long multiple-choice instructions can be moved into the content of the page that links to the poll.
-- When ending a vote, tick **Avsluta röstande** instead of unpublishing; this preserves historical visibility while blocking new submissions.
+- When ending a vote, tick **Avsluta röstande** instead of clearing **Publiceras**; this preserves historical visibility while blocking new submissions.

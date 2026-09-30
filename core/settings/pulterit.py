@@ -1,51 +1,32 @@
 from .common import *  # noqa
 
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            'templates/pulterit',
-            *COMMON_TEMPLATE_DIRS,
-        ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                *COMMON_CONTEXT_PROCESSORS,
-                # Add project context processors here
-            ],
-        },
-    },
-]
+TEMPLATES = build_templates('pulterit')
 
-INSTALLED_APPS = get_installed_apps([
-    'news',
-    'events',
-    'polls',
-    'ads',
-    'social',
-    'staticpages',
-    'publications',
-    'billing',
-])
+INSTALLED_APPS = get_installed_apps(
+    [
+        'news',
+        'events',
+        'polls',
+        'ads',
+        'instagram',
+        'harassment',
+        'social',
+        'staticpages',
+        'exambank',
+        'publications',
+        'billing',
+    ]
+)
 
 ROOT_URLCONF = 'core.urls.pulterit'
 ARCHIVE_ENABLED = False
 MEMBERS_SIGNUP_ENABLED = False
 
-STAFF_GROUPS = get_staff_groups([
-        'styrelse',
-        'admin',
-        'fotograf',
-        'rösträknare'
-    ])
+STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static/pulterit'),
-    os.path.join(BASE_DIR, 'static/common'),
-]
-
+STATICFILES_DIRS = build_static_dirs('pulterit')
 
 CONTENT_VARIABLES = {
     "SITE_URL": "https://pulterit.org",

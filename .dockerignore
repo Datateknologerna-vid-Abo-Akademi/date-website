@@ -41,6 +41,13 @@ db.sqlite3
 db.sqlite3-journal
 media/
 
+# Local site export/import archives
+*.WordPress.*.xml
+*-export-local/
+wordpress-export*/
+wordpress-import*/
+wordpress-import-report*.json
+
 # IDE
 .idea/
 .vscode/

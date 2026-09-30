@@ -20,7 +20,7 @@ class ValidateCaptchaTests(SimpleTestCase):
     def test_returns_true_on_successful_validation(self, mock_post):
         mock_post.return_value.json.return_value = {'success': True}
         self.assertTrue(validate_captcha('token'))
-        mock_post.assert_called_once_with(VALIDATION_URL, data={'secret': 'secret', 'response': 'token'})
+        mock_post.assert_called_once_with(VALIDATION_URL, data={'secret': 'secret', 'response': 'token'}, timeout=5)
 
     @override_settings(TURNSTILE_SECRET_KEY='secret')
     @patch('core.utils.requests.post', side_effect=Exception('boom'))
