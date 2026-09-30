@@ -836,10 +836,15 @@ class BookingSettingsAdminTests(PinnedNowMixin, TestCase):
         self.assertNotContains(response, 'name="next_rotation"')
 
         code = access.current_code(access_settings=booking_settings)
-        self.assertRegex(html, f'field-current_code[\\s\\S]{{0,400}}?{code}')
         # A callable admin attribute is rendered with str(), not localized.
         rotation = str(access.next_rotation(access_settings=booking_settings))
-        self.assertRegex(html, f'field-next_rotation[\\s\\S]{{0,400}}?{re.escape(rotation)}')
+        # Assert each value renders next to its own label rather than on a class
+        # name that only one admin theme emits: Unfold renders readonly values in
+        # a different container from the classic admin, and the CI matrix runs
+        # both. That neither value is an editable field is covered by the name=
+        # assertions above.
+        self.assertRegex(html, f'Aktuell bokningskod[\\s\\S]{{0,400}}?{re.escape(code)}')
+        self.assertRegex(html, f'Koden byts ut[\\s\\S]{{0,400}}?{re.escape(rotation)}')
 
 
 class BookingEmailTests(PinnedNowMixin, TestCase):
