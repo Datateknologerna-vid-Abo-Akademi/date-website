@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from . import models
 
+
 class AttendanceChangesInline(admin.TabularInline):
     model = models.AttendanceChange
     classes = ["collapse"]

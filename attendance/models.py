@@ -1,22 +1,22 @@
-import random
-from typing import cast, Any
 from datetime import datetime
+from typing import Any, cast
 
 from django.db import models
-from django.db.models import constraints, Q, QuerySet
-from django.utils.timezone import now, localtime
-from django.utils.translation import gettext_lazy as _, pgettext_lazy, gettext_noop
+from django.db.models import Q, QuerySet, constraints
 from django.utils.formats import date_format, time_format
-
-from members.models import Member
-
+from django.utils.timezone import localtime, now
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_noop, pgettext_lazy
 from django_otp.oath import TOTP
 from django_otp.util import random_hex
+
+from members.models import Member
 
 type Attendee = "Member | NonMemberAttendee"
 
 ATTENDANCE_EVENT_MAX_SLUG_LEN = 50
 NON_MEMBER_MAX_NAME_LEN = 255
+
 
 class AttendanceEvent(models.Model):
     """
@@ -73,9 +73,9 @@ class AttendanceEvent(models.Model):
         return [
             x.attendee
             # NOTE: using distinct this way will only work on postgres, which is currently used
-            for x in self.attendance_changes.filter(timestamp__lte=timestamp).distinct("user", "non_member").order_by(
-                "user_id", "non_member_id", "-timestamp"
-            )
+            for x in self.attendance_changes.filter(timestamp__lte=timestamp)
+            .distinct("user", "non_member")
+            .order_by("user_id", "non_member_id", "-timestamp")
             if x.type == AttendanceChange.Type.ENTER
         ]
 
@@ -135,16 +135,18 @@ class NonMemberAttendee(models.Model):
         verbose_name = _("deltagare, icke-medlem")
         verbose_name_plural = _("deltagare, icke-medlemmar")
 
+    def __str__(self):
+        return f"{self.name} ({_('icke-medlem')})"
+
     # For compatibility with the Member class
     def get_full_name(self):
         return str(self)
 
-    def __str__(self):
-        return f"{self.name} ({_('icke-medlem')})"
-
 
 user_verbose_name = _("Användare")
 non_member_verbose_name = _("Icke-medlem")
+
+
 class AttendanceChange(models.Model):
     """
     A change in the attendance status of someone, either a registered user or a non-member attendee.
@@ -162,15 +164,32 @@ class AttendanceChange(models.Model):
         _ = pgettext_lazy("left/entered in general", "Anlände")
         _ = pgettext_lazy("left/entered in general", "Lämnade")
 
-    event = models.ForeignKey(AttendanceEvent, on_delete=models.CASCADE, related_name="attendance_changes", verbose_name=_("Närvaroevenemang"))
+    event = models.ForeignKey(
+        AttendanceEvent,
+        on_delete=models.CASCADE,
+        related_name="attendance_changes",
+        verbose_name=_("Närvaroevenemang"),
+    )
     """The event that this change applies to"""
 
     # ONE of these fields MUST be non-null, and ONLY ONE field shall be non-null.
     # A change can apply to either a registered member or to a non-member.
-    user = models.ForeignKey(Member, on_delete=models.CASCADE, null=True, blank=True, verbose_name=user_verbose_name) # TODO use some other on_delete?
+    user = models.ForeignKey(  # TODO use some other on_delete?
+        Member,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name=user_verbose_name,
+    )
     """The user subject to this change. Can be None, in which case `non_member` will be set"""
 
-    non_member = models.ForeignKey(NonMemberAttendee, on_delete=models.CASCADE, null=True, blank=True, verbose_name=non_member_verbose_name)
+    non_member = models.ForeignKey(
+        NonMemberAttendee,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        verbose_name=non_member_verbose_name,
+    )
     """The non-member subject to this change. Can be None, in which case `user` will be set"""
 
     timestamp = models.DateTimeField(_("Tidpunkt"), default=now)
@@ -191,27 +210,10 @@ class AttendanceChange(models.Model):
                     | (Q(user__isnull=True) & Q(non_member__isnull=False))
                 ),
                 name="foreign_keys_ok",
-                violation_error_message=_(
-                    "Exakt en av '%(user)s' eller '%(non_member)s' måste anges."
-                )
+                violation_error_message=_("Exakt en av '%(user)s' eller '%(non_member)s' måste anges.")
                 % {"user": user_verbose_name, "non_member": non_member_verbose_name},
             )
         ]
-
-    @property
-    def attendee(self) -> Attendee:
-        """Either a Member or NonMemberAttendee, depending on which field is set"""
-        return cast(Attendee, self.user if self.user is not None else self.non_member)
-
-    @property
-    def attendee_name(self) -> str:
-        """Returns the name of any kind of attendee"""
-        if self.user is not None:
-            user = cast(Member, self.user)
-            return user.full_name
-        else:
-            non_member = cast(NonMemberAttendee, self.non_member)
-            return non_member.name
 
     def __str__(self):
         # The constraint that usually ensures either user or non_member is set is only checked when saving the model,
@@ -229,3 +231,18 @@ class AttendanceChange(models.Model):
             "date": date_format(timestamp),
             "time": time_format(timestamp),
         }
+
+    @property
+    def attendee(self) -> Attendee:
+        """Either a Member or NonMemberAttendee, depending on which field is set"""
+        return cast(Attendee, self.user if self.user is not None else self.non_member)
+
+    @property
+    def attendee_name(self) -> str:
+        """Returns the name of any kind of attendee"""
+        if self.user is not None:
+            user = cast(Member, self.user)
+            return user.full_name
+        else:
+            non_member = cast(NonMemberAttendee, self.non_member)
+            return non_member.name

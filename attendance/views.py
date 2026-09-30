@@ -1,21 +1,23 @@
 from typing import cast
 
-from django.shortcuts import render
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.http import HttpRequest, HttpResponseRedirect
-from django.views.generic import View, ListView
-from django.views.generic.detail import SingleObjectMixin
-from django.utils.translation import gettext_lazy as _
-from django.utils.timezone import now
 from django.db.models import Q
-
+from django.http import HttpRequest, HttpResponseRedirect
+from django.shortcuts import render
+from django.utils.timezone import now
+from django.utils.translation import gettext_lazy as _
+from django.views.generic import ListView, View
+from django.views.generic.detail import SingleObjectMixin
 
 from members.models import Member
+
 from . import forms, websocket
-from .models import AttendanceChange, AttendanceEvent, NonMemberAttendee, Attendee
+from .models import AttendanceChange, AttendanceEvent, Attendee, NonMemberAttendee
+
 
 class HttpResponseSeeOther(HttpResponseRedirect):
     status_code = 303
+
 
 class AttendanceEventsView(ListView):
     model = AttendanceEvent
@@ -59,20 +61,17 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
     def _conflict(self, request, **kwargs):
         return render(request, self.template_name, self.get_ctx(**kwargs), status=409)
 
-
     def get(self, request: HttpRequest, *args, **kwargs):
         self.object = self.get_object()
 
         return render(request, self.template_name, self.get_ctx())
 
-
     def post(self, request: HttpRequest, *args, **kwargs):
         self.object = self.get_object()
 
-
         form = forms.AttendanceChangeForm(request.POST)
         if not form.is_valid():
-            error_dict = { f"{field}_error": errors[0] for field, errors in form.errors.items()}
+            error_dict = {f"{field}_error": errors[0] for field, errors in form.errors.items()}
             return self._bad_request(request, **error_dict)
 
         if not self.object.is_code_valid(form.cleaned_data["code"]):
@@ -84,10 +83,10 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
         if request.user.is_anonymous and len(non_member_name) == 0:
             return self._bad_request(request, non_member_name_error=_("Namn måste anges om du inte är inloggad"))
 
-
-        # This could theoretically end up in a situation where another request gets through and
-        # causes nonsensical attendance change records (e.g going from ENTER -> LEAVE, but the request is sent twice so two LEAVE records are created),
-        # but it wouldn't really matter in the end so this doesn't have to be atomic
+        # This could theoretically end up in a situation where another request gets through and causes
+        # nonsensical attendance change records (e.g going from ENTER -> LEAVE, but the request is sent
+        # twice so two LEAVE records are created), but it wouldn't really matter in the end, so this
+        # does not have to be atomic
 
         attendee: Attendee
         if request.user.is_authenticated:
@@ -99,11 +98,17 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
         match type:
             case AttendanceChange.Type.ENTER:
                 if self.object.is_attendee_present(attendee):
-                    return self._conflict(request, generic_error=_("Du kan inte gå in i ett evenemang var du redan är närvarande"))
+                    return self._conflict(
+                        request,
+                        generic_error=_("Du kan inte gå in i ett evenemang var du redan är närvarande"),
+                    )
 
             case AttendanceChange.Type.LEAVE:
                 if not self.object.is_attendee_present(attendee):
-                    return self._conflict(request, generic_error=_("Du kan inte gå ut ur ett evenemang var du inte är närvarande"))
+                    return self._conflict(
+                        request,
+                        generic_error=_("Du kan inte gå ut ur ett evenemang var du inte är närvarande"),
+                    )
 
             case unhandled:
                 raise Exception(f"unhandled AttendanceChange.Type {unhandled}")
@@ -114,6 +119,7 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
 
         # Clears the "code" query parameter
         return HttpResponseSeeOther(self.request.path)
+
 
 class AttendanceEventOverview(UserPassesTestMixin, SingleObjectMixin[AttendanceEvent], View):
     model = AttendanceEvent

@@ -1,14 +1,15 @@
 import logging
 from typing import Any, cast
 
-from channels.generic.websocket import AsyncJsonWebsocketConsumer
-from channels.auth import UserLazyObject
 from asgiref.sync import sync_to_async
+from channels.auth import UserLazyObject
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from .models import AttendanceEvent
 from .views import AttendanceEventOverview
 
 logger = logging.getLogger("attendance")
+
 
 class AttendanceConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self) -> None:
@@ -28,23 +29,27 @@ class AttendanceConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive_json(self, content: Any, **kwargs: Any) -> None:
-        if type(content) == dict:
+        if isinstance(content, dict):
             if "type" in content and content["type"] == "get_code":
                 code, until_next = await self._get_code()
-                await self.send_json({
-                    "type": "code",
-                    "code": code,
-                    "until_next": until_next,
-                })
+                await self.send_json(
+                    {
+                        "type": "code",
+                        "code": code,
+                        "until_next": until_next,
+                    }
+                )
 
     async def attendance_change(self, event):
-        await self.send_json({
-            "type": "attendance_change",
-            "data": {
-                "name": event["change"]["name"],
-                "type": event["change"]["type"],
-            },
-        })
+        await self.send_json(
+            {
+                "type": "attendance_change",
+                "data": {
+                    "name": event["change"]["name"],
+                    "type": event["change"]["type"],
+                },
+            }
+        )
 
     async def _get_code(self) -> tuple[int, float]:
         event = await AttendanceEvent.objects.filter(slug=self.slug).aget()
