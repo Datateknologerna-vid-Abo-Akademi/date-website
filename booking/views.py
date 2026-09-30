@@ -50,7 +50,9 @@ def room_detail(request, pk):
     room = get_object_or_404(Room, pk=pk, is_active=True)
     at = access.now_at()
 
-    if not request.user.is_authenticated and not access.session_has_access(request, at):
+    if not request.user.is_authenticated and (
+        access.is_code_submission(request) or not access.session_has_access(request, at)
+    ):
         return access.booking_code_gate(
             request,
             template_name='booking/room_detail.html',
@@ -76,7 +78,7 @@ def room_detail(request, pk):
             else:
                 form = form_class(request.POST, room=locked_room)
                 allowed = form.is_valid()
-                if allowed and not validate_captcha(request.POST.get('cf-turnstile-response')):
+                if allowed and not validate_captcha(access.captcha_response(request)):
                     # Say so, rather than re-rendering a valid-looking form and
                     # leaving the visitor to retry it forever.
                     logger.warning('Booking captcha rejected for room %s', room.pk)

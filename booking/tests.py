@@ -955,7 +955,9 @@ class BookingGateRegressionTests(PinnedNowMixin, TestCase):
 
         self.assertEqual(response.status_code, 429)
         self.assertEqual(response.context['lockout_minutes'], access.BOOKING_LOCKOUT_SECONDS // 60)
-        # The template must not print the raw seconds count as a minute count.
+        # The visible message has to be in minutes, and must not print the raw
+        # seconds count as a minute count.
+        self.assertContains(response, '15 minuter', status_code=429)
         self.assertNotIn(str(access.BOOKING_LOCKOUT_SECONDS), response.content.decode())
 
     def test_admin_time_column_renders_local_time(self):
@@ -998,25 +1000,66 @@ class BookingGateCaptchaTests(PinnedNowMixin, TestCase):
     def current_code(self):
         return access.current_code(at=self.now)
 
-    def test_the_gate_renders_the_captcha_widget(self):
+    def accepted_codes(self):
+        return set(access.accepted_codes(at=self.now))
+
+    def wrong_code(self):
+        for candidate in ('000000', '111111', '222222'):
+            if candidate not in self.accepted_codes():
+                return candidate
+        raise AssertionError('no unused code candidate left')
+
+    def test_the_gate_renders_the_captcha_widget_and_its_script(self):
         response = self.client.get(self.room_url)
 
         self.assertContains(response, 'cf-turnstile')
+        self.assertContains(response, 'turnstile/v0/api.js')
 
-    def test_a_failed_captcha_does_not_unlock_and_is_not_a_code_attempt(self):
+    def test_a_failed_captcha_never_inspects_the_submitted_code(self):
+        with patch('booking.access.validate_captcha', return_value=False):
+            with patch('booking.access.check_code') as check_code:
+                response = self.client.post(self.room_url, {'code': self.current_code()})
+
+        self.assertEqual(response.status_code, 403)
+        check_code.assert_not_called()
+
+    def test_a_failed_captcha_does_not_reveal_whether_the_code_was_right(self):
+        with patch('booking.access.validate_captcha', return_value=False):
+            right = self.client.post(self.room_url, {'code': self.current_code()})
+        with patch('booking.access.validate_captcha', return_value=False):
+            wrong = self.client.post(self.room_url, {'code': self.wrong_code()})
+
+        # Any difference here, for example a "Fel kod." shown only for the wrong
+        # guess, would let an unverified client learn the code one guess at a
+        # time without ever passing the challenge.
+        self.assertEqual(right.status_code, 403)
+        self.assertEqual(wrong.status_code, 403)
+        self.assertNotContains(right, 'Fel kod.', status_code=403)
+        self.assertNotContains(wrong, 'Fel kod.', status_code=403)
+
+    def test_a_failed_captcha_is_reported_and_is_not_a_code_attempt(self):
         with patch('booking.access.validate_captcha', return_value=False):
             response = self.client.post(self.room_url, {'code': self.current_code()})
 
         self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'Kunde inte verifiera', status_code=403)
         self.assertNotIn(access.BOOKING_SESSION_TOKEN_KEY, self.client.session)
         self.assertNotIn(access.BOOKING_ATTEMPTS_COUNTER, self.client.session)
 
-    def test_a_failed_captcha_reports_the_challenge_on_the_gate(self):
-        with patch('booking.access.validate_captcha', return_value=False):
-            response = self.client.post(self.room_url, {'code': '000000'})
+    def test_the_validator_receives_the_submitted_token(self):
+        with patch('booking.access.validate_captcha', return_value=True) as captcha:
+            self.client.post(self.room_url, {'code': self.current_code(), 'cf-turnstile-response': 'token-123'})
 
-        self.assertEqual(response.status_code, 403)
-        self.assertContains(response, 'cf-turnstile', status_code=403)
+        captcha.assert_called_once_with('token-123')
+
+    def test_a_missing_captcha_token_is_normalised_to_an_empty_string(self):
+        # core.utils.validate_captcha only short-circuits on "", so passing None
+        # would send a verification request to Cloudflare for every request that
+        # simply omits the field.
+        with patch('booking.access.validate_captcha', return_value=False) as captcha:
+            self.client.post(self.room_url, {'code': self.current_code()})
+
+        captcha.assert_called_once_with('')
 
     def test_a_passed_captcha_unlocks(self):
         with patch('booking.access.validate_captcha', return_value=True):
@@ -1024,3 +1067,15 @@ class BookingGateCaptchaTests(PinnedNowMixin, TestCase):
 
         self.assertRedirects(response, self.room_url)
         self.assertIn(access.BOOKING_SESSION_TOKEN_KEY, self.client.session)
+
+    def test_a_stale_code_submission_is_gated_even_when_already_unlocked(self):
+        with patch('booking.access.validate_captcha', return_value=True):
+            self.client.post(self.room_url, {'code': self.current_code()})
+        self.assertIn(access.BOOKING_SESSION_TOKEN_KEY, self.client.session)
+
+        with patch('booking.access.validate_captcha', return_value=True):
+            response = self.client.post(self.room_url, {'code': self.current_code()})
+
+        # Handled by the gate (a redirect), not by the booking form (a 200 with
+        # errors about booking fields the visitor never filled in).
+        self.assertRedirects(response, self.room_url)

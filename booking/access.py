@@ -216,6 +216,26 @@ def lockout_remaining(request):
     return remaining
 
 
+def captcha_response(request):
+    """The Turnstile response, normalised so a missing field fails locally.
+
+    ``core.utils.validate_captcha`` only short-circuits on an empty string, so
+    handing it None would send a verification request to Cloudflare, with its
+    five second timeout, for every request that simply omits the field.
+    """
+    return request.POST.get('cf-turnstile-response') or ''
+
+
+def is_code_submission(request):
+    """Whether a POST carries the code form rather than the booking form.
+
+    The room page serves both forms and the booking form has no ``code`` field,
+    so a submitted code is handled by the gate even when the visitor has already
+    unlocked the room, for example from an older tab.
+    """
+    return 'code' in request.POST
+
+
 def booking_code_gate(
     request,
     *,
@@ -243,20 +263,19 @@ def booking_code_gate(
     if lockout:
         status = 429
     elif request.method == 'POST':
-        form = BookingCodeForm(request.POST, at=at, access_settings=access_settings)
-        if not validate_captcha(request.POST.get('cf-turnstile-response')):
-            # Checked before the code so that a script has to pass the challenge
-            # for every guess: the attempt counter is per session and cannot
-            # bound a client that discards the cookie. A rejected challenge is
-            # not a code attempt, so it does not consume the visitor's five.
-            # validate_captcha fails open when no secret is configured, which
-            # matches every other public form in the project.
-            form.add_error(None, _('Kunde inte verifiera att du inte är en robot. Försök igen.'))
+        if not validate_captcha(captcha_response(request)):
+            # Deliberately does not build a bound form. Validating the submitted
+            # code here would tell a client that has not passed the challenge
+            # whether its guess was right, one guess at a time, without
+            # consuming an attempt. A rejected challenge is not a code attempt,
+            # so it must not count against the visitor's five either.
+            context['captcha_error'] = _('Kunde inte verifiera att du inte är en robot. Försök igen.')
             status = 403
-        elif form.is_valid():
-            grant_session(request, at=at, access_settings=access_settings)
-            return redirect(next_url)
         else:
+            form = BookingCodeForm(request.POST, at=at, access_settings=access_settings)
+            if form.is_valid():
+                grant_session(request, at=at, access_settings=access_settings)
+                return redirect(next_url)
             attempts = request.session.get(BOOKING_ATTEMPTS_COUNTER, 0) + 1
             request.session[BOOKING_ATTEMPTS_COUNTER] = attempts
             if attempts >= BOOKING_ATTEMPT_LIMIT:

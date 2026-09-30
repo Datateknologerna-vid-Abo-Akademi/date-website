@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-29 20:21+0300\n"
+"POT-Creation-Date: 2026-09-30 20:52+0300\n"
 "PO-Revision-Date: 2025-09-16 20:27+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -2562,6 +2562,10 @@ msgid "Kunde inte ladda upp följande filer: %(files)s"
 msgstr "Could not upload the following files: %(files)s"
 
 
+#: booking/access.py:272 booking/views.py:85
+msgid "Kunde inte verifiera att du inte är en robot. Försök igen."
+msgstr "We could not verify that you are not a robot. Please try again."
+
 #: booking/admin.py:31 booking/models.py:51
 #: templates/date/date/components/bookings.html:5
 msgid "Bokningar"
@@ -2677,11 +2681,7 @@ msgstr ""
 msgid "Bokningsinställningar"
 msgstr "Booking settings"
 
-#: booking/views.py:83
-msgid "Kunde inte verifiera att du inte är en robot. Försök igen."
-msgstr "We could not verify that you are not a robot. Please try again."
-
-#: booking/views.py:88
+#: booking/views.py:90
 msgid "Tack! Din bokning är registrerad."
 msgstr "Thank you! Your booking has been registered."
 
