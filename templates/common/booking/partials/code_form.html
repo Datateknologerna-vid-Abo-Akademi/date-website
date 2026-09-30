@@ -10,6 +10,11 @@
 {% else %}
   <form method="post" class="booking-code-form">
     {% csrf_token %}
+    {% for error in code_form.non_field_errors %}
+      <div class="booking-error">
+        <strong>{{ error|escape }}</strong>
+      </div>
+    {% endfor %}
     <p>
       {{ code_form.code.label_tag }}
       {{ code_form.code }}
@@ -19,6 +24,9 @@
         <strong>{{ error|escape }}</strong>
       </div>
     {% endfor %}
+    <div class="cf-turnstile"
+         data-sitekey="{{ CAPTCHA_SITE_KEY }}"
+         data-callback="javascriptCallback"></div>
     <button class="button" type="submit">{% trans "Fortsätt" %}</button>
   </form>
 {% endif %}

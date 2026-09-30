@@ -18,6 +18,9 @@ import time
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+
+from core.utils import validate_captcha
 
 from .models import BookingSettings
 
@@ -227,7 +230,8 @@ def booking_code_gate(
     ``next_url`` is a URL name or an already resolved URL chosen by the view,
     never a target taken from the request. Behaviour mirrors the exam bank
     gate: a fresh gate is 200, a wrong code is 403, and a lockout is 429,
-    including the request that hits the attempt limit.
+    including the request that hits the attempt limit. A POST must also pass the
+    captcha before the code is looked at.
     """
     from .forms import BookingCodeForm
 
@@ -240,17 +244,27 @@ def booking_code_gate(
         status = 429
     elif request.method == 'POST':
         form = BookingCodeForm(request.POST, at=at, access_settings=access_settings)
-        if form.is_valid():
+        if not validate_captcha(request.POST.get('cf-turnstile-response')):
+            # Checked before the code so that a script has to pass the challenge
+            # for every guess: the attempt counter is per session and cannot
+            # bound a client that discards the cookie. A rejected challenge is
+            # not a code attempt, so it does not consume the visitor's five.
+            # validate_captcha fails open when no secret is configured, which
+            # matches every other public form in the project.
+            form.add_error(None, _('Kunde inte verifiera att du inte är en robot. Försök igen.'))
+            status = 403
+        elif form.is_valid():
             grant_session(request, at=at, access_settings=access_settings)
             return redirect(next_url)
-        attempts = request.session.get(BOOKING_ATTEMPTS_COUNTER, 0) + 1
-        request.session[BOOKING_ATTEMPTS_COUNTER] = attempts
-        if attempts >= BOOKING_ATTEMPT_LIMIT:
-            request.session[BOOKING_LOCKOUT_UNTIL] = time.time() + BOOKING_LOCKOUT_SECONDS
-            lockout = BOOKING_LOCKOUT_SECONDS
-            status = 429
         else:
-            status = 403
+            attempts = request.session.get(BOOKING_ATTEMPTS_COUNTER, 0) + 1
+            request.session[BOOKING_ATTEMPTS_COUNTER] = attempts
+            if attempts >= BOOKING_ATTEMPT_LIMIT:
+                request.session[BOOKING_LOCKOUT_UNTIL] = time.time() + BOOKING_LOCKOUT_SECONDS
+                lockout = BOOKING_LOCKOUT_SECONDS
+                status = 429
+            else:
+                status = 403
 
     context['code_form'] = form
     context['lockout_remaining'] = lockout

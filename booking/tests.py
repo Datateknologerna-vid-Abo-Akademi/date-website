@@ -975,3 +975,52 @@ class BookingGateRegressionTests(PinnedNowMixin, TestCase):
         # timezone has a non-zero offset, which is the regression this pins.
         if raw != local:
             self.assertNotEqual(model_admin.time_range(booking), raw)
+
+
+class BookingGateCaptchaTests(PinnedNowMixin, TestCase):
+    """The gate asks for the captcha before it looks at the code.
+
+    The attempt counter and the lockout live in the session, so a client that
+    discards the cookie is never limited. Requiring the captcha on the code form
+    is what makes each guess cost a challenge; it fails open when no Turnstile
+    secret is configured, which is why the other classes here can post a code
+    without one.
+    """
+
+    def setUp(self):
+        super().setUp()
+        booking_settings = BookingSettings.get_solo()
+        booking_settings.rotation_period = BookingSettings.ROTATION_WEEKLY
+        booking_settings.save()
+        self.room = make_room(name='Kansliet')
+        self.room_url = reverse('booking:room_detail', args=[self.room.pk])
+
+    def current_code(self):
+        return access.current_code(at=self.now)
+
+    def test_the_gate_renders_the_captcha_widget(self):
+        response = self.client.get(self.room_url)
+
+        self.assertContains(response, 'cf-turnstile')
+
+    def test_a_failed_captcha_does_not_unlock_and_is_not_a_code_attempt(self):
+        with patch('booking.access.validate_captcha', return_value=False):
+            response = self.client.post(self.room_url, {'code': self.current_code()})
+
+        self.assertEqual(response.status_code, 403)
+        self.assertNotIn(access.BOOKING_SESSION_TOKEN_KEY, self.client.session)
+        self.assertNotIn(access.BOOKING_ATTEMPTS_COUNTER, self.client.session)
+
+    def test_a_failed_captcha_reports_the_challenge_on_the_gate(self):
+        with patch('booking.access.validate_captcha', return_value=False):
+            response = self.client.post(self.room_url, {'code': '000000'})
+
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'cf-turnstile', status_code=403)
+
+    def test_a_passed_captcha_unlocks(self):
+        with patch('booking.access.validate_captcha', return_value=True):
+            response = self.client.post(self.room_url, {'code': self.current_code()})
+
+        self.assertRedirects(response, self.room_url)
+        self.assertIn(access.BOOKING_SESSION_TOKEN_KEY, self.client.session)

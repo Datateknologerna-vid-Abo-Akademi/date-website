@@ -12,6 +12,10 @@ LANGUAGES = ALL_LANGUAGES
 # activation tokens, the booking code) would otherwise change with the
 # environment and pin a different value in CI than on a developer's machine.
 SECRET_KEY = "SECRET_KEY"  # noqa: S105 (pinned test secret, never a real credential)
+# Empty so validate_captcha fails open, which is the documented default for an
+# association that has not configured Turnstile. Tests that need verification to
+# happen enable it with override_settings(CAPTCHA_SITE_KEY=..., TURNSTILE_SECRET_KEY=...).
+TURNSTILE_SECRET_KEY = ""
 # Pinned so the suite is deterministic: this module inherits from date (where
 # the capability is on by default) and CI copies .env.example to .env, so
 # reading the environment here would make the tests depend on the developer's
