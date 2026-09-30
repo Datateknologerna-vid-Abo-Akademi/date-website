@@ -1023,19 +1023,66 @@ class BookingGateCaptchaTests(PinnedNowMixin, TestCase):
         self.assertEqual(response.status_code, 403)
         check_code.assert_not_called()
 
+    @staticmethod
+    def normalised_body(response):
+        # The CSRF token is a fresh random mask on every render, so drop its
+        # value before comparing two responses body for body.
+        return re.sub(rb'name="csrfmiddlewaretoken" value="[^"]*"', b'csrf', response.content)
+
     def test_a_failed_captcha_does_not_reveal_whether_the_code_was_right(self):
         with patch('booking.access.validate_captcha', return_value=False):
             right = self.client.post(self.room_url, {'code': self.current_code()})
+        after_right = dict(self.client.session)
         with patch('booking.access.validate_captcha', return_value=False):
             wrong = self.client.post(self.room_url, {'code': self.wrong_code()})
+        after_wrong = dict(self.client.session)
 
         # Any difference here, for example a "Fel kod." shown only for the wrong
         # guess, would let an unverified client learn the code one guess at a
-        # time without ever passing the challenge.
+        # time without ever passing the challenge. Status, body and session
+        # effects all have to be indistinguishable.
         self.assertEqual(right.status_code, 403)
         self.assertEqual(wrong.status_code, 403)
-        self.assertNotContains(right, 'Fel kod.', status_code=403)
-        self.assertNotContains(wrong, 'Fel kod.', status_code=403)
+        self.assertEqual(self.normalised_body(right), self.normalised_body(wrong))
+        self.assertEqual(after_right, after_wrong)
+        self.assertNotIn(access.BOOKING_ATTEMPTS_COUNTER, after_wrong)
+        self.assertNotIn(access.BOOKING_SESSION_TOKEN_KEY, after_wrong)
+
+    def test_a_rejected_challenge_does_not_revoke_an_existing_unlock(self):
+        with patch('booking.access.validate_captcha', return_value=True):
+            self.client.post(self.room_url, {'code': self.current_code()})
+
+        with patch('booking.access.validate_captcha', return_value=False):
+            response = self.client.post(self.room_url, {'code': self.wrong_code()})
+
+        self.assertEqual(response.status_code, 403)
+        # The unlock survives, so a booker who submits a stale code form from an
+        # older tab is not thrown back to the gate.
+        served = self.client.get(self.room_url)
+        self.assertIn('form', served.context)
+        self.assertNotIn('code_form', served.context)
+
+    def test_a_code_and_booking_payload_together_is_handled_by_the_gate(self):
+        with patch('booking.access.validate_captcha', return_value=True):
+            response = self.client.post(
+                self.room_url,
+                {
+                    'code': self.current_code(),
+                    'booker_name': 'Försök',
+                    'booker_email': 'forsok@example.com',
+                },
+            )
+
+        self.assertRedirects(response, self.room_url)
+        self.assertFalse(Booking.objects.exists())
+
+    def test_an_accepted_challenge_with_a_wrong_code_counts_an_attempt(self):
+        with patch('booking.access.validate_captcha', return_value=True):
+            response = self.client.post(self.room_url, {'code': self.wrong_code()})
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(self.client.session[access.BOOKING_ATTEMPTS_COUNTER], 1)
+        self.assertNotIn(access.BOOKING_SESSION_TOKEN_KEY, self.client.session)
 
     def test_a_failed_captcha_is_reported_and_is_not_a_code_attempt(self):
         with patch('booking.access.validate_captcha', return_value=False):
