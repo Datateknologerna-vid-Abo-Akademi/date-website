@@ -678,16 +678,22 @@ class LanguageSelectionTests(TestCase):
         self.assertTrue(rendered.startswith("om "))
 
     def test_localized_timeuntil_filter_returns_empty_for_past_timestamps_in_all_languages(self):
+        # The suffix is rendered after a date, e.g. "1.10 01:23, om 2 timmar".
+        # A past timestamp must contribute nothing at all, so the rendering has
+        # to equal the date on its own. Comparing against that instead of
+        # scanning the combined string for ", " and "0 " keeps the check
+        # independent of how the date formats: "1.10 " contains "0 " by itself.
         template = Template(
             '{% load localized_time %}{{ value|date:"j.n H:i" }}{{ value|localized_timeuntil|comma_if }}'
         )
+        date_only = Template('{{ value|date:"j.n H:i" }}')
         value = timezone.now() - timedelta(minutes=1)
 
         for language in ("sv", "en", "fi"):
             with self.subTest(language=language), translation.override(language):
                 rendered = template.render(Context({"value": value}))
-            self.assertNotIn(", ", rendered)
-            self.assertNotIn("0 ", rendered)
+                expected = date_only.render(Context({"value": value}))
+            self.assertEqual(rendered, expected)
 
     def test_localized_timesince_ago_filter_uses_finnish_word_order(self):
         template = Template("{% load localized_time %}{{ value|localized_timesince_ago }}")
