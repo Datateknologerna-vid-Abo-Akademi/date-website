@@ -311,6 +311,52 @@ msgstr "Harassment Reports"
 msgid "Report Recipients"
 msgstr "Report Recipients"
 
+#: core/admin_ui.py:223 templates/common/feedback/feedback_form.html:14
+msgid "Feedback"
+msgstr "Palaute"
+
+#: core/admin_ui.py:229
+msgid "Feedback Recipients"
+msgstr "Feedback Recipients"
+
+#: core/admin_ui.py:235
+msgid "Feedback Settings"
+msgstr "Feedback Settings"
+
+#: feedback/models.py:21
+msgid "Skickad"
+msgstr "Lähetetty"
+
+#: feedback/models.py:24 feedback/models.py:25
+msgid "Inskickad feedback"
+msgstr "Lähetetty palaute"
+
+#: feedback/models.py:43 feedback/models.py:44
+msgid "Mottagare för feedback"
+msgstr "Palautteen vastaanottajat"
+
+#: feedback/models.py:56
+msgid "Introduktionstext"
+msgstr "Johdantoteksti"
+
+#: feedback/models.py:60
+msgid "Texten som visas ovanför formuläret på /forms/."
+msgstr "Lomakkeen yläpuolella osoitteessa /forms/ näkyvä teksti."
+
+#: feedback/models.py:64 feedback/models.py:65 feedback/models.py:68
+msgid "Formulärtext"
+msgstr "Lomaketeksti"
+
+#: templates/common/feedback/feedback_form.html:4
+#: templates/common/feedback/feedback_form.html:13
+#: templates/common/feedback/feedback_success.html:4
+msgid "Kontakta oss"
+msgstr "Ota yhteyttä"
+
+#: templates/common/feedback/feedback_success.html:10
+msgid "Tack för ditt svar."
+msgstr "Kiitos vastauksestasi."
+
 #: core/admin_ui.py:137
 msgid "System"
 msgstr "System"

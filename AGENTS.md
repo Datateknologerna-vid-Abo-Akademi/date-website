@@ -168,6 +168,7 @@ django-admin compilemessages
 - `date`: homepage composition, calendar data, language switching, middleware, error views.
 - `events`: events, dynamic registration forms, capacity/sign-up windows, passcodes, captcha, child events, WebSocket attendee updates.
 - `exambank`: exam archive collections and files (replaced `archive.Collection(type="Exams")`); own sign-in/password access gate shared across `archive`, `exambank.archive_urls`, and `exambank.urls`.
+- `feedback`: standalone fixed feedback form at `/forms/`, separate from `harassment`'s report form (own model, recipients, and admin section).
 - `functionaries`: yearly functionary roles and assignments, member self-service history, public functionary listing.
 - `gallery`: photo albums and uploads (replaced `archive.Collection(type="Pictures")`); compresses/converts images, including HEIC/HEIF, on save.
 - `harassment`: harassment report form, stored submissions, recipient list, and notification emails.
