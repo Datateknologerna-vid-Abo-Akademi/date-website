@@ -311,6 +311,52 @@ msgstr "Trakasserianmälningar"
 msgid "Report Recipients"
 msgstr "Anmälningsmottagare"
 
+#: core/admin_ui.py:223 templates/common/feedback/feedback_form.html:14
+msgid "Feedback"
+msgstr "Feedback"
+
+#: core/admin_ui.py:229
+msgid "Feedback Recipients"
+msgstr "Feedback Recipients"
+
+#: core/admin_ui.py:235
+msgid "Feedback Settings"
+msgstr "Feedback Settings"
+
+#: feedback/models.py:21
+msgid "Skickad"
+msgstr "Skickad"
+
+#: feedback/models.py:24 feedback/models.py:25
+msgid "Inskickad feedback"
+msgstr "Inskickad feedback"
+
+#: feedback/models.py:43 feedback/models.py:44
+msgid "Mottagare för feedback"
+msgstr "Mottagare för feedback"
+
+#: feedback/models.py:56
+msgid "Introduktionstext"
+msgstr "Introduktionstext"
+
+#: feedback/models.py:60
+msgid "Texten som visas ovanför formuläret på /forms/."
+msgstr "Texten som visas ovanför formuläret på /forms/."
+
+#: feedback/models.py:64 feedback/models.py:65 feedback/models.py:68
+msgid "Formulärtext"
+msgstr "Formulärtext"
+
+#: templates/common/feedback/feedback_form.html:4
+#: templates/common/feedback/feedback_form.html:13
+#: templates/common/feedback/feedback_success.html:4
+msgid "Kontakta oss"
+msgstr "Kontakta oss"
+
+#: templates/common/feedback/feedback_success.html:10
+msgid "Tack för ditt svar."
+msgstr "Tack för ditt svar."
+
 #: core/admin_ui.py:137
 msgid "System"
 msgstr "System"

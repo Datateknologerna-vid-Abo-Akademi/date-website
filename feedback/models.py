@@ -2,6 +2,14 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+# Seeded only into the Swedish column by FeedbackFormSettings.get_solo() - the
+# other language columns are left at the field's own default ('') so
+# modeltranslation's fallback (MODELTRANSLATION_FALLBACK_LANGUAGES, unset here
+# so it defaults to the source language, sv) kicks in for them instead of the
+# admin's English/Finnish tabs opening pre-filled with Swedish text that reads
+# as already translated.
+DEFAULT_INTRO_TEXT = 'Har du synpunkter eller feedback? Skriv gärna till oss här.'
+
 
 class FeedbackSubmission(models.Model):
     """One submitted response to the site's single feedback form at
@@ -18,7 +26,11 @@ class FeedbackSubmission(models.Model):
         ordering = ('-created_time',)
 
     def __str__(self):
-        return self.message
+        # Never return the message: Django stores str(obj) in
+        # django_admin_log.object_repr, and the admin log is readable by
+        # staff who are outside the feedback recipient list. Use
+        # FeedbackSubmissionAdmin.message_preview as the authorised read path.
+        return f'Inskickad feedback #{self.pk}'
 
 
 class FeedbackEmailRecipient(models.Model):
@@ -43,7 +55,8 @@ class FeedbackFormSettings(models.Model):
     intro_text = models.CharField(
         _('Introduktionstext'),
         max_length=500,
-        default='Har du synpunkter eller feedback? Skriv gärna till oss här.',
+        blank=True,
+        default='',
         help_text=_('Texten som visas ovanför formuläret på /forms/.'),
     )
 
@@ -56,5 +69,5 @@ class FeedbackFormSettings(models.Model):
 
     @classmethod
     def get_solo(cls):
-        obj, _created = cls.objects.get_or_create(pk=1)
+        obj, _created = cls.objects.get_or_create(pk=1, defaults={'intro_text_sv': DEFAULT_INTRO_TEXT})
         return obj
