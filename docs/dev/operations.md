@@ -25,6 +25,26 @@ Unfold keeps create actions next to the object they affect. Model lists and edit
 
 Search forms use a visible label and submit button, with model-specific search guidance kept below the field instead of hidden in its placeholder. Change forms include an explicit close action, and public-page links use Unfold's **View on site** object action instead of being inserted into an arbitrary form section.
 
+## Visual Checks
+
+### `scripts/visual_check.py`
+
+Dependency bumps that touch the admin (Django itself, `django-unfold`) can regress layout without failing a test: a test can assert `200` on a changelist while the page behind it is visibly broken. This script renders a set of pages, screenshots them with headless Chromium, and pixel-diffs two runs, so a bump can be checked by eye before it merges.
+
+It has to run inside the checkout whose versions you are testing, because the installed dependencies are what is under test. Comparing two versions means running it once per checkout, for example two `git worktree` copies:
+
+```bash
+cd ../date-website-main && python scripts/visual_check.py capture --out /tmp/base --unfold
+cd ../date-website-bump && python scripts/visual_check.py capture --out /tmp/bump --unfold
+python scripts/visual_check.py compare --base /tmp/base --candidate /tmp/bump --out /tmp/diff
+```
+
+- `capture` boots `core.settings.test`, creates a superuser, collects static into the output directory (never into the checkout), serves the site through a request replay of the Django test client, and screenshots every page at a narrow and a tall viewport. Nothing needs PostgreSQL, Redis, or a browser login.
+- Pages default to the admin dashboard, the public document archive, and the changelist and add form of a few representative models. Add `--model app.Model` or `--url label=/path` for anything else, and `--no-unfold` to capture the classic admin used by the `kk` and `biocum` variants.
+- `compare` reports the changed percentage per screenshot and writes side-by-side and diff images, which is what you actually look at.
+
+Read the numbers against the wording: a diff is a difference, not a defect. Django minor releases change admin layout deliberately (6.1 moved form labels above their inputs), and an Unfold minor release can restyle the sidebar, which shifts every page. Run `capture` twice on the same checkout to see the noise floor first: pages with a live timestamp such as an add form always differ slightly.
+
 ## Logging
 
 Application logging is configured by `LOGGING` in `core/settings/common.py`. Output goes through `core.redaction.RedactingFormatter`, which strips private keys and service-account values, and Django error reports use `core.redaction.DateExceptionReporterFilter` for the same settings.
