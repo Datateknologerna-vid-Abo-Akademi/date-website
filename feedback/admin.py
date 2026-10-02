@@ -13,6 +13,9 @@ class FeedbackSubmissionAdmin(ModelAdmin):
     list_display = ('email', 'message_preview', 'created_time')
     search_fields = ('email', 'message')
     ordering = ('-created_time',)
+    # created_time defaults to timezone.now() on save; without this, the add
+    # form requires typing a timestamp by hand instead of auto-filling one.
+    readonly_fields = ('created_time',)
 
     @admin.display(description=_('Meddelande'))
     def message_preview(self, obj):

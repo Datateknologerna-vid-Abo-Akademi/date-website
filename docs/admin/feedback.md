@@ -18,7 +18,7 @@ Review feedback submitted through the public form at `/forms/`, and maintain the
 
 ## Feedback Settings
 1. Open **Social & Ads › Feedback Settings** to edit the introduction text shown above the form on `/forms/`.
-2. There's only one settings row - it's created automatically the first time it's needed, and can't be deleted or duplicated.
+2. There's only one settings row - it's created automatically the first time it's needed, and the admin page won't let you add or delete it.
 3. If the site has multiple languages enabled, the change form shows a tab per language so each translation of the text can be edited separately.
 
 ## Tips

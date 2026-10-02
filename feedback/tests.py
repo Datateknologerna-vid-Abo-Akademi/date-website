@@ -2,11 +2,18 @@ from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 from django.contrib import admin
+from django.contrib.admin.models import LogEntry
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import translation
 
 from feedback.admin import FeedbackFormSettingsAdmin, FeedbackSubmissionAdmin
-from feedback.models import FeedbackEmailRecipient, FeedbackFormSettings, FeedbackSubmission
+from feedback.models import DEFAULT_INTRO_TEXT, FeedbackEmailRecipient, FeedbackFormSettings, FeedbackSubmission
+
+# Distinctive enough that a leak cannot be confused with unrelated page text.
+# Mirrors harassment.tests.REPORT_TEXT - see HarassmentAdminLogRedactionTests.
+FEEDBACK_TEXT = "En unik text som aldrig får hamna i administrationsloggen"
 
 
 class FeedbackFormViewTests(TestCase):
@@ -72,9 +79,25 @@ class FeedbackFormViewTests(TestCase):
     @patch('feedback.views.send_email_task')
     @patch('feedback.views.validate_captcha', return_value=True)
     def test_no_email_enqueued_without_configured_recipients(self, _mock_captcha, mock_send_email):
-        self.client.post(reverse('feedback:form'), {'message': 'Something to say', 'cf-turnstile-response': 'token'})
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(
+                reverse('feedback:form'), {'message': 'Something to say', 'cf-turnstile-response': 'token'}
+            )
 
         self.assertEqual(FeedbackSubmission.objects.count(), 1)
+        mock_send_email.delay.assert_not_called()
+
+    @patch('feedback.views.send_email_task')
+    @patch('feedback.views.validate_captcha', return_value=False)
+    def test_rejected_captcha_saves_nothing(self, _mock_captcha, mock_send_email):
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                reverse('feedback:form'),
+                {'email': 'visitor@example.com', 'message': 'Nice site', 'cf-turnstile-response': 'token'},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(FeedbackSubmission.objects.count(), 0)
         mock_send_email.delay.assert_not_called()
 
 
@@ -114,3 +137,83 @@ class FeedbackFormSettingsAdminTests(TestCase):
         settings_admin = FeedbackFormSettingsAdmin(FeedbackFormSettings, admin.site)
 
         self.assertFalse(settings_admin.has_delete_permission(request=None))
+
+    def test_get_solo_seeds_only_the_swedish_column(self):
+        # Pre-filling en/fi with the same text as sv would make an untranslated
+        # row look already translated when an admin opens those tabs.
+        obj = FeedbackFormSettings.get_solo()
+
+        self.assertEqual(obj.intro_text_sv, DEFAULT_INTRO_TEXT)
+        self.assertEqual(obj.intro_text_en, '')
+        self.assertEqual(obj.intro_text_fi, '')
+
+    def test_blank_translations_fall_back_to_swedish(self):
+        obj = FeedbackFormSettings.get_solo()
+
+        for language in ('sv', 'en', 'fi'):
+            with translation.override(language):
+                self.assertEqual(obj.intro_text, DEFAULT_INTRO_TEXT)
+
+
+class FeedbackAdminLogRedactionTests(TestCase):
+    """Message text must never reach the admin log, which non-recipients can
+    read. Mirrors harassment.tests.HarassmentAdminLogRedactionTests."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin_user = get_user_model().objects.create_superuser(
+            username='feedbacklogadmin',
+            email='feedbacklogadmin@example.com',
+            password='pass',
+        )
+
+    def setUp(self):
+        self.client.force_login(self.admin_user, backend='members.backends.AuthBackend')
+
+    def test_str_identifies_the_submission_without_its_content(self):
+        submission = FeedbackSubmission.objects.create(message=FEEDBACK_TEXT)
+
+        label = str(submission)
+
+        self.assertNotIn(FEEDBACK_TEXT, label)
+        self.assertIn(f'#{submission.pk}', label)
+
+    def test_admin_add_change_and_delete_keep_message_text_out_of_the_log(self):
+        response = self.client.post(
+            reverse('admin:feedback_feedbacksubmission_add'),
+            {'email': 'reporter@example.com', 'message': FEEDBACK_TEXT, '_save': 'Save'},
+        )
+        self.assertEqual(response.status_code, 302)
+        submission = FeedbackSubmission.objects.get()
+
+        response = self.client.post(
+            reverse('admin:feedback_feedbacksubmission_change', args=[submission.pk]),
+            {'email': 'reporter@example.com', 'message': f'{FEEDBACK_TEXT} (uppdaterad)', '_save': 'Save'},
+        )
+        self.assertEqual(response.status_code, 302)
+
+        response = self.client.post(
+            reverse('admin:feedback_feedbacksubmission_delete', args=[submission.pk]),
+            {'post': 'yes'},
+        )
+        self.assertEqual(response.status_code, 302)
+
+        entries = list(LogEntry.objects.all())
+        self.assertEqual(len(entries), 3)
+        for entry in entries:
+            self.assertNotIn(FEEDBACK_TEXT, entry.object_repr)
+            self.assertNotIn(FEEDBACK_TEXT, entry.get_change_message())
+
+    def test_admin_log_page_does_not_render_message_text(self):
+        response = self.client.post(
+            reverse('admin:feedback_feedbacksubmission_add'),
+            {'email': 'reporter@example.com', 'message': FEEDBACK_TEXT, '_save': 'Save'},
+        )
+        self.assertEqual(response.status_code, 302)
+        submission = FeedbackSubmission.objects.get()
+
+        response = self.client.get(reverse('admin:admin_logentry_changelist'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, FEEDBACK_TEXT)
+        self.assertContains(response, f'#{submission.pk}')
