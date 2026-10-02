@@ -1,0 +1,55 @@
+/* Site theme for the homepage calendar.
+
+   The vendored stylesheet ships the library's structure and its light theme, and
+   the light theme is the layer that applies these properties, so this file only
+   has to set them. The names are the ones the vendored stylesheet reads, because
+   a name it never reads would fail silently. */
+
+.vc {
+  /* panel */
+  --vc-bg: var(--secondaryColor);
+  --vc-color: var(--primaryColor);
+
+  /* weekday headings */
+  --vc-week-day-color: var(--primaryColorLight);
+  --vc-week-day-off-color: var(--primaryColorLight);
+
+  /* day cells: transparent, so only today and a selection get a fill */
+  --vc-date-bg: transparent;
+  --vc-date-color: var(--primaryColor);
+  --vc-date-bg-hover: var(--secondaryColorDarker);
+  --vc-date-hover-bg: var(--secondaryColorDarker);
+  --vc-date-disabled-color: silver;
+
+  /* today */
+  --vc-date-today-bg: var(--secondaryColorDarker);
+  --vc-date-today-color: var(--primaryColor);
+
+  /* selected day */
+  --vc-date-selected-bg: var(--primaryColorLight);
+  --vc-date-selected-color: var(--secondaryColor);
+
+  /* days outside the current month */
+  --vc-date-outside-color: silver;
+  --vc-date-weekend-outside-bg: transparent;
+  --vc-date-weekend-outside-color: silver;
+
+  /* weekends */
+  --vc-date-weekend-color: var(--primaryColor);
+  --vc-date-weekend-bg-hover: var(--secondaryColorDarker);
+  --vc-date-weekend-hover-bg: var(--secondaryColorDarker);
+
+  /* event popup */
+  --vc-date-popup-bg: var(--secondaryColorDarker);
+  --vc-date-popup-color: var(--primaryColor);
+
+  width: 100%;
+  padding: 12px;
+  border-radius: 4px;
+}
+
+/* The arrows are an embedded SVG with a fixed fill rather than a theme colour,
+   so they have to be tinted rather than pointed at a property. */
+[data-vc-theme].vc .vc-arrow:before {
+  filter: invert(14%) sepia(72%) saturate(3141%) hue-rotate(348deg) brightness(84%) contrast(96%);
+}

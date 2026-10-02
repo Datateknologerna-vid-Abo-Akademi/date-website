@@ -67,43 +67,36 @@
             };
         });
 
-        // Select all elements with class 'calendar' and initialize VanillaCalendar on each
+        // Select all elements with class 'calendar' and initialize the calendar on each.
+        // vanilla-calendar 3.x exposes its constructor as Calendar on the
+        // VanillaCalendarPro global, and takes its options flat rather than nested
+        // under a settings key.
         document.querySelectorAll('.calendar').forEach(calendarElement => {
-            const calendarPopups = new VanillaCalendar(calendarElement, {
-                actions: {
-                    clickDay(event, date) {
-                        // The second argument depends on the library version: 1.x passes the
-                        // selected dates array, 2.x passes the calendar instance. Accept either
-                        // so this keeps working across the vanilla-calendar upgrade.
-                        const selectedDates = Array.isArray(date) ? date : (date && date.selectedDates);
-                        if (!Array.isArray(selectedDates) || selectedDates.length === 0) {
-                            return;
-                        }
-                        const day = events_json[selectedDates[0]];
-                        if (day !== undefined && day.events.length === 1) {
-                            const rawUrl = (day.events[0].link || '').trim();
-                            if (isValidInternalUrl(rawUrl)) {
-                                try {
-                                    const safeUrl = new URL(rawUrl, window.location.origin);
-                                    if (safeUrl.origin === window.location.origin) {
-                                        window.location.href = safeUrl.href;
-                                    }
-                                } catch (e) {
-                                    // Fallback or silent fail
+            const calendarPopups = new VanillaCalendarPro.Calendar(calendarElement, {
+                onClickDate(self, event) {
+                    // 3.x runs this before it updates its own selectedDates, so read the
+                    // day from the clicked cell instead. The cell carries the date as an
+                    // ISO key, which is the same key the payload is built with.
+                    const target = event && event.target;
+                    const cell = target && target.closest ? target.closest('[data-vc-date]') : null;
+                    const dateKey = cell && cell.getAttribute('data-vc-date');
+                    const day = dateKey ? events_json[dateKey] : undefined;
+                    if (day !== undefined && day.events.length === 1) {
+                        const rawUrl = (day.events[0].link || '').trim();
+                        if (isValidInternalUrl(rawUrl)) {
+                            try {
+                                const safeUrl = new URL(rawUrl, window.location.origin);
+                                if (safeUrl.origin === window.location.origin) {
+                                    window.location.href = safeUrl.href;
                                 }
+                            } catch (e) {
+                                // Fallback or silent fail
                             }
                         }
-                    },
+                    }
                 },
-                settings: {
-                    visibility: {
-                        weekend: false,
-                    },
-                    selected: {
-                        month: new Date().getMonth(),
-                        year: new Date().getFullYear(),
-                    },
-                },
+                selectedMonth: new Date().getMonth(),
+                selectedYear: new Date().getFullYear(),
                 popups: events_json
             });
             calendarPopups.init();

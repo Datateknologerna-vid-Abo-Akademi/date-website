@@ -386,12 +386,12 @@ div.calendar-container a {
   box-shadow: 0 0 0 0;
 }
 
-.vanilla-calendar-day__btn_today {
+.vc-date[data-vc-date-today] .vc-date__btn {
     color: var(--textColorLight) !important;
     background-color: #545454 !important;
 }
 
-.vanilla-calendar-day__btn_today:hover {
+.vc-date[data-vc-date-today] .vc-date__btn:hover {
     background-color: #282828 !important;
 }
 
@@ -586,39 +586,37 @@ div.calendar-container a {
 }
 
 /* Vanilla calendar contrast overrides */
-.vanilla-calendar-month,
-.vanilla-calendar-year {
+.vc-month,
+.vc-year {
     color: var(--textColorDarkish) !important;
 }
 
-.vanilla-calendar-month:hover,
-.vanilla-calendar-year:hover {
+.vc-month:hover,
+.vc-year:hover {
     color: var(--primaryColorLighter) !important;
 }
 
-.vanilla-calendar-arrow::before,
-.vanilla-calendar-arrow::after {
-    background-color: var(--textColorMedium) !important;
+/* vanilla-calendar 3.x draws the arrow as an embedded SVG with a fixed fill
+   rather than a background swatch, so the previous background-color override
+   cannot express this any more. Tint the SVG to --textColorMedium instead, and
+   let the library's own hover opacity carry the hover state. */
+[data-vc-theme].vc .vc-arrow:before {
+    filter: invert(38%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(96%) contrast(88%);
 }
 
-.vanilla-calendar-arrow:hover::before,
-.vanilla-calendar-arrow:hover::after {
-    background-color: var(--textColorDarkish) !important;
-}
-
-.vanilla-calendar-day__btn_today {
+.vc-date[data-vc-date-today] .vc-date__btn {
     color: var(--textColorLight) !important;
     background-color: #545454 !important;
 }
 
-.vanilla-calendar-day__btn_today:hover {
+.vc-date[data-vc-date-today] .vc-date__btn:hover {
     background-color: #282828 !important;
 }
 
-.vanilla-calendar-day__btn_selected {
+.vc-date[data-vc-date-selected] .vc-date__btn {
     background-color: var(--accentColorBright) !important;
 }
 
-.vanilla-calendar-day__btn_selected:hover {
+.vc-date[data-vc-date-selected] .vc-date__btn:hover {
     background-color: var(--accentColorBrightHover) !important;
 }
