@@ -4,7 +4,6 @@ from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import ListView
 
@@ -12,7 +11,7 @@ from core.utils import validate_captcha
 
 from . import access, emails
 from .forms import AnonymousBookingForm, BookingForm
-from .models import Booking, BookingSettings, Room
+from .models import Booking, BookingSettings, Closure, Room
 
 logger = logging.getLogger('date')
 
@@ -32,6 +31,15 @@ def _code_instructions():
     return settings_row.code_instructions if settings_row else ''
 
 
+def _upcoming_closures(room):
+    """The room's closures that are still to come, soonest first.
+
+    Shown on the room page so a visitor looking at the calendar sees why the room
+    is unavailable, rather than filling in the form and being refused.
+    """
+    return Closure.objects.filter(room=room, end__gte=access.now_at()).order_by('start', 'pk')[:UPCOMING_BOOKING_LIMIT]
+
+
 def _upcoming_bookings(rooms=None):
     """Future bookings of active rooms, furthest away last.
 
@@ -39,7 +47,7 @@ def _upcoming_bookings(rooms=None):
     booking description, the booker name and the booker email stay out of the
     templates.
     """
-    upcoming = Booking.objects.filter(room__is_active=True, end__gte=timezone.now())
+    upcoming = Booking.objects.filter(end__gte=access.now_at())
     if rooms is not None:
         upcoming = upcoming.filter(room__in=rooms)
     return upcoming.select_related('room').order_by('start')
@@ -51,7 +59,7 @@ class RoomListView(ListView):
 
     def get_queryset(self):
         # No caching on purpose: an admin edit has to show up at once.
-        return Room.objects.filter(is_active=True)
+        return Room.objects.all()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -60,7 +68,7 @@ class RoomListView(ListView):
 
 
 def room_detail(request, pk):
-    room = get_object_or_404(Room, pk=pk, is_active=True)
+    room = get_object_or_404(Room, pk=pk)
     at = access.now_at()
 
     if not request.user.is_authenticated and (
@@ -73,6 +81,7 @@ def room_detail(request, pk):
             context={
                 'room': room,
                 'bookings': _upcoming_bookings(rooms=[room])[:UPCOMING_BOOKING_LIMIT],
+                'closures': _upcoming_closures(room),
                 'code_instructions': _code_instructions(),
             },
             next_url=reverse('booking:room_detail', args=[room.pk]),
@@ -113,6 +122,7 @@ def room_detail(request, pk):
         {
             'room': room,
             'bookings': _upcoming_bookings(rooms=[room])[:UPCOMING_BOOKING_LIMIT],
+            'closures': _upcoming_closures(room),
             'form': form,
         },
     )

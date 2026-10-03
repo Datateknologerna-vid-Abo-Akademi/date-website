@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from core.admin_base import ModelAdmin, TabularInline
 
 from . import access
-from .models import Booking, BookingSettings, Room
+from .models import Booking, BookingSettings, Closure, Room
 
 
 class BookingInline(TabularInline):
@@ -90,12 +90,41 @@ class BookingOriginFilter(admin.SimpleListFilter):
         return queryset
 
 
+class ClosureInline(TabularInline):
+    model = Closure
+    fk_name = 'room'
+    extra = 0
+    fields = ('start', 'end', 'description')
+    ordering = ('-start',)
+
+    def get_queryset(self, request):
+        # Same reasoning as the bookings inline: a room collects closures for
+        # years, and what the board acts on is the ones still to come.
+        return super().get_queryset(request).filter(end__gte=timezone.now()).order_by('start', 'pk')
+
+
+@admin.register(Closure)
+class ClosureAdmin(ModelAdmin):
+    list_display = ('room', 'time_range', 'description')
+    list_filter = ('room', 'start')
+    date_hierarchy = 'start'
+    search_fields = ('description', 'room__name')
+    list_select_related = ('room',)
+    autocomplete_fields = ('room',)
+    ordering = ('-start',)
+
+    @admin.display(description=_('Tid'))
+    def time_range(self, obj):
+        start = timezone.localtime(obj.start)
+        end = timezone.localtime(obj.end)
+        return f'{start:%Y-%m-%d %H:%M} - {end:%m-%d %H:%M}'
+
+
 @admin.register(Room)
 class RoomAdmin(ModelAdmin):
-    list_display = ('name', 'is_active', 'current_code', 'last_rotated', 'booking_count')
-    list_filter = ('is_active',)
+    list_display = ('name', 'bookable_hours', 'current_code', 'last_rotated', 'booking_count')
     search_fields = ('name',)
-    inlines = [BookingInline]
+    inlines = [BookingInline, ClosureInline]
     actions = ('rotate_code',)
     readonly_fields = ('current_code', 'last_rotated')
 
@@ -111,7 +140,7 @@ class RoomAdmin(ModelAdmin):
             super().save_model(request, obj, form, change)
             return
         # For a room that exists, only the fields the board can edit are written,
-        # which is name, description and is_active. A plain save() would also put
+        # which is name and description. A plain save() would also put
         # back the generation and the rotation moment from whatever this request
         # read, undoing a rotation that landed in between and reviving the
         # unlocks it had just ended.
@@ -121,6 +150,12 @@ class RoomAdmin(ModelAdmin):
     @admin.display(description=_('Bokningar'), ordering='bookings_total')
     def booking_count(self, obj):
         return obj.bookings_total
+
+    @admin.display(description=_('Bokningsbara tider'))
+    def bookable_hours(self, obj):
+        if not obj.has_bookable_hours:
+            return _('Hela dygnet')
+        return f'{obj.bookable_from:%H:%M} - {obj.bookable_until:%H:%M}'
 
     @admin.display(description=_('Aktuell bokningskod'))
     def current_code(self, obj):

@@ -1175,16 +1175,6 @@ class HomepageBookingTests(TestCase):
             [booking.pk],
         )
 
-    def test_homepage_context_excludes_bookings_of_inactive_rooms(self):
-        inactive = self.Room.objects.create(name="Stängt utrymme", is_active=False)
-        self._booking(inactive, self.now + timedelta(days=1))
-        visible = self._booking(self.room, self.now + timedelta(days=2))
-
-        self.assertEqual(
-            [entry.pk for entry in _homepage_context(now=self.now)["bookings"]],
-            [visible.pk],
-        )
-
     def test_homepage_context_returns_at_most_five_bookings(self):
         starts = [self.now + timedelta(days=1, hours=index) for index in range(6)]
         bookings = [self._booking(self.room, start) for start in starts]

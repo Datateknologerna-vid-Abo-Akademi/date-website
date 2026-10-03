@@ -109,6 +109,16 @@
     color: var(--helpText);
 }
 
+.booking-list-item.booking-list-closed {
+    background-color: rgba(213, 91, 78, 0.14);
+    color: var(--warning, #ffb3a7);
+}
+
+.booking-list-item.booking-list-closed .booking-badge {
+    background-color: var(--warning-darker, var(--warning));
+    color: var(--textColorLight);
+}
+
 .booking-badge {
     min-width: 3.2rem;
     padding: 0.15rem 0.4rem;

@@ -156,7 +156,6 @@ def _homepage_context(now=None):
 
         bookings = list(
             Booking.objects.filter(
-                room__is_active=True,
                 start__gte=now,
                 start__lte=now + timezone.timedelta(days=7),
             )

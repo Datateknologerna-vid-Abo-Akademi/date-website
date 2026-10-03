@@ -39,6 +39,20 @@
             {% endfor %}
           </ul>
         </section>
+        {% if closures %}
+          <section class="booking-room-closures">
+            <h2 class="booking-heading booking-section-title">{% trans "Stängt" %}</h2>
+            <ul class="booking-list">
+              {% for closure in closures %}
+                <li class="booking-list-item booking-list-closed">
+                  <span class="booking-badge">{{ closure.start|date:"d.m" }}</span>
+                  <span class="booking-time">{{ closure.start|date:"H:i" }} - {{ closure.end|date:"d.m H:i" }}</span>
+                  {% if closure.description %}<span class="booking-room-name">{{ closure.description }}</span>{% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </section>
+        {% endif %}
         {% if code_form %}
           <section class="booking-code-section">
             <h2 class="booking-heading booking-section-title">{% trans "Bokningskod" %}</h2>

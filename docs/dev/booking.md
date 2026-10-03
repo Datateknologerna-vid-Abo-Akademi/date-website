@@ -18,9 +18,17 @@ Where the code lives:
 ## Data model (`booking/models.py`)
 
 ### `Room`
-- `name` (max 255), `description` (optional text), `is_active` (default `True`).
-- `is_active` is the bookable flag. A room with `is_active=False` disappears from the public pages, but the row and its whole booking history stay in the database. `RoomListView` and `room_detail` both filter on it, and `room_detail` returns 404 for an inactive room even on a direct URL.
+- `name` (max 255), `description` (optional text).
+- `bookable_from` and `bookable_until` are optional times of day. Both empty (the default) means the room can be booked at any hour; both set means bookings must start and end inside that window on the same local day. `Room.clean()` refuses one without the other and a window whose end is not after its start, and `Room.has_bookable_hours` answers whether a window is in force.
+- `code_generation` and `rotated_at` are the per-room code state, described below.
 - Default ordering is `('name', 'pk')`.
+- There is no active or visible flag: every room row is public. Closing a room for a while is a `Closure`, and removing one is a delete, which cascades to its bookings.
+
+### `Closure`
+- `room` (FK, `CASCADE`, `related_name='closures'`), `start`, `end`, and an optional `description` shown to visitors.
+- A database check constraint, `closure_end_after_start`, is the backstop, and `Closure.clean()` refuses an end that is not after its start.
+- A closure blocks new bookings that overlap it. It does not touch bookings already made inside it, by design: closing a period is not cancelling what somebody booked, and deleting a booker's row silently would be worse than telling them.
+- `_upcoming_closures()` in `booking/views.py` feeds the "Stängt" list on the room page, so a visitor sees why the room is unavailable before filling in the form.
 
 ### `Booking`
 - `room`: FK to `Room`, `on_delete=CASCADE`, `related_name='bookings'`.
@@ -47,7 +55,9 @@ Overlap prevention lives in `Booking.clean()`:
 - `end <= start` produces an error on `end`.
 - A new booking more than `BOOKING_PAST_GRACE` in the past produces an error on `start` (see above).
 - When `author_id is None` and `booker_name` is blank, it produces an error on `booker_name`.
-- When the room and both times are present, it rejects the booking if any other booking for the same room satisfies `start < new end` and `end > new start`. An edit excludes its own row, and bookings that only touch (`end == new start`) do not overlap. The query does not filter by time or by room activity, so an old booking in a since-deactivated room still blocks a new one.
+- It rejects a booking longer than `BOOKING_MAX_DURATION` (one week), measured through UTC so a span across a daylight saving change is not an hour out. There is no limit on how far ahead a booking may be made.
+- When the room and both times are present, and nothing above has already failed, it rejects the booking against the room's bookable hours, then against a closure, then against any other booking for the same room satisfying `start < new end` and `end > new start`. The closure message is checked before the overlap message because "the room is closed" is the truer explanation when both apply.
+- An edit excludes its own row, and bookings that only touch (`end == new start`) do not overlap. The overlap query does not filter by time, so an old booking still blocks a new one.
 
 `clean()` is reached through `full_clean()`, which in practice means the public forms and the admin form. A direct write such as `Booking.objects.create(...)` bypasses it, and only the check constraint would catch a reversed pair of times.
 
@@ -105,7 +115,7 @@ The trade-off this makes is deliberate and worth stating plainly: a scheduled ro
 - `booking:index` at `/booking/`, `RoomListView`.
 - `booking:room_detail` at `/booking/<pk>/`, `views.room_detail`.
 
-`RoomListView` lists `Room.objects.filter(is_active=True)` and attaches up to `UPCOMING_BOOKING_LIMIT` (50) bookings whose `end` is still in the future, across all active rooms, ordered by `start`. The queryset is deliberately not cached: an admin edit shows up on the next request.
+`RoomListView` lists every room and attaches up to `UPCOMING_BOOKING_LIMIT` (50) bookings whose `end` is still in the future, ordered by `start`. The queryset is deliberately not cached: an admin edit shows up on the next request.
 
 `room_detail`:
 
@@ -136,7 +146,7 @@ Three session keys, all namespaced with a `booking_` prefix so they cannot colli
 - DaTe: `core/settings/date.py` sets `BOOKING_ENABLED = env('BOOKING_ENABLED', bool, True)`, so the capability is on unless the environment sets it to a false value. `core/settings/test.py` pins it to `True` so the suite does not depend on a developer's `.env`.
 - Templates: `core/context_processors.py` exposes it as `BOOKING_ENABLED`.
 - Routing: `core/urls/date.py` adds the `booking` route key to its `build_urlpatterns(...)` call only when `settings.BOOKING_ENABLED` is true, and `core/urls/common.py` maps that key to `path('booking/', include('booking.urls'))`. With the capability off, the `booking/` paths are not routed at all.
-- Homepage: `templates/date/date/components/bookings.html` is included from `templates/date/date/start.html` and wrapped in `{% raw %}{% if BOOKING_ENABLED %}{% endraw %}`. Its data comes from `_homepage_context()` in `date/views.py`, which imports `booking.models.Booking` lazily and only when the capability is on and the app is installed, then takes the next five bookings in active rooms that start within seven days. Each card links to the room page of the booking it describes, not to the room list, because the card names one room and one time.
+- Homepage: `templates/date/date/components/bookings.html` is included from `templates/date/date/start.html` and wrapped in `{% raw %}{% if BOOKING_ENABLED %}{% endraw %}`. Its data comes from `_homepage_context()` in `date/views.py`, which imports `booking.models.Booking` lazily and only when the capability is on and the app is installed, then takes the next five bookings that start within seven days. Each card links to the room page of the booking it describes, not to the room list, because the card names one room and one time.
 
 Only DaTe parses the variable. No other module under `core/settings/` reads or sets `BOOKING_ENABLED`, and none of them lists `booking` in its installed apps or its URLconf, so setting `BOOKING_ENABLED` on another association's release has no effect.
 
@@ -153,7 +163,8 @@ The repository's environment template is `.env.example`, the file contributors c
 The public templates under `templates/common/booking/` and `static/common/booking/css/booking.css` are shared, so nothing else is required. An association-specific override follows the usual `templates/<association>/` rules described in `docs/dev/templates.md`.
 
 ## Admin surface (`booking/admin.py`)
-- `RoomAdmin` lists name, `is_active` and a booking count, filters on `is_active`, searches by name, and carries a `BookingInline` so a room's bookings can be managed from the room page.
+- `RoomAdmin` lists name, bookable hours, the current code, when it was rotated and a booking count, searches by name, and carries a `BookingInline` plus a `ClosureInline` limited to periods that have not ended, so a room's bookings and closures can be managed from the room page.
+- `ClosureAdmin` lists room, period and description, filters by room and start, and carries a date hierarchy.
 - `BookingInline` shows only the room's upcoming bookings, soonest first, with `show_change_link`. Django does not paginate inlines, so an unfiltered inline grows without bound for a room with years of history and would open on the oldest rows. Past bookings stay reachable through the Booking changelist, which has the filters and the date drill-down for them.
 - The inline's queryset also keeps every booking id the submitted formset names, read from the `-id` fields in `request.POST`. Cutoff alone is not enough: if a row's `end` passes between the page being opened and the form being submitted, the row would leave the queryset, Django would resolve the submitted id to an unsaved instance, `save_existing_objects()` would skip it, and a checked Delete or an edited description would be dropped while the save still reported success. `_submitted_pks()` on the inline is what closes that; `BookingAdminSurfaceTests` pins both halves.
 - `BookingAdmin` lists room, a start/end time range, the booker display and a "no account" flag, filters on booking origin, room and start, adds a start-date drill-down, searches booker name, booker email and description, and marks the booker display and the account flag read-only. `ordering` is `('-start',)`, so the changelist does not open on the oldest booking ever made; this matches the descending ordering the other time-ordered admins in this project use.

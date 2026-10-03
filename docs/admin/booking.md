@@ -4,17 +4,30 @@
 Room booking lets the association publish the rooms it lends out and lets anyone see them and book one. The room list and each room's page are open to visitors. People who have an account on the website can book straight away; people who do not must unlock the booking form with a shared code. Upcoming bookings also appear in a block on the front page. The board manages the rooms, the bookings and the code in the Django admin.
 
 ## Managing Rooms
-1. Open **Booking › Utrymmen** in `/admin`. The list shows each room's name, whether it is bookable, and how many bookings it has. Use the search box to find a room by name.
+1. Open **Booking › Utrymmen** in `/admin`. The list shows each room's name, its bookable hours, its current booking code and how many bookings it has. Use the search box to find a room by name.
 2. Use the add button above the list and fill in:
    - **Namn**: the room name.
    - **Beskrivning**: free text about the room, for example what it contains or how to find it.
-   - **Aktiv**: the bookable flag. Leave it ticked while the room can be booked.
+   - **Bokningsbart från** and **Bokningsbart till**: optional. Leave both empty and the room can be booked at any hour; fill both in and it can only be booked inside those hours on a single day.
 3. Save. The room appears on the public booking page immediately.
 4. The room page also contains a table of that room's bookings, so you can add or adjust a booking without leaving the room.
 
 The room name and the description are public. The list shows the first 30 words of the description and the room page shows all of it, so do not put internal notes there.
 
-**Aktiv** means bookable. Unticking it removes the room from the public list, from the front-page block and from its own page (a direct link then shows "not found"). The room row and its complete booking history stay in the database and remain visible in the admin, so untick **Aktiv** when a room is only closed for a while. Deleting a room deletes its bookings as well, so use deletion only when the room and its history should really be gone.
+There is no on/off switch for a room: while the row exists, the room is on the public list and its page is reachable. To take a room off the site, delete it, which deletes its bookings with it, so do that only when the room and its history should really be gone. To stop bookings for a while, close a period instead, which leaves the room and its history alone.
+
+### Bookable hours
+Leave **Bokningsbart från** and **Bokningsbart till** empty and the room can be booked around the clock, which is the default and what most rooms want. Fill both in to keep bookings inside a daily window: a room with 08:00 and 22:00 refuses a booking that starts at 03:00, one that ends after 22:00, and one that runs from one day into the next through the closed night. A room that should be bookable across days should leave the hours empty. Setting only one of the two is refused.
+
+### Closed periods
+Open a room and use the **Stängda perioder** table on its page, or **Booking › Stängda perioder** to see them all at once, filtered by room. Give a closure a start, an end, and optionally a **Beskrivning**, which is shown to visitors, such as "Renovering" or "Bokat av styrelsen".
+
+A closure blocks new bookings in that period and is listed on the room's public page, so a visitor sees why the room is unavailable instead of filling in the form and being refused. The message they get is "Utrymmet är stängt under en del av den tiden.".
+
+A closure does **not** touch bookings that were already made inside it. Closing a period because something is happening to the room is not the same as cancelling what somebody booked, and the site will not delete a booker's row for you. Check the room's booking table before closing a period, and contact anyone affected: the booking stays in the list and on the public page until you delete it yourself.
+
+### How long a booking may be
+A booking may run for at most one week. A longer one is refused with "En bokning kan vara i högst en vecka.". There is no limit on how far ahead a room may be booked.
 
 ## Managing Bookings
 Open **Booking › Bokningar**. The list opens furthest away first, so the rows at the top are the bookings still to come and the history sits below them. It has these columns:
@@ -127,7 +140,14 @@ How to grant them: open the group on the **Grupper** (**Groups**) page in the ad
 - Or the booker typed a wrong code five times and is locked out. The lockout is tied to that visitor's browser and clears by itself after 15 minutes. Using another browser or device starts fresh.
 
 **A room is missing from the public list.**
-- Open the room and check that **Aktiv** is ticked. An unticked room is hidden from the public list, from the front page and from its own page, but keeps its whole booking history.
+- Every room is listed while its row exists, so a missing room has been deleted. Deleting a room deletes its bookings, so restore it from a database backup if that was not intended.
+- If the room is listed but cannot be booked for a period, look at its **Stängda perioder** table.
+
+**A booking was rejected because the room is closed.**
+- A closure covers part of that time. Open the room's page or **Booking › Stängda perioder** and check the period, then either shorten it or pick another time.
+
+**A booking was rejected because it was too long.**
+- A booking may run for at most one week. Split it into two bookings if the room really is needed for longer, remembering that the second one has to not overlap the first.
 
 **A booking was rejected as overlapping.**
 - Another booking in the same room covers part of that time. Open **Bokningar**, filter by the room, and either change the times or delete the booking that is in the way. The message is "Utrymmet är redan bokat under denna tid.".

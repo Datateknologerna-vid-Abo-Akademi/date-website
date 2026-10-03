@@ -19,14 +19,14 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
-from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
+from django.test import RequestFactory, SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import formats, timezone
 
 from booking import access, emails
 from booking.admin import BookingAdmin, BookingInline, BookingOriginFilter, RoomAdmin
 from booking.forms import AnonymousBookingForm, BookingForm
-from booking.models import BOOKING_PAST_GRACE, Booking, BookingSettings, Room
+from booking.models import BOOKING_PAST_GRACE, Booking, BookingSettings, Closure, Room
 from core.admin_ui import get_sidebar_navigation
 
 # Unsaved rooms with an explicit primary key: every code function takes a room,
@@ -49,8 +49,8 @@ def local_input_time(value):
     return timezone.localtime(value).strftime('%Y-%m-%dT%H:%M')
 
 
-def make_room(name='Bastun', is_active=True):
-    return Room.objects.create(name=name, is_active=is_active)
+def make_room(name='Bastun'):
+    return Room.objects.create(name=name)
 
 
 def make_booking(room, start, end, **kwargs):
@@ -600,6 +600,145 @@ class BookingModelTests(TestCase):
         self.assertIn('booker_email', form.errors)
 
 
+class BookingAvailabilityRulesTests(TestCase):
+    """When a room may be booked: length, daily hours, closures."""
+
+    def setUp(self):
+        self.room = make_room(name='Bastun')
+        self.start = timezone.localtime(timezone.now()).replace(second=0, microsecond=0) + datetime.timedelta(days=1)
+
+    def booking(self, room=None, start=None, hours=1, **kwargs):
+        start = start or self.start
+        return Booking(
+            room=room or self.room,
+            start=start,
+            end=start + datetime.timedelta(hours=hours),
+            booker_name='Någon',
+            **kwargs,
+        )
+
+    def test_a_booking_longer_than_a_week_is_refused(self):
+        booking = self.booking(hours=24 * 8)
+
+        with self.assertRaises(ValidationError) as raised:
+            booking.full_clean()
+
+        self.assertIn('end', raised.exception.message_dict)
+
+    def test_a_booking_of_exactly_a_week_is_allowed(self):
+        self.booking(hours=24 * 7).full_clean()
+
+    def test_a_room_without_bookable_hours_takes_any_time_of_day(self):
+        self.assertEqual(self.room.bookable_from, None)
+        night = self.start.replace(hour=3)
+
+        self.booking(start=night, hours=1).full_clean()
+
+    def test_bookable_hours_refuse_a_booking_outside_them(self):
+        self.room.bookable_from = datetime.time(8, 0)
+        self.room.bookable_until = datetime.time(22, 0)
+        self.room.save()
+
+        with self.assertRaises(ValidationError) as raised:
+            self.booking(start=self.start.replace(hour=3), hours=1).full_clean()
+
+        self.assertIn('start', raised.exception.message_dict)
+        # Inside the window is still fine, boundaries included.
+        self.booking(start=self.start.replace(hour=8, minute=0), hours=1).full_clean()
+        self.booking(start=self.start.replace(hour=21, minute=0), hours=1).full_clean()
+
+    def test_bookable_hours_refuse_a_booking_that_runs_past_them(self):
+        self.room.bookable_from = datetime.time(8, 0)
+        self.room.bookable_until = datetime.time(22, 0)
+        self.room.save()
+
+        with self.assertRaises(ValidationError) as raised:
+            self.booking(start=self.start.replace(hour=21, minute=0), hours=3).full_clean()
+
+        self.assertIn('start', raised.exception.message_dict)
+
+    def test_bookable_hours_refuse_a_booking_that_spans_the_closed_night(self):
+        # 08:00 Monday to 20:00 Tuesday is inside the hours at both ends, and
+        # still runs straight through the closed night, which is what a daily
+        # window exists to prevent.
+        self.room.bookable_from = datetime.time(8, 0)
+        self.room.bookable_until = datetime.time(22, 0)
+        self.room.save()
+        monday = self.start.replace(hour=8, minute=0)
+        tuesday = monday + datetime.timedelta(days=1)
+
+        with self.assertRaises(ValidationError) as raised:
+            Booking(
+                room=self.room,
+                start=monday,
+                end=tuesday.replace(hour=20),
+                booker_name='Någon',
+            ).full_clean()
+
+        self.assertIn('start', raised.exception.message_dict)
+
+    def test_a_room_needs_both_hours_or_neither(self):
+        self.room.bookable_from = datetime.time(8, 0)
+
+        with self.assertRaises(ValidationError) as raised:
+            self.room.full_clean()
+
+        self.assertIn('bookable_until', raised.exception.message_dict)
+
+    def test_the_closing_hour_must_be_after_the_opening_hour(self):
+        self.room.bookable_from = datetime.time(22, 0)
+        self.room.bookable_until = datetime.time(8, 0)
+
+        with self.assertRaises(ValidationError) as raised:
+            self.room.full_clean()
+
+        self.assertIn('bookable_until', raised.exception.message_dict)
+
+    def test_a_closure_blocks_a_booking_inside_it(self):
+        closure = Closure.objects.create(
+            room=self.room,
+            start=self.start - datetime.timedelta(hours=1),
+            end=self.start + datetime.timedelta(hours=1),
+            description='Renovering',
+        )
+
+        with self.assertRaises(ValidationError) as raised:
+            self.booking(hours=1).full_clean()
+
+        self.assertIn('start', raised.exception.message_dict)
+        # A closure is a period, so the booking just after it is still fine.
+        self.booking(start=closure.end, hours=1).full_clean()
+
+    def test_a_closure_in_another_room_does_not_block(self):
+        other = make_room(name='Sauna')
+        Closure.objects.create(
+            room=other,
+            start=self.start - datetime.timedelta(hours=1),
+            end=self.start + datetime.timedelta(hours=1),
+        )
+
+        self.booking(hours=1).full_clean()
+
+    def test_a_closure_must_end_after_it_starts(self):
+        closure = Closure(room=self.room, start=self.start, end=self.start)
+
+        with self.assertRaises(ValidationError) as raised:
+            closure.full_clean()
+
+        self.assertIn('end', raised.exception.message_dict)
+
+    def test_the_closure_message_wins_over_the_double_booking_message(self):
+        self.booking(hours=2).save()
+        Closure.objects.create(room=self.room, start=self.start, end=self.start + datetime.timedelta(hours=1))
+
+        with self.assertRaises(ValidationError) as raised:
+            self.booking(hours=1).full_clean()
+
+        # The closure is the better explanation of the two, so it is the one the
+        # booker sees.
+        self.assertIn('stängt', raised.exception.message_dict['start'][0])
+
+
 class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
     """The visitor gate: readable pages, an unlock, a lockout and a booking."""
 
@@ -767,6 +906,38 @@ class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
         self.assertEqual(booking.booker_name, 'Extern Besökare')
         self.assertEqual(booking.booker_email, 'besokare@example.com')
         self.assertEqual(booking.room, self.room)
+
+    def test_the_room_page_shows_a_closed_period_before_the_code_is_typed(self):
+        # A visitor looking at the calendar should see why the room is
+        # unavailable, not fill in the form and be refused afterwards.
+        Closure.objects.create(
+            room=self.room,
+            start=self.now + datetime.timedelta(hours=2),
+            end=self.now + datetime.timedelta(hours=5),
+            description='Renovering',
+        )
+
+        response = self.client.get(self.room_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Stängt')
+        self.assertContains(response, 'Renovering')
+
+    def test_a_booking_inside_a_closed_period_is_refused(self):
+        self.unlock()
+        start = self.now + datetime.timedelta(hours=1)
+        Closure.objects.create(
+            room=self.room,
+            start=start - datetime.timedelta(minutes=30),
+            end=start + datetime.timedelta(hours=2),
+        )
+
+        with patch('booking.views.validate_captcha', return_value=True):
+            response = self.client.post(self.room_url, self.booking_payload())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'stängt')
+        self.assertFalse(Booking.objects.exists())
 
     def test_rotation_invalidates_an_existing_unlock(self):
         self.unlock()
@@ -1009,31 +1180,6 @@ class BookingMemberFlowTests(TestCase):
         self.assertEqual(Booking.objects.count(), 1)
         self.assertIn('start', response.context['form'].errors)
 
-    def test_inactive_room_is_absent_from_the_list_and_404s(self):
-        inactive = make_room(name='Stängt utrymme', is_active=False)
-
-        listing = self.client.get(reverse('booking:index'))
-
-        self.assertEqual(listing.status_code, 200)
-        self.assertNotContains(listing, 'Stängt utrymme')
-        self.assertEqual(self.client.get(reverse('booking:room_detail', args=[inactive.pk])).status_code, 404)
-
-
-@override_settings(ROOT_URLCONF='core.urls.demo', BOOKING_ENABLED=False)
-class BookingCapabilityDisabledTests(TestCase):
-    """The capability hides the pages without uninstalling the app.
-
-    core/urls/date.py includes the booking routes only while BOOKING_ENABLED is
-    on; core.urls.demo is a urlconf built without them, which is what every
-    other association ships.
-    """
-
-    def test_booking_pages_are_not_routed_when_the_capability_is_off(self):
-        room = make_room(name='Bastun')
-
-        self.assertEqual(self.client.get('/booking/').status_code, 404)
-        self.assertEqual(self.client.get(f'/booking/{room.pk}/').status_code, 404)
-
 
 class BookingAdminPermissionTests(TestCase):
     """Staff status is group-based; per-model permissions do the gating."""
@@ -1259,7 +1405,6 @@ class BookingAdminSurfaceTests(TestCase):
             f'{prefix}-0-description': booking.description,
             f'{prefix}-0-author': '',
             'name': self.room.name,
-            'is_active': 'on',
             '_save': 'Spara',
         }
         data.update(extra)
@@ -1471,6 +1616,24 @@ class RoomCodeAdminTests(PinnedNowMixin, TestCase):
         self.office = make_room(name='Kansliet')
         self.sauna = make_room(name='Bastun')
 
+    def inline_management_data(self):
+        """The management form of every inline on the room page, with no rows.
+
+        The room page carries both inlines, and a POST that leaves one of them
+        out is refused rather than treated as empty.
+        """
+        data = {}
+        for prefix in ('bookings', 'closures'):
+            data.update(
+                {
+                    f'{prefix}-TOTAL_FORMS': '0',
+                    f'{prefix}-INITIAL_FORMS': '0',
+                    f'{prefix}-MIN_NUM_FORMS': '0',
+                    f'{prefix}-MAX_NUM_FORMS': '1000',
+                }
+            )
+        return data
+
     def test_the_changelist_shows_each_room_s_code(self):
         body = self.client.get(reverse('admin:booking_room_changelist')).content.decode()
 
@@ -1512,14 +1675,8 @@ class RoomCodeAdminTests(PinnedNowMixin, TestCase):
                 {
                     'name': 'Kansliet (nytt namn)',
                     'description': '',
-                    'is_active': 'on',
                     '_save': 'Spara',
-                    # The room page carries the bookings inline, so its management
-                    # form has to be posted even with no rows to change.
-                    'bookings-TOTAL_FORMS': '0',
-                    'bookings-INITIAL_FORMS': '0',
-                    'bookings-MIN_NUM_FORMS': '0',
-                    'bookings-MAX_NUM_FORMS': '1000',
+                    **self.inline_management_data(),
                 },
             )
 
@@ -1540,12 +1697,8 @@ class RoomCodeAdminTests(PinnedNowMixin, TestCase):
             {
                 'name': 'Nytt utrymme',
                 'description': 'Nytt',
-                'is_active': 'on',
-                'bookings-TOTAL_FORMS': '0',
-                'bookings-INITIAL_FORMS': '0',
-                'bookings-MIN_NUM_FORMS': '0',
-                'bookings-MAX_NUM_FORMS': '1000',
                 '_save': 'Spara',
+                **self.inline_management_data(),
             },
         )
 
