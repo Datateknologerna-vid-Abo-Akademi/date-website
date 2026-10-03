@@ -51,6 +51,7 @@ Open a booking to change it. All fields can be edited: **Utrymme**, **Bokare** (
 
 - **To move a booking**, change **Starttid** or **Sluttid** and save.
 - **To cancel a booking**, delete it. Deletion cannot be undone, so check the row before confirming.
+- A booker can also cancel without you. A member does it on their own page, which the booking pages link to when they have something upcoming. Somebody without an account pastes the code from their confirmation email on the cancellation page.
 - The overlap rule is checked here too. Saving a booking that overlaps another booking in the same room is refused with "Utrymmet är redan bokat under denna tid.".
 - The end time must be later than the start time, otherwise the save is refused.
 - A new booking cannot start in the past: it is refused with "Starttiden kan inte vara i det förflutna.". A few minutes are allowed, because a visitor filling in the form by hand can be a moment late. A booking that already exists keeps whatever times it has, so you can still correct the description of one whose time is over.
@@ -63,7 +64,7 @@ What is public and what is not:
 
 - Public: the room's name and description, and the booking's start and end times. The room list, the room page and the front-page block show nothing else.
 - Not public: the booking **description**, the **booker name** and the **booker email**. They are visible only in the admin.
-- The booker email is used for one thing: the confirmation message that the site sends to a person who booked without an account. Bookings made by a signed-in member send no email.
+- The booker email is used for one thing: the confirmation message. Every booking gets one, whether a member made it or somebody without an account, and it carries a calendar invite. A booking with no address at all (a member whose profile has no email) is the only case with no message.
 
 If the member account behind a booking is later deleted, the booking itself stays, and it keeps showing the name that was recorded when it was made.
 

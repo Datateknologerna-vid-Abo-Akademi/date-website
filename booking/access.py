@@ -131,6 +131,42 @@ def check_code(room, candidate, at=None):
     return matched
 
 
+def cancel_code(booking) -> str:
+    """The code that lets one booking be cancelled, derived and never stored.
+
+    It is derived from the booking's primary key and the server secret, the same
+    way the room codes are, so nothing new has to be stored and the code cannot
+    be recomputed by anyone who only knows the booking number. It is longer than
+    a room code on purpose: a room code is typed by people who were told it, and
+    this one is copied out of an email and then used to delete a row, so it has
+    to be beyond guessing rather than merely inconvenient.
+    """
+    return hmac.new(
+        _secret_bytes(),
+        f'booking-cancel:{booking.pk}'.encode(),
+        hashlib.sha256,
+    ).hexdigest()[:12]
+
+
+def booking_with_cancel_code(code, at=None):
+    """The upcoming booking a cancellation code belongs to, or ``None``.
+
+    Finding it means deriving the code for each upcoming booking and comparing,
+    because the code is not stored anywhere to look up. Only upcoming bookings
+    are considered, which is also exactly the set that may be cancelled.
+    """
+    candidate = (code or '').strip().lower()
+    if not candidate:
+        return None
+    from .models import Booking
+
+    upcoming = Booking.objects.filter(end__gte=_as_local(at)).select_related('room')
+    for booking in upcoming:
+        if hmac.compare_digest(cancel_code(booking), candidate):
+            return booking
+    return None
+
+
 def session_token(room) -> str:
     """Opaque token for a room's current generation, recording an unlock.
 

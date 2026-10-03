@@ -13,8 +13,9 @@ Where the code lives:
 - `booking/access.py`: the per-room codes, the session token, and the HTTP gate.
 - `booking/views.py`, `booking/forms.py`, `booking/urls.py`: the public pages.
 - `booking/admin.py`: the admin registrations.
-- `booking/emails.py`: the confirmation email for an external booker.
-- `templates/common/booking/`: `index.html`, `room_detail.html`, `partials/code_form.html`, `partials/board_contact.html` and `booking_confirmation_email.txt` (see the routes section).
+- `booking/emails.py`: the confirmation email, sent to whoever booked.
+- `booking/ics.py`: the calendar invite attached to that email.
+- `templates/common/booking/`: `index.html`, `room_detail.html`, `my_bookings.html`, `cancel_booking.html`, `partials/code_form.html`, `partials/board_contact.html`, and `email/booking_confirmation.html` plus `email/booking_confirmation.txt` (see the routes section).
 - `static/common/booking/css/booking.css`: the shared stylesheet the templates pull in.
 
 ## Data model (`booking/models.py`)
@@ -97,6 +98,17 @@ The trade-off this makes is deliberate and worth stating plainly: a scheduled ro
 - The elapsed time is required to be non-negative, so a `rotated_at` stamped in the future by clock skew does not revive the previous code.
 - `check_code()` strips whitespace and compares with `hmac.compare_digest` against every accepted code with no early exit.
 
+### Cancelling
+Two paths, because the two kinds of booker can prove different things.
+
+A member cancels from `booking:my_bookings` (`/booking/mine/`, `MyBookingsView`, login required). The POST carries the booking id and the queryset is filtered to `author=request.user` and `end__gte=now`, so an id that is somebody else's, unknown, or already finished resolves to nothing and becomes a 404. There is no code on this path: the account is the credential.
+
+Somebody without an account uses `booking:cancel` (`/booking/cancel/`), where they paste the code from the confirmation email. The code is `HMAC-SHA256(SECRET_KEY, 'booking-cancel:<booking pk>')[:12]`, derived rather than stored, so `booking_with_cancel_code()` finds the booking by deriving the code for each upcoming booking and comparing with `hmac.compare_digest`. Twelve hex characters is deliberate: a room code is typed by people who were told it, while this one deletes a row, so it has to be beyond guessing rather than merely inconvenient. Only upcoming bookings are searched, which is also exactly the set that may be cancelled.
+
+The public page is two steps. The GET that a mail client or a link scanner follows only shows which booking the code belongs to, and the deletion happens on the POST behind the confirmation button. A GET that cancelled would let a mailbox provider that prefetches links delete a booking before its owner ever read the email.
+
+Both paths delete the row rather than marking it cancelled, which is what the admin's delete does. Nothing is emailed on cancellation, to the booker or to the board, so a board that needs to hear about cancellations has to watch the admin.
+
 ### Session token and per-room session state
 - `session_token(room)` is `HMAC-SHA256(SECRET_KEY, 'booking-session:<room pk>:<generation>')[:32].hex()`.
 - The token depends on the room and its generation, so rotating a room invalidates exactly the unlocks that room granted and no expiry has to be stored in the session. Note the asymmetry: the code that was just handed out keeps working for the grace window, but an unlock granted with it does not survive the rotation.
@@ -128,12 +140,18 @@ The trade-off this makes is deliberate and worth stating plainly: a scheduled ro
 - Both forms declare `description` as a `Textarea` (3 rows) with `help_text`, overriding the single-line input the model field would produce, and the help text says that only the board reads it. That is the field the board needs to know what the room is for.
 - `BookingForm.__init__` sets a `min` attribute on the `start` and `end` widgets to `access.now_at() - BOOKING_PAST_GRACE`, truncated to the minute. It derives the boundary from the same constant the model uses, so the browser picker offers exactly the range `Booking.clean()` accepts instead of a stricter one: a floor of "now" would refuse a start the server takes, and would invalidate a start that was picked a moment earlier whenever the form is re-rendered after another error. Truncation leaves the picker a fraction more permissive than the server, never less, and the model check stays the authority.
 - The captcha check runs twice on the anonymous path, both through `core.utils.validate_captcha`: once in `booking_code_gate()` and once on the anonymous booking POST. Both call it with `access.captcha_response(request)`, which turns a missing field into an empty string, because the shared helper only short-circuits locally on `""` and a missing field would otherwise reach Cloudflare. A challenge that fails on the gate is reported through the `captcha_error` context key, and crucially the gate does not look at the submitted code at all in that case: validating it would tell a client that has not passed the challenge whether its guess was right, one guess at a time, without consuming an attempt. A rejected challenge is not a code attempt, so it does not count against the visitor's five either.
-- On success the booking is saved, `emails.notify_external_booker(booking)` runs, a success message is added, and the view redirects back to the same room page (POST/redirect/GET). On a validation error the page is re-rendered with the bound form and its field errors, at status 200.
+- On success the booking is saved, `emails.notify_booker(booking, cancel_url=..., site_url=...)` queues the confirmation, a success message is added, and the view redirects back to the same room page (POST/redirect/GET). On a validation error the page is re-rendered with the bound form and its field errors, at status 200.
 - The public templates render room names and start/end times only. The booking description, the booker name and the booker email are never rendered on the public pages.
 
 `templates/common/booking/index.html` renders the room cards and the upcoming-booking list, and says in one line that an account books directly while everyone else needs a code. It deliberately does not say how the code is obtained; that belongs to the page that asks for it. `room_detail.html` doubles as the code-gate page: it still shows the room name, its description and the upcoming bookings, and swaps the booking form for the code form. `partials/code_form.html` renders the explanation of where the code comes from, then either the code input or, during a lockout, the "too many attempts" message with no form at all. The first sentence of that explanation is `code_instructions` when the board has written one, and "Bokningskoden får du av styrelsen." when it has not; the second sentence, that an account needs no code, always follows, because it is a fact about the site rather than about the board's process. `code_instructions` reaches the template through the gate's context, from `_code_instructions()` in `booking/views.py`. `partials/board_contact.html` is the one-line "contact the board at `ASSOCIATION_EMAIL`" note, included by the room list, the room page and the gate; all three guard on `ASSOCIATION_EMAIL` being set, because the templates are shared and an association that leaves it empty would otherwise render a broken sentence. It is a contact route, not a claim about how the code arrives.
 
-`booking/emails.py` sends one confirmation per external booking, through the Celery task `core.utils.send_email_task` and `core.utils.enqueue_task_on_commit`, so the mail is queued after the transaction commits. It returns early unless the booking is external and has an email address, so member bookings and nameless bookings send nothing. The body is `templates/common/booking/booking_confirmation_email.txt`. The body is rendered without a request, so the context processor that exposes the association's variables does not run: `emails.py` passes `ASSOCIATION_EMAIL` from `settings.CONTENT_VARIABLES` into the context itself, and the email names that address, which is otherwise the booker's only route to change or cancel.
+`booking/emails.py` sends one confirmation per booking, member or not, with `notify_booker(booking, cancel_url=..., site_url=...)`. The mail is queued after the transaction commits, through `core.utils.enqueue_task_on_commit` and the Celery task `core.utils.send_email_with_attachments_task`. That task exists because `send_mail` cannot carry a file: it builds an `EmailMultiAlternatives` itself and attaches the calendar invite, keeping the same failure handling as `send_email_task`, where a mail problem is logged rather than raised because the row it describes is already saved.
+
+The message complements the confirmation on the page rather than replacing it. The view adds its `Tack! Din bokning är registrerad.` message whether or not there is an address to send to, and the mail is a second copy of the same news with the details worth keeping.
+
+Bodies are `templates/common/booking/email/booking_confirmation.html` and `.txt`, rendered as a multipart pair. Both are rendered without a request, so the context processor that exposes the association's variables does not run: `emails.py` passes `association_email` from `settings.CONTENT_VARIABLES` into the context itself, and the email names that address, which is otherwise the booker's only route to the board.
+
+`notify_booker` returns early when there is no address to send to, which is `booking.author.email` for a member and `booking.booker_email` for somebody without an account. The recipient is the only difference between the two cases; the body is the same template, and the `cancel_code` key is `None` for a member, which is how the template knows to say "cancel from your account" instead of showing a code.
 
 ## Session keys and the gate function
 Three session keys, all namespaced with a `booking_` prefix so they cannot collide with other apps that keep gate state in the session:

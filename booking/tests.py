@@ -9,6 +9,7 @@ existing unlocks by itself and the typed code never reaches the session.
 
 import datetime
 import re
+import string
 import time
 import zoneinfo
 from types import SimpleNamespace
@@ -1836,16 +1837,12 @@ class RoomCodeAdminTests(PinnedNowMixin, TestCase):
 
 
 class BookingEmailTests(PinnedNowMixin, TestCase):
-    """Only an external booker with an address gets a confirmation."""
+    """The booker is told either way, and the page says so as well."""
 
     def setUp(self):
         super().setUp()
         self.room = make_room(name='Bastun')
         self.room_url = reverse('booking:room_detail', args=[self.room.pk])
-
-    def attempts(self):
-        """Wrong codes this visitor has spent on this room."""
-        return access.attempts_used(SimpleNamespace(session=self.client.session), self.room)
 
     def unlock(self):
         response = self.client.post(self.room_url, {'code': access.current_code(self.room)})
@@ -1863,23 +1860,87 @@ class BookingEmailTests(PinnedNowMixin, TestCase):
             'cf-turnstile-response': 'turnstile-token',
         }
 
-    def test_external_booking_queues_exactly_one_confirmation(self):
+    def queued_message(self, send_email):
+        """The single queued message, as (subject, body, from, to, kwargs)."""
+        self.assertEqual(send_email.delay.call_count, 1)
+        call = send_email.delay.call_args
+        return (*call.args, call.kwargs)
+
+    def test_an_outsider_booking_is_confirmed_on_the_page_and_by_email(self):
+        # The mail complements the message on the page rather than replacing it:
+        # the confirmation a booker sees is there whether or not they left an
+        # address, and it stays when they did.
         self.unlock()
 
         with patch('booking.views.validate_captcha', return_value=True):
-            with patch('booking.emails.send_email_task') as send_email:
+            with patch('booking.emails.send_email_with_attachments_task') as send_email:
                 with self.captureOnCommitCallbacks(execute=True):
-                    response = self.client.post(self.room_url, self.booking_payload())
+                    response = self.client.post(self.room_url, self.booking_payload(), follow=True)
 
-        self.assertEqual(response.status_code, 302)
-        send_email.delay.assert_called_once()
-        _subject, _body, from_email, recipients = send_email.delay.call_args.args
+        self.assertContains(response, 'Tack! Din bokning är registrerad.')
+        subject, _body, from_email, recipients, kwargs = self.queued_message(send_email)
+        booking = Booking.objects.get()
         self.assertEqual(recipients, ['besokare@example.com'])
         self.assertEqual(from_email, settings.DEFAULT_FROM_EMAIL)
+        self.assertIn(self.room.name, subject)
+        # An outsider has no account to check against, so the mail has to carry
+        # the code that proves the booking is theirs.
+        self.assertIn(access.cancel_code(booking), _body)
+        self.assertIn(access.cancel_code(booking), kwargs['html_message'])
+        self.assertIn(reverse('booking:cancel'), _body)
+        filename, content, mimetype = kwargs['attachments'][0]
+        self.assertTrue(filename.endswith('.ics'))
+        self.assertEqual(mimetype, 'text/calendar; method=PUBLISH; charset=utf-8')
+        self.assertIn('BEGIN:VCALENDAR', content)
 
-    def test_the_confirmation_tells_the_booker_how_to_reach_the_board(self):
-        # The email is the only durable record an outside booker has, and the
-        # board is the only route to change or cancel the booking.
+    def test_a_member_booking_is_confirmed_by_email_without_a_code(self):
+        # A member cancels from their own account, so a code would protect
+        # nothing and asking them to keep one would be noise.
+        member = make_member('epostmedlem')
+        self.client.force_login(member, backend='members.backends.AuthBackend')
+        start = self.now + datetime.timedelta(days=1)
+        payload = {
+            'start': local_input_time(start),
+            'end': local_input_time(start + datetime.timedelta(hours=2)),
+            'description': 'Medlemsbokning',
+        }
+
+        with patch('booking.emails.send_email_with_attachments_task') as send_email:
+            with self.captureOnCommitCallbacks(execute=True):
+                response = self.client.post(self.room_url, payload)
+
+        self.assertEqual(response.status_code, 302)
+        _subject, body, _from_email, recipients, kwargs = self.queued_message(send_email)
+        self.assertEqual(recipients, [member.email])
+        booking = Booking.objects.get()
+        self.assertNotIn(access.cancel_code(booking), body)
+        self.assertIn(reverse('booking:cancel'), body)
+        self.assertIn('BEGIN:VCALENDAR', kwargs['attachments'][0][1])
+
+    def test_a_booker_with_no_address_is_not_emailed(self):
+        # Nothing to send to, and no reason to fail the booking over it.
+        member = make_member('utanadress')
+        member.email = ''
+        member.save(update_fields=['email'])
+        self.client.force_login(member, backend='members.backends.AuthBackend')
+        start = self.now + datetime.timedelta(days=1)
+
+        with patch('booking.emails.send_email_with_attachments_task') as send_email:
+            with self.captureOnCommitCallbacks(execute=True):
+                response = self.client.post(
+                    self.room_url,
+                    {
+                        'start': local_input_time(start),
+                        'end': local_input_time(start + datetime.timedelta(hours=2)),
+                        'description': 'Ingen adress',
+                    },
+                )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Booking.objects.exists())
+        send_email.delay.assert_not_called()
+
+    def test_the_confirmation_names_the_room_and_the_board(self):
         booking = make_booking(
             self.room,
             self.now + datetime.timedelta(hours=1),
@@ -1888,41 +1949,176 @@ class BookingEmailTests(PinnedNowMixin, TestCase):
             booker_email='besokare@example.com',
         )
 
-        with patch('booking.emails.send_email_task') as send_email:
+        with patch('booking.emails.send_email_with_attachments_task') as send_email:
             with self.captureOnCommitCallbacks(execute=True):
-                emails.notify_external_booker(booking)
+                emails.notify_booker(booking, cancel_url='https://example.com/booking/cancel/')
 
-        _subject, body, _from_email, _recipients = send_email.delay.call_args.args
+        _subject, body, _from_email, _recipients, kwargs = self.queued_message(send_email)
+        self.assertIn(self.room.name, body)
         self.assertIn(settings.CONTENT_VARIABLES['ASSOCIATION_EMAIL'], body)
+        self.assertIn(self.room.name, kwargs['html_message'])
+        self.assertNotIn('<p>', body)
 
-    def test_member_booking_queues_no_confirmation(self):
-        member = make_member('booking-email-member')
-        self.client.force_login(member, backend='members.backends.AuthBackend')
 
-        with patch('booking.emails.send_email_task') as send_email:
-            with self.captureOnCommitCallbacks(execute=True):
-                response = self.client.post(self.room_url, self.booking_payload())
+class BookingCancellationTests(PinnedNowMixin, TestCase):
+    """Who may take a booking away, and how they prove it is theirs."""
 
-        self.assertEqual(response.status_code, 302)
-        send_email.delay.assert_not_called()
-        self.assertEqual(Booking.objects.get().author, member)
+    def setUp(self):
+        super().setUp()
+        self.room = make_room(name='Bastun')
+        self.start = self.now + datetime.timedelta(days=1)
+        self.end = self.start + datetime.timedelta(hours=2)
+        self.cancel_url = reverse('booking:cancel')
 
-    def test_blank_booker_email_queues_no_confirmation(self):
-        start = self.now + datetime.timedelta(hours=1)
+    def outsider_booking(self, **kwargs):
+        details = {'booker_name': 'Extern Besökare', 'booker_email': 'besokare@example.com'}
+        details.update(kwargs)
+        return make_booking(self.room, self.start, self.end, **details)
+
+    def test_the_code_is_derived_and_differs_per_booking(self):
+        first = self.outsider_booking()
+        second = self.outsider_booking(booker_email='annan@example.com')
+
+        self.assertEqual(access.cancel_code(first), access.cancel_code(first))
+        self.assertNotEqual(access.cancel_code(first), access.cancel_code(second))
+        # Long enough that guessing it is not a plan, and a digest rather than
+        # anything so short as the primary key.
+        code = access.cancel_code(first)
+        self.assertEqual(len(code), 12)
+        self.assertNotEqual(code, str(first.pk))
+        self.assertTrue(all(character in string.hexdigits for character in code))
+
+    def test_the_code_finds_its_own_booking(self):
+        booking = self.outsider_booking()
+
+        self.assertEqual(access.booking_with_cancel_code(access.cancel_code(booking)), booking)
+        self.assertIsNone(access.booking_with_cancel_code('nonsense'))
+        self.assertIsNone(access.booking_with_cancel_code(''))
+        self.assertIsNone(access.booking_with_cancel_code(None))
+
+    def test_a_code_stops_working_once_the_booking_is_over(self):
         booking = make_booking(
             self.room,
-            start,
-            start + datetime.timedelta(hours=1),
-            booker_name='Extern utan adress',
-            booker_email='',
+            self.now - datetime.timedelta(days=2),
+            self.now - datetime.timedelta(days=1),
+            booker_name='Extern Besökare',
+            booker_email='besokare@example.com',
         )
 
-        with patch('booking.emails.send_email_task') as send_email:
-            with self.captureOnCommitCallbacks(execute=True):
-                emails.notify_external_booker(booking)
+        self.assertIsNone(access.booking_with_cancel_code(access.cancel_code(booking)))
 
-        self.assertTrue(booking.is_external)
-        send_email.delay.assert_not_called()
+    def test_the_page_shows_the_booking_and_cancels_only_on_confirmation(self):
+        booking = self.outsider_booking()
+        code = access.cancel_code(booking)
+
+        shown = self.client.get(self.cancel_url, {'code': code})
+
+        self.assertEqual(shown.status_code, 200)
+        self.assertContains(shown, self.room.name)
+        self.assertTrue(Booking.objects.filter(pk=booking.pk).exists())
+
+        cancelled = self.client.post(self.cancel_url, {'code': code, 'confirm': '1'})
+
+        self.assertRedirects(cancelled, reverse('booking:index'))
+        self.assertFalse(Booking.objects.filter(pk=booking.pk).exists())
+
+    def test_a_wrong_code_shows_an_error_and_removes_nothing(self):
+        booking = self.outsider_booking()
+
+        response = self.client.post(self.cancel_url, {'code': 'deadbeefcafe', 'confirm': '1'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Hittade ingen kommande bokning med den koden.')
+        self.assertTrue(Booking.objects.filter(pk=booking.pk).exists())
+
+    def test_a_link_that_is_only_opened_does_not_cancel(self):
+        # Mailbox providers fetch links in incoming mail, so a GET that cancelled
+        # would delete bookings before their owners read the message.
+        booking = self.outsider_booking()
+
+        response = self.client.get(self.cancel_url, {'code': access.cancel_code(booking)})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Booking.objects.filter(pk=booking.pk).exists())
+
+    def test_a_member_sees_their_own_upcoming_bookings(self):
+        member = make_member('avbokare')
+        mine = make_booking(self.room, self.start, self.end, author=member)
+        make_booking(self.room, self.start + datetime.timedelta(days=3), self.end + datetime.timedelta(days=3))
+        make_booking(
+            self.room, self.now - datetime.timedelta(days=2), self.now - datetime.timedelta(days=1), author=member
+        )
+        self.client.force_login(member, backend='members.backends.AuthBackend')
+
+        response = self.client.get(reverse('booking:my_bookings'))
+
+        self.assertEqual([booking.pk for booking in response.context['bookings']], [mine.pk])
+
+    def test_a_member_cancels_their_own_booking(self):
+        member = make_member('avbokare')
+        booking = make_booking(self.room, self.start, self.end, author=member)
+        self.client.force_login(member, backend='members.backends.AuthBackend')
+
+        response = self.client.post(reverse('booking:my_bookings'), {'booking': str(booking.pk)})
+
+        self.assertRedirects(response, reverse('booking:my_bookings'))
+        self.assertFalse(Booking.objects.filter(pk=booking.pk).exists())
+
+    def test_a_member_cannot_cancel_somebody_else_s_booking(self):
+        member = make_member('avbokare')
+        other = make_booking(self.room, self.start, self.end, author=make_member('annan'))
+        self.client.force_login(member, backend='members.backends.AuthBackend')
+
+        response = self.client.post(reverse('booking:my_bookings'), {'booking': str(other.pk)})
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(Booking.objects.filter(pk=other.pk).exists())
+
+    def test_a_nonsense_id_is_not_a_crash(self):
+        member = make_member('avbokare')
+        make_booking(self.room, self.start, self.end, author=member)
+        self.client.force_login(member, backend='members.backends.AuthBackend')
+
+        for value in ('abc', '', '-1', '1; DROP TABLE booking_booking'):
+            with self.subTest(value=value):
+                response = self.client.post(reverse('booking:my_bookings'), {'booking': value})
+                self.assertEqual(response.status_code, 404)
+
+    def test_a_finished_booking_cannot_be_cancelled_from_the_page(self):
+        member = make_member('avbokare')
+        booking = make_booking(
+            self.room,
+            self.now - datetime.timedelta(days=2),
+            self.now - datetime.timedelta(days=1),
+            author=member,
+        )
+        self.client.force_login(member, backend='members.backends.AuthBackend')
+
+        response = self.client.post(reverse('booking:my_bookings'), {'booking': str(booking.pk)})
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(Booking.objects.filter(pk=booking.pk).exists())
+
+    def test_the_page_needs_a_signed_in_member(self):
+        response = self.client.get(reverse('booking:my_bookings'))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse(settings.LOGIN_URL), response['Location'])
+
+    def test_the_link_is_offered_only_when_there_is_something_behind_it(self):
+        member = make_member('avbokare')
+        self.client.force_login(member, backend='members.backends.AuthBackend')
+        index = reverse('booking:index')
+
+        without = self.client.get(index)
+
+        self.assertNotContains(without, reverse('booking:my_bookings'))
+
+        make_booking(self.room, self.start, self.end, author=member)
+
+        with_one = self.client.get(index)
+
+        self.assertContains(with_one, reverse('booking:my_bookings'))
 
 
 class BookingGateRegressionTests(PinnedNowMixin, TestCase):

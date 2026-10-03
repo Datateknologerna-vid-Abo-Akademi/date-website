@@ -1,0 +1,150 @@
+{% load i18n %}
+{% load booking_dates %}
+<table role="presentation"
+       width="100%"
+       cellpadding="0"
+       cellspacing="0"
+       border="0"
+       style="background-color: #000000">
+  <tr>
+    <td align="center" style="padding: 24px 12px">
+      <table role="presentation"
+             width="600"
+             cellpadding="0"
+             cellspacing="0"
+             border="0"
+             style="width: 100%;
+                    max-width: 600px;
+                    background-color: #202020;
+                    border-radius: 5px">
+        <tr>
+          <td style="padding: 28px 28px 0 28px;
+                     font-family: Arial, Helvetica, sans-serif;
+                     font-size: 16px;
+                     line-height: 1.5;
+                     color: #f5f5f5">
+            <h1 style="margin: 0 0 20px 0;
+                       font-size: 24px;
+                       line-height: 1.3;
+                       color: #ffffff">{% trans "Bokningen är bekräftad" %}</h1>
+            <table role="presentation"
+                   width="100%"
+                   cellpadding="0"
+                   cellspacing="0"
+                   border="0"
+                   style="background-color: #3d3d3d;
+                          border-radius: 5px">
+              <tr>
+                <td style="padding: 16px;
+                           font-family: Arial, Helvetica, sans-serif;
+                           font-size: 18px;
+                           line-height: 1.4;
+                           color: #ffffff">
+                  {{ room.name }}
+                  <div style="padding-top: 6px; font-size: 15px; color: #c7c7c7">
+                    {{ start_local|short_date }} {{ start_local|date:"H:i" }} - {% if start_local|date:"Ymd" != end_local|date:"Ymd" %}{{ end_local|short_date }} {% endif %}{{ end_local|date:"H:i" }}
+                  </div>
+                </td>
+              </tr>
+            </table>
+            {% if booking.description %}
+              <p style="margin: 20px 0 4px 0; font-size: 15px; color: #c7c7c7">{% trans "Beskrivning" %}</p>
+              <p style="margin: 0; color: #f5f5f5">{{ booking.description|linebreaksbr }}</p>
+            {% endif %}
+            <h2 style="margin: 28px 0 12px 0;
+                       font-size: 18px;
+                       line-height: 1.3;
+                       color: #ffffff">{% trans "Om tiden inte passar" %}</h2>
+            {% if cancel_code %}
+              {% if cancel_url %}
+                <p style="margin: 0 0 12px 0">{% trans "Avboka bokningen på avbokningssidan. Där anger du koden nedan." %}</p>
+              {% else %}
+                <p style="margin: 0 0 12px 0">{% trans "Kontakta styrelsen om du vill avboka bokningen. Uppge koden nedan." %}</p>
+              {% endif %}
+              <table role="presentation"
+                     cellpadding="0"
+                     cellspacing="0"
+                     border="0"
+                     style="background-color: #3d3d3d;
+                            border: 1px solid #505050;
+                            border-radius: 5px">
+                <tr>
+                  <td style="padding: 12px 18px;
+                             font-family: 'Courier New', Courier, monospace;
+                             font-size: 24px;
+                             line-height: 1.3;
+                             letter-spacing: 2px;
+                             color: rgb(208, 255, 0)">{{ cancel_code }}</td>
+                </tr>
+              </table>
+              <p style="margin: 12px 0 0 0">{% trans "Spara koden. Den behövs för att avboka bokningen." %}</p>
+              {% if cancel_url %}
+                <p style="margin: 16px 0 0 0">
+                  <a href="{{ cancel_url }}"
+                     style="display: inline-block;
+                            padding: 10px 20px;
+                            border-radius: 5px;
+                            background-color: #505050;
+                            color: rgb(208, 255, 0);
+                            font-size: 16px;
+                            font-weight: bold;
+                            text-decoration: none">{% trans "Avboka bokningen" %}</a>
+                </p>
+              {% endif %}
+            {% else %}
+              {% if cancel_url %}
+                <p style="margin: 0">{% trans "Logga in på avbokningssidan och ta bort bokningen där." %}</p>
+                <p style="margin: 16px 0 0 0">
+                  <a href="{{ cancel_url }}"
+                     style="display: inline-block;
+                            padding: 10px 20px;
+                            border-radius: 5px;
+                            background-color: #505050;
+                            color: rgb(208, 255, 0);
+                            font-size: 16px;
+                            font-weight: bold;
+                            text-decoration: none">{% trans "Avboka bokningen" %}</a>
+                </p>
+              {% else %}
+                <p style="margin: 0">{% trans "Kontakta styrelsen om du vill avboka bokningen." %}</p>
+              {% endif %}
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 0 28px 28px 28px;
+                     font-family: Arial, Helvetica, sans-serif;
+                     font-size: 13px;
+                     line-height: 1.5;
+                     color: #c7c7c7">
+            <table role="presentation"
+                   width="100%"
+                   cellpadding="0"
+                   cellspacing="0"
+                   border="0">
+              <tr>
+                <td style="border-top: 1px solid #505050; padding-top: 16px">
+                  {% if association_email %}
+                    {% blocktrans %}Har du frågor om bokningen, kontakta styrelsen via {{ association_email }}.{% endblocktrans %}
+                  {% else %}
+                    {% trans "Har du frågor om bokningen, kontakta styrelsen." %}
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td style="padding-top: 6px; color: #888888">{% trans "Du får det här meddelandet för att du bokade ett utrymme." %}</td>
+              </tr>
+              {% if site_url %}
+                <tr>
+                  <td style="padding-top: 6px">
+                    <a href="{{ site_url }}" style="color: rgb(208, 255, 0)">{{ site_url }}</a>
+                  </td>
+                </tr>
+              {% endif %}
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

@@ -19,6 +19,11 @@
         <p class="booking-help booking-intro">
           {% trans "Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som du får av styrelsen." %}
         </p>
+        {% if has_my_bookings %}
+          <p class="booking-help">
+            <a href="{% url 'booking:my_bookings' %}">{% trans "Mina bokningar" %}</a>
+          </p>
+        {% endif %}
         <div class="booking-rooms">
           {% for room in room_list %}
             <div class="booking-room-card">

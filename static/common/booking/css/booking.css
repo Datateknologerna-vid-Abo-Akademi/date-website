@@ -288,3 +288,24 @@
         max-width: 100%;
     }
 }
+
+.booking-cancel-form {
+    margin-left: auto;
+}
+
+.booking-cancel-button {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .booking-cancel-form {
+        margin-left: 0;
+    }
+}
+
+/* A link that follows a button or a list needs its own space: the button and the
+   list rows carry none below themselves. */
+.booking-back {
+    margin-top: 1.25rem;
+}

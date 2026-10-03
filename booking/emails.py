@@ -1,7 +1,15 @@
-"""Email notifications for external bookings.
+"""Email notifications for bookings.
 
-Only the person who booked without a website account gets a confirmation.
-Bookings made by a member, and bookings without an email address, are silent.
+The person who booked is told either way, member or not. A member used to get
+nothing, on the reasoning that the booking is visible in their account, but the
+confirmation and the calendar invite are worth having for both, and the only
+part that differs is how the booking is cancelled: a member cancels from their
+own account, so their mail carries no code, and somebody without an account has
+no account to be checked against, so theirs carries one.
+
+The page says the same thing when the booking is made. This mail complements the
+on-page confirmation, and the message on the page stays whether or not the
+booker gave an address.
 """
 
 from django.conf import settings
@@ -9,31 +17,54 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from core.utils import enqueue_task_on_commit, send_email_task
+from core.utils import enqueue_task_on_commit, send_email_with_attachments_task
+
+from . import access
+from .ics import invite_attachment
 
 
-def notify_external_booker(booking):
-    if not booking.is_external or not booking.booker_email:
+def notify_booker(booking, *, cancel_url, site_url=''):
+    """Tell the booker that the booking is registered, and how to cancel it."""
+    recipient = _recipient(booking)
+    if not recipient:
         return
-    start = timezone.localtime(booking.start)
-    end = timezone.localtime(booking.end)
     context = {
         'booking': booking,
         'room': booking.room,
-        'start': start.strftime('%d.%m.%Y %H:%M'),
-        'end': end.strftime('%H:%M'),
+        'start_local': timezone.localtime(booking.start),
+        'end_local': timezone.localtime(booking.end),
+        'cancel_url': cancel_url,
+        # Only somebody without an account needs a code, because only they have
+        # nothing else to prove the booking is theirs.
+        'cancel_code': access.cancel_code(booking) if booking.is_external else None,
         # An email body is rendered without a request, so the context processor
         # that exposes the association's address to templates does not run here.
-        # The booker needs that address: the board is the only route to change
-        # or cancel a booking.
-        'ASSOCIATION_EMAIL': getattr(settings, 'CONTENT_VARIABLES', {}).get('ASSOCIATION_EMAIL', ''),
+        'association_email': getattr(settings, 'CONTENT_VARIABLES', {}).get('ASSOCIATION_EMAIL', ''),
+        # The footer links to the site itself, which is a different thing from
+        # the page that cancels this booking.
+        'site_url': site_url,
     }
     subject = _('Bokningsbekräftelse för %(room)s') % {'room': booking.room.name}
-    body = render_to_string('booking/booking_confirmation_email.txt', context)
+    body = render_to_string('booking/email/booking_confirmation.txt', context)
+    html = render_to_string('booking/email/booking_confirmation.html', context)
     enqueue_task_on_commit(
-        send_email_task,
+        send_email_with_attachments_task,
         subject,
         body,
         settings.DEFAULT_FROM_EMAIL,
-        [booking.booker_email],
+        [recipient],
+        html_message=html,
+        attachments=(
+            invite_attachment(
+                booking=booking, room=booking.room, start=booking.start, end=booking.end, cancel_url=cancel_url
+            ),
+        ),
     )
+
+
+def _recipient(booking):
+    """Where to send it, which is the account for a member and the typed
+    address otherwise."""
+    if booking.author_id:
+        return booking.author.email
+    return booking.booker_email

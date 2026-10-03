@@ -1,7 +1,9 @@
 import logging
 
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -10,7 +12,7 @@ from django.views.generic import ListView
 from core.utils import validate_captcha
 
 from . import access, emails
-from .forms import AnonymousBookingForm, BookingForm
+from .forms import AnonymousBookingForm, BookingForm, CancelCodeForm
 from .models import Booking, BookingSettings, Closure, Room
 
 logger = logging.getLogger('date')
@@ -64,6 +66,12 @@ class RoomListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['bookings'] = _upcoming_bookings()[:UPCOMING_BOOKING_LIMIT]
+        # The link to a member's own bookings is offered only when there is
+        # something behind it, so it never leads to an empty page.
+        context['has_my_bookings'] = (
+            self.request.user.is_authenticated
+            and Booking.objects.filter(author=self.request.user, end__gte=access.now_at()).exists()
+        )
         return context
 
 
@@ -110,7 +118,14 @@ def room_detail(request, pk):
                     allowed = False
             if allowed:
                 booking = form.save()
-                emails.notify_external_booker(booking)
+                emails.notify_booker(
+                    booking,
+                    cancel_url=request.build_absolute_uri(reverse('booking:cancel')),
+                    site_url=request.build_absolute_uri('/'),
+                )
+                # The page says so as well, and keeps saying so whether or not
+                # there was an address to mail: the mail complements this, it
+                # does not replace it.
                 messages.success(request, _('Tack! Din bokning är registrerad.'))
                 return redirect('booking:room_detail', pk=room.pk)
     else:
@@ -126,3 +141,70 @@ def room_detail(request, pk):
             'form': form,
         },
     )
+
+
+def _member_upcoming(user):
+    """The member's own bookings that have not finished yet."""
+    return Booking.objects.filter(author=user, end__gte=access.now_at()).select_related('room').order_by('start', 'pk')
+
+
+class MyBookingsView(LoginRequiredMixin, ListView):
+    """A member's own upcoming bookings, and cancelling one of them.
+
+    The page is only linked from the room list when there is something on it, so
+    a member with no bookings never sees an entry that leads to an empty page.
+    Cancelling checks the account rather than a code: the booking has to belong
+    to the signed-in member, so a code to type would protect nothing.
+    """
+
+    template_name = 'booking/my_bookings.html'
+    context_object_name = 'bookings'
+
+    def get_queryset(self):
+        return _member_upcoming(self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        pk = request.POST.get('booking', '')
+        booking = None
+        if pk.isdecimal():
+            booking = _member_upcoming(request.user).filter(pk=pk).first()
+        if booking is None:
+            # Either the id is nonsense, or it is somebody else's booking, or it
+            # has already finished and dropped out of the queryset. All three
+            # look the same from here on purpose.
+            raise Http404
+        booking.delete()
+        messages.success(request, _('Bokningen är borttagen.'))
+        return redirect('booking:my_bookings')
+
+
+def cancel_booking(request):
+    """Cancel a booking made without an account, using the code from the email.
+
+    Two steps on purpose. A link that cancels on a GET would be followed by the
+    link scanners that mailbox providers run over incoming mail, and a booking
+    could disappear before its owner ever read the message. The code identifies
+    the booking, the page shows which one it is, and only the confirmation
+    button on that page deletes it.
+    """
+    at = access.now_at()
+    form = CancelCodeForm(at=at)
+    booking = None
+
+    if request.method == 'POST':
+        form = CancelCodeForm(request.POST, at=at)
+        if form.is_valid():
+            booking = form.booking
+            if 'confirm' in request.POST:
+                booking.delete()
+                messages.success(request, _('Bokningen är borttagen.'))
+                return redirect('booking:index')
+    else:
+        code = request.GET.get('code', '')
+        form = CancelCodeForm(initial={'code': code}, at=at)
+        if code:
+            booking = access.booking_with_cancel_code(code, at=at)
+            if booking is None:
+                form.add_error('code', _('Hittade ingen kommande bokning med den koden.'))
+
+    return render(request, 'booking/cancel_booking.html', {'form': form, 'booking': booking})

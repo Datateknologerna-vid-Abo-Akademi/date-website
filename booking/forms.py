@@ -108,3 +108,29 @@ class AnonymousBookingForm(BookingForm):
         # mypy narrows the inherited Meta.fields to the three base names, so the
         # two extra fields need an explicit ignore.
         fields = (*BookingForm.Meta.fields, 'booker_name', 'booker_email')  # type: ignore[assignment]
+
+
+class CancelCodeForm(forms.Form):
+    """The code from a confirmation email, which identifies one booking.
+
+    Resolving the code to a booking is the validation: a code that matches no
+    upcoming booking is a wrong code, and the page has nothing to show for it.
+    """
+
+    code = forms.CharField(
+        label=_('Avbokningskod'),
+        max_length=32,
+        widget=forms.TextInput(attrs={'autocomplete': 'off', 'autocapitalize': 'none', 'spellcheck': 'false'}),
+    )
+
+    def __init__(self, *args, at=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.at = at
+        self.booking = None
+
+    def clean_code(self):
+        code = self.cleaned_data['code'].strip()
+        self.booking = access.booking_with_cancel_code(code, at=self.at)
+        if self.booking is None:
+            raise forms.ValidationError(_('Hittade ingen kommande bokning med den koden.'))
+        return code
