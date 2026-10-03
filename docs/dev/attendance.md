@@ -1,0 +1,136 @@
+# Attendance Development Notes
+
+## Responsibility
+The `attendance` app owns the digital meeting attendance list: an event gets a public check-in page, and the app records who arrives and who leaves, so a meeting can stop passing a paper list around. Events are created in the Django admin, and a participant checks in with a short code that the site shows to staff and rotates.
+
+The app is installed for the `date` variant only: `core/settings/date.py` lists `attendance` in its `get_installed_apps([...])` call, and no other `core/settings/<variant>.py` does. It has no capability flag of its own. `core/urls/date.py` passes the `attendance` route key to `build_urlpatterns(...)` unconditionally, next to `booking`, which is mounted only when `settings.BOOKING_ENABLED` is true. Removing attendance from a release would be a code change, not an environment variable.
+
+Access is not a permission of the app either. The overview page and the websocket both test `user.is_staff`, and `members.Member.is_staff` is membership of a group named in `settings.STAFF_GROUPS` (for `date`: `styrelse`, `admin`, `fotograf`, `rösträknare`) or a superuser. Every one of those groups can therefore read the current code and the change log. That is wider than "the board", and it is the app's main access limit.
+
+## Models
+`attendance/models.py` defines everything, in three models.
+
+- `AttendanceEvent`: `title` (max 255), `description` (max 255, optional), `start_datetime`, optional `end_datetime`, `allow_non_members` (default `True`), `code_secret` (default `django_otp.util.random_hex`), `code_validity_time` (a `SmallIntegerField`, default 30 seconds), and a unique `slug` (max 50, `allow_unicode=False`, so the URL segment is ASCII).
+- `NonMemberAttendee`: a single `name` field (max 255, unique). It has no link to an event, which is what makes a guest one shared row. See Non-member identity.
+- `AttendanceChange`: `event` (FK to `AttendanceEvent`, `on_delete=CASCADE`, `related_name="attendance_changes"`), nullable `user` (FK to `AUTH_USER_MODEL`, CASCADE), nullable `non_member` (FK to `NonMemberAttendee`, CASCADE), `timestamp` (default `django.utils.timezone.now`), and `type` (`Type.ENTER = 0`, `Type.LEAVE = 1`). A check constraint named `foreign_keys_ok` requires exactly one of `user` and `non_member` to be set: a change is about one attendee of one kind, never both and never neither. `Meta.get_latest_by = "timestamp"` and `Meta.ordering = ["-timestamp"]` put the newest change first in every list: the inline at the bottom of an event's admin page, the standalone change list, and the "Närvaroändringar" log on the event page.
+
+Presence is never stored. `AttendanceEvent.present_attendees(timestamp)` returns the attendees whose newest change is `ENTER`, and `is_attendee_present(attendee, after_timestamp)` answers the same question for one attendee. `was_attendee_present` exists but has no caller. `is_attendee_present` reads `.latest()`, which uses `Meta.get_latest_by`; `present_attendees` instead asks the database for the newest row per attendee (see The PostgreSQL-only presence query).
+
+`has_ended` is a property that is true only when `end_datetime` is set and already past. Nothing in the app reads it. What filters the public list is the queryset in `attendance/views.py`, `Q(end_datetime__isnull=True) | Q(end_datetime__gte=now())`: an event with an end time leaves `/attendance/` once that moment has passed, and an event with no end time stays listed until it is deleted. Because the detail view does not consult `has_ended`, an event's page and its code keep working after the end for anyone who still has the URL or the QR code. The filter is presentation, not a lock.
+
+## Forms & Views
+`attendance/forms.py` is one form, and it renders nothing: `AttendanceChangeForm` carries `non_member_name` (optional, max 255), `type` (a typed choice field) and `code` (optional `IntegerField`). It exists so the POST is validated; the template owns the markup.
+
+The views subscript a generic at class-definition time (`SingleObjectMixin[AttendanceEvent]`), which is a runtime expression and not only a type annotation. `core/settings/common.py` calls `django_stubs_ext.monkeypatch()` at import time for exactly that, and `django-stubs-ext` is a runtime dependency in `pyproject.toml`. Dropping either one breaks the module at import.
+
+`attendance/urls.py` declares three names, and `core/urls/common.py` mounts the app under `attendance/`:
+
+- `attendance-index` at `/attendance/` (`AttendanceEventsView`): public, no login. It lists the events the queryset above leaves, each linking to its slug. Nothing in the site's navigation links here, so participants are given the address rather than browsing to it.
+- `attendance-event-view` at `/attendance/<slug>/` (`AttendanceEventDetailView`): public when `allow_non_members` is true. When it is false the view runs behind `UserPassesTestMixin`, so an anonymous visitor is redirected to the login page (`LOGIN_URL = "members:login"`) while any signed-in member gets in. An unknown slug is a 404.
+- `attendance-event-overview` at `/attendance/<slug>/overview` (`AttendanceEventOverview`, note the missing trailing slash): staff only, again through `UserPassesTestMixin`. Anonymous is redirected to the login page, and a signed-in member who is not staff gets 403.
+
+The detail POST answers with three status codes:
+
+- 403 when the form does not validate, and 403 with the message "Fel kod" when `is_code_valid` rejects the code. An anonymous POST with an empty name is 403 too, with "Namn måste anges om du inte är inloggad", although the template marks that input `required` and a browser never sends it empty.
+- 409 when the request contradicts the log: "Du kan inte gå in i ett evenemang var du redan är närvarande" for an `ENTER` while the attendee is already present, and "Du kan inte gå ut ur ett evenemang var du inte är närvarande" for a `LEAVE` while they are not.
+- 303 on success, back to `request.path`, which is the same page without the `?code=` the QR code added. The response uses the local `HttpResponseSeeOther`, because `HttpResponseRedirect` is 302.
+
+The write is deliberately not atomic. A comment in `views.py` accepts that two simultaneous submissions can both pass the presence check and write two rows, "but it wouldn't really matter in the end": presence is read from the newest row, so the answer is unchanged. Unlike `booking`, there is no `select_for_update` here, and the duplicate stays in the log.
+
+After the row is saved, the view calls `websocket.send_attendance_change(...)` with no error handling around it. A channel-layer failure (Redis unreachable) therefore surfaces as a 500 after the change has already been written. Pressing the button again then gets the 409, so no second row is added.
+
+### The code
+`AttendanceEvent.totp` builds a `django_otp.oath.TOTP` over `code_secret.encode()` with `step=code_validity_time`: the library's standard six-digit SHA1 TOTP. `get_current_code()` returns `totp.token()`, and `is_code_valid(code)` is `totp.verify(code)` with the default zero tolerance, so only the token of the current window is accepted. A code is valid for at most `code_validity_time` seconds and the previous window gets no grace. `time_until_next_code()` is `step - totp.time % step`, the seconds left in the window, which is the value the websocket returns to the overview page.
+
+The code appears in one place only: `AttendanceEventOverview.get_ctx` puts `get_current_code()` into the context of `templates/common/attendance/overview.html`, and no other view or template renders it. That is the anti-abuse control behind issue #398, the requirement that the attendance list cannot be used to inflate a meeting's membership: checking somebody in needs a code that is visible only to staff, on the spot. Its strength is the display and nothing else. The code is six digits, it is shown to everyone in the room, and it rotates every 30 seconds by default, so it is proof of presence at the meeting rather than a credential that identifies a person. Both `code_secret` and `code_validity_time` are editable in the admin, and changing the validity time also changes the step, so the code in force moves at once.
+
+### The check-in control
+The code is the only thing that stands between the public page and the log, and it is a low bar on purpose. There is no rate limit and no attempt lockout on the code input: a wrong code is just a 403 with "Fel kod", and a client can try again immediately, which is also what a participant who mistyped does. The only bound on guessing is that six digits have to match inside one short window, so someone who wants more has to add an attempt limit, and then decide what to key it on, because a client that discards its session cookie starts over. `docs/dev/booking.md` describes the same problem for the booking code.
+
+## Templates and JavaScript
+- `templates/common/attendance/index.html`: the event list, each entry a link to the event's slug.
+- `templates/common/attendance/detail.html`: the check-in page. It prints "Börjar:" and "Slutar:" from the event, shows the name input and its explanatory sentence only to an anonymous visitor, tells a signed-in member that they are present, and disables "Gå in" while they are present and "Gå ut" while they are not. "Närvarande" lists the current attendees from the `present_attendees` context, and the staff-only "Närvaroändringar" log lists the event's changes newest first. The "Till översiktsvyn" link appears only when `can_see_overview` is true, the same staff test the overview view makes.
+- `templates/common/attendance/overview.html`: the current code, a status line and the QR canvas. It renders nothing else and links nowhere, so a staff member reaches it from the event page.
+
+The QR flow, end to end:
+
+1. `static/common/attendance/js/overview.js` takes `window.location.href`, drops the last path segment ("overview"), and renders `${detail_url}?code=${code}` into the canvas with the CDN `qrcode` library (`QRCode.toCanvas`).
+2. A participant scans that code with a phone camera and lands on `/attendance/<slug>/?code=<code>`.
+3. `detail.html` writes the `?code=` value into the code input, so the box arrives prefilled.
+4. `static/common/attendance/js/detail.js` drives the on-screen scanner with the CDN `qr-scanner` library. The "Skanna QR-kod" button starts `disabled` in the template, and the script enables it only after it has constructed the scanner, so a failed CDN load or a browser with JavaScript off leaves a disabled button and a typable code field rather than a dead control. A device without a camera is a separate case: the button works, and pressing it shows "Ingen kamera hittades". The template's `noscript` block says "Tillåt JavaScript för att skanna QR-koder". A scan parses the URL, reads its `code` parameter, writes it into the input and stops the camera; a QR code without that parameter shows "QR-koden innehöll ingen kod". The code field and the two submit buttons are ordinary form controls, so check-in by typing the code still works with JavaScript disabled, and only the camera is lost.
+5. The participant still presses "Gå in" or "Gå ut". The code prefills the form, it does not submit it.
+
+`overview.js` keeps the display live: on `open` it sends `{"type": "get_code"}`, and each reply carries `until_next`, the seconds left in the window, which it uses to schedule the next request. A closed socket shows "Anslutningen till servern bröts" and retries after five seconds. The first code is rendered by the view, so a page whose CDN script fails still shows a code, it just never rotates.
+
+Both scripts call their strings through the `gettext` global injected by `{% url 'javascript-catalog' %}`, and every user-visible string in them is wrapped. They are the only entries in the new `locale/sv|en|fi/LC_MESSAGES/djangojs.po` catalogs: "Ingen kamera hittades", "Ett oväntat fel uppstod medan QR-skannern startades", "QR-koden innehöll ingen kod", "Ansluter till servern..." and "Anslutningen till servern bröts". The template and model strings are in the ordinary `django.po` catalogs for the same three languages.
+
+## Websocket
+`attendance/routing.py` exposes `websocket_urlpatterns` with `re_path(r"ws/attendance/(?P<slug>[-\w]+)$", consumers.AttendanceConsumer.as_asgi())`. `core/routing.py` holds the `WEBSOCKET_ROUTES` map (`{'events': 'events.routing', 'attendance': 'attendance.routing'}`) and imports an app's routing module only when `apps.is_installed(<app label>)` is true, so a variant that does not install `attendance` never loads its consumer through the socket path.
+
+`AttendanceConsumer` is staff-only, because it also serves the current code: `connect` checks `AttendanceEventOverview.is_user_allowed(self.scope["user"])` and closes before accepting anyone else. It joins the group `attendance_<slug>`, and it answers `{"type": "get_code"}` with `{"type": "code", "code": <int>, "until_next": <seconds>}`. Any other message is ignored.
+
+`attendance/websocket.py` broadcasts every saved change to the same group as an `attendance_change` event, and the consumer forwards it to its clients. No client listens today: `overview.js` handles only the `code` message, and `detail.js` opens no socket at all. The attendee list is server-rendered on every request and only the code is live. That is a known gap, not a bug: the broadcast is in place so a live attendee list can be added without touching the write path, and until then everyone has to reload to see who arrived.
+
+## Admin
+`attendance/admin.py` registers `AttendanceEvent` with a collapsed `TabularInline` of its changes, and `AttendanceChange` on its own. `NonMemberAttendee` is not registered, so there is no admin page that creates a guest: those rows come from the public form, and there is nothing for an editor to maintain. Neither registration sets `list_display`, filters or search, and the change list opens newest first through `Meta.ordering`.
+
+## Migrations
+Four migrations, all from the same branch. The app does not exist on `main` yet.
+
+- `0001_initial`: creates the three tables with English placeholder labels ("Title", "Entered") and a `secret` field on the event that does not survive the next migration.
+- `0002_remove_attendanceevent_secret_and_more`: drops `secret` and adds `code_secret` and `code_validity_time`. The column it drops was created by `0001` on this branch and existed only in branch databases, so this touches no pre-existing data anywhere; a database that runs both in order ends up where a fresh one starts.
+- `0003_prepare_translations`: rewrites the model labels and the constraint's violation message from the English placeholders into the Swedish strings the models declare today. No schema change beyond the labels.
+- `0004_alter_attendancechange_options`: sets `ordering = ["-timestamp"]` on `AttendanceChange.Meta`, so the lists read newest first without each caller reversing a queryset, and corrects the plural label to `närvaroändringar`.
+
+Nothing here rewrites a published migration, and a further behaviour change gets a new migration as usual.
+
+## Testing
+```bash
+uv run python manage.py test attendance
+```
+
+Through the Docker helper, after `source env.sh`:
+
+```bash
+date-test attendance
+```
+
+Both run with `core.settings.test`, which installs the DaTe app set, uses in-memory SQLite and an in-memory channel layer. `attendance/tests.py` holds 70 tests: the models, the TOTP code and its rotation, the presence transitions, the check constraint, the form, every view status code and access rule, the broadcast and the consumer. Routing is covered separately by `core/tests/test_url_route_parity.py`, which asserts that `date` exposes the `attendance/` prefix and that `attendance-index` reverses for `date`; that is the test to extend when another variant mounts the app.
+
+### The PostgreSQL-only presence query
+`present_attendees()` calls `.distinct("user", "non_member")`, which compiles to PostgreSQL's `DISTINCT ON`. SQLite does not implement it: evaluating the queryset raises `NotSupportedError`, and the detail view evaluates it on every request through `get_ctx`, so on SQLite the event page raises rather than renders. Two things follow. `PresentAttendeesTests` carries the only direct tests of that method and is guarded the way `events/tests.py` guards its concurrency tests, with `@unittest.skipUnless(connection.vendor == "postgresql", ...)`, so it is skipped in CI. And because every detail view render would raise on SQLite, the view tests patch `AttendanceEvent.present_attendees` to an empty list; the transitions it computes are covered portably through `is_attendee_present()` and `was_attendee_present()`.
+
+### Running the file against PostgreSQL
+The file is written for `core.settings.test`. On PostgreSQL, `channels`' `database_sync_to_async` calls `close_old_connections()` around the consumer's database access, which closes the connection a surrounding `TestCase` transaction is using, so `AttendanceConsumerTests` and the classes after it error with "connection already closed". SQLite hides this, because its in-memory database survives the reconnect. `PresentAttendeesTests` passes against PostgreSQL when run on its own; making the whole file run there means giving the consumer tests their own database setup, most likely by moving them into their own module.
+
+### What is not covered
+The two `PresentAttendeesTests` cases never run in CI, because CI uses SQLite, so the one method that only works on PostgreSQL is verified only when somebody points the suite at PostgreSQL. Neither script has automated coverage: the QR flow and the code countdown are checked by hand.
+
+## Adopting the app in another association
+1. Add `'attendance'` to that variant's installed apps (`get_installed_apps([...])` in `core/settings/<variant>.py`). `core/settings/date.py` is the worked example.
+2. Add the `attendance` route key to that variant's `build_urlpatterns(...)` call. `core/urls/date.py` is the worked example. Unlike `booking`, the key is not gated on a capability, so a variant that wants an off switch has to add one.
+3. Run that variant's migrations so the tables exist.
+4. Add that variant to `EXPECTED_PREFIXES` and `EXPECTED_URL_NAMES` in `core/tests/test_url_route_parity.py`, or the parity test fails.
+
+The templates under `templates/common/attendance/` and the scripts under `static/common/attendance/js/` are shared, so nothing else is required; an association-specific override follows the usual `templates/<association>/` rules in `docs/dev/templates.md`. Nothing under `attendance/` reads `PROJECT_NAME`, `STAFF_GROUPS` or a content variable, so the app itself needs no configuration beyond being installed and routed.
+
+## Non-member identity
+`NonMemberAttendee.name` is unique across the whole table, and the check-in view resolves a typed name with `NonMemberAttendee.objects.get_or_create(name=...)`. Two different people who type the same name therefore share one row for every event, and the change log cannot tell them apart. That is accepted because the app is a list of who was in the room, not an identity system: a guest has no account to key on, and splitting the name into first and last name would not change anything, since the collision is on the name either way. A real fix would take something that distinguishes people, an address or a per-event record, which is more than this list needs. The practical consequence is in the admin guide: ask guests for a name that is theirs alone.
+
+## Deleting a member
+`AttendanceChange.user` is `on_delete=CASCADE` on purpose, and it matches `polls.Vote.user` and `members.SubscriptionPayment.member`: deleting a member removes their own attendance changes with their account. An erasure request should not leave a trail of "this person attended these meetings" in a table nobody thought about. What outlives a member is the minutes, not this table. Nothing marks a row as belonging to a deleted account, and no report survives the deletion, so attendance history that has to outlive an account must be exported or recorded elsewhere first. Deleting an event cascades in the other direction: the event's changes go with it, while a guest's name row stays, because it is shared between events.
+
+## Risks and limits
+- Staff access is group membership, so everyone in `styrelse`, `admin`, `fotograf` and `rösträknare` can see the code and the change log. The app has no permission of its own that narrows the overview page; only the admin edit pages use model permissions.
+- The attendee list on the event page is public to anyone who can open the page, including guests' names. Only the change log is behind `user.is_staff`. If a meeting's attendee list should not be public, that is not a setting today.
+- The code is a proof of presence, not a credential: six digits, displayed to the room, with no attempt limit.
+- An ended event is still reachable and still accepts check-ins, because nothing reads `has_ended`.
+- The attendee list is a snapshot from the request, and the broadcast that would fix it has no consumer.
+- Deleting a change row in the admin changes who counts as present, because presence is read from the newest row.
+- The suite runs on SQLite, so the two `PresentAttendeesTests` cases, the only tests of `present_attendees()`, are skipped in CI and the method's behaviour on PostgreSQL is verified only when somebody runs them there.
+
+## Extending
+- Consume the `attendance_change` broadcast from `detail.js` or a staff view to make the attendee list live; the write path already sends it.
+- Give the consumer tests a database setup that survives the connection `close_old_connections()` closes, so the whole file can run against PostgreSQL and not only on SQLite.
+- Add pagination or a date filter to `AttendanceEventsView` if the event list grows.
+- Add an attempt limit to the code input if guessing matters, and decide first what the limit is keyed on, because a session cookie is thrown away by a script.
