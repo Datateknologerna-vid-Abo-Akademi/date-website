@@ -30,6 +30,16 @@ div a:hover{
 }
 /* ---- */
 
+.partner-link {
+    display: inline-block;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.partner-link:hover {
+    transform: scale(1.03);
+    opacity: 0.75;
+}
+
 .break-words{
     word-break: break-all;
     word-break: break-word;
@@ -112,6 +122,10 @@ div a:hover{
 @media (max-width: 767.98px) {
     .association-footer-brand .footer-img {
         margin-left: 8px;
+    }
+
+    .date-footer-partner .footer-img {
+        max-height: 120px;
     }
 }
 
