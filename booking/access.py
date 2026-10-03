@@ -202,9 +202,9 @@ def _stored_token(value) -> str:
 def _room_state(request, key):
     """The per-room mapping a session key holds, ignoring anything else.
 
-    A session written by an older release holds a bare token or counter under
-    these keys rather than a mapping. It is treated as empty instead of being
-    migrated: the visitor is asked for the code once more and the session heals.
+    A value that is not a mapping is read as empty rather than trusted: a session
+    is client-visible state, and a shape this code does not recognise should cost
+    the visitor one more code entry, not a server error.
     """
     stored = request.session.get(key)
     return stored if isinstance(stored, dict) else {}

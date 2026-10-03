@@ -52,6 +52,7 @@ Open a booking to change it. All fields can be edited: **Utrymme**, **Bokare** (
 - **To move a booking**, change **Starttid** or **Sluttid** and save.
 - **To cancel a booking**, delete it. Deletion cannot be undone, so check the row before confirming.
 - A booker can also cancel without you. A member does it on their own page, which the booking pages link to when they have something upcoming. Somebody without an account pastes the code from their confirmation email on the cancellation page.
+- That cancellation page is not linked from anywhere on the site, on purpose: it is useless without a code, and the code only ever arrives by email. A booker who has lost the email has to come to you, and you can delete the booking from **Bokningar** instead.
 - The overlap rule is checked here too. Saving a booking that overlaps another booking in the same room is refused with "Utrymmet är redan bokat under denna tid.".
 - The end time must be later than the start time, otherwise the save is refused.
 - A new booking cannot start in the past: it is refused with "Starttiden kan inte vara i det förflutna.". A few minutes are allowed, because a visitor filling in the form by hand can be a moment late. A booking that already exists keeps whatever times it has, so you can still correct the description of one whose time is over.
@@ -145,12 +146,15 @@ How to grant them: open the group on the **Grupper** (**Groups**) page in the ad
 
 ## Troubleshooting
 **An outside booker says the code is rejected.**
-- The code has been rotated since it was shared. Check **Bokningsinställningar** for **Aktuell bokningskod** and pass that on. The old code works for 15 minutes after a rotation and then stops.
+- The code has been rotated since it was shared. Open **Booking › Utrymmen** and read that room's **Aktuell bokningskod**, then pass it on. The old code works for 15 minutes after a rotation and then stops.
 - Or the booker typed a wrong code five times and is locked out. The lockout is tied to that visitor's browser and clears by itself after 15 minutes. Using another browser or device starts fresh.
 
 **A room is missing from the public list.**
 - Every room is listed while its row exists, so a missing room has been deleted. Deleting a room deletes its bookings, so restore it from a database backup if that was not intended.
 - If the room is listed but cannot be booked for a period, look at its **Stängda perioder** table.
+
+**You saved a booking and were told it had been removed.**
+- Somebody cancelled it while your page was open. Nothing was written, which is deliberate: without that check the save would have put the row back after the booker was told it was gone. Reload the page to see the current list.
 
 **A booking was rejected because the room is closed.**
 - A closure covers part of that time. Open the room's page or **Booking › Stängda perioder** and check the period, then either shorten it or pick another time.

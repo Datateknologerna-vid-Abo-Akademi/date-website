@@ -1,11 +1,10 @@
 """Email notifications for bookings.
 
-The person who booked is told either way, member or not. A member used to get
-nothing, on the reasoning that the booking is visible in their account, but the
-confirmation and the calendar invite are worth having for both, and the only
-part that differs is how the booking is cancelled: a member cancels from their
-own account, so their mail carries no code, and somebody without an account has
-no account to be checked against, so theirs carries one.
+The person who booked is told either way, member or not: the confirmation and
+the calendar invite are worth having whoever booked, and what differs is how the
+booking is cancelled. A member cancels from their own account, so their mail
+carries no code, and somebody without an account has nothing else to be checked
+against, so theirs carries one.
 
 The page says the same thing when the booking is made. This mail complements the
 on-page confirmation, and the message on the page stays whether or not the
