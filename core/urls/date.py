@@ -24,6 +24,7 @@ urlpatterns = build_urlpatterns(
     'ckeditor',
     'publications',
     'alumni',
+    'attendance',
     # Room booking. Mounted only when the capability is on, so a release can
     # hide the pages without changing the installed app list.
     *(['booking'] if settings.BOOKING_ENABLED else []),

@@ -347,6 +347,7 @@ msgstr "Production"
 #: core/settings/sf.py:40
 msgid "Hemort"
 msgstr "Home town"
+
 #: ctf/admin.py:22 events/admin.py:142 lucia/admin.py:30 news/admin.py:31
 #: polls/admin.py:54
 msgid "publicering"
@@ -468,9 +469,7 @@ msgstr "Bookings"
 msgid "Rooms"
 msgstr "Rooms"
 
-
-#: ctf/admin.py:56
-#: templates/common/ctf/post_mortem_index.html:13
+#: ctf/admin.py:56 templates/common/ctf/post_mortem_index.html:13
 msgid "Post-mortems"
 msgstr "Post-mortems"
 
@@ -2354,10 +2353,8 @@ msgstr ""
 "for all members."
 
 #: templates/impuls/date/components/extras.html:6
-msgid ""
-"Om du upplever trakasserier i samband med Impuls verksamhet, vänligen"
-msgstr ""
-"If you encounter harassment during the activity of Impuls, please"
+msgid "Om du upplever trakasserier i samband med Impuls verksamhet, vänligen"
+msgstr "If you encounter harassment during the activity of Impuls, please"
 
 #: templates/date/date/components/header.html:8
 msgid "Datateknologerna"
@@ -2393,135 +2390,6 @@ msgstr "Partner logo"
 msgid "Vill du samarbeta med Pulterit?"
 msgstr "Do you want to collaborate with Pulterit ry?"
 
-#~ msgid "Författare"
-#~ msgstr "Author"
-
-#~ msgid "first"
-#~ msgstr "first"
-
-#, python-format
-#~ msgid "Page %(page_number)s of %(total_pages)s."
-#~ msgstr "Page %(page_number)s of %(total_pages)s."
-
-#~ msgid "last"
-#~ msgstr "last"
-
-#~ msgid "Kemistbaal Anmälning"
-#~ msgstr "Kemistbaal Registration"
-
-#~ msgid ""
-#~ "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på "
-#~ "reservlistan och meddelas om du får plats."
-#~ msgstr ""
-#~ "The event is full! By signing up you will be put on the reserve list, and "
-#~ "you will be contacted in case a spot frees up."
-
-#~ msgid "Developed by"
-#~ msgstr "Developed by"
-
-#~ msgid "Please check this box to continue."
-#~ msgstr "Please check this box to continue."
-
-#~ msgid "sedan"
-#~ msgstr "ago"
-
-#~ msgid "om"
-#~ msgstr "in"
-
-#~ msgid "Bilder"
-#~ msgstr "Pictures"
-
-#~ msgid "Det finns"
-#~ msgstr "There are"
-
-#~ msgid "platser!"
-#~ msgstr "places!"
-
-#~ msgid "Skriven "
-#~ msgstr "Written"
-
-#~ msgid "av"
-#~ msgstr "by"
-
-#~ msgid " av "
-#~ msgstr "by"
-
-#~ msgid "Page"
-#~ msgstr "Page"
-
-#~ msgid "of"
-#~ msgstr "of"
-
-#~ msgid "Joke"
-#~ msgstr "Joke"
-
-#~ msgid "Medlemsprofil"
-#~ msgstr "Member profile"
-
-#~ msgid "Tvåfaktorsautentisering"
-#~ msgstr "Two-factor authentication"
-
-#~ msgid "Aktiverad"
-#~ msgstr "Enabled"
-
-#~ msgid "Inte aktiverad"
-#~ msgstr "Not enabled"
-
-#~ msgid "Email:"
-#~ msgstr "Email:"
-
-#~ msgid "Förnamn:"
-#~ msgstr "First name:"
-
-#~ msgid "Efternamn:"
-#~ msgstr "Last name:"
-
-#~ msgid "Telefonnummer:"
-#~ msgstr "Phone number:"
-
-#~ msgid "Adress:"
-#~ msgstr "Address:"
-
-#~ msgid "Zip kod:"
-#~ msgstr "ZIP code:"
-
-#~ msgid "Stad:"
-#~ msgstr "City:"
-
-#~ msgid "Land:"
-#~ msgstr "Country:"
-
-#~ msgid "Medlems typ:"
-#~ msgstr "Membership type:"
-
-#, python-format
-#~ msgid ""
-#~ "För att ändra ditt användarnamn eller e-post, kontakta styrelsen på "
-#~ "%(ASSOCIATION_EMAIL)s"
-#~ msgstr ""
-#~ "To change your username or email address, contact the board at "
-#~ "%(ASSOCIATION_EMAIL)s"
-
-#~ msgid "Enter your username or email address and password."
-#~ msgstr "Enter your username or email address and password."
-
-#~ msgid "Back to profile"
-#~ msgstr "Back to profile"
-
-#~ msgid "Registreringsdatum"
-#~ msgstr "Registration date"
-
-#~ msgid "Processerad"
-#~ msgstr "Processed"
-
-#~ msgid "Alumnregistrering"
-#~ msgstr "Alumni registration"
-
-#~ msgid "Alumnregistreringar"
-#~ msgstr "Alumni registrations"
-
-#~ msgid "Mera nyheter..."
-#~ msgstr "More news..."
 #: templates/impuls/date/components/header.html:12
 msgid "Impuls"
 msgstr "Impuls"
@@ -2546,31 +2414,49 @@ msgstr ""
 "active across faculty and association boundaries, both within psychology and "
 "with other subjects."
 
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
 msgid "Klotterplanket"
 msgstr "Scribble board"
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
-msgid "Skriv ett inlägg anonymt med en pseudonym. Inlägg som bryter mot reglerna för webbplatsen kan tas bort."
-msgstr "Write a post anonymously with a pseudonym. Posts that break the website rules may be removed."
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
+msgid ""
+"Skriv ett inlägg anonymt med en pseudonym. Inlägg som bryter mot reglerna "
+"för webbplatsen kan tas bort."
+msgstr ""
+"Write a post anonymously with a pseudonym. Posts that break the website "
+"rules may be removed."
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
 msgid "Pseudonym"
 msgstr "Pseudonym"
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
 msgid "Meddelande"
 msgstr "Message"
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
 msgid "Inlägg"
 msgstr "Posts"
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
 msgid "Inga inlägg ännu. Skriv det första!"
 msgstr "No posts yet. Write the first one!"
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
 msgid "Ditt inlägg har lagts till!"
 msgstr "Your post has been added!"
 
 #: klotterplanket/views.py
 msgid "Botkontrollen misslyckades, försök igen."
 msgstr "The bot check failed, try again."
+
 #: klotterplanket/views.py
 msgid "Kontrollera pseudonymen och meddelandet."
 msgstr "Check the pseudonym and the message."
@@ -2579,7 +2465,6 @@ msgstr "Check the pseudonym and the message."
 #, python-format
 msgid "Kunde inte ladda upp följande filer: %(files)s"
 msgstr "Could not upload the following files: %(files)s"
-
 
 #: booking/access.py:324 booking/views.py:117
 msgid "Kunde inte verifiera att du inte är en robot. Försök igen."
@@ -2727,8 +2612,7 @@ msgstr "No account"
 msgid ""
 "Berätta kort vad utrymmet ska användas till. Endast styrelsen ser detta."
 msgstr ""
-"Briefly describe what the room will be used for. Only the board sees "
-"this."
+"Briefly describe what the room will be used for. Only the board sees this."
 
 #: booking/models.py:264
 msgid "Starttiden kan inte vara i det förflutna."
@@ -2739,8 +2623,8 @@ msgid ""
 "Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som "
 "du får av styrelsen."
 msgstr ""
-"With an account you book straight away. Without one you need a booking "
-"code, which you get from the board."
+"With an account you book straight away. Without one you need a booking code, "
+"which you get from the board."
 
 #: templates/common/booking/partials/board_contact.html:4
 #, python-format
@@ -2763,8 +2647,8 @@ msgid ""
 "Visas offentligt där koden efterfrågas, i stället för standardtexten. Lämna "
 "tomt om standardtexten räcker."
 msgstr ""
-"Shown publicly where the code is asked for, instead of the default "
-"text. Leave it empty if the default text is enough."
+"Shown publicly where the code is asked for, instead of the default text. "
+"Leave it empty if the default text is enough."
 
 #: templates/common/booking/partials/code_form.html:3
 msgid "Bokningskoden får du av styrelsen."
@@ -2775,8 +2659,8 @@ msgid ""
 "Har du ett konto på webbplatsen kan du logga in i stället och behöver då "
 "ingen kod."
 msgstr ""
-"If you have an account on the website you can log in instead, and then "
-"you need no code."
+"If you have an account on the website you can log in instead, and then you "
+"need no code."
 
 #: booking/admin.py:166 booking/models.py:66
 msgid "Senast bytt"
@@ -2796,8 +2680,8 @@ msgid ""
 "Ny bokningskod för %(room)s: %(code)s. Den förra koden fungerar i 15 minuter "
 "till."
 msgstr ""
-"New booking code for %(room)s: %(code)s. The previous code keeps "
-"working for 15 more minutes."
+"New booking code for %(room)s: %(code)s. The previous code keeps working for "
+"15 more minutes."
 
 #: booking/admin.py:236
 msgid ""
@@ -2805,25 +2689,25 @@ msgid ""
 "under Bokningar › Utrymmen. Här står bara texten som besökare utan konto får "
 "läsa."
 msgstr ""
-"Every room has its own booking code, shown and rotated on the room "
-"page under Booking › Rooms. Only the text that a visitor without an "
-"account reads lives here."
+"Every room has its own booking code, shown and rotated on the room page "
+"under Booking › Rooms. Only the text that a visitor without an account reads "
+"lives here."
 
 #: booking/models.py:63
 msgid ""
 "Räknas upp varje gång utrymmets kod byts. Koden härleds ur den och kan inte "
 "läsas av härifrån."
 msgstr ""
-"Counted up every time the room's code is rotated. The code is derived "
-"from it and cannot be read back from here."
+"Counted up every time the room's code is rotated. The code is derived from "
+"it and cannot be read back from here."
 
 #: booking/models.py:70
 msgid ""
 "När utrymmets kod senast byttes. Gör att den förra koden fungerar en stund "
 "till."
 msgstr ""
-"When the room's code was last rotated. Lets the previous code keep "
-"working for a while."
+"When the room's code was last rotated. Lets the previous code keep working "
+"for a while."
 
 #: booking/admin.py:154
 msgid "Bokningsbara tider"
@@ -2873,16 +2757,15 @@ msgstr "The room is closed for part of that time."
 #, python-format
 msgid "Utrymmet kan bara bokas mellan %(from)s och %(until)s samma dag."
 msgstr ""
-"The room can only be booked between %(from)s and %(until)s on the same "
-"day."
+"The room can only be booked between %(from)s and %(until)s on the same day."
 
 #: booking/models.py:76
 msgid ""
 "Lämna båda tomma för att tillåta bokning dygnet runt. Med tider gäller de "
 "varje dag."
 msgstr ""
-"Leave both empty to allow booking at any hour. With hours set, they "
-"apply every day."
+"Leave both empty to allow booking at any hour. With hours set, they apply "
+"every day."
 
 #: booking/models.py:82
 msgid "En bokning måste börja och sluta inom samma dygn när tider är satta."
@@ -2961,22 +2844,21 @@ msgid ""
 "Bokade du utan konto fick du en avbokningskod i bekräftelsemejlet. Klistra "
 "in den här."
 msgstr ""
-"If you booked without an account, the confirmation email has a "
-"cancellation code. Paste it here."
+"If you booked without an account, the confirmation email has a cancellation "
+"code. Paste it here."
 
 #: templates/common/booking/email/booking_confirmation.html:60
 #: templates/common/booking/email/booking_confirmation.txt:10
 msgid "Avboka bokningen på avbokningssidan. Där anger du koden nedan."
 msgstr ""
-"Cancel the booking on the cancellation page. You enter the code below "
-"there."
+"Cancel the booking on the cancellation page. You enter the code below there."
 
 #: templates/common/booking/email/booking_confirmation.html:62
 #: templates/common/booking/email/booking_confirmation.txt:11
 msgid "Kontakta styrelsen om du vill avboka bokningen. Uppge koden nedan."
 msgstr ""
-"Contact the board if you want to cancel the booking. Give them the "
-"code below."
+"Contact the board if you want to cancel the booking. Give them the code "
+"below."
 
 #: templates/common/booking/email/booking_confirmation.html:80
 #: templates/common/booking/email/booking_confirmation.txt:14
@@ -3033,8 +2915,7 @@ msgstr "My bookings"
 msgid ""
 "Här ser du dina kommande bokningar och kan ta bort en som inte längre passar."
 msgstr ""
-"Here are your upcoming bookings, and you can remove one that no longer "
-"suits."
+"Here are your upcoming bookings, and you can remove one that no longer suits."
 
 #: templates/common/booking/my_bookings.html:36
 msgid "Du har inga kommande bokningar."
@@ -3048,8 +2929,8 @@ msgstr "Sign in on My bookings and remove the booking there."
 #: booking/admin.py:250
 msgid "Bokningen hann tas bort av någon annan och sparades därför inte."
 msgstr ""
-"The booking was removed by somebody else in the meantime, so it was "
-"not saved."
+"The booking was removed by somebody else in the meantime, so it was not "
+"saved."
 
 #: core/admin_ui.py:114
 msgid "Closed periods"
@@ -3066,3 +2947,330 @@ msgstr "Two bookings in the same room overlap each other."
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"
 msgstr "No upcoming bookings found"
+
+#: attendance/models.py:30
+msgid "Tillåt icke-medlemmar att delta"
+msgstr "Allow non-member attendees"
+
+#: attendance/models.py:31
+msgid "Kodens genereringsnyckel"
+msgstr "Code generation secret"
+
+#: attendance/models.py:32
+msgid "Kodens giltighetsperiod (sekunder)"
+msgstr "Code validity period (seconds)"
+
+#: attendance/models.py:41
+msgctxt "singular"
+msgid "närvaroevenemang"
+msgstr "attendance event"
+
+#: attendance/models.py:42
+msgctxt "plural"
+msgid "närvaroevenemang"
+msgstr "attendance events"
+
+#: attendance/models.py:135
+msgid "deltagare, icke-medlem"
+msgstr "attendee, non-member"
+
+#: attendance/models.py:136
+msgid "deltagare, icke-medlemmar"
+msgstr "attendees, non-members"
+
+#: attendance/models.py:143
+msgid "icke-medlem"
+msgstr "non-member"
+
+#: attendance/models.py:147
+msgid "Icke-medlem"
+msgstr "Non-member"
+
+#: attendance/models.py:155
+msgid "Anlände"
+msgstr "Entered"
+
+#: attendance/models.py:156
+msgid "Lämnade"
+msgstr "Left"
+
+#: attendance/models.py:160
+msgctxt "left/entered some event"
+msgid "Anlände"
+msgstr "Entered"
+
+#: attendance/models.py:161
+msgctxt "left/entered some event"
+msgid "Lämnade"
+msgstr "Left"
+
+#: attendance/models.py:162
+msgctxt "left/entered in general"
+msgid "Anlände"
+msgstr "Entered"
+
+#: attendance/models.py:163
+msgctxt "left/entered in general"
+msgid "Lämnade"
+msgstr "Left"
+
+#: attendance/models.py:165 templates/common/attendance/index.html:12
+msgid "Närvaroevenemang"
+msgstr "Attendance event"
+
+#: attendance/models.py:176
+msgid "Tidpunkt"
+msgstr "Timestamp"
+
+#: attendance/models.py:183
+msgid "närvaroändring"
+msgstr "attendance change"
+
+#: attendance/models.py:184
+msgid "närvaroändringar"
+msgstr "attendance changes"
+
+#: attendance/models.py:195
+#, python-format
+msgid "Exakt en av '%(user)s' eller '%(non_member)s' måste anges."
+msgstr "One and only one of '%(user)s' or '%(non_member)s' must be specified."
+
+#: attendance/models.py:220
+msgid "<ogiltig>"
+msgstr "<invalid>"
+
+#: attendance/models.py:225
+#, python-format
+msgid "%(user)s %(action)s %(event)s den %(date)s kl %(time)s"
+msgstr "%(user)s %(action)s %(event)s at %(date)s, %(time)s"
+
+#: attendance/views.py:79
+msgid "Fel kod"
+msgstr "Incorrect code"
+
+#: attendance/views.py:85
+msgid "Namn måste anges om du inte är inloggad"
+msgstr "Name must be specified if you are not signed in"
+
+#: attendance/views.py:102
+msgid "Du kan inte gå in i ett evenemang var du redan är närvarande"
+msgstr "You cannot enter an event where you are already present"
+
+#: attendance/views.py:106
+msgid "Du kan inte gå ut ur ett evenemang var du inte är närvarande"
+msgstr "You cannot leave an event where you are not present"
+
+#: templates/common/attendance/detail.html:5
+#: templates/common/attendance/overview.html:5
+#, python-format
+msgid "Närvaro för %(title)s"
+msgstr "Attendance for %(title)s"
+
+#: templates/common/attendance/detail.html:21
+msgid "Till översiktsvyn"
+msgstr "To overview"
+
+#: templates/common/attendance/detail.html:31
+#, python-format
+msgid "Börjar: %(start)s"
+msgstr "Starts: %(start)s"
+
+#: templates/common/attendance/detail.html:36
+#, python-format
+msgid "Slutar: %(end)s"
+msgstr "Ends: %(end)s"
+
+#: templates/common/attendance/detail.html:43
+msgid "Du är"
+msgstr "You are"
+
+#: templates/common/attendance/detail.html:45
+msgid "närvarande"
+msgstr "present"
+
+#: templates/common/attendance/detail.html:47
+msgid "inte närvarande"
+msgstr "not present"
+
+#: templates/common/attendance/detail.html:64
+msgid ""
+"Du är inte inloggad. Fyll i ditt namn nedan om du inte har ett konto. Om du "
+"har ett konto var vänlig och logga in."
+msgstr ""
+"You are not signed in. Enter your name below if you do not have an account. "
+"Please sign in if you have an account."
+
+#: templates/common/attendance/detail.html:94
+msgid "Kod"
+msgstr "Code"
+
+#: templates/common/attendance/detail.html:99
+msgid "Skanna QR-kod"
+msgstr "Scan QR code"
+
+#: templates/common/attendance/detail.html:102
+msgid "Sluta skanna"
+msgstr "Stop scanning"
+
+#: templates/common/attendance/detail.html:111
+msgid "Tillåt JavaScript för att skanna QR-koder"
+msgstr "Allow JavaScript to scan QR codes"
+
+#: templates/common/attendance/detail.html:122
+msgid "Gå in"
+msgstr "Enter"
+
+#: templates/common/attendance/detail.html:125
+msgid "Gå ut"
+msgstr "Leave"
+
+#: templates/common/attendance/detail.html:133
+msgid "Närvarande"
+msgstr "Present"
+
+#: templates/common/attendance/detail.html:143
+msgid "Närvaroändringar"
+msgstr "Attendance changes"
+
+#: templates/common/attendance/detail.html:148
+#, python-format
+msgid "%(name)s %(type_l)s den %(date)s kl %(time)s"
+msgstr "%(name)s %(type_l)s at %(date)s, %(time)s"
+
+#: templates/common/attendance/index.html:5
+msgid "Närvaro"
+msgstr "Attendance"
+
+#: templates/common/attendance/index.html:17
+msgid "Inga evenemang"
+msgstr "No events"
+
+#~ msgid "Författare"
+#~ msgstr "Author"
+
+#~ msgid "first"
+#~ msgstr "first"
+
+#, python-format
+#~ msgid "Page %(page_number)s of %(total_pages)s."
+#~ msgstr "Page %(page_number)s of %(total_pages)s."
+
+#~ msgid "last"
+#~ msgstr "last"
+
+#~ msgid "Kemistbaal Anmälning"
+#~ msgstr "Kemistbaal Registration"
+
+#~ msgid ""
+#~ "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på "
+#~ "reservlistan och meddelas om du får plats."
+#~ msgstr ""
+#~ "The event is full! By signing up you will be put on the reserve list, and "
+#~ "you will be contacted in case a spot frees up."
+
+#~ msgid "Developed by"
+#~ msgstr "Developed by"
+
+#~ msgid "Please check this box to continue."
+#~ msgstr "Please check this box to continue."
+
+#~ msgid "sedan"
+#~ msgstr "ago"
+
+#~ msgid "om"
+#~ msgstr "in"
+
+#~ msgid "Bilder"
+#~ msgstr "Pictures"
+
+#~ msgid "Det finns"
+#~ msgstr "There are"
+
+#~ msgid "platser!"
+#~ msgstr "places!"
+
+#~ msgid "Skriven "
+#~ msgstr "Written"
+
+#~ msgid "av"
+#~ msgstr "by"
+
+#~ msgid " av "
+#~ msgstr "by"
+
+#~ msgid "Page"
+#~ msgstr "Page"
+
+#~ msgid "of"
+#~ msgstr "of"
+
+#~ msgid "Joke"
+#~ msgstr "Joke"
+
+#~ msgid "Medlemsprofil"
+#~ msgstr "Member profile"
+
+#~ msgid "Tvåfaktorsautentisering"
+#~ msgstr "Two-factor authentication"
+
+#~ msgid "Aktiverad"
+#~ msgstr "Enabled"
+
+#~ msgid "Inte aktiverad"
+#~ msgstr "Not enabled"
+
+#~ msgid "Email:"
+#~ msgstr "Email:"
+
+#~ msgid "Förnamn:"
+#~ msgstr "First name:"
+
+#~ msgid "Efternamn:"
+#~ msgstr "Last name:"
+
+#~ msgid "Telefonnummer:"
+#~ msgstr "Phone number:"
+
+#~ msgid "Adress:"
+#~ msgstr "Address:"
+
+#~ msgid "Zip kod:"
+#~ msgstr "ZIP code:"
+
+#~ msgid "Stad:"
+#~ msgstr "City:"
+
+#~ msgid "Land:"
+#~ msgstr "Country:"
+
+#~ msgid "Medlems typ:"
+#~ msgstr "Membership type:"
+
+#, python-format
+#~ msgid ""
+#~ "För att ändra ditt användarnamn eller e-post, kontakta styrelsen på "
+#~ "%(ASSOCIATION_EMAIL)s"
+#~ msgstr ""
+#~ "To change your username or email address, contact the board at "
+#~ "%(ASSOCIATION_EMAIL)s"
+
+#~ msgid "Enter your username or email address and password."
+#~ msgstr "Enter your username or email address and password."
+
+#~ msgid "Back to profile"
+#~ msgstr "Back to profile"
+
+#~ msgid "Registreringsdatum"
+#~ msgstr "Registration date"
+
+#~ msgid "Processerad"
+#~ msgstr "Processed"
+
+#~ msgid "Alumnregistrering"
+#~ msgstr "Alumni registration"
+
+#~ msgid "Alumnregistreringar"
+#~ msgstr "Alumni registrations"
+
+#~ msgid "Mera nyheter..."
+#~ msgstr "More news..."
