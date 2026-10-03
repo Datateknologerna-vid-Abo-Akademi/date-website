@@ -26,6 +26,8 @@ A closure blocks new bookings in that period and is listed on the room's public 
 
 A closure does **not** touch bookings that were already made inside it. Closing a period because something is happening to the room is not the same as cancelling what somebody booked, and the site will not delete a booker's row for you. Check the room's booking table before closing a period, and contact anyone affected: the booking stays in the list and on the public page until you delete it yourself.
 
+Replacing a booking in one save does not work. If you delete one booking and add another that would overlap it, or swap two bookings between slots, the save is refused even though the end result would be valid: each row is checked against what is still in the database before the deletion is applied. Delete and save first, then add the replacement.
+
 ### How long a booking may be
 A booking may run for at most one week. A longer one is refused with "En bokning kan vara i högst en vecka.". There is no limit on how far ahead a room may be booked.
 
@@ -129,7 +131,7 @@ The permissions to grant, by model, with the exact codenames as they appear in t
   - `booking.add_closure`
   - `booking.change_closure`
   - `booking.delete_closure`
-  - Without these four the room page shows no **Stängda perioder** table at all, because Django hides an inline the user may not change, so a board that can edit rooms but not closures sees no closures and no explanation.
+  - `booking.view_closure` is what makes the table appear, and it is enough to read it. Adding a period needs `add_closure`, and changing or removing one needs `change_closure` and `delete_closure`. Without any view permission the table is hidden entirely, so a board that may edit rooms but not see closures gets no explanation of why a period is closed.
 - Bokningsinställningar (BookingSettings):
   - `booking.view_bookingsettings`
   - `booking.change_bookingsettings`

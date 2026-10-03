@@ -289,6 +289,26 @@
     }
 }
 
+/* A row is a flex line, and a room name or a closure description may run to 255
+   characters. Letting the line wrap and the items shrink cut the overflow at a
+   390px layout roughly in half, from 893px to 675px on a room page and from
+   782px to 585px on the member's list. It does not finish the job: something in
+   the ancestor chain is still wider than the viewport, and this ruleset is the
+   part that was measured rather than guessed. */
+.booking-list-item {
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+}
+
+.booking-list-item > * {
+    min-width: 0;
+}
+
+.booking-room-name {
+    overflow-wrap: anywhere;
+}
+
+
 .booking-cancel-form {
     margin-left: auto;
 }

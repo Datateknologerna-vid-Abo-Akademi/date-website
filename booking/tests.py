@@ -1828,6 +1828,39 @@ class RoomCodeAdminTests(PinnedNowMixin, TestCase):
         self.assertEqual(body.count('redan bokat'), 2)
         self.assertNotIn('överlappar varandra', body)
 
+    def test_a_room_and_its_bookings_can_be_created_together_but_not_overnight(self):
+        # The parent room has no primary key during inline validation, so a check
+        # that waited for one would let this through on a room with a daily
+        # window. The hours rule needs no database, so it runs on the attached
+        # room whether or not it has been saved.
+        start = timezone.localtime(timezone.now()).replace(second=0, microsecond=0) + datetime.timedelta(days=1)
+        data = {
+            'name': 'Nytt utrymme med tider',
+            'description': '',
+            'bookable_from': '08:00:00',
+            'bookable_until': '22:00:00',
+            '_save': 'Spara',
+            'bookings-TOTAL_FORMS': '1',
+            'bookings-INITIAL_FORMS': '0',
+            'bookings-MIN_NUM_FORMS': '0',
+            'bookings-MAX_NUM_FORMS': '1000',
+            'bookings-0-start_0': start.strftime('%Y-%m-%d'),
+            'bookings-0-start_1': '21:00:00',
+            'bookings-0-end_0': (start + datetime.timedelta(days=1)).strftime('%Y-%m-%d'),
+            'bookings-0-end_1': '02:00:00',
+            'bookings-0-booker_name': 'Nattlig',
+            'closures-TOTAL_FORMS': '0',
+            'closures-INITIAL_FORMS': '0',
+            'closures-MIN_NUM_FORMS': '0',
+            'closures-MAX_NUM_FORMS': '1000',
+        }
+
+        response = self.client.post(reverse('admin:booking_room_add'), data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'kan bara bokas mellan')
+        self.assertFalse(Room.objects.filter(name='Nytt utrymme med tider').exists())
+
     def test_two_overlapping_rows_in_one_submission_are_refused(self):
         # Neither row is in the database when the other is validated, so the
         # model's own check cannot see this pair. Without a formset that compares

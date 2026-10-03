@@ -269,11 +269,17 @@ class Booking(models.Model):
         if self.author_id is None and not (self.booker_name or '').strip():
             errors['booker_name'] = _('Ange namnet på den som bokar.')
 
-        if not errors and self.room_id and self.start and self.end:
+        # The hours rule is checked on the attached room rather than on a saved
+        # one: an admin can create a room and its bookings in a single submission,
+        # and the parent has no primary key yet, so a check that waited for one
+        # would let an overnight booking through on a room with a daily window.
+        if not errors and self.start and self.end:
             hours_error = self._bookable_hours_error()
             if hours_error:
                 errors['start'] = hours_error
-            elif Closure.objects.filter(
+
+        if not errors and self.room_id and self.start and self.end:
+            if Closure.objects.filter(
                 room_id=self.room_id,
                 start__lt=self.end,
                 end__gt=self.start,
