@@ -698,17 +698,29 @@ class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Booking.objects.exists())
 
-    def test_the_gate_says_where_the_code_comes_from(self):
+    def test_the_gate_explains_the_code_without_naming_a_channel(self):
         # A visitor who has never booked before cannot guess that the code
-        # exists, who holds it or how to ask for it. The whole sentence is
-        # asserted, not the address on its own: the footer carries the address
-        # on every page, so a bare address would prove nothing here.
+        # exists or who holds it, so the page has to say so. It must not say how
+        # the code reaches them: the board hands it out however it likes, and a
+        # sentence promising email would be wrong for most of them.
         response = self.client.get(self.room_url)
 
-        self.assertContains(
-            response,
-            f'Bokningskoden får du av styrelsen via {settings.CONTENT_VARIABLES["ASSOCIATION_EMAIL"]}',
-        )
+        self.assertContains(response, 'Bokningskoden får du av styrelsen.')
+        self.assertNotContains(response, 'får du av styrelsen via')
+
+    def test_the_gate_shows_the_boards_own_instructions_when_set(self):
+        # The board can say how the code is obtained, for example that it is
+        # given out at the office, without a code change.
+        settings_row = BookingSettings.get_solo()
+        settings_row.code_instructions = 'Koden delas ut i kansliet på onsdagar.'
+        settings_row.save()
+
+        response = self.client.get(self.room_url)
+
+        self.assertContains(response, 'Koden delas ut i kansliet på onsdagar.')
+        self.assertNotContains(response, 'Bokningskoden får du av styrelsen.')
+        # The fact about accounts still holds and is still shown.
+        self.assertContains(response, 'behöver då ingen kod')
 
     def test_the_gate_explains_the_code_in_english_too(self):
         # The English page is what an outsider who does not read Swedish sees,
@@ -724,12 +736,8 @@ class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
     def test_the_room_list_says_that_a_code_is_needed(self):
         response = self.client.get(self.index_url)
 
-        self.assertContains(response, 'bokningskod')
-        self.assertContains(
-            response,
-            f'Utan konto behöver du en bokningskod, som du får av styrelsen via '
-            f'{settings.CONTENT_VARIABLES["ASSOCIATION_EMAIL"]}',
-        )
+        self.assertContains(response, 'bokningskod, som du får av styrelsen')
+        self.assertNotContains(response, 'får av styrelsen via')
 
     def test_the_booking_page_names_the_board_as_the_contact(self):
         self.unlock()
@@ -1290,6 +1298,25 @@ class BookingSettingsAdminTests(PinnedNowMixin, TestCase):
         # assertions above.
         self.assertRegex(html, f'Aktuell bokningskod[\\s\\S]{{0,400}}?{re.escape(code)}')
         self.assertRegex(html, f'Koden byts ut[\\s\\S]{{0,400}}?{re.escape(rotation)}')
+
+    def test_the_board_can_write_how_the_code_is_handed_out(self):
+        booking_settings = BookingSettings.get_solo()
+        url = reverse('admin:booking_bookingsettings_change', args=[booking_settings.pk])
+
+        response = self.client.get(url)
+        self.assertContains(response, 'name="code_instructions"')
+
+        response = self.client.post(
+            url,
+            {
+                'rotation_period': BookingSettings.ROTATION_WEEKLY,
+                'code_instructions': 'Koden står på dörren till kansliet.',
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        booking_settings.refresh_from_db()
+        self.assertEqual(booking_settings.code_instructions, 'Koden står på dörren till kansliet.')
 
 
 class BookingEmailTests(PinnedNowMixin, TestCase):

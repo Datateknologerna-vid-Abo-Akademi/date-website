@@ -12,11 +12,24 @@ from core.utils import validate_captcha
 
 from . import access, emails
 from .forms import AnonymousBookingForm, BookingForm
-from .models import Booking, Room
+from .models import Booking, BookingSettings, Room
 
 logger = logging.getLogger('date')
 
 UPCOMING_BOOKING_LIMIT = 50
+
+
+def _code_instructions():
+    """The board's own wording for how a visitor is given the code, if any.
+
+    Read directly rather than through ``get_solo()``: a public page has no
+    reason to create the settings row, and a row that is not there yet simply
+    means no text of the board's own. The channel itself is deliberately not
+    decided anywhere in this app, because the board is the one that hands the
+    code out, and it does that however it likes.
+    """
+    settings_row = BookingSettings.objects.filter(pk=1).only('code_instructions').first()
+    return settings_row.code_instructions if settings_row else ''
 
 
 def _upcoming_bookings(rooms=None):
@@ -59,6 +72,7 @@ def room_detail(request, pk):
             context={
                 'room': room,
                 'bookings': _upcoming_bookings(rooms=[room])[:UPCOMING_BOOKING_LIMIT],
+                'code_instructions': _code_instructions(),
             },
             next_url=reverse('booking:room_detail', args=[room.pk]),
             at=at,

@@ -53,9 +53,10 @@ What is public and what is not:
 If the member account behind a booking is later deleted, the booking itself stays, and it keeps showing the name that was recorded when it was made.
 
 ## The Rotating Code
-Open **Booking › Bokningsinställningar**. That page shows three things:
+Open **Booking › Bokningsinställningar**. That page shows four things:
 
 - **Kodens rotationsperiod**: how often the code changes.
+- **Så får besökare koden**: the board's own sentence about how a booker gets the code. It is optional; see below.
 - **Aktuell bokningskod**: the code that works right now. It is read-only.
 - **Koden byts ut**: the moment when the code shown stops being current.
 
@@ -72,9 +73,13 @@ To change the period, pick another value in **Kodens rotationsperiod** and save.
 Right after a rotation the previous code keeps working for a short grace period, at most 15 minutes. The grace period is counted from the start of the new period, not from the moment anyone opens the page, so it does not stretch forward with each visit. This is what keeps a booker who copied the code just before the change from being stranded.
 
 ## Telling Bookers the Code
-The board shares the current code with outside bookers through whatever channel it already uses, for example by email or phone. The site does not send the code to anyone.
+The board shares the current code with outside bookers through whatever channel it already uses, for example at the office, by phone, in a group chat or by email. The site does not send the code to anyone, and it deliberately does not say how the code reaches a booker, because that is the board's business rather than the website's.
 
-The website does explain the rest. The room list says that an account books directly and that everyone else needs a code, the page that asks for the code says that the board provides it and names the association address, and the confirmation email repeats that address so the booker knows where to turn when a time has to change.
+The website does explain the rest. The room list says that an account books directly and that everyone else needs a code, and the page that asks for the code says that the board provides it.
+
+**Så får besökare koden** on **Booking › Bokningsinställningar** is where the board writes its own sentence for that page, if the standard text does not fit: "koden delas ut i kansliet på onsdagar", "fråga i Slackkanalen", or whatever the board actually does. It is shown on the page that asks for the code, above the box. Leave it empty and the page says only that the board provides the code. The text is public, so do not put anything there that bookers should not read. It is written once per association and is not translated, the same as a room's name and description.
+
+Whoever is asked for the code always has a way to reach the board: the association address is in the footer of every page, and the code page and the room page repeat it. The confirmation email carries it too, so a booker whose plans change knows where to turn.
 
 A booker who has unlocked the form stays unlocked for the rest of the current period. When the code rotates, every existing unlock ends, and the next visit asks for a code again. If the booker already has the previous code, it still works during the grace period described above.
 

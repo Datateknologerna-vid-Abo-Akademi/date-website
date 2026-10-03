@@ -148,7 +148,7 @@ class BookingSettingsAdmin(ModelAdmin):
         (
             None,
             {
-                'fields': ('rotation_period',),
+                'fields': ('rotation_period', 'code_instructions'),
                 'description': _('Bokningskoden genereras automatiskt och kan inte skrivas in här. Den visas nedan.'),
             },
         ),

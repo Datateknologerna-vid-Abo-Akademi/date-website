@@ -173,6 +173,13 @@ class BookingSettings(models.Model):
         default=ROTATION_WEEKLY,
         help_text=_('Hur ofta bokningskoden byts ut. Koden genereras automatiskt och kan inte ställas in manuellt.'),
     )
+    code_instructions = models.TextField(
+        _('Så får besökare koden'),
+        blank=True,
+        help_text=_(
+            'Visas offentligt där koden efterfrågas, i stället för standardtexten. Lämna tomt om standardtexten räcker.'
+        ),
+    )
 
     class Meta:
         verbose_name = _('Bokningsinställningar')

@@ -109,19 +109,20 @@ msgstr "Päivitä tietosi"
 msgid "Städa upp media"
 msgstr "Siivoa media"
 
-#: archive/models.py:21 archive/models.py:83 events/models.py:212
-#: events/models.py:348 events/models.py:390 exambank/models.py:23
-#: exambank/models.py:82 functionaries/models.py:21 gallery/models.py:50
-#: members/models.py:96 members/models.py:121 news/models.py:15
-#: templates/biocum/events/arsfest.html:92
-#: templates/common/events/arsfest.html:80
-#: templates/common/events/baal_detail.html:73
-#: templates/common/events/detail.html:60
-#: templates/common/events/kk100_detail.html:74
-#: templates/common/events/tomtejakt.html:318
-#: templates/common/events/wappmiddag.html:74
-#: templates/date/events/arsfest.html:86
-#: templates/pulterit/events/arsfest.html:85
+#: archive/models.py:17 archive/models.py:80 booking/forms.py:96
+#: booking/models.py:25 booking/models.py:57 events/models.py:251
+#: events/models.py:409 events/models.py:477 exambank/models.py:23
+#: exambank/models.py:82 functionaries/models.py:21 gallery/models.py:57
+#: members/models.py:108 members/models.py:133 news/models.py:15
+#: templates/biocum/events/arsfest.html:95
+#: templates/common/events/arsfest_base.html:94
+#: templates/common/events/baal_detail.html:83
+#: templates/common/events/detail.html:55
+#: templates/common/events/kk100_detail.html:84
+#: templates/common/events/tomtejakt.html:92
+#: templates/common/events/wappmiddag.html:90
+#: templates/date/events/arsfest.html:95
+#: templates/pulterit/events/arsfest.html:95
 msgid "Namn"
 msgstr "Nimi"
 
@@ -444,7 +445,7 @@ msgstr "Arvaus"
 msgid "Korrekt"
 msgstr "Oikein"
 
-#: ctf/models.py:82
+#: booking/admin.py:123 ctf/models.py:135
 msgid "Tid"
 msgstr "Aika"
 
@@ -608,7 +609,8 @@ msgstr "Ilmoittautuminen"
 msgid "Avanmälningen stängs"
 msgstr "Ilmoittautuminen sulkeutuu"
 
-#: events/models.py:86 news/models.py:40 staticpages/models.py:41
+#: booking/models.py:62 events/models.py:77 news/models.py:40
+#: staticpages/models.py:40
 msgid "Skapad"
 msgstr "Luotu"
 
@@ -965,7 +967,8 @@ msgstr "jäsen"
 msgid "medlemmar"
 msgstr "jäsenet"
 
-#: members/models.py:97
+#: booking/forms.py:54 booking/models.py:26 booking/models.py:61
+#: members/models.py:109
 msgid "Beskrivning"
 msgstr "Kuvaus"
 
@@ -1522,7 +1525,8 @@ msgid_plural "För många försök. Försök igen om %(seconds)s sekunder."
 msgstr[0] "Liian monta yritystä. Yritä uudelleen %(seconds)s sekunnin kuluttua."
 msgstr[1] "Liian monta yritystä. Yritä uudelleen %(seconds)s sekunnin kuluttua."
 
-#: templates/common/archive/exam_password.html:24
+#: templates/common/archive/exam_password.html:30
+#: templates/common/booking/partials/code_form.html:34
 msgid "Fortsätt"
 msgstr "Jatka"
 
@@ -1660,7 +1664,8 @@ msgid "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
 msgstr ""
 "%(association_name)s:n hallitukseen voi ottaa yhteyttä seuraavalla tavalla."
 
-#: templates/common/core/footer.html:31
+#: booking/forms.py:102 booking/models.py:58
+#: templates/common/core/footer.html:34 templates/sf/core/footer.html:58
 msgid "E-post"
 msgstr "Sähköposti"
 
@@ -2613,24 +2618,24 @@ msgid "Kunde inte ladda upp följande filer: %(files)s"
 msgstr "Seuraavia tiedostoja ei voitu ladata: %(files)s"
 
 
-#: booking/access.py:272 booking/views.py:85
+#: booking/access.py:272 booking/views.py:99
 msgid "Kunde inte verifiera att du inte är en robot. Försök igen."
 msgstr "Emme voineet vahvistaa, ettet ole robotti. Yritä uudelleen."
 
-#: booking/admin.py:31 booking/models.py:51
+#: booking/admin.py:104 booking/models.py:66
 #: templates/date/date/components/bookings.html:5
 msgid "Bokningar"
 msgstr "Varaukset"
 
-#: booking/admin.py:54 booking/models.py:74
+#: booking/models.py:120
 msgid "Extern bokning"
 msgstr "Ulkoinen varaus"
 
-#: booking/admin.py:58 booking/models.py:36
+#: booking/admin.py:138 booking/models.py:51
 msgid "Bokare"
 msgstr "Varaaja"
 
-#: booking/admin.py:72
+#: booking/admin.py:152
 msgid ""
 "Bokningskoden genereras automatiskt och kan inte skrivas in här. Den visas "
 "nedan."
@@ -2638,89 +2643,89 @@ msgstr ""
 "Varauskoodi luodaan automaattisesti, eikä sitä voi syöttää tähän. Se näkyy "
 "alla."
 
-#: booking/admin.py:76 booking/admin.py:89
+#: booking/admin.py:156 booking/admin.py:169
 msgid "Aktuell bokningskod"
 msgstr "Nykyinen varauskoodi"
 
-#: booking/admin.py:93
+#: booking/admin.py:173
 msgid "Koden byts ut"
 msgstr "Koodi vaihtuu"
 
-#: booking/emails.py:26
+#: booking/emails.py:31
 #, python-format
 msgid "Bokningsbekräftelse för %(room)s"
 msgstr "Varausvahvistus: %(room)s"
 
-#: booking/forms.py:32 templates/common/booking/room_detail.html:44
+#: booking/forms.py:33 templates/common/booking/room_detail.html:44
 msgid "Bokningskod"
 msgstr "Varauskoodi"
 
-#: booking/forms.py:45
+#: booking/forms.py:46
 msgid "Fel kod."
 msgstr "Väärä koodi."
 
-#: booking/forms.py:50 booking/models.py:44
+#: booking/forms.py:51 booking/models.py:59
 msgid "Starttid"
 msgstr "Alkamisaika"
 
-#: booking/forms.py:51 booking/models.py:45
+#: booking/forms.py:52 booking/models.py:60
 msgid "Sluttid"
 msgstr "Päättymisaika"
 
-#: booking/forms.py:82 booking/models.py:84
+#: booking/forms.py:99 booking/models.py:136
 msgid "Ange namnet på den som bokar."
 msgstr "Anna varaajan nimi."
 
-#: booking/forms.py:87
+#: booking/forms.py:104
 msgid "Ange en e-postadress så att vi kan nå dig."
 msgstr "Anna sähköpostiosoite, jotta voimme ottaa sinuun yhteyttä."
 
-#: booking/models.py:13
+#: booking/models.py:28
 msgid "Aktiv"
 msgstr "Aktiivinen"
 
-#: booking/models.py:15
+#: booking/models.py:30
 msgid "Endast aktiva utrymmen visas för besökare på webbplatsen."
 msgstr "Vain aktiiviset tilat näkyvät sivuston kävijöille."
 
-#: booking/models.py:19 booking/models.py:30
+#: booking/models.py:34 booking/models.py:45
 msgid "Utrymme"
 msgstr "Tila"
 
-#: booking/models.py:20
+#: booking/models.py:35
 msgid "Utrymmen"
 msgstr "Tilat"
 
-#: booking/models.py:50 templates/common/booking/index.html:5
+#: booking/models.py:65 templates/common/booking/index.html:5
 #: templates/common/booking/room_detail.html:5
 msgid "Bokning"
 msgstr "Varaus"
 
-#: booking/models.py:81
+#: booking/models.py:127
 msgid "Sluttiden måste vara efter starttiden."
 msgstr "Päättymisajan on oltava alkamisajan jälkeen."
 
-#: booking/models.py:95
+#: booking/models.py:147
 msgid "Utrymmet är redan bokat under denna tid."
 msgstr "Tila on jo varattu tälle ajalle."
 
-#: booking/models.py:112
+#: booking/models.py:164
 msgid "Dagligen"
 msgstr "Päivittäin"
 
-#: booking/models.py:113
+#: booking/models.py:165
 msgid "Veckovis"
 msgstr "Viikoittain"
 
-#: booking/models.py:114
+#: booking/models.py:166
 msgid "Månadsvis"
 msgstr "Kuukausittain"
 
-#: booking/models.py:118
+#: booking/models.py:170
 msgid "Kodens rotationsperiod"
 msgstr "Koodin vaihtoväli"
 
-#: booking/models.py:122
+#: booking/models.py:174
 msgid ""
 "Hur ofta bokningskoden byts ut. Koden genereras automatiskt och kan inte "
 "ställas in manuellt."
@@ -2728,11 +2733,11 @@ msgstr ""
 "Kuinka usein varauskoodi vaihtuu. Koodi luodaan automaattisesti, eikä sitä "
 "voi asettaa käsin."
 
-#: booking/models.py:126 booking/models.py:127 booking/models.py:130
+#: booking/models.py:186 booking/models.py:187 booking/models.py:190
 msgid "Bokningsinställningar"
 msgstr "Varausasetukset"
 
-#: booking/views.py:90
+#: booking/views.py:104
 msgid "Tack! Din bokning är registrerad."
 msgstr "Kiitos! Varauksesi on rekisteröity."
 
@@ -2757,21 +2762,21 @@ msgstr ""
 msgid "Bokbara utrymmen"
 msgstr "Varattavat tilat"
 
-#: templates/common/booking/index.html:29
+#: templates/common/booking/index.html:32
 msgid "Inga utrymmen är bokbara just nu."
 msgstr "Tiloja ei voi varata juuri nyt."
 
-#: templates/common/booking/index.html:33
+#: templates/common/booking/index.html:36
 #: templates/common/booking/room_detail.html:30
 msgid "Kommande bokningar"
 msgstr "Tulevat varaukset"
 
-#: templates/common/booking/index.html:42
+#: templates/common/booking/index.html:45
 #: templates/common/booking/room_detail.html:38
 msgid "Inga kommande bokningar."
 msgstr "Ei tulevia varauksia."
 
-#: templates/common/booking/partials/code_form.html:4
+#: templates/common/booking/partials/code_form.html:8
 #, python-format
 msgid "För många försök. Försök igen om %(minutes)s minut."
 msgid_plural "För många försök. Försök igen om %(minutes)s minuter."
@@ -2784,15 +2789,15 @@ msgstr[1] ""
 msgid "Tillbaka till utrymmena"
 msgstr "Takaisin tiloihin"
 
-#: templates/common/booking/room_detail.html:49
+#: templates/common/booking/room_detail.html:50
 msgid "Boka utrymmet"
 msgstr "Varaa tila"
 
-#: templates/common/booking/room_detail.html:78
+#: templates/common/booking/room_detail.html:79
 msgid "Boka"
 msgstr "Varaa"
 
-#: templates/common/booking/room_detail.html:81
+#: templates/common/booking/room_detail.html:82
 msgid "E-postadressen används bara för att skicka en bokningsbekräftelse."
 msgstr "Sähköpostiosoitetta käytetään vain varausvahvistuksen lähettämiseen."
 
@@ -2821,7 +2826,7 @@ msgid ""
 "Berätta kort vad utrymmet ska användas till. Endast styrelsen ser detta."
 msgstr "Kerro lyhyesti, mihin tilaa käytetään. Vain hallitus näkee tämän."
 
-#: booking/models.py:127
+#: booking/models.py:133
 msgid "Starttiden kan inte vara i det förflutna."
 msgstr "Aloitusaika ei voi olla menneisyydessä."
 
@@ -2829,16 +2834,7 @@ msgstr "Aloitusaika ei voi olla menneisyydessä."
 msgid "Styrelsen nås på %(ASSOCIATION_EMAIL)s."
 msgstr "Hallitukseen saa yhteyden osoitteesta %(ASSOCIATION_EMAIL)s."
 
-#: templates/common/booking/index.html:20
-msgid ""
-"Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som "
-"du får av styrelsen via %(ASSOCIATION_EMAIL)s."
-msgstr ""
-"Jos sinulla on tili, voit varata heti. Ilman tiliä tarvitset "
-"varauskoodin, jonka saat hallitukselta osoitteesta "
-"%(ASSOCIATION_EMAIL)s."
-
-#: templates/common/booking/index.html:22
+#: templates/common/booking/index.html:19
 msgid ""
 "Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som "
 "du får av styrelsen."
@@ -2857,22 +2853,29 @@ msgstr ""
 msgid "Har du frågor om en bokning, kontakta styrelsen."
 msgstr "Jos sinulla on kysyttävää varauksesta, ota yhteyttä hallitukseen."
 
+#: booking/models.py:177
+msgid "Så får besökare koden"
+msgstr "Näin kävijät saavat koodin"
+
+#: booking/models.py:180
+msgid ""
+"Visas offentligt där koden efterfrågas, i stället för standardtexten. Lämna "
+"tomt om standardtexten räcker."
+msgstr ""
+"Näytetään julkisesti siellä, missä koodia kysytään, oletustekstin "
+"sijaan. Jätä tyhjäksi, jos oletusteksti riittää."
+
+#: templates/common/booking/partials/code_form.html:3
+msgid "Bokningskoden får du av styrelsen."
+msgstr "Saat varauskoodin hallitukselta."
+
 #: templates/common/booking/partials/code_form.html:4
 msgid ""
-"Bokningskoden får du av styrelsen via %(ASSOCIATION_EMAIL)s. Har du ett "
-"konto på webbplatsen kan du logga in i stället och behöver då ingen kod."
+"Har du ett konto på webbplatsen kan du logga in i stället och behöver då "
+"ingen kod."
 msgstr ""
-"Saat varauskoodin hallitukselta osoitteesta %(ASSOCIATION_EMAIL)s. Jos "
-"sinulla on tili verkkosivustolla, voit kirjautua sisään sen sijaan, "
-"etkä tarvitse koodia."
-
-#: templates/common/booking/partials/code_form.html:6
-msgid ""
-"Bokningskoden får du av styrelsen. Har du ett konto på webbplatsen kan du "
-"logga in i stället och behöver då ingen kod."
-msgstr ""
-"Saat varauskoodin hallitukselta. Jos sinulla on tili verkkosivustolla, "
-"voit kirjautua sisään sen sijaan, etkä tarvitse koodia."
+"Jos sinulla on tili verkkosivustolla, voit kirjautua sisään sen "
+"sijaan, etkä tarvitse koodia."
 
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"

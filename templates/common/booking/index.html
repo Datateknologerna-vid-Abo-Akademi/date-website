@@ -16,11 +16,7 @@
       <div class="content">
         <h1 class="booking-heading">{% trans "Bokbara utrymmen" %}</h1>
         <p class="booking-help booking-intro">
-          {% if ASSOCIATION_EMAIL %}
-            {% blocktrans %}Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som du får av styrelsen via {{ ASSOCIATION_EMAIL }}.{% endblocktrans %}
-          {% else %}
-            {% trans "Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som du får av styrelsen." %}
-          {% endif %}
+          {% trans "Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som du får av styrelsen." %}
         </p>
         <div class="booking-rooms">
           {% for room in room_list %}
