@@ -3037,8 +3037,8 @@ msgid "närvaroändring"
 msgstr "närvaroändring"
 
 #: attendance/models.py:184
-msgid "närvaroändingar"
-msgstr "närvaroändingar"
+msgid "närvaroändringar"
+msgstr "närvaroändringar"
 
 #: attendance/models.py:195
 #, python-format

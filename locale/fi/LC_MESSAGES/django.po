@@ -3046,7 +3046,7 @@ msgid "närvaroändring"
 msgstr "läsnäolotilan muutos"
 
 #: attendance/models.py:184
-msgid "närvaroändingar"
+msgid "närvaroändringar"
 msgstr "läsnäolotilojen muutokset"
 
 #: attendance/models.py:195

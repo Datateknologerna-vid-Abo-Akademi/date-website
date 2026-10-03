@@ -65,7 +65,7 @@ const onResult = (scanner, result) => {
     const url = URL.parse(result.data);
     if (url === null || !url.searchParams.has("code")) {
         qrReaderError.hidden = false;
-        qrReaderError.innerText = "QR code did not contain a code";
+        qrReaderError.innerText = _("QR-koden innehöll ingen kod");
     } else {
         codeInput.value = url.searchParams.get("code");
     }

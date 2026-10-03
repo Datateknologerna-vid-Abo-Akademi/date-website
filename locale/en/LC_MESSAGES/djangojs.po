@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-12 23:55+0300\n"
+"POT-Creation-Date: 2026-10-04 01:36+0300\n"
 "PO-Revision-Date: 2026-05-12 14:55+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -26,6 +26,10 @@ msgstr "No camera found"
 #: static/common/attendance/js/detail.js:49
 msgid "Ett oväntat fel uppstod medan QR-skannern startades"
 msgstr "An unexpected error occurred when starting the QR scanner"
+
+#: static/common/attendance/js/detail.js:68
+msgid "QR-koden innehöll ingen kod"
+msgstr "The QR code did not contain a code"
 
 #: static/common/attendance/js/overview.js:58
 msgid "Ansluter till servern..."

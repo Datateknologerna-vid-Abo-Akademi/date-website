@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, cast
 
 from django.db import models
-from django.db.models import Q, QuerySet, constraints
+from django.db.models import Q, constraints
 from django.utils.formats import date_format, time_format
 from django.utils.timezone import localtime, now
 from django.utils.translation import gettext_lazy as _
@@ -43,14 +43,6 @@ class AttendanceEvent(models.Model):
 
     def __str__(self):
         return f"{self.title}"
-
-    @property
-    def attendance_changes(self) -> QuerySet[AttendanceChange, AttendanceChange]:
-        """
-        Returns a QuerySet of all AttendanceChanges that apply to this event
-        """
-
-        return AttendanceChange.objects.filter(event=self)
 
     @property
     def has_ended(self) -> bool:
@@ -123,10 +115,15 @@ class AttendanceEvent(models.Model):
         return self.totp.verify(code)
 
 
-# TODO change to use first_name/last_name fields instead?
 class NonMemberAttendee(models.Model):
     """
     An attendee who is not a registered user.
+
+    The name is the identity: a guest has no account to key on, and the check-in
+    view calls get_or_create(name=...), so two people with the same name share
+    one row across every event. Splitting it into first and last name would not
+    change that, it would take an address or a per-event record to tell them
+    apart, which is more than this list needs.
     """
 
     name = models.CharField(_("Namn"), max_length=NON_MEMBER_MAX_NAME_LEN, unique=True)
@@ -174,7 +171,11 @@ class AttendanceChange(models.Model):
 
     # ONE of these fields MUST be non-null, and ONLY ONE field shall be non-null.
     # A change can apply to either a registered member or to a non-member.
-    user = models.ForeignKey(  # TODO use some other on_delete?
+    # Deleting a member takes their own attendance changes with them. That is
+    # what the other member-linked records in this project do (polls.Vote.user,
+    # members.SubscriptionPayment.member) and what an erasure request needs. The
+    # minutes, not this table, are the record that outlives a member.
+    user = models.ForeignKey(
         Member,
         on_delete=models.CASCADE,
         null=True,
@@ -200,8 +201,10 @@ class AttendanceChange(models.Model):
 
     class Meta:
         verbose_name = _("närvaroändring")
-        verbose_name_plural = _("närvaroändingar")
+        verbose_name_plural = _("närvaroändringar")
         get_latest_by = "timestamp"
+        # Newest first: the change log is read to see who just arrived or left.
+        ordering = ["-timestamp"]
 
         constraints = [
             constraints.CheckConstraint(

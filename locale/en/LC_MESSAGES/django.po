@@ -3027,7 +3027,7 @@ msgid "närvaroändring"
 msgstr "attendance change"
 
 #: attendance/models.py:184
-msgid "närvaroändingar"
+msgid "närvaroändringar"
 msgstr "attendance changes"
 
 #: attendance/models.py:195
