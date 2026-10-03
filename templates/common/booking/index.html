@@ -1,0 +1,59 @@
+{% extends 'core/base.html' %}
+{% load booking_dates %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+  {% trans "Bokning" %}
+{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet"
+        href="{% static 'booking/css/booking.css' %}"
+        type="text/css">
+{% endblock %}
+{% block content %}
+  <div class="container-md min-vh-100 container-margin-top">
+    <div class="container-size break-words">
+      <div class="content">
+        <h1 class="booking-heading">{% trans "Bokbara utrymmen" %}</h1>
+        <p class="booking-help booking-intro">
+          {% trans "Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som du får av styrelsen." %}
+        </p>
+        {% if has_my_bookings %}
+          <p class="booking-help">
+            <a href="{% url 'booking:my_bookings' %}">{% trans "Mina bokningar" %}</a>
+          </p>
+        {% endif %}
+        <div class="booking-rooms">
+          {% for room in room_list %}
+            <div class="booking-room-card">
+              <a href="{% url 'booking:room_detail' room.pk %}">
+                <h2 class="booking-heading">{{ room.name }}</h2>
+                {% if room.description %}
+                  <p class="booking-room-description">{{ room.description|striptags|truncatewords:30 }}</p>
+                {% endif %}
+              </a>
+            </div>
+          {% empty %}
+            <p class="booking-rooms-empty">{% trans "Inga utrymmen är bokbara just nu." %}</p>
+          {% endfor %}
+        </div>
+        <section class="booking-upcoming">
+          <h2 class="booking-heading booking-section-title">{% trans "Kommande bokningar" %}</h2>
+          <ul class="booking-list">
+            {% for booking in bookings %}
+              <li class="booking-list-item">
+                <span class="booking-badge">{{ booking.start|short_date }}</span>
+                <span class="booking-time">{{ booking.start|date:"H:i" }} - {% if booking.start|date:"Ymd" != booking.end|date:"Ymd" %}{{ booking.end|short_date }} {% endif %}{{ booking.end|date:"H:i" }}</span>
+                <span class="booking-room-name">{{ booking.room.name }}</span>
+              </li>
+            {% empty %}
+              <li class="booking-list-item booking-list-empty">{% trans "Inga kommande bokningar." %}</li>
+            {% endfor %}
+          </ul>
+        </section>
+        {% include 'booking/partials/board_contact.html' %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

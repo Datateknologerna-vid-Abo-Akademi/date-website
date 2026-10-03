@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-16 23:19+0300\n"
+"POT-Creation-Date: 2026-09-30 20:52+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -108,19 +108,20 @@ msgstr "Uppdatera dina uppgifter"
 msgid "Städa upp media"
 msgstr "Städa upp media"
 
-#: archive/models.py:21 archive/models.py:83 events/models.py:212
-#: events/models.py:348 events/models.py:390 exambank/models.py:23
-#: exambank/models.py:82 functionaries/models.py:21 gallery/models.py:50
-#: members/models.py:96 members/models.py:121 news/models.py:15
-#: templates/biocum/events/arsfest.html:92
-#: templates/common/events/arsfest.html:80
-#: templates/common/events/baal_detail.html:73
-#: templates/common/events/detail.html:60
-#: templates/common/events/kk100_detail.html:74
-#: templates/common/events/tomtejakt.html:318
-#: templates/common/events/wappmiddag.html:74
-#: templates/date/events/arsfest.html:86
-#: templates/pulterit/events/arsfest.html:85
+#: archive/models.py:17 archive/models.py:80 booking/forms.py:96
+#: booking/models.py:57 booking/models.py:188 events/models.py:251
+#: events/models.py:409 events/models.py:477 exambank/models.py:23
+#: exambank/models.py:82 functionaries/models.py:21 gallery/models.py:57
+#: members/models.py:108 members/models.py:133 news/models.py:15
+#: templates/biocum/events/arsfest.html:95
+#: templates/common/events/arsfest_base.html:94
+#: templates/common/events/baal_detail.html:83
+#: templates/common/events/detail.html:55
+#: templates/common/events/kk100_detail.html:84
+#: templates/common/events/tomtejakt.html:92
+#: templates/common/events/wappmiddag.html:90
+#: templates/date/events/arsfest.html:95
+#: templates/pulterit/events/arsfest.html:95
 msgid "Namn"
 msgstr "Namn"
 
@@ -443,7 +444,7 @@ msgstr "Gissning"
 msgid "Korrekt"
 msgstr "Korrekt"
 
-#: ctf/models.py:82
+#: booking/admin.py:116 booking/admin.py:201 ctf/models.py:135
 msgid "Tid"
 msgstr "Tid"
 
@@ -454,6 +455,19 @@ msgstr "Gissningar"
 #: core/admin_ui.py:188
 msgid "CTF Post-mortems"
 msgstr "CTF-efteranalyser"
+
+#: core/admin_ui.py:99
+msgid "Booking"
+msgstr "Bokning"
+
+#: core/admin_ui.py:102
+msgid "Bookings"
+msgstr "Bokningar"
+
+#: core/admin_ui.py:108
+msgid "Rooms"
+msgstr "Utrymmen"
+
 
 #: ctf/admin.py:56
 #: templates/common/ctf/post_mortem_index.html:13
@@ -590,7 +604,8 @@ msgstr "Avanmälning"
 msgid "Avanmälningen stängs"
 msgstr "Avanmälningen stängs"
 
-#: events/models.py:86 news/models.py:40 staticpages/models.py:41
+#: booking/models.py:193 events/models.py:77 news/models.py:40
+#: staticpages/models.py:40
 msgid "Skapad"
 msgstr "Skapad"
 
@@ -943,7 +958,9 @@ msgstr "medlem"
 msgid "medlemmar"
 msgstr "medlemmar"
 
-#: members/models.py:97
+#: booking/forms.py:54 booking/models.py:58 booking/models.py:145
+#: booking/models.py:192 members/models.py:109
+#: templates/common/booking/email/booking_confirmation.html:51
 msgid "Beskrivning"
 msgstr "Beskrivning"
 
@@ -1011,7 +1028,7 @@ msgstr "prenumerationsbetalning"
 msgid "prenumerationsbetalningar"
 msgstr "prenumerationsbetalningar"
 
-#: members/models.py:162
+#: booking/admin.py:169 members/models.py:174
 msgid "Aldrig"
 msgstr "Aldrig"
 
@@ -1497,7 +1514,8 @@ msgid_plural "För många försök. Försök igen om %(seconds)s sekunder."
 msgstr[0] "För många försök. Försök igen om %(seconds)s sekund."
 msgstr[1] "För många försök. Försök igen om %(seconds)s sekunder."
 
-#: templates/common/archive/exam_password.html:24
+#: templates/common/archive/exam_password.html:30
+#: templates/common/booking/partials/code_form.html:34
 msgid "Fortsätt"
 msgstr "Fortsätt"
 
@@ -1634,7 +1652,8 @@ msgstr "%(association_name)s logo"
 msgid "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
 msgstr "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
 
-#: templates/common/core/footer.html:31
+#: booking/forms.py:102 booking/models.py:189
+#: templates/common/core/footer.html:34 templates/sf/core/footer.html:58
 msgid "E-post"
 msgstr "E-post"
 
@@ -2543,3 +2562,486 @@ msgstr "Kontrollera pseudonymen och meddelandet."
 #, python-format
 msgid "Kunde inte ladda upp följande filer: %(files)s"
 msgstr "Kunde inte ladda upp följande filer: %(files)s"
+
+
+#: booking/access.py:324 booking/views.py:117
+msgid "Kunde inte verifiera att du inte är en robot. Försök igen."
+msgstr "Kunde inte verifiera att du inte är en robot. Försök igen."
+
+#: booking/admin.py:150 booking/models.py:197
+#: templates/date/date/components/bookings.html:6
+msgid "Bokningar"
+msgstr "Bokningar"
+
+#: booking/models.py:251
+msgid "Extern bokning"
+msgstr "Extern bokning"
+
+#: booking/admin.py:216 booking/models.py:182
+msgid "Bokare"
+msgstr "Bokare"
+
+#: booking/admin.py:160
+msgid "Aktuell bokningskod"
+msgstr "Aktuell bokningskod"
+
+#: booking/emails.py:45
+#, python-format
+msgid "Bokningsbekräftelse för %(room)s"
+msgstr "Bokningsbekräftelse för %(room)s"
+
+#: booking/forms.py:33 templates/common/booking/room_detail.html:59
+msgid "Bokningskod"
+msgstr "Bokningskod"
+
+#: booking/forms.py:46
+msgid "Fel kod."
+msgstr "Fel kod."
+
+#: booking/forms.py:51 booking/models.py:190
+msgid "Starttid"
+msgstr "Starttid"
+
+#: booking/forms.py:52 booking/models.py:191
+msgid "Sluttid"
+msgstr "Sluttid"
+
+#: booking/forms.py:99 booking/models.py:270
+msgid "Ange namnet på den som bokar."
+msgstr "Ange namnet på den som bokar."
+
+#: booking/forms.py:104
+msgid "Ange en e-postadress så att vi kan nå dig."
+msgstr "Ange en e-postadress så att vi kan nå dig."
+
+#: booking/models.py:86 booking/models.py:138 booking/models.py:176
+msgid "Utrymme"
+msgstr "Utrymme"
+
+#: booking/models.py:87
+msgid "Utrymmen"
+msgstr "Utrymmen"
+
+#: booking/models.py:196 templates/common/booking/index.html:6
+#: templates/common/booking/room_detail.html:6
+msgid "Bokning"
+msgstr "Bokning"
+
+#: booking/models.py:106 booking/models.py:170 booking/models.py:258
+msgid "Sluttiden måste vara efter starttiden."
+msgstr "Sluttiden måste vara efter starttiden."
+
+#: booking/models.py:291
+msgid "Utrymmet är redan bokat under denna tid."
+msgstr "Utrymmet är redan bokat under denna tid."
+
+#: booking/models.py:343 booking/models.py:344 booking/models.py:347
+msgid "Bokningsinställningar"
+msgstr "Bokningsinställningar"
+
+#: booking/views.py:129
+msgid "Tack! Din bokning är registrerad."
+msgstr "Tack! Din bokning är registrerad."
+
+#: templates/common/booking/index.html:18
+msgid "Bokbara utrymmen"
+msgstr "Bokbara utrymmen"
+
+#: templates/common/booking/index.html:38
+msgid "Inga utrymmen är bokbara just nu."
+msgstr "Inga utrymmen är bokbara just nu."
+
+#: templates/common/booking/index.html:42
+#: templates/common/booking/room_detail.html:31
+msgid "Kommande bokningar"
+msgstr "Kommande bokningar"
+
+#: templates/common/booking/index.html:51
+#: templates/common/booking/room_detail.html:39
+msgid "Inga kommande bokningar."
+msgstr "Inga kommande bokningar."
+
+#: templates/common/booking/partials/code_form.html:8
+#, python-format
+msgid "För många försök. Försök igen om %(minutes)s minut."
+msgid_plural "För många försök. Försök igen om %(minutes)s minuter."
+msgstr[0] "För många försök. Försök igen om %(minutes)s minut."
+msgstr[1] "För många försök. Försök igen om %(minutes)s minuter."
+
+#: templates/common/booking/cancel_booking.html:52
+#: templates/common/booking/my_bookings.html:39
+#: templates/common/booking/room_detail.html:28
+msgid "Tillbaka till utrymmena"
+msgstr "Tillbaka till utrymmena"
+
+#: templates/common/booking/room_detail.html:65
+msgid "Boka utrymmet"
+msgstr "Boka utrymmet"
+
+#: templates/common/booking/room_detail.html:94
+msgid "Boka"
+msgstr "Boka"
+
+#: templates/common/booking/room_detail.html:97
+msgid "E-postadressen används bara för att skicka en bokningsbekräftelse."
+msgstr "E-postadressen används bara för att skicka en bokningsbekräftelse."
+
+#: booking/admin.py:73
+msgid "Bokningens ursprung"
+msgstr "Bokningens ursprung"
+
+#: booking/admin.py:78
+msgid "Bokning av en medlem"
+msgstr "Bokning av en medlem"
+
+#: booking/admin.py:79
+msgid "Bokning utan konto, via webbformuläret"
+msgstr "Bokning utan konto, via webbformuläret"
+
+#: booking/admin.py:80
+msgid "Bokning utan konto"
+msgstr "Bokning utan konto"
+
+#: booking/admin.py:209
+msgid "Utan konto"
+msgstr "Utan konto"
+
+#: booking/forms.py:58
+msgid ""
+"Berätta kort vad utrymmet ska användas till. Endast styrelsen ser detta."
+msgstr ""
+"Berätta kort vad utrymmet ska användas till. Endast styrelsen ser "
+"detta."
+
+#: booking/models.py:264
+msgid "Starttiden kan inte vara i det förflutna."
+msgstr "Starttiden kan inte vara i det förflutna."
+
+#: templates/common/booking/index.html:20
+msgid ""
+"Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som "
+"du får av styrelsen."
+msgstr ""
+"Har du ett konto bokar du direkt. Utan konto behöver du en "
+"bokningskod, som du får av styrelsen."
+
+#: templates/common/booking/partials/board_contact.html:4
+#, python-format
+msgid ""
+"Har du frågor om en bokning, kontakta styrelsen via %(ASSOCIATION_EMAIL)s."
+msgstr ""
+"Har du frågor om en bokning, kontakta styrelsen via "
+"%(ASSOCIATION_EMAIL)s."
+
+#: templates/common/booking/partials/board_contact.html:7
+msgid "Har du frågor om en bokning, kontakta styrelsen."
+msgstr "Har du frågor om en bokning, kontakta styrelsen."
+
+#: booking/models.py:335
+msgid "Så får besökare koden"
+msgstr "Så får besökare koden"
+
+#: booking/models.py:338
+msgid ""
+"Visas offentligt där koden efterfrågas, i stället för standardtexten. Lämna "
+"tomt om standardtexten räcker."
+msgstr ""
+"Visas offentligt där koden efterfrågas, i stället för standardtexten. "
+"Lämna tomt om standardtexten räcker."
+
+#: templates/common/booking/partials/code_form.html:3
+msgid "Bokningskoden får du av styrelsen."
+msgstr "Bokningskoden får du av styrelsen."
+
+#: templates/common/booking/partials/code_form.html:4
+msgid ""
+"Har du ett konto på webbplatsen kan du logga in i stället och behöver då "
+"ingen kod."
+msgstr ""
+"Har du ett konto på webbplatsen kan du logga in i stället och behöver "
+"då ingen kod."
+
+#: booking/admin.py:166 booking/models.py:66
+msgid "Senast bytt"
+msgstr "Senast bytt"
+
+#: booking/admin.py:174
+msgid "Byt bokningskoden nu"
+msgstr "Byt bokningskoden nu"
+
+#: booking/models.py:60
+msgid "Kodgeneration"
+msgstr "Kodgeneration"
+
+#: booking/admin.py:181
+#, python-format
+msgid ""
+"Ny bokningskod för %(room)s: %(code)s. Den förra koden fungerar i 15 minuter "
+"till."
+msgstr ""
+"Ny bokningskod för %(room)s: %(code)s. Den förra koden fungerar i 15 "
+"minuter till."
+
+#: booking/admin.py:236
+msgid ""
+"Varje utrymme har sin egen bokningskod, som visas och byts på utrymmets sida "
+"under Bokningar › Utrymmen. Här står bara texten som besökare utan konto får "
+"läsa."
+msgstr ""
+"Varje utrymme har sin egen bokningskod, som visas och byts på "
+"utrymmets sida under Bokningar › Utrymmen. Här står bara texten som "
+"besökare utan konto får läsa."
+
+#: booking/models.py:63
+msgid ""
+"Räknas upp varje gång utrymmets kod byts. Koden härleds ur den och kan inte "
+"läsas av härifrån."
+msgstr ""
+"Räknas upp varje gång utrymmets kod byts. Koden härleds ur den och kan "
+"inte läsas av härifrån."
+
+#: booking/models.py:70
+msgid ""
+"När utrymmets kod senast byttes. Gör att den förra koden fungerar en stund "
+"till."
+msgstr ""
+"När utrymmets kod senast byttes. Gör att den förra koden fungerar en "
+"stund till."
+
+#: booking/admin.py:154
+msgid "Bokningsbara tider"
+msgstr "Bokningsbara tider"
+
+#: booking/admin.py:157
+msgid "Hela dygnet"
+msgstr "Hela dygnet"
+
+#: booking/models.py:73
+msgid "Bokningsbart från"
+msgstr "Bokningsbart från"
+
+#: booking/models.py:79
+msgid "Bokningsbart till"
+msgstr "Bokningsbart till"
+
+#: booking/models.py:142
+msgid "Stängt från"
+msgstr "Stängt från"
+
+#: booking/models.py:143
+msgid "Stängt till"
+msgstr "Stängt till"
+
+#: templates/common/booking/room_detail.html:45
+msgid "Stängt"
+msgstr "Stängt"
+
+#: booking/models.py:152
+msgid "Stängd period"
+msgstr "Stängd period"
+
+#: booking/models.py:153
+msgid "Stängda perioder"
+msgstr "Stängda perioder"
+
+#: booking/models.py:267
+msgid "En bokning kan vara i högst en vecka."
+msgstr "En bokning kan vara i högst en vecka."
+
+#: booking/models.py:281
+msgid "Utrymmet är stängt under en del av den tiden."
+msgstr "Utrymmet är stängt under en del av den tiden."
+
+#: booking/models.py:319
+#, python-format
+msgid "Utrymmet kan bara bokas mellan %(from)s och %(until)s samma dag."
+msgstr "Utrymmet kan bara bokas mellan %(from)s och %(until)s samma dag."
+
+#: booking/models.py:76
+msgid ""
+"Lämna båda tomma för att tillåta bokning dygnet runt. Med tider gäller de "
+"varje dag."
+msgstr ""
+"Lämna båda tomma för att tillåta bokning dygnet runt. Med tider gäller "
+"de varje dag."
+
+#: booking/models.py:82
+msgid "En bokning måste börja och sluta inom samma dygn när tider är satta."
+msgstr "En bokning måste börja och sluta inom samma dygn när tider är satta."
+
+#: booking/models.py:103
+msgid ""
+"Ange både start och slut för bokningsbara tider, eller lämna båda tomma."
+msgstr ""
+"Ange både start och slut för bokningsbara tider, eller lämna båda "
+"tomma."
+
+#: booking/models.py:148
+msgid "Visas för besökare, till exempel vad som gör att utrymmet är stängt."
+msgstr "Visas för besökare, till exempel vad som gör att utrymmet är stängt."
+
+#: booking/forms.py:121
+msgid "Avbokningskod"
+msgstr "Avbokningskod"
+
+#: templates/common/booking/email/booking_confirmation.txt:12
+msgid "Avbokningskod:"
+msgstr "Avbokningskod:"
+
+#: booking/forms.py:135 booking/views.py:208
+msgid "Hittade ingen kommande bokning med den koden."
+msgstr "Hittade ingen kommande bokning med den koden."
+
+#: booking/ics.py:89
+#, python-format
+msgid "Bokningen kan avbokas på %(url)s."
+msgstr "Bokningen kan avbokas på %(url)s."
+
+#: booking/views.py:177 booking/views.py:200
+msgid "Bokningen är borttagen."
+msgstr "Bokningen är borttagen."
+
+#: templates/common/booking/cancel_booking.html:6
+#: templates/common/booking/cancel_booking.html:18
+msgid "Avboka en bokning"
+msgstr "Avboka en bokning"
+
+#: templates/common/booking/cancel_booking.html:31
+#: templates/common/booking/email/booking_confirmation.html:91
+#: templates/common/booking/email/booking_confirmation.html:106
+msgid "Avboka bokningen"
+msgstr "Avboka bokningen"
+
+#: templates/common/booking/email/booking_confirmation.txt:18
+msgid "Avboka bokningen:"
+msgstr "Avboka bokningen:"
+
+#: templates/common/booking/my_bookings.html:30
+msgid "Avboka"
+msgstr "Avboka"
+
+#: templates/common/booking/cancel_booking.html:48
+msgid "Visa bokningen"
+msgstr "Visa bokningen"
+
+#: templates/common/booking/email/booking_confirmation.html:29
+#: templates/common/booking/email/booking_confirmation.txt:1
+msgid "Bokningen är bekräftad"
+msgstr "Bokningen är bekräftad"
+
+#: templates/common/booking/email/booking_confirmation.html:57
+#: templates/common/booking/email/booking_confirmation.txt:8
+msgid "Om tiden inte passar"
+msgstr "Om tiden inte passar"
+
+#: templates/common/booking/cancel_booking.html:20
+msgid ""
+"Stämmer bokningen nedan? Avboka den bara om du verkligen vill ta bort den."
+msgstr ""
+"Stämmer bokningen nedan? Avboka den bara om du verkligen vill ta bort "
+"den."
+
+#: templates/common/booking/cancel_booking.html:35
+msgid ""
+"Bokade du utan konto fick du en avbokningskod i bekräftelsemejlet. Klistra "
+"in den här."
+msgstr ""
+"Bokade du utan konto fick du en avbokningskod i bekräftelsemejlet. "
+"Klistra in den här."
+
+#: templates/common/booking/email/booking_confirmation.html:60
+#: templates/common/booking/email/booking_confirmation.txt:10
+msgid "Avboka bokningen på avbokningssidan. Där anger du koden nedan."
+msgstr "Avboka bokningen på avbokningssidan. Där anger du koden nedan."
+
+#: templates/common/booking/email/booking_confirmation.html:62
+#: templates/common/booking/email/booking_confirmation.txt:11
+msgid "Kontakta styrelsen om du vill avboka bokningen. Uppge koden nedan."
+msgstr "Kontakta styrelsen om du vill avboka bokningen. Uppge koden nedan."
+
+#: templates/common/booking/email/booking_confirmation.html:80
+#: templates/common/booking/email/booking_confirmation.txt:14
+msgid "Spara koden. Den behövs för att avboka bokningen."
+msgstr "Spara koden. Den behövs för att avboka bokningen."
+
+#: templates/common/booking/email/booking_confirmation.html:109
+#: templates/common/booking/email/booking_confirmation.txt:16
+msgid "Kontakta styrelsen om du vill avboka bokningen."
+msgstr "Kontakta styrelsen om du vill avboka bokningen."
+
+#: templates/common/booking/email/booking_confirmation.html:128
+#: templates/common/booking/email/booking_confirmation.txt:20
+#, python-format
+msgid ""
+"Har du frågor om bokningen, kontakta styrelsen via %(association_email)s."
+msgstr ""
+"Har du frågor om bokningen, kontakta styrelsen via "
+"%(association_email)s."
+
+#: templates/common/booking/email/booking_confirmation.html:130
+#: templates/common/booking/email/booking_confirmation.txt:21
+msgid "Har du frågor om bokningen, kontakta styrelsen."
+msgstr "Har du frågor om bokningen, kontakta styrelsen."
+
+#: templates/common/booking/email/booking_confirmation.html:135
+#: templates/common/booking/email/booking_confirmation.txt:22
+msgid "Du får det här meddelandet för att du bokade ett utrymme."
+msgstr "Du får det här meddelandet för att du bokade ett utrymme."
+
+#: templates/common/booking/email/booking_confirmation.txt:3
+msgid "Utrymme:"
+msgstr "Utrymme:"
+
+#: templates/common/booking/email/booking_confirmation.txt:4
+msgid "Tid:"
+msgstr "Tid:"
+
+#: templates/common/booking/email/booking_confirmation.txt:6
+msgid "Beskrivning:"
+msgstr "Beskrivning:"
+
+#: templates/common/booking/email/booking_confirmation.txt:24
+msgid "Webbplatsen:"
+msgstr "Webbplatsen:"
+
+#: templates/common/booking/index.html:24
+#: templates/common/booking/my_bookings.html:6
+#: templates/common/booking/my_bookings.html:18
+msgid "Mina bokningar"
+msgstr "Mina bokningar"
+
+#: templates/common/booking/my_bookings.html:20
+msgid ""
+"Här ser du dina kommande bokningar och kan ta bort en som inte längre passar."
+msgstr ""
+"Här ser du dina kommande bokningar och kan ta bort en som inte längre "
+"passar."
+
+#: templates/common/booking/my_bookings.html:36
+msgid "Du har inga kommande bokningar."
+msgstr "Du har inga kommande bokningar."
+
+#: templates/common/booking/email/booking_confirmation.html:96
+#: templates/common/booking/email/booking_confirmation.txt:15
+msgid "Logga in på Mina bokningar och ta bort bokningen där."
+msgstr "Logga in på Mina bokningar och ta bort bokningen där."
+
+#: booking/admin.py:250
+msgid "Bokningen hann tas bort av någon annan och sparades därför inte."
+msgstr "Bokningen hann tas bort av någon annan och sparades därför inte."
+
+#: core/admin_ui.py:114
+msgid "Closed periods"
+msgstr "Stängda perioder"
+
+#: core/admin_ui.py:120
+msgid "Booking settings"
+msgstr "Bokningsinställningar"
+
+#: booking/admin.py:52 booking/admin.py:53
+msgid "Två bokningar i samma utrymme överlappar varandra."
+msgstr "Två bokningar i samma utrymme överlappar varandra."
+
+#: templates/date/date/components/bookings.html:39
+msgid "Inga kommande bokningar hittades"
+msgstr "Inga kommande bokningar hittades"
