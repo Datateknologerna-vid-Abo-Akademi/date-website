@@ -6,7 +6,7 @@
        cellspacing="0"
        border="0">
   <tr>
-    <td align="center" style="padding: 24px 12px">
+    <td align="center" style="padding: 24px 12px; color: #f5f5f5">
       <table role="presentation"
              width="600"
              cellpadding="0"
@@ -122,7 +122,10 @@
                    cellspacing="0"
                    border="0">
               <tr>
-                <td style="border-top: 1px solid #505050; padding-top: 16px">
+                <td style="border-top: 1px solid #505050;
+                           padding-top: 16px;
+                           font-size: 13px;
+                           color: #c7c7c7">
                   {% if association_email %}
                     {% blocktrans %}Har du frågor om bokningen, kontakta styrelsen via {{ association_email }}.{% endblocktrans %}
                   {% else %}
@@ -131,11 +134,11 @@
                 </td>
               </tr>
               <tr>
-                <td style="padding-top: 6px; color: #888888">{% trans "Du får det här meddelandet för att du bokade ett utrymme." %}</td>
+                <td style="padding-top: 6px; font-size: 13px; color: #a8a8a8">{% trans "Du får det här meddelandet för att du bokade ett utrymme." %}</td>
               </tr>
               {% if site_url %}
                 <tr>
-                  <td style="padding-top: 6px">
+                  <td style="padding-top: 6px; font-size: 13px; color: #c7c7c7">
                     <a href="{{ site_url }}" style="color: rgb(208, 255, 0)">{{ site_url }}</a>
                   </td>
                 </tr>

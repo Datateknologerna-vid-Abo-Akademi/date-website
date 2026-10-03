@@ -1943,6 +1943,52 @@ class BookingEmailTests(PinnedNowMixin, TestCase):
         self.assertTrue(Booking.objects.exists())
         send_email.delay.assert_not_called()
 
+    def test_the_mail_links_to_the_associations_address_not_the_request_host(self):
+        # Behind the ingress the request carries an internal name, and a mail
+        # telling a booker to visit it is worse than no link at all.
+        booking = make_booking(
+            self.room,
+            self.now + datetime.timedelta(hours=1),
+            self.now + datetime.timedelta(hours=2),
+            booker_name='Extern Besökare',
+            booker_email='besokare@example.com',
+        )
+        request = RequestFactory().post('/booking/1/', HTTP_HOST='internal-web.default.svc.cluster.local')
+        variables = {**settings.CONTENT_VARIABLES, 'SITE_URL': 'https://example.test'}
+
+        with self.settings(CONTENT_VARIABLES=variables):
+            with patch('booking.emails.send_email_with_attachments_task') as send_email:
+                with self.captureOnCommitCallbacks(execute=True):
+                    emails.notify_booker(booking, request=request)
+
+        _subject, body, _from_email, _recipients, kwargs = self.queued_message(send_email)
+        self.assertIn('https://example.test' + reverse('booking:cancel'), body)
+        self.assertIn('https://example.test/', body)
+        self.assertNotIn('internal-web', body)
+        # The invite's identity comes from the same address, so an event does not
+        # change when a request arrives through a different host.
+        self.assertIn('@example.test', kwargs['attachments'][0][1])
+
+    def test_without_a_site_address_the_request_host_is_used(self):
+        # A development instance has no public address, and has to link to
+        # itself rather than to something the reader cannot reach.
+        booking = make_booking(
+            self.room,
+            self.now + datetime.timedelta(hours=1),
+            self.now + datetime.timedelta(hours=2),
+            booker_name='Extern Besökare',
+            booker_email='besokare@example.com',
+        )
+        request = RequestFactory().post('/booking/1/')
+
+        with self.settings(CONTENT_VARIABLES={**settings.CONTENT_VARIABLES, 'SITE_URL': ''}):
+            with patch('booking.emails.send_email_with_attachments_task') as send_email:
+                with self.captureOnCommitCallbacks(execute=True):
+                    emails.notify_booker(booking, request=request)
+
+        _subject, body, _from_email, _recipients, _kwargs = self.queued_message(send_email)
+        self.assertIn('http://testserver' + reverse('booking:cancel'), body)
+
     def test_the_confirmation_names_the_room_and_the_board(self):
         booking = make_booking(
             self.room,

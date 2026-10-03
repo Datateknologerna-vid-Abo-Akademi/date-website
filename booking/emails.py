@@ -12,6 +12,8 @@ on-page confirmation, and the message on the page stays whether or not the
 booker gave an address.
 """
 
+from urllib.parse import urlsplit
+
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -35,10 +37,10 @@ def notify_booker(booking, *, request):
     # the caller and here is how a member ends up being sent to a page asking for
     # a code they were never given.
     if booking.is_external:
-        cancel_url = request.build_absolute_uri(reverse('booking:cancel'))
+        cancel_url = _site_base(request) + reverse('booking:cancel')
         cancel_code = access.cancel_code(booking)
     else:
-        cancel_url = request.build_absolute_uri(reverse('booking:my_bookings'))
+        cancel_url = _site_base(request) + reverse('booking:my_bookings')
         cancel_code = None
     context = {
         'booking': booking,
@@ -52,7 +54,7 @@ def notify_booker(booking, *, request):
         'association_email': getattr(settings, 'CONTENT_VARIABLES', {}).get('ASSOCIATION_EMAIL', ''),
         # The footer links to the site itself, which is a different thing from
         # the page that cancels this booking.
-        'site_url': request.build_absolute_uri('/'),
+        'site_url': _site_base(request) + '/',
     }
     subject = _('Bokningsbekräftelse för %(room)s') % {'room': booking.room.name}
     body = render_to_string('booking/email/booking_confirmation.txt', context)
@@ -71,10 +73,35 @@ def notify_booker(booking, *, request):
                 start=booking.start,
                 end=booking.end,
                 cancel_url=cancel_url,
-                host=request.get_host(),
+                host=_invite_namespace(request),
             ),
         ),
     )
+
+
+def _site_base(request):
+    """The association's public address, without a trailing slash.
+
+    Not the host this request arrived on: behind the ingress the request carries
+    an internal name, and a mail that tells a booker to visit it is worse than no
+    link at all. The content variable is what the rest of the project's mail
+    uses, and the request is only the fallback so a development instance still
+    links to itself.
+    """
+    base = str(getattr(settings, 'CONTENT_VARIABLES', {}).get('SITE_URL', '') or '')
+    if base:
+        return base.rstrip('/')
+    return request.build_absolute_uri('/').rstrip('/')
+
+
+def _invite_namespace(request):
+    """What keeps this installation's calendar events apart from another's.
+
+    The public address when there is one, so the identity of an event does not
+    move when a request arrives through a different host, and the request's host
+    only as the fallback.
+    """
+    return urlsplit(_site_base(request)).netloc or request.get_host()
 
 
 def _recipient(booking):
