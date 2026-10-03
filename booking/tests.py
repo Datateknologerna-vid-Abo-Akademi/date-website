@@ -24,7 +24,7 @@ from django.urls import reverse
 from django.utils import formats, timezone
 
 from booking import access, emails
-from booking.admin import BookingAdmin, BookingInline, BookingOriginFilter
+from booking.admin import BookingAdmin, BookingInline, BookingOriginFilter, RoomAdmin
 from booking.forms import AnonymousBookingForm, BookingForm
 from booking.models import BOOKING_PAST_GRACE, Booking, BookingSettings, Room
 from core.admin_ui import get_sidebar_navigation
@@ -804,8 +804,7 @@ class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
 
     def test_the_unlock_is_stored_for_the_room_that_was_gated(self):
         # The view fetches the room once and hands the same instance to the code
-        # check and to the unlock, so the two cannot end up on different
-        # generations, and the token is filed under this room alone.
+        # check and to the unlock, so the token is filed under this room alone.
         code = self.current_code()
 
         response = self.client.post(self.room_url, {'code': code})
@@ -819,6 +818,35 @@ class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
         # one room's code from opening another.
         other = make_room(name='Sauna')
         self.assertFalse(access.session_has_access(SimpleNamespace(session=self.client.session), other))
+
+    def test_a_rotation_landing_mid_request_cannot_unlock_the_new_generation(self):
+        # The check and the grant work from one room instance, so a rotation that
+        # lands between them leaves the visitor holding a token for the
+        # generation whose code they actually typed. That token must not open the
+        # room they have not got the new code for.
+        room = self.room
+        real_check = access.check_code
+
+        def check_then_rotate(checked_room, candidate, at=None):
+            accepted = real_check(checked_room, candidate, at=at)
+            Room.objects.filter(pk=room.pk).update(code_generation=checked_room.code_generation + 1)
+            return accepted
+
+        code = self.current_code()
+        with patch('booking.access.check_code', side_effect=check_then_rotate):
+            response = self.client.post(self.room_url, {'code': code})
+
+        self.assertRedirects(response, self.room_url, fetch_redirect_response=False)
+        self.assertEqual(
+            self.client.session[access.BOOKING_SESSION_TOKEN_KEY],
+            {str(room.pk): access.session_token(room)},
+        )
+
+        room.refresh_from_db()
+        self.assertEqual(room.code_generation, 2)
+        gated_again = self.client.get(self.room_url)
+        self.assertIn('code_form', gated_again.context)
+        self.assertNotIn('form', gated_again.context)
 
     def test_captcha_failure_blocks_creation(self):
         self.unlock()
@@ -1464,34 +1492,68 @@ class RoomCodeAdminTests(PinnedNowMixin, TestCase):
         self.assertContains(response, rotated)
         self.assertNotContains(response, 'Aldrig')
 
-    def test_editing_a_room_does_not_disturb_its_code(self):
-        # save_model writes only the editable fields, so a rotation that lands
-        # while the board is editing the name is not undone.
+    def test_editing_a_room_does_not_put_a_stale_code_generation_back(self):
+        # The race the guarded save exists for: the admin reads the room, the
+        # board opens the page, somebody rotates the room from elsewhere, and the
+        # save that follows must not undo that rotation. Rotating on the way in
+        # is what makes this test fail if the guard is replaced with a plain
+        # save(): the form was built from the pre-rotation row.
         url = reverse('admin:booking_room_change', args=[self.office.pk])
-        self.office.rotate_code()
-        rotated_code = access.current_code(self.office)
+        real_get_object = RoomAdmin.get_object
 
+        def rotate_after_the_read(admin_self, request, object_id, from_field=None):
+            stale = real_get_object(admin_self, request, object_id, from_field)
+            Room.objects.filter(pk=self.office.pk).update(code_generation=5, rotated_at=timezone.now())
+            return stale
+
+        with patch.object(RoomAdmin, 'get_object', rotate_after_the_read):
+            response = self.client.post(
+                url,
+                {
+                    'name': 'Kansliet (nytt namn)',
+                    'description': '',
+                    'is_active': 'on',
+                    '_save': 'Spara',
+                    # The room page carries the bookings inline, so its management
+                    # form has to be posted even with no rows to change.
+                    'bookings-TOTAL_FORMS': '0',
+                    'bookings-INITIAL_FORMS': '0',
+                    'bookings-MIN_NUM_FORMS': '0',
+                    'bookings-MAX_NUM_FORMS': '1000',
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.office.refresh_from_db()
+        # The edit landed...
+        self.assertEqual(self.office.name, 'Kansliet (nytt namn)')
+        # ...and the rotation that happened in the meantime survived it.
+        self.assertEqual(self.office.code_generation, 5)
+        self.assertIsNotNone(self.office.rotated_at)
+        self.assertEqual(access.current_code(self.office), access.code_for_generation(self.office, 5))
+
+    def test_a_room_can_still_be_created_from_the_admin(self):
+        # The guarded save belongs to the change path only: an insert has no
+        # primary key yet, and Django refuses update_fields without one.
         response = self.client.post(
-            url,
+            reverse('admin:booking_room_add'),
             {
-                'name': 'Kansliet (nytt namn)',
-                'description': '',
+                'name': 'Nytt utrymme',
+                'description': 'Nytt',
                 'is_active': 'on',
-                '_save': 'Spara',
-                # The room page carries the bookings inline, so its management
-                # form has to be posted even with no rows to change.
                 'bookings-TOTAL_FORMS': '0',
                 'bookings-INITIAL_FORMS': '0',
                 'bookings-MIN_NUM_FORMS': '0',
                 'bookings-MAX_NUM_FORMS': '1000',
+                '_save': 'Spara',
             },
         )
 
         self.assertEqual(response.status_code, 302)
-        self.office.refresh_from_db()
-        self.assertEqual(self.office.name, 'Kansliet (nytt namn)')
-        self.assertEqual(self.office.code_generation, 2)
-        self.assertEqual(access.current_code(self.office), rotated_code)
+        created = Room.objects.get(name='Nytt utrymme')
+        self.assertEqual(created.code_generation, 1)
+        self.assertIsNone(created.rotated_at)
+        self.assertTrue(access.current_code(created).isdigit())
 
     def test_the_rotate_action_hands_out_a_new_code_for_the_selected_room(self):
         old_code = access.current_code(self.office)

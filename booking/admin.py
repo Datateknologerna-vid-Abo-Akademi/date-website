@@ -104,12 +104,17 @@ class RoomAdmin(ModelAdmin):
         return super().get_queryset(request).annotate(bookings_total=Count('bookings'))
 
     def save_model(self, request, obj, form, change):
-        # Only the fields the board can edit are written, which is name,
-        # description and is_active. A plain save() would also put back the
-        # generation and the rotation moment from whatever this request read,
-        # undoing a rotation that landed in between and reviving the unlocks it
-        # had just ended. On an insert update_fields is ignored and every field
-        # is written, which is what the two defaults need.
+        if not change:
+            # A new room is an insert, and Django refuses update_fields without
+            # a primary key, so the defaults for the code state are written the
+            # ordinary way.
+            super().save_model(request, obj, form, change)
+            return
+        # For a room that exists, only the fields the board can edit are written,
+        # which is name, description and is_active. A plain save() would also put
+        # back the generation and the rotation moment from whatever this request
+        # read, undoing a rotation that landed in between and reviving the
+        # unlocks it had just ended.
         editable = [f.name for f in obj._meta.concrete_fields if f.editable and not f.primary_key]
         obj.save(update_fields=editable)
 
