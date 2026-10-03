@@ -34,8 +34,10 @@ Open **Booking › Bokningar**. The list opens furthest away first, so the rows 
 
 - **Utrymme**: the room that was booked.
 - **Tid**: the start date and time, followed by the end time.
-- **Bokare**: the member who booked, or the name recorded for a booking made by someone without an account. A member's name is written down when the booking is made, so it stays readable here even if that member later deletes the account.
+- **Bokare**: the member who booked, or the name recorded for a booking made by someone without an account. A member is shown by their full name, and by the account name only when the profile has no name. The name is written down when the booking is made, so it stays readable here even if that member later deletes the account.
 - **Utan konto**: ticked when there is no website account behind the booking. It is also ticked for a booking made by a member who has since deleted the account, so read it together with **Bokare** rather than on its own.
+
+On the public pages each booking shows as a weekday and a date (`mån 4.10`), with the year added when the booking falls in another year than the current one, so a short badge can never be read as the wrong year.
 
 Filters are available by booking origin, by room and by start date, the date drill-down at the top steps through the calendar, and the search box looks in the booker's name, the booker's email and the booking description. The origin filter has three choices:
 
@@ -120,6 +122,12 @@ The permissions to grant, by model, with the exact codenames as they appear in t
   - `booking.add_booking`
   - `booking.change_booking`
   - `booking.delete_booking`
+- Stängd period (Closure):
+  - `booking.view_closure`
+  - `booking.add_closure`
+  - `booking.change_closure`
+  - `booking.delete_closure`
+  - Without these four the room page shows no **Stängda perioder** table at all, because Django hides an inline the user may not change, so a board that can edit rooms but not closures sees no closures and no explanation.
 - Bokningsinställningar (BookingSettings):
   - `booking.view_bookingsettings`
   - `booking.change_bookingsettings`
@@ -127,7 +135,7 @@ The permissions to grant, by model, with the exact codenames as they appear in t
 
 Who should have them:
 
-- The board group (`styrelse`) should have all of the permissions above, so the board can manage rooms, bookings and the code.
+- The board group (`styrelse`) should have all of the permissions above, so the board can manage rooms, bookings, closures and the codes. `members/provisioning.py` grants a group every permission of every local app, so a group provisioned that way picks the closure permissions up on its next run and nothing has to be added by hand.
 - Staff groups that have nothing to do with room booking, such as photographers (`fotograf`) and vote counters (`rösträknare`), must not. With these permissions a group could change rooms, delete other people's bookings, or look up the email addresses of outside bookers.
 - Grant `booking.view_bookingsettings` only to people who may see the code, because the settings page displays it.
 - Any other staff group follows the same rule: no booking access unless it is granted.

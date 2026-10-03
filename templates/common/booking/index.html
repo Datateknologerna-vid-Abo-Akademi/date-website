@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load booking_dates %}
 {% load static %}
 {% load i18n %}
 {% block title %}
@@ -37,8 +38,8 @@
           <ul class="booking-list">
             {% for booking in bookings %}
               <li class="booking-list-item">
-                <span class="booking-badge">{{ booking.start|date:"d.m" }}</span>
-                <span class="booking-time">{{ booking.start|date:"H:i" }} - {{ booking.end|date:"H:i" }}</span>
+                <span class="booking-badge">{{ booking.start|short_date }}</span>
+                <span class="booking-time">{{ booking.start|date:"H:i" }} - {% if booking.start|date:"Ymd" != booking.end|date:"Ymd" %}{{ booking.end|short_date }} {% endif %}{{ booking.end|date:"H:i" }}</span>
                 <span class="booking-room-name">{{ booking.room.name }}</span>
               </li>
             {% empty %}

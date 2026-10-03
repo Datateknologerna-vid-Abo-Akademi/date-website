@@ -1,3 +1,4 @@
+{% load booking_dates %}
 {% load i18n %}
 {% if BOOKING_ENABLED %}
   <div class="bookings-container">
@@ -17,7 +18,7 @@
                       <div>
                         <span class="badge">{{ booking.start|date:"d" }}</span>
                       </div>
-                      <div class="text-color">{{ booking.start|date:"M" }}</div>
+                      <div class="text-color">{{ booking.start|date:"M" }}{{ booking.start|year_suffix }}</div>
                     </div>
                     <div style="margin: auto;" class="col-7">
                       <div class="d-flex flex-column">

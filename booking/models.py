@@ -42,6 +42,17 @@ def _now():
     return access.now_at()
 
 
+def booker_label(author):
+    """What to call the member behind a booking.
+
+    The full name when the profile has one, because that is the person the board
+    is looking for, and the account name only as a fallback: a row reading
+    "abbe" next to a user card reading "Albin Bäck" is the same person and looks
+    like two.
+    """
+    return (author.get_full_name() or '').strip() or str(author)
+
+
 class Room(models.Model):
     name = models.CharField(_('Namn'), max_length=255)
     description = models.TextField(_('Beskrivning'), blank=True)
@@ -218,7 +229,7 @@ class Booking(models.Model):
         # there, skip the snapshot, and write an author with a blank name.
         writes_row = update_fields is None or bool(update_fields)
         if writes_row and not self.booker_name and self.author_id:
-            self.booker_name = str(self.author)
+            self.booker_name = booker_label(self.author)
             if update_fields is not None:
                 kwargs['update_fields'] = update_fields | {'booker_name'}
         super().save(*args, **kwargs)
@@ -236,7 +247,7 @@ class Booking(models.Model):
     @property
     def booker_display(self):
         if self.author_id:
-            return str(self.author)
+            return booker_label(self.author)
         return self.booker_name or str(_('Extern bokning'))
 
     def clean(self):

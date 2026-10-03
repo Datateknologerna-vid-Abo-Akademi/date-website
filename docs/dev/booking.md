@@ -8,6 +8,8 @@ The app is association-agnostic. Nothing under `booking/` reads `PROJECT_NAME` o
 Where the code lives:
 
 - `booking/models.py`: `Room`, `Booking`, `BookingSettings`.
+- The public lists print a time range as `18:00 - 20:00`, and add the end date with its weekday when the range crosses midnight, so a booking or a closure that runs over several days cannot be read as a same-day one. The end date appears only then, because repeating it on every row is noise.
+- `booking/templatetags/booking_dates.py`: `short_date` and `year_suffix`, the two filters that format a date in the public lists. Weekday always, year only when the date is not in the current year, both taken from the active locale and measured against `access.now_at()` so a test can pin the year boundary.
 - `booking/access.py`: the per-room codes, the session token, and the HTTP gate.
 - `booking/views.py`, `booking/forms.py`, `booking/urls.py`: the public pages.
 - `booking/admin.py`: the admin registrations.
@@ -31,6 +33,7 @@ Where the code lives:
 - `_upcoming_closures()` in `booking/views.py` feeds the "Stängt" list on the room page, so a visitor sees why the room is unavailable before filling in the form.
 
 ### `Booking`
+- `booker_label(author)` is the single place that decides what to call the member behind a booking: the profile's full name when there is one, and the account name otherwise. A row reading a login handle next to a user card reading a full name looks like two different people, so both the snapshot and the display go through it.
 - `room`: FK to `Room`, `on_delete=CASCADE`, `related_name='bookings'`.
 - `author`: optional FK to the member model (`settings.AUTH_USER_MODEL`), `on_delete=SET_NULL`, `related_name='room_bookings'`. `None` means there is no website account behind the booking: either it came from a visitor, or the member who made it deleted the account afterwards.
 - `booker_name` (max 255, optional), `booker_email` (optional), `start`, `end`, `description` (max 400, optional), `created` (`default=timezone.now`, not editable).

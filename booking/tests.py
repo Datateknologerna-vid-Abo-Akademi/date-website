@@ -27,6 +27,7 @@ from booking import access, emails
 from booking.admin import BookingAdmin, BookingInline, BookingOriginFilter, RoomAdmin
 from booking.forms import AnonymousBookingForm, BookingForm
 from booking.models import BOOKING_PAST_GRACE, Booking, BookingSettings, Closure, Room
+from booking.templatetags.booking_dates import short_date, year_suffix
 from core.admin_ui import get_sidebar_navigation
 
 # Unsaved rooms with an explicit primary key: every code function takes a room,
@@ -464,6 +465,39 @@ class BookingModelTests(TestCase):
 
         self.assertEqual(booking.booker_name, str(member))
 
+    def test_a_member_with_a_name_is_recorded_and_shown_by_that_name(self):
+        # The board looks for a person, not a login handle, so the full name wins
+        # whenever the profile has one.
+        member = make_member('abbe', first_name='Albin', last_name='Bäck')
+
+        booking = make_booking(self.room, self.start, self.end, author=member)
+
+        self.assertEqual(booking.booker_name, 'Albin Bäck')
+        self.assertEqual(booking.booker_display, 'Albin Bäck')
+
+    def test_a_member_without_a_name_falls_back_to_the_account(self):
+        member = make_member('abbe')
+
+        booking = make_booking(self.room, self.start, self.end, author=member)
+
+        self.assertEqual(booking.booker_name, 'abbe')
+        self.assertEqual(booking.booker_display, 'abbe')
+
+    def test_renaming_a_member_does_not_rewrite_an_old_booking(self):
+        # The snapshot keeps what the name was when the booking was made, and the
+        # display prefers the live profile when there still is one.
+        member = make_member('abbe', first_name='Albin', last_name='Bäck')
+        booking = make_booking(self.room, self.start, self.end, author=member)
+
+        member.first_name = 'Albin'
+        member.last_name = 'Bäckman'
+        member.save()
+
+        booking.refresh_from_db()
+        self.assertEqual(booking.booker_name, 'Albin Bäck')
+        booking.author.refresh_from_db()
+        self.assertEqual(booking.booker_display, 'Albin Bäckman')
+
     def test_a_name_typed_by_the_board_is_not_overwritten(self):
         member = make_member('booking-typed')
         booking = make_booking(self.room, self.start, self.end, author=member, booker_name='Ringde kansliet')
@@ -598,6 +632,33 @@ class BookingModelTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn('booker_name', form.errors)
         self.assertIn('booker_email', form.errors)
+
+
+class BookingDateFilterTests(PinnedNowMixin, SimpleTestCase):
+    """The date badges say the weekday, and the year only when it is needed."""
+
+    def test_a_date_in_the_current_year_has_no_year(self):
+        # self.now is pinned, so this is not a question about today's date.
+        moment = self.now.replace(month=10, day=4, hour=15)
+
+        rendered = short_date(moment)
+
+        self.assertIn('4.10', rendered)
+        self.assertIn('sön', rendered.lower())
+        self.assertNotIn(str(self.now.year), rendered)
+
+    def test_a_date_in_another_year_says_which_year(self):
+        moment = self.now.replace(year=self.now.year + 1, month=1, day=3, hour=15)
+
+        rendered = short_date(moment)
+
+        self.assertIn('3.1', rendered)
+        self.assertIn(str(self.now.year + 1), rendered)
+        self.assertIn('sön', rendered.lower())
+
+    def test_the_year_suffix_is_empty_inside_the_current_year(self):
+        self.assertEqual(year_suffix(self.now.replace(month=6, day=1)), '')
+        self.assertEqual(year_suffix(self.now.replace(year=self.now.year + 2)), f' {self.now.year + 2}')
 
 
 class BookingAvailabilityRulesTests(TestCase):
@@ -906,6 +967,15 @@ class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
         self.assertEqual(booking.booker_name, 'Extern Besökare')
         self.assertEqual(booking.booker_email, 'besokare@example.com')
         self.assertEqual(booking.room, self.room)
+
+    def test_the_room_list_badge_carries_the_weekday(self):
+        # The filter is wired into the list, not merely available.
+        start = self.now + datetime.timedelta(days=1)
+        make_booking(self.room, start, start + datetime.timedelta(hours=1), booker_name='Någon')
+
+        response = self.client.get(self.index_url)
+
+        self.assertContains(response, short_date(start))
 
     def test_the_room_page_shows_a_closed_period_before_the_code_is_typed(self):
         # A visitor looking at the calendar should see why the room is
