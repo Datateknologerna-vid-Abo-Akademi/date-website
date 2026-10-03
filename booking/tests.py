@@ -20,6 +20,7 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.test import RequestFactory, SimpleTestCase, TestCase, TransactionTestCase
 from django.urls import reverse
 from django.utils import formats, timezone
@@ -1779,6 +1780,80 @@ class RoomCodeAdminTests(PinnedNowMixin, TestCase):
         self.assertIsNone(created.rotated_at)
         self.assertTrue(access.current_code(created).isdigit())
 
+    def test_two_overlapping_rows_in_one_submission_are_refused(self):
+        # Neither row is in the database when the other is validated, so the
+        # model's own check cannot see this pair. Without a formset that compares
+        # its rows, both would be written by a single save.
+        url = reverse('admin:booking_room_change', args=[self.office.pk])
+        start = timezone.localtime(timezone.now()).replace(second=0, microsecond=0) + datetime.timedelta(days=1)
+        data = {
+            'name': self.office.name,
+            'description': '',
+            '_save': 'Spara',
+            'bookings-TOTAL_FORMS': '2',
+            'bookings-INITIAL_FORMS': '0',
+            'bookings-MIN_NUM_FORMS': '0',
+            'bookings-MAX_NUM_FORMS': '1000',
+            'bookings-0-room': str(self.office.pk),
+            'bookings-0-start_0': start.strftime('%Y-%m-%d'),
+            'bookings-0-start_1': '18:00:00',
+            'bookings-0-end_0': start.strftime('%Y-%m-%d'),
+            'bookings-0-end_1': '20:00:00',
+            'bookings-0-booker_name': 'Första',
+            'bookings-1-room': str(self.office.pk),
+            'bookings-1-start_0': start.strftime('%Y-%m-%d'),
+            'bookings-1-start_1': '19:00:00',
+            'bookings-1-end_0': start.strftime('%Y-%m-%d'),
+            'bookings-1-end_1': '21:00:00',
+            'bookings-1-booker_name': 'Andra',
+            'closures-TOTAL_FORMS': '0',
+            'closures-INITIAL_FORMS': '0',
+            'closures-MIN_NUM_FORMS': '0',
+            'closures-MAX_NUM_FORMS': '1000',
+        }
+
+        response = self.client.post(url, data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Två bokningar i samma utrymme överlappar varandra.')
+        self.assertEqual(Booking.objects.count(), 0)
+
+    def test_two_rows_that_only_touch_are_accepted(self):
+        # The positive control: the check above must not refuse a pair that merely
+        # meets at a boundary, which is exactly what the model allows.
+        url = reverse('admin:booking_room_change', args=[self.office.pk])
+        start = timezone.localtime(timezone.now()).replace(second=0, microsecond=0) + datetime.timedelta(days=1)
+        data = {
+            'name': self.office.name,
+            'description': '',
+            '_save': 'Spara',
+            'bookings-TOTAL_FORMS': '2',
+            'bookings-INITIAL_FORMS': '0',
+            'bookings-MIN_NUM_FORMS': '0',
+            'bookings-MAX_NUM_FORMS': '1000',
+            'bookings-0-room': str(self.office.pk),
+            'bookings-0-start_0': start.strftime('%Y-%m-%d'),
+            'bookings-0-start_1': '18:00:00',
+            'bookings-0-end_0': start.strftime('%Y-%m-%d'),
+            'bookings-0-end_1': '20:00:00',
+            'bookings-0-booker_name': 'Första',
+            'bookings-1-room': str(self.office.pk),
+            'bookings-1-start_0': start.strftime('%Y-%m-%d'),
+            'bookings-1-start_1': '20:00:00',
+            'bookings-1-end_0': start.strftime('%Y-%m-%d'),
+            'bookings-1-end_1': '21:00:00',
+            'bookings-1-booker_name': 'Andra',
+            'closures-TOTAL_FORMS': '0',
+            'closures-INITIAL_FORMS': '0',
+            'closures-MIN_NUM_FORMS': '0',
+            'closures-MAX_NUM_FORMS': '1000',
+        }
+
+        response = self.client.post(url, data)
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Booking.objects.count(), 2)
+
     def test_the_rotate_action_hands_out_a_new_code_for_the_selected_room(self):
         old_code = access.current_code(self.office)
         sauna_code = access.current_code(self.sauna)
@@ -1988,6 +2063,29 @@ class BookingEmailTests(PinnedNowMixin, TestCase):
 
         _subject, body, _from_email, _recipients, _kwargs = self.queued_message(send_email)
         self.assertIn('http://testserver' + reverse('booking:cancel'), body)
+
+    def test_a_broker_that_is_down_does_not_undo_the_booking(self):
+        # The booking is committed by the time the task is queued, so a broker
+        # error must not reach the visitor as a failed booking. An outsider would
+        # also lose the only copy of their cancellation code, so the loss is
+        # logged rather than raised.
+        booking = make_booking(
+            self.room,
+            self.now + datetime.timedelta(hours=1),
+            self.now + datetime.timedelta(hours=2),
+            booker_name='Extern Besökare',
+            booker_email='besokare@example.com',
+        )
+        request = RequestFactory().post('/booking/1/')
+
+        with patch('booking.emails.send_email_with_attachments_task') as task:
+            task.delay.side_effect = OSError('broker is down')
+            with self.assertLogs('date', level='WARNING') as logs:
+                with self.captureOnCommitCallbacks(execute=True):
+                    emails.notify_booker(booking, request=request)
+
+        self.assertTrue(Booking.objects.filter(pk=booking.pk).exists())
+        self.assertIn('Could not queue the confirmation', logs.output[0])
 
     def test_the_confirmation_names_the_room_and_the_board(self):
         booking = make_booking(
@@ -2478,21 +2576,72 @@ class BookingAdminRaceTests(TransactionTestCase):
         # its UPDATE matches no rows, so the row would return while the booker had
         # already been told it was gone. Both admin paths have to write only the
         # fields their form can change for this to be a no-op.
-        admin_user = get_user_model().objects.create_superuser(
-            username='bokningsadmin',
-            password='pwd',
-            email='bokningsadmin@example.com',
-        )
         booking = self.booking()
-        stale = Booking.objects.get(pk=booking.pk)
+        # Held before the delete: Django clears a deleted instance's primary key,
+        # so asserting on booking.pk afterwards would be asserting on None.
+        pk = booking.pk
+        stale = Booking.objects.get(pk=pk)
         booking.delete()
         request = RequestFactory().post('/admin/booking/booking/')
-        request.user = admin_user
+        request.user = self.admin_user
         model_admin = BookingAdmin(Booking, admin.site)
 
         with patch.object(BookingAdmin, 'message_user') as message_user:
+            # Inside a transaction, the way the admin runs it: the raised error
+            # marks that transaction for rollback, so the guard needs a savepoint
+            # of its own to be able to carry on and tell the board anything.
             model_admin.save_model(request, stale, form=None, change=True)
 
-        self.assertFalse(Booking.objects.filter(pk=booking.pk).exists())
+        self.assertFalse(Booking.objects.filter(pk=pk).exists())
         # The board is told rather than left thinking the edit landed.
         self.assertTrue(message_user.called)
+
+    def test_a_caught_not_updated_leaves_the_transaction_usable(self):
+        """The mechanism the admin's guard depends on.
+
+        A save whose row has gone raises NotUpdated, which is a DatabaseError, so
+        the surrounding transaction is marked for rollback the moment it is
+        raised. Catching it without a savepoint of its own therefore leaves a
+        transaction the admin cannot use: its next write, the log entry, fails.
+        This exercises that shape directly, because the admin supplies its own
+        transaction and the test harness cannot get inside it.
+        """
+        booking = self.booking()
+        pk = booking.pk
+        stale = Booking.objects.get(pk=pk)
+        booking.delete()
+
+        with transaction.atomic():
+            try:
+                with transaction.atomic():
+                    stale.save(update_fields=['description'])
+            except Booking.NotUpdated:
+                pass
+            # Where the admin writes its log entry. This raises
+            # TransactionManagementError without the inner savepoint.
+            self.assertEqual(Booking.objects.count(), 0)
+
+        self.assertFalse(Booking.objects.filter(pk=pk).exists())
+
+    def test_the_lock_covers_every_room_a_submission_can_write(self):
+        # The effect of the lock cannot be shown on SQLite, which ignores
+        # select_for_update, so what is pinned is which rooms the admin asks to
+        # lock: the room a booking is moving to, the one it is moving away from,
+        # and the inline's rows.
+        other = make_room(name='Kansliet')
+        booking = self.booking()
+        booking_admin = BookingAdmin(Booking, admin.site)
+
+        moving = RequestFactory().post('/admin/booking/booking/', {'room': str(other.pk)})
+
+        self.assertEqual(booking_admin.rooms_to_lock(moving, str(booking.pk)), {other.pk, self.room.pk})
+        self.assertEqual(booking_admin.rooms_to_lock(moving, None), {other.pk})
+
+        room_admin = RoomAdmin(Room, admin.site)
+        inline_post = RequestFactory().post(
+            f'/admin/booking/room/{self.room.pk}/change/',
+            {'room': str(self.room.pk), 'bookings-0-room': str(other.pk)},
+        )
+
+        self.assertEqual(room_admin.rooms_to_lock(inline_post, str(self.room.pk)), {self.room.pk, other.pk})
+        self.assertEqual(room_admin.rooms_to_lock(inline_post, None), {self.room.pk, other.pk})

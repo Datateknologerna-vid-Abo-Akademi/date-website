@@ -3095,6 +3095,10 @@ msgstr "Suljetut jaksot"
 msgid "Booking settings"
 msgstr "Varausasetukset"
 
+#: booking/admin.py:52 booking/admin.py:53
+msgid "Två bokningar i samma utrymme överlappar varandra."
+msgstr "Kaksi varausta samassa tilassa menevät päällekkäin."
+
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"
 msgstr "Tulevia varauksia ei löytynyt"

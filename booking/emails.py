@@ -11,18 +11,22 @@ on-page confirmation, and the message on the page stays whether or not the
 booker gave an address.
 """
 
+import logging
 from urllib.parse import urlsplit
 
 from django.conf import settings
+from django.db import transaction
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from core.utils import enqueue_task_on_commit, send_email_with_attachments_task
+from core.utils import send_email_with_attachments_task
 
 from . import access
 from .ics import invite_attachment
+
+logger = logging.getLogger('date')
 
 
 def notify_booker(booking, *, request):
@@ -58,24 +62,38 @@ def notify_booker(booking, *, request):
     subject = _('Bokningsbekräftelse för %(room)s') % {'room': booking.room.name}
     body = render_to_string('booking/email/booking_confirmation.txt', context)
     html = render_to_string('booking/email/booking_confirmation.html', context)
-    enqueue_task_on_commit(
-        send_email_with_attachments_task,
-        subject,
-        body,
-        settings.DEFAULT_FROM_EMAIL,
-        [recipient],
-        html_message=html,
-        attachments=(
-            invite_attachment(
-                booking=booking,
-                room=booking.room,
-                start=booking.start,
-                end=booking.end,
-                cancel_url=cancel_url,
-                host=_invite_namespace(request),
-            ),
-        ),
+    # Queued on commit, but not through enqueue_task_on_commit: that helper lets a
+    # broker error out of the callback, and by then the booking is committed, so
+    # an unreachable broker would turn a booking that exists into an error page
+    # for the visitor, and an outsider would lose the only copy of their
+    # cancellation code. The loss is logged instead, which is the smaller harm.
+    transaction.on_commit(
+        lambda: _queue(subject, body, html, recipient, cancel_url, booking, _invite_namespace(request))
     )
+    return
+
+
+def _queue(subject, body, html, recipient, cancel_url, booking, host):
+    try:
+        send_email_with_attachments_task.delay(
+            subject,
+            body,
+            settings.DEFAULT_FROM_EMAIL,
+            [recipient],
+            html_message=html,
+            attachments=(
+                invite_attachment(
+                    booking=booking,
+                    room=booking.room,
+                    start=booking.start,
+                    end=booking.end,
+                    cancel_url=cancel_url,
+                    host=host,
+                ),
+            ),
+        )
+    except Exception:
+        logger.warning('Could not queue the confirmation for booking %s', booking.pk, exc_info=True)
 
 
 def _site_base(request):

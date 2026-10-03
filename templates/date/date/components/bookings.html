@@ -23,7 +23,7 @@
                     <div style="margin: auto;" class="col-7">
                       <div class="d-flex flex-column">
                         <small class="list-inline-item">
-                          <i class="far fa-clock"></i> {{ booking.start|date:"H:i" }}-{{ booking.end|date:"H:i" }}
+                          <i class="far fa-clock"></i> {{ booking.start|date:"H:i" }}-{% if booking.start|date:"Ymd" != booking.end|date:"Ymd" %}{{ booking.end|short_date }} {% endif %}{{ booking.end|date:"H:i" }}
                         </small>
                         <h6 class="card-title text-uppercase mt-0">
                           <strong>{{ booking.room.name }}</strong>

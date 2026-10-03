@@ -9,6 +9,7 @@ tested as text, because that is what it is and how a client parses it.
 import datetime
 import re
 import zoneinfo
+from unittest.mock import patch
 
 from django.template.loader import render_to_string
 from django.test import SimpleTestCase
@@ -199,27 +200,29 @@ class BookingInviteTests(SimpleTestCase):
     def test_invite_attachment_returns_the_file_triple(self):
         booking = make_booking()
 
-        filename, content, mimetype = invite_attachment(
-            booking=booking,
-            room=booking.room,
-            start=booking.start,
-            end=booking.end,
-        )
+        # The clock is pinned across both generations. DTSTAMP comes from
+        # timezone.now(), so comparing a file generated now with one generated a
+        # moment later fails whenever the second boundary falls between them.
+        with patch('booking.ics.timezone.now', return_value=booking.start):
+            filename, content, mimetype = invite_attachment(
+                booking=booking,
+                room=booking.room,
+                start=booking.start,
+                end=booking.end,
+            )
+            expected = booking_invite(
+                booking=booking,
+                room=booking.room,
+                start=booking.start,
+                end=booking.end,
+            )
 
         self.assertEqual(filename, f'booking-{booking.pk}.ics')
         self.assertTrue(filename.endswith('.ics'))
         self.assertEqual(mimetype, 'text/calendar; method=PUBLISH; charset=utf-8')
         self.assertEqual(mimetype, ATTACHMENT_MIMETYPE)
         self.assertIn('BEGIN:VCALENDAR', content)
-        self.assertEqual(
-            content,
-            booking_invite(
-                booking=booking,
-                room=booking.room,
-                start=booking.start,
-                end=booking.end,
-            ),
-        )
+        self.assertEqual(content, expected)
 
 
 class BookingConfirmationBodyTests(SimpleTestCase):

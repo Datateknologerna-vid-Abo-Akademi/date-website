@@ -65,7 +65,7 @@ What is public and what is not:
 
 - Public: the room's name and description, and the booking's start and end times. The room list, the room page and the front-page block show nothing else.
 - Not public: the booking **description**, the **booker name** and the **booker email**. They are visible only in the admin.
-- The booker email is used for one thing: the confirmation message. Every booking gets one, whether a member made it or somebody without an account, and it carries a calendar invite. A booking with no address at all (a member whose profile has no email) is the only case with no message.
+- The booker email is used for one thing: the confirmation message, which is sent when somebody books through the public form, whether they are a member or not, and which carries a calendar invite. A booking you create or edit here sends nothing, so tell the booker yourself if you make one for them. A booking with no address at all (a member whose profile has no email) also gets no message.
 
 If the member account behind a booking is later deleted, the booking itself stays, and it keeps showing the name that was recorded when it was made.
 
@@ -133,13 +133,13 @@ The permissions to grant, by model, with the exact codenames as they appear in t
 - Bokningsinställningar (BookingSettings):
   - `booking.view_bookingsettings`
   - `booking.change_bookingsettings`
-  - `booking.add_bookingsettings` and `booking.delete_bookingsettings` also exist, but the site creates the settings row on its own and the admin never offers to delete it, so they are not needed.
+  - `booking.add_bookingsettings` is needed once, to create the row: nothing else creates it, and the site deliberately does not, so without it the board cannot write its note. `booking.delete_bookingsettings` is never needed, because the admin refuses to delete the row.
 
 Who should have them:
 
 - The board group (`styrelse`) should have all of the permissions above, so the board can manage rooms, bookings, closures and the codes. `members/provisioning.py` grants a group every permission of every local app, so a group provisioned that way picks the closure permissions up on its next run and nothing has to be added by hand.
 - Staff groups that have nothing to do with room booking, such as photographers (`fotograf`) and vote counters (`rösträknare`), must not. With these permissions a group could change rooms, delete other people's bookings, or look up the email addresses of outside bookers.
-- Grant `booking.view_bookingsettings` only to people who may see the code, because the settings page displays it.
+- Grant `booking.view_bookingsettings` to whoever writes the note that visitors read. It no longer shows a code: the codes live on the rooms, so the permission that shows them is `booking.view_room`.
 - Any other staff group follows the same rule: no booking access unless it is granted.
 
 How to grant them: open the group on the **Grupper** (**Groups**) page in the admin's authentication section, move the booking permissions from the available list to the chosen list, and save. Granting a permission is what makes the booking section appear for that group; no other step is needed. A group without any of these permissions sees no booking section at all in the admin. Superusers always have access.

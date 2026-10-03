@@ -3038,6 +3038,10 @@ msgstr "Stängda perioder"
 msgid "Booking settings"
 msgstr "Bokningsinställningar"
 
+#: booking/admin.py:52 booking/admin.py:53
+msgid "Två bokningar i samma utrymme överlappar varandra."
+msgstr "Två bokningar i samma utrymme överlappar varandra."
+
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"
 msgstr "Inga kommande bokningar hittades"

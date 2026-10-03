@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib import admin, messages
+from django.db import transaction
 from django.db.models import Count, Q
 from django.forms.models import BaseInlineFormSet
 from django.utils import formats, timezone
@@ -26,22 +27,90 @@ def editable_field_names(obj):
 
 
 class BookingInlineFormSet(BaseInlineFormSet):
-    """Saves only what the row's form can change, for the reason above.
+    """The inline's own two rules: no resurrection, and no sibling overlap.
 
-    A row that disappeared between the formset being read and this save is
-    dropped with a log line rather than an error page. The board sees it gone
-    from the list after the reload, which is the truth of it, and the cancellation
-    that removed it is the answer that stands.
+    Saves only what the row's form can change, and checks the submitted rows
+    against each other. A formset validates each form on its own, and none of the
+    rows exists in the database yet, so `Booking.clean()` cannot see that two rows
+    in this one submission cover the same time. Without the check below the board
+    can add an overlapping pair in a single save and both are written.
     """
+
+    def clean(self):
+        super().clean()
+        seen = []
+        for form in self.forms:
+            data = getattr(form, 'cleaned_data', None)
+            if not data or data.get('DELETE'):
+                continue
+            start = data.get('start')
+            end = data.get('end')
+            if not start or not end:
+                continue
+            for other_start, other_end, other_form in seen:
+                if start < other_end and end > other_start:
+                    form.add_error('start', _('Två bokningar i samma utrymme överlappar varandra.'))
+                    other_form.add_error('start', _('Två bokningar i samma utrymme överlappar varandra.'))
+                    break
+            seen.append((start, end, form))
 
     def save_existing(self, form, obj, commit=True):
         if not commit:
             return form.save(commit=False)
+        # The savepoint is what makes catching this safe. Django marks the
+        # surrounding transaction for rollback as soon as the UPDATE raises, so
+        # without a savepoint of its own the admin log write that follows would
+        # raise TransactionManagementError and the board would get an error page
+        # instead of the sentence below.
         try:
-            obj.save(update_fields=editable_field_names(obj))
+            with transaction.atomic():
+                obj.save(update_fields=editable_field_names(obj))
         except Booking.NotUpdated:
             logger.warning('Booking %s was removed while this page was being saved', obj.pk)
         return obj
+
+
+class BookingWriteLockMixin:
+    """Takes the room lock the public booking form takes, before validating.
+
+    `room_detail` locks the room row before it validates, so two visitors cannot
+    both pass the overlap check and both insert. The admin validates before Django
+    opens its own transaction, so without this the same two writes can both pass
+    it: two board members, or a board member racing a visitor. The only database
+    constraint is `end > start`, so nothing else would catch it.
+
+    Everything a submitted page touches is locked, including the room a booking is
+    being moved away from, because that room is where the freed time reappears.
+
+    SQLite ignores `select_for_update`, so the tests cannot prove the race, the
+    same limitation the public path already documents. What they do cover is which
+    rooms this asks to lock.
+    """
+
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        if request.method != 'POST':
+            return super().changeform_view(request, object_id, form_url, extra_context)
+        with transaction.atomic():
+            locked = self.rooms_to_lock(request, object_id)
+            if locked:
+                # Evaluated, not left as a queryset: the lock has to be held now.
+                list(Room.objects.select_for_update().filter(pk__in=locked))
+            return super().changeform_view(request, object_id, form_url, extra_context)
+
+    def rooms_to_lock(self, request, object_id):
+        """The room primary keys a submitted page can write bookings against."""
+        pks = set()
+        if object_id and str(object_id).isdigit():
+            if self.model is Room:
+                pks.add(int(object_id))
+            else:
+                current = self.model._default_manager.filter(pk=object_id).values_list('room_id', flat=True).first()
+                if current:
+                    pks.add(current)
+        for key, value in request.POST.items():
+            if (key == 'room' or key.endswith('-room')) and str(value).isdigit():
+                pks.add(int(value))
+        return pks
 
 
 class BookingInline(TabularInline):
@@ -157,7 +226,7 @@ class ClosureAdmin(ModelAdmin):
 
 
 @admin.register(Room)
-class RoomAdmin(ModelAdmin):
+class RoomAdmin(BookingWriteLockMixin, ModelAdmin):
     list_display = ('name', 'bookable_hours', 'current_code', 'last_rotated', 'booking_count')
     search_fields = ('name',)
     inlines = [BookingInline, ClosureInline]
@@ -221,7 +290,7 @@ class RoomAdmin(ModelAdmin):
 
 
 @admin.register(Booking)
-class BookingAdmin(ModelAdmin):
+class BookingAdmin(BookingWriteLockMixin, ModelAdmin):
     list_display = ('room', 'time_range', 'booker_display', 'no_account')
     list_filter = (BookingOriginFilter, 'room', 'start')
     date_hierarchy = 'start'
@@ -241,9 +310,12 @@ class BookingAdmin(ModelAdmin):
         # Naming the fields is what keeps a save from putting a row back that a
         # cancellation deleted while this request was in flight. Django reports
         # that as NotUpdated instead of falling back to an insert, so the board
-        # gets a sentence rather than an error page.
+        # gets a sentence rather than an error page, and the savepoint is what
+        # makes catching it safe: without one the transaction is already marked
+        # for rollback and the admin's log write would raise instead.
         try:
-            obj.save(update_fields=editable_field_names(obj))
+            with transaction.atomic():
+                obj.save(update_fields=editable_field_names(obj))
         except Booking.NotUpdated:
             self.message_user(
                 request,
