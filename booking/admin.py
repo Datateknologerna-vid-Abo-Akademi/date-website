@@ -170,6 +170,17 @@ class BookingSettingsAdmin(ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def save_model(self, request, obj, form, change):
+        if not change:
+            super().save_model(request, obj, form, change)
+            return
+        # Only the note is editable, and a plain save() would write the
+        # generation and the rotation moment back from whatever this request
+        # read, undoing a rotation that landed in between and reviving the
+        # unlocks it had just ended. editable=False keeps them out of the form,
+        # not out of the UPDATE.
+        obj.save(update_fields=['code_instructions'])
+
     @admin.display(description=_('Aktuell bokningskod'))
     def current_code(self, obj):
         return access.current_code(access_settings=self._settings_for(obj))

@@ -50,6 +50,19 @@ def _as_local(at):
     return timezone.localtime(at)
 
 
+def _elapsed_since(start, at=None):
+    """Time actually passed between ``start`` and ``at``.
+
+    Both sides go through UTC first. Subtracting two aware datetimes that share
+    a ``tzinfo`` compares their naive parts, so a pair straddling a daylight
+    saving change would measure wall-clock time instead of elapsed time: in
+    Helsinki, 03:55+03:00 to 04:00+02:00 is five minutes by wall clock and an
+    hour and five in reality, which is long enough to keep a rotated code alive
+    for an extra hour or to end its grace period an hour early.
+    """
+    return _as_local(at).astimezone(datetime.UTC) - _as_local(start).astimezone(datetime.UTC)
+
+
 def _secret_bytes():
     """The server secret as bytes, whatever form the settings hold it in."""
     secret = settings.SECRET_KEY
@@ -95,7 +108,7 @@ def accepted_codes(at=None, access_settings=None):
     codes = [code_for_generation(access_settings.code_generation)]
     rotated_at = access_settings.rotated_at
     if rotated_at is not None and access_settings.code_generation > 1:
-        elapsed = _as_local(at) - _as_local(rotated_at)
+        elapsed = _elapsed_since(rotated_at, at)
         if datetime.timedelta(0) <= elapsed < BOOKING_CODE_GRACE:
             codes.append(code_for_generation(access_settings.code_generation - 1))
     return tuple(codes)
@@ -202,8 +215,17 @@ def booking_code_gate(
     gate: a fresh gate is 200, a wrong code is 403, and a lockout is 429,
     including the request that hits the attempt limit. A POST must also pass the
     captcha before the code is looked at.
+
+    The settings row is read once for the whole request when the caller does not
+    supply one. Reading it again when the unlock is granted would open a window
+    where a rotation lands between checking the typed code and storing the
+    token, handing the visitor an unlock for a generation whose code they never
+    knew.
     """
     from .forms import BookingCodeForm
+
+    if access_settings is None:
+        access_settings = BookingSettings.get_solo()
 
     context = dict(context or {})
     lockout = lockout_remaining(request)

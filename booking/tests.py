@@ -10,6 +10,7 @@ existing unlocks by itself and the typed code never reaches the session.
 import datetime
 import re
 import time
+import zoneinfo
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -242,6 +243,43 @@ class BookingCodeGraceTests(SimpleTestCase):
         at = self.rotated_at - datetime.timedelta(minutes=1)
 
         self.assertEqual(access.accepted_codes(at=at, access_settings=self.after_rotation), (self.current_code,))
+
+    def test_the_window_measures_elapsed_time_across_a_clock_change(self):
+        # Helsinki leaves summer time at 04:00 EEST on 2026-10-25, so these two
+        # are five minutes apart on the clock and sixty-five in reality. Naive
+        # subtraction of two datetimes sharing a tzinfo gets this wrong and
+        # keeps a rotated code alive for an extra hour.
+        helsinki = zoneinfo.ZoneInfo('Europe/Helsinki')
+        rotated_at = datetime.datetime(2026, 10, 25, 3, 55, tzinfo=helsinki)
+        at = datetime.datetime(2026, 10, 25, 4, 0, tzinfo=helsinki)
+        real_elapsed = at.astimezone(datetime.UTC) - rotated_at.astimezone(datetime.UTC)
+        settings_row = BookingSettings(code_generation=2, rotated_at=rotated_at)
+
+        with timezone.override('Europe/Helsinki'):
+            self.assertGreater(real_elapsed, access.BOOKING_CODE_GRACE)
+            self.assertEqual(
+                access.accepted_codes(at=at, access_settings=settings_row),
+                (access.code_for_generation(2),),
+            )
+            self.assertFalse(access.check_code(access.code_for_generation(1), at=at, access_settings=settings_row))
+
+    def test_the_window_survives_a_clock_change_that_shortens_the_wall_clock(self):
+        # The other direction: Helsinki enters summer time at 03:00 EET on
+        # 2026-03-29. Ten minutes have passed but the clock says seventy, so
+        # naive subtraction would close the window on a booker who was handed
+        # the previous code a moment ago.
+        helsinki = zoneinfo.ZoneInfo('Europe/Helsinki')
+        rotated_at = datetime.datetime(2026, 3, 29, 2, 55, tzinfo=helsinki)
+        at = datetime.datetime(2026, 3, 29, 4, 5, tzinfo=helsinki)
+        real_elapsed = at.astimezone(datetime.UTC) - rotated_at.astimezone(datetime.UTC)
+        settings_row = BookingSettings(code_generation=2, rotated_at=rotated_at)
+
+        with timezone.override('Europe/Helsinki'):
+            self.assertLess(real_elapsed, access.BOOKING_CODE_GRACE)
+            self.assertEqual(
+                access.accepted_codes(at=at, access_settings=settings_row),
+                (access.code_for_generation(2), access.code_for_generation(1)),
+            )
 
     def test_grant_during_grace_stores_the_current_generation_token(self):
         request = SimpleNamespace(session={})
@@ -718,6 +756,20 @@ class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertNotIn(access.BOOKING_SESSION_TOKEN_KEY, self.client.session)
+
+    def test_the_gate_reads_the_settings_once_per_submission(self):
+        # The typed code is checked against one snapshot and the unlock is
+        # granted from the same one. Reading the row twice leaves a window where
+        # a rotation between the two hands out an unlock for a generation whose
+        # code the visitor never knew.
+        code = self.current_code()  # computed outside the patch, which it would also count
+        with patch('booking.access.BookingSettings.get_solo', wraps=BookingSettings.get_solo) as get_solo:
+            response = self.client.post(self.room_url, {'code': code})
+
+        # Not followed: the redirected room page is a second request, and it
+        # reads the settings again to check the unlock it was just given.
+        self.assertRedirects(response, self.room_url, fetch_redirect_response=False)
+        self.assertEqual(get_solo.call_count, 1)
 
     def test_captcha_failure_blocks_creation(self):
         self.unlock()
@@ -1380,9 +1432,14 @@ class BookingSettingsAdminTests(PinnedNowMixin, TestCase):
         self.assertEqual(booking_settings.code_generation, 2)
         new_code = access.current_code(access_settings=booking_settings)
         self.assertNotEqual(new_code, old_code)
-        # The board has to be told the new code, because it is not stored anywhere
-        # they could look it up later out of band.
-        self.assertContains(response, new_code)
+        # Assert the message itself, not the code: the changelist derives and
+        # shows the current code anyway, so looking for the digits would pass
+        # even if the board were never told which one is in force.
+        told = [str(message) for message in response.context['messages']]
+        self.assertTrue(
+            any(message.startswith('Ny bokningskod:') and new_code in message for message in told),
+            told,
+        )
 
     def test_the_rotate_action_is_hidden_from_a_view_only_holder(self):
         booking_settings = BookingSettings.get_solo()

@@ -2761,6 +2761,7 @@ msgid "Starttiden kan inte vara i det förflutna."
 msgstr "The start time cannot be in the past."
 
 #: templates/common/booking/booking_confirmation_email.txt:8
+#, python-format
 msgid "Styrelsen nås på %(ASSOCIATION_EMAIL)s."
 msgstr "The board can be reached at %(ASSOCIATION_EMAIL)s."
 
@@ -2773,6 +2774,7 @@ msgstr ""
 "code, which you get from the board."
 
 #: templates/common/booking/partials/board_contact.html:4
+#, python-format
 msgid ""
 "Har du frågor om en bokning, kontakta styrelsen via %(ASSOCIATION_EMAIL)s."
 msgstr ""
@@ -2824,6 +2826,7 @@ msgid "Byt bokningskoden nu"
 msgstr "Rotate the booking code now"
 
 #: booking/admin.py:192
+#, python-format
 msgid "Ny bokningskod: %(code)s. Den förra koden fungerar i 15 minuter till."
 msgstr ""
 "New booking code: %(code)s. The previous code keeps working for 15 "
