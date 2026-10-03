@@ -38,8 +38,20 @@ Manage the informational pages and navigation links that live under the "About",
    - **#** – ordering token; increments of 10 keep the list tidy.
 2. Save the category to persist link changes.
 
+## Editor Options
+The **Innehåll** field uses the shared CKEditor configuration (`core/settings/dependencies/ckeditor.py`), which offers:
+- **Images** - insert, upload or link an image, set the alternative text, add a caption, and pick an alignment (left, right, center or side) or a size from the resize list. Use **No hover effect** on a linked image when the hover zoom is distracting.
+- **Text alignment** - left, center, right and justify for paragraphs and headings.
+- **Tables** - insert a table, add or remove its caption, merge cells, and set borders and background colors.
+- **Lists** - bulleted, numbered and to-do lists, with bullet style, start number and reversed order.
+- **Find and replace** - search the current field, which is quicker than scrolling on a long page.
+- **Special characters** - insert characters that are awkward to type, such as section signs and typographic quotes.
+- **Horizontal line**, **Show blocks** and **Source editing** for structure, and for fixing markup by hand.
+
+Uploads accept jpg, jpeg, png, gif, bmp, webp and tiff. An image you add with **Insert image** is a block image, which is what the resize list works on: it keeps the size you pick, and one you leave alone is capped to a share of the viewport height so a single large photo cannot dominate the page. An image that arrives inline from pasted content is not resized by that list, because the site caps those at their natural size. Delete it and add it again with **Insert image** to get a resizable one. A table wider than the screen scrolls sideways on a phone instead of shifting the whole page.
+
 ## Tips for Editors
 - If a page should be linked from navigation, create the Static Page first, copy its slug, then create a Static URL entry that points to `/pages/<slug>/`.
 - If translation features are enabled, category names and link labels can have per-language values. Check the translated fields before publishing multilingual navigation changes.
-- Use the preview icon in CKEditor to check layout before publishing.
+- CKEditor has no preview plugin here, so check the layout with the **Public page** link from the list or the edit form rather than from inside the editor.
 - Keep `members_only` pages organized; add “(endast medlemmar)” to their titles so visitors know why they might need to log in.

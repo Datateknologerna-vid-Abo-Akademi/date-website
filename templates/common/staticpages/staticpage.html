@@ -7,6 +7,9 @@
   <link rel="stylesheet"
         href="{% static 'staticpages/css/staticpage.css' %}"
         type="text/css">
+  <link rel="stylesheet"
+        href="{% static 'core/css/ck-content.css' %}"
+        type="text/css">
   {% with background_image_url=page.background_image_url %}
     {% if background_image_url %}
       <style>
@@ -25,7 +28,7 @@
   <div class="container-md min-vh-100 container-margin-top p-1 background-img">
     <div class="container-size break-words">
       {% if show_content %}
-        <div class="content">
+        <div class="content ck-content">
           {% if document_html %}
             {% if show_document_title %}<h1>{{ page.title }}</h1>{% endif %}
             {{ document_html|safe }}

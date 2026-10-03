@@ -92,6 +92,38 @@ SIDEBAR_NAVIGATION = (
             ),
         ),
     ),
+    # Only appears for a user who holds one of the booking permissions, and only
+    # on an association that installs the app: an unresolvable permission or URL
+    # name drops the link.
+    AdminSidebarGroup(
+        _('Booking'),
+        (
+            AdminLink(
+                _('Bookings'),
+                icon='event_available',
+                url_name='admin:booking_booking_changelist',
+                permission='booking.view_booking',
+            ),
+            AdminLink(
+                _('Rooms'),
+                icon='meeting_room',
+                url_name='admin:booking_room_changelist',
+                permission='booking.view_room',
+            ),
+            AdminLink(
+                _('Closed periods'),
+                icon='event_busy',
+                url_name='admin:booking_closure_changelist',
+                permission='booking.view_closure',
+            ),
+            AdminLink(
+                _('Booking settings'),
+                icon='key',
+                url_name='admin:booking_bookingsettings_changelist',
+                permission='booking.view_bookingsettings',
+            ),
+        ),
+    ),
     AdminSidebarGroup(
         _('Members'),
         (

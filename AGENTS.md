@@ -164,6 +164,7 @@ django-admin compilemessages
 - `alumni`: Google Sheets-backed alumni signup/update flow, Celery side effects, token emails.
 - `archive`: photo/document/exam/public-file collections, bulk uploads, access checks.
 - `billing`: event invoices and reference-number generation behind the event billing integration.
+- `booking`: bookable rooms and their bookings, with a public booking flow unlocked by a per-room code that the board rotates by hand; DaTe-only behind the `BOOKING_ENABLED` capability.
 - `ctf`: seasonal CTFs, flags, guesses, solving flow, and published post-mortems.
 - `date`: homepage composition, calendar data, language switching, middleware, error views.
 - `events`: events, dynamic registration forms, capacity/sign-up windows, passcodes, captcha, child events, WebSocket attendee updates.

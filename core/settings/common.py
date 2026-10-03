@@ -410,6 +410,7 @@ APRIL_HOMEPAGE_ENABLED = False
 REGISTRATION_TERMS_ENABLED = False
 EQUALITY_PLAN_ENABLED = False
 KK_EVENT_TEMPLATES_ENABLED = False
+BOOKING_ENABLED = False
 
 # The runtime image is built with each association's static collected into
 # /code/static-collected/<PROJECT_NAME>; pick that tree when present so every

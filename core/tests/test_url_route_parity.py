@@ -32,6 +32,7 @@ EXPECTED_PREFIXES = {
         "publications/",
         "alumni/",
         "attendance/",
+        "booking/",
         *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
@@ -156,6 +157,7 @@ EXPECTED_URL_NAMES = {
         "publications:pdf_list",
         "alumni:alumni_signup",
         "attendance-index",
+        "booking:index",
         "api:events:upcoming",
     ],
     "kk": ["news:index", "lucia:index", "publications:pdf_list", "alumni:alumni_signup", "api:events:upcoming"],
@@ -173,7 +175,12 @@ EXPECTED_URL_NAMES = {
 }
 
 FORBIDDEN_URL_NAMES = {
-    "pulterit": ["archive:years"],
+    "kk": ["booking:index"],
+    "biocum": ["booking:index"],
+    "pulterit": ["archive:years", "booking:index"],
+    "sf": ["booking:index"],
+    "impuls": ["booking:index"],
+    "demo": ["booking:index"],
 }
 
 CODE = """
@@ -238,7 +245,12 @@ class VariantRouteParityTests(SimpleTestCase):
                     ],
                     capture_output=True,
                     text=True,
-                    env={**os.environ, "PROJECT_NAME": variant},
+                    # BOOKING_ENABLED is dropped so the inventory describes each
+                    # settings module's default instead of the developer's .env.
+                    env={
+                        **{k: v for k, v in os.environ.items() if k != "BOOKING_ENABLED"},
+                        "PROJECT_NAME": variant,
+                    },
                 )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
@@ -257,3 +269,32 @@ class ApiRootCompositionTests(SimpleTestCase):
     def test_api_root_absent_when_events_not_requested(self):
         patterns = build_urlpatterns('index')
         self.assertNotIn("api/", [str(p.pattern) for p in patterns])
+
+
+class BookingCapabilityRouteTests(SimpleTestCase):
+    """BOOKING_ENABLED decides whether the date URLconf mounts the booking
+    routes, so the capability can be turned off on a release without changing
+    the installed app list. core/urls/date.py reads the setting at import time,
+    which is why this runs in a fresh process like the parity test above.
+    """
+
+    def test_disabling_the_capability_removes_the_routes(self):
+        prefixes = [p for p in EXPECTED_PREFIXES["date"] if p != "booking/"]
+        names = [n for n in EXPECTED_URL_NAMES["date"] if n != "booking:index"]
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                CODE,
+                "date",
+                ",".join(prefixes),
+                ",".join(names),
+                "booking:index",
+            ],
+            capture_output=True,
+            text=True,
+            env={**os.environ, "PROJECT_NAME": "date", "BOOKING_ENABLED": "0"},
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

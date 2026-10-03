@@ -39,10 +39,47 @@ class AdminUiRegistryTests(TestCase):
         self.assertIn("/admin/functionaries/functionaryrole/", links)
         self.assertIn("/admin/publications/publicationcollection/", links)
         self.assertIn("/admin/ctf/ctf/", links)
+        # The booking group, all four links: the room list carries the codes, and
+        # the closed periods have a page of their own rather than only the inline
+        # on a room.
+        self.assertIn("/admin/booking/booking/", links)
+        self.assertIn("/admin/booking/room/", links)
+        self.assertIn("/admin/booking/closure/", links)
+        self.assertIn("/admin/booking/bookingsettings/", links)
         self.assertNotIn("/admin/billing/eventinvoice/", links)
         self.assertNotIn("/admin/functionaries/functionary/", links)
         self.assertNotIn("/admin/publications/pdffile/", links)
         self.assertNotIn("/admin/ctf/guess/", links)
+
+    def test_sidebar_booking_links_follow_their_own_permissions(self):
+        """Each booking link needs its own permission, and no others.
+
+        A board that may see rooms but not closures gets the room link and not
+        the closure one, which is how a model added later can end up invisible
+        with nobody noticing.
+        """
+        request = self.factory.get("/admin/")
+        request.user = get_user_model().objects.create_user(
+            username="rooms-only-admin",
+            password="pass",
+            email="rooms-only@example.com",
+        )
+        request.user.user_permissions.add(Permission.objects.get(codename="view_room"))
+
+        links = {item["link"] for group in get_sidebar_navigation(request) for item in group["items"]}
+
+        self.assertIn("/admin/booking/room/", links)
+        self.assertNotIn("/admin/booking/closure/", links)
+        self.assertNotIn("/admin/booking/booking/", links)
+
+        request.user.user_permissions.add(Permission.objects.get(codename="view_closure"))
+        # Django caches a user's permissions on the instance, and a real request
+        # would have loaded a fresh one.
+        request.user = get_user_model().objects.get(pk=request.user.pk)
+
+        links = {item["link"] for group in get_sidebar_navigation(request) for item in group["items"]}
+
+        self.assertIn("/admin/booking/closure/", links)
 
     def test_sidebar_registry_requires_permissions(self):
         request = self.factory.get("/admin/")

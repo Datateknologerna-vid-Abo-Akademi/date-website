@@ -1,0 +1,24 @@
+{# Tags are glued to the line they guard: a tag alone on its line leaves its newline behind, and a part that is not there would show up as a blank line. #}{% load i18n %}{% load booking_dates %}{% autoescape off %}{% trans "Bokningen är bekräftad" %}
+
+{% trans "Utrymme:" %} {{ room.name }}
+{% trans "Tid:" %} {{ start_local|short_date }} {{ start_local|date:"H:i" }} - {% if start_local|date:"Ymd" != end_local|date:"Ymd" %}{{ end_local|short_date }} {% endif %}{{ end_local|date:"H:i" }}
+
+{% if booking.description %}{% trans "Beskrivning:" %} {{ booking.description }}
+
+{% endif %}{% trans "Om tiden inte passar" %}
+
+{% if cancel_code %}{% if cancel_url %}{% trans "Avboka bokningen på avbokningssidan. Där anger du koden nedan." %}
+{% else %}{% trans "Kontakta styrelsen om du vill avboka bokningen. Uppge koden nedan." %}
+{% endif %}{% trans "Avbokningskod:" %} {{ cancel_code }}
+
+{% trans "Spara koden. Den behövs för att avboka bokningen." %}
+{% else %}{% if cancel_url %}{% trans "Logga in på Mina bokningar och ta bort bokningen där." %}
+{% else %}{% trans "Kontakta styrelsen om du vill avboka bokningen." %}
+{% endif %}{% endif %}{% if cancel_url %}
+{% trans "Avboka bokningen:" %} {{ cancel_url }}
+{% endif %}
+{% if association_email %}{% blocktrans %}Har du frågor om bokningen, kontakta styrelsen via {{ association_email }}.{% endblocktrans %}
+{% else %}{% trans "Har du frågor om bokningen, kontakta styrelsen." %}
+{% endif %}{% trans "Du får det här meddelandet för att du bokade ett utrymme." %}{% if site_url %}
+
+{% trans "Webbplatsen:" %} {{ site_url }}{% endif %}{% endautoescape %}

@@ -1,0 +1,105 @@
+{% extends 'core/base.html' %}
+{% load booking_dates %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+  {% trans "Bokning" %}
+{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet"
+        href="{% static 'booking/css/booking.css' %}"
+        type="text/css">
+  {% if not user.is_authenticated %}
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+            async
+            defer></script>
+  {% endif %}
+{% endblock %}
+{% block content %}
+  <div class="container-md min-vh-100 container-margin-top">
+    <div class="container-size break-words">
+      <div class="content">
+        <h1 class="booking-heading">{{ room.name }}</h1>
+        {% if room.description %}
+          <div class="booking-room-description">{{ room.description|linebreaks }}</div>
+        {% endif %}
+        <p>
+          <a class="booking-back-link" href="{% url 'booking:index' %}">{% trans "Tillbaka till utrymmena" %}</a>
+        </p>
+        <section class="booking-room-bookings">
+          <h2 class="booking-heading booking-section-title">{% trans "Kommande bokningar" %}</h2>
+          <ul class="booking-list">
+            {% for booking in bookings %}
+              <li class="booking-list-item">
+                <span class="booking-badge">{{ booking.start|short_date }}</span>
+                <span class="booking-time">{{ booking.start|date:"H:i" }} - {% if booking.start|date:"Ymd" != booking.end|date:"Ymd" %}{{ booking.end|short_date }} {% endif %}{{ booking.end|date:"H:i" }}</span>
+              </li>
+            {% empty %}
+              <li class="booking-list-item booking-list-empty">{% trans "Inga kommande bokningar." %}</li>
+            {% endfor %}
+          </ul>
+        </section>
+        {% if closures %}
+          <section class="booking-room-closures">
+            <h2 class="booking-heading booking-section-title">{% trans "Stängt" %}</h2>
+            <ul class="booking-list">
+              {% for closure in closures %}
+                <li class="booking-list-item booking-list-closed">
+                  <span class="booking-badge">{{ closure.start|short_date }}</span>
+                  <span class="booking-time">{{ closure.start|date:"H:i" }} - {% if closure.start|date:"Ymd" != closure.end|date:"Ymd" %}{{ closure.end|short_date }} {% endif %}{{ closure.end|date:"H:i" }}</span>
+                  {% if closure.description %}<span class="booking-room-name">{{ closure.description }}</span>{% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          </section>
+        {% endif %}
+        {% if code_form %}
+          <section class="booking-code-section">
+            <h2 class="booking-heading booking-section-title">{% trans "Bokningskod" %}</h2>
+            {% include 'booking/partials/code_form.html' %}
+          </section>
+          {% include 'booking/partials/board_contact.html' %}
+        {% else %}
+          <section class="booking-form-section">
+            <h2 class="booking-heading booking-section-title">{% trans "Boka utrymmet" %}</h2>
+            {% if form.non_field_errors %}
+              <div class="booking-error">
+                {% for error in form.non_field_errors %}
+                  <p>{{ error|escape }}</p>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <form method="post" class="booking-form">
+              {% csrf_token %}
+              {% for field in form %}
+                <p>
+                  {{ field.label_tag }}
+                  {{ field }}
+                </p>
+                {% for error in field.errors %}
+                  <div class="booking-error">
+                    <strong>{{ error|escape }}</strong>
+                  </div>
+                {% endfor %}
+                {% if field.help_text %}
+                  <small class="booking-help">{{ field.help_text }}</small>
+                {% endif %}
+              {% endfor %}
+              {% if not user.is_authenticated %}
+                <div class="cf-turnstile"
+                     data-sitekey="{{ CAPTCHA_SITE_KEY }}"
+                     data-callback="javascriptCallback"></div>
+              {% endif %}
+              <button class="theme-button" type="submit">{% trans "Boka" %}</button>
+            </form>
+            {% if not user.is_authenticated %}
+              <small class="booking-help">{% trans "E-postadressen används bara för att skicka en bokningsbekräftelse." %}</small>
+            {% endif %}
+            {% include 'booking/partials/board_contact.html' %}
+          </section>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

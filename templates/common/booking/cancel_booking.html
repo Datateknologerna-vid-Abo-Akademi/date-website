@@ -1,0 +1,58 @@
+{% extends 'core/base.html' %}
+{% load booking_dates %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+  {% trans "Avboka en bokning" %}
+{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet"
+        href="{% static 'booking/css/booking.css' %}"
+        type="text/css">
+{% endblock %}
+{% block content %}
+  <div class="container-md min-vh-100 container-margin-top">
+    <div class="container-size break-words">
+      <div class="content">
+        <h1 class="booking-heading">{% trans "Avboka en bokning" %}</h1>
+        {% if booking %}
+          <p class="booking-help">{% trans "Stämmer bokningen nedan? Avboka den bara om du verkligen vill ta bort den." %}</p>
+          <ul class="booking-list">
+            <li class="booking-list-item">
+              <span class="booking-badge">{{ booking.start|short_date }}</span>
+              <span class="booking-time">{{ booking.start|date:"H:i" }} - {% if booking.start|date:"Ymd" != booking.end|date:"Ymd" %}{{ booking.end|short_date }} {% endif %}{{ booking.end|date:"H:i" }}</span>
+              <span class="booking-room-name">{{ booking.room.name }}</span>
+            </li>
+          </ul>
+          <form method="post" class="booking-code-form">
+            {% csrf_token %}
+            <input type="hidden" name="code" value="{{ form.code.value|default:'' }}">
+            <button class="theme-button" type="submit" name="confirm" value="1">{% trans "Avboka bokningen" %}</button>
+          </form>
+        {% else %}
+          <p class="booking-help">
+            {% trans "Bokade du utan konto fick du en avbokningskod i bekräftelsemejlet. Klistra in den här." %}
+          </p>
+          <form method="post" class="booking-code-form">
+            {% csrf_token %}
+            <p>
+              {{ form.code.label_tag }}
+              {{ form.code }}
+            </p>
+            {% for error in form.code.errors %}
+              <div class="booking-error">
+                <strong>{{ error|escape }}</strong>
+              </div>
+            {% endfor %}
+            <button class="theme-button" type="submit">{% trans "Visa bokningen" %}</button>
+          </form>
+        {% endif %}
+        <p class="booking-help booking-back">
+          <a href="{% url 'booking:index' %}">{% trans "Tillbaka till utrymmena" %}</a>
+        </p>
+        {% include 'booking/partials/board_contact.html' %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

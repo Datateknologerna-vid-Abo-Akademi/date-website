@@ -20,6 +20,7 @@ INSTALLED_APPS = get_installed_apps(
         'alumni',
         'billing',
         'attendance',
+        'booking',
     ]
 )
 
@@ -67,3 +68,8 @@ CONTENT_VARIABLES = {
 # Association capabilities
 REGISTRATION_TERMS_ENABLED = True
 EQUALITY_PLAN_ENABLED = True
+# Room booking is live for DaTe only. Other associations keep the default from
+# core/settings/common.py and never parse this variable, so setting it on one of
+# their releases has no effect. Turn it off here (or on the DaTe release) to
+# remove the public booking pages and the homepage booking block.
+BOOKING_ENABLED = env('BOOKING_ENABLED', bool, True)

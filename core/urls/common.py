@@ -29,6 +29,7 @@ ROUTES = {
     'publications': lambda: path('publications/', include('publications.urls')),
     'alumni': lambda: path('alumni/', include('alumni.urls')),
     'attendance': lambda: path('attendance/', include('attendance.urls')),
+    'booking': lambda: path('booking/', include('booking.urls')),
     'lucia': lambda: path('lucia/', include('lucia.urls')),
     'klotterplanket': lambda: path('klotterplanket/', include('klotterplanket.urls')),
 }
