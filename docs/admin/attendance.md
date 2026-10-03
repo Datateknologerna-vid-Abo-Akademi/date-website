@@ -13,7 +13,7 @@ The list is a record of who was in the room at a meeting. It is not the associat
    - **Slug**: the URL segment. An event with the slug `hostmote` lives at `/attendance/hostmote/`. It has to be unique and can contain only letters, digits, hyphens and underscores, so write `hostmote` rather than `höstmöte`.
    - **Starttid** and **Sluttid**: when the event begins and ends. **Sluttid** is optional. With it, the event leaves the public list once that moment has passed; without it, the event stays on the list until you delete it.
    - **Tillåt icke-medlemmar att delta**: ticked (the default) means a visitor without an account sees the check-in form and writes their name. Unticked means the event page asks for a login, and a guest cannot check in at all.
-   - **Kodens giltighetsperiod (sekunder)**: how long each code is shown before it rotates. 30 is the default. A meeting that needs longer to read or scan the code can be given more; a shorter period is harder to pass on to somebody outside the room.
+   - **Kodens giltighetsperiod (sekunder)**: how long each code is shown before it rotates. 30 is the default, and the field refuses anything below 1 second, because a period of zero breaks the code calculation. A meeting that needs longer to read or scan the code can be given more; a shorter period is harder to pass on to somebody outside the room.
    - **Kodens genereringsnyckel**: the value the codes are computed from. The site fills in a random one, and you can leave it as it is.
 3. Save. The event appears on `/attendance/` immediately, and its page is at `/attendance/<slug>/`.
 
