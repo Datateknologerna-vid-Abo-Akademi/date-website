@@ -1,11 +1,13 @@
 """Access gate for the public room-booking pages.
 
-The booking code is never stored anywhere. It is derived from the server secret
-and a generation counter that only moves when the board rotates the code, so
-there is no schedule to run and the current code can be displayed read-only in
-the admin. Unlocking a visitor is only a session token for the current
-generation, which means a rotation invalidates every existing unlock by itself
-and the typed code is never written to the session.
+Every room has its own booking code, and none of them is stored anywhere. A code
+is derived from the server secret, the room and a per-room generation counter
+that only moves when the board rotates that room's code, so there is no schedule
+to run, one room's code can be handed out without handing out another's, and a
+leak is contained to the room it leaked from. Unlocking a visitor is a session
+token stored per room for that room's current generation, so rotating a room
+invalidates exactly the unlocks it granted and the typed code is never written
+to the session.
 """
 
 import datetime
@@ -21,8 +23,8 @@ from django.utils.translation import gettext_lazy as _
 
 from core.utils import validate_captcha
 
-from .models import BookingSettings
-
+# All three hold a mapping keyed by room primary key as text, because the
+# default session serializer is JSON and JSON object keys are strings.
 BOOKING_SESSION_TOKEN_KEY = 'booking_access_token'  # noqa: S105 (session key, not a password)
 BOOKING_ATTEMPTS_COUNTER = 'booking_code_attempts'
 BOOKING_LOCKOUT_UNTIL = 'booking_code_lockout_until'
@@ -69,33 +71,32 @@ def _secret_bytes():
     return secret.encode() if isinstance(secret, str) else secret
 
 
-def _generation(access_settings=None):
-    if access_settings is None:
-        access_settings = BookingSettings.get_solo()
-    return access_settings.code_generation
+def code_for_generation(room, generation):
+    """Derive a room's fixed-width numeric code for one of its generations.
 
-
-def code_for_generation(generation):
-    """Derive the fixed-width numeric code for a generation from SECRET_KEY."""
+    The room goes into the message, so two rooms on the same generation do not
+    share a code and one room's code says nothing about another's.
+    """
     digest = hmac.new(
         _secret_bytes(),
-        f'booking-code:{generation}'.encode(),
+        f'booking-code:{room.pk}:{generation}'.encode(),
         hashlib.sha256,
     ).digest()
     number = int.from_bytes(digest[:8], 'big') % (10**BOOKING_CODE_DIGITS)
     return str(number).zfill(BOOKING_CODE_DIGITS)
 
 
-def current_code(access_settings=None):
-    """The code that is valid now.
+def current_code(room):
+    """The room's code that is valid now.
 
-    Nothing about it depends on the clock. It changes when the board rotates it
-    and at no other moment, so no schedule has to run for it to stay correct.
+    Nothing about it depends on the clock. It changes when the board rotates
+    that room and at no other moment, so no schedule has to run for it to stay
+    correct, and rotating one room leaves the others alone.
     """
-    return code_for_generation(_generation(access_settings))
+    return code_for_generation(room, room.code_generation)
 
 
-def accepted_codes(at=None, access_settings=None):
+def accepted_codes(room, at=None):
     """The current code, plus the previous one while its grace period lasts.
 
     The grace period is anchored to the moment the board rotated the code, not
@@ -103,18 +104,16 @@ def accepted_codes(at=None, access_settings=None):
     forward with every visit. A booker who was handed the old code a minute
     before the rotation is not stranded by it.
     """
-    if access_settings is None:
-        access_settings = BookingSettings.get_solo()
-    codes = [code_for_generation(access_settings.code_generation)]
-    rotated_at = access_settings.rotated_at
-    if rotated_at is not None and access_settings.code_generation > 1:
+    codes = [code_for_generation(room, room.code_generation)]
+    rotated_at = room.rotated_at
+    if rotated_at is not None and room.code_generation > 1:
         elapsed = _elapsed_since(rotated_at, at)
         if datetime.timedelta(0) <= elapsed < BOOKING_CODE_GRACE:
-            codes.append(code_for_generation(access_settings.code_generation - 1))
+            codes.append(code_for_generation(room, room.code_generation - 1))
     return tuple(codes)
 
 
-def check_code(candidate, at=None, access_settings=None):
+def check_code(room, candidate, at=None):
     """Constant-time check of a typed code, with no early exit.
 
     The comparison is on encoded bytes: ``hmac.compare_digest`` raises
@@ -127,22 +126,23 @@ def check_code(candidate, at=None, access_settings=None):
         return False
     candidate_bytes = candidate.encode()
     matched = False
-    for accepted in accepted_codes(at=at, access_settings=access_settings):
+    for accepted in accepted_codes(room, at=at):
         matched = hmac.compare_digest(candidate_bytes, accepted.encode()) or matched
     return matched
 
 
-def session_token(access_settings=None) -> str:
-    """Opaque token for the current generation, recording an unlock.
+def session_token(room) -> str:
+    """Opaque token for a room's current generation, recording an unlock.
 
     It is HMAC'd rather than a bare hash of the six-digit code, and it depends
-    on the generation, so rotating the code ends every existing unlock with no
-    stored expiry anywhere. The digest is returned hex-encoded because the
-    default session serializer is JSON and cannot store bytes.
+    on the room and its generation, so rotating a room ends exactly the unlocks
+    that room granted, with no stored expiry anywhere. The digest is returned
+    hex-encoded because the default session serializer is JSON and cannot store
+    bytes.
     """
     return hmac.new(
         _secret_bytes(),
-        f'booking-session:{_generation(access_settings)}'.encode(),
+        f'booking-session:{room.pk}:{room.code_generation}'.encode(),
         hashlib.sha256,
     ).hexdigest()
 
@@ -152,29 +152,76 @@ def _stored_token(value) -> str:
     return value.hex() if isinstance(value, bytes) else value
 
 
-def session_has_access(request, access_settings=None) -> bool:
-    stored = request.session.get(BOOKING_SESSION_TOKEN_KEY)
+def _room_state(request, key):
+    """The per-room mapping a session key holds, ignoring anything else.
+
+    A session written by an older release holds a bare token or counter under
+    these keys rather than a mapping. It is treated as empty instead of being
+    migrated: the visitor is asked for the code once more and the session heals.
+    """
+    stored = request.session.get(key)
+    return stored if isinstance(stored, dict) else {}
+
+
+def _room_key(room):
+    return str(room.pk)
+
+
+def session_has_access(request, room) -> bool:
+    stored = _room_state(request, BOOKING_SESSION_TOKEN_KEY).get(_room_key(room))
     if not stored:
         return False
     stored = _stored_token(stored)
-    return hmac.compare_digest(stored, session_token(access_settings=access_settings))
+    return hmac.compare_digest(stored, session_token(room))
 
 
-def grant_session(request, access_settings=None):
-    request.session[BOOKING_SESSION_TOKEN_KEY] = session_token(access_settings=access_settings)
-    request.session.pop(BOOKING_ATTEMPTS_COUNTER, None)
-    request.session.pop(BOOKING_LOCKOUT_UNTIL, None)
+def grant_session(request, room):
+    """Record the unlock for this room, and clear this room's code attempts."""
+    tokens = dict(_room_state(request, BOOKING_SESSION_TOKEN_KEY))
+    tokens[_room_key(room)] = session_token(room)
+    request.session[BOOKING_SESSION_TOKEN_KEY] = tokens
+    _clear_room_state(request, BOOKING_ATTEMPTS_COUNTER, room)
+    _clear_room_state(request, BOOKING_LOCKOUT_UNTIL, room)
 
 
-def lockout_remaining(request):
-    """Seconds left in the current lockout, clearing it once it has passed."""
-    until = request.session.get(BOOKING_LOCKOUT_UNTIL)
+def _clear_room_state(request, key, room):
+    """Forget this room's entry, and the key itself once nothing is left."""
+    state = dict(_room_state(request, key))
+    if _room_key(room) in state:
+        del state[_room_key(room)]
+        if state:
+            request.session[key] = state
+        else:
+            request.session.pop(key, None)
+
+
+def attempts_used(request, room):
+    """How many wrong codes this visitor has typed for this room."""
+    return int(_room_state(request, BOOKING_ATTEMPTS_COUNTER).get(_room_key(room), 0))
+
+
+def record_failed_attempt(request, room):
+    """Count a wrong code for this room and lock the room out at the limit."""
+    attempts = attempts_used(request, room) + 1
+    counters = dict(_room_state(request, BOOKING_ATTEMPTS_COUNTER))
+    counters[_room_key(room)] = attempts
+    request.session[BOOKING_ATTEMPTS_COUNTER] = counters
+    if attempts >= BOOKING_ATTEMPT_LIMIT:
+        until = dict(_room_state(request, BOOKING_LOCKOUT_UNTIL))
+        until[_room_key(room)] = time.time() + BOOKING_LOCKOUT_SECONDS
+        request.session[BOOKING_LOCKOUT_UNTIL] = until
+    return attempts
+
+
+def lockout_remaining(request, room):
+    """Seconds left in this room's lockout, clearing it once it has passed."""
+    until = _room_state(request, BOOKING_LOCKOUT_UNTIL).get(_room_key(room))
     if not until:
         return 0
     remaining = int(until - time.time())
     if remaining <= 0:
-        request.session.pop(BOOKING_LOCKOUT_UNTIL, None)
-        request.session.pop(BOOKING_ATTEMPTS_COUNTER, None)
+        _clear_room_state(request, BOOKING_LOCKOUT_UNTIL, room)
+        _clear_room_state(request, BOOKING_ATTEMPTS_COUNTER, room)
         return 0
     return remaining
 
@@ -202,11 +249,11 @@ def is_code_submission(request):
 def booking_code_gate(
     request,
     *,
+    room,
     template_name,
     context=None,
     next_url,
     at=None,
-    access_settings=None,
 ):
     """Render the code gate, or redirect to ``next_url`` after a valid code.
 
@@ -216,20 +263,17 @@ def booking_code_gate(
     including the request that hits the attempt limit. A POST must also pass the
     captcha before the code is looked at.
 
-    The settings row is read once for the whole request when the caller does not
-    supply one. Reading it again when the unlock is granted would open a window
-    where a rotation lands between checking the typed code and storing the
-    token, handing the visitor an unlock for a generation whose code they never
-    knew.
+    The room instance is the one snapshot the whole request works from, so the
+    code that is checked and the token that is stored belong to the same
+    generation: re-reading the room when the unlock is granted would open a
+    window where a rotation lands between the two and hands the visitor an
+    unlock for a generation whose code they never knew.
     """
     from .forms import BookingCodeForm
 
-    if access_settings is None:
-        access_settings = BookingSettings.get_solo()
-
     context = dict(context or {})
-    lockout = lockout_remaining(request)
-    form = BookingCodeForm(at=at, access_settings=access_settings)
+    lockout = lockout_remaining(request, room)
+    form = BookingCodeForm(room=room, at=at)
     status = 200
 
     if lockout:
@@ -244,14 +288,11 @@ def booking_code_gate(
             context['captcha_error'] = _('Kunde inte verifiera att du inte är en robot. Försök igen.')
             status = 403
         else:
-            form = BookingCodeForm(request.POST, at=at, access_settings=access_settings)
+            form = BookingCodeForm(request.POST, room=room, at=at)
             if form.is_valid():
-                grant_session(request, access_settings=access_settings)
+                grant_session(request, room)
                 return redirect(next_url)
-            attempts = request.session.get(BOOKING_ATTEMPTS_COUNTER, 0) + 1
-            request.session[BOOKING_ATTEMPTS_COUNTER] = attempts
-            if attempts >= BOOKING_ATTEMPT_LIMIT:
-                request.session[BOOKING_LOCKOUT_UNTIL] = time.time() + BOOKING_LOCKOUT_SECONDS
+            if record_failed_attempt(request, room) >= BOOKING_ATTEMPT_LIMIT:
                 lockout = BOOKING_LOCKOUT_SECONDS
                 status = 429
             else:

@@ -29,6 +29,19 @@ class Room(models.Model):
         default=True,
         help_text=_('Endast aktiva utrymmen visas för besökare på webbplatsen.'),
     )
+    code_generation = models.PositiveIntegerField(
+        _('Kodgeneration'),
+        default=1,
+        editable=False,
+        help_text=_('Räknas upp varje gång utrymmets kod byts. Koden härleds ur den och kan inte läsas av härifrån.'),
+    )
+    rotated_at = models.DateTimeField(
+        _('Senast bytt'),
+        null=True,
+        blank=True,
+        editable=False,
+        help_text=_('När utrymmets kod senast byttes. Gör att den förra koden fungerar en stund till.'),
+    )
 
     class Meta:
         verbose_name = _('Utrymme')
@@ -37,6 +50,20 @@ class Room(models.Model):
 
     def __str__(self):
         return self.name
+
+    def rotate_code(self, at=None):
+        """Move to the next code for this room and end the unlocks it granted.
+
+        The counter is bumped in the database rather than in Python, so two
+        rotations racing each other cannot both read the same generation and
+        write the same value back.
+        """
+        Room.objects.filter(pk=self.pk).update(
+            code_generation=F('code_generation') + 1,
+            rotated_at=at or timezone.now(),
+        )
+        self.refresh_from_db(fields=['code_generation', 'rotated_at'])
+        return self.code_generation
 
 
 class Booking(models.Model):
@@ -153,25 +180,12 @@ class Booking(models.Model):
 class BookingSettings(models.Model):
     """Singleton with the association-wide booking configuration.
 
-    There is no stored booking code: the code is derived from the server secret
-    and ``code_generation``, a counter that only moves when the board rotates
-    the code on purpose. Nothing about the code depends on the clock, so no
-    schedule has to run for it to stay correct.
+    The codes themselves are not here: each room carries its own generation, and
+    a room's code is derived from the server secret, the room and that
+    generation. What is association-wide is how a visitor is told to get a code
+    at all, which is `code_instructions`.
     """
 
-    code_generation = models.PositiveIntegerField(
-        _('Kodgeneration'),
-        default=1,
-        editable=False,
-        help_text=_('Räknas upp varje gång koden byts. Koden härleds ur den och kan inte läsas av härifrån.'),
-    )
-    rotated_at = models.DateTimeField(
-        _('Senast bytt'),
-        null=True,
-        blank=True,
-        editable=False,
-        help_text=_('När koden senast byttes. Gör att den förra koden fungerar en stund till.'),
-    )
     code_instructions = models.TextField(
         _('Så får besökare koden'),
         blank=True,
@@ -186,20 +200,6 @@ class BookingSettings(models.Model):
 
     def __str__(self):
         return str(_('Bokningsinställningar'))
-
-    def rotate_code(self, at=None):
-        """Move to the next code and end every existing unlock.
-
-        The counter is bumped in the database rather than in Python, so two
-        rotations racing each other cannot both read the same generation and
-        write the same value back.
-        """
-        BookingSettings.objects.filter(pk=self.pk).update(
-            code_generation=F('code_generation') + 1,
-            rotated_at=at or timezone.now(),
-        )
-        self.refresh_from_db(fields=['code_generation', 'rotated_at'])
-        return self.code_generation
 
     @classmethod
     def get_solo(cls):

@@ -92,18 +92,56 @@ class BookingOriginFilter(admin.SimpleListFilter):
 
 @admin.register(Room)
 class RoomAdmin(ModelAdmin):
-    list_display = ('name', 'is_active', 'booking_count')
+    list_display = ('name', 'is_active', 'current_code', 'last_rotated', 'booking_count')
     list_filter = ('is_active',)
     search_fields = ('name',)
     inlines = [BookingInline]
+    actions = ('rotate_code',)
+    readonly_fields = ('current_code', 'last_rotated')
 
     def get_queryset(self, request):
         # Annotated so the changelist does not run one COUNT per room.
         return super().get_queryset(request).annotate(bookings_total=Count('bookings'))
 
+    def save_model(self, request, obj, form, change):
+        # Only the fields the board can edit are written, which is name,
+        # description and is_active. A plain save() would also put back the
+        # generation and the rotation moment from whatever this request read,
+        # undoing a rotation that landed in between and reviving the unlocks it
+        # had just ended. On an insert update_fields is ignored and every field
+        # is written, which is what the two defaults need.
+        editable = [f.name for f in obj._meta.concrete_fields if f.editable and not f.primary_key]
+        obj.save(update_fields=editable)
+
     @admin.display(description=_('Bokningar'), ordering='bookings_total')
     def booking_count(self, obj):
         return obj.bookings_total
+
+    @admin.display(description=_('Aktuell bokningskod'))
+    def current_code(self, obj):
+        if not obj or not obj.pk:
+            return '-'
+        return access.current_code(obj)
+
+    @admin.display(description=_('Senast bytt'))
+    def last_rotated(self, obj):
+        if not obj or not obj.pk or not obj.rotated_at:
+            return _('Aldrig')
+        # Formatted rather than handed to the template as a datetime: Django
+        # would render the raw repr, offset and all.
+        return formats.date_format(timezone.localtime(obj.rotated_at), 'DATETIME_FORMAT')
+
+    @admin.action(description=_('Byt bokningskoden nu'), permissions=['change'])
+    def rotate_code(self, request, queryset):
+        """Hand the board a new code per room, ending the unlocks each granted."""
+        for room in queryset:
+            generation = room.rotate_code()
+            self.message_user(
+                request,
+                _('Ny bokningskod för %(room)s: %(code)s. Den förra koden fungerar i 15 minuter till.')
+                % {'room': room.name, 'code': access.code_for_generation(room, generation)},
+                messages.SUCCESS,
+            )
 
 
 @admin.register(Booking)
@@ -142,24 +180,22 @@ class BookingAdmin(ModelAdmin):
 
 @admin.register(BookingSettings)
 class BookingSettingsAdmin(ModelAdmin):
-    list_display = ('__str__', 'current_code', 'last_rotated')
-    readonly_fields = ('current_code', 'last_rotated')
-    actions = ('rotate_code',)
+    """The association-wide note about how a visitor gets a code.
+
+    The codes themselves live on each room, so this page has no code to show and
+    nothing to rotate.
+    """
+
+    list_display = ('__str__',)
     fieldsets = (
         (
             None,
             {
                 'fields': ('code_instructions',),
                 'description': _(
-                    'Bokningskoden genereras automatiskt och kan inte skrivas in här. Den visas nedan, och '
-                    'den byts bara när någon väljer åtgärden "Byt bokningskoden nu".'
+                    'Varje utrymme har sin egen bokningskod, som visas och byts på utrymmets sida under '
+                    'Bokningar › Utrymmen. Här står bara texten som besökare utan konto får läsa.'
                 ),
-            },
-        ),
-        (
-            _('Aktuell bokningskod'),
-            {
-                'fields': ('current_code', 'last_rotated'),
             },
         ),
     )
@@ -169,46 +205,3 @@ class BookingSettingsAdmin(ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
-
-    def save_model(self, request, obj, form, change):
-        if not change:
-            super().save_model(request, obj, form, change)
-            return
-        # Only the note is editable, and a plain save() would write the
-        # generation and the rotation moment back from whatever this request
-        # read, undoing a rotation that landed in between and reviving the
-        # unlocks it had just ended. editable=False keeps them out of the form,
-        # not out of the UPDATE.
-        obj.save(update_fields=['code_instructions'])
-
-    @admin.display(description=_('Aktuell bokningskod'))
-    def current_code(self, obj):
-        return access.current_code(access_settings=self._settings_for(obj))
-
-    @admin.display(description=_('Senast bytt'))
-    def last_rotated(self, obj):
-        if not obj or not obj.pk or not obj.rotated_at:
-            return _('Aldrig')
-        # Formatted rather than handed to the template as a datetime: Django
-        # would render the raw repr, offset and all.
-        return formats.date_format(timezone.localtime(obj.rotated_at), 'DATETIME_FORMAT')
-
-    @admin.action(description=_('Byt bokningskoden nu'), permissions=['change'])
-    def rotate_code(self, request, queryset):
-        """Hand the board a new code, ending every existing unlock."""
-        for settings_row in queryset:
-            generation = settings_row.rotate_code()
-            self.message_user(
-                request,
-                _('Ny bokningskod: %(code)s. Den förra koden fungerar i 15 minuter till.')
-                % {'code': access.code_for_generation(generation)},
-                messages.SUCCESS,
-            )
-
-    @staticmethod
-    def _settings_for(obj):
-        # Never get_solo() while rendering: the add page has no stored row yet,
-        # and creating one here would make has_add_permission refuse the very
-        # POST the admin just filled in. An unsaved instance carries the model
-        # defaults, and only the generation and the rotation moment are read.
-        return obj if obj and obj.pk else BookingSettings()

@@ -35,14 +35,14 @@ class BookingCodeForm(forms.Form):
         widget=forms.TextInput(attrs={'inputmode': 'numeric', 'autocomplete': 'off'}),
     )
 
-    def __init__(self, *args, at=None, access_settings=None, **kwargs):
+    def __init__(self, *args, room, at=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.room = room
         self.at = at
-        self.access_settings = access_settings
 
     def clean_code(self):
         code = self.cleaned_data['code']
-        if not access.check_code(code, at=self.at, access_settings=self.access_settings):
+        if not access.check_code(self.room, code, at=self.at):
             raise forms.ValidationError(_('Fel kod.'))
         return code
 

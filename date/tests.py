@@ -1228,7 +1228,7 @@ class HomepageBookingTests(TestCase):
             [booking.room.name for booking in response.context["bookings"]],
             [self.room.name],
         )
-        self.assertNotContains(response, self.access.current_code())
+        self.assertNotContains(response, self.access.current_code(self.room))
         self.assertNotContains(response, "Hemlig Bokare")
         self.assertNotContains(response, "hemlig@example.com")
         self.assertNotContains(response, "Hemlig beskrivning")

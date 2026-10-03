@@ -1,14 +1,14 @@
 # Booking Development Notes
 
 ## Scope
-The `booking` app owns the public room-booking pages: a list of bookable rooms, a detail page per room with a booking form, and the rotating code that visitors without a website account use to unlock that form. The same models record bookings made by signed-in members, and the Django admin is the management surface.
+The `booking` app owns the public room-booking pages: a list of bookable rooms, a detail page per room with a booking form, and the per-room code that visitors without a website account use to unlock that form. The same models record bookings made by signed-in members, and the Django admin is the management surface.
 
 The app is association-agnostic. Nothing under `booking/` reads `PROJECT_NAME` or `STAFF_GROUPS`. The one content variable it touches is optional: `booking/emails.py` reads `CONTENT_VARIABLES["ASSOCIATION_EMAIL"]` to name the board's address in the confirmation email, because an email body is rendered without a request and the context processor does not run there. It defaults to an empty string, and the templates that show the same address guard on it being set, so an association that leaves it empty loses the sentence and nothing else. The other association-specific parts are which variants list the app in `INSTALLED_APPS`, which variants mount its route key, and which variants set the `BOOKING_ENABLED` capability. An association that installs the app and creates rooms gets working behaviour with no further configuration.
 
 Where the code lives:
 
 - `booking/models.py`: `Room`, `Booking`, `BookingSettings`.
-- `booking/access.py`: the rotating code, the session token, and the HTTP gate.
+- `booking/access.py`: the per-room codes, the session token, and the HTTP gate.
 - `booking/views.py`, `booking/forms.py`, `booking/urls.py`: the public pages.
 - `booking/admin.py`: the admin registrations.
 - `booking/emails.py`: the confirmation email for an external booker.
@@ -53,28 +53,29 @@ Overlap prevention lives in `Booking.clean()`:
 
 The create path in `room_detail` wraps validation and save in `transaction.atomic()` and locks the room row with `Room.objects.select_for_update()` before validating, so two simultaneous submissions for one room cannot both pass the overlap check. SQLite ignores `select_for_update`, and `core/settings/test.py` uses in-memory SQLite, so the tests cannot prove that part; production runs PostgreSQL.
 
-## `BookingSettings` (`booking/models.py`)
-`BookingSettings` is a singleton reached through `BookingSettings.get_solo()`, which reads or creates `pk=1`. It has three fields. `code_generation` is the counter the code is derived from, starting at 1 and moving only when the board rotates. `rotated_at` records when that last happened, and exists so the previous code can keep working briefly. `code_instructions` is an optional TextField the board fills in to say how a visitor is given the code; the gate shows it instead of the default sentence, and an empty value is the normal case. All three are read-only in the admin: `code_generation` and `rotated_at` because the rotate action owns them, and `code_instructions` is editable.
+## Where the code state lives
 
-There is no stored password or code anywhere in the app, and nothing about the code depends on the clock. `get_solo()` is the only way to reach the row from the app, and the public path reads `code_instructions` directly through `_code_instructions()` in `booking/views.py` so that an anonymous page view does not create the singleton as a side effect.
+`Room` carries `code_generation` (default 1, `editable=False`) and `rotated_at` (nullable, `editable=False`). Each room has its own, which is what makes the codes independent: the office and the sauna do not share a code, a room lent to an outside group can have a code those people never see for the rest of the house, and rotating one room leaves every other room alone. `Room.rotate_code()` moves that room to the next generation and stamps `rotated_at`, bumping the counter with a database-side `F('code_generation') + 1` rather than in Python, so two rotations racing each other cannot both read the same value and write it back.
 
-`code_instructions` exists because the distribution channel is not the website's decision. The board hands the code out however it likes, so nothing in the app names a channel: the default copy says only that the board provides the code, and an association that wants to be specific writes its own sentence. Like `Room.name` and `Room.description`, the field is editor content and is not translated, so an English visitor reading a Swedish sentence is the same trade-off the app already makes for rooms.
+`RoomAdmin.save_model()` writes only the editable fields. A plain `save()` would also put the generation and the rotation moment back from whatever the request read, undoing a rotation that landed in between, so the room form does not write them at all.
 
-`rotate_code()` moves to the next generation and stamps `rotated_at`. It bumps the counter with a database-side `F('code_generation') + 1` rather than in Python, so two rotations racing each other cannot both read the same value and write it back.
+`BookingSettings` is now only the association-wide note about how a visitor gets a code: an optional `code_instructions` TextField, reached through `BookingSettings.get_solo()`. It has no code of its own and nothing to rotate. The public path reads it directly through `_code_instructions()` in `booking/views.py` rather than through `get_solo()`, so an anonymous page view does not create the row as a side effect.
+
+`code_instructions` exists because the distribution channel is not the website's decision. The board hands a code out however it likes, so nothing in the app names a channel: the default copy says only that the board provides the code, and an association that wants to be specific writes its own sentence. Like `Room.name` and `Room.description`, the field is editor content and is not translated, so an English visitor reading a Swedish sentence is the same trade-off the app already makes for rooms.
 
 ## The booking code (`booking/access.py`)
 
 ### Derivation
 ```
-digest = HMAC-SHA256(SECRET_KEY, 'booking-code:<generation>')
+digest = HMAC-SHA256(SECRET_KEY, 'booking-code:<room pk>:<generation>')
 number = int.from_bytes(digest[:8], 'big') % 10**6
 code   = str(number).zfill(6)
 ```
 
-The result is always six digits, with leading zeros kept.
+The result is always six digits, with leading zeros kept. The room's primary key is in the message, so two rooms on the same generation still have different codes, and the name is not, so renaming a room does not change its code.
 
 ### Why there is no schedule
-The code is a pure function of `SECRET_KEY` and `code_generation`. Nothing in the derivation reads the time, so the code stays exactly where the board left it: `current_code()` takes no moment at all, and no task has to run for the code to remain correct. Rotation is an explicit act by someone holding `booking.change_bookingsettings`, through the **Byt bokningskoden nu** admin action, which reports the new code in a message. The code is never stored, but it is always derivable, so the settings page and the changelist display the current one at any time; the message is only so the board has it in hand straight after rotating.
+A code is a pure function of `SECRET_KEY`, the room and that room's `code_generation`. Nothing in the derivation reads the time, so a code stays exactly where the board left it: `current_code(room)` takes no moment at all, and no task has to run for codes to remain correct. Rotation is an explicit act by someone holding `booking.change_room`, through the **Byt bokningskoden nu** admin action on the room list, which reports each new code with its room name. Codes are never stored, but they are always derivable, so the room list and each room's page display the current one at any time; the message is only so the board has the new ones in hand straight after rotating.
 
 The trade-off this makes is deliberate and worth stating plainly: a scheduled rotation used to be one of the two things bounding an automated guesser. With rotation on demand, that bound is gone. A code nobody rotates stays valid indefinitely, and what is left is weaker than it looks: the five-attempt limit and the lockout live in a session cookie a script simply discards, and the captcha fails open when `CF_TURNSTILE_SECRET_KEY` is empty. Against a determined guesser of a six-digit code the honest summary is that the code is a speed bump, not a wall, and that the association is relying on the code being shared among people who do not attack it. Rotating after any suspected leak is the control that remains, and `rotated_at` is displayed so a stale code is at least visible.
 
@@ -83,9 +84,10 @@ The trade-off this makes is deliberate and worth stating plainly: a scheduled ro
 - The elapsed time is required to be non-negative, so a `rotated_at` stamped in the future by clock skew does not revive the previous code.
 - `check_code()` strips whitespace and compares with `hmac.compare_digest` against every accepted code with no early exit.
 
-### Session token
-- `session_token()` is `HMAC-SHA256(SECRET_KEY, 'booking-session:<generation>')[:32].hex()`.
-- The token depends on the generation, so a rotation invalidates every stored unlock at once and no expiry has to be stored in the session. Note the asymmetry: the code that was just handed out keeps working for the grace window, but an unlock granted with it does not survive the rotation.
+### Session token and per-room session state
+- `session_token(room)` is `HMAC-SHA256(SECRET_KEY, 'booking-session:<room pk>:<generation>')[:32].hex()`.
+- The token depends on the room and its generation, so rotating a room invalidates exactly the unlocks that room granted and no expiry has to be stored in the session. Note the asymmetry: the code that was just handed out keeps working for the grace window, but an unlock granted with it does not survive the rotation.
+- `booking_access_token`, `booking_code_attempts` and `booking_code_lockout_until` hold mappings keyed by the room primary key as text, because the default session serializer is JSON and JSON object keys are strings. Attempts and lockouts are therefore per room too: fumbling one room's code does not lock a visitor out of another's. `_room_state()` reads a mapping and treats anything else as empty, so a session written by an earlier release loses its unlock and heals on the next visit instead of needing a migration.
 - It is an HMAC over a distinct message rather than a hash of the six-digit code: the code space has only a million entries, so a stored hash of the code would be a trivially reversible fingerprint, while the HMAC needs `SECRET_KEY`. The typed code itself is never written to the session.
 - The digest is hex-encoded because Django's default session serializer is JSON and cannot store bytes. `_stored_token()` accepts either form, and `session_has_access()` compares with `compare_digest`.
 
@@ -95,7 +97,7 @@ The trade-off this makes is deliberate and worth stating plainly: a scheduled ro
 
 ### Test seams
 - `now_at()` is the single time seam, and it now only matters to the grace window and the lockout. Tests patch `booking.access.now_at` to pin "now".
-- `access_settings=None` on `current_code`, `accepted_codes`, `check_code`, `session_token`, `session_has_access`, `grant_session` and `booking_code_gate` means "read `BookingSettings.get_solo()`", which lets the pure-function tests pass an unsaved instance with an explicit generation and no database write. `at=` survives only where the moment is genuinely read, which is the grace window.
+- Every code function takes a room, so the pure-function tests pass an unsaved `Room` with an explicit primary key and generation and touch no database. `at=` survives only where the moment is genuinely read, which is the grace window.
 
 ## Public routes and views
 `booking/urls.py` sets `app_name = 'booking'` and the shared URLconf mounts it at `booking/`:
@@ -174,7 +176,7 @@ Through the Docker helper, after `source env.sh`:
 date-test booking
 ```
 
-The rotating code is testable without `freezegun` because of the seams above: patch `booking.access.now_at`, or pass `at=` and `access_settings=` straight to the `access` functions. The app's tests live in `booking/tests.py`.
+The codes are testable without `freezegun` because of the seams above: patch `booking.access.now_at`, or pass `at=` straight to the `access` functions. The app's tests live in `booking/tests.py`.
 
 ## Risks and gotchas
 - The homepage block sits inside `{% raw %}{% cache 300 main_page_fixed LANGUAGE_CODE %}{% endraw %}` in `templates/date/date/start.html`, so flipping `BOOKING_ENABLED` can take up to five minutes to show on the homepage. A stale fragment can even hold a link to a now unmounted route for that long. The app's own pages are not cached and change on the next request.
