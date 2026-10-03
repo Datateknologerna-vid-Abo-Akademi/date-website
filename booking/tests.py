@@ -18,14 +18,15 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
-from django.test import SimpleTestCase, TestCase, override_settings
+from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from booking import access, emails
-from booking.admin import BookingAdmin
+from booking.admin import BookingAdmin, BookingInline, BookingOriginFilter
 from booking.forms import AnonymousBookingForm, BookingForm
-from booking.models import Booking, BookingSettings, Room
+from booking.models import BOOKING_PAST_GRACE, Booking, BookingSettings, Room
+from core.admin_ui import get_sidebar_navigation
 
 # Unsaved singletons: every settings-reading function in booking.access accepts
 # one, so the pure-function tests need no database at all.
@@ -364,6 +365,113 @@ class BookingModelTests(TestCase):
         booking.refresh_from_db()
 
         self.assertIsNone(booking.author)
+        # The name is recorded when the booking is made, so deleting the
+        # account does not erase who booked the room.
+        self.assertEqual(booking.booker_name, 'booking-author')
+        self.assertEqual(booking.booker_display, 'booking-author')
+
+    def test_a_member_booking_records_the_booker_name(self):
+        member = make_member('booking-snapshot')
+        booking = make_booking(self.room, self.start, self.end, author=member)
+
+        self.assertEqual(booking.booker_name, str(member))
+
+    def test_a_name_typed_by_the_board_is_not_overwritten(self):
+        member = make_member('booking-typed')
+        booking = make_booking(self.room, self.start, self.end, author=member, booker_name='Ringde kansliet')
+
+        self.assertEqual(booking.booker_name, 'Ringde kansliet')
+
+    def test_the_snapshot_is_written_when_update_fields_is_narrow(self):
+        # A save that names only the fields it changes must still carry the
+        # snapshot, or the name stays in memory and is lost with the account.
+        member = make_member('booking-narrow-update')
+        booking = make_booking(self.room, self.start, self.end)
+        booking.author = member
+
+        booking.save(update_fields=['author'])
+
+        self.assertEqual(Booking.objects.get(pk=booking.pk).booker_name, str(member))
+
+    def test_an_empty_update_fields_is_still_a_no_op(self):
+        # Django reads an empty update_fields as "write nothing"; the snapshot
+        # must not turn that into a write of its own.
+        member = make_member('booking-empty-update')
+        booking = make_booking(self.room, self.start, self.end)
+        booking.author = member
+
+        booking.save(update_fields=[])
+
+        stored = Booking.objects.get(pk=booking.pk)
+        self.assertIsNone(stored.author_id)
+        self.assertEqual(stored.booker_name, '')
+
+    def test_an_empty_update_fields_generator_is_handled_like_an_empty_list(self):
+        # Django reads any empty iterable as "write nothing". A generator has to
+        # be consumed rather than left in kwargs, where save_base() cannot read
+        # it and raises instead.
+        member = make_member('booking-empty-generator')
+        booking = make_booking(self.room, self.start, self.end)
+        booking.author = member
+
+        booking.save(update_fields=iter([]))
+
+        stored = Booking.objects.get(pk=booking.pk)
+        self.assertIsNone(stored.author_id)
+        self.assertEqual(stored.booker_name, '')
+
+    def test_a_write_nothing_save_does_not_consume_the_snapshot(self):
+        # The name must not be filled in on the instance by a save that writes
+        # nothing: the next narrow save would see it as already set, skip the
+        # snapshot, and store an author with a blank name, which is the identity
+        # loss the snapshot exists to prevent.
+        member = make_member('booking-empty-then-narrow')
+        booking = make_booking(self.room, self.start, self.end)
+        booking.author = member
+
+        booking.save(update_fields=[])
+        booking.save(update_fields=['author'])
+
+        stored = Booking.objects.get(pk=booking.pk)
+        self.assertEqual(stored.author_id, member.pk)
+        self.assertEqual(stored.booker_name, str(member))
+
+    def test_a_new_booking_in_the_past_is_rejected(self):
+        past = timezone.now() - datetime.timedelta(days=1)
+        booking = Booking(room=self.room, start=past, end=past + datetime.timedelta(hours=1), booker_name='Någon')
+
+        with self.assertRaises(ValidationError) as raised:
+            booking.full_clean()
+
+        self.assertIn('start', raised.exception.message_dict)
+
+    def test_a_start_inside_the_grace_window_is_accepted(self):
+        # A visitor filling the form by hand can be a few minutes late by the
+        # time the POST lands, so a recent start is not treated as an error.
+        recent = timezone.now() - BOOKING_PAST_GRACE / 2
+        booking = Booking(
+            room=self.room,
+            start=recent,
+            end=recent + datetime.timedelta(hours=1),
+            booker_name='Någon',
+        )
+
+        booking.full_clean()
+
+    def test_an_existing_booking_keeps_a_start_that_has_passed(self):
+        # Otherwise the board could not correct the description of a booking
+        # whose time is over without also being told its time is invalid.
+        past = timezone.now() - datetime.timedelta(days=30)
+        booking = make_booking(
+            self.room,
+            past,
+            past + datetime.timedelta(hours=1),
+            booker_name='Någon',
+        )
+        booking.refresh_from_db()
+        booking.description = 'Rättad i efterhand'
+
+        booking.full_clean()
 
     def test_booking_form_rejects_end_before_start(self):
         form = BookingForm(
@@ -590,6 +698,66 @@ class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Booking.objects.exists())
 
+    def test_the_gate_says_where_the_code_comes_from(self):
+        # A visitor who has never booked before cannot guess that the code
+        # exists, who holds it or how to ask for it. The whole sentence is
+        # asserted, not the address on its own: the footer carries the address
+        # on every page, so a bare address would prove nothing here.
+        response = self.client.get(self.room_url)
+
+        self.assertContains(
+            response,
+            f'Bokningskoden får du av styrelsen via {settings.CONTENT_VARIABLES["ASSOCIATION_EMAIL"]}',
+        )
+
+    def test_the_gate_explains_the_code_in_english_too(self):
+        # The English page is what an outsider who does not read Swedish sees,
+        # and it is the only place the catalogs for this feature are exercised.
+        # Set through the cookie: the site's language middleware activates the
+        # request language and would override translation.override().
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = 'en'
+
+        response = self.client.get(self.room_url)
+
+        self.assertContains(response, 'You get the booking code from the board')
+
+    def test_the_room_list_says_that_a_code_is_needed(self):
+        response = self.client.get(self.index_url)
+
+        self.assertContains(response, 'bokningskod')
+        self.assertContains(
+            response,
+            f'Utan konto behöver du en bokningskod, som du får av styrelsen via '
+            f'{settings.CONTENT_VARIABLES["ASSOCIATION_EMAIL"]}',
+        )
+
+    def test_the_booking_page_names_the_board_as_the_contact(self):
+        self.unlock()
+
+        response = self.client.get(self.room_url)
+
+        self.assertContains(
+            response,
+            f'Har du frågor om en bokning, kontakta styrelsen via {settings.CONTENT_VARIABLES["ASSOCIATION_EMAIL"]}',
+        )
+
+    def test_a_booking_in_the_past_is_rejected(self):
+        self.unlock()
+        past = self.now - datetime.timedelta(days=1)
+
+        with patch('booking.views.validate_captcha', return_value=True):
+            response = self.client.post(
+                self.room_url,
+                self.booking_payload(
+                    start=local_input_time(past),
+                    end=local_input_time(past + datetime.timedelta(hours=1)),
+                ),
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('start', response.context['form'].errors)
+        self.assertFalse(Booking.objects.exists())
+
 
 class BookingMemberFlowTests(TestCase):
     """A signed-in member needs no code step, only a valid booking."""
@@ -620,8 +788,41 @@ class BookingMemberFlowTests(TestCase):
         self.assertRedirects(response, self.room_url)
         booking = Booking.objects.get()
         self.assertEqual(booking.author, self.member)
-        self.assertEqual(booking.booker_name, '')
+        # The member's display name is snapshotted so the booking still says who
+        # booked it after the account is deleted.
+        self.assertEqual(booking.booker_name, str(self.member))
         self.assertFalse(booking.is_external)
+
+    def test_member_booking_in_the_past_is_rejected(self):
+        past = timezone.now() - datetime.timedelta(days=1)
+
+        response = self.client.post(
+            self.room_url,
+            self.booking_payload(
+                start=local_input_time(past),
+                end=local_input_time(past + datetime.timedelta(hours=1)),
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('start', response.context['form'].errors)
+        self.assertFalse(Booking.objects.exists())
+
+    def test_the_start_input_offers_the_same_range_the_model_accepts(self):
+        # Pinned so the assertion cannot lose a race with the clock ticking over
+        # to the next minute between the render and the comparison.
+        pinned = timezone.localtime(timezone.now()).replace(second=0, microsecond=0)
+        with patch('booking.access.now_at', new=lambda: pinned):
+            response = self.client.get(self.room_url)
+
+        # The input's floor is the model's grace boundary, not the current
+        # moment: a floor of "now" would make the picker refuse a start that
+        # Booking.clean() accepts, and would invalidate a start that was picked
+        # a moment earlier if the form is re-rendered after another error.
+        expected = timezone.localtime(pinned - BOOKING_PAST_GRACE).strftime('%Y-%m-%dT%H:%M')
+        for name in ('start', 'end'):
+            with self.subTest(field=name):
+                self.assertEqual(response.context['form'].fields[name].widget.attrs['min'], expected)
 
     def test_captcha_is_not_consulted_for_members(self):
         with patch('booking.views.validate_captcha') as captcha:
@@ -771,6 +972,250 @@ class BookingAdminPermissionTests(TestCase):
         self.assertFalse(Booking.objects.filter(pk=created.pk).exists())
 
 
+class BookingAdminSurfaceTests(TestCase):
+    """What the board actually sees: the order, the filters and the room page."""
+
+    def setUp(self):
+        self.room = make_room(name='Bastun')
+        self.now = timezone.now()
+        self.editor = make_staff_member(
+            'booking-surface-editor',
+            settings.STAFF_GROUPS[0],
+            (
+                ('booking', 'view_booking'),
+                ('booking', 'view_room'),
+                ('booking', 'view_bookingsettings'),
+            ),
+        )
+        self.client.force_login(self.editor, backend='members.backends.AuthBackend')
+
+    def _booking(self, **kwargs):
+        start = kwargs.pop('start', self.now + datetime.timedelta(days=1))
+        return make_booking(self.room, start, start + datetime.timedelta(hours=1), **kwargs)
+
+    def _request(self, user=None, **data):
+        request = RequestFactory().get('/admin/booking/booking/', data)
+        request.user = user or self.editor
+        return request
+
+    def _time_label(self, booking):
+        """The text the Tid column renders, which is what the row order is read from."""
+        start = timezone.localtime(booking.start)
+        end = timezone.localtime(booking.end)
+        return f'{start:%Y-%m-%d %H:%M} - {end:%H:%M}'
+
+    def test_the_changelist_opens_on_the_newest_booking_not_the_oldest(self):
+        oldest = self._booking(start=self.now + datetime.timedelta(days=1))
+        newest = self._booking(start=self.now + datetime.timedelta(days=30))
+
+        body = self.client.get(reverse('admin:booking_booking_changelist')).content.decode()
+
+        self.assertLess(body.index(self._time_label(newest)), body.index(self._time_label(oldest)))
+
+    def _origin_filtered(self, query):
+        """Apply the origin filter the way the changelist does.
+
+        The changelist hands over ``dict(request.GET.lists())``, so every value
+        is a list and the filter takes its last element.
+        """
+        params = {key: [value] for key, value in query.items()}
+        request = self._request(**query)
+        chosen = BookingOriginFilter(request, params, Booking, BookingAdmin(Booking, admin.site))
+        return set(chosen.queryset(request, Booking.objects.all()).values_list('pk', flat=True))
+
+    def test_the_origin_filter_separates_member_and_website_bookings(self):
+        by_member = self._booking(author=self.editor)
+        by_visitor = self._booking(booker_name='Extern Besökare', booker_email='besokare@example.com')
+        # A booking whose member deleted the account: no author, and no address,
+        # because the public form always records one.
+        deleted_member = self._booking(booker_name='Före detta medlem')
+
+        self.assertEqual(self._origin_filtered({'origin': 'account'}), {by_member.pk})
+        self.assertEqual(self._origin_filtered({'origin': 'no_account'}), {by_visitor.pk, deleted_member.pk})
+        self.assertEqual(self._origin_filtered({'origin': 'external'}), {by_visitor.pk})
+        # An absent or unknown value must not filter anything out.
+        self.assertEqual(self._origin_filtered({}), {by_member.pk, by_visitor.pk, deleted_member.pk})
+        self.assertEqual(
+            self._origin_filtered({'origin': 'nonsense'}), {by_member.pk, by_visitor.pk, deleted_member.pk}
+        )
+
+    def test_the_room_page_lists_upcoming_bookings_only(self):
+        past = self._booking(start=self.now - datetime.timedelta(days=30))
+        upcoming = self._booking(start=self.now + datetime.timedelta(days=2))
+        model_admin = BookingInline(Booking, admin.site)
+
+        listed = set(model_admin.get_queryset(self._request()).values_list('pk', flat=True))
+
+        self.assertEqual(listed, {upcoming.pk})
+        self.assertNotIn(past.pk, listed)
+
+    def test_the_room_page_lists_upcoming_bookings_soonest_first(self):
+        later = self._booking(start=self.now + datetime.timedelta(days=5))
+        sooner = self._booking(start=self.now + datetime.timedelta(days=1))
+        model_admin = BookingInline(Booking, admin.site)
+
+        listed = list(model_admin.get_queryset(self._request()).values_list('pk', flat=True))
+
+        self.assertEqual(listed, [sooner.pk, later.pk])
+
+    def _inline_editor(self):
+        """A board member who may change the room and its bookings from the room page."""
+        editor = make_staff_member(
+            'booking-inline-editor',
+            settings.STAFF_GROUPS[0],
+            (
+                ('booking', 'change_room'),
+                ('booking', 'view_booking'),
+                ('booking', 'change_booking'),
+                ('booking', 'delete_booking'),
+            ),
+        )
+        self.client.force_login(editor, backend='members.backends.AuthBackend')
+        return editor
+
+    def _room_inline_post_data(self, booking, prefix, **extra):
+        local_start = timezone.localtime(booking.start)
+        local_end = timezone.localtime(booking.end)
+        data = {
+            f'{prefix}-TOTAL_FORMS': '1',
+            f'{prefix}-INITIAL_FORMS': '1',
+            f'{prefix}-MIN_NUM_FORMS': '0',
+            f'{prefix}-MAX_NUM_FORMS': '1000',
+            f'{prefix}-0-id': str(booking.pk),
+            f'{prefix}-0-room': str(self.room.pk),
+            f'{prefix}-0-start_0': local_start.strftime('%Y-%m-%d'),
+            f'{prefix}-0-start_1': local_start.strftime('%H:%M:%S'),
+            f'{prefix}-0-end_0': local_end.strftime('%Y-%m-%d'),
+            f'{prefix}-0-end_1': local_end.strftime('%H:%M:%S'),
+            f'{prefix}-0-booker_name': booking.booker_name,
+            f'{prefix}-0-description': booking.description,
+            f'{prefix}-0-author': '',
+            'name': self.room.name,
+            'is_active': 'on',
+            '_save': 'Spara',
+        }
+        data.update(extra)
+        return data
+
+    def _let_time_pass(self, booking):
+        """Move a booking into the past, as the clock would while the page is open.
+
+        Written with ``update()`` and then read back so the submitted form data
+        carries the times the page would now show. ``end`` stays after ``start``
+        to satisfy the database check constraint.
+        """
+        Booking.objects.filter(pk=booking.pk).update(
+            start=self.now - datetime.timedelta(hours=2),
+            end=self.now - datetime.timedelta(hours=1),
+        )
+        booking.refresh_from_db()
+        return booking
+
+    def test_a_row_that_ended_while_the_page_was_open_still_deletes(self):
+        self._inline_editor()
+        room_url = reverse('admin:booking_room_change', args=[self.room.pk])
+        booking = self._booking(start=self.now + datetime.timedelta(hours=1), booker_name='Någon')
+        # Read the prefix from the rendered page, which also proves the row was
+        # shown to the board before its time passed.
+        page = self.client.get(room_url).content.decode()
+        prefix = re.search(r'name="([A-Za-z0-9_]+)-TOTAL_FORMS"', page).group(1)
+        self.assertIn('Någon', page)
+
+        # The end passes between the page being opened and the form being
+        # submitted. The row has to stay in the inline's queryset: an id Django
+        # cannot resolve becomes an unsaved instance, the checked delete is
+        # dropped, and the save still reports success.
+        booking = self._let_time_pass(booking)
+
+        response = self.client.post(
+            room_url,
+            self._room_inline_post_data(booking, prefix, **{f'{prefix}-0-DELETE': 'on'}),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Booking.objects.filter(pk=booking.pk).exists())
+
+    def test_a_row_that_ended_while_the_page_was_open_still_saves(self):
+        self._inline_editor()
+        room_url = reverse('admin:booking_room_change', args=[self.room.pk])
+        booking = self._booking(start=self.now + datetime.timedelta(hours=1), booker_name='Någon')
+        page = self.client.get(room_url).content.decode()
+        prefix = re.search(r'name="([A-Za-z0-9_]+)-TOTAL_FORMS"', page).group(1)
+
+        booking = self._let_time_pass(booking)
+        response = self.client.post(
+            room_url,
+            self._room_inline_post_data(booking, prefix, **{f'{prefix}-0-description': 'Ändrad i efterhand'}),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        booking.refresh_from_db()
+        self.assertEqual(booking.description, 'Ändrad i efterhand')
+
+    def test_another_inlines_ids_do_not_pull_rows_into_the_room_inline(self):
+        # The preservation reads the submitted formset's own prefix, so a page
+        # hosting a second inline cannot drag a stale booking back into view.
+        past = self._booking(start=self.now - datetime.timedelta(days=1))
+        request = RequestFactory().post(
+            '/admin/booking/room/1/change/',
+            {'other-0-id': str(past.pk), 'other-TOTAL_FORMS': '1'},
+        )
+        request.user = self.editor
+        model_admin = BookingInline(Booking, admin.site)
+
+        self.assertEqual(model_admin._submitted_pks(request), set())
+        # Read the pks out: comparing an integer against a queryset of Booking
+        # objects would pass whether or not the row were there.
+        listed = list(model_admin.get_queryset(request).values_list('pk', flat=True))
+        self.assertNotIn(past.pk, listed)
+
+    def test_an_unparseable_id_is_ignored_rather_than_raising(self):
+        # int() refuses a very long digit string and a superscript two, and a
+        # stray id must not turn the room page into a 500 for whoever posted it.
+        request = RequestFactory().post(
+            '/admin/booking/room/1/change/',
+            {
+                'bookings-0-id': '9' * 5000,
+                'bookings-1-id': '\u00b2',
+                'bookings-2-id': 'abc',
+                'bookings-other-0-id': '7',
+                'bookings-3-unrelated-id': '8',
+            },
+        )
+        request.user = self.editor
+
+        self.assertEqual(BookingInline(Booking, admin.site)._submitted_pks(request), set())
+
+    def test_the_sidebar_offers_booking_to_a_holder_of_the_permissions(self):
+        # Asserted on the hrefs rather than on the group title: the labels are
+        # translated, so the title depends on the active language.
+        groups = get_sidebar_navigation(self._request())
+        booking_groups = [
+            group
+            for group in groups
+            if any(item['link'] == reverse('admin:booking_booking_changelist') for item in group['items'])
+        ]
+
+        self.assertEqual(len(booking_groups), 1)
+        self.assertEqual(
+            {item['link'] for item in booking_groups[0]['items']},
+            {
+                reverse('admin:booking_booking_changelist'),
+                reverse('admin:booking_room_changelist'),
+                reverse('admin:booking_bookingsettings_changelist'),
+            },
+        )
+
+    def test_the_sidebar_hides_booking_from_a_group_without_the_permissions(self):
+        photographer = make_staff_member('booking-surface-photographer', settings.STAFF_GROUPS[0])
+
+        groups = get_sidebar_navigation(self._request(user=photographer))
+        hrefs = {item['link'] for group in groups for item in group['items']}
+
+        self.assertNotIn(reverse('admin:booking_booking_changelist'), hrefs)
+        self.assertNotIn(reverse('admin:booking_room_changelist'), hrefs)
+
+
 class BookingSettingsAdminTests(PinnedNowMixin, TestCase):
     """The settings are a singleton that only displays the derived code."""
 
@@ -884,6 +1329,24 @@ class BookingEmailTests(PinnedNowMixin, TestCase):
         _subject, _body, from_email, recipients = send_email.delay.call_args.args
         self.assertEqual(recipients, ['besokare@example.com'])
         self.assertEqual(from_email, settings.DEFAULT_FROM_EMAIL)
+
+    def test_the_confirmation_tells_the_booker_how_to_reach_the_board(self):
+        # The email is the only durable record an outside booker has, and the
+        # board is the only route to change or cancel the booking.
+        booking = make_booking(
+            self.room,
+            self.now + datetime.timedelta(hours=1),
+            self.now + datetime.timedelta(hours=2),
+            booker_name='Extern Besökare',
+            booker_email='besokare@example.com',
+        )
+
+        with patch('booking.emails.send_email_task') as send_email:
+            with self.captureOnCommitCallbacks(execute=True):
+                emails.notify_external_booker(booking)
+
+        _subject, body, _from_email, _recipients = send_email.delay.call_args.args
+        self.assertIn(settings.CONTENT_VARIABLES['ASSOCIATION_EMAIL'], body)
 
     def test_member_booking_queues_no_confirmation(self):
         member = make_member('booking-email-member')

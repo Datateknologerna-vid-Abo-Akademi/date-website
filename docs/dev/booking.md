@@ -3,7 +3,7 @@
 ## Scope
 The `booking` app owns the public room-booking pages: a list of bookable rooms, a detail page per room with a booking form, and the rotating code that visitors without a website account use to unlock that form. The same models record bookings made by signed-in members, and the Django admin is the management surface.
 
-The app is association-agnostic. Nothing under `booking/` reads `PROJECT_NAME`, the `CONTENT_VARIABLES` content variables, or `STAFF_GROUPS`. The only association-specific parts are which variants list the app in `INSTALLED_APPS`, which variants mount its route key, and which variants set the `BOOKING_ENABLED` capability. An association that installs the app and creates rooms gets working behaviour with no further configuration.
+The app is association-agnostic. Nothing under `booking/` reads `PROJECT_NAME` or `STAFF_GROUPS`. The one content variable it touches is optional: `booking/emails.py` reads `CONTENT_VARIABLES["ASSOCIATION_EMAIL"]` to name the board's address in the confirmation email, because an email body is rendered without a request and the context processor does not run there. It defaults to an empty string, and the templates that show the same address guard on it being set, so an association that leaves it empty loses the sentence and nothing else. The other association-specific parts are which variants list the app in `INSTALLED_APPS`, which variants mount its route key, and which variants set the `BOOKING_ENABLED` capability. An association that installs the app and creates rooms gets working behaviour with no further configuration.
 
 Where the code lives:
 
@@ -12,7 +12,7 @@ Where the code lives:
 - `booking/views.py`, `booking/forms.py`, `booking/urls.py`: the public pages.
 - `booking/admin.py`: the admin registrations.
 - `booking/emails.py`: the confirmation email for an external booker.
-- `templates/common/booking/`: `index.html`, `room_detail.html`, `partials/code_form.html` and `booking_confirmation_email.txt` (see the routes section).
+- `templates/common/booking/`: `index.html`, `room_detail.html`, `partials/code_form.html`, `partials/board_contact.html` and `booking_confirmation_email.txt` (see the routes section).
 - `static/common/booking/css/booking.css`: the shared stylesheet the templates pull in.
 
 ## Data model (`booking/models.py`)
@@ -24,19 +24,28 @@ Where the code lives:
 
 ### `Booking`
 - `room`: FK to `Room`, `on_delete=CASCADE`, `related_name='bookings'`.
-- `author`: optional FK to the member model (`settings.AUTH_USER_MODEL`), `on_delete=SET_NULL`, `related_name='room_bookings'`. `None` means the booking came from a visitor without a website account.
+- `author`: optional FK to the member model (`settings.AUTH_USER_MODEL`), `on_delete=SET_NULL`, `related_name='room_bookings'`. `None` means there is no website account behind the booking: either it came from a visitor, or the member who made it deleted the account afterwards.
 - `booker_name` (max 255, optional), `booker_email` (optional), `start`, `end`, `description` (max 400, optional), `created` (`default=timezone.now`, not editable).
 - Default ordering is `('start', 'pk')`.
-- `is_external` is `author_id is None`. `booker_display` returns the member's `str()` when there is an author, otherwise `booker_name`, otherwise the fallback label "Extern bokning".
+- `save()` copies the author's `str()` into `booker_name` when that field is blank and an author is set. `author` is `SET_NULL`, so without the copy a deleted member's booking would lose its booker and read as a booking without an account. A name typed by the board is never overwritten.
+- `is_external` is `author_id is None`. `booker_display` returns the member's `str()` when there is an author, otherwise `booker_name`, otherwise the fallback label "Extern bokning". Because the name is snapshotted, a booking whose member deleted the account still displays that member's name.
 - The only rule the database enforces is the `booking_end_after_start` check constraint, `end > start`. It is a backstop only: it says nothing about overlaps, and it fires on write.
 
+### A start time in the past
+`clean()` refuses a new booking whose `start` is more than `BOOKING_PAST_GRACE` (10 minutes) in the past, with "Starttiden kan inte vara i det förflutna.". The grace exists because the `datetime-local` input has minute precision and a form takes a moment to fill in, so a start equal to the current minute can be marginally stale by the time the POST lands.
+
+The check is guarded by `self._state.adding`: only a booking that is being created is refused. A booking that already exists keeps whatever times it has, so the board can still correct the description of one whose time is over from the admin without being told its time is invalid.
+
+The clock comes from `booking.access.now_at()` through a function-level import in `models.py` (`access` imports this module, so a module-level import would be circular). That keeps the single time seam the gate already uses, and it is what lets the tests pin "now" while the views and the model agree on it. Without the rule a mistyped year was saved, confirmed by email, and then invisible on every public list while still occupying the admin, because the public queries filter on `end__gte=now`.
+
 ### An external booking
-An external booking is an ordinary `Booking` row with `author` unset and the name and email recorded in `booker_name` and `booker_email`. There is no separate model, no account is created for the booker, and the email address on the row is the only link back to them.
+An external booking is an ordinary `Booking` row with `author` unset and the name and email recorded in `booker_name` and `booker_email`. There is no separate model, no account is created for the booker, and the email address on the row is the only link back to them. An unset `author` is also what a booking made by a member looks like after that member deletes the account, so `author is None` means "no account now" rather than "never had one"; the snapshotted `booker_name` is what tells the two apart.
 
 ### Overlap prevention
 Overlap prevention lives in `Booking.clean()`:
 
 - `end <= start` produces an error on `end`.
+- A new booking more than `BOOKING_PAST_GRACE` in the past produces an error on `start` (see above).
 - When `author_id is None` and `booker_name` is blank, it produces an error on `booker_name`.
 - When the room and both times are present, it rejects the booking if any other booking for the same room satisfies `start < new end` and `end > new start`. An edit excludes its own row, and bookings that only touch (`end == new start`) do not overlap. The query does not filter by time or by room activity, so an old booking in a since-deactivated room still blocks a new one.
 
@@ -95,13 +104,15 @@ The result is always six digits, with leading zeros kept.
 - 404 for a missing or inactive room.
 - For a signed-in member, or an anonymous visitor whose session token matches the current slot, it renders `templates/common/booking/room_detail.html` with the room, its future bookings (same 50 limit, restricted to that room), and a booking form.
 - `BookingForm` for a signed-in member (the author is taken from the request), `AnonymousBookingForm` for a visitor (adds required `booker_name` and `booker_email`).
+- Both forms declare `description` as a `Textarea` (3 rows) with `help_text`, overriding the single-line input the model field would produce, and the help text says that only the board reads it. That is the field the board needs to know what the room is for.
+- `BookingForm.__init__` sets a `min` attribute on the `start` and `end` widgets to `access.now_at() - BOOKING_PAST_GRACE`, truncated to the minute. It derives the boundary from the same constant the model uses, so the browser picker offers exactly the range `Booking.clean()` accepts instead of a stricter one: a floor of "now" would refuse a start the server takes, and would invalidate a start that was picked a moment earlier whenever the form is re-rendered after another error. Truncation leaves the picker a fraction more permissive than the server, never less, and the model check stays the authority.
 - The captcha check runs twice on the anonymous path, both through `core.utils.validate_captcha`: once in `booking_code_gate()` and once on the anonymous booking POST. Both call it with `access.captcha_response(request)`, which turns a missing field into an empty string, because the shared helper only short-circuits locally on `""` and a missing field would otherwise reach Cloudflare. A challenge that fails on the gate is reported through the `captcha_error` context key, and crucially the gate does not look at the submitted code at all in that case: validating it would tell a client that has not passed the challenge whether its guess was right, one guess at a time, without consuming an attempt. A rejected challenge is not a code attempt, so it does not count against the visitor's five either.
 - On success the booking is saved, `emails.notify_external_booker(booking)` runs, a success message is added, and the view redirects back to the same room page (POST/redirect/GET). On a validation error the page is re-rendered with the bound form and its field errors, at status 200.
 - The public templates render room names and start/end times only. The booking description, the booker name and the booker email are never rendered on the public pages.
 
-`templates/common/booking/index.html` renders the room cards and the upcoming-booking list. `room_detail.html` doubles as the code-gate page: it still shows the room name, its description and the upcoming bookings, and swaps the booking form for the code form. `partials/code_form.html` renders either the code input or, during a lockout, the "too many attempts" message with no form at all.
+`templates/common/booking/index.html` renders the room cards and the upcoming-booking list, and says in one line that an account books directly while everyone else needs a code. `room_detail.html` doubles as the code-gate page: it still shows the room name, its description and the upcoming bookings, and swaps the booking form for the code form. `partials/code_form.html` renders the explanation of where the code comes from, then either the code input or, during a lockout, the "too many attempts" message with no form at all. `partials/board_contact.html` is the one-line "contact the board at `ASSOCIATION_EMAIL`" note, included by the room list and the room page; both guard on `ASSOCIATION_EMAIL` being set, because the templates are shared and an association that leaves it empty would otherwise render a broken sentence.
 
-`booking/emails.py` sends one confirmation per external booking, through the Celery task `core.utils.send_email_task` and `core.utils.enqueue_task_on_commit`, so the mail is queued after the transaction commits. It returns early unless the booking is external and has an email address, so member bookings and nameless bookings send nothing. The body is `templates/common/booking/booking_confirmation_email.txt`.
+`booking/emails.py` sends one confirmation per external booking, through the Celery task `core.utils.send_email_task` and `core.utils.enqueue_task_on_commit`, so the mail is queued after the transaction commits. It returns early unless the booking is external and has an email address, so member bookings and nameless bookings send nothing. The body is `templates/common/booking/booking_confirmation_email.txt`. The body is rendered without a request, so the context processor that exposes the association's variables does not run: `emails.py` passes `ASSOCIATION_EMAIL` from `settings.CONTENT_VARIABLES` into the context itself, and the email names that address, which is otherwise the booker's only route to change or cancel.
 
 ## Session keys and the gate function
 Three session keys, all namespaced with a `booking_` prefix so they cannot collide with other apps that keep gate state in the session:
@@ -117,7 +128,7 @@ Three session keys, all namespaced with a `booking_` prefix so they cannot colli
 - DaTe: `core/settings/date.py` sets `BOOKING_ENABLED = env('BOOKING_ENABLED', bool, True)`, so the capability is on unless the environment sets it to a false value. `core/settings/test.py` pins it to `True` so the suite does not depend on a developer's `.env`.
 - Templates: `core/context_processors.py` exposes it as `BOOKING_ENABLED`.
 - Routing: `core/urls/date.py` adds the `booking` route key to its `build_urlpatterns(...)` call only when `settings.BOOKING_ENABLED` is true, and `core/urls/common.py` maps that key to `path('booking/', include('booking.urls'))`. With the capability off, the `booking/` paths are not routed at all.
-- Homepage: `templates/date/date/components/bookings.html` is included from `templates/date/date/start.html` and wrapped in `{% raw %}{% if BOOKING_ENABLED %}{% endraw %}`. Its data comes from `_homepage_context()` in `date/views.py`, which imports `booking.models.Booking` lazily and only when the capability is on and the app is installed, then takes the next five bookings in active rooms that start within seven days.
+- Homepage: `templates/date/date/components/bookings.html` is included from `templates/date/date/start.html` and wrapped in `{% raw %}{% if BOOKING_ENABLED %}{% endraw %}`. Its data comes from `_homepage_context()` in `date/views.py`, which imports `booking.models.Booking` lazily and only when the capability is on and the app is installed, then takes the next five bookings in active rooms that start within seven days. Each card links to the room page of the booking it describes, not to the room list, because the card names one room and one time.
 
 Only DaTe parses the variable. No other module under `core/settings/` reads or sets `BOOKING_ENABLED`, and none of them lists `booking` in its installed apps or its URLconf, so setting `BOOKING_ENABLED` on another association's release has no effect.
 
@@ -134,10 +145,15 @@ The repository's environment template is `.env.example`, the file contributors c
 The public templates under `templates/common/booking/` and `static/common/booking/css/booking.css` are shared, so nothing else is required. An association-specific override follows the usual `templates/<association>/` rules described in `docs/dev/templates.md`.
 
 ## Admin surface (`booking/admin.py`)
-- `RoomAdmin` lists name, `is_active` and a booking count, filters on `is_active`, searches by name, and carries a `BookingInline` (start, end, author, booker name, description) so a room's bookings can be managed from the room page.
-- `BookingAdmin` lists room, a start/end time range, the booker display and an external flag, filters on room and start, adds a start-date drill-down, searches booker name, booker email and description, and marks the booker display and external flag read-only.
+- `RoomAdmin` lists name, `is_active` and a booking count, filters on `is_active`, searches by name, and carries a `BookingInline` so a room's bookings can be managed from the room page.
+- `BookingInline` shows only the room's upcoming bookings, soonest first, with `show_change_link`. Django does not paginate inlines, so an unfiltered inline grows without bound for a room with years of history and would open on the oldest rows. Past bookings stay reachable through the Booking changelist, which has the filters and the date drill-down for them.
+- The inline's queryset also keeps every booking id the submitted formset names, read from the `-id` fields in `request.POST`. Cutoff alone is not enough: if a row's `end` passes between the page being opened and the form being submitted, the row would leave the queryset, Django would resolve the submitted id to an unsaved instance, `save_existing_objects()` would skip it, and a checked Delete or an edited description would be dropped while the save still reported success. `_submitted_pks()` on the inline is what closes that; `BookingAdminSurfaceTests` pins both halves.
+- `BookingAdmin` lists room, a start/end time range, the booker display and a "no account" flag, filters on booking origin, room and start, adds a start-date drill-down, searches booker name, booker email and description, and marks the booker display and the account flag read-only. `ordering` is `('-start',)`, so the changelist does not open on the oldest booking ever made; this matches the descending ordering the other time-ordered admins in this project use.
+- `BookingOriginFilter` (`admin.SimpleListFilter`) separates member bookings from bookings made through the public form. `author` alone cannot do it, because `SET_NULL` gives a deleted member's booking the same shape as a visitor's, so the filter also reads `booker_email`: the public form requires an address and a member booking never records one. "Bokning utan konto, via webbformuläret" is the address-bearing subset of "Bokning utan konto".
+- The account flag column is labelled "Utan konto" rather than "extern". It is `is_external`, which is also true for a booking whose member deleted the account, so the old label stated something false about that row; the Bokare column carries the snapshotted name.
 - `BookingSettingsAdmin` shows the rotation period, the current code and the next rotation, both computed and read-only. It refuses to delete the singleton and only allows adding one while no settings row exists.
 - The admin is the only place that displays the current code. There is no separate "generate a code" action anywhere, because nothing is stored.
+- `core/admin_ui.py` carries a `Booking` sidebar group (Bookings, Rooms, Booking Code) for the Unfold theme. Each link resolves only when its permission is held and its URL name exists, so the group disappears for an association that does not install the app.
 
 ## Testing
 Run the app's tests with the test settings, which install the DaTe app set and set `BOOKING_ENABLED=True`:
@@ -158,6 +174,8 @@ The rotating code is testable without `freezegun` because of the seams above: pa
 - The homepage block sits inside `{% raw %}{% cache 300 main_page_fixed LANGUAGE_CODE %}{% endraw %}` in `templates/date/date/start.html`, so flipping `BOOKING_ENABLED` can take up to five minutes to show on the homepage. A stale fragment can even hold a link to a now unmounted route for that long. The app's own pages are not cached and change on the next request.
 - The attempt counter and the lockout live in the session, which limits a browser but not a script: a client that never returns the session cookie starts from zero attempts on every request, so the five-attempt limit does not bound an automated guesser. What does bound one is the captcha on the gate, which makes every guess cost a challenge, together with the rotation. The residual gap is the association that has not configured Turnstile: `core.utils.validate_captcha` fails open when `CF_TURNSTILE_SECRET_KEY` is empty, so with no secret there is no captcha and no server-side limit either. Closing that properly needs a rate limit keyed on something the client cannot discard, and that needs a decision about client addresses first: behind an ingress that rewrites the source address, every visitor shares one key and a low threshold would lock out all of them.
 - Direct edits to rooms and bookings in the admin appear on the public booking pages immediately because those views query the database on every request. Only the homepage block is cached.
+- The origin filter reads "came from the public form" as "no author and a recorded address". That is an inference, not a stored fact, and it is wrong for the two rows that do not fit the pattern: a member booking whose address the board filled in by hand, and an admin-created booking with an account-less booker and an address. Storing the origin would need a new field, and the app is not deployed yet, so the inference is used instead and the guide describes it.
+- The room page's inline hides past bookings, so a booking that was made and has since passed is edited through the Booking changelist. Nothing is deleted by the filter: an inline formset only saves and deletes the rows it was given.
 - `select_for_update` is a no-op on SQLite, so the tests cannot cover the race that the room lock exists to prevent. Verify that path against PostgreSQL.
 - The code is derived from `SECRET_KEY`, so rotating the secret changes every code and invalidates every unlock at once.
 - If the member account behind a booking is deleted, the booking survives with no author and displays the recorded name, or "Extern bokning" when none was recorded.

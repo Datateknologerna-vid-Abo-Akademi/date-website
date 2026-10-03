@@ -17,14 +17,20 @@ The room name and the description are public. The list shows the first 30 words 
 **Aktiv** means bookable. Unticking it removes the room from the public list, from the front-page block and from its own page (a direct link then shows "not found"). The room row and its complete booking history stay in the database and remain visible in the admin, so untick **Aktiv** when a room is only closed for a while. Deleting a room deletes its bookings as well, so use deletion only when the room and its history should really be gone.
 
 ## Managing Bookings
-Open **Booking › Bokningar**. The list has these columns:
+Open **Booking › Bokningar**. The list opens furthest away first, so the rows at the top are the bookings still to come and the history sits below them. It has these columns:
 
 - **Utrymme**: the room that was booked.
 - **Tid**: the start date and time, followed by the end time.
-- **Bokare**: the member who booked, or the name recorded for a booking made by someone without an account, or "Extern bokning" when no name was recorded.
-- **Extern bokning**: ticked when the booking came from someone without a website account.
+- **Bokare**: the member who booked, or the name recorded for a booking made by someone without an account. A member's name is written down when the booking is made, so it stays readable here even if that member later deletes the account.
+- **Utan konto**: ticked when there is no website account behind the booking. It is also ticked for a booking made by a member who has since deleted the account, so read it together with **Bokare** rather than on its own.
 
-Filters are available by room and by start date, the date drill-down at the top steps through the calendar, and the search box looks in the booker's name, the booker's email and the booking description.
+Filters are available by booking origin, by room and by start date, the date drill-down at the top steps through the calendar, and the search box looks in the booker's name, the booker's email and the booking description. The origin filter has three choices:
+
+- **Bokning av en medlem**: the booking is attached to a website account.
+- **Bokning utan konto, via webbformuläret**: the booking came from the public form. An address is always recorded there, which is what separates it from the next choice.
+- **Bokning utan konto**: no account, whether the booking came from the public form or the account was deleted afterwards.
+
+The last two choices are read from the account and the address, not from a stored marker, so a booking the board entered by hand with no account and an address lands under **Bokning utan konto, via webbformuläret** even though nobody filled in the public form. Treat the filter as a way to narrow the list, not as proof of where a booking came from.
 
 Open a booking to change it. All fields can be edited: **Utrymme**, **Bokare** (the member account, optional), **Namn**, **E-post**, **Starttid**, **Sluttid** and **Beskrivning**. The creation timestamp (**Skapad**) is read-only.
 
@@ -32,6 +38,11 @@ Open a booking to change it. All fields can be edited: **Utrymme**, **Bokare** (
 - **To cancel a booking**, delete it. Deletion cannot be undone, so check the row before confirming.
 - The overlap rule is checked here too. Saving a booking that overlaps another booking in the same room is refused with "Utrymmet är redan bokat under denna tid.".
 - The end time must be later than the start time, otherwise the save is refused.
+- A new booking cannot start in the past: it is refused with "Starttiden kan inte vara i det förflutna.". A few minutes are allowed, because a visitor filling in the form by hand can be a moment late. A booking that already exists keeps whatever times it has, so you can still correct the description of one whose time is over.
+
+**Beskrivning** is where a booker says what the room is for. It is shown on the public form with a note that only the board sees it, and it is visible only here.
+
+The room page carries a table of that room's **upcoming** bookings, soonest first, so a booking can be added or adjusted without leaving the room. Past bookings are not listed there, because a room collects them for years; use **Booking › Bokningar** for those, where the room filter and the date drill-down reach them.
 
 What is public and what is not:
 
@@ -39,7 +50,7 @@ What is public and what is not:
 - Not public: the booking **description**, the **booker name** and the **booker email**. They are visible only in the admin.
 - The booker email is used for one thing: the confirmation message that the site sends to a person who booked without an account. Bookings made by a signed-in member send no email.
 
-If the member account behind a booking is later deleted, the booking itself stays. It then shows the recorded name, or "Extern bokning" if no name was recorded.
+If the member account behind a booking is later deleted, the booking itself stays, and it keeps showing the name that was recorded when it was made.
 
 ## The Rotating Code
 Open **Booking › Bokningsinställningar**. That page shows three things:
@@ -63,7 +74,12 @@ Right after a rotation the previous code keeps working for a short grace period,
 ## Telling Bookers the Code
 The board shares the current code with outside bookers through whatever channel it already uses, for example by email or phone. The site does not send the code to anyone.
 
+The website does explain the rest. The room list says that an account books directly and that everyone else needs a code, the page that asks for the code says that the board provides it and names the association address, and the confirmation email repeats that address so the booker knows where to turn when a time has to change.
+
 A booker who has unlocked the form stays unlocked for the rest of the current period. When the code rotates, every existing unlock ends, and the next visit asks for a code again. If the booker already has the previous code, it still works during the grace period described above.
+
+## Reaching the Booking Page
+The room list is linked from the booking block on the front page. To put it in the site menu as well, add a page under **Static Pages** with the URL `/booking/` and place it through **Page Navigation**. The path is the same in every language, because the website keeps the language in a cookie rather than in the address.
 
 ## Permissions
 Access to the booking section is controlled by the ordinary Django model permissions. A staff group does not get booking access by being a staff group; the permissions have to be granted deliberately to each group that should have them.
@@ -108,4 +124,11 @@ How to grant them: open the group on the **Grupper** (**Groups**) page in the ad
 
 **A booking was rejected because of the times or the name.**
 - The end time must be later than the start time.
+- The start time cannot be in the past. The visitor picked a date that has already been and gone, which is usually a wrong year or a wrong month; ask them to pick the date again.
 - A booking with no member account must have a name, otherwise the admin asks for it ("Ange namnet på den som bokar.").
+
+**A booking is missing from the room page but you know it exists.**
+- The room page lists upcoming bookings only. A booking whose time is over is still in **Bokningar**, which the room filter and the date drill-down reach.
+
+**The booking section is not in the admin menu.**
+- Under the Unfold admin theme the section appears in the sidebar only for a user who holds at least one of the booking view permissions. Grant them as described under Permissions above.

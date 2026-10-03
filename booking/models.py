@@ -1,9 +1,24 @@
+import datetime
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import F, Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+
+# The datetime-local input has minute precision and a form takes a moment to
+# fill in, so a start a few minutes in the past is not a mistake. A start older
+# than this is a wrong date, and the booking would be invisible everywhere the
+# page lists upcoming times while still occupying the room in the admin.
+BOOKING_PAST_GRACE = datetime.timedelta(minutes=10)
+
+
+def _now():
+    """The gate's time seam, imported lazily because ``access`` imports this module."""
+    from . import access
+
+    return access.now_at()
 
 
 class Room(models.Model):
@@ -62,9 +77,40 @@ class Booking(models.Model):
         end = timezone.localtime(self.end).strftime('%Y-%m-%d %H:%M') if self.end else '-'
         return f'{self.room.name}: {start} - {end}'
 
+    def save(self, *args, **kwargs):
+        """Record who booked while the account still exists.
+
+        ``author`` is ``SET_NULL``, so a deleted member's booking would
+        otherwise lose its booker and read as a booking without an account.
+        The name is only filled in when it is blank, so a name typed by the
+        board is never overwritten.
+        """
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None:
+            # Materialised for two reasons: an empty ``update_fields`` means
+            # "write nothing", which is Django's own meaning for it, and a
+            # generator left in kwargs could not be read a second time.
+            update_fields = {*update_fields}
+            kwargs['update_fields'] = update_fields
+        # The snapshot is filled in only when the save writes the row at all.
+        # Filling it in for a save that writes nothing would leave it on the
+        # instance, and the next narrow save would then find a name already
+        # there, skip the snapshot, and write an author with a blank name.
+        writes_row = update_fields is None or bool(update_fields)
+        if writes_row and not self.booker_name and self.author_id:
+            self.booker_name = str(self.author)
+            if update_fields is not None:
+                kwargs['update_fields'] = update_fields | {'booker_name'}
+        super().save(*args, **kwargs)
+
     @property
     def is_external(self):
-        """An external booking has no website account behind it."""
+        """Whether the booking has no website account behind it.
+
+        A booking made by a member who later deletes the account lands here
+        too, because ``author`` is ``SET_NULL``; ``booker_name`` is snapshotted
+        on save, so the name of the person who booked survives either way.
+        """
         return self.author_id is None
 
     @property
@@ -79,6 +125,12 @@ class Booking(models.Model):
 
         if self.start and self.end and self.end <= self.start:
             errors['end'] = _('Sluttiden måste vara efter starttiden.')
+
+        # Checked only for a new booking. A booking that already exists keeps
+        # whatever times it has, so the board can still correct a booking whose
+        # time has passed without being told the time is invalid.
+        if self._state.adding and self.start and self.start < _now() - BOOKING_PAST_GRACE:
+            errors['start'] = _('Starttiden kan inte vara i det förflutna.')
 
         if self.author_id is None and not (self.booker_name or '').strip():
             errors['booker_name'] = _('Ange namnet på den som bokar.')

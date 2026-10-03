@@ -1,9 +1,10 @@
 from django import forms
 from django.conf import settings
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from . import access
-from .models import Booking
+from .models import BOOKING_PAST_GRACE, Booking
 
 BOOKING_DATETIME_FORMAT = '%Y-%m-%dT%H:%M'
 
@@ -49,6 +50,13 @@ class BookingCodeForm(forms.Form):
 class BookingForm(forms.ModelForm):
     start = local_datetime_field(_('Starttid'))
     end = local_datetime_field(_('Sluttid'))
+    description = forms.CharField(
+        label=_('Beskrivning'),
+        max_length=400,
+        required=False,
+        widget=forms.Textarea(attrs={'rows': 3}),
+        help_text=_('Berätta kort vad utrymmet ska användas till. Endast styrelsen ser detta.'),
+    )
 
     class Meta:
         model = Booking
@@ -60,6 +68,15 @@ class BookingForm(forms.ModelForm):
             self.room = room
         if author is not None:
             self.author = author
+        # The model refuses a new booking that starts before its own grace
+        # boundary, so the input offers exactly the same range: deriving the
+        # boundary from the model's constant keeps the picker from refusing a
+        # start the server would have accepted. Truncated to the minute, the
+        # widget's precision, which leaves the picker a fraction more permissive
+        # than the server rather than less; the model check stays the authority.
+        earliest = timezone.localtime(access.now_at() - BOOKING_PAST_GRACE).replace(second=0, microsecond=0)
+        for name in ('start', 'end'):
+            self.fields[name].widget.attrs['min'] = earliest.strftime(BOOKING_DATETIME_FORMAT)
         # ModelForm._post_clean() runs the model's clean(), and the overlap and
         # external-name rules only work once the room and author are set on the
         # instance. Assigning them here (before validation) is what makes those

@@ -9,7 +9,8 @@
         <div class="col-md-12">
           {% for booking in bookings %}
             <div class="card-group event-card text-light mb-2">
-              <a href="{% url 'booking:index' %}" class="card mb-0 p-1">
+              <a href="{% url 'booking:room_detail' booking.room.pk %}"
+                 class="card mb-0 p-1">
                 <div class="card-body py-1">
                   <div class="row">
                     <div style="margin: auto;" class="col-3">

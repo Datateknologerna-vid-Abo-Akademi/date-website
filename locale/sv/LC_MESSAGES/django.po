@@ -455,6 +455,23 @@ msgstr "Gissningar"
 msgid "CTF Post-mortems"
 msgstr "CTF-efteranalyser"
 
+#: core/admin_ui.py:99
+msgid "Booking"
+msgstr "Bokning"
+
+#: core/admin_ui.py:102
+msgid "Bookings"
+msgstr "Bokningar"
+
+#: core/admin_ui.py:108
+msgid "Rooms"
+msgstr "Utrymmen"
+
+#: core/admin_ui.py:114
+msgid "Booking Code"
+msgstr "Bokningskod"
+
+
 #: ctf/admin.py:56
 #: templates/common/ctf/post_mortem_index.html:13
 msgid "Post-mortems"
@@ -2725,6 +2742,85 @@ msgstr "Boka"
 #: templates/common/booking/room_detail.html:81
 msgid "E-postadressen används bara för att skicka en bokningsbekräftelse."
 msgstr "E-postadressen används bara för att skicka en bokningsbekräftelse."
+
+#: booking/admin.py:73
+msgid "Bokningens ursprung"
+msgstr "Bokningens ursprung"
+
+#: booking/admin.py:78
+msgid "Bokning av en medlem"
+msgstr "Bokning av en medlem"
+
+#: booking/admin.py:79
+msgid "Bokning utan konto, via webbformuläret"
+msgstr "Bokning utan konto, via webbformuläret"
+
+#: booking/admin.py:80
+msgid "Bokning utan konto"
+msgstr "Bokning utan konto"
+
+#: booking/admin.py:131
+msgid "Utan konto"
+msgstr "Utan konto"
+
+#: booking/forms.py:58
+msgid ""
+"Berätta kort vad utrymmet ska användas till. Endast styrelsen ser detta."
+msgstr ""
+"Berätta kort vad utrymmet ska användas till. Endast styrelsen ser "
+"detta."
+
+#: booking/models.py:127
+msgid "Starttiden kan inte vara i det förflutna."
+msgstr "Starttiden kan inte vara i det förflutna."
+
+#: templates/common/booking/booking_confirmation_email.txt:8
+msgid "Styrelsen nås på %(ASSOCIATION_EMAIL)s."
+msgstr "Styrelsen nås på %(ASSOCIATION_EMAIL)s."
+
+#: templates/common/booking/index.html:20
+msgid ""
+"Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som "
+"du får av styrelsen via %(ASSOCIATION_EMAIL)s."
+msgstr ""
+"Har du ett konto bokar du direkt. Utan konto behöver du en "
+"bokningskod, som du får av styrelsen via %(ASSOCIATION_EMAIL)s."
+
+#: templates/common/booking/index.html:22
+msgid ""
+"Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som "
+"du får av styrelsen."
+msgstr ""
+"Har du ett konto bokar du direkt. Utan konto behöver du en "
+"bokningskod, som du får av styrelsen."
+
+#: templates/common/booking/partials/board_contact.html:4
+msgid ""
+"Har du frågor om en bokning, kontakta styrelsen via %(ASSOCIATION_EMAIL)s."
+msgstr ""
+"Har du frågor om en bokning, kontakta styrelsen via "
+"%(ASSOCIATION_EMAIL)s."
+
+#: templates/common/booking/partials/board_contact.html:7
+msgid "Har du frågor om en bokning, kontakta styrelsen."
+msgstr "Har du frågor om en bokning, kontakta styrelsen."
+
+#: templates/common/booking/partials/code_form.html:4
+msgid ""
+"Bokningskoden får du av styrelsen via %(ASSOCIATION_EMAIL)s. Har du ett "
+"konto på webbplatsen kan du logga in i stället och behöver då ingen kod."
+msgstr ""
+"Bokningskoden får du av styrelsen via %(ASSOCIATION_EMAIL)s. Har du "
+"ett konto på webbplatsen kan du logga in i stället och behöver då "
+"ingen kod."
+
+#: templates/common/booking/partials/code_form.html:6
+msgid ""
+"Bokningskoden får du av styrelsen. Har du ett konto på webbplatsen kan du "
+"logga in i stället och behöver då ingen kod."
+msgstr ""
+"Bokningskoden får du av styrelsen. Har du ett konto på webbplatsen kan "
+"du logga in i stället och behöver då ingen kod."
 
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"

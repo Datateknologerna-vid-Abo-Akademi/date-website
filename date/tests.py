@@ -1284,3 +1284,15 @@ class HomepageBookingTests(TestCase):
         # A room without bookings has no homepage-visible effect of its own, so
         # the invalidation is asserted on the version the context cache keys on.
         self.assertNotEqual(cache.get(version_key), version_before)
+
+    def test_the_booking_card_links_to_the_room_it_shows(self):
+        # The card names one room and one time, so following it has to open that
+        # room rather than the room list.
+        other_room = self.Room.objects.create(name="Sauna")
+        self._booking(self.room, self.now + timedelta(days=2))
+        self._booking(other_room, self.now + timedelta(days=3))
+
+        response = self.client.get("/")
+
+        self.assertContains(response, reverse("booking:room_detail", args=[self.room.pk]))
+        self.assertContains(response, reverse("booking:room_detail", args=[other_room.pk]))

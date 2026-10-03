@@ -15,6 +15,13 @@
     <div class="container-size break-words">
       <div class="content">
         <h1 class="booking-heading">{% trans "Bokbara utrymmen" %}</h1>
+        <p class="booking-help">
+          {% if ASSOCIATION_EMAIL %}
+            {% blocktrans %}Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som du får av styrelsen via {{ ASSOCIATION_EMAIL }}.{% endblocktrans %}
+          {% else %}
+            {% trans "Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som du får av styrelsen." %}
+          {% endif %}
+        </p>
         <div class="booking-rooms">
           {% for room in room_list %}
             <div class="booking-room-card">
@@ -43,6 +50,7 @@
             {% endfor %}
           </ul>
         </section>
+        {% include 'booking/partials/board_contact.html' %}
       </div>
     </div>
   </div>

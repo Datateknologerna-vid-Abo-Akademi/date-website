@@ -22,6 +22,11 @@ def notify_external_booker(booking):
         'room': booking.room,
         'start': start.strftime('%d.%m.%Y %H:%M'),
         'end': end.strftime('%H:%M'),
+        # An email body is rendered without a request, so the context processor
+        # that exposes the association's address to templates does not run here.
+        # The booker needs that address: the board is the only route to change
+        # or cancel a booking.
+        'ASSOCIATION_EMAIL': getattr(settings, 'CONTENT_VARIABLES', {}).get('ASSOCIATION_EMAIL', ''),
     }
     subject = _('Bokningsbekräftelse för %(room)s') % {'room': booking.room.name}
     body = render_to_string('booking/booking_confirmation_email.txt', context)

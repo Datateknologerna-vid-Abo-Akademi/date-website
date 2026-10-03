@@ -1,4 +1,11 @@
 {% load i18n %}
+<p class="booking-help">
+  {% if ASSOCIATION_EMAIL %}
+    {% blocktrans %}Bokningskoden får du av styrelsen via {{ ASSOCIATION_EMAIL }}. Har du ett konto på webbplatsen kan du logga in i stället och behöver då ingen kod.{% endblocktrans %}
+  {% else %}
+    {% trans "Bokningskoden får du av styrelsen. Har du ett konto på webbplatsen kan du logga in i stället och behöver då ingen kod." %}
+  {% endif %}
+</p>
 {% if lockout_minutes %}
   <p class="booking-lockout">
     {% blocktrans count minutes=lockout_minutes trimmed %}
