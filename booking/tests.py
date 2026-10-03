@@ -1780,6 +1780,54 @@ class RoomCodeAdminTests(PinnedNowMixin, TestCase):
         self.assertIsNone(created.rotated_at)
         self.assertTrue(access.current_code(created).isdigit())
 
+    def test_an_overlap_with_an_existing_row_is_reported_once(self):
+        # Two rows that already overlap in the database, submitted unchanged: the
+        # model's own check catches each against the other, and the formset's
+        # sibling check must not pile a second complaint onto the same field.
+        start = timezone.localtime(timezone.now()).replace(second=0, microsecond=0) + datetime.timedelta(days=1)
+        first_end = start + datetime.timedelta(hours=2)
+        second_start = start + datetime.timedelta(hours=1)
+        second_end = start + datetime.timedelta(hours=3)
+        first = make_booking(self.office, start, first_end, booker_name='Första')
+        make_booking(self.office, second_start, second_end, booker_name='Andra')
+        url = reverse('admin:booking_room_change', args=[self.office.pk])
+        data = {
+            'name': self.office.name,
+            'description': '',
+            '_save': 'Spara',
+            'bookings-TOTAL_FORMS': '2',
+            'bookings-INITIAL_FORMS': '2',
+            'bookings-MIN_NUM_FORMS': '0',
+            'bookings-MAX_NUM_FORMS': '1000',
+            'bookings-0-id': str(first.pk),
+            'bookings-0-room': str(self.office.pk),
+            'bookings-0-start_0': start.strftime('%Y-%m-%d'),
+            'bookings-0-start_1': start.strftime('%H:%M:%S'),
+            'bookings-0-end_0': first_end.strftime('%Y-%m-%d'),
+            'bookings-0-end_1': first_end.strftime('%H:%M:%S'),
+            'bookings-0-booker_name': 'Första',
+            'bookings-1-room': str(self.office.pk),
+            'bookings-1-start_0': start.strftime('%Y-%m-%d'),
+            'bookings-1-start_1': second_start.strftime('%H:%M:%S'),
+            'bookings-1-end_0': second_end.strftime('%Y-%m-%d'),
+            'bookings-1-end_1': second_end.strftime('%H:%M:%S'),
+            'bookings-1-booker_name': 'Andra',
+            'closures-TOTAL_FORMS': '0',
+            'closures-INITIAL_FORMS': '0',
+            'closures-MIN_NUM_FORMS': '0',
+            'closures-MAX_NUM_FORMS': '1000',
+        }
+
+        response = self.client.post(url, data)
+        body = response.content.decode()
+
+        self.assertEqual(response.status_code, 200)
+        # The model's own complaint about each row, and none of the formset's:
+        # `add_error` drops the field from `cleaned_data`, so the sibling check
+        # steps aside once the model has spoken rather than repeating it.
+        self.assertEqual(body.count('redan bokat'), 2)
+        self.assertNotIn('överlappar varandra', body)
+
     def test_two_overlapping_rows_in_one_submission_are_refused(self):
         # Neither row is in the database when the other is validated, so the
         # model's own check cannot see this pair. Without a formset that compares
