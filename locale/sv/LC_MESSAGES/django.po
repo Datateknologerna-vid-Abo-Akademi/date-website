@@ -2956,8 +2956,8 @@ msgid "Tillåt icke-medlemmar att delta"
 msgstr "Tillåt icke-medlemmar att delta"
 
 #: attendance/models.py:31
-msgid "Kodens genereringnyckel"
-msgstr "Kodens genereringnyckel"
+msgid "Kodens genereringsnyckel"
+msgstr "Kodens genereringsnyckel"
 
 #: attendance/models.py:32
 msgid "Kodens giltighetsperiod (sekunder)"

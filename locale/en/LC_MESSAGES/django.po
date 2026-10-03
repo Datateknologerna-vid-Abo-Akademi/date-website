@@ -2953,7 +2953,7 @@ msgid "Tillåt icke-medlemmar att delta"
 msgstr "Allow non-member attendees"
 
 #: attendance/models.py:31
-msgid "Kodens genereringnyckel"
+msgid "Kodens genereringsnyckel"
 msgstr "Code generation secret"
 
 #: attendance/models.py:32

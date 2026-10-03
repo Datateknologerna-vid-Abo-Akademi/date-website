@@ -2972,7 +2972,7 @@ msgid "Tillåt icke-medlemmar att delta"
 msgstr "Salli ulkopuolisten osallistumiset"
 
 #: attendance/models.py:31
-msgid "Kodens genereringnyckel"
+msgid "Kodens genereringsnyckel"
 msgstr "Koodin luontiavain"
 
 #: attendance/models.py:32
