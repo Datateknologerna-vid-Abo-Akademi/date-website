@@ -2,8 +2,8 @@
 
 The public room list and room pages are readable by anyone, but creating a
 booking as a visitor without a website account is gated by a code derived from
-``SECRET_KEY`` and the current rotation slot. Nothing about the code is stored:
-an unlock is only a per-slot session token, so rotating the code invalidates
+``SECRET_KEY`` and a generation counter. Nothing about the code is stored: an
+unlock is only a per-generation session token, so rotating the code invalidates
 existing unlocks by itself and the typed code never reaches the session.
 """
 
@@ -20,7 +20,7 @@ from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import formats, timezone
 
 from booking import access, emails
 from booking.admin import BookingAdmin, BookingInline, BookingOriginFilter
@@ -30,27 +30,16 @@ from core.admin_ui import get_sidebar_navigation
 
 # Unsaved singletons: every settings-reading function in booking.access accepts
 # one, so the pure-function tests need no database at all.
-WEEKLY_SETTINGS = BookingSettings(rotation_period=BookingSettings.ROTATION_WEEKLY)
-DAILY_SETTINGS = BookingSettings(rotation_period=BookingSettings.ROTATION_DAILY)
-MONTHLY_SETTINGS = BookingSettings(rotation_period=BookingSettings.ROTATION_MONTHLY)
+FIRST_CODE_SETTINGS = BookingSettings(code_generation=1)
+SECOND_CODE_SETTINGS = BookingSettings(code_generation=2)
 
-# core.settings.test pins SECRET_KEY to the literal "SECRET_KEY". This is the
-# code derived from it for the weekly slot that starts on 2026-01-05, pinned so
-# a change to the derivation (secret, message shape, digest truncation) fails
-# loudly instead of silently rotating every code.
-PINNED_WEEKLY_SLOT = 'weekly:2026-01-05'
-PINNED_WEEKLY_CODE = '713445'
-
-# The weekly slot starts on a Monday; 2026-01-05 is a Monday and the naive
-# datetimes below are read as local wall clock by booking.access._as_local.
-SLOT_START = datetime.datetime(2026, 1, 5, 0, 0)
-PREVIOUS_SLOT_START = datetime.datetime(2025, 12, 29, 0, 0)
-NEXT_SLOT_START = datetime.datetime(2026, 1, 12, 0, 0)
-
-
-def local_naive(value):
-    """Return ``value`` as local wall-clock time, for boundary assertions."""
-    return timezone.localtime(value).replace(tzinfo=None)
+# core.settings.test pins SECRET_KEY to the literal "SECRET_KEY". These are the
+# codes derived from it for the first generations, pinned so a change to the
+# derivation (secret, message shape, digest truncation) fails loudly instead of
+# silently handing every booker a different code.
+PINNED_FIRST_CODE = '862536'
+PINNED_SECOND_CODE = '623957'
+PINNED_THIRD_CODE = '222378'
 
 
 def local_input_time(value):
@@ -101,150 +90,171 @@ class PinnedNowMixin:
 
 
 class BookingCodeDerivationTests(SimpleTestCase):
-    """The code is derived from the secret and the slot, never stored."""
+    """The code is derived from the secret and a stored generation, never stored."""
 
-    def test_code_is_six_digits_for_every_rotation_period(self):
-        at = datetime.datetime(2026, 3, 18, 15, 30)
+    def setUp(self):
+        super().setUp()
+        self.at = datetime.datetime(2026, 3, 18, 15, 30)
 
-        for access_settings in (DAILY_SETTINGS, WEEKLY_SETTINGS, MONTHLY_SETTINGS):
-            with self.subTest(period=access_settings.rotation_period):
-                code = access.current_code(at=at, access_settings=access_settings)
-                self.assertEqual(len(code), access.BOOKING_CODE_DIGITS)
-                self.assertTrue(code.isdigit())
+    def test_code_is_six_digits_and_different_for_each_generation(self):
+        codes = [access.code_for_generation(generation) for generation in range(1, 6)]
 
-    def test_weekly_code_is_stable_across_the_whole_slot(self):
-        monday_morning = datetime.datetime(2026, 1, 5, 9, 0)
-        sunday_night = datetime.datetime(2026, 1, 11, 23, 59)
-        next_monday = datetime.datetime(2026, 1, 12, 9, 0)
+        for code in codes:
+            self.assertEqual(len(code), access.BOOKING_CODE_DIGITS)
+            self.assertTrue(code.isdigit())
+        # A derivation that ignored the generation would hand out one code
+        # forever, which is the failure this pins.
+        self.assertEqual(len(set(codes)), len(codes))
 
-        self.assertEqual(
-            access.current_code(at=monday_morning, access_settings=WEEKLY_SETTINGS),
-            access.current_code(at=sunday_night, access_settings=WEEKLY_SETTINGS),
-        )
-        self.assertNotEqual(
-            access.current_code(at=sunday_night, access_settings=WEEKLY_SETTINGS),
-            access.current_code(at=next_monday, access_settings=WEEKLY_SETTINGS),
-        )
+    def test_the_known_generations_are_pinned(self):
+        self.assertEqual(access.code_for_generation(1), PINNED_FIRST_CODE)
+        self.assertEqual(access.code_for_generation(2), PINNED_SECOND_CODE)
+        self.assertEqual(access.code_for_generation(3), PINNED_THIRD_CODE)
+
+    def test_the_code_does_not_depend_on_the_clock(self):
+        # The point of the change: nothing about the code moves on its own, so
+        # no schedule has to run and a forgotten code stays valid.
+        for at in (
+            datetime.datetime(2026, 1, 5, 9, 0),
+            datetime.datetime(2031, 7, 1, 3, 0),
+            datetime.datetime(1999, 12, 31, 23, 59),
+        ):
+            with self.subTest(at=at), patch('booking.access.now_at', new=lambda at=at: at):
+                self.assertEqual(access.current_code(access_settings=FIRST_CODE_SETTINGS), PINNED_FIRST_CODE)
+
+    def test_current_code_follows_the_stored_generation(self):
+        self.assertEqual(access.current_code(access_settings=FIRST_CODE_SETTINGS), PINNED_FIRST_CODE)
+        self.assertEqual(access.current_code(access_settings=SECOND_CODE_SETTINGS), PINNED_SECOND_CODE)
 
     def test_code_is_identical_for_another_association(self):
-        at = datetime.datetime(2026, 1, 5, 9, 0)
-        date_code = access.current_code(at=at, access_settings=WEEKLY_SETTINGS)
+        # The derivation uses SECRET_KEY and the generation only. Two
+        # associations sharing a secret share codes, which is why the docs tell
+        # each release to set its own.
+        date_code = access.current_code(access_settings=FIRST_CODE_SETTINGS)
 
         with self.settings(PROJECT_NAME='kk'):
-            other_code = access.current_code(at=at, access_settings=WEEKLY_SETTINGS)
+            other_code = access.current_code(access_settings=FIRST_CODE_SETTINGS)
 
         self.assertEqual(other_code, date_code)
 
-    def test_weekly_code_for_a_known_slot_is_pinned(self):
-        self.assertEqual(access.code_for_slot(PINNED_WEEKLY_SLOT), PINNED_WEEKLY_CODE)
+    def test_a_different_secret_gives_a_different_code(self):
+        with self.settings(SECRET_KEY='another-secret'):
+            self.assertNotEqual(access.code_for_generation(1), PINNED_FIRST_CODE)
+
+
+class BookingCodeRotationTests(TestCase):
+    """Rotating is the only thing that moves the code, and it is deliberate."""
+
+    def test_rotating_moves_to_the_next_generation_and_stamps_the_moment(self):
+        settings_row = BookingSettings.get_solo()
+        self.assertEqual(settings_row.code_generation, 1)
+        self.assertIsNone(settings_row.rotated_at)
+        before = access.current_code(access_settings=settings_row)
+
+        at = timezone.now()
+        generation = settings_row.rotate_code(at=at)
+
+        self.assertEqual(generation, 2)
+        settings_row.refresh_from_db()
+        self.assertEqual(settings_row.code_generation, 2)
+        self.assertEqual(settings_row.rotated_at, at)
+        self.assertNotEqual(access.current_code(access_settings=settings_row), before)
+
+    def test_rotating_twice_moves_twice(self):
+        settings_row = BookingSettings.get_solo()
+
+        settings_row.rotate_code()
+        settings_row.rotate_code()
+
+        self.assertEqual(settings_row.code_generation, 3)
         self.assertEqual(
-            access.current_code(at=datetime.datetime(2026, 1, 5, 9, 0), access_settings=WEEKLY_SETTINGS),
-            PINNED_WEEKLY_CODE,
+            access.current_code(access_settings=settings_row),
+            access.code_for_generation(3),
         )
 
-    def test_slot_key_carries_the_rotation_period(self):
-        at = datetime.datetime(2026, 3, 18, 15, 30)
+    def test_rotating_ends_every_existing_unlock_at_once(self):
+        # Deliberate asymmetry: the code just handed out keeps working for the
+        # grace window, but an unlock granted with the old code does not.
+        request = SimpleNamespace(session={})
+        settings_row = BookingSettings.get_solo()
+        access.grant_session(request, access_settings=settings_row)
+        self.assertTrue(access.session_has_access(request, access_settings=settings_row))
 
-        keys = {
-            access_settings.rotation_period: access.slot_for(access_settings.rotation_period, at)[0]
-            for access_settings in (DAILY_SETTINGS, WEEKLY_SETTINGS, MONTHLY_SETTINGS)
-        }
+        settings_row.rotate_code()
 
-        self.assertEqual(
-            keys,
-            {'daily': 'daily:2026-03-18', 'weekly': 'weekly:2026-03-16', 'monthly': 'monthly:2026-03'},
-        )
+        self.assertFalse(access.session_has_access(request, access_settings=settings_row))
 
-    def test_weekly_slot_starts_on_monday_local_midnight(self):
-        _key, start = access.slot_for(WEEKLY_SETTINGS.rotation_period, datetime.datetime(2026, 3, 18, 15, 30))
+    def test_the_settings_row_is_created_with_the_first_generation(self):
+        self.assertFalse(BookingSettings.objects.exists())
 
-        self.assertEqual(local_naive(start), datetime.datetime(2026, 3, 16, 0, 0))
+        settings_row = BookingSettings.get_solo()
 
-    def test_monthly_slot_starts_on_the_first_local_day(self):
-        _key, start = access.slot_for(MONTHLY_SETTINGS.rotation_period, datetime.datetime(2026, 3, 17, 15, 30))
-
-        self.assertEqual(local_naive(start), datetime.datetime(2026, 3, 1, 0, 0))
-
-    def test_next_rotation_daily_lands_on_the_next_local_midnight(self):
-        rotation = access.next_rotation(datetime.datetime(2026, 3, 18, 15, 30), access_settings=DAILY_SETTINGS)
-
-        self.assertEqual(local_naive(rotation), datetime.datetime(2026, 3, 19, 0, 0))
-
-    def test_next_rotation_weekly_lands_on_the_next_local_monday(self):
-        rotation = access.next_rotation(datetime.datetime(2026, 3, 18, 15, 30), access_settings=WEEKLY_SETTINGS)
-
-        self.assertEqual(local_naive(rotation), datetime.datetime(2026, 3, 23, 0, 0))
-
-    def test_next_rotation_monthly_lands_on_the_first_local_day_of_next_month(self):
-        rotation = access.next_rotation(datetime.datetime(2026, 3, 18, 15, 30), access_settings=MONTHLY_SETTINGS)
-
-        self.assertEqual(local_naive(rotation), datetime.datetime(2026, 4, 1, 0, 0))
-
-    def test_next_rotation_monthly_rolls_over_the_year(self):
-        rotation = access.next_rotation(datetime.datetime(2026, 12, 10, 15, 30), access_settings=MONTHLY_SETTINGS)
-
-        self.assertEqual(local_naive(rotation), datetime.datetime(2027, 1, 1, 0, 0))
+        self.assertEqual(settings_row.code_generation, 1)
+        self.assertIsNone(settings_row.rotated_at)
 
 
 class BookingCodeGraceTests(SimpleTestCase):
-    """The previous code keeps working briefly after a rotation.
+    """The previous code keeps working briefly after the board rotates it.
 
-    The grace window is anchored to the start of the current slot, and a grant
-    made during it stores the current slot's token, so an unlock cannot outlive
+    The window is anchored to the moment of the rotation, and a grant made
+    during it stores the current generation's token, so an unlock cannot outlive
     the rotation that granted it.
     """
 
     def setUp(self):
         super().setUp()
-        self.current_code = access.current_code(at=SLOT_START, access_settings=WEEKLY_SETTINGS)
-        self.previous_code = access.current_code(at=PREVIOUS_SLOT_START, access_settings=WEEKLY_SETTINGS)
+        self.rotated_at = datetime.datetime(2026, 1, 5, 9, 0)
+        self.after_rotation = BookingSettings(
+            code_generation=2,
+            rotated_at=timezone.make_aware(self.rotated_at, timezone.get_current_timezone()),
+        )
+        self.current_code = access.code_for_generation(2)
+        self.previous_code = access.code_for_generation(1)
 
     def test_previous_code_is_accepted_just_after_the_rotation(self):
-        at = SLOT_START + datetime.timedelta(minutes=5)
+        at = self.rotated_at + datetime.timedelta(minutes=5)
 
         self.assertEqual(
-            access.accepted_codes(at=at, access_settings=WEEKLY_SETTINGS),
+            access.accepted_codes(at=at, access_settings=self.after_rotation),
             (self.current_code, self.previous_code),
         )
-        self.assertTrue(access.check_code(self.previous_code, at=at, access_settings=WEEKLY_SETTINGS))
+        self.assertTrue(access.check_code(self.previous_code, at=at, access_settings=self.after_rotation))
 
     def test_previous_code_is_rejected_after_the_grace_window(self):
-        at = SLOT_START + access.BOOKING_CODE_GRACE + datetime.timedelta(minutes=1)
+        at = self.rotated_at + access.BOOKING_CODE_GRACE + datetime.timedelta(minutes=1)
 
-        self.assertEqual(access.accepted_codes(at=at, access_settings=WEEKLY_SETTINGS), (self.current_code,))
-        self.assertFalse(access.check_code(self.previous_code, at=at, access_settings=WEEKLY_SETTINGS))
-        self.assertTrue(access.check_code(self.current_code, at=at, access_settings=WEEKLY_SETTINGS))
+        self.assertEqual(access.accepted_codes(at=at, access_settings=self.after_rotation), (self.current_code,))
+        self.assertFalse(access.check_code(self.previous_code, at=at, access_settings=self.after_rotation))
+        self.assertTrue(access.check_code(self.current_code, at=at, access_settings=self.after_rotation))
 
-    def test_grant_during_grace_stores_the_current_slot_token(self):
+    def test_there_is_no_grace_before_anything_has_been_rotated(self):
+        # The first code has no predecessor to keep alive, and a code that was
+        # never handed out must not be accepted.
+        fresh = BookingSettings(code_generation=1, rotated_at=None)
+
+        self.assertEqual(
+            access.accepted_codes(at=self.rotated_at, access_settings=fresh),
+            (access.code_for_generation(1),),
+        )
+
+    def test_a_rotation_stamped_in_the_future_does_not_open_the_window(self):
+        # Clock skew between app servers must not revive the previous code.
+        at = self.rotated_at - datetime.timedelta(minutes=1)
+
+        self.assertEqual(access.accepted_codes(at=at, access_settings=self.after_rotation), (self.current_code,))
+
+    def test_grant_during_grace_stores_the_current_generation_token(self):
         request = SimpleNamespace(session={})
-        at = SLOT_START + datetime.timedelta(minutes=5)
 
-        access.grant_session(request, at=at, access_settings=WEEKLY_SETTINGS)
+        access.grant_session(request, access_settings=self.after_rotation)
 
         stored = request.session[access.BOOKING_SESSION_TOKEN_KEY]
-        self.assertEqual(stored, access.session_token(at=SLOT_START, access_settings=WEEKLY_SETTINGS))
-        self.assertNotEqual(stored, access.session_token(at=PREVIOUS_SLOT_START, access_settings=WEEKLY_SETTINGS))
-
-    def test_unlock_does_not_outlive_the_rotation(self):
-        request = SimpleNamespace(session={})
-        access.grant_session(request, at=SLOT_START + datetime.timedelta(minutes=5), access_settings=WEEKLY_SETTINGS)
-
-        self.assertTrue(
-            access.session_has_access(
-                request,
-                at=SLOT_START + datetime.timedelta(hours=23),
-                access_settings=WEEKLY_SETTINGS,
-            )
-        )
-        # Just after the next rotation the previous code would still be inside
-        # the grace window, but the stored token already belongs to the old slot.
-        self.assertFalse(
-            access.session_has_access(
-                request,
-                at=NEXT_SLOT_START + datetime.timedelta(minutes=1),
-                access_settings=WEEKLY_SETTINGS,
-            )
-        )
+        self.assertEqual(stored, access.session_token(access_settings=self.after_rotation))
+        self.assertNotEqual(stored, access.session_token(access_settings=FIRST_CODE_SETTINGS))
+        # The unlocked visitor keeps access for as long as the generation holds,
+        # and loses it the moment the board rotates again.
+        self.assertTrue(access.session_has_access(request, access_settings=self.after_rotation))
+        self.assertFalse(access.session_has_access(request, access_settings=FIRST_CODE_SETTINGS))
 
 
 class BookingCodeValidationTests(SimpleTestCase):
@@ -257,22 +267,22 @@ class BookingCodeValidationTests(SimpleTestCase):
     def test_empty_code_is_never_accepted(self):
         for candidate in ('', None, '   '):
             with self.subTest(candidate=candidate):
-                self.assertFalse(access.check_code(candidate, at=self.at, access_settings=WEEKLY_SETTINGS))
+                self.assertFalse(access.check_code(candidate, at=self.at, access_settings=FIRST_CODE_SETTINGS))
 
         # Positive control: the loop above must not pass vacuously.
         self.assertTrue(
             access.check_code(
-                access.current_code(at=self.at, access_settings=WEEKLY_SETTINGS),
+                access.current_code(access_settings=FIRST_CODE_SETTINGS),
                 at=self.at,
-                access_settings=WEEKLY_SETTINGS,
+                access_settings=FIRST_CODE_SETTINGS,
             )
         )
 
     def test_short_or_stretched_codes_are_rejected(self):
-        code = access.current_code(at=self.at, access_settings=WEEKLY_SETTINGS)
+        code = access.current_code(access_settings=FIRST_CODE_SETTINGS)
 
-        self.assertFalse(access.check_code(code[:-1], at=self.at, access_settings=WEEKLY_SETTINGS))
-        self.assertFalse(access.check_code(f'{code}0', at=self.at, access_settings=WEEKLY_SETTINGS))
+        self.assertFalse(access.check_code(code[:-1], at=self.at, access_settings=FIRST_CODE_SETTINGS))
+        self.assertFalse(access.check_code(f'{code}0', at=self.at, access_settings=FIRST_CODE_SETTINGS))
 
 
 class BookingModelTests(TestCase):
@@ -522,7 +532,7 @@ class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
         self.index_url = reverse('booking:index')
 
     def current_code(self):
-        return access.current_code(at=self.now)
+        return access.current_code()
 
     def wrong_code(self):
         accepted = set(access.accepted_codes(at=self.now))
@@ -653,7 +663,7 @@ class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
 
         self.assertRedirects(response, self.room_url)
         stored = self.client.session[access.BOOKING_SESSION_TOKEN_KEY]
-        self.assertEqual(stored, access.session_token(at=self.now))
+        self.assertEqual(stored, access.session_token())
         self.assertNotEqual(stored, code)
         self.assertNotIn(code, [str(value) for value in self.client.session.values()])
 
@@ -679,14 +689,35 @@ class BookingAnonymousFlowTests(PinnedNowMixin, TestCase):
     def test_rotation_invalidates_an_existing_unlock(self):
         self.unlock()
         old_code = self.current_code()
-        self.now = self.now + datetime.timedelta(days=7)
+
+        settings_row = BookingSettings.get_solo()
+        settings_row.rotate_code(at=self.now)
 
         response = self.client.get(self.room_url)
 
         self.assertEqual(response.status_code, 200)
         self.assertIn('code_form', response.context)
         self.assertNotIn('form', response.context)
-        self.assertEqual(self.client.post(self.room_url, {'code': old_code}).status_code, 403)
+        # Rotating ends the unlock at once, while the code that was just handed
+        # out keeps working for the grace window.
+        self.assertTrue(access.check_code(old_code, at=self.now, access_settings=settings_row))
+        self.assertEqual(self.client.post(self.room_url, {'code': old_code}).status_code, 302)
+
+    def test_the_old_code_stops_working_when_the_grace_window_ends(self):
+        self.unlock()
+        old_code = self.current_code()
+        settings_row = BookingSettings.get_solo()
+        settings_row.rotate_code(at=self.now)
+
+        # Move past the grace window without moving the stored moment.
+        settings_row.rotated_at = self.now - access.BOOKING_CODE_GRACE - datetime.timedelta(minutes=1)
+        settings_row.save(update_fields=['rotated_at'])
+        self.client.session.flush()
+
+        response = self.client.post(self.room_url, {'code': old_code})
+
+        self.assertEqual(response.status_code, 403)
+        self.assertNotIn(access.BOOKING_SESSION_TOKEN_KEY, self.client.session)
 
     def test_captcha_failure_blocks_creation(self):
         self.unlock()
@@ -1241,11 +1272,12 @@ class BookingSettingsAdminTests(PinnedNowMixin, TestCase):
         add_url = reverse('admin:booking_bookingsettings_add')
 
         self.assertEqual(self.client.get(add_url).status_code, 403)
-        self.assertEqual(self.client.post(add_url, {'rotation_period': 'daily'}).status_code, 403)
+        self.assertEqual(self.client.post(add_url, {'code_instructions': 'nej'}).status_code, 403)
 
         self.assertEqual(BookingSettings.objects.count(), 1)
         booking_settings.refresh_from_db()
-        self.assertEqual(booking_settings.rotation_period, BookingSettings.ROTATION_WEEKLY)
+        self.assertEqual(booking_settings.code_generation, 1)
+        self.assertEqual(booking_settings.code_instructions, '')
 
     def test_first_row_is_created_by_saving_the_add_form(self):
         BookingSettings.objects.all().delete()
@@ -1259,10 +1291,12 @@ class BookingSettingsAdminTests(PinnedNowMixin, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(BookingSettings.objects.exists())
 
-        response = self.client.post(add_url, {'rotation_period': BookingSettings.ROTATION_MONTHLY})
+        response = self.client.post(add_url, {'code_instructions': 'Fråga i kansliet.'})
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(BookingSettings.get_solo().rotation_period, BookingSettings.ROTATION_MONTHLY)
+        created = BookingSettings.get_solo()
+        self.assertEqual(created.code_instructions, 'Fråga i kansliet.')
+        self.assertEqual(created.code_generation, 1)
 
     def test_singleton_refuses_deletion(self):
         booking_settings = BookingSettings.get_solo()
@@ -1272,7 +1306,7 @@ class BookingSettingsAdminTests(PinnedNowMixin, TestCase):
         self.assertEqual(self.client.post(delete_url, {'post': 'yes'}).status_code, 403)
         self.assertTrue(BookingSettings.objects.filter(pk=booking_settings.pk).exists())
 
-    def test_change_page_shows_the_code_read_only_and_keeps_the_period_editable(self):
+    def test_change_page_shows_the_code_read_only_and_keeps_the_note_editable(self):
         booking_settings = BookingSettings.get_solo()
         url = reverse('admin:booking_bookingsettings_change', args=[booking_settings.pk])
 
@@ -1281,23 +1315,34 @@ class BookingSettingsAdminTests(PinnedNowMixin, TestCase):
         self.assertEqual(response.status_code, 200)
         html = response.content.decode()
         form_fields = response.context['adminform'].form.fields
-        self.assertIn('rotation_period', form_fields)
+        self.assertIn('code_instructions', form_fields)
         self.assertNotIn('current_code', form_fields)
-        self.assertNotIn('next_rotation', form_fields)
-        self.assertContains(response, 'name="rotation_period"')
+        self.assertNotIn('last_rotated', form_fields)
+        self.assertNotIn('code_generation', form_fields)
+        self.assertNotIn('rotated_at', form_fields)
+        self.assertContains(response, 'name="code_instructions"')
         self.assertNotContains(response, 'name="current_code"')
-        self.assertNotContains(response, 'name="next_rotation"')
+        self.assertNotContains(response, 'name="rotated_at"')
 
         code = access.current_code(access_settings=booking_settings)
-        # A callable admin attribute is rendered with str(), not localized.
-        rotation = str(access.next_rotation(access_settings=booking_settings))
-        # Assert each value renders next to its own label rather than on a class
-        # name that only one admin theme emits: Unfold renders readonly values in
-        # a different container from the classic admin, and the CI matrix runs
-        # both. That neither value is an editable field is covered by the name=
-        # assertions above.
+        # A value the board reads rather than edits, rendered next to its own
+        # label rather than on a class name that only one admin theme emits:
+        # Unfold renders readonly values in a different container from the
+        # classic admin, and the CI matrix runs both.
         self.assertRegex(html, f'Aktuell bokningskod[\\s\\S]{{0,400}}?{re.escape(code)}')
-        self.assertRegex(html, f'Koden byts ut[\\s\\S]{{0,400}}?{re.escape(rotation)}')
+
+    def test_the_change_page_says_when_the_code_was_last_rotated(self):
+        booking_settings = BookingSettings.get_solo()
+        url = reverse('admin:booking_bookingsettings_change', args=[booking_settings.pk])
+        self.assertContains(self.client.get(url), 'Aldrig')
+
+        booking_settings.rotate_code(at=timezone.localtime(timezone.now()).replace(microsecond=0))
+        rotated = formats.date_format(timezone.localtime(booking_settings.rotated_at), 'DATETIME_FORMAT')
+
+        response = self.client.get(url)
+
+        self.assertContains(response, rotated)
+        self.assertNotContains(response, 'Aldrig')
 
     def test_the_board_can_write_how_the_code_is_handed_out(self):
         booking_settings = BookingSettings.get_solo()
@@ -1308,15 +1353,63 @@ class BookingSettingsAdminTests(PinnedNowMixin, TestCase):
 
         response = self.client.post(
             url,
-            {
-                'rotation_period': BookingSettings.ROTATION_WEEKLY,
-                'code_instructions': 'Koden står på dörren till kansliet.',
-            },
+            {'code_instructions': 'Koden står på dörren till kansliet.'},
         )
 
         self.assertEqual(response.status_code, 302)
         booking_settings.refresh_from_db()
         self.assertEqual(booking_settings.code_instructions, 'Koden står på dörren till kansliet.')
+
+    def test_the_rotate_action_hands_out_a_new_code(self):
+        booking_settings = BookingSettings.get_solo()
+        old_code = access.current_code(access_settings=booking_settings)
+        changelist = reverse('admin:booking_bookingsettings_changelist')
+
+        response = self.client.post(
+            changelist,
+            {
+                'action': 'rotate_code',
+                '_selected_action': [str(booking_settings.pk)],
+                'index': '0',
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        booking_settings.refresh_from_db()
+        self.assertEqual(booking_settings.code_generation, 2)
+        new_code = access.current_code(access_settings=booking_settings)
+        self.assertNotEqual(new_code, old_code)
+        # The board has to be told the new code, because it is not stored anywhere
+        # they could look it up later out of band.
+        self.assertContains(response, new_code)
+
+    def test_the_rotate_action_is_hidden_from_a_view_only_holder(self):
+        booking_settings = BookingSettings.get_solo()
+        viewer = make_staff_member(
+            'booking-settings-viewer',
+            settings.STAFF_GROUPS[0],
+            (('booking', 'view_bookingsettings'),),
+        )
+        self.client.force_login(viewer, backend='members.backends.AuthBackend')
+
+        response = self.client.post(
+            reverse('admin:booking_bookingsettings_changelist'),
+            {
+                'action': 'rotate_code',
+                '_selected_action': [str(booking_settings.pk)],
+                'index': '0',
+            },
+            follow=True,
+        )
+
+        # Django drops an action the user may not run and re-renders the list
+        # with a warning rather than a 403, so what has to hold is that the code
+        # did not move and the action was never offered.
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Byt bokningskoden nu')
+        booking_settings.refresh_from_db()
+        self.assertEqual(booking_settings.code_generation, 1)
 
 
 class BookingEmailTests(PinnedNowMixin, TestCase):
@@ -1328,7 +1421,7 @@ class BookingEmailTests(PinnedNowMixin, TestCase):
         self.room_url = reverse('booking:room_detail', args=[self.room.pk])
 
     def unlock(self):
-        response = self.client.post(self.room_url, {'code': access.current_code(at=self.now)})
+        response = self.client.post(self.room_url, {'code': access.current_code()})
         self.assertRedirects(response, self.room_url)
 
     def booking_payload(self):
@@ -1417,7 +1510,6 @@ class BookingGateRegressionTests(PinnedNowMixin, TestCase):
     def setUp(self):
         super().setUp()
         booking_settings = BookingSettings.get_solo()
-        booking_settings.rotation_period = BookingSettings.ROTATION_WEEKLY
         booking_settings.save()
         self.room = make_room(name='Kansliet')
         self.room_url = reverse('booking:room_detail', args=[self.room.pk])
@@ -1430,7 +1522,7 @@ class BookingGateRegressionTests(PinnedNowMixin, TestCase):
         raise AssertionError('no unused code candidate left')
 
     def test_non_ascii_code_is_rejected_instead_of_raising(self):
-        current = access.current_code(at=self.now)
+        current = access.current_code()
 
         self.assertFalse(access.check_code('å' * access.BOOKING_CODE_DIGITS, at=self.now))
         self.assertFalse(access.check_code('KOD123', at=self.now))
@@ -1487,13 +1579,12 @@ class BookingGateCaptchaTests(PinnedNowMixin, TestCase):
     def setUp(self):
         super().setUp()
         booking_settings = BookingSettings.get_solo()
-        booking_settings.rotation_period = BookingSettings.ROTATION_WEEKLY
         booking_settings.save()
         self.room = make_room(name='Kansliet')
         self.room_url = reverse('booking:room_detail', args=[self.room.pk])
 
     def current_code(self):
-        return access.current_code(at=self.now)
+        return access.current_code()
 
     def accepted_codes(self):
         return set(access.accepted_codes(at=self.now))

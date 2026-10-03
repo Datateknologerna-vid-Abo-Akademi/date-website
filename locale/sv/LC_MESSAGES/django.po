@@ -1031,7 +1031,7 @@ msgstr "prenumerationsbetalning"
 msgid "prenumerationsbetalningar"
 msgstr "prenumerationsbetalningar"
 
-#: members/models.py:162
+#: booking/admin.py:180 members/models.py:174
 msgid "Aldrig"
 msgstr "Aldrig"
 
@@ -2567,7 +2567,7 @@ msgid "Kunde inte ladda upp följande filer: %(files)s"
 msgstr "Kunde inte ladda upp följande filer: %(files)s"
 
 
-#: booking/access.py:272 booking/views.py:99
+#: booking/access.py:222 booking/views.py:99
 msgid "Kunde inte verifiera att du inte är en robot. Försök igen."
 msgstr "Kunde inte verifiera att du inte är en robot. Försök igen."
 
@@ -2584,21 +2584,9 @@ msgstr "Extern bokning"
 msgid "Bokare"
 msgstr "Bokare"
 
-#: booking/admin.py:152
-msgid ""
-"Bokningskoden genereras automatiskt och kan inte skrivas in här. Den visas "
-"nedan."
-msgstr ""
-"Bokningskoden genereras automatiskt och kan inte skrivas in här. Den visas "
-"nedan."
-
-#: booking/admin.py:156 booking/admin.py:169
+#: booking/admin.py:160 booking/admin.py:173
 msgid "Aktuell bokningskod"
 msgstr "Aktuell bokningskod"
-
-#: booking/admin.py:173
-msgid "Koden byts ut"
-msgstr "Koden byts ut"
 
 #: booking/emails.py:31
 #, python-format
@@ -2658,31 +2646,7 @@ msgstr "Sluttiden måste vara efter starttiden."
 msgid "Utrymmet är redan bokat under denna tid."
 msgstr "Utrymmet är redan bokat under denna tid."
 
-#: booking/models.py:164
-msgid "Dagligen"
-msgstr "Dagligen"
-
-#: booking/models.py:165
-msgid "Veckovis"
-msgstr "Veckovis"
-
-#: booking/models.py:166
-msgid "Månadsvis"
-msgstr "Månadsvis"
-
-#: booking/models.py:170
-msgid "Kodens rotationsperiod"
-msgstr "Kodens rotationsperiod"
-
-#: booking/models.py:174
-msgid ""
-"Hur ofta bokningskoden byts ut. Koden genereras automatiskt och kan inte "
-"ställas in manuellt."
-msgstr ""
-"Hur ofta bokningskoden byts ut. Koden genereras automatiskt och kan inte "
-"ställas in manuellt."
-
-#: booking/models.py:186 booking/models.py:187 booking/models.py:190
+#: booking/models.py:184 booking/models.py:185 booking/models.py:188
 msgid "Bokningsinställningar"
 msgstr "Bokningsinställningar"
 
@@ -2802,11 +2766,11 @@ msgstr ""
 msgid "Har du frågor om en bokning, kontakta styrelsen."
 msgstr "Har du frågor om en bokning, kontakta styrelsen."
 
-#: booking/models.py:177
+#: booking/models.py:176
 msgid "Så får besökare koden"
 msgstr "Så får besökare koden"
 
-#: booking/models.py:180
+#: booking/models.py:179
 msgid ""
 "Visas offentligt där koden efterfrågas, i stället för standardtexten. Lämna "
 "tomt om standardtexten räcker."
@@ -2825,6 +2789,46 @@ msgid ""
 msgstr ""
 "Har du ett konto på webbplatsen kan du logga in i stället och behöver "
 "då ingen kod."
+
+#: booking/admin.py:154
+msgid ""
+"Bokningskoden genereras automatiskt och kan inte skrivas in här. Den visas "
+"nedan, och den byts bara när någon väljer åtgärden \"Byt bokningskoden nu\"."
+msgstr ""
+"Bokningskoden genereras automatiskt och kan inte skrivas in här. Den "
+"visas nedan, och den byts bara när någon väljer åtgärden \"Byt "
+"bokningskoden nu\"."
+
+#: booking/admin.py:177 booking/models.py:169
+msgid "Senast bytt"
+msgstr "Senast bytt"
+
+#: booking/admin.py:185
+msgid "Byt bokningskoden nu"
+msgstr "Byt bokningskoden nu"
+
+#: booking/admin.py:192
+msgid "Ny bokningskod: %(code)s. Den förra koden fungerar i 15 minuter till."
+msgstr "Ny bokningskod: %(code)s. Den förra koden fungerar i 15 minuter till."
+
+#: booking/models.py:163
+msgid "Kodgeneration"
+msgstr "Kodgeneration"
+
+#: booking/models.py:166
+msgid ""
+"Räknas upp varje gång koden byts. Koden härleds ur den och kan inte läsas av "
+"härifrån."
+msgstr ""
+"Räknas upp varje gång koden byts. Koden härleds ur den och kan inte "
+"läsas av härifrån."
+
+#: booking/models.py:173
+msgid ""
+"När koden senast byttes. Gör att den förra koden fungerar en stund till."
+msgstr ""
+"När koden senast byttes. Gör att den förra koden fungerar en stund "
+"till."
 
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"

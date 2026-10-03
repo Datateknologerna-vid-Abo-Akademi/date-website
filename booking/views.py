@@ -64,7 +64,7 @@ def room_detail(request, pk):
     at = access.now_at()
 
     if not request.user.is_authenticated and (
-        access.is_code_submission(request) or not access.session_has_access(request, at)
+        access.is_code_submission(request) or not access.session_has_access(request)
     ):
         return access.booking_code_gate(
             request,

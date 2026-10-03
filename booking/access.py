@@ -1,14 +1,13 @@
 """Access gate for the public room-booking pages.
 
 The booking code is never stored anywhere. It is derived from the server secret
-and the current time slot, so rotating the code needs no scheduled task and the
-current code can be displayed read-only in the admin. Unlocking a visitor is
-only a session token for the current slot, which means a rotation invalidates
-every existing unlock by itself and the typed code is never written to the
-session.
+and a generation counter that only moves when the board rotates the code, so
+there is no schedule to run and the current code can be displayed read-only in
+the admin. Unlocking a visitor is only a session token for the current
+generation, which means a rotation invalidates every existing unlock by itself
+and the typed code is never written to the session.
 """
 
-import calendar
 import datetime
 import hashlib
 import hmac
@@ -51,101 +50,54 @@ def _as_local(at):
     return timezone.localtime(at)
 
 
-def _slot_start(rotation_period, at):
-    """Start of the slot that contains ``at``, in local time."""
-    local = _as_local(at)
-    if rotation_period == BookingSettings.ROTATION_MONTHLY:
-        return local.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    if rotation_period == BookingSettings.ROTATION_DAILY:
-        return local.replace(hour=0, minute=0, second=0, microsecond=0)
-    midnight = local.replace(hour=0, minute=0, second=0, microsecond=0)
-    return midnight - datetime.timedelta(days=midnight.weekday())
-
-
-def slot_for(rotation_period, at=None):
-    """Return ``(slot_key, slot_start)`` for the slot containing ``at``.
-
-    The key is prefixed with the rotation period so that changing the period
-    always changes the slot, even when the calendar part happens to repeat.
-    """
-    start = _slot_start(rotation_period, at)
-    if rotation_period == BookingSettings.ROTATION_MONTHLY:
-        calendar_part = start.strftime('%Y-%m')
-    else:
-        calendar_part = start.strftime('%Y-%m-%d')
-    return f'{rotation_period}:{calendar_part}', start
-
-
 def _secret_bytes():
     """The server secret as bytes, whatever form the settings hold it in."""
     secret = settings.SECRET_KEY
     return secret.encode() if isinstance(secret, str) else secret
 
 
-def code_for_slot(slot):
-    """Derive the fixed-width numeric code for a slot from SECRET_KEY."""
+def _generation(access_settings=None):
+    if access_settings is None:
+        access_settings = BookingSettings.get_solo()
+    return access_settings.code_generation
+
+
+def code_for_generation(generation):
+    """Derive the fixed-width numeric code for a generation from SECRET_KEY."""
     digest = hmac.new(
         _secret_bytes(),
-        f'booking-code:{slot}'.encode(),
+        f'booking-code:{generation}'.encode(),
         hashlib.sha256,
     ).digest()
     number = int.from_bytes(digest[:8], 'big') % (10**BOOKING_CODE_DIGITS)
     return str(number).zfill(BOOKING_CODE_DIGITS)
 
 
-def _rotation_period(access_settings=None):
-    if access_settings is None:
-        access_settings = BookingSettings.get_solo()
-    return access_settings.rotation_period
+def current_code(access_settings=None):
+    """The code that is valid now.
 
-
-def _slot_offset(rotation_period, at, offset):
-    """Start of the slot ``offset`` slots before the slot containing ``at``."""
-    start = _slot_start(rotation_period, at)
-    if rotation_period == BookingSettings.ROTATION_MONTHLY:
-        month = start.month - offset
-        year = start.year
-        while month < 1:
-            month += 12
-            year -= 1
-        return start.replace(year=year, month=month)
-    days = 1 if rotation_period == BookingSettings.ROTATION_DAILY else 7
-    return start - datetime.timedelta(days=days * offset)
-
-
-def current_code(at=None, access_settings=None):
-    """The code that is valid right now."""
-    rotation_period = _rotation_period(access_settings)
-    slot, _start = slot_for(rotation_period, at)
-    return code_for_slot(slot)
-
-
-def next_rotation(at=None, access_settings=None):
-    """Start of the slot that follows the one containing ``at``."""
-    rotation_period = _rotation_period(access_settings)
-    start = _slot_start(rotation_period, at)
-    if rotation_period == BookingSettings.ROTATION_MONTHLY:
-        last_day = calendar.monthrange(start.year, start.month)[1]
-        return start.replace(day=last_day) + datetime.timedelta(days=1)
-    if rotation_period == BookingSettings.ROTATION_DAILY:
-        return start + datetime.timedelta(days=1)
-    return start + datetime.timedelta(days=7)
+    Nothing about it depends on the clock. It changes when the board rotates it
+    and at no other moment, so no schedule has to run for it to stay correct.
+    """
+    return code_for_generation(_generation(access_settings))
 
 
 def accepted_codes(at=None, access_settings=None):
-    """The current code, plus the previous one while the grace period lasts.
+    """The current code, plus the previous one while its grace period lasts.
 
-    The grace period keeps a code that was just displayed in the admin working
-    for a while, and it is anchored to the start of the slot so it does not
-    slide forward with every request.
+    The grace period is anchored to the moment the board rotated the code, not
+    to a calendar boundary and not to the current request, so it does not slide
+    forward with every visit. A booker who was handed the old code a minute
+    before the rotation is not stranded by it.
     """
-    rotation_period = _rotation_period(access_settings)
-    _slot, start = slot_for(rotation_period, at)
-    codes = [code_for_slot(_slot)]
-    if _as_local(at) - start < BOOKING_CODE_GRACE:
-        previous_start = _slot_offset(rotation_period, start, 1)
-        previous_slot, _previous_start = slot_for(rotation_period, previous_start)
-        codes.append(code_for_slot(previous_slot))
+    if access_settings is None:
+        access_settings = BookingSettings.get_solo()
+    codes = [code_for_generation(access_settings.code_generation)]
+    rotated_at = access_settings.rotated_at
+    if rotated_at is not None and access_settings.code_generation > 1:
+        elapsed = _as_local(at) - _as_local(rotated_at)
+        if datetime.timedelta(0) <= elapsed < BOOKING_CODE_GRACE:
+            codes.append(code_for_generation(access_settings.code_generation - 1))
     return tuple(codes)
 
 
@@ -167,19 +119,17 @@ def check_code(candidate, at=None, access_settings=None):
     return matched
 
 
-def session_token(at=None, access_settings=None) -> str:
-    """Opaque per-slot token that records an unlock in the session.
+def session_token(access_settings=None) -> str:
+    """Opaque token for the current generation, recording an unlock.
 
     It is HMAC'd rather than a bare hash of the six-digit code, and it depends
-    on the slot, so a rotation ends the unlock without any stored expiry. The
-    digest is returned hex-encoded because the default session serializer is
-    JSON and cannot store bytes.
+    on the generation, so rotating the code ends every existing unlock with no
+    stored expiry anywhere. The digest is returned hex-encoded because the
+    default session serializer is JSON and cannot store bytes.
     """
-    rotation_period = _rotation_period(access_settings)
-    slot, _start = slot_for(rotation_period, at)
     return hmac.new(
         _secret_bytes(),
-        f'booking-session:{slot}'.encode(),
+        f'booking-session:{_generation(access_settings)}'.encode(),
         hashlib.sha256,
     ).hexdigest()
 
@@ -189,16 +139,16 @@ def _stored_token(value) -> str:
     return value.hex() if isinstance(value, bytes) else value
 
 
-def session_has_access(request, at=None, access_settings=None) -> bool:
+def session_has_access(request, access_settings=None) -> bool:
     stored = request.session.get(BOOKING_SESSION_TOKEN_KEY)
     if not stored:
         return False
     stored = _stored_token(stored)
-    return hmac.compare_digest(stored, session_token(at=at, access_settings=access_settings))
+    return hmac.compare_digest(stored, session_token(access_settings=access_settings))
 
 
-def grant_session(request, at=None, access_settings=None):
-    request.session[BOOKING_SESSION_TOKEN_KEY] = session_token(at=at, access_settings=access_settings)
+def grant_session(request, access_settings=None):
+    request.session[BOOKING_SESSION_TOKEN_KEY] = session_token(access_settings=access_settings)
     request.session.pop(BOOKING_ATTEMPTS_COUNTER, None)
     request.session.pop(BOOKING_LOCKOUT_UNTIL, None)
 
@@ -274,7 +224,7 @@ def booking_code_gate(
         else:
             form = BookingCodeForm(request.POST, at=at, access_settings=access_settings)
             if form.is_valid():
-                grant_session(request, at=at, access_settings=access_settings)
+                grant_session(request, access_settings=access_settings)
                 return redirect(next_url)
             attempts = request.session.get(BOOKING_ATTEMPTS_COUNTER, 0) + 1
             request.session[BOOKING_ATTEMPTS_COUNTER] = attempts

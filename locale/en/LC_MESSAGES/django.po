@@ -1030,7 +1030,7 @@ msgstr "subscription payment"
 msgid "prenumerationsbetalningar"
 msgstr "subscription payments"
 
-#: members/models.py:162
+#: booking/admin.py:180 members/models.py:174
 msgid "Aldrig"
 msgstr "Never"
 
@@ -2584,7 +2584,7 @@ msgid "Kunde inte ladda upp följande filer: %(files)s"
 msgstr "Could not upload the following files: %(files)s"
 
 
-#: booking/access.py:272 booking/views.py:99
+#: booking/access.py:222 booking/views.py:99
 msgid "Kunde inte verifiera att du inte är en robot. Försök igen."
 msgstr "We could not verify that you are not a robot. Please try again."
 
@@ -2601,21 +2601,9 @@ msgstr "External booking"
 msgid "Bokare"
 msgstr "Booked by"
 
-#: booking/admin.py:152
-msgid ""
-"Bokningskoden genereras automatiskt och kan inte skrivas in här. Den visas "
-"nedan."
-msgstr ""
-"The booking code is generated automatically and cannot be entered here. It "
-"is shown below."
-
-#: booking/admin.py:156 booking/admin.py:169
+#: booking/admin.py:160 booking/admin.py:173
 msgid "Aktuell bokningskod"
 msgstr "Current booking code"
-
-#: booking/admin.py:173
-msgid "Koden byts ut"
-msgstr "Code changes"
 
 #: booking/emails.py:31
 #, python-format
@@ -2675,31 +2663,7 @@ msgstr "The end time must be after the start time."
 msgid "Utrymmet är redan bokat under denna tid."
 msgstr "The room is already booked for this time."
 
-#: booking/models.py:164
-msgid "Dagligen"
-msgstr "Daily"
-
-#: booking/models.py:165
-msgid "Veckovis"
-msgstr "Weekly"
-
-#: booking/models.py:166
-msgid "Månadsvis"
-msgstr "Monthly"
-
-#: booking/models.py:170
-msgid "Kodens rotationsperiod"
-msgstr "Code rotation period"
-
-#: booking/models.py:174
-msgid ""
-"Hur ofta bokningskoden byts ut. Koden genereras automatiskt och kan inte "
-"ställas in manuellt."
-msgstr ""
-"How often the booking code is replaced. The code is generated automatically "
-"and cannot be set manually."
-
-#: booking/models.py:186 booking/models.py:187 booking/models.py:190
+#: booking/models.py:184 booking/models.py:185 booking/models.py:188
 msgid "Bokningsinställningar"
 msgstr "Booking settings"
 
@@ -2819,11 +2783,11 @@ msgstr ""
 msgid "Har du frågor om en bokning, kontakta styrelsen."
 msgstr "If you have questions about a booking, contact the board."
 
-#: booking/models.py:177
+#: booking/models.py:176
 msgid "Så får besökare koden"
 msgstr "How visitors get the code"
 
-#: booking/models.py:180
+#: booking/models.py:179
 msgid ""
 "Visas offentligt där koden efterfrågas, i stället för standardtexten. Lämna "
 "tomt om standardtexten räcker."
@@ -2842,6 +2806,47 @@ msgid ""
 msgstr ""
 "If you have an account on the website you can log in instead, and then "
 "you need no code."
+
+#: booking/admin.py:154
+msgid ""
+"Bokningskoden genereras automatiskt och kan inte skrivas in här. Den visas "
+"nedan, och den byts bara när någon väljer åtgärden \"Byt bokningskoden nu\"."
+msgstr ""
+"The booking code is generated automatically and cannot be entered "
+"here. It is shown below, and it changes only when somebody rotates it."
+
+#: booking/admin.py:177 booking/models.py:169
+msgid "Senast bytt"
+msgstr "Last rotated"
+
+#: booking/admin.py:185
+msgid "Byt bokningskoden nu"
+msgstr "Rotate the booking code now"
+
+#: booking/admin.py:192
+msgid "Ny bokningskod: %(code)s. Den förra koden fungerar i 15 minuter till."
+msgstr ""
+"New booking code: %(code)s. The previous code keeps working for 15 "
+"more minutes."
+
+#: booking/models.py:163
+msgid "Kodgeneration"
+msgstr "Code generation"
+
+#: booking/models.py:166
+msgid ""
+"Räknas upp varje gång koden byts. Koden härleds ur den och kan inte läsas av "
+"härifrån."
+msgstr ""
+"Counted up every time the code is rotated. The code is derived from it "
+"and cannot be read back from here."
+
+#: booking/models.py:173
+msgid ""
+"När koden senast byttes. Gör att den förra koden fungerar en stund till."
+msgstr ""
+"When the code was last rotated. Lets the previous code keep working "
+"for a while."
 
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"

@@ -154,24 +154,23 @@ class BookingSettings(models.Model):
     """Singleton with the association-wide booking configuration.
 
     There is no stored booking code: the code is derived from the server secret
-    and the current time slot, so it cannot be set or read back here.
+    and ``code_generation``, a counter that only moves when the board rotates
+    the code on purpose. Nothing about the code depends on the clock, so no
+    schedule has to run for it to stay correct.
     """
 
-    ROTATION_DAILY = 'daily'
-    ROTATION_WEEKLY = 'weekly'
-    ROTATION_MONTHLY = 'monthly'
-    ROTATION_CHOICES = [
-        (ROTATION_DAILY, _('Dagligen')),
-        (ROTATION_WEEKLY, _('Veckovis')),
-        (ROTATION_MONTHLY, _('Månadsvis')),
-    ]
-
-    rotation_period = models.CharField(
-        _('Kodens rotationsperiod'),
-        max_length=8,
-        choices=ROTATION_CHOICES,
-        default=ROTATION_WEEKLY,
-        help_text=_('Hur ofta bokningskoden byts ut. Koden genereras automatiskt och kan inte ställas in manuellt.'),
+    code_generation = models.PositiveIntegerField(
+        _('Kodgeneration'),
+        default=1,
+        editable=False,
+        help_text=_('Räknas upp varje gång koden byts. Koden härleds ur den och kan inte läsas av härifrån.'),
+    )
+    rotated_at = models.DateTimeField(
+        _('Senast bytt'),
+        null=True,
+        blank=True,
+        editable=False,
+        help_text=_('När koden senast byttes. Gör att den förra koden fungerar en stund till.'),
     )
     code_instructions = models.TextField(
         _('Så får besökare koden'),
@@ -187,6 +186,20 @@ class BookingSettings(models.Model):
 
     def __str__(self):
         return str(_('Bokningsinställningar'))
+
+    def rotate_code(self, at=None):
+        """Move to the next code and end every existing unlock.
+
+        The counter is bumped in the database rather than in Python, so two
+        rotations racing each other cannot both read the same generation and
+        write the same value back.
+        """
+        BookingSettings.objects.filter(pk=self.pk).update(
+            code_generation=F('code_generation') + 1,
+            rotated_at=at or timezone.now(),
+        )
+        self.refresh_from_db(fields=['code_generation', 'rotated_at'])
+        return self.code_generation
 
     @classmethod
     def get_solo(cls):

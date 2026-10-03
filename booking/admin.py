@@ -1,6 +1,6 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db.models import Count, Q
-from django.utils import timezone
+from django.utils import formats, timezone
 from django.utils.translation import gettext_lazy as _
 
 from core.admin_base import ModelAdmin, TabularInline
@@ -142,20 +142,24 @@ class BookingAdmin(ModelAdmin):
 
 @admin.register(BookingSettings)
 class BookingSettingsAdmin(ModelAdmin):
-    list_display = ('__str__', 'rotation_period', 'current_code', 'next_rotation')
-    readonly_fields = ('current_code', 'next_rotation')
+    list_display = ('__str__', 'current_code', 'last_rotated')
+    readonly_fields = ('current_code', 'last_rotated')
+    actions = ('rotate_code',)
     fieldsets = (
         (
             None,
             {
-                'fields': ('rotation_period', 'code_instructions'),
-                'description': _('Bokningskoden genereras automatiskt och kan inte skrivas in här. Den visas nedan.'),
+                'fields': ('code_instructions',),
+                'description': _(
+                    'Bokningskoden genereras automatiskt och kan inte skrivas in här. Den visas nedan, och '
+                    'den byts bara när någon väljer åtgärden "Byt bokningskoden nu".'
+                ),
             },
         ),
         (
             _('Aktuell bokningskod'),
             {
-                'fields': ('current_code', 'next_rotation'),
+                'fields': ('current_code', 'last_rotated'),
             },
         ),
     )
@@ -170,14 +174,30 @@ class BookingSettingsAdmin(ModelAdmin):
     def current_code(self, obj):
         return access.current_code(access_settings=self._settings_for(obj))
 
-    @admin.display(description=_('Koden byts ut'))
-    def next_rotation(self, obj):
-        return access.next_rotation(access_settings=self._settings_for(obj))
+    @admin.display(description=_('Senast bytt'))
+    def last_rotated(self, obj):
+        if not obj or not obj.pk or not obj.rotated_at:
+            return _('Aldrig')
+        # Formatted rather than handed to the template as a datetime: Django
+        # would render the raw repr, offset and all.
+        return formats.date_format(timezone.localtime(obj.rotated_at), 'DATETIME_FORMAT')
+
+    @admin.action(description=_('Byt bokningskoden nu'), permissions=['change'])
+    def rotate_code(self, request, queryset):
+        """Hand the board a new code, ending every existing unlock."""
+        for settings_row in queryset:
+            generation = settings_row.rotate_code()
+            self.message_user(
+                request,
+                _('Ny bokningskod: %(code)s. Den förra koden fungerar i 15 minuter till.')
+                % {'code': access.code_for_generation(generation)},
+                messages.SUCCESS,
+            )
 
     @staticmethod
     def _settings_for(obj):
         # Never get_solo() while rendering: the add page has no stored row yet,
         # and creating one here would make has_add_permission refuse the very
         # POST the admin just filled in. An unsaved instance carries the model
-        # default period, and only rotation_period is ever read.
+        # defaults, and only the generation and the rotation moment are read.
         return obj if obj and obj.pk else BookingSettings()

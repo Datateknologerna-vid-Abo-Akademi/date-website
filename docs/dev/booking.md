@@ -54,36 +54,38 @@ Overlap prevention lives in `Booking.clean()`:
 The create path in `room_detail` wraps validation and save in `transaction.atomic()` and locks the room row with `Room.objects.select_for_update()` before validating, so two simultaneous submissions for one room cannot both pass the overlap check. SQLite ignores `select_for_update`, and `core/settings/test.py` uses in-memory SQLite, so the tests cannot prove that part; production runs PostgreSQL.
 
 ## `BookingSettings` (`booking/models.py`)
-`BookingSettings` is a singleton reached through `BookingSettings.get_solo()`, which reads or creates `pk=1`. It has two fields. `rotation_period` is one of `daily`, `weekly`, `monthly`, defaulting to `weekly`. `code_instructions` is an optional TextField the board fills in to say how a visitor is given the code; the gate shows it instead of the default sentence, and an empty value is the normal case. There is no stored password or code anywhere in the app: the code is derived from the server secret and the current clock, so the settings row can be shown read-only in the admin apart from these two fields.
+`BookingSettings` is a singleton reached through `BookingSettings.get_solo()`, which reads or creates `pk=1`. It has three fields. `code_generation` is the counter the code is derived from, starting at 1 and moving only when the board rotates. `rotated_at` records when that last happened, and exists so the previous code can keep working briefly. `code_instructions` is an optional TextField the board fills in to say how a visitor is given the code; the gate shows it instead of the default sentence, and an empty value is the normal case. All three are read-only in the admin: `code_generation` and `rotated_at` because the rotate action owns them, and `code_instructions` is editable.
+
+There is no stored password or code anywhere in the app, and nothing about the code depends on the clock. `get_solo()` is the only way to reach the row from the app, and the public path reads `code_instructions` directly through `_code_instructions()` in `booking/views.py` so that an anonymous page view does not create the singleton as a side effect.
 
 `code_instructions` exists because the distribution channel is not the website's decision. The board hands the code out however it likes, so nothing in the app names a channel: the default copy says only that the board provides the code, and an association that wants to be specific writes its own sentence. Like `Room.name` and `Room.description`, the field is editor content and is not translated, so an English visitor reading a Swedish sentence is the same trade-off the app already makes for rooms.
 
-The public path reads the row directly, through `_code_instructions()` in `booking/views.py`, rather than through `get_solo()`: a public page should not create the settings singleton as a side effect of an anonymous request, and a missing row simply means there is no board text yet.
+`rotate_code()` moves to the next generation and stamps `rotated_at`. It bumps the counter with a database-side `F('code_generation') + 1` rather than in Python, so two rotations racing each other cannot both read the same value and write it back.
 
-## The rotating code (`booking/access.py`)
+## The booking code (`booking/access.py`)
 
 ### Derivation
 ```
-digest = HMAC-SHA256(SECRET_KEY, 'booking-code:<slot>')
+digest = HMAC-SHA256(SECRET_KEY, 'booking-code:<generation>')
 number = int.from_bytes(digest[:8], 'big') % 10**6
 code   = str(number).zfill(6)
 ```
 
 The result is always six digits, with leading zeros kept.
 
-### Slots
-- The slot key is `f'{rotation_period}:{calendar_part}'`, where `calendar_part` is `%Y-%m` for monthly and `%Y-%m-%d` for daily and weekly. Prefixing the period means a period change always changes the slot, even when the date part repeats.
-- `daily` starts at local midnight, `weekly` at Monday local midnight (the code subtracts `weekday()` days from midnight), `monthly` on the first day of the month at local midnight.
-- Boundaries are computed in the association's local time: `_as_local()` goes through `timezone.get_current_timezone()` and `timezone.localtime()`, and a naive input is treated as already local.
-- `next_rotation()` returns the start of the slot after the current one. The admin uses it for the "when does the code change" column.
+### Why there is no schedule
+The code is a pure function of `SECRET_KEY` and `code_generation`. Nothing in the derivation reads the time, so the code stays exactly where the board left it: `current_code()` takes no moment at all, and no task has to run for the code to remain correct. Rotation is an explicit act by someone holding `booking.change_bookingsettings`, through the **Byt bokningskoden nu** admin action, which shows the new code in a message because there is nowhere to look it up afterwards.
+
+The trade-off this makes is deliberate and worth knowing: a scheduled rotation was one of the two things bounding an automated guesser, the other being the captcha. With rotation on demand, a code that nobody rotates stays valid indefinitely, so the captcha and the five-attempt limit carry that weight alone, and the board is expected to rotate if a code leaks. `rotated_at` is displayed on the settings page so a stale code is at least visible.
 
 ### Grace window
-- `accepted_codes()` returns the current code, plus the previous slot's code while less than `BOOKING_CODE_GRACE` (15 minutes) has passed since the start of the current slot. The window is anchored to the slot start, so it does not slide forward with every request.
+- `accepted_codes()` returns the current generation's code, plus the previous generation's code while less than `BOOKING_CODE_GRACE` (15 minutes) has passed since `rotated_at`. The window is anchored to the stored moment, so it does not slide forward with every request, and it only opens for a generation above 1: there is no predecessor to keep alive before the first rotation.
+- The elapsed time is required to be non-negative, so a `rotated_at` stamped in the future by clock skew does not revive the previous code.
 - `check_code()` strips whitespace and compares with `hmac.compare_digest` against every accepted code with no early exit.
 
 ### Session token
-- `session_token()` is `HMAC-SHA256(SECRET_KEY, 'booking-session:<slot>')[:32].hex()`.
-- The token depends on the slot, so a rotation invalidates every stored unlock on its own and no expiry has to be stored in the session.
+- `session_token()` is `HMAC-SHA256(SECRET_KEY, 'booking-session:<generation>')[:32].hex()`.
+- The token depends on the generation, so a rotation invalidates every stored unlock at once and no expiry has to be stored in the session. Note the asymmetry: the code that was just handed out keeps working for the grace window, but an unlock granted with it does not survive the rotation.
 - It is an HMAC over a distinct message rather than a hash of the six-digit code: the code space has only a million entries, so a stored hash of the code would be a trivially reversible fingerprint, while the HMAC needs `SECRET_KEY`. The typed code itself is never written to the session.
 - The digest is hex-encoded because Django's default session serializer is JSON and cannot store bytes. `_stored_token()` accepts either form, and `session_has_access()` compares with `compare_digest`.
 
@@ -92,8 +94,8 @@ The result is always six digits, with leading zeros kept.
 - `lockout_remaining()` returns the seconds left and clears the lockout keys once the time has passed.
 
 ### Test seams
-- `now_at()` is the single time seam. Tests patch `booking.access.now_at` to pin "now".
-- `at=None` and `access_settings=None` on `slot_for`, `current_code`, `next_rotation`, `accepted_codes`, `check_code`, `session_token`, `session_has_access`, `grant_session` and `booking_code_gate` let a test pass an explicit moment and an explicit settings object, so time can be pinned without `freezegun` and without a database write. `access_settings=None` means "read `BookingSettings.get_solo()`".
+- `now_at()` is the single time seam, and it now only matters to the grace window and the lockout. Tests patch `booking.access.now_at` to pin "now".
+- `access_settings=None` on `current_code`, `accepted_codes`, `check_code`, `session_token`, `session_has_access`, `grant_session` and `booking_code_gate` means "read `BookingSettings.get_solo()`", which lets the pure-function tests pass an unsaved instance with an explicit generation and no database write. `at=` survives only where the moment is genuinely read, which is the grace window.
 
 ## Public routes and views
 `booking/urls.py` sets `app_name = 'booking'` and the shared URLconf mounts it at `booking/`:
