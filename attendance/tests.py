@@ -33,12 +33,15 @@ from channels.layers import get_channel_layer
 from channels.routing import URLRouter
 from channels.testing import WebsocketCommunicator
 from django.conf import settings
+from django.contrib import admin
 from django.contrib.auth.models import AnonymousUser, Group
+from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection, transaction
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.timezone import now
+from django_otp.oath import TOTP
 
 if "attendance" not in settings.INSTALLED_APPS:
     raise unittest.SkipTest("attendance app is not installed in this settings module")
@@ -71,11 +74,11 @@ def make_member(username, **kwargs):
 
 def make_event(slug="mote", title="Möte", start_datetime=None, **kwargs):
     """An attendance event that is open right now and uses the pinned code key."""
+    kwargs.setdefault("code_secret", TOTP_KEY)
     return AttendanceEvent.objects.create(
         title=title,
         slug=slug,
         start_datetime=start_datetime or timezone.now(),
-        code_secret=TOTP_KEY,
         **kwargs,
     )
 
@@ -108,7 +111,7 @@ async def receive_message(channel_layer, channel, timeout=1):
 
 
 class AttendanceEventModelTests(TestCase):
-    """Naming, ending and slug uniqueness on AttendanceEvent."""
+    """Naming, ending, slug uniqueness and validity-period validation on AttendanceEvent."""
 
     def test_str_is_the_title(self):
         self.assertEqual(str(make_event(title="Årsmöte")), "Årsmöte")
@@ -131,6 +134,50 @@ class AttendanceEventModelTests(TestCase):
         make_event(slug="arsmote")
         with self.assertRaises(IntegrityError), transaction.atomic():
             make_event(slug="arsmote")
+
+    def test_code_validity_time_of_zero_is_rejected(self):
+        event = make_event(code_validity_time=0)
+
+        with self.assertRaises(ValidationError) as raised:
+            event.full_clean()
+
+        self.assertIn("code_validity_time", raised.exception.message_dict)
+
+    def test_negative_code_validity_time_is_rejected(self):
+        event = make_event(code_validity_time=-30)
+
+        with self.assertRaises(ValidationError) as raised:
+            event.full_clean()
+
+        self.assertIn("code_validity_time", raised.exception.message_dict)
+
+    def test_code_validity_time_of_one_second_is_accepted(self):
+        event = make_event(code_validity_time=1)
+
+        event.full_clean()  # No ValidationError: one second is the smallest allowed period.
+
+    def test_admin_form_rejects_a_zero_period(self):
+        request = RequestFactory().get("/admin/attendance/attendanceevent/")
+        request.user = make_member("admin", is_superuser=True)
+        form_class = admin.site._registry[AttendanceEvent].get_form(request)
+        event = make_event(slug="admin", code_validity_time=0)
+
+        form = form_class(
+            data={
+                "title": event.title,
+                "description": "",
+                "start_datetime": event.start_datetime,
+                "end_datetime": "",
+                "allow_non_members": "on",
+                "code_secret": event.code_secret,
+                "code_validity_time": "0",
+                "slug": event.slug,
+            },
+            instance=event,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("code_validity_time", form.errors)
 
 
 class AttendanceCodeTests(TestCase):
@@ -162,6 +209,23 @@ class AttendanceCodeTests(TestCase):
         remaining = event.time_until_next_code()
         self.assertGreater(remaining, 0)
         self.assertLessEqual(remaining, event.code_validity_time)
+
+    @patch("django_otp.oath.time", return_value=OATH_TIME)
+    def test_code_uses_the_secret_and_period_stored_on_the_event(self, _time):
+        secret = "abcdefghijklmnopqrst"
+        minute_period = make_event(code_secret=secret, code_validity_time=60)
+        half_minute_period = make_event(slug="trettio", code_secret=secret, code_validity_time=30)
+
+        expected = TOTP(minute_period.code_secret.encode(), step=60).token()
+
+        self.assertEqual(minute_period.get_current_code(), expected)
+        self.assertTrue(minute_period.is_code_valid(expected))
+
+        # The same secret on the default 30-second period is a different token, and
+        # the 60-second event does not accept it.
+        thirty_second_code = half_minute_period.get_current_code()
+        self.assertEqual(thirty_second_code, TOTP(secret.encode(), step=30).token())
+        self.assertFalse(minute_period.is_code_valid(thirty_second_code))
 
 
 class AttendeePresenceTests(TestCase):
@@ -314,14 +378,19 @@ class AttendanceChangeModelTests(TestCase):
         self.assertIn("<ogiltig>", str(change))
 
     def test_default_queryset_is_newest_first(self):
-        timestamps = [self.at - timedelta(minutes=2), self.at - timedelta(minutes=1), self.at]
-        changes = [record_change(self.event, ENTER, user=self.member, timestamp=stamp) for stamp in timestamps]
-        newest_first = list(reversed(changes))
+        # The newest change is inserted first, so insertion order and timestamp
+        # order disagree: a queryset that followed insertion order (or id) would
+        # read all three the wrong way round.
+        newest = record_change(self.event, ENTER, user=self.member, timestamp=self.at)
+        middle = record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=1))
+        oldest = record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=2))
+        self.assertLess(newest.pk, oldest.pk)
 
+        newest_first = [newest, middle, oldest]
         self.assertEqual(list(AttendanceChange.objects.all()), newest_first)
         self.assertEqual(list(self.event.attendance_changes.all()), newest_first)
-        self.assertEqual(AttendanceChange.objects.first(), changes[-1])
-        self.assertEqual(AttendanceChange.objects.latest(), changes[-1])
+        self.assertEqual(AttendanceChange.objects.first(), newest)
+        self.assertEqual(AttendanceChange.objects.latest(), newest)
 
 
 class AttendanceChangeConstraintTests(TestCase):
@@ -462,6 +531,16 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response["Location"].startswith(reverse("members:login")))
 
+    def test_member_sees_the_page_when_non_members_are_not_allowed(self):
+        self.event.allow_non_members = False
+        self.event.save()
+        self.client.force_login(self.member)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["object"], self.event)
+
     def test_member_sees_their_own_presence_state(self):
         self.client.force_login(self.member)
 
@@ -482,8 +561,25 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
 
         self.assertFalse(response.context["is_present"])
 
+    def test_present_attendees_are_listed(self):
+        guest = NonMemberAttendee.objects.create(name="Gäst I Närvarolistan")
+        with patch.object(AttendanceEvent, "present_attendees", return_value=[self.member, guest]) as present:
+            response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, 200)
+        present.assert_called_once_with()
+        self.assertContains(response, f"<li>{self.member.get_full_name()}</li>")
+        self.assertContains(response, f"<li>{guest.get_full_name()}</li>")
+
     def test_staff_sees_the_change_log(self):
-        record_change(self.event, ENTER, user=self.member)
+        at = now()
+        newest_guest = NonMemberAttendee.objects.create(name="Gäst Senast")
+        oldest_guest = NonMemberAttendee.objects.create(name="Gäst Först")
+        # Inserted newest first, and every row renders its own attendee's name, so
+        # the rendered line order is the only thing the assertions can come from.
+        record_change(self.event, ENTER, non_member=newest_guest, timestamp=at)
+        record_change(self.event, ENTER, user=self.member, timestamp=at - timedelta(minutes=1))
+        record_change(self.event, ENTER, non_member=oldest_guest, timestamp=at - timedelta(minutes=2))
         self.client.force_login(self.staff)
 
         response = self.client.get(self.detail_url)
@@ -491,6 +587,10 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Närvaroändringar")
         self.assertContains(response, self.member.full_name)
+
+        content = response.content.decode()
+        self.assertLess(content.index(newest_guest.name), content.index(self.member.full_name))
+        self.assertLess(content.index(self.member.full_name), content.index(oldest_guest.name))
 
     def test_plain_member_does_not_see_the_change_log(self):
         record_change(self.event, ENTER, user=self.member)
@@ -505,6 +605,7 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         response = self.client.get(self.detail_url, {"code": "123456"})
 
         self.assertEqual(response.context["prefilled_code"], "123456")
+        self.assertContains(response, 'value="123456"')
 
 
 class AttendanceDetailViewPostTests(AttendanceViewTestCase):
@@ -546,6 +647,17 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertEqual(self.event.attendance_changes.count(), 0)
+        self.send_change.assert_not_called()
+
+    def test_invalid_change_type_is_rejected(self):
+        self.client.force_login(self.member)
+
+        response = self.client.post(self.detail_url, {"type": "9", "code": str(PINNED_CODE)})
+
+        self.assertEqual(response.status_code, 403)
+        self.assertIn("type_error", response.context)
+        self.assertEqual(self.event.attendance_changes.count(), 0)
+        self.assertEqual(NonMemberAttendee.objects.count(), 0)
         self.send_change.assert_not_called()
 
     def test_enter_creates_the_change_and_redirects_without_the_query(self):
@@ -638,6 +750,19 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
         self.assertTrue(response["Location"].startswith(reverse("members:login")))
         self.assertEqual(self.event.attendance_changes.count(), 0)
 
+    def test_member_enter_is_recorded_when_non_members_are_not_allowed(self):
+        self.event.allow_non_members = False
+        self.event.save()
+
+        response = self.post_change(ENTER, login=self.member)
+
+        self.assertEqual(response.status_code, 303)
+        change = self.event.attendance_changes.get()
+        self.assertEqual(change.type, ENTER)
+        self.assertEqual(change.user, self.member)
+        self.assertIsNone(change.non_member)
+        self.send_change.assert_called_once_with(self.event.slug, change)
+
 
 class AttendanceOverviewViewTests(AttendanceViewTestCase):
     """The staff-only code view."""
@@ -658,6 +783,18 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
         self.client.force_login(self.member)
 
         self.assertEqual(self.client.get(self.overview_url).status_code, 403)
+
+    def test_unknown_slug_is_not_found(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.get(reverse("attendance-event-overview", args=["finns-inte"]))
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_overview_rejects_post(self):
+        self.client.force_login(self.staff)
+
+        self.assertEqual(self.client.post(self.overview_url).status_code, 405)
 
     def test_staff_group_member_sees_the_current_code(self):
         self.client.force_login(self.staff)
@@ -736,12 +873,12 @@ class AttendanceConsumerTests(TestCase):
     def test_staff_receives_the_current_code(self):
         async def flow():
             communicator = connect_as(self.staff, self.event.slug)
-            connected, _ = await communicator.connect()
+            connected, _ = await communicator.connect(timeout=10)
             self.assertTrue(connected)
 
             await communicator.send_json_to({"type": "get_code"})
-            reply = await communicator.receive_json_from()
-            await communicator.disconnect()
+            reply = await communicator.receive_json_from(timeout=10)
+            await communicator.disconnect(timeout=10)
             return reply
 
         with patch("django_otp.oath.time", return_value=OATH_TIME):
@@ -755,7 +892,7 @@ class AttendanceConsumerTests(TestCase):
     def test_non_staff_member_is_rejected(self):
         async def flow():
             communicator = connect_as(self.member, self.event.slug)
-            connected, _ = await communicator.connect()
+            connected, _ = await communicator.connect(timeout=10)
             return connected
 
         self.assertFalse(async_to_sync(flow)())
@@ -763,7 +900,7 @@ class AttendanceConsumerTests(TestCase):
     def test_anonymous_visitor_is_rejected(self):
         async def flow():
             communicator = connect_as(AnonymousUser(), self.event.slug)
-            connected, _ = await communicator.connect()
+            connected, _ = await communicator.connect(timeout=10)
             return connected
 
         self.assertFalse(async_to_sync(flow)())
@@ -771,7 +908,7 @@ class AttendanceConsumerTests(TestCase):
     def test_unknown_message_type_gets_no_reply(self):
         async def flow():
             communicator = connect_as(self.staff, self.event.slug)
-            connected, _ = await communicator.connect()
+            connected, _ = await communicator.connect(timeout=10)
             self.assertTrue(connected)
 
             await communicator.send_json_to({"type": "not-a-real-message"})
@@ -782,8 +919,8 @@ class AttendanceConsumerTests(TestCase):
             # The connection still answers afterwards, so the unknown type was
             # ignored rather than fatal.
             await communicator.send_json_to({"type": "get_code"})
-            reply = await communicator.receive_json_from()
-            await communicator.disconnect()
+            reply = await communicator.receive_json_from(timeout=10)
+            await communicator.disconnect(timeout=10)
             return silent, reply
 
         with patch("django_otp.oath.time", return_value=OATH_TIME):
@@ -798,15 +935,15 @@ class AttendanceConsumerTests(TestCase):
 
         async def flow():
             communicator = connect_as(self.staff, self.event.slug)
-            connected, _ = await communicator.connect()
+            connected, _ = await communicator.connect(timeout=10)
             self.assertTrue(connected)
 
             await self.channel_layer.group_send(
                 f"attendance_{self.event.slug}",
                 {"type": "attendance.change", "change": {"name": "Gäst", "type": "ENTER"}},
             )
-            reply = await communicator.receive_json_from()
-            await communicator.disconnect()
+            reply = await communicator.receive_json_from(timeout=10)
+            await communicator.disconnect(timeout=10)
             return reply
 
         self.assertEqual(
