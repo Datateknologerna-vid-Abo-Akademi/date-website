@@ -20,7 +20,7 @@ There is no on/off switch for a room: while the row exists, the room is on the p
 Leave **Bokningsbart från** and **Bokningsbart till** empty and the room can be booked around the clock, which is the default and what most rooms want. Fill both in to keep bookings inside a daily window: a room with 08:00 and 22:00 refuses a booking that starts at 03:00, one that ends after 22:00, and one that runs from one day into the next through the closed night. A room that should be bookable across days should leave the hours empty. Setting only one of the two is refused.
 
 ### Closed periods
-Open a room and use the **Stängda perioder** table on its page, or **Booking › Stängda perioder** to see them all at once, filtered by room. Give a closure a start, an end, and optionally a **Beskrivning**, which is shown to visitors, such as "Renovering" or "Bokat av styrelsen".
+Open a room and use the **Stängda perioder** table on its page, or **Booking › Stängda perioder** in the sidebar to see them all at once, filtered by room. Give a closure a start, an end, and optionally a **Beskrivning**, which is shown to visitors, such as "Renovering" or "Bokat av styrelsen".
 
 A closure blocks new bookings in that period and is listed on the room's public page, so a visitor sees why the room is unavailable instead of filling in the form and being refused. The message they get is "Utrymmet är stängt under en del av den tiden.".
 

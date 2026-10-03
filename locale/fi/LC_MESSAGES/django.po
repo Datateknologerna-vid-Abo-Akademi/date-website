@@ -469,10 +469,6 @@ msgstr "Varaukset"
 msgid "Rooms"
 msgstr "Tilat"
 
-#: core/admin_ui.py:114
-msgid "Booking Code"
-msgstr "Varauskoodi"
-
 
 #: ctf/admin.py:56
 #: templates/common/ctf/post_mortem_index.html:13
@@ -3090,6 +3086,14 @@ msgstr "Kirjaudu sisään Omat varaukseni -sivulla ja poista varaus siellä."
 #: booking/admin.py:250
 msgid "Bokningen hann tas bort av någon annan och sparades därför inte."
 msgstr "Joku toinen ehti poistaa varauksen, joten sitä ei tallennettu."
+
+#: core/admin_ui.py:114
+msgid "Closed periods"
+msgstr "Suljetut jaksot"
+
+#: core/admin_ui.py:120
+msgid "Booking settings"
+msgstr "Varausasetukset"
 
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"

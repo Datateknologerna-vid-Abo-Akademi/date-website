@@ -111,7 +111,13 @@ SIDEBAR_NAVIGATION = (
                 permission='booking.view_room',
             ),
             AdminLink(
-                _('Booking Code'),
+                _('Closed periods'),
+                icon='event_busy',
+                url_name='admin:booking_closure_changelist',
+                permission='booking.view_closure',
+            ),
+            AdminLink(
+                _('Booking settings'),
                 icon='key',
                 url_name='admin:booking_bookingsettings_changelist',
                 permission='booking.view_bookingsettings',

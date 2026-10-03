@@ -200,7 +200,7 @@ The public templates under `templates/common/booking/` and `static/common/bookin
 - The account flag column is labelled "Utan konto" rather than "extern". It is `is_external`, which is also true for a booking whose member deleted the account, so the old label stated something false about that row; the Bokare column carries the snapshotted name.
 - `BookingSettingsAdmin` shows the rotation period, the current code and the next rotation, both computed and read-only. It refuses to delete the singleton and only allows adding one while no settings row exists.
 - The admin is the only place that displays the current code. There is no separate "generate a code" action anywhere, because nothing is stored.
-- `core/admin_ui.py` carries a `Booking` sidebar group (Bookings, Rooms, Booking Code) for the Unfold theme. Each link resolves only when its permission is held and its URL name exists, so the group disappears for an association that does not install the app.
+- `core/admin_ui.py` carries a `Booking` sidebar group for the Unfold theme holding Bookings, Rooms, Closed periods and Booking settings. Without that group the Unfold sidebar has no route to the closure admin at all, because Unfold replaces the per-app model list, so a model added later has to be added here as well. Each link resolves only when its own permission is held and its URL name exists, so the group disappears for an association that does not install the app.
 
 ## Testing
 Run the app's tests with the test settings, which install the DaTe app set and set `BOOKING_ENABLED=True`:

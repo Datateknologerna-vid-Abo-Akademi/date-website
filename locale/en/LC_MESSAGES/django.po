@@ -468,10 +468,6 @@ msgstr "Bookings"
 msgid "Rooms"
 msgstr "Rooms"
 
-#: core/admin_ui.py:114
-msgid "Booking Code"
-msgstr "Booking Code"
-
 
 #: ctf/admin.py:56
 #: templates/common/ctf/post_mortem_index.html:13
@@ -3054,6 +3050,14 @@ msgid "Bokningen hann tas bort av någon annan och sparades därför inte."
 msgstr ""
 "The booking was removed by somebody else in the meantime, so it was "
 "not saved."
+
+#: core/admin_ui.py:114
+msgid "Closed periods"
+msgstr "Closed periods"
+
+#: core/admin_ui.py:120
+msgid "Booking settings"
+msgstr "Booking settings"
 
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"
