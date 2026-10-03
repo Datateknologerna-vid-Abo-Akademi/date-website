@@ -1,5 +1,8 @@
+import logging
+
 from django.contrib import admin, messages
 from django.db.models import Count, Q
+from django.forms.models import BaseInlineFormSet
 from django.utils import formats, timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -8,9 +11,42 @@ from core.admin_base import ModelAdmin, TabularInline
 from . import access
 from .models import Booking, BookingSettings, Closure, Room
 
+logger = logging.getLogger('date')
+
+
+def editable_field_names(obj):
+    """The fields a form may change, which are the ones worth writing back.
+
+    Naming them is what keeps a save from putting a row back that something else
+    deleted. Django falls back to an INSERT when its UPDATE matches no rows, so a
+    booking cancelled while the board was sending its own edit would come back to
+    life, and the booker would have been told a booking was gone that is not.
+    """
+    return [field.name for field in obj._meta.concrete_fields if field.editable and not field.primary_key]
+
+
+class BookingInlineFormSet(BaseInlineFormSet):
+    """Saves only what the row's form can change, for the reason above.
+
+    A row that disappeared between the formset being read and this save is
+    dropped with a log line rather than an error page. The board sees it gone
+    from the list after the reload, which is the truth of it, and the cancellation
+    that removed it is the answer that stands.
+    """
+
+    def save_existing(self, form, obj, commit=True):
+        if not commit:
+            return form.save(commit=False)
+        try:
+            obj.save(update_fields=editable_field_names(obj))
+        except Booking.NotUpdated:
+            logger.warning('Booking %s was removed while this page was being saved', obj.pk)
+        return obj
+
 
 class BookingInline(TabularInline):
     model = Booking
+    formset = BookingInlineFormSet
     fk_name = 'room'
     extra = 0
     fields = ('start', 'end', 'author', 'booker_name', 'description')
@@ -197,6 +233,23 @@ class BookingAdmin(ModelAdmin):
     # made. This matches the descending ordering the other time-ordered admins
     # in this project use.
     ordering = ('-start',)
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            super().save_model(request, obj, form, change)
+            return
+        # Naming the fields is what keeps a save from putting a row back that a
+        # cancellation deleted while this request was in flight. Django reports
+        # that as NotUpdated instead of falling back to an insert, so the board
+        # gets a sentence rather than an error page.
+        try:
+            obj.save(update_fields=editable_field_names(obj))
+        except Booking.NotUpdated:
+            self.message_user(
+                request,
+                _('Bokningen hann tas bort av någon annan och sparades därför inte.'),
+                messages.WARNING,
+            )
 
     @admin.display(description=_('Tid'))
     def time_range(self, obj):

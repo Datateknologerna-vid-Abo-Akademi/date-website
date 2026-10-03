@@ -12,7 +12,7 @@
 {% endif %}{% trans "Avbokningskod:" %} {{ cancel_code }}
 
 {% trans "Spara koden. Den behövs för att avboka bokningen." %}
-{% else %}{% if cancel_url %}{% trans "Logga in på avbokningssidan och ta bort bokningen där." %}
+{% else %}{% if cancel_url %}{% trans "Logga in på Mina bokningar och ta bort bokningen där." %}
 {% else %}{% trans "Kontakta styrelsen om du vill avboka bokningen." %}
 {% endif %}{% endif %}{% if cancel_url %}
 {% trans "Avboka bokningen:" %} {{ cancel_url }}

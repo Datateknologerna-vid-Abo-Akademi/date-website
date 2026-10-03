@@ -14,6 +14,7 @@ import datetime
 import hashlib
 import hmac
 import math
+import string
 import time
 
 from django.conf import settings
@@ -32,6 +33,11 @@ BOOKING_ATTEMPT_LIMIT = 5
 BOOKING_LOCKOUT_SECONDS = 15 * 60
 BOOKING_CODE_GRACE = datetime.timedelta(minutes=15)
 BOOKING_CODE_DIGITS = 6
+
+# Twelve hex characters. Longer than a room code because this one deletes a row
+# rather than opening a page, so it has to be beyond guessing and not merely
+# inconvenient.
+CANCEL_CODE_LENGTH = 12
 
 
 def now_at():
@@ -145,7 +151,7 @@ def cancel_code(booking) -> str:
         _secret_bytes(),
         f'booking-cancel:{booking.pk}'.encode(),
         hashlib.sha256,
-    ).hexdigest()[:12]
+    ).hexdigest()[:CANCEL_CODE_LENGTH]
 
 
 def booking_with_cancel_code(code, at=None):
@@ -156,7 +162,12 @@ def booking_with_cancel_code(code, at=None):
     are considered, which is also exactly the set that may be cancelled.
     """
     candidate = (code or '').strip().lower()
-    if not candidate:
+    # Checked before comparing rather than after: compare_digest refuses a string
+    # with non-ASCII characters outright, so a code typed with a stray letter
+    # from another alphabet would otherwise be a server error instead of a
+    # rejected code.
+    hex_digits = string.hexdigits.lower()
+    if len(candidate) != CANCEL_CODE_LENGTH or any(character not in hex_digits for character in candidate):
         return None
     from .models import Booking
 

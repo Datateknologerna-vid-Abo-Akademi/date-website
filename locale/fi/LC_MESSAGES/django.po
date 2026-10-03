@@ -3025,11 +3025,6 @@ msgstr ""
 msgid "Spara koden. Den behövs för att avboka bokningen."
 msgstr "Säilytä koodi. Tarvitset sitä varauksen peruuttamiseen."
 
-#: templates/common/booking/email/booking_confirmation.html:96
-#: templates/common/booking/email/booking_confirmation.txt:15
-msgid "Logga in på avbokningssidan och ta bort bokningen där."
-msgstr "Kirjaudu sisään peruutussivulla ja poista varaus siellä."
-
 #: templates/common/booking/email/booking_confirmation.html:109
 #: templates/common/booking/email/booking_confirmation.txt:16
 msgid "Kontakta styrelsen om du vill avboka bokningen."
@@ -3086,6 +3081,15 @@ msgstr ""
 #: templates/common/booking/my_bookings.html:36
 msgid "Du har inga kommande bokningar."
 msgstr "Sinulla ei ole tulevia varauksia."
+
+#: templates/common/booking/email/booking_confirmation.html:96
+#: templates/common/booking/email/booking_confirmation.txt:15
+msgid "Logga in på Mina bokningar och ta bort bokningen där."
+msgstr "Kirjaudu sisään Omat varaukseni -sivulla ja poista varaus siellä."
+
+#: booking/admin.py:250
+msgid "Bokningen hann tas bort av någon annan och sparades därför inte."
+msgstr "Joku toinen ehti poistaa varauksen, joten sitä ei tallennettu."
 
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"

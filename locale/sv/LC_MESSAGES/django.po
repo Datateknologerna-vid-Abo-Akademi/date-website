@@ -2968,11 +2968,6 @@ msgstr "Kontakta styrelsen om du vill avboka bokningen. Uppge koden nedan."
 msgid "Spara koden. Den behövs för att avboka bokningen."
 msgstr "Spara koden. Den behövs för att avboka bokningen."
 
-#: templates/common/booking/email/booking_confirmation.html:96
-#: templates/common/booking/email/booking_confirmation.txt:15
-msgid "Logga in på avbokningssidan och ta bort bokningen där."
-msgstr "Logga in på avbokningssidan och ta bort bokningen där."
-
 #: templates/common/booking/email/booking_confirmation.html:109
 #: templates/common/booking/email/booking_confirmation.txt:16
 msgid "Kontakta styrelsen om du vill avboka bokningen."
@@ -3029,6 +3024,15 @@ msgstr ""
 #: templates/common/booking/my_bookings.html:36
 msgid "Du har inga kommande bokningar."
 msgstr "Du har inga kommande bokningar."
+
+#: templates/common/booking/email/booking_confirmation.html:96
+#: templates/common/booking/email/booking_confirmation.txt:15
+msgid "Logga in på Mina bokningar och ta bort bokningen där."
+msgstr "Logga in på Mina bokningar och ta bort bokningen där."
+
+#: booking/admin.py:250
+msgid "Bokningen hann tas bort av någon annan och sparades därför inte."
+msgstr "Bokningen hann tas bort av någon annan och sparades därför inte."
 
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"

@@ -259,7 +259,7 @@ class BookingConfirmationBodyTests(SimpleTestCase):
         for template in (HTML_TEMPLATE, TEXT_TEMPLATE):
             with self.subTest(template=template):
                 body = render_body(template, cancel_code=None)
-                self.assertIn('Logga in på avbokningssidan och ta bort bokningen där.', body)
+                self.assertIn('Logga in på Mina bokningar och ta bort bokningen där.', body)
                 self.assertIn('https://date.example/booking/cancel/', body)
                 self.assertNotIn('abc123def456', body)
                 # A code exists only for a booker without an account, so the

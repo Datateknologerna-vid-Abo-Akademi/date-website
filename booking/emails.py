@@ -14,6 +14,7 @@ booker gave an address.
 
 from django.conf import settings
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -23,26 +24,35 @@ from . import access
 from .ics import invite_attachment
 
 
-def notify_booker(booking, *, cancel_url, site_url=''):
+def notify_booker(booking, *, request):
     """Tell the booker that the booking is registered, and how to cancel it."""
     recipient = _recipient(booking)
     if not recipient:
         return
+    # Decided in one place, from the same fact the code is: a member cancels from
+    # the page that checks their account, and somebody without one has only the
+    # code, so their link goes to the page that takes it. Splitting this between
+    # the caller and here is how a member ends up being sent to a page asking for
+    # a code they were never given.
+    if booking.is_external:
+        cancel_url = request.build_absolute_uri(reverse('booking:cancel'))
+        cancel_code = access.cancel_code(booking)
+    else:
+        cancel_url = request.build_absolute_uri(reverse('booking:my_bookings'))
+        cancel_code = None
     context = {
         'booking': booking,
         'room': booking.room,
         'start_local': timezone.localtime(booking.start),
         'end_local': timezone.localtime(booking.end),
         'cancel_url': cancel_url,
-        # Only somebody without an account needs a code, because only they have
-        # nothing else to prove the booking is theirs.
-        'cancel_code': access.cancel_code(booking) if booking.is_external else None,
+        'cancel_code': cancel_code,
         # An email body is rendered without a request, so the context processor
         # that exposes the association's address to templates does not run here.
         'association_email': getattr(settings, 'CONTENT_VARIABLES', {}).get('ASSOCIATION_EMAIL', ''),
         # The footer links to the site itself, which is a different thing from
         # the page that cancels this booking.
-        'site_url': site_url,
+        'site_url': request.build_absolute_uri('/'),
     }
     subject = _('Bokningsbekräftelse för %(room)s') % {'room': booking.room.name}
     body = render_to_string('booking/email/booking_confirmation.txt', context)
@@ -56,7 +66,12 @@ def notify_booker(booking, *, cancel_url, site_url=''):
         html_message=html,
         attachments=(
             invite_attachment(
-                booking=booking, room=booking.room, start=booking.start, end=booking.end, cancel_url=cancel_url
+                booking=booking,
+                room=booking.room,
+                start=booking.start,
+                end=booking.end,
+                cancel_url=cancel_url,
+                host=request.get_host(),
             ),
         ),
     )

@@ -35,7 +35,13 @@ ATTACHMENT_MIMETYPE = 'text/calendar; method=PUBLISH; charset=utf-8'
 
 
 def booking_invite(
-    *, booking: Booking, room: Room, start: datetime.datetime, end: datetime.datetime, cancel_url: str = ''
+    *,
+    booking: Booking,
+    room: Room,
+    start: datetime.datetime,
+    end: datetime.datetime,
+    cancel_url: str = '',
+    host: str = '',
 ) -> str:
     """The complete iCalendar file for one published booking event.
 
@@ -49,7 +55,7 @@ def booking_invite(
         f'PRODID:{PRODID}',
         'METHOD:PUBLISH',
         'BEGIN:VEVENT',
-        f'UID:{_uid(booking)}',
+        f'UID:{_uid(booking, host)}',
         f'DTSTAMP:{_utc_stamp(timezone.now())}',
         f'DTSTART:{_utc_stamp(start)}',
         f'DTEND:{_utc_stamp(end)}',
@@ -69,8 +75,15 @@ def invite_attachment(**kwargs: Any) -> tuple[str, str, str]:
     return f'booking-{kwargs["booking"].pk}.ics', content, ATTACHMENT_MIMETYPE
 
 
-def _uid(booking: Booking) -> str:
-    return f'booking-{booking.pk}@{_UID_DOMAIN}'
+def _uid(booking: Booking, host: str = '') -> str:
+    """A stable identity for the event, unique beyond this installation.
+
+    The primary key alone would collide with another association's booking of the
+    same number, and a calendar that sees both would treat them as one event and
+    replace the first with the second. The host supplies the namespace, and the
+    reserved domain is the fallback for a caller that has no request.
+    """
+    return f'booking-{booking.pk}@{host or _UID_DOMAIN}'
 
 
 def _utc_stamp(moment: datetime.datetime) -> str:

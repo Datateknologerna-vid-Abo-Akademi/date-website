@@ -20,7 +20,7 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
-from django.test import RequestFactory, SimpleTestCase, TestCase
+from django.test import RequestFactory, SimpleTestCase, TestCase, TransactionTestCase
 from django.urls import reverse
 from django.utils import formats, timezone
 
@@ -1914,7 +1914,10 @@ class BookingEmailTests(PinnedNowMixin, TestCase):
         self.assertEqual(recipients, [member.email])
         booking = Booking.objects.get()
         self.assertNotIn(access.cancel_code(booking), body)
-        self.assertIn(reverse('booking:cancel'), body)
+        # Their own page, which checks the account. The code page would ask for a
+        # code a member was never given.
+        self.assertIn(reverse('booking:my_bookings'), body)
+        self.assertNotIn(reverse('booking:cancel'), body)
         self.assertIn('BEGIN:VCALENDAR', kwargs['attachments'][0][1])
 
     def test_a_booker_with_no_address_is_not_emailed(self):
@@ -1949,9 +1952,11 @@ class BookingEmailTests(PinnedNowMixin, TestCase):
             booker_email='besokare@example.com',
         )
 
+        request = RequestFactory().post(f'/booking/{self.room.pk}/')
+
         with patch('booking.emails.send_email_with_attachments_task') as send_email:
             with self.captureOnCommitCallbacks(execute=True):
-                emails.notify_booker(booking, cancel_url='https://example.com/booking/cancel/')
+                emails.notify_booker(booking, request=request)
 
         _subject, body, _from_email, _recipients, kwargs = self.queued_message(send_email)
         self.assertIn(self.room.name, body)
@@ -2031,6 +2036,42 @@ class BookingCancellationTests(PinnedNowMixin, TestCase):
         self.assertContains(response, 'Hittade ingen kommande bokning med den koden.')
         self.assertTrue(Booking.objects.filter(pk=booking.pk).exists())
 
+    def test_a_code_that_is_not_hexadecimal_is_rejected_rather_than_crashing(self):
+        # compare_digest refuses non-ASCII outright, so a code with a letter from
+        # another alphabet would be a server error without this check. An
+        # upcoming booking has to exist for the comparison to be reached at all.
+        self.outsider_booking()
+
+        for value in ('äääääääääää', 'ä' * 12, 'ø' * 12, 'z' * 12, '9' * 5000, 'å' * 12):
+            with self.subTest(value=value[:12]):
+                self.assertIsNone(access.booking_with_cancel_code(value))
+
+        response = self.client.get(self.cancel_url, {'code': 'äääääääääää'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Hittade ingen kommande bokning med den koden.')
+
+    def test_the_code_is_accepted_with_odd_spacing_and_case(self):
+        # It is copied out of a mail by hand, so a stray space or a capital is not
+        # a wrong code.
+        booking = self.outsider_booking()
+        code = access.cancel_code(booking)
+
+        for value in (f'  {code}  ', code.upper()):
+            with self.subTest(value=value):
+                self.assertEqual(access.booking_with_cancel_code(value), booking)
+
+    def test_a_wrong_code_in_a_link_is_a_page_with_a_message(self):
+        # Somebody who follows the link from their mail with a code that no longer
+        # works should get the form and the reason, not a bare error page.
+        self.outsider_booking()
+
+        response = self.client.get(self.cancel_url, {'code': 'deadbeefcafe'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Hittade ingen kommande bokning med den koden.')
+        self.assertContains(response, 'name="code"')
+
     def test_a_link_that_is_only_opened_does_not_cancel(self):
         # Mailbox providers fetch links in incoming mail, so a GET that cancelled
         # would delete bookings before their owners read the message.
@@ -2098,6 +2139,15 @@ class BookingCancellationTests(PinnedNowMixin, TestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertTrue(Booking.objects.filter(pk=booking.pk).exists())
+
+    def test_a_very_long_id_is_not_a_crash(self):
+        member = make_member('avbokare')
+        make_booking(self.room, self.start, self.end, author=member)
+        self.client.force_login(member, backend='members.backends.AuthBackend')
+
+        response = self.client.post(reverse('booking:my_bookings'), {'booking': '9' * 5000})
+
+        self.assertEqual(response.status_code, 404)
 
     def test_the_page_needs_a_signed_in_member(self):
         response = self.client.get(reverse('booking:my_bookings'))
@@ -2339,3 +2389,64 @@ class BookingGateCaptchaTests(PinnedNowMixin, TestCase):
         # Handled by the gate (a redirect), not by the booking form (a 200 with
         # errors about booking fields the visitor never filled in).
         self.assertRedirects(response, self.room_url)
+
+
+class BookingAdminRaceTests(TransactionTestCase):
+    """A save that races a cancellation must not put the booking back.
+
+    TransactionTestCase rather than TestCase on purpose: the error Django raises
+    for an update that matched no rows marks the surrounding transaction as
+    needing a rollback, and the test would then fail on its own assertions
+    instead of on the behaviour it is asking about.
+
+    ``serialized_rollback`` puts the database back the way it was for the tests
+    that run after this one. Truncating the tables leaves the content types gone,
+    and a later test class that loads a fixture then collides with them.
+    """
+
+    serialized_rollback = True
+
+    def setUp(self):
+        super().setUp()
+        self.room = make_room(name='Bastun')
+        self.start = timezone.now() + datetime.timedelta(days=1)
+        self.end = self.start + datetime.timedelta(hours=2)
+        self.admin_user = get_user_model().objects.create_superuser(
+            username='raceadmin',
+            password='pwd',
+            email='raceadmin@example.com',
+        )
+
+    def booking(self):
+        return make_booking(
+            self.room,
+            self.start,
+            self.end,
+            booker_name='Extern Besökare',
+            booker_email='besokare@example.com',
+        )
+
+    def test_a_save_racing_a_cancellation_does_not_put_the_booking_back(self):
+        # The board's request reads the booking, the booker's cancellation deletes
+        # it, and the board's save runs after. Django falls back to an INSERT once
+        # its UPDATE matches no rows, so the row would return while the booker had
+        # already been told it was gone. Both admin paths have to write only the
+        # fields their form can change for this to be a no-op.
+        admin_user = get_user_model().objects.create_superuser(
+            username='bokningsadmin',
+            password='pwd',
+            email='bokningsadmin@example.com',
+        )
+        booking = self.booking()
+        stale = Booking.objects.get(pk=booking.pk)
+        booking.delete()
+        request = RequestFactory().post('/admin/booking/booking/')
+        request.user = admin_user
+        model_admin = BookingAdmin(Booking, admin.site)
+
+        with patch.object(BookingAdmin, 'message_user') as message_user:
+            model_admin.save_model(request, stale, form=None, change=True)
+
+        self.assertFalse(Booking.objects.filter(pk=booking.pk).exists())
+        # The board is told rather than left thinking the edit landed.
+        self.assertTrue(message_user.called)

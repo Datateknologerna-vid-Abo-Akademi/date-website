@@ -118,11 +118,7 @@ def room_detail(request, pk):
                     allowed = False
             if allowed:
                 booking = form.save()
-                emails.notify_booker(
-                    booking,
-                    cancel_url=request.build_absolute_uri(reverse('booking:cancel')),
-                    site_url=request.build_absolute_uri('/'),
-                )
+                emails.notify_booker(booking, request=request)
                 # The page says so as well, and keeps saying so whether or not
                 # there was an address to mail: the mail complements this, it
                 # does not replace it.
@@ -166,7 +162,10 @@ class MyBookingsView(LoginRequiredMixin, ListView):
     def post(self, request, *args, **kwargs):
         pk = request.POST.get('booking', '')
         booking = None
-        if pk.isdecimal():
+        # Bounded before the query: a long enough run of digits overflows the
+        # conversion Django does for the primary key, which would be a server
+        # error rather than the not-found a nonsense id deserves.
+        if pk.isdecimal() and len(pk) <= 18:
             booking = _member_upcoming(request.user).filter(pk=pk).first()
         if booking is None:
             # Either the id is nonsense, or it is somebody else's booking, or it
@@ -199,12 +198,13 @@ def cancel_booking(request):
                 booking.delete()
                 messages.success(request, _('Bokningen är borttagen.'))
                 return redirect('booking:index')
-    else:
-        code = request.GET.get('code', '')
-        form = CancelCodeForm(initial={'code': code}, at=at)
-        if code:
-            booking = access.booking_with_cancel_code(code, at=at)
-            if booking is None:
-                form.add_error('code', _('Hittade ingen kommande bokning med den koden.'))
+    elif request.GET.get('code'):
+        # Bound so the code is validated and any complaint is a field error on a
+        # rendered page. A visitor who follows the link from their email with a
+        # code that no longer works deserves the form and the message, not a
+        # bare error page.
+        form = CancelCodeForm({'code': request.GET['code']}, at=at)
+        if form.is_valid():
+            booking = form.booking
 
     return render(request, 'booking/cancel_booking.html', {'form': form, 'booking': booking})
