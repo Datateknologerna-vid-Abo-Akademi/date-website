@@ -65,6 +65,17 @@
     max-width: 32rem;
 }
 
+/* The label and its field are inline-blocks on one line. A single-line input
+   takes its baseline from the text inside it, but a textarea scrolls, so its
+   baseline is its bottom edge: the description's label would be pushed under
+   the field. Aligning both to the top of the line box keeps every field in the
+   form on the same footing. */
+.booking-form label,
+.booking-form input,
+.booking-form textarea {
+    vertical-align: top;
+}
+
 .booking-error {
     color: var(--primaryColorLight);
 }
