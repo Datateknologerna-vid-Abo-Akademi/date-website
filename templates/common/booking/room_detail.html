@@ -24,10 +24,10 @@
           <div class="booking-room-description">{{ room.description|linebreaks }}</div>
         {% endif %}
         <p>
-          <a href="{% url 'booking:index' %}">{% trans "Tillbaka till utrymmena" %}</a>
+          <a class="booking-back-link" href="{% url 'booking:index' %}">{% trans "Tillbaka till utrymmena" %}</a>
         </p>
         <section class="booking-room-bookings">
-          <h2 class="booking-heading">{% trans "Kommande bokningar" %}</h2>
+          <h2 class="booking-heading booking-section-title">{% trans "Kommande bokningar" %}</h2>
           <ul class="booking-list">
             {% for booking in bookings %}
               <li class="booking-list-item">
@@ -35,18 +35,18 @@
                 <span class="booking-time">{{ booking.start|date:"H:i" }} - {{ booking.end|date:"H:i" }}</span>
               </li>
             {% empty %}
-              <li class="booking-list-item">{% trans "Inga kommande bokningar." %}</li>
+              <li class="booking-list-item booking-list-empty">{% trans "Inga kommande bokningar." %}</li>
             {% endfor %}
           </ul>
         </section>
         {% if code_form %}
           <section class="booking-code-section">
-            <h2 class="booking-heading">{% trans "Bokningskod" %}</h2>
+            <h2 class="booking-heading booking-section-title">{% trans "Bokningskod" %}</h2>
             {% include 'booking/partials/code_form.html' %}
           </section>
         {% else %}
           <section class="booking-form-section">
-            <h2 class="booking-heading">{% trans "Boka utrymmet" %}</h2>
+            <h2 class="booking-heading booking-section-title">{% trans "Boka utrymmet" %}</h2>
             {% if form.non_field_errors %}
               <div class="booking-error">
                 {% for error in form.non_field_errors %}
@@ -75,7 +75,7 @@
                      data-sitekey="{{ CAPTCHA_SITE_KEY }}"
                      data-callback="javascriptCallback"></div>
               {% endif %}
-              <button class="button" type="submit">{% trans "Boka" %}</button>
+              <button class="theme-button" type="submit">{% trans "Boka" %}</button>
             </form>
             {% if not user.is_authenticated %}
               <small class="booking-help">{% trans "E-postadressen används bara för att skicka en bokningsbekräftelse." %}</small>

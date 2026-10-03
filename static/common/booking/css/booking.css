@@ -1,58 +1,122 @@
-/* Booking rooms and booking lists. Only custom properties that already exist
-   in the site root stylesheet are used, and nothing global is restyled. */
+/* Booking pages: the room list, a room with its booking form, and the code gate.
+   The templates under templates/common/booking/ are shared, so this file only
+   uses custom properties that already exist in the association's own root
+   stylesheet, with a fallback wherever an association does not define one
+   (biocum has no --linkColorLight). Nothing global is restyled. */
+
+/* ---- headings and page furniture ---- */
 
 .booking-heading {
     margin-bottom: 0.5rem;
+    line-height: 1.25;
 }
 
+.booking-intro {
+    max-width: 46rem;
+    margin-bottom: 1.25rem;
+    line-height: 1.55;
+}
+
+.booking-section-title {
+    margin: 1.75rem 0 0.85rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--primaryColorLighter);
+    font-size: 1.3rem;
+    line-height: 1.25;
+}
+
+.booking-back-link {
+    display: inline-block;
+    margin: 0 0 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* ---- the rooms ---- */
+
 .booking-rooms {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
     gap: 1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .booking-room-card {
-    flex: 1 1 16rem;
-    padding: 0.75rem 1rem;
+    overflow: hidden;
+    border: 1px solid var(--primaryColorLighter);
+    border-top: 3px solid var(--linkColorLight, var(--linkColorDark, var(--secondaryColor)));
     border-radius: var(--defaultRadius);
-    background: var(--primaryColorLight);
+    background-color: var(--primaryColorLighte);
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.booking-room-card:hover {
+    background-color: var(--primaryColorLighter);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.35);
 }
 
 .booking-room-card a {
     display: block;
-    color: var(--linkColorLight);
+    padding: 1rem 1.1rem;
+    color: var(--linkColorLight, var(--textColorLight));
     text-decoration: none;
 }
 
-.booking-room-card a:hover {
-    color: var(--linkColorLightHover);
+.booking-room-card a:hover,
+.booking-room-card a:focus {
+    color: var(--linkColorLightHover, var(--linkColorLight, var(--textColorLight)));
+}
+
+.booking-room-card .booking-heading {
+    margin-bottom: 0.35rem;
+    font-size: 1.2rem;
 }
 
 .booking-room-description {
-    color: var(--helpText);
-    font-size: 14px;
+    margin-bottom: 0;
+    color: var(--helpTextLighter, var(--helpText));
+    font-size: 0.9rem;
+    line-height: 1.5;
 }
 
+.booking-rooms-empty {
+    margin: 0.5rem 0 1.5rem;
+}
+
+/* ---- upcoming bookings ---- */
+
 .booking-list {
-    list-style: none;
+    display: grid;
+    gap: 0.35rem;
+    margin: 0;
     padding-left: 0;
+    list-style: none;
 }
 
 .booking-list-item {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.25rem 0;
+    align-items: baseline;
+    gap: 0.6rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--defaultRadius);
+    background-color: rgba(255, 255, 255, 0.04);
+    color: var(--textColorLightish, var(--helpText));
+    font-size: 0.95rem;
+}
+
+.booking-list-item.booking-list-empty {
+    background-color: transparent;
     color: var(--helpText);
-    font-size: 14px;
 }
 
 .booking-badge {
-    padding: 0 0.4rem;
+    min-width: 3.2rem;
+    padding: 0.15rem 0.4rem;
     border-radius: var(--defaultRadius);
-    background: var(--helpText);
-    color: var(--primaryColorLight);
+    background-color: var(--primaryColorLighter);
+    color: var(--textColorLight);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
 }
 
 .booking-time,
@@ -60,26 +124,157 @@
     white-space: nowrap;
 }
 
+.booking-room-name {
+    color: var(--textColorLight);
+}
+
+/* ---- the booking form ---- */
+
 .booking-code-form,
 .booking-form {
     max-width: 32rem;
 }
 
-/* The label and its field are inline-blocks on one line. A single-line input
-   takes its baseline from the text inside it, but a textarea scrolls, so its
-   baseline is its bottom edge: the description's label would be pushed under
-   the field. Aligning both to the top of the line box keeps every field in the
-   form on the same footing. */
-.booking-form label,
-.booking-form input,
-.booking-form textarea {
-    vertical-align: top;
+/* One row per field, label beside it, the same shape the event registration
+   form uses. Errors and help text sit under both columns. */
+.booking-form > p {
+    display: grid;
+    grid-template-columns: 30% 1fr;
+    gap: 0.35rem 0.75rem;
+    align-items: start;
+    margin: 0 0 0.9rem;
 }
 
-.booking-error {
-    color: var(--primaryColorLight);
+.booking-form > p > label {
+    padding-top: 0.55rem;
+    overflow-wrap: anywhere;
+}
+
+.booking-form > p > .booking-error,
+.booking-form > p > .booking-help {
+    grid-column: 1 / -1;
+}
+
+.booking-form input,
+.booking-form textarea {
+    width: 100%;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--primaryColorLighter);
+    border-radius: var(--defaultRadius);
+    background-color: var(--secondaryColor);
+    color: var(--textColorDark);
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.booking-form textarea {
+    min-height: 6rem;
+    resize: vertical;
+}
+
+.booking-form input:focus,
+.booking-form textarea:focus {
+    border-color: var(--linkColorLight, var(--textColorLight));
+    outline: 2px solid var(--linkColorLight, var(--textColorLight));
+    outline-offset: 1px;
+}
+
+.booking-form .theme-button {
+    margin-top: 0.35rem;
 }
 
 .booking-help {
+    display: block;
     color: var(--helpText);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Errors used to be drawn in --primaryColorLight, which is the colour of the
+   panel behind them, so a wrong code or a rejected field was invisible. */
+.booking-error {
+    margin: 0.35rem 0;
+    padding: 0.45rem 0.65rem;
+    border-left: 3px solid var(--warning-darker, var(--warning));
+    border-radius: var(--defaultRadius);
+    background-color: rgba(213, 91, 78, 0.14);
+    color: var(--warning, #ffb3a7);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* ---- the code gate ---- */
+
+.booking-code-help {
+    max-width: 46rem;
+    margin-bottom: 1.1rem;
+}
+
+.booking-code-form > p {
+    margin-bottom: 1rem;
+}
+
+.booking-code-form label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+}
+
+.booking-code-form input[name="code"] {
+    display: block;
+    width: 100%;
+    max-width: 15rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--primaryColorLighter);
+    border-radius: var(--defaultRadius);
+    background-color: var(--secondaryColor);
+    color: var(--textColorDark);
+    font-family: inherit;
+    font-size: 1.7rem;
+    letter-spacing: 0.35rem;
+    text-align: center;
+    text-indent: 0.35rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.booking-code-form input[name="code"]:focus {
+    border-color: var(--linkColorLight, var(--textColorLight));
+    outline: 2px solid var(--linkColorLight, var(--textColorLight));
+    outline-offset: 1px;
+}
+
+.booking-code-form .theme-button {
+    margin-top: 0.35rem;
+}
+
+.booking-lockout {
+    padding: 0.6rem 0.75rem;
+    border-left: 3px solid var(--warning-darker, var(--warning));
+    border-radius: var(--defaultRadius);
+    background-color: rgba(213, 91, 78, 0.14);
+    color: var(--warning, #ffb3a7);
+}
+
+/* ---- narrow screens ---- */
+
+@media screen and (max-width: 768px) {
+    .booking-form > p {
+        grid-template-columns: 1fr;
+        gap: 0.25rem;
+        margin-bottom: 1.1rem;
+    }
+
+    .booking-form > p > label {
+        padding-top: 0;
+        font-weight: 600;
+    }
+
+    .booking-form .theme-button,
+    .booking-code-form .theme-button {
+        width: 100%;
+    }
+
+    .booking-code-form input[name="code"] {
+        max-width: 100%;
+    }
 }

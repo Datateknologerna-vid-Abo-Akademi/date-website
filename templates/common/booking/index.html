@@ -15,7 +15,7 @@
     <div class="container-size break-words">
       <div class="content">
         <h1 class="booking-heading">{% trans "Bokbara utrymmen" %}</h1>
-        <p class="booking-help">
+        <p class="booking-help booking-intro">
           {% if ASSOCIATION_EMAIL %}
             {% blocktrans %}Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som du får av styrelsen via {{ ASSOCIATION_EMAIL }}.{% endblocktrans %}
           {% else %}
@@ -33,11 +33,11 @@
               </a>
             </div>
           {% empty %}
-            <p>{% trans "Inga utrymmen är bokbara just nu." %}</p>
+            <p class="booking-rooms-empty">{% trans "Inga utrymmen är bokbara just nu." %}</p>
           {% endfor %}
         </div>
         <section class="booking-upcoming">
-          <h2 class="booking-heading">{% trans "Kommande bokningar" %}</h2>
+          <h2 class="booking-heading booking-section-title">{% trans "Kommande bokningar" %}</h2>
           <ul class="booking-list">
             {% for booking in bookings %}
               <li class="booking-list-item">
@@ -46,7 +46,7 @@
                 <span class="booking-room-name">{{ booking.room.name }}</span>
               </li>
             {% empty %}
-              <li class="booking-list-item">{% trans "Inga kommande bokningar." %}</li>
+              <li class="booking-list-item booking-list-empty">{% trans "Inga kommande bokningar." %}</li>
             {% endfor %}
           </ul>
         </section>

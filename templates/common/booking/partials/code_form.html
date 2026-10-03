@@ -1,5 +1,5 @@
 {% load i18n %}
-<p class="booking-help">
+<p class="booking-help booking-code-help">
   {% if ASSOCIATION_EMAIL %}
     {% blocktrans %}Bokningskoden får du av styrelsen via {{ ASSOCIATION_EMAIL }}. Har du ett konto på webbplatsen kan du logga in i stället och behöver då ingen kod.{% endblocktrans %}
   {% else %}
@@ -34,6 +34,6 @@
     <div class="cf-turnstile"
          data-sitekey="{{ CAPTCHA_SITE_KEY }}"
          data-callback="javascriptCallback"></div>
-    <button class="button" type="submit">{% trans "Fortsätt" %}</button>
+    <button class="theme-button" type="submit">{% trans "Fortsätt" %}</button>
   </form>
 {% endif %}
