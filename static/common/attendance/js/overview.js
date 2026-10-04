@@ -26,10 +26,20 @@ const qrOptions = {
 };
 
 const updateQrCode = (code) => {
-    const url = stripLastSeparator(window.location.href);
+    // `pathname`, so a query string cannot confuse the last separator, with the
+    // slash kept because this is the event page's own URL: without it the scan
+    // takes a redirect before the page renders.
+    const url = stripLastSeparator(window.location.pathname);
 
-    // https://github.com/soldair/node-qrcode
-    QRCode.toCanvas(qrCanvas, `${url}?code=${code}`, qrOptions);
+    // The QR code is a convenience for phones; the attendee list is the point of
+    // the page. A failed CDN load leaves QRCode undefined, and without this guard
+    // the throw would happen here and the websocket below would never open.
+    try {
+        // https://github.com/soldair/node-qrcode
+        QRCode.toCanvas(qrCanvas, `${url}/?code=${code}`, qrOptions);
+    } catch (err) {
+        console.warn("Could not draw the QR code:", err);
+    }
     codeDisplay.innerText = code;
 };
 
@@ -42,28 +52,31 @@ const updateEmptyState = () => {
 }
 
 /**
- * @param {string} name
+ * One row per attendee, matched on the key rather than the name: two members can
+ * share a name, and a guest may type a name a member already has.
+ *
+ * @param {{key: string, name: string}} entry
  */
-const addAttendee = (name) => {
-    const alreadyListed = Array.from(attendeeList.children).some((item) => item.dataset.attendee === name);
+const addAttendee = (entry) => {
+    const alreadyListed = Array.from(attendeeList.children).some((item) => item.dataset.attendee === entry.key);
     if (alreadyListed) {
         return;
     }
 
     const item = document.createElement("li");
-    item.dataset.attendee = name;
-    item.innerText = name;
+    item.dataset.attendee = entry.key;
+    item.innerText = entry.name;
     attendeeList.appendChild(item);
 
     updateEmptyState();
 }
 
 /**
- * @param {string} name
+ * @param {string} key
  */
-const removeAttendee = (name) => {
+const removeAttendee = (key) => {
     for (const item of Array.from(attendeeList.children)) {
-        if (item.dataset.attendee === name) {
+        if (item.dataset.attendee === key) {
             item.remove();
         }
     }
@@ -72,13 +85,34 @@ const removeAttendee = (name) => {
 }
 
 /**
- * @param {{name: string, type: string}} change
+ * Replace the whole list with the snapshot the server sends on connect, so
+ * anything that happened between the page render and the socket opening is not
+ * lost.
+ *
+ * Entries are keyed, so a snapshot and a live change for the same attendee are
+ * idempotent: the second one lands on the same row, either message may arrive
+ * first, and no ordering dance between them is needed.
+ *
+ * @param {Array<{key: string, name: string}>} entries
+ */
+const replaceAttendees = (entries) => {
+    attendeeList.replaceChildren();
+
+    for (const entry of entries) {
+        addAttendee(entry);
+    }
+
+    updateEmptyState();
+}
+
+/**
+ * @param {{key: string, name: string, type: string}} change
  */
 const applyAttendanceChange = (change) => {
     if (change.type == "ENTER") {
-        addAttendee(change.name);
+        addAttendee(change);
     } else if (change.type == "LEAVE") {
-        removeAttendee(change.name);
+        removeAttendee(change.key);
     }
 }
 
@@ -91,14 +125,31 @@ const requestNewCode = (ws) => {
     }));
 }
 
+// How long to wait before asking again when the reply carries no usable delay.
+const CODE_REQUEST_FALLBACK_MS = 5_000;
+
 let codeFetcher = null;
 const onMessage = (ws, msg) => {
-    const data = JSON.parse(msg.data);
+    let data;
+    try {
+        data = JSON.parse(msg.data);
+    } catch (err) {
+        // One unreadable frame must not stop the rotation, which is the only
+        // thing keeping the displayed code current.
+        console.error("Ignoring an unreadable websocket frame:", err);
+        return;
+    }
 
     if (data.type == "code") {
         updateQrCode(data.code);
 
-        codeFetcher = setTimeout(() => requestNewCode(ws), data.until_next * 1000);
+        const untilNext = Number(data.until_next) * 1000;
+        // A renamed or missing field would make this NaN, and setTimeout treats
+        // NaN as zero, which would turn the countdown into a tight request loop.
+        const delay = Number.isFinite(untilNext) && untilNext > 0 ? untilNext : CODE_REQUEST_FALLBACK_MS;
+        codeFetcher = setTimeout(() => requestNewCode(ws), delay);
+    } else if (data.type == "attendance_snapshot") {
+        replaceAttendees(data.data);
     } else if (data.type == "attendance_change") {
         applyAttendanceChange(data.data);
     }
@@ -123,6 +174,8 @@ const makeWebsocket = () => {
     });
 };
 
+// The QR code is optional, so a failure there must not stop the list from
+// connecting: the guard inside updateQrCode keeps this line from throwing.
 updateQrCode(codeDisplay.innerText);
 updateEmptyState();
 makeWebsocket();

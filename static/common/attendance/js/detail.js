@@ -62,7 +62,18 @@ const stopScan = (scanner) => {
 
 const onResult = (scanner, result) => {
     codeInput.value = "";
-    const url = URL.parse(result.data);
+    let url = null;
+    try {
+        // `new URL` and not `URL.parse`: the static parser is a 2024 API
+        // (Chrome 126+, Safari 17.6+), and on anything older it throws, which
+        // would leave the code empty and the camera running.
+        url = new URL(result.data);
+    } catch (err) {
+        // Not a URL at all, which gets the same answer as one without a code
+        // parameter.
+        console.debug("The scanned value is not a URL:", err);
+    }
+
     if (url === null || !url.searchParams.has("code")) {
         qrReaderError.hidden = false;
         qrReaderError.innerText = _("QR-koden innehöll ingen kod");
@@ -80,18 +91,28 @@ const onResult = (scanner, result) => {
 
 
 // https://github.com/nimiq/qr-scanner#usage
-const qrScanner = new QrScanner(
-    qrReaderVideo,
-    (res) => onResult(qrScanner, res),
-    {
-        "highlightScanRegion": true,
-        "highlightCodeOutline": true,
-        "returnDetailedScanResult": true,
-    },
-);
+let qrScanner = null;
+try {
+    qrScanner = new QrScanner(
+        qrReaderVideo,
+        (res) => onResult(qrScanner, res),
+        {
+            "highlightScanRegion": true,
+            "highlightCodeOutline": true,
+            "returnDetailedScanResult": true,
+        },
+    );
+} catch (err) {
+    // Scanning is optional, and the code can still be typed in. A failed CDN load
+    // leaves QrScanner undefined, so say what happened instead of leaving the
+    // button disabled with no explanation.
+    console.error("Could not set up the QR scanner:", err);
+    qrReaderError.hidden = false;
+    qrReaderError.innerText = _("QR-skannern kunde inte laddas");
+}
 
 
 qrScanButton.addEventListener("click", () => startScan(qrScanner));
 qrScanStopButton.addEventListener("click", () => stopScan(qrScanner));
 
-qrScanButton.disabled = false;
+qrScanButton.disabled = qrScanner === null;

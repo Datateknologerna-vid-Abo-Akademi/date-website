@@ -38,6 +38,31 @@ def attendee_label(attendee: Attendee) -> str:
     return cast(NonMemberAttendee, attendee).name
 
 
+def attendee_key(attendee: Attendee) -> str:
+    """A stable identity for an attendee, unlike the name.
+
+    Two members can share a name, and a guest may type a name that a member
+    already has. The overview list has to keep those apart, so it identifies a
+    row by the row's primary key and its kind, not by the label it displays.
+
+    The two kinds are namespaced because a member and a guest are different
+    tables: their primary keys are not comparable.
+    """
+    if isinstance(attendee, Member):
+        return f"user-{attendee.pk}"
+
+    return f"non-member-{cast(NonMemberAttendee, attendee).pk}"
+
+
+def attendee_entry(attendee: Attendee) -> dict[str, str]:
+    """One entry of the staff overview list: what to show and what to match on.
+
+    The page, the connect snapshot and the change broadcast all build their
+    entries through this, so an attendee has the same key in every one of them.
+    """
+    return {"key": attendee_key(attendee), "name": attendee_label(attendee)}
+
+
 class AttendanceEvent(models.Model):
     """
     Some kind of event that one can attend.
@@ -279,3 +304,8 @@ class AttendanceChange(models.Model):
     def attendee_name(self) -> str:
         """Returns the language-independent name of any kind of attendee"""
         return attendee_label(self.attendee)
+
+    @property
+    def attendee_key(self) -> str:
+        """Returns the stable identity of this change's attendee, not their name"""
+        return attendee_key(self.attendee)

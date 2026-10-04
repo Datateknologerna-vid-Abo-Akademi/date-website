@@ -12,7 +12,7 @@ from django.views.generic.detail import SingleObjectMixin
 from members.models import Member
 
 from . import forms, limits, websocket
-from .models import AttendanceChange, AttendanceEvent, Attendee, NonMemberAttendee, attendee_label
+from .models import AttendanceChange, AttendanceEvent, Attendee, NonMemberAttendee, attendee_entry
 
 
 class HttpResponseSeeOther(HttpResponseRedirect):
@@ -100,6 +100,11 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
         form = forms.AttendanceChangeForm(request.POST)
         if not form.is_valid():
             error_dict = {f"{field}_error": errors[0] for field, errors in form.errors.items()}
+            # A malformed change type has no field of its own on the page. Mapping
+            # it onto the message the template does render keeps a stale or
+            # tampered form from failing silently.
+            if "type_error" in error_dict:
+                error_dict["generic_error"] = error_dict.pop("type_error")
             return self._bad_request(request, **error_dict)
 
         # A malformed submission is not a code attempt, so it costs nothing.
@@ -179,9 +184,10 @@ class AttendanceEventOverview(UserPassesTestMixin, AttendanceEventObjectMixin[At
 
         ctx["object"] = self.object
         ctx["code"] = self.object.get_current_code()
-        # Labels rather than attendees: the page and the websocket broadcast have
-        # to agree on the name, and the broadcast carries `attendee_name`.
-        ctx["present_attendees"] = [attendee_label(attendee) for attendee in self.object.present_attendees()]
+        # Entries rather than labels: the list identifies a row by the attendee's
+        # key so two people with the same name stay two rows, and the name is the
+        # label the websocket broadcast carries.
+        ctx["present_attendees"] = [attendee_entry(attendee) for attendee in self.object.present_attendees()]
 
         return ctx
 

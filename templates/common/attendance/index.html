@@ -6,10 +6,10 @@
   <div class="container-md min-vh-100 container-margin-top d-flex justify-content-center">
     <div class="container-size text-center">
       <div class="content" style="width: fit-content">
-        <h3>{% trans "Närvaroevenemang" %} <i class="fas fa-users"></i></h3>
+        <h1>{% trans "Närvaroevenemang" %} <i class="fas fa-users" aria-hidden="true"></i></h1>
         <ul class="list-unstyled">
           {% for e in object_list %}
-            <li class="m-1"><a href="{{ e.slug }}">{{ e }}</a></li>
+            <li class="m-1"><a href="{% url 'attendance-event-view' e.slug %}">{{ e }}</a></li>
           {% empty %}
             <li>{% trans "Inga evenemang" %}</li>
           {% endfor %}

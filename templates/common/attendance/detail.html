@@ -17,12 +17,12 @@
       <div class="content" style="width: fit-content">
         {% if can_see_overview %}
           <div>
-            <a href="overview">{% trans "Till översiktsvyn" %}</a>
+            <a href="{% url 'attendance-event-overview' object.slug %}">{% trans "Till översiktsvyn" %}</a>
           </div>
         {% endif %}
         <div class="lh-1">
-          <h2 class="header">{{ object.title }}</h2>
-          <h5>{{ object.description }}</h5>
+          <h1>{{ object.title }}</h1>
+          <p class="h5">{{ object.description }}</p>
           <p></p>
           <p>
             {% blocktrans trimmed with start=object.start_datetime %}
@@ -56,9 +56,10 @@
             {% csrf_token %}
             {% if not user.is_authenticated %}
               <div class="mb-3">
-                <label for="non_member_name">
+                <label for="non_member_name" class="visually-hidden">{% trans "Namn" %}</label>
+                <p id="non-member-name-help">
                   {% trans "Du är inte inloggad. Fyll i ditt namn nedan om du inte har ett konto. Om du har ett konto var vänlig och logga in." %}
-                </label>
+                </p>
                 <div class="input-group">
                   <input type="text"
                          class="form-control {% if non_member_name_error %} is-invalid {% endif %}"
@@ -66,14 +67,16 @@
                          name="non_member_name"
                          value=""
                          placeholder="{% trans "Namn" %}"
+                         aria-describedby="non-member-name-help{% if non_member_name_error %} non-member-name-error{% endif %}"
                          required>
                   {% if non_member_name_error %}
-                    <div class="invalid-feedback">{{ non_member_name_error }}</div>
+                    <div class="invalid-feedback" id="non-member-name-error" role="alert">{{ non_member_name_error }}</div>
                   {% endif %}
                 </div>
               </div>
             {% endif %}
             <div class="mb-3">
+              <label for="code" class="visually-hidden">{% trans "Kod" %}</label>
               <div class="input-group">
                 <input type="text"
                        inputmode="numeric"
@@ -82,15 +85,16 @@
                        id="code"
                        placeholder="{% trans "Kod" %}"
                        value="{{ prefilled_code }}"
+                       {% if code_error %}aria-describedby="code-error"{% endif %}
                        required>
                 <button class="btn btn-secondary" id="qr-scan" type="button" disabled>
-                  <i class="bi bi-camera"></i> {% trans "Skanna QR-kod" %}
+                  <i class="bi bi-camera" aria-hidden="true"></i> {% trans "Skanna QR-kod" %}
                 </button>
                 <button class="btn btn-danger" id="qr-scan-stop" type="button" hidden>
-                  <i class="bi bi-stop"></i> {% trans "Sluta skanna" %}
+                  <i class="bi bi-stop" aria-hidden="true"></i> {% trans "Sluta skanna" %}
                 </button>
                 {% if code_error %}
-                  <div class="invalid-feedback">{{ code_error }}</div>
+                  <div class="invalid-feedback" id="code-error" role="alert">{{ code_error }}</div>
                 {% endif %}
               </div>
               <noscript>
@@ -101,7 +105,7 @@
               <video class="w-100" id="qr-reader">
               </video>
             </div>
-            <div id="qr-reader-error" hidden></div>
+            <div id="qr-reader-error" hidden aria-live="polite"></div>
             <div class="input-group mb-3">
               <button type="submit"
                       class="btn btn-success"

@@ -27,14 +27,18 @@ msgstr "Kameraa ei löytynyt"
 msgid "Ett oväntat fel uppstod medan QR-skannern startades"
 msgstr "Tapahtui odottamaton virhe käynnistäessä QR-skanneria"
 
-#: static/common/attendance/js/detail.js:68
+#: static/common/attendance/js/detail.js:79
 msgid "QR-koden innehöll ingen kod"
 msgstr "QR-koodi ei sisältänyt koodia"
 
-#: static/common/attendance/js/overview.js:58
+#: static/common/attendance/js/detail.js:111
+msgid "QR-skannern kunde inte laddas"
+msgstr "QR-skanneria ei voitu ladata"
+
+#: static/common/attendance/js/overview.js:154
 msgid "Ansluter till servern..."
 msgstr "Yhdistetään palvelimeen..."
 
-#: static/common/attendance/js/overview.js:68
+#: static/common/attendance/js/overview.js:164
 msgid "Anslutningen till servern bröts"
 msgstr "Yhteys palvelimeen on katkennut"

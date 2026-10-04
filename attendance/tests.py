@@ -12,8 +12,10 @@ so the suite works around them instead of dropping the behaviour:
   which only PostgreSQL supports (the model carries a ``NOTE`` saying so). The
   detail view calls it on every render, so the view tests patch it out, and the
   class that exercises it is skipped unless the connection is PostgreSQL. The
-  presence transitions it computes are covered portably through
-  ``is_attendee_present()`` and ``was_attendee_present()``.
+  consumer calls it too, to build the snapshot it sends on connect, so
+  ``AttendanceConsumerTests`` patches it as well. The presence transitions it
+  computes are covered portably through ``is_attendee_present()`` and
+  ``was_attendee_present()``.
 * ``django_otp`` reads the clock through the ``time`` name in ``django_otp.oath``,
   so the code tests patch that name. Patching ``time.time`` would not be seen.
 
@@ -21,6 +23,9 @@ so the suite works around them instead of dropping the behaviour:
 at import time, so row timestamps are passed in explicitly and cannot be patched.
 The patchable ``attendance.models.now`` seam (a module global looked up on each
 call) is used for ``has_ended``, which reads it at call time.
+
+A staff client is sent an ``attendance_snapshot`` as soon as it connects, so every
+consumer test that expects a reply first reads and discards that message.
 """
 
 import asyncio
@@ -28,7 +33,7 @@ import unittest
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
-from asgiref.sync import async_to_sync
+from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
 from channels.routing import URLRouter
 from channels.testing import WebsocketCommunicator
@@ -49,7 +54,13 @@ if "attendance" not in settings.INSTALLED_APPS:
     raise unittest.SkipTest("attendance app is not installed in this settings module")
 
 from attendance import forms, limits, websocket  # noqa: E402
-from attendance.models import AttendanceChange, AttendanceEvent, NonMemberAttendee  # noqa: E402
+from attendance.models import (  # noqa: E402
+    AttendanceChange,
+    AttendanceEvent,
+    NonMemberAttendee,
+    attendee_entry,
+    attendee_key,
+)
 from attendance.routing import websocket_urlpatterns  # noqa: E402
 from members.models import Member  # noqa: E402
 
@@ -96,15 +107,20 @@ def record_change(event, change_type, *, user=None, non_member=None, timestamp=N
     )
 
 
-def connect_as(user, slug):
-    """A websocket communicator for ``ws/attendance/<slug>`` that sees *user*.
+def connect_to(path, user):
+    """A websocket communicator for an arbitrary path, so the route itself is covered.
 
     The communicator runs inside a single event loop (see the tests), and the real
     routing is used so the URL pattern and the consumer under it are both covered.
     """
-    communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), f"/ws/attendance/{slug}")
+    communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), path)
     communicator.scope["user"] = user
     return communicator
+
+
+def connect_as(user, slug):
+    """A websocket communicator for ``ws/attendance/<slug>`` that sees *user*."""
+    return connect_to(f"/ws/attendance/{slug}", user)
 
 
 async def receive_message(channel_layer, channel, timeout=1):
@@ -374,6 +390,46 @@ class NonMemberAttendeeModelTests(TestCase):
         self.assertIn("Gäst", attendee.get_full_name())
 
 
+class AttendeeIdentityTests(TestCase):
+    """attendee_key() and attendee_entry(): the identity a name cannot provide.
+
+    The staff overview list keeps one row per attendee, so it matches on a key
+    rather than on the name: two people can share a name, and a guest may type a
+    name a member already has.
+    """
+
+    def setUp(self):
+        self.member = make_member("medlem", first_name="Maja", last_name="Andersson")
+        self.other_member = make_member("annan", first_name="Maja", last_name="Andersson")
+        self.non_member = NonMemberAttendee.objects.create(name="Maja Andersson")
+
+    def test_a_member_key_is_namespaced_by_kind(self):
+        self.assertEqual(attendee_key(self.member), f"user-{self.member.pk}")
+
+    def test_a_non_member_key_is_namespaced_by_kind(self):
+        self.assertEqual(attendee_key(self.non_member), f"non-member-{self.non_member.pk}")
+
+    def test_same_name_attendees_get_different_keys(self):
+        keys = {attendee_key(self.member), attendee_key(self.other_member), attendee_key(self.non_member)}
+
+        self.assertEqual(len(keys), 3)
+
+    def test_an_entry_carries_the_key_and_the_label(self):
+        self.assertEqual(attendee_entry(self.member), {"key": f"user-{self.member.pk}", "name": "Maja Andersson"})
+        self.assertEqual(
+            attendee_entry(self.non_member),
+            {"key": f"non-member-{self.non_member.pk}", "name": "Maja Andersson"},
+        )
+
+    def test_a_change_carries_its_attendees_key(self):
+        event = make_event()
+        member_change = AttendanceChange(event=event, user=self.member, type=ENTER)
+        guest_change = AttendanceChange(event=event, non_member=self.non_member, type=ENTER)
+
+        self.assertEqual(member_change.attendee_key, f"user-{self.member.pk}")
+        self.assertEqual(guest_change.attendee_key, f"non-member-{self.non_member.pk}")
+
+
 class AttendanceChangeModelTests(TestCase):
     """Who a change belongs to, how it renders, and the order the log is read in."""
 
@@ -555,6 +611,12 @@ class AttendanceIndexViewTests(TestCase):
     def test_index_rejects_post(self):
         self.assertEqual(self.client.post(self.url).status_code, 405)
 
+    def test_index_links_to_the_event_page_by_url_name(self):
+        response = self.client.get(self.url)
+
+        self.assertContains(response, f'href="{reverse("attendance-event-view", args=[self.ongoing.slug])}"')
+        self.assertContains(response, "<h1>")
+
 
 class AttendanceDetailViewGetTests(AttendanceViewTestCase):
     """Reading the detail page: 404s, guest access and the member's own state."""
@@ -691,6 +753,32 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         self.assertEqual(response.context["prefilled_code"], "123456")
         self.assertContains(response, 'value="123456"')
 
+    def test_the_code_input_has_a_label_of_its_own(self):
+        """The placeholder is not a label, so the input carries a hidden one."""
+        response = self.client.get(self.detail_url)
+
+        self.assertContains(response, '<label for="code" class="visually-hidden">Kod</label>')
+
+    def test_the_name_input_has_a_short_label_and_a_described_explanation(self):
+        response = self.client.get(self.detail_url)
+
+        self.assertContains(response, '<label for="non_member_name" class="visually-hidden">Namn</label>')
+        self.assertContains(response, 'id="non-member-name-help"')
+        self.assertContains(response, 'aria-describedby="non-member-name-help"')
+
+    def test_the_qr_reader_message_is_announced(self):
+        response = self.client.get(self.detail_url)
+
+        self.assertContains(response, 'id="qr-reader-error" hidden aria-live="polite"')
+
+    def test_the_overview_link_is_built_from_the_url_name(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertContains(response, f'href="{self.overview_url}"')
+        self.assertNotContains(response, 'href="overview"')
+
 
 class AttendanceDetailViewPostTests(AttendanceViewTestCase):
     """Checking in and out: the code, the conflicts and the stored change."""
@@ -733,13 +821,35 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
         self.assertEqual(self.event.attendance_changes.count(), 0)
         self.send_change.assert_not_called()
 
-    def test_invalid_change_type_is_rejected(self):
+    def test_a_wrong_code_is_announced_and_tied_to_the_input(self):
+        response = self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'aria-describedby="code-error"', status_code=403)
+        self.assertContains(response, 'id="code-error" role="alert"', status_code=403)
+        self.assertContains(response, response.context["code_error"], status_code=403)
+
+    def test_a_missing_name_is_announced_and_tied_to_the_input(self):
+        response = self.post_change(ENTER, name="")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'id="non-member-name-error" role="alert"', status_code=403)
+        self.assertContains(response, 'aria-describedby="non-member-name-help non-member-name-error"', status_code=403)
+
+    def test_invalid_change_type_is_rejected_with_a_rendered_message(self):
+        """A stale or tampered type field must not fail silently.
+
+        The form error belongs to a field the page does not draw, so the view maps
+        it onto the one message the template does render.
+        """
         self.client.force_login(self.member)
 
         response = self.client.post(self.detail_url, {"type": "9", "code": str(PINNED_CODE)})
 
         self.assertEqual(response.status_code, 403)
-        self.assertIn("type_error", response.context)
+        self.assertIn("generic_error", response.context)
+        self.assertNotIn("type_error", response.context)
+        self.assertContains(response, response.context["generic_error"], status_code=403)
         self.assertEqual(self.event.attendance_changes.count(), 0)
         self.assertEqual(NonMemberAttendee.objects.count(), 0)
         self.send_change.assert_not_called()
@@ -976,14 +1086,58 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
 
         self.assertEqual(response.status_code, 200)
         present.assert_called_once_with()
-        member_label = self.member.get_full_name()
-        guest_label = guest.name
-        self.assertCountEqual(response.context["present_attendees"], [member_label, guest_label])
+        member_entry = {"key": f"user-{self.member.pk}", "name": self.member.get_full_name()}
+        guest_entry = {"key": f"non-member-{guest.pk}", "name": guest.name}
+        self.assertCountEqual(response.context["present_attendees"], [member_entry, guest_entry])
         self.assertContains(response, "Närvarande")
         # The list updates over the socket, so it has to announce its changes.
         self.assertContains(response, 'aria-live="polite"')
-        self.assertContains(response, f'<li data-attendee="{member_label}">{member_label}</li>')
-        self.assertContains(response, f'<li data-attendee="{guest_label}">{guest_label}</li>')
+        self.assertContains(response, f'<li data-attendee="{member_entry["key"]}">{member_entry["name"]}</li>')
+        self.assertContains(response, f'<li data-attendee="{guest_entry["key"]}">{guest_entry["name"]}</li>')
+
+    def test_two_attendees_with_the_same_name_get_two_rows(self):
+        """The list identifies a row by key, so a shared name is not a shared row."""
+        first = make_member("forsta", first_name="Anna", last_name="Svensson")
+        second = make_member("andra", first_name="Anna", last_name="Svensson")
+        self.client.force_login(self.staff)
+
+        with patch.object(AttendanceEvent, "present_attendees", return_value=[first, second]):
+            response = self.client.get(self.overview_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["present_attendees"], [attendee_entry(first), attendee_entry(second)])
+        self.assertContains(response, f'<li data-attendee="user-{first.pk}">Anna Svensson</li>')
+        self.assertContains(response, f'<li data-attendee="user-{second.pk}">Anna Svensson</li>')
+
+    def test_a_guest_with_a_members_name_is_a_row_of_its_own(self):
+        guest = NonMemberAttendee.objects.create(name=self.member.get_full_name())
+        self.client.force_login(self.staff)
+
+        with patch.object(AttendanceEvent, "present_attendees", return_value=[self.member, guest]):
+            response = self.client.get(self.overview_url)
+
+        self.assertContains(response, f'<li data-attendee="user-{self.member.pk}">{self.member.get_full_name()}</li>')
+        self.assertContains(response, f'<li data-attendee="non-member-{guest.pk}">{guest.name}</li>')
+
+    def test_overview_has_one_heading_and_no_borrowed_header_class(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.overview_url)
+
+        self.assertContains(response, f"<h1>{self.event.title}</h1>")
+        # The description is not a heading, and the rotating code only looks like one.
+        self.assertContains(response, f'<p class="h5">{self.event.description}</p>')
+        self.assertContains(response, '<p class="h1" id="current-code">')
+        self.assertNotContains(response, 'class="header"')
+
+    def test_overview_announces_the_messages_the_script_fills(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.overview_url)
+
+        self.assertContains(response, 'id="status-message" aria-live="polite"')
+        # The template formatter wraps this tag, so match across the line break.
+        self.assertRegex(response.content.decode(), r'<p id="no-present-attendees"\s+aria-live="polite"')
 
     def test_overview_shows_the_empty_state_when_nobody_is_present(self):
         """The empty state is in the page, unhidden, when the event has nobody present."""
@@ -996,13 +1150,13 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
         self.assertContains(response, 'id="no-present-attendees"')
         self.assertNotContains(response, 'id="no-present-attendees" hidden')
 
-    def test_websocket_label_matches_the_overview_label_for_a_guest(self):
-        """The broadcast carries the label the staff page renders, marker or not.
+    def test_websocket_key_matches_the_overview_key_for_a_guest(self):
+        """The broadcast carries the identity and the label the page renders.
 
-        ``attendee_name`` is what ``websocket.send_attendance_change`` puts in the
-        payload. The list on the page and the payload both come from
-        ``attendee_label``, so the script recognises an attendee it has already
-        rendered instead of adding a second row for them.
+        ``attendee_key`` and ``attendee_label`` are what ``websocket.send_attendance_change``
+        puts in the payload. The list on the page and the payload both come from
+        those same two helpers, so the script matches a row it has already
+        rendered instead of adding a second one for the same attendee.
         """
         guest = NonMemberAttendee.objects.create(name="Gäst I Översikten")
         change = record_change(self.event, ENTER, non_member=guest, timestamp=now())
@@ -1015,10 +1169,14 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
         with patch.object(layer, "group_send", new=AsyncMock()) as group_send:
             websocket.send_attendance_change(self.event.slug, change)
 
-        broadcast_name = group_send.await_args.args[1]["change"]["name"]
+        payload = group_send.await_args.args[1]["change"]
+        broadcast_key = payload["key"]
+        broadcast_name = payload["name"]
+        self.assertEqual(broadcast_key, f"non-member-{guest.pk}")
         self.assertEqual(broadcast_name, guest.name)
-        # The page carries the same label in the same attribute the script reads.
-        self.assertContains(response, f'data-attendee="{broadcast_name}"')
+        # The page carries the same key in the attribute the script matches on,
+        # and the name is what it displays.
+        self.assertContains(response, f'<li data-attendee="{broadcast_key}">{broadcast_name}</li>')
         # The translated guest marker belongs to the change log, not to this label.
         self.assertNotContains(response, "icke-medlem")
 
@@ -1094,14 +1252,30 @@ class AttendanceWebsocketTests(TestCase):
 
     def test_message_targets_the_event_group_with_the_attendee_payload(self):
         change = record_change(self.event, ENTER, user=self.member)
+        expected = {
+            "key": f"user-{self.member.pk}",
+            "name": "Maja Andersson",
+            "type": "ENTER",
+        }
 
         with patch.object(self.channel_layer, "group_send", new=AsyncMock()) as group_send:
             websocket.send_attendance_change(self.event.slug, change)
 
         group_send.assert_awaited_once_with(
             "attendance_mote",
-            {"type": "attendance.change", "change": {"name": "Maja Andersson", "type": "ENTER"}},
+            {"type": "attendance.change", "change": expected},
         )
+
+    def test_the_payload_key_is_the_key_the_overview_page_renders(self):
+        """Both sides go through attendee_key(), so the key cannot drift."""
+        change = record_change(self.event, ENTER, user=self.member)
+
+        with patch.object(self.channel_layer, "group_send", new=AsyncMock()) as group_send:
+            websocket.send_attendance_change(self.event.slug, change)
+
+        payload = group_send.await_args.args[1]["change"]
+        self.assertEqual(payload["key"], attendee_key(self.member))
+        self.assertEqual(payload["key"], change.attendee_key)
 
     def test_message_reaches_a_listener_in_the_event_group(self):
         change = record_change(self.event, LEAVE, user=self.member)
@@ -1113,36 +1287,54 @@ class AttendanceWebsocketTests(TestCase):
 
         message = async_to_sync(receive_message)(self.channel_layer, channel)
         self.assertEqual(message["type"], "attendance.change")
-        self.assertEqual(message["change"], {"name": "Maja Andersson", "type": "LEAVE"})
+        self.assertEqual(
+            message["change"],
+            {"key": f"user-{self.member.pk}", "name": "Maja Andersson", "type": "LEAVE"},
+        )
 
 
 class AttendanceConsumerTests(TestCase):
-    """The overview websocket: staff get codes, everyone else is rejected.
+    """The overview websocket: staff get codes and a snapshot, everyone else is rejected.
 
     Each test runs its whole websocket conversation inside one event loop, because
     the communicator's task lives in the loop that created it.
 
     Known limitation on PostgreSQL: ``channels``' ``AsyncConsumer`` calls
-    ``close_old_connections()`` when a consumer call ends, and Django drops a
-    connection whose autocommit is off, which inside a ``TestCase`` it always is.
+    ``close_old_connections()`` before it dispatches each message, and Django drops
+    a connection whose autocommit is off, which inside a ``TestCase`` it always is.
     PostgreSQL is then left with a connection closed inside a transaction, and the
     rest of the file errors with "connection already closed".
     ``core.settings.test``, which is what the repository runs, uses SQLite, where
-    that branch is never taken, so all five pass.
+    that branch is never taken, so all of these pass.
     """
 
     def setUp(self):
+        # The connect snapshot asks present_attendees() who is in the room, and
+        # that method cannot run on SQLite (see the module docstring). Tests that
+        # care what the snapshot holds patch this again around their connect.
+        patcher = patch.object(AttendanceEvent, "present_attendees", return_value=[])
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
         self.event = make_event(slug="motesal")
         self.staff = make_member("funktionar", first_name="Stina", last_name="Styrelse")
         self.staff.groups.add(Group.objects.create(name=STAFF_GROUP))
         self.member = make_member("medlem", first_name="Maja", last_name="Andersson")
         self.channel_layer = get_channel_layer()
 
+    async def connect_and_drain_the_snapshot(self, communicator):
+        """Connect, then read and return the snapshot every accepted client gets first."""
+        connected, _ = await communicator.connect(timeout=10)
+        self.assertTrue(connected)
+
+        snapshot = await communicator.receive_json_from(timeout=10)
+        self.assertEqual(snapshot["type"], "attendance_snapshot")
+        return snapshot
+
     def test_staff_receives_the_current_code(self):
         async def flow():
             communicator = connect_as(self.staff, self.event.slug)
-            connected, _ = await communicator.connect(timeout=10)
-            self.assertTrue(connected)
+            await self.connect_and_drain_the_snapshot(communicator)
 
             await communicator.send_json_to({"type": "get_code"})
             reply = await communicator.receive_json_from(timeout=10)
@@ -1156,6 +1348,28 @@ class AttendanceConsumerTests(TestCase):
         self.assertEqual(reply["code"], PINNED_CODE)
         # The patched clock sits at OATH_TIME, one second before the next step.
         self.assertAlmostEqual(reply["until_next"], 1.0)
+
+    def test_staff_receives_a_snapshot_of_the_present_attendees_on_connect(self):
+        guest = NonMemberAttendee.objects.create(name="Gäst")
+
+        async def flow():
+            communicator = connect_as(self.staff, self.event.slug)
+            with patch.object(AttendanceEvent, "present_attendees", return_value=[self.member, guest]):
+                snapshot = await self.connect_and_drain_the_snapshot(communicator)
+            await communicator.disconnect(timeout=10)
+            return snapshot
+
+        snapshot = async_to_sync(flow)()
+
+        # The entries carry the same key and name the rendered list does, so a
+        # snapshot and a live change for one attendee are idempotent.
+        self.assertEqual(
+            snapshot["data"],
+            [
+                {"key": f"user-{self.member.pk}", "name": "Maja Andersson"},
+                {"key": f"non-member-{guest.pk}", "name": "Gäst"},
+            ],
+        )
 
     def test_non_staff_member_is_rejected(self):
         async def flow():
@@ -1173,11 +1387,79 @@ class AttendanceConsumerTests(TestCase):
 
         self.assertFalse(async_to_sync(flow)())
 
+    def test_a_slug_that_does_not_exist_is_closed_without_an_error(self):
+        """A deleted event must not leave an exception behind the closed socket."""
+
+        async def flow():
+            communicator = connect_as(self.staff, "finns-inte")
+            connected, _code = await communicator.connect(timeout=10)
+            return connected
+
+        self.assertFalse(async_to_sync(flow)())
+
+    def test_the_socket_accepts_a_trailing_slash(self):
+        """The route must not depend on the page URL having no trailing slash."""
+
+        async def flow():
+            communicator = connect_to(f"/ws/attendance/{self.event.slug}/", self.staff)
+            connected, _ = await communicator.connect(timeout=10)
+            snapshot = await communicator.receive_json_from(timeout=10)
+            await communicator.disconnect(timeout=10)
+            return connected, snapshot
+
+        connected, snapshot = async_to_sync(flow)()
+
+        self.assertTrue(connected)
+        self.assertEqual(snapshot["type"], "attendance_snapshot")
+
+    def test_staff_removed_from_the_staff_group_mid_connection_gets_no_code(self):
+        """The socket serves the code, so it cannot outlive the permission."""
+
+        async def flow():
+            communicator = connect_as(self.staff, self.event.slug)
+            await self.connect_and_drain_the_snapshot(communicator)
+
+            await sync_to_async(self.staff.groups.clear)()
+
+            with patch("django_otp.oath.time", return_value=OATH_TIME):
+                await communicator.send_json_to({"type": "get_code"})
+
+            # The next thing the client sees is the close, not a code.
+            return await communicator.receive_output(timeout=10)
+
+        output = async_to_sync(flow)()
+
+        self.assertEqual(output["type"], "websocket.close")
+
+    def test_a_demoted_staff_socket_is_closed_when_a_change_is_broadcast(self):
+        """A broadcast does not pass through the message handler, so it checks too."""
+
+        async def flow():
+            communicator = connect_as(self.staff, self.event.slug)
+            await self.connect_and_drain_the_snapshot(communicator)
+
+            await sync_to_async(self.staff.groups.clear)()
+
+            # A change written by somebody else reaches the group, and with it
+            # this socket, without the client having asked for anything.
+            await self.channel_layer.group_send(
+                f"attendance_{self.event.slug}",
+                {
+                    "type": "attendance.change",
+                    "change": {"key": attendee_key(self.member), "name": "Maja Andersson", "type": "ENTER"},
+                },
+            )
+
+            return await communicator.receive_output(timeout=10)
+
+        output = async_to_sync(flow)()
+
+        self.assertEqual(output["type"], "websocket.close")
+
     def test_unknown_message_type_gets_no_reply(self):
         async def flow():
             communicator = connect_as(self.staff, self.event.slug)
-            connected, _ = await communicator.connect(timeout=10)
-            self.assertTrue(connected)
+            await self.connect_and_drain_the_snapshot(communicator)
 
             await communicator.send_json_to({"type": "not-a-real-message"})
             # A bounded silence check: the only way to observe that nothing was
@@ -1199,16 +1481,15 @@ class AttendanceConsumerTests(TestCase):
         self.assertEqual(reply["code"], PINNED_CODE)
 
     def test_attendance_change_from_the_group_is_forwarded(self):
-        """The handler reads the name/type payload that websocket.send_attendance_change sends."""
+        """The handler reads the key/name/type payload that send_attendance_change sends."""
 
         async def flow():
             communicator = connect_as(self.staff, self.event.slug)
-            connected, _ = await communicator.connect(timeout=10)
-            self.assertTrue(connected)
+            await self.connect_and_drain_the_snapshot(communicator)
 
             await self.channel_layer.group_send(
                 f"attendance_{self.event.slug}",
-                {"type": "attendance.change", "change": {"name": "Gäst", "type": "ENTER"}},
+                {"type": "attendance.change", "change": {"key": "non-member-7", "name": "Gäst", "type": "ENTER"}},
             )
             reply = await communicator.receive_json_from(timeout=10)
             await communicator.disconnect(timeout=10)
@@ -1216,5 +1497,5 @@ class AttendanceConsumerTests(TestCase):
 
         self.assertEqual(
             async_to_sync(flow)(),
-            {"type": "attendance_change", "data": {"name": "Gäst", "type": "ENTER"}},
+            {"type": "attendance_change", "data": {"key": "non-member-7", "name": "Gäst", "type": "ENTER"}},
         )

@@ -27,14 +27,18 @@ msgstr "No camera found"
 msgid "Ett oväntat fel uppstod medan QR-skannern startades"
 msgstr "An unexpected error occurred when starting the QR scanner"
 
-#: static/common/attendance/js/detail.js:68
+#: static/common/attendance/js/detail.js:79
 msgid "QR-koden innehöll ingen kod"
 msgstr "The QR code did not contain a code"
 
-#: static/common/attendance/js/overview.js:58
+#: static/common/attendance/js/detail.js:111
+msgid "QR-skannern kunde inte laddas"
+msgstr "The QR scanner could not be loaded"
+
+#: static/common/attendance/js/overview.js:154
 msgid "Ansluter till servern..."
 msgstr "Connecting to the server..."
 
-#: static/common/attendance/js/overview.js:68
+#: static/common/attendance/js/overview.js:164
 msgid "Anslutningen till servern bröts"
 msgstr "Lost connection with the server"
