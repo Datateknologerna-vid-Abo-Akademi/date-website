@@ -465,6 +465,18 @@ msgstr "Bokning"
 msgid "Bookings"
 msgstr "Bokningar"
 
+#: core/admin_ui.py:131
+msgid "Attendance"
+msgstr "Närvaro"
+
+#: core/admin_ui.py:134
+msgid "Attendance events"
+msgstr "Närvaroevenemang"
+
+#: core/admin_ui.py:140
+msgid "Attendance changes"
+msgstr "Närvaroändringar"
+
 #: core/admin_ui.py:108
 msgid "Rooms"
 msgstr "Utrymmen"

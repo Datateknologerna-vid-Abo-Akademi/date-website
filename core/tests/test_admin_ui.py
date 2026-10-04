@@ -46,6 +46,11 @@ class AdminUiRegistryTests(TestCase):
         self.assertIn("/admin/booking/room/", links)
         self.assertIn("/admin/booking/closure/", links)
         self.assertIn("/admin/booking/bookingsettings/", links)
+        # The attendance group: the event list is where an editor finds the event
+        # whose overview page runs the check-in, and the change list is where a
+        # row written in error is corrected.
+        self.assertIn("/admin/attendance/attendanceevent/", links)
+        self.assertIn("/admin/attendance/attendancechange/", links)
         self.assertNotIn("/admin/billing/eventinvoice/", links)
         self.assertNotIn("/admin/functionaries/functionary/", links)
         self.assertNotIn("/admin/publications/pdffile/", links)
@@ -80,6 +85,30 @@ class AdminUiRegistryTests(TestCase):
         links = {item["link"] for group in get_sidebar_navigation(request) for item in group["items"]}
 
         self.assertIn("/admin/booking/closure/", links)
+
+    def test_sidebar_attendance_links_follow_their_own_permissions(self):
+        """The event link does not carry the change list with it."""
+        request = self.factory.get("/admin/")
+        request.user = get_user_model().objects.create_user(
+            username="events-only-admin",
+            password="pass",
+            email="events-only@example.com",
+        )
+        request.user.user_permissions.add(Permission.objects.get(codename="view_attendanceevent"))
+
+        links = {item["link"] for group in get_sidebar_navigation(request) for item in group["items"]}
+
+        self.assertIn("/admin/attendance/attendanceevent/", links)
+        self.assertNotIn("/admin/attendance/attendancechange/", links)
+
+        request.user.user_permissions.add(Permission.objects.get(codename="view_attendancechange"))
+        # Django caches a user's permissions on the instance, and a real request
+        # would have loaded a fresh one.
+        request.user = get_user_model().objects.get(pk=request.user.pk)
+
+        links = {item["link"] for group in get_sidebar_navigation(request) for item in group["items"]}
+
+        self.assertIn("/admin/attendance/attendancechange/", links)
 
     def test_sidebar_registry_requires_permissions(self):
         request = self.factory.get("/admin/")

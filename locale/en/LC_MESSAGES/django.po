@@ -465,6 +465,18 @@ msgstr "Booking"
 msgid "Bookings"
 msgstr "Bookings"
 
+#: core/admin_ui.py:131
+msgid "Attendance"
+msgstr "Attendance"
+
+#: core/admin_ui.py:134
+msgid "Attendance events"
+msgstr "Attendance events"
+
+#: core/admin_ui.py:140
+msgid "Attendance changes"
+msgstr "Attendance changes"
+
 #: core/admin_ui.py:108
 msgid "Rooms"
 msgstr "Rooms"
