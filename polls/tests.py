@@ -1,3 +1,4 @@
+import re
 import unittest
 from unittest.mock import patch
 
@@ -716,9 +717,17 @@ class QuestionAdminAttendanceTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Närvarande i mötet nu')
-        self.assertContains(response, '<div class="readonly">2</div>')
         self.assertContains(response, 'Har röstat')
-        self.assertContains(response, '<div class="readonly">1</div>')
+        # Which fields the admin decided to show, and what the reader sees. The
+        # names are theme-independent; the rendered numbers are read after the
+        # markup is stripped, because the classic admin and Unfold wrap a read-only
+        # field differently and the shape of that wrapper is not what matters here.
+        readonly = response.context['adminform'].readonly_fields
+        self.assertIn('attendance_present_now', readonly)
+        self.assertIn('attendance_voters', readonly)
+        rendered = ' '.join(re.sub(r'<[^>]+>', ' ', response.content.decode()).split())
+        self.assertRegex(rendered, r'Närvarande i mötet nu:?\s*2\b')
+        self.assertRegex(rendered, r'Har röstat:?\s*1\b')
 
     def test_the_readout_follows_the_room_rather_than_a_stored_value(self):
         """The headcount is answered when the page is read, from the change log."""
