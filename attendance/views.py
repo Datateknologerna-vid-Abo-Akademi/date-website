@@ -1,4 +1,6 @@
+from datetime import timedelta
 from typing import cast
+from urllib.parse import quote, unquote
 
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.db.models import Model, Q
@@ -21,17 +23,41 @@ class HttpResponseSeeOther(HttpResponseRedirect):
     status_code = 303
 
 
+# A meeting that recorded no end stays on the public list while it started less
+# than this many hours ago. A meeting is yesterday's news the next day, and
+# without a bound a meeting whose end nobody filled in would sit on the public
+# page for ever. Only the list forgets it: its own page, its code and its QR code
+# keep working for anyone who has the link.
+NO_END_LISTING_HOURS = 24
+
+# The name a guest typed, kept in a cookie so their next visit is one tap. The
+# cookie is convenience only: the log's identity is the typed name, not the
+# cookie, so a different name is a different attendee and clearing cookies costs
+# nothing but retyping. The value is percent-encoded, because a Set-Cookie header
+# is latin-1 and `http.cookies` escapes a name like "Gäst" into a form a browser
+# hands back verbatim and Django then cannot parse, so the name would be lost.
+NON_MEMBER_NAME_COOKIE = "attendance_non_member_name"
+NON_MEMBER_NAME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
+
+
 class AttendanceEventsView(ListView):
     model = AttendanceEvent
     template_name = "attendance/index.html"
 
     def get_queryset(self):
+        # A meeting with an end leaves the list once that moment has passed. One
+        # without an end is listed while it started less than NO_END_LISTING_HOURS
+        # ago, so a forgotten end does not pin a meeting to the top of the public
+        # list for ever.
+        #
         # Soonest first, so the meeting that is running now is at the top and the
         # ones after it follow. Without an order the database decides, which for
         # a list of meetings is not an order a reader can predict.
-        return self.model.objects.filter(Q(end_datetime__isnull=True) | Q(end_datetime__gte=now())).order_by(
-            "start_datetime"
-        )
+        moment = now()
+        return self.model.objects.filter(
+            Q(end_datetime__gte=moment)
+            | Q(end_datetime__isnull=True, start_datetime__gt=moment - timedelta(hours=NO_END_LISTING_HOURS))
+        ).order_by("start_datetime")
 
 
 class AttendanceEventObjectMixin[ModelT: Model](SingleObjectMixin[ModelT]):
@@ -72,14 +98,39 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
         # per row for the names. Lazy, so it is free for everyone else.
         ctx["changes"] = self.object.attendance_changes.select_related("user", "non_member")
         ctx["next"] = self._safe_next(self.request)
+        ctx["prefilled_name"] = ""
+        # None means the page cannot say either way, and then it draws no state at
+        # all: an anonymous visitor with no remembered name is not an attendee
+        # here. A member and a remembered guest both get an answer.
+        ctx["is_present"] = None
         if self.request.method == "GET" and "code" in self.request.GET:
             ctx["prefilled_code"] = self.request.GET.get("code")
 
         if self.request.user.is_authenticated:
             user = cast(Member, self.request.user)
             ctx["is_present"] = self.object.is_attendee_present(user)
+        elif self.request.method == "GET":
+            remembered = self._remembered_name(self.request)
+            ctx["prefilled_name"] = remembered
+            if remembered:
+                # Never create on a GET: the cookie is a claim about a name, not a
+                # guest. It only lets the page say whether that name's row is
+                # currently in the room.
+                guest = NonMemberAttendee.objects.filter(name=remembered).first()
+                if guest is not None:
+                    ctx["is_present"] = self.object.is_attendee_present(guest)
 
         return ctx
+
+    def _remembered_name(self, request: HttpRequest) -> str:
+        """The guest name the visitor typed on an earlier visit, or an empty string.
+
+        Convenience only. It is what the name box is prefilled with, and it is
+        never written into a change: the guest still has to press the button and
+        the log is keyed on the submitted name. The value is decoded here, which
+        is the other half of the percent-encoding the response writes.
+        """
+        return unquote(request.COOKIES.get(NON_MEMBER_NAME_COOKIE, ""))
 
     def _safe_next(self, request: HttpRequest) -> str:
         """The local page to return to after a check-in, or an empty string.
@@ -186,7 +237,27 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
 
         # Back to the page that asked for this check-in when it named one, and to
         # this page without the "code" query parameter otherwise.
-        return HttpResponseSeeOther(self._safe_next(request) or self.request.path)
+        response = HttpResponseSeeOther(self._safe_next(request) or self.request.path)
+
+        # A successful guest change remembers the typed name so checking out and
+        # back in is one tap. The cookie is convenience only: the log's identity is
+        # the name, so a different name is a different attendee and clearing
+        # cookies costs nothing but retyping. A member's request writes nothing,
+        # because a member is identified by the account and not by a name box.
+        # Percent-encoded, so the value is ASCII whatever the guest typed and a
+        # Set-Cookie header can always carry it (see NON_MEMBER_NAME_COOKIE).
+        if attendee_type == "non_member":
+            response.set_cookie(
+                NON_MEMBER_NAME_COOKIE,
+                quote(non_member_name, safe=""),
+                max_age=NON_MEMBER_NAME_COOKIE_MAX_AGE,
+                path="/",
+                secure=request.is_secure(),
+                httponly=True,
+                samesite="Lax",
+            )
+
+        return response
 
 
 class AttendanceEventOverview(UserPassesTestMixin, AttendanceEventObjectMixin[AttendanceEvent], View):

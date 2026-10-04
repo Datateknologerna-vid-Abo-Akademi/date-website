@@ -72,7 +72,7 @@ class AttendanceEvent(models.Model):
     description = models.CharField(_("Beskrivning"), max_length=255, blank=True)
     start_datetime = models.DateTimeField(_("Starttid"))
     end_datetime = models.DateTimeField(_("Sluttid"), null=True, blank=True)
-    allow_non_members = models.BooleanField(_("Tillåt icke-medlemmar att delta"), default=True)
+    allow_non_members = models.BooleanField(_("Tillåt icke-medlemmar att delta"), default=False)
     code_secret = models.CharField(_("Kodens genereringsnyckel"), default=random_hex)
     # At least one second: django_otp divides by the step, so a zero or negative
     # period breaks the code calculation outright.

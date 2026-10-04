@@ -35,7 +35,7 @@
             {% endblocktrans %}
           </p>
         </div>
-        {% if user.is_authenticated %}
+        {% if is_present is not None %}
           <p>
             {% trans "Du är" %}
             {% if is_present %}
@@ -66,7 +66,7 @@
                          class="form-control {% if non_member_name_error %} is-invalid {% endif %}"
                          id="non_member_name"
                          name="non_member_name"
-                         value=""
+                         value="{{ prefilled_name }}"
                          placeholder="{% trans "Namn" %}"
                          aria-describedby="non-member-name-help{% if non_member_name_error %} non-member-name-error{% endif %}"
                          required>
@@ -112,12 +112,12 @@
                       class="btn btn-success"
                       name="type"
                       value="0"
-                      {% if user.is_authenticated and is_present %} disabled {% endif %}>{% trans "Gå in" %}</button>
+                      {% if is_present %} disabled {% endif %}>{% trans "Gå in" %}</button>
               <button type="submit"
                       class="btn btn-warning"
                       name="type"
                       value="1"
-                      {% if user.is_authenticated and not is_present %} disabled {% endif %}>
+                      {% if is_present is not None and not is_present %} disabled {% endif %}>
                 {% trans "Gå ut" %}
               </button>
             </div>

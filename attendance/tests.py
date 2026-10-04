@@ -33,7 +33,9 @@ consumer test that expects a reply first reads and discards that message.
 import asyncio
 import unittest
 from datetime import UTC, datetime, timedelta
+from http.cookies import SimpleCookie
 from unittest.mock import AsyncMock, patch
+from urllib.parse import parse_qs, quote, unquote, urlsplit
 
 from asgiref.sync import async_to_sync, sync_to_async
 from channels.layers import get_channel_layer
@@ -67,6 +69,10 @@ from attendance.models import (  # noqa: E402
     attendee_key,
 )
 from attendance.routing import websocket_urlpatterns  # noqa: E402
+from attendance.views import (  # noqa: E402
+    NON_MEMBER_NAME_COOKIE,
+    NON_MEMBER_NAME_COOKIE_MAX_AGE,
+)
 from members.models import Member  # noqa: E402
 from polls.models import Choice, Question, Vote  # noqa: E402
 
@@ -129,6 +135,11 @@ def connect_as(user, slug):
     return connect_to(f"/ws/attendance/{slug}", user)
 
 
+def remember_name(client, name):
+    """Give *client* the name cookie the way a browser hands it back: encoded."""
+    client.cookies[NON_MEMBER_NAME_COOKIE] = quote(name, safe="")
+
+
 async def receive_message(channel_layer, channel, timeout=1):
     """Receive one channel message, failing after a timeout instead of blocking forever."""
     return await asyncio.wait_for(channel_layer.receive(channel), timeout)
@@ -139,6 +150,10 @@ class AttendanceEventModelTests(TestCase):
 
     def test_str_is_the_title(self):
         self.assertEqual(str(make_event(title="Årsmöte")), "Årsmöte")
+
+    def test_a_new_event_does_not_allow_non_members(self):
+        """Guests are off until an editor ticks the switch on the event."""
+        self.assertFalse(make_event().allow_non_members)
 
     @patch("attendance.models.now", return_value=REFERENCE_NOW)
     def test_has_ended_is_false_without_an_end(self, _now):
@@ -871,7 +886,10 @@ class AttendanceViewTestCase(TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
-        self.event = make_event()
+        # Explicit, because the model default is members-only: most of these tests
+        # are about what a guest sees, and the ones about the members-only page set
+        # the field back to False themselves.
+        self.event = make_event(allow_non_members=True)
         self.member = make_member("medlem", first_name="Maja", last_name="Andersson")
         self.staff = make_member("funktionar", first_name="Stina", last_name="Styrelse")
         self.staff.groups.add(Group.objects.create(name=STAFF_GROUP))
@@ -880,7 +898,7 @@ class AttendanceViewTestCase(TestCase):
 
 
 class AttendanceIndexViewTests(TestCase):
-    """The index lists the events that have not ended yet."""
+    """The index lists the events that have not ended, and a meeting without an end for a day."""
 
     def setUp(self):
         self.ended = make_event(slug="avslutat", title="Avslutat", end_datetime=now() - timedelta(hours=1))
@@ -906,6 +924,42 @@ class AttendanceIndexViewTests(TestCase):
         titles = [event.title for event in response.context["object_list"]]
         self.assertLess(titles.index("Tidigare"), titles.index("Senare"))
 
+    def test_a_meeting_without_an_end_is_listed_while_it_started_today(self):
+        """No end recorded is not a reason to hide a meeting that is still the room's."""
+        recent = make_event(slug="utan-slut", title="Utan slut", start_datetime=now() - timedelta(hours=1))
+
+        response = self.client.get(self.url)
+
+        self.assertIn(recent, response.context["object_list"])
+        self.assertContains(response, "Utan slut")
+
+    def test_a_meeting_without_an_end_is_forgotten_after_a_day(self):
+        """A forgotten end must not pin a meeting to the public list for ever."""
+        stale = make_event(slug="gammalt", title="Gammalt", start_datetime=now() - timedelta(hours=25))
+
+        response = self.client.get(self.url)
+
+        self.assertNotIn(stale, response.context["object_list"])
+        self.assertNotContains(response, "Gammalt")
+
+    def test_a_meeting_with_an_end_is_listed_until_that_end_has_passed(self):
+        upcoming = make_event(slug="framtid", title="Framtid", end_datetime=now() + timedelta(days=30))
+        past = make_event(slug="forflutet", title="Förflutet", end_datetime=now() - timedelta(minutes=1))
+
+        response = self.client.get(self.url)
+
+        self.assertIn(upcoming, response.context["object_list"])
+        self.assertNotIn(past, response.context["object_list"])
+
+    def test_the_order_is_still_soonest_first_with_a_meeting_without_an_end(self):
+        make_event(slug="senare", title="Senare", start_datetime=now() + timedelta(hours=2))
+        make_event(slug="tidigare", title="Tidigare", start_datetime=now() - timedelta(hours=2))
+
+        response = self.client.get(self.url)
+
+        titles = [event.title for event in response.context["object_list"]]
+        self.assertLess(titles.index("Tidigare"), titles.index("Senare"))
+
     def test_index_rejects_post(self):
         self.assertEqual(self.client.post(self.url).status_code, 405)
 
@@ -917,7 +971,7 @@ class AttendanceIndexViewTests(TestCase):
 
 
 class AttendanceDetailViewGetTests(AttendanceViewTestCase):
-    """Reading the detail page: 404s, guest access and the member's own state."""
+    """Reading the detail page: 404s, guest access and the reader's own state."""
 
     def test_unknown_slug_is_not_found(self):
         response = self.client.get(reverse("attendance-event-view", args=["finns-inte"]))
@@ -938,6 +992,42 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response["Location"].startswith(reverse("members:login")))
+
+    def test_a_new_meeting_is_members_only_and_asks_a_visitor_to_log_in(self):
+        """Guests are off by default, so the page is a login redirect and no name box.
+
+        The ``?code=`` the visitor arrived with rides along in ``next``, so logging
+        in lands back on the check-in page with the room's code already filled in.
+        """
+        members_only = make_event(slug="medlemsmote", title="Medlemsmöte")
+        detail_url = reverse("attendance-event-view", args=[members_only.slug])
+
+        response = self.client.get(f"{detail_url}?code=123456")
+
+        self.assertFalse(members_only.allow_non_members)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response["Location"].startswith(reverse("members:login")))
+        # The whole page address, query string included, is what the login form
+        # sends the visitor back to.
+        self.assertEqual(parse_qs(urlsplit(response["Location"]).query)["next"], [f"{detail_url}?code=123456"])
+
+    def test_a_meeting_that_dropped_off_the_list_keeps_its_page(self):
+        """The list forgets a meeting without an end after a day; the link does not."""
+        stale = make_event(
+            slug="gammalt-mote",
+            title="Gammalt möte",
+            start_datetime=now() - timedelta(hours=25),
+            allow_non_members=True,
+        )
+
+        listed = self.client.get(reverse("attendance-index"))
+
+        self.assertNotIn(stale, listed.context["object_list"])
+
+        response = self.client.get(reverse("attendance-event-view", args=[stale.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["object"], stale)
 
     def test_member_sees_the_page_when_non_members_are_not_allowed(self):
         self.event.allow_non_members = False
@@ -968,6 +1058,80 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         response = self.client.get(self.detail_url)
 
         self.assertFalse(response.context["is_present"])
+
+    def test_a_remembered_guest_gets_the_typed_name_prefilled(self):
+        NonMemberAttendee.objects.create(name="Gäst")
+        remember_name(self.client, "Gäst")
+
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.context["prefilled_name"], "Gäst")
+        self.assertContains(response, 'value="Gäst"')
+
+    def test_a_remembered_guest_who_is_present_sees_the_state_and_a_disabled_check_in(self):
+        """The same treatment a member gets: the line, and the pointless button off."""
+        guest = NonMemberAttendee.objects.create(name="Gäst")
+        record_change(self.event, ENTER, non_member=guest, timestamp=now() - timedelta(minutes=1))
+        remember_name(self.client, "Gäst")
+
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["is_present"])
+        self.assertContains(response, 'class="text-success"')
+
+        content = response.content.decode()
+        self.assertIn("disabled", content[content.index('value="0"') : content.index("Gå in")])
+        self.assertNotIn("disabled", content[content.index('value="1"') : content.index("Gå ut")])
+
+    def test_a_remembered_guest_who_is_absent_gets_the_check_out_disabled(self):
+        guest = NonMemberAttendee.objects.create(name="Gäst")
+        record_change(self.event, ENTER, non_member=guest, timestamp=now() - timedelta(minutes=10))
+        record_change(self.event, LEAVE, non_member=guest, timestamp=now() - timedelta(minutes=5))
+        remember_name(self.client, "Gäst")
+
+        response = self.client.get(self.detail_url)
+
+        self.assertFalse(response.context["is_present"])
+        self.assertContains(response, 'class="text-warning"')
+
+        content = response.content.decode()
+        self.assertNotIn("disabled", content[content.index('value="0"') : content.index("Gå in")])
+        self.assertIn("disabled", content[content.index('value="1"') : content.index("Gå ut")])
+
+    def test_a_visitor_without_the_cookie_sees_no_state_and_no_prefill(self):
+        response = self.client.get(self.detail_url)
+
+        self.assertIsNone(response.context["is_present"])
+        self.assertEqual(response.context["prefilled_name"], "")
+        self.assertNotContains(response, "text-success")
+        self.assertNotContains(response, "text-warning")
+
+        content = response.content.decode()
+        self.assertNotIn("disabled", content[content.index('value="0"') : content.index("Gå in")])
+        self.assertNotIn("disabled", content[content.index('value="1"') : content.index("Gå ut")])
+
+    def test_a_cookie_naming_a_guest_that_does_not_exist_creates_nothing(self):
+        """A GET only looks a name up: a cookie is a claim, not an attendee."""
+        remember_name(self.client, "Okänd")
+
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.context["prefilled_name"], "Okänd")
+        self.assertIsNone(response.context["is_present"])
+        self.assertFalse(NonMemberAttendee.objects.exists())
+
+    def test_a_member_ignores_the_name_cookie(self):
+        """A remembered name is a guest's: a member's own state comes from the account."""
+        guest = NonMemberAttendee.objects.create(name="Gäst")
+        record_change(self.event, ENTER, non_member=guest, timestamp=now() - timedelta(minutes=1))
+        remember_name(self.client, "Gäst")
+        self.client.force_login(self.member)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertFalse(response.context["is_present"])
+        self.assertNotContains(response, 'name="non_member_name"')
 
     def test_present_attendees_are_listed(self):
         guest = NonMemberAttendee.objects.create(name="Gäst I Närvarolistan")
@@ -1123,7 +1287,9 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
         time_patcher.start()
         self.addCleanup(time_patcher.stop)
 
-    def post_change(self, change_type, *, code=PINNED_CODE, name=None, login=None, query="", next_url=None):
+    def post_change(
+        self, change_type, *, code=PINNED_CODE, name=None, login=None, query="", next_url=None, secure=False
+    ):
         """POST a check-in or check-out, with the code in the body and optionally in the URL."""
         if login is not None:
             self.client.force_login(login)
@@ -1136,7 +1302,7 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
         if next_url is not None:
             data["next"] = next_url
 
-        return self.client.post(self.detail_url + query, data)
+        return self.client.post(self.detail_url + query, data, secure=secure)
 
     def test_wrong_code_is_rejected(self):
         response = self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member)
@@ -1265,6 +1431,92 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
         self.assertEqual(response.status_code, 403)
         self.assertEqual(NonMemberAttendee.objects.count(), 0)
         self.assertEqual(self.event.attendance_changes.count(), 0)
+
+    def test_a_successful_guest_change_remembers_the_name_in_a_cookie(self):
+        """The next visit prefills the box, so checking out and back in is one tap."""
+        response = self.post_change(ENTER, name="Gäst")
+
+        self.assertEqual(response.status_code, 303)
+        cookie = response.cookies[NON_MEMBER_NAME_COOKIE]
+        self.assertEqual(unquote(cookie.value), "Gäst")
+        self.assertEqual(cookie["path"], "/")
+        self.assertEqual(cookie["max-age"], NON_MEMBER_NAME_COOKIE_MAX_AGE)
+        self.assertTrue(cookie["httponly"])
+        self.assertEqual(cookie["samesite"], "Lax")
+        self.assertFalse(cookie["secure"])
+
+    def test_the_name_survives_the_cookie_header_round_trip(self):
+        """What the response writes is what a browser sends back, escape for escape.
+
+        Left to `http.cookies`, a name like "Gäst" is octal-escaped in the
+        `Set-Cookie` header, and a browser hands that escape back verbatim rather
+        than decoding it; Django then cannot parse the cookie and drops it, so the
+        name is lost instead of prefilled. Percent-encoding the value keeps the
+        header plain ASCII and the round trip exact.
+        """
+        response = self.post_change(ENTER, name="Gäst")
+
+        header = response.cookies[NON_MEMBER_NAME_COOKIE].OutputString()
+        sent_by_the_browser = header.split(";", 1)[0].removeprefix(f"{NON_MEMBER_NAME_COOKIE}=").strip('"')
+
+        jar = SimpleCookie()
+        jar.load(f"{NON_MEMBER_NAME_COOKIE}={sent_by_the_browser}")
+        self.assertIn(NON_MEMBER_NAME_COOKIE, jar)
+        self.client.cookies[NON_MEMBER_NAME_COOKIE] = jar[NON_MEMBER_NAME_COOKIE].value
+
+        follow_up = self.client.get(self.detail_url)
+
+        self.assertEqual(follow_up.context["prefilled_name"], "Gäst")
+        self.assertContains(follow_up, 'value="Gäst"')
+
+    def test_a_name_outside_latin_1_is_carried_too(self):
+        """No charset is imposed on a guest, so the encoding has to cover the range."""
+        response = self.post_change(ENTER, name="Гость 😀")
+
+        cookie = response.cookies[NON_MEMBER_NAME_COOKIE]
+        # What a WSGI server does with the header: it has to fit in latin-1.
+        header = cookie.OutputString().encode("latin-1")
+        self.assertIn(b"attendance_non_member_name=", header)
+        self.assertEqual(unquote(cookie.value), "Гость 😀")
+
+    def test_a_guest_check_out_remembers_the_name_too(self):
+        guest = NonMemberAttendee.objects.create(name="Gäst")
+        record_change(self.event, ENTER, non_member=guest, timestamp=now() - timedelta(minutes=5))
+
+        response = self.post_change(LEAVE, name="Gäst")
+
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(unquote(response.cookies[NON_MEMBER_NAME_COOKIE].value), "Gäst")
+
+    def test_the_name_cookie_is_secure_on_a_secure_request(self):
+        response = self.post_change(ENTER, name="Gäst", secure=True)
+
+        self.assertEqual(response.status_code, 303)
+        self.assertTrue(response.cookies[NON_MEMBER_NAME_COOKIE]["secure"])
+
+    def test_a_member_change_writes_no_name_cookie(self):
+        """A member is identified by the account, so there is no name to remember."""
+        response = self.post_change(ENTER, login=self.member)
+
+        self.assertEqual(response.status_code, 303)
+        self.assertNotIn(NON_MEMBER_NAME_COOKIE, response.cookies)
+
+    def test_a_refused_guest_attempt_remembers_nothing(self):
+        guest = NonMemberAttendee.objects.create(name="Gäst")
+        record_change(self.event, ENTER, non_member=guest, timestamp=now() - timedelta(minutes=5))
+
+        refusals = {
+            "wrong code": lambda: self.post_change(ENTER, code=PINNED_CODE + 1, name="Gäst"),
+            "no name": lambda: self.post_change(ENTER, name=""),
+            "already present": lambda: self.post_change(ENTER, name="Gäst"),
+        }
+
+        for refusal, attempt in refusals.items():
+            with self.subTest(refusal=refusal):
+                response = attempt()
+
+                self.assertGreaterEqual(response.status_code, 400)
+                self.assertNotIn(NON_MEMBER_NAME_COOKIE, response.cookies)
 
     def test_anonymous_post_is_redirected_when_non_members_are_not_allowed(self):
         self.event.allow_non_members = False
