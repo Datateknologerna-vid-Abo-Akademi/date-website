@@ -3061,6 +3061,14 @@ msgstr "läsnäolotilan muutos"
 msgid "närvaroändringar"
 msgstr "läsnäolotilojen muutokset"
 
+#: attendance/models.py:210
+msgid "närvarokrav"
+msgstr "läsnäolovaatimus"
+
+#: polls/admin.py:54
+msgid "Närvarokrav"
+msgstr "Läsnäolovaatimus"
+
 #: attendance/models.py:195
 #, python-format
 msgid "Exakt en av '%(user)s' eller '%(non_member)s' måste anges."

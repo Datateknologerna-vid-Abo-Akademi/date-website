@@ -3042,6 +3042,14 @@ msgstr "attendance change"
 msgid "närvaroändringar"
 msgstr "attendance changes"
 
+#: attendance/models.py:210
+msgid "närvarokrav"
+msgstr "attendance requirement"
+
+#: polls/admin.py:54
+msgid "Närvarokrav"
+msgstr "Attendance requirement"
+
 #: attendance/models.py:195
 #, python-format
 msgid "Exakt en av '%(user)s' eller '%(non_member)s' måste anges."
