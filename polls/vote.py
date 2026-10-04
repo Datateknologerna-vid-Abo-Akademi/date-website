@@ -1,3 +1,5 @@
+from typing import Any, NamedTuple
+
 from django.apps import apps
 from django.db import transaction
 from django.db.models import F
@@ -23,6 +25,52 @@ ERROR_MESSAGES = {
 }
 
 
+class AttendanceRequirement(NamedTuple):
+    """What a room-only poll needs from the visitor reading the page.
+
+    ``event`` is the meeting the poll is attached to, and the page names it and
+    links to its check-in page. ``is_signed_in`` keeps the page from offering
+    that link to a guest, who has no member the meeting's changes can be looked
+    up by and therefore cannot vote however many times they check in.
+    ``is_present`` is the same answer ``voter_is_present()`` acts on.
+    """
+
+    event: Any
+    is_signed_in: bool
+    is_present: bool
+
+
+def attendance_requirement(question, user):
+    """The meeting a poll is attached to and whether this voter is in it, or None.
+
+    None means the poll is an ordinary one: either the association has no
+    attendance app, or no AttendancePoll row attaches this question to a meeting.
+
+    The lookup is guarded because ``polls`` is installed by every association
+    while only DaTe installs ``attendance``: ``Question.attendance_poll`` does
+    not exist anywhere else, and an unguarded import or access would break those
+    variants. This function is the one definition of the attachment, so the poll
+    page and the vote check cannot disagree about the room.
+
+    An anonymous voter is not present, because a member is the only thing
+    ``is_attendee_present`` can look up in the meeting's changes.
+    """
+    if not apps.is_installed('attendance'):
+        return None
+
+    attendance_poll = getattr(question, 'attendance_poll', None)
+    if attendance_poll is None:
+        return None
+
+    is_signed_in = user.is_authenticated
+
+    return AttendanceRequirement(
+        event=attendance_poll.event,
+        is_signed_in=is_signed_in,
+        is_present=is_signed_in and attendance_poll.event.is_attendee_present(user),
+    )
+
+
 def voter_is_present(question, user):
     """Whether the poll's meeting lets this voter in, if it has a meeting at all.
 
@@ -31,25 +79,12 @@ def voter_is_present(question, user):
     association that does not install ``attendance``, answer True here and keep
     the vote rules they had before.
 
-    The lookup is guarded because ``polls`` is installed by every association
-    while only DaTe installs ``attendance``: ``Question.attendance_poll`` does
-    not exist anywhere else, and an unguarded import or access would break those
-    variants.
-
-    An anonymous voter is not present, because a member is the only thing
-    ``is_attendee_present`` can look up in the meeting's changes.
+    Thin over ``attendance_requirement()``, which is also what the poll page
+    reads, so what the page says about the room is what the POST enforces.
     """
-    if not apps.is_installed('attendance'):
-        return True
+    requirement = attendance_requirement(question, user)
 
-    attendance_poll = getattr(question, 'attendance_poll', None)
-    if attendance_poll is None:
-        return True
-
-    if not user.is_authenticated:
-        return False
-
-    return attendance_poll.event.is_attendee_present(user)
+    return requirement is None or requirement.is_present
 
 
 def selected_choices_belong_to_question(question, selected_choices):
@@ -161,6 +196,9 @@ def handle_vote(request, question, user, selected_choices):
             {
                 'question': question,
                 'error_message': error_message,
+                # The refusal reads as a dead end without it: the template uses
+                # this to point the voter at the meeting's check-in page.
+                'attendance_requirement': attendance_requirement(question, user),
             },
         )
 

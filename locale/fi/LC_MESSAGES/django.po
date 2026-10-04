@@ -1921,6 +1921,7 @@ msgid "Du kan nu logga in som vanligt"
 msgstr "Voit nyt kirjoittautua normaalisti"
 
 #: templates/common/members/registration/password_reset_complete.html:17
+#: templates/common/polls/detail.html:28
 msgid "Logga in"
 msgstr "Kirjaudu sisään"
 
@@ -2109,6 +2110,24 @@ msgstr "Ei uutisia tällä hetkellä"
 #: templates/common/polls/results.html:4
 msgid "Poll"
 msgstr "Kysely"
+
+#: templates/common/polls/detail.html:25
+msgid "Röstningen kräver att du är inloggad medlem och att du är på plats i mötet."
+msgstr "Äänestäminen edellyttää, että olet kirjautunut jäsen ja olet paikalla."
+
+#: templates/common/polls/detail.html:32
+#, python-format
+msgid "Du är närvarande på %(meeting)s."
+msgstr "Olet läsnä tapahtumassa %(meeting)s."
+
+#: templates/common/polls/detail.html:38
+#, python-format
+msgid "Den här frågan får bara besvaras av dem som är på plats på %(meeting)s."
+msgstr "Vain paikalla olevat voivat vastata tähän kysymykseen tapahtumassa %(meeting)s."
+
+#: templates/common/polls/detail.html:44
+msgid "Ange koden och checka in"
+msgstr "Syötä koodi ja merkitse itsesi läsnäolevaksi"
 
 #: templates/common/polls/index.html:27
 msgid "Det finns inga aktiva omröstningar"

@@ -33,6 +33,19 @@ The gate runs after the authorization and already-voted checks on purpose: a mem
 
 Presence is read from the newest change, so a member who checks in and never checks out is present for as long as that row says so: the meeting's own end time is not consulted, and `AttendanceEvent.has_ended` plays no part here. An attached poll therefore keeps accepting that member's vote after the meeting has ended, until an editor stops it with `end_vote` or the member checks out. Closing the poll is the control for that, and it is the one an editor already has.
 
+## The poll page's presence prompt
+The page and the vote check share one definition of the attachment. `attendance_requirement(question, user)` in `polls/vote.py` returns the meeting, whether the visitor is signed in and whether they are in the room, or `None` when the poll is ordinary, and `voter_is_present()` is a thin wrapper over it. `polls/views.py` puts that object in the `polls/detail.html` context, and `handle_vote()` puts it there too when it re-renders the page with a refusal, so the page and the POST cannot disagree about the room.
+
+`templates/common/polls/detail.html` draws the prompt above the vote form, in the place the error message occupies, and it has three cases:
+
+- A signed-in member who is not in the room reads the meeting's name and gets one button, "Ange koden och checka in", pointing at `{% raw %}{% url 'attendance-event-view' attendance_requirement.event.slug %}?next={% url 'polls:detail' question.id %}{% endraw %}`. The check-in page honours that `next` and returns the member to the poll (see `docs/dev/attendance.md`).
+- A signed-in member the meeting counts as present reads "Du är närvarande på <meeting>." and gets no button.
+- A visitor who is not signed in is sent to `{% raw %}{% url 'members:login' %}?next={% url 'polls:detail' question.id %}{% endraw %}` and is told that voting needs a signed-in member and presence. A guest cannot vote however many times they check in, because the meeting's changes are keyed on a member.
+
+A poll with no attachment, and every poll on an association that does not install the app, renders exactly what it rendered before. The prompt sits inside `{% raw %}{% if attendance_requirement %}{% endraw %}`, so the block and the `{% raw %}{% url %}{% endraw %}` tags in it are never reached when the helper answers `None`.
+
+The return path is built from the URL name rather than from `request.path`, because this template draws the prompt twice: on the GET that shows the poll, where the path is `/polls/<id>/`, and again when a refused vote re-renders it, where the path is the vote endpoint. A value taken from `request.path` would send a member who pressed "Rösta" first, and only then went to check in, back to `/polls/<id>/vote/`, which renders the poll again with a spurious "Du valde inget alternativ." message. Both links therefore name `polls:detail`, and a test pins it.
+
 ## Admin
 - `QuestionAdmin` inline-stacks `Choice` and `Vote`. `VoteInline` disallows adding rows manually and limits deletion to superusers.
 - Where `attendance` is installed, `AttendancePollInline` is added to the same page so an editor picks the meeting on the poll they are editing; see `docs/admin/polls.md` for what the editor sees. The poll list gets a `Närvaroevenemang` column behind the same flag, and `QuestionAdmin.get_queryset()` joins `attendance_poll__event` so the column costs one query rather than one per row. `question_list_display()` builds the column list from the flag, which is what keeps the changelist valid on an association without the app.

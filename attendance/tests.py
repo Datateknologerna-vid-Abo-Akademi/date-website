@@ -832,6 +832,29 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         self.assertContains(response, f'href="{self.overview_url}"')
         self.assertNotContains(response, 'href="overview"')
 
+    def test_a_next_from_the_query_string_is_rendered_into_the_form(self):
+        """The poll's link carries the page to return to, and the form keeps it."""
+        response = self.client.get(self.detail_url, {"next": "/polls/7/"})
+
+        self.assertEqual(response.context["next"], "/polls/7/")
+        self.assertContains(response, '<input type="hidden" name="next" value="/polls/7/">')
+
+    def test_the_next_input_is_absent_without_the_parameter(self):
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.context["next"], "")
+        self.assertNotContains(response, 'name="next"')
+
+    def test_an_off_site_next_from_the_query_string_is_not_rendered(self):
+        """A URL off this host is dropped rather than reflected into the markup."""
+        for off_site in ("https://evil.example", "//evil.example"):
+            with self.subTest(off_site=off_site):
+                response = self.client.get(self.detail_url, {"next": off_site})
+
+                self.assertEqual(response.context["next"], "")
+                self.assertNotContains(response, 'name="next"')
+                self.assertNotContains(response, "evil.example")
+
 
 class AttendanceDetailViewPostTests(AttendanceViewTestCase):
     """Checking in and out: the code, the conflicts and the stored change."""
@@ -846,7 +869,7 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
         time_patcher.start()
         self.addCleanup(time_patcher.stop)
 
-    def post_change(self, change_type, *, code=PINNED_CODE, name=None, login=None, query=""):
+    def post_change(self, change_type, *, code=PINNED_CODE, name=None, login=None, query="", next_url=None):
         """POST a check-in or check-out, with the code in the body and optionally in the URL."""
         if login is not None:
             self.client.force_login(login)
@@ -856,6 +879,8 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
             data["code"] = str(code)
         if name is not None:
             data["non_member_name"] = name
+        if next_url is not None:
+            data["next"] = next_url
 
         return self.client.post(self.detail_url + query, data)
 
@@ -1078,6 +1103,79 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
         self.assertEqual(response.status_code, 403)
         is_code_valid.assert_not_called()
         self.assertNotIn(limits.ATTEMPTS_SESSION_KEY, self.client.session)
+
+    def test_a_safe_next_is_where_the_check_in_lands(self):
+        """The poll that sent the voter here is the page they come back to."""
+        response = self.post_change(ENTER, login=self.member, next_url="/polls/7/")
+
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(response["Location"], "/polls/7/")
+        self.assertEqual(self.event.attendance_changes.get().type, ENTER)
+
+    def test_an_off_site_next_falls_back_to_this_page(self):
+        """An open redirect is refused, whatever shape the off-site URL has."""
+        for off_site in (
+            "https://evil.example",
+            "//evil.example",
+            "https://evil.example/polls/7/",
+        ):
+            with self.subTest(off_site=off_site):
+                # Each attempt has to be an arrival, or the second one is a conflict.
+                self.event.attendance_changes.all().delete()
+
+                response = self.post_change(ENTER, login=self.member, next_url=off_site)
+
+                self.assertEqual(response.status_code, 303)
+                self.assertEqual(response["Location"], self.detail_url)
+
+    def test_the_next_query_parameter_coexists_with_the_code(self):
+        """The QR flow's ?code= and the poll's ?next= arrive together on GET."""
+        response = self.client.get(self.detail_url + f"?code={PINNED_CODE}&next=/polls/7/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["prefilled_code"], str(PINNED_CODE))
+        self.assertContains(response, 'value="/polls/7/"')
+
+    def test_a_refused_code_keeps_the_next_input(self):
+        """The flow survives a wrong code: the retry still knows where to return."""
+        response = self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member, next_url="/polls/7/")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertContains(response, 'name="next"', status_code=403)
+        self.assertContains(response, 'value="/polls/7/"', status_code=403)
+
+    def test_a_conflict_keeps_the_next_input(self):
+        record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=5))
+
+        response = self.post_change(ENTER, login=self.member, next_url="/polls/7/")
+
+        self.assertEqual(response.status_code, 409)
+        self.assertContains(response, 'value="/polls/7/"', status_code=409)
+
+    def test_a_lockout_keeps_the_next_input(self):
+        for _ in range(limits.ATTEMPT_LIMIT - 1):
+            self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member, next_url="/polls/7/")
+
+        response = self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member, next_url="/polls/7/")
+
+        self.assertEqual(response.status_code, 429)
+        self.assertContains(response, 'value="/polls/7/"', status_code=429)
+
+    def test_an_off_site_next_is_not_rendered_back_into_the_form(self):
+        """A refused URL is dropped, not reflected, so the markup carries no hostile URL."""
+        response = self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member, next_url="https://evil.example")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertNotContains(response, 'name="next"', status_code=403)
+        self.assertNotContains(response, "evil.example", status_code=403)
+
+    def test_a_check_out_honours_next_too(self):
+        record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=5))
+
+        response = self.post_change(LEAVE, login=self.member, next_url="/polls/7/")
+
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(response["Location"], "/polls/7/")
 
 
 class AttendanceOverviewViewTests(AttendanceViewTestCase):

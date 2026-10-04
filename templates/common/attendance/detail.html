@@ -54,6 +54,7 @@
           {% endif %}
           <form method="post">
             {% csrf_token %}
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
             {% if not user.is_authenticated %}
               <div class="mb-3">
                 <label for="non_member_name" class="visually-hidden">{% trans "Namn" %}</label>

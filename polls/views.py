@@ -6,7 +6,7 @@ from django.views import generic
 from members.models import Member
 
 from .models import Question
-from .vote import handle_vote
+from .vote import attendance_requirement, handle_vote
 
 logger = logging.getLogger('date')
 
@@ -23,6 +23,13 @@ class IndexView(generic.ListView):
 class DetailView(generic.DetailView):
     model = Question
     template_name = 'polls/detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # What the page needs to tell a voter about the meeting, if this poll has
+        # one. The vote check reads the same helper, so the two cannot disagree.
+        context['attendance_requirement'] = attendance_requirement(self.object, self.request.user)
+        return context
 
 
 class ResultsView(generic.DetailView):

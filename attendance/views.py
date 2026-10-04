@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.db.models import Model, Q
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import ListView, View
@@ -69,6 +70,7 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
         # select_related so the staff change log costs one query rather than one
         # per row for the names. Lazy, so it is free for everyone else.
         ctx["changes"] = self.object.attendance_changes.select_related("user", "non_member")
+        ctx["next"] = self._safe_next(self.request)
         if self.request.method == "GET" and "code" in self.request.GET:
             ctx["prefilled_code"] = self.request.GET.get("code")
 
@@ -77,6 +79,26 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
             ctx["is_present"] = self.object.is_attendee_present(user)
 
         return ctx
+
+    def _safe_next(self, request: HttpRequest) -> str:
+        """The local page to return to after a check-in, or an empty string.
+
+        ``next`` arrives from the query string on GET and from the form on POST,
+        and the value is checked before it is used or rendered: without the check
+        the parameter would be an open redirect, and reflecting a hostile one into
+        the hidden input would hand the same URL to whoever reads the markup.
+
+        A refused attempt (a wrong code, a lockout, a conflict) renders the page
+        again through ``get_ctx``, so the value survives in the form and the
+        participant still lands on the page that sent them here.
+        """
+        candidate = request.POST.get("next", "") if request.method == "POST" else request.GET.get("next", "")
+        if candidate and url_has_allowed_host_and_scheme(
+            candidate, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+        ):
+            return candidate
+
+        return ""
 
     def _bad_request(self, request, **kwargs):
         return render(request, self.template_name, self.get_ctx(**kwargs), status=403)
@@ -161,8 +183,9 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
         change.save()
         websocket.send_attendance_change(self.object.slug, change)
 
-        # Clears the "code" query parameter
-        return HttpResponseSeeOther(self.request.path)
+        # Back to the page that asked for this check-in when it named one, and to
+        # this page without the "code" query parameter otherwise.
+        return HttpResponseSeeOther(self._safe_next(request) or self.request.path)
 
 
 class AttendanceEventOverview(UserPassesTestMixin, AttendanceEventObjectMixin[AttendanceEvent], View):

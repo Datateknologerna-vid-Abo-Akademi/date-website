@@ -1908,6 +1908,7 @@ msgid "Du kan nu logga in som vanligt"
 msgstr "You can now log in normally"
 
 #: templates/common/members/registration/password_reset_complete.html:17
+#: templates/common/polls/detail.html:28
 msgid "Logga in"
 msgstr "Login"
 
@@ -2098,6 +2099,24 @@ msgstr "No news found..."
 #: templates/common/polls/results.html:4
 msgid "Poll"
 msgstr "Poll"
+
+#: templates/common/polls/detail.html:25
+msgid "Röstningen kräver att du är inloggad medlem och att du är på plats i mötet."
+msgstr "Voting requires that you are signed in as a member and present in the room."
+
+#: templates/common/polls/detail.html:32
+#, python-format
+msgid "Du är närvarande på %(meeting)s."
+msgstr "You are present at %(meeting)s."
+
+#: templates/common/polls/detail.html:38
+#, python-format
+msgid "Den här frågan får bara besvaras av dem som är på plats på %(meeting)s."
+msgstr "This question can only be answered by people who are present at %(meeting)s."
+
+#: templates/common/polls/detail.html:44
+msgid "Ange koden och checka in"
+msgstr "Enter the code and check in"
 
 #: templates/common/polls/index.html:27
 msgid "Det finns inga aktiva omröstningar"

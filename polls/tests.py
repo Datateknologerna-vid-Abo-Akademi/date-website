@@ -458,6 +458,137 @@ class VoterPresenceTests(TestCase):
 
 
 @unittest.skipUnless(ATTENDANCE_INSTALLED, "the attendance app is not installed in this settings module")
+class PollPageAttendancePromptTests(TestCase):
+    """The poll page's half of the flow: it tells a room-only voter where to check in."""
+
+    def setUp(self):
+        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.member = Member.objects.create_user(
+            username="roestare", password="pwd", membership_type=self.membership_type
+        )
+        self.event = make_attendance_event(slug="arsmote", title="Årsmöte")
+        self.question = Question.objects.create(question_text="Mötesfråga", voting_options=MEMBERS_ONLY)
+        self.choice = Choice.objects.create(question=self.question, choice_text="ja")
+        AttendancePoll.objects.create(question=self.question, event=self.event)
+        self.page_url = reverse('polls:detail', args=[self.question.id])
+        self.vote_url = reverse('polls:vote', args=[self.question.id])
+        self.check_in_url = reverse('attendance-event-view', args=[self.event.slug])
+
+    def test_a_member_who_is_not_present_is_sent_to_the_check_in_page(self):
+        self.client.force_login(self.member)
+
+        response = self.client.get(self.page_url)
+
+        self.assertContains(response, "Årsmöte")
+        self.assertContains(response, "Ange koden och checka in")
+        # The round trip: the check-in page sends the voter back to this page.
+        self.assertContains(response, f'href="{self.check_in_url}?next={self.page_url}"')
+
+    def test_a_refused_vote_still_returns_the_voter_to_this_page(self):
+        """The link names the poll page, not the endpoint that rendered the refusal.
+
+        A refusal is rendered by the vote view, so ``request.path`` there ends in
+        ``/vote/``: a link built from it would send a voter who tried to vote
+        first, and only then went to check in, to the vote endpoint, where the
+        page renders again with a spurious "you picked nothing" message.
+        """
+        self.client.force_login(self.member)
+
+        response = self.client.post(self.vote_url, {"choice": [self.choice.id]})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Du måste vara närvarande")
+        self.assertContains(response, f'href="{self.check_in_url}?next={self.page_url}"')
+        self.assertNotContains(response, f"next={self.vote_url}")
+
+    def test_a_present_member_reads_that_they_are_in_the_room(self):
+        record_change(self.event, ENTER, self.member)
+        self.client.force_login(self.member)
+
+        response = self.client.get(self.page_url)
+
+        self.assertContains(response, "Du är närvarande på Årsmöte.")
+        self.assertNotContains(response, self.check_in_url)
+        self.assertNotContains(response, "Ange koden och checka in")
+
+    def test_an_anonymous_visitor_is_sent_to_the_login_page(self):
+        """A guest cannot vote by checking in, so the poll sends them to sign in."""
+        response = self.client.get(self.page_url)
+
+        self.assertContains(response, f'href="{reverse("members:login")}?next={self.page_url}"')
+        self.assertNotContains(response, self.check_in_url)
+        self.assertNotContains(response, "Ange koden och checka in")
+
+    def test_an_ordinary_poll_shows_none_of_the_prompt(self):
+        ordinary = Question.objects.create(question_text="Vanlig fråga")
+        Choice.objects.create(question=ordinary, choice_text="ja")
+        self.client.force_login(self.member)
+
+        response = self.client.get(reverse('polls:detail', args=[ordinary.id]))
+
+        self.assertIsNone(response.context['attendance_requirement'])
+        self.assertNotContains(response, "Årsmöte")
+        self.assertNotContains(response, self.check_in_url)
+        self.assertNotContains(response, "Ange koden och checka in")
+        self.assertNotContains(response, "Du är närvarande på")
+        self.assertNotContains(response, "Röstningen kräver")
+        self.assertNotContains(response, "/attendance/")
+
+    def test_nothing_new_is_rendered_when_attendance_is_not_installed(self):
+        """The other six associations have no check-in page to link to."""
+        self.client.force_login(self.member)
+
+        with patch('polls.vote.apps.is_installed', return_value=False):
+            response = self.client.get(self.page_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context['attendance_requirement'])
+        self.assertNotContains(response, "Ange koden och checka in")
+        self.assertNotContains(response, "Röstningen kräver")
+        self.assertNotContains(response, "Årsmöte")
+        # The check-in URL is not even resolved, so a site without the route is safe.
+        self.assertNotContains(response, "/attendance/")
+
+    def test_the_refusal_still_offers_the_check_in_page(self):
+        """A voter who presses "Rösta" without checking in is not left at a dead end."""
+        self.client.force_login(self.member)
+
+        response = self.client.post(self.vote_url, {'choice': [str(self.choice.id)]})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, ERROR_MESSAGES['not_present'])
+        self.assertContains(response, "Ange koden och checka in")
+
+    def test_the_page_and_the_vote_gate_agree_about_the_room(self):
+        """The one test that fails if the page and voter_is_present() ever disagree.
+
+        The page is read for what it renders, not for its context, so a prompt that
+        claims presence it does not have is caught here as well.
+        """
+        for present in (False, True):
+            with self.subTest(present=present):
+                if present:
+                    record_change(self.event, ENTER, self.member)
+                self.client.force_login(self.member)
+
+                page = self.client.get(self.page_url)
+                page_says_present = "Du är närvarande på" in page.content.decode()
+                requirement = page.context['attendance_requirement']
+
+                # The object the page renders from and the gate the POST runs are
+                # the same answer, and the rendered page carries that answer.
+                self.assertEqual(requirement.is_present, voter_is_present(self.question, self.member))
+                self.assertEqual(page_says_present, voter_is_present(self.question, self.member))
+                self.assertEqual(requirement.event, self.event)
+
+                vote = self.client.post(self.vote_url, {'choice': [str(self.choice.id)]})
+                if page_says_present:
+                    self.assertEqual(vote.status_code, 302)
+                else:
+                    self.assertContains(vote, ERROR_MESSAGES['not_present'])
+
+
+@unittest.skipUnless(ATTENDANCE_INSTALLED, "the attendance app is not installed in this settings module")
 class QuestionAdminAttendanceTests(TestCase):
     """The meeting column and the inline, on the poll page an editor works from."""
 
