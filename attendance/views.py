@@ -32,10 +32,11 @@ NO_END_LISTING_HOURS = 24
 
 # The name a guest typed, kept in a cookie so their next visit is one tap. The
 # cookie is convenience only: the log's identity is the typed name, not the
-# cookie, so a different name is a different attendee and clearing cookies costs
-# nothing but retyping. The value is percent-encoded, because a Set-Cookie header
-# is latin-1 and `http.cookies` escapes a name like "Gäst" into a form a browser
-# hands back verbatim and Django then cannot parse, so the name would be lost.
+# cookie, so a different name is a different attendee (case and stray spaces
+# aside) and clearing cookies costs nothing but retyping. The value is
+# percent-encoded, because a Set-Cookie header is latin-1 and `http.cookies`
+# escapes a name like "Gäst" into a form a browser hands back verbatim and Django
+# then cannot parse, so the name would be lost.
 NON_MEMBER_NAME_COOKIE = "attendance_non_member_name"
 NON_MEMBER_NAME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 
@@ -115,8 +116,11 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
             if remembered:
                 # Never create on a GET: the cookie is a claim about a name, not a
                 # guest. It only lets the page say whether that name's row is
-                # currently in the room.
-                guest = NonMemberAttendee.objects.filter(name=remembered).first()
+                # currently in the room. Case-insensitive for the same reason the
+                # check-in path is: the row keeps the spelling used first while
+                # the cookie keeps the spelling typed last, so an exact match
+                # would lose the guest who typed their name differently.
+                guest = NonMemberAttendee.objects.filter(name__iexact=remembered).first()
                 if guest is not None:
                     ctx["is_present"] = self.object.is_attendee_present(guest)
 
@@ -195,7 +199,10 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
 
         limits.clear(request)
 
-        non_member_name: str = form.cleaned_data["non_member_name"]
+        # Leading and trailing whitespace is trimmed before anything reads the
+        # name, so a stray space is not a second guest. The form's CharField
+        # strips too, and this is the value the row, the log and the cookie get.
+        non_member_name: str = form.cleaned_data["non_member_name"].strip()
         type: AttendanceChange.Type = form.cleaned_data["type"]
 
         if request.user.is_anonymous and len(non_member_name) == 0:
@@ -210,7 +217,15 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
         if request.user.is_authenticated:
             attendee_type, attendee = "user", cast(Attendee, request.user)
         else:
-            non_member, created = NonMemberAttendee.objects.get_or_create(name=non_member_name)
+            # Case-insensitive, so "david dahl" is the guest who typed "David
+            # Dahl". The first spelling stays on the row: the create only runs
+            # when no row matches at all, and then the trimmed name is what it
+            # holds. `unique_non_member_name_ci` on the model is what stops two
+            # racing devices from inserting two spellings at the same moment.
+            non_member, created = NonMemberAttendee.objects.get_or_create(
+                name__iexact=non_member_name,
+                defaults={"name": non_member_name},
+            )
             attendee_type, attendee = "non_member", non_member
 
         match type:

@@ -4,6 +4,7 @@ from typing import Any, cast
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Q, constraints
+from django.db.models.functions import Lower
 from django.utils.formats import date_format, time_format
 from django.utils.timezone import localtime, now
 from django.utils.translation import gettext_lazy as _
@@ -252,10 +253,11 @@ class NonMemberAttendee(models.Model):
     An attendee who is not a registered user.
 
     The name is the identity: a guest has no account to key on, and the check-in
-    view calls get_or_create(name=...), so two people with the same name share
-    one row across every event. Splitting it into first and last name would not
-    change that, it would take an address or a per-event record to tell them
-    apart, which is more than this list needs.
+    view resolves a typed name case-insensitively on a trimmed value, so two
+    people who type the same name share one row across every event whatever the
+    capitalisation or the stray spaces. Splitting it into first and last name
+    would not change that, it would take an address or a per-event record to tell
+    them apart, which is more than this list needs.
     """
 
     name = models.CharField(_("Namn"), max_length=NON_MEMBER_MAX_NAME_LEN, unique=True)
@@ -263,6 +265,14 @@ class NonMemberAttendee(models.Model):
     class Meta:
         verbose_name = _("deltagare, icke-medlem")
         verbose_name_plural = _("deltagare, icke-medlemmar")
+        # The check-in lookup is case-insensitive on its own, but two devices can
+        # race: both look, both find nothing, both insert. This is what the
+        # database refuses. It folds the name, so "David Dahl" and "david dahl"
+        # are one row, and `unique=True` on the field stays as the exact-name
+        # constraint that already existed.
+        constraints = [
+            models.UniqueConstraint(Lower("name"), name="unique_non_member_name_ci"),
+        ]
 
     def __str__(self):
         return f"{self.name} ({_('icke-medlem')})"

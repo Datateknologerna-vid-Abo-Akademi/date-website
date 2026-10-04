@@ -646,6 +646,26 @@ class NonMemberAttendeeModelTests(TestCase):
         with self.assertRaises(IntegrityError), transaction.atomic():
             NonMemberAttendee.objects.create(name="Gäst")
 
+    def test_a_name_that_differs_only_in_case_is_rejected(self):
+        """The database holds the guarantee, not only the check-in lookup.
+
+        Two devices can both look a name up, both find nothing and both insert,
+        so the fold has to be a constraint: a direct create is refused here even
+        though it never goes through the view at all.
+        """
+        NonMemberAttendee.objects.create(name="David Dahl")
+
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            NonMemberAttendee.objects.create(name="david dahl")
+
+    def test_a_different_name_is_a_row_of_its_own(self):
+        """The fold is the only extra identity: another spelling is another guest."""
+        NonMemberAttendee.objects.create(name="David Dahl")
+
+        NonMemberAttendee.objects.create(name="Dave")
+
+        self.assertEqual(NonMemberAttendee.objects.count(), 2)
+
     def test_get_full_name_matches_the_member_interface(self):
         attendee = NonMemberAttendee.objects.create(name="Gäst")
 
@@ -1068,6 +1088,22 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         self.assertEqual(response.context["prefilled_name"], "Gäst")
         self.assertContains(response, 'value="Gäst"')
 
+    def test_a_remembered_name_that_differs_in_case_still_finds_the_guest(self):
+        """The cookie keeps the spelling typed last, the row keeps the first.
+
+        The check-in folds the two, so the GET that reads the cookie back has to
+        fold them as well: an exact lookup would leave a remembered guest who
+        typed their name in another case without the presence line a member gets.
+        """
+        guest = NonMemberAttendee.objects.create(name="David Dahl")
+        record_change(self.event, ENTER, non_member=guest, timestamp=now() - timedelta(minutes=1))
+        remember_name(self.client, "david dahl")
+
+        response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.context["prefilled_name"], "david dahl")
+        self.assertTrue(response.context["is_present"])
+
     def test_a_remembered_guest_who_is_present_sees_the_state_and_a_disabled_check_in(self):
         """The same treatment a member gets: the line, and the pointless button off."""
         guest = NonMemberAttendee.objects.create(name="Gäst")
@@ -1431,6 +1467,61 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
         self.assertEqual(response.status_code, 403)
         self.assertEqual(NonMemberAttendee.objects.count(), 0)
         self.assertEqual(self.event.attendance_changes.count(), 0)
+
+    def test_a_differently_cased_name_is_the_same_guest(self):
+        """The first spelling stays on the row and in the log.
+
+        The second check-in types the same name in lower case, and it has to land
+        on the guest the first one created: a second row would leave the check-out
+        with "not present" and a 409 instead of a departure.
+        """
+        self.post_change(ENTER, name="David Dahl")
+
+        response = self.post_change(LEAVE, name="david dahl")
+
+        self.assertEqual(response.status_code, 303)
+        guest = NonMemberAttendee.objects.get()
+        self.assertEqual(guest.name, "David Dahl")
+        names = [change.attendee_name for change in self.event.attendance_changes.all()]
+        self.assertEqual(names, ["David Dahl", "David Dahl"])
+        self.assertEqual([change.non_member for change in self.event.attendance_changes.all()], [guest, guest])
+
+    def test_a_padded_name_is_the_same_guest(self):
+        """A stray space is not a second guest either."""
+        self.post_change(ENTER, name="David Dahl")
+
+        response = self.post_change(LEAVE, name="  David Dahl  ")
+
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(NonMemberAttendee.objects.count(), 1)
+        self.assertEqual(self.event.attendance_changes.count(), 2)
+        self.assertEqual(self.event.attendance_changes.first().non_member, NonMemberAttendee.objects.get())
+
+    def test_a_padded_name_is_stored_trimmed(self):
+        """A padded first spelling is trimmed before it is stored and remembered."""
+        response = self.post_change(ENTER, name="  David Dahl  ")
+
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(NonMemberAttendee.objects.get().name, "David Dahl")
+        self.assertEqual(unquote(response.cookies[NON_MEMBER_NAME_COOKIE].value), "David Dahl")
+
+    def test_a_different_name_is_still_a_new_guest(self):
+        """Only case and padding are folded: another spelling is another attendee.
+
+        A nickname, a shorter name and a different surname all have to keep
+        creating a guest of their own, or the list would merge people who are not
+        the same person.
+        """
+        self.post_change(ENTER, name="David Dahl")
+
+        for other in ("Dave", "David", "David Dahlgren"):
+            with self.subTest(other=other):
+                self.assertEqual(self.post_change(ENTER, name=other).status_code, 303)
+
+        self.assertEqual(
+            set(NonMemberAttendee.objects.values_list("name", flat=True)),
+            {"David Dahl", "Dave", "David", "David Dahlgren"},
+        )
 
     def test_a_successful_guest_change_remembers_the_name_in_a_cookie(self):
         """The next visit prefills the box, so checking out and back in is one tap."""
