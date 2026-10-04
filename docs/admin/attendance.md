@@ -24,9 +24,9 @@ The list is a record of who was in the room at a meeting. It is not the associat
 4. Read the code from the screen rather than copying it onto a whiteboard or a printout. It is only valid for its window, so anything written down is stale within seconds.
 
 ## Reaching the event page
-Nothing in the site's menus links to the attendance pages, so the address is something you give to the participants rather than something they browse to. The event list at `/attendance/` is public, and each event has its own address at `/attendance/<slug>/`.
+The site's menus are editor content, not code, so the attendance page reaches them the way any other link does: add a **Static URL** entry (under a **Static Page Nav** category) pointing at `/attendance/`, and it appears in that dropdown. Until such an entry exists, the address is something you give to the participants.
 
-The QR code on the overview page is the shortest route: it encodes the event's address with the current code in it, so a participant who scans it lands on the event page with the code already filled in. Put the event's address in the meeting invitation if people should be able to find it without the QR code, and remember that a guest still needs **Tillåt icke-medlemmar att delta** ticked to use it.
+The event list at `/attendance/` is public, and each event has its own address at `/attendance/<slug>/`. The QR code on the overview page is the shortest route to one event: it encodes the event's address with the current code in it, so a participant who scans it lands on the event page with the code already filled in. Put the event's address in the meeting invitation if people should be able to find it without the QR code, and remember that a guest still needs **Tillåt icke-medlemmar att delta** ticked to use it.
 
 ## Checking people in and out
 - A signed-in member opens the event page, types the code (or scans the QR code with a phone camera, which opens the same page with the code prefilled) and presses **Gå in**. The member is recorded as themselves, and the page then shows them as present, with **Gå in** disabled and **Gå ut** ready.
@@ -58,6 +58,11 @@ There is no admin page for guests and no guest list to keep tidy. A guest's row 
 - The code rotated between the participant reading it and pressing the button. Only the code for the current window is accepted, and the previous one gets no grace, so read the current code from the overview page and try again.
 - Or they are using another event's code. Every event has its own code, so a code shown for a different event never works here. This is the usual mix-up when several events are open at once.
 - If somebody scanned the QR code and still sees this, the code changed while they walked to the door. Point them at the current one, or have them scan again.
+
+**The page says "För många felaktiga koder".**
+- That browser has entered five wrong codes, so it is locked out for a minute. Nothing was recorded, so ask the participant to wait and try again with the current code. A correct code is refused too while the lockout lasts, which is deliberate.
+- The counter lives in that browser's session, so another browser, a private window or clearing cookies starts fresh. Treat it as a speed bump for a fumbling participant or a careless script, not as a security control: what actually keeps people out is the code rotating on the screen.
+- If several participants hit it at once, the code they are reading is probably stale. Reload the overview page and check that the code on it is the one in force.
 
 **"Du kan inte gå in i ett evenemang var du redan är närvarande"**
 - They are already checked in, usually because the button was pressed twice or the page was opened before they went in. Reload the event page: it shows them as present. Nothing else is needed.

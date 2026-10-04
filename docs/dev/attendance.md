@@ -25,14 +25,15 @@ The views subscript a generic at class-definition time (`SingleObjectMixin[Atten
 
 `attendance/urls.py` declares three names, and `core/urls/common.py` mounts the app under `attendance/`:
 
-- `attendance-index` at `/attendance/` (`AttendanceEventsView`): public, no login. It lists the events the queryset above leaves, each linking to its slug. Nothing in the site's navigation links here, so participants are given the address rather than browsing to it.
+- `attendance-index` at `/attendance/` (`AttendanceEventsView`): public, no login. It lists the events the queryset above leaves, each linking to its slug. Nothing in the code puts this page in the site's menus: the menu is editor content, so a link is added through the admin's navigation (a Static Page Nav category or a Static URL entry) like any other link, and it disappears again if an editor removes it.
 - `attendance-event-view` at `/attendance/<slug>/` (`AttendanceEventDetailView`): public when `allow_non_members` is true. When it is false the view runs behind `UserPassesTestMixin`, so an anonymous visitor is redirected to the login page (`LOGIN_URL = "members:login"`) while any signed-in member gets in. An unknown slug is a 404.
 - `attendance-event-overview` at `/attendance/<slug>/overview` (`AttendanceEventOverview`, note the missing trailing slash): staff only, again through `UserPassesTestMixin`. Anonymous is redirected to the login page, and a signed-in member who is not staff gets 403.
 
-The detail POST answers with three status codes:
+The detail POST answers with four status codes:
 
 - 403 when the form does not validate, and 403 with the message "Fel kod" when `is_code_valid` rejects the code. An anonymous POST with an empty name is 403 too, with "Namn måste anges om du inte är inloggad", although the template marks that input `required` and a browser never sends it empty.
 - 409 when the request contradicts the log: "Du kan inte gå in i ett evenemang var du redan är närvarande" for an `ENTER` while the attendee is already present, and "Du kan inte gå ut ur ett evenemang var du inte är närvarande" for a `LEAVE` while they are not.
+- 429 while the session is locked out after too many wrong codes, including the submission that reaches the limit. The page shows how long is left and the submission writes nothing, even when the code in it is correct.
 - 303 on success, back to `request.path`, which is the same page without the `?code=` the QR code added. The response uses the local `HttpResponseSeeOther`, because `HttpResponseRedirect` is 302.
 
 The write is deliberately not atomic. A comment in `views.py` accepts that two simultaneous submissions can both pass the presence check and write two rows, "but it wouldn't really matter in the end": presence is read from the newest row, so the answer is unchanged. Unlike `booking`, there is no `select_for_update` here, and the duplicate stays in the log.
@@ -45,7 +46,11 @@ After the row is saved, the view calls `websocket.send_attendance_change(...)` w
 The code appears in one place only: `AttendanceEventOverview.get_ctx` puts `get_current_code()` into the context of `templates/common/attendance/overview.html`, and no other view or template renders it. That is the anti-abuse control behind issue #398, the requirement that the attendance list cannot be used to inflate a meeting's membership: checking somebody in needs a code that is visible only to staff, on the spot. Its strength is the display and nothing else. The code is six digits, it is shown to everyone in the room, and it rotates every 30 seconds by default, so it is proof of presence at the meeting rather than a credential that identifies a person. Both `code_secret` and `code_validity_time` are editable in the admin, and changing the validity time also changes the step, so the code in force moves at once. The period has a floor of one second: `django_otp` divides by the step, so a zero or negative period breaks the calculation outright, and a `MinValueValidator(1)` on the field is what stops the admin form from saving one.
 
 ### The check-in control
-The code is the only thing that stands between the public page and the log, and it is a low bar on purpose. There is no rate limit and no attempt lockout on the code input: a wrong code is just a 403 with "Fel kod", and a client can try again immediately, which is also what a participant who mistyped does. The only bound on guessing is that six digits have to match inside one short window, so someone who wants more has to add an attempt limit, and then decide what to key it on, because a client that discards its session cookie starts over. `docs/dev/booking.md` describes the same problem for the booking code.
+The code is the only thing that stands between the public page and the log, and it is a low bar on purpose. `attendance/limits.py` counts wrong codes in the session: after `ATTEMPT_LIMIT` (5) of them the session is locked out for `LOCKOUT_SECONDS` (60), every submission in that window answers 429 with "För många felaktiga koder", and a correct code clears both the counter and the lockout. The limit is checked before the code is, so a lockout also refuses the right code, which is the point: otherwise an attacker keeps guessing while a participant's correct attempt slips through. The lockout is deliberately short, because the code is on a screen in the room and the likeliest person holding a wrong one is a participant who mistyped it.
+
+What that bounds is worth stating plainly. The counter is in the session, so a client that discards its cookie starts over, and this is a speed bump rather than a wall. Moving it server-side needs a key the client cannot throw away, and the obvious candidate, the client address, is rewritten by the ingress, so every visitor would share one bucket and a low threshold would lock out the whole meeting. `docs/dev/booking.md` describes the same trade-off for the booking code.
+
+The form is validated before the lockout is consulted, so a malformed submission is a 403 that costs no attempt.
 
 ## Templates and JavaScript
 - `templates/common/attendance/index.html`: the event list, each entry a link to the event's slug.
@@ -75,13 +80,13 @@ Both scripts call their strings through the `gettext` global injected by the pag
 `attendance/admin.py` registers `AttendanceEvent` with a collapsed `TabularInline` of its changes, and `AttendanceChange` on its own. `NonMemberAttendee` is not registered, so there is no admin page that creates a guest: those rows come from the public form, and there is nothing for an editor to maintain. Neither registration sets `list_display`, filters or search, and the change list opens newest first through `Meta.ordering`.
 
 ## Migrations
-Five migrations, all from the same branch. The app does not exist on `main` yet. Each one records the strings as they stood when it was written, so an earlier migration can carry a spelling that a later one corrects.
+Five migrations, all from the same branch. The app does not exist on `main` yet, so this history is still being tidied rather than treated as published.
 
 - `0001_initial`: creates the three tables with English placeholder labels ("Title", "Entered") and a `secret` field on the event that does not survive the next migration.
 - `0002_remove_attendanceevent_secret_and_more`: drops `secret` and adds `code_secret` and `code_validity_time`. The column it drops was created by `0001` on this branch and existed only in branch databases, so this touches no pre-existing data anywhere; a database that runs both in order ends up where a fresh one starts.
 - `0003_prepare_translations`: rewrites the model labels and the constraint's violation message from the English placeholders into the Swedish strings the models declare today. No schema change beyond the labels.
-- `0004_alter_attendancechange_options`: sets `ordering = ["-timestamp"]` on `AttendanceChange.Meta`, so the lists read newest first without each caller reversing a queryset, and corrects the plural label to `närvaroändringar`.
-- `0005_alter_attendanceevent_code_secret_and_more`: floors `code_validity_time` at one second with a `MinValueValidator`, so the admin cannot save a period that breaks the code arithmetic, and corrects the label `Kodens genereringsnyckel`, which was missing an `s`.
+- `0004_alter_attendancechange_options`: sets `ordering = ["-timestamp"]` on `AttendanceChange.Meta`, so the lists read newest first without each caller reversing a queryset.
+- `0005_alter_attendanceevent_code_validity_time`: floors `code_validity_time` at one second with a `MinValueValidator`, so the admin cannot save a period that breaks the code arithmetic.
 
 Nothing here rewrites a published migration, and a further behaviour change gets a new migration as usual.
 
@@ -124,7 +129,7 @@ The templates under `templates/common/attendance/` and the scripts under `static
 ## Risks and limits
 - Staff access is group membership, so everyone in `styrelse`, `admin`, `fotograf` and `rösträknare` can see the code and the change log. The app has no permission of its own that narrows the overview page; only the admin edit pages use model permissions.
 - The attendee list on the event page is public to anyone who can open the page, including guests' names. Only the change log is behind `user.is_staff`. If a meeting's attendee list should not be public, that is not a setting today.
-- The code is a proof of presence, not a credential: six digits, displayed to the room, with no attempt limit.
+- The code is a proof of presence, not a credential: six digits, displayed to the room. The attempt limit that guards it is a session counter, so a client that discards its cookie is not bounded by it.
 - An ended event is still reachable and still accepts check-ins, because nothing reads `has_ended`.
 - The attendee list is a snapshot from the request, and the broadcast that would fix it has no consumer.
 - Deleting a change row in the admin changes who counts as present, because presence is read from the newest row.
@@ -134,4 +139,4 @@ The templates under `templates/common/attendance/` and the scripts under `static
 - Consume the `attendance_change` broadcast from `detail.js` or a staff view to make the attendee list live; the write path already sends it.
 - Give the consumer tests a database setup that survives the connection `close_old_connections()` closes, so the whole file can run against PostgreSQL and not only on SQLite.
 - Add pagination or a date filter to `AttendanceEventsView` if the event list grows.
-- Add an attempt limit to the code input if guessing matters, and decide first what the limit is keyed on, because a session cookie is thrown away by a script.
+- Move the attempt limit off the session if guessing ever matters more than it does now. That needs a key the client cannot discard, which means deciding how to treat client addresses behind the ingress first.
