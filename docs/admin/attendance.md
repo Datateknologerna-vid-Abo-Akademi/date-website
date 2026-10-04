@@ -6,7 +6,7 @@ The attendance list is the digital replacement for the paper list at a meeting. 
 The list is a record of who was in the room at a meeting. It is not the association's minutes, and it does not replace them.
 
 ## Creating an event
-1. Open the attendance events list (**Närvaroevenemang**) in `/admin` and use the add button above the list.
+1. Open the attendance events list (**Närvaroevenemang**) in `/admin` and use the add button above the list. It shows each event's title, its start and end time and whether guests may check in, opens on the newest event, and can be searched by title or narrowed by date.
 2. Fill in:
    - **Titel**: the name the participants see, and the name the admin list shows.
    - **Beskrivning**: one optional line shown under the title.
@@ -56,7 +56,7 @@ There is no admin page for guests and no guest list to keep tidy. A guest's row 
 
 ## Troubleshooting
 **"Fel kod" is shown over the code box.**
-- The code rotated between the participant reading it and pressing the button. Only the code for the current window is accepted, and the previous one gets no grace, so read the current code from the overview page and try again.
+- The code rotated between the participant reading it and pressing the button, and the code they read is now more than one period old. A code keeps working through the period after it is replaced, so somebody who was a few seconds slow is still accepted; anything older than that is not. Read the current code from the overview page and try again.
 - Or they are using another event's code. Every event has its own code, so a code shown for a different event never works here. This is the usual mix-up when several events are open at once.
 - If somebody scanned the QR code and still sees this, the code changed while they walked to the door. Point them at the current one, or have them scan again.
 

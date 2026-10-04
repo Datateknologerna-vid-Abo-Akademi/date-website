@@ -120,7 +120,7 @@
         </div>
         <div>
           <h2>{% trans "Närvarande" %}:</h2>
-          <ul class="list-dashed">
+          <ul>
             {% for a in present_attendees %}
               <li>{{ a.get_full_name }}</li>
             {% endfor %}
@@ -130,7 +130,7 @@
           <div>
             <h2>{% trans "Närvaroändringar" %}</h2>
             <ul>
-              {% for c in object.attendance_changes.all %}
+              {% for c in changes %}
                 {% trans c.get_type_display context "left/entered in general" as type %}
                 <li>
                   {% blocktrans trimmed with name=c.attendee.get_full_name type_l=type|lower date=c.timestamp.date time=c.timestamp.time %}

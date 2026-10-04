@@ -38,6 +38,7 @@ from django.contrib.auth.models import AnonymousUser, Group
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection, transaction
 from django.test import RequestFactory, TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.timezone import now
@@ -196,11 +197,19 @@ class AttendanceCodeTests(TestCase):
         self.assertFalse(make_event().is_code_valid(PINNED_CODE + 1))
 
     @patch("django_otp.oath.time", return_value=OATH_TIME + 30)
-    def test_is_code_valid_rejects_the_previous_step_after_the_validity_time(self, _time):
+    def test_is_code_valid_accepts_the_previous_step_as_grace(self, _time):
         event = make_event()
         # A step later the event hands out a different code ...
         self.assertEqual(event.get_current_code(), PINNED_NEXT_CODE)
-        # ... and the code from the previous step no longer verifies.
+        # ... and the code from the step before still verifies, so somebody who
+        # started typing just before the rotation is not told they are wrong.
+        self.assertTrue(event.is_code_valid(PINNED_CODE))
+
+    @patch("django_otp.oath.time", return_value=OATH_TIME + 60)
+    def test_is_code_valid_rejects_a_code_two_steps_old(self, _time):
+        event = make_event()
+
+        # The grace is one step wide, not an open window.
         self.assertFalse(event.is_code_valid(PINNED_CODE))
 
     @patch("django_otp.oath.time", return_value=OATH_TIME)
@@ -210,9 +219,12 @@ class AttendanceCodeTests(TestCase):
         self.assertGreater(remaining, 0)
         self.assertLessEqual(remaining, event.code_validity_time)
 
-    @patch("django_otp.oath.time", return_value=OATH_TIME)
+    @patch("django_otp.oath.time", return_value=OATH_TIME + 60)
     def test_code_uses_the_secret_and_period_stored_on_the_event(self, _time):
         secret = "abcdefghijklmnopqrst"
+        # Both periods are past their first step at this clock. A 60-second period
+        # pinned at OATH_TIME sits at counter 0, and the one-step grace would look
+        # at counter -1, which the TOTP arithmetic cannot express.
         minute_period = make_event(code_secret=secret, code_validity_time=60)
         half_minute_period = make_event(slug="trettio", code_secret=secret, code_validity_time=30)
 
@@ -321,6 +333,20 @@ class PresentAttendeesTests(TestCase):
         record_change(self.event, LEAVE, user=self.member, timestamp=self.at + timedelta(minutes=10))
 
         self.assertEqual(self.event.present_attendees(self.at), [self.member])
+
+    def test_the_names_come_from_the_same_query_as_the_rows(self):
+        """Two attendees cost one query, not three.
+
+        Without ``select_related`` every name is fetched on its own, which is what
+        the query count here pins.
+        """
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=10))
+        record_change(self.event, ENTER, non_member=self.guest, timestamp=self.at - timedelta(minutes=5))
+
+        with self.assertNumQueries(1):
+            labels = [attendee.get_full_name() for attendee in self.event.present_attendees(self.at)]
+
+        self.assertEqual(len(labels), 2)
 
 
 class NonMemberAttendeeModelTests(TestCase):
@@ -507,6 +533,15 @@ class AttendanceIndexViewTests(TestCase):
         self.assertContains(response, "Öppet")
         self.assertNotContains(response, "Avslutat")
 
+    def test_index_lists_the_soonest_event_first(self):
+        make_event(slug="senare", title="Senare", start_datetime=now() + timedelta(days=2))
+        make_event(slug="tidigare", title="Tidigare", start_datetime=now() + timedelta(hours=2))
+
+        response = self.client.get(self.url)
+
+        titles = [event.title for event in response.context["object_list"]]
+        self.assertLess(titles.index("Tidigare"), titles.index("Senare"))
+
     def test_index_rejects_post(self):
         self.assertEqual(self.client.post(self.url).status_code, 405)
 
@@ -603,6 +638,23 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, "Närvaroändringar")
+
+    def test_the_change_log_costs_the_same_however_many_rows_it_has(self):
+        """Five more log rows must not mean five more queries."""
+        self.client.force_login(self.staff)
+        record_change(self.event, ENTER, user=self.member)
+
+        with CaptureQueriesContext(connection) as small:
+            self.client.get(self.detail_url)
+
+        for index in range(5):
+            guest = NonMemberAttendee.objects.create(name=f"Gäst {index}")
+            record_change(self.event, ENTER, non_member=guest)
+
+        with CaptureQueriesContext(connection) as grown:
+            self.client.get(self.detail_url)
+
+        self.assertEqual(len(small.captured_queries), len(grown.captured_queries))
 
     def test_code_from_the_query_string_is_prefilled(self):
         response = self.client.get(self.detail_url, {"code": "123456"})
@@ -891,6 +943,8 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
         guest_label = guest.name
         self.assertCountEqual(response.context["present_attendees"], [member_label, guest_label])
         self.assertContains(response, "Närvarande")
+        # The list updates over the socket, so it has to announce its changes.
+        self.assertContains(response, 'aria-live="polite"')
         self.assertContains(response, f'<li data-attendee="{member_label}">{member_label}</li>')
         self.assertContains(response, f'<li data-attendee="{guest_label}">{guest_label}</li>')
 
@@ -952,6 +1006,44 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
         self.assertEqual(swedish_label, english_label)
         self.assertEqual(swedish_label, guest.name)
         self.assertNotEqual(swedish_log_label, english_log_label)
+
+
+class AttendanceAdminTests(TestCase):
+    """The admin surface an editor works from: find the event, open its overview page."""
+
+    def setUp(self):
+        self.admin_user = make_member("admin", is_superuser=True)
+        self.changelist_url = reverse("admin:attendance_attendanceevent_changelist")
+
+    def test_event_changelist_lists_the_events(self):
+        make_event(slug="hostmote", title="Höstmöte")
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.changelist_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Höstmöte")
+        self.assertContains(response, "Starttid")
+
+    def test_event_changelist_can_be_searched(self):
+        make_event(slug="hostmote", title="Höstmöte")
+        make_event(slug="arsmote", title="Årsmöte")
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.changelist_url, {"q": "Höst"})
+
+        self.assertContains(response, "Höstmöte")
+        self.assertNotContains(response, "Årsmöte")
+
+    def test_event_changelist_opens_on_the_newest_event(self):
+        make_event(slug="aldre", title="Äldre", start_datetime=now() - timedelta(days=7))
+        make_event(slug="nyare", title="Nyare", start_datetime=now())
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.changelist_url)
+
+        content = response.content.decode()
+        self.assertLess(content.index("Nyare"), content.index("Äldre"))
 
 
 class AttendanceWebsocketTests(TestCase):

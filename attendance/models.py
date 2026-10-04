@@ -90,6 +90,8 @@ class AttendanceEvent(models.Model):
             x.attendee
             # NOTE: using distinct this way will only work on postgres, which is currently used
             for x in self.attendance_changes.filter(timestamp__lte=timestamp)
+            # Otherwise every attendee costs a query of its own for the name.
+            .select_related("user", "non_member")
             .distinct("user", "non_member")
             .order_by("user_id", "non_member_id", "-timestamp")
             if x.type == AttendanceChange.Type.ENTER
@@ -136,7 +138,12 @@ class AttendanceEvent(models.Model):
         return step - now % step
 
     def is_code_valid(self, code: int) -> bool:
-        return self.totp.verify(code)
+        # One step of grace: the code that was on screen when somebody started
+        # typing still works through the following period. Without it a
+        # participant who is a little slow gets "Fel kod", and five of those now
+        # start a lockout. The next period's code cannot be produced without the
+        # secret, so widening the window costs nothing.
+        return self.totp.verify(code, tolerance=1)
 
 
 class NonMemberAttendee(models.Model):

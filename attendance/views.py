@@ -1,7 +1,7 @@
 from typing import cast
 
 from django.contrib.auth.mixins import UserPassesTestMixin
-from django.db.models import Q
+from django.db.models import Model, Q
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
 from django.utils.timezone import now
@@ -24,10 +24,30 @@ class AttendanceEventsView(ListView):
     template_name = "attendance/index.html"
 
     def get_queryset(self):
-        return self.model.objects.filter(Q(end_datetime__isnull=True) | Q(end_datetime__gte=now()))
+        # Soonest first, so the meeting that is running now is at the top and the
+        # ones after it follow. Without an order the database decides, which for
+        # a list of meetings is not an order a reader can predict.
+        return self.model.objects.filter(Q(end_datetime__isnull=True) | Q(end_datetime__gte=now())).order_by(
+            "start_datetime"
+        )
 
 
-class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[AttendanceEvent], View):
+class AttendanceEventObjectMixin[ModelT: Model](SingleObjectMixin[ModelT]):
+    """Fetches the event once per request.
+
+    ``UserPassesTestMixin.test_func`` runs before the handler and has to look the
+    object up to decide, so without this every detail and overview request would
+    fetch the same row twice.
+    """
+
+    def get_object(self, queryset=None):
+        if not hasattr(self, "object"):
+            self.object = super().get_object(queryset)
+
+        return self.object
+
+
+class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[AttendanceEvent], View):
     model = AttendanceEvent
     template_name = "attendance/detail.html"
 
@@ -46,6 +66,9 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
         ctx["can_see_overview"] = AttendanceEventOverview.is_user_allowed(self.request.user)
         ctx["user"] = self.request.user
         ctx["present_attendees"] = self.object.present_attendees()
+        # select_related so the staff change log costs one query rather than one
+        # per row for the names. Lazy, so it is free for everyone else.
+        ctx["changes"] = self.object.attendance_changes.select_related("user", "non_member")
         if self.request.method == "GET" and "code" in self.request.GET:
             ctx["prefilled_code"] = self.request.GET.get("code")
 
@@ -137,7 +160,7 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
         return HttpResponseSeeOther(self.request.path)
 
 
-class AttendanceEventOverview(UserPassesTestMixin, SingleObjectMixin[AttendanceEvent], View):
+class AttendanceEventOverview(UserPassesTestMixin, AttendanceEventObjectMixin[AttendanceEvent], View):
     model = AttendanceEvent
     template_name = "attendance/overview.html"
 

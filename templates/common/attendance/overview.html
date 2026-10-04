@@ -27,7 +27,7 @@
         <div id="qrcode"></div>
         <div>
           <h2>{% trans "Närvarande" %}:</h2>
-          <ul id="present-attendees" class="list-dashed">
+          <ul id="present-attendees" aria-live="polite">
             {% for a in present_attendees %}
               <li data-attendee="{{ a }}">{{ a }}</li>
             {% endfor %}
