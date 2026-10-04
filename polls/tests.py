@@ -1,15 +1,21 @@
+import unittest
 from unittest.mock import patch
 
+from django.conf import settings
+from django.contrib import admin
 from django.contrib.auth.models import AnonymousUser
+from django.db import connection
 from django.http import HttpResponse
 from django.test import RequestFactory, TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
 from members.models import NON_VOTING_MEMBER, ORDINARY_MEMBER, Member, MembershipType, Subscription, SubscriptionPayment
 
+from . import admin as polls_admin
 from . import views
-from .models import Choice, Question
+from .models import Choice, Question, Vote
 from .vote import (
     ANYONE,
     ERROR_MESSAGES,
@@ -21,7 +27,27 @@ from .vote import (
     is_user_authorized_to_vote,
     required_multiple_choices_matches_selected,
     validate_vote,
+    voter_is_present,
 )
+
+# `attendance` is installed by DaTe alone, and `core.settings.test` inherits the
+# date settings, so the poll-to-meeting tests below run here and are skipped on a
+# settings module that does not install the app.
+ATTENDANCE_INSTALLED = 'attendance' in settings.INSTALLED_APPS
+
+if ATTENDANCE_INSTALLED:
+    from attendance.models import AttendanceChange, AttendanceEvent, AttendancePoll
+
+    ENTER = AttendanceChange.Type.ENTER
+    LEAVE = AttendanceChange.Type.LEAVE
+
+    def make_attendance_event(slug='mote', title='Möte'):
+        """An attendance event that is open right now."""
+        return AttendanceEvent.objects.create(title=title, slug=slug, start_datetime=timezone.now())
+
+    def record_change(event, change_type, user):
+        """Write one attendance change for a member."""
+        return AttendanceChange.objects.create(event=event, user=user, type=change_type)
 
 
 class QuestionModelTests(TestCase):
@@ -240,3 +266,299 @@ class HandleVoteWorkflowTests(TestCase):
         response = handle_vote(request, self.question, self.member, [])
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Du valde inget alternativ', response.content)
+
+
+class ForgedChoiceTests(TestCase):
+    """A posted choice has to be an answer to the question being voted on.
+
+    The ids come straight from the POST, so a crafted submission could name the
+    choices of another poll and inflate that poll's counters. `validate_vote`
+    refuses it, and `handle_selected_choices` is scoped to the question so the
+    write path is safe even when the validation is bypassed.
+    """
+
+    def setUp(self):
+        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.member = Member.objects.create_user(
+            username="forger", password="pwd", membership_type=self.membership_type
+        )
+        self.question = Question.objects.create(question_text="Frågan som röstas på")
+        self.choice = Choice.objects.create(question=self.question, choice_text="ja")
+        self.other_question = Question.objects.create(question_text="En annan fråga")
+        self.other_choice = Choice.objects.create(question=self.other_question, choice_text="annat", votes=5)
+
+    def test_a_choice_from_another_question_is_refused(self):
+        message = validate_vote(None, self.question, self.member, [str(self.other_choice.id)])
+
+        self.assertEqual(message, ERROR_MESSAGES['invalid_choice'])
+        self.assertNotEqual(message, ERROR_MESSAGES['no_choice'])
+
+    def test_a_choice_id_that_is_not_a_number_is_refused(self):
+        message = validate_vote(None, self.question, self.member, ['inte-ett-id'])
+
+        self.assertEqual(message, ERROR_MESSAGES['invalid_choice'])
+
+    def test_a_forged_choice_changes_no_counter(self):
+        """The write path on its own, with validate_vote() deliberately skipped."""
+        handle_selected_choices(self.question, [self.other_choice.id], self.member)
+
+        self.other_choice.refresh_from_db()
+        self.choice.refresh_from_db()
+        self.assertEqual(self.other_choice.votes, 5)
+        self.assertEqual(self.choice.votes, 0)
+
+    def test_a_forged_vote_is_refused_and_writes_nothing(self):
+        """Through the view, where the refusal comes before anything is written."""
+        response = self.client.post(
+            reverse('polls:vote', args=[self.question.id]),
+            {'choice': [str(self.other_choice.id)]},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, ERROR_MESSAGES['invalid_choice'])
+        self.other_choice.refresh_from_db()
+        self.assertEqual(self.other_choice.votes, 5)
+        self.assertEqual(Vote.objects.count(), 0)
+
+    def test_a_real_choice_still_counts(self):
+        """The scoped update still updates the question's own choices."""
+        handle_selected_choices(self.question, [self.choice.id], self.member)
+
+        self.choice.refresh_from_db()
+        self.assertEqual(self.choice.votes, 1)
+        self.assertEqual(Vote.objects.count(), 1)
+
+
+@unittest.skipUnless(ATTENDANCE_INSTALLED, "the attendance app is not installed in this settings module")
+class VoterPresenceTests(TestCase):
+    """The poll gate: only people in the meeting's room may vote on it."""
+
+    def setUp(self):
+        self.membership_type = MembershipType.objects.get(pk=ORDINARY_MEMBER)
+        self.member = Member.objects.create_user(
+            username="narvarande", password="pwd", membership_type=self.membership_type
+        )
+        self.event = make_attendance_event()
+        self.question = Question.objects.create(question_text="Mötesfråga")
+        self.choice = Choice.objects.create(question=self.question, choice_text="ja")
+        self.attachment = AttendancePoll.objects.create(question=self.question, event=self.event)
+
+    def test_a_present_member_may_vote(self):
+        record_change(self.event, ENTER, self.member)
+
+        self.assertTrue(voter_is_present(self.question, self.member))
+        self.assertIsNone(validate_vote(None, self.question, self.member, [str(self.choice.id)]))
+
+    def test_a_member_who_has_not_arrived_is_refused(self):
+        self.assertFalse(voter_is_present(self.question, self.member))
+        self.assertEqual(
+            validate_vote(None, self.question, self.member, [str(self.choice.id)]),
+            ERROR_MESSAGES['not_present'],
+        )
+
+    def test_a_member_who_left_before_voting_is_refused(self):
+        record_change(self.event, ENTER, self.member)
+        record_change(self.event, LEAVE, self.member)
+
+        self.assertFalse(voter_is_present(self.question, self.member))
+        self.assertEqual(
+            validate_vote(None, self.question, self.member, [str(self.choice.id)]),
+            ERROR_MESSAGES['not_present'],
+        )
+
+    def test_presence_at_another_meeting_is_not_presence_here(self):
+        record_change(make_attendance_event(slug="annat", title="Annat möte"), ENTER, self.member)
+
+        self.assertFalse(voter_is_present(self.question, self.member))
+        self.assertEqual(
+            validate_vote(None, self.question, self.member, [str(self.choice.id)]),
+            ERROR_MESSAGES['not_present'],
+        )
+
+    def test_an_anonymous_voter_is_refused(self):
+        """The poll is open to anyone, and the gate still refuses an anonymous visitor."""
+        self.assertEqual(self.question.voting_options, ANYONE)
+
+        self.assertFalse(voter_is_present(self.question, AnonymousUser()))
+        self.assertEqual(
+            validate_vote(None, self.question, AnonymousUser(), [str(self.choice.id)]),
+            ERROR_MESSAGES['not_present'],
+        )
+
+    def test_the_attachment_is_read_through_the_reverse_accessor(self):
+        self.assertEqual(self.question.attendance_poll, self.attachment)
+        self.assertEqual(self.event.polls.get(), self.attachment)
+
+    def test_a_poll_without_an_attachment_is_unaffected(self):
+        """The regression that matters most: an ordinary poll keeps its old rules."""
+        unattached = Question.objects.create(question_text="Vanlig fråga")
+        choice = Choice.objects.create(question=unattached, choice_text="ja")
+
+        self.assertTrue(voter_is_present(unattached, AnonymousUser()))
+        self.assertTrue(voter_is_present(unattached, self.member))
+        self.assertIsNone(validate_vote(None, unattached, AnonymousUser(), [str(choice.id)]))
+
+    def test_the_helper_allows_everyone_when_attendance_is_not_installed(self):
+        """The other six associations have no attendance app to consult."""
+        # The refusal below is what the patch is measured against.
+        self.assertFalse(voter_is_present(self.question, self.member))
+
+        with patch('polls.vote.apps.is_installed', return_value=False):
+            self.assertTrue(voter_is_present(self.question, self.member))
+            self.assertTrue(voter_is_present(self.question, AnonymousUser()))
+
+    def test_the_eligibility_message_wins_over_the_presence_message(self):
+        """The gate is checked after authorization, so an ineligible voter hears that."""
+        self.question.voting_options = MEMBERS_ONLY
+        self.question.save()
+
+        self.assertFalse(voter_is_present(self.question, AnonymousUser()))
+        self.assertEqual(
+            validate_vote(None, self.question, AnonymousUser(), [str(self.choice.id)]),
+            ERROR_MESSAGES['not_authorized'],
+        )
+
+    def test_a_member_who_already_voted_hears_that_before_the_room_check(self):
+        """The existing checks keep their position, so the gate cannot mask them."""
+        self.question.voting_options = MEMBERS_ONLY
+        self.question.save()
+        self.question.voters.add(self.member)
+
+        # Present or not, this member has voted on this poll already.
+        self.assertFalse(voter_is_present(self.question, self.member))
+        self.assertEqual(
+            validate_vote(None, self.question, self.member, [str(self.choice.id)]),
+            ERROR_MESSAGES['already_voted'],
+        )
+
+    def test_a_vote_from_the_room_is_redirected(self):
+        self.question.voting_options = MEMBERS_ONLY
+        self.question.save()
+        record_change(self.event, ENTER, self.member)
+        self.client.force_login(self.member)
+
+        response = self.client.post(reverse('polls:vote', args=[self.question.id]), {'choice': [str(self.choice.id)]})
+
+        self.assertEqual(response.status_code, 302)
+        self.choice.refresh_from_db()
+        self.assertEqual(self.choice.votes, 1)
+
+    def test_a_vote_from_outside_the_room_renders_the_message(self):
+        self.question.voting_options = MEMBERS_ONLY
+        self.question.save()
+        self.client.force_login(self.member)
+
+        response = self.client.post(reverse('polls:vote', args=[self.question.id]), {'choice': [str(self.choice.id)]})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, ERROR_MESSAGES['not_present'])
+        self.choice.refresh_from_db()
+        self.assertEqual(self.choice.votes, 0)
+        self.assertEqual(Vote.objects.count(), 0)
+
+
+@unittest.skipUnless(ATTENDANCE_INSTALLED, "the attendance app is not installed in this settings module")
+class QuestionAdminAttendanceTests(TestCase):
+    """The meeting column and the inline, on the poll page an editor works from."""
+
+    def setUp(self):
+        self.admin_user = Member.objects.create_user(
+            username="admin",
+            password="pwd",
+            membership_type=MembershipType.objects.get(pk=ORDINARY_MEMBER),
+            is_superuser=True,
+        )
+        self.event = make_attendance_event(title="Årsmöte")
+        self.question = Question.objects.create(question_text="Kopplad fråga")
+        self.unattached = Question.objects.create(question_text="Vanlig fråga")
+        self.changelist_url = reverse("admin:polls_question_changelist")
+
+    def test_the_meeting_column_exists_only_with_the_attendance_app(self):
+        with_app = polls_admin.question_list_display(True)
+        without_app = polls_admin.question_list_display(False)
+
+        self.assertIn('attendance_event', with_app)
+        self.assertNotIn('attendance_event', without_app)
+        # The column is an addition, so no variant loses a column it has today.
+        self.assertEqual(set(without_app) - set(with_app), set())
+        self.assertEqual(set(with_app) - set(without_app), {'attendance_event'})
+
+    def test_the_registered_admin_uses_the_column_list_for_this_settings_module(self):
+        """The class config is the one this settings module's flag asks for."""
+        self.assertTrue(polls_admin.ATTENDANCE_INSTALLED)
+        registered = admin.site._registry[Question]
+
+        self.assertEqual(registered.list_display, polls_admin.question_list_display(True))
+        # The column's relation is joined into the changelist query, not fetched
+        # one row at a time. The query count below pins the effect.
+        self.assertTrue(registered.get_queryset(None).query.select_related)
+
+    def test_the_column_shows_the_meeting_or_a_dash(self):
+        registered = admin.site._registry[Question]
+        AttendancePoll.objects.create(question=self.question, event=self.event)
+
+        self.assertEqual(registered.attendance_event(self.question), self.event)
+        self.assertEqual(registered.attendance_event(self.unattached), '-')
+
+    def test_the_changelist_renders_the_meeting(self):
+        AttendancePoll.objects.create(question=self.question, event=self.event)
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.changelist_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, str(self.event))
+        self.assertContains(response, self.unattached.question_text)
+
+    def test_the_meeting_column_costs_no_query_per_row(self):
+        self.client.force_login(self.admin_user)
+        AttendancePoll.objects.create(question=self.question, event=self.event)
+
+        with CaptureQueriesContext(connection) as small:
+            self.client.get(self.changelist_url)
+
+        for index in range(5):
+            question = Question.objects.create(question_text=f"Kopplad fråga {index}")
+            AttendancePoll.objects.create(question=question, event=self.event)
+
+        with CaptureQueriesContext(connection) as grown:
+            self.client.get(self.changelist_url)
+
+        self.assertEqual(len(small.captured_queries), len(grown.captured_queries))
+
+    def test_the_inline_is_configured_for_one_meeting(self):
+        """One poll, one meeting, and a Swedish heading for the section."""
+        inline = polls_admin.AttendancePollInline
+
+        self.assertEqual(str(inline.verbose_name_plural), 'Närvarokrav')
+        self.assertEqual(inline.extra, 0)
+        self.assertEqual(inline.max_num, 1)
+
+    def test_the_poll_page_offers_the_meeting_on_the_poll_being_edited(self):
+        """The inline's parent is the poll, so Django fills that side in."""
+        AttendancePoll.objects.create(question=self.question, event=self.event)
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:polls_question_change", args=[self.question.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Närvarokrav')
+        self.assertContains(response, 'name="attendance_poll-0-event"')
+        self.assertContains(response, str(self.event))
+
+    def test_the_add_page_offers_the_inline_before_the_poll_exists(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:polls_question_add"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Närvarokrav')
+
+    def test_the_poll_page_offers_the_inline_on_a_poll_without_a_meeting(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:polls_question_change", args=[self.unattached.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        # The inline is there for the editor to attach a meeting to this poll.
+        self.assertContains(response, 'Närvarokrav')

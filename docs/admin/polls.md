@@ -28,6 +28,15 @@ Run quick votes or questionnaires for members. Each poll ("Fråga") contains mul
 2. Enter the visible text. Vote counts are read-only.
 3. Save when all options have been added.
 
+## Restrict a Poll to a Meeting
+On an association that installs the `attendance` app (`date`), the poll page has a **Närvarokrav** section below the choices, on the add page as well as on a saved poll. Pick an **Närvaroevenemang** and save. From then on the poll accepts a vote only from somebody who is in that meeting's room at the moment they vote: a member whose newest check-in there is an arrival. A member who has checked out, a member who has not arrived yet, and an anonymous visitor are all refused with "Du måste vara närvarande på mötet för att rösta.".
+
+Leave the section empty and the poll keeps the ordinary rules from **Valmöjligheter**. A poll belongs to at most one meeting, so the section holds a single row. Presence is read when the vote is submitted and nothing about it is stored on the vote, so a member who leaves the room afterwards can no longer vote, while the votes already counted stay counted.
+
+On an association that does not install `attendance` (every association except `date`), the section is not rendered at all: there is no meeting to pick and no meeting to check against, and every poll keeps the rules from **Valmöjligheter**. The poll list (`/admin/polls/question/`) has a **Närvaroevenemang** column on `date`, showing the meeting an attached poll belongs to and a dash for a poll with none; that column does not exist on the other associations either.
+
+Somebody who checks in and never checks out still counts as present, so a poll attached to that meeting keeps accepting their vote after it has ended. Stop the poll with **Avsluta röstande** when the vote is over, and remind people to press **Gå ut** if you want the room list itself to be exact.
+
 ## Monitor Votes
 - The **Röstare** inline lists individual members who voted. It’s read-only to avoid tampering (only superusers may delete entries).
 - Use the list filter (`pub_date`) or search bar to find older polls.

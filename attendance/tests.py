@@ -58,12 +58,14 @@ from attendance.consumers import AttendanceConsumer  # noqa: E402
 from attendance.models import (  # noqa: E402
     AttendanceChange,
     AttendanceEvent,
+    AttendancePoll,
     NonMemberAttendee,
     attendee_entry,
     attendee_key,
 )
 from attendance.routing import websocket_urlpatterns  # noqa: E402
 from members.models import Member  # noqa: E402
+from polls.models import Question  # noqa: E402
 
 # RFC 6238 test key. At second OATH_TIME the current token is PINNED_CODE, and one
 # step later it is PINNED_NEXT_CODE, which is what makes the rotation testable.
@@ -513,6 +515,56 @@ class AttendanceChangeConstraintTests(TestCase):
             record_change(self.event, ENTER, user=self.member, non_member=self.non_member)
 
         self.assertIn("foreign_keys_ok", str(raised.exception))
+
+
+class AttendancePollModelTests(TestCase):
+    """The poll-to-meeting link: one poll to one meeting, and the cascades both ways."""
+
+    def setUp(self):
+        self.event = make_event(title="Årsmöte")
+        self.other_event = make_event(slug="annat", title="Annat möte")
+        self.question = Question.objects.create(question_text="Mötesfråga")
+        self.other_question = Question.objects.create(question_text="Annan fråga")
+
+    def test_a_link_is_readable_from_both_sides(self):
+        link = AttendancePoll.objects.create(question=self.question, event=self.event)
+
+        self.assertEqual(self.event.polls.get(), link)
+        self.assertEqual(self.question.attendance_poll, link)
+
+    def test_str_names_the_meeting_and_the_question(self):
+        link = AttendancePoll.objects.create(question=self.question, event=self.event)
+
+        self.assertEqual(str(link), f"{self.event}: {self.question}")
+
+    def test_a_question_can_be_attached_to_only_one_meeting(self):
+        AttendancePoll.objects.create(question=self.question, event=self.event)
+
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            AttendancePoll.objects.create(question=self.question, event=self.other_event)
+
+    def test_one_meeting_can_carry_several_polls(self):
+        first = AttendancePoll.objects.create(question=self.question, event=self.event)
+        second = AttendancePoll.objects.create(question=self.other_question, event=self.event)
+
+        self.assertCountEqual(self.event.polls.all(), [first, second])
+
+    def test_deleting_the_question_removes_the_link(self):
+        AttendancePoll.objects.create(question=self.question, event=self.event)
+
+        self.question.delete()
+
+        self.assertFalse(AttendancePoll.objects.exists())
+        # The meeting is untouched: the poll was the dependent side.
+        self.assertTrue(AttendanceEvent.objects.filter(pk=self.event.pk).exists())
+
+    def test_deleting_the_event_removes_the_link_and_keeps_the_poll(self):
+        AttendancePoll.objects.create(question=self.question, event=self.event)
+
+        self.event.delete()
+
+        self.assertFalse(AttendancePoll.objects.exists())
+        self.assertTrue(Question.objects.filter(pk=self.question.pk).exists())
 
 
 class AttendanceChangeFormTests(TestCase):

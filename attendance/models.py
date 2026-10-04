@@ -175,6 +175,45 @@ class AttendanceEvent(models.Model):
         return previous.verify(code)
 
 
+class AttendancePoll(models.Model):
+    """
+    A poll that only the people in a meeting's room may vote on.
+
+    The link lives here and not on ``polls.Question``: every association installs
+    ``polls``, while ``attendance`` is installed by DaTe alone
+    (``core/settings/date.py``), and a field on the question pointing at this app
+    would fail ``manage.py check`` on the other six. ``polls`` reaches this model
+    through ``Question.attendance_poll``.
+
+    One poll belongs to at most one meeting, which is what the one-to-one says.
+    A poll without a row here is an ordinary poll and keeps the vote rules it
+    always had.
+    """
+
+    # The poll that requires presence.
+    question = models.OneToOneField(
+        "polls.Question",
+        on_delete=models.CASCADE,
+        related_name="attendance_poll",
+        verbose_name=_("Fråga"),
+    )
+
+    # The meeting whose room the voter has to be in.
+    event = models.ForeignKey(
+        AttendanceEvent,
+        on_delete=models.CASCADE,
+        related_name="polls",
+        verbose_name=_("Närvaroevenemang"),
+    )
+
+    class Meta:
+        verbose_name = _("närvarokrav")
+        verbose_name_plural = _("närvarokrav")
+
+    def __str__(self):
+        return f"{self.event}: {self.question}"
+
+
 class NonMemberAttendee(models.Model):
     """
     An attendee who is not a registered user.
