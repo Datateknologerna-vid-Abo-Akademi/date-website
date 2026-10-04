@@ -39,7 +39,7 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection, transaction
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.utils.timezone import now
 from django_otp.oath import TOTP
 
@@ -357,6 +357,9 @@ class AttendanceChangeModelTests(TestCase):
         change = AttendanceChange(event=self.event, non_member=self.non_member, type=ENTER, timestamp=self.at)
 
         self.assertEqual(change.attendee, self.non_member)
+        # The bare name: the socket payload is built in the participant's request
+        # language while the staff page renders in the staff member's, so the
+        # translated marker cannot be part of a label that has to match across it.
         self.assertEqual(change.attendee_name, "Gäst")
 
     def test_str_names_the_attendee_and_the_event(self):
@@ -874,6 +877,81 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context["code"], PINNED_CODE)
+
+    def test_overview_lists_the_present_attendees(self):
+        guest = NonMemberAttendee.objects.create(name="Gäst I Översikten")
+        self.client.force_login(self.staff)
+
+        with patch.object(AttendanceEvent, "present_attendees", return_value=[self.member, guest]) as present:
+            response = self.client.get(self.overview_url)
+
+        self.assertEqual(response.status_code, 200)
+        present.assert_called_once_with()
+        member_label = self.member.get_full_name()
+        guest_label = guest.name
+        self.assertCountEqual(response.context["present_attendees"], [member_label, guest_label])
+        self.assertContains(response, "Närvarande")
+        self.assertContains(response, f'<li data-attendee="{member_label}">{member_label}</li>')
+        self.assertContains(response, f'<li data-attendee="{guest_label}">{guest_label}</li>')
+
+    def test_overview_shows_the_empty_state_when_nobody_is_present(self):
+        """The empty state is in the page, unhidden, when the event has nobody present."""
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.overview_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<ul id="present-attendees"')
+        self.assertContains(response, 'id="no-present-attendees"')
+        self.assertNotContains(response, 'id="no-present-attendees" hidden')
+
+    def test_websocket_label_matches_the_overview_label_for_a_guest(self):
+        """The broadcast carries the label the staff page renders, marker or not.
+
+        ``attendee_name`` is what ``websocket.send_attendance_change`` puts in the
+        payload. The list on the page and the payload both come from
+        ``attendee_label``, so the script recognises an attendee it has already
+        rendered instead of adding a second row for them.
+        """
+        guest = NonMemberAttendee.objects.create(name="Gäst I Översikten")
+        change = record_change(self.event, ENTER, non_member=guest, timestamp=now())
+        self.client.force_login(self.staff)
+
+        with patch.object(AttendanceEvent, "present_attendees", return_value=[guest]):
+            response = self.client.get(self.overview_url)
+
+        layer = get_channel_layer()
+        with patch.object(layer, "group_send", new=AsyncMock()) as group_send:
+            websocket.send_attendance_change(self.event.slug, change)
+
+        broadcast_name = group_send.await_args.args[1]["change"]["name"]
+        self.assertEqual(broadcast_name, guest.name)
+        # The page carries the same label in the same attribute the script reads.
+        self.assertContains(response, f'data-attendee="{broadcast_name}"')
+        # The translated guest marker belongs to the change log, not to this label.
+        self.assertNotContains(response, "icke-medlem")
+
+    def test_the_guest_label_does_not_depend_on_the_language(self):
+        """The participant's language and the staff member's may differ.
+
+        The payload is built while the participant checks in and the page is
+        rendered in the staff member's language. ``attendee_label`` is therefore
+        untranslated, which is why it cannot be the guest's ``get_full_name()``:
+        that one appends a translated marker and would not match.
+        """
+        guest = NonMemberAttendee.objects.create(name="Gäst I Översikten")
+        change = record_change(self.event, ENTER, non_member=guest, timestamp=now())
+
+        with translation.override("sv"):
+            swedish_label = change.attendee_name
+            swedish_log_label = guest.get_full_name()
+        with translation.override("en"):
+            english_label = change.attendee_name
+            english_log_label = guest.get_full_name()
+
+        self.assertEqual(swedish_label, english_label)
+        self.assertEqual(swedish_label, guest.name)
+        self.assertNotEqual(swedish_log_label, english_log_label)
 
 
 class AttendanceWebsocketTests(TestCase):
