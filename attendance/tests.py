@@ -41,7 +41,7 @@ from channels.routing import URLRouter
 from channels.testing import WebsocketCommunicator
 from django.conf import settings
 from django.contrib import admin
-from django.contrib.auth.models import AnonymousUser, Group
+from django.contrib.auth.models import AnonymousUser, Group, Permission
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection, transaction
 from django.test import RequestFactory, TestCase, override_settings
@@ -56,6 +56,7 @@ if "attendance" not in settings.INSTALLED_APPS:
     raise unittest.SkipTest("attendance app is not installed in this settings module")
 
 from attendance import forms, limits, websocket  # noqa: E402
+from attendance.admin import present_at_end  # noqa: E402
 from attendance.consumers import AttendanceConsumer  # noqa: E402
 from attendance.models import (  # noqa: E402
     AttendanceChange,
@@ -67,7 +68,7 @@ from attendance.models import (  # noqa: E402
 )
 from attendance.routing import websocket_urlpatterns  # noqa: E402
 from members.models import Member  # noqa: E402
-from polls.models import Question  # noqa: E402
+from polls.models import Choice, Question, Vote  # noqa: E402
 
 # RFC 6238 test key. At second OATH_TIME the current token is PINNED_CODE, and one
 # step later it is PINNED_NEXT_CODE, which is what makes the rotation testable.
@@ -524,6 +525,36 @@ class PresentAttendeesTests(TestCase):
             with self.subTest(offset=offset):
                 moment = self.at + timedelta(minutes=offset)
                 self.assertEqual(self.event.present_count(moment), len(self.event.present_attendees(moment)))
+
+    def test_the_reports_number_at_the_end_is_what_present_attendees_answers(self):
+        """The report prints ``present_at_end(event)``; the real query has to agree.
+
+        ``present_at_end()`` is the report's own helper, and it is the only
+        version the report can call, because the report also has to render on
+        SQLite. This is where the number it prints is held against the
+        ``DISTINCT ON`` query the room list is built from. The report is not
+        rendered through the client here: on PostgreSQL the test client's session
+        and middleware hit the closed-connection problem described under Running
+        the file against PostgreSQL, and the number is produced by the helper
+        either way.
+        """
+        later = make_member("senare", first_name="Senare", last_name="Svensson")
+        end = self.at + timedelta(minutes=5)
+        self.event.end_datetime = end
+        self.event.save()
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=30))
+        record_change(self.event, ENTER, user=self.gone_member, timestamp=self.at - timedelta(minutes=20))
+        record_change(self.event, LEAVE, user=self.gone_member, timestamp=self.at - timedelta(minutes=10))
+        record_change(self.event, ENTER, non_member=self.guest, timestamp=self.at - timedelta(minutes=5))
+        record_change(self.event, ENTER, user=later, timestamp=self.at - timedelta(minutes=3))
+        record_change(self.event, LEAVE, non_member=self.guest, timestamp=self.at + timedelta(minutes=1))
+        # After the end of the meeting, so neither answer may see it.
+        record_change(self.event, LEAVE, user=self.member, timestamp=self.at + timedelta(minutes=6))
+
+        expected = self.event.present_attendees(end)
+
+        self.assertEqual(len(expected), 2)
+        self.assertEqual(present_at_end(self.event), len(expected))
 
 
 class NonMemberAttendeeModelTests(TestCase):
@@ -1598,6 +1629,249 @@ class AttendanceAdminTests(TestCase):
 
         content = response.content.decode()
         self.assertLess(content.index("Nyare"), content.index("Äldre"))
+
+
+class AttendanceReportAdminTests(TestCase):
+    """The per-meeting report an admin reads afterwards, and its two downloads.
+
+    The report calls ``present_count()`` and never ``present_attendees()`` (see
+    the module docstring), so it renders on SQLite and these tests need no patch.
+    """
+
+    def setUp(self):
+        # A fixed start date, because both downloads are named from it.
+        start = datetime(2024, 5, 1, 12, 0, tzinfo=UTC)
+        self.event = make_event(slug="hostmote", title="Höstmöte", start_datetime=start)
+        self.admin_user = make_member("admin", is_superuser=True)
+        self.report_url = reverse("admin:attendance_event_report", args=[self.event.pk])
+        self.timeline_csv_url = reverse("admin:attendance_event_report_timeline_csv", args=[self.event.pk])
+        self.polls_csv_url = reverse("admin:attendance_event_report_polls_csv", args=[self.event.pk])
+        self.at = now()
+
+    def staff_user(self, username, *permissions):
+        """A staff member who holds exactly the named ``app.codename`` permissions."""
+        user = make_member(username)
+        group, _created = Group.objects.get_or_create(name=STAFF_GROUP)
+        user.groups.add(group)
+        for permission in permissions:
+            app_label, codename = permission.split(".", 1)
+            user.user_permissions.add(Permission.objects.get(content_type__app_label=app_label, codename=codename))
+
+        return user
+
+    def test_the_report_renders_the_numbers_the_timeline_and_the_polls(self):
+        maja = make_member("maja", first_name="Maja", last_name="Andersson")
+        mitt = NonMemberAttendee.objects.create(name="Gäst Mitt")
+        senast = NonMemberAttendee.objects.create(name="Gäst Senast")
+        record_change(self.event, ENTER, user=maja, timestamp=self.at - timedelta(minutes=40))
+        record_change(self.event, ENTER, non_member=mitt, timestamp=self.at - timedelta(minutes=30))
+        record_change(self.event, LEAVE, user=maja, timestamp=self.at - timedelta(minutes=20))
+        record_change(self.event, ENTER, non_member=senast, timestamp=self.at - timedelta(minutes=10))
+        question = Question.objects.create(question_text="Mötesfråga")
+        Choice.objects.create(question=question, choice_text="Ja", votes=3)
+        Choice.objects.create(question=question, choice_text="Nej", votes=1)
+        Vote.objects.create(question=question, user=make_member("rostare"))
+        AttendancePoll.objects.create(question=question, event=self.event)
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.report_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Höstmöte")
+        self.assertContains(response, "Närvarorapport")
+        # The meeting title is the page's one heading. The admin base template
+        # renders a context "title" as a heading too, so the view leaves that key
+        # out deliberately.
+        self.assertEqual(response.content.decode().count("<h1>"), 1)
+        self.assertContains(response, "<h1>Höstmöte</h1>")
+        # At the end the member has left and both guests are in the room.
+        self.assertEqual(response.context["present_at_end"], 2)
+        # The guest and the member overlapped for ten minutes.
+        self.assertEqual(response.context["peak_present"], 2)
+        self.assertEqual(response.context["ever_present"], 3)
+        self.assertEqual(response.context["change_count"], 4)
+
+        # The timeline reads oldest first, however the rows were written.
+        content = response.content.decode()
+        self.assertLess(content.index("Maja Andersson"), content.index("Gäst Mitt"))
+        self.assertLess(content.index("Gäst Mitt"), content.index("Gäst Senast"))
+
+        # The poll: the question, its choices and its votes.
+        self.assertContains(response, "Mötesfråga")
+        self.assertContains(response, "<td>Ja</td>")
+        self.assertContains(response, "<td>Nej</td>")
+        poll = response.context["polls"][0]
+        self.assertEqual(poll["ballots"], 4)
+        self.assertEqual(poll["voters"], 1)
+        self.assertEqual(poll["headcount"], 2)
+        self.assertEqual([entry["percentage"] for entry in poll["choices"]], [75, 25])
+        # The three numbers are labelled beside each other.
+        self.assertContains(response, "Röstsedlar")
+        self.assertContains(response, "Röstande")
+        self.assertContains(response, "Närvarande")
+
+    def test_the_peak_counts_overlapping_arrivals_and_departures(self):
+        anna = make_member("anna", first_name="Anna", last_name="A")
+        bo = make_member("bo", first_name="Bo", last_name="B")
+        cilla = make_member("cilla", first_name="Cilla", last_name="C")
+        record_change(self.event, ENTER, user=anna, timestamp=self.at - timedelta(minutes=50))
+        record_change(self.event, ENTER, user=bo, timestamp=self.at - timedelta(minutes=40))
+        record_change(self.event, LEAVE, user=anna, timestamp=self.at - timedelta(minutes=30))
+        record_change(self.event, ENTER, user=cilla, timestamp=self.at - timedelta(minutes=20))
+        record_change(self.event, LEAVE, user=bo, timestamp=self.at - timedelta(minutes=10))
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.report_url)
+
+        self.assertEqual(response.context["peak_present"], 2)
+        self.assertEqual(response.context["present_at_end"], 1)
+        self.assertEqual(response.context["ever_present"], 3)
+
+    def test_the_peak_is_zero_when_nobody_came(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.report_url)
+
+        self.assertEqual(response.context["peak_present"], 0)
+        self.assertEqual(response.context["present_at_end"], 0)
+        self.assertEqual(response.context["ever_present"], 0)
+        self.assertEqual(response.context["change_count"], 0)
+        self.assertContains(response, "Inga närvaroändringar registrerade.")
+
+    def test_the_report_requires_the_event_permission(self):
+        limited = self.staff_user("begransad", "polls.view_question")
+        self.client.force_login(limited)
+
+        self.assertEqual(self.client.get(self.report_url).status_code, 403)
+
+    def test_the_polls_are_announced_as_hidden_without_the_question_permission(self):
+        question = Question.objects.create(question_text="Hemlig mötesfråga")
+        Choice.objects.create(question=question, choice_text="Ja", votes=1)
+        AttendancePoll.objects.create(question=question, event=self.event)
+        limited = self.staff_user("utanfraga", "attendance.view_attendanceevent")
+        self.client.force_login(limited)
+
+        response = self.client.get(self.report_url)
+
+        self.assertEqual(response.status_code, 200)
+        # The results are not silently missing: the line says they are hidden, and
+        # the question text itself is not in the page.
+        self.assertNotContains(response, "Hemlig mötesfråga")
+        self.assertContains(response, "Omröstningarna döljs utan behörigheten att visa frågor.")
+        # The timeline download needs no poll permission, the poll one does.
+        self.assertEqual(self.client.get(self.timeline_csv_url).status_code, 200)
+        self.assertEqual(self.client.get(self.polls_csv_url).status_code, 403)
+
+    def test_an_unknown_event_id_is_not_found(self):
+        self.client.force_login(self.admin_user)
+
+        for url in (
+            reverse("admin:attendance_event_report", args=[999999]),
+            reverse("admin:attendance_event_report_timeline_csv", args=[999999]),
+            reverse("admin:attendance_event_report_polls_csv", args=[999999]),
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(self.client.get(url).status_code, 404)
+
+    def test_the_changelist_button_appears_with_the_permission_and_disappears_without_it(self):
+        event_admin = admin.site._registry[AttendanceEvent]
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:attendance_attendanceevent_changelist"))
+
+        self.assertContains(
+            response,
+            f'<a class="button admin-inline-action" href="{self.report_url}">Rapport</a>',
+            html=True,
+        )
+
+        request = RequestFactory().get(reverse("admin:attendance_attendanceevent_changelist"))
+        request.user = self.admin_user
+        self.assertIn("report_link", event_admin.get_list_display(request))
+
+        request.user = self.staff_user("utanbehorighet", "polls.view_question")
+        self.assertNotIn("report_link", event_admin.get_list_display(request))
+
+    def test_a_poll_without_any_votes_renders(self):
+        """get_vote_percentage() divides by the total, and raises when there is none."""
+        question = Question.objects.create(question_text="Obesvarad fråga")
+        Choice.objects.create(question=question, choice_text="Ja", votes=0)
+        Choice.objects.create(question=question, choice_text="Nej", votes=0)
+        AttendancePoll.objects.create(question=question, event=self.event)
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.report_url)
+
+        self.assertEqual(response.status_code, 200)
+        poll = response.context["polls"][0]
+        self.assertEqual([entry["percentage"] for entry in poll["choices"]], [0, 0])
+        self.assertEqual(poll["ballots"], 0)
+        self.assertEqual(poll["voters"], 0)
+        # The download divides too, so it has to survive the same poll.
+        self.assertEqual(self.client.get(self.polls_csv_url).status_code, 200)
+
+    def test_the_timeline_csv_has_a_bom_a_header_and_the_changes_in_order(self):
+        maja = make_member("maja", first_name="Maja", last_name="Andersson")
+        senare = NonMemberAttendee.objects.create(name="Gäst Senare")
+        tidigare = NonMemberAttendee.objects.create(name="Gäst Tidigare")
+        # Written newest first, so insertion order and timestamp order disagree.
+        record_change(self.event, ENTER, non_member=senare, timestamp=self.at - timedelta(minutes=10))
+        record_change(self.event, ENTER, user=maja, timestamp=self.at - timedelta(minutes=20))
+        record_change(self.event, ENTER, non_member=tidigare, timestamp=self.at - timedelta(minutes=30))
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.timeline_csv_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/csv")
+        self.assertEqual(
+            response["Content-Disposition"],
+            'attachment; filename="narvaro_hostmote_2024-05-01.csv"',
+        )
+        body = response.content.decode("utf-8")
+        self.assertTrue(body.startswith("\ufeff"))
+        lines = body.removeprefix("\ufeff").splitlines()
+        self.assertEqual(lines[0], "Tid;Deltagare;Ändring;Typ")
+        self.assertEqual(len(lines), 4)
+        self.assertEqual(
+            [line.split(";")[1] for line in lines[1:]],
+            ["Gäst Tidigare", "Maja Andersson", "Gäst Senare"],
+        )
+        self.assertEqual([line.split(";")[2] for line in lines[1:]], ["Anlände"] * 3)
+
+    def test_the_polls_csv_carries_one_row_per_poll_per_choice(self):
+        first = Question.objects.create(question_text="Första frågan")
+        Choice.objects.create(question=first, choice_text="Ja", votes=3)
+        Choice.objects.create(question=first, choice_text="Nej", votes=1)
+        second = Question.objects.create(question_text="Andra frågan")
+        Choice.objects.create(question=second, choice_text="Kanske", votes=0)
+        AttendancePoll.objects.create(question=first, event=self.event)
+        AttendancePoll.objects.create(question=second, event=self.event)
+        Vote.objects.create(question=first, user=make_member("rostare"))
+        record_change(
+            self.event,
+            ENTER,
+            non_member=NonMemberAttendee.objects.create(name="Gäst"),
+            timestamp=self.at - timedelta(minutes=5),
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.polls_csv_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/csv")
+        self.assertEqual(
+            response["Content-Disposition"],
+            'attachment; filename="omrostning_hostmote_2024-05-01.csv"',
+        )
+        body = response.content.decode("utf-8")
+        self.assertTrue(body.startswith("\ufeff"))
+        lines = body.removeprefix("\ufeff").splitlines()
+        self.assertEqual(lines[0], "Fråga;Val;Röster;Andel (%);Röstsedlar;Röstande;Närvarande")
+        self.assertEqual(len(lines), 4)
+        self.assertEqual(lines[1], "Första frågan;Ja;3;75;4;1;1")
+        self.assertEqual(lines[2], "Första frågan;Nej;1;25;4;1;1")
+        self.assertEqual(lines[3], "Andra frågan;Kanske;0;0;0;0;1")
 
 
 class AttendanceWebsocketTests(TestCase):

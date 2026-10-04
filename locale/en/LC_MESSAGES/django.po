@@ -3206,6 +3206,134 @@ msgstr "No events"
 msgid "Ingen är närvarande"
 msgstr "Nobody is present"
 
+#: attendance/admin.py:178 attendance/admin.py:183
+msgid "Rapport"
+msgstr "Report"
+
+#: attendance/admin.py:99 templates/common/admin/attendance/report.html:106
+msgid "Medlem"
+msgstr "Member"
+
+#: templates/common/admin/attendance/report.html:5 templates/common/admin/attendance/report.html:14
+msgid "Närvarorapport"
+msgstr "Attendance report"
+
+#: templates/common/admin/attendance/report.html:17
+msgid "Tillbaka till listan"
+msgstr "Back to the list"
+
+#: templates/common/admin/attendance/report.html:19
+msgid "Ladda ner tidslinjen som CSV"
+msgstr "Download the timeline as CSV"
+
+#: templates/common/admin/attendance/report.html:22
+msgid "Ladda ner omröstningarna som CSV"
+msgstr "Download the polls as CSV"
+
+#: templates/common/admin/attendance/report.html:25
+msgid "Mötet"
+msgstr "The meeting"
+
+#: templates/common/admin/attendance/report.html:58
+msgid "Ja"
+msgstr "Yes"
+
+#: templates/common/admin/attendance/report.html:60
+msgid "Nej"
+msgstr "No"
+
+#: templates/common/admin/attendance/report.html:63
+msgid "Status"
+msgstr "Status"
+
+#: templates/common/admin/attendance/report.html:66
+msgid "Avslutat"
+msgstr "Ended"
+
+#: templates/common/admin/attendance/report.html:68
+msgid "Pågår"
+msgstr "Ongoing"
+
+#: templates/common/admin/attendance/report.html:72
+msgid "Situationen"
+msgstr "The situation"
+
+#: templates/common/admin/attendance/report.html:75
+msgid "Närvarande vid slutet"
+msgstr "Present at the end"
+
+#: templates/common/admin/attendance/report.html:78
+msgid "Som mest närvarande"
+msgstr "Peak present"
+
+#: templates/common/admin/attendance/report.html:81
+msgid "Unika deltagare"
+msgstr "Distinct attendees"
+
+#: templates/common/admin/attendance/report.html:84
+msgid "Ändringsrader"
+msgstr "Change rows"
+
+#: templates/common/admin/attendance/report.html:87
+msgid "Tidslinje"
+msgstr "Timeline"
+
+#: attendance/admin.py:27 templates/common/admin/attendance/report.html:93
+msgid "Deltagare"
+msgstr "Attendee"
+
+#: attendance/admin.py:27 templates/common/admin/attendance/report.html:94
+msgid "Ändring"
+msgstr "Change"
+
+#: templates/common/admin/attendance/report.html:116
+msgid "Inga närvaroändringar registrerade."
+msgstr "No attendance changes recorded."
+
+#: templates/common/admin/attendance/report.html:118
+msgid "Omröstningar"
+msgstr "Polls"
+
+#: templates/common/admin/attendance/report.html:120
+msgid "Omröstningarna döljs utan behörigheten att visa frågor."
+msgstr "The polls are hidden without permission to view questions."
+
+#: templates/common/admin/attendance/report.html:127
+msgid "Röstandet är avslutat"
+msgstr "Voting has ended"
+
+#: templates/common/admin/attendance/report.html:129
+msgid "Röstandet är öppet"
+msgstr "Voting is open"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:136
+msgid "Röster"
+msgstr "Votes"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:137
+msgid "Andel (%)"
+msgstr "Share (%)"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:152
+msgid "Röstsedlar"
+msgstr "Ballots"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:155
+msgid "Röstande"
+msgstr "Voters"
+
+#: templates/common/admin/attendance/report.html:163
+msgid "Flervalsfråga: en röstande får lämna flera val, så röstsedlarna kan vara fler än antalet röstande."
+msgstr "Multiple-choice poll: one voter can pick several choices, so the ballots can be more than the number of voters."
+
+#: templates/common/admin/attendance/report.html:168
+msgid "Frågan är öppen för vem som helst: en röstande kan rösta flera gånger, så röstsedlarna kan vara fler än antalet röstande."
+msgstr "The poll is open to anyone: one voter can vote several times, so the ballots can be more than the number of voters."
+
+#: templates/common/admin/attendance/report.html:174
+msgid "Inga omröstningar är kopplade till mötet."
+msgstr "No polls are attached to the meeting."
+
 #~ msgid "Författare"
 #~ msgstr "Author"
 

@@ -46,6 +46,9 @@ Somebody who checks in and never checks out still counts as present, so a poll a
 
 That pair is what to read while a vote is running. The poll accepts a vote only from somebody who is present, so a turnout below the headcount means somebody who is in the room has not voted yet: wait a little longer, or ask the room for the remaining votes before you stop the poll. The two numbers are equal when everybody the site counts as present has voted. Both lines are absent on a poll with no **Närvarokrav** row, and on an association that does not install the `attendance` app.
 
+### Results after the meeting
+Once the meeting is over, the numbers are on the meeting's own report page rather than on the poll: it lists every poll that was held there with its choices, the ballots, the voters and the headcount, and offers the whole lot as a CSV. Open it with **Rapport** on the attendance events list, described in `docs/admin/attendance.md`.
+
 ## Testing the Poll
 1. Visit `/polls/` to confirm the question appears (only published questions show up).
 2. Click the poll to test the voting flow with a member account that matches the restriction level.

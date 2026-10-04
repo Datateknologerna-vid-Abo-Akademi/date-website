@@ -3217,6 +3217,134 @@ msgstr "Inga evenemang"
 msgid "Ingen är närvarande"
 msgstr "Ingen är närvarande"
 
+#: attendance/admin.py:178 attendance/admin.py:183
+msgid "Rapport"
+msgstr "Rapport"
+
+#: attendance/admin.py:99 templates/common/admin/attendance/report.html:106
+msgid "Medlem"
+msgstr "Medlem"
+
+#: templates/common/admin/attendance/report.html:5 templates/common/admin/attendance/report.html:14
+msgid "Närvarorapport"
+msgstr "Närvarorapport"
+
+#: templates/common/admin/attendance/report.html:17
+msgid "Tillbaka till listan"
+msgstr "Tillbaka till listan"
+
+#: templates/common/admin/attendance/report.html:19
+msgid "Ladda ner tidslinjen som CSV"
+msgstr "Ladda ner tidslinjen som CSV"
+
+#: templates/common/admin/attendance/report.html:22
+msgid "Ladda ner omröstningarna som CSV"
+msgstr "Ladda ner omröstningarna som CSV"
+
+#: templates/common/admin/attendance/report.html:25
+msgid "Mötet"
+msgstr "Mötet"
+
+#: templates/common/admin/attendance/report.html:58
+msgid "Ja"
+msgstr "Ja"
+
+#: templates/common/admin/attendance/report.html:60
+msgid "Nej"
+msgstr "Nej"
+
+#: templates/common/admin/attendance/report.html:63
+msgid "Status"
+msgstr "Status"
+
+#: templates/common/admin/attendance/report.html:66
+msgid "Avslutat"
+msgstr "Avslutat"
+
+#: templates/common/admin/attendance/report.html:68
+msgid "Pågår"
+msgstr "Pågår"
+
+#: templates/common/admin/attendance/report.html:72
+msgid "Situationen"
+msgstr "Situationen"
+
+#: templates/common/admin/attendance/report.html:75
+msgid "Närvarande vid slutet"
+msgstr "Närvarande vid slutet"
+
+#: templates/common/admin/attendance/report.html:78
+msgid "Som mest närvarande"
+msgstr "Som mest närvarande"
+
+#: templates/common/admin/attendance/report.html:81
+msgid "Unika deltagare"
+msgstr "Unika deltagare"
+
+#: templates/common/admin/attendance/report.html:84
+msgid "Ändringsrader"
+msgstr "Ändringsrader"
+
+#: templates/common/admin/attendance/report.html:87
+msgid "Tidslinje"
+msgstr "Tidslinje"
+
+#: attendance/admin.py:27 templates/common/admin/attendance/report.html:93
+msgid "Deltagare"
+msgstr "Deltagare"
+
+#: attendance/admin.py:27 templates/common/admin/attendance/report.html:94
+msgid "Ändring"
+msgstr "Ändring"
+
+#: templates/common/admin/attendance/report.html:116
+msgid "Inga närvaroändringar registrerade."
+msgstr "Inga närvaroändringar registrerade."
+
+#: templates/common/admin/attendance/report.html:118
+msgid "Omröstningar"
+msgstr "Omröstningar"
+
+#: templates/common/admin/attendance/report.html:120
+msgid "Omröstningarna döljs utan behörigheten att visa frågor."
+msgstr "Omröstningarna döljs utan behörigheten att visa frågor."
+
+#: templates/common/admin/attendance/report.html:127
+msgid "Röstandet är avslutat"
+msgstr "Röstandet är avslutat"
+
+#: templates/common/admin/attendance/report.html:129
+msgid "Röstandet är öppet"
+msgstr "Röstandet är öppet"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:136
+msgid "Röster"
+msgstr "Röster"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:137
+msgid "Andel (%)"
+msgstr "Andel (%)"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:152
+msgid "Röstsedlar"
+msgstr "Röstsedlar"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:155
+msgid "Röstande"
+msgstr "Röstande"
+
+#: templates/common/admin/attendance/report.html:163
+msgid "Flervalsfråga: en röstande får lämna flera val, så röstsedlarna kan vara fler än antalet röstande."
+msgstr "Flervalsfråga: en röstande får lämna flera val, så röstsedlarna kan vara fler än antalet röstande."
+
+#: templates/common/admin/attendance/report.html:168
+msgid "Frågan är öppen för vem som helst: en röstande kan rösta flera gånger, så röstsedlarna kan vara fler än antalet röstande."
+msgstr "Frågan är öppen för vem som helst: en röstande kan rösta flera gånger, så röstsedlarna kan vara fler än antalet röstande."
+
+#: templates/common/admin/attendance/report.html:174
+msgid "Inga omröstningar är kopplade till mötet."
+msgstr "Inga omröstningar är kopplade till mötet."
+
 #~ msgid "Författare"
 #~ msgstr "Författare"
 

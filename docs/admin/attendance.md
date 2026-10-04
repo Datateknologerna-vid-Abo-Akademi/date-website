@@ -47,6 +47,39 @@ The event list at `/attendance/` is public, and each event has its own address a
 - The admin also has a standalone list of all attendance changes across every event, and each event's admin page carries the same rows as a collapsed table at the bottom.
 - The change rows can be edited and deleted in the admin like any other row, but deleting one changes who counts as present on the public page, because presence is read from the newest row rather than stored. Treat a manual edit as a correction of last resort, and reload the public page afterwards.
 
+## The report after the meeting
+Once the meeting is over, the attendance events list (**Närvaroevenemang**, under **Närvaro**) has a **Rapport** button on every row. It opens a page for that one meeting. Nothing on the page is stored: it is computed from the check-in rows every time it is opened, so there is nothing to maintain and nothing that can go stale.
+
+The page shows the meeting itself (title, description, start and end, slug, whether guests may check in, and whether it has ended), then four numbers:
+
+- **Närvarande vid slutet**: how many the site counts as in the room when the meeting ended, or right now if the meeting has no end time.
+- **Som mest närvarande**: the largest number in the room at any one moment. That is not stored anywhere, so the page replays the check-ins and check-outs in order to find it.
+- **Unika deltagare**: how many different people ever checked in, so somebody who left and came back counts once.
+- **Ändringsrader**: how many check-ins and check-outs the meeting has in total, which is the number of rows in the table under these four.
+
+The **Tidslinje** table below is the whole log, oldest first: local time, the name, whether the row is an arrival or a departure, and whether the person is a member or a guest. It is the same data as the **Närvaroändringar** list on the event page, but in the order the meeting actually happened, which is the order to read it in when writing the minutes.
+
+Under that, every poll that was attached to the meeting is printed with its question, whether voting has been ended, each choice with its votes and its share, and three numbers beside each other:
+
+- **Röstsedlar** is the number of ballots: the votes that were cast, counted per choice.
+- **Röstande** is the number of signed-in members who voted. A vote from a visitor without an account is not counted here.
+- **Närvarande** is the headcount from higher up the page, repeated so it can be compared with the two numbers above it.
+
+Those three can disagree, and the page says why where they are shown. A **Flerval** poll lets one voter tick several choices, so the ballots are then more than the voters. A poll whose **Valmöjligheter** is **Vem som helst** lets one member vote more than once, which inflates the ballots the same way. **Närvarande** being higher than **Röstande** is the ordinary case worth looking for: somebody who was in the room did not vote. While the vote is still running, the poll's own page shows the same pair of numbers (`docs/admin/polls.md`).
+
+## Taking the report away
+Two buttons at the top of the report download it:
+
+- **Ladda ner tidslinjen som CSV** is the timeline, one row per check-in or check-out.
+- **Ladda ner omröstningarna som CSV** is one row per poll per choice, carrying the votes, the share, the ballots, the voters and the headcount, with the poll and the choice named so that a row still makes sense on its own. The three poll-wide numbers repeat on every row of their poll.
+
+Both files are named after the meeting, for example `narvaro_hostmote_2024-05-01.csv`, and both open directly in Excel. They are written with a semicolon between the columns rather than a comma, because a Swedish Excel reads the comma as the decimal separator; that is deliberate and differs from the invoice export in `docs/admin/billing.md`. The file also starts with a byte-order mark, which is what makes Excel read it as UTF-8, so the "å", "ä" and "ö" in a name stay readable.
+
+## Printing the report
+The report prints from the browser's own print dialog, with the usual Ctrl+P (Cmd+P on a Mac). The page carries a print stylesheet, so the printed sheet leaves out the admin's header, user menu, breadcrumbs, sidebar, footer and the report's own download buttons, keeps a table row, a list item and a heading from being cut in half by a page break, and repeats a long table's header row on every page. It does not number the pages, add a header or footer of its own, or make a PDF: that is what a print dialog or a phone's "save as PDF" is for, and the stylesheet deliberately does no more than what is listed above.
+
+To keep a meeting's report for the file, print it while the page is open. The address can also be bookmarked and opened later, because the numbers are computed from the stored rows every time the page is loaded.
+
 ## Non-members in the admin
 There is no admin page for guests and no guest list to keep tidy. A guest's row is created the first time their name is used on the public check-in form, and it is reused for every later event. So an editor adds a guest by having them check in, not by creating anything. There is no guest record to correct either: a name lives on the change rows and in a shared row that only a developer can rename or delete, and deleting that row removes the name's changes everywhere.
 
@@ -58,6 +91,7 @@ There is no admin page for guests and no guest list to keep tidy. A guest's row 
 - Being staff is group membership, not a checkbox on the member: the groups named in the site's staff group setting, which for this site are `styrelse`, `admin`, `fotograf` and `rösträknare`, plus superusers.
 - Staff status is what shows **Till översiktsvyn**, the code, the QR code, the change log on the event page and the live code and attendee updates on the overview page. It is wider than "the board": a photographer or a vote counter is staff too and can see the code. The app has no smaller permission for the overview page, so keeping a group out of it means changing the staff group list for the site, not unticking something on the member.
 - Creating and editing events and change rows in the admin follows the ordinary Django model permissions, so the attendance permissions have to be granted to the group that should create events. Staff status alone lets somebody log in, not edit.
+- The report page follows the attendance event view permission, so whoever can open the events list can open a report. The polls on it are a second and separate permission: somebody who may not view questions sees a line saying the polls are hidden instead of the results, and cannot download the poll CSV. The timeline download needs the attendance permission only.
 
 ## Troubleshooting
 **"Fel kod" is shown over the code box.**

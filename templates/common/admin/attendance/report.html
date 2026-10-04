@@ -1,0 +1,177 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+{% load static %}
+{% block title %}
+  {% trans "Närvarorapport" %} | {{ site_title|default:_("Django site admin") }}
+{% endblock %}
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'attendance/css/report.css' %}">
+{% endblock %}
+{% block content %}
+  <div class="attendance-report">
+    <h1>{{ event.title }}</h1>
+    <p class="attendance-report__subtitle">{% trans "Närvarorapport" %}</p>
+    <p class="attendance-report__actions">
+      <a class="button admin-inline-action"
+         href="{% url 'admin:attendance_attendanceevent_changelist' %}">{% trans "Tillbaka till listan" %}</a>
+      <a class="button admin-inline-action"
+         href="{% url 'admin:attendance_event_report_timeline_csv' event.pk %}">{% trans "Ladda ner tidslinjen som CSV" %}</a>
+      {% if show_polls %}
+        <a class="button admin-inline-action"
+           href="{% url 'admin:attendance_event_report_polls_csv' event.pk %}">{% trans "Ladda ner omröstningarna som CSV" %}</a>
+      {% endif %}
+    </p>
+    <h2>{% trans "Mötet" %}</h2>
+    <dl>
+      <dt>{% trans "Titel" %}</dt>
+      <dd>
+        {{ event.title }}
+      </dd>
+      <dt>{% trans "Beskrivning" %}</dt>
+      <dd>
+        {% if event.description %}
+          {{ event.description }}
+        {% else %}
+          -
+        {% endif %}
+      </dd>
+      <dt>{% trans "Starttid" %}</dt>
+      <dd>
+        {{ event.start_datetime|date }} {{ event.start_datetime|time }}
+      </dd>
+      <dt>{% trans "Sluttid" %}</dt>
+      <dd>
+        {% if event.end_datetime %}
+          {{ event.end_datetime|date }} {{ event.end_datetime|time }}
+        {% else %}
+          -
+        {% endif %}
+      </dd>
+      <dt>{% trans "Slug" %}</dt>
+      <dd>
+        {{ event.slug }}
+      </dd>
+      <dt>{% trans "Tillåt icke-medlemmar att delta" %}</dt>
+      <dd>
+        {% if event.allow_non_members %}
+          {% trans "Ja" %}
+        {% else %}
+          {% trans "Nej" %}
+        {% endif %}
+      </dd>
+      <dt>{% trans "Status" %}</dt>
+      <dd>
+        {% if event.has_ended %}
+          {% trans "Avslutat" %}
+        {% else %}
+          {% trans "Pågår" %}
+        {% endif %}
+      </dd>
+    </dl>
+    <h2>{% trans "Situationen" %}</h2>
+    <ul class="attendance-report__stats">
+      <li>
+        {% trans "Närvarande vid slutet" %}: <strong>{{ present_at_end }}</strong>
+      </li>
+      <li>
+        {% trans "Som mest närvarande" %}: <strong>{{ peak_present }}</strong>
+      </li>
+      <li>
+        {% trans "Unika deltagare" %}: <strong>{{ ever_present }}</strong>
+      </li>
+      <li>
+        {% trans "Ändringsrader" %}: <strong>{{ change_count }}</strong>
+      </li>
+    </ul>
+    <h2>{% trans "Tidslinje" %}</h2>
+    {% if changes %}
+      <table>
+        <thead>
+          <tr>
+            <th>{% trans "Tid" %}</th>
+            <th>{% trans "Deltagare" %}</th>
+            <th>{% trans "Ändring" %}</th>
+            <th>{% trans "Typ" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for change in changes %}
+            <tr>
+              <td>{{ change.timestamp|date }} {{ change.timestamp|time }}</td>
+              <td>{{ change.attendee_name }}</td>
+              <td>{% trans change.get_type_display context "left/entered in general" %}</td>
+              <td>
+                {% if change.user_id %}
+                  {% trans "Medlem" %}
+                {% else %}
+                  {% trans "Icke-medlem" %}
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="attendance-report__empty">{% trans "Inga närvaroändringar registrerade." %}</p>
+    {% endif %}
+    <h2>{% trans "Omröstningar" %}</h2>
+    {% if hidden_polls %}
+      <p class="attendance-report__muted">{% trans "Omröstningarna döljs utan behörigheten att visa frågor." %}</p>
+    {% elif polls %}
+      {% for poll in polls %}
+        <section class="attendance-report__poll">
+          <h3>{{ poll.question.question_text }}</h3>
+          <p class="attendance-report__muted">
+            {% if poll.ended %}
+              {% trans "Röstandet är avslutat" %}
+            {% else %}
+              {% trans "Röstandet är öppet" %}
+            {% endif %}
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>{% trans "Val" %}</th>
+                <th>{% trans "Röster" %}</th>
+                <th>{% trans "Andel (%)" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in poll.choices %}
+                <tr>
+                  <td>{{ row.choice.choice_text }}</td>
+                  <td>{{ row.votes }}</td>
+                  <td>{{ row.percentage }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <ul class="attendance-report__stats">
+            <li>
+              {% trans "Röstsedlar" %}: <strong>{{ poll.ballots }}</strong>
+            </li>
+            <li>
+              {% trans "Röstande" %}: <strong>{{ poll.voters }}</strong>
+            </li>
+            <li>
+              {% trans "Närvarande" %}: <strong>{{ poll.headcount }}</strong>
+            </li>
+          </ul>
+          {% if poll.multiple_choice %}
+            <p class="attendance-report__muted">
+              {% trans "Flervalsfråga: en röstande får lämna flera val, så röstsedlarna kan vara fler än antalet röstande." %}
+            </p>
+          {% endif %}
+          {% if poll.anyone %}
+            <p class="attendance-report__muted">
+              {% trans "Frågan är öppen för vem som helst: en röstande kan rösta flera gånger, så röstsedlarna kan vara fler än antalet röstande." %}
+            </p>
+          {% endif %}
+        </section>
+      {% endfor %}
+    {% else %}
+      <p class="attendance-report__empty">{% trans "Inga omröstningar är kopplade till mötet." %}</p>
+    {% endif %}
+  </div>
+{% endblock %}

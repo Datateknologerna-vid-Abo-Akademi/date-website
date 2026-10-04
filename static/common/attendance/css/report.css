@@ -1,0 +1,45 @@
+/* The repository's first print stylesheet. The attendance report is opened in
+   the admin and then printed from the browser, so this does three things and
+   nothing else: it hides the admin chrome around the report, it keeps a table
+   row, a list item or a heading from being split across two sheets, and it
+   repeats a long table's header row on every sheet.
+
+   It does not paginate the report, add a running header or footer, or produce a
+   PDF. Everything else a printed page shows comes from the browser's own print
+   dialog, and that is the whole promise. */
+
+@media print {
+  #header,
+  #user-tools,
+  .breadcrumbs,
+  #nav-sidebar,
+  #footer,
+  nav,
+  .attendance-report__actions {
+    display: none !important;
+  }
+
+  .attendance-report table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  .attendance-report th,
+  .attendance-report td {
+    border: 1px solid #999;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .attendance-report tr,
+  .attendance-report li,
+  .attendance-report h2,
+  .attendance-report h3 {
+    break-inside: avoid;
+  }
+
+  /* Repeat the header row whenever a long table continues on the next sheet. */
+  .attendance-report thead {
+    display: table-header-group;
+  }
+}
