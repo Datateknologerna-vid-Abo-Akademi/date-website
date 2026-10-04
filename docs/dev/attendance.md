@@ -82,15 +82,13 @@ Both scripts call their strings through the `gettext` global injected by the pag
 `attendance/admin.py` registers `AttendanceEvent` with a collapsed `TabularInline` of its changes, and `AttendanceChange` on its own. `NonMemberAttendee` is not registered, so there is no admin page that creates a guest: those rows come from the public form, and there is nothing for an editor to maintain. Neither registration sets `list_display`, filters or search, and the change list opens newest first through `Meta.ordering`.
 
 ## Migrations
-Five migrations, all from the same branch. The app does not exist on `main` yet, so this history is still being tidied rather than treated as published.
+One migration. `0001_initial` creates the three tables, the `foreign_keys_ok` check constraint, the `ordering` and `get_latest_by` options on `AttendanceChange`, and the validity-period validator on the event, and it declares the Swedish labels directly.
 
-- `0001_initial`: creates the three tables with English placeholder labels ("Title", "Entered") and a `secret` field on the event that does not survive the next migration.
-- `0002_remove_attendanceevent_secret_and_more`: drops `secret` and adds `code_secret` and `code_validity_time`. The column it drops was created by `0001` on this branch and existed only in branch databases, so this touches no pre-existing data anywhere; a database that runs both in order ends up where a fresh one starts.
-- `0003_prepare_translations`: rewrites the model labels and the constraint's violation message from the English placeholders into the Swedish strings the models declare today. No schema change beyond the labels.
-- `0004_alter_attendancechange_options`: sets `ordering = ["-timestamp"]` on `AttendanceChange.Meta`, so the lists read newest first without each caller reversing a queryset.
-- `0005_alter_attendanceevent_code_validity_time`: floors `code_validity_time` at one second with a `MinValueValidator`, so the admin cannot save a period that breaks the code arithmetic.
+The app has never been released, and the branch went through several revisions, so the history was flattened: an earlier revision of this branch needed five migrations, including one that dropped a `secret` column and two that corrected labels. None of that is worth keeping in a branch nobody has deployed, and one initial migration is what a reviewer can read in a sitting.
 
-Nothing here rewrites a published migration, and a further behaviour change gets a new migration as usual.
+That has one consequence on a machine whose database ran an earlier revision. Rows in `django_migrations` name migrations that no longer exist, so `migrate` will not reconcile that database. Drop the three `attendance_*` tables there, or recreate the development database with `date-cleaninit`, and migrate again. A database that only ever sees the flattened migration is unaffected.
+
+A further behaviour change gets a new migration as usual, and from here the ordinary rule applies: do not rewrite what has been released.
 
 ## Testing
 ```bash
