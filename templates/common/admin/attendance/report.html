@@ -72,7 +72,12 @@
     <h2>{% trans "Situationen" %}</h2>
     <ul class="attendance-report__stats">
       <li>
-        {% trans "Närvarande vid slutet" %}: <strong>{{ present_at_end }}</strong>
+        {% if has_end_datetime %}
+          {% trans "Närvarande vid slutet" as present_at_end_label %}
+        {% else %}
+          {% trans "Närvarande vid sista ändringen" as present_at_end_label %}
+        {% endif %}
+        {{ present_at_end_label }}: <strong>{{ present_at_end }}</strong>
       </li>
       <li>
         {% trans "Som mest närvarande" %}: <strong>{{ peak_present }}</strong>

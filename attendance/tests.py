@@ -433,6 +433,72 @@ class PresentCountTests(TestCase):
             self.assertEqual(self.event.present_count(self.at), 5)
 
 
+class PresentAtEndTests(TestCase):
+    """present_at_end(): the report's number, read without an end to read it at.
+
+    A meeting that recorded an ``end_datetime`` is read there, so changes after
+    the end are not part of the number. A meeting without one is read at its
+    last recorded change rather than at the clock: the report is a historical
+    document, so the same log has to give the same number however late it is
+    opened. Which of the two it was is what the page's label reports, and
+    ``AttendanceReportAdminTests`` pins both labels.
+    """
+
+    def setUp(self):
+        self.event = make_event()
+        self.member = make_member("narvarande", first_name="Maja", last_name="Andersson")
+        self.guest = NonMemberAttendee.objects.create(name="Gäst")
+        self.at = now()
+
+    def test_no_changes_at_all_is_zero(self):
+        self.assertEqual(present_at_end(self.event), 0)
+
+    def test_a_log_that_ends_with_a_departure_reports_nobody(self):
+        """The state after the last change, whatever the clock says when it is asked.
+
+        The clock is set between the two changes and then after both. An answer
+        read at "now" would be one person at the first moment and nobody at the
+        second, so this fails for the fallback the report used to have; the log's
+        own last moment is nobody either way.
+        """
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=30))
+        record_change(self.event, LEAVE, user=self.member, timestamp=self.at - timedelta(minutes=10))
+
+        for clock in (self.at - timedelta(minutes=20), self.at + timedelta(hours=3)):
+            with self.subTest(clock=clock), patch("attendance.models.now", return_value=clock):
+                self.assertEqual(present_at_end(self.event), 0)
+
+    def test_a_change_after_the_last_one_moves_the_number(self):
+        """The log is read again on every call: the answer is not cached."""
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=30))
+        record_change(self.event, LEAVE, user=self.member, timestamp=self.at - timedelta(minutes=20))
+
+        self.assertEqual(present_at_end(self.event), 0)
+
+        record_change(self.event, ENTER, non_member=self.guest, timestamp=self.at - timedelta(minutes=10))
+
+        self.assertEqual(present_at_end(self.event), 1)
+
+    def test_a_meeting_with_an_end_counts_who_was_there_then(self):
+        self.event.end_datetime = self.at - timedelta(minutes=5)
+        self.event.save()
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=30))
+        # After the end of the meeting, so the number at the end may not see it.
+        record_change(self.event, LEAVE, user=self.member, timestamp=self.at - timedelta(minutes=2))
+
+        self.assertEqual(present_at_end(self.event), 1)
+
+    def test_a_meeting_with_an_end_ignores_an_arrival_after_it(self):
+        """The other direction: the last change sees somebody the end does not."""
+        self.event.end_datetime = self.at - timedelta(minutes=10)
+        self.event.save()
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=30))
+        record_change(self.event, LEAVE, user=self.member, timestamp=self.at - timedelta(minutes=20))
+        record_change(self.event, ENTER, non_member=self.guest, timestamp=self.at - timedelta(minutes=5))
+
+        self.assertEqual(present_at_end(self.event), 0)
+
+
 @unittest.skipUnless(
     connection.vendor == "postgresql",
     "present_attendees uses DISTINCT ON, which SQLite does not support",
@@ -1737,6 +1803,47 @@ class AttendanceReportAdminTests(TestCase):
         self.assertEqual(response.context["ever_present"], 0)
         self.assertEqual(response.context["change_count"], 0)
         self.assertContains(response, "Inga närvaroändringar registrerade.")
+
+    def test_the_report_labels_the_number_at_the_end_when_the_meeting_has_one(self):
+        self.event.end_datetime = self.at - timedelta(minutes=5)
+        self.event.save()
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.report_url)
+
+        self.assertTrue(response.context["has_end_datetime"])
+        self.assertContains(response, "Närvarande vid slutet")
+        self.assertNotContains(response, "Närvarande vid sista ändringen")
+
+    def test_the_report_labels_the_number_at_the_last_change_without_an_end(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.report_url)
+
+        self.assertFalse(response.context["has_end_datetime"])
+        self.assertContains(response, "Närvarande vid sista ändringen")
+        self.assertNotContains(response, "Närvarande vid slutet")
+
+    def test_the_number_of_a_meeting_without_an_end_follows_the_last_change(self):
+        """Two loads of the same page, and the number moves with the log, not the clock."""
+        maja = make_member("maja", first_name="Maja", last_name="Andersson")
+        record_change(self.event, ENTER, user=maja, timestamp=self.at - timedelta(minutes=30))
+        record_change(self.event, LEAVE, user=maja, timestamp=self.at - timedelta(minutes=20))
+        self.client.force_login(self.admin_user)
+
+        self.assertEqual(self.client.get(self.report_url).context["present_at_end"], 0)
+
+        record_change(
+            self.event,
+            ENTER,
+            non_member=NonMemberAttendee.objects.create(name="Gäst Efter"),
+            timestamp=self.at - timedelta(minutes=10),
+        )
+
+        response = self.client.get(self.report_url)
+
+        self.assertEqual(response.context["present_at_end"], 1)
+        self.assertContains(response, "Närvarande vid sista ändringen")
 
     def test_the_report_requires_the_event_permission(self):
         limited = self.staff_user("begransad", "polls.view_question")

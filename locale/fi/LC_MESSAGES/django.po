@@ -3283,6 +3283,10 @@ msgid "Närvarande vid slutet"
 msgstr "Paikalla lopussa"
 
 #: templates/common/admin/attendance/report.html:78
+msgid "Närvarande vid sista ändringen"
+msgstr "Paikalla viimeisimmän muutoksen hetkellä"
+
+#: templates/common/admin/attendance/report.html:78
 msgid "Som mest närvarande"
 msgstr "Enimmillään paikalla"
 

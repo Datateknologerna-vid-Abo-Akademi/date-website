@@ -3274,6 +3274,10 @@ msgid "Närvarande vid slutet"
 msgstr "Närvarande vid slutet"
 
 #: templates/common/admin/attendance/report.html:78
+msgid "Närvarande vid sista ändringen"
+msgstr "Närvarande vid sista ändringen"
+
+#: templates/common/admin/attendance/report.html:78
 msgid "Som mest närvarande"
 msgstr "Som mest närvarande"
 

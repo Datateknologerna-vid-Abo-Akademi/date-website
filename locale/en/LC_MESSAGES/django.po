@@ -3263,6 +3263,10 @@ msgid "Närvarande vid slutet"
 msgstr "Present at the end"
 
 #: templates/common/admin/attendance/report.html:78
+msgid "Närvarande vid sista ändringen"
+msgstr "Present at the last change"
+
+#: templates/common/admin/attendance/report.html:78
 msgid "Som mest närvarande"
 msgstr "Peak present"
 

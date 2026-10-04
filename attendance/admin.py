@@ -71,7 +71,18 @@ def ever_present_count(changes: list[AttendanceChange]) -> int:
 
 
 def present_at_end(event: AttendanceEvent) -> int:
-    """How many were in the room when the meeting ended, or now if it has no end.
+    """How many were in the room at the meeting's end, or at its last change.
+
+    A meeting that recorded an end time is read at that moment, so the answer is
+    the same every time the report is opened.
+
+    A meeting with no end time is read at its last recorded change rather than
+    at the current time: the report is a historical document, and an answer read
+    at "now" is whoever is in the room when the page happens to be opened, which
+    is a different number after the next check-in. The state after the newest
+    ``AttendanceChange`` is fixed with the log, and ``has_end_datetime`` in the
+    report's context is what tells the page which of the two the number is.
+    With no changes at all the answer is 0.
 
     ``present_count()`` and not ``present_attendees()``: only the count runs on
     every backend (see the model's NOTE on the distinct query). It is a function
@@ -81,7 +92,14 @@ def present_at_end(event: AttendanceEvent) -> int:
     if event.end_datetime is not None:
         return event.present_count(event.end_datetime)
 
-    return event.present_count()
+    # The newest row, then the count as it stood at that moment: ties in
+    # ``timestamp`` are broken by the primary key so the answer cannot depend on
+    # the row order the database happens to return.
+    latest = event.attendance_changes.order_by("-timestamp", "-pk").first()
+    if latest is None:
+        return 0
+
+    return event.present_count(latest.timestamp)
 
 
 def change_action_label(change: AttendanceChange) -> str:
@@ -259,6 +277,10 @@ class AttendanceEventAdmin(admin.ModelAdmin):
             "event": event,
             "changes": changes,
             "present_at_end": headcount,
+            # Which of the two numbers ``present_at_end()`` returned, so the page
+            # can label it honestly: a meeting without an end time has no end to
+            # be present at.
+            "has_end_datetime": event.end_datetime is not None,
             "peak_present": peak_present_count(changes),
             "ever_present": ever_present_count(changes),
             "change_count": len(changes),

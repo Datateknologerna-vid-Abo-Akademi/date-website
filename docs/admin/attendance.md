@@ -11,7 +11,7 @@ The list is a record of who was in the room at a meeting. It is not the associat
    - **Titel**: the name the participants see, and the name the admin list shows.
    - **Beskrivning**: one optional line shown under the title.
    - **Slug**: the URL segment. An event with the slug `hostmote` lives at `/attendance/hostmote/`. It has to be unique and can contain only letters, digits, hyphens and underscores, so write `hostmote` rather than `höstmöte`.
-   - **Starttid** and **Sluttid**: when the event begins and ends. **Sluttid** is optional. With it, the event leaves the public list once that moment has passed; without it, the event stays on the list until you delete it.
+   - **Starttid** and **Sluttid**: when the event begins and ends. **Sluttid** is optional. With it, the event leaves the public list once that moment has passed; without it, the event stays on the list until you delete it. A meeting whose end is not known in advance is the ordinary reason to leave it empty: the event page then prints "Slutar: -", the event stays on the public list, and the report labels its headcount differently (see The report after the meeting, and `docs/dev/attendance.md` for what the number is computed from).
    - **Tillåt icke-medlemmar att delta**: ticked (the default) means a visitor without an account sees the check-in form and writes their name. Unticked means the event page asks for a login, and a guest cannot check in at all.
    - **Kodens giltighetsperiod (sekunder)**: how long each code is shown before it rotates. 30 is the default, and the field refuses anything below 1 second, because a period of zero breaks the code calculation. A meeting that needs longer to read or scan the code can be given more; a shorter period is harder to pass on to somebody outside the room.
    - **Kodens genereringsnyckel**: the value the codes are computed from. The site fills in a random one, and you can leave it as it is.
@@ -52,7 +52,7 @@ Once the meeting is over, the attendance events list (**Närvaroevenemang**, und
 
 The page shows the meeting itself (title, description, start and end, slug, whether guests may check in, and whether it has ended), then four numbers:
 
-- **Närvarande vid slutet**: how many the site counts as in the room when the meeting ended, or right now if the meeting has no end time.
+- **Närvarande vid slutet** or **Närvarande vid sista ändringen**: how many the site counts as in the room. A meeting with a **Sluttid** gets the first label, and the number is read at that end, so a check-in or check-out registered after it is not part of the number. A meeting without one gets the second label, and the number is read after the last check-in or check-out that was registered. It comes from the meeting's own log and not from the clock, so the same log gives the same number whenever the report is opened, which is what makes the page worth printing or filing. `docs/dev/attendance.md` describes both readings.
 - **Som mest närvarande**: the largest number in the room at any one moment. That is not stored anywhere, so the page replays the check-ins and check-outs in order to find it.
 - **Unika deltagare**: how many different people ever checked in, so somebody who left and came back counts once.
 - **Ändringsrader**: how many check-ins and check-outs the meeting has in total, which is the number of rows in the table under these four.
