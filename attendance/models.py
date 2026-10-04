@@ -124,10 +124,7 @@ class AttendanceEvent(models.Model):
         else:
             filters["non_member"] = attendee
 
-        try:
-            return any(x.type == AttendanceChange.Type.ENTER for x in self.attendance_changes.filter(**filters))
-        except AttendanceChange.DoesNotExist:
-            return False
+        return any(x.type == AttendanceChange.Type.ENTER for x in self.attendance_changes.filter(**filters))
 
     def get_current_code(self) -> int:
         return self.totp.token()
@@ -138,12 +135,19 @@ class AttendanceEvent(models.Model):
         return step - now % step
 
     def is_code_valid(self, code: int) -> bool:
-        # One step of grace: the code that was on screen when somebody started
-        # typing still works through the following period. Without it a
-        # participant who is a little slow gets "Fel kod", and five of those now
-        # start a lockout. The next period's code cannot be produced without the
-        # secret, so widening the window costs nothing.
-        return self.totp.verify(code, tolerance=1)
+        """The code for the current period, or for the one before it."""
+        totp = self.totp
+        if totp.verify(code):
+            return True
+
+        # One period of grace: the code that was on screen when somebody started
+        # typing still works after it rotates. Without it a participant who is a
+        # little slow gets "Fel kod", and five of those now start a lockout.
+        # `verify` looks only at the current step, so the previous period is
+        # reached by asking the same secret to count one step back; the period
+        # after this one is deliberately not accepted.
+        previous = TOTP(totp.key, step=totp.step, t0=totp.t0, digits=totp.digits, drift=-1)
+        return previous.verify(code)
 
 
 class NonMemberAttendee(models.Model):

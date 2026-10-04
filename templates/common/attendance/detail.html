@@ -133,7 +133,7 @@
               {% for c in changes %}
                 {% trans c.get_type_display context "left/entered in general" as type %}
                 <li>
-                  {% blocktrans trimmed with name=c.attendee.get_full_name type_l=type|lower date=c.timestamp.date time=c.timestamp.time %}
+                  {% blocktrans trimmed with name=c.attendee.get_full_name type_l=type|lower date=c.timestamp|date time=c.timestamp|time %}
                     {{ name }} {{ type_l }} den {{ date }} kl {{ time }}
                   {% endblocktrans %}
                 </li>

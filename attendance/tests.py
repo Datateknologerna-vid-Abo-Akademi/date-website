@@ -41,6 +41,7 @@ from django.test import RequestFactory, TestCase
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone, translation
+from django.utils.formats import date_format, time_format
 from django.utils.timezone import now
 from django_otp.oath import TOTP
 
@@ -211,6 +212,15 @@ class AttendanceCodeTests(TestCase):
 
         # The grace is one step wide, not an open window.
         self.assertFalse(event.is_code_valid(PINNED_CODE))
+
+    @patch("django_otp.oath.time", return_value=OATH_TIME)
+    def test_is_code_valid_rejects_the_next_step(self, _time):
+        event = make_event()
+
+        # The grace looks backwards only: a code that has not been handed out yet
+        # is not accepted early.
+        self.assertEqual(event.get_current_code(), PINNED_CODE)
+        self.assertFalse(event.is_code_valid(PINNED_NEXT_CODE))
 
     @patch("django_otp.oath.time", return_value=OATH_TIME)
     def test_time_until_next_code_is_within_the_validity_time(self, _time):
@@ -630,6 +640,25 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         self.assertLess(content.index(newest_guest.name), content.index(self.member.full_name))
         self.assertLess(content.index(self.member.full_name), content.index(oldest_guest.name))
 
+    def test_the_change_log_is_shown_in_the_association_timezone(self):
+        """A change stored in UTC is rendered in the site's own zone.
+
+        21:30 UTC on 15 June is 00:30 on the 16th in Helsinki, so a page that
+        printed the stored value would be wrong in both the time and the date.
+        """
+        at = datetime(2026, 6, 15, 21, 30, tzinfo=UTC)
+        record_change(self.event, ENTER, user=self.member, timestamp=at)
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.detail_url)
+
+        local = timezone.localtime(at)
+        # The assertions are worth making only if the two differ.
+        self.assertNotEqual(date_format(local), date_format(at))
+        self.assertContains(response, date_format(local))
+        self.assertContains(response, time_format(local))
+        self.assertNotContains(response, date_format(at))
+
     def test_plain_member_does_not_see_the_change_log(self):
         record_change(self.event, ENTER, user=self.member)
         self.client.force_login(self.member)
@@ -871,12 +900,20 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
         self.assertEqual(response.status_code, 303)
         self.assertNotIn(limits.ATTEMPTS_SESSION_KEY, self.client.session)
 
-    def test_a_malformed_submission_costs_no_attempt(self):
+    def test_a_malformed_submission_does_not_reach_the_code(self):
+        """A bad change type is refused before the code is looked at, and costs no attempt.
+
+        The wrong code in the body matters: a version that verified the code first
+        would register a failure here, or lock the session out, for a submission
+        that was never a code attempt.
+        """
         self.client.force_login(self.member)
 
-        response = self.client.post(self.detail_url, {"type": "9", "code": str(PINNED_CODE)})
+        with patch.object(AttendanceEvent, "is_code_valid") as is_code_valid:
+            response = self.client.post(self.detail_url, {"type": "9", "code": str(PINNED_CODE + 1)})
 
         self.assertEqual(response.status_code, 403)
+        is_code_valid.assert_not_called()
         self.assertNotIn(limits.ATTEMPTS_SESSION_KEY, self.client.session)
 
 
@@ -1085,13 +1122,13 @@ class AttendanceConsumerTests(TestCase):
     Each test runs its whole websocket conversation inside one event loop, because
     the communicator's task lives in the loop that created it.
 
-    Known limitation on PostgreSQL: ``channels``' ``database_sync_to_async`` calls
-    ``close_old_connections()`` around the consumer's database access, which closes
-    the connection the surrounding ``TestCase`` transaction is using, so on
-    PostgreSQL the first test in this class passes and later ones error with
-    "connection already closed". ``core.settings.test``, which is what the
-    repository runs, uses SQLite, where the in-memory database survives the
-    reconnect and all five pass.
+    Known limitation on PostgreSQL: ``channels``' ``AsyncConsumer`` calls
+    ``close_old_connections()`` when a consumer call ends, and Django drops a
+    connection whose autocommit is off, which inside a ``TestCase`` it always is.
+    PostgreSQL is then left with a connection closed inside a transaction, and the
+    rest of the file errors with "connection already closed".
+    ``core.settings.test``, which is what the repository runs, uses SQLite, where
+    that branch is never taken, so all five pass.
     """
 
     def setUp(self):

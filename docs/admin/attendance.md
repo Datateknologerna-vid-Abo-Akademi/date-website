@@ -6,7 +6,7 @@ The attendance list is the digital replacement for the paper list at a meeting. 
 The list is a record of who was in the room at a meeting. It is not the association's minutes, and it does not replace them.
 
 ## Creating an event
-1. Open the attendance events list (**Närvaroevenemang**) in `/admin` and use the add button above the list. It shows each event's title, its start and end time and whether guests may check in, opens on the newest event, and can be searched by title or narrowed by date.
+1. Open the attendance events list (**Närvaroevenemang**, under **Närvaro** in the sidebar) in `/admin` and use the add button above the list. It shows each event's title, its start and end time and whether guests may check in, opens on the newest event, and can be searched by title or narrowed by date.
 2. Fill in:
    - **Titel**: the name the participants see, and the name the admin list shows.
    - **Beskrivning**: one optional line shown under the title.
@@ -38,7 +38,7 @@ The event list at `/attendance/` is public, and each event has its own address a
 - A guest's name is remembered from one event to the next, because the name is the whole identity of a guest. Two different people who type the same name share one entry and cannot be told apart, so ask guests for a name that is theirs alone, such as first name and surname.
 
 ## The change log
-- The event page shows a **Närvaroändringar** list to staff under the attendee list: one line per change, newest first, naming the person, the change in Swedish (**Anlände** or **Lämnade**) and the date and time. It is the same data the attendee list is computed from, so it is what to read when the **Närvarande** snapshot on the event page looks out of date.
+- The event page shows a **Närvaroändringar** list to staff under the attendee list: one line per change, newest first, naming the person, the change in Swedish (**anlände** or **lämnade**) and the date and time in the association's own timezone. It is the same data the attendee list is computed from, so it is what to read when the **Närvarande** snapshot on the event page looks out of date.
 - The admin also has a standalone list of all attendance changes across every event, and each event's admin page carries the same rows as a collapsed table at the bottom.
 - The change rows can be edited and deleted in the admin like any other row, but deleting one changes who counts as present on the public page, because presence is read from the newest row rather than stored. Treat a manual edit as a correction of last resort, and reload the public page afterwards.
 
@@ -60,7 +60,7 @@ There is no admin page for guests and no guest list to keep tidy. A guest's row 
 - Or they are using another event's code. Every event has its own code, so a code shown for a different event never works here. This is the usual mix-up when several events are open at once.
 - If somebody scanned the QR code and still sees this, the code changed while they walked to the door. Point them at the current one, or have them scan again.
 
-**The page says "För många felaktiga koder".**
+**The page says "För många felaktiga koder. Försök igen om N sekunder."**
 - That browser has entered five wrong codes, so it is locked out for a minute. Nothing was recorded, so ask the participant to wait and try again with the current code. A correct code is refused too while the lockout lasts, which is deliberate.
 - The counter lives in that browser's session, so another browser, a private window or clearing cookies starts fresh. Treat it as a speed bump for a fumbling participant or a careless script, not as a security control: what actually keeps people out is the code rotating on the screen.
 - If several participants hit it at once, the code they are reading is probably stale. Reload the overview page and check that the code on it is the one in force.
@@ -88,4 +88,4 @@ There is no admin page for guests and no guest list to keep tidy. A guest's row 
 
 **A participant is missing from the Närvarande list even though the change log shows them.**
 - On the event page the list is a snapshot, so reload the page. The **Närvarande** list on the staff overview page is live, so a name should appear there without a reload.
-- If their newest change is a departure, they are not present, and the log line says **Lämnade**.
+- If their newest change is a departure, they are not present, and the log line says **lämnade**.
