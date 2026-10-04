@@ -1198,15 +1198,27 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
 
         self.assertEqual(self.client.get(self.overview_url).status_code, 403)
 
-    def test_the_qr_code_carries_an_absolute_event_url(self):
-        """A phone camera opens a link, so a bare path would be useless to it.
+    def test_the_qr_code_carries_the_association_public_url(self):
+        """The request host is not necessarily the address the room can reach.
 
-        The in-page scanner cannot parse a path either: `new URL()` without a base
-        throws, which is what made the code unusable by both routes.
+        Behind the ingress the staff screen is served on an internal name, so the
+        code has to name the association's own public address instead, the one the
+        rest of the project's links and mail use.
         """
         self.client.force_login(self.staff)
 
         response = self.client.get(self.overview_url)
+
+        expected = f'{settings.CONTENT_VARIABLES["SITE_URL"]}/attendance/{self.event.slug}/'
+        self.assertContains(response, f'data-event-url="{expected}"')
+        self.assertNotContains(response, f'data-event-url="http://testserver/attendance/{self.event.slug}/"')
+
+    def test_the_qr_code_falls_back_to_the_request_without_a_public_url(self):
+        """An instance that has not set the variable still links to itself."""
+        self.client.force_login(self.staff)
+
+        with self.settings(CONTENT_VARIABLES={**settings.CONTENT_VARIABLES, "SITE_URL": ""}):
+            response = self.client.get(self.overview_url)
 
         self.assertContains(response, f'data-event-url="http://testserver/attendance/{self.event.slug}/"')
 

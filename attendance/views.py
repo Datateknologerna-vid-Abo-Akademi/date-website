@@ -1,5 +1,6 @@
 from typing import cast
 
+from django.conf import settings
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.db.models import Model, Q
 from django.http import HttpRequest, HttpResponseRedirect
@@ -15,6 +16,21 @@ from members.models import Member
 
 from . import forms, limits, websocket
 from .models import AttendanceChange, AttendanceEvent, Attendee, NonMemberAttendee, attendee_entry
+
+
+def event_url(request: HttpRequest, event: AttendanceEvent) -> str:
+    """The event page as an absolute URL, for the QR code.
+
+    The association's own ``SITE_URL`` wins over the host this request arrived on:
+    behind the ingress that name is internal, and a QR code that sends the room to
+    an unreachable address is worse than no code at all. The request is the
+    fallback, so an instance that has not set the variable still links to itself.
+    ``booking/emails.py`` makes the same choice for the links it mails out.
+    """
+    path = reverse("attendance-event-view", args=[event.slug])
+    base = str(getattr(settings, "CONTENT_VARIABLES", {}).get("SITE_URL", "") or "").rstrip("/")
+
+    return f"{base}{path}" if base else request.build_absolute_uri(path)
 
 
 class HttpResponseSeeOther(HttpResponseRedirect):
@@ -210,8 +226,10 @@ class AttendanceEventOverview(UserPassesTestMixin, AttendanceEventObjectMixin[At
         ctx["code"] = self.object.get_current_code()
         # The event page as an absolute URL, for the QR code. A bare path is not a
         # link to a phone's camera app, and the check-in page's own scanner cannot
-        # parse one either, so the value the code carries has to be absolute.
-        ctx["event_url"] = self.request.build_absolute_uri(reverse("attendance-event-view", args=[self.object.slug]))
+        # parse one either, so the value has to be absolute, and it has to name the
+        # association's public address rather than the host this staff screen
+        # happened to be opened with.
+        ctx["event_url"] = event_url(self.request, self.object)
         # Entries rather than labels: the list identifies a row by the attendee's
         # key so two people with the same name stay two rows, and the name is the
         # label the websocket broadcast carries.
