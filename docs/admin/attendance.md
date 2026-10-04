@@ -19,7 +19,7 @@ The list is a record of who was in the room at a meeting. It is not the associat
 
 ## Running the check-in at the meeting
 1. Open the event's page at `/attendance/<slug>/`, and follow **Till översiktsvyn** near the top. Only staff see that link.
-2. The overview page at `/attendance/<slug>/overview` shows the current code in large digits with a QR code below it. Both change every **Kodens giltighetsperiod (sekunder)** seconds, and the page updates itself, so leave it on a screen where the participants can see or scan it.
+2. The overview page at `/attendance/<slug>/overview` shows the current code in large digits with a QR code below it, and the **Närvarande** list under that. The code and the QR code change every **Kodens giltighetsperiod (sekunder)** seconds, and the page updates itself, list included, so leave it on a screen where the participants can see or scan it.
 3. The overview page is for staff only. An anonymous visitor who opens the address is asked to log in, and a signed-in member who is not staff gets an error page. That is deliberate: the code is the whole check-in control, so the page that shows it stays with the people running the meeting.
 4. Read the code from the screen rather than copying it onto a whiteboard or a printout. It is only valid for its window, so anything written down is stale within seconds.
 
@@ -32,12 +32,13 @@ The event list at `/attendance/` is public, and each event has its own address a
 - A signed-in member opens the event page, types the code (or scans the QR code with a phone camera, which opens the same page with the code prefilled) and presses **Gå in**. The member is recorded as themselves, and the page then shows them as present, with **Gå in** disabled and **Gå ut** ready.
 - A visitor without an account types their name in the name box, then the code, and presses **Gå in**. The name is what the list keeps. If **Tillåt icke-medlemmar att delta** is unticked there is no name box, and the page asks the visitor to log in instead.
 - Nobody can go in twice or go out when not present. For a signed-in member the button that makes no sense is disabled. For everyone, the server refuses the action with a message on the page instead of writing a row: "Du kan inte gå in i ett evenemang var du redan är närvarande" or "Du kan inte gå ut ur ett evenemang var du inte är närvarande".
-- The **Närvarande** list at the bottom of the event page is a snapshot from the moment the page was opened, so reload to see who has arrived since. The code and the QR code on the overview page are the only things that update by themselves.
+- The **Närvarande** list at the bottom of the event page is a snapshot from the moment the page was opened, so reload to see who has arrived since. On the staff overview page the same list is live: it picks up a name as that person checks in and drops it as they check out, next to the code and the QR code, which also update by themselves.
+- A guest appears on the overview page under exactly the name they typed. The event page's list adds the marker "(icke-medlem)" after a guest's name; the overview page leaves it off, because that label is the one the live update carries.
 - The **Närvarande** list is public on the event page: anyone who can open the page sees who is present, including the names guests typed. Only the change log below it is staff-only.
 - A guest's name is remembered from one event to the next, because the name is the whole identity of a guest. Two different people who type the same name share one entry and cannot be told apart, so ask guests for a name that is theirs alone, such as first name and surname.
 
 ## The change log
-- The event page shows a **Närvaroändringar** list to staff under the attendee list: one line per change, newest first, naming the person, the change in Swedish (**Anlände** or **Lämnade**) and the date and time. It is the same data the attendee list is computed from, so it is what to read when the **Närvarande** snapshot looks out of date.
+- The event page shows a **Närvaroändringar** list to staff under the attendee list: one line per change, newest first, naming the person, the change in Swedish (**Anlände** or **Lämnade**) and the date and time. It is the same data the attendee list is computed from, so it is what to read when the **Närvarande** snapshot on the event page looks out of date.
 - The admin also has a standalone list of all attendance changes across every event, and each event's admin page carries the same rows as a collapsed table at the bottom.
 - The change rows can be edited and deleted in the admin like any other row, but deleting one changes who counts as present on the public page, because presence is read from the newest row rather than stored. Treat a manual edit as a correction of last resort, and reload the public page afterwards.
 
@@ -50,7 +51,7 @@ There is no admin page for guests and no guest list to keep tidy. A guest's row 
 
 ## Permissions
 - Being staff is group membership, not a checkbox on the member: the groups named in the site's staff group setting, which for this site are `styrelse`, `admin`, `fotograf` and `rösträknare`, plus superusers.
-- Staff status is what shows **Till översiktsvyn**, the code, the QR code, the change log on the event page and the live code updates. It is wider than "the board": a photographer or a vote counter is staff too and can see the code. The app has no smaller permission for the overview page, so keeping a group out of it means changing the staff group list for the site, not unticking something on the member.
+- Staff status is what shows **Till översiktsvyn**, the code, the QR code, the change log on the event page and the live code and attendee updates on the overview page. It is wider than "the board": a photographer or a vote counter is staff too and can see the code. The app has no smaller permission for the overview page, so keeping a group out of it means changing the staff group list for the site, not unticking something on the member.
 - Creating and editing events and change rows in the admin follows the ordinary Django model permissions, so the attendance permissions have to be granted to the group that should create events. Staff status alone lets somebody log in, not edit.
 
 ## Troubleshooting
@@ -78,6 +79,7 @@ There is no admin page for guests and no guest list to keep tidy. A guest's row 
 
 **The code on the overview page is not changing, or the page says "Anslutningen till servern bröts".**
 - The overview page updates over a websocket and retries by itself every few seconds, so the message is the page reporting the gap. The code it shows is the one from when the page was loaded and may be stale, which is what produces "Fel kod" for participants. Reload the page and read the current code from the fresh load. If the message stays, tell a developer, and until then reload the page whenever somebody needs a code.
+- The same connection carries the live **Närvarande** list on the overview page, so that list also stands still while the message is shown. A reload brings back both the current code and the current list.
 
 **A participant has no account.**
 - They do not need one. If **Tillåt icke-medlemmar att delta** is ticked, they type their name on the event page and check in like anyone else.
@@ -85,4 +87,5 @@ There is no admin page for guests and no guest list to keep tidy. A guest's row 
 - There is nothing to create for them in the admin, and no guest entry to fill in.
 
 **A participant is missing from the Närvarande list even though the change log shows them.**
-- The list is a snapshot, so reload the page. If their newest change is a departure, they are not present, and the log line says **Lämnade**.
+- On the event page the list is a snapshot, so reload the page. The **Närvarande** list on the staff overview page is live, so a name should appear there without a reload.
+- If their newest change is a departure, they are not present, and the log line says **Lämnade**.
