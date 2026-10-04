@@ -3058,6 +3058,11 @@ msgstr "%(user)s %(action)s %(event)s den %(date)s kl %(time)s"
 msgid "Fel kod"
 msgstr "Fel kod"
 
+#, python-format
+#: attendance/views.py:65
+msgid "För många felaktiga koder. Försök igen om %(seconds)s sekunder."
+msgstr "För många felaktiga koder. Försök igen om %(seconds)s sekunder."
+
 #: attendance/views.py:85
 msgid "Namn måste anges om du inte är inloggad"
 msgstr "Namn måste anges om du inte är inloggad"

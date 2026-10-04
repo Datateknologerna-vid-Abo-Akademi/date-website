@@ -49,6 +49,9 @@
           {% if generic_error %}
             <p class="warning">{{ generic_error }}</p>
           {% endif %}
+          {% if lockout_error %}
+            <p class="warning">{{ lockout_error }}</p>
+          {% endif %}
           <form method="post">
             {% csrf_token %}
             {% if not user.is_authenticated %}

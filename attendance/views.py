@@ -11,7 +11,7 @@ from django.views.generic.detail import SingleObjectMixin
 
 from members.models import Member
 
-from . import forms, websocket
+from . import forms, limits, websocket
 from .models import AttendanceChange, AttendanceEvent, Attendee, NonMemberAttendee
 
 
@@ -61,6 +61,11 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
     def _conflict(self, request, **kwargs):
         return render(request, self.template_name, self.get_ctx(**kwargs), status=409)
 
+    def _locked_out(self, request, seconds: int):
+        message = _("För många felaktiga koder. Försök igen om %(seconds)s sekunder.") % {"seconds": seconds}
+
+        return render(request, self.template_name, self.get_ctx(lockout_error=message), status=429)
+
     def get(self, request: HttpRequest, *args, **kwargs):
         self.object = self.get_object()
 
@@ -74,8 +79,19 @@ class AttendanceEventDetailView(UserPassesTestMixin, SingleObjectMixin[Attendanc
             error_dict = {f"{field}_error": errors[0] for field, errors in form.errors.items()}
             return self._bad_request(request, **error_dict)
 
+        # A malformed submission is not a code attempt, so it costs nothing.
+        lockout = limits.lockout_remaining(request)
+        if lockout:
+            return self._locked_out(request, lockout)
+
         if not self.object.is_code_valid(form.cleaned_data["code"]):
+            limits.register_failure(request)
+            lockout = limits.lockout_remaining(request)
+            if lockout:
+                return self._locked_out(request, lockout)
             return self._bad_request(request, code_error=_("Fel kod"))
+
+        limits.clear(request)
 
         non_member_name: str = form.cleaned_data["non_member_name"]
         type: AttendanceChange.Type = form.cleaned_data["type"]

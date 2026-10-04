@@ -46,7 +46,7 @@ from django_otp.oath import TOTP
 if "attendance" not in settings.INSTALLED_APPS:
     raise unittest.SkipTest("attendance app is not installed in this settings module")
 
-from attendance import forms, websocket  # noqa: E402
+from attendance import forms, limits, websocket  # noqa: E402
 from attendance.models import AttendanceChange, AttendanceEvent, NonMemberAttendee  # noqa: E402
 from attendance.routing import websocket_urlpatterns  # noqa: E402
 from members.models import Member  # noqa: E402
@@ -762,6 +762,67 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
         self.assertEqual(change.user, self.member)
         self.assertIsNone(change.non_member)
         self.send_change.assert_called_once_with(self.event.slug, change)
+
+    def test_a_wrong_code_counts_towards_the_lockout(self):
+        response = self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member)
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(self.client.session[limits.ATTEMPTS_SESSION_KEY], 1)
+
+    def test_the_lockout_arrives_with_the_last_allowed_wrong_code(self):
+        for _ in range(limits.ATTEMPT_LIMIT - 1):
+            self.assertEqual(
+                self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member).status_code,
+                403,
+            )
+
+        response = self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member)
+
+        self.assertEqual(response.status_code, 429)
+        self.assertIn("lockout_error", response.context)
+        self.assertEqual(self.event.attendance_changes.count(), 0)
+        self.send_change.assert_not_called()
+
+    def test_a_correct_code_is_refused_while_locked_out(self):
+        for _ in range(limits.ATTEMPT_LIMIT):
+            self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member)
+
+        response = self.post_change(ENTER, login=self.member)
+
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(self.event.attendance_changes.count(), 0)
+
+    def test_the_lockout_lifts_after_its_window(self):
+        start = now()
+
+        with patch("attendance.limits.now", return_value=start) as clock:
+            for _ in range(limits.ATTEMPT_LIMIT):
+                self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member)
+
+            clock.return_value = start + timedelta(seconds=limits.LOCKOUT_SECONDS + 1)
+            response = self.post_change(ENTER, login=self.member)
+
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(self.event.attendance_changes.count(), 1)
+        self.assertNotIn(limits.ATTEMPTS_SESSION_KEY, self.client.session)
+        self.assertNotIn(limits.LOCKOUT_SESSION_KEY, self.client.session)
+
+    def test_a_correct_code_clears_the_failed_attempts(self):
+        for _ in range(2):
+            self.post_change(ENTER, code=PINNED_CODE + 1, login=self.member)
+
+        response = self.post_change(ENTER, login=self.member)
+
+        self.assertEqual(response.status_code, 303)
+        self.assertNotIn(limits.ATTEMPTS_SESSION_KEY, self.client.session)
+
+    def test_a_malformed_submission_costs_no_attempt(self):
+        self.client.force_login(self.member)
+
+        response = self.client.post(self.detail_url, {"type": "9", "code": str(PINNED_CODE)})
+
+        self.assertEqual(response.status_code, 403)
+        self.assertNotIn(limits.ATTEMPTS_SESSION_KEY, self.client.session)
 
 
 class AttendanceOverviewViewTests(AttendanceViewTestCase):
