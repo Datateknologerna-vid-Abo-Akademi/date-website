@@ -166,10 +166,20 @@ const makeWebsocket = () => {
         requestNewCode(ws);
     });
     ws.addEventListener("close", (ev) => {
+        clearTimeout(codeFetcher);
+
+        // 4003 and 4004 are the server saying this page cannot come back: the
+        // staff permission was removed, or the event is gone. Retrying would ask
+        // again every five seconds forever, so say so and stop.
+        if (ev.code === 4003 || ev.code === 4004) {
+            setStatusMessage(_("Sidan kan inte längre uppdateras. Ladda om sidan."));
+            console.warn(`WebSocket closed by the server with code ${ev.code}; not retrying`);
+            return;
+        }
+
         setStatusMessage(_("Anslutningen till servern bröts"));
         console.warn(`WebSocket closed! Retrying in 5 seconds`);
 
-        clearTimeout(codeFetcher);
         setTimeout(makeWebsocket, 5_000);
     });
 };

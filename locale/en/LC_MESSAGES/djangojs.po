@@ -42,3 +42,7 @@ msgstr "Connecting to the server..."
 #: static/common/attendance/js/overview.js:164
 msgid "Anslutningen till servern bröts"
 msgstr "Lost connection with the server"
+
+#: static/common/attendance/js/overview.js:175
+msgid "Sidan kan inte längre uppdateras. Ladda om sidan."
+msgstr "The page can no longer update itself. Reload it."

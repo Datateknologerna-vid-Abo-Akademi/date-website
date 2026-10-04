@@ -42,3 +42,7 @@ msgstr "Ansluter till servern..."
 #: static/common/attendance/js/overview.js:164
 msgid "Anslutningen till servern bröts"
 msgstr "Anslutningen till servern bröts"
+
+#: static/common/attendance/js/overview.js:175
+msgid "Sidan kan inte längre uppdateras. Ladda om sidan."
+msgstr "Sidan kan inte längre uppdateras. Ladda om sidan."

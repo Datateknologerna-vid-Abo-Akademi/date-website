@@ -54,6 +54,7 @@ if "attendance" not in settings.INSTALLED_APPS:
     raise unittest.SkipTest("attendance app is not installed in this settings module")
 
 from attendance import forms, limits, websocket  # noqa: E402
+from attendance.consumers import AttendanceConsumer  # noqa: E402
 from attendance.models import (  # noqa: E402
     AttendanceChange,
     AttendanceEvent,
@@ -1392,10 +1393,19 @@ class AttendanceConsumerTests(TestCase):
 
         async def flow():
             communicator = connect_as(self.staff, "finns-inte")
-            connected, _code = await communicator.connect(timeout=10)
-            return connected
+            connected, code = await communicator.connect(timeout=10)
+            return connected, code
 
-        self.assertFalse(async_to_sync(flow)())
+        connected, code = async_to_sync(flow)()
+
+        self.assertFalse(connected)
+        # The code tells the client not to keep retrying a page that is gone.
+        self.assertEqual(code, AttendanceConsumer.EVENT_GONE)
+
+    def test_the_close_codes_are_the_ones_the_client_stops_on(self):
+        """overview.js stops retrying on these two numbers, so pin them."""
+        self.assertEqual(AttendanceConsumer.NOT_ALLOWED, 4003)
+        self.assertEqual(AttendanceConsumer.EVENT_GONE, 4004)
 
     def test_the_socket_accepts_a_trailing_slash(self):
         """The route must not depend on the page URL having no trailing slash."""
@@ -1430,6 +1440,7 @@ class AttendanceConsumerTests(TestCase):
         output = async_to_sync(flow)()
 
         self.assertEqual(output["type"], "websocket.close")
+        self.assertEqual(output["code"], AttendanceConsumer.NOT_ALLOWED)
 
     def test_a_demoted_staff_socket_is_closed_when_a_change_is_broadcast(self):
         """A broadcast does not pass through the message handler, so it checks too."""
@@ -1455,6 +1466,7 @@ class AttendanceConsumerTests(TestCase):
         output = async_to_sync(flow)()
 
         self.assertEqual(output["type"], "websocket.close")
+        self.assertEqual(output["code"], AttendanceConsumer.NOT_ALLOWED)
 
     def test_unknown_message_type_gets_no_reply(self):
         async def flow():

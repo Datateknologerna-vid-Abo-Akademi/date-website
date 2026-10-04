@@ -12,6 +12,12 @@ logger = logging.getLogger("attendance")
 
 
 class AttendanceConsumer(AsyncJsonWebsocketConsumer):
+    # Close codes the client understands. Both mean the page cannot come back on
+    # its own, so `overview.js` stops retrying instead of asking again every five
+    # seconds for something that will never answer.
+    NOT_ALLOWED = 4003
+    EVENT_GONE = 4004
+
     async def connect(self) -> None:
         self.user = cast(UserLazyObject, self.scope["user"])
         self.slug = self.scope["url_route"]["kwargs"]["slug"]
@@ -19,7 +25,7 @@ class AttendanceConsumer(AsyncJsonWebsocketConsumer):
 
         if not await self._is_user_allowed():
             logger.info(f"rejecting connection attempt for user {self.user} as they not allowed to see overview page")
-            return await self.close()
+            return await self.close(code=self.NOT_ALLOWED)
 
         # The event is looked up here because the snapshot below needs it, and
         # because an unknown or deleted slug has to close the socket cleanly. A
@@ -29,7 +35,7 @@ class AttendanceConsumer(AsyncJsonWebsocketConsumer):
         event = await self._get_event()
         if event is None:
             logger.info(f"rejecting connection attempt for unknown attendance event {self.slug}")
-            return await self.close()
+            return await self.close(code=self.EVENT_GONE)
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
 
@@ -47,14 +53,14 @@ class AttendanceConsumer(AsyncJsonWebsocketConsumer):
         # the code until they closed the tab.
         if not await self._is_user_allowed():
             logger.info(f"closing connection for user {self.user} as they are no longer allowed to see overview page")
-            return await self.close()
+            return await self.close(code=self.NOT_ALLOWED)
 
         if isinstance(content, dict):
             if "type" in content and content["type"] == "get_code":
                 code = await self._get_code()
                 if code is None:
                     logger.info(f"closing connection as attendance event {self.slug} no longer exists")
-                    return await self.close()
+                    return await self.close(code=self.EVENT_GONE)
 
                 current_code, until_next = code
                 await self.send_json(
@@ -71,7 +77,7 @@ class AttendanceConsumer(AsyncJsonWebsocketConsumer):
         # connected would keep reading attendee names until their next message.
         if not await self._is_user_allowed():
             logger.info(f"closing connection for user {self.user} as they are no longer allowed to see overview page")
-            return await self.close()
+            return await self.close(code=self.NOT_ALLOWED)
 
         await self.send_json(
             {
