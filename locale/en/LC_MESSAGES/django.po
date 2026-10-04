@@ -3069,6 +3069,10 @@ msgstr "attendance requirement"
 msgid "Närvarokrav"
 msgstr "Attendance requirement"
 
+#: templates/common/attendance/overview.html:28
+msgid "Skanna med telefonens kamera"
+msgstr "Scan it with your phone's camera"
+
 #: attendance/models.py:195
 #, python-format
 msgid "Exakt en av '%(user)s' eller '%(non_member)s' måste anges."

@@ -3088,6 +3088,10 @@ msgstr "läsnäolovaatimus"
 msgid "Närvarokrav"
 msgstr "Läsnäolovaatimus"
 
+#: templates/common/attendance/overview.html:28
+msgid "Skanna med telefonens kamera"
+msgstr "Skannaa puhelimesi kameralla"
+
 #: attendance/models.py:195
 #, python-format
 msgid "Exakt en av '%(user)s' eller '%(non_member)s' måste anges."

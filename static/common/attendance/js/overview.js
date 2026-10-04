@@ -26,17 +26,19 @@ const qrOptions = {
 };
 
 const updateQrCode = (code) => {
-    // `pathname`, so a query string cannot confuse the last separator, with the
-    // slash kept because this is the event page's own URL: without it the scan
-    // takes a redirect before the page renders.
-    const url = stripLastSeparator(window.location.pathname);
+    // The event page's absolute URL comes from the view, so what the QR holds is a
+    // link any camera app will open, and the check-in page's own scanner can parse
+    // it. The fallback covers a template override that leaves the attribute out.
+    const eventUrl =
+        qrDiv.dataset.eventUrl ||
+        `${window.location.origin}${stripLastSeparator(window.location.pathname)}/`;
 
     // The QR code is a convenience for phones; the attendee list is the point of
     // the page. A failed CDN load leaves QRCode undefined, and without this guard
     // the throw would happen here and the websocket below would never open.
     try {
         // https://github.com/soldair/node-qrcode
-        QRCode.toCanvas(qrCanvas, `${url}/?code=${code}`, qrOptions);
+        QRCode.toCanvas(qrCanvas, `${eventUrl}?code=${code}`, qrOptions);
     } catch (err) {
         console.warn("Could not draw the QR code:", err);
     }

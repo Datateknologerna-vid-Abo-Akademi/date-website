@@ -24,7 +24,8 @@
           <p class="h1" id="current-code">{{ code }}</p>
           <div class="w-100 text-warning" id="status-message" aria-live="polite"></div>
         </div>
-        <div id="qrcode"></div>
+        <div id="qrcode" data-event-url="{{ event_url }}"></div>
+        <p class="form-text">{% trans "Skanna med telefonens kamera" %}</p>
         <div>
           <h2>{% trans "Närvarande" %}:</h2>
           <ul id="present-attendees" aria-live="polite">

@@ -66,8 +66,10 @@ const onResult = (scanner, result) => {
     try {
         // `new URL` and not `URL.parse`: the static parser is a 2024 API
         // (Chrome 126+, Safari 17.6+), and on anything older it throws, which
-        // would leave the code empty and the camera running.
-        url = new URL(result.data);
+        // would leave the code empty and the camera running. The page's own origin
+        // is the base, so a QR that carries a path rather than a full link, which
+        // is what an older code in the wild holds, still fills the box in.
+        url = new URL(result.data, window.location.origin);
     } catch (err) {
         // Not a URL at all, which gets the same answer as one without a code
         // parameter.

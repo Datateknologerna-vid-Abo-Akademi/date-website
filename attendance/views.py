@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.db.models import Model, Q
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
@@ -207,6 +208,10 @@ class AttendanceEventOverview(UserPassesTestMixin, AttendanceEventObjectMixin[At
 
         ctx["object"] = self.object
         ctx["code"] = self.object.get_current_code()
+        # The event page as an absolute URL, for the QR code. A bare path is not a
+        # link to a phone's camera app, and the check-in page's own scanner cannot
+        # parse one either, so the value the code carries has to be absolute.
+        ctx["event_url"] = self.request.build_absolute_uri(reverse("attendance-event-view", args=[self.object.slug]))
         # Entries rather than labels: the list identifies a row by the attendee's
         # key so two people with the same name stay two rows, and the name is the
         # label the websocket broadcast carries.

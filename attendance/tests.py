@@ -1198,6 +1198,18 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
 
         self.assertEqual(self.client.get(self.overview_url).status_code, 403)
 
+    def test_the_qr_code_carries_an_absolute_event_url(self):
+        """A phone camera opens a link, so a bare path would be useless to it.
+
+        The in-page scanner cannot parse a path either: `new URL()` without a base
+        throws, which is what made the code unusable by both routes.
+        """
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.overview_url)
+
+        self.assertContains(response, f'data-event-url="http://testserver/attendance/{self.event.slug}/"')
+
     def test_unknown_slug_is_not_found(self):
         self.client.force_login(self.staff)
 
