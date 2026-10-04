@@ -3079,6 +3079,14 @@ msgstr "närvarokrav"
 msgid "Närvarokrav"
 msgstr "Närvarokrav"
 
+#: polls/admin.py:172
+msgid "Närvarande i mötet nu"
+msgstr "Närvarande i mötet nu"
+
+#: polls/admin.py:182
+msgid "Har röstat"
+msgstr "Har röstat"
+
 #: templates/common/attendance/overview.html:28
 msgid "Skanna med telefonens kamera"
 msgstr "Skanna med telefonens kamera"

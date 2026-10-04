@@ -124,7 +124,7 @@
           </form>
         </div>
         <div>
-          <h2>{% trans "Närvarande" %}:</h2>
+          <h2>{% trans "Närvarande" %}: <span id="present-count">{{ present_attendees|length }}</span></h2>
           <ul>
             {% for a in present_attendees %}
               <li>{{ a.get_full_name }}</li>

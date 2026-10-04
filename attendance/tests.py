@@ -15,7 +15,9 @@ so the suite works around them instead of dropping the behaviour:
   consumer calls it too, to build the snapshot it sends on connect, so
   ``AttendanceConsumerTests`` patches it as well. The presence transitions it
   computes are covered portably through ``is_attendee_present()`` and
-  ``was_attendee_present()``.
+  ``was_attendee_present()``. ``present_count()`` answers the same question
+  without the distinct, so it runs on SQLite and that is where the count itself
+  is tested; the PostgreSQL-only class is what holds it equal to the list.
 * ``django_otp`` reads the clock through the ``time`` name in ``django_otp.oath``,
   so the code tests patch that name. Patching ``time.time`` would not be seen.
 
@@ -335,6 +337,101 @@ class AttendeePresenceTests(TestCase):
         self.assertFalse(self.event.was_attendee_present(self.other_member))
 
 
+class PresentCountTests(TestCase):
+    """present_count(): the headcount on its own, and the one that runs on SQLite.
+
+    ``present_attendees()`` cannot be evaluated here (see the module docstring),
+    so the transitions it computes are pinned through the count instead, and
+    ``PresentAttendeesTests`` is what holds the two answers equal on the backend
+    where the distinct query exists.
+    """
+
+    def setUp(self):
+        self.event = make_event()
+        self.member = make_member("medlem", first_name="Maja", last_name="Andersson")
+        self.other_member = make_member("annan", first_name="Nils", last_name="Nordin")
+        self.guest = NonMemberAttendee.objects.create(name="Gäst")
+        self.at = now()
+
+    def test_no_changes_is_zero(self):
+        self.assertEqual(self.event.present_count(self.at), 0)
+
+    def test_an_arrival_counts(self):
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=2))
+
+        self.assertEqual(self.event.present_count(self.at), 1)
+
+    def test_a_departure_after_an_arrival_removes_the_attendee(self):
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=2))
+        record_change(self.event, LEAVE, user=self.member, timestamp=self.at - timedelta(minutes=1))
+
+        self.assertEqual(self.event.present_count(self.at), 0)
+
+    def test_two_present_attendees_are_two(self):
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=3))
+        record_change(self.event, ENTER, user=self.other_member, timestamp=self.at - timedelta(minutes=2))
+
+        self.assertEqual(self.event.present_count(self.at), 2)
+
+    def test_a_change_after_the_timestamp_is_ignored(self):
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=1))
+        record_change(self.event, LEAVE, user=self.member, timestamp=self.at + timedelta(minutes=1))
+
+        self.assertEqual(self.event.present_count(self.at), 1)
+        # At the later moment the departure is the newest change and counts.
+        self.assertEqual(self.event.present_count(self.at + timedelta(minutes=2)), 0)
+
+    def test_a_change_at_the_timestamp_counts(self):
+        """At or before the timestamp, as the list's own filter reads it."""
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at)
+
+        self.assertEqual(self.event.present_count(self.at), 1)
+
+    def test_an_attendee_who_only_left_is_not_counted(self):
+        record_change(self.event, LEAVE, user=self.member, timestamp=self.at - timedelta(minutes=1))
+
+        self.assertEqual(self.event.present_count(self.at), 0)
+
+    def test_the_newest_change_per_attendee_decides(self):
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=3))
+        record_change(self.event, LEAVE, user=self.member, timestamp=self.at - timedelta(minutes=2))
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=1))
+
+        self.assertEqual(self.event.present_count(self.at), 1)
+
+    def test_two_arrivals_for_one_attendee_count_once(self):
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=2))
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=1))
+
+        self.assertEqual(self.event.present_count(self.at), 1)
+
+    def test_a_member_and_a_guest_are_separate_attendees(self):
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=3))
+        record_change(self.event, ENTER, non_member=self.guest, timestamp=self.at - timedelta(minutes=2))
+
+        self.assertEqual(self.event.present_count(self.at), 2)
+
+        # The guest leaving must not take the member with them, which is what a
+        # count that keyed on the primary key alone would do.
+        record_change(self.event, LEAVE, non_member=self.guest, timestamp=self.at - timedelta(minutes=1))
+
+        self.assertEqual(self.event.present_count(self.at), 1)
+
+    def test_the_default_timestamp_is_now(self):
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=1))
+
+        self.assertEqual(self.event.present_count(), 1)
+
+    def test_the_count_costs_one_query_however_many_attendees(self):
+        """One query, not one per change: the rows are walked newest first in Python."""
+        for index in range(5):
+            guest = NonMemberAttendee.objects.create(name=f"Gäst {index}")
+            record_change(self.event, ENTER, non_member=guest, timestamp=self.at - timedelta(minutes=10 - index))
+
+        with self.assertNumQueries(1):
+            self.assertEqual(self.event.present_count(self.at), 5)
+
+
 @unittest.skipUnless(
     connection.vendor == "postgresql",
     "present_attendees uses DISTINCT ON, which SQLite does not support",
@@ -376,6 +473,57 @@ class PresentAttendeesTests(TestCase):
             labels = [attendee.get_full_name() for attendee in self.event.present_attendees(self.at)]
 
         self.assertEqual(len(labels), 2)
+
+    def test_present_count_agrees_with_present_attendees(self):
+        """The portable count has to answer what the distinct query answers.
+
+        ``present_count()`` is the version the poll admin can run anywhere, so
+        this is where the two are held against each other while the real
+        ``DISTINCT ON`` query is available.
+        """
+        # (change type, attendee field, minutes relative to self.at)
+        scenarios = {
+            "nobody": [],
+            "one present": [(ENTER, {"user": self.member}, -2)],
+            "arrival and departure": [(ENTER, {"user": self.member}, -3), (LEAVE, {"user": self.member}, -2)],
+            "a member and a guest": [
+                (ENTER, {"user": self.member}, -2),
+                (ENTER, {"non_member": self.guest}, -1),
+            ],
+            "a departure between two arrivals": [
+                (ENTER, {"user": self.gone_member}, -3),
+                (LEAVE, {"user": self.gone_member}, -2),
+                (ENTER, {"user": self.member}, -1),
+            ],
+            "an arrival after the timestamp": [
+                (ENTER, {"user": self.member}, -2),
+                (LEAVE, {"user": self.member}, 2),
+            ],
+            "a change exactly at the timestamp": [
+                (ENTER, {"user": self.member}, 0),
+                (LEAVE, {"user": self.gone_member}, 0),
+            ],
+        }
+
+        for name, changes in scenarios.items():
+            with self.subTest(scenario=name):
+                self.event.attendance_changes.all().delete()
+
+                for change_type, attendee, offset in changes:
+                    record_change(self.event, change_type, timestamp=self.at + timedelta(minutes=offset), **attendee)
+
+                self.assertEqual(self.event.present_count(self.at), len(self.event.present_attendees(self.at)))
+
+    def test_the_two_answers_agree_at_every_moment_of_a_meeting(self):
+        """A guest arriving and leaving must move both answers the same way."""
+        record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=30))
+        record_change(self.event, ENTER, non_member=self.guest, timestamp=self.at - timedelta(minutes=20))
+        record_change(self.event, LEAVE, non_member=self.guest, timestamp=self.at - timedelta(minutes=10))
+
+        for offset in (-60, -30, -25, -20, -15, -10, 0, 10):
+            with self.subTest(offset=offset):
+                moment = self.at + timedelta(minutes=offset)
+                self.assertEqual(self.event.present_count(moment), len(self.event.present_attendees(moment)))
 
 
 class NonMemberAttendeeModelTests(TestCase):
@@ -733,6 +881,15 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         present.assert_called_once_with()
         self.assertContains(response, f"<li>{self.member.get_full_name()}</li>")
         self.assertContains(response, f"<li>{guest.get_full_name()}</li>")
+
+    def test_present_attendees_are_counted_in_the_heading(self):
+        """A participant reads how many are in the room, in the overview's own shape."""
+        guest = NonMemberAttendee.objects.create(name="Gäst I Närvarolistan")
+        with patch.object(AttendanceEvent, "present_attendees", return_value=[self.member, guest]):
+            response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<h2>Närvarande: <span id="present-count">2</span></h2>')
 
     def test_staff_sees_the_change_log(self):
         at = now()
@@ -1334,6 +1491,23 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
         self.assertContains(response, '<ul id="present-attendees"')
         self.assertContains(response, 'id="no-present-attendees"')
         self.assertNotContains(response, 'id="no-present-attendees" hidden')
+
+    def test_overview_heading_carries_the_headcount_the_script_updates(self):
+        """The number sits in the element overview.js writes the list's length into."""
+        guest = NonMemberAttendee.objects.create(name="Gäst I Översikten")
+        self.client.force_login(self.staff)
+
+        with patch.object(AttendanceEvent, "present_attendees", return_value=[self.member, guest]):
+            response = self.client.get(self.overview_url)
+
+        self.assertContains(response, '<h2>Närvarande: <span id="present-count">2</span></h2>')
+
+    def test_overview_heading_carries_zero_when_nobody_is_present(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.overview_url)
+
+        self.assertContains(response, '<h2>Närvarande: <span id="present-count">0</span></h2>')
 
     def test_websocket_key_matches_the_overview_key_for_a_guest(self):
         """The broadcast carries the identity and the label the page renders.

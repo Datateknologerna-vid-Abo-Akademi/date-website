@@ -3069,6 +3069,14 @@ msgstr "attendance requirement"
 msgid "Närvarokrav"
 msgstr "Attendance requirement"
 
+#: polls/admin.py:172
+msgid "Närvarande i mötet nu"
+msgstr "Present at the meeting now"
+
+#: polls/admin.py:182
+msgid "Har röstat"
+msgstr "Have voted"
+
 #: templates/common/attendance/overview.html:28
 msgid "Skanna med telefonens kamera"
 msgstr "Scan it with your phone's camera"

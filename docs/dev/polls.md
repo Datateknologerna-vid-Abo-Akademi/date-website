@@ -49,6 +49,7 @@ The return path is built from the URL name rather than from `request.path`, beca
 ## Admin
 - `QuestionAdmin` inline-stacks `Choice` and `Vote`. `VoteInline` disallows adding rows manually and limits deletion to superusers.
 - Where `attendance` is installed, `AttendancePollInline` is added to the same page so an editor picks the meeting on the poll they are editing; see `docs/admin/polls.md` for what the editor sees. The poll list gets a `Närvaroevenemang` column behind the same flag, and `QuestionAdmin.get_queryset()` joins `attendance_poll__event` so the column costs one query rather than one per row. `question_list_display()` builds the column list from the flag, which is what keeps the changelist valid on an association without the app.
+- The same block adds two read-only fields to the change page of an attached poll: **Närvarande i mötet nu**, the attached meeting's `AttendanceEvent.present_count()`, and **Har röstat**, the poll's `question.voters.count()`. `get_readonly_fields()` returns them only for a saved poll that has an `AttendancePoll` row, so an ordinary poll and the add page render exactly as before, and `get_fieldsets()` names them in the last section because a read-only field is only rendered from a fieldset. Neither is in `list_display`, so no changelist row pays a query for them, and the headcount uses the portable count rather than `present_attendees()` because only the number is wanted.
 - No slug fields; URLs use numeric primary keys.
 
 ## Extending

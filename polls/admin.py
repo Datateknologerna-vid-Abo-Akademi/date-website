@@ -169,6 +169,45 @@ class QuestionAdmin(FlatpickrDateTimeAdminMixin, TranslationCompletionAdminMixin
             # per row, the way the attendance change log does it.
             return super().get_queryset(request).select_related('attendance_poll__event')
 
+        @admin.display(description=_("Närvarande i mötet nu"))
+        def attendance_present_now(self, obj):
+            """How many the poll's meeting counts as present right now.
+
+            ``present_count()`` rather than ``present_attendees()``: only the
+            number is wanted here, and the count runs on every backend while the
+            list's ``DISTINCT ON`` does not.
+            """
+            return obj.attendance_poll.event.present_count()
+
+        @admin.display(description=_("Har röstat"))
+        def attendance_voters(self, obj):
+            """How many have voted so far, to read beside the headcount above."""
+            return obj.voters.count()
+
+        def get_readonly_fields(self, request, obj=None):
+            readonly_fields = super().get_readonly_fields(request, obj)
+            # An ordinary poll, and the add page where no attachment exists yet,
+            # keep the page they had. The readouts are appended rather than set
+            # in the class, because `Question.attendance_poll` does not exist at
+            # all on an association without the attendance app.
+            if obj is not None and getattr(obj, 'attendance_poll', None) is not None:
+                return (*readonly_fields, 'attendance_present_now', 'attendance_voters')
+            return readonly_fields
+
+        def get_fieldsets(self, request, obj=None):
+            fieldsets = list(super().get_fieldsets(request, obj))
+            # A read-only field is rendered only when a fieldset names it, so the
+            # attachment that adds the readouts to readonly_fields appends them
+            # to the last section here. They are on the change page alone, never
+            # in list_display, so no changelist row pays a query for them.
+            if 'attendance_present_now' not in self.get_readonly_fields(request, obj):
+                return fieldsets
+
+            name, options = fieldsets[-1]
+            fields = tuple(options.get('fields', ())) + ('attendance_present_now', 'attendance_voters')
+            fieldsets[-1] = (name, {**options, 'fields': fields})
+            return fieldsets
+
     class Media:
         css = {'all': FLATPICKR_ADMIN_CSS}
         js = ('admin/js/jquery.init.js',) + FLATPICKR_ADMIN_JS

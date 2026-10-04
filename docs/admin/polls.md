@@ -41,7 +41,10 @@ Somebody who checks in and never checks out still counts as present, so a poll a
 
 ## Monitor Votes
 - The **Röstare** inline lists individual members who voted. It’s read-only to avoid tampering (only superusers may delete entries).
+- On a poll with a **Närvarokrav** row, the poll page carries two read-only lines among its own fields, above the lists of choices, voters and the meeting: **Närvarande i mötet nu** is how many the meeting counts as present at this moment, and **Har röstat** is how many have voted so far. Both are read when the page is loaded, so reload to see them move.
 - Use the list filter (`pub_date`) or search bar to find older polls.
+
+That pair is what to read while a vote is running. The poll accepts a vote only from somebody who is present, so a turnout below the headcount means somebody who is in the room has not voted yet: wait a little longer, or ask the room for the remaining votes before you stop the poll. The two numbers are equal when everybody the site counts as present has voted. Both lines are absent on a poll with no **Närvarokrav** row, and on an association that does not install the `attendance` app.
 
 ## Testing the Poll
 1. Visit `/polls/` to confirm the question appears (only published questions show up).

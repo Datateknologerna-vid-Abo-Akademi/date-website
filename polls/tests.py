@@ -693,3 +693,89 @@ class QuestionAdminAttendanceTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # The inline is there for the editor to attach a meeting to this poll.
         self.assertContains(response, 'Närvarokrav')
+
+    def test_the_poll_page_reads_the_room_and_the_turnout(self):
+        """Both numbers are on the change page, and they are different numbers.
+
+        Two people in the room and one vote behind the poll is the case the
+        readout exists for: the person running the vote compares the two before
+        deciding whether to wait any longer.
+        """
+        AttendancePoll.objects.create(question=self.question, event=self.event)
+        other_member = Member.objects.create_user(
+            username="narvarande2",
+            password="pwd",
+            membership_type=MembershipType.objects.get(pk=ORDINARY_MEMBER),
+        )
+        record_change(self.event, ENTER, self.admin_user)
+        record_change(self.event, ENTER, other_member)
+        self.question.voters.add(self.admin_user)
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:polls_question_change", args=[self.question.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Närvarande i mötet nu')
+        self.assertContains(response, '<div class="readonly">2</div>')
+        self.assertContains(response, 'Har röstat')
+        self.assertContains(response, '<div class="readonly">1</div>')
+
+    def test_the_readout_follows_the_room_rather_than_a_stored_value(self):
+        """The headcount is answered when the page is read, from the change log."""
+        AttendancePoll.objects.create(question=self.question, event=self.event)
+        registered = admin.site._registry[Question]
+        record_change(self.event, ENTER, self.admin_user)
+
+        self.assertEqual(registered.attendance_present_now(self.question), 1)
+
+        record_change(self.event, LEAVE, self.admin_user)
+
+        self.assertEqual(registered.attendance_present_now(self.question), 0)
+
+    def test_the_readout_counts_the_votes_that_have_been_cast(self):
+        AttendancePoll.objects.create(question=self.question, event=self.event)
+        registered = admin.site._registry[Question]
+
+        self.assertEqual(registered.attendance_voters(self.question), 0)
+
+        self.question.voters.add(self.admin_user)
+
+        self.assertEqual(registered.attendance_voters(self.question), 1)
+
+    def test_the_readout_is_absent_for_a_poll_without_a_meeting(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:polls_question_change", args=[self.unattached.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Närvarande i mötet nu')
+        self.assertNotContains(response, 'Har röstat')
+        self.assertNotContains(response, 'field-attendance_present_now')
+
+    def test_the_readout_is_absent_before_the_poll_exists(self):
+        """The add page has no attachment to read yet, so it renders as before."""
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:polls_question_add"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Närvarande i mötet nu')
+        self.assertNotContains(response, 'Har röstat')
+
+    def test_the_readout_is_not_a_changelist_column(self):
+        """A readout meant for one poll must not add a query per changelist row."""
+        registered = admin.site._registry[Question]
+
+        self.assertNotIn('attendance_present_now', registered.list_display)
+        self.assertNotIn('attendance_voters', registered.list_display)
+
+    def test_the_readout_fields_are_added_only_for_an_attached_poll(self):
+        """The attachment is the switch, so no page needs a fieldset of its own."""
+        registered = admin.site._registry[Question]
+        AttendancePoll.objects.create(question=self.question, event=self.event)
+
+        self.assertEqual(registered.get_readonly_fields(None, self.unattached), ())
+        self.assertEqual(
+            registered.get_readonly_fields(None, self.question),
+            ('attendance_present_now', 'attendance_voters'),
+        )

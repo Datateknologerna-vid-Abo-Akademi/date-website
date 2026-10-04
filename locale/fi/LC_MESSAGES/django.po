@@ -3088,6 +3088,14 @@ msgstr "läsnäolovaatimus"
 msgid "Närvarokrav"
 msgstr "Läsnäolovaatimus"
 
+#: polls/admin.py:172
+msgid "Närvarande i mötet nu"
+msgstr "Läsnä kokouksessa nyt"
+
+#: polls/admin.py:182
+msgid "Har röstat"
+msgstr "Äänestäneet"
+
 #: templates/common/attendance/overview.html:28
 msgid "Skanna med telefonens kamera"
 msgstr "Skannaa puhelimesi kameralla"

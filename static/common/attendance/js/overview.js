@@ -16,6 +16,7 @@ const statusMessage = document.getElementById("status-message")
 
 const attendeeList = document.getElementById("present-attendees");
 const attendeeEmptyState = document.getElementById("no-present-attendees");
+const attendeeCount = document.getElementById("present-count");
 
 const qrDiv = document.getElementById("qrcode");
 const qrCanvas = document.createElement("canvas");
@@ -49,8 +50,19 @@ const setStatusMessage = (msg) => {
     statusMessage.innerText = msg;
 }
 
+/**
+ * The headcount is read off the list rather than tracked beside it, so the
+ * number and the rows cannot drift apart. Every path that changes the list
+ * (the connect snapshot, an arrival, a departure) goes through
+ * updateEmptyState, which is where this is called from.
+ */
+const updateCount = () => {
+    attendeeCount.innerText = attendeeList.children.length;
+}
+
 const updateEmptyState = () => {
     attendeeEmptyState.hidden = attendeeList.children.length > 0;
+    updateCount();
 }
 
 /**

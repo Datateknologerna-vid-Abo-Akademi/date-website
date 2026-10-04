@@ -122,6 +122,39 @@ class AttendanceEvent(models.Model):
             if x.type == AttendanceChange.Type.ENTER
         ]
 
+    def present_count(self, timestamp: datetime | None = None) -> int:
+        """
+        Get how many attendees were present at the given timestamp.
+        Defaults to the current time.
+
+        The same answer as ``len(present_attendees(timestamp))``, in a form that
+        also runs on SQLite. ``present_attendees`` asks the database for one row
+        per attendee with ``distinct("user", "non_member")``, which compiles to
+        PostgreSQL's ``DISTINCT ON`` and raises ``NotSupportedError`` on any other
+        backend (NOTE on that method), so a caller that only wants the number
+        cannot use it. Here the changes are read newest first and the first row
+        per attendee is kept in Python instead, which costs one query and no
+        per-attendee query, and the arrivals among those rows are counted.
+        """
+        timestamp = timestamp or now()
+        seen: set[tuple[str, int | None]] = set()
+        count = 0
+
+        for change in self.attendance_changes.filter(timestamp__lte=timestamp).order_by("-timestamp"):
+            # A member and a guest are different attendees, so the kind has to be
+            # part of the identity: their primary keys are not comparable, which
+            # is the same reason attendee_key namespaces it. The check constraint
+            # says exactly one of the two fields is set.
+            key = ("user", change.user_id) if change.user_id is not None else ("non_member", change.non_member_id)
+            if key in seen:
+                continue
+
+            seen.add(key)
+            if change.type == AttendanceChange.Type.ENTER:
+                count += 1
+
+        return count
+
     def is_attendee_present(self, attendee: Attendee, after_timestamp: datetime | None = None):
         filters: dict[str, Any] = {}
         if after_timestamp:
