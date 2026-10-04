@@ -19,6 +19,25 @@ ATTENDANCE_EVENT_MAX_SLUG_LEN = 50
 NON_MEMBER_MAX_NAME_LEN = 255
 
 
+def attendee_label(attendee: Attendee) -> str:
+    """The name to show for an attendee, in a form that does not depend on the language.
+
+    The websocket broadcast and the staff overview page it feeds both use this, so
+    a name arriving over the socket matches the one already rendered. The event
+    page keeps the translated guest marker in its change log, which is rendered in
+    one language and never has to match a socket payload.
+
+    `NonMemberAttendee.__str__` appends a translated "(icke-medlem)". The payload
+    is built in the participant's request language while the staff page renders in
+    the staff member's, so a translated marker cannot be part of a label that has
+    to match across that boundary.
+    """
+    if isinstance(attendee, Member):
+        return attendee.get_full_name()
+
+    return cast(NonMemberAttendee, attendee).name
+
+
 class AttendanceEvent(models.Model):
     """
     Some kind of event that one can attend.
@@ -247,10 +266,5 @@ class AttendanceChange(models.Model):
 
     @property
     def attendee_name(self) -> str:
-        """Returns the name of any kind of attendee"""
-        if self.user is not None:
-            user = cast(Member, self.user)
-            return user.full_name
-        else:
-            non_member = cast(NonMemberAttendee, self.non_member)
-            return non_member.name
+        """Returns the language-independent name of any kind of attendee"""
+        return attendee_label(self.attendee)

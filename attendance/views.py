@@ -12,7 +12,7 @@ from django.views.generic.detail import SingleObjectMixin
 from members.models import Member
 
 from . import forms, limits, websocket
-from .models import AttendanceChange, AttendanceEvent, Attendee, NonMemberAttendee
+from .models import AttendanceChange, AttendanceEvent, Attendee, NonMemberAttendee, attendee_label
 
 
 class HttpResponseSeeOther(HttpResponseRedirect):
@@ -156,6 +156,9 @@ class AttendanceEventOverview(UserPassesTestMixin, SingleObjectMixin[AttendanceE
 
         ctx["object"] = self.object
         ctx["code"] = self.object.get_current_code()
+        # Labels rather than attendees: the page and the websocket broadcast have
+        # to agree on the name, and the broadcast carries `attendee_name`.
+        ctx["present_attendees"] = [attendee_label(attendee) for attendee in self.object.present_attendees()]
 
         return ctx
 

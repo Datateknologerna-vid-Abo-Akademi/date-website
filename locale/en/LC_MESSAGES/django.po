@@ -3130,6 +3130,7 @@ msgid "Gå ut"
 msgstr "Leave"
 
 #: templates/common/attendance/detail.html:133
+#: templates/common/attendance/overview.html:29
 msgid "Närvarande"
 msgstr "Present"
 
@@ -3149,6 +3150,10 @@ msgstr "Attendance"
 #: templates/common/attendance/index.html:17
 msgid "Inga evenemang"
 msgstr "No events"
+
+#: templates/common/attendance/overview.html:35
+msgid "Ingen är närvarande"
+msgstr "Nobody is present"
 
 #~ msgid "Författare"
 #~ msgstr "Author"

@@ -25,6 +25,15 @@
           <div class="w-100 text-warning" id="status-message"></div>
         </div>
         <div id="qrcode"></div>
+        <div>
+          <h2>{% trans "Närvarande" %}:</h2>
+          <ul id="present-attendees" class="list-dashed">
+            {% for a in present_attendees %}
+              <li data-attendee="{{ a }}">{{ a }}</li>
+            {% endfor %}
+          </ul>
+          <p id="no-present-attendees" {% if present_attendees %}hidden{% endif %}>{% trans "Ingen är närvarande" %}</p>
+        </div>
       </div>
     </div>
   </div>

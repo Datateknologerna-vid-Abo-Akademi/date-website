@@ -3150,6 +3150,7 @@ msgid "Gå ut"
 msgstr "Astu ulos"
 
 #: templates/common/attendance/detail.html:133
+#: templates/common/attendance/overview.html:29
 msgid "Närvarande"
 msgstr "Läsnäolevat"
 
@@ -3169,6 +3170,10 @@ msgstr "Läsnäolo"
 #: templates/common/attendance/index.html:17
 msgid "Inga evenemang"
 msgstr "Ei tapahtumia"
+
+#: templates/common/attendance/overview.html:35
+msgid "Ingen är närvarande"
+msgstr "Kukaan ei ole läsnä"
 
 #~ msgid "Författare"
 #~ msgstr "Kirjoittaja"
