@@ -42,7 +42,7 @@ from django.contrib import admin
 from django.contrib.auth.models import AnonymousUser, Group
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection, transaction
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone, translation
@@ -1198,29 +1198,39 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
 
         self.assertEqual(self.client.get(self.overview_url).status_code, 403)
 
-    def test_the_qr_code_carries_the_association_public_url(self):
-        """The request host is not necessarily the address the room can reach.
+    def test_the_qr_code_names_the_address_the_page_is_served_from(self):
+        """A phone camera opens a link, so a bare path would be useless to it.
 
-        Behind the ingress the staff screen is served on an internal name, so the
-        code has to name the association's own public address instead, the one the
-        rest of the project's links and mail use.
+        The address is the one the staff screen is being served from rather than a
+        `SITE_URL` setting shared by every instance of the code: that way this
+        instance's own address is what the room gets, on production, on a QA
+        deployment and on a laptop alike.
         """
         self.client.force_login(self.staff)
 
-        response = self.client.get(self.overview_url)
-
-        expected = f'{settings.CONTENT_VARIABLES["SITE_URL"]}/attendance/{self.event.slug}/'
-        self.assertContains(response, f'data-event-url="{expected}"')
-        self.assertNotContains(response, f'data-event-url="http://testserver/attendance/{self.event.slug}/"')
-
-    def test_the_qr_code_falls_back_to_the_request_without_a_public_url(self):
-        """An instance that has not set the variable still links to itself."""
-        self.client.force_login(self.staff)
-
-        with self.settings(CONTENT_VARIABLES={**settings.CONTENT_VARIABLES, "SITE_URL": ""}):
+        with self.settings(CONTENT_VARIABLES={**settings.CONTENT_VARIABLES, "SITE_URL": "https://elsewhere.example"}):
             response = self.client.get(self.overview_url)
 
         self.assertContains(response, f'data-event-url="http://testserver/attendance/{self.event.slug}/"')
+
+    @override_settings(
+        USE_X_FORWARDED_HOST=True,
+        ALLOWED_HOSTS=["datateknologerna.org", "testserver"],
+        SECURE_PROXY_SSL_HEADER=("HTTP_X_FORWARDED_PROTO", "https"),
+    )
+    def test_a_forwarded_public_host_is_what_the_qr_names(self):
+        """This is the production shape: the chart trusts both forwarded headers."""
+        self.client.force_login(self.staff)
+
+        response = self.client.get(
+            self.overview_url,
+            headers={"x-forwarded-host": "datateknologerna.org", "x-forwarded-proto": "https"},
+        )
+
+        self.assertContains(
+            response,
+            f'data-event-url="https://datateknologerna.org/attendance/{self.event.slug}/"',
+        )
 
     def test_unknown_slug_is_not_found(self):
         self.client.force_login(self.staff)
