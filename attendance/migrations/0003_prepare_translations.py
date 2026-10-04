@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='attendancechange',
-            options={'get_latest_by': 'timestamp', 'verbose_name': 'närvaroändring', 'verbose_name_plural': 'närvaroändingar'},
+            options={'get_latest_by': 'timestamp', 'verbose_name': 'närvaroändring', 'verbose_name_plural': 'närvaroändringar'},
         ),
         migrations.AlterModelOptions(
             name='attendanceevent',
@@ -60,7 +60,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='attendanceevent',
             name='code_secret',
-            field=models.CharField(default=django_otp.util.random_hex, verbose_name='Kodens genereringnyckel'),
+            field=models.CharField(default=django_otp.util.random_hex, verbose_name='Kodens genereringsnyckel'),
         ),
         migrations.AlterField(
             model_name='attendanceevent',
