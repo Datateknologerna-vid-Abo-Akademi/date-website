@@ -17,6 +17,7 @@ from two_factor.utils import default_device
 from two_factor.views.utils import LoginStorage
 
 from .two_factor import MemberLoginView, member_has_2fa, should_redirect_to_two_factor_setup
+from .webauthn import has_recent_auth
 
 logger = logging.getLogger('date')
 
@@ -91,6 +92,11 @@ def github_login(request):
 @login_required
 def github_connect(request):
     if request.method != 'POST':
+        return redirect('members:info')
+    # A linked GitHub account can sign in (and refresh the recent-auth stamp
+    # that gates passkey registration), so linking needs a fresh sign-in too.
+    if not has_recent_auth(request):
+        messages.error(request, _('Logga in på nytt innan du kopplar ett GitHub-konto.'))
         return redirect('members:info')
     return _github_redirect(request, intent='connect')
 

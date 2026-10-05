@@ -409,6 +409,55 @@ class PasskeyRegistrationApiTests(PasskeyTestMixin, TestCase):
         mock_enqueue.assert_called_once()
         self.assertEqual(mock_enqueue.call_args.args[4], [self.member.email])
 
+    @patch('members.webauthn.enqueue_task_on_commit')
+    def test_complete_rotates_session_key_when_upgrading_to_verified(self, _mock_enqueue):
+        self.login(self.member)
+        self.set_session(otp_webauthn_register_state=REGISTER_STATE)
+        old_key = self.client.session.session_key
+
+        def register_complete(helper, user, state, data):
+            return make_passkey(user)
+
+        with patch('django_otp_webauthn.helpers.WebAuthnHelper.register_complete', register_complete):
+            response = self.post_json(self.complete_url, {'id': 'x'})
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertNotEqual(self.client.session.session_key, old_key)
+
+
+class PasskeySecurityRegressionTests(PasskeyTestMixin, TestCase):
+    def test_unverified_passkey_member_cannot_enrol_totp(self):
+        make_passkey(self.member)
+        self.login(self.member)
+        response = self.client.get(reverse('two_factor:setup'))
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.url.startswith(reverse('members:login')))
+
+    def test_verified_passkey_member_can_enrol_totp(self):
+        passkey = make_passkey(self.member)
+        self.login(self.member, verified_device=passkey)
+        self.assertEqual(self.client.get(reverse('two_factor:setup')).status_code, 200)
+
+    @override_settings(**GITHUB_SETTINGS)
+    def test_github_connect_requires_recent_authentication(self):
+        self.login(self.member)
+        self.set_session(**{RECENT_AUTH_SESSION_KEY: int(time.time()) - 3600})
+        response = self.client.post(reverse('members:github_connect'))
+        self.assertRedirects(response, reverse('members:info'), fetch_redirect_response=False)
+
+    @override_settings(**GITHUB_SETTINGS)
+    def test_github_connect_allowed_after_fresh_login(self):
+        self.login(self.member)
+        response = self.client.post(reverse('members:github_connect'))
+        self.assertTrue(response.url.startswith('https://github.com/login/oauth/authorize'))
+
+    @patch('members.webauthn.enqueue_task_on_commit')
+    def test_notification_email_is_not_html_escaped(self, mock_enqueue):
+        from members.webauthn import notify_passkey_change
+
+        notify_passkey_change(self.member, 'Tom & "Jerry"', added=True)
+        self.assertIn('Tom & "Jerry"', mock_enqueue.call_args.args[2])
+
 
 class PasskeyAuthenticationApiTests(PasskeyTestMixin, TestCase):
     complete_url = reverse('otp_webauthn:credential-authentication-complete')

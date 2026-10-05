@@ -56,7 +56,8 @@ class WebAuthnCredentialInline(TabularInline):
     model = WebAuthnCredential
     extra = 0
     max_num = 0
-    can_delete = True
+    # Removal goes through the guarded, logged "Inaktivera 2FA" action instead.
+    can_delete = False
     fields = ('name', 'created_at', 'last_used_at')
     readonly_fields = ('name', 'created_at', 'last_used_at')
     verbose_name = "Passkey"
