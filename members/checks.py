@@ -17,6 +17,15 @@ def check_passkey_settings(app_configs, **kwargs):
         ]
 
     errors = []
+    if not settings.CONTENT_VARIABLES.get('ASSOCIATION_NAME'):
+        # py_webauthn rejects an empty RP name, which would 500 every registration.
+        errors.append(
+            Error(
+                'Passkeys need a relying party name.',
+                hint="Set CONTENT_VARIABLES['ASSOCIATION_NAME'] for this association.",
+                id='members.E004',
+            )
+        )
     rp_id = settings.OTP_WEBAUTHN_RP_ID
     for origin in settings.OTP_WEBAUTHN_ALLOWED_ORIGINS:
         parts = urlsplit(origin)
