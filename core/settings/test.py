@@ -53,6 +53,11 @@ CACHES = {
 
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 
+OTP_WEBAUTHN_RP_ID = 'localhost'
+OTP_WEBAUTHN_ALLOWED_ORIGINS = ['http://localhost:8000']
+PASSKEYS_ENABLED = True
+SILENCED_SYSTEM_CHECKS = []
+
 LOGGING = {
     'version': 1,
     # Silence Django's default loggers explicitly: configure_logging applies

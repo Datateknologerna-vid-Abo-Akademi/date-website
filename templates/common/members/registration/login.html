@@ -7,7 +7,12 @@
     {% if wizard.steps.current == 'token' %}
       <p>{{ device|as_verbose_action }}</p>
     {% elif wizard.steps.current == 'backup' %}
-      <p>{% trans "Enter one of your backup tokens to continue." %}</p>
+      {% if passkeys_enabled %}
+        <p>{% trans "Verify with your passkey, or enter one of your backup tokens to continue." %}</p>
+        {% include "members/registration/_passkey_login.html" %}
+      {% else %}
+        <p>{% trans "Enter one of your backup tokens to continue." %}</p>
+      {% endif %}
     {% endif %}
     <form action="" method="post">
       {% csrf_token %}
@@ -36,6 +41,9 @@
       </form>
     {% endif %}
     {% if wizard.steps.current == 'auth' %}
+      {% if passkeys_enabled %}
+        {% include "members/registration/_passkey_login.html" %}
+      {% endif %}
       {% if GITHUB_CLIENT_ID %}
         <div class="github-login">
           <a href="{% url 'members:github_login' %}{% if redirect_field_value %}?next={{ redirect_field_value|urlencode }}{% elif request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}"

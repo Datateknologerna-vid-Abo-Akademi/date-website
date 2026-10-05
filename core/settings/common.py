@@ -159,6 +159,7 @@ def get_installed_apps(proj_apps):
         'django_otp',
         'django_otp.plugins.otp_static',
         'django_otp.plugins.otp_totp',
+        'django_otp_webauthn',
         'two_factor',
         'admin_ordering',
         'django_ckeditor_5',
@@ -344,7 +345,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTHENTICATION_BACKENDS = ('members.backends.AuthBackend',)
+AUTHENTICATION_BACKENDS = ('members.backends.AuthBackend', 'django_otp_webauthn.backends.WebAuthnBackend')
 
 LOGIN_URL = 'members:login'
 LOGIN_REDIRECT_URL = 'members:info'
@@ -588,6 +589,19 @@ ALUMNI_SETTINGS = os.environ.get("ALUMNI_SETTINGS", '')
 GITHUB_CLIENT_ID = env('GITHUB_CLIENT_ID', str, '')
 GITHUB_CLIENT_SECRET = env('GITHUB_CLIENT_SECRET', str, '')
 GITHUB_MFA_POLICY = env('GITHUB_MFA_POLICY', str, 'enrolled').lower()
+
+# Passkeys (django-otp-webauthn). The RP ID is pinned rather than derived from
+# the request host: changing it later invalidates every registered passkey.
+OTP_WEBAUTHN_RP_ID = env('WEBAUTHN_RP_ID', str, 'localhost' if DEBUG else '')
+OTP_WEBAUTHN_ALLOWED_ORIGINS = json.loads(
+    env('WEBAUTHN_ALLOWED_ORIGINS', str, '["http://localhost:8000"]' if DEBUG else '[]')
+)
+OTP_WEBAUTHN_RP_NAME_CALLABLE = 'members.webauthn.get_rp_name'
+PASSKEYS_ENABLED = bool(OTP_WEBAUTHN_RP_ID and OTP_WEBAUTHN_ALLOWED_ORIGINS)
+PASSKEY_REGISTRATION_MAX_AUTH_AGE = 10 * 60
+if not PASSKEYS_ENABLED:
+    # members.checks reports a warning instead, so unconfigured sites still deploy.
+    SILENCED_SYSTEM_CHECKS = ['otp_webauthn.E010', 'otp_webauthn.E030']
 
 DEFAULT_EXCEPTION_REPORTER_FILTER = 'core.redaction.DateExceptionReporterFilter'
 

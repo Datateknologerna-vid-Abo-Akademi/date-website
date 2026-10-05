@@ -43,6 +43,33 @@
 - Deleting a member cascades into that member's `LogEntry` rows, because the admin audit log points at the user model with a CASCADE foreign key, and the log admin is deliberately read-only. `UserAdmin.get_deleted_objects` drops the log entry from Django's related-object permission check, since otherwise the read-only log admin would refuse every member deletion, superusers included. The other cascade targets (payments, votes, authored content) still have to pass their own delete permissions, so a non-superuser needs the matching delete permissions for each registered related model that would be removed.
 - Member-valued autocomplete fields on other apps (`Flag.solver`, `Event.author`, `Functionary.member`, `EventInvoice.participant`, `Post.author`, ...) work for editors who can add/change the referring object even when they lack `members.view_member`. `core.admin.ReferringObjectAutocompleteJsonView` (installed via `FixedLanguageAdminSite.autocomplete_view`) widens Django's default check, which otherwise requires view permission on the *related* model and returns an empty "no results" dropdown. `UserAdmin.get_queryset` still filters the returned rows, so `MEMBER_ADMIN_RESTRICTED_GROUP`/`MEMBER_ADMIN_RESTRICTED_MEMBERSHIP_TYPE` restrictions keep applying.
 
+## Two-Factor Authentication & Passkeys
+- 2FA is built on `django-otp` + `django-two-factor-auth` (TOTP authenticator apps, static backup tokens) plus `django-otp-webauthn` 0.10.3 for passkeys. Custom views live in `members/two_factor.py` (mounted at `/members/two-factor/`); passkey API views live in `members/webauthn.py` and are mounted at `/members/webauthn/` (namespace `otp_webauthn`) for every association.
+- `django-two-factor-auth`'s own `two_factor.plugins.webauthn` was not used: its Django 6 support is unreleased, it is second-factor only, does not create discoverable credentials, and pins py_webauthn below 3 (which conflicts with `django-otp-webauthn`).
+- `member_has_2fa(user)` is true when the member has any confirmed non-static device (TOTP or passkey); backup tokens alone don't count. It drives `should_redirect_to_two_factor_setup`, the profile 2FA links (`two_factor_context`), `FixedLanguageAdminSite.has_permission` (`core/admin.py`), the GitHub `GITHUB_MFA_POLICY` check, the passkey registration enrolment check, and the admin `has_two_factor` column (a TOTP-or-passkey `Exists` annotation).
+
+### Passkey settings
+- `WEBAUTHN_RP_ID` → `OTP_WEBAUTHN_RP_ID`: the relying-party domain (e.g. `example.com`). It is pinned rather than derived from the request host. **Treat it as permanent**: changing it (or switching between apex and `www.`) invalidates every registered passkey.
+- `WEBAUTHN_ALLOWED_ORIGINS` → `OTP_WEBAUTHN_ALLOWED_ORIGINS`: JSON list of exact origins (`https://example.com`, `https://www.example.com`). Kept separate from `ALLOWED_ORIGINS`/`CSRF_TRUSTED_ORIGINS`, which may contain plain-http or wildcard entries.
+- With `DEBUG` on and both unset, they default to `localhost` / `["http://localhost:8000"]` (browsers treat localhost as a secure context; RP ID `localhost` works on any port, but each port must be listed as an origin).
+- `PASSKEYS_ENABLED` is derived: true only when both are set. When false, the passkey UI is hidden, the passkey endpoints and `/members/two-factor/passkeys/` return 404, the library's own checks `otp_webauthn.E010`/`E030` are silenced, and `members.W001` warns instead, so unconfigured sites still deploy.
+- `members/checks.py` errors when enabled and an origin contains a wildcard (`members.E001`), is not https unless its host is `localhost` (`members.E002`), or is not the RP ID or a subdomain of it (`members.E003`).
+- `PASSKEY_REGISTRATION_MAX_AUTH_AGE` (default 600 s): how recent the session's last sign-in/verification must be to register a passkey.
+
+### Passkey flows
+- **Passwordless sign-in**: the login page's auth step shows "Sign in with a passkey". User verification is required for this anonymous ceremony. Success logs the member in through `django_otp_webauthn.backends.WebAuthnBackend` and marks the session OTP-verified, so it satisfies admin and `otp_required` views. The complete view reuses the login page's validated `next`/referer-inferred redirect.
+- **Existing session**: if a member is already logged in (in practice only after GitHub login with `GITHUB_MFA_POLICY` `off`/`staff`), the library uses UV "discouraged", so a security-key touch verifies the session; GitHub was the first factor. The session key is rotated when an existing session becomes verified.
+- **Passkey-only member + password or GitHub login**: two_factor's `default_device()` only knows TOTP-style devices, so `MemberLoginView.has_backup_step` uses `member_has_2fa` and `_begin_two_factor_login` jumps to the backup step. That step offers the passkey button or a backup token; there is no way to finish unverified.
+- **Registration** (`/members/two-factor/passkeys/`): requires a sign-in/verification within `PASSKEY_REGISTRATION_MAX_AUTH_AGE` (timestamp set on `user_logged_in` and on passkey verification), and — if the member already has a second factor — a verified session. Registering marks the session verified.
+- **Rename/delete**: POST-only, `otp_required`, scoped to the member's own credentials (404 otherwise). Deleting the last real factor also deletes the backup-token device so the member isn't left half-enrolled.
+- Adding or removing a passkey emails the member (`members/passkey_added_email.txt` / `passkey_removed_email.txt`) via `enqueue_task_on_commit` + `send_email_task`. Registration, sign-in, failures, deletion and the admin disable action are logged on the `date` logger.
+- **Disable 2FA** (`two_factor:disable`) removes all devices, including passkeys.
+- **Password reset intentionally keeps 2FA devices** so an email-account takeover does not also reset the second factor. Lockout recovery is the admin "Inaktivera 2FA" action.
+
+### Known gaps
+- The passkey endpoints have no application-level rate limiting; throttle `members/webauthn/` at the ingress.
+- py_webauthn rejects non-increasing sign counts, but the credential is not flagged or disabled and the member is not alerted (synced passkeys report 0 anyway).
+
 ## Extending
 - Consider adding auditing (who edited a member) since current forms don’t track admin users.
 - Django 6 is now in use. If you revisit background jobs, evaluate Django's built-in Tasks framework separately from Celery migration work rather than mixing both changes into a feature branch.
@@ -54,3 +81,6 @@
 - Ran full `ruff check`, `ruff format --check`, `djlint --check templates/`, and `mypy .` checks plus `git diff --check`; all passed.
 - Ran `uv run python manage.py makemigrations --check --dry-run`: no model changes were missing. The command warned that the configured development host `db` could not resolve while checking migration history, but dry-run migration detection completed.
 - [ ] Run an SF deployment smoke test after migration with representative staff accounts and production membership data.
+
+## Verification (passkeys branch)
+- [ ] Record test, lint, and manual passkey smoke-test results for the `feat/passkeys` branch before merge.

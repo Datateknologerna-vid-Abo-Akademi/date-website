@@ -2,14 +2,25 @@ import logging
 from urllib.parse import urlsplit, urlunsplit
 
 import django_otp
+from django import forms
+from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
-from django.http import HttpResponseRedirect
-from django.shortcuts import redirect, resolve_url
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import Http404, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, redirect, resolve_url
 from django.urls import resolve, reverse_lazy
+from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import RedirectView
+from django.views import View
+from django.views.decorators.cache import never_cache
+from django.views.generic import RedirectView, TemplateView
+from django_otp import devices_for_user
+from django_otp.decorators import otp_required
+from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from django_otp_webauthn.models import WebAuthnCredential
 from two_factor.forms import AuthenticationTokenForm, BackupTokenForm, TOTPDeviceForm
 from two_factor.views import (
     BackupTokensView,
@@ -26,7 +37,27 @@ INFERRED_REDIRECT_SESSION_KEY = 'members_login_inferred_next'
 
 
 def member_has_2fa(user):
+    """True when the member has a confirmed second factor (TOTP or passkey); backup codes alone don't count."""
+    if not user.is_authenticated:
+        return False
+    return any(not isinstance(device, StaticDevice) for device in devices_for_user(user, confirmed=True))
+
+
+def member_has_totp(user):
     return user.is_authenticated and TOTPDevice.objects.filter(user=user, confirmed=True).exists()
+
+
+def member_has_passkey(user):
+    return user.is_authenticated and WebAuthnCredential.objects.filter(user=user, confirmed=True).exists()
+
+
+def two_factor_context(user):
+    return {
+        'two_factor_enabled': member_has_2fa(user),
+        'has_totp': member_has_totp(user),
+        'has_passkey': member_has_passkey(user),
+        'passkeys_enabled': settings.PASSKEYS_ENABLED,
+    }
 
 
 def should_redirect_to_two_factor_setup(user, target):
@@ -61,6 +92,28 @@ class MemberLoginView(LoginView):
         (LoginView.TOKEN_STEP, AuthenticationTokenForm),
         (LoginView.BACKUP_STEP, BackupTokenForm),
     )
+
+    def has_backup_step(self):
+        # two_factor only knows TOTP-style default devices. A passkey-only member
+        # signing in with a password must still verify (passkey or backup
+        # token) instead of ending up logged in but unverified.
+        user = self.get_user()
+        return bool(
+            user
+            and member_has_2fa(user)
+            and self.TOKEN_STEP not in self.storage.validated_step_data
+            and not self.remember_agent
+        )
+
+    condition_dict = {
+        **LoginView.condition_dict,
+        LoginView.BACKUP_STEP: has_backup_step,
+    }
+
+    def get_context_data(self, form, **kwargs):
+        context = super().get_context_data(form, **kwargs)
+        context['passkeys_enabled'] = settings.PASSKEYS_ENABLED
+        return context
 
     def get(self, request, *args, **kwargs):
         if self.redirect_field_name not in request.GET:
@@ -182,3 +235,68 @@ class MemberSetupCompleteView(SetupCompleteView):
 
 class TwoFactorProfileRedirectView(RedirectView):
     pattern_name = 'members:info'
+
+
+class PasskeysEnabledViewMixin:
+    def dispatch(self, request, *args, **kwargs):
+        if not settings.PASSKEYS_ENABLED:
+            raise Http404
+        return super().dispatch(request, *args, **kwargs)
+
+
+@method_decorator(never_cache, name='dispatch')
+class PasskeyListView(PasskeysEnabledViewMixin, LoginRequiredMixin, TemplateView):
+    template_name = 'two_factor/profile/passkeys.html'
+
+    def get_context_data(self, **kwargs):
+        from .webauthn import has_recent_auth
+
+        user = self.request.user
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                'credentials': WebAuthnCredential.objects.filter(user=user, confirmed=True).order_by('created_at'),
+                'can_register': has_recent_auth(self.request) and (user.is_verified() or not member_has_2fa(user)),
+                'has_backup_tokens': StaticDevice.objects.filter(user=user, token_set__isnull=False).exists(),
+            }
+        )
+        return context
+
+
+class PasskeyRenameForm(forms.Form):
+    name = forms.CharField(max_length=WebAuthnCredential._meta.get_field('name').max_length)
+
+
+@method_decorator([never_cache, otp_required], name='dispatch')
+class PasskeyRenameView(PasskeysEnabledViewMixin, View):
+    http_method_names = ['post']
+
+    def post(self, request, pk):
+        credential = get_object_or_404(WebAuthnCredential, pk=pk, user=request.user)
+        form = PasskeyRenameForm(request.POST)
+        if form.is_valid():
+            credential.name = form.cleaned_data['name']
+            credential.save(update_fields=['name'])
+        else:
+            messages.error(request, _('Invalid passkey name.'))
+        return redirect('two_factor:passkeys')
+
+
+@method_decorator([never_cache, otp_required], name='dispatch')
+class PasskeyDeleteView(PasskeysEnabledViewMixin, View):
+    http_method_names = ['post']
+
+    def post(self, request, pk):
+        from .webauthn import notify_passkey_change
+
+        credential = get_object_or_404(WebAuthnCredential, pk=pk, user=request.user)
+        name = credential.name
+        credential.delete()
+        if not member_has_2fa(request.user):
+            # Backup codes alone are not a second factor; drop them so the
+            # member isn't left half-enrolled and unable to re-enrol.
+            StaticDevice.objects.filter(user=request.user).delete()
+        logger.info('Passkey %s deleted by member %s', pk, request.user.pk)
+        notify_passkey_change(request.user, name, added=False)
+        messages.success(request, _('Passkey removed.'))
+        return redirect('two_factor:passkeys')

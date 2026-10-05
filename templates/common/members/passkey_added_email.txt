@@ -1,0 +1,5 @@
+{% load i18n %}{% blocktrans with name=user.get_short_name %}Hi {{ name }},{% endblocktrans %}
+
+{% blocktrans %}A passkey named "{{ credential_name }}" was added to your {{ association_name }} account.{% endblocktrans %}
+
+{% trans "If this wasn't you, sign in, remove the passkey and change your password, then contact the site administrators." %}

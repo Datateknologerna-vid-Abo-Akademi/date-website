@@ -1,3 +1,4 @@
+import logging
 from functools import reduce
 
 from django.conf import settings
@@ -10,6 +11,7 @@ from django.db.models.functions import Lower, Replace
 from django.utils.translation import gettext_lazy as _
 from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from django_otp_webauthn.models import WebAuthnCredential
 
 from core.admin_base import ModelAdmin, TabularInline
 from members.forms import (
@@ -19,6 +21,8 @@ from members.forms import (
     SubscriptionPaymentForm,
 )
 from members.models import Member, MembershipType, Subscription, SubscriptionPayment
+
+logger = logging.getLogger('date')
 
 
 @admin.register(Permission)
@@ -46,6 +50,17 @@ class TOTPDeviceInline(TabularInline):
     readonly_fields = ('name', 'created_at', 'last_used_at')
     verbose_name = "2FA device"
     verbose_name_plural = "2FA devices"
+
+
+class WebAuthnCredentialInline(TabularInline):
+    model = WebAuthnCredential
+    extra = 0
+    max_num = 0
+    can_delete = True
+    fields = ('name', 'created_at', 'last_used_at')
+    readonly_fields = ('name', 'created_at', 'last_used_at')
+    verbose_name = "Passkey"
+    verbose_name_plural = "Passkeys"
 
 
 class StaticDeviceInline(TabularInline):
@@ -137,7 +152,7 @@ class UserAdmin(_UserAdminBase):
         Lower('username'),
     ]
     readonly_fields = ('last_login', 'has_two_factor')
-    inlines = [TOTPDeviceInline, StaticDeviceInline]
+    inlines = [TOTPDeviceInline, WebAuthnCredentialInline, StaticDeviceInline]
     actions = ['activate_user', 'deactivate_user', 'disable_two_factor']
 
     @admin.display(boolean=True)
@@ -155,11 +170,12 @@ class UserAdmin(_UserAdminBase):
             and request.user.groups.filter(name=restricted_group).exists()
         ):
             queryset = queryset.filter(membership_type__name=restricted_membership)
-        confirmed_devices = TOTPDevice.objects.filter(user=OuterRef('pk'), confirmed=True)
+        confirmed_totp = TOTPDevice.objects.filter(user=OuterRef('pk'), confirmed=True)
+        confirmed_passkeys = WebAuthnCredential.objects.filter(user=OuterRef('pk'), confirmed=True)
         return (
             queryset.select_related('membership_type')
             .prefetch_related('groups')
-            .annotate(_has_two_factor=Exists(confirmed_devices))
+            .annotate(_has_two_factor=Exists(confirmed_totp) | Exists(confirmed_passkeys))
         )
 
     def _has_restricted_object_access(self, request, obj):
@@ -283,13 +299,20 @@ class UserAdmin(_UserAdminBase):
         updated = queryset.update(is_active=False)
         self.message_user(request, _("Deaktiverade %(count)d användare.") % {'count': updated})
 
-    @admin.action(description="Inaktivera 2FA")
+    @admin.action(description="Inaktivera 2FA", permissions=['change'])
     def disable_two_factor(self, request, queryset):
-        totp_qs = TOTPDevice.objects.filter(user__in=queryset)
-        static_qs = StaticDevice.objects.filter(user__in=queryset)
-        total = totp_qs.count() + static_qs.count()
-        totp_qs.delete()
-        static_qs.delete()
+        if not request.user.is_superuser:
+            queryset = queryset.filter(is_superuser=False)
+        device_querysets = [
+            model.objects.filter(user__in=queryset) for model in (TOTPDevice, WebAuthnCredential, StaticDevice)
+        ]
+        total = sum(qs.count() for qs in device_querysets)
+        member_ids = list(queryset.values_list('pk', flat=True))
+        for qs in device_querysets:
+            qs.delete()
+        logger.warning(
+            '2FA disabled by admin %s for members %s (%d devices removed)', request.user.pk, member_ids, total
+        )
         self.message_user(
             request,
             _("2FA inaktiverat för valda medlemmar: %(count)d enhet(er) borttagna.") % {'count': total},
