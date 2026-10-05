@@ -1,11 +1,14 @@
 import logging
-from typing import Any, cast
+from importlib import import_module
+from typing import Any
 
 from asgiref.sync import sync_to_async
-from channels.auth import UserLazyObject
+from channels.auth import get_user
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 
-from .models import AttendanceEvent, attendee_entry
+from .models import AttendanceChange, AttendanceEvent, attendance_change_token, attendee_entry
 from .views import AttendanceEventOverview
 
 logger = logging.getLogger("attendance")
@@ -19,12 +22,12 @@ class AttendanceConsumer(AsyncJsonWebsocketConsumer):
     EVENT_GONE = 4004
 
     async def connect(self) -> None:
-        self.user = cast(UserLazyObject, self.scope["user"])
+        self.session_key = self.scope["session"].session_key
         self.slug = self.scope["url_route"]["kwargs"]["slug"]
         self.group_name = f"attendance_{self.slug}"
 
         if not await self._is_user_allowed():
-            logger.info(f"rejecting connection attempt for user {self.user} as they not allowed to see overview page")
+            logger.info(f"rejecting connection attempt for {self.slug}: user is not allowed")
             return await self.close(code=self.NOT_ALLOWED)
 
         # The event is looked up here because the snapshot below needs it, and
@@ -47,12 +50,10 @@ class AttendanceConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive_json(self, content: Any, **kwargs: Any) -> None:
-        # The socket hands out the rotating code, so it must not outlive the
-        # permission that opened it. A staff member removed from the staff group
-        # while their overview page is still open would otherwise keep reading
-        # the code until they closed the tab.
+        # Re-read the session before every inbound message. The socket can outlive
+        # a logout or session rotation in another tab.
         if not await self._is_user_allowed():
-            logger.info(f"closing connection for user {self.user} as they are no longer allowed to see overview page")
+            logger.info(f"closing attendance connection for {self.slug}: user is no longer allowed")
             return await self.close(code=self.NOT_ALLOWED)
 
         if isinstance(content, dict):
@@ -72,36 +73,35 @@ class AttendanceConsumer(AsyncJsonWebsocketConsumer):
                 )
 
     async def attendance_change(self, event):
-        # Broadcasts arrive from the channel layer, which the check in
-        # `receive_json` does not see: without this one a user demoted since they
-        # connected would keep reading attendee names until their next message.
+        # Broadcasts arrive from the channel layer, so they must revalidate the
+        # session too before forwarding attendee names.
         if not await self._is_user_allowed():
-            logger.info(f"closing connection for user {self.user} as they are no longer allowed to see overview page")
+            logger.info(f"closing attendance connection for {self.slug}: user is no longer allowed")
             return await self.close(code=self.NOT_ALLOWED)
 
-        await self.send_json(
-            {
-                "type": "attendance_change",
-                "data": {
-                    "key": event["change"]["key"],
-                    "name": event["change"]["name"],
-                    "type": event["change"]["type"],
-                },
-            }
-        )
+        await self.send_json({"type": "attendance_change", "data": event["change"]})
 
     async def _get_event(self) -> AttendanceEvent | None:
         """The event this socket is for, or None when its slug does not exist."""
         return await AttendanceEvent.objects.filter(slug=self.slug).afirst()
 
-    async def _snapshot(self, event: AttendanceEvent) -> list[dict[str, str]]:
-        """The attendees present right now, as entries the page can render.
+    async def _snapshot(self, event: AttendanceEvent) -> list[dict[str, str | int | bool]]:
+        """All latest attendee states with versions, including absent attendees.
 
-        Sent on connect because the page is rendered before the socket opens,
-        so anything that happened in between would otherwise be lost.
+        The page is rendered before the socket opens. Per-attendee versions let
+        the browser merge this snapshot with channel messages that race it, while
+        absent states act as tombstones for delayed arrivals.
         """
-        attendees = await sync_to_async(event.present_attendees)()
-        return [attendee_entry(attendee) for attendee in attendees]
+        changes = await sync_to_async(lambda: list(event.latest_attendance_changes()))()
+        return [
+            {
+                **attendee_entry(change.attendee),
+                "type": AttendanceChange.Type(change.type).name,
+                "present": change.type == AttendanceChange.Type.ENTER,
+                **attendance_change_token(change),
+            }
+            for change in changes
+        ]
 
     async def _get_code(self) -> tuple[int, float] | None:
         # Looked up per message rather than cached from connect, so an admin
@@ -112,5 +112,19 @@ class AttendanceConsumer(AsyncJsonWebsocketConsumer):
 
         return event.get_current_code(), event.time_until_next_code()
 
-    async def _is_user_allowed(self):
-        return await sync_to_async(AttendanceEventOverview.is_user_allowed)(self.user)
+    async def _get_current_user(self):
+        """Authenticate against the current server-side session, not connect's cache."""
+        if not self.session_key:
+            return AnonymousUser()
+
+        session_store = import_module(settings.SESSION_ENGINE).SessionStore
+        session = session_store(session_key=self.session_key)
+        return await get_user({**self.scope, "session": session})
+
+    async def _is_user_allowed(self) -> bool:
+        user = await self._get_current_user()
+
+        def is_allowed() -> bool:
+            return bool(getattr(user, "is_active", False) and AttendanceEventOverview.is_user_allowed(user))
+
+        return await sync_to_async(is_allowed)()

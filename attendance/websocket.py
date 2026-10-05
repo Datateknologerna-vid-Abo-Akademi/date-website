@@ -1,7 +1,7 @@
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
-from .models import AttendanceChange
+from .models import AttendanceChange, attendance_change_token
 
 
 def send_attendance_change(slug: str, change: AttendanceChange):
@@ -17,6 +17,7 @@ def send_attendance_change(slug: str, change: AttendanceChange):
                 "key": change.attendee_key,
                 "name": change.attendee_name,
                 "type": AttendanceChange.Type(change.type).name,
+                **attendance_change_token(change),
             },
         },
     )

@@ -25,7 +25,7 @@ CSV_DELIMITER = ";"
 UTF8_BOM = "\ufeff"
 
 TIMELINE_FIELDNAMES = (_("Tid"), _("Deltagare"), _("Ändring"), _("Typ"))
-POLL_FIELDNAMES = (_("Fråga"), _("Val"), _("Röster"), _("Andel (%)"), _("Röstsedlar"), _("Röstande"), _("Närvarande"))
+POLL_FIELDNAMES = (_("Fråga"), _("Val"), _("Röster"), _("Andel (%)"), _("Röstsedlar"), _("Röstande"))
 
 
 def attendee_identity(change: AttendanceChange) -> tuple[str, int | None]:
@@ -40,19 +40,21 @@ def attendee_identity(change: AttendanceChange) -> tuple[str, int | None]:
     return ("non_member", change.non_member_id)
 
 
-def peak_present_count(changes: list[AttendanceChange]) -> int:
-    """The most people in the room at any one moment of the meeting.
+def peak_present_count(changes: list[AttendanceChange], end_datetime: datetime | None = None) -> int:
+    """The largest headcount in the meeting, ignoring changes after a recorded end.
 
-    Nothing in the database answers this portably: the peak is not any single
-    row, and PostgreSQL's window functions or ``DISTINCT ON`` would not run on
-    the SQLite test database either. Replaying the timeline in Python is the one
-    answer that is the same on every backend, and the changes are already in
-    memory for the page's table.
+    The timeline is already loaded for the page, so replaying it in Python gives
+    the same answer on every backend without another query. A meeting with no
+    recorded end includes every change; a meeting with an end includes changes
+    through that exact timestamp only.
     """
     present: set[tuple[str, int | None]] = set()
     peak = 0
 
     for change in changes:
+        if end_datetime is not None and change.timestamp > end_datetime:
+            continue
+
         key = attendee_identity(change)
         if change.type == AttendanceChange.Type.ENTER:
             present.add(key)
@@ -74,32 +76,26 @@ def present_at_end(event: AttendanceEvent) -> int:
     """How many were in the room at the meeting's end, or at its last change.
 
     A meeting that recorded an end time is read at that moment, so the answer is
-    the same every time the report is opened.
-
-    A meeting with no end time is read at its last recorded change rather than
-    at the current time: the report is a historical document, and an answer read
-    at "now" is whoever is in the room when the page happens to be opened, which
-    is a different number after the next check-in. The state after the newest
-    ``AttendanceChange`` is fixed with the log, and ``has_end_datetime`` in the
-    report's context is what tells the page which of the two the number is.
-    With no changes at all the answer is 0.
-
-    ``present_count()`` and not ``present_attendees()``: only the count runs on
-    every backend (see the model's NOTE on the distinct query). It is a function
-    of its own so that ``PresentAttendeesTests`` can hold this exact number
-    against the real ``DISTINCT ON`` query on the one backend that has it.
+    the same every time the report is opened. A meeting without one is read at
+    its last recorded change rather than at the current time. With no changes,
+    the answer is 0. Both list and count readers break timestamp ties by primary
+    key, matching the order of the report timeline.
     """
     if event.end_datetime is not None:
         return event.present_count(event.end_datetime)
 
-    # The newest row, then the count as it stood at that moment: ties in
-    # ``timestamp`` are broken by the primary key so the answer cannot depend on
-    # the row order the database happens to return.
     latest = event.attendance_changes.order_by("-timestamp", "-pk").first()
     if latest is None:
         return 0
 
     return event.present_count(latest.timestamp)
+
+
+def present_at_end_label(event: AttendanceEvent) -> str:
+    """The report's honest label for its meeting-end or last-change headcount."""
+    if event.end_datetime is not None:
+        return str(_("Närvarande vid slutet"))
+    return str(_("Närvarande vid sista ändringen"))
 
 
 def change_action_label(change: AttendanceChange) -> str:
@@ -139,8 +135,23 @@ def report_filename(event: AttendanceEvent, prefix: str) -> str:
     return f"{prefix}_{event.slug}_{start}.csv"
 
 
+def sanitize_csv_string(value: Any) -> Any:
+    """Neutralize Excel formula prefixes in string data cells, never in headers/numbers.
+
+    CSV quoting protects delimiters and quotes, not spreadsheet formulas. A
+    leading apostrophe makes formula-like values literal text when opened in
+    Excel, including those hidden after leading whitespace or control characters.
+    """
+    if isinstance(value, str):
+        formula = value.lstrip(" \t\r\n")
+        if formula.startswith(("=", "+", "-", "@")):
+            return f"'{value}"
+    return value
+
+
 def csv_row(fieldnames: tuple[str, ...], values: list[Any]) -> dict[str, Any]:
-    return dict(zip(fieldnames, values, strict=True))
+    safe_values = (sanitize_csv_string(value) for value in values)
+    return dict(zip(fieldnames, safe_values, strict=True))
 
 
 class AttendanceChangesInline(admin.TabularInline):
@@ -281,7 +292,8 @@ class AttendanceEventAdmin(admin.ModelAdmin):
             # can label it honestly: a meeting without an end time has no end to
             # be present at.
             "has_end_datetime": event.end_datetime is not None,
-            "peak_present": peak_present_count(changes),
+            "present_at_end_label": present_at_end_label(event),
+            "peak_present": peak_present_count(changes, event.end_datetime),
             "ever_present": ever_present_count(changes),
             "change_count": len(changes),
             "show_polls": show_polls,
@@ -339,7 +351,7 @@ class AttendanceEventAdmin(admin.ModelAdmin):
             raise PermissionDenied
 
         event = self._event(request, event_id)
-        fieldnames = tuple(str(label) for label in POLL_FIELDNAMES)
+        fieldnames = tuple(str(label) for label in (*POLL_FIELDNAMES, present_at_end_label(event)))
         response = self._csv_response(event, "omrostning")
         response.write(UTF8_BOM)
         writer = csv.DictWriter(response, fieldnames=fieldnames, delimiter=CSV_DELIMITER)

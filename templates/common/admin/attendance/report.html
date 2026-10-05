@@ -72,11 +72,6 @@
     <h2>{% trans "Situationen" %}</h2>
     <ul class="attendance-report__stats">
       <li>
-        {% if has_end_datetime %}
-          {% trans "Närvarande vid slutet" as present_at_end_label %}
-        {% else %}
-          {% trans "Närvarande vid sista ändringen" as present_at_end_label %}
-        {% endif %}
         {{ present_at_end_label }}: <strong>{{ present_at_end }}</strong>
       </li>
       <li>
@@ -124,6 +119,9 @@
     {% if hidden_polls %}
       <p class="attendance-report__muted">{% trans "Omröstningarna döljs utan behörigheten att visa frågor." %}</p>
     {% elif polls %}
+      <p class="attendance-report__muted">
+        {% trans "Mötesnärvaron är ett sammanhangsvärde, inte en exakt nämnare vid omröstningstillfället: den läses vid mötets slut eller sista ändringen och kan omfatta gäster och personer utan rösträtt." %}
+      </p>
       {% for poll in polls %}
         <section class="attendance-report__poll">
           <h3>{{ poll.question.question_text }}</h3>
@@ -160,7 +158,7 @@
               {% trans "Röstande" %}: <strong>{{ poll.voters }}</strong>
             </li>
             <li>
-              {% trans "Närvarande" %}: <strong>{{ poll.headcount }}</strong>
+              {{ present_at_end_label }}: <strong>{{ poll.headcount }}</strong>
             </li>
           </ul>
           {% if poll.multiple_choice %}

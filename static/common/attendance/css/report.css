@@ -10,6 +10,7 @@
 
 @media print {
   #header,
+  #main > .bg-white.border-b,
   #user-tools,
   .breadcrumbs,
   #nav-sidebar,

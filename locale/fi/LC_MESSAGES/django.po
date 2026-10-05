@@ -3508,3 +3508,21 @@ msgstr "Kokoukseen ei ole liitetty äänestyksiä."
 
 #~ msgid "Mera nyheter..."
 #~ msgstr "Lisää uutisia..."
+
+#: polls/vote.py:24
+msgid "Du måste vara närvarande på mötet för att rösta."
+msgstr "Sinun on oltava läsnä kokouksessa voidaksesi äänestää."
+
+#: polls/vote.py:25
+msgid "Du valde ett alternativ som inte hör till frågan."
+msgstr "Valitsit vaihtoehdon, joka ei kuulu kysymykseen."
+
+#: templates/common/admin/attendance/report.html:123
+msgid ""
+"Mötesnärvaron är ett sammanhangsvärde, inte en exakt nämnare vid "
+"omröstningstillfället: den läses vid mötets slut eller sista ändringen och "
+"kan omfatta gäster och personer utan rösträtt."
+msgstr ""
+"Kokouksen läsnäolijamäärä on asiayhteyttä kuvaava tieto, ei tarkka "
+"äänestyshetken nimittäjä. Määrä luetaan kokouksen päättyessä tai viimeisen "
+"muutoksen jälkeen, ja siihen voi sisältyä vieraita ja äänioikeudettomia."

@@ -9,8 +9,6 @@ const stripLastSeparator = (url) => {
     return lastSeparatorIdx < 1 ? url : url.slice(0, lastSeparatorIdx);
 };
 
-const wsUrl = `/ws${stripLastSeparator(window.location.pathname)}`
-
 const codeDisplay = document.getElementById("current-code");
 const statusMessage = document.getElementById("status-message")
 
@@ -65,6 +63,10 @@ const updateEmptyState = () => {
     updateCount();
 }
 
+// A live delta and the connect snapshot may arrive out of order. Keep the
+// highest (timestamp, primary key) seen for each attendee and ignore stale state.
+const attendeeVersions = new Map();
+
 /**
  * One row per attendee, matched on the key rather than the name: two members can
  * share a name, and a guest may type a name a member already has.
@@ -72,8 +74,9 @@ const updateEmptyState = () => {
  * @param {{key: string, name: string}} entry
  */
 const addAttendee = (entry) => {
-    const alreadyListed = Array.from(attendeeList.children).some((item) => item.dataset.attendee === entry.key);
-    if (alreadyListed) {
+    const existing = Array.from(attendeeList.children).find((item) => item.dataset.attendee === entry.key);
+    if (existing) {
+        existing.innerText = entry.name;
         return;
     }
 
@@ -99,35 +102,66 @@ const removeAttendee = (key) => {
 }
 
 /**
- * Replace the whole list with the snapshot the server sends on connect, so
- * anything that happened between the page render and the socket opening is not
- * lost.
+ * Apply a versioned current-state entry only if it is newer than the state
+ * already received for this attendee.
  *
- * Entries are keyed, so a snapshot and a live change for the same attendee are
- * idempotent: the second one lands on the same row, either message may arrive
- * first, and no ordering dance between them is needed.
- *
- * @param {Array<{key: string, name: string}>} entries
+ * @param {{key: string, name: string, type: string, present: boolean, timestamp: string, change_id: number}} state
  */
-const replaceAttendees = (entries) => {
-    attendeeList.replaceChildren();
+const applyAttendanceState = (state) => {
+    const changeId = Number(state.change_id);
+    if (typeof state.key !== "string" || typeof state.timestamp !== "string" || !Number.isSafeInteger(changeId)) {
+        return;
+    }
 
-    for (const entry of entries) {
-        addAttendee(entry);
+    const previous = attendeeVersions.get(state.key);
+    if (previous && (state.timestamp < previous.timestamp || (state.timestamp === previous.timestamp && changeId <= previous.changeId))) {
+        return;
+    }
+
+    attendeeVersions.set(state.key, {timestamp: state.timestamp, changeId});
+    if (state.present) {
+        addAttendee(state);
+    } else {
+        removeAttendee(state.key);
+    }
+}
+
+/**
+ * Merge the versioned snapshot instead of replacing the list blindly. The
+ * snapshot includes absent attendees as tombstones. Initial HTML rows missing
+ * from it are removed, except when a newer live delta already arrived.
+ *
+ * @param {Array<{key: string, name: string, type: string, present: boolean, timestamp: string, change_id: number}>} states
+ */
+const replaceAttendees = (states) => {
+    if (!Array.isArray(states)) {
+        return;
+    }
+
+    const snapshotKeys = new Set(states.map((state) => state.key));
+    for (const item of Array.from(attendeeList.children)) {
+        const key = item.dataset.attendee;
+        if (!snapshotKeys.has(key) && !attendeeVersions.has(key)) {
+            item.remove();
+        }
+    }
+
+    for (const state of states) {
+        applyAttendanceState(state);
     }
 
     updateEmptyState();
 }
 
 /**
- * @param {{key: string, name: string, type: string}} change
+ * @param {{key: string, name: string, type: string, timestamp: string, change_id: number}} change
  */
 const applyAttendanceChange = (change) => {
-    if (change.type == "ENTER") {
-        addAttendee(change);
-    } else if (change.type == "LEAVE") {
-        removeAttendee(change.key);
+    if (change.type !== "ENTER" && change.type !== "LEAVE") {
+        return;
     }
+
+    applyAttendanceState({...change, present: change.type === "ENTER"});
 }
 
 /**
@@ -170,8 +204,25 @@ const onMessage = (ws, msg) => {
 };
 
 const makeWebsocket = () => {
+    // A reconnect gets a fresh authoritative snapshot; only versions received
+    // on this connection may protect rows that are absent from that snapshot.
+    attendeeVersions.clear();
     setStatusMessage(_("Ansluter till servern..."));
-    const ws = new WebSocket(wsUrl);
+
+    let ws;
+    try {
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const wsUrl = `${protocol}//${window.location.host}/ws${stripLastSeparator(window.location.pathname)}`;
+        ws = new WebSocket(wsUrl);
+    } catch (err) {
+        // A malformed URL or a synchronous constructor error must not leave the
+        // status stuck at "connecting" without the normal retry.
+        console.warn("Could not create the attendance websocket:", err);
+        setStatusMessage(_("Anslutningen till servern bröts"));
+        setTimeout(makeWebsocket, 5_000);
+        return;
+    }
+
     ws.addEventListener("message", (msg) => onMessage(ws, msg));
     ws.addEventListener("open", () => {
         setStatusMessage("");

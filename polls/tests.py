@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib import admin
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, Group, Permission
 from django.db import connection
 from django.http import HttpResponse
 from django.test import RequestFactory, TestCase
@@ -85,7 +85,7 @@ class VoteViewTests(TestCase):
         request.user = self.member
         response = views.vote(request, self.question.id)
         selected = mock_handle_vote.call_args.args[3]
-        self.assertCountEqual(selected, [str(self.choice1.id), str(self.choice2.id)])
+        self.assertEqual(selected, [str(self.choice1.id), str(self.choice2.id), str(self.choice1.id)])
         self.assertEqual(response.content, b"ok")
 
     @patch("polls.views.handle_vote")
@@ -320,6 +320,45 @@ class ForgedChoiceTests(TestCase):
         self.other_choice.refresh_from_db()
         self.assertEqual(self.other_choice.votes, 5)
         self.assertEqual(Vote.objects.count(), 0)
+
+    def test_numeric_aliases_of_one_choice_do_not_satisfy_required_choices(self):
+        self.question.multiple_choice = True
+        self.question.required_multiple_choices = 2
+        self.question.save(update_fields=['multiple_choice', 'required_multiple_choices'])
+        other_choice = Choice.objects.create(question=self.question, choice_text="nej")
+        self.client.force_login(self.member)
+
+        response = self.client.post(
+            reverse('polls:vote', args=[self.question.id]),
+            {'choice': [str(self.choice.id), f"+{self.choice.id}"]},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, ERROR_MESSAGES['invalid_choice'])
+        self.choice.refresh_from_db()
+        other_choice.refresh_from_db()
+        self.assertEqual(self.choice.votes, 0)
+        self.assertEqual(other_choice.votes, 0)
+        self.assertEqual(Vote.objects.count(), 0)
+
+    def test_required_multiple_choice_post_counts_distinct_choices(self):
+        self.question.multiple_choice = True
+        self.question.required_multiple_choices = 2
+        self.question.save(update_fields=['multiple_choice', 'required_multiple_choices'])
+        other_choice = Choice.objects.create(question=self.question, choice_text="nej")
+        self.client.force_login(self.member)
+
+        response = self.client.post(
+            reverse('polls:vote', args=[self.question.id]),
+            {'choice': [str(self.choice.id), str(other_choice.id)]},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.choice.refresh_from_db()
+        other_choice.refresh_from_db()
+        self.assertEqual(self.choice.votes, 1)
+        self.assertEqual(other_choice.votes, 1)
+        self.assertEqual(Vote.objects.filter(question=self.question, user=self.member).count(), 1)
 
     def test_a_real_choice_still_counts(self):
         """The scoped update still updates the question's own choices."""
@@ -694,6 +733,28 @@ class QuestionAdminAttendanceTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # The inline is there for the editor to attach a meeting to this poll.
         self.assertContains(response, 'Närvarokrav')
+
+    def test_question_editors_can_render_the_inline_without_attendance_permissions(self):
+        editor = Member.objects.create_user(
+            username="poll-editor",
+            password="pwd",
+            membership_type=MembershipType.objects.get(pk=ORDINARY_MEMBER),
+        )
+        editor.groups.add(Group.objects.create(name=settings.STAFF_GROUPS[0]))
+        editor.user_permissions.add(
+            Permission.objects.get(content_type__app_label="polls", codename="add_question"),
+            Permission.objects.get(content_type__app_label="polls", codename="change_question"),
+        )
+        self.assertFalse(editor.has_perm("attendance.add_attendancepoll"))
+        self.assertFalse(editor.has_perm("attendance.change_attendancepoll"))
+        AttendancePoll.objects.create(question=self.question, event=self.event)
+        self.client.force_login(editor)
+
+        response = self.client.get(reverse("admin:polls_question_change", args=[self.question.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="attendance_poll-0-event"')
+        self.assertContains(response, str(self.event))
 
     def test_the_poll_page_reads_the_room_and_the_turnout(self):
         """Both numbers are on the change page, and they are different numbers.

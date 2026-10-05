@@ -1,10 +1,10 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, cast
 
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Q, constraints
-from django.db.models.functions import Lower
+from django.db.models import F, Q, Window, constraints
+from django.db.models.functions import Lower, RowNumber
 from django.utils.formats import date_format, time_format
 from django.utils.timezone import localtime, now
 from django.utils.translation import gettext_lazy as _
@@ -64,6 +64,14 @@ def attendee_entry(attendee: Attendee) -> dict[str, str]:
     return {"key": attendee_key(attendee), "name": attendee_label(attendee)}
 
 
+def attendance_change_token(change: Any) -> dict[str, str | int]:
+    """An exact, comparable version for live attendance state updates."""
+    return {
+        "timestamp": change.timestamp.astimezone(UTC).isoformat(timespec="microseconds"),
+        "change_id": change.pk,
+    }
+
+
 class AttendanceEvent(models.Model):
     """
     Some kind of event that one can attend.
@@ -106,59 +114,45 @@ class AttendanceEvent(models.Model):
     def totp(self) -> TOTP:
         return TOTP(self.code_secret.encode(), step=self.code_validity_time)
 
-    def present_attendees(self, timestamp: datetime | None = None) -> list[Attendee]:
-        """
-        Get all attendees who were present at the given timestamp.
-        Defaults to the current time.
+    def latest_attendance_changes(self, timestamp: datetime | None = None):
+        """Return the latest state row for every attendee at a moment.
+
+        Timestamp ties are resolved by primary key, matching the report timeline.
+        A window query keeps this portable across SQLite and PostgreSQL while
+        loading only one row per attendee, including attendees whose latest state
+        is absent. The latter also lets websocket snapshots carry tombstones that
+        prevent delayed arrivals from restoring someone who has left.
         """
         timestamp = timestamp or now()
-        return [
-            x.attendee
-            # NOTE: using distinct this way will only work on postgres, which is currently used
-            for x in self.attendance_changes.filter(timestamp__lte=timestamp)
-            # Otherwise every attendee costs a query of its own for the name.
+        return (
+            self.attendance_changes.filter(timestamp__lte=timestamp)
+            .annotate(
+                _attendee_rank=Window(
+                    expression=RowNumber(),
+                    partition_by=[F("user_id"), F("non_member_id")],
+                    order_by=[F("timestamp").desc(), F("pk").desc()],
+                )
+            )
+            .filter(_attendee_rank=1)
             .select_related("user", "non_member")
-            .distinct("user", "non_member")
-            .order_by("user_id", "non_member_id", "-timestamp")
-            if x.type == AttendanceChange.Type.ENTER
+            .order_by("user_id", "non_member_id")
+        )
+
+    def present_attendees(self, timestamp: datetime | None = None) -> list[Attendee]:
+        """Get attendees present at a moment, defaulting to the current time."""
+        return [
+            change.attendee
+            for change in self.latest_attendance_changes(timestamp)
+            if change.type == AttendanceChange.Type.ENTER
         ]
 
     def present_count(self, timestamp: datetime | None = None) -> int:
-        """
-        Get how many attendees were present at the given timestamp.
-        Defaults to the current time.
-
-        The same answer as ``len(present_attendees(timestamp))``, in a form that
-        also runs on SQLite. ``present_attendees`` asks the database for one row
-        per attendee with ``distinct("user", "non_member")``, which compiles to
-        PostgreSQL's ``DISTINCT ON`` and raises ``NotSupportedError`` on any other
-        backend (NOTE on that method), so a caller that only wants the number
-        cannot use it. Here the changes are read newest first and the first row
-        per attendee is kept in Python instead, which costs one query and no
-        per-attendee query, and the arrivals among those rows are counted.
-        """
-        timestamp = timestamp or now()
-        seen: set[tuple[str, int | None]] = set()
-        count = 0
-
-        for change in self.attendance_changes.filter(timestamp__lte=timestamp).order_by("-timestamp"):
-            # A member and a guest are different attendees, so the kind has to be
-            # part of the identity: their primary keys are not comparable, which
-            # is the same reason attendee_key namespaces it. The check constraint
-            # says exactly one of the two fields is set.
-            key = ("user", change.user_id) if change.user_id is not None else ("non_member", change.non_member_id)
-            if key in seen:
-                continue
-
-            seen.add(key)
-            if change.type == AttendanceChange.Type.ENTER:
-                count += 1
-
-        return count
+        """Count present attendees using the same state rows as the attendee list."""
+        return sum(change.type == AttendanceChange.Type.ENTER for change in self.latest_attendance_changes(timestamp))
 
     def is_attendee_present(self, attendee: Attendee, after_timestamp: datetime | None = None):
-        filters: dict[str, Any] = {}
-        if after_timestamp:
+        filters: dict[str, Any] = {"timestamp__lte": now()}
+        if after_timestamp is not None:
             filters["timestamp__gte"] = after_timestamp
 
         if isinstance(attendee, Member):
@@ -166,10 +160,13 @@ class AttendanceEvent(models.Model):
         else:
             filters["non_member"] = attendee
 
-        try:
-            return self.attendance_changes.filter(**filters).latest().type == AttendanceChange.Type.ENTER
-        except AttendanceChange.DoesNotExist:
-            return False
+        latest_type = (
+            self.attendance_changes.filter(**filters)
+            .order_by("-timestamp", "-pk")
+            .values_list("type", flat=True)
+            .first()
+        )
+        return latest_type == AttendanceChange.Type.ENTER
 
     def was_attendee_present(self, attendee: Attendee):
         """
@@ -232,10 +229,12 @@ class AttendancePoll(models.Model):
         verbose_name=_("Fråga"),
     )
 
-    # The meeting whose room the voter has to be in.
+    # The meeting whose room the voter has to be in. Protecting it prevents an
+    # event deletion from silently dropping the room requirement and opening the
+    # poll to ordinary voting; an editor must explicitly remove this link first.
     event = models.ForeignKey(
         AttendanceEvent,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="polls",
         verbose_name=_("Närvaroevenemang"),
     )

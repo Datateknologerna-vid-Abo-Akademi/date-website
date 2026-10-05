@@ -45,6 +45,6 @@ def vote(request, question_id):
     else:
         user = request.user
 
-    selected_choices = [choice_id for choice_id in set(request.POST.getlist('choice'))]
+    selected_choices = request.POST.getlist('choice')
 
     return handle_vote(request, question, user, selected_choices)

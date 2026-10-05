@@ -3467,3 +3467,21 @@ msgstr "No polls are attached to the meeting."
 
 #~ msgid "Mera nyheter..."
 #~ msgstr "More news..."
+
+#: polls/vote.py:24
+msgid "Du måste vara närvarande på mötet för att rösta."
+msgstr "You must be present at the meeting to vote."
+
+#: polls/vote.py:25
+msgid "Du valde ett alternativ som inte hör till frågan."
+msgstr "You selected an option that does not belong to the question."
+
+#: templates/common/admin/attendance/report.html:123
+msgid ""
+"Mötesnärvaron är ett sammanhangsvärde, inte en exakt nämnare vid "
+"omröstningstillfället: den läses vid mötets slut eller sista ändringen och "
+"kan omfatta gäster och personer utan rösträtt."
+msgstr ""
+"The meeting headcount is contextual, not an exact poll-time denominator. It "
+"is read at the meeting end or last change and can include guests and members "
+"who are not eligible to vote."

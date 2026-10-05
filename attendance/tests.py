@@ -5,21 +5,13 @@ overview page and that members (and, where the event allows it, guests) type in
 on the detail page. Every check-in and check-out becomes an ``AttendanceChange``
 row, and the change is broadcast over the event's websocket group.
 
-Two pieces of production code cannot run as written on the SQLite test database,
-so the suite works around them instead of dropping the behaviour:
+Presence readers share a portable window query and order timestamp ties by
+primary key. The live snapshot includes each attendee's latest state, including
+absent attendees, so delayed channel messages can be compared with a version
+rather than applied blindly.
 
-* ``AttendanceEvent.present_attendees()`` uses ``distinct("user", "non_member")``,
-  which only PostgreSQL supports (the model carries a ``NOTE`` saying so). The
-  detail view calls it on every render, so the view tests patch it out, and the
-  class that exercises it is skipped unless the connection is PostgreSQL. The
-  consumer calls it too, to build the snapshot it sends on connect, so
-  ``AttendanceConsumerTests`` patches it as well. The presence transitions it
-  computes are covered portably through ``is_attendee_present()`` and
-  ``was_attendee_present()``. ``present_count()`` answers the same question
-  without the distinct, so it runs on SQLite and that is where the count itself
-  is tested; the PostgreSQL-only class is what holds it equal to the list.
-* ``django_otp`` reads the clock through the ``time`` name in ``django_otp.oath``,
-  so the code tests patch that name. Patching ``time.time`` would not be seen.
+``django_otp`` reads the clock through the ``time`` name in ``django_otp.oath``,
+so the code tests patch that name. Patching ``time.time`` would not be seen.
 
 ``AttendanceChange.timestamp`` defaults to the ``now()`` object the field captured
 at import time, so row timestamps are passed in explicitly and cannot be patched.
@@ -31,9 +23,12 @@ consumer test that expects a reply first reads and discards that message.
 """
 
 import asyncio
+import csv
 import unittest
 from datetime import UTC, datetime, timedelta
 from http.cookies import SimpleCookie
+from importlib import import_module
+from io import StringIO
 from unittest.mock import AsyncMock, patch
 from urllib.parse import parse_qs, quote, unquote, urlsplit
 
@@ -43,9 +38,11 @@ from channels.routing import URLRouter
 from channels.testing import WebsocketCommunicator
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth import BACKEND_SESSION_KEY, HASH_SESSION_KEY, SESSION_KEY
 from django.contrib.auth.models import AnonymousUser, Group, Permission
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection, transaction
+from django.db.models.deletion import ProtectedError
 from django.test import RequestFactory, TestCase, override_settings
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
@@ -65,6 +62,7 @@ from attendance.models import (  # noqa: E402
     AttendanceEvent,
     AttendancePoll,
     NonMemberAttendee,
+    attendance_change_token,
     attendee_entry,
     attendee_key,
 )
@@ -119,20 +117,32 @@ def record_change(event, change_type, *, user=None, non_member=None, timestamp=N
     )
 
 
-def connect_to(path, user):
-    """A websocket communicator for an arbitrary path, so the route itself is covered.
+async def connect_to(path, user):
+    """A websocket communicator for an arbitrary path with a server-side user session.
 
     The communicator runs inside a single event loop (see the tests), and the real
     routing is used so the URL pattern and the consumer under it are both covered.
     """
+
+    def create_session():
+        session_store = import_module(settings.SESSION_ENGINE).SessionStore
+        session = session_store()
+        if user.is_authenticated:
+            session[SESSION_KEY] = str(user.pk)
+            session[BACKEND_SESSION_KEY] = settings.AUTHENTICATION_BACKENDS[0]
+            session[HASH_SESSION_KEY] = user.get_session_auth_hash()
+        session.save()
+        return session
+
+    session = await sync_to_async(create_session)()
     communicator = WebsocketCommunicator(URLRouter(websocket_urlpatterns), path)
-    communicator.scope["user"] = user
+    communicator.scope["session"] = session
     return communicator
 
 
-def connect_as(user, slug):
+async def connect_as(user, slug):
     """A websocket communicator for ``ws/attendance/<slug>`` that sees *user*."""
-    return connect_to(f"/ws/attendance/{slug}", user)
+    return await connect_to(f"/ws/attendance/{slug}", user)
 
 
 def remember_name(client, name):
@@ -313,6 +323,13 @@ class AttendeePresenceTests(TestCase):
 
         self.assertFalse(self.event.is_attendee_present(self.member))
 
+    def test_equal_timestamps_use_the_later_primary_key(self):
+        entered = record_change(self.event, ENTER, user=self.member, timestamp=self.at)
+        left = record_change(self.event, LEAVE, user=self.member, timestamp=self.at)
+
+        self.assertLess(entered.pk, left.pk)
+        self.assertFalse(self.event.is_attendee_present(self.member))
+
     def test_enter_after_leave_marks_present_again(self):
         record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=3))
         record_change(self.event, LEAVE, user=self.member, timestamp=self.at - timedelta(minutes=2))
@@ -354,13 +371,7 @@ class AttendeePresenceTests(TestCase):
 
 
 class PresentCountTests(TestCase):
-    """present_count(): the headcount on its own, and the one that runs on SQLite.
-
-    ``present_attendees()`` cannot be evaluated here (see the module docstring),
-    so the transitions it computes are pinned through the count instead, and
-    ``PresentAttendeesTests`` is what holds the two answers equal on the backend
-    where the distinct query exists.
-    """
+    """The headcount and attendee list use the same portable latest-state query."""
 
     def setUp(self):
         self.event = make_event()
@@ -381,6 +392,13 @@ class PresentCountTests(TestCase):
         record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=2))
         record_change(self.event, LEAVE, user=self.member, timestamp=self.at - timedelta(minutes=1))
 
+        self.assertEqual(self.event.present_count(self.at), 0)
+
+    def test_equal_timestamps_use_the_later_primary_key(self):
+        entered = record_change(self.event, ENTER, user=self.member, timestamp=self.at)
+        left = record_change(self.event, LEAVE, user=self.member, timestamp=self.at)
+
+        self.assertLess(entered.pk, left.pk)
         self.assertEqual(self.event.present_count(self.at), 0)
 
     def test_two_present_attendees_are_two(self):
@@ -439,7 +457,7 @@ class PresentCountTests(TestCase):
         self.assertEqual(self.event.present_count(), 1)
 
     def test_the_count_costs_one_query_however_many_attendees(self):
-        """One query, not one per change: the rows are walked newest first in Python."""
+        """One window query, not one query per attendee."""
         for index in range(5):
             guest = NonMemberAttendee.objects.create(name=f"Gäst {index}")
             record_change(self.event, ENTER, non_member=guest, timestamp=self.at - timedelta(minutes=10 - index))
@@ -514,12 +532,8 @@ class PresentAtEndTests(TestCase):
         self.assertEqual(present_at_end(self.event), 0)
 
 
-@unittest.skipUnless(
-    connection.vendor == "postgresql",
-    "present_attendees uses DISTINCT ON, which SQLite does not support",
-)
 class PresentAttendeesTests(TestCase):
-    """present_attendees() itself, which only PostgreSQL can run (see the module docstring)."""
+    """The attendee list, now portable across the repository's test database."""
 
     def setUp(self):
         self.event = make_event()
@@ -535,6 +549,13 @@ class PresentAttendeesTests(TestCase):
         record_change(self.event, ENTER, non_member=self.guest, timestamp=self.at - timedelta(minutes=5))
 
         self.assertCountEqual(self.event.present_attendees(self.at), [self.member, self.guest])
+
+    def test_equal_timestamps_use_the_later_primary_key(self):
+        left = record_change(self.event, LEAVE, user=self.member, timestamp=self.at)
+        entered = record_change(self.event, ENTER, user=self.member, timestamp=self.at)
+
+        self.assertLess(left.pk, entered.pk)
+        self.assertEqual(self.event.present_attendees(self.at), [self.member])
 
     def test_changes_after_the_timestamp_are_ignored(self):
         record_change(self.event, ENTER, user=self.member, timestamp=self.at - timedelta(minutes=10))
@@ -557,12 +578,7 @@ class PresentAttendeesTests(TestCase):
         self.assertEqual(len(labels), 2)
 
     def test_present_count_agrees_with_present_attendees(self):
-        """The portable count has to answer what the distinct query answers.
-
-        ``present_count()`` is the version the poll admin can run anywhere, so
-        this is where the two are held against each other while the real
-        ``DISTINCT ON`` query is available.
-        """
+        """Both readers must answer from the same latest-state rows."""
         # (change type, attendee field, minutes relative to self.at)
         scenarios = {
             "nobody": [],
@@ -608,17 +624,7 @@ class PresentAttendeesTests(TestCase):
                 self.assertEqual(self.event.present_count(moment), len(self.event.present_attendees(moment)))
 
     def test_the_reports_number_at_the_end_is_what_present_attendees_answers(self):
-        """The report prints ``present_at_end(event)``; the real query has to agree.
-
-        ``present_at_end()`` is the report's own helper, and it is the only
-        version the report can call, because the report also has to render on
-        SQLite. This is where the number it prints is held against the
-        ``DISTINCT ON`` query the room list is built from. The report is not
-        rendered through the client here: on PostgreSQL the test client's session
-        and middleware hit the closed-connection problem described under Running
-        the file against PostgreSQL, and the number is produced by the helper
-        either way.
-        """
+        """The report helper and attendee list agree at the recorded end."""
         later = make_member("senare", first_name="Senare", last_name="Svensson")
         end = self.at + timedelta(minutes=5)
         self.event.end_datetime = end
@@ -798,13 +804,42 @@ class AttendanceChangeConstraintTests(TestCase):
 
 
 class AttendancePollModelTests(TestCase):
-    """The poll-to-meeting link: one poll to one meeting, and the cascades both ways."""
+    """The poll-to-meeting link: poll deletion cascades, meeting deletion protects."""
 
     def setUp(self):
         self.event = make_event(title="Årsmöte")
         self.other_event = make_event(slug="annat", title="Annat möte")
         self.question = Question.objects.create(question_text="Mötesfråga")
         self.other_question = Question.objects.create(question_text="Annan fråga")
+
+    def test_a_future_arrival_does_not_count_or_open_a_room_only_poll_early(self):
+        from polls.vote import voter_is_present
+
+        member = make_member("future_arrival")
+        AttendancePoll.objects.create(question=self.question, event=self.event)
+        moment = now()
+        record_change(self.event, ENTER, user=member, timestamp=moment + timedelta(minutes=1))
+
+        with patch("attendance.models.now", return_value=moment):
+            self.assertFalse(self.event.is_attendee_present(member))
+            self.assertEqual(self.event.present_attendees(), [])
+            self.assertEqual(self.event.present_count(), 0)
+            self.assertFalse(voter_is_present(self.question, member))
+
+    def test_a_future_departure_does_not_remove_someone_early(self):
+        from polls.vote import voter_is_present
+
+        member = make_member("future_departure")
+        AttendancePoll.objects.create(question=self.question, event=self.event)
+        moment = now()
+        record_change(self.event, ENTER, user=member, timestamp=moment - timedelta(minutes=1))
+        record_change(self.event, LEAVE, user=member, timestamp=moment + timedelta(minutes=1))
+
+        with patch("attendance.models.now", return_value=moment):
+            self.assertTrue(self.event.is_attendee_present(member))
+            self.assertEqual(self.event.present_attendees(), [member])
+            self.assertEqual(self.event.present_count(), 1)
+            self.assertTrue(voter_is_present(self.question, member))
 
     def test_a_link_is_readable_from_both_sides(self):
         link = AttendancePoll.objects.create(question=self.question, event=self.event)
@@ -838,13 +873,25 @@ class AttendancePollModelTests(TestCase):
         # The meeting is untouched: the poll was the dependent side.
         self.assertTrue(AttendanceEvent.objects.filter(pk=self.event.pk).exists())
 
-    def test_deleting_the_event_removes_the_link_and_keeps_the_poll(self):
-        AttendancePoll.objects.create(question=self.question, event=self.event)
+    def test_deleting_a_meeting_with_a_room_only_poll_is_prevented(self):
+        link = AttendancePoll.objects.create(question=self.question, event=self.event)
+
+        with self.assertRaises(ProtectedError):
+            self.event.delete()
+
+        self.assertEqual(AttendancePoll.objects.get(), link)
+        self.assertTrue(AttendanceEvent.objects.filter(pk=self.event.pk).exists())
+        self.assertTrue(Question.objects.filter(pk=self.question.pk).exists())
+
+    def test_explicitly_detaching_a_poll_allows_meeting_deletion(self):
+        link = AttendancePoll.objects.create(question=self.question, event=self.event)
+        link.delete()
 
         self.event.delete()
 
-        self.assertFalse(AttendancePoll.objects.exists())
+        self.assertFalse(AttendanceEvent.objects.filter(pk=self.event.pk).exists())
         self.assertTrue(Question.objects.filter(pk=self.question.pk).exists())
+        self.assertFalse(AttendancePoll.objects.exists())
 
 
 class AttendanceChangeFormTests(TestCase):
@@ -897,8 +944,8 @@ class AttendanceChangeFormTests(TestCase):
 class AttendanceViewTestCase(TestCase):
     """Shared fixtures for the attendance views.
 
-    ``present_attendees()`` cannot run on SQLite (see the module docstring) and
-    the detail view calls it on every render, so every view test patches it out.
+    These tests patch the attendee list when they need specific rendered rows;
+    the model query itself is covered by the portable presence tests above.
     """
 
     def setUp(self):
@@ -1461,12 +1508,54 @@ class AttendanceDetailViewPostTests(AttendanceViewTestCase):
         self.assertEqual(self.event.attendance_changes.first().non_member, guest)
         self.assertEqual(self.send_change.call_count, 2)
 
+    def test_anonymous_checkout_with_a_never_seen_name_creates_no_guest(self):
+        response = self.post_change(LEAVE, name="Never Seen")
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(NonMemberAttendee.objects.count(), 0)
+        self.assertEqual(self.event.attendance_changes.count(), 0)
+        self.assertNotIn(NON_MEMBER_NAME_COOKIE, response.cookies)
+        self.send_change.assert_not_called()
+
+    def test_anonymous_checkout_with_a_known_absent_guest_does_not_add_a_row(self):
+        guest = NonMemberAttendee.objects.create(name="David Dahl")
+
+        response = self.post_change(LEAVE, name="david dahl")
+
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(NonMemberAttendee.objects.count(), 1)
+        self.assertEqual(NonMemberAttendee.objects.get(), guest)
+        self.assertEqual(self.event.attendance_changes.count(), 0)
+        self.assertNotIn(NON_MEMBER_NAME_COOKIE, response.cookies)
+        self.send_change.assert_not_called()
+
     def test_anonymous_post_with_a_wrong_code_creates_no_guest(self):
         response = self.post_change(ENTER, code=PINNED_CODE + 1, name="Gäst")
 
         self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.context["prefilled_name"], "Gäst")
+        self.assertContains(response, 'value="Gäst"', status_code=403)
+        self.assertNotIn(NON_MEMBER_NAME_COOKIE, response.cookies)
         self.assertEqual(NonMemberAttendee.objects.count(), 0)
         self.assertEqual(self.event.attendance_changes.count(), 0)
+
+    def test_a_remembered_guest_keeps_presence_on_a_failed_attempt(self):
+        guest = NonMemberAttendee.objects.create(name="Gäst")
+        record_change(self.event, ENTER, non_member=guest, timestamp=now() - timedelta(minutes=5))
+        remember_name(self.client, "gäst")
+
+        response = self.post_change(ENTER, code=PINNED_CODE + 1, name="")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.context["prefilled_name"], "gäst")
+        self.assertTrue(response.context["is_present"])
+        self.assertContains(response, "närvarande", status_code=403)
+        self.assertContains(response, 'value="gäst"', status_code=403)
+        self.assertRegex(response.content.decode(), r'name="type"\s+value="0"\s+disabled\s*>')
+        self.assertRegex(response.content.decode(), r'name="type"\s+value="1"\s*>')
+        self.assertNotIn(NON_MEMBER_NAME_COOKIE, response.cookies)
+        self.assertEqual(NonMemberAttendee.objects.count(), 1)
+        self.assertEqual(self.event.attendance_changes.count(), 1)
 
     def test_a_differently_cased_name_is_the_same_guest(self):
         """The first spelling stays on the row and in the log.
@@ -2136,6 +2225,20 @@ class AttendanceReportAdminTests(TestCase):
         self.assertEqual(response.context["present_at_end"], 1)
         self.assertEqual(response.context["ever_present"], 3)
 
+    def test_the_peak_ignores_changes_after_the_recorded_end(self):
+        self.event.end_datetime = self.at - timedelta(minutes=20)
+        self.event.save()
+        before_end = make_member("before", first_name="Before")
+        after_end = make_member("after", first_name="After")
+        record_change(self.event, ENTER, user=before_end, timestamp=self.at - timedelta(minutes=30))
+        record_change(self.event, ENTER, user=after_end, timestamp=self.at - timedelta(minutes=10))
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.report_url)
+
+        self.assertEqual(response.context["peak_present"], 1)
+        self.assertEqual(response.context["present_at_end"], 1)
+
     def test_the_peak_is_zero_when_nobody_came(self):
         self.client.force_login(self.admin_user)
 
@@ -2317,11 +2420,66 @@ class AttendanceReportAdminTests(TestCase):
         body = response.content.decode("utf-8")
         self.assertTrue(body.startswith("\ufeff"))
         lines = body.removeprefix("\ufeff").splitlines()
-        self.assertEqual(lines[0], "Fråga;Val;Röster;Andel (%);Röstsedlar;Röstande;Närvarande")
+        self.assertEqual(
+            lines[0],
+            "Fråga;Val;Röster;Andel (%);Röstsedlar;Röstande;Närvarande vid sista ändringen",
+        )
         self.assertEqual(len(lines), 4)
         self.assertEqual(lines[1], "Första frågan;Ja;3;75;4;1;1")
         self.assertEqual(lines[2], "Första frågan;Nej;1;25;4;1;1")
         self.assertEqual(lines[3], "Andra frågan;Kanske;0;0;0;0;1")
+
+    def test_formula_like_guest_names_are_literal_in_parsed_timeline_csv(self):
+        names = [
+            "=SUM(1,1)",
+            "+1+1",
+            "-1+1",
+            "@SUM(A1:A2)",
+            "  =SUM(1,1)",
+            "\t=SUM(1,1)",
+            "\tordinary text",
+            "\nordinary text",
+        ]
+        expected = [f"'{name}" for name in names[:6]] + names[6:]
+        for index, name in enumerate(names):
+            guest = NonMemberAttendee.objects.create(name=name)
+            record_change(self.event, ENTER, non_member=guest, timestamp=self.at - timedelta(minutes=30 - index))
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.timeline_csv_url)
+        rows = list(csv.reader(StringIO(response.content.decode("utf-8-sig")), delimiter=";"))
+
+        self.assertEqual(rows[0], ["Tid", "Deltagare", "Ändring", "Typ"])
+        self.assertEqual([row[1] for row in rows[1:]], expected)
+
+    def test_formula_like_poll_text_is_literal_in_parsed_polls_csv(self):
+        question = Question.objects.create(question_text="-SUM(1,1)")
+        Choice.objects.create(question=question, choice_text="@cmd", votes=2)
+        AttendancePoll.objects.create(question=question, event=self.event)
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.polls_csv_url)
+        rows = list(csv.reader(StringIO(response.content.decode("utf-8-sig")), delimiter=";"))
+
+        self.assertEqual(rows[0][-1], "Närvarande vid sista ändringen")
+        self.assertEqual(rows[1][:2], ["'-SUM(1,1)", "'@cmd"])
+        self.assertEqual(rows[1][2:], ["2", "100", "2", "0", "0"])
+
+    def test_end_time_headcount_label_matches_report_and_csv(self):
+        self.event.end_datetime = self.at - timedelta(minutes=5)
+        self.event.save()
+        question = Question.objects.create(question_text="Avslutad fråga")
+        Choice.objects.create(question=question, choice_text="Ja", votes=1)
+        AttendancePoll.objects.create(question=question, event=self.event)
+        self.client.force_login(self.admin_user)
+
+        report = self.client.get(self.report_url)
+        response = self.client.get(self.polls_csv_url)
+        rows = list(csv.reader(StringIO(response.content.decode("utf-8-sig")), delimiter=";"))
+
+        self.assertEqual(report.context["present_at_end_label"], "Närvarande vid slutet")
+        self.assertContains(report, "Närvarande vid slutet")
+        self.assertEqual(rows[0][-1], report.context["present_at_end_label"])
 
 
 class AttendanceWebsocketTests(TestCase):
@@ -2339,6 +2497,7 @@ class AttendanceWebsocketTests(TestCase):
             "key": f"user-{self.member.pk}",
             "name": "Maja Andersson",
             "type": "ENTER",
+            **attendance_change_token(change),
         }
 
         with patch.object(self.channel_layer, "group_send", new=AsyncMock()) as group_send:
@@ -2372,8 +2531,86 @@ class AttendanceWebsocketTests(TestCase):
         self.assertEqual(message["type"], "attendance.change")
         self.assertEqual(
             message["change"],
-            {"key": f"user-{self.member.pk}", "name": "Maja Andersson", "type": "LEAVE"},
+            {
+                "key": f"user-{self.member.pk}",
+                "name": "Maja Andersson",
+                "type": "LEAVE",
+                **attendance_change_token(change),
+            },
         )
+
+
+@override_settings(ALLOWED_HOSTS=["testserver"])
+class AttendanceOriginValidationTests(TestCase):
+    """The ASGI websocket route accepts the site origin and rejects others."""
+
+    def setUp(self):
+        from core.routing import websocket_application
+
+        self.websocket_application = websocket_application
+        self.event = make_event(slug="origin-check")
+        self.staff = make_member("origin-staff", is_superuser=False)
+        self.staff.groups.add(Group.objects.create(name=STAFF_GROUP))
+        self.client.force_login(self.staff)
+        session_key = self.client.cookies[settings.SESSION_COOKIE_NAME].value
+        self.cookie_header = f"{settings.SESSION_COOKIE_NAME}={session_key}".encode()
+
+    def communicator(self, origin):
+        return WebsocketCommunicator(
+            self.websocket_application,
+            f"/ws/attendance/{self.event.slug}",
+            headers=[
+                (b"host", b"testserver"),
+                (b"origin", origin.encode()),
+                (b"cookie", self.cookie_header),
+            ],
+        )
+
+    def test_allowed_local_origin_connects_with_its_authenticated_session(self):
+        communicator = self.communicator("http://testserver")
+
+        async def flow():
+            connected, _ = await communicator.connect(timeout=10)
+            if connected:
+                await communicator.receive_json_from(timeout=10)
+                await communicator.disconnect(timeout=10)
+            return connected
+
+        self.assertTrue(async_to_sync(flow)())
+
+    def test_deleted_session_closes_open_socket_before_it_can_return_a_code(self):
+        communicator = self.communicator("http://testserver")
+        session_key = self.client.cookies[settings.SESSION_COOKIE_NAME].value
+
+        def delete_session():
+            session_store = import_module(settings.SESSION_ENGINE).SessionStore(session_key=session_key)
+            session_store.delete()
+
+        async def flow():
+            connected, _ = await communicator.connect(timeout=10)
+            self.assertTrue(connected)
+            snapshot = await communicator.receive_json_from(timeout=10)
+            self.assertEqual(snapshot["type"], "attendance_snapshot")
+
+            # A second SessionStore context revokes the browser's server-side
+            # session while this authenticated websocket remains open.
+            await sync_to_async(delete_session)()
+            await communicator.send_json_to({"type": "get_code"})
+            return await communicator.receive_output(timeout=10)
+
+        output = async_to_sync(flow)()
+
+        self.assertEqual(output["type"], "websocket.close")
+        self.assertEqual(output["code"], AttendanceConsumer.NOT_ALLOWED)
+
+    def test_untrusted_origin_is_rejected_even_with_an_authenticated_session(self):
+        communicator = self.communicator("https://evil.example")
+
+        async def flow():
+            connected, _ = await communicator.connect(timeout=10)
+            return connected
+
+        self.assertFalse(async_to_sync(flow)())
 
 
 class AttendanceConsumerTests(TestCase):
@@ -2392,13 +2629,6 @@ class AttendanceConsumerTests(TestCase):
     """
 
     def setUp(self):
-        # The connect snapshot asks present_attendees() who is in the room, and
-        # that method cannot run on SQLite (see the module docstring). Tests that
-        # care what the snapshot holds patch this again around their connect.
-        patcher = patch.object(AttendanceEvent, "present_attendees", return_value=[])
-        patcher.start()
-        self.addCleanup(patcher.stop)
-
         self.event = make_event(slug="motesal")
         self.staff = make_member("funktionar", first_name="Stina", last_name="Styrelse")
         self.staff.groups.add(Group.objects.create(name=STAFF_GROUP))
@@ -2416,7 +2646,7 @@ class AttendanceConsumerTests(TestCase):
 
     def test_staff_receives_the_current_code(self):
         async def flow():
-            communicator = connect_as(self.staff, self.event.slug)
+            communicator = await connect_as(self.staff, self.event.slug)
             await self.connect_and_drain_the_snapshot(communicator)
 
             await communicator.send_json_to({"type": "get_code"})
@@ -2434,29 +2664,56 @@ class AttendanceConsumerTests(TestCase):
 
     def test_staff_receives_a_snapshot_of_the_present_attendees_on_connect(self):
         guest = NonMemberAttendee.objects.create(name="Gäst")
+        record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=5))
+        record_change(self.event, ENTER, non_member=guest, timestamp=now() - timedelta(minutes=4))
 
         async def flow():
-            communicator = connect_as(self.staff, self.event.slug)
-            with patch.object(AttendanceEvent, "present_attendees", return_value=[self.member, guest]):
-                snapshot = await self.connect_and_drain_the_snapshot(communicator)
+            communicator = await connect_as(self.staff, self.event.slug)
+            snapshot = await self.connect_and_drain_the_snapshot(communicator)
+            await communicator.disconnect(timeout=10)
+            return snapshot
+
+        snapshot = async_to_sync(flow)()
+        states = snapshot["data"]
+
+        self.assertCountEqual(
+            [(state["key"], state["name"], state["type"], state["present"]) for state in states],
+            [
+                (f"user-{self.member.pk}", "Maja Andersson", "ENTER", True),
+                (f"non-member-{guest.pk}", "Gäst", "ENTER", True),
+            ],
+        )
+        self.assertTrue(all(state["change_id"] > 0 and state["timestamp"] for state in states))
+
+    def test_snapshot_includes_absent_attendees_as_versioned_tombstones(self):
+        entered = record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=5))
+        left = record_change(self.event, LEAVE, user=self.member, timestamp=now() - timedelta(minutes=4))
+        self.assertLess(entered.pk, left.pk)
+
+        async def flow():
+            communicator = await connect_as(self.staff, self.event.slug)
+            snapshot = await self.connect_and_drain_the_snapshot(communicator)
             await communicator.disconnect(timeout=10)
             return snapshot
 
         snapshot = async_to_sync(flow)()
 
-        # The entries carry the same key and name the rendered list does, so a
-        # snapshot and a live change for one attendee are idempotent.
         self.assertEqual(
             snapshot["data"],
             [
-                {"key": f"user-{self.member.pk}", "name": "Maja Andersson"},
-                {"key": f"non-member-{guest.pk}", "name": "Gäst"},
+                {
+                    "key": f"user-{self.member.pk}",
+                    "name": "Maja Andersson",
+                    "type": "LEAVE",
+                    "present": False,
+                    **attendance_change_token(left),
+                }
             ],
         )
 
     def test_non_staff_member_is_rejected(self):
         async def flow():
-            communicator = connect_as(self.member, self.event.slug)
+            communicator = await connect_as(self.member, self.event.slug)
             connected, _ = await communicator.connect(timeout=10)
             return connected
 
@@ -2464,7 +2721,7 @@ class AttendanceConsumerTests(TestCase):
 
     def test_anonymous_visitor_is_rejected(self):
         async def flow():
-            communicator = connect_as(AnonymousUser(), self.event.slug)
+            communicator = await connect_as(AnonymousUser(), self.event.slug)
             connected, _ = await communicator.connect(timeout=10)
             return connected
 
@@ -2474,7 +2731,7 @@ class AttendanceConsumerTests(TestCase):
         """A deleted event must not leave an exception behind the closed socket."""
 
         async def flow():
-            communicator = connect_as(self.staff, "finns-inte")
+            communicator = await connect_as(self.staff, "finns-inte")
             connected, code = await communicator.connect(timeout=10)
             return connected, code
 
@@ -2493,7 +2750,7 @@ class AttendanceConsumerTests(TestCase):
         """The route must not depend on the page URL having no trailing slash."""
 
         async def flow():
-            communicator = connect_to(f"/ws/attendance/{self.event.slug}/", self.staff)
+            communicator = await connect_to(f"/ws/attendance/{self.event.slug}/", self.staff)
             connected, _ = await communicator.connect(timeout=10)
             snapshot = await communicator.receive_json_from(timeout=10)
             await communicator.disconnect(timeout=10)
@@ -2508,7 +2765,7 @@ class AttendanceConsumerTests(TestCase):
         """The socket serves the code, so it cannot outlive the permission."""
 
         async def flow():
-            communicator = connect_as(self.staff, self.event.slug)
+            communicator = await connect_as(self.staff, self.event.slug)
             await self.connect_and_drain_the_snapshot(communicator)
 
             await sync_to_async(self.staff.groups.clear)()
@@ -2528,7 +2785,7 @@ class AttendanceConsumerTests(TestCase):
         """A broadcast does not pass through the message handler, so it checks too."""
 
         async def flow():
-            communicator = connect_as(self.staff, self.event.slug)
+            communicator = await connect_as(self.staff, self.event.slug)
             await self.connect_and_drain_the_snapshot(communicator)
 
             await sync_to_async(self.staff.groups.clear)()
@@ -2552,7 +2809,7 @@ class AttendanceConsumerTests(TestCase):
 
     def test_unknown_message_type_gets_no_reply(self):
         async def flow():
-            communicator = connect_as(self.staff, self.event.slug)
+            communicator = await connect_as(self.staff, self.event.slug)
             await self.connect_and_drain_the_snapshot(communicator)
 
             await communicator.send_json_to({"type": "not-a-real-message"})
@@ -2574,22 +2831,25 @@ class AttendanceConsumerTests(TestCase):
         self.assertEqual(reply["type"], "code")
         self.assertEqual(reply["code"], PINNED_CODE)
 
-    def test_attendance_change_from_the_group_is_forwarded(self):
-        """The handler reads the key/name/type payload that send_attendance_change sends."""
+    def test_attendance_change_from_the_group_is_forwarded_with_its_version(self):
+        change = {
+            "key": "non-member-7",
+            "name": "Gäst",
+            "type": "ENTER",
+            "timestamp": "2024-05-01T12:00:00.000000+00:00",
+            "change_id": 7,
+        }
 
         async def flow():
-            communicator = connect_as(self.staff, self.event.slug)
+            communicator = await connect_as(self.staff, self.event.slug)
             await self.connect_and_drain_the_snapshot(communicator)
 
             await self.channel_layer.group_send(
                 f"attendance_{self.event.slug}",
-                {"type": "attendance.change", "change": {"key": "non-member-7", "name": "Gäst", "type": "ENTER"}},
+                {"type": "attendance.change", "change": change},
             )
             reply = await communicator.receive_json_from(timeout=10)
             await communicator.disconnect(timeout=10)
             return reply
 
-        self.assertEqual(
-            async_to_sync(flow)(),
-            {"type": "attendance_change", "data": {"key": "non-member-7", "name": "Gäst", "type": "ENTER"}},
-        )
+        self.assertEqual(async_to_sync(flow)(), {"type": "attendance_change", "data": change})

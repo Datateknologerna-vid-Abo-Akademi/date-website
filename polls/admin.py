@@ -55,6 +55,19 @@ if ATTENDANCE_INSTALLED:
         extra = 0
         max_num = 1
 
+        def has_add_permission(self, request, obj=None):
+            permission = "polls.add_question" if obj is None else "polls.change_question"
+            return request.user.has_perm(permission)
+
+        def has_change_permission(self, request, obj=None):
+            return obj is not None and request.user.has_perm("polls.change_question")
+
+        def has_delete_permission(self, request, obj=None):
+            return obj is not None and request.user.has_perm("polls.change_question")
+
+        def has_view_permission(self, request, obj=None):
+            return self.has_add_permission(request, obj) or self.has_change_permission(request, obj)
+
 
 class ChoiceInline(PollTranslationInlineBase):
     model = Choice

@@ -3452,3 +3452,21 @@ msgstr "Inga omröstningar är kopplade till mötet."
 
 #~ msgid "Please check this box to continue."
 #~ msgstr "Välj den här rutan för att fortsätta."
+
+#: polls/vote.py:24
+msgid "Du måste vara närvarande på mötet för att rösta."
+msgstr "Du måste vara närvarande på mötet för att rösta."
+
+#: polls/vote.py:25
+msgid "Du valde ett alternativ som inte hör till frågan."
+msgstr "Du valde ett alternativ som inte hör till frågan."
+
+#: templates/common/admin/attendance/report.html:123
+msgid ""
+"Mötesnärvaron är ett sammanhangsvärde, inte en exakt nämnare vid "
+"omröstningstillfället: den läses vid mötets slut eller sista ändringen och "
+"kan omfatta gäster och personer utan rösträtt."
+msgstr ""
+"Mötesnärvaron är ett sammanhangsvärde, inte en exakt nämnare vid "
+"omröstningstillfället: den läses vid mötets slut eller sista ändringen och "
+"kan omfatta gäster och personer utan rösträtt."

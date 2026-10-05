@@ -110,16 +110,20 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
         if self.request.user.is_authenticated:
             user = cast(Member, self.request.user)
             ctx["is_present"] = self.object.is_attendee_present(user)
-        elif self.request.method == "GET":
-            remembered = self._remembered_name(self.request)
+        else:
+            if self.request.method == "POST":
+                # A refused submission renders this page instead of redirecting,
+                # so keep what the guest typed. An empty field falls back to the
+                # remembered name, which also restores its presence state.
+                remembered = self.request.POST.get("non_member_name", "").strip() or self._remembered_name(self.request)
+            else:
+                remembered = self._remembered_name(self.request)
+
             ctx["prefilled_name"] = remembered
             if remembered:
-                # Never create on a GET: the cookie is a claim about a name, not a
-                # guest. It only lets the page say whether that name's row is
-                # currently in the room. Case-insensitive for the same reason the
-                # check-in path is: the row keeps the spelling used first while
-                # the cookie keeps the spelling typed last, so an exact match
-                # would lose the guest who typed their name differently.
+                # Never create on a render: a submitted or remembered name is a
+                # claim about a guest until a valid check-in writes a row. Match
+                # case-insensitively because the row keeps its first spelling.
                 guest = NonMemberAttendee.objects.filter(name__iexact=remembered).first()
                 if guest is not None:
                     ctx["is_present"] = self.object.is_attendee_present(guest)
@@ -216,6 +220,17 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
         attendee: Attendee
         if request.user.is_authenticated:
             attendee_type, attendee = "user", cast(Attendee, request.user)
+        elif type == AttendanceChange.Type.LEAVE:
+            # A checkout must refer to an existing guest. Looking up without
+            # creating avoids leaving an identity row behind for a refused
+            # request, and still folds case like the check-in path.
+            non_member = NonMemberAttendee.objects.filter(name__iexact=non_member_name).first()
+            if non_member is None:
+                return self._conflict(
+                    request,
+                    generic_error=_("Du kan inte gå ut ur ett evenemang var du inte är närvarande"),
+                )
+            attendee_type, attendee = "non_member", non_member
         else:
             # Case-insensitive, so "david dahl" is the guest who typed "David
             # Dahl". The first spelling stays on the row: the create only runs
