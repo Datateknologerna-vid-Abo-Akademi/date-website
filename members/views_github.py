@@ -13,6 +13,7 @@ from django.shortcuts import redirect, resolve_url
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
+from two_factor.utils import default_device
 from two_factor.views.utils import LoginStorage
 
 from .two_factor import MemberLoginView, member_has_2fa, should_redirect_to_two_factor_setup
@@ -41,7 +42,9 @@ def _begin_two_factor_login(request, member, next_url):
     storage.reset()
     storage.authenticated_user = member
     storage.data['authentication_time'] = int(time.time())
-    storage.current_step = MemberLoginView.TOKEN_STEP
+    # Passkey-only members have no two_factor default device; they verify on the
+    # backup step, which offers the passkey button alongside backup tokens.
+    storage.current_step = MemberLoginView.TOKEN_STEP if default_device(member) else MemberLoginView.BACKUP_STEP
     return redirect(_build_login_redirect(next_url))
 
 

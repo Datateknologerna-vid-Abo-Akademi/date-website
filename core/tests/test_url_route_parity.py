@@ -11,7 +11,7 @@ COMMON_PREFIXES = ["healthz/", "readyz/"]
 # the shared api/ root is assembled right before the trailing group in all of
 # them. See core.urls.common.build_urlpatterns.
 API_PREFIXES = ["api/"]
-TRAILING_PREFIXES = ["set_lang/", "jsi18n/", "_uploads/sign/"]
+TRAILING_PREFIXES = ["members/webauthn/", "set_lang/", "jsi18n/", "_uploads/sign/"]
 
 EXPECTED_PREFIXES = {
     "date": [

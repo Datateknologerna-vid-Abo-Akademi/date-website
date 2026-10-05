@@ -37,6 +37,12 @@ django:
   - datateknologerna.org
   allowedOrigins:
   - https://datateknologerna.org
+  # Passkeys (WebAuthn): disabled until both are set. The RP ID is permanent;
+  # changing it invalidates every registered passkey. Origins must be exact
+  # https origins on the RP ID domain, e.g. rpId example.com with
+  # https://example.com and https://www.example.com.
+  webauthnRpId: ''
+  webauthnAllowedOrigins: []
   useXForwardedHost: true
   trustXForwardedProto: true
   extraStaffGroups: []
