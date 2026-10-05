@@ -20,7 +20,7 @@ Most people register themselves at `/members/signup/`. Those signups land in the
 
 ## Two-Factor Authentication & Passkeys
 - Members can protect their account with an authenticator app (TOTP), passkeys, and backup tokens from their profile page. A passkey sign-in counts as two-factor verification, including for admin access.
-- The member edit page shows read-only **2FA devices**, **Passkeys**, and **Backup token devices** inlines (name, created, last used). You can delete individual entries there.
+- The member edit page shows read-only **2FA devices**, **Passkeys**, and **Backup token devices** inlines (name, created, last used). You can delete individual authenticator apps and backup token devices there; passkeys can only be removed by the member or with **Inaktivera 2FA**.
 - The **2FA** column in the member list is ticked when the member has a confirmed authenticator app or passkey.
 - **Inaktivera 2FA** (actions menu) removes all authenticator apps, passkeys, and backup tokens for the selected members. Use it when a member has lost their devices and is locked out; they can then sign in with their password and set up 2FA again.
   - It requires change permission on members.

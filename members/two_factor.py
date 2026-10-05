@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import redirect_to_login
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, resolve_url
 from django.urls import resolve, reverse_lazy
@@ -180,6 +181,16 @@ class MemberLoginView(LoginView):
 
 class MemberSetupView(SetupView):
     template_name = 'two_factor/core/setup.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        # two_factor only skips setup when a TOTP default device exists. Without
+        # this, an unverified session of a passkey-only member could enrol its
+        # own TOTP device and upgrade itself to verified.
+        user = request.user
+        if user.is_authenticated and member_has_2fa(user) and not user.is_verified():
+            messages.error(request, _('Verify with your existing passkey or authenticator before adding another.'))
+            return redirect_to_login(request.get_full_path(), resolve_url(settings.OTP_LOGIN_URL))
+        return super().dispatch(request, *args, **kwargs)
 
     def get_form_list(self):
         form_list = super().get_form_list()

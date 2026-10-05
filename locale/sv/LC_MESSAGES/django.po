@@ -3153,3 +3153,11 @@ msgstr "Av säkerhetsskäl, logga ut och logga in på nytt (inklusive din andra 
 #: templates/common/two_factor/profile/passkeys.html
 msgid "Generate backup tokens so you can still sign in if you lose your passkey."
 msgstr "Generera reservkoder så att du fortfarande kan logga in om du tappar bort din inloggningsnyckel."
+
+#: members/two_factor.py
+msgid "Verify with your existing passkey or authenticator before adding another."
+msgstr "Verifiera med din befintliga nyckel eller autentiseringsapp innan du lägger till en ny."
+
+#: members/views_github.py
+msgid "Logga in på nytt innan du kopplar ett GitHub-konto."
+msgstr "Logga in på nytt innan du kopplar ett GitHub-konto."

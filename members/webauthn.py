@@ -93,8 +93,12 @@ class MemberBeginRegistrationView(MemberRegistrationMixin, BeginCredentialRegist
 
 class MemberCompleteRegistrationView(MemberRegistrationMixin, CompleteCredentialRegistrationView):
     def post(self, *args, **kwargs):
+        was_verified = self.request.user.is_verified()
         response = super().post(*args, **kwargs)
         if response.status_code == 200:
+            if not was_verified:
+                # The library upgrades the session to verified here; rotate the key.
+                self.request.session.cycle_key()
             credential = WebAuthnCredential.objects.get(pk=json.loads(response.content)['id'], user=self.request.user)
             logger.info('Passkey registered for member %s (credential %s)', self.request.user.pk, credential.pk)
             notify_passkey_change(self.request.user, credential.name, added=True)

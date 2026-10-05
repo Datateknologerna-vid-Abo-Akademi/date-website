@@ -3210,3 +3210,11 @@ msgstr "Kirjaudu turvallisuussyistä ulos ja takaisin sisään (myös toisella t
 #: templates/common/two_factor/profile/passkeys.html
 msgid "Generate backup tokens so you can still sign in if you lose your passkey."
 msgstr "Luo varakoodit, jotta voit kirjautua, vaikka kadottaisit pääsyavaimesi."
+
+#: members/two_factor.py
+msgid "Verify with your existing passkey or authenticator before adding another."
+msgstr "Vahvista henkilöllisyytesi nykyisellä pääsyavaimellasi tai todennussovelluksellasi ennen uuden lisäämistä."
+
+#: members/views_github.py
+msgid "Logga in på nytt innan du kopplar ett GitHub-konto."
+msgstr "Kirjaudu uudelleen sisään ennen GitHub-tilin linkittämistä."
