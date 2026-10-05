@@ -57,7 +57,7 @@ def notify_passkey_change(user, credential_name, added):
         {
             'user': user,
             'credential_name': credential_name,
-            'association_name': get_rp_name(None),
+            'association_name': settings.CONTENT_VARIABLES.get('ASSOCIATION_NAME', ''),
         },
     )
     enqueue_task_on_commit(send_email_task, subject, body, None, [user.email])

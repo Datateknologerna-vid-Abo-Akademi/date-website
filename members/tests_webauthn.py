@@ -98,6 +98,10 @@ class PasskeySettingsCheckTests(TestCase):
     def test_http_localhost_is_allowed(self):
         self.assertEqual(self._ids('localhost', ['http://localhost:8000']), [])
 
+    def test_missing_association_name_is_rejected(self):
+        with override_settings(CONTENT_VARIABLES={}):
+            self.assertIn('members.E004', self._ids('localhost', ['http://localhost:8000']))
+
 
 class AuthBackendTests(PasskeyTestMixin, TestCase):
     def test_missing_credentials_return_none(self):

@@ -53,7 +53,7 @@
 - `WEBAUTHN_ALLOWED_ORIGINS` → `OTP_WEBAUTHN_ALLOWED_ORIGINS`: JSON list of exact origins (`https://example.com`, `https://www.example.com`). Kept separate from `ALLOWED_ORIGINS`/`CSRF_TRUSTED_ORIGINS`, which may contain plain-http or wildcard entries.
 - With `DEBUG` on and both unset, they default to `localhost` / `["http://localhost:8000"]` (browsers treat localhost as a secure context; RP ID `localhost` works on any port, but each port must be listed as an origin).
 - `PASSKEYS_ENABLED` is derived: true only when both are set. When false, the passkey UI is hidden, the passkey endpoints and `/members/two-factor/passkeys/` return 404, the library's own checks `otp_webauthn.E010`/`E030` are silenced, and `members.W001` warns instead, so unconfigured sites still deploy.
-- `members/checks.py` errors when enabled and an origin contains a wildcard (`members.E001`), is not https unless its host is `localhost` (`members.E002`), or is not the RP ID or a subdomain of it (`members.E003`).
+- `members/checks.py` errors when enabled and an origin contains a wildcard (`members.E001`), is not https unless its host is `localhost` (`members.E002`), or is not the RP ID or a subdomain of it (`members.E003`), and when `CONTENT_VARIABLES['ASSOCIATION_NAME']` (the RP name) is empty (`members.E004`; py_webauthn rejects an empty RP name).
 - `PASSKEY_REGISTRATION_MAX_AUTH_AGE` (default 600 s): how recent the session's last sign-in/verification must be to register a passkey.
 
 ### Passkey flows
