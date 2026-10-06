@@ -1,0 +1,38 @@
+.userinfo-note {
+    color: var(--helpText);
+    font-size: 0.9rem;
+}
+
+.userinfo-section {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--secondaryColorDarker);
+}
+
+.userinfo-section h4 {
+    margin-bottom: 0.75rem;
+}
+
+.userinfo-2fa-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.userinfo-2fa-status::before {
+    content: "";
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+    background: #c62828;
+    flex-shrink: 0;
+}
+
+.userinfo-2fa-status.is-on::before {
+    background: #4CAF50;
+}
+
+.userinfo-subsection {
+    margin-top: 1.5rem;
+}
