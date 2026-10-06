@@ -212,9 +212,16 @@ class SiteShellTemplateTests(TestCase):
                 with translation.override(language):
                     rendered[language] = render_to_string("core/footer.html", self._content_context())
 
-        self.assertIn('aria-label="Åbo Akademi – psykologi"', rendered["sv"])
-        self.assertIn('aria-label="Åbo Akademi University – Psychology"', rendered["en"])
-        self.assertNotIn("<?xml", rendered["sv"])
+        self.assertIn('aria-label="Psykologi vid Åbo Akademi"', rendered["sv"])
+        self.assertIn('aria-label="Psychology at Åbo Akademi University"', rendered["en"])
+
+        for language in ("sv", "en"):
+            page = rendered[language]
+            self.assertIn('href="https://www.abo.fi/utbildningsprogram/psykologi/"', page)
+            self.assertIn('target="_blank"', page)
+            self.assertIn('rel="noopener"', page)
+            self.assertIn("<svg", page)
+            self.assertIn("<path", page)
 
     def test_language_picker_hides_when_disabled_in_header_template(self):
         template = Template("{% include 'core/header.html' %}")
