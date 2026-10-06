@@ -2389,6 +2389,10 @@ msgstr "Disable"
 msgid "View all"
 msgstr "View all"
 
+#: templates/date/core/footer.html:7
+msgid "Albins Angels"
+msgstr "Albins Angels"
+
 #: templates/date/date/components/about.html:4
 msgid "Om oss"
 msgstr "About us"
