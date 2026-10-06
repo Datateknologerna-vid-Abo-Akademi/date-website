@@ -1,6 +1,7 @@
 """Template helpers for the Albins Angels news category."""
 
 from django import template
+from django.db import DatabaseError
 from django.urls import reverse
 
 from news.models import Category
@@ -19,7 +20,13 @@ def aa_news_url():
     """
     from date.views import ALBINS_ANGELS_CATEGORY_NAME
 
-    category = Category.objects.filter(name=ALBINS_ANGELS_CATEGORY_NAME).first()
+    try:
+        category = Category.objects.filter(name=ALBINS_ANGELS_CATEGORY_NAME).first()
+    except DatabaseError:
+        # The footer also renders on the error pages, so a database outage must
+        # not turn a custom 500 into an unhandled exception. Fall back to the
+        # news index, which needs no query.
+        return reverse('news:index')
     if category is None:
         return reverse('news:index')
     return category.get_absolute_url()

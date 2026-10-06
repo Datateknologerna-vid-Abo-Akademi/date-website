@@ -13,7 +13,7 @@ from django.contrib import admin
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.db import connection
+from django.db import DatabaseError, connection
 from django.http import HttpResponse
 from django.template import Context, Template
 from django.template.loader import render_to_string
@@ -26,6 +26,7 @@ from ads.models import AdUrl
 from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
 from date.middleware import ConnectionLifecycleMiddleware
+from date.templatetags.albins_angels import aa_news_url
 from date.templatetags.social_icons import social_icon_template
 from date.views import (
     _homepage_context,
@@ -261,6 +262,19 @@ class SiteShellTemplateTests(TestCase):
             template = Template("{% include 'core/footer.html' %}")
             rendered = template.render(Context(self._content_context()))
         self.assertNotIn("aa-logo-small.png", rendered)
+
+    def test_aa_news_url_falls_back_to_the_news_index(self):
+        # Both a missing category and an unreachable database must degrade to the
+        # news index: the footer also renders on the error pages, so the tag must
+        # never raise out of a 500.
+        self.assertEqual(aa_news_url(), reverse("news:index"))
+
+        category = Category.objects.create(name="Albins Angels", slug="albins-angels")
+        self.assertEqual(aa_news_url(), category.get_absolute_url())
+
+        with patch("date.templatetags.albins_angels.Category.objects") as manager:
+            manager.filter.side_effect = DatabaseError
+            self.assertEqual(aa_news_url(), reverse("news:index"))
 
     def test_language_picker_hides_when_disabled_in_header_template(self):
         template = Template("{% include 'core/header.html' %}")
