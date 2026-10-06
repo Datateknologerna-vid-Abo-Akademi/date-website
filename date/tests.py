@@ -228,6 +228,11 @@ class SiteShellTemplateTests(TestCase):
             self.assertIn("<path", page)
 
     def test_aa_partner_badge_only_renders_in_date_footer(self):
+        # A fresh database seeds the category as "albins-angels", while
+        # production uses the slug "aa". Creating it here with the seeded slug
+        # proves the footer resolves the link through the category name.
+        category = Category.objects.create(name="Albins Angels", slug="albins-angels")
+
         for association, settings_module in ASSOCIATION_SETTINGS_MODULES.items():
             with self.subTest(association=association):
                 module = importlib.import_module(settings_module)
@@ -235,10 +240,27 @@ class SiteShellTemplateTests(TestCase):
                     template = Template("{% include 'core/footer.html' %}")
                     rendered = template.render(Context(self._content_context()))
                 if association == "date":
-                    self.assertIn("core/images/aa-logo-small.png", rendered)
-                    self.assertIn(reverse("news:aa_index", args=["aa"]), rendered)
+                    link = re.search(r'<a class="partner-link" href="([^"]*)"', rendered)
+                    self.assertIsNotNone(link)
+                    self.assertEqual(link.group(1), category.get_absolute_url())
+                    self.assertEqual(rendered.count("date-footer-partner"), 1)
+                    self.assertEqual(rendered.count("aa-logo-small.png"), 1)
+                    badge = re.search(r"<img[^>]*aa-logo-small\.png[^>]*>", rendered)
+                    self.assertIsNotNone(badge)
+                    alt = re.search(r'alt="([^"]*)"', badge.group(0))
+                    self.assertIsNotNone(alt)
+                    self.assertTrue(alt.group(1).strip())
                 else:
                     self.assertNotIn("aa-logo-small.png", rendered)
+
+        # Impuls is checked separately: it layers the date templates but
+        # overrides footer_right, and it is deliberately not part of
+        # ASSOCIATION_SETTINGS_MODULES.
+        impuls_settings = importlib.import_module("core.settings.impuls")
+        with override_settings(TEMPLATES=impuls_settings.TEMPLATES):
+            template = Template("{% include 'core/footer.html' %}")
+            rendered = template.render(Context(self._content_context()))
+        self.assertNotIn("aa-logo-small.png", rendered)
 
     def test_language_picker_hides_when_disabled_in_header_template(self):
         template = Template("{% include 'core/header.html' %}")
@@ -1145,10 +1167,11 @@ class HomepageQueryTests(TestCase):
         with CaptureQueriesContext(connection) as second:
             response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        # Second load is a pure cache hit: the homepage context and the
-        # anonymous navigation are both cached.
+        # Second load reuses the cached homepage context and anonymous
+        # navigation; the remaining query is the footer Albins Angels category
+        # lookup, which runs on every page since the badge resolves by name.
         self.assertLess(len(second), len(first))
-        self.assertEqual(len(second), 0)
+        self.assertEqual(len(second), 1)
 
     def test_logged_in_homepage_is_not_cached(self):
         cache.clear()
@@ -1181,12 +1204,12 @@ class HomepageQueryTests(TestCase):
 
     def test_cache_key_is_isolated_by_language(self):
         cache.clear()
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             self.client.get("/")
         # A different active language must not reuse the Swedish entry (set
         # via the language cookie; the locale middleware drives get_language).
         self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "fi"
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             self.client.get("/")
 
     def test_admin_edit_invalidates_anonymous_cache(self):
@@ -1245,17 +1268,18 @@ class HomepageQueryTests(TestCase):
         # Simulate the version key being evicted while the homepage entry
         # is still alive: the next load must not reuse the old generation.
         cache.delete(_homepage_version_key())
-        # The context rebuilds from scratch (6 queries); the navigation is
-        # still served from its own cache.
-        with self.assertNumQueries(6):
+        # The context rebuilds from scratch (7 queries, including the footer
+        # Albins Angels category lookup); the navigation is still served from
+        # its own cache.
+        with self.assertNumQueries(7):
             self.client.get("/")
 
     def test_dummy_cache_never_caches(self):
         cache.clear()
         with override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}):
-            with self.assertNumQueries(8):
+            with self.assertNumQueries(9):
                 self.client.get("/")
-            with self.assertNumQueries(8):
+            with self.assertNumQueries(9):
                 self.client.get("/")
 
 

@@ -2396,6 +2396,10 @@ msgstr "Stäng av"
 msgid "View all"
 msgstr "Visa alla"
 
+#: templates/date/core/footer.html:7
+msgid "Albins Angels"
+msgstr "Albins Angels"
+
 #: templates/date/date/components/about.html:4
 msgid "Om oss"
 msgstr "Om oss"

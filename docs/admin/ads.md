@@ -20,6 +20,8 @@ The Ads app controls the rotating banner graphics that appear on the public fron
 2. Replace the **Ad url** or **Company url** as needed.
 3. Click **Save**. Use **Delete** if the campaign is over.
 
+The Albins Angels logo is no longer a sponsor row: if an `ads.AdUrl` row still points at `partner-logos/aa-logo-small.png`, delete it in the admin in each environment, otherwise the logo appears both in the sponsors block and in the footer.
+
 ## Tips for Non-Technical Editors
 - Keep banner dimensions consistent with the existing creatives to avoid layout jumps.
 - Always test the company URL in a new browser tab before saving.

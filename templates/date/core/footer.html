@@ -1,10 +1,10 @@
 {% extends "core/footer.html" %}
-{% load static %}
+{% load static i18n albins_angels %}
 {% block footer_right %}
   <div class="col-12 col-md-4 text-center date-footer-partner">
-    <a class="partner-link" href="{% url 'news:aa_index' 'aa' %}">
+    <a class="partner-link" href="{% aa_news_url %}">
       <img class="footer-img img-fluid"
-           alt="AA logo"
+           alt="{% translate 'Albins Angels' %}"
            src="{% static 'core/images/aa-logo-small.png' %}">
     </a>
   </div>
