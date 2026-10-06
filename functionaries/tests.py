@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from django.contrib import admin
 from django.contrib.auth.models import AnonymousUser
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 from django.utils import timezone
 
 from functionaries.admin import FunctionaryAdmin, FunctionaryInline, FunctionaryRoleAdmin
@@ -136,7 +136,15 @@ class FunctionaryHelperTests(TestCase):
         self.assertEqual(list(selected), list(years))
         self.assertTrue(all_years)
 
-    def test_get_selected_year_applies_parameters_for_anonymous_user(self):
+    def test_get_selected_year_ignores_parameters_for_anonymous_user_by_default(self):
+        request = self.factory.get('/funktionarer/?year=2020')
+        request.user = AnonymousUser()
+        years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')
+        selected, _ = get_selected_year(request, years)
+        self.assertEqual(selected, timezone.now().year)
+
+    @override_settings(FUNCTIONARIES_ANONYMOUS_FILTERS=True)
+    def test_get_selected_year_applies_parameters_for_anonymous_user_when_enabled(self):
         request = self.factory.get('/funktionarer/?year=2020')
         request.user = AnonymousUser()
         years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')
@@ -165,13 +173,31 @@ class FunctionaryHelperTests(TestCase):
         self.assertIsNone(selected)
         self.assertFalse(all_roles)
 
-    def test_get_selected_role_applies_for_anonymous_requests(self):
+    def test_get_selected_role_ignores_anonymous_requests_by_default(self):
+        request = self.factory.get('/funktionarer/?role=all')
+        request.user = AnonymousUser()
+        roles = FunctionaryRole.objects.all()
+        selected, all_roles = get_selected_role(request, roles)
+        self.assertIsNone(selected)
+        self.assertFalse(all_roles)
+
+    @override_settings(FUNCTIONARIES_ANONYMOUS_FILTERS=True)
+    def test_get_selected_role_applies_for_anonymous_requests_when_enabled(self):
         request = self.factory.get('/funktionarer/?role=all')
         request.user = AnonymousUser()
         roles = FunctionaryRole.objects.all()
         selected, all_roles = get_selected_role(request, roles)
         self.assertTrue(all_roles)
         self.assertEqual(list(selected), list(roles))
+
+    @override_settings(FUNCTIONARIES_ANONYMOUS_FILTERS=True)
+    def test_get_selected_role_ignores_non_numeric_anonymous_value_when_enabled(self):
+        request = self.factory.get('/funktionarer/?role=abc')
+        request.user = AnonymousUser()
+        roles = FunctionaryRole.objects.all()
+        selected, all_roles = get_selected_role(request, roles)
+        self.assertIsNone(selected)
+        self.assertFalse(all_roles)
 
     def test_get_filtered_functionaries_accepts_all_years_queryset(self):
         years = Functionary.objects.values_list('year', flat=True).distinct().order_by('-year')

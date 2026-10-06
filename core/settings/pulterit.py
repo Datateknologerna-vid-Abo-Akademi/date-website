@@ -22,6 +22,9 @@ INSTALLED_APPS = get_installed_apps(
 ROOT_URLCONF = 'core.urls.pulterit'
 ARCHIVE_ENABLED = False
 MEMBERS_SIGNUP_ENABLED = False
+# Pulterit has no member accounts to sign in with, so the public functionaries
+# listing must honour the year and role filters for signed-out visitors.
+FUNCTIONARIES_ANONYMOUS_FILTERS = True
 
 STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'fotograf', 'rösträknare'])
 

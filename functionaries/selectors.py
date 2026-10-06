@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from django.conf import settings
 from django.db.models import Q, QuerySet
 from django.utils import timezone
 
@@ -23,7 +24,7 @@ def get_selected_year(request, distinct_years):
     selected_year = get_current_year()
     all_years = False
 
-    if 'year' in request.GET:
+    if (request.user.is_authenticated or settings.FUNCTIONARIES_ANONYMOUS_FILTERS) and 'year' in request.GET:
         year_param = request.GET['year']
 
         if year_param == 'all':
@@ -44,7 +45,7 @@ def get_selected_role(request, functionary_roles):
     selected_role = None
     all_roles = False
 
-    if 'role' in request.GET:
+    if (request.user.is_authenticated or settings.FUNCTIONARIES_ANONYMOUS_FILTERS) and 'role' in request.GET:
         role_param = request.GET['role']
 
         if role_param == 'all':
@@ -53,9 +54,7 @@ def get_selected_role(request, functionary_roles):
         else:
             try:
                 role_id = int(role_param)
-            except ValueError:
-                pass
-            except TypeError:
+            except ValueError, TypeError:
                 pass
             else:
                 selected_role = FunctionaryRole.objects.filter(pk=role_id).first()
