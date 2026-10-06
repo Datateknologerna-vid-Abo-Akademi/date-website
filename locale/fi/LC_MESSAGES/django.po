@@ -3238,3 +3238,20 @@ msgstr "Kaksivaiheinen tunnistautuminen ei ole käytössä."
 #: templates/common/members/userinfo.html
 msgid "Authenticator app"
 msgstr "Todennussovellus"
+
+#: templates/common/two_factor/core/backup_tokens.html
+msgid "Download backup codes"
+msgstr "Lataa varakoodit"
+
+#: members/two_factor.py
+msgid "You have no backup codes to download. Generate new ones first."
+msgstr "Sinulla ei ole ladattavia varakoodeja. Luo ensin uudet."
+
+#: members/two_factor.py
+#, python-format
+msgid "Backup codes for %(username)s at %(association)s, generated %(date)s."
+msgstr "Varakoodit käyttäjälle %(username)s (%(association)s), luotu %(date)s."
+
+#: members/two_factor.py
+msgid "Each code can be used once. Keep this file somewhere safe."
+msgstr "Jokaista koodia voi käyttää kerran. Säilytä tiedosto turvallisessa paikassa."

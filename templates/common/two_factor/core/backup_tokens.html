@@ -8,6 +8,11 @@
       <div class="two-factor-token-list">
         {% for token in device.token_set.all %}<code>{{ token.token }}</code>{% endfor %}
       </div>
+      <div class="two-factor-actions">
+        <a href="{% url 'two_factor:backup_tokens_download' %}"
+           class="theme-button"
+           download>{% trans "Download backup codes" %}</a>
+      </div>
     {% endif %}
     <form method="post">
       {% csrf_token %}

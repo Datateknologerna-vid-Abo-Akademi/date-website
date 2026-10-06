@@ -3202,3 +3202,20 @@ msgstr "Two-factor authentication is off."
 #: templates/common/members/userinfo.html
 msgid "Authenticator app"
 msgstr "Authenticator app"
+
+#: templates/common/two_factor/core/backup_tokens.html
+msgid "Download backup codes"
+msgstr "Download backup codes"
+
+#: members/two_factor.py
+msgid "You have no backup codes to download. Generate new ones first."
+msgstr "You have no backup codes to download. Generate new ones first."
+
+#: members/two_factor.py
+#, python-format
+msgid "Backup codes for %(username)s at %(association)s, generated %(date)s."
+msgstr "Backup codes for %(username)s at %(association)s, generated %(date)s."
+
+#: members/two_factor.py
+msgid "Each code can be used once. Keep this file somewhere safe."
+msgstr "Each code can be used once. Keep this file somewhere safe."

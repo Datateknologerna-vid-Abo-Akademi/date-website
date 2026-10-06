@@ -548,3 +548,56 @@ class PasskeyEndpointsDisabledTests(PasskeyTestMixin, TestCase):
     def test_login_page_hides_passkey_button(self):
         response = self.client.get(reverse('members:login'))
         self.assertNotContains(response, 'passkey-verification-placeholder')
+
+
+class BackupTokensDownloadTests(PasskeyTestMixin, TestCase):
+    url = reverse('two_factor:backup_tokens_download')
+
+    def _static_device(self, user, *tokens):
+        device = StaticDevice.objects.create(user=user, confirmed=True, name='backup')
+        for token in tokens:
+            device.token_set.create(token=token)
+        return device
+
+    def test_unverified_session_is_redirected(self):
+        self._static_device(self.member, 'aaaa1111')
+        make_passkey(self.member)
+        self.login(self.member)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
+        self.assertNotIn('aaaa1111', response.content.decode())
+
+    def test_verified_member_downloads_only_their_codes(self):
+        device = self._static_device(self.member, 'aaaa1111', 'bbbb2222')
+        self._static_device(self.make_member('other'), 'zzzz9999')
+        self.login(self.member, verified_device=device)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'text/plain; charset=utf-8')
+        self.assertEqual(response['Content-Disposition'], 'attachment; filename="date-backup-codes.txt"')
+        self.assertEqual(response['X-Content-Type-Options'], 'nosniff')
+        self.assertIn('no-store', response['Cache-Control'])
+        body = response.content.decode()
+        lines = body.splitlines()
+        self.assertEqual(lines[-2:], ['aaaa1111', 'bbbb2222'])
+        self.assertIn(self.member.username, lines[0])
+        self.assertNotIn('zzzz9999', body)
+
+    def test_no_codes_redirects_to_backup_page(self):
+        passkey = make_passkey(self.member)
+        self.login(self.member, verified_device=passkey)
+        response = self.client.get(self.url)
+        self.assertRedirects(response, reverse('two_factor:backup_tokens'), fetch_redirect_response=False)
+
+    def test_post_is_not_allowed(self):
+        device = self._static_device(self.member, 'aaaa1111')
+        self.login(self.member, verified_device=device)
+        self.assertEqual(self.client.post(self.url).status_code, 405)
+
+    def test_backup_page_links_to_download(self):
+        device = self._static_device(self.member, 'aaaa1111')
+        self.login(self.member, verified_device=device)
+        response = self.client.get(reverse('two_factor:backup_tokens'))
+        self.assertContains(response, self.url)

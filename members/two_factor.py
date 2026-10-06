@@ -8,18 +8,21 @@ from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import redirect_to_login
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, resolve_url
 from django.urls import resolve, reverse_lazy
+from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django.utils.formats import date_format
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django.views.decorators.cache import never_cache
 from django.views.generic import RedirectView, TemplateView
 from django_otp import devices_for_user
 from django_otp.decorators import otp_required
-from django_otp.plugins.otp_static.models import StaticDevice
+from django_otp.plugins.otp_static.models import StaticDevice, StaticToken
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django_otp_webauthn.models import WebAuthnCredential
 from two_factor.forms import AuthenticationTokenForm, BackupTokenForm, TOTPDeviceForm
@@ -224,6 +227,38 @@ class MemberDisableView(DisableView):
 
 class MemberBackupTokensView(BackupTokensView):
     template_name = 'two_factor/core/backup_tokens.html'
+
+
+@method_decorator([never_cache, otp_required], name='dispatch')
+class MemberBackupTokensDownloadView(View):
+    http_method_names = ['get']
+
+    def get(self, request):
+        tokens = list(
+            StaticToken.objects.filter(device__user=request.user, device__confirmed=True)
+            .order_by('pk')
+            .values_list('token', flat=True)
+        )
+        if not tokens:
+            messages.error(request, _('You have no backup codes to download. Generate new ones first.'))
+            return redirect('two_factor:backup_tokens')
+
+        content_variables = settings.CONTENT_VARIABLES
+        association = content_variables.get('ASSOCIATION_NAME', '')
+        header = _('Backup codes for %(username)s at %(association)s, generated %(date)s.') % {
+            'username': request.user.get_username(),
+            'association': association,
+            'date': date_format(timezone.localdate(), 'SHORT_DATE_FORMAT'),
+        }
+        note = _('Each code can be used once. Keep this file somewhere safe.')
+        body = '\n'.join([str(header), str(note), '', *tokens, ''])
+
+        prefix = slugify(content_variables.get('ASSOCIATION_NAME_SHORT', ''))
+        filename = f'{prefix}-backup-codes.txt' if prefix else 'backup-codes.txt'
+        response = HttpResponse(body, content_type='text/plain; charset=utf-8')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['X-Content-Type-Options'] = 'nosniff'
+        return response
 
 
 class MemberQRGeneratorView(QRGeneratorView):

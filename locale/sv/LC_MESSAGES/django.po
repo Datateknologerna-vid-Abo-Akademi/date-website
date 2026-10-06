@@ -3181,3 +3181,20 @@ msgstr "Tvåfaktorsautentisering är av."
 #: templates/common/members/userinfo.html
 msgid "Authenticator app"
 msgstr "Autentiseringsapp"
+
+#: templates/common/two_factor/core/backup_tokens.html
+msgid "Download backup codes"
+msgstr "Ladda ner reservkoder"
+
+#: members/two_factor.py
+msgid "You have no backup codes to download. Generate new ones first."
+msgstr "Du har inga reservkoder att ladda ner. Generera nya först."
+
+#: members/two_factor.py
+#, python-format
+msgid "Backup codes for %(username)s at %(association)s, generated %(date)s."
+msgstr "Reservkoder för %(username)s hos %(association)s, genererade %(date)s."
+
+#: members/two_factor.py
+msgid "Each code can be used once. Keep this file somewhere safe."
+msgstr "Varje kod kan användas en gång. Förvara filen på ett säkert ställe."
