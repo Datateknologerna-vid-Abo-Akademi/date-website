@@ -227,6 +227,19 @@ class SiteShellTemplateTests(TestCase):
             self.assertIn("<svg", page)
             self.assertIn("<path", page)
 
+    def test_aa_partner_badge_only_renders_in_date_footer(self):
+        for association, settings_module in ASSOCIATION_SETTINGS_MODULES.items():
+            with self.subTest(association=association):
+                module = importlib.import_module(settings_module)
+                with override_settings(TEMPLATES=module.TEMPLATES):
+                    template = Template("{% include 'core/footer.html' %}")
+                    rendered = template.render(Context(self._content_context()))
+                if association == "date":
+                    self.assertIn("core/images/aa-logo-small.png", rendered)
+                    self.assertIn(reverse("news:aa_index", args=["aa"]), rendered)
+                else:
+                    self.assertNotIn("aa-logo-small.png", rendered)
+
     def test_language_picker_hides_when_disabled_in_header_template(self):
         template = Template("{% include 'core/header.html' %}")
         rendered = template.render(Context(self._content_context()))
