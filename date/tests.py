@@ -22,6 +22,7 @@ from django.test.utils import CaptureQueriesContext, override_settings
 from django.urls import clear_url_caches, reverse, set_urlconf
 from django.utils import timezone, translation
 
+from ads.models import AdUrl
 from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
 from date.middleware import ConnectionLifecycleMiddleware
@@ -35,6 +36,7 @@ from date.views import (
     handler500,
 )
 from events.models import Event
+from instagram.models import IgUrl
 from news.models import Category, Post
 
 ASSOCIATION_SETTINGS_MODULES = {
@@ -44,6 +46,7 @@ ASSOCIATION_SETTINGS_MODULES = {
     "demo": "core.settings.demo",
     "pulterit": "core.settings.pulterit",
     "sf": "core.settings.sf",
+    "impuls": "core.settings.impuls",
 }
 
 # The Font Awesome compatible build of Line Awesome. Shared templates use fa-* /
@@ -921,6 +924,62 @@ class AssociationHomepageSmokeTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "date/april_start.html")
+
+    def test_impuls_homepage_shows_instagram_slider_instead_of_partners(self):
+        cache.clear()
+        IgUrl.objects.create(image="instagram/impuls-post.png", shortcode="ImpulsPost1")
+        AdUrl.objects.create(ad_url="https://example.com/partner-logo.png", company_url="https://example.com/partner")
+
+        response = self._get_association_homepage("impuls")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'href="https://www.instagram.com/p/ImpulsPost1/"')
+        self.assertContains(response, "--ig-items: 32")
+        self.assertContains(response, '<h3 class="ig-title header-border-bottom">Senaste Instagram-inlägg</h3>')
+        original, *repeats = re.findall(
+            r'<a href="https://www\.instagram\.com/p/ImpulsPost1/"([^>]*)>', response.content.decode()
+        )
+        self.assertEqual(len(repeats), 31)
+        self.assertNotIn("aria-hidden", original)
+        self.assertTrue(all('aria-hidden="true"' in attrs and 'tabindex="-1"' in attrs for attrs in repeats))
+        self.assertNotContains(response, "Samarbetspartners")
+        self.assertNotContains(response, "https://example.com/partner-logo.png")
+
+    def test_impuls_homepage_omits_instagram_slider_without_posts(self):
+        cache.clear()
+
+        response = self._get_association_homepage("impuls")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'class="ig-scroll"')
+        self.assertNotContains(response, "Senaste Instagram-inlägg")
+
+    def test_impuls_instagram_heading_is_translated_to_english(self):
+        impuls_settings = importlib.import_module("core.settings.impuls")
+        cache.clear()
+        IgUrl.objects.create(image="instagram/impuls-post.png", shortcode="ImpulsPost1")
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
+
+        response = self._get_association_homepage(
+            "impuls",
+            ENABLE_LANGUAGE_FEATURES=True,
+            LANGUAGES=impuls_settings.DATE_LANGUAGES,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, ">Latest Instagram posts</h3>")
+
+    @patch("date.views.timezone.localdate", return_value=date(2026, 10, 6))
+    def test_kk_homepage_uses_the_shared_instagram_slider(self, _localdate):
+        cache.clear()
+        IgUrl.objects.create(url="https://cdn.example/kk-post.jpg", shortcode="KkPost1")
+
+        response = self._get_association_homepage("kk")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "date/components/instagram.html")
+        self.assertContains(response, 'href="https://www.instagram.com/p/KkPost1/"')
+        self.assertNotContains(response, "ig-title")
 
 
 class HomepageQueryTests(TestCase):

@@ -3,17 +3,15 @@ import os
 import sys
 import time
 from datetime import datetime
-from itertools import islice
 
 import django
-import instaloader
 import schedule
 
 sys.path.append("/code")
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings.date")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", f"core.settings.{os.environ.get('PROJECT_NAME') or 'date'}")
 django.setup()
 
-from instagram.models import IgUrl
+from django.core.management import CommandError, call_command
 
 logger = logging.getLogger('date')
 
@@ -23,14 +21,10 @@ SCHEDULED_TIME = '00:00'
 def updateIg():
     logger.info("IGSCHEDULER WORKING")
     logger.info(datetime.now())
-    loader = instaloader.Instaloader()
-    ig_profile = instaloader.Profile.from_username(loader.context, "kemistklubben")
-    top40 = islice(ig_profile.get_posts(), 40)
-
-    IgUrl.objects.all().delete()
-
-    for post in top40:
-        IgUrl.objects.create(url=post.url, shortcode=post.shortcode)
+    try:
+        call_command("update_instagram")
+    except CommandError as exc:
+        logger.error("Instagram update failed: %s", exc)
 
 
 def run_scheduler():

@@ -4,45 +4,36 @@
 The `instagram` app owns the Instagram post URLs used by the home page embed area.
 
 ## Models
-- `IgUrl` stores a post `url` and Instagram `shortcode`.
+- `IgUrl` is one slider post: an uploaded `image` (admin-managed posts) or an image `url` (posts fetched by the updater), plus the post's Instagram `shortcode`, used to link to it.
+- `clean()` accepts a pasted post link (`/p/` or `/reel/`, with or without a username or query string) and stores just the shortcode, and requires either an image or a URL.
+- `image_url` returns the uploaded image when there is one, otherwise `url`. `image` is a `core.fields.PublicFileField`, so uploads go to public storage on S3.
+- New uploads must be real images at least `MIN_IMAGE_HEIGHT` (300 px) tall: the slider shows posts 150 px tall, and high-density screens need twice that to stay sharp. Only new uploads are checked, so editing a post never re-reads its stored file.
+- Rows are ordered newest first (`-id`).
 
 ## Integrations
-- `date.views.index` reads `IgUrl` rows for the front page context.
-- `instagram/igupdate.py` is the standalone Instagram updater: a long-running
-  scheduler that fetches the latest ~40 posts for the hardcoded
-  `kemistklubben` profile via instaloader once per day at 00:00 and rewrites
-  `IgUrl`. `social/igupdate.py` remains as a thin compatibility import.
+- `date.views.index` passes the `IgUrl` rows to the front page as `posts`.
+- `templates/common/date/components/instagram.html` is the shared scrolling slider; kk and impuls include it. It renders nothing when there are no posts. Each site styles it in its own `date/css/homepage.css`.
+- Impuls's posts are managed in the admin only (no `INSTAGRAM_USERNAME`).
 
-## Running the updater
+## Updating the posts
 
-The updater is not part of the web/worker runtime: `instaloader` and
-`schedule` live in the optional `instagram` dependency group, so a default
-image cannot run it.
+`python manage.py update_instagram` (`date-manage update_instagram` in Docker) fetches the latest 40 posts of the site's `INSTAGRAM_USERNAME` with instaloader and replaces the previously fetched posts; posts with an uploaded image are never touched. The new posts are only written once the whole fetch has succeeded, so a failed run keeps the current ones. `INSTAGRAM_USERNAME` is an association capability setting: `kemistklubben` for kk, empty (updater disabled) elsewhere.
+
+`instagram/igupdate.py` is a long-running scheduler that runs the command daily at 00:00 and logs failures; like `manage.py`, it picks the settings from `PROJECT_NAME`. `social/igupdate.py` remains as a thin compatibility import.
+
+Both need the optional `instagram` dependency group, which the web/worker image does not include:
 
 ```bash
 uv sync --extra instagram
-python instagram/igupdate.py
+PROJECT_NAME=kk python manage.py update_instagram
 ```
 
-The script calls `django.setup()` itself and defaults to
-`core.settings.date`; set `PROJECT_NAME` (or `DJANGO_SETTINGS_MODULE`) when
-running it for another association.
-
-**As of 2026-08, no runner is wired anywhere**: the web/worker image excludes
-the `instagram` extra, and neither this repository (compose services, chart,
-Celery tasks, workflows) nor the operator infrastructure (CronJobs, host
-cron, systemd) starts the updater. The feed is refreshed only when someone
-runs the script manually. If the embed should stay fresh, wire a runner
-(e.g. a chart CronJob) that installs the `instagram` extra and executes
-`python instagram/igupdate.py` daily.
+**As of 2026-08, no runner is wired anywhere**: neither this repository (compose services, chart, Celery tasks, workflows) nor the operator infrastructure (CronJobs, host cron, systemd) runs the updater, so the posts only change when someone runs it manually. If the slider should stay fresh, wire a runner (e.g. a chart CronJob) that installs the `instagram` extra and runs `python manage.py update_instagram` daily.
 
 Caveats:
 
-- The profile is hardcoded to `kemistklubben`; there is no configuration.
-- `IgUrl.objects.all().delete()` runs before the fetch, so a failed fetch
-  (rate limiting, 2FA, network) leaves the embed area empty until the next
-  successful run. The Celery task that replaced this script historically
-  replaced rows only on success; the standalone script does not.
+- Instagram rate-limits anonymous requests. A request from a development machine on 2026-10-06 got `429 Too Many Requests` on the very first profile lookup, so expect fetches to fail; the stored posts are kept when they do.
+- The stored image URLs are Instagram CDN links that expire, so the slider needs regular refreshes to keep showing images.
 
 ## Migration Notes
 - Data was split out from `social.IgUrl` into `instagram.IgUrl`.
