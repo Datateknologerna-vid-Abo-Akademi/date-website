@@ -12,6 +12,9 @@
         {% include "members/registration/_passkey_login.html" %}
       {% else %}
         <p>{% trans "Enter one of your backup tokens to continue." %}</p>
+        <p>
+          {% trans "If you normally sign in with a passkey and have no backup tokens, contact the site administrators to regain access." %}
+        </p>
       {% endif %}
     {% endif %}
     <form action="" method="post">

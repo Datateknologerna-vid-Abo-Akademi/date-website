@@ -241,6 +241,17 @@ class PasskeyLoginWizardTests(PasskeyTestMixin, TestCase):
         self.assertNotIn('_auth_user_id', self.client.session)
         self.assertContains(response, 'passkey-verification-placeholder')
 
+    @override_settings(PASSKEYS_ENABLED=False)
+    def test_passkeys_disabled_backup_step_fails_closed_with_recovery_hint(self):
+        make_passkey(self.member)
+        _, response = self._post_auth_step()
+
+        self.assertEqual(response.context['wizard']['steps'].current, 'backup')
+        self.assertNotIn('_auth_user_id', self.client.session)
+        self.assertNotContains(response, 'passkey-verification-placeholder')
+        # Swedish is the site default language.
+        self.assertContains(response, 'kontakta webbplatsens administratörer')
+
     def test_backup_token_completes_passkey_only_login(self):
         make_passkey(self.member)
         static = StaticDevice.objects.create(user=self.member, confirmed=True, name='backup')
