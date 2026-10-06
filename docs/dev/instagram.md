@@ -5,7 +5,7 @@ The `instagram` app owns the Instagram post URLs used by the home page embed are
 
 ## Models
 - `IgUrl` is one slider post: an uploaded `image` (admin-managed posts) or an image `url` (posts fetched by the updater), plus the post's Instagram `shortcode`, used to link to it.
-- `clean()` accepts a pasted post link (`/p/` or `/reel/`, with or without a username or query string) and stores just the shortcode, and requires either an image or a URL.
+- `clean()` accepts a pasted post link (`/p/`, `/reel/` or `/tv/`, with or without a username or query string, and with any host casing) and stores just the shortcode, and requires either an image or a URL.
 - `image_url` returns the uploaded image when there is one, otherwise `url`. `image` is a `core.fields.PublicFileField`, so uploads go to public storage on S3.
 - New uploads must be real images at least `MIN_IMAGE_HEIGHT` (300 px) tall: the slider shows posts 150 px tall, and high-density screens need twice that to stay sharp. Only new uploads are checked, so editing a post never re-reads its stored file.
 - Rows are ordered newest first (`-id`).
