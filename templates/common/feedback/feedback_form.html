@@ -26,6 +26,15 @@
             {{ form.email }}
             {{ form.email.errors }}
           </div>
+          <p class="consent-form-group mt-2">
+            {{ form.consent }}
+            <label for="{{ form.consent.id_for_label }}">{{ form.consent.label }}</label>
+            <a href="http://{{ request.get_host }}/pages/registerbeskrivning/"
+               target="_blank">
+              {% translate "villkoren" %} <i class="fa fa-external-link" aria-hidden="true"></i>
+            </a>
+            {{ form.consent.errors }}
+          </p>
           <div class="cf-turnstile"
                data-sitekey="{{ CAPTCHA_SITE_KEY }}"
                data-callback="javascriptCallback"></div>

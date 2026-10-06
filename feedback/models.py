@@ -2,13 +2,14 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-# Seeded only into the Swedish column by FeedbackFormSettings.get_solo() - the
-# other language columns are left at the field's own default ('') so
-# modeltranslation's fallback (MODELTRANSLATION_FALLBACK_LANGUAGES, unset here
-# so it defaults to the source language, sv) kicks in for them instead of the
-# admin's English/Finnish tabs opening pre-filled with Swedish text that reads
-# as already translated. get_solo() creates that one row when the table is
-# empty and otherwise returns the lowest-pk row; it does not pin a pk.
+# Seeded into the Swedish column of the singleton FeedbackFormSettings row by
+# the feedback 0003 data migration, and by FeedbackFormSettings.get_solo() when
+# the table is empty - the other language columns are left at the field's own
+# default ('') so modeltranslation's fallback (MODELTRANSLATION_FALLBACK_LANGUAGES,
+# unset here so it defaults to the source language, sv) kicks in for them instead
+# of the admin's English/Finnish tabs opening pre-filled with Swedish text that
+# reads as already translated. get_solo() returns the lowest-pk row and does not
+# pin a pk.
 DEFAULT_INTRO_TEXT = 'Har du synpunkter eller feedback? Skriv gärna till oss här.'
 
 
@@ -52,10 +53,10 @@ class FeedbackFormSettings(models.Model):
     """Singleton row holding the admin-editable copy shown on /forms/ -
     mirrors exambank.ExamBankAccessSettings's get_solo() pattern.
 
-    The site reads one row: the lowest pk. get_solo() returns that row and
-    creates it when the table is empty, and FeedbackFormSettingsAdmin pins
-    its changelist to the same row, so the editable row and the read row
-    cannot diverge. See docs/dev/feedback.md."""
+    The site reads one row: the lowest pk. The row is seeded by the 0003 data
+    migration, the public page reads it with a plain query (get_intro_text),
+    and FeedbackFormSettingsAdmin pins its changelist to the same row, so the
+    editable row and the read row cannot diverge. See docs/dev/feedback.md."""
 
     intro_text = models.CharField(
         _('Introduktionstext'),
@@ -73,7 +74,27 @@ class FeedbackFormSettings(models.Model):
         return str(_('Formulärtext'))
 
     @classmethod
+    def get_intro_text(cls) -> str:
+        """Return the copy shown above the form without writing to the table.
+
+        The row is seeded by the 0003 data migration, so the public path never
+        needs to create it. Fall back to DEFAULT_INTRO_TEXT when no row exists
+        (hand-deleted, or a database restored from before the migration ran)
+        so the page still renders instead of raising.
+        """
+        obj = cls.objects.order_by('pk').first()
+        if obj is None:
+            return DEFAULT_INTRO_TEXT
+        return obj.intro_text
+
+    @classmethod
     def get_solo(cls):
+        """Return the row the site reads, creating it when the table is empty.
+
+        Kept robust for the missing-row case so a caller cannot break on an
+        empty table; the public request path uses get_intro_text() instead,
+        which never writes.
+        """
         obj = cls.objects.order_by('pk').first()
         if obj is None:
             obj = cls.objects.create(intro_text_sv=DEFAULT_INTRO_TEXT)

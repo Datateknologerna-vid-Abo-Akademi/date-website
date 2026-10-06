@@ -16,8 +16,12 @@ logger = logging.getLogger('date')
 
 def feedback_form(request):
     form = FeedbackSubmissionForm()
-    if request.session.get('feedback_submitted', False):
-        request.session['feedback_submitted'] = False
+    # Consume the flag on GET only. Checking it before the POST branch would
+    # swallow a submission whenever the redirect GET never landed (back button,
+    # dropped connection, a second tab): the visitor would see the thank-you
+    # page and the feedback would be silently lost. See the same fix in
+    # harassment.views.harassment_form.
+    if request.method == 'GET' and request.session.pop('feedback_submitted', False):
         return render(request, 'feedback/feedback_success.html')
 
     if request.method == 'POST':
@@ -31,13 +35,13 @@ def feedback_form(request):
             else:
                 submission = form.save()
                 feedback_receivers = [receiver.recipient_email for receiver in FeedbackEmailRecipient.objects.all()]
-                email_ctx = {
-                    'submission_url': (
-                        f"{settings.CONTENT_VARIABLES['SITE_URL']}"
-                        f"{reverse('admin:feedback_feedbacksubmission_change', args=[submission.id])}"
-                    ),
-                }
                 if feedback_receivers:
+                    email_ctx = {
+                        'submission_url': (
+                            f"{settings.CONTENT_VARIABLES['SITE_URL']}"
+                            f"{reverse('admin:feedback_feedbacksubmission_change', args=[submission.id])}"
+                        ),
+                    }
                     enqueue_task_on_commit(
                         send_email_task,
                         "Ny feedback har inkommit",
@@ -56,5 +60,5 @@ def feedback_form(request):
     return render(
         request,
         'feedback/feedback_form.html',
-        {'form': form, 'intro_text': FeedbackFormSettings.get_solo().intro_text},
+        {'form': form, 'intro_text': FeedbackFormSettings.get_intro_text()},
     )

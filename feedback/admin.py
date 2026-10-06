@@ -12,7 +12,7 @@ from .models import FeedbackEmailRecipient, FeedbackFormSettings, FeedbackSubmis
 class FeedbackSubmissionAdmin(ModelAdmin):
     list_display = ('email', 'message_preview', 'created_time')
     search_fields = ('email', 'message')
-    ordering = ('-created_time',)
+    # No explicit ordering: it would only repeat FeedbackSubmission.Meta.ordering.
     # created_time defaults to timezone.now() on save; without this, the add
     # form requires typing a timestamp by hand instead of auto-filling one.
     readonly_fields = ('created_time',)
@@ -42,6 +42,29 @@ else:
 @admin.register(FeedbackFormSettings)
 class FeedbackFormSettingsAdmin(FeedbackFormSettingsTranslationAdminBase):
     list_display = ('__str__', 'intro_text')
+
+    def get_fields(self, request, obj=None):
+        # With the multilingual UI off the site runs Swedish only and the public
+        # page reads intro_text_sv. The base intro_text column is not what the
+        # site reads: modeltranslation resolves the field to the active language
+        # column (sv) and syncs the base column from it, so an edit typed into
+        # the plain intro_text field is silently discarded. Show the column the
+        # site reads instead. Decided at request time rather than by the admin
+        # base class chosen at import time, so a test can flip the setting with
+        # override_settings.
+        if not settings.ENABLE_LANGUAGE_FEATURES:
+            return ['intro_text_sv']
+        return super().get_fields(request, obj)
+
+    def get_fieldsets(self, request, obj=None):
+        # Same reason as get_fields: with the multilingual UI off the change
+        # form must edit exactly the one column the site reads. Stated here as
+        # well so the guarantee holds whichever admin base class was picked at
+        # import time (the tabbed base class derives its fieldsets from the
+        # form, not from get_fields).
+        if not settings.ENABLE_LANGUAGE_FEATURES:
+            return [(None, {'fields': ['intro_text_sv']})]
+        return super().get_fieldsets(request, obj)
 
     def get_queryset(self, request):
         # Pin the changelist to the row the site reads (the lowest pk), so a row

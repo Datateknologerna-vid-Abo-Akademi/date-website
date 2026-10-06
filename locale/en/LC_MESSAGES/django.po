@@ -2043,13 +2043,14 @@ msgstr ""
 msgid "Sign up"
 msgstr "Sign up"
 
-#: templates/common/members/signup.html:48
-#: templates/common/social/harassment_form.html:31
+#: feedback/forms.py:14 templates/common/members/signup.html:52
+#: templates/common/social/harassment_form.html:37
 msgid "Jag godkänner"
 msgstr "I accept"
 
-#: templates/common/members/signup.html:50
-#: templates/common/social/harassment_form.html:33
+#: templates/common/feedback/feedback_form.html:34
+#: templates/common/members/signup.html:55
+#: templates/common/social/harassment_form.html:40
 msgid "villkoren"
 msgstr "the terms and conditions"
 
