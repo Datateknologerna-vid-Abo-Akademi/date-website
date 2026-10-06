@@ -348,6 +348,10 @@ msgstr "The text shown above the form at /forms/."
 msgid "Formulärtext"
 msgstr "Form Text"
 
+#: feedback/views.py:30
+msgid "Robotkontrollen misslyckades. Försök igen."
+msgstr "The bot check failed. Please try again."
+
 #: templates/common/feedback/feedback_form.html:4
 #: templates/common/feedback/feedback_form.html:13
 #: templates/common/feedback/feedback_success.html:4

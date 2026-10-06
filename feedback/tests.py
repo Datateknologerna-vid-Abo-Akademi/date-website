@@ -57,6 +57,10 @@ class FeedbackFormViewTests(TestCase):
         self.assertEqual(FeedbackSubmission.objects.count(), 1)
         mock_send_email.delay.assert_called_once()
         self.assertEqual(mock_send_email.delay.call_args.args[3], ['feedback@example.com'])
+        # The notification body carries the admin link only: the message text
+        # must not travel in an email any wider than the recipient list.
+        body = mock_send_email.delay.call_args.args[2]
+        self.assertNotIn('Nice site', body)
 
     @patch('feedback.views.send_email_task')
     @patch('feedback.views.validate_captcha', return_value=True)
@@ -79,13 +83,17 @@ class FeedbackFormViewTests(TestCase):
     @patch('feedback.views.send_email_task')
     @patch('feedback.views.validate_captcha', return_value=True)
     def test_no_email_enqueued_without_configured_recipients(self, _mock_captcha, mock_send_email):
-        with self.captureOnCommitCallbacks(execute=True):
+        with self.assertLogs('date', level='WARNING') as logs, self.captureOnCommitCallbacks(execute=True):
             self.client.post(
                 reverse('feedback:form'), {'message': 'Something to say', 'cf-turnstile-response': 'token'}
             )
 
         self.assertEqual(FeedbackSubmission.objects.count(), 1)
         mock_send_email.delay.assert_not_called()
+        self.assertTrue(
+            any('No feedback recipients configured' in message for message in logs.output),
+            logs.output,
+        )
 
     @patch('feedback.views.send_email_task')
     @patch('feedback.views.validate_captcha', return_value=False)
@@ -99,6 +107,26 @@ class FeedbackFormViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(FeedbackSubmission.objects.count(), 0)
         mock_send_email.delay.assert_not_called()
+
+    @patch('feedback.views.send_email_task')
+    @patch('feedback.views.validate_captcha', return_value=False)
+    def test_rejected_captcha_explains_itself_on_the_rendered_form(self, _mock_captcha, _mock_send_email):
+        response = self.client.post(
+            reverse('feedback:form'),
+            {'email': 'visitor@example.com', 'message': 'Nice site', 'cf-turnstile-response': 'token'},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Robotkontrollen misslyckades. Försök igen.')
+
+    def test_invalid_form_renders_its_field_errors(self):
+        response = self.client.post(reverse('feedback:form'), {'message': '', 'email': 'not-an-email'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(FeedbackSubmission.objects.count(), 0)
+        self.assertContains(response, 'errorlist')
+        self.assertContains(response, 'Detta fält måste fyllas i.')
+        self.assertContains(response, 'Fyll i en giltig e-postadress.')
 
 
 class FeedbackAdminTests(TestCase):
@@ -124,6 +152,30 @@ class FeedbackFormSettingsAdminTests(TestCase):
 
         self.assertEqual(first.pk, second.pk)
         self.assertEqual(FeedbackFormSettings.objects.count(), 1)
+
+    def test_get_solo_on_an_empty_table_creates_the_first_row(self):
+        # The old behaviour pinned pk=1; on a fresh database the row get_solo()
+        # creates is still the first one, so existing assumptions still hold.
+        obj = FeedbackFormSettings.get_solo()
+
+        self.assertEqual(obj.pk, 1)
+        self.assertEqual(obj.intro_text_sv, DEFAULT_INTRO_TEXT)
+        self.assertEqual(FeedbackFormSettings.objects.count(), 1)
+
+    def test_get_solo_returns_a_row_created_out_of_band_at_another_pk(self):
+        FeedbackFormSettings.objects.create(pk=7, intro_text='Skapad vid sidan av admin')
+
+        solo = FeedbackFormSettings.get_solo()
+
+        self.assertEqual(solo.pk, 7)
+        self.assertEqual(solo.intro_text_sv, 'Skapad vid sidan av admin')
+
+    def test_out_of_band_row_is_what_the_form_page_renders(self):
+        FeedbackFormSettings.objects.create(pk=7, intro_text='Skapad vid sidan av admin')
+
+        response = self.client.get(reverse('feedback:form'))
+
+        self.assertContains(response, 'Skapad vid sidan av admin')
 
     def test_add_permission_is_refused_once_the_row_exists(self):
         request = SimpleNamespace(user=SimpleNamespace(has_perm=Mock(return_value=True)))
@@ -153,6 +205,45 @@ class FeedbackFormSettingsAdminTests(TestCase):
         for language in ('sv', 'en', 'fi'):
             with translation.override(language):
                 self.assertEqual(obj.intro_text, DEFAULT_INTRO_TEXT)
+
+
+class FeedbackFormSettingsAdminChangelistTests(TestCase):
+    """The editable row and the row the site reads must not diverge: the
+    changelist is pinned to the solo (lowest pk) row."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin_user = get_user_model().objects.create_superuser(
+            username='feedbacksettingsadmin',
+            email='feedbacksettingsadmin@example.com',
+            password='pass',
+        )
+
+    def setUp(self):
+        self.client.force_login(self.admin_user, backend='members.backends.AuthBackend')
+
+    def test_changelist_shows_only_the_solo_row(self):
+        FeedbackFormSettings.objects.create(pk=3, intro_text='Lägsta pk')
+        FeedbackFormSettings.objects.create(pk=8, intro_text='Högre pk')
+
+        response = self.client.get(reverse('admin:feedback_feedbackformsettings_changelist'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([obj.pk for obj in response.context['cl'].result_list], [3])
+
+    def test_changelist_does_not_create_the_row_on_a_get(self):
+        response = self.client.get(reverse('admin:feedback_feedbackformsettings_changelist'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(FeedbackFormSettings.objects.count(), 0)
+
+    def test_non_solo_row_is_not_editable(self):
+        FeedbackFormSettings.objects.create(pk=3, intro_text='Lägsta pk')
+        FeedbackFormSettings.objects.create(pk=8, intro_text='Högre pk')
+
+        response = self.client.get(reverse('admin:feedback_feedbackformsettings_change', args=[8]))
+
+        self.assertEqual(response.status_code, 302)
 
 
 class FeedbackAdminLogRedactionTests(TestCase):

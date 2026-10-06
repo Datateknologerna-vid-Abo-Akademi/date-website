@@ -15,13 +15,16 @@
         <p>{{ intro_text }}</p>
         <form method="post">
           {% csrf_token %}
+          {{ form.non_field_errors }}
           <div class="form-group">
             <label for="{{ form.message.id_for_label }}">{% translate "Meddelande" %}*:</label>
             {{ form.message }}
+            {{ form.message.errors }}
           </div>
           <div class="form-group mt-2">
             <label for="{{ form.email.id_for_label }}">{% translate "Ange din Email om du vill bli kontaktad" %}:</label>
             {{ form.email }}
+            {{ form.email.errors }}
           </div>
           <div class="cf-turnstile"
                data-sitekey="{{ CAPTCHA_SITE_KEY }}"

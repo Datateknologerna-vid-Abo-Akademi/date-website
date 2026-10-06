@@ -317,11 +317,11 @@ msgstr "Feedback"
 
 #: core/admin_ui.py:229
 msgid "Feedback Recipients"
-msgstr "Feedback Recipients"
+msgstr "Mottagare för feedback"
 
 #: core/admin_ui.py:235
 msgid "Feedback Settings"
-msgstr "Feedback Settings"
+msgstr "Formulärtext"
 
 #: feedback/models.py:21
 msgid "Skickad"
@@ -346,6 +346,10 @@ msgstr "Texten som visas ovanför formuläret på /forms/."
 #: feedback/models.py:64 feedback/models.py:65 feedback/models.py:68
 msgid "Formulärtext"
 msgstr "Formulärtext"
+
+#: feedback/views.py:30
+msgid "Robotkontrollen misslyckades. Försök igen."
+msgstr "Robotkontrollen misslyckades. Försök igen."
 
 #: templates/common/feedback/feedback_form.html:4
 #: templates/common/feedback/feedback_form.html:13

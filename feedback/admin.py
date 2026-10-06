@@ -43,6 +43,17 @@ else:
 class FeedbackFormSettingsAdmin(FeedbackFormSettingsTranslationAdminBase):
     list_display = ('__str__', 'intro_text')
 
+    def get_queryset(self, request):
+        # Pin the changelist to the row the site reads (the lowest pk), so a row
+        # created out of band at another pk can never be edited while having no
+        # effect on /forms/. Computed with a plain query rather than get_solo()
+        # so a GET of the changelist does not create the row.
+        solo_pk = FeedbackFormSettings.objects.order_by('pk').values_list('pk', flat=True).first()
+        queryset = super().get_queryset(request)
+        if solo_pk is None:
+            return queryset
+        return queryset.filter(pk=solo_pk)
+
     def has_add_permission(self, request):
         return not FeedbackFormSettings.objects.exists() and super().has_add_permission(request)
 

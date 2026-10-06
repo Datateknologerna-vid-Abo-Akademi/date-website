@@ -1,12 +1,17 @@
+import logging
+
 from django.conf import settings
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 
 from core.utils import enqueue_task_on_commit, send_email_task, validate_captcha
 
 from .forms import FeedbackSubmissionForm
 from .models import FeedbackEmailRecipient, FeedbackFormSettings
+
+logger = logging.getLogger('date')
 
 
 def feedback_form(request):
@@ -17,26 +22,36 @@ def feedback_form(request):
 
     if request.method == 'POST':
         form = FeedbackSubmissionForm(request.POST)
-        if form.is_valid() and validate_captcha(request.POST.get('cf-turnstile-response')):
-            submission = form.save()
-            feedback_receivers = [receiver.recipient_email for receiver in FeedbackEmailRecipient.objects.all()]
-            email_ctx = {
-                'submission': submission,
-                'submission_url': (
-                    f"{settings.CONTENT_VARIABLES['SITE_URL']}"
-                    f"{reverse('admin:feedback_feedbacksubmission_change', args=[submission.id])}"
-                ),
-            }
-            if feedback_receivers:
-                enqueue_task_on_commit(
-                    send_email_task,
-                    "Ny feedback har inkommit",
-                    render_to_string('feedback/feedback_admin_email.txt', email_ctx),
-                    settings.DEFAULT_FROM_EMAIL,
-                    feedback_receivers,
-                )
-            request.session['feedback_submitted'] = True
-            return redirect('feedback:form')
+        if form.is_valid():
+            if not validate_captcha(request.POST.get('cf-turnstile-response')):
+                # Say so, rather than re-rendering a valid-looking form with no
+                # explanation. Checked after is_valid() on purpose, so an
+                # invalid submission never reaches the outbound Cloudflare call.
+                form.add_error(None, _('Robotkontrollen misslyckades. Försök igen.'))
+            else:
+                submission = form.save()
+                feedback_receivers = [receiver.recipient_email for receiver in FeedbackEmailRecipient.objects.all()]
+                email_ctx = {
+                    'submission_url': (
+                        f"{settings.CONTENT_VARIABLES['SITE_URL']}"
+                        f"{reverse('admin:feedback_feedbacksubmission_change', args=[submission.id])}"
+                    ),
+                }
+                if feedback_receivers:
+                    enqueue_task_on_commit(
+                        send_email_task,
+                        "Ny feedback har inkommit",
+                        render_to_string('feedback/feedback_admin_email.txt', email_ctx),
+                        settings.DEFAULT_FROM_EMAIL,
+                        feedback_receivers,
+                    )
+                else:
+                    logger.warning(
+                        'No feedback recipients configured; feedback submission #%s was not emailed',
+                        submission.pk,
+                    )
+                request.session['feedback_submitted'] = True
+                return redirect('feedback:form')
 
     return render(
         request,

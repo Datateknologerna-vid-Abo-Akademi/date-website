@@ -318,11 +318,11 @@ msgstr "Palaute"
 
 #: core/admin_ui.py:229
 msgid "Feedback Recipients"
-msgstr "Feedback Recipients"
+msgstr "Palautteen vastaanottajat"
 
 #: core/admin_ui.py:235
 msgid "Feedback Settings"
-msgstr "Feedback Settings"
+msgstr "Lomaketeksti"
 
 #: feedback/models.py:21
 msgid "Skickad"
@@ -347,6 +347,10 @@ msgstr "Lomakkeen yläpuolella osoitteessa /forms/ näkyvä teksti."
 #: feedback/models.py:64 feedback/models.py:65 feedback/models.py:68
 msgid "Formulärtext"
 msgstr "Lomaketeksti"
+
+#: feedback/views.py:30
+msgid "Robotkontrollen misslyckades. Försök igen."
+msgstr "Robottitarkistus epäonnistui. Yritä uudelleen."
 
 #: templates/common/feedback/feedback_form.html:4
 #: templates/common/feedback/feedback_form.html:13

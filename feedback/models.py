@@ -7,7 +7,8 @@ from django.utils.translation import gettext_lazy as _
 # modeltranslation's fallback (MODELTRANSLATION_FALLBACK_LANGUAGES, unset here
 # so it defaults to the source language, sv) kicks in for them instead of the
 # admin's English/Finnish tabs opening pre-filled with Swedish text that reads
-# as already translated.
+# as already translated. get_solo() creates that one row when the table is
+# empty and otherwise returns the lowest-pk row; it does not pin a pk.
 DEFAULT_INTRO_TEXT = 'Har du synpunkter eller feedback? Skriv gärna till oss här.'
 
 
@@ -49,8 +50,12 @@ class FeedbackEmailRecipient(models.Model):
 
 class FeedbackFormSettings(models.Model):
     """Singleton row holding the admin-editable copy shown on /forms/ -
-    mirrors exambank.ExamBankAccessSettings's get_solo() pattern. There is
-    only ever one row (pk=1); see docs/dev/feedback.md."""
+    mirrors exambank.ExamBankAccessSettings's get_solo() pattern.
+
+    The site reads one row: the lowest pk. get_solo() returns that row and
+    creates it when the table is empty, and FeedbackFormSettingsAdmin pins
+    its changelist to the same row, so the editable row and the read row
+    cannot diverge. See docs/dev/feedback.md."""
 
     intro_text = models.CharField(
         _('Introduktionstext'),
@@ -69,5 +74,7 @@ class FeedbackFormSettings(models.Model):
 
     @classmethod
     def get_solo(cls):
-        obj, _created = cls.objects.get_or_create(pk=1, defaults={'intro_text_sv': DEFAULT_INTRO_TEXT})
+        obj = cls.objects.order_by('pk').first()
+        if obj is None:
+            obj = cls.objects.create(intro_text_sv=DEFAULT_INTRO_TEXT)
         return obj

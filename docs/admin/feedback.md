@@ -6,6 +6,7 @@ Review feedback submitted through the public form at `/forms/`, and maintain the
 ## Feedback Submissions
 1. Review submissions under **Social & Ads › Feedback**.
 2. Each entry stores an optional email address plus the message, capped at 1500 characters.
+3. Reading submissions requires staff access plus the `feedback.view_feedbacksubmission` permission (superusers have everything). The notification email links to `/admin/feedback/feedbacksubmission/<id>/`, which needs at least that permission to open: a recipient whose account is not staff, or whose group lacks the permission, gets a permission error from the link even though the email arrived.
 
 ## Feedback Recipients
 1. Open **Social & Ads › Feedback Recipients**.
@@ -15,11 +16,17 @@ Review feedback submitted through the public form at `/forms/`, and maintain the
 
 ## Email Workflow
 - New feedback submissions enqueue a notification email after the database transaction commits, linking to `/admin/feedback/feedbacksubmission/<id>/`.
+- If no recipient is configured the submission is still saved and no email is sent; the server logs a warning (`No feedback recipients configured`) so a misconfigured association is visible to operators.
 
 ## Feedback Settings
-1. Open **Social & Ads › Feedback Settings** to edit the introduction text shown above the form on `/forms/`.
-2. There's only one settings row - it's created automatically the first time it's needed, and the admin page won't let you add or delete it.
-3. If the site has multiple languages enabled, the change form shows a tab per language so each translation of the text can be edited separately.
+1. Open **Social & Ads › Feedback Settings** to edit the introduction text shown above the form on `/forms/`. This needs staff access plus the `feedback.view_feedbackformsettings`/`feedback.change_feedbackformsettings` permissions.
+2. There is only one settings row that matters: the one with the lowest id (normally the first row ever created). The list shows only that row and the change page only lets you edit it, because that is the row the public page reads. A row created outside the admin at a higher id is ignored and does not appear in the admin.
+3. The admin page won't let you add or delete the settings row.
+4. If the site has the multilingual UI enabled (`ENABLE_LANGUAGE_FEATURES`), the change form shows a tab per language so each translation of the text can be edited separately. That flag defaults to off: the change form then shows no tabs, just the four rows that back `intro_text` (`intro_text`, `intro_text_sv`, `intro_text_en`, `intro_text_fi`), all labelled **Introduktionstext** with the language appended by modeltranslation for the three translated ones. With the multilingual UI off the public page reads the Swedish field (`intro_text_sv`), so edit that one.
+
+## Deployment
+- Configure the Turnstile keys per association: `CAPTCHA_SITE_KEY` and `TURNSTILE_SECRET_KEY`. `core/utils.validate_captcha` treats an empty `TURNSTILE_SECRET_KEY` as "captcha disabled" and accepts every submission, so an association that never configured the secret gets no bot protection on this form (or on the harassment form or member signup, which share the same check). That fail-open default is deliberate and used by development and the test suite, so treat it as a deployment setting to verify, not as a bug in the form.
+- Make the form reachable before announcing it: nothing in the site links to `/forms/` at runtime. Navigation is database driven, so an editor adds a static URL entry (or a link from a static page) pointing at `/forms/` in the admin. `scripts/generate_dynamic_fixtures.py` seeds a **Feedback** navigation entry for local development only; dev fixtures are not loaded in production, so the entry has to be created per association.
 
 ## Tips
 - There is one feedback form for the whole site - it always has the same two fields (optional email, a message). There is no way to add custom fields or create additional feedback forms from the admin.
