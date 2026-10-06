@@ -14,7 +14,7 @@ from django.urls import reverse
 from PIL import Image
 
 from instagram.admin import IgUrlAdmin
-from instagram.models import IgUrl
+from instagram.models import IgUrl, validate_image_height
 from instagram.templatetags.instagram_slider import conveyor
 
 
@@ -132,6 +132,8 @@ class IgUrlModelTests(TestCase):
             "https://www.instagram.com/p/ABC_12-3/?igsh=xyz",
             "https://www.instagram.com/impulsrf/p/ABC_12-3/",
             "https://www.instagram.com/reel/ABC_12-3/",
+            "https://www.instagram.com/tv/ABC_12-3/",
+            "https://WWW.INSTAGRAM.COM/p/ABC_12-3/",
             "ABC_12-3",
         ):
             with self.subTest(link=link):
@@ -157,6 +159,15 @@ def png(width, height):
     buffer = BytesIO()
     Image.new("RGB", (width, height)).save(buffer, format="PNG")
     return SimpleUploadedFile("post.png", buffer.getvalue(), content_type="image/png")
+
+
+class ValidateImageHeightTests(SimpleTestCase):
+    def test_rejects_a_raw_upload_that_is_too_short(self):
+        with self.assertRaises(ValidationError):
+            validate_image_height(png(300, 299))
+
+    def test_accepts_a_raw_upload_that_is_tall_enough(self):
+        validate_image_height(png(300, 300))
 
 
 class IgUrlAdminUploadTests(TestCase):

@@ -17,7 +17,7 @@ The `instagram` app owns the Instagram post URLs used by the home page embed are
 
 ## Updating the posts
 
-`python manage.py update_instagram` (`date-manage update_instagram` in Docker) fetches the latest 40 posts of the site's `INSTAGRAM_USERNAME` with instaloader and replaces the previously fetched posts; posts with an uploaded image are never touched. The new posts are only written once the whole fetch has succeeded, so a failed run keeps the current ones. `INSTAGRAM_USERNAME` is an association capability setting: `kemistklubben` for kk, empty (updater disabled) elsewhere.
+`python manage.py update_instagram` fetches the latest 40 posts of the site's `INSTAGRAM_USERNAME` with instaloader and replaces the previously fetched posts; posts with an uploaded image are never touched. Run it from a checkout where the `instagram` extra is installed (see below); the web/worker image is built without that extra, so `date-manage update_instagram` fails with `CommandError: instaloader is not installed`. The new posts are only written once the whole fetch has succeeded, so a failed run keeps the current ones. `INSTAGRAM_USERNAME` is an association capability setting: `kemistklubben` for kk, empty (updater disabled) elsewhere.
 
 `instagram/igupdate.py` is a long-running scheduler that runs the command daily at 00:00 and logs failures; like `manage.py`, it picks the settings from `PROJECT_NAME`. `social/igupdate.py` remains as a thin compatibility import.
 
@@ -32,6 +32,7 @@ PROJECT_NAME=kk python manage.py update_instagram
 
 Caveats:
 
+- The updater replaces every row that has no uploaded image, so a row created in the admin without an image is deleted on the next run. The `url` field is updater-owned: leave it empty on posts whose image is uploaded in the admin.
 - Instagram rate-limits anonymous requests. A request from a development machine on 2026-10-06 got `429 Too Many Requests` on the very first profile lookup, so expect fetches to fail; the stored posts are kept when they do.
 - The stored image URLs are Instagram CDN links that expire, so the slider needs regular refreshes to keep showing images.
 

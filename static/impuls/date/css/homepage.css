@@ -651,7 +651,8 @@ div.calendar-container a {
 
 .ig-scroll {
     --ig-height: 150px;
-    --ig-seconds-per-item: 2.25s;
+    /* The track is the doubled --ig-items, so the duration is halved below. */
+    --ig-seconds-per-item: 4.5s;
     grid-area: ig-scroll;
     display: grid;
     grid-template-columns: 0 1fr 0;
@@ -688,7 +689,7 @@ div.scroll-content img {
     display: flex;
     align-items: center;
     width: max-content;
-    animation: slideshow calc(var(--ig-items, 32) * var(--ig-seconds-per-item)) linear infinite;
+    animation: slideshow calc(var(--ig-items, 32) * var(--ig-seconds-per-item) / 2) linear infinite;
 }
 
 .images a {
@@ -724,7 +725,7 @@ div.scroll-content img {
 @media screen and (max-width: 550px) {
     .ig-scroll {
         --ig-height: 112px;
-        --ig-seconds-per-item: 1.7s;
+        --ig-seconds-per-item: 3.4s;
     }
 }
 

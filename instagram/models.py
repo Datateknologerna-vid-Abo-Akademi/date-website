@@ -2,20 +2,22 @@ import re
 
 from django.core.exceptions import ValidationError
 from django.core.files.images import get_image_dimensions
+from django.core.files.uploadedfile import UploadedFile
 from django.core.validators import validate_image_file_extension
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from core.fields import PublicFileField
 
-POST_LINK = re.compile(r'instagram\.com/(?:[^/?#]+/)?(?:p|reel)/([A-Za-z0-9_-]+)')
+POST_LINK = re.compile(r'instagram\.com/(?:[^/?#]+/)?(?:p|reel|tv)/([A-Za-z0-9_-]+)', re.IGNORECASE)
 
 # The slider shows posts 150px tall; high-density screens need twice that to stay sharp.
 MIN_IMAGE_HEIGHT = 300
 
 
 def validate_image_height(file):
-    if getattr(file, '_committed', True):
+    # A raw upload has no _committed attribute yet, so it must be treated as new.
+    if not isinstance(file, UploadedFile) and getattr(file, '_committed', True):
         return
     _width, height = get_image_dimensions(file)
     if height is None:
