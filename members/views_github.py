@@ -16,7 +16,12 @@ from django.utils.translation import gettext as _
 from two_factor.utils import default_device
 from two_factor.views.utils import LoginStorage
 
-from .two_factor import MemberLoginView, member_has_2fa, should_redirect_to_two_factor_setup
+from .two_factor import (
+    LOGIN_HANDOFF_SESSION_KEY,
+    MemberLoginView,
+    member_has_2fa,
+    should_redirect_to_two_factor_setup,
+)
 from .webauthn import has_recent_auth
 
 logger = logging.getLogger('date')
@@ -46,6 +51,7 @@ def _begin_two_factor_login(request, member, next_url):
     # Passkey-only members have no two_factor default device; they verify on the
     # backup step, which offers the passkey button alongside backup tokens.
     storage.current_step = MemberLoginView.TOKEN_STEP if default_device(member) else MemberLoginView.BACKUP_STEP
+    request.session[LOGIN_HANDOFF_SESSION_KEY] = True
     return redirect(_build_login_redirect(next_url))
 
 

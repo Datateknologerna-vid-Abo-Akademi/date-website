@@ -38,6 +38,9 @@ from two_factor.views.mixins import OTPRequiredMixin
 
 logger = logging.getLogger('date')
 INFERRED_REDIRECT_SESSION_KEY = 'members_login_inferred_next'
+# One-shot marker: the next login-page GET resumes the wizard step seeded by
+# the GitHub callback instead of restarting at the password step.
+LOGIN_HANDOFF_SESSION_KEY = 'members_login_handoff'
 
 
 def member_has_2fa(user):
@@ -68,8 +71,13 @@ def should_redirect_to_two_factor_setup(user, target):
     if not target or not OTPRequiredMixin.is_otp_view(target):
         return False
 
+    # A member who already has a factor needs to verify, not enrol another one;
+    # the OTP-protected target sends an unverified session to login itself.
+    if member_has_2fa(user):
+        return False
+
     resolver_match = resolve(target)
-    if resolver_match.namespace == 'admin' and user.is_active and user.is_staff and not member_has_2fa(user):
+    if resolver_match.namespace == 'admin' and user.is_active and user.is_staff:
         return False
 
     return True
@@ -117,9 +125,13 @@ class MemberLoginView(LoginView):
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form, **kwargs)
         context['passkeys_enabled'] = settings.PASSKEYS_ENABLED
+        user = self.get_user()
+        context['user_has_passkey'] = bool(user) and member_has_passkey(user)
         return context
 
     def get(self, request, *args, **kwargs):
+        if request.session.pop(LOGIN_HANDOFF_SESSION_KEY, False) and self._can_resume_handoff():
+            return self.render(self.get_form())
         if self.redirect_field_name not in request.GET:
             request.session.pop(INFERRED_REDIRECT_SESSION_KEY, None)
             redirect_to = self._get_referer_redirect_target(request)
@@ -144,6 +156,14 @@ class MemberLoginView(LoginView):
 
     def get_success_url(self):
         return self.get_redirect_url() or resolve_url('index')
+
+    def _can_resume_handoff(self):
+        return (
+            bool(self.storage.authenticated_user)
+            and not self.expired
+            and self.storage.current_step in (self.TOKEN_STEP, self.BACKUP_STEP)
+            and self.condition_dict[self.storage.current_step](self)
+        )
 
     def _get_referer_redirect_target(self, request):
         referer = request.META.get('HTTP_REFERER')
@@ -223,6 +243,18 @@ class MemberSetupView(SetupView):
 class MemberDisableView(DisableView):
     template_name = 'two_factor/profile/disable.html'
     success_url = reverse_lazy('members:info')
+
+    def form_valid(self, form):
+        from .webauthn import notify_passkey_change
+
+        user = self.request.user
+        passkey_names = list(
+            WebAuthnCredential.objects.filter(user=user, confirmed=True).values_list('name', flat=True)
+        )
+        response = super().form_valid(form)
+        for name in passkey_names:
+            notify_passkey_change(user, name, added=False)
+        return response
 
 
 class MemberBackupTokensView(BackupTokensView):
@@ -312,6 +344,14 @@ class PasskeyListView(PasskeysEnabledViewMixin, LoginRequiredMixin, TemplateView
 class PasskeyRenameForm(forms.Form):
     name = forms.CharField(max_length=WebAuthnCredential._meta.get_field('name').max_length)
 
+    def clean_name(self):
+        name = self.cleaned_data['name'].strip()
+        # two_factor's default_device() treats any device named 'default' as the
+        # member's TOTP device, which would misroute sign-in to the token step.
+        if name.lower() == 'default':
+            raise forms.ValidationError(_('Choose a different name.'))
+        return name
+
 
 @method_decorator([never_cache, otp_required], name='dispatch')
 class PasskeyRenameView(PasskeysEnabledViewMixin, View):
@@ -324,7 +364,7 @@ class PasskeyRenameView(PasskeysEnabledViewMixin, View):
             credential.name = form.cleaned_data['name']
             credential.save(update_fields=['name'])
         else:
-            messages.error(request, _('Invalid passkey name.'))
+            messages.error(request, form.errors.get('name', [_('Invalid passkey name.')])[0])
         return redirect('two_factor:passkeys')
 
 

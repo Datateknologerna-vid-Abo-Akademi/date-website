@@ -3198,3 +3198,11 @@ msgstr "Reservkoder för %(username)s hos %(association)s, genererade %(date)s."
 #: members/two_factor.py
 msgid "Each code can be used once. Keep this file somewhere safe."
 msgstr "Varje kod kan användas en gång. Förvara filen på ett säkert ställe."
+
+#: members/webauthn.py members/two_factor.py
+msgid "Passkey"
+msgstr "Inloggningsnyckel"
+
+#: members/webauthn.py members/two_factor.py
+msgid "Choose a different name."
+msgstr "Välj ett annat namn."

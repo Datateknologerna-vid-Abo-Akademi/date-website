@@ -8,6 +8,8 @@ from django.dispatch import receiver
 from django.http import Http404
 from django.shortcuts import resolve_url
 from django.template.loader import render_to_string
+from django.utils import timezone
+from django.utils.formats import date_format
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 from django_otp_webauthn import exceptions
@@ -47,9 +49,16 @@ def _mark_recent_auth_on_login(sender, request, user, **kwargs):
         mark_recent_auth(request)
 
 
+def default_passkey_name():
+    # The library leaves new credentials unnamed; never 'default' (see PasskeyRenameForm).
+    name = f'{_("Passkey")} {date_format(timezone.localdate(), "SHORT_DATE_FORMAT")}'
+    return name[: WebAuthnCredential._meta.get_field('name').max_length]
+
+
 def notify_passkey_change(user, credential_name, added):
     if not user.email:
         return
+    credential_name = credential_name or _('Passkey')
     template = 'members/passkey_added_email.txt' if added else 'members/passkey_removed_email.txt'
     subject = _('A passkey was added to your account') if added else _('A passkey was removed from your account')
     body = render_to_string(
@@ -100,6 +109,9 @@ class MemberCompleteRegistrationView(MemberRegistrationMixin, CompleteCredential
                 # The library upgrades the session to verified here; rotate the key.
                 self.request.session.cycle_key()
             credential = WebAuthnCredential.objects.get(pk=json.loads(response.content)['id'], user=self.request.user)
+            if not credential.name.strip():
+                credential.name = default_passkey_name()
+                credential.save(update_fields=['name'])
             logger.info('Passkey registered for member %s (credential %s)', self.request.user.pk, credential.pk)
             notify_passkey_change(self.request.user, credential.name, added=True)
         return response

@@ -3219,3 +3219,11 @@ msgstr "Backup codes for %(username)s at %(association)s, generated %(date)s."
 #: members/two_factor.py
 msgid "Each code can be used once. Keep this file somewhere safe."
 msgstr "Each code can be used once. Keep this file somewhere safe."
+
+#: members/webauthn.py members/two_factor.py
+msgid "Passkey"
+msgstr "Passkey"
+
+#: members/webauthn.py members/two_factor.py
+msgid "Choose a different name."
+msgstr "Choose a different name."

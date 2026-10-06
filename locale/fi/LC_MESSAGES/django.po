@@ -3255,3 +3255,11 @@ msgstr "Varakoodit käyttäjälle %(username)s (%(association)s), luotu %(date)s
 #: members/two_factor.py
 msgid "Each code can be used once. Keep this file somewhere safe."
 msgstr "Jokaista koodia voi käyttää kerran. Säilytä tiedosto turvallisessa paikassa."
+
+#: members/webauthn.py members/two_factor.py
+msgid "Passkey"
+msgstr "Pääsyavain"
+
+#: members/webauthn.py members/two_factor.py
+msgid "Choose a different name."
+msgstr "Valitse toinen nimi."

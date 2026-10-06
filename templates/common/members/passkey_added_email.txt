@@ -1,4 +1,4 @@
-{% load i18n %}{% autoescape off %}{% blocktrans with name=user.get_short_name %}Hi {{ name }},{% endblocktrans %}
+{% load i18n %}{% autoescape off %}{% blocktrans with name=user.get_short_name|default:user.username %}Hi {{ name }},{% endblocktrans %}
 
 {% blocktrans %}A passkey named "{{ credential_name }}" was added to your {{ association_name }} account.{% endblocktrans %}
 
