@@ -66,6 +66,7 @@
 - **Rename/delete**: POST-only, `otp_required`, scoped to the member's own credentials (404 otherwise). Deleting the last real factor also deletes the backup-token device so the member isn't left half-enrolled.
 - Adding or removing a passkey emails the member (`members/passkey_added_email.txt` / `passkey_removed_email.txt`) via `enqueue_task_on_commit` + `send_email_task`. Registration, sign-in, failures, deletion and the admin disable action are logged on the `date` logger.
 - **Disable 2FA** (`two_factor:disable`) removes all devices, including passkeys.
+- **Backup code download** (`two_factor:backup_tokens_download`): `otp_required`, GET-only `text/plain` attachment (`never_cache`, `nosniff`) with only the requesting member's backup codes; redirects to the backup tokens page when there are none.
 - **Password reset intentionally keeps 2FA devices** so an email-account takeover does not also reset the second factor. Lockout recovery is the admin "Inaktivera 2FA" action.
 - The member admin's **Passkeys** inline is read-only and cannot delete; removal goes through the guarded, logged "Inaktivera 2FA" action.
 - If passkeys are later disabled (unset `WEBAUTHN_*`), existing passkeys still count as a second factor, so passkey-only members without backup tokens need the admin action to sign in again.
