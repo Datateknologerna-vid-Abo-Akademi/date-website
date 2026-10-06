@@ -312,6 +312,56 @@ msgstr "Harassment Reports"
 msgid "Report Recipients"
 msgstr "Report Recipients"
 
+#: core/admin_ui.py:223 templates/common/feedback/feedback_form.html:14
+msgid "Feedback"
+msgstr "Feedback"
+
+#: core/admin_ui.py:229
+msgid "Feedback Recipients"
+msgstr "Feedback Recipients"
+
+#: core/admin_ui.py:235
+msgid "Feedback Settings"
+msgstr "Feedback Settings"
+
+#: feedback/models.py:21
+msgid "Skickad"
+msgstr "Submitted"
+
+#: feedback/models.py:24 feedback/models.py:25
+msgid "Inskickad feedback"
+msgstr "Submitted Feedback"
+
+#: feedback/models.py:43 feedback/models.py:44
+msgid "Mottagare för feedback"
+msgstr "Feedback Recipients"
+
+#: feedback/models.py:56
+msgid "Introduktionstext"
+msgstr "Introduction Text"
+
+#: feedback/models.py:60
+msgid "Texten som visas ovanför formuläret på /forms/."
+msgstr "The text shown above the form at /forms/."
+
+#: feedback/models.py:64 feedback/models.py:65 feedback/models.py:68
+msgid "Formulärtext"
+msgstr "Form Text"
+
+#: feedback/views.py:30
+msgid "Robotkontrollen misslyckades. Försök igen."
+msgstr "The bot check failed. Please try again."
+
+#: templates/common/feedback/feedback_form.html:4
+#: templates/common/feedback/feedback_form.html:13
+#: templates/common/feedback/feedback_success.html:4
+msgid "Kontakta oss"
+msgstr "Contact Us"
+
+#: templates/common/feedback/feedback_success.html:10
+msgid "Tack för ditt svar."
+msgstr "Thank you for your response."
+
 #: core/admin_ui.py:137
 msgid "System"
 msgstr "System"
@@ -1993,13 +2043,14 @@ msgstr ""
 msgid "Sign up"
 msgstr "Sign up"
 
-#: templates/common/members/signup.html:48
-#: templates/common/social/harassment_form.html:31
+#: feedback/forms.py:14 templates/common/members/signup.html:52
+#: templates/common/social/harassment_form.html:37
 msgid "Jag godkänner"
 msgstr "I accept"
 
-#: templates/common/members/signup.html:50
-#: templates/common/social/harassment_form.html:33
+#: templates/common/feedback/feedback_form.html:34
+#: templates/common/members/signup.html:55
+#: templates/common/social/harassment_form.html:40
 msgid "villkoren"
 msgstr "the terms and conditions"
 
