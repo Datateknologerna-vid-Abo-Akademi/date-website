@@ -3222,3 +3222,19 @@ msgstr "Kirjaudu uudelleen sisään ennen GitHub-tilin linkittämistä."
 #: templates/common/members/registration/login.html
 msgid "If you normally sign in with a passkey and have no backup tokens, contact the site administrators to regain access."
 msgstr "Jos kirjaudut yleensä sisään pääsyavaimella etkä omista varakoodeja, ota yhteyttä sivuston ylläpitäjiin palauttaaksesi pääsyn."
+
+#: templates/common/members/userinfo.html
+msgid "Sign-in and security"
+msgstr "Kirjautuminen ja tietoturva"
+
+#: templates/common/members/userinfo.html
+msgid "Two-factor authentication is on."
+msgstr "Kaksivaiheinen tunnistautuminen on käytössä."
+
+#: templates/common/members/userinfo.html
+msgid "Two-factor authentication is off."
+msgstr "Kaksivaiheinen tunnistautuminen ei ole käytössä."
+
+#: templates/common/members/userinfo.html
+msgid "Authenticator app"
+msgstr "Todennussovellus"

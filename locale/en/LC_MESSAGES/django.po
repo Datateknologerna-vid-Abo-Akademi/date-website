@@ -3186,3 +3186,19 @@ msgstr "Sign in again before linking a GitHub account."
 #: templates/common/members/registration/login.html
 msgid "If you normally sign in with a passkey and have no backup tokens, contact the site administrators to regain access."
 msgstr "If you normally sign in with a passkey and have no backup tokens, contact the site administrators to regain access."
+
+#: templates/common/members/userinfo.html
+msgid "Sign-in and security"
+msgstr "Sign-in and security"
+
+#: templates/common/members/userinfo.html
+msgid "Two-factor authentication is on."
+msgstr "Two-factor authentication is on."
+
+#: templates/common/members/userinfo.html
+msgid "Two-factor authentication is off."
+msgstr "Two-factor authentication is off."
+
+#: templates/common/members/userinfo.html
+msgid "Authenticator app"
+msgstr "Authenticator app"
