@@ -146,6 +146,41 @@ form{
     margin: 1.25rem 0;
 }
 
+.passkey-login {
+    margin: 1.25rem 0;
+}
+
+.members-form button.passkey-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-height: 56px;
+    border: 2px solid #4CAF50;
+    border-radius: 8px;
+    background: transparent;
+    color: #2e7d32;
+    font-size: 15px;
+    line-height: 1.2;
+}
+
+.members-form button.passkey-button:hover,
+.members-form button.passkey-button:focus {
+    background: rgba(76, 175, 80, 0.12);
+    color: #1b5e20;
+}
+
+.passkey-button__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+}
+
+.passkey-status:not(:empty) {
+    margin-top: 0.5rem;
+    color: var(--helpText);
+    font-size: 14px;
+}
+
 .members-form a.github-button {
     display: inline-flex;
     align-items: center;
