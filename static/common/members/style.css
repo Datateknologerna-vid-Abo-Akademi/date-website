@@ -170,9 +170,14 @@ form{
     color: #1b5e20;
 }
 
-.passkey-button__icon {
-    display: inline-flex;
+.members-form button.passkey-button::before {
+    content: "";
     flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='7.5' cy='15.5' r='4.5'/%3E%3Cpath d='M10.7 12.3 21 2m-4 4 3 3m-6-1 2 2'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='7.5' cy='15.5' r='4.5'/%3E%3Cpath d='M10.7 12.3 21 2m-4 4 3 3m-6-1 2 2'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 .passkey-status:not(:empty) {

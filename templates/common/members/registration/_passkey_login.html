@@ -5,22 +5,9 @@
          value="{% if redirect_field_value %}{{ redirect_field_value }}{% else %}{{ request.GET.next|default:'' }}{% endif %}">
   <span id="passkey-verification-placeholder"></span>
   <template id="passkey-verification-available-template">
+    {# The library rewrites the label via textContent, so the icon lives in CSS (::before). #}
     <button type="button" id="passkey-verification-button" class="passkey-button">
-      <span class="passkey-button__icon" aria-hidden="true">
-        <svg width="20"
-             height="20"
-             viewBox="0 0 24 24"
-             fill="none"
-             stroke="currentColor"
-             stroke-width="2"
-             stroke-linecap="round"
-             stroke-linejoin="round"
-             xmlns="http://www.w3.org/2000/svg">
-          <circle cx="7.5" cy="15.5" r="4.5" />
-          <path d="M10.7 12.3 21 2m-4 4 3 3m-6-1 2 2" />
-        </svg>
-      </span>
-      <span>{% trans "Sign in with a passkey" %}</span>
+      {% trans "Sign in with a passkey" %}
     </button>
     <div id="passkey-verification-status-message"
          class="passkey-status"
