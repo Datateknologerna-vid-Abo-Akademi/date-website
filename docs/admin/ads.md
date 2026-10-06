@@ -1,7 +1,7 @@
 # Ads Admin Guide
 
 ## Purpose
-The Ads app controls the rotating banner graphics that appear on the public front page. Each entry simply links a banner image URL to an optional company landing page URL.
+The Ads app controls the rotating banner graphics that appear on the public front page (except on Impuls, whose front page shows an Instagram slider instead). Each entry simply links a banner image URL to an optional company landing page URL.
 
 ## Access
 1. Sign in to the Django admin (`/admin`).

@@ -7,9 +7,9 @@ from .models import IgUrl
 
 @admin.register(IgUrl)
 class IgUrlAdmin(ModelAdmin):
-    list_display = ('url', 'shortcode')
-    search_fields = ('url', 'shortcode')
-    ordering = ('url',)
+    list_display = ('shortcode', 'image', 'url')
+    search_fields = ('shortcode', 'url')
+    fields = ('image', 'shortcode', 'url')
 
     def _has_legacy_permission(self, request, action):
         return request.user.has_perm(f'social.{action}_igurl')

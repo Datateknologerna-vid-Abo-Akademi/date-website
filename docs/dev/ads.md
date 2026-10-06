@@ -5,7 +5,7 @@
 
 ## Views and Templates
 - `ads.views.adsIndex` loads all `AdUrl` rows and renders them with `ads/adsindex.html`.
-- The front page (`date/views.py:index`) also pulls `AdUrl.objects.all()` to display banners globally, so changes here surface across the public site.
+- The front page (`date/views.py:index`) also pulls `AdUrl.objects.all()` to display banners globally, so changes here surface across the public site. Impuls's front page doesn't include the partners section, so they don't show there.
 
 ## Admin Integration
 - Admin registers `AdUrl` with default settings (`ads/admin.py`). There is no custom form logic, so any validation or upload handling must happen before saving URLs.

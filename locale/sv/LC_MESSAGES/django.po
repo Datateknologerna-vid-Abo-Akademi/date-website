@@ -902,6 +902,39 @@ msgstr "URL"
 msgid "SHORTCODE"
 msgstr "SHORTCODE"
 
+#: instagram/models.py:41
+msgid "Fylls i av Instagram-uppdateraren. Lämna tomt när du laddar upp en bild."
+msgstr "Fylls i av Instagram-uppdateraren. Lämna tomt när du laddar upp en bild."
+
+#: instagram/models.py:44
+msgid "Instagram-inlägg"
+msgstr "Instagram-inlägg"
+
+#: instagram/models.py:46
+msgid "Klistra in länken till inlägget, t.ex. https://www.instagram.com/p/ABC123/."
+msgstr "Klistra in länken till inlägget, t.ex. https://www.instagram.com/p/ABC123/."
+
+#: instagram/models.py:64
+msgid "Ladda upp en bild för inlägget."
+msgstr "Ladda upp en bild för inlägget."
+
+#: instagram/models.py:89
+msgid "Ange en länk till ett Instagram-inlägg, t.ex. https://www.instagram.com/p/ABC123/, eller en kortkod."
+msgstr "Ange en länk till ett Instagram-inlägg, t.ex. https://www.instagram.com/p/ABC123/, eller en kortkod."
+
+#: instagram/models.py:22
+msgid "Filen är inte en bild."
+msgstr "Filen är inte en bild."
+
+#: instagram/models.py:25
+#, python-format
+msgid "Bilden är för liten (%(height)s px hög). Ladda upp en bild som är minst %(minimum)s px hög."
+msgstr "Bilden är för liten (%(height)s px hög). Ladda upp en bild som är minst %(minimum)s px hög."
+
+#: templates/impuls/date/start.html:30
+msgid "Senaste Instagram-inlägg"
+msgstr "Senaste Instagram-inlägg"
+
 #: lucia/admin.py:26
 msgid "Leave blank to keep the candidate hidden."
 msgstr "Lämna tomt för att hålla kandidaten dold."

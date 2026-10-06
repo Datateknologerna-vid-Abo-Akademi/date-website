@@ -56,3 +56,4 @@ CONTENT_VARIABLES = {
 # Association capabilities
 APRIL_HOMEPAGE_ENABLED = True
 KK_EVENT_TEMPLATES_ENABLED = True
+INSTAGRAM_USERNAME = 'kemistklubben'

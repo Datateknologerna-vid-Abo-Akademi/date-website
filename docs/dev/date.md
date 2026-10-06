@@ -11,6 +11,7 @@
 ## Homepage Variants
 - `get_homepage_template_name()` returns the standard `date/start.html` template for most sites.
 - With `APRIL_HOMEPAGE_ENABLED=True` (kk), it occasionally serves `date/april_start.html` on April 1st.
+- kk and impuls include the shared Instagram slider (`date/components/instagram.html`, see `docs/dev/instagram.md`); impuls shows it in place of the partners section.
 - Keep variant-specific homepage behavior here rather than scattering date checks through templates.
 
 ## Calendar Data Structure
