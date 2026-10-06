@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django_otp import DEVICE_ID_SESSION_KEY
+from django_otp.oath import TOTP
 from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from django_otp_webauthn.models import WebAuthnCredential
@@ -601,3 +602,123 @@ class BackupTokensDownloadTests(PasskeyTestMixin, TestCase):
         self.login(self.member, verified_device=device)
         response = self.client.get(reverse('two_factor:backup_tokens'))
         self.assertContains(response, self.url)
+
+
+@override_settings(**GITHUB_SETTINGS)
+class FinalReviewRegressionTests(PasskeyTestMixin, TestCase):
+    def _github_callback(self, member, policy='enrolled', next_url=None):
+        session = {'github_oauth_state': 'valid-state', 'github_oauth_intent': 'login'}
+        if next_url:
+            session['github_oauth_next'] = next_url
+        self.set_session(**session)
+        mock_post, mock_get = _mock_github_responses(github_id=member.github_id, email=member.email)
+        with override_settings(GITHUB_MFA_POLICY=policy), mock_post, mock_get:
+            return self.client.get(reverse('members:github_callback'), {'state': 'valid-state', 'code': 'c'})
+
+    @patch('members.webauthn.enqueue_task_on_commit')
+    def test_registration_names_unnamed_credentials(self, mock_enqueue):
+        self.login(self.member)
+        self.set_session(otp_webauthn_register_state=REGISTER_STATE)
+
+        def register_complete(helper, user, state, data):
+            return make_passkey(user, name='')
+
+        with patch('django_otp_webauthn.helpers.WebAuthnHelper.register_complete', register_complete):
+            response = self.post_json(reverse('otp_webauthn:credential-registration-complete'), {'id': 'x'})
+
+        self.assertEqual(response.status_code, 200, response.content)
+        name = WebAuthnCredential.objects.get(user=self.member).name
+        self.assertTrue(name.strip())
+        self.assertNotEqual(name.lower(), 'default')
+        self.assertIn(f'"{name}"', mock_enqueue.call_args.args[2])
+
+    @patch('members.webauthn.enqueue_task_on_commit')
+    def test_email_greeting_falls_back_to_username(self, mock_enqueue):
+        from members.webauthn import notify_passkey_change
+
+        self.member.first_name = ''
+        notify_passkey_change(self.member, '', added=True)
+        body = mock_enqueue.call_args.args[2]
+        self.assertIn(self.member.username, body.splitlines()[0])
+        self.assertNotIn('""', body)
+
+    def test_passkey_cannot_be_renamed_default(self):
+        passkey = make_passkey(self.member)
+        self.login(self.member, verified_device=passkey)
+        self.client.post(reverse('two_factor:passkey_rename', args=[passkey.pk]), {'name': ' Default '})
+        passkey.refresh_from_db()
+        self.assertEqual(passkey.name, 'Laptop')
+
+    @patch('members.webauthn.enqueue_task_on_commit')
+    def test_self_service_disable_notifies_about_removed_passkeys(self, mock_enqueue):
+        passkey = make_passkey(self.member, name='Phone')
+        self.login(self.member, verified_device=passkey)
+        response = self.client.post(reverse('two_factor:disable'), {'understand': 'on'})
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(WebAuthnCredential.objects.filter(user=self.member).exists())
+        mock_enqueue.assert_called_once()
+        self.assertIn('"Phone"', mock_enqueue.call_args.args[2])
+
+    def test_github_handoff_resumes_token_step_for_totp_member(self):
+        member = self.make_member('ghtotp', github_id=5151)
+        device = TOTPDevice.objects.create(user=member, confirmed=True, name='default')
+        response = self._github_callback(member)
+        response = self.client.get(response.headers['Location'])
+        self.assertEqual(response.context['wizard']['steps'].current, 'token')
+
+        prefix = response.context['wizard']['management_form'].prefix
+        token = TOTP(device.bin_key, device.step, device.t0, device.digits, device.drift).token()
+        response = self.client.post(
+            reverse('members:login'), {f'{prefix}-current_step': 'token', 'token-otp_token': f'{token:06d}'}
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(int(self.client.session['_auth_user_id']), member.pk)
+        self.assertEqual(self.client.session[DEVICE_ID_SESSION_KEY], device.persistent_id)
+
+    def test_github_handoff_resumes_backup_step_for_passkey_only_member(self):
+        member = self.make_member('ghpk', github_id=5252)
+        make_passkey(member)
+        response = self._github_callback(member)
+        response = self.client.get(response.headers['Location'])
+        self.assertEqual(response.context['wizard']['steps'].current, 'backup')
+        self.assertContains(response, 'passkey-verification-placeholder')
+
+    def test_handoff_marker_is_one_shot(self):
+        member = self.make_member('ghonce', github_id=5353)
+        TOTPDevice.objects.create(user=member, confirmed=True, name='default')
+        location = self._github_callback(member).headers['Location']
+        self.client.get(location)
+        response = self.client.get(location)
+        self.assertEqual(response.context['wizard']['steps'].current, 'auth')
+
+    def test_unverified_member_with_passkey_is_not_sent_to_setup(self):
+        member = self.make_member('ghstaff', github_id=5454)
+        member.groups.add(Group.objects.get_or_create(name='styrelse')[0])
+        make_passkey(member)
+        response = self._github_callback(member, policy='off', next_url='/admin/')
+        self.assertEqual(response.headers['Location'], '/admin/')
+
+    def test_token_step_offers_passkey_when_member_has_one(self):
+        TOTPDevice.objects.create(user=self.member, confirmed=True, name='default')
+        make_passkey(self.member)
+        response = self.client.get(reverse('members:login'))
+        prefix = response.context['wizard']['management_form'].prefix
+        response = self.client.post(
+            reverse('members:login'),
+            {f'{prefix}-current_step': 'auth', 'auth-username': self.member.username, 'auth-password': self.password},
+        )
+        self.assertEqual(response.context['wizard']['steps'].current, 'token')
+        self.assertContains(response, 'passkey-verification-placeholder')
+
+    def test_username_selector_only_on_auth_step(self):
+        response = self.client.get(reverse('members:login'))
+        self.assertContains(response, '"autocompleteLoginFieldSelector": "input[name=')
+
+        make_passkey(self.member)
+        prefix = response.context['wizard']['management_form'].prefix
+        response = self.client.post(
+            reverse('members:login'),
+            {f'{prefix}-current_step': 'auth', 'auth-username': self.member.username, 'auth-password': self.password},
+        )
+        self.assertEqual(response.context['wizard']['steps'].current, 'backup')
+        self.assertContains(response, '"autocompleteLoginFieldSelector": null')

@@ -6,6 +6,9 @@
     <h2>{% trans "Login" %}</h2>
     {% if wizard.steps.current == 'token' %}
       <p>{{ device|as_verbose_action }}</p>
+      {% if passkeys_enabled and user_has_passkey %}
+        {% include "members/registration/_passkey_login.html" %}
+      {% endif %}
     {% elif wizard.steps.current == 'backup' %}
       {% if passkeys_enabled %}
         <p>{% trans "Verify with your passkey, or enter one of your backup tokens to continue." %}</p>
@@ -45,7 +48,7 @@
     {% endif %}
     {% if wizard.steps.current == 'auth' %}
       {% if passkeys_enabled %}
-        {% include "members/registration/_passkey_login.html" %}
+        {% include "members/registration/_passkey_login.html" with passkey_username_selector="input[name='auth-username']" %}
       {% endif %}
       {% if GITHUB_CLIENT_ID %}
         <div class="github-login">

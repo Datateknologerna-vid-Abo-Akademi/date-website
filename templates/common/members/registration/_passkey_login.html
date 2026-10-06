@@ -16,5 +16,9 @@
   <template id="passkey-verification-unavailable-template">
     <p class="passkey-unavailable">{% trans "This browser does not support passkeys." %}</p>
   </template>
-  {% render_otp_webauthn_auth_scripts username_field_selector="input[name='auth-username']" %}
+  {% if passkey_username_selector %}
+    {% render_otp_webauthn_auth_scripts username_field_selector=passkey_username_selector %}
+  {% else %}
+    {% render_otp_webauthn_auth_scripts %}
+  {% endif %}
 </div>
