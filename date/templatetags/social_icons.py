@@ -8,9 +8,10 @@ from django.template.loader import get_template
 
 register = template.Library()
 
-# Only plain lowercase identifiers can name an icon file, so a SOCIAL_BUTTONS
-# value can never point the lookup outside core/svg/social/.
-_ICON_NAME = re.compile(r'[a-z0-9-]+')
+# Only plain lowercase identifiers of at most 64 characters can name an icon
+# file, so a SOCIAL_BUTTONS value can never point the lookup outside
+# core/svg/social/ or exceed the filesystem's per-name length limit.
+_ICON_NAME = re.compile(r'[a-z0-9-]{1,64}')
 
 
 @register.simple_tag
@@ -29,6 +30,8 @@ def social_icon_template(name):
     template_name = f'core/svg/social/{name}.svg'
     try:
         get_template(template_name)
-    except TemplateDoesNotExist:
+    except TemplateDoesNotExist, OSError:
+        # An unreadable or missing icon file falls back to the icon font, so a
+        # broken icon never breaks the footer.
         return ''
     return template_name

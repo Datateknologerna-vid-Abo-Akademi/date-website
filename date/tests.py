@@ -250,6 +250,25 @@ class SiteShellTemplateTests(TestCase):
         self.assertIn('role="img" aria-label="Linktree"', rendered)
         self.assertNotIn('aria-label="Tiktok"', rendered)
 
+    def test_footer_falls_back_to_the_icon_font_for_a_hostile_icon_name(self):
+        hostile_name = "a" * 300
+        template = Template("{% include 'core/footer.html' %}")
+        rendered = template.render(
+            Context(
+                {
+                    **self._content_context(),
+                    "SOCIAL_BUTTONS": [
+                        [hostile_name, "https://example.com/hostile"],
+                        ["tiktok", "https://example.com/tiktok"],
+                    ],
+                }
+            )
+        )
+
+        self.assertIn("association-footer", rendered)
+        self.assertIn(f'<i class="fab {hostile_name}"></i>', rendered)
+        self.assertIn('aria-label="TikTok"', rendered)
+
     def _render_impuls_footer(self, language="sv"):
         impuls_settings = importlib.import_module("core.settings.impuls")
 
@@ -277,6 +296,10 @@ class SiteShellTemplateTests(TestCase):
         self.assertIn('aria-label="Linktree"', rendered)
         self.assertNotIn("fab tiktok", rendered)
         self.assertNotIn("fab linktree", rendered)
+        # The Impuls footer overrides footer_logo, so this asset proves which
+        # template rendered and not just that the shared footer was used.
+        self.assertIn("impuls-logo-transparent.png", rendered)
+        self.assertNotIn("core/images/footerlogo.png", rendered)
 
 
 class SocialIconTemplateTagTests(SimpleTestCase):
@@ -291,6 +314,11 @@ class SocialIconTemplateTagTests(SimpleTestCase):
         for name in ("../../../svg/albin", "core/footer", "TikTok", "tiktok.svg", "", None):
             with self.subTest(name=name):
                 self.assertEqual(social_icon_template(name), "")
+
+    def test_rejects_names_longer_than_the_filesystem_limit(self):
+        # A 300 character name is longer than the per-name filesystem limit, so
+        # the lookup must be refused instead of raising OSError.
+        self.assertEqual(social_icon_template("a" * 300), "")
 
 
 class HealthCheckTests(TestCase):

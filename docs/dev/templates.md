@@ -69,7 +69,7 @@ Adding an empty block to the common template is safe: associations that don't ov
 
 Each association lists its footer buttons in `CONTENT_VARIABLES["SOCIAL_BUTTONS"]` as `[icon, url]` pairs; an entry with a blank URL is skipped. The shared footer (`templates/common/core/footer.html`, `footer_social_buttons` block) picks the icon for each entry:
 
-1. If `templates/common/core/svg/social/<icon>.svg` exists, it is included inline (looked up by the `social_icon_template` tag in `date/templatetags/social_icons.py`).
+1. If the template `core/svg/social/<icon>.svg` resolves through the configured template search path, it is included inline. The `social_icon_template` tag in `date/templatetags/social_icons.py` asks Django's template loader for that path, so the whole search path is used and not just the shared directory.
 2. Otherwise the entry renders as the Line Awesome icon-font class `fab <icon>`, e.g. `fa-facebook-f`.
 
 So platforms Line Awesome covers keep using `fa-*` names, and a platform it lacks needs one SVG file to work for every association:
@@ -78,6 +78,6 @@ So platforms Line Awesome covers keep using `fa-*` names, and a platform it lack
 - Give the `<svg>` `role="img"` and an `aria-label` with the platform's name spelled the way the brand writes it (`aria-label="TikTok"`). The button takes its accessible name from the icon, so this is the label screen readers announce; the file name can't carry it because it has to stay lowercase.
 - Add `["<name>", "<url>"]` to the association's `SOCIAL_BUTTONS`.
 
-To give one association a different icon, put a file at the same path in its own template directory (`templates/<association>/core/svg/social/<name>.svg`); it is found before the shared one.
+To give one association a different icon, put a file at the same path in its own template directory (`templates/<association>/core/svg/social/<name>.svg`); the search order finds it before the shared file. A variant that layers another variant's templates (impuls and biocum layer `date`) or an app's `templates/` directory can supply or override an icon the same way.
 
 Shared icons so far: `tiktok`, `linktree` (Font Awesome Free 7.3.1, CC BY 4.0). `sf` renders its own complete footer and does not use this lookup.
