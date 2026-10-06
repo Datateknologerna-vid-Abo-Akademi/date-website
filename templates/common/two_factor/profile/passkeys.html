@@ -9,42 +9,46 @@
     {% if credentials %}
       <ul class="passkey-list">
         {% for credential in credentials %}
-          <li class="passkey-list__item">
-            <form method="post"
-                  action="{% url 'two_factor:passkey_rename' credential.pk %}"
-                  class="two-factor-inline-form">
-              {% csrf_token %}
-              <label class="visually-hidden" for="passkey-name-{{ credential.pk }}">{% trans "Name" %}</label>
-              <input id="passkey-name-{{ credential.pk }}"
-                     name="name"
-                     value="{{ credential.name }}"
-                     maxlength="64"
-                     required>
-              <button type="submit" class="two-factor-secondary">{% trans "Rename" %}</button>
-            </form>
-            <small>
-              {% blocktrans with created=credential.created_at|date:"SHORT_DATE_FORMAT" %}Added {{ created }}{% endblocktrans %}
-              {% if credential.last_used_at %}
-                · {% blocktrans with used=credential.last_used_at|date:"SHORT_DATE_FORMAT" %}Last used {{ used }}{% endblocktrans %}
-              {% endif %}
-            </small>
+          <li class="passkey-item">
+            <div class="passkey-item__main">
+              <form method="post"
+                    action="{% url 'two_factor:passkey_rename' credential.pk %}"
+                    class="passkey-rename">
+                {% csrf_token %}
+                <label class="visually-hidden" for="passkey-name-{{ credential.pk }}">{% trans "Name" %}</label>
+                <input id="passkey-name-{{ credential.pk }}"
+                       name="name"
+                       value="{{ credential.name }}"
+                       maxlength="64"
+                       required>
+                <button type="submit" class="passkey-action">{% trans "Rename" %}</button>
+              </form>
+              <small class="passkey-item__meta">
+                {% blocktrans with created=credential.created_at|date:"SHORT_DATE_FORMAT" %}Added {{ created }}{% endblocktrans %}
+                {% if credential.last_used_at %}
+                  · {% blocktrans with used=credential.last_used_at|date:"SHORT_DATE_FORMAT" %}Last used {{ used }}{% endblocktrans %}
+                {% endif %}
+              </small>
+            </div>
             <form method="post"
                   action="{% url 'two_factor:passkey_delete' credential.pk %}"
-                  class="two-factor-inline-form">
+                  class="passkey-item__delete">
               {% csrf_token %}
-              <button type="submit" class="btn btn-danger">{% trans "Remove" %}</button>
+              <button type="submit" class="passkey-action passkey-action--danger">{% trans "Remove" %}</button>
             </form>
           </li>
         {% endfor %}
       </ul>
     {% else %}
-      <p>{% trans "You have no passkeys yet." %}</p>
+      <p class="passkey-empty">{% trans "You have no passkeys yet." %}</p>
     {% endif %}
     {% if can_register %}
       <span id="passkey-registration-placeholder"></span>
       <template id="passkey-registration-available-template">
-        <button type="button" id="passkey-register-button" class="btn btn-primary">{% trans "Add a passkey" %}</button>
-        <div id="passkey-register-status-message" role="alert"></div>
+        <button type="button" id="passkey-register-button" class="passkey-add">{% trans "Add a passkey" %}</button>
+        <div id="passkey-register-status-message"
+             class="passkey-status"
+             role="alert"></div>
       </template>
       <template id="passkey-registration-unavailable-template">
         <p>{% trans "This browser does not support passkeys." %}</p>
@@ -56,12 +60,12 @@
         });
       </script>
     {% else %}
-      <p>
+      <p class="passkey-notice">
         {% trans "For your security, sign out and sign in again (including your second factor, if you have one) before adding a passkey." %}
       </p>
     {% endif %}
     {% if credentials and not has_backup_tokens %}
-      <p>
+      <p class="passkey-notice">
         <a href="{% url 'two_factor:backup_tokens' %}">{% trans "Generate backup tokens so you can still sign in if you lose your passkey." %}</a>
       </p>
     {% endif %}
