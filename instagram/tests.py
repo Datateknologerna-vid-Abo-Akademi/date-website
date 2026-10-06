@@ -1,6 +1,7 @@
 import sys
 import tempfile
 from io import BytesIO, StringIO
+from pathlib import Path
 from types import ModuleType, SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -141,6 +142,40 @@ class IgUrlModelTests(TestCase):
                 post.full_clean()
                 self.assertEqual(post.shortcode, "ABC_12-3")
 
+    def test_clean_rejects_links_that_are_not_post_links(self):
+        for link in (
+            "https://www.instagram.com/impulsrf/",
+            "https://www.instagram.com/stories/impulsrf/1234567890/",
+            "https://instagr.am/p/ABC_12-3/",
+        ):
+            with self.subTest(link=link):
+                post = IgUrl(image="instagram/post.png", shortcode=link)
+
+                with self.assertRaises(ValidationError) as raised:
+                    post.full_clean()
+
+                self.assertIn("shortcode", raised.exception.message_dict)
+                self.assertEqual(post.shortcode, link)
+                self.assertIsNone(post.pk)
+        self.assertFalse(IgUrl.objects.exists())
+
+    def test_clean_rejects_an_empty_shortcode(self):
+        post = IgUrl(image="instagram/post.png", shortcode="")
+
+        with self.assertRaises(ValidationError) as raised:
+            post.full_clean()
+
+        self.assertIn("shortcode", raised.exception.message_dict)
+        self.assertEqual(post.shortcode, "")
+        self.assertIsNone(post.pk)
+        self.assertFalse(IgUrl.objects.exists())
+
+        with self.assertRaises(ValidationError) as raised:
+            post.clean()
+
+        self.assertIn("shortcode", raised.exception.message_dict)
+        self.assertIn("eller en kortkod", str(raised.exception))
+
     def test_clean_requires_an_image_or_an_image_address(self):
         with self.assertRaises(ValidationError) as raised:
             IgUrl(shortcode="ABC123").full_clean()
@@ -222,6 +257,60 @@ class IgUrlAdminUploadTests(TestCase):
         self.assertEqual(response.status_code, 302)
         post.refresh_from_db()
         self.assertEqual(post.shortcode, "New")
+
+
+class IgUrlImageCleanupTests(TestCase):
+    def setUp(self):
+        media_root = tempfile.TemporaryDirectory()
+        self.addCleanup(media_root.cleanup)
+        self.media_root = media_root.name
+        media_override = override_settings(MEDIA_ROOT=media_root.name)
+        media_override.enable()
+        self.addCleanup(media_override.disable)
+
+    def stored_files(self):
+        return sorted(path.name for path in Path(self.media_root).glob("instagram/**/*") if path.is_file())
+
+    def test_deleting_a_post_removes_its_uploaded_image(self):
+        post = IgUrl.objects.create(image=png(300, 300), shortcode="ABC123")
+        self.assertEqual(self.stored_files(), [Path(post.image.path).name])
+
+        post.delete()
+
+        self.assertEqual(self.stored_files(), [])
+
+    def test_replacing_an_image_removes_the_previous_file(self):
+        post = IgUrl.objects.create(image=png(300, 300), shortcode="ABC123")
+        previous = Path(post.image.path)
+
+        post.image = png(300, 300)
+        post.save()
+
+        self.assertNotEqual(str(Path(post.image.path)), str(previous))
+        self.assertFalse(previous.exists())
+        self.assertTrue(Path(post.image.path).exists())
+
+    def test_clearing_an_image_removes_the_previous_file(self):
+        post = IgUrl.objects.create(image=png(300, 300), shortcode="ABC123")
+        previous = Path(post.image.path)
+
+        post.image = ""
+        post.save()
+
+        self.assertFalse(previous.exists())
+
+    def test_deleting_a_post_without_an_image_is_unaffected(self):
+        post = IgUrl.objects.create(url="https://cdn.example/x.jpg", shortcode="Fetched")
+
+        post.delete()
+
+        self.assertFalse(IgUrl.objects.filter(pk=post.pk).exists())
+        self.assertEqual(self.stored_files(), [])
+
+    def test_storing_a_fetched_post_does_not_look_up_a_previous_image(self):
+        # The updater inserts rows without images in a loop: one INSERT each.
+        with self.assertNumQueries(1):
+            IgUrl.objects.create(url="https://cdn.example/x.jpg", shortcode="Fetched")
 
 
 class ConveyorFilterTests(SimpleTestCase):

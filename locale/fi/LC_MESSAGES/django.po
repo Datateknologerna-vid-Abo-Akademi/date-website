@@ -870,6 +870,10 @@ msgstr "Liitä julkaisun linkki, esim. https://www.instagram.com/p/ABC123/."
 msgid "Ladda upp en bild för inlägget."
 msgstr "Lataa julkaisulle kuva."
 
+#: instagram/models.py:89
+msgid "Ange en länk till ett Instagram-inlägg, t.ex. https://www.instagram.com/p/ABC123/, eller en kortkod."
+msgstr "Anna linkki Instagram-julkaisuun, esim. https://www.instagram.com/p/ABC123/, tai lyhytkoodi."
+
 #: instagram/models.py:22
 msgid "Filen är inte en bild."
 msgstr "Tiedosto ei ole kuva."

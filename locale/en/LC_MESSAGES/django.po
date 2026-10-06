@@ -867,6 +867,10 @@ msgstr "Paste the link to the post, e.g. https://www.instagram.com/p/ABC123/."
 msgid "Ladda upp en bild för inlägget."
 msgstr "Upload an image for the post."
 
+#: instagram/models.py:89
+msgid "Ange en länk till ett Instagram-inlägg, t.ex. https://www.instagram.com/p/ABC123/, eller en kortkod."
+msgstr "Enter a link to an Instagram post, e.g. https://www.instagram.com/p/ABC123/, or a shortcode."
+
 #: instagram/models.py:22
 msgid "Filen är inte en bild."
 msgstr "The file is not an image."

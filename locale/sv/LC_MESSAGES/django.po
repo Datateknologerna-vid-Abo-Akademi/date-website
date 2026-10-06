@@ -868,6 +868,10 @@ msgstr "Klistra in länken till inlägget, t.ex. https://www.instagram.com/p/ABC
 msgid "Ladda upp en bild för inlägget."
 msgstr "Ladda upp en bild för inlägget."
 
+#: instagram/models.py:89
+msgid "Ange en länk till ett Instagram-inlägg, t.ex. https://www.instagram.com/p/ABC123/, eller en kortkod."
+msgstr "Ange en länk till ett Instagram-inlägg, t.ex. https://www.instagram.com/p/ABC123/, eller en kortkod."
+
 #: instagram/models.py:22
 msgid "Filen är inte en bild."
 msgstr "Filen är inte en bild."

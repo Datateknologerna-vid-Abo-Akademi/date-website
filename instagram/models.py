@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from core.fields import PublicFileField
 
 POST_LINK = re.compile(r'instagram\.com/(?:[^/?#]+/)?(?:p|reel|tv)/([A-Za-z0-9_-]+)', re.IGNORECASE)
+SHORTCODE = re.compile(r'[A-Za-z0-9_-]+')
 
 # The slider shows posts 150px tall; high-density screens need twice that to stay sharp.
 MIN_IMAGE_HEIGHT = 300
@@ -54,13 +55,45 @@ class IgUrl(models.Model):
     def __str__(self):
         return self.shortcode
 
+    def save(self, *args, **kwargs):
+        # A new row cannot be replacing a stored file, so the updater, which
+        # inserts rows without images in a loop, skips the lookup entirely.
+        replaced = None
+        if self.pk:
+            replaced = type(self).objects.filter(pk=self.pk).values_list('image', flat=True).first()
+        super().save(*args, **kwargs)
+        if replaced and replaced != self.image.name:
+            # The field's own storage, so local disk and the public S3 bucket
+            # are both covered.
+            self.image.storage.delete(replaced)
+
+    def delete(self, *args, **kwargs):
+        if self.image:
+            self.image.delete(save=False)
+        super().delete(*args, **kwargs)
+
+    def clean(self):
+        # The help text asks for a pasted link, so anything that is neither a
+        # post link nor a bare shortcode is rejected instead of being stored
+        # as an href that cannot resolve to a post.
+        value = self.shortcode.strip()
+        match = POST_LINK.search(value)
+        if match:
+            self.shortcode = match.group(1)
+        elif SHORTCODE.fullmatch(value):
+            self.shortcode = value
+        else:
+            raise ValidationError(
+                {
+                    'shortcode': _(
+                        'Ange en länk till ett Instagram-inlägg, t.ex. '
+                        'https://www.instagram.com/p/ABC123/, eller en kortkod.'
+                    )
+                }
+            )
+        if not self.image and not self.url:
+            raise ValidationError({'image': _('Ladda upp en bild för inlägget.')})
+
     @property
     def image_url(self):
         return self.image.url if self.image else self.url
-
-    def clean(self):
-        match = POST_LINK.search(self.shortcode)
-        if match:
-            self.shortcode = match.group(1)
-        if not self.image and not self.url:
-            raise ValidationError({'image': _('Ladda upp en bild för inlägget.')})
