@@ -5,8 +5,8 @@ Manage the Instagram posts shown in the scrolling slider on the home page (kk an
 
 ## Adding a post
 1. In `/admin`, open **Social & Ads › Instagram URLs** and click **Add**.
-2. **Bild** – upload the post's image (a screenshot or the original photo works). It must be at least 300 px tall so it stays sharp in the slider; smaller images are rejected with a message.
-3. **Instagram-inlägg** – paste the link to the post, e.g. `https://www.instagram.com/p/ABC123/`. It is saved as the post's code, and clicking the image in the slider opens the post.
+2. **Bild**: upload the post's image (a screenshot or the original photo works). It must be at least 300 px tall so it stays sharp in the slider; smaller images are rejected with a message.
+3. **Instagram-inlägg**: paste the link to the post, e.g. `https://www.instagram.com/p/ABC123/`. It is saved as the post's code, and clicking the image in the slider opens the post.
 4. Leave **URL** empty; it is only used by the automatic updater.
 5. Save. The newest post is shown first; delete old posts to keep the slider short. When there are no posts, the slider is hidden.
 
