@@ -2385,8 +2385,8 @@ msgid "Website developed and maintained by"
 msgstr "Website developed and maintained by"
 
 #: templates/impuls/core/footer.html:15
-msgid "Psykologi vid Åbo Akademi"
-msgstr "Psychology at Åbo Akademi University"
+msgid "Åbo Akademi – psykologi"
+msgstr "Åbo Akademi University – Psychology"
 
 #: templates/pulterit/date/components/partners.html:8
 #: templates/pulterit/date/components/partners.html:12

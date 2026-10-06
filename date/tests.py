@@ -212,8 +212,8 @@ class SiteShellTemplateTests(TestCase):
                 with translation.override(language):
                     rendered[language] = render_to_string("core/footer.html", self._content_context())
 
-        self.assertIn('aria-label="Psykologi vid Åbo Akademi"', rendered["sv"])
-        self.assertIn('aria-label="Psychology at Åbo Akademi University"', rendered["en"])
+        self.assertIn('aria-label="Åbo Akademi – psykologi"', rendered["sv"])
+        self.assertIn('aria-label="Åbo Akademi University – Psychology"', rendered["en"])
 
         for language in ("sv", "en"):
             page = rendered[language]
