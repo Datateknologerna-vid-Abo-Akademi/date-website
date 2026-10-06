@@ -25,6 +25,7 @@ from django.utils import timezone, translation
 from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
 from date.middleware import ConnectionLifecycleMiddleware
+from date.templatetags.social_icons import social_icon_template
 from date.views import (
     _homepage_context,
     _homepage_version_key,
@@ -225,6 +226,71 @@ class SiteShellTemplateTests(TestCase):
         self.assertNotIn('href=""', rendered)
         self.assertIn("test@example.com", rendered)
         self.assertNotIn("test@example.com<br>", rendered)
+
+    def test_footer_mixes_shared_svg_icons_with_icon_font_fallback(self):
+        template = Template("{% include 'core/footer.html' %}")
+        rendered = template.render(
+            Context(
+                {
+                    **self._content_context(),
+                    "SOCIAL_BUTTONS": [
+                        ["fa-facebook-f", "https://example.com/facebook"],
+                        ["tiktok", "https://example.com/tiktok"],
+                        ["linktree", "https://example.com/linktree"],
+                    ],
+                }
+            )
+        )
+
+        self.assertIn('<i class="fab fa-facebook-f"></i>', rendered)
+        self.assertNotIn("fab tiktok", rendered)
+        self.assertNotIn("fab linktree", rendered)
+        self.assertEqual(rendered.count("<svg"), 2)
+        self.assertIn('role="img" aria-label="TikTok"', rendered)
+        self.assertIn('role="img" aria-label="Linktree"', rendered)
+        self.assertNotIn('aria-label="Tiktok"', rendered)
+
+    def _render_impuls_footer(self, language="sv"):
+        impuls_settings = importlib.import_module("core.settings.impuls")
+
+        with (
+            override_settings(
+                TEMPLATES=impuls_settings.TEMPLATES,
+                STATICFILES_DIRS=impuls_settings.STATICFILES_DIRS,
+            ),
+            translation.override(language),
+        ):
+            return render_to_string(
+                "core/footer.html",
+                {
+                    **self._content_context(),
+                    "SOCIAL_BUTTONS": impuls_settings.CONTENT_VARIABLES["SOCIAL_BUTTONS"],
+                },
+            )
+
+    def test_impuls_footer_renders_its_configured_social_icons(self):
+        rendered = self._render_impuls_footer()
+
+        self.assertIn('<i class="fab fa-facebook-f"></i>', rendered)
+        self.assertIn('<i class="fab fa-instagram"></i>', rendered)
+        self.assertIn('aria-label="TikTok"', rendered)
+        self.assertIn('aria-label="Linktree"', rendered)
+        self.assertNotIn("fab tiktok", rendered)
+        self.assertNotIn("fab linktree", rendered)
+
+
+class SocialIconTemplateTagTests(SimpleTestCase):
+    def test_returns_the_shared_svg_template_when_one_exists(self):
+        self.assertEqual(social_icon_template("tiktok"), "core/svg/social/tiktok.svg")
+        self.assertEqual(social_icon_template("linktree"), "core/svg/social/linktree.svg")
+
+    def test_returns_empty_for_icon_font_classes_without_an_svg(self):
+        self.assertEqual(social_icon_template("fa-facebook-f"), "")
+
+    def test_rejects_names_that_could_escape_the_icon_directory(self):
+        for name in ("../../../svg/albin", "core/footer", "TikTok", "tiktok.svg", "", None):
+            with self.subTest(name=name):
+                self.assertEqual(social_icon_template(name), "")
 
 
 class HealthCheckTests(TestCase):
