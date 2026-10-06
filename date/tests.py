@@ -200,6 +200,22 @@ class SiteShellTemplateTests(TestCase):
         self.assertIn("association-footer-copy pulterit-footer-copy", rendered)
         self.assertNotIn("association-footerpulterit-footer", rendered)
 
+    def test_impuls_partner_link_is_named_for_its_destination(self):
+        impuls_settings = importlib.import_module("core.settings.impuls")
+        rendered = {}
+
+        with override_settings(
+            TEMPLATES=impuls_settings.TEMPLATES,
+            STATICFILES_DIRS=impuls_settings.STATICFILES_DIRS,
+        ):
+            for language in ("sv", "en"):
+                with translation.override(language):
+                    rendered[language] = render_to_string("core/footer.html", self._content_context())
+
+        self.assertIn('aria-label="Åbo Akademi – psykologi"', rendered["sv"])
+        self.assertIn('aria-label="Åbo Akademi University – Psychology"', rendered["en"])
+        self.assertNotIn("<?xml", rendered["sv"])
+
     def test_language_picker_hides_when_disabled_in_header_template(self):
         template = Template("{% include 'core/header.html' %}")
         rendered = template.render(Context(self._content_context()))
