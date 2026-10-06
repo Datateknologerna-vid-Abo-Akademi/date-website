@@ -3182,3 +3182,7 @@ msgstr "Verify with your existing passkey or authenticator before adding another
 #: members/views_github.py
 msgid "Logga in på nytt innan du kopplar ett GitHub-konto."
 msgstr "Sign in again before linking a GitHub account."
+
+#: templates/common/members/registration/login.html
+msgid "If you normally sign in with a passkey and have no backup tokens, contact the site administrators to regain access."
+msgstr "If you normally sign in with a passkey and have no backup tokens, contact the site administrators to regain access."

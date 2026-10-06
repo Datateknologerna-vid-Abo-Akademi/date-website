@@ -3218,3 +3218,7 @@ msgstr "Vahvista henkilöllisyytesi nykyisellä pääsyavaimellasi tai todennuss
 #: members/views_github.py
 msgid "Logga in på nytt innan du kopplar ett GitHub-konto."
 msgstr "Kirjaudu uudelleen sisään ennen GitHub-tilin linkittämistä."
+
+#: templates/common/members/registration/login.html
+msgid "If you normally sign in with a passkey and have no backup tokens, contact the site administrators to regain access."
+msgstr "Jos kirjaudut yleensä sisään pääsyavaimella etkä omista varakoodeja, ota yhteyttä sivuston ylläpitäjiin palauttaaksesi pääsyn."
