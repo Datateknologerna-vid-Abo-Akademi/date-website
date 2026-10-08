@@ -82,3 +82,16 @@ So platforms Line Awesome covers keep using `fa-*` names, and a platform it lack
 To give one association a different icon, put a file at the same path in its own template directory (`templates/<association>/core/svg/social/<name>.svg`); the search order finds it before the shared file. A variant that layers another variant's templates (impuls and biocum layer `date`) or an app's `templates/` directory can supply or override an icon the same way.
 
 Shared icons so far: `tiktok`, `linktree` (Font Awesome Free 7.3.1, CC BY 4.0). `sf` renders its own complete footer and does not use this lookup.
+
+## Shared CSS And Element Selectors
+
+An association's stylesheets are loaded on every page of that association, and the shared sheets under `static/common/` are loaded on every page of every association that does not shadow them. A selector that matches a bare HTML element therefore reaches parts of the page it was not written for.
+
+The header sheets are the trap. The site header is `<nav class="navbar ...">` (from `templates/common/core/header.html`), but the pagination widgets are `<nav>` elements too: django-tables2's table pagination (`<nav aria-label="Table navigation">`, rendered on the archive documents and exam pages), the gallery fallback, and `publications-pagination`. A rule written as `nav { ... }` to style the header also painted a table's pagination bar with the header background, which on the associations whose link colour matches their background made the page numbers effectively invisible.
+
+Rules to follow:
+
+- Scope header rules to the header nav, e.g. `nav.navbar { ... }`. The same applies to rules that hide the chrome for a full page takeover, e.g. `nav.navbar, footer { display: none !important; }` on the Lucia and April pages.
+- Scope table pagination styling to django-tables2's wrapper. `static/common/core/css/pagination.css` keeps every rule under `.table-container`, which is the wrapper the package template emits, so the news, publications and gallery paginations keep their own styling.
+- Link that sheet from every site shell. The shared `templates/common/core/base.html` does, and the standalone `templates/sf/core/base.html` has to as well; a new shell needs the link too.
+- `core/tests/test_static_css.py` enforces both selector rules: it fails on any unscoped `nav` selector under `static/` (a `nav` type selector must be qualified immediately by a class, id or attribute, because an ancestor alone such as `.content nav` can still contain a pagination nav) and on a `templates/**/core/base.html` that neither links the pagination sheet nor extends the common shell. `date/tests.py` renders every association's shell and asserts the link is present.
