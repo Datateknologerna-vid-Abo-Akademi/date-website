@@ -114,6 +114,17 @@ class SiteShellTemplateTests(TestCase):
                 self.assertIn(FA_COMPATIBLE_ICON_CSS_SRI, rendered)
                 self.assertNotIn(plain_line_awesome, rendered)
 
+    def test_every_association_shell_loads_the_shared_pagination_css(self):
+        # The table pagination markup comes from django-tables2 rather than from a
+        # project template, so the sheet that styles it has to be linked by every
+        # shell. sf is the only standalone one; the rest extend templates/common.
+        for association, settings_module in ASSOCIATION_SETTINGS_MODULES.items():
+            with self.subTest(association=association):
+                module = importlib.import_module(settings_module)
+                with override_settings(PROJECT_NAME=association, TEMPLATES=module.TEMPLATES):
+                    rendered = render_to_string("core/base.html", self._content_context())
+                self.assertIn("core/css/pagination.css", rendered)
+
     def test_header_uses_unique_dropdown_ids_for_categories(self):
         categories = [
             SimpleNamespace(category_name="About", use_category_url=False, url=""),
