@@ -189,6 +189,16 @@
   `KK_EVENT_TEMPLATES_ENABLED` (kk) adds the kk event-template choices to the
   admin forms. Defaults live in `core/settings/common.py`; enable them per
   association in its settings module rather than adding `PROJECT_NAME` checks.
+- The Årsfest layout lives in `templates/common/events/arsfest_base.html` with the
+  `arsfest_logo`, `arsfest_heading` and `arsfest_signup_tab` block slots, so an
+  association can replace the logo or heading, or drop the Anmälan tab, by
+  overriding a block instead of copying the page.
+  `templates/sf/events/arsfest.html` empties `arsfest_signup_tab` because SF takes
+  årsfest registrations through an external service. DaTe, Biocum and Pulterit each
+  render their own standalone copy of the page and are not reachable from the shared
+  template. Hiding the tab does not disable registration: the `#/anmalan` panel and
+  the sign-up POST stay in place, and the event's own `sign_up` setting decides
+  whether a visitor can register.
 - Any changes to registration fields must keep `Event.make_registration_form()`
   in sync; inconsistent `choice_list` formatting breaks multiple-choice inputs.
 - When altering attendee serialization, update both the model and the JS that

@@ -53,10 +53,12 @@
                  href="#/{{ page.slug }}"
                  data-nav="{{ page.slug }}">{{ page.title }}</a>
             {% endfor %}
-            <a class="ball-link"
-               onclick="showPage(this)"
-               href="#/anmalan"
-               data-nav="anmalan">Anmälan</a>
+            {% block arsfest_signup_tab %}
+              <a class="ball-link"
+                 onclick="showPage(this)"
+                 href="#/anmalan"
+                 data-nav="anmalan">Anmälan</a>
+            {% endblock %}
             <a class="ball-link"
                onclick="showPage(this)"
                href="#/attendee-list"
