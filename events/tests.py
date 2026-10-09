@@ -2741,6 +2741,40 @@ class EventTemplateSelectionTests(TestCase):
         self.assertNotContains(response, "DaTe XXVII")
         self.assertNotContains(response, "albin.png")
 
+    def test_sf_arsfest_hides_the_signup_tab(self):
+        sf_settings = importlib.import_module("core.settings.sf")
+
+        event = Event.objects.create(
+            title="SF:s Årsfest",
+            slug="arsfest",
+            author=self.author,
+        )
+        with override_settings(
+            TEMPLATES=sf_settings.TEMPLATES,
+            STATICFILES_DIRS=sf_settings.STATICFILES_DIRS,
+        ):
+            response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertNotContains(response, 'data-nav="anmalan"')
+        self.assertContains(response, 'data-nav="main"')
+        self.assertContains(response, 'data-nav="attendee-list"')
+
+    def test_common_arsfest_keeps_the_signup_tab(self):
+        demo_settings = importlib.import_module("core.settings.demo")
+
+        event = Event.objects.create(
+            title="Årsfest",
+            slug="arsfest",
+            author=self.author,
+        )
+        with override_settings(
+            TEMPLATES=demo_settings.TEMPLATES,
+            STATICFILES_DIRS=demo_settings.STATICFILES_DIRS,
+        ):
+            response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertContains(response, 'data-nav="anmalan"')
+
     def test_passcode_template_used_when_locked(self):
         event = Event.objects.create(
             title="Secret Event",
