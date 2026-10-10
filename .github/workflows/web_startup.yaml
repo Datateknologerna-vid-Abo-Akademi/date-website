@@ -258,6 +258,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Use the interpreter the image ships
+        run: |
+          # The image is the single source of truth for the Python version. Without
+          # this, uv installs the newest interpreter the project allows (>=3.14),
+          # which can be one the dependencies have no wheels for yet.
+          version="$(sed -n 's/^FROM python:\([0-9][0-9.]*\).*/\1/p' Dockerfile | head -n 1)"
+          if [ -z "${version}" ]; then
+            echo "No python:<version> base image found in Dockerfile" >&2
+            exit 1
+          fi
+          echo "Linting with Python ${version}"
+          echo "UV_PYTHON=${version}" >> "${GITHUB_ENV}"
+
       - name: Install uv
         uses: astral-sh/setup-uv@v7
 
