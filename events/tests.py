@@ -2819,11 +2819,26 @@ class EventTemplateSelectionTests(TestCase):
                 sign_up=True,
                 event_date_end=timezone.now() - timezone.timedelta(days=3),
             ),
+            "with-registrations": Event.objects.create(
+                title="Årsfest",
+                slug="layout-with-registrations",
+                author=self.author,
+                template="events/arsfest.html",
+                sign_up=False,
+            ),
         }
+        EventAttendees.objects.create(
+            event=events["with-registrations"],
+            user="Guest",
+            email="layout-registration@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
         expected_tabs = {
             "with-signups": (True, True),
             "without-signups": (False, False),
             "finished": (True, False),
+            "with-registrations": (False, True),
         }
 
         for layout, module_name in layouts:

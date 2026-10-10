@@ -200,7 +200,8 @@
   only while `Event.show_attendee_tab` holds, which means the list is shown for that
   event and the event either takes sign-ups or already holds registrations. An event
   with sign-up off and no registrations is therefore a plain information page with no
-  registration tabs, while an event that takes sign-ups always offers the Anmälda tab.
+  registration tabs, while an event that takes sign-ups offers the Anmälda tab for as
+  long as its attendee list is shown.
   DaTe, Biocum and Pulterit render their own standalone copies of the page and apply
   the same conditions; Baal, KK100 and Wappmiddag still carry unconditional tabs, and
   Tomtejakt renders its registration sections without a tab row.
