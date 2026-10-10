@@ -19,6 +19,32 @@
             <strong>{{ error_message }}</strong>
           </p>
         {% endif %}
+        {% if attendance_requirement %}
+          {% if not attendance_requirement.is_signed_in %}
+            <p class="warning">
+              {% blocktrans trimmed %}
+                Röstningen kräver att du är inloggad medlem och att du är på plats i mötet.
+              {% endblocktrans %}
+              <a href="{% url 'members:login' %}?next={% url 'polls:detail' question.id %}">{% trans "Logga in" %}</a>
+            </p>
+          {% elif attendance_requirement.is_present %}
+            <p>
+              {% blocktrans trimmed with meeting=attendance_requirement.event %}
+                Du är närvarande på {{ meeting }}.
+              {% endblocktrans %}
+            </p>
+          {% else %}
+            <p>
+              {% blocktrans trimmed with meeting=attendance_requirement.event %}
+                Den här frågan får bara besvaras av dem som är på plats på {{ meeting }}.
+              {% endblocktrans %}
+            </p>
+            <a class="btn btn-light"
+               href="{% url 'attendance-event-view' attendance_requirement.event.slug %}?next={% url 'polls:detail' question.id %}">
+              {% trans "Ange koden och checka in" %}
+            </a>
+          {% endif %}
+        {% endif %}
         <form action="{% url 'polls:vote' question.id %}" method="post">
           {% csrf_token %}
           {% for choice in question.choice_set.all %}

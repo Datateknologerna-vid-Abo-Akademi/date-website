@@ -26,7 +26,11 @@ class AsgiApplicationTests(SimpleTestCase):
         self.assertIn(b'"status": "ok"', response["body"])
 
     async def test_websocket_connects_through_the_asgi_application(self):
-        communicator = WebsocketCommunicator(application, "/ws/events/date-test/")
+        communicator = WebsocketCommunicator(
+            application,
+            "/ws/events/date-test/",
+            headers=[(b"origin", b"http://testserver")],
+        )
         connected, _ = await communicator.connect()
         self.assertTrue(connected)
         await communicator.disconnect()

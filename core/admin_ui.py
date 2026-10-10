@@ -124,6 +124,26 @@ SIDEBAR_NAVIGATION = (
             ),
         ),
     ),
+    # The same rule as the booking group: a link whose permission or URL name
+    # does not resolve drops out, so the group is absent on an association that
+    # does not install the app.
+    AdminSidebarGroup(
+        _('Attendance'),
+        (
+            AdminLink(
+                _('Attendance events'),
+                icon='how_to_reg',
+                url_name='admin:attendance_attendanceevent_changelist',
+                permission='attendance.view_attendanceevent',
+            ),
+            AdminLink(
+                _('Attendance changes'),
+                icon='history',
+                url_name='admin:attendance_attendancechange_changelist',
+                permission='attendance.view_attendancechange',
+            ),
+        ),
+    ),
     AdminSidebarGroup(
         _('Members'),
         (

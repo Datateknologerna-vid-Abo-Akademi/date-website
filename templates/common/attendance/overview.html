@@ -1,0 +1,43 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% load i18n %}
+{% block title %}{{ ASSOCIATION_NAME_SHORT }} - {% blocktrans with title=object.title %}Närvaro för {{title}}{% endblocktrans %}{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"
+          integrity="sha512-PEhlWBZBrQL7flpJPY8lXx8tIN7HWX912GzGhFTDqA3iWFrakVH3lVHomCoU9BhfKzgxfEk6EG2C3xej+9srOQ=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer"></script>
+  <script src="{% url 'javascript-catalog' %}"></script>
+  <script src="{% static 'attendance/js/overview.js' %}" defer></script>
+{% endblock %}
+{% block content %}
+  <div class="container-md min-vh-100 container-margin-top d-flex justify-content-center">
+    <div class="container-size">
+      <div class="content" style="width: fit-content">
+        <div class="lh-1">
+          <h1>{{ object.title }}</h1>
+          <p class="h5">{{ object.description }}</p>
+          <p></p>
+        </div>
+        <div class="lh-1 text-center">
+          <p class="h1" id="current-code">{{ code }}</p>
+          <div class="w-100 text-warning" id="status-message" aria-live="polite"></div>
+        </div>
+        <div id="qrcode" data-event-url="{{ event_url }}"></div>
+        <p class="form-text">{% trans "Skanna med telefonens kamera" %}</p>
+        <div>
+          <h2>{% trans "Närvarande" %}: <span id="present-count">{{ present_attendees|length }}</span></h2>
+          <ul id="present-attendees" aria-live="polite">
+            {% for a in present_attendees %}
+              <li data-attendee="{{ a.key }}">{{ a.name }}</li>
+            {% endfor %}
+          </ul>
+          <p id="no-present-attendees"
+             aria-live="polite"
+             {% if present_attendees %}hidden{% endif %}>{% trans "Ingen är närvarande" %}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

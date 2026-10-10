@@ -397,6 +397,7 @@ msgstr "Tuotanto"
 #: core/settings/sf.py:40
 msgid "Hemort"
 msgstr "Kotipaikka"
+
 #: ctf/admin.py:22 events/admin.py:142 lucia/admin.py:30 news/admin.py:31
 #: polls/admin.py:54
 msgid "publicering"
@@ -515,13 +516,23 @@ msgstr "Varaus"
 msgid "Bookings"
 msgstr "Varaukset"
 
+#: core/admin_ui.py:131
+msgid "Attendance"
+msgstr "Läsnäolo"
+
+#: core/admin_ui.py:134
+msgid "Attendance events"
+msgstr "Läsnäolotapahtumat"
+
+#: core/admin_ui.py:140
+msgid "Attendance changes"
+msgstr "Läsnäolotilojen muutokset"
+
 #: core/admin_ui.py:108
 msgid "Rooms"
 msgstr "Tilat"
 
-
-#: ctf/admin.py:56
-#: templates/common/ctf/post_mortem_index.html:13
+#: ctf/admin.py:56 templates/common/ctf/post_mortem_index.html:13
 msgid "Post-mortems"
 msgstr "Jälkianalysit"
 
@@ -1183,8 +1194,9 @@ msgstr "GitHub-tili on linkitetty tiliisi."
 #: members/views_github.py:258
 msgid "Inget konto hittades för ditt GitHub-konto. Kontakta administratören."
 msgstr ""
-"GitHub-tiliäsi vastaavaa käyttäjätiliä ei löydy. Ota yhteyttä ylläpitäjään."
-"GitHub-tilillesi ei löytynyt tiliä. Ota yhteyttä järjestelmänvalvojaan."
+"GitHub-tiliäsi vastaavaa käyttäjätiliä ei löydy. Ota yhteyttä "
+"ylläpitäjään.GitHub-tilillesi ei löytynyt tiliä. Ota yhteyttä "
+"järjestelmänvalvojaan."
 
 #: members/views_github.py:263
 msgid "Ditt konto är inaktiverat."
@@ -1602,8 +1614,10 @@ msgstr "Lisää tentti"
 #, python-format
 msgid "För många försök. Försök igen om %(seconds)s sekund."
 msgid_plural "För många försök. Försök igen om %(seconds)s sekunder."
-msgstr[0] "Liian monta yritystä. Yritä uudelleen %(seconds)s sekunnin kuluttua."
-msgstr[1] "Liian monta yritystä. Yritä uudelleen %(seconds)s sekunnin kuluttua."
+msgstr[0] ""
+"Liian monta yritystä. Yritä uudelleen %(seconds)s sekunnin kuluttua."
+msgstr[1] ""
+"Liian monta yritystä. Yritä uudelleen %(seconds)s sekunnin kuluttua."
 
 #: templates/common/archive/exam_password.html:30
 #: templates/common/booking/partials/code_form.html:34
@@ -1990,6 +2004,7 @@ msgid "Du kan nu logga in som vanligt"
 msgstr "Voit nyt kirjoittautua normaalisti"
 
 #: templates/common/members/registration/password_reset_complete.html:17
+#: templates/common/polls/detail.html:28
 msgid "Logga in"
 msgstr "Kirjaudu sisään"
 
@@ -2179,6 +2194,24 @@ msgstr "Ei uutisia tällä hetkellä"
 #: templates/common/polls/results.html:4
 msgid "Poll"
 msgstr "Kysely"
+
+#: templates/common/polls/detail.html:25
+msgid "Röstningen kräver att du är inloggad medlem och att du är på plats i mötet."
+msgstr "Äänestäminen edellyttää, että olet kirjautunut jäsen ja olet paikalla."
+
+#: templates/common/polls/detail.html:32
+#, python-format
+msgid "Du är närvarande på %(meeting)s."
+msgstr "Olet läsnä tapahtumassa %(meeting)s."
+
+#: templates/common/polls/detail.html:38
+#, python-format
+msgid "Den här frågan får bara besvaras av dem som är på plats på %(meeting)s."
+msgstr "Vain paikalla olevat voivat vastata tähän kysymykseen tapahtumassa %(meeting)s."
+
+#: templates/common/polls/detail.html:44
+msgid "Ange koden och checka in"
+msgstr "Syötä koodi ja merkitse itsesi läsnäolevaksi"
 
 #: templates/common/polls/index.html:27
 msgid "Det finns inga aktiva omröstningar"
@@ -2455,10 +2488,8 @@ msgstr ""
 "ja kunnioittavaa ympäristöä kaikille jäsenille."
 
 #: templates/impuls/date/components/extras.html:6
-msgid ""
-"Om du upplever trakasserier i samband med Impuls verksamhet, vänligen"
-msgstr ""
-"Jos koet epäasiallista käytöstä Impulssin toiminnan aikana, voit"
+msgid "Om du upplever trakasserier i samband med Impuls verksamhet, vänligen"
+msgstr "Jos koet epäasiallista käytöstä Impulssin toiminnan aikana, voit"
 
 #: templates/date/date/components/header.html:8
 msgid "Datateknologerna"
@@ -2498,156 +2529,6 @@ msgstr "Partner logo"
 msgid "Vill du samarbeta med Pulterit?"
 msgstr "Haluatko tehdä yhteistyötä Pulterit ry:n kanssa?"
 
-#~ msgid "Författare"
-#~ msgstr "Kirjoittaja"
-
-#~ msgid "first"
-#~ msgstr "ensimmäinen"
-
-#, python-format
-#~ msgid "Page %(page_number)s of %(total_pages)s."
-#~ msgstr "Sivu %(page_number)s/%(total_pages)s."
-
-#~ msgid "last"
-#~ msgstr "viimeinen"
-
-#~ msgid "Kemistbaal Anmälning"
-#~ msgstr "Kemistibaalin ilmoittautuminen"
-
-#~ msgid ""
-#~ "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på "
-#~ "reservlistan och meddelas om du får plats."
-#~ msgstr ""
-#~ "Tapahtuma on valitettavasti täynnä. Jos ilmoittaudut, sinut lisätään "
-#~ "varasijalle ja sinulle ilmoitetaan, jos paikka vapautuu."
-
-#~ msgid "Please check this box to continue."
-#~ msgstr "Valitse tämä ruutu jatkaaksesi."
-
-#~ msgid "sedan"
-#~ msgstr "sitten"
-
-#~ msgid "om"
-#~ msgstr "kuluttua"
-
-#~ msgid "Bilder"
-#~ msgstr "Kuvat"
-
-#~ msgid "Det finns"
-#~ msgstr "Jäljellä"
-
-#~ msgid "platser!"
-#~ msgstr "paikkaa!"
-
-#~ msgid "Skriven "
-#~ msgstr "Kirjoitettu "
-
-#~ msgid "av"
-#~ msgstr "kirjoittanut"
-
-#~ msgid " av "
-#~ msgstr " kirjoittanut "
-
-#~ msgid "Page"
-#~ msgstr "Sivu"
-
-#~ msgid "of"
-#~ msgstr "/"
-
-#~ msgid "Joke"
-#~ msgstr "Joke"
-
-#~ msgid "Medlemsprofil"
-#~ msgstr "Jäsenprofiili"
-
-#~ msgid "Tvåfaktorsautentisering"
-#~ msgstr "Kaksivaiheinen tunnistautuminen"
-
-#~ msgid "Aktiverad"
-#~ msgstr "Käytössä"
-
-#~ msgid "Inte aktiverad"
-#~ msgstr "Ei käytössä"
-
-#~ msgid "Email:"
-#~ msgstr "Sähköposti:"
-
-#~ msgid "Förnamn:"
-#~ msgstr "Etunimi:"
-
-#~ msgid "Efternamn:"
-#~ msgstr "Sukunimi:"
-
-#~ msgid "Telefonnummer:"
-#~ msgstr "Puhelinnumero:"
-
-#~ msgid "Adress:"
-#~ msgstr "Osoite:"
-
-#~ msgid "Zip kod:"
-#~ msgstr "Postinumero:"
-
-#~ msgid "Stad:"
-#~ msgstr "Kaupunki:"
-
-#~ msgid "Land:"
-#~ msgstr "Maa:"
-
-#~ msgid "Medlems typ:"
-#~ msgstr "Jäsentyyppi:"
-
-#, python-format
-#~ msgid ""
-#~ "För att ändra ditt användarnamn eller e-post, kontakta styrelsen på "
-#~ "%(ASSOCIATION_EMAIL)s"
-#~ msgstr ""
-#~ "Jos haluat vaihtaa käyttäjätunnuksesi tai sähköpostiosoitteesi, ota "
-#~ "yhteyttä hallitukseen osoitteessa %(ASSOCIATION_EMAIL)s"
-
-#~ msgid "Member profile"
-#~ msgstr "Jäsenprofiili"
-
-#~ msgid "Enabled"
-#~ msgstr "Käytössä"
-
-#~ msgid "Not enabled"
-#~ msgstr "Ei käytössä"
-
-#~ msgid "First name:"
-#~ msgstr "Etunimi:"
-
-#~ msgid "Last name:"
-#~ msgstr "Sukunimi:"
-
-#~ msgid "Phone number:"
-#~ msgstr "Puhelinnumero:"
-
-#~ msgid "Address:"
-#~ msgstr "Osoite:"
-
-#~ msgid "Zip code:"
-#~ msgstr "Postinumero:"
-
-#~ msgid "City:"
-#~ msgstr "Kaupunki:"
-
-#~ msgid "Country:"
-#~ msgstr "Maa:"
-
-#~ msgid "Enter your username or email address and password."
-#~ msgstr "Anna käyttäjätunnuksesi tai sähköpostiosoitteesi ja salasanasi."
-
-#~ msgid "Back to profile"
-#~ msgstr "Takaisin profiiliin"
-
-#~ msgid "Registreringsdatum"
-#~ msgstr "Rekisteröintipäivämäärä"
-
-#~ msgid "Processerad"
-#~ msgstr "Prosessoitu"
-
-#~ msgid "Mera nyheter..."
-#~ msgstr "Lisää uutisia..."
 #: templates/impuls/date/components/header.html:12
 msgid "Impuls"
 msgstr "Impuls"
@@ -2659,8 +2540,8 @@ msgid ""
 "öka samvaron och trivseln för våra psykologistuderande."
 msgstr ""
 "Impuls rf on Åbo Akademin psykologian ainejärjestö. Yhdistys pyrkii "
-"parantamaan ja syventämään psykologian opetusta sekä lisäämään "
-"psykologian opiskelijoiden yhteisöllisyyttä ja viihtyvyyttä."
+"parantamaan ja syventämään psykologian opetusta sekä lisäämään psykologian "
+"opiskelijoiden yhteisöllisyyttä ja viihtyvyyttä."
 
 #: templates/impuls/date/components/about.html:13
 msgid ""
@@ -2672,31 +2553,49 @@ msgstr ""
 "jäsenilleen sekä aktiivinen toiminta tiedekunta- ja yhdistysrajojen yli, "
 "niin psykologian kuin muidenkin oppiaineiden parissa."
 
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
 msgid "Klotterplanket"
 msgstr "Kommenttiseinä"
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
-msgid "Skriv ett inlägg anonymt med en pseudonym. Inlägg som bryter mot reglerna för webbplatsen kan tas bort."
-msgstr "Kirjoita viesti anonyymisti pseudonyymillä. Sivuston sääntöjä rikkovat viestit voidaan poistaa."
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
+msgid ""
+"Skriv ett inlägg anonymt med en pseudonym. Inlägg som bryter mot reglerna "
+"för webbplatsen kan tas bort."
+msgstr ""
+"Kirjoita viesti anonyymisti pseudonyymillä. Sivuston sääntöjä rikkovat "
+"viestit voidaan poistaa."
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
 msgid "Pseudonym"
 msgstr "Pseudonyymi"
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
 msgid "Meddelande"
 msgstr "Viesti"
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
 msgid "Inlägg"
 msgstr "Viestit"
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
 msgid "Inga inlägg ännu. Skriv det första!"
 msgstr "Ei viestejä vielä. Kirjoita ensimmäinen!"
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
 msgid "Ditt inlägg har lagts till!"
 msgstr "Viestisi on lisätty!"
 
 #: klotterplanket/views.py
 msgid "Botkontrollen misslyckades, försök igen."
 msgstr "Botintarkistus epäonnistui, yritä uudelleen."
+
 #: klotterplanket/views.py
 msgid "Kontrollera pseudonymen och meddelandet."
 msgstr "Tarkista pseudonyymi ja viesti."
@@ -2705,7 +2604,6 @@ msgstr "Tarkista pseudonyymi ja viesti."
 #, python-format
 msgid "Kunde inte ladda upp följande filer: %(files)s"
 msgstr "Seuraavia tiedostoja ei voitu ladata: %(files)s"
-
 
 #: booking/access.py:324 booking/views.py:117
 msgid "Kunde inte verifiera att du inte är en robot. Försök igen."
@@ -2865,16 +2763,16 @@ msgid ""
 "Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som "
 "du får av styrelsen."
 msgstr ""
-"Jos sinulla on tili, voit varata heti. Ilman tiliä tarvitset "
-"varauskoodin, jonka saat hallitukselta."
+"Jos sinulla on tili, voit varata heti. Ilman tiliä tarvitset varauskoodin, "
+"jonka saat hallitukselta."
 
 #: templates/common/booking/partials/board_contact.html:4
 #, python-format
 msgid ""
 "Har du frågor om en bokning, kontakta styrelsen via %(ASSOCIATION_EMAIL)s."
 msgstr ""
-"Jos sinulla on kysyttävää varauksesta, ota yhteyttä hallitukseen "
-"osoitteessa %(ASSOCIATION_EMAIL)s."
+"Jos sinulla on kysyttävää varauksesta, ota yhteyttä hallitukseen osoitteessa "
+"%(ASSOCIATION_EMAIL)s."
 
 #: templates/common/booking/partials/board_contact.html:7
 msgid "Har du frågor om en bokning, kontakta styrelsen."
@@ -2889,8 +2787,8 @@ msgid ""
 "Visas offentligt där koden efterfrågas, i stället för standardtexten. Lämna "
 "tomt om standardtexten räcker."
 msgstr ""
-"Näytetään julkisesti siellä, missä koodia kysytään, oletustekstin "
-"sijaan. Jätä tyhjäksi, jos oletusteksti riittää."
+"Näytetään julkisesti siellä, missä koodia kysytään, oletustekstin sijaan. "
+"Jätä tyhjäksi, jos oletusteksti riittää."
 
 #: templates/common/booking/partials/code_form.html:3
 msgid "Bokningskoden får du av styrelsen."
@@ -2901,8 +2799,8 @@ msgid ""
 "Har du ett konto på webbplatsen kan du logga in i stället och behöver då "
 "ingen kod."
 msgstr ""
-"Jos sinulla on tili verkkosivustolla, voit kirjautua sisään sen "
-"sijaan, etkä tarvitse koodia."
+"Jos sinulla on tili verkkosivustolla, voit kirjautua sisään sen sijaan, etkä "
+"tarvitse koodia."
 
 #: booking/admin.py:166 booking/models.py:66
 msgid "Senast bytt"
@@ -2922,8 +2820,8 @@ msgid ""
 "Ny bokningskod för %(room)s: %(code)s. Den förra koden fungerar i 15 minuter "
 "till."
 msgstr ""
-"Uusi varauskoodi kohteelle %(room)s: %(code)s. Edellinen koodi toimii "
-"vielä 15 minuuttia."
+"Uusi varauskoodi kohteelle %(room)s: %(code)s. Edellinen koodi toimii vielä "
+"15 minuuttia."
 
 #: booking/admin.py:236
 msgid ""
@@ -2931,25 +2829,25 @@ msgid ""
 "under Bokningar › Utrymmen. Här står bara texten som besökare utan konto får "
 "läsa."
 msgstr ""
-"Jokaisella tilalla on oma varauskoodinsa, joka näytetään ja vaihdetaan "
-"tilan sivulla kohdassa Varaus › Tilat. Täällä on vain teksti, jonka "
-"ilman tiliä varaava lukee."
+"Jokaisella tilalla on oma varauskoodinsa, joka näytetään ja vaihdetaan tilan "
+"sivulla kohdassa Varaus › Tilat. Täällä on vain teksti, jonka ilman tiliä "
+"varaava lukee."
 
 #: booking/models.py:63
 msgid ""
 "Räknas upp varje gång utrymmets kod byts. Koden härleds ur den och kan inte "
 "läsas av härifrån."
 msgstr ""
-"Kasvaa joka kerta, kun tilan koodi vaihdetaan. Koodi johdetaan siitä, "
-"eikä sitä voi lukea täältä."
+"Kasvaa joka kerta, kun tilan koodi vaihdetaan. Koodi johdetaan siitä, eikä "
+"sitä voi lukea täältä."
 
 #: booking/models.py:70
 msgid ""
 "När utrymmets kod senast byttes. Gör att den förra koden fungerar en stund "
 "till."
 msgstr ""
-"Milloin tilan koodi vaihdettiin viimeksi. Sallii edellisen koodin "
-"toimia vielä hetken."
+"Milloin tilan koodi vaihdettiin viimeksi. Sallii edellisen koodin toimia "
+"vielä hetken."
 
 #: booking/admin.py:154
 msgid "Bokningsbara tider"
@@ -2999,29 +2897,27 @@ msgstr "Tila on suljettu osan siitä ajasta."
 #, python-format
 msgid "Utrymmet kan bara bokas mellan %(from)s och %(until)s samma dag."
 msgstr ""
-"Tila on varattavissa vain kello %(from)s ja %(until)s välillä samana "
-"päivänä."
+"Tila on varattavissa vain kello %(from)s ja %(until)s välillä samana päivänä."
 
 #: booking/models.py:76
 msgid ""
 "Lämna båda tomma för att tillåta bokning dygnet runt. Med tider gäller de "
 "varje dag."
 msgstr ""
-"Jätä molemmat tyhjiksi, niin varaus on mahdollinen mihin aikaan "
-"tahansa. Jos ajat on asetettu, ne koskevat joka päivä."
+"Jätä molemmat tyhjiksi, niin varaus on mahdollinen mihin aikaan tahansa. Jos "
+"ajat on asetettu, ne koskevat joka päivä."
 
 #: booking/models.py:82
 msgid "En bokning måste börja och sluta inom samma dygn när tider är satta."
 msgstr ""
-"Varauksen on alettava ja päätyttävä saman vuorokauden aikana, kun ajat "
-"on asetettu."
+"Varauksen on alettava ja päätyttävä saman vuorokauden aikana, kun ajat on "
+"asetettu."
 
 #: booking/models.py:103
 msgid ""
 "Ange både start och slut för bokningsbara tider, eller lämna båda tomma."
 msgstr ""
-"Aseta sekä alku että loppu varattaville ajoille tai jätä molemmat "
-"tyhjiksi."
+"Aseta sekä alku että loppu varattaville ajoille tai jätä molemmat tyhjiksi."
 
 #: booking/models.py:148
 msgid "Visas för besökare, till exempel vad som gör att utrymmet är stängt."
@@ -3085,16 +2981,16 @@ msgstr "Jos ajankohta ei enää sovi"
 msgid ""
 "Stämmer bokningen nedan? Avboka den bara om du verkligen vill ta bort den."
 msgstr ""
-"Onko alla oleva varaus oikea? Peruuta se vain, jos todella haluat "
-"poistaa sen."
+"Onko alla oleva varaus oikea? Peruuta se vain, jos todella haluat poistaa "
+"sen."
 
 #: templates/common/booking/cancel_booking.html:35
 msgid ""
 "Bokade du utan konto fick du en avbokningskod i bekräftelsemejlet. Klistra "
 "in den här."
 msgstr ""
-"Jos varasit ilman tiliä, sait peruutuskoodin vahvistusviestissä. Liitä "
-"se tähän."
+"Jos varasit ilman tiliä, sait peruutuskoodin vahvistusviestissä. Liitä se "
+"tähän."
 
 #: templates/common/booking/email/booking_confirmation.html:60
 #: templates/common/booking/email/booking_confirmation.txt:10
@@ -3105,8 +3001,8 @@ msgstr "Peruuta varaus peruutussivulla. Syötä koodi alla siellä."
 #: templates/common/booking/email/booking_confirmation.txt:11
 msgid "Kontakta styrelsen om du vill avboka bokningen. Uppge koden nedan."
 msgstr ""
-"Ota yhteyttä hallitukseen, jos haluat peruuttaa varauksen. Ilmoita "
-"alla oleva koodi."
+"Ota yhteyttä hallitukseen, jos haluat peruuttaa varauksen. Ilmoita alla "
+"oleva koodi."
 
 #: templates/common/booking/email/booking_confirmation.html:80
 #: templates/common/booking/email/booking_confirmation.txt:14
@@ -3163,8 +3059,7 @@ msgstr "Omat varaukseni"
 msgid ""
 "Här ser du dina kommande bokningar och kan ta bort en som inte längre passar."
 msgstr ""
-"Tässä ovat tulevat varauksesi, ja voit poistaa sellaisen, joka ei enää "
-"sovi."
+"Tässä ovat tulevat varauksesi, ja voit poistaa sellaisen, joka ei enää sovi."
 
 #: templates/common/booking/my_bookings.html:36
 msgid "Du har inga kommande bokningar."
@@ -3194,3 +3089,532 @@ msgstr "Kaksi varausta samassa tilassa menevät päällekkäin."
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"
 msgstr "Tulevia varauksia ei löytynyt"
+
+#: attendance/models.py:30
+msgid "Tillåt icke-medlemmar att delta"
+msgstr "Salli ulkopuolisten osallistumiset"
+
+#: attendance/models.py:31
+msgid "Kodens genereringsnyckel"
+msgstr "Koodin luontiavain"
+
+#: attendance/models.py:32
+msgid "Kodens giltighetsperiod (sekunder)"
+msgstr "Koodin voimassaoloaika (sekunneina)"
+
+#: attendance/models.py:41
+msgctxt "singular"
+msgid "närvaroevenemang"
+msgstr "läsnäolotapahtuma"
+
+#: attendance/models.py:42
+msgctxt "plural"
+msgid "närvaroevenemang"
+msgstr "läsnäolotapahtumat"
+
+#: attendance/models.py:135
+msgid "deltagare, icke-medlem"
+msgstr "osallistuja, ei jäsen"
+
+#: attendance/models.py:136
+msgid "deltagare, icke-medlemmar"
+msgstr "osallistujia, ei jäsenia"
+
+#: attendance/models.py:143
+msgid "icke-medlem"
+msgstr "ulkopuolinen"
+
+#: attendance/models.py:147
+msgid "Icke-medlem"
+msgstr "Ulkopuolinen"
+
+#: attendance/models.py:155
+msgid "Anlände"
+msgstr "Astui sisään"
+
+#: attendance/models.py:156
+msgid "Lämnade"
+msgstr "Astui ulos"
+
+#: attendance/models.py:160
+msgctxt "left/entered some event"
+msgid "Anlände"
+msgstr "Astui sisään tapahtumaan"
+
+#: attendance/models.py:161
+msgctxt "left/entered some event"
+msgid "Lämnade"
+msgstr "Astui ulos tapahtumasta"
+
+#: attendance/models.py:162
+msgctxt "left/entered in general"
+msgid "Anlände"
+msgstr "Astui sisään"
+
+#: attendance/models.py:163
+msgctxt "left/entered in general"
+msgid "Lämnade"
+msgstr "Astui ulos"
+
+#: attendance/models.py:165 templates/common/attendance/index.html:12
+msgid "Närvaroevenemang"
+msgstr "Läsnäolotapahtuma"
+
+#: attendance/models.py:176
+msgid "Tidpunkt"
+msgstr "Aikaleima"
+
+#: attendance/models.py:183
+msgid "närvaroändring"
+msgstr "läsnäolotilan muutos"
+
+#: attendance/models.py:184
+msgid "närvaroändringar"
+msgstr "läsnäolotilojen muutokset"
+
+#: attendance/models.py:210
+msgid "närvarokrav"
+msgstr "läsnäolovaatimus"
+
+#: polls/admin.py:54
+msgid "Närvarokrav"
+msgstr "Läsnäolovaatimus"
+
+#: polls/admin.py:172
+msgid "Närvarande i mötet nu"
+msgstr "Läsnä kokouksessa nyt"
+
+#: polls/admin.py:182
+msgid "Har röstat"
+msgstr "Äänestäneet"
+
+#: templates/common/attendance/overview.html:28
+msgid "Skanna med telefonens kamera"
+msgstr "Skannaa puhelimesi kameralla"
+
+#: attendance/models.py:195
+#, python-format
+msgid "Exakt en av '%(user)s' eller '%(non_member)s' måste anges."
+msgstr ""
+"Täsmälleen yksi '%(user)s' tai '%(non_member)s' kentistä on täytettävä."
+
+#: attendance/models.py:220
+msgid "<ogiltig>"
+msgstr "<virheellinen>"
+
+#: attendance/models.py:225
+#, python-format
+msgid "%(user)s %(action)s %(event)s den %(date)s kl %(time)s"
+msgstr "%(user)s %(action)s %(event)s %(date)s klo %(time)s"
+
+#: attendance/views.py:79
+msgid "Fel kod"
+msgstr "Väärä koodi"
+
+#, python-format
+#: attendance/views.py:65
+msgid "För många felaktiga koder. Försök igen om %(seconds)s sekunder."
+msgstr "Liian monta väärää koodia. Yritä uudelleen %(seconds)s sekunnin kuluttua."
+
+#: attendance/views.py:85
+msgid "Namn måste anges om du inte är inloggad"
+msgstr "Nimi on annettava jos et ole kirjautuneena"
+
+#: attendance/views.py:102
+msgid "Du kan inte gå in i ett evenemang var du redan är närvarande"
+msgstr "Et voi astua sisään tapahtumaan missä olet jo läsnä"
+
+#: attendance/views.py:106
+msgid "Du kan inte gå ut ur ett evenemang var du inte är närvarande"
+msgstr "Et voi astua ulos tapahtumasta missä et ole läsnä"
+
+#: templates/common/attendance/detail.html:5
+#: templates/common/attendance/overview.html:5
+#, python-format
+msgid "Närvaro för %(title)s"
+msgstr "Läsnäolo tapahtumalle %(title)s"
+
+#: templates/common/attendance/detail.html:21
+msgid "Till översiktsvyn"
+msgstr "Yleiskatsastukseen"
+
+#: templates/common/attendance/detail.html:31
+#, python-format
+msgid "Börjar: %(start)s"
+msgstr "Alkaa: %(start)s"
+
+#: templates/common/attendance/detail.html:36
+#, python-format
+msgid "Slutar: %(end)s"
+msgstr "Loppuu: %(end)s"
+
+#: templates/common/attendance/detail.html:43
+msgid "Du är"
+msgstr "Olet"
+
+#: templates/common/attendance/detail.html:45
+msgid "närvarande"
+msgstr "läsnä"
+
+#: templates/common/attendance/detail.html:47
+msgid "inte närvarande"
+msgstr "poissa"
+
+#: templates/common/attendance/detail.html:64
+msgid ""
+"Du är inte inloggad. Fyll i ditt namn nedan om du inte har ett konto. Om du "
+"har ett konto var vänlig och logga in."
+msgstr ""
+"Et ole kirjautunut. Täytä nimesi kentään alla jos sinulla ei ole tiliä. "
+"Kirjaudu tilillesi jos sinulla on tili."
+
+#: templates/common/attendance/detail.html:94
+msgid "Kod"
+msgstr "Koodi"
+
+#: templates/common/attendance/detail.html:99
+msgid "Skanna QR-kod"
+msgstr "Skannaa QR-koodi"
+
+#: templates/common/attendance/detail.html:102
+msgid "Sluta skanna"
+msgstr "Lopeta skannaus"
+
+#: templates/common/attendance/detail.html:111
+msgid "Tillåt JavaScript för att skanna QR-koder"
+msgstr "Salli JavaScript QR-koodien skannausta varten"
+
+#: templates/common/attendance/detail.html:122
+msgid "Gå in"
+msgstr "Astu sisään"
+
+#: templates/common/attendance/detail.html:125
+msgid "Gå ut"
+msgstr "Astu ulos"
+
+#: templates/common/attendance/detail.html:133
+#: templates/common/attendance/overview.html:29
+msgid "Närvarande"
+msgstr "Läsnäolevat"
+
+#: templates/common/attendance/detail.html:143
+msgid "Närvaroändringar"
+msgstr "Läsnäolomuutokset"
+
+#: templates/common/attendance/detail.html:148
+#, python-format
+msgid "%(name)s %(type_l)s den %(date)s kl %(time)s"
+msgstr "%(name)s %(type_l)s %(date)s klo %(time)s"
+
+#: templates/common/attendance/index.html:5
+msgid "Närvaro"
+msgstr "Läsnäolo"
+
+#: templates/common/attendance/index.html:17
+msgid "Inga evenemang"
+msgstr "Ei tapahtumia"
+
+#: templates/common/attendance/overview.html:35
+msgid "Ingen är närvarande"
+msgstr "Kukaan ei ole läsnä"
+
+#: attendance/admin.py:178 attendance/admin.py:183
+msgid "Rapport"
+msgstr "Raportti"
+
+#: attendance/admin.py:99 templates/common/admin/attendance/report.html:106
+msgid "Medlem"
+msgstr "Jäsen"
+
+#: templates/common/admin/attendance/report.html:5 templates/common/admin/attendance/report.html:14
+msgid "Närvarorapport"
+msgstr "Läsnäoloraportti"
+
+#: templates/common/admin/attendance/report.html:17
+msgid "Tillbaka till listan"
+msgstr "Takaisin luetteloon"
+
+#: templates/common/admin/attendance/report.html:19
+msgid "Ladda ner tidslinjen som CSV"
+msgstr "Lataa aikajana CSV-tiedostona"
+
+#: templates/common/admin/attendance/report.html:22
+msgid "Ladda ner omröstningarna som CSV"
+msgstr "Lataa äänestykset CSV-tiedostona"
+
+#: templates/common/admin/attendance/report.html:25
+msgid "Mötet"
+msgstr "Kokous"
+
+#: templates/common/admin/attendance/report.html:58
+msgid "Ja"
+msgstr "Kyllä"
+
+#: templates/common/admin/attendance/report.html:60
+msgid "Nej"
+msgstr "Ei"
+
+#: templates/common/admin/attendance/report.html:63
+msgid "Status"
+msgstr "Tila"
+
+#: templates/common/admin/attendance/report.html:66
+msgid "Avslutat"
+msgstr "Päättynyt"
+
+#: templates/common/admin/attendance/report.html:68
+msgid "Pågår"
+msgstr "Käynnissä"
+
+#: templates/common/admin/attendance/report.html:72
+msgid "Situationen"
+msgstr "Tilanne"
+
+#: templates/common/admin/attendance/report.html:75
+msgid "Närvarande vid slutet"
+msgstr "Paikalla lopussa"
+
+#: templates/common/admin/attendance/report.html:78
+msgid "Närvarande vid sista ändringen"
+msgstr "Paikalla viimeisimmän muutoksen hetkellä"
+
+#: templates/common/admin/attendance/report.html:78
+msgid "Som mest närvarande"
+msgstr "Enimmillään paikalla"
+
+#: templates/common/admin/attendance/report.html:81
+msgid "Unika deltagare"
+msgstr "Yksittäisiä osallistujia"
+
+#: templates/common/admin/attendance/report.html:84
+msgid "Ändringsrader"
+msgstr "Muutosrivejä"
+
+#: templates/common/admin/attendance/report.html:87
+msgid "Tidslinje"
+msgstr "Aikajana"
+
+#: attendance/admin.py:27 templates/common/admin/attendance/report.html:93
+msgid "Deltagare"
+msgstr "Osallistuja"
+
+#: attendance/admin.py:27 templates/common/admin/attendance/report.html:94
+msgid "Ändring"
+msgstr "Muutos"
+
+#: templates/common/admin/attendance/report.html:116
+msgid "Inga närvaroändringar registrerade."
+msgstr "Ei läsnäolomuutoksia."
+
+#: templates/common/admin/attendance/report.html:118
+msgid "Omröstningar"
+msgstr "Äänestykset"
+
+#: templates/common/admin/attendance/report.html:120
+msgid "Omröstningarna döljs utan behörigheten att visa frågor."
+msgstr "Äänestykset on piilotettu, koska kysymysten katseluoikeutta ei ole."
+
+#: templates/common/admin/attendance/report.html:127
+msgid "Röstandet är avslutat"
+msgstr "Äänestys on päättynyt"
+
+#: templates/common/admin/attendance/report.html:129
+msgid "Röstandet är öppet"
+msgstr "Äänestys on avoinna"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:136
+msgid "Röster"
+msgstr "Ääniä"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:137
+msgid "Andel (%)"
+msgstr "Osuus (%)"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:152
+msgid "Röstsedlar"
+msgstr "Äänestysliput"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:155
+msgid "Röstande"
+msgstr "Äänestäneet"
+
+#: templates/common/admin/attendance/report.html:163
+msgid "Flervalsfråga: en röstande får lämna flera val, så röstsedlarna kan vara fler än antalet röstande."
+msgstr "Monivalintakysymys: yksi äänestäjä voi valita useita vaihtoehtoja, joten äänestyslippuja voi olla enemmän kuin äänestäneitä."
+
+#: templates/common/admin/attendance/report.html:168
+msgid "Frågan är öppen för vem som helst: en röstande kan rösta flera gånger, så röstsedlarna kan vara fler än antalet röstande."
+msgstr "Kysymys on avoin kaikille: yksi äänestäjä voi äänestää useita kertoja, joten äänestyslippuja voi olla enemmän kuin äänestäneitä."
+
+#: templates/common/admin/attendance/report.html:174
+msgid "Inga omröstningar är kopplade till mötet."
+msgstr "Kokoukseen ei ole liitetty äänestyksiä."
+
+#~ msgid "Författare"
+#~ msgstr "Kirjoittaja"
+
+#~ msgid "first"
+#~ msgstr "ensimmäinen"
+
+#, python-format
+#~ msgid "Page %(page_number)s of %(total_pages)s."
+#~ msgstr "Sivu %(page_number)s/%(total_pages)s."
+
+#~ msgid "last"
+#~ msgstr "viimeinen"
+
+#~ msgid "Kemistbaal Anmälning"
+#~ msgstr "Kemistibaalin ilmoittautuminen"
+
+#~ msgid ""
+#~ "Evenemanget är tyvärr fullt! Om du anmäler dig läggs du till på "
+#~ "reservlistan och meddelas om du får plats."
+#~ msgstr ""
+#~ "Tapahtuma on valitettavasti täynnä. Jos ilmoittaudut, sinut lisätään "
+#~ "varasijalle ja sinulle ilmoitetaan, jos paikka vapautuu."
+
+#~ msgid "Please check this box to continue."
+#~ msgstr "Valitse tämä ruutu jatkaaksesi."
+
+#~ msgid "sedan"
+#~ msgstr "sitten"
+
+#~ msgid "om"
+#~ msgstr "kuluttua"
+
+#~ msgid "Bilder"
+#~ msgstr "Kuvat"
+
+#~ msgid "Det finns"
+#~ msgstr "Jäljellä"
+
+#~ msgid "platser!"
+#~ msgstr "paikkaa!"
+
+#~ msgid "Skriven "
+#~ msgstr "Kirjoitettu "
+
+#~ msgid "av"
+#~ msgstr "kirjoittanut"
+
+#~ msgid " av "
+#~ msgstr " kirjoittanut "
+
+#~ msgid "Page"
+#~ msgstr "Sivu"
+
+#~ msgid "of"
+#~ msgstr "/"
+
+#~ msgid "Joke"
+#~ msgstr "Joke"
+
+#~ msgid "Medlemsprofil"
+#~ msgstr "Jäsenprofiili"
+
+#~ msgid "Tvåfaktorsautentisering"
+#~ msgstr "Kaksivaiheinen tunnistautuminen"
+
+#~ msgid "Aktiverad"
+#~ msgstr "Käytössä"
+
+#~ msgid "Inte aktiverad"
+#~ msgstr "Ei käytössä"
+
+#~ msgid "Email:"
+#~ msgstr "Sähköposti:"
+
+#~ msgid "Förnamn:"
+#~ msgstr "Etunimi:"
+
+#~ msgid "Efternamn:"
+#~ msgstr "Sukunimi:"
+
+#~ msgid "Telefonnummer:"
+#~ msgstr "Puhelinnumero:"
+
+#~ msgid "Adress:"
+#~ msgstr "Osoite:"
+
+#~ msgid "Zip kod:"
+#~ msgstr "Postinumero:"
+
+#~ msgid "Stad:"
+#~ msgstr "Kaupunki:"
+
+#~ msgid "Land:"
+#~ msgstr "Maa:"
+
+#~ msgid "Medlems typ:"
+#~ msgstr "Jäsentyyppi:"
+
+#, python-format
+#~ msgid ""
+#~ "För att ändra ditt användarnamn eller e-post, kontakta styrelsen på "
+#~ "%(ASSOCIATION_EMAIL)s"
+#~ msgstr ""
+#~ "Jos haluat vaihtaa käyttäjätunnuksesi tai sähköpostiosoitteesi, ota "
+#~ "yhteyttä hallitukseen osoitteessa %(ASSOCIATION_EMAIL)s"
+
+#~ msgid "Member profile"
+#~ msgstr "Jäsenprofiili"
+
+#~ msgid "Enabled"
+#~ msgstr "Käytössä"
+
+#~ msgid "Not enabled"
+#~ msgstr "Ei käytössä"
+
+#~ msgid "First name:"
+#~ msgstr "Etunimi:"
+
+#~ msgid "Last name:"
+#~ msgstr "Sukunimi:"
+
+#~ msgid "Phone number:"
+#~ msgstr "Puhelinnumero:"
+
+#~ msgid "Address:"
+#~ msgstr "Osoite:"
+
+#~ msgid "Zip code:"
+#~ msgstr "Postinumero:"
+
+#~ msgid "City:"
+#~ msgstr "Kaupunki:"
+
+#~ msgid "Country:"
+#~ msgstr "Maa:"
+
+#~ msgid "Enter your username or email address and password."
+#~ msgstr "Anna käyttäjätunnuksesi tai sähköpostiosoitteesi ja salasanasi."
+
+#~ msgid "Back to profile"
+#~ msgstr "Takaisin profiiliin"
+
+#~ msgid "Registreringsdatum"
+#~ msgstr "Rekisteröintipäivämäärä"
+
+#~ msgid "Processerad"
+#~ msgstr "Prosessoitu"
+
+#~ msgid "Mera nyheter..."
+#~ msgstr "Lisää uutisia..."
+
+#: polls/vote.py:24
+msgid "Du måste vara närvarande på mötet för att rösta."
+msgstr "Sinun on oltava läsnä kokouksessa voidaksesi äänestää."
+
+#: polls/vote.py:25
+msgid "Du valde ett alternativ som inte hör till frågan."
+msgstr "Valitsit vaihtoehdon, joka ei kuulu kysymykseen."
+
+#: templates/common/admin/attendance/report.html:123
+msgid ""
+"Mötesnärvaron är ett sammanhangsvärde, inte en exakt nämnare vid "
+"omröstningstillfället: den läses vid mötets slut eller sista ändringen och "
+"kan omfatta gäster och personer utan rösträtt."
+msgstr ""
+"Kokouksen läsnäolijamäärä on asiayhteyttä kuvaava tieto, ei tarkka "
+"äänestyshetken nimittäjä. Määrä luetaan kokouksen päättyessä tai viimeisen "
+"muutoksen jälkeen, ja siihen voi sisältyä vieraita ja äänioikeudettomia."

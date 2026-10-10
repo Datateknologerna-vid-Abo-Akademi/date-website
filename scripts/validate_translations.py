@@ -74,16 +74,21 @@ def main() -> int:
     failures: list[str] = []
 
     for locale in REQUIRED_LOCALES:
-        po_path = Path("locale") / locale / "LC_MESSAGES" / "django.po"
-        if not po_path.exists():
-            failures.append(f"missing locale catalog: {po_path}")
-            continue
+        # Both catalogs a page can load: the template and model strings, and the
+        # strings the JavaScript reads through the `gettext` global. A missing or
+        # untranslated entry in either one is invisible on the page until somebody
+        # switches language, which is what this gate is for.
+        for name in ("django", "djangojs"):
+            po_path = Path("locale") / locale / "LC_MESSAGES" / f"{name}.po"
+            if not po_path.exists():
+                failures.append(f"missing locale catalog: {po_path}")
+                continue
 
-        fuzzy, untranslated = parse_po(po_path)
-        if fuzzy:
-            failures.append(f"{po_path}: {fuzzy} fuzzy entries")
-        if untranslated:
-            failures.append(f"{po_path}: {untranslated} untranslated entries")
+            fuzzy, untranslated = parse_po(po_path)
+            if fuzzy:
+                failures.append(f"{po_path}: {fuzzy} fuzzy entries")
+            if untranslated:
+                failures.append(f"{po_path}: {untranslated} untranslated entries")
 
     if failures:
         print("Translation validation failed:", file=sys.stderr)

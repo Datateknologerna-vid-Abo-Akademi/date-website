@@ -1,0 +1,23 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
+from .models import AttendanceChange, attendance_change_token
+
+
+def send_attendance_change(slug: str, change: AttendanceChange):
+    channel_layer = get_channel_layer()
+    assert channel_layer
+    group = f"attendance_{slug}"
+
+    async_to_sync(channel_layer.group_send)(
+        group,
+        {
+            "type": "attendance.change",
+            "change": {
+                "key": change.attendee_key,
+                "name": change.attendee_name,
+                "type": AttendanceChange.Type(change.type).name,
+                **attendance_change_token(change),
+            },
+        },
+    )

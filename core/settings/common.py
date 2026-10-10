@@ -14,9 +14,15 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import json
 import os
 
+import django_stubs_ext
 import environ
 from django.templatetags.static import static
 from django.utils.translation import gettext_lazy as _
+
+# Annotations that become runtime expressions, such as
+# `SingleObjectMixin[Model]` in a class definition, need django-stubs' generic
+# support at runtime and not only while type checking.
+django_stubs_ext.monkeypatch()
 
 from .dependencies.ckeditor import *  # noqa
 
