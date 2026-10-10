@@ -138,22 +138,23 @@
             }
         });
 
-        function showPage(element){
-            $(".ball-content").addClass("hidden");
-            $(`.${element.dataset.nav}`).toggleClass("hidden")
-            let pageHash = window.location.hash.substr(1).replace(/\//g,'');
-        }
-
-        function currentPage(element){
-            let pageHash = window.location.hash.substr(1).replace(/\//g,'') || "main";
+        function showPanel(panelId){
             let target = $(".ball-content").filter(function(){
-                return this.id === pageHash;
+                return this.id === panelId;
             });
             if(!target.length){
                 target = $(".ball-content.main");
             }
             $(".ball-content").addClass("hidden");
             target.removeClass("hidden")
+        }
+
+        function showPage(element){
+            showPanel(element.dataset.nav);
+        }
+
+        function currentPage(){
+            showPanel(window.location.hash.substr(1).replace(/\//g,'') || "main");
         }
 
   </script>

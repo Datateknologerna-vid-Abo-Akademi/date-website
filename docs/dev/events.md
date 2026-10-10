@@ -193,9 +193,10 @@
   `arsfest_logo`, `arsfest_heading`, `arsfest_signup_tab` and `arsfest_attendee_tab`
   block slots, so an association can replace the logo or heading, or customize the
   navigation, without copying the page. Dropping a registration tab needs no override:
-  which tabs appear follows the event. A block that adds a link has to keep the panel
-  that link targets and give that panel an `id` matching the hash, because the hash
-  navigation selects panels by id and falls back to the main panel when nothing matches.
+  which tabs appear follows the event. Adding a tab means adding a link whose `data-nav`
+  and `#/` hash carry the key, plus a `.ball-content` panel carrying that key as its
+  `id`: both the click handler and the hash navigation select the panel by id, and fall
+  back to the main panel when no id matches.
 - The Årsfest tabs follow the event rather than the layout: the Anmälan tab and the
   sign-up panel render only while the event has `sign_up` set, and the Anmälda tab
   only while `Event.show_attendee_tab` holds, which means the list is shown for that
