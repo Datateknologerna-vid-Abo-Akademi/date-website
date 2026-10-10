@@ -145,9 +145,12 @@
         }
 
         function currentPage(element){
-            $(".ball-content").addClass("hidden");
             let pageHash = window.location.hash.substr(1).replace(/\//g,'');
-            $(`.${pageHash}`).toggleClass("hidden")
+            if(!$(`.${pageHash}`).length){
+                pageHash = "main";
+            }
+            $(".ball-content").addClass("hidden");
+            $(`.${pageHash}`).removeClass("hidden")
         }
 
   </script>
