@@ -86,7 +86,7 @@
           </div>
         </div>
         {% if event.sign_up %}
-          <div class="content ball-content anmalan hidden break-words">
+          <div id="anmalan" class="content ball-content anmalan hidden break-words">
             <h2 id="sign-up">{% trans "Anmälning" %}</h2>
             {% include 'events/registration_state.html' %}
           </div>
@@ -147,7 +147,7 @@
         function currentPage(element){
             let pageHash = window.location.hash.substr(1).replace(/\//g,'') || "main";
             let target = $(".ball-content").filter(function(){
-                return this.id === pageHash || $(this).hasClass(pageHash);
+                return this.id === pageHash;
             });
             if(!target.length){
                 target = $(".ball-content.main");

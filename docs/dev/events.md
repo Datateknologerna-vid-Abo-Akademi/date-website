@@ -194,7 +194,8 @@
   block slots, so an association can replace the logo or heading, or customize the
   navigation, without copying the page. Dropping a registration tab needs no override:
   which tabs appear follows the event. A block that adds a link has to keep the panel
-  that link targets, because the hash navigation only reveals panels that exist.
+  that link targets and give that panel an `id` matching the hash, because the hash
+  navigation selects panels by id and falls back to the main panel when nothing matches.
 - The Årsfest tabs follow the event rather than the layout: the Anmälan tab and the
   sign-up panel render only while the event has `sign_up` set, and the Anmälda tab
   only while `Event.show_attendee_tab` holds, which means the list is shown for that
