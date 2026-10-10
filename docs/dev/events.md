@@ -191,10 +191,9 @@
   association in its settings module rather than adding `PROJECT_NAME` checks.
 - The Årsfest layout lives in `templates/common/events/arsfest_base.html` with the
   `arsfest_logo`, `arsfest_heading`, `arsfest_signup_tab` and `arsfest_attendee_tab`
-  block slots, so an association can replace the logo or heading, or drop a
-  registration tab, by overriding a block instead of copying the page.
-  `templates/sf/events/arsfest.html` empties `arsfest_signup_tab` because SF takes
-  årsfest registrations through an external service.
+  block slots, so an association can replace the logo or heading, or force a tab,
+  by overriding a block instead of copying the page. No association needs an override
+  to drop a registration tab: which tabs appear follows the event's own settings.
 - The Årsfest tabs follow the event rather than the layout: the Anmälan tab and the
   sign-up panel render only while the event has `sign_up` set, and the Anmälda tab
   only while `Event.show_attendee_tab` holds, which means the list is shown for that

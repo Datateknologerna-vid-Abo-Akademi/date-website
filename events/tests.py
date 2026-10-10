@@ -2741,23 +2741,36 @@ class EventTemplateSelectionTests(TestCase):
         self.assertNotContains(response, "DaTe XXVII")
         self.assertNotContains(response, "albin.png")
 
-    def test_sf_arsfest_hides_the_signup_tab(self):
+    def test_sf_arsfest_uses_the_shared_tab_rules(self):
         sf_settings = importlib.import_module("core.settings.sf")
 
-        event = Event.objects.create(
+        with_signups = Event.objects.create(
             title="SF:s Årsfest",
-            slug="arsfest",
+            slug="sf-arsfest-with-signups",
             author=self.author,
+            template="events/arsfest.html",
+            sign_up=True,
+        )
+        without_signups = Event.objects.create(
+            title="SF:s Årsfest",
+            slug="sf-arsfest-without-signups",
+            author=self.author,
+            template="events/arsfest.html",
+            sign_up=False,
         )
         with override_settings(
             TEMPLATES=sf_settings.TEMPLATES,
             STATICFILES_DIRS=sf_settings.STATICFILES_DIRS,
         ):
-            response = self.client.get(reverse("events:detail", args=[event.slug]))
+            signup_response = self.client.get(reverse("events:detail", args=[with_signups.slug]))
+            info_response = self.client.get(reverse("events:detail", args=[without_signups.slug]))
 
-        self.assertNotContains(response, 'data-nav="anmalan"')
-        self.assertContains(response, 'data-nav="main"')
-        self.assertContains(response, 'data-nav="attendee-list"')
+        self.assertTemplateUsed(signup_response, "events/arsfest.html")
+        self.assertContains(signup_response, 'data-nav="anmalan"')
+        self.assertContains(signup_response, 'data-nav="attendee-list"')
+        self.assertContains(info_response, 'data-nav="main"')
+        self.assertNotContains(info_response, 'data-nav="anmalan"')
+        self.assertNotContains(info_response, 'data-nav="attendee-list"')
 
     def test_common_arsfest_keeps_the_signup_tab(self):
         demo_settings = importlib.import_module("core.settings.demo")
