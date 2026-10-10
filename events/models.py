@@ -365,6 +365,19 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
     def show_attendee_list(self):
         return self.event_date_end > now() + timedelta(-1)
 
+    @register.filter
+    def show_attendee_tab(self):
+        """Whether the Anmälda tab has anything to offer on an event page.
+
+        The list is hidden for old events, and it stays empty on an event that
+        neither takes sign-ups nor holds registrations an editor added, so the
+        tab is dropped in both cases and a page with no sign-ups at all shows
+        no registration tabs.
+        """
+        if not self.show_attendee_list():
+            return False
+        return self.sign_up or self.get_registrations().exists()
+
     def validate_unique_email(self, email):
         # Indexed existence check instead of scanning every attendee row on
         # each signup (the unique_together constraint on (event, email) is the

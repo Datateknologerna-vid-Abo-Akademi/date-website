@@ -12,7 +12,7 @@ Create public event pages, manage registration windows, collect attendee data, a
 2. Fill in the form (key sections):
    - **Titel & Innehåll** – what visitors see on the event page (CKEditor field supports images, embeds, etc.).
    - **Date & time fields** – start/end timestamps plus signup open/close windows. Use the date+time split inputs; keep members/others windows realistic.
-   - **Anmälning** – uncheck if no signup is needed (all signup-related fields will be ignored).
+   - **Anmälning** – uncheck if no signup is needed (all signup-related fields will be ignored). On an Årsfest page this also removes the Anmälan tab and the sign-up panel, so the page works as a plain information page.
    - **Maximal antal deltagare** – `0` means unlimited.
    - **Avec** – allow partners; extra fields will display when the signup form contains `avec_…` inputs.
    - **Kräv inloggning för innehåll** – gate the event page behind member login.
@@ -45,6 +45,7 @@ Each event can have dynamic questions managed inline:
 3. To export a pretty list, click **Deltagarlista** in the main event row; this opens a printable view with the public answers.
 4. Bulk deletion: select events in the changelist → choose **Delete all attendees for selected events**. You will get a confirmation screen before anything is removed.
 5. Question names must be unique within an event. Names used by standard signup fields, such as `email`, `user`, and avec fields, are rejected to prevent invalid registrations.
+6. On an Årsfest page the **Anmälda** tab follows the list itself: it appears while the event is recent enough to show the list and the event either takes sign-ups or already holds registrations. Registrations you enter by hand therefore keep the tab, even on an event whose sign-up is turned off.
 
 ## Handling Waiting Lists / Child Events
 - The **Parent** dropdown lets you chain events together. Registrations for child events roll up to the parent so attendee numbers stay consistent.

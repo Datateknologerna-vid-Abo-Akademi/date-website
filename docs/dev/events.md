@@ -190,15 +190,22 @@
   admin forms. Defaults live in `core/settings/common.py`; enable them per
   association in its settings module rather than adding `PROJECT_NAME` checks.
 - The Årsfest layout lives in `templates/common/events/arsfest_base.html` with the
-  `arsfest_logo`, `arsfest_heading` and `arsfest_signup_tab` block slots, so an
-  association can replace the logo or heading, or drop the Anmälan tab, by
-  overriding a block instead of copying the page.
+  `arsfest_logo`, `arsfest_heading`, `arsfest_signup_tab` and `arsfest_attendee_tab`
+  block slots, so an association can replace the logo or heading, or drop a
+  registration tab, by overriding a block instead of copying the page.
   `templates/sf/events/arsfest.html` empties `arsfest_signup_tab` because SF takes
-  årsfest registrations through an external service. DaTe, Biocum and Pulterit each
-  render their own standalone copy of the page and are not reachable from the shared
-  template. Hiding the tab does not disable registration: the `#/anmalan` panel and
-  the sign-up POST stay in place, and the event's own `sign_up` setting decides
-  whether a visitor can register.
+  årsfest registrations through an external service.
+- The Årsfest tabs follow the event rather than the layout: the Anmälan tab and the
+  sign-up panel render only while the event has `sign_up` set, and the Anmälda tab
+  only while `Event.show_attendee_tab` holds, which means the list is shown for that
+  event and the event either takes sign-ups or already holds registrations an editor
+  added. An event with sign-up off and no registrations is therefore a plain
+  information page with no registration tabs. DaTe, Biocum and Pulterit render their
+  own standalone copies of the page and apply the same conditions; the Baal,
+  Wappmiddag and Tomtejakt layouts still carry hardcoded tabs.
+- The tabs are presentation only. The sign-up POST is accepted whenever the event has
+  `sign_up` set and its registration window is open, whether or not a tab points at
+  the form, and hiding a tab never disables registration.
 - Any changes to registration fields must keep `Event.make_registration_form()`
   in sync; inconsistent `choice_list` formatting breaks multiple-choice inputs.
 - When altering attendee serialization, update both the model and the JS that

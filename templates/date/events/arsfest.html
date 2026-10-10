@@ -54,14 +54,18 @@
                  href="#/{{ page.slug }}"
                  data-nav="{{ page.slug }}">{{ page.title }}</a>
             {% endfor %}
-            <a class="ball-link"
-               onclick="showPage(this)"
-               href="#/anmalan"
-               data-nav="anmalan">Anmälan</a>
-            <a class="ball-link"
-               onclick="showPage(this)"
-               href="#/attendee-list"
-               data-nav="attendee-list">Anmälda</a>
+            {% if event.sign_up %}
+              <a class="ball-link"
+                 onclick="showPage(this)"
+                 href="#/anmalan"
+                 data-nav="anmalan">Anmälan</a>
+            {% endif %}
+            {% if event|show_attendee_tab %}
+              <a class="ball-link"
+                 onclick="showPage(this)"
+                 href="#/attendee-list"
+                 data-nav="attendee-list">Anmälda</a>
+            {% endif %}
           </div>
         </div>
         <div class="text-content lava-container">
@@ -78,10 +82,12 @@
             <p>{{ event.content | safe }}</p>
           </div>
         </div>
-        <div class="content ball-content anmalan hidden break-words">
-          <h2 id="sign-up">{% trans "Anmälning" %}</h2>
-          {% include 'events/registration_state.html' %}
-        </div>
+        {% if event.sign_up %}
+          <div class="content ball-content anmalan hidden break-words">
+            <h2 id="sign-up">{% trans "Anmälning" %}</h2>
+            {% include 'events/registration_state.html' %}
+          </div>
+        {% endif %}
         <div id="attendee-list"
              class="content ball-content attendee-list hidden"
              data-parent-slug="{{ event.parent.slug|default:'' }}">

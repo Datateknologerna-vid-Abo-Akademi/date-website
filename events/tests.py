@@ -2775,6 +2775,118 @@ class EventTemplateSelectionTests(TestCase):
 
         self.assertContains(response, 'data-nav="anmalan"')
 
+    def test_show_attendee_tab_follows_signups_registrations_and_event_age(self):
+        without_signups = Event.objects.create(
+            title="Info Page",
+            slug="info-page",
+            author=self.author,
+            sign_up=False,
+        )
+        self.assertFalse(without_signups.show_attendee_tab())
+
+        with_signups = Event.objects.create(
+            title="Party",
+            slug="party",
+            author=self.author,
+            sign_up=True,
+        )
+        self.assertTrue(with_signups.show_attendee_tab())
+
+        EventAttendees.objects.create(
+            event=without_signups,
+            user="Guest",
+            email="guest@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+        self.assertTrue(without_signups.show_attendee_tab())
+
+        finished = Event.objects.create(
+            title="Finished Party",
+            slug="finished-party",
+            author=self.author,
+            sign_up=True,
+            event_date_end=timezone.now() - timezone.timedelta(days=3),
+        )
+        self.assertFalse(finished.show_attendee_tab())
+
+    def test_arsfest_page_shows_both_tabs_when_signups_are_enabled(self):
+        demo_settings = importlib.import_module("core.settings.demo")
+
+        event = Event.objects.create(
+            title="Årsfest",
+            slug="arsfest",
+            author=self.author,
+            sign_up=True,
+        )
+        with override_settings(
+            TEMPLATES=demo_settings.TEMPLATES,
+            STATICFILES_DIRS=demo_settings.STATICFILES_DIRS,
+        ):
+            response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertContains(response, 'data-nav="anmalan"')
+        self.assertContains(response, 'data-nav="attendee-list"')
+        self.assertContains(response, 'id="sign-up"')
+
+    def test_arsfest_page_without_signups_shows_no_registration_tabs(self):
+        demo_settings = importlib.import_module("core.settings.demo")
+
+        event = Event.objects.create(
+            title="Årsfest",
+            slug="arsfest",
+            author=self.author,
+            sign_up=False,
+        )
+        with override_settings(
+            TEMPLATES=demo_settings.TEMPLATES,
+            STATICFILES_DIRS=demo_settings.STATICFILES_DIRS,
+        ):
+            response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertContains(response, 'data-nav="main"')
+        self.assertNotContains(response, 'data-nav="anmalan"')
+        self.assertNotContains(response, 'data-nav="attendee-list"')
+        self.assertNotContains(response, 'id="sign-up"')
+
+    def test_arsfest_page_keeps_the_attendee_tab_for_editor_added_registrations(self):
+        demo_settings = importlib.import_module("core.settings.demo")
+
+        event = Event.objects.create(
+            title="Årsfest",
+            slug="arsfest",
+            author=self.author,
+            sign_up=False,
+        )
+        EventAttendees.objects.create(
+            event=event,
+            user="Guest",
+            email="guest@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+        with override_settings(
+            TEMPLATES=demo_settings.TEMPLATES,
+            STATICFILES_DIRS=demo_settings.STATICFILES_DIRS,
+        ):
+            response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertNotContains(response, 'data-nav="anmalan"')
+        self.assertContains(response, 'data-nav="attendee-list"')
+
+    def test_date_arsfest_page_hides_registration_tabs_without_signups(self):
+        event = Event.objects.create(
+            title="Årsfest",
+            slug="arsfest",
+            author=self.author,
+            sign_up=False,
+        )
+        response = self.client.get(reverse("events:detail", args=[event.slug]))
+
+        self.assertContains(response, 'data-nav="main"')
+        self.assertNotContains(response, 'data-nav="anmalan"')
+        self.assertNotContains(response, 'data-nav="attendee-list"')
+
     def test_passcode_template_used_when_locked(self):
         event = Event.objects.create(
             title="Secret Event",
