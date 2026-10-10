@@ -250,11 +250,6 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    env:
-      # Lint on the interpreter the image ships. The project allows any Python
-      # >=3.14, so without this uv installs the newest one it can find, and a
-      # dependency pinned in the lock may have no wheel for it yet.
-      UV_PYTHON: "3.14"
     defaults:
       run:
         shell: bash
@@ -262,6 +257,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+
+      - name: Use the interpreter the image ships
+        run: |
+          # The image is the single source of truth for the Python version. Without
+          # this, uv installs the newest interpreter the project allows (>=3.14),
+          # which can be one the dependencies have no wheels for yet.
+          version="$(sed -n 's/^FROM python:\([0-9][0-9.]*\).*/\1/p' Dockerfile | head -n 1)"
+          if [ -z "${version}" ]; then
+            echo "No python:<version> base image found in Dockerfile" >&2
+            exit 1
+          fi
+          echo "Linting with Python ${version}"
+          echo "UV_PYTHON=${version}" >> "${GITHUB_ENV}"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
