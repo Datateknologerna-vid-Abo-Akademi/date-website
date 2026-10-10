@@ -142,7 +142,7 @@
         }
 
         function currentPage(element){
-            let pageHash = window.location.hash.substr(1).replace(/\//g,'');
+            let pageHash = window.location.hash.substr(1).replace(/\//g,'') || "main";
             let target = $(".ball-content").filter(function(){
                 return this.id === pageHash || $(this).hasClass(pageHash);
             });

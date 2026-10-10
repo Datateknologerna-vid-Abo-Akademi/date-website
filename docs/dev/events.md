@@ -191,17 +191,19 @@
   association in its settings module rather than adding `PROJECT_NAME` checks.
 - The Årsfest layout lives in `templates/common/events/arsfest_base.html` with the
   `arsfest_logo`, `arsfest_heading`, `arsfest_signup_tab` and `arsfest_attendee_tab`
-  block slots, so an association can replace the logo or heading, or force a tab,
-  by overriding a block instead of copying the page. No association needs an override
-  to drop a registration tab: which tabs appear follows the event's own settings.
+  block slots, so an association can replace the logo or heading, or customize the
+  navigation, without copying the page. Dropping a registration tab needs no override:
+  which tabs appear follows the event. A block that adds a link has to keep the panel
+  that link targets, because the hash navigation only reveals panels that exist.
 - The Årsfest tabs follow the event rather than the layout: the Anmälan tab and the
   sign-up panel render only while the event has `sign_up` set, and the Anmälda tab
   only while `Event.show_attendee_tab` holds, which means the list is shown for that
-  event and the event either takes sign-ups or already holds registrations an editor
-  added. An event with sign-up off and no registrations is therefore a plain
-  information page with no registration tabs. DaTe, Biocum and Pulterit render their
-  own standalone copies of the page and apply the same conditions; the Baal,
-  Wappmiddag and Tomtejakt layouts still carry hardcoded tabs.
+  event and the event either takes sign-ups or already holds registrations. An event
+  with sign-up off and no registrations is therefore a plain information page with no
+  registration tabs, while an event that takes sign-ups always offers the Anmälda tab.
+  DaTe, Biocum and Pulterit render their own standalone copies of the page and apply
+  the same conditions; Baal, KK100 and Wappmiddag still carry unconditional tabs, and
+  Tomtejakt renders its registration sections without a tab row.
 - The tabs are presentation only. The sign-up POST is accepted whenever the event has
   `sign_up` set and its registration window is open, whether or not a tab points at
   the form, and hiding a tab never disables registration.

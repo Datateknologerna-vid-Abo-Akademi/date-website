@@ -2788,6 +2788,110 @@ class EventTemplateSelectionTests(TestCase):
 
         self.assertContains(response, 'data-nav="anmalan"')
 
+    def test_every_arsfest_layout_follows_the_event_settings(self):
+        layouts = (
+            ("common", "core.settings.demo"),
+            ("sf", "core.settings.sf"),
+            ("date", "core.settings.date"),
+            ("biocum", "core.settings.biocum"),
+            ("pulterit", "core.settings.pulterit"),
+        )
+        events = {
+            "with-signups": Event.objects.create(
+                title="Årsfest",
+                slug="layout-with-signups",
+                author=self.author,
+                template="events/arsfest.html",
+                sign_up=True,
+            ),
+            "without-signups": Event.objects.create(
+                title="Årsfest",
+                slug="layout-without-signups",
+                author=self.author,
+                template="events/arsfest.html",
+                sign_up=False,
+            ),
+            "finished": Event.objects.create(
+                title="Årsfest",
+                slug="layout-finished",
+                author=self.author,
+                template="events/arsfest.html",
+                sign_up=True,
+                event_date_end=timezone.now() - timezone.timedelta(days=3),
+            ),
+        }
+        expected_tabs = {
+            "with-signups": (True, True),
+            "without-signups": (False, False),
+            "finished": (True, False),
+        }
+
+        for layout, module_name in layouts:
+            settings_module = importlib.import_module(module_name)
+            with override_settings(
+                TEMPLATES=settings_module.TEMPLATES,
+                STATICFILES_DIRS=settings_module.STATICFILES_DIRS,
+            ):
+                for event_name, event in events.items():
+                    response = self.client.get(reverse("events:detail", args=[event.slug]))
+                    has_signup_tab, has_attendee_tab = expected_tabs[event_name]
+                    with self.subTest(layout=layout, event=event_name):
+                        self.assertTemplateUsed(response, "events/arsfest.html")
+                        if has_signup_tab:
+                            self.assertContains(response, 'data-nav="anmalan"')
+                            self.assertContains(response, 'id="sign-up"')
+                        else:
+                            self.assertNotContains(response, 'data-nav="anmalan"')
+                            self.assertNotContains(response, 'id="sign-up"')
+                        if has_attendee_tab:
+                            self.assertContains(response, 'data-nav="attendee-list"')
+                        else:
+                            self.assertNotContains(response, 'data-nav="attendee-list"')
+
+    def test_show_attendee_tab_ignores_a_siblings_registrations(self):
+        parent = Event.objects.create(
+            title="Årsfest",
+            slug="attendee-tab-parent",
+            author=self.author,
+            sign_up=False,
+        )
+        child = Event.objects.create(
+            title="Årsfest gäster",
+            slug="attendee-tab-child",
+            author=self.author,
+            sign_up=False,
+            parent=parent,
+        )
+        sibling = Event.objects.create(
+            title="Årsfest personal",
+            slug="attendee-tab-sibling",
+            author=self.author,
+            sign_up=False,
+            parent=parent,
+        )
+        EventAttendees.objects.create(
+            event=parent,
+            original_event=sibling,
+            user="Sibling Guest",
+            email="sibling@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        self.assertFalse(child.show_attendee_tab())
+        self.assertTrue(sibling.show_attendee_tab())
+
+        EventAttendees.objects.create(
+            event=parent,
+            original_event=child,
+            user="Child Guest",
+            email="child@example.com",
+            time_registered=timezone.now(),
+            preferences={},
+        )
+
+        self.assertTrue(child.show_attendee_tab())
+
     def test_show_attendee_tab_follows_signups_registrations_and_event_age(self):
         without_signups = Event.objects.create(
             title="Info Page",

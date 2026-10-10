@@ -370,9 +370,8 @@ class Event(models.Model):  # type: ignore[django-manager-missing]
         """Whether the Anmälda tab has anything to offer on an event page.
 
         The list is hidden for old events, and it stays empty on an event that
-        neither takes sign-ups nor holds registrations an editor added, so the
-        tab is dropped in both cases and a page with no sign-ups at all shows
-        no registration tabs.
+        neither takes sign-ups nor holds registrations, so the tab is dropped in
+        both cases and a page with no sign-ups at all shows no registration tabs.
         """
         if not self.show_attendee_list():
             return False
