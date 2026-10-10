@@ -146,11 +146,14 @@
 
         function currentPage(element){
             let pageHash = window.location.hash.substr(1).replace(/\//g,'');
-            if(!$(`.${pageHash}`).length){
-                pageHash = "main";
+            let target = $(".ball-content").filter(function(){
+                return this.id === pageHash || $(this).hasClass(pageHash);
+            });
+            if(!target.length){
+                target = $(".ball-content.main");
             }
             $(".ball-content").addClass("hidden");
-            $(`.${pageHash}`).removeClass("hidden")
+            target.removeClass("hidden")
         }
 
   </script>
