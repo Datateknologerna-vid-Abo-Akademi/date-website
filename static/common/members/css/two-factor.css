@@ -156,3 +156,110 @@
     text-align: center;
     border-radius: var(--defaultRadius);
 }
+
+.passkey-list {
+    list-style: none;
+    padding: 0;
+    margin: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.passkey-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--secondaryColorDarker);
+    border-radius: 8px;
+}
+
+.passkey-item__main {
+    flex: 1;
+    min-width: 0;
+}
+
+.passkey-rename {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.members-form .passkey-rename input {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding: 0.6rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.passkey-item__meta {
+    display: block;
+    margin-top: 0.4rem;
+}
+
+.members-form button.passkey-action {
+    width: auto;
+    flex-shrink: 0;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid #4CAF50;
+    border-radius: 6px;
+    background: transparent;
+    color: #2e7d32;
+    font-size: 13px;
+}
+
+.members-form button.passkey-action:hover,
+.members-form button.passkey-action:focus {
+    background: rgba(76, 175, 80, 0.12);
+}
+
+.members-form button.passkey-action--danger {
+    border-color: #c62828;
+    color: #c62828;
+}
+
+.members-form button.passkey-action--danger:hover,
+.members-form button.passkey-action--danger:focus {
+    background: rgba(198, 40, 40, 0.1);
+}
+
+.passkey-empty {
+    margin: 1.5rem 0;
+    color: var(--helpText);
+}
+
+.members-form button.passkey-add {
+    margin-top: 0.5rem;
+    border-radius: 8px;
+}
+
+.passkey-status:not(:empty) {
+    margin-top: 0.5rem;
+    color: var(--helpText);
+    font-size: 14px;
+}
+
+.passkey-notice {
+    margin-top: 1.25rem;
+    padding: 0.75rem 1rem;
+    border-left: 3px solid #4CAF50;
+    background: rgba(76, 175, 80, 0.08);
+    border-radius: 0 6px 6px 0;
+}
+
+.passkey-notice a {
+    color: #2e7d32;
+    text-decoration: underline;
+}
+
+@media screen and (max-width: 520px) {
+    .passkey-item {
+        flex-direction: column;
+    }
+
+    .passkey-item__delete {
+        align-self: flex-end;
+    }
+}

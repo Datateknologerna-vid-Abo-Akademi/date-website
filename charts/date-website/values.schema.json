@@ -88,6 +88,15 @@
             "type": "string"
           }
         },
+        "webauthnRpId": {
+          "type": "string"
+        },
+        "webauthnAllowedOrigins": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "github": {
           "type": "object",
           "properties": {

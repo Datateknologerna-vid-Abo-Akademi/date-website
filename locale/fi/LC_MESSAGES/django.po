@@ -3194,3 +3194,164 @@ msgstr "Kaksi varausta samassa tilassa menevät päällekkäin."
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"
 msgstr "Tulevia varauksia ei löytynyt"
+#: members/two_factor.py
+msgid "Invalid passkey name."
+msgstr "Virheellinen pääsyavaimen nimi."
+
+#: members/two_factor.py
+msgid "Passkey removed."
+msgstr "Pääsyavain poistettu."
+
+#: members/webauthn.py
+msgid "A passkey was added to your account"
+msgstr "Tiliisi lisättiin pääsyavain"
+
+#: members/webauthn.py
+msgid "A passkey was removed from your account"
+msgstr "Tililtäsi poistettiin pääsyavain"
+
+#: members/webauthn.py
+msgid "Sign in again before adding a passkey."
+msgstr "Kirjaudu uudelleen ennen kuin lisäät pääsyavaimen."
+
+#: templates/common/members/passkey_added_email.txt
+#, python-format
+msgid "Hi %(name)s,"
+msgstr "Hei %(name)s,"
+
+#: templates/common/members/passkey_added_email.txt
+#, python-format
+msgid "A passkey named \"%(credential_name)s\" was added to your %(association_name)s account."
+msgstr "Pääsyavain nimeltä \"%(credential_name)s\" lisättiin %(association_name)s-tiliisi."
+
+#: templates/common/members/passkey_added_email.txt
+msgid "If this wasn't you, sign in, remove the passkey and change your password, then contact the site administrators."
+msgstr "Jos et tehnyt tätä itse, kirjaudu sisään, poista pääsyavain ja vaihda salasanasi. Ota sitten yhteyttä sivuston ylläpitäjiin."
+
+#: templates/common/members/passkey_removed_email.txt
+#, python-format
+msgid "A passkey named \"%(credential_name)s\" was removed from your %(association_name)s account."
+msgstr "Pääsyavain nimeltä \"%(credential_name)s\" poistettiin %(association_name)s-tililtäsi."
+
+#: templates/common/members/passkey_removed_email.txt
+msgid "If this wasn't you, change your password and contact the site administrators."
+msgstr "Jos et tehnyt tätä itse, vaihda salasanasi ja ota yhteyttä sivuston ylläpitäjiin."
+
+#: templates/common/members/registration/_passkey_login.html
+msgid "Sign in with a passkey"
+msgstr "Kirjaudu pääsyavaimella"
+
+#: templates/common/members/registration/_passkey_login.html
+msgid "This browser does not support passkeys."
+msgstr "Tämä selain ei tue pääsyavaimia."
+
+#: templates/common/members/registration/login.html
+msgid "Verify with your passkey, or enter one of your backup tokens to continue."
+msgstr "Vahvista pääsyavaimellasi tai syötä yksi varakoodeistasi jatkaaksesi."
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Passkeys"
+msgstr "Pääsyavaimet"
+
+#: templates/common/two_factor/core/backup_tokens.html
+msgid "Generate backup tokens to keep access if your authenticator app or passkey is unavailable."
+msgstr "Luo varakoodit, jotta pääset tilillesi, vaikka todennussovellus tai pääsyavain ei olisi käytettävissä."
+
+#: templates/common/two_factor/profile/disable.html
+msgid "This removes the extra verification step from your account, including your authenticator app, passkeys and backup tokens."
+msgstr "Tämä poistaa tililtäsi ylimääräisen vahvistusvaiheen, mukaan lukien todennussovelluksen, pääsyavaimet ja varakoodit."
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "A passkey lets you sign in with your fingerprint, face or device PIN instead of a password. Signing in with a passkey also counts as two-factor authentication."
+msgstr "Pääsyavaimella voit kirjautua sormenjäljellä, kasvoilla tai laitteen PIN-koodilla salasanan sijaan. Pääsyavaimella kirjautuminen lasketaan myös kaksivaiheiseksi tunnistautumiseksi."
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Name"
+msgstr "Nimi"
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Rename"
+msgstr "Nimeä uudelleen"
+
+#: templates/common/two_factor/profile/passkeys.html
+#, python-format
+msgid "Added %(created)s"
+msgstr "Lisätty %(created)s"
+
+#: templates/common/two_factor/profile/passkeys.html
+#, python-format
+msgid "Last used %(used)s"
+msgstr "Viimeksi käytetty %(used)s"
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Remove"
+msgstr "Poista"
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "You have no passkeys yet."
+msgstr "Sinulla ei ole vielä pääsyavaimia."
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Add a passkey"
+msgstr "Lisää pääsyavain"
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "For your security, sign out and sign in again (including your second factor, if you have one) before adding a passkey."
+msgstr "Kirjaudu turvallisuussyistä ulos ja takaisin sisään (myös toisella tunnistautumistavalla, jos sinulla on sellainen) ennen kuin lisäät pääsyavaimen."
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Generate backup tokens so you can still sign in if you lose your passkey."
+msgstr "Luo varakoodit, jotta voit kirjautua, vaikka kadottaisit pääsyavaimesi."
+
+#: members/two_factor.py
+msgid "Verify with your existing passkey or authenticator before adding another."
+msgstr "Vahvista henkilöllisyytesi nykyisellä pääsyavaimellasi tai todennussovelluksellasi ennen uuden lisäämistä."
+
+#: members/views_github.py
+msgid "Logga in på nytt innan du kopplar ett GitHub-konto."
+msgstr "Kirjaudu uudelleen sisään ennen GitHub-tilin linkittämistä."
+
+#: templates/common/members/registration/login.html
+msgid "If you normally sign in with a passkey and have no backup tokens, contact the site administrators to regain access."
+msgstr "Jos kirjaudut yleensä sisään pääsyavaimella etkä omista varakoodeja, ota yhteyttä sivuston ylläpitäjiin palauttaaksesi pääsyn."
+
+#: templates/common/members/userinfo.html
+msgid "Sign-in and security"
+msgstr "Kirjautuminen ja tietoturva"
+
+#: templates/common/members/userinfo.html
+msgid "Two-factor authentication is on."
+msgstr "Kaksivaiheinen tunnistautuminen on käytössä."
+
+#: templates/common/members/userinfo.html
+msgid "Two-factor authentication is off."
+msgstr "Kaksivaiheinen tunnistautuminen ei ole käytössä."
+
+#: templates/common/members/userinfo.html
+msgid "Authenticator app"
+msgstr "Todennussovellus"
+
+#: templates/common/two_factor/core/backup_tokens.html
+msgid "Download backup codes"
+msgstr "Lataa varakoodit"
+
+#: members/two_factor.py
+msgid "You have no backup codes to download. Generate new ones first."
+msgstr "Sinulla ei ole ladattavia varakoodeja. Luo ensin uudet."
+
+#: members/two_factor.py
+#, python-format
+msgid "Backup codes for %(username)s at %(association)s, generated %(date)s."
+msgstr "Varakoodit käyttäjälle %(username)s (%(association)s), luotu %(date)s."
+
+#: members/two_factor.py
+msgid "Each code can be used once. Keep this file somewhere safe."
+msgstr "Jokaista koodia voi käyttää kerran. Säilytä tiedosto turvallisessa paikassa."
+
+#: members/webauthn.py members/two_factor.py
+msgid "Passkey"
+msgstr "Pääsyavain"
+
+#: members/webauthn.py members/two_factor.py
+msgid "Choose a different name."
+msgstr "Valitse toinen nimi."

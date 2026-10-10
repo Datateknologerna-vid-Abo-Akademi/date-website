@@ -3158,3 +3158,164 @@ msgstr "Two bookings in the same room overlap each other."
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"
 msgstr "No upcoming bookings found"
+#: members/two_factor.py
+msgid "Invalid passkey name."
+msgstr "Invalid passkey name."
+
+#: members/two_factor.py
+msgid "Passkey removed."
+msgstr "Passkey removed."
+
+#: members/webauthn.py
+msgid "A passkey was added to your account"
+msgstr "A passkey was added to your account"
+
+#: members/webauthn.py
+msgid "A passkey was removed from your account"
+msgstr "A passkey was removed from your account"
+
+#: members/webauthn.py
+msgid "Sign in again before adding a passkey."
+msgstr "Sign in again before adding a passkey."
+
+#: templates/common/members/passkey_added_email.txt
+#, python-format
+msgid "Hi %(name)s,"
+msgstr "Hi %(name)s,"
+
+#: templates/common/members/passkey_added_email.txt
+#, python-format
+msgid "A passkey named \"%(credential_name)s\" was added to your %(association_name)s account."
+msgstr "A passkey named \"%(credential_name)s\" was added to your %(association_name)s account."
+
+#: templates/common/members/passkey_added_email.txt
+msgid "If this wasn't you, sign in, remove the passkey and change your password, then contact the site administrators."
+msgstr "If this wasn't you, sign in, remove the passkey and change your password, then contact the site administrators."
+
+#: templates/common/members/passkey_removed_email.txt
+#, python-format
+msgid "A passkey named \"%(credential_name)s\" was removed from your %(association_name)s account."
+msgstr "A passkey named \"%(credential_name)s\" was removed from your %(association_name)s account."
+
+#: templates/common/members/passkey_removed_email.txt
+msgid "If this wasn't you, change your password and contact the site administrators."
+msgstr "If this wasn't you, change your password and contact the site administrators."
+
+#: templates/common/members/registration/_passkey_login.html
+msgid "Sign in with a passkey"
+msgstr "Sign in with a passkey"
+
+#: templates/common/members/registration/_passkey_login.html
+msgid "This browser does not support passkeys."
+msgstr "This browser does not support passkeys."
+
+#: templates/common/members/registration/login.html
+msgid "Verify with your passkey, or enter one of your backup tokens to continue."
+msgstr "Verify with your passkey, or enter one of your backup tokens to continue."
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Passkeys"
+msgstr "Passkeys"
+
+#: templates/common/two_factor/core/backup_tokens.html
+msgid "Generate backup tokens to keep access if your authenticator app or passkey is unavailable."
+msgstr "Generate backup tokens to keep access if your authenticator app or passkey is unavailable."
+
+#: templates/common/two_factor/profile/disable.html
+msgid "This removes the extra verification step from your account, including your authenticator app, passkeys and backup tokens."
+msgstr "This removes the extra verification step from your account, including your authenticator app, passkeys and backup tokens."
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "A passkey lets you sign in with your fingerprint, face or device PIN instead of a password. Signing in with a passkey also counts as two-factor authentication."
+msgstr "A passkey lets you sign in with your fingerprint, face or device PIN instead of a password. Signing in with a passkey also counts as two-factor authentication."
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Name"
+msgstr "Name"
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Rename"
+msgstr "Rename"
+
+#: templates/common/two_factor/profile/passkeys.html
+#, python-format
+msgid "Added %(created)s"
+msgstr "Added %(created)s"
+
+#: templates/common/two_factor/profile/passkeys.html
+#, python-format
+msgid "Last used %(used)s"
+msgstr "Last used %(used)s"
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Remove"
+msgstr "Remove"
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "You have no passkeys yet."
+msgstr "You have no passkeys yet."
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Add a passkey"
+msgstr "Add a passkey"
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "For your security, sign out and sign in again (including your second factor, if you have one) before adding a passkey."
+msgstr "For your security, sign out and sign in again (including your second factor, if you have one) before adding a passkey."
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Generate backup tokens so you can still sign in if you lose your passkey."
+msgstr "Generate backup tokens so you can still sign in if you lose your passkey."
+
+#: members/two_factor.py
+msgid "Verify with your existing passkey or authenticator before adding another."
+msgstr "Verify with your existing passkey or authenticator before adding another."
+
+#: members/views_github.py
+msgid "Logga in på nytt innan du kopplar ett GitHub-konto."
+msgstr "Sign in again before linking a GitHub account."
+
+#: templates/common/members/registration/login.html
+msgid "If you normally sign in with a passkey and have no backup tokens, contact the site administrators to regain access."
+msgstr "If you normally sign in with a passkey and have no backup tokens, contact the site administrators to regain access."
+
+#: templates/common/members/userinfo.html
+msgid "Sign-in and security"
+msgstr "Sign-in and security"
+
+#: templates/common/members/userinfo.html
+msgid "Two-factor authentication is on."
+msgstr "Two-factor authentication is on."
+
+#: templates/common/members/userinfo.html
+msgid "Two-factor authentication is off."
+msgstr "Two-factor authentication is off."
+
+#: templates/common/members/userinfo.html
+msgid "Authenticator app"
+msgstr "Authenticator app"
+
+#: templates/common/two_factor/core/backup_tokens.html
+msgid "Download backup codes"
+msgstr "Download backup codes"
+
+#: members/two_factor.py
+msgid "You have no backup codes to download. Generate new ones first."
+msgstr "You have no backup codes to download. Generate new ones first."
+
+#: members/two_factor.py
+#, python-format
+msgid "Backup codes for %(username)s at %(association)s, generated %(date)s."
+msgstr "Backup codes for %(username)s at %(association)s, generated %(date)s."
+
+#: members/two_factor.py
+msgid "Each code can be used once. Keep this file somewhere safe."
+msgstr "Each code can be used once. Keep this file somewhere safe."
+
+#: members/webauthn.py members/two_factor.py
+msgid "Passkey"
+msgstr "Passkey"
+
+#: members/webauthn.py members/two_factor.py
+msgid "Choose a different name."
+msgstr "Choose a different name."

@@ -75,6 +75,7 @@ def build_urlpatterns(*routes):
         urlpatterns.append(path("api/", include((api_patterns, "api"))))
 
     urlpatterns += [
+        path("members/webauthn/", include("members.webauthn_urls", namespace="otp_webauthn")),
         path("set_lang/", date_views.set_language, name="set_lang"),
         path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
         path("_uploads/sign/", uploads_views.sign_upload, name="direct-upload-sign"),
