@@ -1,9 +1,12 @@
 {% load i18n %}
 <div class="two-factor-actions">
+  {# Enter in a field submits the first submit button; keep that Continue, not Back. #}
+  <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
   {% if wizard.steps.prev %}
     <button name="wizard_goto_step"
             type="submit"
             value="{{ wizard.steps.prev }}"
+            formnovalidate
             class="two-factor-secondary">{% trans "Back" %}</button>
   {% endif %}
   <button type="submit">{% trans "Continue" %}</button>
