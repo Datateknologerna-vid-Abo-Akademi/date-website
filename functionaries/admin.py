@@ -116,8 +116,8 @@ class FunctionaryRoleAdmin(
         ),
     )
     save_on_top = True
-    list_display = ('title', 'translation_status', 'board', 'functionary_count')
-    list_filter = ('board',)
+    list_display = ('title', 'translation_status', 'board', 'tutor', 'functionary_count')
+    list_filter = ('board', 'tutor')
     search_fields = ('title', 'functionary__name', 'functionary__member__first_name', 'functionary__member__last_name')
     ordering = ['title']
     inlines = [FunctionaryInline]

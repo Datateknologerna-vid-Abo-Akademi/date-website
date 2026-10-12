@@ -4,6 +4,7 @@ from unittest.mock import Mock
 from django.contrib import admin
 from django.contrib.auth.models import AnonymousUser
 from django.test import RequestFactory, TestCase, override_settings
+from django.urls import reverse
 from django.utils import timezone
 
 from functionaries.admin import FunctionaryAdmin, FunctionaryInline, FunctionaryRoleAdmin
@@ -208,3 +209,56 @@ class FunctionaryHelperTests(TestCase):
             list(functionaries.values_list('year', flat=True)),
             [2024, 2023],
         )
+
+
+class FunctionaryTutorSectionTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        member = Member.objects.create_user(
+            username='tutorsection',
+            password='pwd',
+            membership_type=MembershipType.objects.get(pk=ORDINARY_MEMBER),
+        )
+        cls.board_role = FunctionaryRole.objects.create(title='Ordförande', board=True)
+        cls.tutor_role = FunctionaryRole.objects.create(title='Tutor', tutor=True)
+        cls.board_tutor_role = FunctionaryRole.objects.create(title='Tutorchef', board=True, tutor=True)
+        cls.other_role = FunctionaryRole.objects.create(title='Webmaster')
+        cls.year = timezone.now().year
+        cls.board = Functionary.objects.create(member=member, functionary_role=cls.board_role, year=cls.year)
+        cls.tutor = Functionary.objects.create(name='Tutor Person', functionary_role=cls.tutor_role, year=cls.year)
+        cls.board_tutor = Functionary.objects.create(
+            name='Tutor Chair', functionary_role=cls.board_tutor_role, year=cls.year
+        )
+        cls.other = Functionary.objects.create(name='Web Person', functionary_role=cls.other_role, year=cls.year)
+
+    def test_tutor_defaults_to_false(self):
+        self.assertFalse(self.other_role.tutor)
+
+    def test_selector_sections_are_mutually_exclusive(self):
+        self.assertCountEqual(
+            get_filtered_functionaries(self.year, None, True),
+            [self.board, self.board_tutor],
+        )
+        self.assertCountEqual(
+            get_filtered_functionaries(self.year, None, False, is_tutor=True),
+            [self.tutor],
+        )
+        self.assertCountEqual(
+            get_filtered_functionaries(self.year, None, False),
+            [self.other],
+        )
+
+    def test_public_listing_renders_tutor_section(self):
+        response = self.client.get(reverse('members:functionaries'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context['tutor_functionaries_by_role']), [self.tutor_role])
+        self.assertNotIn(self.tutor_role, response.context['functionaries_by_role'])
+        self.assertIn(self.board_tutor_role, response.context['board_functionaries_by_role'])
+        self.assertContains(response, 'Tutor Person')
+
+    def test_role_admin_lists_and_filters_tutor_flag(self):
+        role_admin = FunctionaryRoleAdmin(FunctionaryRole, admin.site)
+
+        self.assertIn('tutor', role_admin.list_display)
+        self.assertIn('tutor', role_admin.list_filter)
