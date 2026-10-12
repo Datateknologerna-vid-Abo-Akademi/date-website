@@ -9,6 +9,11 @@ django:
   allowedOrigins:
     - https://kemistklubben.org
     - https://www.kemistklubben.org
+  # Passkeys: the RP ID is permanent once members register passkeys.
+  # webauthnRpId: kemistklubben.org
+  # webauthnAllowedOrigins:
+  #   - https://kemistklubben.org
+  #   - https://www.kemistklubben.org
 
 ingress:
   hosts:

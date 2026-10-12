@@ -22,7 +22,7 @@ from core.utils import enqueue_task_on_commit, send_email_task, validate_captcha
 from .forms import CustomPasswordResetForm, MemberEditForm, SignUpForm
 from .models import Member, MembershipType
 from .tokens import account_activation_token
-from .two_factor import member_has_2fa
+from .two_factor import two_factor_context
 
 logger = logging.getLogger('date')
 
@@ -35,7 +35,7 @@ class UserinfoView(View):
         context = {
             "user": user,
             "form": form,
-            "two_factor_enabled": member_has_2fa(user),
+            **two_factor_context(user),
         }
         return render(request, 'members/userinfo.html', context)
 
@@ -50,7 +50,7 @@ class UserinfoView(View):
         context = {
             "user": user,
             "form": form,
-            "two_factor_enabled": member_has_2fa(user),
+            **two_factor_context(user),
         }
         return render(request, 'members/userinfo.html', context)
 

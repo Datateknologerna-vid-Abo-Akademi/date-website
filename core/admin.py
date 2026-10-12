@@ -3,7 +3,6 @@ from django.contrib import admin
 from django.contrib.admin.options import InlineModelAdmin
 from django.contrib.admin.views.autocomplete import AutocompleteJsonView
 from django.utils.translation import gettext_lazy as _
-from django_otp.plugins.otp_totp.models import TOTPDevice
 from modeltranslation.admin import TranslationAdmin
 from two_factor.admin import AdminSiteOTPRequiredMixin
 
@@ -169,10 +168,11 @@ class FixedLanguageAdminSite(AdminSiteOTPRequiredMixin, _AdminSiteBase):  # type
         if not admin.AdminSite.has_permission(self, request):
             return False
 
-        # Allow access when the user has no 2FA device registered (2FA is optional).
-        # When a device exists the user must have completed OTP verification this session.
-        has_totp = TOTPDevice.objects.filter(user=request.user, confirmed=True).exists()
-        return request.user.is_verified() or not has_totp
+        from members.two_factor import member_has_2fa
+
+        # Allow access when the user has no second factor (2FA is optional).
+        # When one exists (TOTP or passkey) the session must be OTP-verified.
+        return request.user.is_verified() or not member_has_2fa(request.user)
 
 
 # When USE_UNFOLD=True, unfold's DefaultAppConfig.ready() preempts Django's lazy

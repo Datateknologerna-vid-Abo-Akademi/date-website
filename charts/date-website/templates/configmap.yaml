@@ -11,6 +11,12 @@ data:
   ENABLE_LANGUAGE_FEATURES: {{ .Values.django.enableLanguageFeatures | quote }}
   ALLOWED_HOSTS: {{ .Values.django.allowedHosts | toJson | quote }}
   ALLOWED_ORIGINS: {{ .Values.django.allowedOrigins | toJson | quote }}
+  {{- with .Values.django.webauthnRpId }}
+  WEBAUTHN_RP_ID: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.django.webauthnAllowedOrigins }}
+  WEBAUTHN_ALLOWED_ORIGINS: {{ . | toJson | quote }}
+  {{- end }}
   USE_X_FORWARDED_HOST: {{ .Values.django.useXForwardedHost | quote }}
   TRUST_X_FORWARDED_PROTO: {{ .Values.django.trustXForwardedProto | quote }}
   EXTRA_STAFF_GROUPS: {{ .Values.django.extraStaffGroups | toJson | quote }}

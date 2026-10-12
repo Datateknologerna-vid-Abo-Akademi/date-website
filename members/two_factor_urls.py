@@ -1,11 +1,15 @@
 from django.urls import path
 
 from .two_factor import (
+    MemberBackupTokensDownloadView,
     MemberBackupTokensView,
     MemberDisableView,
     MemberQRGeneratorView,
     MemberSetupCompleteView,
     MemberSetupView,
+    PasskeyDeleteView,
+    PasskeyListView,
+    PasskeyRenameView,
     TwoFactorProfileRedirectView,
 )
 
@@ -17,5 +21,9 @@ urlpatterns = [
     path('qrcode/', MemberQRGeneratorView.as_view(), name='qr'),
     path('setup/complete/', MemberSetupCompleteView.as_view(), name='setup_complete'),
     path('backup/tokens/', MemberBackupTokensView.as_view(), name='backup_tokens'),
+    path('backup/tokens/download/', MemberBackupTokensDownloadView.as_view(), name='backup_tokens_download'),
     path('disable/', MemberDisableView.as_view(), name='disable'),
+    path('passkeys/', PasskeyListView.as_view(), name='passkeys'),
+    path('passkeys/<int:pk>/rename/', PasskeyRenameView.as_view(), name='passkey_rename'),
+    path('passkeys/<int:pk>/delete/', PasskeyDeleteView.as_view(), name='passkey_delete'),
 ]

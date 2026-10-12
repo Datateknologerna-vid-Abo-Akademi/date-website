@@ -3137,3 +3137,164 @@ msgstr "Två bokningar i samma utrymme överlappar varandra."
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"
 msgstr "Inga kommande bokningar hittades"
+#: members/two_factor.py
+msgid "Invalid passkey name."
+msgstr "Ogiltigt namn på nyckel."
+
+#: members/two_factor.py
+msgid "Passkey removed."
+msgstr "Nyckeln har tagits bort."
+
+#: members/webauthn.py
+msgid "A passkey was added to your account"
+msgstr "En inloggningsnyckel har lagts till på ditt konto"
+
+#: members/webauthn.py
+msgid "A passkey was removed from your account"
+msgstr "En inloggningsnyckel har tagits bort från ditt konto"
+
+#: members/webauthn.py
+msgid "Sign in again before adding a passkey."
+msgstr "Logga in på nytt innan du lägger till en inloggningsnyckel."
+
+#: templates/common/members/passkey_added_email.txt
+#, python-format
+msgid "Hi %(name)s,"
+msgstr "Hej %(name)s,"
+
+#: templates/common/members/passkey_added_email.txt
+#, python-format
+msgid "A passkey named \"%(credential_name)s\" was added to your %(association_name)s account."
+msgstr "En inloggningsnyckel med namnet \"%(credential_name)s\" har lagts till på ditt %(association_name)s-konto."
+
+#: templates/common/members/passkey_added_email.txt
+msgid "If this wasn't you, sign in, remove the passkey and change your password, then contact the site administrators."
+msgstr "Om det inte var du, logga in, ta bort nyckeln och byt lösenord. Kontakta sedan webbplatsens administratörer."
+
+#: templates/common/members/passkey_removed_email.txt
+#, python-format
+msgid "A passkey named \"%(credential_name)s\" was removed from your %(association_name)s account."
+msgstr "En inloggningsnyckel med namnet \"%(credential_name)s\" har tagits bort från ditt %(association_name)s-konto."
+
+#: templates/common/members/passkey_removed_email.txt
+msgid "If this wasn't you, change your password and contact the site administrators."
+msgstr "Om det inte var du, byt lösenord och kontakta webbplatsens administratörer."
+
+#: templates/common/members/registration/_passkey_login.html
+msgid "Sign in with a passkey"
+msgstr "Logga in med inloggningsnyckel"
+
+#: templates/common/members/registration/_passkey_login.html
+msgid "This browser does not support passkeys."
+msgstr "Den här webbläsaren stöder inte inloggningsnycklar."
+
+#: templates/common/members/registration/login.html
+msgid "Verify with your passkey, or enter one of your backup tokens to continue."
+msgstr "Verifiera med din inloggningsnyckel eller ange en av dina reservkoder för att fortsätta."
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Passkeys"
+msgstr "Inloggningsnycklar"
+
+#: templates/common/two_factor/core/backup_tokens.html
+msgid "Generate backup tokens to keep access if your authenticator app or passkey is unavailable."
+msgstr "Generera reservkoder för att behålla åtkomsten om din autentiseringsapp eller inloggningsnyckel inte är tillgänglig."
+
+#: templates/common/two_factor/profile/disable.html
+msgid "This removes the extra verification step from your account, including your authenticator app, passkeys and backup tokens."
+msgstr "Detta tar bort det extra verifieringssteget från ditt konto, inklusive din autentiseringsapp, dina inloggningsnycklar och reservkoder."
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "A passkey lets you sign in with your fingerprint, face or device PIN instead of a password. Signing in with a passkey also counts as two-factor authentication."
+msgstr "Med en inloggningsnyckel kan du logga in med fingeravtryck, ansikte eller enhetens PIN-kod i stället för lösenord. Inloggning med nyckel räknas också som tvåfaktorsautentisering."
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Name"
+msgstr "Namn"
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Rename"
+msgstr "Byt namn"
+
+#: templates/common/two_factor/profile/passkeys.html
+#, python-format
+msgid "Added %(created)s"
+msgstr "Tillagd %(created)s"
+
+#: templates/common/two_factor/profile/passkeys.html
+#, python-format
+msgid "Last used %(used)s"
+msgstr "Senast använd %(used)s"
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Remove"
+msgstr "Ta bort"
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "You have no passkeys yet."
+msgstr "Du har inga inloggningsnycklar ännu."
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Add a passkey"
+msgstr "Lägg till inloggningsnyckel"
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "For your security, sign out and sign in again (including your second factor, if you have one) before adding a passkey."
+msgstr "Av säkerhetsskäl, logga ut och logga in på nytt (inklusive din andra faktor om du har en) innan du lägger till en inloggningsnyckel."
+
+#: templates/common/two_factor/profile/passkeys.html
+msgid "Generate backup tokens so you can still sign in if you lose your passkey."
+msgstr "Generera reservkoder så att du fortfarande kan logga in om du tappar bort din inloggningsnyckel."
+
+#: members/two_factor.py
+msgid "Verify with your existing passkey or authenticator before adding another."
+msgstr "Verifiera med din befintliga inloggningsnyckel eller autentiseringsapp innan du lägger till en ny."
+
+#: members/views_github.py
+msgid "Logga in på nytt innan du kopplar ett GitHub-konto."
+msgstr "Logga in på nytt innan du kopplar ett GitHub-konto."
+
+#: templates/common/members/registration/login.html
+msgid "If you normally sign in with a passkey and have no backup tokens, contact the site administrators to regain access."
+msgstr "Om du vanligtvis loggar in med en inloggningsnyckel och inte har några reservkoder, kontakta webbplatsens administratörer för att få tillbaka åtkomsten."
+
+#: templates/common/members/userinfo.html
+msgid "Sign-in and security"
+msgstr "Inloggning och säkerhet"
+
+#: templates/common/members/userinfo.html
+msgid "Two-factor authentication is on."
+msgstr "Tvåfaktorsautentisering är på."
+
+#: templates/common/members/userinfo.html
+msgid "Two-factor authentication is off."
+msgstr "Tvåfaktorsautentisering är av."
+
+#: templates/common/members/userinfo.html
+msgid "Authenticator app"
+msgstr "Autentiseringsapp"
+
+#: templates/common/two_factor/core/backup_tokens.html
+msgid "Download backup codes"
+msgstr "Ladda ner reservkoder"
+
+#: members/two_factor.py
+msgid "You have no backup codes to download. Generate new ones first."
+msgstr "Du har inga reservkoder att ladda ner. Generera nya först."
+
+#: members/two_factor.py
+#, python-format
+msgid "Backup codes for %(username)s at %(association)s, generated %(date)s."
+msgstr "Reservkoder för %(username)s hos %(association)s, genererade %(date)s."
+
+#: members/two_factor.py
+msgid "Each code can be used once. Keep this file somewhere safe."
+msgstr "Varje kod kan användas en gång. Förvara filen på ett säkert ställe."
+
+#: members/webauthn.py members/two_factor.py
+msgid "Passkey"
+msgstr "Inloggningsnyckel"
+
+#: members/webauthn.py members/two_factor.py
+msgid "Choose a different name."
+msgstr "Välj ett annat namn."
