@@ -262,3 +262,14 @@ class FunctionaryTutorSectionTests(TestCase):
 
         self.assertIn('tutor', role_admin.list_display)
         self.assertIn('tutor', role_admin.list_filter)
+
+    def test_role_admin_shows_board_and_tutor_on_one_row(self):
+        role_admin = FunctionaryRoleAdmin(FunctionaryRole, admin.site)
+        request = RequestFactory().get('/')
+        request.user = SimpleNamespace(is_superuser=True)
+
+        fields = role_admin.get_fields(request)
+
+        self.assertIn(('board', 'tutor'), fields)
+        self.assertNotIn('tutor', fields)
+        self.assertTrue(any(isinstance(field, str) and field.startswith('title') for field in fields))
