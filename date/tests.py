@@ -49,6 +49,7 @@ ASSOCIATION_SETTINGS_MODULES = {
     "pulterit": "core.settings.pulterit",
     "sf": "core.settings.sf",
     "impuls": "core.settings.impuls",
+    "hf": "core.settings.hf",
 }
 
 # The Font Awesome compatible build of Line Awesome. Shared templates use fa-* /

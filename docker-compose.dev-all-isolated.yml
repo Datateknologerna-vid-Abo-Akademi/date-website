@@ -11,7 +11,7 @@ services:
     restart: "no"
     environment:
       PGPASSWORD: ${DATE_DB_PASSWORD}
-    command: /bin/bash -c "set -e; until pg_isready -h db -U postgres -q; do sleep 1; done; for db in date kk biocum pulterit sf impuls; do psql -h db -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname='$${db}'\" | grep -q 1 || createdb -h db -U postgres $${db}; done"
+    command: /bin/bash -c "set -e; until pg_isready -h db -U postgres -q; do sleep 1; done; for db in date kk biocum pulterit sf impuls hf; do psql -h db -U postgres -tc \"SELECT 1 FROM pg_database WHERE datname='$${db}'\" | grep -q 1 || createdb -h db -U postgres $${db}; done"
     depends_on:
       db:
         condition: service_started
@@ -19,7 +19,7 @@ services:
   init:
     # Each database needs its own migration history. This covers variants with
     # association-only apps as well as the shared app set.
-    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && for entry in 'date date' 'kk kk' 'biocum biocum' 'pulterit pulterit' 'sf sf' 'impuls impuls'; do set -- $${entry}; PROJECT_NAME=$${1} DB_DATABASE=$${2} python manage.py migrate --noinput || exit 1; done && python manage.py compilemessages -l en -l fi -l sv --verbosity 0"
+    command: /bin/bash -c "./wait-for-postgres.sh db:5432 && for entry in 'date date' 'kk kk' 'biocum biocum' 'pulterit pulterit' 'sf sf' 'impuls impuls' 'hf hf'; do set -- $${entry}; PROJECT_NAME=$${1} DB_DATABASE=$${2} python manage.py migrate --noinput || exit 1; done && python manage.py compilemessages -l en -l fi -l sv --verbosity 0"
     depends_on:
       db:
         condition: service_started
@@ -73,3 +73,11 @@ services:
     environment:
       DB_DATABASE: impuls
       REDIS_SERVER: redis://redis:6379/5
+
+  web-hf:
+    profiles:
+      - all
+      - hf
+    environment:
+      DB_DATABASE: hf
+      REDIS_SERVER: redis://redis:6379/6

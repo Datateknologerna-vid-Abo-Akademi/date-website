@@ -119,6 +119,7 @@ database and Redis logical database when separate state is required.
 | pulterit    | http://localhost:8004 |
 | sf          | http://localhost:8005 |
 | impuls      | http://localhost:8006 |
+| hf          | http://localhost:8007 |
 
 The database is exposed on host port `5433` to avoid conflicting with the regular dev stack on `5432`.
 
@@ -220,7 +221,7 @@ cross-association app changes.
 uv run python scripts/check_project_variants.py
 ```
 
-It runs `manage.py check` for `date`, `kk`, `biocum`, and `pulterit`. Pass one
+It runs `manage.py check` for `date`, `kk`, `biocum`, `pulterit`, and `hf`. Pass one
 or more project names as arguments to narrow the run.
 
 ## Translation Maintenance

@@ -4,7 +4,7 @@ import os
 import subprocess
 import sys
 
-DEFAULT_PROJECTS = ("date", "kk", "biocum", "pulterit")
+DEFAULT_PROJECTS = ("date", "kk", "biocum", "pulterit", "hf")
 
 
 def main() -> int:

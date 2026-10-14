@@ -95,7 +95,7 @@ source "$DATE_WEBSITE_DIR/env.sh"
 
 Important environment flags:
 
-- `PROJECT_NAME` selects the active association/site variant (`date`, `kk`, `biocum`, `demo`, `pulterit`, `sf`, `impuls`, ...).
+- `PROJECT_NAME` selects the active association/site variant (`date`, `kk`, `biocum`, `demo`, `pulterit`, `sf`, `impuls`, `hf`, ...).
 - `ENABLE_LANGUAGE_FEATURES=True` enables the language switcher, translated admin tabs, and runtime selection between the languages configured for the active association on unprefixed URLs. DaTe currently uses Swedish and English at runtime; some other associations also expose Finnish. When omitted or false, the project runs Swedish-only.
 - `USE_UNFOLD=True` enables the Unfold admin theme. When omitted or false, Django uses the classic admin. Restart or recreate containers after changing it because admin apps, widgets, templates, and static assets are selected at startup.
 - `USE_S3` toggles whether uploads use local disk storage or the configured S3-compatible backend.
@@ -155,7 +155,7 @@ The `date-test` alias runs with `--no-deps`, so it does not start the database o
 
 Manually verify user-facing flows (forms, background jobs, Channels endpoints) when implementing a feature; a lot of work in this repo still benefits from a quick human smoke test after the automated checks pass.
 
-Use `scripts/check_project_variants.py` after changing shared settings, templates, static paths, URL configuration, or apps that are not installed for every association. It runs `manage.py check` for `date`, `kk`, `biocum`, and `pulterit`; pass project names as arguments to narrow the run.
+Use `scripts/check_project_variants.py` after changing shared settings, templates, static paths, URL configuration, or apps that are not installed for every association. It runs `manage.py check` for `date`, `kk`, `biocum`, `pulterit`, and `hf`; pass project names as arguments to narrow the run.
 
 If you touch translations, templates, or language-aware navigation, also smoke-test the default Swedish site plus at least one non-default language selected through the language switcher with `ENABLE_LANGUAGE_FEATURES=True`.
 
@@ -170,7 +170,7 @@ For translation architecture and workflow, see [docs/dev/translations.md](docs/d
 
 ### Production: Kubernetes + GitOps
 
-The association's production sites (date, kk, biocum, pulterit, sf, qa)
+The association's production sites (date, kk, biocum, pulterit, sf, hf, qa)
 run on a Kubernetes cluster managed with **GitOps**: Argo CD watches a
 private operator repository and deploys the published Helm chart + per-site
 values. You do not deploy to production from this repository — you publish

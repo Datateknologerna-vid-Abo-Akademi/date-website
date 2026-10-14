@@ -8,7 +8,7 @@ The project supports multiple site variants selected by `PROJECT_NAME`. Each var
 # Variant with no inherited templates (date, kk, pulterit, demo):
 TEMPLATES = build_templates('date')
 
-# Variant inheriting another variant's templates (biocum, sf, impuls):
+# Variant inheriting another variant's templates (biocum, sf, impuls, hf):
 TEMPLATES = build_templates('biocum', parent_variants=('date',))
 ```
 
@@ -38,7 +38,7 @@ This means:
 - `templates/common/` defines the base structure and all available `{% raw %}{% block %}{% endraw %}` slots.
 - `templates/<association>/` overrides only the blocks it needs; everything else falls through to the common template.
 - Associations can also layer another association's templates before common templates. For example, Impuls uses `templates/impuls`, then `templates/date`, then `templates/common` so it can reuse the DaTe homepage layout while overriding only Impuls branding and copy.
-- In a layered variant, `{% raw %}{% extends %}{% endraw %}` resolves to the parent variant's override when one exists, so blocks DaTe fills are inherited too. `templates/date/core/footer.html` puts the DaTe-only AA partner badge in `footer_right`; `templates/biocum/core/footer.html` empties that block again, and Impuls replaces it. `templates/sf/core/footer.html` does not extend the common footer at all (it is a standalone footer with no `footer_right` block), so SF replaces the whole footer. Check biocum, impuls and sf when adding content to a `templates/date/` override.
+- In a layered variant, `{% raw %}{% extends %}{% endraw %}` resolves to the parent variant's override when one exists, so blocks DaTe fills are inherited too. `templates/date/core/footer.html` puts the DaTe-only AA partner badge in `footer_right`; `templates/biocum/core/footer.html` empties that block again, and Impuls replaces it. `templates/sf/core/footer.html` does not extend the common footer at all (it is a standalone footer with no `footer_right` block), so SF replaces the whole footer. Check biocum, impuls, sf and hf when adding content to a `templates/date/` override.
 
 ## Adding New Block Slots
 
@@ -79,7 +79,7 @@ So platforms Line Awesome covers keep using `fa-*` names, and a platform it lack
 - Give the `<svg>` `role="img"` and an `aria-label` with the platform's name spelled the way the brand writes it (`aria-label="TikTok"`). The button takes its accessible name from the icon, so this is the label screen readers announce; the file name can't carry it because it has to stay lowercase.
 - Add `["<name>", "<url>"]` to the association's `SOCIAL_BUTTONS`.
 
-To give one association a different icon, put a file at the same path in its own template directory (`templates/<association>/core/svg/social/<name>.svg`); the search order finds it before the shared file. A variant that layers another variant's templates (impuls and biocum layer `date`) or an app's `templates/` directory can supply or override an icon the same way.
+To give one association a different icon, put a file at the same path in its own template directory (`templates/<association>/core/svg/social/<name>.svg`); the search order finds it before the shared file. A variant that layers another variant's templates (impuls, biocum and hf layer `date`) or an app's `templates/` directory can supply or override an icon the same way.
 
 Shared icons so far: `tiktok`, `linktree` (Font Awesome Free 7.3.1, CC BY 4.0). `sf` renders its own complete footer and does not use this lookup.
 

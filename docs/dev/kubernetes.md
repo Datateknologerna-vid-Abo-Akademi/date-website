@@ -113,7 +113,7 @@ new pods can overlap during rollouts.
 ## How production actually runs (summary)
 
 - One release per association (currently: date, kk, biocum, pulterit, sf,
-  qa), each in its own namespace with its own `PROJECT_NAME`, hosts,
+  hf, qa), each in its own namespace with its own `PROJECT_NAME`, hosts,
   settings module, media prefixes, database, and secrets.
 - **Databases are shared engines, not per-release.** A shared PostgreSQL
   (and MongoDB/MariaDB for other apps) runs in the cluster; each site gets
@@ -166,7 +166,7 @@ the variant.
 
 The build collects each variant's static concurrently into its own tree, and
 collects `django-unfold` static only for the variants that run the unfold
-admin skin (`USE_UNFOLD=True`: date incl. qa, pulterit, sf, impuls); kk and
+admin skin (`USE_UNFOLD=True`: date incl. qa, pulterit, sf, impuls, hf); kk and
 biocum keep the stock admin and the dev-only demo variant gets no collected
 tree. `collectstatic` only discovers app static dirs for apps in
 `INSTALLED_APPS`, so a variant collected without `USE_UNFOLD=True` renders

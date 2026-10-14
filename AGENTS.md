@@ -57,6 +57,9 @@ For cross-association visual checks, use `docker-compose.dev-all.yml` or the `da
 - date: `http://localhost:8002`
 - kk: `http://localhost:8003`
 - pulterit: `http://localhost:8004`
+- sf: `http://localhost:8005`
+- impuls: `http://localhost:8006`
+- hf: `http://localhost:8007`
 
 The dev-all stack runs migrations/`compilemessages` once in an `init` service with `PROJECT_NAME=date`. It intentionally skips `collectstatic`; debug mode uses WhiteNoise finders to serve static files directly from each association's `STATICFILES_DIRS`.
 
@@ -102,7 +105,7 @@ Prefer adding dependencies only when they remove meaningful complexity. This app
 
 Important settings come from `.env`:
 
-- `PROJECT_NAME`: active association/site variant (`date`, `kk`, `biocum`, `demo`, `pulterit`, etc.).
+- `PROJECT_NAME`: active association/site variant (`date`, `kk`, `biocum`, `demo`, `pulterit`, `hf`, etc.).
 - `ENABLE_LANGUAGE_FEATURES`: enables runtime language switching and translated admin tabs. Default/off means Swedish-only behavior.
 - `USE_UNFOLD`: enables the Unfold admin theme. Restart/recreate containers after changing it.
 - `USE_S3`: switches uploads from local disk to S3-compatible storage.

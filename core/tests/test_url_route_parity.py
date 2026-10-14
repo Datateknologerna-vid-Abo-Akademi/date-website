@@ -153,6 +153,26 @@ EXPECTED_PREFIXES = {
         *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
+    "hf": [
+        *COMMON_PREFIXES,
+        "",
+        "news/",
+        "members/",
+        "members/two-factor/",
+        "archive/",
+        "events/",
+        "pages/",
+        "forms/",
+        "ads/",
+        "social/",
+        "polls/",
+        "admin/",
+        "ckeditor5/",
+        "publications/",
+        "klotterplanket/",
+        *API_PREFIXES,
+        *TRAILING_PREFIXES,
+    ],
 }
 
 EXPECTED_URL_NAMES = {
@@ -177,6 +197,7 @@ EXPECTED_URL_NAMES = {
         "api:events:upcoming",
     ],
     "demo": ["news:index", "archive:years", "api:events:upcoming"],
+    "hf": ["news:index", "archive:years", "publications:pdf_list", "klotterplanket:index", "api:events:upcoming"],
 }
 
 FORBIDDEN_URL_NAMES = {
@@ -186,6 +207,7 @@ FORBIDDEN_URL_NAMES = {
     "sf": ["booking:index"],
     "impuls": ["booking:index"],
     "demo": ["booking:index"],
+    "hf": ["booking:index"],
 }
 
 CODE = """

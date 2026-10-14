@@ -233,7 +233,7 @@ jobs:
       - name: Fresh-process checks for every association
         run: |
           set -euo pipefail
-          for variant in date kk biocum pulterit sf impuls demo; do
+          for variant in date kk biocum pulterit sf impuls hf demo; do
             echo "== ${variant}: manage.py check"
             docker-compose run --rm --no-deps -e PROJECT_NAME="${variant}" web python manage.py check
           done

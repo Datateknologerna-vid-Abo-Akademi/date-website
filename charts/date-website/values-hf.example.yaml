@@ -1,0 +1,33 @@
+# Example per-association values for Humanistiska föreningen vid Åbo Akademi r.f.
+# Use after values-hetzner.yaml and values-backblaze-b2.example.yaml.
+#
+# Placeholders: replace the host/domain examples, and set the real SITE_URL
+# in core/settings/hf.py CONTENT_VARIABLES (it is a settings value, not an
+# env var).
+
+django:
+  projectName: hf
+  allowedHosts:
+    - hf.example.com
+  allowedOrigins:
+    - https://hf.example.com
+
+ingress:
+  hosts:
+    - host: hf.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+media:
+  s3:
+    bucketName: "hf-website-media"
+    privateBucketName: "hf-website-private"
+    publicBucketName: "hf-website-public"
+    privateLocation: "hf/media"
+    publicLocation: "hf/public"
+
+backups:
+  objectStorage:
+    bucketName: "hf-website-backups"
+    prefix: "hf-website/postgresql"

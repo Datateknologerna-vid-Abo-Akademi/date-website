@@ -1,0 +1,12 @@
+{% extends "core/footer.html" %}
+{% block footer_logo %}
+  <span class="footer-association-name">{{ ASSOCIATION_NAME_FULL }}</span>
+{% endblock %}
+{% block footer_right %}
+  {% comment %}
+    The parent fills this with the DaTe partner badge, whose image lives only
+    under static/date/. The shared footer_copy column already renders the
+    association's e-mail and address, so this column stays empty rather than
+    repeating them.
+  {% endcomment %}
+{% endblock %}

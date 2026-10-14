@@ -201,7 +201,7 @@ date-all-isolated() {
 }
 
 _date_all_variants() {
-    printf '%s\n' "date kk biocum pulterit sf impuls"
+    printf '%s\n' "date kk biocum pulterit sf impuls hf"
 }
 
 _date_all_service_for() {
@@ -214,7 +214,7 @@ _date_all_service_for() {
 
 _date_all_validate_variant() {
     case "$1" in
-        date|kk|biocum|pulterit|sf|impuls) ;;
+        date|kk|biocum|pulterit|sf|impuls|hf) ;;
         *)
             echo "unknown variant: $1 (supported: $(_date_all_variants))" >&2
             return 1
