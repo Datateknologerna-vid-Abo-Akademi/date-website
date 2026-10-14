@@ -52,11 +52,17 @@
     var paths = Array.prototype.slice.call(svg.querySelectorAll('path'));
     if (!paths.length) return;
 
+    // Every timing below is written at a reference pace of 1 and scaled by the
+    // pace the hero stylesheet sets, which its own keyframes use too. That
+    // keeps the whole animation on one knob, and stops the stylesheet's settle
+    // and title fades drifting away from the trace.
+    var speed = readPace(svg);
+
     // The sweep: one turn, starting a beat after the page settles. A turn is a
     // repeating movement, so it wants to be brisk; the figure below is a
     // one-off drawing, and that one wants to be slow enough to follow.
-    var sweepDelay = 250;
-    var sweepTurn = 2800;
+    var sweepDelay = 250 * speed;
+    var sweepTurn = 2800 * speed;
 
     // Radial layers. Each element starts when the sweep reaches the angle it
     // sits at, and `duration` is how long one element takes to draw. The
@@ -69,12 +75,17 @@
     // anticlockwise, because the bottom words sit upright rather than upside
     // down. One rotating hand therefore cannot write both in order, and running
     // the bottom arc with the hand spells it right to left.
-    var radialLayers = [{ selector: '.hf-ring-dot', duration: 440 }];
+    var radialLayers = [{ selector: '.hf-ring-dot', duration: 440 * speed }];
 
     // The lettering is written instead, in the order the artwork lists it,
     // which the trace script emits as reading order.
     var textLayers = [
-        { selector: '.hf-letter', delay: 400, stagger: 55, duration: 560 }
+        {
+            selector: '.hf-letter',
+            delay: 400 * speed,
+            stagger: 55 * speed,
+            duration: 560 * speed
+        }
     ];
 
     // The circles, traced at the sweep's own pace so their leading edge is the
@@ -84,15 +95,20 @@
     // The figure, drawn top downwards rather than swept, and started while the
     // hand is still going round so the two overlap instead of queueing up.
     var figureLayers = [
-        { selector: '.hf-figure, .hf-detail', delay: 1100, stagger: 75, duration: 800 }
+        {
+            selector: '.hf-figure, .hf-detail',
+            delay: 1100 * speed,
+            stagger: 75 * speed,
+            duration: 800 * speed
+        }
     ];
 
     // Fill geometry: invisible while the drawing is happening, then faded in
     // whole so the solid emblem arrives with the figure punched out of it.
     var fillSelectors = ['.hf-ring', '.hf-disc'];
 
-    var fillDuration = 1100;
-    var fillOverlap = 300;
+    var fillDuration = 1100 * speed;
+    var fillOverlap = 300 * speed;
     var strokeFractionOfViewBox = 0.0042;
 
     var animations = [];
@@ -131,6 +147,15 @@
 
     function measure(path) {
         return Math.ceil(path.getTotalLength()) + 24;
+    }
+
+    // The hero stylesheet owns the pace, because its own keyframes have to move
+    // with the trace and CSS cannot read JavaScript. A value that is missing or
+    // unusable falls back to the reference pace of one, which is also what the
+    // stylesheet's own calc() falls back to, so the two cannot disagree.
+    function readPace(element) {
+        var value = parseFloat(getComputedStyle(element).getPropertyValue('--hf-logo-pace'));
+        return value > 0 ? value : 1;
     }
 
     // Angles are measured in the viewport's own coordinates, which run the way

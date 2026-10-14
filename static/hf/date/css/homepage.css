@@ -30,6 +30,15 @@
     max-width: 100%;
 }
 
+/* The pace of the whole hero animation, as a multiple of its reference timing.
+   The trace script in date/js/header-logo-animation.js reads this same value
+   and scales its own schedule by it, and every duration and delay below is
+   written as a reference time times this, so one number retimes the hero
+   without the two drifting apart. */
+:root {
+    --hf-logo-pace: 0.7;
+}
+
 /* The hero title follows the treatment the association's own website gives it:
    Sansita bold in sentence case, so the uppercase of the sibling variants is
    dropped and the tracking is tightened rather than opened out. */
@@ -41,8 +50,8 @@
     letter-spacing: -0.02em;
     line-height: 1.2;
     will-change: transform, opacity;
-    -webkit-animation: hfHeroTitle 1.6s 0.9s both cubic-bezier(.18,.84,.32,1);
-            animation: hfHeroTitle 1.6s 0.9s both cubic-bezier(.18,.84,.32,1);
+    -webkit-animation: hfHeroTitle calc(1.6s * var(--hf-logo-pace, 1)) calc(0.9s * var(--hf-logo-pace, 1)) both cubic-bezier(.18,.84,.32,1);
+            animation: hfHeroTitle calc(1.6s * var(--hf-logo-pace, 1)) calc(0.9s * var(--hf-logo-pace, 1)) both cubic-bezier(.18,.84,.32,1);
 }
 
 .hero-text-box .text h3 {
@@ -51,8 +60,8 @@
     font-size: clamp(1.05rem, 0.8rem + 1.4vw, 2rem);
     font-weight: 700;
     letter-spacing: -0.01em;
-    -webkit-animation: hfHeroSubtitle 1.1s ease-out 2.3s both;
-            animation: hfHeroSubtitle 1.1s ease-out 2.3s both;
+    -webkit-animation: hfHeroSubtitle calc(1.1s * var(--hf-logo-pace, 1)) ease-out calc(2.3s * var(--hf-logo-pace, 1)) both;
+            animation: hfHeroSubtitle calc(1.1s * var(--hf-logo-pace, 1)) ease-out calc(2.3s * var(--hf-logo-pace, 1)) both;
     white-space: nowrap;
 }
 
@@ -79,8 +88,8 @@
     color: var(--secondaryColor);
     transform-origin: center;
     will-change: transform;
-    -webkit-animation: hfLogoSettle 6.4s both cubic-bezier(.18,.84,.32,1);
-            animation: hfLogoSettle 6.4s both cubic-bezier(.18,.84,.32,1);
+    -webkit-animation: hfLogoSettle calc(6.4s * var(--hf-logo-pace, 1)) both cubic-bezier(.18,.84,.32,1);
+            animation: hfLogoSettle calc(6.4s * var(--hf-logo-pace, 1)) both cubic-bezier(.18,.84,.32,1);
 }
 
 .albin svg.is-animating path {
