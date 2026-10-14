@@ -1,29 +1,36 @@
 /*
  * Hero logo trace animation for the HF homepage.
  *
- * The hero logo in templates/hf/svg/logo.svg is emitted as one <path> per
- * visual element, already ordered in draw sequence:
+ * templates/hf/svg/logo.svg is emitted by scripts/trace_hero_logo_svg.py as one
+ * <path> per visual element. The classes carry the roles:
  *
- *   .hf-ring       the outer circle
- *   .hf-ring-dot   the bead dots sitting in the ring's gap
- *   .hf-letter     the arc lettering, in reading order
- *   .hf-figure     the interior contours of the disc, which is what the
- *                  animation actually draws
- *   .hf-disc       the disc, carrying the figure as negative space
- *   .hf-detail     the fine detail inside the disc
+ *   .hf-ring        the ring band, as fill geometry
+ *   .hf-ring-outer  the band's outer circle, as a stroke guide
+ *   .hf-ring-dot    the bead dots sitting in the gap inside the band
+ *   .hf-letter      the arc lettering, in reading order
+ *   .hf-figure      the disc's interior contours, one path each
+ *   .hf-disc-edge   the disc's outline, as a stroke guide
+ *   .hf-disc        the disc, carrying the figure as negative space
+ *   .hf-detail      the fine detail inside the disc
  *
- * This script walks the logo stroke by stroke with stroke-dashoffset and then
- * fades the fills in together. Every measurement is taken from the live paths
- * with getTotalLength(), so the timing survives any later edit of the artwork.
+ * The animation is built around one sweep. A hand starts at the first letter
+ * of the arc text and travels clockwise round the emblem, and every radial
+ * element starts drawing when the hand reaches the angle it sits at, so the
+ * beads and the lettering at one angle appear together.
  *
- * The two circles are the exception, and they are treated alike on purpose. A
- * dash trace cannot show a circle without leaving a gap in it until it reaches
- * the point it started from, and a circle with an obvious gap in it reads as a
- * mistake rather than as drawing. So neither is traced: the ring fades in as
- * the animation opens, and the disc is held back until the fill brings it in
- * whole. The figure inside the disc is still drawn, which is why the artwork
- * carries its contours a second time as .hf-figure: tracing the disc itself
- * would drag its outline along with the figure.
+ * The hand is not a separate effect: it is the leading edge of the two circles.
+ * They are traced at exactly the sweep's pace and rotated so their dashes begin
+ * on the sweep's origin, which means their leading edges stay radially aligned
+ * with each other and with everything else the hand has reached. A dash trace
+ * cannot show a circle without a gap in it, but with both gaps in the same
+ * place the gap is the hand, and it reads as intended.
+ *
+ * The figure is not a ring, so it is not swept. Its contours are drawn one
+ * after another, top of the artwork downwards, the way it would be sketched.
+ *
+ * Every measurement is taken from the live paths with getBBox(),
+ * getPointAtLength(), getTotalLength() and getCTM(), so the timing survives any
+ * later edit of the artwork.
  *
  * Without JavaScript, or with reduced motion requested, the logo just renders
  * in its final state: the artwork carries a real fill and the script adds the
@@ -38,28 +45,37 @@
     var paths = Array.prototype.slice.call(svg.querySelectorAll('path'));
     if (!paths.length) return;
 
-    // One entry per traced layer. `delay` is when the layer starts, `stagger`
-    // is the extra delay per element inside it, and `duration` is one
-    // element's draw. The figure gets the longest draw: it is the dense line
-    // work inside the disc, and the one part worth taking slowly.
-    var stages = [
-        { selector: '.hf-ring-dot', delay: 950, stagger: 50, duration: 650 },
-        { selector: '.hf-letter', delay: 1400, stagger: 85, duration: 900 },
-        { selector: '.hf-figure', delay: 2100, stagger: 0, duration: 4400 },
-        { selector: '.hf-detail', delay: 3200, stagger: 65, duration: 800 }
+    // The sweep: one turn, starting a beat after the page settles.
+    var sweepDelay = 300;
+    var sweepTurn = 4200;
+
+    // Radial layers. Each element starts when the sweep reaches the angle it
+    // sits at, and `duration` is how long one element takes to draw.
+    var radialLayers = [
+        { selector: '.hf-ring-dot', duration: 650 },
+        { selector: '.hf-letter', duration: 850 }
     ];
 
-    // The frame: the outer ring, then the disc's edge a beat later, so the
-    // emblem is outlined before anything is drawn inside it.
-    var frameLayers = [
-        { selector: '.hf-ring', delay: 200, duration: 1200, stroked: false },
-        { selector: '.hf-disc-edge', delay: 850, duration: 1200, stroked: true }
+    // The circles, traced at the sweep's own pace so their leading edge is the
+    // hand everything else waits for.
+    var circleSelectors = ['.hf-ring-outer', '.hf-disc-edge'];
+
+    // The figure, drawn top downwards rather than swept.
+    var figureLayers = [
+        { selector: '.hf-figure, .hf-detail', delay: 2400, stagger: 70, duration: 750 }
     ];
+
+    // Fill geometry: invisible while the drawing is happening, then faded in
+    // whole so the solid emblem arrives with the figure punched out of it.
+    var fillSelectors = ['.hf-ring', '.hf-disc'];
 
     var fillDuration = 1100;
     var fillOverlap = 300;
+    var strokeFractionOfViewBox = 0.0042;
 
     var animations = [];
+    var centreLocal = null;
+    var centreViewBox = null;
 
     // Put every path back to plain artwork in its final state. Used when the
     // animation is skipped or when anything in it throws, so a failure can
@@ -84,10 +100,7 @@
     }
 
     function localUnitsPerViewBoxUnit() {
-        var transform = '';
-        if (paths[0].parentNode) {
-            transform = paths[0].parentNode.getAttribute('transform') || '';
-        }
+        var transform = paths[0].parentNode.getAttribute('transform') || '';
         var match = /scale\(\s*(-?[\d.]+)/.exec(transform);
         if (!match) return 1;
         var scale = Math.abs(parseFloat(match[1]));
@@ -98,21 +111,117 @@
         return Math.ceil(path.getTotalLength()) + 24;
     }
 
+    // Angles are measured in the viewport's own coordinates, which run the way
+    // the viewer sees them, rather than in the artwork's, which run bottom-up
+    // because the group transform flips y.
+    function toViewBox(path, x, y) {
+        return new DOMPoint(x, y).matrixTransform(path.getCTM());
+    }
+
+    function angleBetween(point, centre) {
+        var degrees = (Math.atan2(point.y - centre.y, point.x - centre.x) * 180) / Math.PI;
+        return (degrees + 360) % 360;
+    }
+
+    function boxAngle(path, centre) {
+        var box = path.getBBox();
+        return angleBetween(
+            toViewBox(path, box.x + box.width / 2, box.y + box.height / 2),
+            centre
+        );
+    }
+
+    function startAngle(path, centre) {
+        var point = path.getPointAtLength(0);
+        return angleBetween(toViewBox(path, point.x, point.y), centre);
+    }
+
+    // The trace script mirrors a circle when it would otherwise travel the
+    // other way round from its neighbour. That mirror is part of the artwork,
+    // so the rotation below is composed on top of it rather than written over
+    // it, which would silently drop the mirror and set the two circles
+    // drawing against each other.
+    function circleBaseTransform(path) {
+        if (typeof path.hfBaseTransform === 'undefined') {
+            path.hfBaseTransform = path.getAttribute('transform') || '';
+        }
+        return path.hfBaseTransform;
+    }
+
+    function setCircleTransform(path, degrees) {
+        var base = circleBaseTransform(path);
+        var rotation =
+            'rotate(' + degrees + ' ' + centreLocal.x + ' ' + centreLocal.y + ')';
+        path.setAttribute('transform', base ? base + ' ' + rotation : rotation);
+    }
+
+    // A dash can only begin where its path begins, so each circle is rotated to
+    // bring that start onto the sweep's origin. The artwork's y flip makes a
+    // rotation in the path's own coordinates run the other way on screen, so
+    // the direction is measured with a one degree nudge instead of assumed.
+    function alignCircleToOrigin(path, origin) {
+        setCircleTransform(path, 0);
+        var before = startAngle(path, centreViewBox);
+        setCircleTransform(path, 1);
+        var perLocalDegree = ((startAngle(path, centreViewBox) - before + 540) % 360) - 180;
+        var wanted = ((origin - before + 540) % 360) - 180;
+        setCircleTransform(path, perLocalDegree === 0 ? 0 : wanted / perLocalDegree);
+    }
+
+    function sweepOrigin() {
+        var firstLetter = svg.querySelector('.hf-letter');
+        // Failing that, start at twelve o'clock, which is 270 in this frame.
+        return firstLetter ? boxAngle(firstLetter, centreViewBox) : 270;
+    }
+
     function collect() {
+        var origin = sweepOrigin();
         var timeline = [];
-        stages.forEach(function (stage) {
-            var elements = Array.prototype.slice.call(svg.querySelectorAll(stage.selector));
-            elements.forEach(function (path, index) {
-                var delay = stage.delay + index * stage.stagger;
+
+        circleSelectors.forEach(function (selector) {
+            svg.querySelectorAll(selector).forEach(function (path) {
+                alignCircleToOrigin(path, origin);
                 timeline.push({
                     path: path,
                     length: measure(path),
-                    delay: delay,
-                    duration: stage.duration,
-                    end: delay + stage.duration
+                    delay: sweepDelay,
+                    duration: sweepTurn,
+                    end: sweepDelay + sweepTurn
                 });
             });
         });
+
+        radialLayers.forEach(function (layer) {
+            Array.prototype.slice.call(svg.querySelectorAll(layer.selector)).forEach(
+                function (path) {
+                    var clockwise = ((boxAngle(path, centreViewBox) - origin) % 360 + 360) % 360;
+                    var delay = sweepDelay + (clockwise / 360) * sweepTurn;
+                    timeline.push({
+                        path: path,
+                        length: measure(path),
+                        delay: delay,
+                        duration: layer.duration,
+                        end: delay + layer.duration
+                    });
+                }
+            );
+        });
+
+        figureLayers.forEach(function (layer) {
+            Array.prototype.slice.call(svg.querySelectorAll(layer.selector)).forEach(
+                function (path, index) {
+                    var delay = layer.delay + index * layer.stagger;
+                    timeline.push({
+                        path: path,
+                        length: measure(path),
+                        delay: delay,
+                        duration: layer.duration,
+                        end: delay + layer.duration
+                    });
+                }
+            );
+        });
+
         return timeline;
     }
 
@@ -169,47 +278,6 @@
         animations.push(animation);
     }
 
-    // The two circles are the frame of the artwork, so they are presented
-    // alike: each fades in whole on its own cue rather than being traced. The
-    // filled ring brings its fill with it, the disc's edge is a stroke.
-    function presentFrame(path, layer, strokeWidth) {
-        path.style.transformBox = 'fill-box';
-        path.style.transformOrigin = 'center';
-        path.style.opacity = '0';
-        path.style.fillOpacity = '0';
-
-        if (layer.stroked) {
-            path.style.stroke = 'currentColor';
-            path.style.strokeWidth = strokeWidth;
-            path.style.strokeLinecap = 'round';
-            path.style.strokeLinejoin = 'round';
-        }
-
-        var animation = path.animate(
-            [
-                { opacity: 0, transform: 'scale(0.96)' },
-                {
-                    opacity: 1,
-                    fillOpacity: layer.stroked ? 0 : 1,
-                    transform: 'scale(1)'
-                }
-            ],
-            {
-                duration: layer.duration,
-                delay: layer.delay,
-                easing: 'cubic-bezier(.2,.7,.2,1)',
-                fill: 'forwards'
-            }
-        );
-
-        animation.onfinish = function () {
-            path.style.opacity = '1';
-            path.style.fillOpacity = layer.stroked ? '0' : '1';
-            path.style.transform = 'scale(1)';
-        };
-        animations.push(animation);
-    }
-
     function run() {
         var reducedMotion =
             window.matchMedia &&
@@ -220,13 +288,23 @@
             return;
         }
 
+        var ring = svg.querySelector('.hf-ring');
+        if (!ring) {
+            reveal();
+            return;
+        }
+        var ringBox = ring.getBBox();
+        centreLocal = { x: ringBox.x + ringBox.width / 2, y: ringBox.y + ringBox.height / 2 };
+        centreViewBox = toViewBox(ring, centreLocal.x, centreLocal.y);
+
         svg.classList.add('is-animating');
         // The artwork is authored 10x inside its group transform, so a stroke
         // width meant to read as a given fraction of the viewBox has to be
         // converted into those local units. 0.0042 of the viewBox is a little
         // over 2px once the logo is at its widest, which keeps the trace
         // lighter than the artwork it is drawing.
-        var strokeWidth = svg.viewBox.baseVal.width * 0.0042 * localUnitsPerViewBoxUnit();
+        var strokeWidth =
+            svg.viewBox.baseVal.width * strokeFractionOfViewBox * localUnitsPerViewBoxUnit();
         var timeline = collect();
         if (!timeline.length) {
             reveal();
@@ -242,27 +320,17 @@
         }, 0);
         var fillDelay = Math.max(0, traceEnd - fillOverlap);
 
-        frameLayers.forEach(function (layer) {
-            svg.querySelectorAll(layer.selector).forEach(function (path) {
-                presentFrame(path, layer, strokeWidth);
-            });
-        });
-
         timeline.forEach(function (entry) {
             drawEntry(entry);
             fillEntry(entry.path, fillDelay);
         });
 
-        // The disc fill brings the solid emblem in whole, punching the figure
-        // out of it. The edge stroke has done its job by then and fades with
-        // the other trace strokes.
-        svg.querySelectorAll('.hf-disc-edge').forEach(function (path) {
-            fillEntry(path, fillDelay);
-        });
-        svg.querySelectorAll('.hf-disc').forEach(function (path) {
-            path.style.opacity = '1';
-            path.style.fillOpacity = '0';
-            fillEntry(path, fillDelay);
+        fillSelectors.forEach(function (selector) {
+            svg.querySelectorAll(selector).forEach(function (path) {
+                path.style.opacity = '1';
+                path.style.fillOpacity = '0';
+                fillEntry(path, fillDelay);
+            });
         });
 
         // Release the class that hides the fills while the layers are being

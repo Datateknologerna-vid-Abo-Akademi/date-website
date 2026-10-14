@@ -55,6 +55,8 @@ from scipy import ndimage
 ALPHA_THRESHOLD = 128
 MIN_COMPONENT_PIXELS = 40
 DRAW_ORDER = ("ring", "ring-dot", "letter", "disc", "detail")
+# potrace traces at scale(0.1, -0.1), so one source pixel is ten artwork units.
+LOCAL_UNITS_PER_PIXEL = 10
 
 # The source art is flat two-tone line work, so a low speckle filter and the
 # default corner detection give clean curves.
@@ -73,6 +75,15 @@ SUB_PATH = re.compile(r"[Mm][^Mm]*")
 
 
 @dataclass
+class Guide:
+    """An unfilled path that exists for the animation to draw, not to be seen."""
+
+    css_class: str
+    data: str
+    transform: str = ""
+
+
+@dataclass
 class Component:
     """One connected dark region of the source art."""
 
@@ -88,9 +99,7 @@ class Component:
     group: str = "detail"
     order: float = 0.0
     path_data: str = ""
-    # Additional unfilled paths, as (class, path data), for parts of this
-    # component an animation needs to handle on their own.
-    guides: list[tuple[str, str]] = field(default_factory=list)
+    guides: list[Guide] = field(default_factory=list)
 
 
 @dataclass
@@ -327,33 +336,105 @@ def absolute_subpaths(path_data: str) -> list[str]:
     return resolved
 
 
-def split_disc_contours(path_data: str) -> tuple[str, str, str]:
+def shoelace(points: list[tuple[float, float]]) -> float:
+    """Twice the signed area of a closed polygon. Sign gives the orientation."""
+    total = 0.0
+    for (x1, y1), (x2, y2) in zip(points, points[1:] + points[:1], strict=True):
+        total += x1 * y2 - x2 * y1
+    return total / 2
+
+
+def contour_area(subpath: str) -> float:
+    """Enclosed area of a contour.
+
+    Bounding boxes are not a safe way to rank contours here: potrace's control
+    points sit outside the curve, and they bulge proportionally further on a
+    small contour than on a large one, so the inner circle of a thin band can
+    out-measure the outer one.  The enclosed area has no such problem.
+    """
+    return abs(shoelace(subpath_points(subpath)))
+
+
+def travels_clockwise(subpath: str) -> bool:
+    """Whether a contour runs clockwise the way a viewer sees it.
+
+    The artwork's group flips y, so the contours are measured with y negated,
+    which puts them in the viewer's orientation. In those coordinates, where y
+    grows downwards, a clockwise polygon has a positive signed area.
+    """
+    points = [(x, -y) for x, y in subpath_points(subpath)]
+    return shoelace(points) > 0
+
+
+def mirror_about_vertical(centre_x: float) -> str:
+    """An SVG transform that mirrors a shape about the vertical axis at x.
+
+    Used to turn a contour round without moving it: for a circle centred on
+    that axis the mirror is a no-op geometrically, and it only reverses the
+    direction of travel, which is what a stroke trace follows.
+    """
+    return f"translate({format_number(centre_x * 2)} 0) scale(-1 1)"
+
+
+def circular_guides(contours: list[str], classes: list[str], centre_x: float) -> list[Guide]:
+    """Pair closed circular contours with the classes that draw them.
+
+    Both contours must end up travelling the same way, or one of them traces
+    against the other and the two leading edges come apart.  potrace gives an
+    outer boundary and the hole inside it opposite orientations, so a contour
+    running the wrong way is mirrored, which for a concentric circle costs
+    nothing.
+    """
+    guides: list[Guide] = []
+    for contour, css_class in zip(contours, classes, strict=True):
+        transform = ""
+        if not travels_clockwise(contour):
+            transform = mirror_about_vertical(centre_x)
+        guides.append(Guide(css_class, contour, transform))
+    return guides
+
+
+def split_ring_contours(path_data: str) -> tuple[str, list[str]]:
+    """Split the ring band into its fill geometry and its outermost contour.
+
+    The band is an annulus, so potrace gives it two contours, and the fill
+    needs both.  Only the outer one is drawn: the inner one runs the other way
+    round, and the band is thin enough that a stroke along the outer contour
+    reads as the band until the fill takes over.
+    """
+    subpaths = absolute_subpaths(path_data)
+    if len(subpaths) < 2:
+        return "".join(subpaths), []
+
+    outer = max(subpaths, key=contour_area)
+    return "".join(subpaths), [outer]
+
+
+def split_disc_contours(path_data: str) -> tuple[str, list[str], str]:
     """Split the disc into its fill geometry and its two drawable parts.
 
     Returns ``(fill, figure, edge)``.  The fill is every contour: the figure's
     interiors plus the disc outline, which even-odd filling turns into a disc
-    with the figure punched out of it.  The figure is those same interior
-    contours on their own, sorted top to bottom, and the edge is the outline on
-    its own.  An animation can then present the outline and draw the figure
-    without the two dragging each other along.
+    with the figure punched out of it.  ``figure`` is those same interior
+    contours, one string each and sorted top to bottom, and ``edge`` is the
+    outline on its own.
+
+    The figure comes back one contour at a time rather than joined up, because
+    a hero animation wants to draw each contour at its own moment.  Keeping
+    them separate is what lets the animation walk around the emblem by angle
+    instead of unspooling one long path.
 
     potrace's output is y-up, so the topmost contour of the art has the largest
     y coordinate and the contours sort by descending upper bound.
     """
     subpaths = absolute_subpaths(path_data)
     if len(subpaths) < 2:
-        whole = "".join(subpaths)
-        return whole, "", ""
+        return "".join(subpaths), [], ""
 
-    def area(subpath: str) -> float:
-        x0, y0, x1, y1 = subpath_bounds(subpath)
-        return (x1 - x0) * (y1 - y0)
-
-    outline = max(subpaths, key=area)
+    outline = max(subpaths, key=contour_area)
     figure = [s for s in subpaths if s != outline]
-    figure.sort(key=lambda s: subpath_bounds(s)[3], reverse=True)
-    figure_data = "".join(figure)
-    return figure_data + outline, figure_data, outline
+    figure.sort(key=lambda s: subpath_bounds(s)[3], reverse=True)  # top of the art first
+    return "".join(figure) + outline, figure, outline
 
 
 def build_svg(logo: TracedLogo, label: str) -> str:
@@ -367,8 +448,9 @@ def build_svg(logo: TracedLogo, label: str) -> str:
     ]
     for group in DRAW_ORDER:
         for component in logo.groups.get(group, []):
-            for guide_class, guide_data in component.guides:
-                lines.append(f'    <path class="{guide_class}" fill="none" d="{guide_data}"/>')
+            for guide in component.guides:
+                transform = f' transform="{guide.transform}"' if guide.transform else ""
+                lines.append(f'    <path class="{guide.css_class}" fill="none"{transform} d="{guide.data}"/>')
             lines.append(f'    <path class="hf-{group}" d="{component.path_data}"/>')
     lines.extend(["  </g>", "</svg>", ""])
     return "\n".join(lines)
@@ -388,6 +470,15 @@ def main() -> None:
     height, width = mask.shape
     groups = classify(label_components(mask))
 
+    def centroid_x(group: str) -> float:
+        """Horizontal centre of a component, in the artwork's own units.
+
+        The ring is a symmetric band, so its centroid is the centre of the
+        whole emblem.  potrace's group transform scales a source pixel to ten
+        artwork units, hence the factor.
+        """
+        return groups[group][0].centroid[0] * LOCAL_UNITS_PER_PIXEL
+
     transforms: set[str] = set()
     with tempfile.TemporaryDirectory() as tmp:
         workdir = Path(tmp)
@@ -398,15 +489,39 @@ def main() -> None:
                 if group == "disc":
                     fill_data, figure_data, edge_data = split_disc_contours(path_data)
                     component.guides = [
-                        ("hf-figure", figure_data),
-                        ("hf-disc-edge", edge_data),
+                        *[Guide("hf-figure", contour) for contour in figure_data],
+                        *circular_guides([edge_data], ["hf-disc-edge"], centroid_x("ring")),
                     ]
                     path_data = fill_data
+                elif group == "ring":
+                    path_data, outer_contours = split_ring_contours(path_data)
+                    component.guides = circular_guides(outer_contours, ["hf-ring-outer"], centroid_x("ring"))
                 else:
                     # Absolute moves everywhere, so a consumer may split a
                     # path into subpaths without changing the geometry.
                     path_data = "".join(absolute_subpaths(path_data))
                 component.path_data = path_data
+
+    circle_guides = [
+        guide
+        for group in ("ring", "disc")
+        for component in groups[group]
+        for guide in component.guides
+        if guide.css_class in ("hf-ring-outer", "hf-disc-edge")
+    ]
+
+    def draws_clockwise(guide: Guide) -> bool:
+        # A mirrored guide travels the opposite way round from its own data.
+        return travels_clockwise(guide.data) != bool(guide.transform)
+
+    against = [g.css_class for g in circle_guides if not draws_clockwise(g)]
+    if against:
+        raise SystemExit(
+            "Every circle guide must travel the same way round, or the hero "
+            f"animation draws one of them against the other: {against}"
+        )
+    if len(circle_guides) != 2:
+        raise SystemExit(f"Expected the ring and the disc to give one circle guide each, got {len(circle_guides)}")
 
     if len(transforms) != 1:
         raise SystemExit(f"Layers traced at differing scales: {sorted(transforms)}")
