@@ -45,15 +45,20 @@
     var paths = Array.prototype.slice.call(svg.querySelectorAll('path'));
     if (!paths.length) return;
 
-    // The sweep: one turn, starting a beat after the page settles.
-    var sweepDelay = 300;
-    var sweepTurn = 4200;
+    // The sweep: one turn, starting a beat after the page settles. A turn is a
+    // repeating movement, so it wants to be brisk; the figure below is a
+    // one-off drawing, and that one wants to be slow enough to follow.
+    var sweepDelay = 250;
+    var sweepTurn = 2800;
 
     // Radial layers. Each element starts when the sweep reaches the angle it
-    // sits at, and `duration` is how long one element takes to draw.
+    // sits at, and `duration` is how long one element takes to draw. The
+    // durations belong to the sweep: they set how wide a swath of the emblem is
+    // mid-draw behind the hand, so they scale with the turn rather than staying
+    // put and leaving a long tail.
     var radialLayers = [
-        { selector: '.hf-ring-dot', duration: 650 },
-        { selector: '.hf-letter', duration: 850 }
+        { selector: '.hf-ring-dot', duration: 440 },
+        { selector: '.hf-letter', duration: 560 }
     ];
 
     // The circles, traced at the sweep's own pace so their leading edge is the
