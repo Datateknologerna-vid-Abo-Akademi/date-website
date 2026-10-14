@@ -222,8 +222,10 @@
         svg.classList.add('is-animating');
         // The artwork is authored 10x inside its group transform, so a stroke
         // width meant to read as a given fraction of the viewBox has to be
-        // converted into those local units.
-        var strokeWidth = svg.viewBox.baseVal.width * 0.0055 * localUnitsPerViewBoxUnit();
+        // converted into those local units. 0.0042 of the viewBox is a little
+        // over 2px once the logo is at its widest, which keeps the trace
+        // lighter than the artwork it is drawing.
+        var strokeWidth = svg.viewBox.baseVal.width * 0.0042 * localUnitsPerViewBoxUnit();
         var timeline = collect();
         if (!timeline.length) {
             reveal();
