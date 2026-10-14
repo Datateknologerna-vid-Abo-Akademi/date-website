@@ -1095,6 +1095,39 @@ class AssociationHomepageSmokeTests(TestCase):
         self.assertNotContains(response, "Suomi")
         self.assertNotContains(response, 'value="fi"')
 
+    def test_hf_homepage_offers_swedish_and_english_only(self):
+        hf_settings = importlib.import_module("core.settings.hf")
+        cache.clear()
+        response = self._get_association_homepage(
+            "hf",
+            ENABLE_LANGUAGE_FEATURES=True,
+            LANGUAGES=hf_settings.DATE_LANGUAGES,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'action="/set_lang/"')
+        self.assertContains(response, 'name="lang"')
+        self.assertContains(response, "Svenska")
+        self.assertContains(response, "English")
+        self.assertNotContains(response, "Suomi")
+        self.assertNotContains(response, 'value="fi"')
+
+    def test_hf_hero_subtitle_is_translated_to_english(self):
+        hf_settings = importlib.import_module("core.settings.hf")
+        cache.clear()
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
+
+        response = self._get_association_homepage(
+            "hf",
+            ENABLE_LANGUAGE_FEATURES=True,
+            LANGUAGES=hf_settings.DATE_LANGUAGES,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Do you want to collaborate with HF?")
+        self.assertContains(response, "If you encounter harassment")
+        self.assertNotContains(response, "Vill du samarbeta med HF?")
+
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
     @patch("date.views.secrets.randbelow", return_value=0)
     def test_kk_april_homepage_renders(self, _randrange, _localdate):

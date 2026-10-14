@@ -17,14 +17,15 @@ Swedish (`sv`) is the default language. The exact non-default languages exposed 
 - DaTe runtime languages: `sv`, `en`
 - Impuls runtime languages: `sv`, `en`
 - Biocum runtime languages: `sv`, `en`
+- HF runtime languages: `sv`, `en`
 - Some other associations still expose `fi`
-- Settings sources: `core/settings/common.py`, `core/settings/date.py`, `core/settings/impuls.py`, `core/settings/biocum.py`
+- Settings sources: `core/settings/common.py`, `core/settings/date.py`, `core/settings/impuls.py`, `core/settings/biocum.py`, `core/settings/hf.py`
 
 Important settings:
 
 - `LANGUAGE_CODE = "sv"`
 - `ALL_LANGUAGES = (("sv", "Svenska"), ("en", "English"), ("fi", "Suomi"))`
-- `DATE_LANGUAGES = (("sv", "Svenska"), ("en", "English"))` narrows an association's active language list (DaTe, Impuls, Biocum)
+- `DATE_LANGUAGES = (("sv", "Svenska"), ("en", "English"))` narrows an association's active language list (DaTe, Impuls, Biocum, HF)
 - `ENABLE_LANGUAGE_FEATURES` controls whether the project exposes the active association's full language set or only Swedish
 - `LOCALE_PATHS = ("locale",)` points Django to the `.po` and `.mo` files
 

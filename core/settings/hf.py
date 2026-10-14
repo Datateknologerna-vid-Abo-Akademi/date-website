@@ -26,6 +26,21 @@ INSTALLED_APPS = get_installed_apps(
 
 ROOT_URLCONF = 'core.urls.hf'
 
+# The association publishes in Swedish and English. DATE_LANGUAGES is the
+# association's own pair, so Finnish is never offered here, and LANGUAGES
+# narrows to the default language until ENABLE_LANGUAGE_FEATURES is set, which
+# is the same switch date, biocum and impuls use.
+USE_ACCEPT_LANGUAGE_HEADER = False
+DATE_LANGUAGES = (
+    ("sv", "Svenska"),
+    ("en", "English"),
+)
+LANGUAGES = (
+    DATE_LANGUAGES
+    if ENABLE_LANGUAGE_FEATURES
+    else tuple(language for language in DATE_LANGUAGES if language[0] == LANGUAGE_CODE)
+)
+
 STAFF_GROUPS = get_staff_groups(['styrelse', 'admin', 'webbansvarig'])
 
 
