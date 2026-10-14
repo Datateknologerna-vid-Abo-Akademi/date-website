@@ -79,8 +79,8 @@
     color: var(--secondaryColor);
     transform-origin: center;
     will-change: transform;
-    -webkit-animation: hfLogoSettle 7.4s both cubic-bezier(.18,.84,.32,1);
-            animation: hfLogoSettle 7.4s both cubic-bezier(.18,.84,.32,1);
+    -webkit-animation: hfLogoSettle 6.4s both cubic-bezier(.18,.84,.32,1);
+            animation: hfLogoSettle 6.4s both cubic-bezier(.18,.84,.32,1);
 }
 
 .albin svg.is-animating path {

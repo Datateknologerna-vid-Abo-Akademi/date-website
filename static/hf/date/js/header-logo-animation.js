@@ -14,9 +14,8 @@
  *   .hf-detail      the fine detail inside the disc
  *
  * The animation is built around one sweep. A hand starts at the first letter
- * of the arc text and travels clockwise round the emblem, and every radial
- * element starts drawing when the hand reaches the angle it sits at, so the
- * beads and the lettering at one angle appear together.
+ * of the arc text and travels clockwise round the emblem, and the beads start
+ * drawing when the hand reaches the angle they sit at.
  *
  * The hand is not a separate effect: it is the leading edge of the two circles.
  * They are traced at exactly the sweep's pace and rotated so their dashes begin
@@ -25,8 +24,16 @@
  * cannot show a circle without a gap in it, but with both gaps in the same
  * place the gap is the hand, and it reads as intended.
  *
+ * The lettering is deliberately not on the hand. The top arc reads clockwise
+ * and the bottom arc reads anticlockwise, because the bottom words sit upright
+ * rather than upside down, so no single rotating hand can write both in order:
+ * running the bottom arc with the hand spells it right to left. It is written
+ * instead, in reading order, at a pace that keeps it in step with the hand over
+ * the top arc.
+ *
  * The figure is not a ring, so it is not swept. Its contours are drawn one
- * after another, top of the artwork downwards, the way it would be sketched.
+ * after another, top of the artwork downwards, the way it would be sketched,
+ * starting while the hand is still going round so the two overlap.
  *
  * Every measurement is taken from the live paths with getBBox(),
  * getPointAtLength(), getTotalLength() and getCTM(), so the timing survives any
@@ -56,18 +63,28 @@
     // durations belong to the sweep: they set how wide a swath of the emblem is
     // mid-draw behind the hand, so they scale with the turn rather than staying
     // put and leaving a long tail.
-    var radialLayers = [
-        { selector: '.hf-ring-dot', duration: 440 },
-        { selector: '.hf-letter', duration: 560 }
+    //
+    // Only the beads are on the hand. The lettering is not, and that is not an
+    // oversight: the top arc reads clockwise and the bottom arc reads
+    // anticlockwise, because the bottom words sit upright rather than upside
+    // down. One rotating hand therefore cannot write both in order, and running
+    // the bottom arc with the hand spells it right to left.
+    var radialLayers = [{ selector: '.hf-ring-dot', duration: 440 }];
+
+    // The lettering is written instead, in the order the artwork lists it,
+    // which the trace script emits as reading order.
+    var textLayers = [
+        { selector: '.hf-letter', delay: 400, stagger: 55, duration: 560 }
     ];
 
     // The circles, traced at the sweep's own pace so their leading edge is the
     // hand everything else waits for.
     var circleSelectors = ['.hf-ring-outer', '.hf-disc-edge'];
 
-    // The figure, drawn top downwards rather than swept.
+    // The figure, drawn top downwards rather than swept, and started while the
+    // hand is still going round so the two overlap instead of queueing up.
     var figureLayers = [
-        { selector: '.hf-figure, .hf-detail', delay: 2400, stagger: 70, duration: 750 }
+        { selector: '.hf-figure, .hf-detail', delay: 1100, stagger: 75, duration: 800 }
     ];
 
     // Fill geometry: invisible while the drawing is happening, then faded in
@@ -212,7 +229,7 @@
             );
         });
 
-        figureLayers.forEach(function (layer) {
+        function pushInDocumentOrder(layer) {
             Array.prototype.slice.call(svg.querySelectorAll(layer.selector)).forEach(
                 function (path, index) {
                     var delay = layer.delay + index * layer.stagger;
@@ -225,7 +242,10 @@
                     });
                 }
             );
-        });
+        }
+
+        textLayers.forEach(pushInDocumentOrder);
+        figureLayers.forEach(pushInDocumentOrder);
 
         return timeline;
     }
