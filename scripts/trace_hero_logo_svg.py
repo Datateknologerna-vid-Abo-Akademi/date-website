@@ -15,7 +15,16 @@ This script does the segmentation and the ordering:
 * each component is traced on its own with potrace, so a letter keeps its
   counters inside the same path element
 * paths are emitted in draw order: ring, beads, arc text in reading order,
-  then the disc and its interior detail
+  then the figure and the disc that holds it
+
+The disc is emitted twice, which needs explaining.  Its fill has to punch the
+figure out of the disc, and that only works when the figure's contours live in
+the same path as the disc outline (even-odd filling).  An animation that wants
+to draw the figure, however, must not draw the outline with it, because a
+half-drawn circle reads as a mistake.  So the interior contours are emitted
+once more as ``.hf-figure`` with no fill: the disc carries the geometry, the
+figure path carries only the drawing.  Both come from the same potrace run, so
+they cannot drift apart.
 
 Run it from the repository root::
 
@@ -79,6 +88,9 @@ class Component:
     group: str = "detail"
     order: float = 0.0
     path_data: str = ""
+    # Additional unfilled paths, as (class, path data), for parts of this
+    # component an animation needs to handle on their own.
+    guides: list[tuple[str, str]] = field(default_factory=list)
 
 
 @dataclass
@@ -315,31 +327,33 @@ def absolute_subpaths(path_data: str) -> list[str]:
     return resolved
 
 
-def order_disc_subpaths(path_data: str) -> str:
-    """Order the disc's contours for a stroke trace, smallest detail first.
+def split_disc_contours(path_data: str) -> tuple[str, str, str]:
+    """Split the disc into its fill geometry and its two drawable parts.
 
-    The interior contours are drawn before the disc outline and sorted top to
-    bottom, so a hero animation draws the figure and then closes the circle
-    around it.  Drawn the other way round, the outline leads and the viewer
-    spends the longest phase of the animation looking at a large circle with an
-    obvious gap in it, which reads as an unfinished drawing rather than as an
-    intentional one.
+    Returns ``(fill, figure, edge)``.  The fill is every contour: the figure's
+    interiors plus the disc outline, which even-odd filling turns into a disc
+    with the figure punched out of it.  The figure is those same interior
+    contours on their own, sorted top to bottom, and the edge is the outline on
+    its own.  An animation can then present the outline and draw the figure
+    without the two dragging each other along.
 
     potrace's output is y-up, so the topmost contour of the art has the largest
     y coordinate and the contours sort by descending upper bound.
     """
     subpaths = absolute_subpaths(path_data)
     if len(subpaths) < 2:
-        return "".join(subpaths)
+        whole = "".join(subpaths)
+        return whole, "", ""
 
     def area(subpath: str) -> float:
         x0, y0, x1, y1 = subpath_bounds(subpath)
         return (x1 - x0) * (y1 - y0)
 
     outline = max(subpaths, key=area)
-    detail = [s for s in subpaths if s != outline]
-    detail.sort(key=lambda s: subpath_bounds(s)[3], reverse=True)
-    return "".join([*detail, outline])
+    figure = [s for s in subpaths if s != outline]
+    figure.sort(key=lambda s: subpath_bounds(s)[3], reverse=True)
+    figure_data = "".join(figure)
+    return figure_data + outline, figure_data, outline
 
 
 def build_svg(logo: TracedLogo, label: str) -> str:
@@ -353,6 +367,8 @@ def build_svg(logo: TracedLogo, label: str) -> str:
     ]
     for group in DRAW_ORDER:
         for component in logo.groups.get(group, []):
+            for guide_class, guide_data in component.guides:
+                lines.append(f'    <path class="{guide_class}" fill="none" d="{guide_data}"/>')
             lines.append(f'    <path class="hf-{group}" d="{component.path_data}"/>')
     lines.extend(["  </g>", "</svg>", ""])
     return "\n".join(lines)
@@ -380,7 +396,12 @@ def main() -> None:
                 transform, path_data = trace_mask(component.mask, workdir)
                 transforms.add(transform)
                 if group == "disc":
-                    path_data = order_disc_subpaths(path_data)
+                    fill_data, figure_data, edge_data = split_disc_contours(path_data)
+                    component.guides = [
+                        ("hf-figure", figure_data),
+                        ("hf-disc-edge", edge_data),
+                    ]
+                    path_data = fill_data
                 else:
                     # Absolute moves everywhere, so a consumer may split a
                     # path into subpaths without changing the geometry.

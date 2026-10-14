@@ -7,23 +7,23 @@
  *   .hf-ring       the outer circle
  *   .hf-ring-dot   the bead dots sitting in the ring's gap
  *   .hf-letter     the arc lettering, in reading order
- *   .hf-disc       the disc, figure contours first and its outline last
+ *   .hf-figure     the interior contours of the disc, which is what the
+ *                  animation actually draws
+ *   .hf-disc       the disc, carrying the figure as negative space
  *   .hf-detail     the fine detail inside the disc
  *
  * This script walks the logo stroke by stroke with stroke-dashoffset and then
  * fades the fills in together. Every measurement is taken from the live paths
  * with getTotalLength(), so the timing survives any later edit of the artwork.
  *
- * Two deliberate exceptions to the stroke trace:
- *
- *   The outer circle fades in whole. It is an annulus, so a dash trace leaves
- *   the same gap in two concentric contours at once, and a circle with an
- *   obvious gap in it reads as a mistake rather than as drawing.
- *
- *   The disc outline is the last contour of its own path, so the figure is
- *   drawn first and the circle closes around it at the end. Leading with the
- *   outline would mean the longest phase of the animation is spent watching a
- *   large unfinished circle.
+ * The two circles are the exception, and they are treated alike on purpose. A
+ * dash trace cannot show a circle without leaving a gap in it until it reaches
+ * the point it started from, and a circle with an obvious gap in it reads as a
+ * mistake rather than as drawing. So neither is traced: the ring fades in as
+ * the animation opens, and the disc is held back until the fill brings it in
+ * whole. The figure inside the disc is still drawn, which is why the artwork
+ * carries its contours a second time as .hf-figure: tracing the disc itself
+ * would drag its outline along with the figure.
  *
  * Without JavaScript, or with reduced motion requested, the logo just renders
  * in its final state: the artwork carries a real fill and the script adds the
@@ -40,34 +40,26 @@
 
     // One entry per traced layer. `delay` is when the layer starts, `stagger`
     // is the extra delay per element inside it, and `duration` is one
-    // element's draw. The disc gets the longest draw because it carries the
-    // whole figure plus its closing circle.
+    // element's draw. The figure gets the longest draw: it is the dense line
+    // work inside the disc, and the one part worth taking slowly.
     var stages = [
         { selector: '.hf-ring-dot', delay: 950, stagger: 50, duration: 650 },
         { selector: '.hf-letter', delay: 1400, stagger: 85, duration: 900 },
-        { selector: '.hf-disc', delay: 2100, stagger: 0, duration: 4400 },
+        { selector: '.hf-figure', delay: 2100, stagger: 0, duration: 4400 },
         { selector: '.hf-detail', delay: 3200, stagger: 65, duration: 800 }
     ];
 
-    var ringFadeDelay = 200;
-    var ringFadeDuration = 1200;
+    // The frame: the outer ring, then the disc's edge a beat later, so the
+    // emblem is outlined before anything is drawn inside it.
+    var frameLayers = [
+        { selector: '.hf-ring', delay: 200, duration: 1200, stroked: false },
+        { selector: '.hf-disc-edge', delay: 850, duration: 1200, stroked: true }
+    ];
+
     var fillDuration = 1100;
     var fillOverlap = 300;
 
-    var state = {};
     var animations = [];
-
-    function remember(el) {
-        state[el] = {
-            opacity: el.style.opacity,
-            fillOpacity: el.style.fillOpacity,
-            stroke: el.style.stroke,
-            strokeOpacity: el.style.strokeOpacity,
-            strokeWidth: el.style.strokeWidth,
-            strokeDasharray: el.style.strokeDasharray,
-            strokeDashoffset: el.style.strokeDashoffset
-        };
-    }
 
     // Put every path back to plain artwork in its final state. Used when the
     // animation is skipped or when anything in it throws, so a failure can
@@ -81,11 +73,6 @@
         animations.length = 0;
 
         paths.forEach(function (path) {
-            if (state[path]) {
-                Object.keys(state[path]).forEach(function (property) {
-                    path.style[property] = state[path][property];
-                });
-            }
             path.style.opacity = '1';
             path.style.fillOpacity = '1';
             path.style.stroke = 'none';
@@ -182,20 +169,34 @@
         animations.push(animation);
     }
 
-    function fadeInRing(path) {
+    // The two circles are the frame of the artwork, so they are presented
+    // alike: each fades in whole on its own cue rather than being traced. The
+    // filled ring brings its fill with it, the disc's edge is a stroke.
+    function presentFrame(path, layer, strokeWidth) {
         path.style.transformBox = 'fill-box';
         path.style.transformOrigin = 'center';
         path.style.opacity = '0';
         path.style.fillOpacity = '0';
 
+        if (layer.stroked) {
+            path.style.stroke = 'currentColor';
+            path.style.strokeWidth = strokeWidth;
+            path.style.strokeLinecap = 'round';
+            path.style.strokeLinejoin = 'round';
+        }
+
         var animation = path.animate(
             [
-                { opacity: 0, fillOpacity: 0, transform: 'scale(0.96)' },
-                { opacity: 1, fillOpacity: 1, transform: 'scale(1)' }
+                { opacity: 0, transform: 'scale(0.96)' },
+                {
+                    opacity: 1,
+                    fillOpacity: layer.stroked ? 0 : 1,
+                    transform: 'scale(1)'
+                }
             ],
             {
-                duration: ringFadeDuration,
-                delay: ringFadeDelay,
+                duration: layer.duration,
+                delay: layer.delay,
                 easing: 'cubic-bezier(.2,.7,.2,1)',
                 fill: 'forwards'
             }
@@ -203,7 +204,7 @@
 
         animation.onfinish = function () {
             path.style.opacity = '1';
-            path.style.fillOpacity = '1';
+            path.style.fillOpacity = layer.stroked ? '0' : '1';
             path.style.transform = 'scale(1)';
         };
         animations.push(animation);
@@ -241,11 +242,27 @@
         }, 0);
         var fillDelay = Math.max(0, traceEnd - fillOverlap);
 
-        svg.querySelectorAll('.hf-ring').forEach(fadeInRing);
+        frameLayers.forEach(function (layer) {
+            svg.querySelectorAll(layer.selector).forEach(function (path) {
+                presentFrame(path, layer, strokeWidth);
+            });
+        });
 
         timeline.forEach(function (entry) {
             drawEntry(entry);
             fillEntry(entry.path, fillDelay);
+        });
+
+        // The disc fill brings the solid emblem in whole, punching the figure
+        // out of it. The edge stroke has done its job by then and fades with
+        // the other trace strokes.
+        svg.querySelectorAll('.hf-disc-edge').forEach(function (path) {
+            fillEntry(path, fillDelay);
+        });
+        svg.querySelectorAll('.hf-disc').forEach(function (path) {
+            path.style.opacity = '1';
+            path.style.fillOpacity = '0';
+            fillEntry(path, fillDelay);
         });
 
         // Release the class that hides the fills while the layers are being
