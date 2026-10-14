@@ -1,4 +1,4 @@
-# Example per-association values for Humanistiska föreningen vid Åbo Akademi r.f.
+# Example per-association values for Humanistiska föreningen vid Åbo Akademi.
 # Use after values-hetzner.yaml and values-backblaze-b2.example.yaml.
 #
 # Placeholders: replace the host/domain examples, and set the real SITE_URL

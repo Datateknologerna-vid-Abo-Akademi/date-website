@@ -63,7 +63,7 @@ STATICFILES_DIRS = build_static_dirs('hf')
 CONTENT_VARIABLES = {
     "SITE_URL": "https://www.humanistiskaforeningen.com",
     "ASSOCIATION_NAME": "Humanistiska föreningen",
-    "ASSOCIATION_NAME_FULL": "Humanistiska föreningen vid Åbo Akademi r.f.",
+    "ASSOCIATION_NAME_FULL": "Humanistiska föreningen vid Åbo Akademi",
     "ASSOCIATION_NAME_SHORT": "HF",
     "ASSOCIATION_EMAIL": "hum@abo.fi",
     "ASSOCIATION_ADDRESS_L1": "Fabriksgatan 2",
