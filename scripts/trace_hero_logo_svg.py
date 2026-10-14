@@ -316,10 +316,17 @@ def absolute_subpaths(path_data: str) -> list[str]:
 
 
 def order_disc_subpaths(path_data: str) -> str:
-    """Put the disc outline first, then its interior contours top to bottom.
+    """Order the disc's contours for a stroke trace, smallest detail first.
 
-    potrace's output is y-up, so the topmost contour of the art has the
-    largest y coordinate and the holes sort by descending upper bound.
+    The interior contours are drawn before the disc outline and sorted top to
+    bottom, so a hero animation draws the figure and then closes the circle
+    around it.  Drawn the other way round, the outline leads and the viewer
+    spends the longest phase of the animation looking at a large circle with an
+    obvious gap in it, which reads as an unfinished drawing rather than as an
+    intentional one.
+
+    potrace's output is y-up, so the topmost contour of the art has the largest
+    y coordinate and the contours sort by descending upper bound.
     """
     subpaths = absolute_subpaths(path_data)
     if len(subpaths) < 2:
@@ -330,9 +337,9 @@ def order_disc_subpaths(path_data: str) -> str:
         return (x1 - x0) * (y1 - y0)
 
     outline = max(subpaths, key=area)
-    holes = [s for s in subpaths if s != outline]
-    holes.sort(key=lambda s: subpath_bounds(s)[3], reverse=True)
-    return "".join([outline, *holes])
+    detail = [s for s in subpaths if s != outline]
+    detail.sort(key=lambda s: subpath_bounds(s)[3], reverse=True)
+    return "".join([*detail, outline])
 
 
 def build_svg(logo: TracedLogo, label: str) -> str:

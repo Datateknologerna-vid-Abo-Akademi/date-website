@@ -41,8 +41,8 @@
     letter-spacing: -0.02em;
     line-height: 1.2;
     will-change: transform, opacity;
-    -webkit-animation: hfHeroTitle 1.4s 1s both cubic-bezier(.18,.84,.32,1);
-            animation: hfHeroTitle 1.4s 1s both cubic-bezier(.18,.84,.32,1);
+    -webkit-animation: hfHeroTitle 1.6s 0.9s both cubic-bezier(.18,.84,.32,1);
+            animation: hfHeroTitle 1.6s 0.9s both cubic-bezier(.18,.84,.32,1);
 }
 
 .hero-text-box .text h3 {
@@ -51,8 +51,8 @@
     font-size: clamp(1.05rem, 0.8rem + 1.4vw, 2rem);
     font-weight: 700;
     letter-spacing: -0.01em;
-    -webkit-animation: hfHeroSubtitle 0.8s ease-out 2.4s both;
-            animation: hfHeroSubtitle 0.8s ease-out 2.4s both;
+    -webkit-animation: hfHeroSubtitle 1.1s ease-out 2.3s both;
+            animation: hfHeroSubtitle 1.1s ease-out 2.3s both;
     white-space: nowrap;
 }
 
@@ -79,8 +79,8 @@
     color: var(--secondaryColor);
     transform-origin: center;
     will-change: transform;
-    -webkit-animation: hfLogoSettle 4.2s both cubic-bezier(.18,.84,.32,1);
-            animation: hfLogoSettle 4.2s both cubic-bezier(.18,.84,.32,1);
+    -webkit-animation: hfLogoSettle 7.4s both cubic-bezier(.18,.84,.32,1);
+            animation: hfLogoSettle 7.4s both cubic-bezier(.18,.84,.32,1);
 }
 
 .albin svg.is-animating path {
@@ -92,7 +92,7 @@
         -webkit-transform: scale(0.972);
         transform: scale(0.972);
     }
-    78% {
+    80% {
         -webkit-transform: scale(0.972);
         transform: scale(0.972);
     }
@@ -106,7 +106,7 @@
         -webkit-transform: scale(0.972);
         transform: scale(0.972);
     }
-    78% {
+    80% {
         -webkit-transform: scale(0.972);
         transform: scale(0.972);
     }

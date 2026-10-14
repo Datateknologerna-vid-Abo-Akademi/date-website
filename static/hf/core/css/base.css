@@ -15,6 +15,22 @@ h1, h2, h3, h4, h5, h6 {
     letter-spacing: -0.02em;
 }
 
+/* The header mark, top left. The sf variant defines .header-logo-text in its
+   own core/css/header.css, but shipping that path in a variant replaces the
+   shared nav stylesheet outright instead of adding to it, so the rule lives
+   here. !important is needed to outrank Bootstrap's .navbar-light .navbar-brand,
+   which the shell links after this file. */
+.navbar-brand.header-logo-text {
+    color: var(--secondaryColor) !important;
+    font-family: 'Sansita', serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    padding: 0;
+    text-decoration: none !important;
+}
+
 .content img{
     max-height: 35vh;
     max-width: 100%;
