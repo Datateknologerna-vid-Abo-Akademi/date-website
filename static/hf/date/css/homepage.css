@@ -30,13 +30,16 @@
     max-width: 100%;
 }
 
+/* The hero title follows the treatment the association's own website gives it:
+   Sansita bold in sentence case, so the uppercase of the sibling variants is
+   dropped and the tracking is tightened rather than opened out. */
 .hero-text-box .text h1 {
-    text-transform: uppercase;
     display: block;
     margin-bottom: 0;
-    font-size: clamp(1.5rem, 1rem + 2.5vw, 3rem);
-    font-weight: 400;
-    letter-spacing: 0.04em;
+    font-size: clamp(1.75rem, 1.2rem + 3vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
     will-change: transform, opacity;
     -webkit-animation: hfHeroTitle 1.4s 1s both cubic-bezier(.18,.84,.32,1);
             animation: hfHeroTitle 1.4s 1s both cubic-bezier(.18,.84,.32,1);
@@ -45,9 +48,9 @@
 .hero-text-box .text h3 {
     display: block;
     text-align: center;
-    font-size: clamp(0.8rem, 0.7rem + 1vw, 1.3rem);
+    font-size: clamp(1.05rem, 0.8rem + 1.4vw, 2rem);
     font-weight: 700;
-    letter-spacing: clamp(0.08rem, 0.1rem + 0.25vw, 0.28rem);
+    letter-spacing: -0.01em;
     -webkit-animation: hfHeroSubtitle 0.8s ease-out 2.4s both;
             animation: hfHeroSubtitle 0.8s ease-out 2.4s both;
     white-space: nowrap;
@@ -118,13 +121,13 @@
         opacity: 0;
         -webkit-transform: translateY(10px);
         transform: translateY(10px);
-        letter-spacing: 0.18em;
+        letter-spacing: 0.06em;
     }
     100% {
         opacity: 1;
         -webkit-transform: translateY(0);
         transform: translateY(0);
-        letter-spacing: 0.04em;
+        letter-spacing: -0.02em;
     }
 }
 @keyframes hfHeroTitle {
@@ -132,13 +135,13 @@
         opacity: 0;
         -webkit-transform: translateY(10px);
         transform: translateY(10px);
-        letter-spacing: 0.18em;
+        letter-spacing: 0.06em;
     }
     100% {
         opacity: 1;
         -webkit-transform: translateY(0);
         transform: translateY(0);
-        letter-spacing: 0.04em;
+        letter-spacing: -0.02em;
     }
 }
 

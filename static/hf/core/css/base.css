@@ -5,7 +5,14 @@ html {
 html body{
     background-color: var(--primaryColor);
     color: var(--textColorLightish);
-    font-family: 'Josefin Sans', sans-serif;
+    font-family: 'Nunito Sans', sans-serif;
+}
+
+/* Sansita and Nunito Sans are the pairing the association's own website uses,
+   with Sansita at 700 and slightly tightened tracking for headings. */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Sansita', serif;
+    letter-spacing: -0.02em;
 }
 
 .content img{
@@ -85,7 +92,7 @@ div a:hover{
     text-align: center;
     font-size: 16px;
     border-radius: 5px;
-    font-family: 'Josefin Sans', sans-serif;
+    font-family: 'Nunito Sans', sans-serif;
     cursor: pointer;
     transition: background-color 0.3s, color 0.3s;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);

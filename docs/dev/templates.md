@@ -66,6 +66,23 @@ Adding an empty block to the common template is safe: associations that don't ov
 
 **You cannot inject content into the middle of a parent template's HTML from a child template** — only into defined `{% raw %}{% block %}{% endraw %}` slots. A block defined in a child template that has no corresponding slot in the parent is a no-op; the content is silently discarded.
 
+## Association Webfonts
+
+The shared shell loads its families inside a `{% raw %}{% block fonts %}{% endraw %}` slot, so an association with its own pairing overrides that block rather than adding a second set of links beside the existing ones:
+
+```django
+{% raw %}
+{# templates/<association>/core/base.html #}
+{% block fonts %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=...&display=swap" rel="stylesheet">
+{% endblock %}
+{% endraw %}
+```
+
+`templates/hf/core/base.html` is the worked example: it swaps in Sansita for headings and Nunito Sans for everything else, which is the pairing the association's own website uses. Also set the matching `font-family` in the variant's `static/<association>/core/css/base.css`; a family that is loaded but never referenced, or referenced but never loaded, falls back to a system font without any error.
+
 ## Footer Social Icons
 
 Each association lists its footer buttons in `CONTENT_VARIABLES["SOCIAL_BUTTONS"]` as `[icon, url]` pairs; an entry with a blank URL is skipped. The shared footer (`templates/common/core/footer.html`, `footer_social_buttons` block) picks the icon for each entry:
