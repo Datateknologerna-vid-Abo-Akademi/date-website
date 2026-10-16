@@ -84,11 +84,10 @@ div a:hover{
     transition: background-color 0.3s, color 0.3s;
     /* Additional styles for interactions */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    outline: none; /* Prevents focus outline */
 }
 
 .theme-button:hover {
-    background-color: var(--primaryColorLighte);
+    background-color: var(--primaryColorMid);
     color: var(--linkColorLightHover);
 }
 

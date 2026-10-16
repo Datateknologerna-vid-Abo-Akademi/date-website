@@ -1,0 +1,41 @@
+# Curated page list for the CSS regression harness.
+#
+#   uv run python scripts/css_regression.py capture --label before \
+#       --pages scripts/css_regression_pages.txt
+#
+# This set exists to give every shared and association stylesheet at least one
+# page that loads it, so an appearance-neutral claim can actually be checked.
+# The five seasonal event paths (/events/arsfest/, /events/baal/,
+# /events/kk100/, /events/tomtejakt/, /events/wappmiddag/) only resolve when an
+# event exists whose title or slug selects that template; the dynamic fixtures
+# create one of each for exactly this reason.
+#
+# One path per line. Blank lines are ignored and everything from a '#' to the
+# end of the line is a comment. Every path must start with '/'.
+/
+/events/
+/events/arsfest/
+/events/baal/
+/events/kk100/
+/events/tomtejakt/
+/events/wappmiddag/
+/events/valentines-sitsit/
+/news/
+/news/articles/lunchguide/
+/news/articles/styrelsens-halsning/
+/pages/om-oss/
+/pages/styrelsen/
+/publications/
+/archive/documents/
+/archive/pictures/
+/archive/exams/
+/members/signup/
+/members/login/
+/members/funktionarer/
+/members/cert/
+/forms/
+/polls/
+/social/harassment/
+/alumni/signup/
+/ads/
+/booking/

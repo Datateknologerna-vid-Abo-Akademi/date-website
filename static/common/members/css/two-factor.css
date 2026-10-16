@@ -68,7 +68,7 @@
 
 .two-factor-secondary:hover,
 .two-factor-secondary:focus {
-    background-color: var(--primaryColorLighte);
+    background-color: var(--primaryColorMid);
     color: var(--linkColorLightHover);
 }
 

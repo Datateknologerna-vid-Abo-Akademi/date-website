@@ -117,7 +117,7 @@ class SiteShellTemplateTests(TestCase):
     def test_every_association_shell_loads_the_shared_pagination_css(self):
         # The table pagination markup comes from django-tables2 rather than from a
         # project template, so the sheet that styles it has to be linked by every
-        # shell. sf is the only standalone one; the rest extend templates/common.
+        # shell. Every association shell extends templates/common, which links it.
         for association, settings_module in ASSOCIATION_SETTINGS_MODULES.items():
             with self.subTest(association=association):
                 module = importlib.import_module(settings_module)

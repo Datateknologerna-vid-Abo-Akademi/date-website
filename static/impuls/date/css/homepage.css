@@ -8,7 +8,7 @@
 
 .header {
     color: var(--textColorLight);
-    background: linear-gradient(180deg, var(--primaryColorLighte) 0%, var(--primaryColor) 100%);
+    background: linear-gradient(180deg, var(--primaryColorMid) 0%, var(--primaryColor) 100%);
     margin: 0;
     min-height: 68vh;
     padding-top: 58px;
@@ -575,7 +575,7 @@ div.calendar-container a {
 }
 
 .vanilla-calendar-day__btn_today:not(.calendar-eventday):hover {
-    background-color: var(--primaryColorLighte) !important;
+    background-color: var(--primaryColorMid) !important;
 }
 
 /* Today + an event on the same day: keep the event's own color (it's the

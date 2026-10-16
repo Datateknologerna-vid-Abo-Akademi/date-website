@@ -1,0 +1,20 @@
+# Explicit page list for the CSS regression harness, used instead of the seed page
+# list and the automatic detail-page discovery:
+#
+#   uv run python scripts/css_regression.py capture --label before \
+#       --only date --pages scripts/css_regression_pages.example.txt
+#
+# One path per line. Blank lines are ignored and everything from a '#' to the end of
+# the line is a comment. Every path must start with '/', is requested against each
+# selected variant's base URL, and becomes a page label derived from the path
+# (for example /members/signup/ becomes members-signup).
+/
+/events/
+/events/arsfest/
+/news/
+/news/articles/lunchguide/
+/publications/
+/members/signup/
+/forms/
+/polls/
+/booking/

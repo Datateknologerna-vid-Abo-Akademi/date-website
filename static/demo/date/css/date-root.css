@@ -4,7 +4,7 @@
 :root {
     --primaryColor: #0000FF;
     --primaryColorLight:  #2020FF;
-    --primaryColorLighte:#3d3dFF;
+    --primaryColorMid:#3d3dFF;
     --primaryColorLighter:#5050FF;
     --primaryColorTransparent: rgba(0,0,255,0.9);
     --primaryColorTransparenter: rgba(0,0,255,0.8);
