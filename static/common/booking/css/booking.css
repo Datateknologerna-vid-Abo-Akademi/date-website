@@ -45,7 +45,7 @@
     border: 1px solid var(--primaryColorLighter);
     border-top: 3px solid var(--linkColorLight, var(--linkColorDark, var(--secondaryColor)));
     border-radius: var(--defaultRadius);
-    background-color: var(--primaryColorLighte);
+    background-color: var(--primaryColorMid);
     transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
