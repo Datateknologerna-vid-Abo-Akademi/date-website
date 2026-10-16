@@ -184,8 +184,8 @@
   display: block;
   width: auto;
   height: auto;
-  max-width: min(210px, 60vw);
-  max-height: 120px;
+  max-width: min(320px, 62vw);
+  max-height: 300px;
   margin: 0 auto;
 }
 
