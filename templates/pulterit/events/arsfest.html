@@ -37,9 +37,10 @@
           </div>
           <div class="main-content mt-4">
             <div class="text-center flex-container-center">
-              <img class="periodic-table-square"
-                   src="{% static 'core/images/albin.png' %}"
-                   alt="Albin">
+              {# The association's own event logo, from EVENT_TEMPLATE_LOGO, as the shared events/arsfest_base.html renders it. #}
+              <img class="event-template-logo"
+                   src="{% static EVENT_TEMPLATE_LOGO %}"
+                   alt="{{ ASSOCIATION_NAME }} logo">
             </div>
           </div>
           <h1 class="age" style="font-size:64px; text-align:center;">{{ ASSOCIATION_NAME }}</h1>
