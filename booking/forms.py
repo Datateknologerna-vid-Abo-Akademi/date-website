@@ -9,9 +9,17 @@ from .models import BOOKING_PAST_GRACE, Booking
 BOOKING_DATETIME_FORMAT = '%Y-%m-%dT%H:%M'
 
 
-def _local_datetime_widget():
-    """A datetime-local input that keeps the browser value after a reload."""
-    return forms.DateTimeInput(attrs={'type': 'datetime-local'}, format=BOOKING_DATETIME_FORMAT)
+def _local_datetime_widget(label):
+    """A datetime-local input that keeps the browser value after a reload.
+
+    The field's label goes on as an accessible name too. The room page shows one
+    "Tid" label over both datetime inputs, so without this the second of them
+    would have no name of its own for a screen reader.
+    """
+    return forms.DateTimeInput(
+        attrs={'type': 'datetime-local', 'aria-label': label},
+        format=BOOKING_DATETIME_FORMAT,
+    )
 
 
 def local_datetime_field(label):
@@ -21,7 +29,7 @@ def local_datetime_field(label):
     halves are built here: the browser value has to be accepted and a value
     that failed validation still has to come back in the input's own format.
     """
-    widget = _local_datetime_widget()
+    widget = _local_datetime_widget(label)
     field = forms.DateTimeField(label=label, widget=widget)
     field.input_formats = [BOOKING_DATETIME_FORMAT, *getattr(settings, 'DATETIME_INPUT_FORMATS', ())]
     field.widget.input_formats = field.input_formats
@@ -102,6 +110,10 @@ class AnonymousBookingForm(BookingForm):
         label=_('E-post'),
         required=True,
         error_messages={'required': _('Ange en e-postadress så att vi kan nå dig.')},
+        # Said under the field it is about, rather than as a line under the
+        # button: it explains why an address is being asked for, and a visitor
+        # who is typing one is the reader.
+        help_text=_('E-postadressen används bara för att skicka en bokningsbekräftelse.'),
     )
 
     class Meta(BookingForm.Meta):

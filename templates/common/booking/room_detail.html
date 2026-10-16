@@ -7,9 +7,20 @@
 {% endblock %}
 {% block extra_head %}
   {{ block.super }}
+  {% comment %}
+    The booking form asks for a start and an end once, not twice: the pair of
+    datetime inputs is what posts, and the script below turns it into a single
+    range field when flatpickr is available. flatpickr's stylesheet is loaded
+    first so booking.css can re-skin the calendar.
+  {% endcomment %}
+  <link rel="stylesheet"
+        href="{% static 'core/css/flatpickr.min.css' %}"
+        type="text/css">
   <link rel="stylesheet"
         href="{% static 'booking/css/booking.css' %}"
         type="text/css">
+  <script src="{% static 'core/js/flatpickr.min.js' %}" defer></script>
+  <script src="{% static 'booking/js/booking-time-range.js' %}" defer></script>
   {% if not user.is_authenticated %}
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js"
             async
@@ -73,17 +84,50 @@
             <form method="post" class="booking-form">
               {% csrf_token %}
               {% for field in form %}
-                <p>
-                  {{ field.label_tag }}
-                  {{ field }}
-                </p>
-                {% for error in field.errors %}
-                  <div class="booking-error">
-                    <strong>{{ error|escape }}</strong>
-                  </div>
-                {% endfor %}
-                {% if field.help_text %}
-                  <small class="booking-help">{{ field.help_text }}</small>
+                {% if field.name == "start" %}
+                  {% comment %}
+                    Start and end are one question, so they are one row: the label
+                    covers both, and the script replaces the pair with a range
+                    field when it can.
+                  {% endcomment %}
+                  <p class="booking-when"
+                     id="booking-when"
+                     data-booking-time-range
+                     data-booking-range-separator="{% trans 'till' %}"
+                     data-booking-range-placeholder="{% trans 'Välj start och sluttid' %}">
+                    <label for="{{ field.id_for_label }}">{% trans "Tid" %}:</label>
+                    <span class="booking-when-fields" data-booking-range-fields>
+                      {{ field }}
+                      <span class="booking-when-sep">{% trans "till" %}</span>
+                      {{ form.end }}
+                    </span>
+                    {% for error in field.errors %}
+                      <span class="booking-error"><strong>{{ error|escape }}</strong></span>
+                    {% endfor %}
+                    {% comment %}
+                      One range, one mistake: an end error that repeats what the
+                      start already said is dropped, since two identical bands
+                      read as two problems.
+                    {% endcomment %}
+                    {% for error in form.end.errors %}
+                      {% if error not in field.errors %}
+                        <span class="booking-error"><strong>{{ error|escape }}</strong></span>
+                      {% endif %}
+                    {% endfor %}
+                  </p>
+                {% elif field.name == "end" %}
+                  {# Rendered with the start field above. #}
+                {% else %}
+                  <p>
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% for error in field.errors %}
+                      <span class="booking-error"><strong>{{ error|escape }}</strong></span>
+                    {% endfor %}
+                    {% if field.help_text %}
+                      <small class="booking-help">{{ field.help_text }}</small>
+                    {% endif %}
+                  </p>
                 {% endif %}
               {% endfor %}
               {% if not user.is_authenticated %}
@@ -93,9 +137,6 @@
               {% endif %}
               <button class="theme-button" type="submit">{% trans "Boka" %}</button>
             </form>
-            {% if not user.is_authenticated %}
-              <small class="booking-help">{% trans "E-postadressen används bara för att skicka en bokningsbekräftelse." %}</small>
-            {% endif %}
             {% include 'booking/partials/board_contact.html' %}
           </section>
         {% endif %}

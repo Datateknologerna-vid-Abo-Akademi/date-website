@@ -140,16 +140,30 @@
 
 /* ---- the booking form ---- */
 
-.booking-code-form,
-.booking-form {
+.booking-code-form {
     max-width: 32rem;
 }
 
-/* One row per field, label beside it, the same shape the event registration
-   form uses. Errors and help text sit under both columns. */
+/* One column for the controls: the widgets, their help text and the submit
+   button all start at the same x, so the form reads as a column of inputs with
+   labels beside it instead of a label column with stray content under it. The
+   form repeats the field row's own grid, and every field row spans it, which is
+   what keeps the two grids aligned. */
+.booking-form {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    column-gap: 0.75rem;
+}
+
+/* One row per field, label in a fixed column beside it. The event registration
+   form uses the same shape with a 30% label column; fixed rather than a share of
+   the width because the labels here are one or two words, and a percentage
+   leaves a wide gap between a short label and its widget once the form is as
+   wide as the panel. Errors span the row, help text sits under its widget. */
 .booking-form > p {
     display: grid;
-    grid-template-columns: 30% 1fr;
+    grid-template-columns: 9rem 1fr;
+    grid-column: 1 / -1;
     gap: 0.35rem 0.75rem;
     align-items: start;
     margin: 0 0 0.9rem;
@@ -160,9 +174,14 @@
     overflow-wrap: anywhere;
 }
 
-.booking-form > p > .booking-error,
-.booking-form > p > .booking-help {
+.booking-form > p > .booking-error {
     grid-column: 1 / -1;
+}
+
+/* Under the widget it explains, not under the label: the sentence about what
+   the description is for belongs to the box it sits beneath. */
+.booking-form > p > .booking-help {
+    grid-column: 2;
 }
 
 .booking-form input,
@@ -189,8 +208,24 @@
     outline-offset: 1px;
 }
 
+/* The controls' column rather than the labels': the button sits under the
+   fields it submits, and the captcha widget with it. The button keeps the width
+   of its own label instead of filling the column, which is what it did before
+   and what it still does on a narrow screen. */
+.booking-form > .theme-button,
+.booking-form > .cf-turnstile {
+    grid-column: 2;
+}
+
+.booking-form > .theme-button {
+    justify-self: start;
+}
+
+/* The button closes the form, and what follows it is a note about the page
+   rather than about the button. A button carries no space below itself, so
+   without this the board's contact line reads as a caption for it. */
 .booking-form .theme-button {
-    margin-top: 0.35rem;
+    margin: 0.35rem 0 0.6rem;
 }
 
 .booking-help {
@@ -200,9 +235,154 @@
     line-height: 1.5;
 }
 
+/* ---- the start and end of a booking, as one field ---- */
+
+/* The two datetime inputs are what posts. Beside each other under one label
+   they read as a single question, and the script replaces them with one range
+   field when flatpickr is available, which is what the `-enhanced` class
+   records. Without the script this row is the whole control, and it stays
+   usable. */
+.booking-when-fields {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.booking-when-sep {
+    color: var(--helpText);
+}
+
+.booking-when > .booking-when-picker {
+    grid-column: 2;
+}
+
+.booking-when-enhanced > .booking-when-fields {
+    display: none;
+}
+
+/* ---- the range picker ---- */
+
+/* flatpickr's own stylesheet draws a light calendar, which would be the one
+   light card on these pages. It is re-skinned with the variables the panel
+   already uses, so the field looks like the rest of the form. Every rule is
+   written under `.flatpickr-calendar` to outweigh the single-class rules in
+   that stylesheet, which is loaded before this one. */
+.flatpickr-calendar {
+    border: 1px solid var(--primaryColorLighter);
+    border-radius: var(--defaultRadius);
+    background-color: var(--primaryColorLight);
+    color: var(--textColorLight);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+}
+
+.flatpickr-calendar.arrowTop:after {
+    border-bottom-color: var(--primaryColorLight);
+}
+
+.flatpickr-calendar.arrowBottom:after {
+    border-top-color: var(--primaryColorLight);
+}
+
+.flatpickr-calendar .flatpickr-months .flatpickr-month,
+.flatpickr-calendar .flatpickr-months .flatpickr-prev-month,
+.flatpickr-calendar .flatpickr-months .flatpickr-next-month {
+    color: var(--textColorLight);
+    fill: var(--textColorLight);
+}
+
+.flatpickr-calendar .flatpickr-months .flatpickr-prev-month:hover,
+.flatpickr-calendar .flatpickr-months .flatpickr-next-month:hover {
+    color: var(--linkColorLight, var(--textColorLight));
+    fill: var(--linkColorLight, var(--textColorLight));
+}
+
+.flatpickr-calendar span.flatpickr-weekday {
+    color: var(--helpText);
+}
+
+.flatpickr-calendar .flatpickr-day {
+    color: var(--textColorLight);
+}
+
+.flatpickr-calendar .flatpickr-day.prevMonthDay,
+.flatpickr-calendar .flatpickr-day.nextMonthDay,
+.flatpickr-calendar .flatpickr-day.flatpickr-disabled,
+.flatpickr-calendar .flatpickr-day.notAllowed {
+    color: var(--helpText);
+}
+
+.flatpickr-calendar .flatpickr-day:hover,
+.flatpickr-calendar .flatpickr-day:focus,
+.flatpickr-calendar .flatpickr-day.inRange {
+    background-color: var(--primaryColorLighter);
+    border-color: var(--primaryColorLighter);
+    box-shadow: none;
+}
+
+.flatpickr-calendar .flatpickr-day.today {
+    border-color: var(--linkColorLight, var(--textColorLight));
+}
+
+.flatpickr-calendar .flatpickr-day.today:hover,
+.flatpickr-calendar .flatpickr-day.today:focus {
+    background-color: var(--linkColorLight, var(--textColorLight));
+    color: var(--textColorDark);
+}
+
+.flatpickr-calendar .flatpickr-day.selected,
+.flatpickr-calendar .flatpickr-day.startRange,
+.flatpickr-calendar .flatpickr-day.endRange,
+.flatpickr-calendar .flatpickr-day.selected:hover,
+.flatpickr-calendar .flatpickr-day.startRange:hover,
+.flatpickr-calendar .flatpickr-day.endRange:hover {
+    background-color: var(--linkColorLight, var(--textColorLight));
+    border-color: var(--linkColorLight, var(--textColorLight));
+    color: var(--textColorDark);
+}
+
+.flatpickr-calendar.hasTime .flatpickr-time {
+    border-top-color: var(--primaryColorLighter);
+}
+
+.flatpickr-calendar .flatpickr-time input,
+.flatpickr-calendar .flatpickr-time .flatpickr-time-separator {
+    color: var(--textColorLight);
+}
+
+.flatpickr-calendar .flatpickr-time input:hover,
+.flatpickr-calendar .flatpickr-time input:focus {
+    background-color: var(--primaryColorLighter);
+}
+
+.flatpickr-calendar .flatpickr-time .numInputWrapper span.arrowUp:after {
+    border-bottom-color: var(--textColorLight);
+}
+
+.flatpickr-calendar .flatpickr-time .numInputWrapper span.arrowDown:after {
+    border-top-color: var(--textColorLight);
+}
+
+.flatpickr-calendar .flatpickr-current-month .numInputWrapper span.arrowUp:after {
+    border-bottom-color: var(--textColorLight);
+}
+
+.flatpickr-calendar .flatpickr-current-month .numInputWrapper span.arrowDown:after {
+    border-top-color: var(--textColorLight);
+}
+
+/* The board's contact line ends the page, whichever element it follows: the
+   form's last field, the submit button, or the link back to the room list. It
+   is a note of its own, so it keeps its distance from all of them. */
+.booking-contact {
+    margin: 1.25rem 0 0;
+}
+
 /* Errors used to be drawn in --primaryColorLight, which is the colour of the
-   panel behind them, so a wrong code or a rejected field was invisible. */
+   panel behind them, so a wrong code or a rejected field was invisible. It is a
+   span rather than a div because a field row is a <p>, which cannot hold one. */
 .booking-error {
+    display: block;
     margin: 0.35rem 0;
     padding: 0.45rem 0.65rem;
     border-left: 3px solid var(--warning-darker, var(--warning));
@@ -254,7 +434,7 @@
 }
 
 .booking-code-form .theme-button {
-    margin-top: 0.35rem;
+    margin: 0.35rem 0 0.6rem;
 }
 
 .booking-lockout {
@@ -268,6 +448,18 @@
 /* ---- narrow screens ---- */
 
 @media screen and (max-width: 768px) {
+    /* One column, so the control column the button and the help text were
+       placed in no longer exists. */
+    .booking-form {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-form > .theme-button,
+    .booking-form > .cf-turnstile,
+    .booking-form > p > .booking-help {
+        grid-column: 1;
+    }
+
     .booking-form > p {
         grid-template-columns: 1fr;
         gap: 0.25rem;
@@ -277,6 +469,19 @@
     .booking-form > p > label {
         padding-top: 0;
         font-weight: 600;
+    }
+
+    /* A phone has no room for two datetime inputs side by side, so the pair
+       stacks and the separator keeps the order readable. The single range field
+       has to be moved into the one remaining column by hand: its rule above
+       names the second column, which a one-column grid would otherwise create
+       as an implicit one. */
+    .booking-when-fields {
+        grid-template-columns: 1fr;
+    }
+
+    .booking-when > .booking-when-picker {
+        grid-column: 1;
     }
 
     .booking-form .theme-button,

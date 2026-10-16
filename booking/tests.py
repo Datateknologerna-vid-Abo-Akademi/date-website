@@ -1235,6 +1235,31 @@ class BookingMemberFlowTests(TestCase):
             with self.subTest(field=name):
                 self.assertEqual(response.context['form'].fields[name].widget.attrs['min'], expected)
 
+    def test_the_two_time_fields_share_one_row(self):
+        response = self.client.get(self.room_url)
+
+        content = response.content.decode()
+        # The pair is what posts and the script turns it into one range field, so
+        # both inputs and every word the script reads have to be in the same row.
+        self.assertContains(response, 'data-booking-time-range')
+        self.assertContains(response, 'data-booking-range-fields')
+        self.assertContains(response, 'data-booking-range-separator="till"')
+        self.assertContains(response, 'data-booking-range-placeholder="')
+        self.assertEqual(content.count('name="start"'), 1)
+        self.assertEqual(content.count('name="end"'), 1)
+        # One visible label covers both inputs, so each carries its own name.
+        self.assertContains(response, 'aria-label="Starttid"')
+        self.assertContains(response, 'aria-label="Sluttid"')
+
+    def test_one_empty_range_is_reported_once(self):
+        response = self.client.post(self.room_url, self.booking_payload(start='', end=''))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('start', response.context['form'].errors)
+        self.assertIn('end', response.context['form'].errors)
+        # Two bands saying the same thing read as two problems, and there is one.
+        self.assertEqual(response.content.decode().count('Detta fält måste fyllas i.'), 1)
+
     def test_captcha_is_not_consulted_for_members(self):
         with patch('booking.views.validate_captcha') as captcha:
             response = self.client.post(self.room_url, self.booking_payload())
