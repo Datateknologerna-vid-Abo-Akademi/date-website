@@ -136,17 +136,30 @@
         </section>
         {% if user.is_staff %}
           <section class="attendance-section">
-            <h2>{% trans "Närvaroändringar" %}</h2>
-            <ul class="attendance-list">
-              {% for c in changes %}
-                {% trans c.get_type_display context "left/entered in general" as type %}
-                <li>
-                  {% blocktrans trimmed with name=c.attendee.get_full_name type_l=type|lower date=c.timestamp|date time=c.timestamp|time %}
-                    {{ name }} {{ type_l }} den {{ date }} kl {{ time }}
-                  {% endblocktrans %}
-                </li>
-              {% endfor %}
-            </ul>
+            <h2 id="changes-heading">{% trans "Närvaroändringar" %}</h2>
+            <p class="attendance-changes__hint">{% trans "Hela loggen, nyaste först. Listan uppdateras när sidan laddas om." %}</p>
+            <div class="attendance-changes-wrap">
+              <table class="attendance-changes" aria-labelledby="changes-heading">
+                <thead>
+                  <tr>
+                    <th scope="col">{% trans "Tid" %}</th>
+                    <th scope="col">{% trans "Deltagare" %}</th>
+                    <th scope="col">{% trans "Ändring" %}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for change in changes %}
+                    <tr class="attendance-changes__row--{{ change.type_name|lower }}">
+                      <td class="attendance-changes__time">{{ change.timestamp|date:"SHORT_DATE_FORMAT" }} {{ change.timestamp|time }}</td>
+                      <td class="attendance-changes__name">{{ change.attendee_name }}</td>
+                      <td class="attendance-changes__action attendance-changes__action--{{ change.type_name|lower }}">
+                        {% trans change.get_type_display context "left/entered in general" %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
           </section>
         {% endif %}
       </div>

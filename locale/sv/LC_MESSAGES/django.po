@@ -3544,3 +3544,9 @@ msgstr "Hela loggen finns på mötets sida."
 #: templates/common/attendance/overview.html
 msgid "Till mötessidan"
 msgstr "Till mötessidan"
+
+#: templates/common/attendance/detail.html
+msgid ""
+"Hela loggen, nyaste först. Listan uppdateras när sidan laddas om."
+msgstr ""
+"Hela loggen, nyaste först. Listan uppdateras när sidan laddas om."

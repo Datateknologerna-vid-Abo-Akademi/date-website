@@ -330,21 +330,21 @@ const addChangeToFeed = (change) => {
 
     const item = document.createElement("tr");
     item.dataset.changeId = changeId;
-    item.className = `attendance-feed__row--${direction}`;
+    item.className = `attendance-changes__row--${direction}`;
 
     const timeCell = document.createElement("td");
-    timeCell.className = "attendance-feed__time";
+    timeCell.className = "attendance-changes__time";
     const time = document.createElement("time");
     time.dateTime = typeof change.timestamp === "string" ? change.timestamp : "";
     time.innerText = formatFeedTime(change.timestamp);
     timeCell.append(time);
 
     const nameCell = document.createElement("td");
-    nameCell.className = "attendance-feed__name";
+    nameCell.className = "attendance-changes__name";
     nameCell.innerText = change.name || "";
 
     const actionCell = document.createElement("td");
-    actionCell.className = `attendance-feed__action attendance-feed__action--${direction}`;
+    actionCell.className = `attendance-changes__action attendance-changes__action--${direction}`;
     actionCell.innerText = change.type === "ENTER" ? _("Anlände") : _("Lämnade");
 
     item.append(timeCell, nameCell, actionCell);

@@ -1304,9 +1304,25 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         local = timezone.localtime(at)
         # The assertions are worth making only if the two differ.
         self.assertNotEqual(date_format(local), date_format(at))
-        self.assertContains(response, date_format(local))
+        self.assertContains(response, date_format(local, format="SHORT_DATE_FORMAT"))
         self.assertContains(response, time_format(local))
-        self.assertNotContains(response, date_format(at))
+        self.assertNotContains(response, date_format(at, format="SHORT_DATE_FORMAT"))
+
+    def test_the_change_log_is_a_table_that_tells_the_directions_apart(self):
+        """The event page's log reads the same way as the staff feed's."""
+        record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=2))
+        record_change(self.event, LEAVE, user=self.member, timestamp=now() - timedelta(minutes=1))
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertContains(response, 'aria-labelledby="changes-heading"')
+        self.assertContains(response, "attendance-changes__row--enter")
+        self.assertContains(response, "attendance-changes__row--leave")
+        self.assertContains(response, "attendance-changes__action--enter")
+        self.assertContains(response, "attendance-changes__action--leave")
+        self.assertContains(response, "Anlände")
+        self.assertContains(response, "Lämnade")
 
     def test_plain_member_does_not_see_the_change_log(self):
         record_change(self.event, ENTER, user=self.member)
@@ -2086,10 +2102,10 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
 
         response = self.client.get(self.overview_url)
 
-        self.assertContains(response, "attendance-feed__row--enter")
-        self.assertContains(response, "attendance-feed__row--leave")
-        self.assertContains(response, "attendance-feed__action--enter")
-        self.assertContains(response, "attendance-feed__action--leave")
+        self.assertContains(response, "attendance-changes__row--enter")
+        self.assertContains(response, "attendance-changes__row--leave")
+        self.assertContains(response, "attendance-changes__action--enter")
+        self.assertContains(response, "attendance-changes__action--leave")
 
     def test_overview_renders_the_feed_empty_state(self):
         self.client.force_login(self.staff)

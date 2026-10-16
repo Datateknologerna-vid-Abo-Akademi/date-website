@@ -44,9 +44,9 @@
         </section>
         <section class="attendance-section">
           <h2 id="change-feed-heading">{% trans "Närvaroflöde" %}</h2>
-          <p class="attendance-feed__hint">{% trans "Varje in- och utcheckning, senaste först." %}</p>
-          <div class="attendance-feed-wrap" aria-live="polite">
-            <table class="attendance-feed" aria-labelledby="change-feed-heading">
+          <p class="attendance-changes__hint">{% trans "Varje in- och utcheckning, senaste först." %}</p>
+          <div class="attendance-changes-wrap" aria-live="polite">
+            <table class="attendance-changes" aria-labelledby="change-feed-heading">
               <thead>
                 <tr>
                   <th scope="col">{% trans "Tid" %}</th>
@@ -57,13 +57,13 @@
               <tbody id="change-feed">
                 {% for change in recent_changes %}
                   <tr data-change-id="{{ change.pk }}"
-                      class="attendance-feed__row--{{ change.type_name|lower }}"
+                      class="attendance-changes__row--{{ change.type_name|lower }}"
                       {% if forloop.counter > feed_visible %}hidden{% endif %}>
-                    <td class="attendance-feed__time">
+                    <td class="attendance-changes__time">
                       <time datetime="{{ change.timestamp|date:'c' }}">{{ change.timestamp|time }}</time>
                     </td>
-                    <td class="attendance-feed__name">{{ change.attendee_name }}</td>
-                    <td class="attendance-feed__action attendance-feed__action--{{ change.type_name|lower }}">
+                    <td class="attendance-changes__name">{{ change.attendee_name }}</td>
+                    <td class="attendance-changes__action attendance-changes__action--{{ change.type_name|lower }}">
                       {% trans change.get_type_display context "left/entered in general" %}
                     </td>
                   </tr>

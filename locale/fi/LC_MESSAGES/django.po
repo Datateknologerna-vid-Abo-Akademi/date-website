@@ -3600,3 +3600,9 @@ msgstr "Koko loki on kokouksen sivulla."
 #: templates/common/attendance/overview.html
 msgid "Till mötessidan"
 msgstr "Siirry kokouksen sivulle"
+
+#: templates/common/attendance/detail.html
+msgid ""
+"Hela loggen, nyaste först. Listan uppdateras när sidan laddas om."
+msgstr ""
+"Koko loki, uusin ensin. Luettelo päivittyy, kun sivu ladataan uudelleen."

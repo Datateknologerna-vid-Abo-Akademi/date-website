@@ -128,21 +128,24 @@
     margin-bottom: 0.3rem;
 }
 
-/* The live log under the attendee list. One row per check-in or check-out with
-   its time, so the board can see that somebody who left came back, and the two
-   directions are told apart by colour as well as by the word in the last
-   column. The colour is never the only signal: the word carries it. */
-.attendance-feed-wrap {
-    overflow-x: auto;
-}
+/* A log of check-ins and check-outs, used twice: the live feed on the staff
+   overview page, and the whole log on the event page. One row per change with
+   its time, and the two directions are told apart by colour as well as by the
+   word in the last column, so the colour is never the only signal. */
+.attendance-changes {
+    --attendance-enter: var(--attendance-present, #7fe3a9);
+    --attendance-leave: var(--attendance-absent, #ffd479);
 
-.attendance-feed {
     width: 100%;
     border-collapse: collapse;
 }
 
-.attendance-feed th,
-.attendance-feed td {
+.attendance-changes-wrap {
+    overflow-x: auto;
+}
+
+.attendance-changes th,
+.attendance-changes td {
     padding: 0.4rem 0.5rem;
     text-align: left;
     vertical-align: top;
@@ -150,40 +153,40 @@
     border-bottom-color: color-mix(in srgb, currentColor 20%, transparent);
 }
 
-.attendance-feed thead th {
+.attendance-changes thead th {
     font-size: 0.9rem;
     font-weight: 600;
 }
 
-.attendance-feed__time {
+.attendance-changes__time {
     color: var(--attendance-muted, #c9c9c9);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
 
-.attendance-feed__name {
+.attendance-changes__name {
     font-weight: 600;
 }
 
-.attendance-feed__action--enter {
-    color: var(--attendance-present, #7fe3a9);
+.attendance-changes__action--enter {
+    color: var(--attendance-enter);
     font-weight: 600;
 }
 
-.attendance-feed__action--leave {
-    color: var(--attendance-absent, #ffd479);
+.attendance-changes__action--leave {
+    color: var(--attendance-leave);
     font-weight: 600;
 }
 
-.attendance-feed__row--enter td:first-child {
-    border-left: 3px solid var(--attendance-present, #7fe3a9);
+.attendance-changes__row--enter td:first-child {
+    border-left: 3px solid var(--attendance-enter);
 }
 
-.attendance-feed__row--leave td:first-child {
-    border-left: 3px solid var(--attendance-absent, #ffd479);
+.attendance-changes__row--leave td:first-child {
+    border-left: 3px solid var(--attendance-leave);
 }
 
-.attendance-feed__hint {
+.attendance-changes__hint {
     margin-bottom: 0.5rem;
     color: var(--attendance-muted, #c9c9c9);
     font-size: 0.95rem;

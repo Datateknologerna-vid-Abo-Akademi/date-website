@@ -3559,3 +3559,10 @@ msgstr "The whole log is on the meeting's page."
 #: templates/common/attendance/overview.html
 msgid "Till mötessidan"
 msgstr "Go to the meeting page"
+
+#: templates/common/attendance/detail.html
+msgid ""
+"Hela loggen, nyaste först. Listan uppdateras när sidan laddas om."
+msgstr ""
+"The whole log, newest first. The list refreshes when the page is "
+"reloaded."
