@@ -25,8 +25,9 @@
               {% blocktrans trimmed %}
                 Röstningen kräver att du är inloggad medlem och att du är på plats i mötet.
               {% endblocktrans %}
-              <a href="{% url 'members:login' %}?next={% url 'polls:detail' question.id %}">{% trans "Logga in" %}</a>
             </p>
+            <a class="theme-button d-inline-block"
+               href="{% url 'members:login' %}?next={% url 'polls:detail' question.id %}">{% trans "Logga in" %}</a>
           {% elif attendance_requirement.is_present %}
             <p>
               {% blocktrans trimmed with meeting=attendance_requirement.event %}
@@ -39,24 +40,34 @@
                 Den här frågan får bara besvaras av dem som är på plats på {{ meeting }}.
               {% endblocktrans %}
             </p>
-            <a class="btn btn-light"
+            <a class="theme-button d-inline-block"
                href="{% url 'attendance-event-view' attendance_requirement.event.slug %}?next={% url 'polls:detail' question.id %}">
               {% trans "Ange koden och checka in" %}
             </a>
           {% endif %}
         {% endif %}
-        <form action="{% url 'polls:vote' question.id %}" method="post">
-          {% csrf_token %}
-          {% for choice in question.choice_set.all %}
-            <input type="{% if question.multiple_choice %}checkbox{% else %}radio{% endif %}"
-                   name="choice"
-                   id="choice{{ forloop.counter }}"
-                   value="{{ choice.id }}">
-            <label class="p-2" for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label>
-            <br>
-          {% endfor %}
-          <input class="btn btn-light" type="submit" value="Rösta">
-        </form>
+        {% if not attendance_requirement or attendance_requirement.is_present %}
+          <form action="{% url 'polls:vote' question.id %}" method="post">
+            {% csrf_token %}
+            <fieldset class="mt-3">
+              <legend class="visually-hidden">{% trans "Svarsalternativ" %}</legend>
+              {% for choice in question.choice_set.all %}
+                <label class="d-flex align-items-start gap-3 border rounded p-3 mb-2"
+                       for="choice{{ forloop.counter }}">
+                  <input class="mt-1"
+                         type="{% if question.multiple_choice %}checkbox{% else %}radio{% endif %}"
+                         name="choice"
+                         id="choice{{ forloop.counter }}"
+                         value="{{ choice.id }}">
+                  <span>{{ choice.choice_text }}</span>
+                </label>
+              {% endfor %}
+            </fieldset>
+            <div class="mt-3">
+              <input class="theme-button" type="submit" value="{% trans 'Rösta' %}">
+            </div>
+          </form>
+        {% endif %}
       </div>
     </div>
   </div>

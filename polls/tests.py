@@ -514,6 +514,22 @@ class PollPageAttendancePromptTests(TestCase):
         self.vote_url = reverse('polls:vote', args=[self.question.id])
         self.check_in_url = reverse('attendance-event-view', args=[self.event.slug])
 
+    def rendered_vote_form(self, response, question):
+        """The vote form as it was rendered, or an empty string when there is none.
+
+        The page carries a language form of its own in the header, so searching
+        the whole page for ``type="submit"`` would answer the wrong question. The
+        form is matched by the action it posts to instead, and the assertions
+        below read that fragment rather than the page around it.
+        """
+        pattern = re.compile(
+            rf'<form[^>]*{re.escape(reverse("polls:vote", args=[question.id]))}.*?</form>',
+            re.DOTALL,
+        )
+        match = pattern.search(response.content.decode())
+
+        return match.group(0) if match else ''
+
     def test_a_member_who_is_not_present_is_sent_to_the_check_in_page(self):
         self.client.force_login(self.member)
 
@@ -523,6 +539,70 @@ class PollPageAttendancePromptTests(TestCase):
         self.assertContains(response, "Ange koden och checka in")
         # The round trip: the check-in page sends the voter back to this page.
         self.assertContains(response, f'href="{self.check_in_url}?next={self.page_url}"')
+
+    def test_a_member_who_is_not_present_gets_no_vote_form(self):
+        """Nothing to pick and nothing to submit, so no choice can be lost."""
+        self.client.force_login(self.member)
+
+        response = self.client.get(self.page_url)
+        check_in_href = f'href="{self.check_in_url}?next={self.page_url}"'
+
+        self.assertContains(response, "Ange koden och checka in", count=1)
+        # The one action is the site's own button, not the mixed Bootstrap pair
+        # the page used before, where the link and the submit rendered apart.
+        self.assertRegex(
+            response.content.decode(),
+            r'<a[^>]*class="theme-button[^"]*"[^>]*' + re.escape(check_in_href),
+        )
+        self.assertNotContains(response, 'name="choice"')
+        self.assertNotContains(response, self.vote_url)
+        self.assertEqual(self.rendered_vote_form(response, self.question), '')
+
+    def test_an_anonymous_visitor_gets_no_vote_form(self):
+        response = self.client.get(self.page_url)
+
+        self.assertContains(response, f'href="{reverse("members:login")}?next={self.page_url}"')
+        self.assertNotContains(response, 'name="choice"')
+        self.assertNotContains(response, self.vote_url)
+        self.assertEqual(self.rendered_vote_form(response, self.question), '')
+
+    def test_a_refused_vote_renders_no_vote_form(self):
+        """The refusal re-renders the page without the form the voter could not use."""
+        self.client.force_login(self.member)
+
+        response = self.client.post(self.vote_url, {"choice": [str(self.choice.id)]})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, ERROR_MESSAGES['not_present'])
+        self.assertNotContains(response, 'name="choice"')
+        self.assertEqual(self.rendered_vote_form(response, self.question), '')
+
+    def test_a_present_member_gets_the_vote_form(self):
+        record_change(self.event, ENTER, self.member)
+        self.client.force_login(self.member)
+
+        response = self.client.get(self.page_url)
+        form = self.rendered_vote_form(response, self.question)
+
+        self.assertIn('name="choice"', form)
+        self.assertIn(f'value="{self.choice.id}"', form)
+        self.assertEqual(form.count('type="submit"'), 1)
+        self.assertRegex(form, r'<input[^>]*class="theme-button"[^>]*type="submit"')
+        # Each choice is one row, and the row itself is a label that selects it.
+        self.assertEqual(form.count('<label'), 1)
+        self.assertEqual(form.count('<br>'), 0)
+
+    def test_an_ordinary_poll_gets_the_vote_form(self):
+        ordinary = Question.objects.create(question_text="Vanlig fråga")
+        choice = Choice.objects.create(question=ordinary, choice_text="ja")
+        self.client.force_login(self.member)
+
+        response = self.client.get(reverse('polls:detail', args=[ordinary.id]))
+        form = self.rendered_vote_form(response, ordinary)
+
+        self.assertIn('name="choice"', form)
+        self.assertIn(f'value="{choice.id}"', form)
+        self.assertIn('type="submit"', form)
 
     def test_a_refused_vote_still_returns_the_voter_to_this_page(self):
         """The link names the poll page, not the endpoint that rendered the refusal.
