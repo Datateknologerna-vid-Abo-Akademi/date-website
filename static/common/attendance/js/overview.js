@@ -52,12 +52,25 @@ const setStatusMessage = (msg) => {
 // How long after a code should have rotated the page stops presenting it as
 // current. A websocket that stalls without closing leaves the last code on
 // screen, and a code that looks live but is not is worse than no code: the
-// person reading it out would be reading a value the server rejects.
-const CODE_STALE_GRACE_MS = 5_000;
+// person reading it out would be reading a value the server rejects. The grace
+// only has to cover the round trip of the request that was already sent.
+const CODE_STALE_GRACE_MS = 3_000;
 const COUNTDOWN_TICK_MS = 1_000;
 
 let countdownTimer = null;
 let codeDeadline = 0;
+let codeIsStale = false;
+
+// The wrapper both pages render around the code and the QR code, dimmed together
+// when the code stops rotating: the QR carries the same expired code, so leaving
+// it bright invites a scan the server will refuse.
+const attendancePage = document.querySelector(".attendance-page");
+
+const setStalePresentation = (stale) => {
+    if (attendancePage) {
+        attendancePage.classList.toggle("attendance-page--code-stale", stale);
+    }
+};
 
 const renderCountdown = () => {
     // The page is a shared template and an association override could drop the
@@ -75,24 +88,35 @@ const renderCountdown = () => {
     } else if (remaining > -CODE_STALE_GRACE_MS) {
         codeCountdown.innerText = _("Hämtar en ny kod...");
     } else {
-        codeCountdown.innerText = _("Koden uppdateras inte. Kontrollera anslutningen.");
-        codeCountdown.classList.add("attendance-countdown--stale");
+        markCodeStale();
     }
 };
 
 /**
- * Count down to the next rotation and say so when it does not arrive.
+ * Count down to the next rotation, when the reply says how long that is.
  *
- * @param {number} untilNextMs
+ * A reply without usable timing must not start a countdown: the fallback delay
+ * is how long until the page asks again, which is not how long the code stays
+ * good for, and promising a rotation the page cannot know would be a lie.
+ *
+ * @param {number|null} untilNextMs
  */
 const startCountdown = (untilNextMs) => {
     window.clearInterval(countdownTimer);
-    codeDeadline = Date.now() + untilNextMs;
+    countdownTimer = null;
+    codeDeadline = 0;
 
     if (!codeCountdown) {
         return;
     }
 
+    if (!Number.isFinite(untilNextMs) || untilNextMs <= 0) {
+        codeCountdown.innerText = _("Hämtar en ny kod...");
+        codeCountdown.classList.remove("attendance-countdown--stale");
+        return;
+    }
+
+    codeDeadline = Date.now() + untilNextMs;
     renderCountdown();
     countdownTimer = window.setInterval(renderCountdown, COUNTDOWN_TICK_MS);
 };
@@ -102,16 +126,37 @@ const stopCountdown = () => {
     countdownTimer = null;
 }
 
+const clearCodeStale = () => {
+    if (!codeIsStale) {
+        return;
+    }
+
+    codeIsStale = false;
+    setStalePresentation(false);
+    setStatusMessage("");
+}
+
 const markCodeStale = () => {
     stopCountdown();
     codeDeadline = 0;
 
-    if (!codeCountdown) {
+    // Said once per stall, not on every tick of the interval that found it.
+    if (codeIsStale) {
         return;
     }
 
-    codeCountdown.innerText = _("Koden uppdateras inte. Kontrollera anslutningen.");
-    codeCountdown.classList.add("attendance-countdown--stale");
+    codeIsStale = true;
+    setStalePresentation(true);
+
+    if (codeCountdown) {
+        codeCountdown.innerText = _("Koden uppdateras inte. Kontrollera anslutningen.");
+        codeCountdown.classList.add("attendance-countdown--stale");
+    }
+
+    // The countdown line is aria-hidden because it ticks every second, so the
+    // warning reaches a screen reader through the page's live status region.
+    // A closed socket reports itself there too, and overwrites this.
+    setStatusMessage(_("Koden uppdateras inte. Kontrollera anslutningen."));
 }
 
 /**
@@ -256,12 +301,16 @@ const onMessage = (ws, msg) => {
 
     if (data.type == "code") {
         updateQrCode(data.code);
+        clearCodeStale();
 
-        const untilNext = Number(data.until_next) * 1000;
+        const seconds = Number(data.until_next);
         // A renamed or missing field would make this NaN, and setTimeout treats
-        // NaN as zero, which would turn the countdown into a tight request loop.
-        const delay = Number.isFinite(untilNext) && untilNext > 0 ? untilNext : CODE_REQUEST_FALLBACK_MS;
-        startCountdown(delay);
+        // NaN as zero, which would turn the retry into a tight request loop. The
+        // same value only becomes a countdown when it is usable.
+        const knownWindow = Number.isFinite(seconds) && seconds > 0;
+        startCountdown(knownWindow ? seconds * 1000 : null);
+
+        const delay = knownWindow ? seconds * 1000 : CODE_REQUEST_FALLBACK_MS;
         window.clearTimeout(codeFetcher);
         codeFetcher = setTimeout(() => requestNewCode(ws), delay);
     } else if (data.type == "attendance_snapshot") {

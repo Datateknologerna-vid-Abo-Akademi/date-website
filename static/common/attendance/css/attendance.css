@@ -59,6 +59,19 @@
     font-weight: 600;
 }
 
+/* A code that has stopped rotating must not look current, and the QR code must
+   not be offered at all: it carries the same expired value, so a scan fills the
+   form with a code the server refuses, and five of those start a lockout. The
+   digits stay, dimmed, because they are what the room is reading. */
+.attendance-page--code-stale #current-code {
+    opacity: 0.45;
+}
+
+.attendance-page--code-stale .attendance-qr,
+.attendance-page--code-stale .attendance-qr-caption {
+    display: none;
+}
+
 /* The QR code holds a full event URL, so its canvas grows with the link. The
    cap keeps a long production URL inside the card on a phone. */
 .attendance-qr {

@@ -194,6 +194,12 @@ class AttendanceEventModelTests(TestCase):
         event = make_event(start_datetime=REFERENCE_NOW - timedelta(minutes=1))
         self.assertTrue(event.has_started)
 
+    @patch("attendance.models.now", return_value=REFERENCE_NOW)
+    def test_has_started_is_false_at_the_exact_start(self, _now):
+        """The boundary is strict, the same way has_ended is."""
+        event = make_event(start_datetime=REFERENCE_NOW)
+        self.assertFalse(event.has_started)
+
     def test_slug_is_unique(self):
         make_event(slug="arsmote")
         with self.assertRaises(IntegrityError), transaction.atomic():
@@ -1216,6 +1222,7 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
 
         self.assertContains(response, 'class="attendance-actions')
         self.assertContains(response, "Välj Gå in när du kommer")
+        self.assertContains(response, "och Gå ut när du lämnar mötet")
 
     def test_a_cookie_naming_a_guest_that_does_not_exist_creates_nothing(self):
         """A GET only looks a name up: a cookie is a claim, not an attendee."""
@@ -2033,11 +2040,12 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
         # The template formatter wraps this tag, so match across the line break.
         self.assertRegex(response.content.decode(), r'<p id="no-present-attendees"\s+aria-live="polite"')
 
-    def test_overview_labels_the_code_and_counts_down_to_the_next_one(self):
+    def test_overview_labels_the_code_and_renders_the_countdown_contract(self):
         """The code is read aloud to a room, so it carries a name and a countdown.
 
-        A code that has stopped rotating looks exactly like a current one, which
-        is why the page says how long it is good for and falls back to a warning.
+        This pins the template contract only. The countdown's ticking, its stale
+        warning and its recovery are JavaScript, and this repository has no
+        JavaScript test runner, so those are checked in a browser.
         """
         self.client.force_login(self.staff)
 
@@ -2047,6 +2055,9 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
         self.assertContains(response, 'aria-labelledby="code-heading"')
         self.assertContains(response, 'id="code-countdown" aria-hidden="true"')
         self.assertContains(response, "Aktuell möteskod")
+        # The countdown line is hidden from assistive technology, so the stale
+        # warning has to reach a reader through the live status region.
+        self.assertContains(response, 'id="status-message" aria-live="polite"')
 
     def test_overview_shows_the_empty_state_when_nobody_is_present(self):
         """The empty state is in the page, unhidden, when the event has nobody present."""
