@@ -77,13 +77,17 @@
                     id="feed-more"
                     data-page-size="{{ feed_page_size }}">{% trans "Visa fler" %}</button>
           {% endif %}
-          <p id="feed-end"
-             class="attendance-feed__hint"
-             {% if recent_changes|length > feed_visible %}hidden{% endif %}>
-            {% trans "Hela loggen finns på mötets sida." %}
-            <a href="{% url 'attendance-event-view' object.slug %}">{% trans "Till mötessidan" %}</a>
-          </p>
-          <p id="no-changes" {% if recent_changes %}hidden{% endif %}>{% trans "Inga ändringar ännu" %}</p>
+          {% if recent_changes %}
+            <p id="feed-end"
+               class="attendance-feed__end"
+               {% if recent_changes|length > feed_visible %}hidden{% endif %}>
+              {% trans "Hela loggen finns på mötets sida." %}
+              <a href="{% url 'attendance-event-view' object.slug %}">{% trans "Till mötessidan" %}</a>
+            </p>
+          {% endif %}
+          <p id="no-changes"
+             class="attendance-feed__end"
+             {% if recent_changes %}hidden{% endif %}>{% trans "Inga ändringar ännu" %}</p>
         </section>
       </div>
     </div>

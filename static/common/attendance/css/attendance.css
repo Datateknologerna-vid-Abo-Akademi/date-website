@@ -189,8 +189,18 @@
     font-size: 0.95rem;
 }
 
+/* The line under the table, or the paging button when there is more to show. The
+   room between the table and whichever of them is visible belongs to them: the
+   table sits inside a wrapper, so a margin on the table would not collapse with
+   theirs and the gap would come out twice as wide. */
+.attendance-feed__end {
+    margin: 1rem 0 0;
+    color: var(--attendance-muted, #c9c9c9);
+    font-size: 0.95rem;
+}
+
 .attendance-feed__more {
-    margin-top: 0.75rem;
+    margin: 1rem 0;
 }
 
 /* The list of meetings. Each row is one tappable block carrying the meeting's
