@@ -74,19 +74,21 @@ const setStalePresentation = (stale) => {
 
 const renderCountdown = () => {
     // The page is a shared template and an association override could drop the
-    // element; a missing countdown must not stop the code from rotating.
-    if (!codeCountdown) {
-        return;
-    }
-
+    // element. Only the writes are guarded: the deadline still has to expire, or
+    // an override without a countdown line would keep presenting a stale code and
+    // its QR code for ever.
     const remaining = codeDeadline - Date.now();
 
     if (remaining > 0) {
-        const seconds = Math.ceil(remaining / COUNTDOWN_TICK_MS);
-        codeCountdown.innerText = interpolate(_("Ny kod om %(seconds)s s"), {seconds}, true);
-        codeCountdown.classList.remove("attendance-countdown--stale");
+        if (codeCountdown) {
+            const seconds = Math.ceil(remaining / COUNTDOWN_TICK_MS);
+            codeCountdown.innerText = interpolate(_("Ny kod om %(seconds)s s"), {seconds}, true);
+            codeCountdown.classList.remove("attendance-countdown--stale");
+        }
     } else if (remaining > -CODE_STALE_GRACE_MS) {
-        codeCountdown.innerText = _("Hämtar en ny kod...");
+        if (codeCountdown) {
+            codeCountdown.innerText = _("Hämtar en ny kod...");
+        }
     } else {
         markCodeStale();
     }
@@ -106,13 +108,11 @@ const startCountdown = (untilNextMs) => {
     countdownTimer = null;
     codeDeadline = 0;
 
-    if (!codeCountdown) {
-        return;
-    }
-
     if (!Number.isFinite(untilNextMs) || untilNextMs <= 0) {
-        codeCountdown.innerText = _("Hämtar en ny kod...");
-        codeCountdown.classList.remove("attendance-countdown--stale");
+        if (codeCountdown) {
+            codeCountdown.innerText = _("Hämtar en ny kod...");
+            codeCountdown.classList.remove("attendance-countdown--stale");
+        }
         return;
     }
 
@@ -342,7 +342,11 @@ const makeWebsocket = () => {
 
     ws.addEventListener("message", (msg) => onMessage(ws, msg));
     ws.addEventListener("open", () => {
-        setStatusMessage("");
+        // A stale warning stays until a fresh code actually arrives: a socket that
+        // opens and then returns nothing must not look healthy again.
+        if (!codeIsStale) {
+            setStatusMessage("");
+        }
         console.log("Websocket open");
 
         requestNewCode(ws);
