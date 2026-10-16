@@ -14,7 +14,8 @@
 - kk and impuls include the shared Instagram slider (`date/components/instagram.html`, see `docs/dev/instagram.md`); impuls shows it in place of the partners section.
 - sf, kk, biocum and hf group the events calendar, the Annat panel and the partner logos into one right-hand column, wrapped in `.sidebar-container` in their `date/start.html` and placed by a `sidebar` grid area in their `static/<association>/date/css/homepage.css`. On date, impuls and pulterit those sections are separate grid areas, so the partners render as a full-width band below the news column.
 - hf drops the joke block from `templates/hf/date/components/extras.html`. The shared script in `templates/date/date/components/scripts.html` only fetches a joke when `#joke-string` is on the page, so no other variant is affected.
-- The hf footer puts `static/hf/core/images/hf-logo-white.svg` above the association name; `scripts/make_hf_footer_logo.py` derives that file from the traced hero artwork in `templates/hf/svg/logo.svg`.
+- `templates/hf/date/components/partners.html` keeps the partner logos but drops the call-to-action link, as sf does.
+- The hf footer puts `static/hf/core/images/hf-logo-white.svg` above the association name; `scripts/make_hf_footer_logo.py` derives that file from the traced hero artwork in `templates/hf/svg/logo.svg`. It also fills `extra_footer` with the DaTe credit line the other associations show, styled by `.footer-credit-link` in `static/hf/core/css/base.css`.
 - Keep variant-specific homepage behavior here rather than scattering date checks through templates.
 
 ## Calendar Data Structure

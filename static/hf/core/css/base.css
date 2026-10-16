@@ -159,6 +159,18 @@ div a:hover{
     line-height: 1.4;
 }
 
+/* The DaTe credit line. Sp_Albin.png is white line art, so it reads on the
+   navy footer without the invert filter pulterit applies. */
+.footer-credit-link {
+    transition: opacity 0.2s, filter 0.2s;
+}
+
+.footer-credit-link:hover {
+    opacity: 0.85;
+    color: var(--linkColorLightHover) !important;
+    filter: drop-shadow(0 0 8px var(--linkColorLightHover)) drop-shadow(0 0 16px var(--linkColorLight));
+}
+
 @media (max-width: 767.98px) {
     .association-footer-brand .footer-img {
         margin-left: 8px;

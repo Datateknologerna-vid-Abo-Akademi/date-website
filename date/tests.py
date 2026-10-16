@@ -1125,9 +1125,8 @@ class AssociationHomepageSmokeTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Do you want to collaborate with HF?")
         self.assertContains(response, "If you encounter harassment")
-        self.assertNotContains(response, "Vill du samarbeta med HF?")
+        self.assertNotContains(response, "Om du upplever trakasserier")
 
     def test_hf_homepage_drops_the_joke_and_shares_one_sidebar(self):
         hf_settings = importlib.import_module("core.settings.hf")
@@ -1144,6 +1143,10 @@ class AssociationHomepageSmokeTests(TestCase):
         self.assertNotContains(response, 'id="joke-string"')
         # The calendar, the Annat panel and the partner logos share one column.
         self.assertContains(response, 'class="sidebar-container"')
+        # The partner section keeps the logos but loses its call to action.
+        self.assertContains(response, "Samarbetspartners")
+        self.assertNotContains(response, "Vill du samarbeta med HF?")
+        self.assertNotContains(response, "foretagssamarbete")
         self.assertContains(response, "core/images/hf-logo-white.svg")
 
         with override_settings(**self._association_overrides("hf")):
@@ -1151,6 +1154,16 @@ class AssociationHomepageSmokeTests(TestCase):
                 finders.find("core/images/hf-logo-white.svg"),
                 "the hf footer logo is not collected by the static finders",
             )
+
+    def test_hf_homepage_credits_date_in_the_footer(self):
+        cache.clear()
+        response = self._get_association_homepage("hf")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Hemsidan är utvecklad och upprätthålls av")
+        self.assertContains(response, 'class="footer-credit-link"')
+        self.assertContains(response, "https://datateknologerna.org/")
+        self.assertContains(response, "core/images/Sp_Albin.png")
 
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
     @patch("date.views.secrets.randbelow", return_value=0)
