@@ -53,8 +53,10 @@
           {% trans "Address" %}:
           <br>
           {% block footer_address_l1 %}{{ ASSOCIATION_ADDRESS_L1 }}{% endblock %}
-          <br>
-          {{ ASSOCIATION_ADDRESS_L2 }}
+          {% if ASSOCIATION_ADDRESS_L2 %}
+            <br>
+            {{ ASSOCIATION_ADDRESS_L2 }}
+          {% endif %}
           <br>
           {{ ASSOCIATION_POSTAL_CODE }}
         </p>

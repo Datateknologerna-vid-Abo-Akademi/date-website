@@ -1165,6 +1165,24 @@ class AssociationHomepageSmokeTests(TestCase):
         self.assertContains(response, "https://datateknologerna.org/")
         self.assertContains(response, "core/images/Sp_Albin.png")
 
+    def test_footer_address_skips_an_empty_second_line(self):
+        cache.clear()
+        hf_response = self._get_association_homepage("hf")
+
+        self.assertEqual(hf_response.status_code, 200)
+        self.assertContains(hf_response, "Fabriksgatan 2")
+        self.assertContains(hf_response, "20500 Åbo")
+        # hf is the only association without a second address line, which used
+        # to render as a blank line between the street and the postal code.
+        self.assertNotRegex(
+            hf_response.content.decode(),
+            r"Fabriksgatan 2\s*<br\s*/?>\s*<br\s*/?>",
+        )
+
+        # A variant that does have a second line still renders it.
+        biocum_response = self._get_association_homepage("biocum")
+        self.assertContains(biocum_response, "Artillerigatan 6")
+
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
     @patch("date.views.secrets.randbelow", return_value=0)
     def test_kk_april_homepage_renders(self, _randrange, _localdate):
