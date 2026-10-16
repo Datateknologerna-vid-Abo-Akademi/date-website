@@ -60,3 +60,15 @@ msgstr "Anslutningen till servern bröts"
 #: static/common/attendance/js/overview.js:309
 msgid "Sidan kan inte längre uppdateras. Ladda om sidan."
 msgstr "Sidan kan inte längre uppdateras. Ladda om sidan."
+
+#: static/common/attendance/js/overview.js
+msgid "Anlände"
+msgstr "Anlände"
+
+#: static/common/attendance/js/overview.js
+msgid "Lämnade"
+msgstr "Lämnade"
+
+#: static/common/attendance/js/overview.js
+msgid "QR-kod som leder till incheckningssidan"
+msgstr "QR-kod som leder till incheckningssidan"

@@ -30,6 +30,11 @@ class HttpResponseSeeOther(HttpResponseRedirect):
 # keep working for anyone who has the link.
 NO_END_LISTING_HOURS = 24
 
+# How much of the log the staff overview page renders before the websocket starts
+# appending to it. A meeting is followed live, so this only has to cover the
+# stretch since the page was opened, and the browser trims what it appends.
+RECENT_CHANGES_ON_OVERVIEW = 20
+
 # The name a guest typed, kept in a cookie so their next visit is one tap. The
 # cookie is convenience only: the log's identity is the typed name, not the
 # cookie, so a different name is a different attendee (case and stray spaces
@@ -324,6 +329,13 @@ class AttendanceEventOverview(UserPassesTestMixin, AttendanceEventObjectMixin[At
         # key so two people with the same name stay two rows, and the name is the
         # label the websocket broadcast carries.
         ctx["present_attendees"] = [attendee_entry(attendee) for attendee in self.object.present_attendees()]
+        # The staff page also carries the recent log, so the board can follow who
+        # left and came back, which is what a check-out and a fresh check-in look
+        # like on the screen. Rendered newest first by the model's ordering, and
+        # the same rows the websocket appends to as the meeting continues.
+        ctx["recent_changes"] = list(
+            self.object.attendance_changes.select_related("user", "non_member")[:RECENT_CHANGES_ON_OVERVIEW]
+        )
 
         return ctx
 

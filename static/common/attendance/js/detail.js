@@ -20,10 +20,14 @@ const swapScanAndStop = () => {
         qrScanStopButton.hidden = false;
         qrScanButton.hidden = true;
         qrScanButton.replaceWith(qrScanStopButton);
+        // Replacing a button drops focus to the document, which loses a keyboard
+        // user's place in the page; put it on the control that took its place.
+        qrScanStopButton.focus();
     } else {
         qrScanButton.hidden = false;
         qrScanStopButton.hidden = true;
         qrScanStopButton.replaceWith(qrScanButton);
+        qrScanButton.focus();
     }
 };
 
@@ -84,6 +88,16 @@ const onResult = (scanner, result) => {
     }
 
     stopScan(scanner);
+
+    // The next step is to submit, so move focus to the action that applies rather
+    // than to the code field: focusing the field would open a phone keyboard over
+    // the very buttons the participant is about to press.
+    const checkInButton = document.querySelector('button[name="type"][value="0"]');
+    if (checkInButton && !checkInButton.disabled) {
+        checkInButton.focus();
+    } else {
+        codeInput.focus();
+    }
 
     codeInput.scrollIntoView({
         behavior: "instant",

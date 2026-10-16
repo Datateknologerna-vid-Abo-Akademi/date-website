@@ -5,6 +5,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import F, Q, Window, constraints
 from django.db.models.functions import Lower, RowNumber
+from django.urls import reverse
 from django.utils.formats import date_format, time_format
 from django.utils.timezone import localtime, now
 from django.utils.translation import gettext_lazy as _
@@ -101,6 +102,17 @@ class AttendanceEvent(models.Model):
 
     def __str__(self):
         return f"{self.title}"
+
+    def get_absolute_url(self) -> str:
+        """The public check-in page, the one a link about this meeting should open.
+
+        Not the staff overview: a link that leaves the admin should land the
+        reader on the page they can use, which is the check-in page this meeting
+        is reached at by its slug. Django's change form reads this method to
+        build its "View on site" button, so that button and every other link
+        built from the model agree on where the meeting lives.
+        """
+        return reverse("attendance-event-view", args=[self.slug])
 
     @property
     def has_ended(self) -> bool:
@@ -398,3 +410,13 @@ class AttendanceChange(models.Model):
     def attendee_key(self) -> str:
         """Returns the stable identity of this change's attendee, not their name"""
         return attendee_key(self.attendee)
+
+    @property
+    def type_name(self) -> str:
+        """``"ENTER"`` or ``"LEAVE"``, the name the websocket payload carries.
+
+        Templates and scripts both present an arrival differently from a
+        departure, and both should read the same word for it rather than compare
+        the stored integer themselves.
+        """
+        return AttendanceChange.Type(self.type).name

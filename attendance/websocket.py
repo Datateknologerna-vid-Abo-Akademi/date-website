@@ -16,7 +16,7 @@ def send_attendance_change(slug: str, change: AttendanceChange):
             "change": {
                 "key": change.attendee_key,
                 "name": change.attendee_name,
-                "type": AttendanceChange.Type(change.type).name,
+                "type": change.type_name,
                 **attendance_change_token(change),
             },
         },

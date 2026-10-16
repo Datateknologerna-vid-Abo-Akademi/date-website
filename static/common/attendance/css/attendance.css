@@ -128,6 +128,67 @@
     margin-bottom: 0.3rem;
 }
 
+/* The live log under the attendee list. One row per check-in or check-out with
+   its time, so the board can see that somebody who left came back, and the two
+   directions are told apart by colour as well as by the word in the last
+   column. The colour is never the only signal: the word carries it. */
+.attendance-feed-wrap {
+    overflow-x: auto;
+}
+
+.attendance-feed {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.attendance-feed th,
+.attendance-feed td {
+    padding: 0.4rem 0.5rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid rgba(127, 127, 127, 0.25);
+    border-bottom-color: color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.attendance-feed thead th {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.attendance-feed__time {
+    color: var(--attendance-muted, #c9c9c9);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.attendance-feed__name {
+    font-weight: 600;
+}
+
+.attendance-feed__action--enter {
+    color: var(--attendance-present, #7fe3a9);
+    font-weight: 600;
+}
+
+.attendance-feed__action--leave {
+    color: var(--attendance-absent, #ffd479);
+    font-weight: 600;
+}
+
+.attendance-feed__row--enter td:first-child {
+    border-left: 3px solid var(--attendance-present, #7fe3a9);
+}
+
+.attendance-feed__row--leave td:first-child {
+    border-left: 3px solid var(--attendance-absent, #ffd479);
+}
+
+.attendance-feed__hint {
+    margin-bottom: 0.5rem;
+    color: var(--attendance-muted, #c9c9c9);
+    font-size: 0.95rem;
+}
+
 /* The list of meetings. Each row is one tappable block carrying the meeting's
    start, so a participant on a phone does not have to aim at a bare link. */
 .attendance-events {

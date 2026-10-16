@@ -70,6 +70,7 @@ from attendance.routing import websocket_urlpatterns  # noqa: E402
 from attendance.views import (  # noqa: E402
     NON_MEMBER_NAME_COOKIE,
     NON_MEMBER_NAME_COOKIE_MAX_AGE,
+    RECENT_CHANGES_ON_OVERVIEW,
 )
 from members.models import Member  # noqa: E402
 from polls.models import Choice, Question, Vote  # noqa: E402
@@ -2059,6 +2060,65 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
         # warning has to reach a reader through the live status region.
         self.assertContains(response, 'id="status-message" aria-live="polite"')
 
+    def test_overview_renders_the_recent_log_the_board_follows(self):
+        """The feed is how the board sees that somebody left and came back."""
+        record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=5))
+        record_change(self.event, LEAVE, user=self.member, timestamp=now() - timedelta(minutes=3))
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.overview_url)
+
+        self.assertEqual(len(response.context["recent_changes"]), 2)
+        self.assertContains(response, 'id="change-feed"')
+        self.assertContains(response, "Lämnade")
+        self.assertContains(response, "Anlände")
+
+        feed = response.content.decode()[response.content.decode().index('id="change-feed"') :]
+        self.assertLess(feed.index("Lämnade"), feed.index("Anlände"))
+
+    def test_overview_colours_a_departure_differently_from_an_arrival(self):
+        """Colour is the second signal; the word in the last column is the first."""
+        record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=5))
+        record_change(self.event, LEAVE, user=self.member, timestamp=now() - timedelta(minutes=3))
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.overview_url)
+
+        self.assertContains(response, "attendance-feed__row--enter")
+        self.assertContains(response, "attendance-feed__row--leave")
+        self.assertContains(response, "attendance-feed__action--enter")
+        self.assertContains(response, "attendance-feed__action--leave")
+
+    def test_overview_renders_the_feed_empty_state(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.overview_url)
+
+        self.assertContains(response, "Inga ändringar ännu")
+        self.assertNotContains(response, 'id="no-changes" hidden')
+
+    def test_overview_renders_a_slice_of_the_log_and_lets_the_socket_append(self):
+        """The page renders a bounded slice; the websocket carries the rest."""
+        for index in range(RECENT_CHANGES_ON_OVERVIEW + 5):
+            record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=index + 1))
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.overview_url)
+
+        self.assertEqual(len(response.context["recent_changes"]), RECENT_CHANGES_ON_OVERVIEW)
+
+    def test_overview_announces_changes_through_the_feed_not_the_list(self):
+        """A live region only announces additions, so a list would never say that
+        somebody left. The feed carries both, and the list stays silent."""
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.overview_url)
+
+        self.assertContains(response, 'aria-labelledby="change-feed-heading"')
+        content = response.content.decode()
+        start = content.index('<ul id="present-attendees"')
+        self.assertNotIn("aria-live", content[start : content.index(">", start)])
+
     def test_overview_shows_the_empty_state_when_nobody_is_present(self):
         """The empty state is in the page, unhidden, when the event has nobody present."""
         self.client.force_login(self.staff)
@@ -2902,3 +2962,49 @@ class AttendanceConsumerTests(TestCase):
             return reply
 
         self.assertEqual(async_to_sync(flow)(), {"type": "attendance_change", "data": change})
+
+
+class AttendanceEventAdminFormTests(TestCase):
+    """The event form a board member fills in: its sections and its links."""
+
+    def setUp(self):
+        self.staff = make_member("admin", is_superuser=True)
+        self.event = make_event(slug="arsmote", title="Årsmöte")
+        self.change_url = reverse("admin:attendance_attendanceevent_change", args=[self.event.pk])
+
+    def test_the_model_points_at_its_public_check_in_page(self):
+        """What the admin's "View on site" button and every other link use."""
+        self.assertEqual(self.event.get_absolute_url(), reverse("attendance-event-view", args=[self.event.slug]))
+
+    def test_the_code_fields_sit_in_a_collapsed_section(self):
+        """The machinery is one disclosure away from the six fields that are not."""
+        request = RequestFactory().get(reverse("admin:attendance_attendanceevent_changelist"))
+        request.user = self.staff
+        event_admin = admin.site._registry[AttendanceEvent]
+
+        sections = {str(name): config for name, config in event_admin.get_fieldsets(request)}
+
+        self.assertIn("Koden", sections)
+        self.assertIn("collapse", sections["Koden"]["classes"])
+        self.assertEqual(sections["Koden"]["fields"], ("code_secret", "code_validity_time"))
+
+    def test_the_change_page_links_to_the_check_in_page_and_the_overview(self):
+        """An operator should not have to build a URL out of the slug."""
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.change_url)
+
+        self.assertContains(response, "Öppna incheckningen")
+        self.assertContains(response, "Visa möteskoden")
+        self.assertContains(response, f'href="{reverse("attendance-event-view", args=[self.event.slug])}"')
+        self.assertContains(response, f'href="{reverse("attendance-event-overview", args=[self.event.slug])}"')
+
+    def test_the_add_page_renders_no_event_links(self):
+        """Before the meeting exists there is no slug for either page."""
+        self.client.force_login(self.staff)
+
+        response = self.client.get(reverse("admin:attendance_attendanceevent_add"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Öppna incheckningen")
+        self.assertNotContains(response, "Visa möteskoden")

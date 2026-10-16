@@ -3550,3 +3550,41 @@ msgid ""
 msgstr ""
 "Koodi näytetään kokoushuoneessa. Valitse Astu sisään saapuessasi ja Astu "
 "ulos lähtiessäsi kokouksesta."
+
+#: templates/common/attendance/overview.html
+msgid "Närvaroflöde"
+msgstr "Läsnäolovirta"
+
+#: templates/common/attendance/overview.html
+msgid "Varje in- och utcheckning, senaste först."
+msgstr "Jokainen sisään- ja uloskirjautuminen, uusin ensin."
+
+#: templates/common/attendance/overview.html
+msgid "Inga ändringar ännu"
+msgstr "Ei vielä muutoksia"
+
+#: attendance/admin.py
+msgid "Länkar"
+msgstr "Linkit"
+
+#: attendance/admin.py
+msgid "Öppna incheckningen"
+msgstr "Avaa sisäänkirjautumissivu"
+
+#: attendance/admin.py
+msgid "Visa möteskoden"
+msgstr "Näytä kokouskoodi"
+
+#: attendance/admin.py
+msgid ""
+"Koden som visas på översiktsvyn räknas fram ur hemligheten, så en ny "
+"hemlighet gör att koden som gäller just nu slutar fungera med en gång. "
+"Giltighetsperioden är hur många sekunder varje kod är giltig."
+msgstr ""
+"Yleisnäkymässä näytettävä koodi lasketaan salaisuudesta, joten uusi "
+"salaisuus lopettaa voimassa olevan koodin heti. Voimassaoloaika kertoo, "
+"kuinka monta sekuntia kukin koodi on voimassa."
+
+#: attendance/admin.py
+msgid "Koden"
+msgstr "Koodi"

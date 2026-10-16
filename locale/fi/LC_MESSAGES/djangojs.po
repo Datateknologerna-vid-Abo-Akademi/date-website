@@ -60,3 +60,15 @@ msgstr "Yhteys palvelimeen on katkennut"
 #: static/common/attendance/js/overview.js:309
 msgid "Sidan kan inte längre uppdateras. Ladda om sidan."
 msgstr "Sivua ei voi enää päivittää. Lataa sivu uudelleen."
+
+#: static/common/attendance/js/overview.js
+msgid "Anlände"
+msgstr "Astui sisään"
+
+#: static/common/attendance/js/overview.js
+msgid "Lämnade"
+msgstr "Astui ulos"
+
+#: static/common/attendance/js/overview.js
+msgid "QR-kod som leder till incheckningssidan"
+msgstr "QR-koodi, joka avaa sisäänkirjautumissivun"

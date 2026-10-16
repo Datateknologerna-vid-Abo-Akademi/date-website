@@ -3509,3 +3509,41 @@ msgid ""
 msgstr ""
 "The code is shown in the meeting room. Choose Enter when you arrive and "
 "Leave when you leave the meeting."
+
+#: templates/common/attendance/overview.html
+msgid "Närvaroflöde"
+msgstr "Attendance feed"
+
+#: templates/common/attendance/overview.html
+msgid "Varje in- och utcheckning, senaste först."
+msgstr "Every check-in and check-out, newest first."
+
+#: templates/common/attendance/overview.html
+msgid "Inga ändringar ännu"
+msgstr "No changes yet"
+
+#: attendance/admin.py
+msgid "Länkar"
+msgstr "Links"
+
+#: attendance/admin.py
+msgid "Öppna incheckningen"
+msgstr "Open the check-in page"
+
+#: attendance/admin.py
+msgid "Visa möteskoden"
+msgstr "Show the meeting code"
+
+#: attendance/admin.py
+msgid ""
+"Koden som visas på översiktsvyn räknas fram ur hemligheten, så en ny "
+"hemlighet gör att koden som gäller just nu slutar fungera med en gång. "
+"Giltighetsperioden är hur många sekunder varje kod är giltig."
+msgstr ""
+"The code shown on the overview page is derived from the secret, so a new "
+"secret stops the code in force immediately. The validity period is how "
+"many seconds each code stays valid."
+
+#: attendance/admin.py
+msgid "Koden"
+msgstr "The code"

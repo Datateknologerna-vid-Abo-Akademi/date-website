@@ -17,9 +17,22 @@ const attendeeList = document.getElementById("present-attendees");
 const attendeeEmptyState = document.getElementById("no-present-attendees");
 const attendeeCount = document.getElementById("present-count");
 
+const changeFeed = document.getElementById("change-feed");
+const changeEmptyState = document.getElementById("no-changes");
+
+// The server renders the stretch of the log up to the page load, and the socket
+// appends what happens next. The list is trimmed so a long meeting cannot grow
+// the page without bound.
+const FEED_MAX_ENTRIES = 25;
+
 const qrDiv = document.getElementById("qrcode");
 const qrCanvas = document.createElement("canvas");
 qrDiv.appendChild(qrCanvas);
+
+// The canvas is an image to a screen reader and the caption beside it is a
+// separate paragraph, so the image carries its own name.
+qrCanvas.setAttribute("role", "img");
+qrCanvas.setAttribute("aria-label", _("QR-kod som leder till incheckningssidan"));
 
 const qrOptions = {
     scale: 8,
@@ -276,6 +289,73 @@ const applyAttendanceChange = (change) => {
 }
 
 /**
+ * The time in the reader's own clock, in the 24 hour shape the server renders the
+ * rows it sends with the page.
+ *
+ * @param {string} timestamp
+ */
+const formatFeedTime = (timestamp) => {
+    const when = new Date(timestamp);
+    if (Number.isNaN(when.getTime())) {
+        return "";
+    }
+
+    return when.toLocaleTimeString(undefined, {hour: "2-digit", minute: "2-digit", hour12: false});
+}
+
+/**
+ * Write the same change into the log the board follows, newest first.
+ *
+ * The server renders the log up to the page load, so anything already on the page
+ * is left alone: a row is matched on its change id, which is also what keeps a
+ * repeated frame from appearing twice.
+ *
+ * @param {{name: string, type: string, timestamp: string, change_id: number}} change
+ */
+const addChangeToFeed = (change) => {
+    if (!changeFeed || (change.type !== "ENTER" && change.type !== "LEAVE")) {
+        return;
+    }
+
+    const changeId = String(change.change_id);
+    if (changeFeed.querySelector(`tr[data-change-id="${changeId}"]`)) {
+        return;
+    }
+
+    const direction = change.type === "ENTER" ? "enter" : "leave";
+
+    const item = document.createElement("tr");
+    item.dataset.changeId = changeId;
+    item.className = `attendance-feed__row--${direction}`;
+
+    const timeCell = document.createElement("td");
+    timeCell.className = "attendance-feed__time";
+    const time = document.createElement("time");
+    time.dateTime = typeof change.timestamp === "string" ? change.timestamp : "";
+    time.innerText = formatFeedTime(change.timestamp);
+    timeCell.append(time);
+
+    const nameCell = document.createElement("td");
+    nameCell.className = "attendance-feed__name";
+    nameCell.innerText = change.name || "";
+
+    const actionCell = document.createElement("td");
+    actionCell.className = `attendance-feed__action attendance-feed__action--${direction}`;
+    actionCell.innerText = change.type === "ENTER" ? _("Anlände") : _("Lämnade");
+
+    item.append(timeCell, nameCell, actionCell);
+    changeFeed.prepend(item);
+
+    while (changeFeed.children.length > FEED_MAX_ENTRIES) {
+        changeFeed.lastElementChild.remove();
+    }
+
+    if (changeEmptyState) {
+        changeEmptyState.hidden = true;
+    }
+}
+
+/**
  * @param {WebSocket} ws
  */
 const requestNewCode = (ws) => {
@@ -317,6 +397,7 @@ const onMessage = (ws, msg) => {
         replaceAttendees(data.data);
     } else if (data.type == "attendance_change") {
         applyAttendanceChange(data.data);
+        addChangeToFeed(data.data);
     }
 };
 

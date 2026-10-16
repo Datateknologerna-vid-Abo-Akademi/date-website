@@ -3494,3 +3494,41 @@ msgid ""
 msgstr ""
 "Koden visas i mötesrummet. Välj Gå in när du kommer och Gå ut när du "
 "lämnar mötet."
+
+#: templates/common/attendance/overview.html
+msgid "Närvaroflöde"
+msgstr "Närvaroflöde"
+
+#: templates/common/attendance/overview.html
+msgid "Varje in- och utcheckning, senaste först."
+msgstr "Varje in- och utcheckning, senaste först."
+
+#: templates/common/attendance/overview.html
+msgid "Inga ändringar ännu"
+msgstr "Inga ändringar ännu"
+
+#: attendance/admin.py
+msgid "Länkar"
+msgstr "Länkar"
+
+#: attendance/admin.py
+msgid "Öppna incheckningen"
+msgstr "Öppna incheckningen"
+
+#: attendance/admin.py
+msgid "Visa möteskoden"
+msgstr "Visa möteskoden"
+
+#: attendance/admin.py
+msgid ""
+"Koden som visas på översiktsvyn räknas fram ur hemligheten, så en ny "
+"hemlighet gör att koden som gäller just nu slutar fungera med en gång. "
+"Giltighetsperioden är hur många sekunder varje kod är giltig."
+msgstr ""
+"Koden som visas på översiktsvyn räknas fram ur hemligheten, så en ny "
+"hemlighet gör att koden som gäller just nu slutar fungera med en gång. "
+"Giltighetsperioden är hur många sekunder varje kod är giltig."
+
+#: attendance/admin.py
+msgid "Koden"
+msgstr "Koden"

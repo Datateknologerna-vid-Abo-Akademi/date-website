@@ -60,3 +60,15 @@ msgstr "Lost connection with the server"
 #: static/common/attendance/js/overview.js:309
 msgid "Sidan kan inte längre uppdateras. Ladda om sidan."
 msgstr "The page can no longer update itself. Reload it."
+
+#: static/common/attendance/js/overview.js
+msgid "Anlände"
+msgstr "Entered"
+
+#: static/common/attendance/js/overview.js
+msgid "Lämnade"
+msgstr "Left"
+
+#: static/common/attendance/js/overview.js
+msgid "QR-kod som leder till incheckningssidan"
+msgstr "QR code that opens the check-in page"
