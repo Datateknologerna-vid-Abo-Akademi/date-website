@@ -1,5 +1,9 @@
 {% extends "core/footer.html" %}
+{% load static %}
 {% block footer_logo %}
+  <img class="footer-img img-fluid"
+       alt="{{ ASSOCIATION_NAME_FULL }} logo"
+       src="{% static 'core/images/hf-logo-white.svg' %}">
   <span class="footer-association-name">{{ ASSOCIATION_NAME_FULL }}</span>
 {% endblock %}
 {% block footer_right %}

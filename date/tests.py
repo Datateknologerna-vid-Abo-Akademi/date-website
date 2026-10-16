@@ -12,6 +12,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth import get_user_model
+from django.contrib.staticfiles import finders
 from django.core.cache import cache
 from django.db import DatabaseError, connection
 from django.http import HttpResponse
@@ -1127,6 +1128,29 @@ class AssociationHomepageSmokeTests(TestCase):
         self.assertContains(response, "Do you want to collaborate with HF?")
         self.assertContains(response, "If you encounter harassment")
         self.assertNotContains(response, "Vill du samarbeta med HF?")
+
+    def test_hf_homepage_drops_the_joke_and_shares_one_sidebar(self):
+        hf_settings = importlib.import_module("core.settings.hf")
+        cache.clear()
+        response = self._get_association_homepage(
+            "hf",
+            ENABLE_LANGUAGE_FEATURES=True,
+            LANGUAGES=hf_settings.DATE_LANGUAGES,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        # DaTe's joke block is dropped, so the shared script's guard stays shut.
+        self.assertNotContains(response, 'id="joke-header"')
+        self.assertNotContains(response, 'id="joke-string"')
+        # The calendar, the Annat panel and the partner logos share one column.
+        self.assertContains(response, 'class="sidebar-container"')
+        self.assertContains(response, "core/images/hf-logo-white.svg")
+
+        with override_settings(**self._association_overrides("hf")):
+            self.assertIsNotNone(
+                finders.find("core/images/hf-logo-white.svg"),
+                "the hf footer logo is not collected by the static finders",
+            )
 
     @patch("date.views.timezone.localdate", return_value=date(2026, 4, 1))
     @patch("date.views.secrets.randbelow", return_value=0)

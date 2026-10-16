@@ -229,12 +229,17 @@
     grid-template-columns: 1fr 850px 350px 1fr;
     grid-template-rows: auto;
     grid-template-areas: 
-      ". news events ."
-      ". news bookings ."
-      ". news extras ."
-      ". ig-scroll ig-scroll ."
-      ". logos logos .";
+      ". news sidebar .";
     grid-column-gap: 3vw;
+    align-items: start;
+}
+
+/* The events calendar, the Annat panel and the partner logos share one right
+   hand column, as they do on the other associations. Left as separate grid
+   areas they landed in different rows, so the partners ended up as a wide band
+   under the news column while the right column kept a hole beneath it. */
+.sidebar-container {
+    grid-area: sidebar;
 }
 
 .text-size{
@@ -682,6 +687,13 @@ div.calendar-container a {
           ". extras ."
           ". logos ."
           ". ig-scroll .";
+    }
+
+    /* One column: the sidebar wrapper would otherwise be a single grid item
+       that cannot occupy several named areas, so its children become grid
+       items of the container again. */
+    .sidebar-container {
+        display: contents;
     }
 
 }

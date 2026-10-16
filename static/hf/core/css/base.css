@@ -145,6 +145,20 @@ div a:hover{
 
 /* ---- */
 
+/* The footer carries the association's own mark, drawn in white so it reads
+   against the navy footer, with the full name beneath it. */
+.association-footer-brand .footer-img {
+    max-height: 160px;
+    object-fit: contain;
+}
+
+.footer-association-name {
+    display: block;
+    margin-top: 0.75rem;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+
 @media (max-width: 767.98px) {
     .association-footer-brand .footer-img {
         margin-left: 8px;
