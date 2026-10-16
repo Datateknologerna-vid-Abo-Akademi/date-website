@@ -3470,3 +3470,27 @@ msgstr ""
 "Mötesnärvaron är ett sammanhangsvärde, inte en exakt nämnare vid "
 "omröstningstillfället: den läses vid mötets slut eller sista ändringen och "
 "kan omfatta gäster och personer utan rösträtt."
+
+#: templates/common/attendance/overview.html
+msgid "Aktuell möteskod"
+msgstr "Aktuell möteskod"
+
+#: templates/common/attendance/detail.html
+msgid "Inte startat"
+msgstr "Inte startat"
+
+#: templates/common/polls/detail.html
+msgid "Svarsalternativ"
+msgstr "Svarsalternativ"
+
+#: templates/common/polls/detail.html
+msgid "Rösta"
+msgstr "Rösta"
+
+#: templates/common/attendance/detail.html
+msgid ""
+"Koden visas i mötesrummet. Välj Gå in när du kommer och Gå ut när du "
+"lämnar mötet."
+msgstr ""
+"Koden visas i mötesrummet. Välj Gå in när du kommer och Gå ut när du "
+"lämnar mötet."

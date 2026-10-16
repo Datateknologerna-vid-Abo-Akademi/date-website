@@ -3485,3 +3485,27 @@ msgstr ""
 "The meeting headcount is contextual, not an exact poll-time denominator. It "
 "is read at the meeting end or last change and can include guests and members "
 "who are not eligible to vote."
+
+#: templates/common/attendance/overview.html
+msgid "Aktuell möteskod"
+msgstr "Current meeting code"
+
+#: templates/common/attendance/detail.html
+msgid "Inte startat"
+msgstr "Not started"
+
+#: templates/common/polls/detail.html
+msgid "Svarsalternativ"
+msgstr "Answer choices"
+
+#: templates/common/polls/detail.html
+msgid "Rösta"
+msgstr "Vote"
+
+#: templates/common/attendance/detail.html
+msgid ""
+"Koden visas i mötesrummet. Välj Gå in när du kommer och Gå ut när du "
+"lämnar mötet."
+msgstr ""
+"The code is shown in the meeting room. Choose Enter when you arrive and "
+"Leave when you leave the meeting."

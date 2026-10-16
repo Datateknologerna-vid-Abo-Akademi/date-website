@@ -3526,3 +3526,27 @@ msgstr ""
 "Kokouksen läsnäolijamäärä on asiayhteyttä kuvaava tieto, ei tarkka "
 "äänestyshetken nimittäjä. Määrä luetaan kokouksen päättyessä tai viimeisen "
 "muutoksen jälkeen, ja siihen voi sisältyä vieraita ja äänioikeudettomia."
+
+#: templates/common/attendance/overview.html
+msgid "Aktuell möteskod"
+msgstr "Nykyinen kokouskoodi"
+
+#: templates/common/attendance/detail.html
+msgid "Inte startat"
+msgstr "Ei alkanut"
+
+#: templates/common/polls/detail.html
+msgid "Svarsalternativ"
+msgstr "Vastausvaihtoehdot"
+
+#: templates/common/polls/detail.html
+msgid "Rösta"
+msgstr "Äänestä"
+
+#: templates/common/attendance/detail.html
+msgid ""
+"Koden visas i mötesrummet. Välj Gå in när du kommer och Gå ut när du "
+"lämnar mötet."
+msgstr ""
+"Koodi näytetään kokoushuoneessa. Valitse Astu sisään saapuessasi ja Astu "
+"ulos lähtiessäsi kokouksesta."

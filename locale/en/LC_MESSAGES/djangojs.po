@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-04 01:36+0300\n"
+"POT-Creation-Date: 2026-10-17 00:47+0300\n"
 "PO-Revision-Date: 2026-05-12 14:55+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -27,22 +27,36 @@ msgstr "No camera found"
 msgid "Ett oväntat fel uppstod medan QR-skannern startades"
 msgstr "An unexpected error occurred when starting the QR scanner"
 
-#: static/common/attendance/js/detail.js:79
+#: static/common/attendance/js/detail.js:81
 msgid "QR-koden innehöll ingen kod"
 msgstr "The QR code did not contain a code"
 
-#: static/common/attendance/js/detail.js:111
+#: static/common/attendance/js/detail.js:113
 msgid "QR-skannern kunde inte laddas"
 msgstr "The QR scanner could not be loaded"
 
-#: static/common/attendance/js/overview.js:154
+#: static/common/attendance/js/overview.js:73
+msgid "Ny kod om %(seconds)s s"
+msgstr "New code in %(seconds)s s"
+
+#: static/common/attendance/js/overview.js:76
+msgid "Hämtar en ny kod..."
+msgstr "Fetching a new code..."
+
+#: static/common/attendance/js/overview.js:78
+#: static/common/attendance/js/overview.js:113
+msgid "Koden uppdateras inte. Kontrollera anslutningen."
+msgstr "The code is not updating. Check the connection."
+
+#: static/common/attendance/js/overview.js:278
 msgid "Ansluter till servern..."
 msgstr "Connecting to the server..."
 
-#: static/common/attendance/js/overview.js:164
+#: static/common/attendance/js/overview.js:289
+#: static/common/attendance/js/overview.js:314
 msgid "Anslutningen till servern bröts"
 msgstr "Lost connection with the server"
 
-#: static/common/attendance/js/overview.js:175
+#: static/common/attendance/js/overview.js:309
 msgid "Sidan kan inte längre uppdateras. Ladda om sidan."
 msgstr "The page can no longer update itself. Reload it."
