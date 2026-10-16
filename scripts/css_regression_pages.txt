@@ -34,6 +34,14 @@
 #       --pages scripts/css_regression_pages.txt \
 #       --mask '#clock-wrapper' --mask '.registration-timing' --mask 'img.balloon'
 #
+# One more difference is not nondeterminism but the clock, and no mask can fix
+# it: the homepage event list is filtered with `event_date_end >= now()`, so an
+# event drops out of the list as its end time passes and the calendar day cells
+# that carried it restyle. Two captures taken close together agree; two taken an
+# hour apart can legitimately differ on every homepage. Capture the before and
+# after of a change back to back, as the guide's workflow does, rather than
+# comparing against a reference recorded much earlier.
+#
 # The mask sets visibility: hidden on just those elements (never display: none,
 # which would remove them from layout and shift everything below them), so the
 # rest of each page is still compared, and masked elements stay in the
