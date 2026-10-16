@@ -35,4 +35,16 @@
     --pubCardFgSoft: var(--helpText);
     --pubCardThumbBg: var(--primaryColorMid);
     --pubCardThumbShimmer: var(--primaryColorLighter);
+
+    /* Event card roles, consumed by the shared events/css/event-card.css. The div
+       card on /events/ declares no colour of its own and must keep inheriting from
+       the card group, so its token is inherit. The anchor card on the archive index
+       takes the plain link colour from div a in core/css/base.css. */
+    --event-card-fg: inherit;
+    --event-card-anchor-fg: var(--linkColorLight);
+    --event-card-badge-bg: var(--helpText);
+    --event-card-badge-fg: #fff; /* Bootstrap's .badge colour, never overridden here */
+    --event-card-bg: var(--primaryColorLight);
+    --event-card-link: var(--linkColorLight);
+    --event-card-link-hover: var(--linkColorLightHover);
 }

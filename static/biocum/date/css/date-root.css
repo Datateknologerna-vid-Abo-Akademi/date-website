@@ -31,4 +31,15 @@
     --defaultPadding: 20px;
     --defaultRadius: 5px;
     --pubListHeadingFg: var(--textColorLight);
+
+    /* Event card roles, consumed by the shared events/css/event-card.css. The div
+       card and the anchor card resolve the same colour here: the card rule this
+       association used to keep in its own event card sheet applied to both. */
+    --event-card-fg: var(--textColorDarkish);
+    --event-card-anchor-fg: var(--textColorDarkish);
+    --event-card-badge-bg: var(--badgeColor);
+    --event-card-badge-fg: #fff; /* Bootstrap's .badge colour, never overridden here */
+    --event-card-bg: var(--secondaryColor);
+    --event-card-link: var(--linkColorSecondary);
+    --event-card-link-hover: var(--linkSecondaryHover);
 }
