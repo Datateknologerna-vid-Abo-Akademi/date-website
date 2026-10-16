@@ -23,10 +23,10 @@
 #
 #   #clock-wrapper        /members/cert/ paints a wall clock here and refreshes
 #                         it every 500 ms.
-#   .registration-timing  an event page whose sign-up has closed renders a
-#                         relative time such as "39 minuter sedan", and one whose
-#                         sign-up has not opened yet renders "om 3 dagar"; both
-#                         branches carry this class.
+#   .registration-timing  every branch of the event sign-up block that prints a
+#                         relative time carries this class: a closed sign-up
+#                         reads "39 minuter sedan", one that has not opened reads
+#                         "om 3 dagar", and an open one counts down.
 #   img.balloon           the seasonal event art is animated, so a few pixels on
 #                         its edges can land differently between two runs.
 #

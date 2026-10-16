@@ -383,13 +383,22 @@ capture was authenticated.
 
 Three things on those pages change between two captures even when the change is
 neutral, so a capture intended to reach a green verdict masks them: the wall
-clock on `/members/cert/` (`#clock-wrapper`), the relative sign-up timing on an
-event page (`.registration-timing`), and the animated seasonal art
+clock on `/members/cert/` (`#clock-wrapper`), the relative sign-up timing printed
+by every branch of the event sign-up block (`.registration-timing`, which is
+"39 minuter sedan" once sign-up has closed, "om 3 dagar" before it opens, and a
+running countdown while it is open), and the animated seasonal art
 (`img.balloon`). `--mask` sets `visibility: hidden` on the matching elements
 only, never `display: none`, so nothing below them moves, and masked elements
 stay in the computed-style probe, so a real style change on one is still
 reported. A selector that matches nothing is warned about, so a mask that quietly
 stopped working is visible.
+
+A canvas that composites a blurred panel can still land a handful of pixels
+differently between two runs even with Chrome's deterministic rendering flags
+enabled. The documented command therefore allows a few pixels per view
+(`--tolerance 20 --max-percent 0.002`) while still failing on any computed-style
+change, which is the channel a real stylesheet change moves by orders of
+magnitude more than that.
 
 Captures land under `~/.cache/date-website/css-regression/<label>/` unless
 `--out` names a directory. The harness covers the six shipped variants (it skips
