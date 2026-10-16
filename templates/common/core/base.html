@@ -15,6 +15,8 @@
       carries !important and over-qualified selectors such as "html body".
       Reordering these links changes rendering for every association at once.
     {% endcomment %}
+    {# Shared core of the per-association core/css/base.css sheets; loads first so an association's own rules win. #}
+    <link rel="stylesheet" href="{% static 'core/css/base-core.css' %}">
     <link rel="stylesheet" href="{% static 'core/css/base.css' %}">
     <link rel="stylesheet" href="{% static 'date/css/date-root.css' %}">
     <link rel="stylesheet" href="{% static 'core/css/cookie-banner.css' %}">
