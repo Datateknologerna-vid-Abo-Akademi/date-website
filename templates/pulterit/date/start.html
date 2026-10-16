@@ -4,6 +4,10 @@
 {% load static %}
 {% block extra_head %}
   {{ block.super }}
+  {# Shared core of the per-association homepage sheets: it loads first, so the association's own rules still win. #}
+  <link rel="stylesheet"
+        href="{% static 'date/css/homepage-core.css' %}"
+        type="text/css">
   <link rel="stylesheet"
         href="{% static 'date/css/homepage.css' %}"
         type="text/css">
