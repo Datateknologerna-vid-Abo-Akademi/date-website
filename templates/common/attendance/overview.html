@@ -57,7 +57,8 @@
               <tbody id="change-feed">
                 {% for change in recent_changes %}
                   <tr data-change-id="{{ change.pk }}"
-                      class="attendance-feed__row--{{ change.type_name|lower }}">
+                      class="attendance-feed__row--{{ change.type_name|lower }}"
+                      {% if forloop.counter > feed_visible %}hidden{% endif %}>
                     <td class="attendance-feed__time">
                       <time datetime="{{ change.timestamp|date:'c' }}">{{ change.timestamp|time }}</time>
                     </td>
@@ -70,6 +71,18 @@
               </tbody>
             </table>
           </div>
+          {% if recent_changes|length > feed_visible %}
+            <button type="button"
+                    class="btn btn-secondary attendance-feed__more"
+                    id="feed-more"
+                    data-page-size="{{ feed_page_size }}">{% trans "Visa fler" %}</button>
+          {% endif %}
+          <p id="feed-end"
+             class="attendance-feed__hint"
+             {% if recent_changes|length > feed_visible %}hidden{% endif %}>
+            {% trans "Hela loggen finns på mötets sida." %}
+            <a href="{% url 'attendance-event-view' object.slug %}">{% trans "Till mötessidan" %}</a>
+          </p>
           <p id="no-changes" {% if recent_changes %}hidden{% endif %}>{% trans "Inga ändringar ännu" %}</p>
         </section>
       </div>

@@ -31,9 +31,18 @@ class HttpResponseSeeOther(HttpResponseRedirect):
 NO_END_LISTING_HOURS = 24
 
 # How much of the log the staff overview page renders before the websocket starts
-# appending to it. A meeting is followed live, so this only has to cover the
-# stretch since the page was opened, and the browser trims what it appends.
-RECENT_CHANGES_ON_OVERVIEW = 20
+# appending to it. The feed opens on the newest FEED_VISIBLE_ON_LOAD of those rows
+# and reveals the rest a page at a time through its own button, so the page stays
+# short while the history is still one click away. A meeting longer than this
+# reaches the rest through the event page and the report, which is why the feed
+# says so when the rendered rows run out.
+RECENT_CHANGES_ON_OVERVIEW = 60
+
+# How many feed rows the page shows before its first "show more" click.
+FEED_VISIBLE_ON_LOAD = 10
+
+# How many further rows one click reveals.
+FEED_PAGE_SIZE = 20
 
 # The name a guest typed, kept in a cookie so their next visit is one tap. The
 # cookie is convenience only: the log's identity is the typed name, not the
@@ -336,6 +345,8 @@ class AttendanceEventOverview(UserPassesTestMixin, AttendanceEventObjectMixin[At
         ctx["recent_changes"] = list(
             self.object.attendance_changes.select_related("user", "non_member")[:RECENT_CHANGES_ON_OVERVIEW]
         )
+        ctx["feed_visible"] = FEED_VISIBLE_ON_LOAD
+        ctx["feed_page_size"] = FEED_PAGE_SIZE
 
         return ctx
 

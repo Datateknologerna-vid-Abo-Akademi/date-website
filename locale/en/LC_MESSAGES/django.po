@@ -3547,3 +3547,15 @@ msgstr ""
 #: attendance/admin.py
 msgid "Koden"
 msgstr "The code"
+
+#: templates/common/attendance/overview.html
+msgid "Visa fler"
+msgstr "Show more"
+
+#: templates/common/attendance/overview.html
+msgid "Hela loggen finns på mötets sida."
+msgstr "The whole log is on the meeting's page."
+
+#: templates/common/attendance/overview.html
+msgid "Till mötessidan"
+msgstr "Go to the meeting page"

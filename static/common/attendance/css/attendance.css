@@ -189,6 +189,10 @@
     font-size: 0.95rem;
 }
 
+.attendance-feed__more {
+    margin-top: 0.75rem;
+}
+
 /* The list of meetings. Each row is one tappable block carrying the meeting's
    start, so a participant on a phone does not have to aim at a bare link. */
 .attendance-events {

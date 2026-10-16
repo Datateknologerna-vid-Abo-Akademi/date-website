@@ -19,11 +19,15 @@ const attendeeCount = document.getElementById("present-count");
 
 const changeFeed = document.getElementById("change-feed");
 const changeEmptyState = document.getElementById("no-changes");
+const feedMore = document.getElementById("feed-more");
+const feedEnd = document.getElementById("feed-end");
 
-// The server renders the stretch of the log up to the page load, and the socket
-// appends what happens next. The list is trimmed so a long meeting cannot grow
-// the page without bound.
-const FEED_MAX_ENTRIES = 25;
+// The server renders the stretch of the log up to the page load and hides all but
+// the first page of it; the socket appends what happens next. The table is trimmed
+// so a long meeting cannot grow the page without bound, oldest rows first, which
+// are the hidden ones.
+const FEED_MAX_ENTRIES = 120;
+const FEED_PAGE_SIZE = 20;
 
 const qrDiv = document.getElementById("qrcode");
 const qrCanvas = document.createElement("canvas");
@@ -353,6 +357,38 @@ const addChangeToFeed = (change) => {
     if (changeEmptyState) {
         changeEmptyState.hidden = true;
     }
+}
+
+/**
+ * Reveal the next page of the rows the server rendered, and point at the full log
+ * once there are none left. The table is bounded, so the feed cannot run forever
+ * and the rest of the history lives on the meeting's own page.
+ */
+const revealMoreFeedRows = () => {
+    if (!changeFeed || !feedMore) {
+        return;
+    }
+
+    const pageSize = Number(feedMore.dataset.pageSize) || FEED_PAGE_SIZE;
+    let revealed = 0;
+    for (const row of changeFeed.querySelectorAll("tr[hidden]")) {
+        if (revealed >= pageSize) {
+            break;
+        }
+        row.hidden = false;
+        revealed += 1;
+    }
+
+    if (!changeFeed.querySelector("tr[hidden]")) {
+        feedMore.hidden = true;
+        if (feedEnd) {
+            feedEnd.hidden = false;
+        }
+    }
+}
+
+if (feedMore) {
+    feedMore.addEventListener("click", revealMoreFeedRows);
 }
 
 /**

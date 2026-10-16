@@ -68,6 +68,8 @@ from attendance.models import (  # noqa: E402
 )
 from attendance.routing import websocket_urlpatterns  # noqa: E402
 from attendance.views import (  # noqa: E402
+    FEED_PAGE_SIZE,
+    FEED_VISIBLE_ON_LOAD,
     NON_MEMBER_NAME_COOKIE,
     NON_MEMBER_NAME_COOKIE_MAX_AGE,
     RECENT_CHANGES_ON_OVERVIEW,
@@ -2106,6 +2108,41 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
         response = self.client.get(self.overview_url)
 
         self.assertEqual(len(response.context["recent_changes"]), RECENT_CHANGES_ON_OVERVIEW)
+
+    def test_overview_opens_the_feed_on_one_page_and_offers_the_rest(self):
+        """The history is one click away rather than scrolling on without end."""
+        record_change(self.event, ENTER, user=self.member, timestamp=now())
+        for index in range(FEED_VISIBLE_ON_LOAD + 4):
+            record_change(self.event, LEAVE, user=self.member, timestamp=now() - timedelta(minutes=index + 1))
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.overview_url)
+
+        self.assertEqual(response.context["feed_visible"], FEED_VISIBLE_ON_LOAD)
+        self.assertContains(response, 'id="feed-more"')
+        self.assertContains(response, f'data-page-size="{FEED_PAGE_SIZE}"')
+
+        content = response.content.decode()
+        feed = content[content.index('id="change-feed"') : content.index("</tbody>")]
+        self.assertEqual(feed.count("data-change-id="), FEED_VISIBLE_ON_LOAD + 5)
+        self.assertEqual(feed.count("hidden"), 5)
+
+        # Nothing more to show yet, so the pointer to the full log stays hidden.
+        start = content.index('<p id="feed-end"')
+        self.assertIn("hidden", content[start : content.index(">", start)])
+
+    def test_overview_offers_no_more_button_when_the_log_fits(self):
+        record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=1))
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.overview_url)
+
+        self.assertNotContains(response, 'id="feed-more"')
+        self.assertContains(response, "Hela loggen finns på mötets sida.")
+
+        content = response.content.decode()
+        start = content.index('<p id="feed-end"')
+        self.assertNotIn("hidden", content[start : content.index(">", start)])
 
     def test_overview_announces_changes_through_the_feed_not_the_list(self):
         """A live region only announces additions, so a list would never say that

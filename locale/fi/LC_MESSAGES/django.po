@@ -3588,3 +3588,15 @@ msgstr ""
 #: attendance/admin.py
 msgid "Koden"
 msgstr "Koodi"
+
+#: templates/common/attendance/overview.html
+msgid "Visa fler"
+msgstr "Näytä lisää"
+
+#: templates/common/attendance/overview.html
+msgid "Hela loggen finns på mötets sida."
+msgstr "Koko loki on kokouksen sivulla."
+
+#: templates/common/attendance/overview.html
+msgid "Till mötessidan"
+msgstr "Siirry kokouksen sivulle"
