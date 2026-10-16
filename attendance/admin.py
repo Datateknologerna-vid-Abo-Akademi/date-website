@@ -8,6 +8,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import re_path, reverse
 from django.utils.html import format_html
+from django.utils.safestring import SafeString
 from django.utils.timezone import localtime
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy
@@ -170,6 +171,40 @@ class AttendanceEventAdmin(admin.ModelAdmin):
     ordering = ("-start_datetime",)
     inlines = [AttendanceChangesInline]
 
+    # The person filling this in is a board member, not a developer setting up a
+    # code generator, so the meeting comes first and the two fields that produce
+    # the rotating code sit together in a collapsed section of their own. The
+    # links stand between them because they are what the meeting is opened
+    # through: the check-in page a participant uses and the staff overview that
+    # shows the code. Every field stays editable and nothing is hidden.
+    fieldsets = (
+        (
+            _("Mötet"),
+            {
+                "fields": ("title", "description", "start_datetime", "end_datetime", "allow_non_members", "slug"),
+            },
+        ),
+        (
+            None,
+            {"fields": ("event_links",)},
+        ),
+        (
+            _("Koden"),
+            {
+                "fields": ("code_secret", "code_validity_time"),
+                "classes": ("collapse",),
+                # The board changes the secret when the code has leaked, so the
+                # sentence says what that does and what the period below means.
+                "description": _(
+                    "Koden som visas på översiktsvyn räknas fram ur hemligheten, så en ny hemlighet gör att "
+                    "koden som gäller just nu slutar fungera med en gång. Giltighetsperioden är hur många "
+                    "sekunder varje kod är giltig."
+                ),
+            },
+        ),
+    )
+    readonly_fields = ("event_links",)
+
     def get_list_display(self, request):
         list_display = list(super().get_list_display(request))
         if not hasattr(request, "user"):
@@ -210,6 +245,28 @@ class AttendanceEventAdmin(admin.ModelAdmin):
             '<a class="button admin-inline-action" href="{}">{}</a>',
             reverse("admin:attendance_event_report", args=[obj.pk]),
             _("Rapport"),
+        )
+
+    @admin.display(description=_("Länkar"))
+    def event_links(self, obj) -> SafeString:
+        """The two pages an operator opens from this meeting, without a built URL.
+
+        The add page has no object yet, so there is no slug to point at and
+        nothing to link to. It gets an empty element rather than an empty string,
+        because Unfold renders its own "-" placeholder for any falsy readonly
+        value; this way the add page shows nothing at all under either theme.
+        Both links open in a new tab so a half-filled form is not left behind.
+        """
+        if not obj or not obj.pk:
+            return format_html("<span>{}</span>", "")
+
+        return format_html(
+            '<a class="button admin-inline-action" href="{}" target="_blank" rel="noopener noreferrer">{}</a>'
+            '&nbsp;<a class="button admin-inline-action" href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
+            obj.get_absolute_url(),
+            _("Öppna incheckningen"),
+            reverse("attendance-event-overview", args=[obj.slug]),
+            _("Visa möteskoden"),
         )
 
     def _event(self, request: HttpRequest, event_id: str) -> AttendanceEvent:
