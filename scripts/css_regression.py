@@ -814,6 +814,22 @@ def launch_chrome(chrome: str) -> Iterator[int]:
         "--no-default-browser-check",
         "--disable-extensions",
         "--disable-background-networking",
+        # Deterministic rasterisation. Each of these removes a source of variance
+        # between two captures of an unchanged tree, which the pixel channel needs
+        # to be usable as a gate: compositor stage timing, threaded animation and
+        # scrolling, checkerboard imaging, the content rendering timeout, and font
+        # hinting or LCD text. The observed case that forced this was the
+        # backdrop-filter corner on the seasonal event sheets landing a few pixels
+        # differently, with no computed style changing at all.
+        "--deterministic-mode",
+        "--run-all-compositor-stages-before-draw",
+        "--disable-threaded-animation",
+        "--disable-threaded-scrolling",
+        "--disable-checker-imaging",
+        "--disable-new-content-rendering-timeout",
+        "--disable-image-animation-resync",
+        "--font-render-hinting=none",
+        "--disable-lcd-text",
     ]
     with log_path.open("wb") as log_handle:
         try:

@@ -354,9 +354,14 @@ full-page screenshot and a computed-style snapshot per page and viewport, then
 compares two captures:
 
 ```bash
-uv run python scripts/css_regression.py capture --label before --pages scripts/css_regression_pages.txt
+export CSS_REGRESSION_USERNAME=admin
+export CSS_REGRESSION_PASSWORD=admin
+masks=(--mask '#clock-wrapper' --mask '.registration-timing' --mask 'img.balloon')
+uv run python scripts/css_regression.py capture --label before \
+  --pages scripts/css_regression_pages.txt "${masks[@]}"
 # make the change
-uv run python scripts/css_regression.py capture --label after --pages scripts/css_regression_pages.txt
+uv run python scripts/css_regression.py capture --label after \
+  --pages scripts/css_regression_pages.txt "${masks[@]}"
 uv run python scripts/css_regression.py compare --before ~/.cache/date-website/css-regression/before \
   --after ~/.cache/date-website/css-regression/after
 ```
@@ -367,6 +372,24 @@ the five seasonal event templates, so a change claimed to be neutral has
 somewhere to show up. Without `--pages` the harness falls back to a small seed
 list plus deterministic detail-page discovery, which does not reach the seasonal
 sheets.
+
+Some of those paths sit behind `login_required`. Supplied with credentials, the
+harness signs in once per association, verifies the session against a page that
+only resolves when signed in, and aborts the association rather than quietly
+capturing the sign-in page as if it were the requested one. Credentials come from
+`--username` and `--password`, or from the environment as above so a password
+never reaches the process list. A manifest records, per association, whether the
+capture was authenticated.
+
+Three things on those pages change between two captures even when the change is
+neutral, so a capture intended to reach a green verdict masks them: the wall
+clock on `/members/cert/` (`#clock-wrapper`), the relative sign-up timing on an
+event page (`.registration-timing`), and the animated seasonal art
+(`img.balloon`). `--mask` sets `visibility: hidden` on the matching elements
+only, never `display: none`, so nothing below them moves, and masked elements
+stay in the computed-style probe, so a real style change on one is still
+reported. A selector that matches nothing is warned about, so a mask that quietly
+stopped working is visible.
 
 Captures land under `~/.cache/date-website/css-regression/<label>/` unless
 `--out` names a directory. The harness covers the six shipped variants (it skips
@@ -381,17 +404,13 @@ differing pixels and no computed-style change for any page or viewport. Any diff
 is either a bug to fix or a change that has to be described as visual rather
 than neutral.
 
-Two limits of the pixel channel are worth knowing before trusting a red run:
-
-- Adding or removing an element in `<head>` is reported but does not fail the
-  gate. No `<link>`, `<meta>`, `<script>` or `<style>` in the head is rendered
-  on its own, so it cannot shift layout. Any other element appearing or
-  disappearing is treated as a geometry change and does fail.
-- `templates/common/events/registration_state.html` renders a relative timestamp
-  ("Anmälningstiden gick ut" followed by a minute-resolution interval), so a page
-  showing a closed registration differs by a few hundred pixels between two
-  captures taken more than a minute apart. The computed-style channel stays clean
-  on those views, so read the style column rather than the pixel column there.
+One limit of the pixel channel is worth knowing before trusting a red run.
+Adding or removing an element in `<head>` is reported but does not fail the gate:
+no `<link>`, `<meta>`, `<script>` or `<style>` in the head is rendered on its
+own, so it cannot shift layout. Any other element appearing or disappearing is
+treated as a geometry change and does fail. Every page also warns when its final
+URL differs from the requested one, so a redirect to the sign-in page shows up in
+the report instead of being compared as the page that was asked for.
 
 The stylesheet guard tests are:
 

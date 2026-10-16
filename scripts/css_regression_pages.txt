@@ -17,20 +17,27 @@
 # --password); the login object in manifest.json then says the capture was
 # authenticated. Those paths are marked below.
 #
-# Two of the listed paths also render live, time-dependent content, which changes
-# between any two captures even when the stylesheet change is appearance-neutral:
-# /members/cert/ paints a wall clock into #clock-wrapper and refreshes it every
-# 500 ms, and an event page whose sign-up has closed renders a relative time such
-# as "39 minuter sedan" into #no-registration. A capture intended to reach a green
-# verdict therefore passes both masks:
+# Three kinds of content change between any two captures even when the
+# stylesheet change is appearance-neutral, so a capture intended to reach a green
+# verdict masks them:
+#
+#   #clock-wrapper        /members/cert/ paints a wall clock here and refreshes
+#                         it every 500 ms.
+#   .registration-timing  an event page whose sign-up has closed renders a
+#                         relative time such as "39 minuter sedan", and one whose
+#                         sign-up has not opened yet renders "om 3 dagar"; both
+#                         branches carry this class.
+#   img.balloon           the seasonal event art is animated, so a few pixels on
+#                         its edges can land differently between two runs.
 #
 #   uv run python scripts/css_regression.py capture --label after \
 #       --pages scripts/css_regression_pages.txt \
-#       --mask '#clock-wrapper' --mask '#no-registration'
+#       --mask '#clock-wrapper' --mask '.registration-timing' --mask 'img.balloon'
 #
 # The mask sets visibility: hidden on just those elements (never display: none,
 # which would remove them from layout and shift everything below them), so the
-# rest of each page is still compared.
+# rest of each page is still compared, and masked elements stay in the
+# computed-style probe so a real style change on one is still reported.
 #
 # One path per line. Blank lines are ignored and everything from a '#' to the
 # end of the line is a comment. Every path must start with '/'.
