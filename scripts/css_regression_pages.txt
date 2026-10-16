@@ -10,6 +10,28 @@
 # event exists whose title or slug selects that template; the dynamic fixtures
 # create one of each for exactly this reason.
 #
+# Some paths are only reachable when signed in. Captured without credentials they
+# redirect to the sign-in page, and the harness would record that sign-in page as
+# if it were the requested path. Capture them with
+# CSS_REGRESSION_USERNAME and CSS_REGRESSION_PASSWORD set (or --username and
+# --password); the login object in manifest.json then says the capture was
+# authenticated. Those paths are marked below.
+#
+# Two of the listed paths also render live, time-dependent content, which changes
+# between any two captures even when the stylesheet change is appearance-neutral:
+# /members/cert/ paints a wall clock into #clock-wrapper and refreshes it every
+# 500 ms, and an event page whose sign-up has closed renders a relative time such
+# as "39 minuter sedan" into #no-registration. A capture intended to reach a green
+# verdict therefore passes both masks:
+#
+#   uv run python scripts/css_regression.py capture --label after \
+#       --pages scripts/css_regression_pages.txt \
+#       --mask '#clock-wrapper' --mask '#no-registration'
+#
+# The mask sets visibility: hidden on just those elements (never display: none,
+# which would remove them from layout and shift everything below them), so the
+# rest of each page is still compared.
+#
 # One path per line. Blank lines are ignored and everything from a '#' to the
 # end of the line is a comment. Every path must start with '/'.
 /
@@ -26,13 +48,15 @@
 /pages/om-oss/
 /pages/styrelsen/
 /publications/
-/archive/documents/
-/archive/pictures/
-/archive/exams/
+/archive/documents/  # login_required, needs credentials
+/archive/pictures/  # login_required, needs credentials
+/archive/exams/  # sign-in gate, needs credentials
 /members/signup/
 /members/login/
+/members/info/  # member page, needs credentials
 /members/funktionarer/
-/members/cert/
+/members/cert/  # login_required, needs credentials
+/ctf/  # redirects to the login page when signed out, needs credentials
 /forms/
 /polls/
 /social/harassment/

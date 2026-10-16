@@ -30,6 +30,59 @@ scripts/css_regression_pages.example.txt). A narrow viewport is not phone emulat
 the mobile viewport is a 390 CSS pixel wide desktop render, which is deterministic and
 is what a CSS breakpoint test needs.
 
+Live content that changes between two captures:
+
+A few pages render content that changes on its own: a wall clock refreshed by a timer, or
+a relative time such as "39 minuter sedan" computed server side from the request time.
+Those pixels differ between any two captures, so such a page can never reach a green
+verdict even when the stylesheet change is appearance-neutral. `--mask CSS_SELECTOR`
+(repeatable) sets `visibility: hidden` on every element matching the selector, after the
+page has settled and before the computed-style probe and the screenshot, so those pixels
+stop being compared while the rest of the page keeps being compared:
+
+    uv run python scripts/css_regression.py capture --label after --mask '#some-id'
+
+`visibility: hidden` is used and never `display: none`: `display: none` takes the element
+out of layout and shifts everything below it, which makes two captures differ for a
+reason that is not the stylesheet. A match that has no layout box of its own is left in
+place and the document is not otherwise changed. The mask is applied identically in every
+capture, and masked elements are deliberately kept in the computed-style probe: their
+other computed properties keep being compared, so a real style regression on a masked
+element is still caught, and only the masked pixels are ignored. Masking is for live
+content only, not for hiding a difference a reviewer should see. The selectors are
+recorded in manifest.json together with the number of elements each matched per view, and
+a selector that matches nothing is warned about instead of being assumed to have worked.
+
+Signing in for a capture:
+
+    CSS_REGRESSION_USERNAME=<user> CSS_REGRESSION_PASSWORD=<password> \
+        uv run python scripts/css_regression.py capture --label after
+
+Pages behind `login_required` are the reason this exists: signed out, such a page
+redirects to the sign-in page, and the harness would then record the sign-in page as if
+it were the page that was asked for, so a diff could compare two sign-in pages and call
+the stylesheet neutral. Credentials come from --username/--password or, when those
+flags are absent, from the CSS_REGRESSION_USERNAME and CSS_REGRESSION_PASSWORD
+environment variables (prefer the environment: a --password value is visible in the
+process list). When neither source has both values the capture stays anonymous, exactly
+as before, and does not fail.
+
+With credentials the harness signs in once per variant, before that variant's page
+loop, by filling the sign-in form in the page over Runtime.evaluate and submitting it,
+so the browser sends the CSRF token and keeps the session cookie. It then loads
+--require-login-path (default /members/info/), a path that is only reachable when
+signed in, and checks that it did not land back on --login-path (default
+/members/login/) and that the status is 200. If that check fails the variant is
+aborted with an error and none of its pages are captured: once credentials were
+supplied there is never a silent fallback to an anonymous capture. Each variant's
+sign-in result is recorded in manifest.json as variants.<name>.login, and every
+captured page whose final URL path differs from the requested path carries a warning
+in its entry, so a redirect to a sign-in page is visible in the report.
+
+A gated page captured without credentials is therefore a capture of the sign-in page
+rather than of the page that was asked for; the login object and the per-page warning
+make that visible instead of silent.
+
 compare refuses to run when the two captures resolved different page sets, when the
 same page label resolved to a different path, or when they were taken at different
 viewports (exit code 2), then reports per page and viewport the differing pixel count
@@ -108,6 +161,16 @@ DEFAULT_BASE_URLS: dict[str, str] = {
     "impuls": "http://127.0.0.1:8016",
 }
 EXCLUDED_VARIANTS = {"demo"}
+
+# Optional authentication for gated pages. The sign-in page is the two_factor login
+# template (templates/common/members/registration/login.html, driven by
+# members.two_factor.MemberLoginView), whose form carries the CSRF token and the
+# username/password inputs this harness fills. The require-login path is a page that
+# only resolves to itself when signed in, so it proves the session took effect.
+DEFAULT_LOGIN_PATH = "/members/login/"
+DEFAULT_REQUIRE_LOGIN_PATH = "/members/info/"
+USERNAME_ENV_VAR = "CSS_REGRESSION_USERNAME"
+PASSWORD_ENV_VAR = "CSS_REGRESSION_PASSWORD"
 
 VIEWPORTS: dict[str, tuple[int, int]] = {"desktop": (1600, 1000), "mobile": (390, 844)}
 
@@ -257,6 +320,47 @@ INIT_SCRIPT = """
 })()
 """.replace("__CSS__", json.dumps(OVERRIDE_CSS)).replace("__ID__", json.dumps(OVERRIDE_STYLE_ID))
 
+# Fill and submit the sign-in form from inside the page, over Runtime.evaluate rather
+# than synthesised key events, so the browser itself applies the field values and sends
+# the hidden CSRF token that the rendered form already carries. The field names are
+# discovered from the form rather than hardcoded: the login form is a two_factor wizard
+# whose authentication step renders `auth-username` and `auth-password` next to a hidden
+# `member_login_view-current_step` field, and a name lookup survives a prefix change.
+# The fields are set first and the submit is deferred by one tick, so the evaluate call
+# returns its (password-free) summary before the navigation destroys the context.
+LOGIN_FILL_JS = """
+(() => {
+  const username = __USERNAME__;
+  const password = __PASSWORD__;
+  const passwordField = document.querySelector('input[type="password"]');
+  if (!passwordField) return JSON.stringify({ok: false, error: 'the page has no password field, so it is not a sign-in form'});
+  const form = passwordField.form;
+  if (!form) return JSON.stringify({ok: false, error: 'the password field is not inside a form'});
+  let usernameField = null;
+  for (const element of form.elements) {
+    if (element === passwordField) continue;
+    const type = (element.getAttribute('type') || 'text').toLowerCase();
+    if (type !== 'text' && type !== 'email') continue;
+    const name = (element.name || '').toLowerCase();
+    if (name === 'username' || name.endsWith('-username') || name.endsWith('username')) { usernameField = element; break; }
+  }
+  if (!usernameField) return JSON.stringify({ok: false, error: 'the sign-in form has no username field'});
+  usernameField.value = username;
+  passwordField.value = password;
+  const summary = {
+    ok: true,
+    username_field: usernameField.name,
+    password_field: passwordField.name,
+    action: passwordField.form.getAttribute('action') || location.pathname,
+  };
+  setTimeout(() => {
+    if (typeof form.requestSubmit === 'function') form.requestSubmit();
+    else form.submit();
+  }, 0);
+  return JSON.stringify(summary);
+})()
+"""
+
 # One pass over every element: the DOM path key, the fixed property subset, and the
 # page level facts that belong with the snapshot. Returned as a JSON string so the
 # result comes back by value in a single round trip.
@@ -309,6 +413,36 @@ PROBE_JS = """
   });
 })()
 """.replace("__PROPERTIES__", json.dumps(list(STYLE_PROPERTIES)))
+
+# Set `visibility: hidden` on every element matching each --mask selector, and report how
+# many elements each selector matched. `visibility: hidden` rather than `display: none`:
+# `display: none` removes the element from layout and shifts everything below it, which
+# would make two captures differ for a reason that is not the stylesheet under test. The
+# element is otherwise left alone, including a match that has no layout box of its own:
+# nothing is wrapped, moved, removed or otherwise changed. Run after the settle and before
+# the computed-style probe and the screenshot, so both channels record the same masked
+# document, and masked elements stay in the probe so only their pixels are dropped.
+MASK_JS = """
+(() => {
+  const selectors = __SELECTORS__;
+  const counts = {};
+  const errors = {};
+  for (const selector of selectors) {
+    let matches;
+    try {
+      matches = document.querySelectorAll(selector);
+    } catch (error) {
+      errors[selector] = String(error);
+      continue;
+    }
+    for (const element of matches) {
+      element.style.setProperty('visibility', 'hidden', 'important');
+    }
+    counts[selector] = matches.length;
+  }
+  return JSON.stringify({counts: counts, errors: errors});
+})()
+"""
 
 FRAME_JS = "new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve('frame'))))"
 FONTS_JS = "document.fonts.ready.then(() => 'fonts')"
@@ -441,6 +575,17 @@ def iter_hrefs(html: str) -> Iterator[str]:
 def path_of(url: str) -> str:
     parts = urllib.parse.urlsplit(url)
     return parts.path + (f"?{parts.query}" if parts.query else "")
+
+
+def normalized_path(url: str) -> str:
+    """The path of a URL without its query and without a trailing slash, so /a/ equals /a.
+
+    Used to decide whether a navigation ended on the page that was asked for: a sign-in
+    redirect adds a `?next=` query, which must not hide that the browser is on the login
+    page.
+    """
+    path = urllib.parse.urlsplit(url).path or "/"
+    return path.rstrip("/") or "/"
 
 
 def match_detail_hrefs(html: str, page_url: str, pattern: re.Pattern[str], limit: int) -> tuple[list[str], int]:
@@ -811,6 +956,174 @@ def evaluate(connection: CdpConnection, expression: str, *, await_promise: bool 
     return (result.get("result") or {}).get("value")
 
 
+def navigate_and_settle(
+    connection: CdpConnection, tracker: NetworkTracker, url: str, timeout: float
+) -> tuple[int | None, str]:
+    """Navigate, wait for the load event and the network, and report (status, final URL).
+
+    The status is the last Document response of the redirect chain, which is the
+    response that actually rendered, and the final URL is read from the page so a
+    client-side redirect is seen as well. Raises CdpError when the navigation does not
+    complete, which the login caller turns into a per-variant abort.
+    """
+    tracker.reset()
+    connection.clear_events()
+    navigation = connection.call("Page.navigate", {"url": url}, timeout=timeout)
+    connection.wait_for_event("Page.loadEventFired", frame_id=navigation.get("frameId"), timeout=timeout)
+    wait_for_network_idle(connection, tracker, min(NETWORK_IDLE_TIMEOUT, timeout))
+    final_url = str(evaluate(connection, "location.href", timeout=min(10.0, timeout)))
+    status = tracker.document_responses[-1]["status"] if tracker.document_responses else None
+    return status, final_url
+
+
+def submit_login_form(
+    connection: CdpConnection,
+    tracker: NetworkTracker,
+    *,
+    username: str,
+    password: str,
+    timeout: float,
+) -> dict[str, Any]:
+    """Fill and submit the sign-in form, then wait for the page it returns.
+
+    Returns a dict with `ok` plus, on success, the field names that were filled and the
+    status/final URL of the page that answered. The password is only ever placed in the
+    page; it is not returned, printed or written to the manifest.
+    """
+    expression = LOGIN_FILL_JS.replace("__USERNAME__", json.dumps(username)).replace(
+        "__PASSWORD__", json.dumps(password)
+    )
+    tracker.reset()
+    connection.clear_events()
+    filled = evaluate(connection, expression, timeout=timeout)
+    payload: dict[str, Any] = json.loads(filled) if filled else {}
+    if not payload.get("ok"):
+        return {"ok": False, "error": str(payload.get("error") or "the sign-in form could not be filled")}
+    try:
+        connection.wait_for_event("Page.loadEventFired", timeout=timeout)
+    except CdpError as error:
+        return {"ok": False, "error": f"the sign-in form was submitted but no page load followed: {error}"}
+    wait_for_network_idle(connection, tracker, min(NETWORK_IDLE_TIMEOUT, timeout))
+    final_url = str(evaluate(connection, "location.href", timeout=min(10.0, timeout)))
+    status = tracker.document_responses[-1]["status"] if tracker.document_responses else None
+    return {
+        "ok": True,
+        "status": status,
+        "final_url": final_url,
+        "username_field": payload.get("username_field"),
+        "password_field": payload.get("password_field"),
+        "action": payload.get("action"),
+    }
+
+
+def login_variant(
+    connection: CdpConnection,
+    tracker: NetworkTracker,
+    *,
+    base_url: str,
+    username: str,
+    password: str,
+    login_path: str,
+    require_login_path: str,
+    timeout: float,
+) -> dict[str, Any]:
+    """Sign in once for one variant and prove the session took effect.
+
+    Navigates to the login path, submits the form, then loads the require-login path and
+    checks that it did not land back on the login path and that it answered 200. The
+    returned record is written to the manifest as variants.<name>.login. `verified` is
+    False for a variant that must be aborted; the caller then captures none of its pages
+    rather than falling back to an anonymous capture.
+    """
+    login_url = base_url + login_path
+    require_url = base_url + require_login_path
+    record: dict[str, Any] = {
+        "used": True,
+        "username": username,
+        "status": None,
+        "final_url": None,
+        "verified": False,
+        "login_path": login_path,
+        "require_login_path": require_login_path,
+        "login_status": None,
+        "login_final_url": None,
+        "fields": None,
+        "error": None,
+    }
+    try:
+        login_status, login_final_url = navigate_and_settle(connection, tracker, login_url, timeout)
+    except CdpError as error:
+        record["error"] = f"navigating to {login_path} failed: {error}"
+        return record
+    record["login_status"] = login_status
+    record["login_final_url"] = login_final_url
+
+    try:
+        submitted = submit_login_form(connection, tracker, username=username, password=password, timeout=timeout)
+    except CdpError as error:
+        record["error"] = f"submitting the sign-in form at {login_path} failed: {error}"
+        return record
+    if not submitted.get("ok"):
+        record["error"] = str(submitted.get("error"))
+        return record
+    record["fields"] = {
+        "username": submitted.get("username_field"),
+        "password": submitted.get("password_field"),
+        "action": submitted.get("action"),
+    }
+
+    try:
+        status, final_url = navigate_and_settle(connection, tracker, require_url, timeout)
+    except CdpError as error:
+        record["error"] = f"navigating to {require_login_path} after signing in failed: {error}"
+        return record
+    record["status"] = status
+    record["final_url"] = final_url
+
+    final_path = normalized_path(final_url)
+    if final_path == normalized_path(login_url):
+        record["error"] = (
+            f"signing in did not take effect: {require_login_path} redirected to the login path {final_path}"
+        )
+    elif status != 200:
+        record["error"] = f"signing in did not take effect: {require_login_path} returned status {status}"
+    else:
+        record["verified"] = True
+    return record
+
+
+def resolve_credentials(args: argparse.Namespace) -> tuple[str | None, str | None]:
+    """Resolve the optional credentials from the flags, then the environment.
+
+    Both absent means an anonymous capture, which is the pre-existing behaviour. Only one
+    of the two present is a mistake that would otherwise be read as an authenticated run,
+    so it fails rather than being ignored.
+    """
+    username = args.username or os.environ.get(USERNAME_ENV_VAR) or None
+    password = args.password or os.environ.get(PASSWORD_ENV_VAR) or None
+    if username and not password:
+        fail(f"a username was supplied without a password (pass --password or set {PASSWORD_ENV_VAR})")
+    if password and not username:
+        fail(f"a password was supplied without a username (pass --username or set {USERNAME_ENV_VAR})")
+    return username, password
+
+
+def apply_masks(
+    connection: CdpConnection, selectors: list[str], *, timeout: float
+) -> tuple[dict[str, int], dict[str, str]]:
+    """Hide every element matching each mask selector, and count the matches per selector.
+
+    Returns (matched elements per selector, selector errors). An unusable selector is
+    reported rather than aborting the capture, so one typo does not lose a whole run.
+    """
+    expression = MASK_JS.replace("__SELECTORS__", json.dumps(list(selectors)))
+    raw = evaluate(connection, expression, timeout=timeout)
+    payload: dict[str, Any] = json.loads(raw) if raw else {}
+    counts = {str(selector): int(count) for selector, count in (payload.get("counts") or {}).items()}
+    errors = {str(selector): str(message) for selector, message in (payload.get("errors") or {}).items()}
+    return counts, errors
+
+
 def capture_page(
     connection: CdpConnection,
     tracker: NetworkTracker,
@@ -818,6 +1131,7 @@ def capture_page(
     url: str,
     png_path: Path,
     styles_path: Path,
+    masks: list[str],
     timeout: float,
 ) -> dict[str, Any]:
     """Navigate one page, wait for it to settle, and record both channels."""
@@ -864,6 +1178,28 @@ def capture_page(
             warnings.append("document element disappeared before the capture")
     except CdpError as error:
         warnings.append(f"settle: {error}")
+
+    # Mask the live content that cannot be part of a parity claim (see MASK_JS). This
+    # runs after the settle and before the computed-style probe and the screenshot, so
+    # both channels see the same masked document. The masked elements stay in the probe:
+    # only their pixels are dropped, not their computed styles.
+    masked: dict[str, int] = {}
+    if masks:
+        try:
+            masked, mask_errors = apply_masks(connection, masks, timeout=min(30.0, remaining()))
+        except CdpError as error:
+            return {
+                "error": f"applying --mask failed: {error}",
+                "warnings": warnings,
+                "seconds": round(time.monotonic() - started, 3),
+            }
+        for selector, message in mask_errors.items():
+            warnings.append(f"--mask {selector!r} is not a usable CSS selector: {message}")
+        try:
+            # Let the paint catch up with the mask before the screenshot is taken.
+            evaluate(connection, FRAME_JS, await_promise=True, timeout=min(10.0, remaining()))
+        except CdpError as error:
+            warnings.append(f"repaint after --mask: {error}")
 
     try:
         evaluate(connection, "window.scrollTo(0, 0)", timeout=min(10.0, remaining()))
@@ -938,6 +1274,18 @@ def capture_page(
         # response that actually rendered.
         final_status = tracker.document_responses[-1]["status"] or 200
 
+    # A page that redirects is compared as the page it redirected to, so say so in the
+    # report. The failure this guards against is a login_required page captured signed
+    # out: the entry would otherwise look like a normal capture of the requested path
+    # while actually holding the sign-in page.
+    requested_path = normalized_path(url)
+    landed_path = normalized_path(final_url)
+    if landed_path != requested_path:
+        warnings.append(
+            f"final URL path {landed_path} differs from the requested path {requested_path} "
+            "(the page redirected; a sign-in redirect lands on the login page, not the page that was requested)"
+        )
+
     return {
         "status": int(final_status),
         "url": final_url,
@@ -946,6 +1294,7 @@ def capture_page(
         "scroll_width": int(probe["scrollWidth"]),
         "scroll_height": int(probe["scrollHeight"]),
         "animated_elements": int(probe["animated"]),
+        "masked": masked,
         "png_bytes": png_bytes,
         "warnings": warnings,
         "error": error,
@@ -1012,12 +1361,19 @@ def cmd_capture(args: argparse.Namespace) -> int:
     pages_file = str(args.pages) if args.pages else None
     store = Path(args.out).expanduser().resolve() if args.out else (DEFAULT_STORE / args.label).expanduser().resolve()
     prepare_capture_dir(store, force=args.force)
+    username, password = resolve_credentials(args)
 
     started = time.monotonic()
     created = datetime.now(UTC).isoformat(timespec="seconds")
     print(f"### capture {args.label!r} -> {store}")
     print(f"    chrome {chrome}")
     print(f"    variants: {', '.join(f'{name}={url}' for name, url in bases.items())}")
+    if username:
+        print(f"    login: {args.login_path} as {username!r}, verified against {args.require_login_path}")
+    else:
+        print("    login: none (gated pages will be captured as the login page)")
+    if args.mask:
+        print(f"    masks: {', '.join(args.mask)}")
 
     page_lists: dict[str, list[tuple[str, str]]] = {}
     discovery: dict[str, Any] = {}
@@ -1033,6 +1389,8 @@ def cmd_capture(args: argparse.Namespace) -> int:
             print(f"      discovery {listing}: status={listing_record['status']} matched={listing_record['matched']}")
 
     entries: list[dict[str, Any]] = []
+    login_records: dict[str, dict[str, Any]] = {}
+    aborted: set[str] = set()
     errors = 0
     with launch_chrome(chrome) as port:
         for variant, base_url in bases.items():
@@ -1041,6 +1399,44 @@ def cmd_capture(args: argparse.Namespace) -> int:
             with open_variant_session(port) as connection:
                 tracker = NetworkTracker()
                 connection.add_listener(tracker.handle)
+                login_record: dict[str, Any] = {
+                    "used": False,
+                    "username": None,
+                    "status": None,
+                    "final_url": None,
+                    "verified": None,
+                    "login_path": args.login_path,
+                    "require_login_path": args.require_login_path,
+                    "login_status": None,
+                    "login_final_url": None,
+                    "fields": None,
+                    "error": None,
+                }
+                if username and password:
+                    login_record = login_variant(
+                        connection,
+                        tracker,
+                        base_url=base_url,
+                        username=username,
+                        password=password,
+                        login_path=args.login_path,
+                        require_login_path=args.require_login_path,
+                        timeout=args.page_timeout,
+                    )
+                    if not login_record["verified"]:
+                        # Never fall back to an anonymous capture once credentials were
+                        # supplied: that is the silent comparison this harness must not make.
+                        login_records[variant] = login_record
+                        aborted.add(variant)
+                        errors += 1
+                        print(f"### {variant}: login FAILED, skipping every page of this variant")
+                        print(f"    {login_record['error']}")
+                        continue
+                    print(
+                        f"    login ok: {login_record['final_url']} "
+                        f"(status {login_record['status']}), fields {login_record['fields']}"
+                    )
+                login_records[variant] = login_record
                 for viewport, (width, height) in VIEWPORTS.items():
                     connection.call(
                         "Emulation.setDeviceMetricsOverride",
@@ -1055,6 +1451,7 @@ def cmd_capture(args: argparse.Namespace) -> int:
                             url=base_url + path,
                             png_path=store / relative_png,
                             styles_path=store / relative_styles,
+                            masks=list(args.mask),
                             timeout=args.page_timeout,
                         )
                         entry: dict[str, Any] = {
@@ -1078,6 +1475,23 @@ def cmd_capture(args: argparse.Namespace) -> int:
                             )
 
     seconds = round(time.monotonic() - started, 3)
+    # How many elements each --mask selector hid, so a selector that matched nothing (or
+    # matched far fewer elements than expected) is visible in the report rather than
+    # being assumed to have worked. The per-view count is in each page entry; this is the
+    # run total, and a selector that matched nothing anywhere is warned about here once
+    # instead of once per page (most pages legitimately contain neither masked element).
+    mask_matches: dict[str, dict[str, int]] = {selector: {"views": 0, "elements": 0} for selector in args.mask}
+    for entry in entries:
+        for selector, count in (entry.get("masked") or {}).items():
+            totals = mask_matches.setdefault(selector, {"views": 0, "elements": 0})
+            if count:
+                totals["views"] += 1
+                totals["elements"] += count
+    if args.mask:
+        print("### masks")
+        for selector, totals in mask_matches.items():
+            note = "" if totals["elements"] else "  WARNING: matched no element in any captured view"
+            print(f"    {selector!r}: {totals['elements']} elements in {totals['views']} views{note}")
     manifest = {
         "version": 1,
         "kind": "css-regression-capture",
@@ -1086,8 +1500,17 @@ def cmd_capture(args: argparse.Namespace) -> int:
         "store": str(store),
         "chrome": chrome,
         "blocked_urls": list(UNSTABLE_URL_PATTERNS),
+        "masks": list(args.mask),
+        "mask_matches": mask_matches,
         "viewports": {name: list(size) for name, size in VIEWPORTS.items()},
-        "variants": {name: {"base_url": url} for name, url in bases.items()},
+        "variants": {
+            name: {
+                "base_url": url,
+                "login": login_records.get(name),
+                "aborted": name in aborted,
+            }
+            for name, url in bases.items()
+        },
         "page_list": {
             name: [{"page": label, "path": path} for label, path in pages] for name, pages in page_lists.items()
         },
@@ -1511,6 +1934,37 @@ def build_parser() -> argparse.ArgumentParser:
         "--pages",
         default=None,
         help="file with one path per line, replacing the seed list and detail discovery",
+    )
+    capture.add_argument(
+        "--mask",
+        action="append",
+        default=[],
+        metavar="CSS_SELECTOR",
+        help=(
+            "hide every element matching this CSS selector with visibility: hidden before the "
+            "computed-style probe and the screenshot, for live content such as a clock "
+            "(repeatable, for example --mask '#some-id')"
+        ),
+    )
+    capture.add_argument(
+        "--username",
+        default=None,
+        help=f"sign in before capturing (default: {USERNAME_ENV_VAR} if set); without it the capture is anonymous",
+    )
+    capture.add_argument(
+        "--password",
+        default=None,
+        help=f"password for --username (default: {PASSWORD_ENV_VAR} if set); prefer the variable, a flag is visible in the process list",
+    )
+    capture.add_argument(
+        "--login-path",
+        default=DEFAULT_LOGIN_PATH,
+        help=f"sign-in page to submit before capturing (default {DEFAULT_LOGIN_PATH})",
+    )
+    capture.add_argument(
+        "--require-login-path",
+        default=DEFAULT_REQUIRE_LOGIN_PATH,
+        help=f"path that is only reachable when signed in, used to verify the session (default {DEFAULT_REQUIRE_LOGIN_PATH})",
     )
     capture.add_argument("--chrome", default=None, help="path to a Chromium binary")
     capture.add_argument(
