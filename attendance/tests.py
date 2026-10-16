@@ -179,6 +179,21 @@ class AttendanceEventModelTests(TestCase):
         event = make_event(end_datetime=REFERENCE_NOW + timedelta(minutes=1))
         self.assertFalse(event.has_ended)
 
+    @patch("attendance.models.now", return_value=REFERENCE_NOW)
+    def test_has_started_is_false_before_the_start(self, _now):
+        """A meeting an editor has created for next week has not started yet.
+
+        The report page reads both ends of the meeting: ``has_ended`` alone would
+        show an upcoming meeting as ongoing.
+        """
+        event = make_event(start_datetime=REFERENCE_NOW + timedelta(minutes=1))
+        self.assertFalse(event.has_started)
+
+    @patch("attendance.models.now", return_value=REFERENCE_NOW)
+    def test_has_started_is_true_after_the_start(self, _now):
+        event = make_event(start_datetime=REFERENCE_NOW - timedelta(minutes=1))
+        self.assertTrue(event.has_started)
+
     def test_slug_is_unique(self):
         make_event(slug="arsmote")
         with self.assertRaises(IntegrityError), transaction.atomic():
@@ -1194,6 +1209,14 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         self.assertNotIn("disabled", content[content.index('value="0"') : content.index("Gå in")])
         self.assertNotIn("disabled", content[content.index('value="1"') : content.index("Gå ut")])
 
+    def test_the_check_in_page_says_which_action_is_for_arriving(self):
+        """A visitor whose presence is unknown sees both actions, so the page has
+        to say which one is for arriving and which for leaving."""
+        response = self.client.get(self.detail_url)
+
+        self.assertContains(response, 'class="attendance-actions')
+        self.assertContains(response, "Välj Gå in när du kommer")
+
     def test_a_cookie_naming_a_guest_that_does_not_exist_creates_nothing(self):
         """A GET only looks a name up: a cookie is a claim, not an attendee."""
         remember_name(self.client, "Okänd")
@@ -2009,6 +2032,21 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
         self.assertContains(response, 'id="status-message" aria-live="polite"')
         # The template formatter wraps this tag, so match across the line break.
         self.assertRegex(response.content.decode(), r'<p id="no-present-attendees"\s+aria-live="polite"')
+
+    def test_overview_labels_the_code_and_counts_down_to_the_next_one(self):
+        """The code is read aloud to a room, so it carries a name and a countdown.
+
+        A code that has stopped rotating looks exactly like a current one, which
+        is why the page says how long it is good for and falls back to a warning.
+        """
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.overview_url)
+
+        self.assertContains(response, 'id="code-heading"')
+        self.assertContains(response, 'aria-labelledby="code-heading"')
+        self.assertContains(response, 'id="code-countdown" aria-hidden="true"')
+        self.assertContains(response, "Aktuell möteskod")
 
     def test_overview_shows_the_empty_state_when_nobody_is_present(self):
         """The empty state is in the page, unhidden, when the event has nobody present."""

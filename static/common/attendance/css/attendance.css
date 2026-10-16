@@ -1,0 +1,160 @@
+/* Screen styles for the two public attendance pages: the participant check-in
+   page and the staff overview. report.css owns the admin report page, this file
+   owns these two, and both templates load it.
+
+   It depends on no association's variables, so the colours below are fallbacks
+   that a theme can override by setting --attendance-present, --attendance-absent
+   and --attendance-muted. */
+
+/* Bootstrap's text-success is 3.6 to 1 on this card and text-warning is a little
+   better, both under the 4.5 to 1 floor for body text. The state colours are
+   raised here, scoped to these pages, rather than changed in the markup: the
+   templates and the tests pin those two class names. */
+.attendance-page .text-success {
+    color: var(--attendance-present, #7fe3a9) !important;
+}
+
+.attendance-page .text-warning {
+    color: var(--attendance-absent, #ffd479) !important;
+}
+
+/* The title block. The pages used line-height 1 to keep the heading and the
+   description close, which crowds a description that wraps to two lines. */
+.attendance-head {
+    margin-bottom: 1.25rem;
+    line-height: 1.35;
+}
+
+.attendance-head h1 {
+    margin-bottom: 0.35rem;
+}
+
+.attendance-head p {
+    margin-bottom: 0.25rem;
+}
+
+/* The rotating code. The staff page is read from across a meeting room, so it
+   scales with the viewport instead of sitting at heading size. */
+.attendance-code-block {
+    margin-bottom: 1.5rem;
+}
+
+.attendance-code-block #current-code {
+    margin-bottom: 0.25rem;
+    font-size: clamp(3rem, 11vw, 5.5rem);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.1em;
+    line-height: 1.1;
+}
+
+.attendance-countdown {
+    margin-bottom: 0.25rem;
+    color: var(--attendance-muted, #c9c9c9);
+    font-variant-numeric: tabular-nums;
+}
+
+.attendance-countdown--stale {
+    color: var(--attendance-absent, #ffd479);
+    font-weight: 600;
+}
+
+/* The QR code holds a full event URL, so its canvas grows with the link. The
+   cap keeps a long production URL inside the card on a phone. */
+.attendance-qr {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.attendance-qr canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+.attendance-qr-caption {
+    margin-bottom: 1.5rem;
+    color: var(--attendance-muted, #c9c9c9);
+    text-align: center;
+}
+
+/* The two actions of the check-in form. They were an input-group, which joined
+   them into one segmented control: a participant then had to read a disabled
+   half to work out which half applied. */
+.attendance-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.attendance-hint {
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--attendance-muted, #c9c9c9);
+    font-size: 0.95rem;
+}
+
+.attendance-presence {
+    display: inline-block;
+    margin-bottom: 1rem;
+    padding: 0.2rem 0.7rem;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.attendance-section {
+    margin-top: 1.75rem;
+}
+
+.attendance-list {
+    margin-bottom: 0;
+    padding-left: 1.2rem;
+}
+
+.attendance-list li {
+    margin-bottom: 0.3rem;
+}
+
+/* The list of meetings. Each row is one tappable block carrying the meeting's
+   start, so a participant on a phone does not have to aim at a bare link. */
+.attendance-events {
+    margin-bottom: 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.attendance-events li + li {
+    margin-top: 0.5rem;
+}
+
+.attendance-event-link {
+    display: block;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid rgba(127, 127, 127, 0.35);
+    border-color: color-mix(in srgb, currentColor 35%, transparent);
+    border-radius: 0.4rem;
+    text-align: left;
+}
+
+.attendance-event-link__title {
+    display: block;
+    font-weight: 600;
+}
+
+.attendance-event-link__when {
+    display: block;
+    color: var(--attendance-muted, #c9c9c9);
+    font-size: 0.9rem;
+}
+
+/* A phone is the device most participants use, so the two actions take the full
+   width there instead of wrapping into a ragged pair. */
+@media (max-width: 480px) {
+    .attendance-actions > .btn {
+        flex: 1 1 8rem;
+    }
+
+    .attendance-code-block #current-code {
+        letter-spacing: 0.06em;
+    }
+}

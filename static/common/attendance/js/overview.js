@@ -10,6 +10,7 @@ const stripLastSeparator = (url) => {
 };
 
 const codeDisplay = document.getElementById("current-code");
+const codeCountdown = document.getElementById("code-countdown");
 const statusMessage = document.getElementById("status-message")
 
 const attendeeList = document.getElementById("present-attendees");
@@ -46,6 +47,71 @@ const updateQrCode = (code) => {
 
 const setStatusMessage = (msg) => {
     statusMessage.innerText = msg;
+}
+
+// How long after a code should have rotated the page stops presenting it as
+// current. A websocket that stalls without closing leaves the last code on
+// screen, and a code that looks live but is not is worse than no code: the
+// person reading it out would be reading a value the server rejects.
+const CODE_STALE_GRACE_MS = 5_000;
+const COUNTDOWN_TICK_MS = 1_000;
+
+let countdownTimer = null;
+let codeDeadline = 0;
+
+const renderCountdown = () => {
+    // The page is a shared template and an association override could drop the
+    // element; a missing countdown must not stop the code from rotating.
+    if (!codeCountdown) {
+        return;
+    }
+
+    const remaining = codeDeadline - Date.now();
+
+    if (remaining > 0) {
+        const seconds = Math.ceil(remaining / COUNTDOWN_TICK_MS);
+        codeCountdown.innerText = interpolate(_("Ny kod om %(seconds)s s"), {seconds}, true);
+        codeCountdown.classList.remove("attendance-countdown--stale");
+    } else if (remaining > -CODE_STALE_GRACE_MS) {
+        codeCountdown.innerText = _("Hämtar en ny kod...");
+    } else {
+        codeCountdown.innerText = _("Koden uppdateras inte. Kontrollera anslutningen.");
+        codeCountdown.classList.add("attendance-countdown--stale");
+    }
+};
+
+/**
+ * Count down to the next rotation and say so when it does not arrive.
+ *
+ * @param {number} untilNextMs
+ */
+const startCountdown = (untilNextMs) => {
+    window.clearInterval(countdownTimer);
+    codeDeadline = Date.now() + untilNextMs;
+
+    if (!codeCountdown) {
+        return;
+    }
+
+    renderCountdown();
+    countdownTimer = window.setInterval(renderCountdown, COUNTDOWN_TICK_MS);
+};
+
+const stopCountdown = () => {
+    window.clearInterval(countdownTimer);
+    countdownTimer = null;
+}
+
+const markCodeStale = () => {
+    stopCountdown();
+    codeDeadline = 0;
+
+    if (!codeCountdown) {
+        return;
+    }
+
+    codeCountdown.innerText = _("Koden uppdateras inte. Kontrollera anslutningen.");
+    codeCountdown.classList.add("attendance-countdown--stale");
 }
 
 /**
@@ -195,6 +261,8 @@ const onMessage = (ws, msg) => {
         // A renamed or missing field would make this NaN, and setTimeout treats
         // NaN as zero, which would turn the countdown into a tight request loop.
         const delay = Number.isFinite(untilNext) && untilNext > 0 ? untilNext : CODE_REQUEST_FALLBACK_MS;
+        startCountdown(delay);
+        window.clearTimeout(codeFetcher);
         codeFetcher = setTimeout(() => requestNewCode(ws), delay);
     } else if (data.type == "attendance_snapshot") {
         replaceAttendees(data.data);
@@ -232,6 +300,7 @@ const makeWebsocket = () => {
     });
     ws.addEventListener("close", (ev) => {
         clearTimeout(codeFetcher);
+        markCodeStale();
 
         // 4003 and 4004 are the server saying this page cannot come back: the
         // staff permission was removed, or the event is gone. Retrying would ask
