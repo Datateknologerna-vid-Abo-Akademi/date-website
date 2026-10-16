@@ -124,6 +124,17 @@ replaces. Three such copies existed when the rule landed
 and `static/biocum/core/css/error-view.css`) and have been deleted, so the list
 of accepted byte-identical shadows is now empty.
 
+A second ratchet covers the near copy, which is the version of the mistake that
+actually happens: a copy edited in two places, frozen, while the shared sheet
+moves on. It normalises both sheets and measures how much of the shared sheet the
+shadow still repeats. At three quarters or more the pair is a fork rather than a
+delta, and it has to be either deleted, with the difference expressed as palette
+tokens, or split with a shared core sheet. Four pairs are frozen as debt in
+`core/tests/css_footgun_baseline.json` with a reason each; a new pair at that
+similarity fails, and so does a frozen pair that drifts further. The worst case
+is `static/kk/events/css/tomtejakt.css` at 0.99, which is already missing a rule
+the shared sheet gained, so that page renders differently for `kk`.
+
 Where a variation is only a colour or another token, do not fork the rule: put
 the value in the association's palette (next section) and let the shared sheet
 consume the token.

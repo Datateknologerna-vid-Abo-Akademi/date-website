@@ -21,6 +21,9 @@ rule removed. Regenerating is never a way to silence an accidental regression. I
 a ratchet fails, fix the stylesheet; rewriting the baseline instead turns the
 guard into a rubber stamp. The file is written with sorted keys, sorted lists and
 a stable two space indent so the diff of an intentional change stays reviewable.
+The near-copy section is the one section a regeneration cannot silently extend: a
+pair at or above ``THRESHOLD`` with no reason line in ``NEAR_DUPLICATE_REASONS``
+stops the regenerator instead of being recorded.
 
 Static resolution, which the undefined token rule depends on: a page's
 stylesheets come from the association's own directory first and
@@ -40,22 +43,47 @@ Rules:
    the same logical path.
 6. No zero-byte stylesheet that a template actually links (a one way ratchet,
    see ``EmptyStylesheetTests``).
+7. No near-copy shadow stylesheet, per variant: a variant sheet at least
+   ``THRESHOLD`` similar to the shared sheet at the same logical path is a fork
+   rather than a delta, and a frozen pair must not drift further towards the
+   shared sheet (see ``NearDuplicateShadowTests``).
+
+Rule 7 is the other half of rule 5. A shadow that is byte-identical is dead
+weight; a shadow that is nearly identical is worse, because it is a private fork
+of the shared rules that keeps rendering its stale copy while the shared sheet
+moves on, which is how the two trees actually drift apart. The comparison is on
+rules rather than bytes: both files are stripped of ``/* ... */`` comments, every
+run of whitespace is collapsed to a single space, the ends are stripped, and
+``difflib.SequenceMatcher.ratio()`` scores what is left, so whitespace and
+comment differences no longer count. A ratio at or above
+``THRESHOLD`` (0.75) means the shadow is three quarters of the shared sheet,
+which is a fork rather than a delta, so it either has to be deleted, with the
+difference expressed as palette tokens, or split into a shared core sheet plus a
+small association delta. Both routes are documented in ``docs/dev/css.md`` under
+the legitimate ways to vary an association. A pair that is already frozen fails
+as soon as its ratio rises by more than ``DRIFT_MARGIN`` (0.02) above the frozen
+value, because that is the fork drifting further instead of being reduced. Only
+the variants in ``VARIANTS`` are walked, so ``demo`` is out of scope here exactly
+as it is for the module's other per variant rules, and a variant sheet whose
+logical path has no ``static/common/`` counterpart is not a shadow at all, so it
+is never considered.
 
 ``*.min.css`` and anything under a ``vendor`` directory are skipped everywhere,
 exactly as ``core/tests/test_static_css.py`` does: generated and third-party
 sheets are not ours to police. The variant ``demo`` is deliberately out of scope
 because it is slated for deletion, so it is not in ``VARIANTS`` and its tree is
-not scanned by the per variant rules. The whole-tree ratchets (rules 2, 3, 4 and
-6) still read every project stylesheet, ``demo`` included, because dropping one
-directory there would need a special case with nothing to gain: a ratchet never
-fails when a file disappears.
+not scanned by the per variant rules (1, 5 and 7). The whole-tree ratchets (rules
+2, 3, 4 and 6) still read every project stylesheet, ``demo`` included, because
+dropping one directory there would need a special case with nothing to gain: a
+ratchet never fails when a file disappears.
 """
 
+import difflib
 import json
 import re
 import sys
 import tempfile
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -136,6 +164,43 @@ KNOWN_UNDEFINED: dict[tuple[str, str], str] = {
 # means no variant stylesheet duplicates the shared file at the same logical
 # path, which is the state the tree is in now that the biocum copies are gone.
 KNOWN_DUPLICATE_SHADOWS: tuple[str, ...] = ()
+
+# Ratio of shared to association text at which a shadow stops being a delta and
+# becomes a fork. Three quarters of the shared sheet means the association is
+# keeping its own stale copy of rules the shared sheet owns, so the fix is to
+# delete the shadow (expressing the difference as palette tokens) or to split it
+# into a shared core sheet plus a small association delta. See rule 7 in the
+# module docstring and the legitimate ways to vary an association in
+# docs/dev/css.md.
+THRESHOLD = 0.75
+
+# A frozen near-copy is allowed to move by this much before it counts as drift.
+# The margin absorbs whitespace and comment level noise that the normalisation
+# already removes, so only a real move towards the shared sheet trips the ratchet.
+DRIFT_MARGIN = 0.02
+
+# Near-copy shadows frozen in the baseline, keyed as the baseline keys them. The
+# reason is carried into the baseline by the regeneration path, and the
+# regenerator refuses to record a near copy that has no line here: a new fork is
+# either fixed as the docstring describes or justified in a review of this file.
+NEAR_DUPLICATE_REASONS: dict[str, str] = {
+    "biocum: core/css/footer.css": (
+        "the biocum footer rewrites the footer image sizing, drops the shared partner link rules and adds an invert "
+        "filter; delete it or split it into a shared core sheet plus a small biocum delta"
+    ),
+    "kk: events/css/tomtejakt.css": (
+        "the kk tomtejakt sheet is a copy of the shared sheet that never got the event-association-logo rule the "
+        "shared sheet gained, which is exactly the drift the rule exists to stop"
+    ),
+    "sf: core/css/footer.css": (
+        "the sf footer replaces the footer image sizing, drops the shared partner link rules and adds its own social "
+        "link rules; delete it or split it into a shared core sheet plus a small sf delta"
+    ),
+    "sf: events/css/detail.css": (
+        "the sf event detail sheet differs from the shared sheet only in whitespace and one hover background token, "
+        "so the fix is to delete it and move that color into the sf palette"
+    ),
+}
 
 
 def project_stylesheets(root: Path) -> list[Path]:
@@ -358,6 +423,93 @@ def new_shadow_offenders(root: Path, known: Iterable[str] = ()) -> list[str]:
     return [relative for relative in identical_shadow_files(root) if relative not in allowed]
 
 
+def normalise_stylesheet(css: str) -> str:
+    """Return the rule text of a stylesheet, with comments and formatting removed.
+
+    Comments are stripped, every run of whitespace collapses to one space and the
+    ends are stripped, so two sheets that differ only in whitespace runs or
+    commentary compare as equal and the similarity score is about rules.
+    """
+    return " ".join(strip_comments(css).split())
+
+
+def shadow_similarity(shared: Path, association: Path) -> float:
+    """Return the ``difflib`` ratio between the normalised shared and shadow text.
+
+    ``1.0`` is a rule for rule copy, ``0.0`` is nothing in common. The scan reads
+    the same normalised text that ``NearDuplicateShadowTests`` reasons about, so
+    the number in a failure message is reproducible by hand.
+    """
+    return difflib.SequenceMatcher(
+        None,
+        normalise_stylesheet(shared.read_text(encoding="utf-8")),
+        normalise_stylesheet(association.read_text(encoding="utf-8")),
+    ).ratio()
+
+
+def shadow_key(variant: str, relative: Path) -> str:
+    """Return the baseline key for a shadow, ``"<variant>: <logical path>"``."""
+    return f"{variant}: {relative.as_posix()}"
+
+
+def shadow_pairs(root: Path) -> dict[str, float]:
+    """Return ``{key: ratio}`` for every in scope variant sheet that shadows a shared sheet.
+
+    A variant sheet is a shadow only when ``static/common/`` holds a file at the
+    same logical path. A variant sheet with no shared counterpart is not a shadow
+    and is not returned, which keeps it out of the near-copy rule entirely.
+    """
+    ratios: dict[str, float] = {}
+    for variant in VARIANTS:
+        variant_root = root / "static" / variant
+        for path in project_stylesheets(variant_root):
+            relative = path.relative_to(variant_root)
+            shared = root / "static" / "common" / relative
+            if shared.is_file():
+                ratios[shadow_key(variant, relative)] = shadow_similarity(shared, path)
+    return ratios
+
+
+def near_duplicate_shadows(root: Path) -> dict[str, float]:
+    """Return the shadow pairs at or above ``THRESHOLD``, keyed by shadow key."""
+    return {key: ratio for key, ratio in shadow_pairs(root).items() if ratio >= THRESHOLD}
+
+
+def near_duplicate_offenders(root: Path, frozen: Mapping[str, float]) -> list[str]:
+    """Return the near-copy shadows the frozen list does not cover yet."""
+    offenders: list[str] = []
+    for key, ratio in sorted(near_duplicate_shadows(root).items()):
+        if key in frozen:
+            continue
+        variant, _, relative = key.partition(": ")
+        offenders.append(
+            f"static/{variant}/{relative}: ratio {ratio:.3f} against static/common/{relative} "
+            f"(threshold {THRESHOLD}), so it is a fork of the shared sheet rather than a delta"
+        )
+    return offenders
+
+
+def drifted_shadow_offenders(root: Path, frozen: Mapping[str, float]) -> list[str]:
+    """Return the frozen near-copies that moved further towards the shared sheet.
+
+    A pair that is gone, or that fell below its frozen ratio, is not a failure:
+    a ratchet never fails because someone cleaned something up. Only the pairs
+    that exist and rose by more than ``DRIFT_MARGIN`` are reported.
+    """
+    observed = shadow_pairs(root)
+    offenders: list[str] = []
+    for key, frozen_ratio in sorted(frozen.items()):
+        ratio = observed.get(key)
+        if ratio is None or ratio <= frozen_ratio + DRIFT_MARGIN:
+            continue
+        variant, _, relative = key.partition(": ")
+        offenders.append(
+            f"static/{variant}/{relative}: frozen ratio {frozen_ratio:.3f}, now {ratio:.3f} "
+            f"(more than {DRIFT_MARGIN} above the frozen value), so the fork drifted further instead of shrinking"
+        )
+    return offenders
+
+
 def zero_byte_stylesheets(paths: Iterable[Path]) -> list[Path]:
     """Return the stylesheets that hold no bytes at all."""
     return [path for path in paths if path.stat().st_size == 0]
@@ -420,9 +572,23 @@ def build_baseline(root: Path = BASE_DIR) -> dict[str, Any]:
         for path in zero_byte_stylesheets(stylesheets)
         if static_logical_path(path, root).as_posix() in linked
     )
+    observed_near_duplicates = near_duplicate_shadows(root)
+    unlisted = sorted(key for key in observed_near_duplicates if key not in NEAR_DUPLICATE_REASONS)
+    if unlisted:
+        raise AssertionError(
+            "near-copy shadow stylesheets have no frozen reason: "
+            + ", ".join(unlisted)
+            + "; fix the stylesheet as docs/dev/css.md describes, or add one reason line per pair to "
+            "NEAR_DUPLICATE_REASONS in core/tests/test_css_system.py"
+        )
+    near_duplicates = {
+        key: {"ratio": round(ratio, 4), "reason": NEAR_DUPLICATE_REASONS[key]}
+        for key, ratio in sorted(observed_near_duplicates.items())
+    }
     return {
         "important_counts": important_counts,
         "media_queries": sorted(media_queries),
+        "near_duplicate_shadows": near_duplicates,
         "z_index_values": z_index_values,
         "zero_byte_stylesheets_linked": empty_linked,
     }
@@ -454,6 +620,11 @@ def baseline_section(key: str) -> Any:
             f"{BASELINE_PATH.name} has no {key!r} section; regenerate it with the command in the module docstring"
         )
     return baseline[key]
+
+
+def frozen_near_duplicate_ratios() -> dict[str, float]:
+    """Return the frozen near-copy ratios as ``{key: ratio}``, dropping the reasons."""
+    return {key: entry["ratio"] for key, entry in baseline_section("near_duplicate_shadows").items()}
 
 
 class DeclarationScannerTests(SimpleTestCase):
@@ -674,6 +845,124 @@ class DuplicateShadowTests(SimpleTestCase):
             self.assertEqual(identical_shadow_files(root), [])
 
 
+class NearDuplicateShadowTests(SimpleTestCase):
+    """Rule 7: freeze the near copies that exist and fail on a new one or on drift.
+
+    The frozen list lives in ``near_duplicate_shadows`` in the baseline, one entry
+    per pair with the ratio measured when it was accepted and a one line reason.
+    The two ratchets read that list; the remaining tests pin the scanner down on a
+    temporary tree, because the real tree only holds four pairs.
+    """
+
+    def _tree(self, root: Path, files: dict[str, str]) -> Path:
+        for relative, text in files.items():
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8")
+        return root
+
+    def test_no_new_near_duplicate_shadow(self):
+        offenders = near_duplicate_offenders(BASE_DIR, frozen_near_duplicate_ratios())
+        self.assertEqual(
+            offenders,
+            [],
+            "A variant stylesheet is a near copy of the shared sheet. Delete it, express the difference as palette "
+            "tokens, or split it into a shared core sheet plus a small association delta; docs/dev/css.md documents "
+            "both routes",
+        )
+
+    def test_frozen_near_duplicates_do_not_drift_further(self):
+        offenders = drifted_shadow_offenders(BASE_DIR, frozen_near_duplicate_ratios())
+        self.assertEqual(
+            offenders,
+            [],
+            "A frozen near copy moved closer to the shared sheet. Reduce the fork or delete it; do not raise the "
+            "frozen ratio",
+        )
+
+    def test_whitespace_and_comments_do_not_change_the_ratio(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            shared = "/* shared */\na {\n  color: red;\n}\n\nb   { color: blue; }\n"
+            association = "a { color: red; }  /* local tweak */\nb { color: blue; }"
+            self._tree(
+                root,
+                {
+                    "static/common/app/css/a.css": shared,
+                    "static/kk/app/css/a.css": association,
+                },
+            )
+            shared_path = root / "static/common/app/css/a.css"
+            association_path = root / "static/kk/app/css/a.css"
+            self.assertEqual(shadow_similarity(shared_path, association_path), 1.0)
+            self.assertEqual(near_duplicate_shadows(root), {"kk: app/css/a.css": 1.0})
+
+    def test_a_new_near_copy_is_flagged_and_a_frozen_one_is_allowed(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._tree(
+                root,
+                {
+                    "static/common/app/css/a.css": "a { color: red; }\nb { color: blue; }\n",
+                    "static/kk/app/css/a.css": "a { color: red; }\nb { color: blue; }\n",
+                },
+            )
+            offenders = near_duplicate_offenders(root, {})
+            self.assertEqual(len(offenders), 1)
+            self.assertIn("static/kk/app/css/a.css", offenders[0])
+            self.assertIn("1.000", offenders[0])
+            self.assertEqual(near_duplicate_offenders(root, {"kk: app/css/a.css": 1.0}), [])
+
+    def test_a_pair_below_the_threshold_is_not_a_fork(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._tree(
+                root,
+                {
+                    "static/common/app/css/a.css": (
+                        ".one { color: red; }\n.two { color: blue; }\n.three { color: green; }\n"
+                    ),
+                    "static/kk/app/css/a.css": ".unrelated { margin: 0; }\n",
+                },
+            )
+            self.assertEqual(near_duplicate_shadows(root), {})
+            self.assertEqual(near_duplicate_offenders(root, {}), [])
+
+    def test_a_variant_sheet_without_a_shared_counterpart_is_out_of_scope(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._tree(root, {"static/kk/app/css/a.css": "a { color: red; }\n"})
+            self.assertEqual(shadow_pairs(root), {})
+            self.assertEqual(near_duplicate_offenders(root, {}), [])
+
+    def test_drift_is_reported_once_the_margin_is_passed(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._tree(
+                root,
+                {
+                    "static/common/app/css/a.css": "a { color: red; }\nb { color: blue; }\nc { color: green; }\n",
+                    "static/kk/app/css/a.css": "a { color: red; }\nb { color: blue; }\nc { color: teal; }\n",
+                },
+            )
+            key = "kk: app/css/a.css"
+            ratio = shadow_similarity(root / "static/common/app/css/a.css", root / "static/kk/app/css/a.css")
+            self.assertGreater(ratio, THRESHOLD)
+            offenders = drifted_shadow_offenders(root, {key: ratio - 0.05})
+            self.assertEqual(len(offenders), 1)
+            self.assertIn("static/kk/app/css/a.css", offenders[0])
+            self.assertIn("frozen ratio", offenders[0])
+            self.assertEqual(drifted_shadow_offenders(root, {key: ratio - 0.01}), [])
+            self.assertEqual(drifted_shadow_offenders(root, {key: ratio}), [])
+            self.assertEqual(drifted_shadow_offenders(root, {key: ratio + 0.5}), [])
+
+    def test_a_deleted_frozen_pair_is_not_a_drift_failure(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            self._tree(root, {"static/common/app/css/a.css": "a { color: red; }\n"})
+            self.assertEqual(drifted_shadow_offenders(root, {"kk: app/css/a.css": 0.1}), [])
+
+
 class EmptyStylesheetTests(SimpleTestCase):
     """Rule 6, a one way ratchet.
 
@@ -723,7 +1012,13 @@ class BaselineShapeTests(SimpleTestCase):
         baseline = load_baseline()
         self.assertEqual(
             sorted(baseline),
-            ["important_counts", "media_queries", "z_index_values", "zero_byte_stylesheets_linked"],
+            [
+                "important_counts",
+                "media_queries",
+                "near_duplicate_shadows",
+                "z_index_values",
+                "zero_byte_stylesheets_linked",
+            ],
         )
 
     def test_baseline_lists_are_sorted_and_unique(self):
@@ -736,6 +1031,17 @@ class BaselineShapeTests(SimpleTestCase):
         for key in ("important_counts", "z_index_values", "zero_byte_stylesheets_linked"):
             for path in baseline_section(key):
                 self.assertTrue((BASE_DIR / path).is_file(), f"{key} names {path}, which no longer exists")
+
+    def test_near_duplicate_entries_carry_a_ratio_and_a_reason(self):
+        for key, entry in baseline_section("near_duplicate_shadows").items():
+            variant, separator, relative = key.partition(": ")
+            self.assertEqual(separator, ": ", f"{key} must read '<variant>: <logical path>'")
+            self.assertIn(variant, VARIANTS, f"{key} names a variant outside VARIANTS")
+            self.assertTrue((STATIC_DIR / variant / relative).is_file(), f"{key} names a missing shadow")
+            self.assertIsInstance(entry["ratio"], float, f"{key} must freeze a numeric ratio")
+            self.assertGreaterEqual(entry["ratio"], THRESHOLD, f"{key} is frozen below THRESHOLD")
+            self.assertLessEqual(entry["ratio"], 1.0, f"{key} cannot exceed a ratio of 1.0")
+            self.assertTrue(entry["reason"].strip(), f"{key} must carry a one line reason")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -750,6 +1056,7 @@ def main(argv: list[str] | None = None) -> int:
         f"{len(data['important_counts'])} files with !important, "
         f"{len(data['z_index_values'])} files with z-index, "
         f"{len(data['media_queries'])} media queries, "
+        f"{len(data['near_duplicate_shadows'])} frozen near-copy shadows, "
         f"{len(data['zero_byte_stylesheets_linked'])} empty stylesheets linked from a template"
     )
     return 0

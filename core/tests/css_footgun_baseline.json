@@ -72,6 +72,24 @@
     "screen and (max-width: 800px)",
     "screen and (max-width: 991px)"
   ],
+  "near_duplicate_shadows": {
+    "biocum: core/css/footer.css": {
+      "ratio": 0.8839,
+      "reason": "the biocum footer rewrites the footer image sizing, drops the shared partner link rules and adds an invert filter; delete it or split it into a shared core sheet plus a small biocum delta"
+    },
+    "kk: events/css/tomtejakt.css": {
+      "ratio": 0.9889,
+      "reason": "the kk tomtejakt sheet is a copy of the shared sheet that never got the event-association-logo rule the shared sheet gained, which is exactly the drift the rule exists to stop"
+    },
+    "sf: core/css/footer.css": {
+      "ratio": 0.7633,
+      "reason": "the sf footer replaces the footer image sizing, drops the shared partner link rules and adds its own social link rules; delete it or split it into a shared core sheet plus a small sf delta"
+    },
+    "sf: events/css/detail.css": {
+      "ratio": 0.9617,
+      "reason": "the sf event detail sheet differs from the shared sheet only in whitespace and one hover background token, so the fix is to delete it and move that color into the sf palette"
+    }
+  },
   "z_index_values": {
     "static/biocum/events/css/arsfest.css": [
       "-1",
