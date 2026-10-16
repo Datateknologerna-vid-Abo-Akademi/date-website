@@ -111,6 +111,14 @@ class AttendanceEvent(models.Model):
         return self.end_datetime is not None and now() > self.end_datetime
 
     @property
+    def has_started(self) -> bool:
+        """
+        Has this event started yet?
+        """
+
+        return now() > self.start_datetime
+
+    @property
     def totp(self) -> TOTP:
         return TOTP(self.code_secret.encode(), step=self.code_validity_time)
 

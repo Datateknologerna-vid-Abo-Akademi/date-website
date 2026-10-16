@@ -52,14 +52,16 @@ The event list at `/attendance/` is public, and each event has its own address a
 ## The report after the meeting
 Once the meeting is over, the attendance events list (**Närvaroevenemang**, under **Närvaro**) has a **Rapport** button on every row. It opens a page for that one meeting. Nothing on the page is stored: it is computed from the check-in rows every time it is opened, so there is nothing to maintain and nothing that can go stale.
 
-The page shows the meeting itself (title, description, start and end, slug, whether guests may check in, and whether it has ended), then four numbers:
+The page shows the meeting itself (title, description, start and end, slug, whether guests may check in, and its status), then four numbers:
 
 - **Närvarande vid slutet** or **Närvarande vid sista ändringen**: how many the site counts as in the room. A meeting with a **Sluttid** gets the first label, and the number is read at that end, so later check-ins and check-outs are not part of it. A meeting without one gets the second label, and the number is read after the last recorded change. It comes from the log rather than the clock, so it stays the same whenever the report is opened.
 - **Som mest närvarande**: the largest headcount in the room at any one moment. The page replays changes in timeline order to find it. If the meeting has a **Sluttid**, changes later than that time are excluded from the peak too. With no **Sluttid**, every recorded change is included.
 - **Unika deltagare**: how many different people ever checked in, so somebody who left and came back counts once.
 - **Ändringsrader**: how many check-ins and check-outs the meeting has in total, which is the number of rows in the table under these four.
 
-The **Tidslinje** table below is the whole log, oldest first: local time, the name, whether the row is an arrival or a departure, and whether the person is a member or a guest. It is the same data as the **Närvaroändringar** list on the event page, but in the order the meeting happened, which is the order to read it in when writing the minutes.
+The status names one of three states. **Inte startat** is a meeting whose **Starttid** is still ahead, **Pågår** is one that has started and has no end or has not reached it, and **Avslutat** is one whose **Sluttid** has passed. A meeting without a **Sluttid** is therefore **Pågår** from its start onwards and never **Avslutat**: there is no end to compare against, which is the same reason its headcount carries the last-change label below.
+
+The **Tidslinje** table below is the whole log, oldest first: local time, the name, whether the row is an arrival or a departure, and whether the person is a member or a guest. It is the same data as the **Närvaroändringar** list on the event page, but in the order the meeting happened, which is the order to read it in when writing the minutes. The time column prints a short local date and time on one line, as in `2026-10-16 23:51`, so a narrow window does not fold it over several lines.
 
 Under that, every poll attached to the meeting is printed with its question, whether voting has ended, each choice with its votes and share, and three numbers beside each other:
 
@@ -68,6 +70,8 @@ Under that, every poll attached to the meeting is printed with its question, whe
 - **Närvarande vid slutet** or **Närvarande vid sista ändringen** is the meeting headcount from above, with the same conditional label as the report and the polls CSV header.
 
 The headcount is contextual, not an exact denominator for a particular poll. It is read at the meeting end or last change, not when each vote was cast, and it can include guests and members who are not eligible to vote. A **Flerval** poll can also have more ballots than voters, and **Vem som helst** lets one member vote more than once. Do not read the headcount as the poll's eligible population. While a vote is running, the poll's own page shows the current room count and voter count (`docs/admin/polls.md`), which still are not an exact denominator.
+
+The page is laid out for the screen as well as for paper, in both admin themes. The three buttons at the top are real buttons rather than bare links, and they wrap onto another row on a narrow window instead of being cut off at the edge. Each part of the report sits in its own bordered section under a heading, the number lists run across the line and wrap, and every table fills the width with padded cells and can be scrolled sideways when the window is too narrow for it, so no column is lost and nothing is clipped. On a phone-width window the meeting details stack into one column with a gap between the pairs rather than as a dense block.
 
 ## Taking the report away
 Two buttons at the top of the report download it:
@@ -78,7 +82,7 @@ Two buttons at the top of the report download it:
 Both files are named after the meeting, for example `narvaro_hostmote_2024-05-01.csv`, and both open directly in Excel. They use a semicolon between columns and start with a byte-order mark, so Swedish Excel reads the UTF-8 names correctly. String data cells beginning with `=`, `+`, `-` or `@` get a leading apostrophe so Excel treats them as literal text; the column headers and numeric values are unchanged.
 
 ## Printing the report
-The report prints from the browser's own print dialog, with the usual Ctrl+P (Cmd+P on a Mac). The page carries a print stylesheet, so the printed sheet leaves out the admin's header, the Unfold header, user menu, breadcrumbs, sidebar, footer and the report's own download buttons. It keeps a table row, a list item and a heading from being cut in half by a page break, and repeats a long table's header row on every page. It does not number the pages, add a header or footer of its own, or make a PDF: that is what a print dialog or a phone's "save as PDF" is for, and the stylesheet deliberately does no more than what is listed above.
+The report prints from the browser's own print dialog, with the usual Ctrl+P (Cmd+P on a Mac). The page carries a print stylesheet, so the printed sheet leaves out the admin's header, the Unfold header, user menu, breadcrumbs, sidebar and the sidebar's own toggle control, footer and the report's own download buttons. It prints black text on a white page whatever colours the admin uses on screen, so a dark theme does not carry its backgrounds onto paper. It keeps a heading with the content that follows it, keeps a table row, a list item and a heading from being cut in half by a page break, and repeats a long table's header row on every page. It does not number the pages, add a header or footer of its own, or make a PDF: that is what a print dialog or a phone's "save as PDF" is for, and the stylesheet deliberately does no more than what is listed above.
 
 To keep a meeting's report for the file, print it while the page is open. The address can also be bookmarked and opened later, because the numbers are computed from the stored rows every time the page is loaded.
 

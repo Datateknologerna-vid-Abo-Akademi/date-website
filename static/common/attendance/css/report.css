@@ -1,12 +1,249 @@
-/* The repository's first print stylesheet. The attendance report is opened in
-   the admin and then printed from the browser, so this does three things and
-   nothing else: it hides the admin chrome around the report, it keeps a table
-   row, a list item or a heading from being split across two sheets, and it
-   repeats a long table's header row on every sheet.
+/* Screen and print styling for the post-meeting attendance report.
 
-   It does not paginate the report, add a running header or footer, or produce a
-   PDF. Everything else a printed page shows comes from the browser's own print
-   dialog, and that is the whole promise. */
+   The page is opened in the admin, which may run the stock Django theme or
+   Unfold, so nothing here reads a theme variable: borders and backgrounds are
+   mixed from currentColor over a neutral fallback, which keeps the page legible
+   on a light and on a dark admin alike.
+
+   The @media print block hides the admin chrome around the report, forces
+   black text on a white page, keeps a heading with what follows it, and repeats
+   a long table's header row. It does not paginate the report, add a running
+   header or footer, or produce a PDF. */
+
+/* ---- page furniture ---- */
+
+.attendance-report {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.attendance-report__header {
+  margin: 0 0 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.35);
+  border-bottom-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+
+.attendance-report h1 {
+  margin: 0 0 0.3rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.attendance-report__subtitle {
+  margin: 0;
+  font-size: 1rem;
+  opacity: 0.85;
+}
+
+/* ---- sections ---- */
+
+.attendance-report__section {
+  margin: 0 0 1.5rem;
+  padding: 1rem 1.25rem 1.25rem;
+  border: 1px solid rgba(127, 127, 127, 0.35);
+  border-color: color-mix(in srgb, currentColor 28%, transparent);
+  border-radius: 0.5rem;
+  background-color: rgba(127, 127, 127, 0.06);
+  background-color: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+.attendance-report h2 {
+  margin: 0 0 0.85rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.25);
+  border-bottom-color: color-mix(in srgb, currentColor 20%, transparent);
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.attendance-report h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+/* ---- action row ---- */
+
+.attendance-report__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+
+.attendance-report__actions .admin-inline-action {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 0.95rem;
+  border: 1px solid rgba(127, 127, 127, 0.5);
+  border-color: color-mix(in srgb, currentColor 45%, transparent);
+  border-radius: 0.4rem;
+  background-color: rgba(127, 127, 127, 0.12);
+  background-color: color-mix(in srgb, currentColor 10%, transparent);
+  box-shadow: none;
+  color: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.attendance-report__actions .admin-inline-action:hover,
+.attendance-report__actions .admin-inline-action:focus-visible {
+  border-color: color-mix(in srgb, currentColor 70%, transparent);
+  background-color: color-mix(in srgb, currentColor 22%, transparent);
+  color: inherit;
+}
+
+.attendance-report__actions .admin-inline-action:active {
+  background-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+
+.attendance-report__actions .admin-inline-action:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* ---- definition list ---- */
+
+.attendance-report__details {
+  display: grid;
+  grid-template-columns: minmax(9rem, max-content) 1fr;
+  gap: 0.45rem 1.5rem;
+  margin: 0;
+}
+
+.attendance-report__details dt {
+  font-weight: 600;
+}
+
+.attendance-report__details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The stock admin sets its own size and leading on dt, dd and li, which is
+   tighter than the rest of the page; keep the report's own rhythm. */
+.attendance-report dt,
+.attendance-report dd,
+.attendance-report li {
+  font-size: inherit;
+  line-height: 1.5;
+}
+
+/* ---- number lists and notes ---- */
+
+.attendance-report__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.attendance-report__stats li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.attendance-report__stats strong {
+  font-weight: 700;
+}
+
+.attendance-report__muted {
+  margin: 0 0 0.75rem;
+  opacity: 0.85;
+}
+
+.attendance-report__empty {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border: 1px dashed rgba(127, 127, 127, 0.45);
+  border-color: color-mix(in srgb, currentColor 35%, transparent);
+  border-radius: 0.5rem;
+  opacity: 0.9;
+}
+
+/* ---- poll blocks ---- */
+
+.attendance-report__poll {
+  margin: 1.5rem 0 0;
+  padding: 0 0 0 1rem;
+  border-left: 3px solid rgba(127, 127, 127, 0.4);
+  border-left-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+
+/* ---- tables ---- */
+
+.attendance-report__table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.attendance-report table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+}
+
+.attendance-report th,
+.attendance-report td {
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.3);
+  border-bottom-color: color-mix(in srgb, currentColor 22%, transparent);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: break-word;
+}
+
+.attendance-report thead th {
+  background-color: rgba(127, 127, 127, 0.12);
+  background-color: color-mix(in srgb, currentColor 9%, transparent);
+  border-bottom: 2px solid rgba(127, 127, 127, 0.45);
+  border-bottom-color: color-mix(in srgb, currentColor 35%, transparent);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.attendance-report__timestamp {
+  white-space: nowrap;
+}
+
+/* ---- narrow screens ---- */
+
+@media (max-width: 640px) {
+  .attendance-report__section {
+    padding: 0.9rem 0.95rem 1rem;
+  }
+
+  .attendance-report__details {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+
+  .attendance-report__details dt {
+    margin-top: 1rem;
+  }
+
+  .attendance-report__details dt:first-of-type {
+    margin-top: 0;
+  }
+
+  .attendance-report th,
+  .attendance-report td {
+    padding: 0.5rem 0.6rem;
+  }
+}
 
 @media print {
   #header,
@@ -14,10 +251,38 @@
   #user-tools,
   .breadcrumbs,
   #nav-sidebar,
+  #toggle-nav-sidebar,
+  .toggle-nav-sidebar,
+  [x-on\:click*="sidebarToggle"],
   #footer,
   nav,
   .attendance-report__actions {
     display: none !important;
+  }
+
+  /* Force black text on a white page, so a dark admin does not carry its
+     backgrounds onto paper. */
+  html,
+  body,
+  #page,
+  #main,
+  #content,
+  .attendance-report,
+  .attendance-report * {
+    background: #fff !important;
+    box-shadow: none !important;
+    color: #000 !important;
+    text-shadow: none !important;
+  }
+
+  .attendance-report__section,
+  .attendance-report__poll,
+  .attendance-report__empty {
+    border-radius: 0;
+  }
+
+  .attendance-report__table-wrap {
+    overflow: visible !important;
   }
 
   .attendance-report table {
@@ -32,11 +297,23 @@
     vertical-align: top;
   }
 
+  .attendance-report thead th {
+    background: #f0f0f0 !important;
+  }
+
   .attendance-report tr,
   .attendance-report li,
+  .attendance-report h1,
   .attendance-report h2,
   .attendance-report h3 {
     break-inside: avoid;
+  }
+
+  /* Keep a heading with the content that follows it. */
+  .attendance-report h1,
+  .attendance-report h2,
+  .attendance-report h3 {
+    break-after: avoid;
   }
 
   /* Repeat the header row whenever a long table continues on the next sheet. */
