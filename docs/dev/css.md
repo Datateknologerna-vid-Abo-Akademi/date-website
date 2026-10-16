@@ -7,7 +7,7 @@ for that system: where a sheet lives, which copy wins, what belongs in a
 variant's palette, and the policies for load order, `!important`, breakpoints,
 `z-index` and JavaScript hooks.
 
-The tree holds 87 hand-written stylesheets (89 `.css` files minus the two
+The tree holds 86 hand-written stylesheets (88 `.css` files minus the two
 vendored minified bundles, `static/common/date/css/vanilla-calendar.min.css` and
 `static/common/core/css/flatpickr.min.css`). A handful of them are linked by
 `templates/common/core/base.html` and therefore load on every page; the rest are
@@ -44,10 +44,10 @@ palette token rename does have to reach `demo`, because
 `static/demo/core/css/base.css` for that reason, and no other `demo` file was
 touched.
 
-Across the six shipped variants, 24 association stylesheets currently sit at a
+Across the six shipped variants, 21 association stylesheets currently sit at a
 logical path that also exists under `static/common/`. Every one of those is a
 shadow, and each one has to be justified by the rules in the section below on
-the two legitimate ways to vary an association.
+the legitimate ways to vary an association.
 
 A few older sheets predate the `<app>/css/` layout:
 `static/common/members/style.css`, `static/common/prettyjson/prettyjson.css`
@@ -92,14 +92,28 @@ the shared pagination sheet and the Font Awesome compatibility sheet are linked
 (`test_every_association_shell_loads_the_shared_pagination_css` and
 `test_every_association_shell_loads_font_awesome_compatibility_css`).
 
-## The two legitimate ways to vary an association
+## The legitimate ways to vary an association
 
-An association has exactly two ways to differ visually from the shared look:
+An association has three legitimate ways to differ visually from the shared look:
 
-1. Delete the shadow, so the association uses the shared sheet unchanged.
-2. Keep a small, genuine delta: a handful of rules that the shared sheet cannot
-   express and that are specific to that association (a seasonal campaign, a
-   layout the association does not share, and so on).
+1. Delete the shadow, so the association uses the shared sheet unchanged, and the
+   shared sheet carries everything the association used to say for itself. This is
+   what happened to the event card sheet: `static/kk`, `static/sf` and
+   `static/biocum` each had a copy of `events/css/event-card.css` that differed
+   from the shared one only by which palette tokens it named, so the shared sheet
+   now reads role tokens (`--event-card-bg`, `--event-card-link` and the rest) and
+   the three copies are gone.
+2. Keep a small, genuine delta: rules the shared sheet cannot express and that are
+   specific to that association. `static/pulterit/events/css/event-card.css` is
+   the surviving example, and its header comment says why: besides the card rules
+   it carries page chrome that belongs only on the pages linking it.
+3. Move the part that is identical everywhere into a shared core sheet that loads
+   immediately before the association sheet. `static/common/core/css/base-core.css`
+   and `static/common/date/css/homepage-core.css` are the two examples, linked
+   from `templates/common/core/base.html` and from each association's homepage
+   template respectively. Because the shared core loads first and the association
+   sheet second, every declaration the association still writes keeps winning,
+   which is what makes the split order-safe.
 
 Copying a shared sheet into an association directory and editing a few lines is
 what produced today's drift: it freezes a private fork of the shared rules, so
@@ -113,6 +127,14 @@ of accepted byte-identical shadows is now empty.
 Where a variation is only a colour or another token, do not fork the rule: put
 the value in the association's palette (next section) and let the shared sheet
 consume the token.
+
+When splitting a shadow into a shared core and an association delta, lift a
+declaration only when it is identical in every association that carries it and is
+declared once for its media query context, selector and property. A sheet that
+declares the same key twice has a winner chosen by order, and lifting the later
+one into a sheet that loads first hands the win to the earlier one left behind.
+Leave anything inside `@keyframes` alone entirely: its steps look like selectors
+but are not, so moving one re-parents it.
 
 ## Palettes and tokens
 
@@ -170,14 +192,23 @@ model which apps a variant installs.
 
 `templates/common/core/base.html` emits assets in a fixed order:
 
-1. The project base sheets: `core/css/base.css`, `date/css/date-root.css`,
-   `core/css/cookie-banner.css`, `core/css/pagination.css`.
+1. The project base sheets: `core/css/base-core.css`, `core/css/base.css`,
+   `date/css/date-root.css`, `core/css/cookie-banner.css`,
+   `core/css/pagination.css`, `core/css/focus.css`.
 2. The CDN vendor sheets: Bootstrap 5.1.3, bootstrap-icons, Line Awesome, then
    jQuery.
 3. `{% block extra_head %}`.
 4. `core/css/header.css`.
 5. `{% block extra_header_css %}`.
 6. `core/css/footer.css`.
+7. `{% block extra_css %}`.
+
+`core/css/base-core.css` is the shared core of the per-association
+`core/css/base.css` sheets and sits first on purpose: the association sheet loads
+one line later, so wherever an association diverges its own declaration still
+wins. The same shape is used for the homepage, where each association's homepage
+template links `date/css/homepage-core.css` immediately before its own
+`date/css/homepage.css`.
 
 The consequence that keeps coming back is step 1 versus step 2: because the
 project base sheets load **before** Bootstrap, a project rule that ties on
@@ -210,7 +241,7 @@ existing uses have no such comment, so treating that as the standard is
 aspirational: the comment is the rule for new work, and the uncommented
 existing uses are debt.
 
-The tree has 361 `!important` declarations across 37 hand-written stylesheets
+The tree has 351 `!important` declarations across 38 hand-written stylesheets
 (comment text excluded); the largest concentrations are 41 in each of
 `static/biocum/events/css/arsfest.css`, `static/date/events/css/arsfest.css` and
 `static/pulterit/events/css/arsfest.css`.
@@ -338,7 +369,7 @@ Two rules are cheap to get right and easy to break:
   admin translation tabs do by combining the `.active` class with
   `aria-pressed`.
 
-No exceptions are documented. The hand-written stylesheets still contain 18
+No exceptions are documented. The hand-written stylesheets still contain 13
 `outline: none` or `outline: 0` declarations against 9 `:focus-visible` rules,
 so several elements lose their focus ring with nothing put back. That is debt,
 not a licence: a change that adds `outline: none` must add the replacement.
