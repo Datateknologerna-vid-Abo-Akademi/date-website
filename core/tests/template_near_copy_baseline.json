@@ -3,19 +3,6 @@
   "near_copies": [
     {
       "lines": [
-        44,
-        44
-      ],
-      "path": "date/components/scripts.html",
-      "ratio": 1.0,
-      "reason": "The dad-joke fetcher. Date guards it on `#joke-string` while pulterit runs it on every page, so the two copies differ in behaviour and not only in layout. Unifying them is a behaviour change and needs its own decision.",
-      "variants": [
-        "biocum",
-        "kk"
-      ]
-    },
-    {
-      "lines": [
         30,
         28
       ],
