@@ -1,3 +1,4 @@
+import importlib
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from django.conf import settings
@@ -123,6 +124,54 @@ class StaticPageViewTests(TestCase):
 
         self.assertIn("image", error.exception.message_dict)
         self.assertIn("s3_image", error.exception.message_dict)
+
+
+class StaticPageContentStylingTests(TestCase):
+    """CKEditor writes image alignment as classes on the rendered HTML.
+
+    Those classes only do something when the public page links the matching
+    stylesheet and marks the wrapper with `ck-content`, so both halves are
+    asserted here. Without them an image renders as a plain block figure
+    whatever alignment the editor showed.
+    """
+
+    def setUp(self):
+        self.page = StaticPage.objects.create(title="Styling", slug="styling", content="<p>Text</p>")
+        self.url = reverse("staticpages:page", args=[self.page.slug])
+
+    def test_rendered_content_is_marked_as_ckeditor_content(self):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="content ck-content"')
+
+    def test_page_links_the_ckeditor_content_stylesheet(self):
+        response = self.client.get(self.url)
+
+        self.assertContains(response, "core/css/ck-content.css")
+
+
+class PulteritStaticPageStylingTests(TestCase):
+    """pulterit replaces the extra_head block to add its own background image.
+
+    A child block that does not call `block.super` silently drops the parent's
+    stylesheets, which is how the CKEditor content styles went missing there.
+    """
+
+    def test_pulterit_page_keeps_the_shared_content_stylesheets(self):
+        pulterit_settings = importlib.import_module("core.settings.pulterit")
+        page = StaticPage.objects.create(title="Styling", slug="styling-pulterit", content="<p>Text</p>")
+
+        with override_settings(
+            PROJECT_NAME="pulterit",
+            TEMPLATES=pulterit_settings.TEMPLATES,
+            STATICFILES_DIRS=pulterit_settings.STATICFILES_DIRS,
+        ):
+            response = self.client.get(reverse("staticpages:page", args=[page.slug]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "staticpages/css/staticpage.css")
+        self.assertContains(response, "core/css/ck-content.css")
 
 
 class StaticUrlTests(TestCase):

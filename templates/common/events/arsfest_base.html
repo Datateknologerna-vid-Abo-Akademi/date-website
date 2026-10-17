@@ -12,7 +12,7 @@
           crossorigin="anonymous"></script>
   <script src="{% static 'core/js/live-attendee-list.js' %}"></script>
   <style>
-    {% if event.background_image_url %}.background-img {
+    {% block arsfest_background_style %}{% if event.background_image_url %}.background-img {
       background: url("{{ event.background_image_url }}") no-repeat center center;
       background-attachment: fixed;
       -webkit-background-size: cover;
@@ -24,14 +24,15 @@
         .background-img {
             background-attachment: scroll;
         }
-    }{% endif %}
+    }{% endif %}{% endblock %}
   </style>
 {% endblock %}
 {% block content %}
   <div class="background-img">
     <div class="container-md min-vh-100 p-1">
-      <div class="container-size">
+      <div class="{% block arsfest_shell_classes %}container-size{% endblock %}">
         <div class="content header-box">
+          {% block arsfest_header_extra %}{% endblock %}
           <div class="main-content mt-4">
             <div class="text-center flex-container-center">
               {% block arsfest_logo %}
@@ -41,9 +42,9 @@
               {% endblock %}
             </div>
           </div>
-          <h1 class="baal-header">{% block arsfest_heading %}{{ event.title }}{% endblock %}</h1>
+          {% block arsfest_heading_block %}<h1 class="baal-header">{% block arsfest_heading %}{{ event.title }}{% endblock %}</h1>{% endblock %}
           <div class="ball-nav flex-container-center">
-            <a class="ball-link ontop"
+            <a class="{% block arsfest_main_tab_class %}ball-link ontop{% endblock %}"
                onclick="showPage(this)"
                href="#/main"
                data-nav="main">Välkommen</a>
@@ -53,17 +54,25 @@
                  href="#/{{ page.slug }}"
                  data-nav="{{ page.slug }}">{{ page.title }}</a>
             {% endfor %}
-            <a class="ball-link"
-               onclick="showPage(this)"
-               href="#/anmalan"
-               data-nav="anmalan">Anmälan</a>
-            <a class="ball-link"
-               onclick="showPage(this)"
-               href="#/attendee-list"
-               data-nav="attendee-list">Anmälda</a>
+            {% block arsfest_signup_tab %}
+              {% if event.sign_up %}
+                <a class="ball-link"
+                   onclick="showPage(this)"
+                   href="#/anmalan"
+                   data-nav="anmalan">Anmälan</a>
+              {% endif %}
+            {% endblock %}
+            {% block arsfest_attendee_tab %}
+              {% if event|show_attendee_tab %}
+                <a class="ball-link"
+                   onclick="showPage(this)"
+                   href="#/attendee-list"
+                   data-nav="attendee-list">Anmälda</a>
+              {% endif %}
+            {% endblock %}
           </div>
         </div>
-        <div class="text-content">
+        <div class="{% block arsfest_content_classes %}text-content{% endblock %}">
           {% for page in staticpages %}
             <div id="{{ page.slug }}"
                  class="content ball-content {{ page.slug }} hidden">
@@ -77,10 +86,12 @@
             <p>{{ event.content | safe }}</p>
           </div>
         </div>
-        <div class="content ball-content anmalan hidden break-words">
-          <h2 id="sign-up">{% trans "Anmälning" %}</h2>
-          {% include 'events/registration_state.html' %}
-        </div>
+        {% if event.sign_up %}
+          <div id="anmalan" class="content ball-content anmalan hidden break-words">
+            <h2 id="sign-up">{% trans "Anmälning" %}</h2>
+            {% include 'events/registration_state.html' %}
+          </div>
+        {% endif %}
         <div id="attendee-list"
              class="content ball-content attendee-list hidden"
              data-parent-slug="{{ event.parent.slug|default:'' }}">
@@ -128,17 +139,25 @@
             }
         });
 
-        function showPage(element){
+        function showPanel(panelId){
+            let target = $(".ball-content").filter(function(){
+                return this.id === panelId;
+            });
+            if(!target.length){
+                target = $(".ball-content.main");
+            }
             $(".ball-content").addClass("hidden");
-            $(`.${element.dataset.nav}`).toggleClass("hidden")
-            let pageHash = window.location.hash.substr(1).replace(/\//g,'');
+            target.removeClass("hidden")
         }
 
-        function currentPage(element){
-            $(".ball-content").addClass("hidden");
-            let pageHash = window.location.hash.substr(1).replace(/\//g,'');
-            $(`.${pageHash}`).toggleClass("hidden")
+        function showPage(element){
+            showPanel(element.dataset.nav);
+        }
+
+        function currentPage(){
+            showPanel(window.location.hash.substr(1).replace(/\//g,'') || "main");
         }
 
   </script>
+  {% block arsfest_scripts %}{% endblock %}
 {% endblock %}

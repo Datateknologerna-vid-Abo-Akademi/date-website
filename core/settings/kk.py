@@ -15,6 +15,7 @@ INSTALLED_APPS = get_installed_apps(
         'harassment',
         'social',
         'staticpages',
+        'feedback',
         'lucia',
         'publications',
         'alumni',
@@ -55,3 +56,4 @@ CONTENT_VARIABLES = {
 # Association capabilities
 APRIL_HOMEPAGE_ENABLED = True
 KK_EVENT_TEMPLATES_ENABLED = True
+INSTAGRAM_USERNAME = 'kemistklubben'

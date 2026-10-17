@@ -1,0 +1,76 @@
+/* Pagination for django-tables2 tables (archive documents, exam lists).
+   Linked from templates/common/core/base.html and templates/sf/core/base.html
+   as core/css/pagination.css.
+
+   django-tables2's bundled bootstrap.html wraps its output as
+
+     <div class="table-container">
+       <table class="table">...</table>
+       <nav aria-label="Table navigation">
+         <ul class="pagination"><li class="previous"><a>...</a></li>...
+
+   The items carry no page-item/page-link classes, so Bootstrap only resets the
+   list and each association's generic `div a` rule colours the links, which put
+   them on top of whatever surface they land on. Scope to the tables2 wrapper so
+   the news, publications and gallery paginations keep their own styling.
+
+   Colours use --primaryColorLight, the dark shade every association defines for
+   its chrome (the publications pagination uses it for the same reason). It stays
+   dark enough for white text on all of them, unlike --primaryColor, which is a
+   light surface on pulterit. This replaces the copy of these rules that sf kept
+   in its own archive/css/document.css, so the palette is now the same everywhere
+   instead of per association. */
+
+.table-container {
+    --table-pagination-fg:     var(--primaryColorLight, #212529);
+    --table-pagination-bg:     var(--secondaryColor, #fff);
+    --table-pagination-active: var(--textColorLight, #fff);
+}
+
+.table-container .pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    list-style: none;
+    padding-left: 0;
+    margin: 30px 0 16px;
+}
+
+.table-container .pagination li {
+    display: inline-block;
+}
+
+.table-container .pagination a {
+    display: inline-block;
+    min-width: 2.5rem;
+    padding: 8px 14px;
+    color: var(--table-pagination-fg);
+    background-color: var(--table-pagination-bg);
+    border: 1px solid var(--table-pagination-fg);
+    border-radius: var(--defaultRadius);
+    text-align: center;
+    text-decoration: none;
+    transition: box-shadow .2s, background-color .2s, color .2s;
+}
+
+.table-container .pagination a:hover {
+    box-shadow: inset 0 0 0 2px var(--table-pagination-fg);
+}
+
+.table-container .pagination .active a {
+    color: var(--table-pagination-active);
+    background-color: var(--table-pagination-fg);
+    font-weight: 600;
+}
+
+.table-container .pagination .disabled,
+.table-container .pagination .disabled a {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.table-container .pagination a:focus-visible {
+    outline: 3px solid var(--table-pagination-fg);
+    outline-offset: 2px;
+}

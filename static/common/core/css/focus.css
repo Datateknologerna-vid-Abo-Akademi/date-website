@@ -1,0 +1,13 @@
+/* Shared keyboard focus ring for the themed buttons.
+ *
+ * The variant core/css/base.css sheets used to set outline: none on
+ * .theme-button with no replacement, which left keyboard users without a
+ * visible indicator on every themed button. This rule restores one, in the
+ * shared tree so each association gets the same behaviour from one place.
+ * --linkColorLight is the palette accent used for focus rings elsewhere in the
+ * tree; the currentColor fallback covers any palette that does not define it.
+ */
+.theme-button:focus-visible {
+  outline: 2px solid var(--linkColorLight, currentColor);
+  outline-offset: 2px;
+}

@@ -38,6 +38,7 @@ This means:
 - `templates/common/` defines the base structure and all available `{% raw %}{% block %}{% endraw %}` slots.
 - `templates/<association>/` overrides only the blocks it needs; everything else falls through to the common template.
 - Associations can also layer another association's templates before common templates. For example, Impuls uses `templates/impuls`, then `templates/date`, then `templates/common` so it can reuse the DaTe homepage layout while overriding only Impuls branding and copy.
+- In a layered variant, `{% raw %}{% extends %}{% endraw %}` resolves to the parent variant's override when one exists, so blocks DaTe fills are inherited too. `templates/date/core/footer.html` puts the DaTe-only AA partner badge in `footer_right`; `templates/biocum/core/footer.html` empties that block again, and Impuls replaces it. `templates/sf/core/footer.html` does not extend the common footer at all (it is a standalone footer with no `footer_right` block), so SF replaces the whole footer. Check biocum, impuls and sf when adding content to a `templates/date/` override.
 
 ## Adding New Block Slots
 
@@ -64,3 +65,77 @@ The association template then fills it:
 Adding an empty block to the common template is safe: associations that don't override it render nothing, so existing variants are unaffected.
 
 **You cannot inject content into the middle of a parent template's HTML from a child template** — only into defined `{% raw %}{% block %}{% endraw %}` slots. A block defined in a child template that has no corresponding slot in the parent is a no-op; the content is silently discarded.
+
+## Shared Components, Not Copies
+
+A component that several associations render belongs in `templates/common/`, even
+when each association already carries its own working copy. The copies are what
+drift: the homepage event list existed as five copies, two of them byte
+identical, and every difference any of them carried was a handful of lines.
+
+Put the whole component in the shared template, with a block for each piece that
+really differs, and give an association that differs a short file that extends
+it:
+
+{% raw %}
+```
+templates/common/date/components/events.html   the component, and a block per icon
+templates/sf/date/components/events.html       {% extends %} plus four block overrides
+```
+{% endraw %}
+
+The association file then holds only its difference, so a change to the shared
+structure reaches every association at once and a reviewer can see the whole
+per-association delta in one screen. The same rule covers the seasonal event
+pages: `templates/common/events/arsfest_base.html` is the shared page, and the
+association files should be overrides of it rather than standalone copies.
+
+Two things that are not blocks:
+
+- A fragment repeated **within one template** (the same row, badge or icon drawn
+  twice) is a `{% raw %}{% partialdef %}{% endraw %}` with `{% raw %}{% partial %}{% endraw %}`,
+  which Django 6 provides natively. The partial renders nothing where it is
+  defined unless it is declared `inline`.
+- A single fragment that a view or an htmx endpoint should return on its own is
+  loaded by name with the `template.html#partial` syntax, so one template can
+  serve both the full page and the fragment.
+
+Before adding a template under `templates/<association>/`, check whether the
+same path already exists for another association. Two association copies of one
+component are almost always one shared component plus two overrides, and
+`templates/` should not gain a third.
+
+`core/tests/test_template_duplication.py` enforces that. It compares the copies of
+every logical path across the six associations and the shared tree, and fails when
+two copies of 15 lines or more are 70 percent alike, unless the pair is frozen in
+`core/tests/template_near_copy_baseline.json` with a reason. A frozen pair that
+gets closer also fails, and so does a baseline entry whose copies have since
+diverged, so the frozen set stays honest. Regenerate it with
+`uv run python -m core.tests.test_template_duplication --write-baseline` after a
+deliberate exception, and add the reason to the `REASONS` mapping in the test.
+
+## Footer Social Icons
+
+Each association lists its footer buttons in `CONTENT_VARIABLES["SOCIAL_BUTTONS"]` as `[icon, url]` pairs; an entry with a blank URL is skipped. The shared footer (`templates/common/core/footer.html`, `footer_social_buttons` block) picks the icon for each entry:
+
+1. If the template `core/svg/social/<icon>.svg` resolves through the configured template search path, it is included inline. The `social_icon_template` tag in `date/templatetags/social_icons.py` asks Django's template loader for that path, so the whole search path is used and not just the shared directory.
+2. Otherwise the entry renders as the Line Awesome icon-font class `fab <icon>`, e.g. `fa-facebook-f`.
+
+So platforms Line Awesome covers keep using `fa-*` names, and a platform it lacks needs one SVG file to work for every association:
+
+- Add `templates/common/core/svg/social/<name>.svg`. Name it with lowercase letters, digits and hyphens only (anything else is ignored). Give the `<svg>` a `viewBox`, `height="1em"`, `fill="currentColor"`, `focusable="false"` and `style="vertical-align: -0.125em"` so it sizes, colors and aligns like the font icons beside it without any CSS, and keep the icon's license comment.
+- Give the `<svg>` `role="img"` and an `aria-label` with the platform's name spelled the way the brand writes it (`aria-label="TikTok"`). The button takes its accessible name from the icon, so this is the label screen readers announce; the file name can't carry it because it has to stay lowercase.
+- Add `["<name>", "<url>"]` to the association's `SOCIAL_BUTTONS`.
+
+To give one association a different icon, put a file at the same path in its own template directory (`templates/<association>/core/svg/social/<name>.svg`); the search order finds it before the shared file. A variant that layers another variant's templates (impuls and biocum layer `date`) or an app's `templates/` directory can supply or override an icon the same way.
+
+Shared icons so far: `tiktok`, `linktree` (Font Awesome Free 7.3.1, CC BY 4.0). `sf` renders its own complete footer and does not use this lookup.
+
+## Shared CSS And Element Selectors
+
+An association's stylesheets are loaded on every page of that association, and a selector that matches a bare HTML element therefore reaches parts of the page it was not written for. Two rules are enforced:
+
+- Scope header rules to the header nav, e.g. `nav.navbar { ... }`. `core/tests/test_static_css.py` fails on any unscoped `nav` selector under `static/`: a `nav` type selector must be qualified immediately by a class, id or attribute, because an ancestor alone such as `.content nav` can still contain a pagination nav.
+- Link `static/common/core/css/pagination.css` from every site shell and keep its rules under django-tables2's `.table-container` wrapper, so the news, publications and gallery paginations keep their own styling. The guard test fails on a `templates/**/core/base.html` that neither links the sheet nor extends the common shell, and `date/tests.py` renders every association's shell and asserts the link is present.
+
+The rest of the contract, including why element selectors are the trap, the palette tokens, load order, `!important`, breakpoints, `z-index` and JavaScript hooks, is in [Shared CSS & Association Overrides](css.md).

@@ -16,6 +16,7 @@ Most people register themselves at `/members/signup/`. Those signups land in the
    - Use the actions menu to bulk **Activate** or **Deactivate** selected users.
    - `is_staff` is computed automatically from group membership (groups listed in `settings.STAFF_GROUPS`).
 4. **Password resets**: direct members to the "Forgot password" link on the login page, which uses the custom reset form.
+5. **Delete member**: deleting an account also permanently deletes the admin log entries where that member was the acting user, because the audit log points at the member record; entries recorded for other users stay untouched. Everything else that cascades from the member (subscription payments, votes, authored content) is deleted too, so you need the matching delete permission for those registered models, while a superuser is unrestricted. The history of a deleted member cannot be recovered, so deactivate instead of deleting whenever you only mean to revoke access.
 
 ## Membership Types
 - Found under **Members › Membership types**. Each type has a description and a `Behörighetsprofil` (Freshman, Ordinary, Supporting, Senior, Member without voting rights). These profiles are referenced by other apps (e.g., Polls, Archive) to enforce permissions.

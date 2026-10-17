@@ -4,7 +4,13 @@ import sys
 
 from django.test import SimpleTestCase
 
+from core.urls.common import build_urlpatterns
+
 COMMON_PREFIXES = ["healthz/", "readyz/"]
+# Every current variant requests 'events', which has an API_ROUTES entry, so
+# the shared api/ root is assembled right before the trailing group in all of
+# them. See core.urls.common.build_urlpatterns.
+API_PREFIXES = ["api/"]
 TRAILING_PREFIXES = ["set_lang/", "jsi18n/", "_uploads/sign/"]
 
 EXPECTED_PREFIXES = {
@@ -17,6 +23,7 @@ EXPECTED_PREFIXES = {
         "archive/",
         "events/",
         "pages/",
+        "forms/",
         "ads/",
         "social/",
         "polls/",
@@ -25,6 +32,9 @@ EXPECTED_PREFIXES = {
         "ckeditor5/",
         "publications/",
         "alumni/",
+        "attendance/",
+        "booking/",
+        *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
     "kk": [
@@ -36,6 +46,7 @@ EXPECTED_PREFIXES = {
         "archive/",
         "events/",
         "pages/",
+        "forms/",
         "ads/",
         "social/",
         "polls/",
@@ -44,6 +55,7 @@ EXPECTED_PREFIXES = {
         "ckeditor5/",
         "publications/",
         "alumni/",
+        *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
     "biocum": [
@@ -55,12 +67,14 @@ EXPECTED_PREFIXES = {
         "archive/",
         "events/",
         "pages/",
+        "forms/",
         "ads/",
         "social/",
         "polls/",
         "admin/",
         "ckeditor5/",
         "publications/",
+        *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
     "pulterit": [
@@ -72,12 +86,14 @@ EXPECTED_PREFIXES = {
         "archive/",
         "events/",
         "pages/",
+        "forms/",
         "ads/",
         "social/",
         "polls/",
         "admin/",
         "ckeditor5/",
         "publications/",
+        *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
     "sf": [
@@ -89,6 +105,7 @@ EXPECTED_PREFIXES = {
         "archive/",
         "events/",
         "pages/",
+        "forms/",
         "ads/",
         "social/",
         "polls/",
@@ -96,6 +113,7 @@ EXPECTED_PREFIXES = {
         "ckeditor5/",
         "publications/",
         "klotterplanket/",
+        *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
     "impuls": [
@@ -107,6 +125,7 @@ EXPECTED_PREFIXES = {
         "archive/",
         "events/",
         "pages/",
+        "forms/",
         "ads/",
         "social/",
         "polls/",
@@ -114,6 +133,7 @@ EXPECTED_PREFIXES = {
         "ckeditor5/",
         "publications/",
         "alumni/",
+        *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
     "demo": [
@@ -125,27 +145,49 @@ EXPECTED_PREFIXES = {
         "archive/",
         "events/",
         "pages/",
+        "forms/",
         "ads/",
         "social/",
         "polls/",
         "admin/",
         "ckeditor5/",
+        *API_PREFIXES,
         *TRAILING_PREFIXES,
     ],
 }
 
 EXPECTED_URL_NAMES = {
-    "date": ["news:index", "archive:years", "ctf:index", "publications:pdf_list", "alumni:alumni_signup"],
-    "kk": ["news:index", "lucia:index", "publications:pdf_list", "alumni:alumni_signup"],
-    "biocum": ["news:index", "archive:years", "publications:pdf_list"],
-    "pulterit": ["news:index", "archive:exams", "publications:pdf_list"],
-    "sf": ["news:index", "archive:years", "publications:pdf_list", "klotterplanket:index"],
-    "impuls": ["news:index", "archive:years", "publications:pdf_list", "alumni:alumni_signup"],
-    "demo": ["news:index", "archive:years"],
+    "date": [
+        "news:index",
+        "archive:years",
+        "ctf:index",
+        "publications:pdf_list",
+        "alumni:alumni_signup",
+        "attendance-index",
+        "booking:index",
+        "api:events:upcoming",
+    ],
+    "kk": ["news:index", "lucia:index", "publications:pdf_list", "alumni:alumni_signup", "api:events:upcoming"],
+    "biocum": ["news:index", "archive:years", "publications:pdf_list", "api:events:upcoming"],
+    "pulterit": ["news:index", "archive:exams", "publications:pdf_list", "api:events:upcoming"],
+    "sf": ["news:index", "archive:years", "publications:pdf_list", "klotterplanket:index", "api:events:upcoming"],
+    "impuls": [
+        "news:index",
+        "archive:years",
+        "publications:pdf_list",
+        "alumni:alumni_signup",
+        "api:events:upcoming",
+    ],
+    "demo": ["news:index", "archive:years", "api:events:upcoming"],
 }
 
 FORBIDDEN_URL_NAMES = {
-    "pulterit": ["archive:years"],
+    "kk": ["booking:index"],
+    "biocum": ["booking:index"],
+    "pulterit": ["archive:years", "booking:index"],
+    "sf": ["booking:index"],
+    "impuls": ["booking:index"],
+    "demo": ["booking:index"],
 }
 
 CODE = """
@@ -210,6 +252,56 @@ class VariantRouteParityTests(SimpleTestCase):
                     ],
                     capture_output=True,
                     text=True,
-                    env={**os.environ, "PROJECT_NAME": variant},
+                    # BOOKING_ENABLED is dropped so the inventory describes each
+                    # settings module's default instead of the developer's .env.
+                    env={
+                        **{k: v for k, v in os.environ.items() if k != "BOOKING_ENABLED"},
+                        "PROJECT_NAME": variant,
+                    },
                 )
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+class ApiRootCompositionTests(SimpleTestCase):
+    """The shared /api/ root only appears for routes with an API_ROUTES
+    entry that were also requested, so leaving a capability's key out of
+    build_urlpatterns(...) removes its API surface too, with no separate
+    toggle to remember and no import of the disabled app's api_urls module.
+    """
+
+    def test_api_root_present_when_events_requested(self):
+        patterns = build_urlpatterns('index', 'events')
+        self.assertIn("api/", [str(p.pattern) for p in patterns])
+
+    def test_api_root_absent_when_events_not_requested(self):
+        patterns = build_urlpatterns('index')
+        self.assertNotIn("api/", [str(p.pattern) for p in patterns])
+
+
+class BookingCapabilityRouteTests(SimpleTestCase):
+    """BOOKING_ENABLED decides whether the date URLconf mounts the booking
+    routes, so the capability can be turned off on a release without changing
+    the installed app list. core/urls/date.py reads the setting at import time,
+    which is why this runs in a fresh process like the parity test above.
+    """
+
+    def test_disabling_the_capability_removes_the_routes(self):
+        prefixes = [p for p in EXPECTED_PREFIXES["date"] if p != "booking/"]
+        names = [n for n in EXPECTED_URL_NAMES["date"] if n != "booking:index"]
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                CODE,
+                "date",
+                ",".join(prefixes),
+                ",".join(names),
+                "booking:index",
+            ],
+            capture_output=True,
+            text=True,
+            env={**os.environ, "PROJECT_NAME": "date", "BOOKING_ENABLED": "0"},
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

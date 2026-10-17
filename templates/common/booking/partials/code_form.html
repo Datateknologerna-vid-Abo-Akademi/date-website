@@ -1,0 +1,36 @@
+{% load i18n %}
+<p class="booking-help booking-code-help">
+  {% if code_instructions %}{{ code_instructions|linebreaksbr }}{% else %}{% trans "Bokningskoden får du av styrelsen." %}{% endif %}
+  {% trans "Har du ett konto på webbplatsen kan du logga in i stället och behöver då ingen kod." %}
+</p>
+{% if lockout_minutes %}
+  <p class="booking-lockout">
+    {% blocktrans count minutes=lockout_minutes trimmed %}
+      För många försök. Försök igen om {{ minutes }} minut.
+    {% plural %}
+      För många försök. Försök igen om {{ minutes }} minuter.
+    {% endblocktrans %}
+  </p>
+{% else %}
+  <form method="post" class="booking-code-form">
+    {% csrf_token %}
+    {% if captcha_error %}
+      <div class="booking-error">
+        <strong>{{ captcha_error }}</strong>
+      </div>
+    {% endif %}
+    <p>
+      {{ code_form.code.label_tag }}
+      {{ code_form.code }}
+    </p>
+    {% for error in code_form.code.errors %}
+      <div class="booking-error">
+        <strong>{{ error|escape }}</strong>
+      </div>
+    {% endfor %}
+    <div class="cf-turnstile"
+         data-sitekey="{{ CAPTCHA_SITE_KEY }}"
+         data-callback="javascriptCallback"></div>
+    <button class="theme-button" type="submit">{% trans "Fortsätt" %}</button>
+  </form>
+{% endif %}

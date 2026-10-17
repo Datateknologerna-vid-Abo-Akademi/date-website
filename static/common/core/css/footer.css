@@ -14,6 +14,16 @@
     width: auto;
 }
 
+.partner-link {
+    display: inline-block;
+    transition: transform 0.2s, opacity 0.2s;
+}
+
+.partner-link:hover {
+    transform: scale(1.03);
+    opacity: 0.75;
+}
+
 footer section {
     margin: 25px 0;
 }

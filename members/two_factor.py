@@ -46,6 +46,7 @@ class UsernameOrEmailAuthenticationForm(AuthenticationForm):
         self.fields['username'].label = _('Username or email')
         self.fields['username'].widget.attrs.setdefault('autocomplete', 'username')
         self.fields['password'].widget.attrs.setdefault('autocomplete', 'current-password')
+        self.fields['username'].widget.attrs['maxlength'] = 254
 
 
 class StrictTOTPDeviceForm(TOTPDeviceForm):

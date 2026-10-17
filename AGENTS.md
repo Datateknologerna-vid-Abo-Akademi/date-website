@@ -21,6 +21,7 @@ Mainline development happens on `main`. QA and production are promoted image env
 - `docs/dev/operations.md`: maintenance scripts, fixture reset, backups, multi-association stack, and operator checklist.
 - `docs/dev/translations.md`: translation architecture and workflow.
 - `docs/dev/templates.md`: association-specific template override rules.
+- `docs/dev/css.md`: shared stylesheet layout, association palettes, and the `!important`, breakpoint and `z-index` policies.
 - `docs/dev/kubernetes.md`: Helm/k3s deployment notes.
 
 If you change app behavior, update the matching `docs/dev/<app>.md` and, when admin/editor workflows change, the matching `docs/admin/<app>.md`. If you add or rename docs, update `docs/index.md`.
@@ -120,7 +121,7 @@ Do not commit real secrets, production bucket names, API keys, or filled product
 - URLconfs also differ by association. For example, `pulterit` disables archive routes via `ARCHIVE_ENABLED=False`, and signup visibility can depend on `MEMBERS_SIGNUP_ENABLED`.
 - `templates/common/` contains shared templates. `templates/<association>/` overrides blocks by extending the same logical template path.
 - `biocum` looks in `templates/biocum`, then `templates/date`, then common templates. Other associations generally go straight from their own template directory to common templates.
-- Static assets are split by association under `static/<association>/` and shared assets under `static/common/`.
+- Static assets are split by association under `static/<association>/` and shared assets under `static/common/`. An association file at the same logical path replaces the shared one rather than extending it, and static dirs do not inherit parent variants; see `docs/dev/css.md`.
 - Media storage can be local or S3-compatible; archive/publication public files expect the storage backend behavior documented in their guides.
 - Celery remains the production background task backend. When tasks depend on saved database rows, enqueue after transaction commit.
 - The Django admin is intentionally custom. `date.apps.DateAdminConfig` installs `core.admin.FixedLanguageAdminSite`, preserves optional 2FA enforcement, and re-installs that site when Unfold would otherwise replace it. Register admin models through normal `admin.site` imports after that setup has run.
@@ -164,10 +165,12 @@ django-admin compilemessages
 - `alumni`: Google Sheets-backed alumni signup/update flow, Celery side effects, token emails.
 - `archive`: photo/document/exam/public-file collections, bulk uploads, access checks.
 - `billing`: event invoices and reference-number generation behind the event billing integration.
-- `ctf`: seasonal CTFs, flags, guesses, and solving flow.
+- `booking`: bookable rooms and their bookings, with a public booking flow unlocked by a per-room code that the board rotates by hand; DaTe-only behind the `BOOKING_ENABLED` capability.
+- `ctf`: seasonal CTFs, flags, guesses, solving flow, and published post-mortems.
 - `date`: homepage composition, calendar data, language switching, middleware, error views.
 - `events`: events, dynamic registration forms, capacity/sign-up windows, passcodes, captcha, child events, WebSocket attendee updates.
 - `exambank`: exam archive collections and files (replaced `archive.Collection(type="Exams")`); own sign-in/password access gate shared across `archive`, `exambank.archive_urls`, and `exambank.urls`.
+- `feedback`: standalone fixed feedback form at `/forms/`, separate from `harassment`'s report form (own model, recipients, and admin section).
 - `functionaries`: yearly functionary roles and assignments, member self-service history, public functionary listing.
 - `gallery`: photo albums and uploads (replaced `archive.Collection(type="Pictures")`); compresses/converts images, including HEIC/HEIF, on save.
 - `harassment`: harassment report form, stored submissions, recipient list, and notification emails.

@@ -16,6 +16,7 @@ urlpatterns = build_urlpatterns(
     'archive',
     'events',
     'pages',
+    'forms',
     'ads',
     'social',
     'polls',
@@ -24,6 +25,10 @@ urlpatterns = build_urlpatterns(
     'ckeditor',
     'publications',
     'alumni',
+    'attendance',
+    # Room booking. Mounted only when the capability is on, so a release can
+    # hide the pages without changing the installed app list.
+    *(['booking'] if settings.BOOKING_ENABLED else []),
 )
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

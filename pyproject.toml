@@ -4,8 +4,8 @@ version = "0.1.0"
 license = "AGPL-3.0-or-later"
 requires-python = ">=3.14"
 dependencies = [
-    "Django~=6.0",
-    "django-unfold>=0.102.0,<0.103",
+    "Django~=6.1",
+    "django-unfold>=0.108.0,<0.109",
     "asgiref",
     "django-ckeditor-5",
     "requests",
@@ -38,6 +38,7 @@ dependencies = [
     "defusedxml>=0.7.1",
     "pillow-heif>=1.5.0",
     "uvicorn-worker>=0.4.0",
+    "django-stubs-ext>=6.0.4",
 ]
 
 [project.optional-dependencies]
@@ -56,6 +57,9 @@ dev = [
     "pre-commit>=4.6.2",
     "ruff>=0.15.20",
     "types-requests>=2.33.0.20260518",
+    # Used directly by scripts/css_regression.py, which drives Chrome over the
+    # DevTools Protocol. uvicorn[standard] already pulls it in for the runtime.
+    "websockets>=17.1",
 ]
 
 [tool.ruff]
@@ -115,6 +119,7 @@ module = [
     "staticpages.models",
     "members.models",
     "gallery.models",
+    "feedback.models",
 ]
 disable_error_code = ["django-manager-missing"]
 

@@ -1,10 +1,10 @@
 /* Root colors */
-/* use with var(--color); included in base.html*/
 
 :root {
+    /* Primary colour ladder, darkest to lightest: --primaryColor, --primaryColorLight, --primaryColorMid, --primaryColorLighter. */
     --primaryColor: #D0D0CE;
     --primaryColorLight:  #202020;
-    --primaryColorLighte:#3d3d3d;
+    --primaryColorMid:#3d3d3d;
     --primaryColorLighter:#505050;
     --primaryColorTransparent: rgba(86, 86, 84, 0.78);
     --primaryColorTransparenter: rgba(70, 70, 68, 0.92);

@@ -5,3 +5,148 @@
 .invalid {
     color: rgb(176, 54, 89);
 }
+
+/* CTF pages (templates/common/ctf/). Layout contract:
+   the page keeps a readable measure, prose is left aligned, and clue content
+   from CKEditor (arbitrary <p>, <ul>, <figure> and long unbroken tokens) never
+   pushes the page sideways. */
+
+.ctf-page {
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.ctf-content {
+    text-align: left;
+    line-height: 1.6;
+    /* Clue and description fields can hold a single token of hundreds of
+       characters with no space to break at. */
+    overflow-wrap: anywhere;
+}
+
+.ctf-content > p {
+    margin-bottom: 1rem;
+}
+
+.ctf-centered {
+    text-align: center;
+}
+
+.ctf-title {
+    margin-bottom: 1rem;
+}
+
+.ctf-content > .ctf-back {
+    margin-bottom: 0.5rem;
+}
+
+.ctf-clue > :last-child {
+    margin-bottom: 0;
+}
+
+.ctf-flags {
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.ctf-flags li {
+    margin-bottom: 0.25rem;
+}
+
+.ctf-status {
+    max-width: 30rem;
+    margin: 1.25rem auto;
+}
+
+.ctf-message {
+    margin: 1rem 0;
+}
+
+/* Guess form */
+
+.ctf-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 24rem;
+    margin: 1.5rem auto 0;
+    text-align: left;
+}
+
+.ctf-form label {
+    font-weight: 600;
+}
+
+.ctf-form input[type='text'] {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--primaryColorLighter);
+    border-radius: var(--defaultRadius);
+    /* Inherit the surface pair instead of pairing a fixed background with a
+       fixed text colour: the association themes define those independently, so
+       mixing them can produce unreadable input text. */
+    background-color: transparent;
+    color: inherit;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.ctf-form input[type='text']:focus {
+    outline: 2px solid var(--linkColorLight, currentColor);
+    outline-offset: 1px;
+}
+
+.ctf-form .theme-button {
+    align-self: center;
+}
+
+/* The association base.css rules for .theme-button set outline: none, so the
+   focus ring has to be restored here for keyboard users. */
+.ctf-form .theme-button:focus-visible {
+    outline: 2px solid var(--linkColorLight, currentColor);
+    outline-offset: 2px;
+}
+
+.ctf-form .errorlist {
+    padding-left: 0;
+    margin: 0;
+    list-style: none;
+    color: rgb(176, 54, 89);
+}
+
+/* Clue images: keep them inside the card and allow a taller crop than the
+   global .content img cap. */
+
+.ctf-content figure {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.ctf-content figure img {
+    max-width: 100%;
+    max-height: 60vh;
+}
+
+/* CKEditor can also emit code blocks and tables. Wrap long code lines instead
+   of hiding them behind a horizontal scroll region, and let a table that cannot
+   fit scroll inside the card while its columns keep a readable width. Without
+   the minimum, the inherited overflow-wrap lets every column collapse to a
+   single character per line. */
+
+.ctf-content pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.ctf-content table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.ctf-content th,
+.ctf-content td {
+    min-width: 6rem;
+}

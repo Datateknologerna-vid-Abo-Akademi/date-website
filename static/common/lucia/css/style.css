@@ -11,7 +11,9 @@ html body{
 }
 
 
-nav, footer{
+/* Hide the site header and footer for this page. Scope the nav selector so it
+   does not also hide other navs (the paginations). */
+nav.navbar, footer{
     display: none !important;
 }
 

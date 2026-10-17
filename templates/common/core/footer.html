@@ -1,18 +1,28 @@
 {% load static %}
 {% load i18n %}
+{% load social_icons %}
 <footer class="container association-footer {% block footer_class_suffix %}{% endblock %}">
   <div class="association-footer-shell {% block footer_shell_class_suffix %}{% endblock %}">
     <hr>
     <section class="col text-center association-footer-social {% block footer_social_class_suffix %}{% endblock %}">
-      {% for btn in SOCIAL_BUTTONS %}
-        {% if btn.1 %}
-          <a class="btn btn-outline-light btn-floating"
-             href="{{ btn.1 }}"
-             role="button">
-            <i class="fab {{ btn.0 }}"></i>
-          </a>
-        {% endif %}
-      {% endfor %}
+      {% block footer_social_buttons %}
+        {% for btn in SOCIAL_BUTTONS %}
+          {% if btn.1 %}
+            {% social_icon_template btn.0 as icon_template %}
+            {% if icon_template %}
+              <a class="btn btn-outline-light btn-floating"
+                 href="{{ btn.1 }}"
+                 role="button">{% include icon_template %}</a>
+            {% else %}
+              <a class="btn btn-outline-light btn-floating"
+                 href="{{ btn.1 }}"
+                 role="button">
+                <i class="fab {{ btn.0 }}"></i>
+              </a>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      {% endblock %}
     </section>
     <div class="row align-middle align-items-center association-footer-content {% block footer_content_class_suffix %}{% endblock %}">
       <div class="col-12 col-md-4 text-center association-footer-brand {% block footer_brand_class_suffix %}{% endblock %}">

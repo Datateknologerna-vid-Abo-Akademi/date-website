@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-16 23:19+0300\n"
+"POT-Creation-Date: 2026-09-30 20:52+0300\n"
 "PO-Revision-Date: 2025-09-16 20:27+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -109,19 +109,20 @@ msgstr "Update your information"
 msgid "Städa upp media"
 msgstr "Clean up media"
 
-#: archive/models.py:21 archive/models.py:83 events/models.py:212
-#: events/models.py:348 events/models.py:390 exambank/models.py:23
-#: exambank/models.py:82 functionaries/models.py:21 gallery/models.py:50
-#: members/models.py:96 members/models.py:121 news/models.py:15
-#: templates/biocum/events/arsfest.html:92
-#: templates/common/events/arsfest.html:80
-#: templates/common/events/baal_detail.html:73
-#: templates/common/events/detail.html:60
-#: templates/common/events/kk100_detail.html:74
-#: templates/common/events/tomtejakt.html:318
-#: templates/common/events/wappmiddag.html:74
-#: templates/date/events/arsfest.html:86
-#: templates/pulterit/events/arsfest.html:85
+#: archive/models.py:17 archive/models.py:80 booking/forms.py:96
+#: booking/models.py:57 booking/models.py:188 events/models.py:251
+#: events/models.py:409 events/models.py:477 exambank/models.py:23
+#: exambank/models.py:82 functionaries/models.py:21 gallery/models.py:57
+#: members/models.py:108 members/models.py:133 news/models.py:15
+#: templates/biocum/events/arsfest.html:95
+#: templates/common/events/arsfest_base.html:94
+#: templates/common/events/baal_detail.html:83
+#: templates/common/events/detail.html:55
+#: templates/common/events/kk100_detail.html:84
+#: templates/common/events/tomtejakt.html:92
+#: templates/common/events/wappmiddag.html:90
+#: templates/date/events/arsfest.html:95
+#: templates/pulterit/events/arsfest.html:95
 msgid "Namn"
 msgstr "Name"
 
@@ -311,6 +312,56 @@ msgstr "Harassment Reports"
 msgid "Report Recipients"
 msgstr "Report Recipients"
 
+#: core/admin_ui.py:223 templates/common/feedback/feedback_form.html:14
+msgid "Feedback"
+msgstr "Feedback"
+
+#: core/admin_ui.py:229
+msgid "Feedback Recipients"
+msgstr "Feedback Recipients"
+
+#: core/admin_ui.py:235
+msgid "Feedback Settings"
+msgstr "Feedback Settings"
+
+#: feedback/models.py:21
+msgid "Skickad"
+msgstr "Submitted"
+
+#: feedback/models.py:24 feedback/models.py:25
+msgid "Inskickad feedback"
+msgstr "Submitted Feedback"
+
+#: feedback/models.py:43 feedback/models.py:44
+msgid "Mottagare för feedback"
+msgstr "Feedback Recipients"
+
+#: feedback/models.py:56
+msgid "Introduktionstext"
+msgstr "Introduction Text"
+
+#: feedback/models.py:60
+msgid "Texten som visas ovanför formuläret på /forms/."
+msgstr "The text shown above the form at /forms/."
+
+#: feedback/models.py:64 feedback/models.py:65 feedback/models.py:68
+msgid "Formulärtext"
+msgstr "Form Text"
+
+#: feedback/views.py:30
+msgid "Robotkontrollen misslyckades. Försök igen."
+msgstr "The bot check failed. Please try again."
+
+#: templates/common/feedback/feedback_form.html:4
+#: templates/common/feedback/feedback_form.html:13
+#: templates/common/feedback/feedback_success.html:4
+msgid "Kontakta oss"
+msgstr "Contact Us"
+
+#: templates/common/feedback/feedback_success.html:10
+msgid "Tack för ditt svar."
+msgstr "Thank you for your response."
+
 #: core/admin_ui.py:137
 msgid "System"
 msgstr "System"
@@ -346,6 +397,7 @@ msgstr "Production"
 #: core/settings/sf.py:40
 msgid "Hemort"
 msgstr "Home town"
+
 #: ctf/admin.py:22 events/admin.py:142 lucia/admin.py:30 news/admin.py:31
 #: polls/admin.py:54
 msgid "publicering"
@@ -443,13 +495,106 @@ msgstr "Guess"
 msgid "Korrekt"
 msgstr "Correct"
 
-#: ctf/models.py:82
+#: booking/admin.py:116 booking/admin.py:201 ctf/models.py:135
 msgid "Tid"
 msgstr "Time"
 
 #: ctf/models.py:86
 msgid "Gissningar"
 msgstr "Guesses"
+
+#: core/admin_ui.py:188
+msgid "CTF Post-mortems"
+msgstr "CTF post-mortems"
+
+#: core/admin_ui.py:99
+msgid "Booking"
+msgstr "Booking"
+
+#: core/admin_ui.py:102
+msgid "Bookings"
+msgstr "Bookings"
+
+#: core/admin_ui.py:131
+msgid "Attendance"
+msgstr "Attendance"
+
+#: core/admin_ui.py:134
+msgid "Attendance events"
+msgstr "Attendance events"
+
+#: core/admin_ui.py:140
+msgid "Attendance changes"
+msgstr "Attendance changes"
+
+#: core/admin_ui.py:108
+msgid "Rooms"
+msgstr "Rooms"
+
+#: ctf/admin.py:56 templates/common/ctf/post_mortem_index.html:13
+msgid "Post-mortems"
+msgstr "Post-mortems"
+
+#: ctf/models.py:74
+msgid "Översikt"
+msgstr "Overview"
+
+#: ctf/models.py:80
+msgid ""
+"Lämna tomt för att dölja efteranalysen. Välj en framtida tid för schemalagd "
+"publicering."
+msgstr ""
+"Leave blank to hide the post-mortem. Choose a future time for scheduled "
+"publishing."
+
+#: ctf/models.py:86
+msgid "post-mortem"
+msgstr "post-mortem"
+
+#: ctf/models.py:87
+msgid "post-mortems"
+msgstr "post-mortems"
+
+#: ctf/models.py:112 templates/common/ctf/post_mortem_detail.html:46
+msgid "Solution"
+msgstr "Solution"
+
+#: templates/common/ctf/detail.html:28
+#: templates/common/ctf/post_mortem_detail.html:13
+msgid "Post-mortem"
+msgstr "Post-mortem"
+
+#: templates/common/ctf/post_mortem_detail.html:15
+msgid "Data"
+msgstr "Data"
+
+#: templates/common/ctf/post_mortem_detail.html:16
+msgid "Total guesses"
+msgstr "Total guesses"
+
+#: templates/common/ctf/post_mortem_detail.html:19
+msgid "Number of inputs"
+msgstr "Number of inputs"
+
+#: templates/common/ctf/post_mortem_detail.html:22
+msgid "Full logs"
+msgstr "Full logs"
+
+#: templates/common/ctf/post_mortem_detail.html:31
+msgid "Solved by"
+msgstr "Solved by"
+
+#: templates/common/ctf/post_mortem_detail.html:34
+msgid "Solve time"
+msgstr "Solve time"
+
+#: templates/common/ctf/post_mortem_detail.html:41
+msgid "Unsolved"
+msgstr "Unsolved"
+
+#: templates/common/ctf/post_mortem_index.html:20
+msgid "No post-mortems have been published yet."
+msgstr "No post-mortems have been published yet."
 
 #: events/forms.py:81 events/forms.py:174
 msgid "Leave blank to keep the event hidden."
@@ -520,7 +665,8 @@ msgstr "Cancel registration"
 msgid "Avanmälningen stängs"
 msgstr "Registration cancellation closes"
 
-#: events/models.py:86 news/models.py:40 staticpages/models.py:41
+#: booking/models.py:193 events/models.py:77 news/models.py:40
+#: staticpages/models.py:40
 msgid "Skapad"
 msgstr "Created"
 
@@ -766,6 +912,39 @@ msgstr "URL"
 msgid "SHORTCODE"
 msgstr "SHORTCODE"
 
+#: instagram/models.py:41
+msgid "Fylls i av Instagram-uppdateraren. Lämna tomt när du laddar upp en bild."
+msgstr "Filled in by the Instagram updater. Leave empty when uploading an image."
+
+#: instagram/models.py:44
+msgid "Instagram-inlägg"
+msgstr "Instagram post"
+
+#: instagram/models.py:46
+msgid "Klistra in länken till inlägget, t.ex. https://www.instagram.com/p/ABC123/."
+msgstr "Paste the link to the post, e.g. https://www.instagram.com/p/ABC123/."
+
+#: instagram/models.py:64
+msgid "Ladda upp en bild för inlägget."
+msgstr "Upload an image for the post."
+
+#: instagram/models.py:89
+msgid "Ange en länk till ett Instagram-inlägg, t.ex. https://www.instagram.com/p/ABC123/, eller en kortkod."
+msgstr "Enter a link to an Instagram post, e.g. https://www.instagram.com/p/ABC123/, or a shortcode."
+
+#: instagram/models.py:22
+msgid "Filen är inte en bild."
+msgstr "The file is not an image."
+
+#: instagram/models.py:25
+#, python-format
+msgid "Bilden är för liten (%(height)s px hög). Ladda upp en bild som är minst %(minimum)s px hög."
+msgstr "The image is too small (%(height)s px tall). Upload an image at least %(minimum)s px tall."
+
+#: templates/impuls/date/start.html:30
+msgid "Senaste Instagram-inlägg"
+msgstr "Latest Instagram posts"
+
 #: lucia/admin.py:26
 msgid "Leave blank to keep the candidate hidden."
 msgstr "Leave blank to keep the candidate hidden."
@@ -872,7 +1051,9 @@ msgstr "member"
 msgid "medlemmar"
 msgstr "members"
 
-#: members/models.py:97
+#: booking/forms.py:54 booking/models.py:58 booking/models.py:145
+#: booking/models.py:192 members/models.py:109
+#: templates/common/booking/email/booking_confirmation.html:51
 msgid "Beskrivning"
 msgstr "Description"
 
@@ -940,7 +1121,7 @@ msgstr "subscription payment"
 msgid "prenumerationsbetalningar"
 msgstr "subscription payments"
 
-#: members/models.py:162
+#: booking/admin.py:169 members/models.py:174
 msgid "Aldrig"
 msgstr "Never"
 
@@ -1426,7 +1607,8 @@ msgid_plural "För många försök. Försök igen om %(seconds)s sekunder."
 msgstr[0] "Too many attempts. Try again in %(seconds)s second."
 msgstr[1] "Too many attempts. Try again in %(seconds)s seconds."
 
-#: templates/common/archive/exam_password.html:24
+#: templates/common/archive/exam_password.html:30
+#: templates/common/booking/partials/code_form.html:34
 msgid "Fortsätt"
 msgstr "Continue"
 
@@ -1562,7 +1744,8 @@ msgstr "%(association_name)s logo"
 msgid "Styrelsen för %(association_name)s kan kontaktas på följande sätt."
 msgstr "The board of %(association_name)s can be contacted as follows."
 
-#: templates/common/core/footer.html:31
+#: booking/forms.py:102 booking/models.py:189
+#: templates/common/core/footer.html:34 templates/sf/core/footer.html:58
 msgid "E-post"
 msgstr "Email"
 
@@ -1808,6 +1991,7 @@ msgid "Du kan nu logga in som vanligt"
 msgstr "You can now log in normally"
 
 #: templates/common/members/registration/password_reset_complete.html:17
+#: templates/common/polls/detail.html:28
 msgid "Logga in"
 msgstr "Login"
 
@@ -1904,13 +2088,14 @@ msgstr ""
 msgid "Sign up"
 msgstr "Sign up"
 
-#: templates/common/members/signup.html:48
-#: templates/common/social/harassment_form.html:31
+#: feedback/forms.py:14 templates/common/members/signup.html:52
+#: templates/common/social/harassment_form.html:37
 msgid "Jag godkänner"
 msgstr "I accept"
 
-#: templates/common/members/signup.html:50
-#: templates/common/social/harassment_form.html:33
+#: templates/common/feedback/feedback_form.html:34
+#: templates/common/members/signup.html:55
+#: templates/common/social/harassment_form.html:40
 msgid "villkoren"
 msgstr "the terms and conditions"
 
@@ -1998,6 +2183,24 @@ msgstr "No news found..."
 #: templates/common/polls/results.html:4
 msgid "Poll"
 msgstr "Poll"
+
+#: templates/common/polls/detail.html:25
+msgid "Röstningen kräver att du är inloggad medlem och att du är på plats i mötet."
+msgstr "Voting requires that you are signed in as a member and present in the room."
+
+#: templates/common/polls/detail.html:32
+#, python-format
+msgid "Du är närvarande på %(meeting)s."
+msgstr "You are present at %(meeting)s."
+
+#: templates/common/polls/detail.html:38
+#, python-format
+msgid "Den här frågan får bara besvaras av dem som är på plats på %(meeting)s."
+msgstr "This question can only be answered by people who are present at %(meeting)s."
+
+#: templates/common/polls/detail.html:44
+msgid "Ange koden och checka in"
+msgstr "Enter the code and check in"
 
 #: templates/common/polls/index.html:27
 msgid "Det finns inga aktiva omröstningar"
@@ -2216,6 +2419,10 @@ msgstr "Disable"
 msgid "View all"
 msgstr "View all"
 
+#: templates/date/core/footer.html:7
+msgid "Albins Angels"
+msgstr "Albins Angels"
+
 #: templates/date/date/components/about.html:4
 msgid "Om oss"
 msgstr "About us"
@@ -2265,10 +2472,8 @@ msgstr ""
 "for all members."
 
 #: templates/impuls/date/components/extras.html:6
-msgid ""
-"Om du upplever trakasserier i samband med Impuls verksamhet, vänligen"
-msgstr ""
-"If you encounter harassment during the activity of Impuls, please"
+msgid "Om du upplever trakasserier i samband med Impuls verksamhet, vänligen"
+msgstr "If you encounter harassment during the activity of Impuls, please"
 
 #: templates/date/date/components/header.html:8
 msgid "Datateknologerna"
@@ -2295,6 +2500,10 @@ msgstr "no active events found"
 msgid "Website developed and maintained by"
 msgstr "Website developed and maintained by"
 
+#: templates/impuls/core/footer.html:15
+msgid "Åbo Akademi – psykologi"
+msgstr "Åbo Akademi University – Psychology"
+
 #: templates/pulterit/date/components/partners.html:8
 #: templates/pulterit/date/components/partners.html:12
 msgid "Partner logo"
@@ -2303,6 +2512,923 @@ msgstr "Partner logo"
 #: templates/pulterit/date/components/partners.html:18
 msgid "Vill du samarbeta med Pulterit?"
 msgstr "Do you want to collaborate with Pulterit ry?"
+
+#: templates/impuls/date/components/header.html:12
+msgid "Impuls"
+msgstr "Impuls"
+
+#: templates/impuls/date/components/about.html:8
+msgid ""
+"Impuls r.f. är ämnesföreningen för psykologi vid Åbo Akademi. Föreningen "
+"strävar efter att förbättra och fördjupa undervisningen i psykologi, samt "
+"öka samvaron och trivseln för våra psykologistuderande."
+msgstr ""
+"Impuls r.f. is the student association for psychology at Åbo Akademi "
+"University. The association works to improve and deepen psychology education "
+"and to strengthen community and well-being among psychology students."
+
+#: templates/impuls/date/components/about.html:13
+msgid ""
+"En central del av Impuls verksamhet är att ordna diverse evenemang för sina "
+"medlemmar och att vara aktiv över fakultets- och föreningsgränserna, såväl "
+"inom psykologi som andra ämnen."
+msgstr ""
+"A central part of Impuls' work is arranging events for its members and being "
+"active across faculty and association boundaries, both within psychology and "
+"with other subjects."
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
+msgid "Klotterplanket"
+msgstr "Scribble board"
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
+msgid ""
+"Skriv ett inlägg anonymt med en pseudonym. Inlägg som bryter mot reglerna "
+"för webbplatsen kan tas bort."
+msgstr ""
+"Write a post anonymously with a pseudonym. Posts that break the website "
+"rules may be removed."
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
+msgid "Pseudonym"
+msgstr "Pseudonym"
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
+msgid "Meddelande"
+msgstr "Message"
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
+msgid "Inlägg"
+msgstr "Posts"
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
+msgid "Inga inlägg ännu. Skriv det första!"
+msgstr "No posts yet. Write the first one!"
+
+#: klotterplanket/views.py klotterplanket/models.py
+#: templates/common/klotterplanket/index.html
+msgid "Ditt inlägg har lagts till!"
+msgstr "Your post has been added!"
+
+#: klotterplanket/views.py
+msgid "Botkontrollen misslyckades, försök igen."
+msgstr "The bot check failed, try again."
+
+#: klotterplanket/views.py
+msgid "Kontrollera pseudonymen och meddelandet."
+msgstr "Check the pseudonym and the message."
+
+#: exambank/views.py
+#, python-format
+msgid "Kunde inte ladda upp följande filer: %(files)s"
+msgstr "Could not upload the following files: %(files)s"
+
+#: booking/access.py:324 booking/views.py:117
+msgid "Kunde inte verifiera att du inte är en robot. Försök igen."
+msgstr "We could not verify that you are not a robot. Please try again."
+
+#: booking/admin.py:150 booking/models.py:197
+#: templates/date/date/components/bookings.html:6
+msgid "Bokningar"
+msgstr "Bookings"
+
+#: booking/models.py:251
+msgid "Extern bokning"
+msgstr "External booking"
+
+#: booking/admin.py:216 booking/models.py:182
+msgid "Bokare"
+msgstr "Booked by"
+
+#: booking/admin.py:160
+msgid "Aktuell bokningskod"
+msgstr "Current booking code"
+
+#: booking/emails.py:45
+#, python-format
+msgid "Bokningsbekräftelse för %(room)s"
+msgstr "Booking confirmation for %(room)s"
+
+#: booking/forms.py:33 templates/common/booking/room_detail.html:59
+msgid "Bokningskod"
+msgstr "Booking code"
+
+#: booking/forms.py:46
+msgid "Fel kod."
+msgstr "Incorrect code."
+
+#: booking/forms.py:51 booking/models.py:190
+msgid "Starttid"
+msgstr "Start time"
+
+#: booking/forms.py:52 booking/models.py:191
+msgid "Sluttid"
+msgstr "End time"
+
+#: booking/forms.py:99 booking/models.py:270
+msgid "Ange namnet på den som bokar."
+msgstr "Enter the name of the person making the booking."
+
+#: booking/forms.py:104
+msgid "Ange en e-postadress så att vi kan nå dig."
+msgstr "Enter an email address so we can reach you."
+
+#: booking/models.py:86 booking/models.py:138 booking/models.py:176
+msgid "Utrymme"
+msgstr "Room"
+
+#: booking/models.py:87
+msgid "Utrymmen"
+msgstr "Rooms"
+
+#: booking/models.py:196 templates/common/booking/index.html:6
+#: templates/common/booking/room_detail.html:6
+msgid "Bokning"
+msgstr "Booking"
+
+#: booking/models.py:106 booking/models.py:170 booking/models.py:258
+msgid "Sluttiden måste vara efter starttiden."
+msgstr "The end time must be after the start time."
+
+#: booking/models.py:291
+msgid "Utrymmet är redan bokat under denna tid."
+msgstr "The room is already booked for this time."
+
+#: booking/models.py:343 booking/models.py:344 booking/models.py:347
+msgid "Bokningsinställningar"
+msgstr "Booking settings"
+
+#: booking/views.py:129
+msgid "Tack! Din bokning är registrerad."
+msgstr "Thank you! Your booking has been registered."
+
+#: templates/common/booking/index.html:18
+msgid "Bokbara utrymmen"
+msgstr "Bookable rooms"
+
+#: templates/common/booking/index.html:38
+msgid "Inga utrymmen är bokbara just nu."
+msgstr "No rooms are bookable right now."
+
+#: templates/common/booking/index.html:42
+#: templates/common/booking/room_detail.html:31
+msgid "Kommande bokningar"
+msgstr "Upcoming bookings"
+
+#: templates/common/booking/index.html:51
+#: templates/common/booking/room_detail.html:39
+msgid "Inga kommande bokningar."
+msgstr "No upcoming bookings."
+
+#: templates/common/booking/partials/code_form.html:8
+#, python-format
+msgid "För många försök. Försök igen om %(minutes)s minut."
+msgid_plural "För många försök. Försök igen om %(minutes)s minuter."
+msgstr[0] "Too many attempts. Try again in %(minutes)s minute."
+msgstr[1] "Too many attempts. Try again in %(minutes)s minutes."
+
+#: templates/common/booking/cancel_booking.html:52
+#: templates/common/booking/my_bookings.html:39
+#: templates/common/booking/room_detail.html:28
+msgid "Tillbaka till utrymmena"
+msgstr "Back to the rooms"
+
+#: templates/common/booking/room_detail.html:65
+msgid "Boka utrymmet"
+msgstr "Book the room"
+
+#: templates/common/booking/room_detail.html:94
+msgid "Boka"
+msgstr "Book"
+
+#: templates/common/booking/room_detail.html:97
+msgid "E-postadressen används bara för att skicka en bokningsbekräftelse."
+msgstr "The email address is only used to send a booking confirmation."
+
+#: booking/admin.py:73
+msgid "Bokningens ursprung"
+msgstr "Booking origin"
+
+#: booking/admin.py:78
+msgid "Bokning av en medlem"
+msgstr "Booked by a member"
+
+#: booking/admin.py:79
+msgid "Bokning utan konto, via webbformuläret"
+msgstr "Booking without an account, via the website form"
+
+#: booking/admin.py:80
+msgid "Bokning utan konto"
+msgstr "Booking without an account"
+
+#: booking/admin.py:209
+msgid "Utan konto"
+msgstr "No account"
+
+#: booking/forms.py:58
+msgid ""
+"Berätta kort vad utrymmet ska användas till. Endast styrelsen ser detta."
+msgstr ""
+"Briefly describe what the room will be used for. Only the board sees this."
+
+#: booking/models.py:264
+msgid "Starttiden kan inte vara i det förflutna."
+msgstr "The start time cannot be in the past."
+
+#: templates/common/booking/index.html:20
+msgid ""
+"Har du ett konto bokar du direkt. Utan konto behöver du en bokningskod, som "
+"du får av styrelsen."
+msgstr ""
+"With an account you book straight away. Without one you need a booking code, "
+"which you get from the board."
+
+#: templates/common/booking/partials/board_contact.html:4
+#, python-format
+msgid ""
+"Har du frågor om en bokning, kontakta styrelsen via %(ASSOCIATION_EMAIL)s."
+msgstr ""
+"If you have questions about a booking, contact the board at "
+"%(ASSOCIATION_EMAIL)s."
+
+#: templates/common/booking/partials/board_contact.html:7
+msgid "Har du frågor om en bokning, kontakta styrelsen."
+msgstr "If you have questions about a booking, contact the board."
+
+#: booking/models.py:335
+msgid "Så får besökare koden"
+msgstr "How visitors get the code"
+
+#: booking/models.py:338
+msgid ""
+"Visas offentligt där koden efterfrågas, i stället för standardtexten. Lämna "
+"tomt om standardtexten räcker."
+msgstr ""
+"Shown publicly where the code is asked for, instead of the default text. "
+"Leave it empty if the default text is enough."
+
+#: templates/common/booking/partials/code_form.html:3
+msgid "Bokningskoden får du av styrelsen."
+msgstr "You get the booking code from the board."
+
+#: templates/common/booking/partials/code_form.html:4
+msgid ""
+"Har du ett konto på webbplatsen kan du logga in i stället och behöver då "
+"ingen kod."
+msgstr ""
+"If you have an account on the website you can log in instead, and then you "
+"need no code."
+
+#: booking/admin.py:166 booking/models.py:66
+msgid "Senast bytt"
+msgstr "Last rotated"
+
+#: booking/admin.py:174
+msgid "Byt bokningskoden nu"
+msgstr "Rotate the booking code now"
+
+#: booking/models.py:60
+msgid "Kodgeneration"
+msgstr "Code generation"
+
+#: booking/admin.py:181
+#, python-format
+msgid ""
+"Ny bokningskod för %(room)s: %(code)s. Den förra koden fungerar i 15 minuter "
+"till."
+msgstr ""
+"New booking code for %(room)s: %(code)s. The previous code keeps working for "
+"15 more minutes."
+
+#: booking/admin.py:236
+msgid ""
+"Varje utrymme har sin egen bokningskod, som visas och byts på utrymmets sida "
+"under Bokningar › Utrymmen. Här står bara texten som besökare utan konto får "
+"läsa."
+msgstr ""
+"Every room has its own booking code, shown and rotated on the room page "
+"under Booking › Rooms. Only the text that a visitor without an account reads "
+"lives here."
+
+#: booking/models.py:63
+msgid ""
+"Räknas upp varje gång utrymmets kod byts. Koden härleds ur den och kan inte "
+"läsas av härifrån."
+msgstr ""
+"Counted up every time the room's code is rotated. The code is derived from "
+"it and cannot be read back from here."
+
+#: booking/models.py:70
+msgid ""
+"När utrymmets kod senast byttes. Gör att den förra koden fungerar en stund "
+"till."
+msgstr ""
+"When the room's code was last rotated. Lets the previous code keep working "
+"for a while."
+
+#: booking/admin.py:154
+msgid "Bokningsbara tider"
+msgstr "Bookable hours"
+
+#: booking/admin.py:157
+msgid "Hela dygnet"
+msgstr "Around the clock"
+
+#: booking/models.py:73
+msgid "Bokningsbart från"
+msgstr "Bookable from"
+
+#: booking/models.py:79
+msgid "Bokningsbart till"
+msgstr "Bookable until"
+
+#: booking/models.py:142
+msgid "Stängt från"
+msgstr "Closed from"
+
+#: booking/models.py:143
+msgid "Stängt till"
+msgstr "Closed until"
+
+#: templates/common/booking/room_detail.html:45
+msgid "Stängt"
+msgstr "Closed"
+
+#: booking/models.py:152
+msgid "Stängd period"
+msgstr "Closed period"
+
+#: booking/models.py:153
+msgid "Stängda perioder"
+msgstr "Closed periods"
+
+#: booking/models.py:267
+msgid "En bokning kan vara i högst en vecka."
+msgstr "A booking may run for at most one week."
+
+#: booking/models.py:281
+msgid "Utrymmet är stängt under en del av den tiden."
+msgstr "The room is closed for part of that time."
+
+#: booking/models.py:319
+#, python-format
+msgid "Utrymmet kan bara bokas mellan %(from)s och %(until)s samma dag."
+msgstr ""
+"The room can only be booked between %(from)s and %(until)s on the same day."
+
+#: booking/models.py:76
+msgid ""
+"Lämna båda tomma för att tillåta bokning dygnet runt. Med tider gäller de "
+"varje dag."
+msgstr ""
+"Leave both empty to allow booking at any hour. With hours set, they apply "
+"every day."
+
+#: booking/models.py:82
+msgid "En bokning måste börja och sluta inom samma dygn när tider är satta."
+msgstr "A booking must start and end on the same day when hours are set."
+
+#: booking/models.py:103
+msgid ""
+"Ange både start och slut för bokningsbara tider, eller lämna båda tomma."
+msgstr "Set both a start and an end for bookable hours, or leave both empty."
+
+#: booking/models.py:148
+msgid "Visas för besökare, till exempel vad som gör att utrymmet är stängt."
+msgstr "Shown to visitors, for example what is keeping the room closed."
+
+#: booking/forms.py:121
+msgid "Avbokningskod"
+msgstr "Cancellation code"
+
+#: templates/common/booking/email/booking_confirmation.txt:12
+msgid "Avbokningskod:"
+msgstr "Cancellation code:"
+
+#: booking/forms.py:135 booking/views.py:208
+msgid "Hittade ingen kommande bokning med den koden."
+msgstr "No upcoming booking matches that code."
+
+#: booking/ics.py:89
+#, python-format
+msgid "Bokningen kan avbokas på %(url)s."
+msgstr "The booking can be cancelled at %(url)s."
+
+#: booking/views.py:177 booking/views.py:200
+msgid "Bokningen är borttagen."
+msgstr "The booking has been removed."
+
+#: templates/common/booking/cancel_booking.html:6
+#: templates/common/booking/cancel_booking.html:18
+msgid "Avboka en bokning"
+msgstr "Cancel a booking"
+
+#: templates/common/booking/cancel_booking.html:31
+#: templates/common/booking/email/booking_confirmation.html:91
+#: templates/common/booking/email/booking_confirmation.html:106
+msgid "Avboka bokningen"
+msgstr "Cancel the booking"
+
+#: templates/common/booking/email/booking_confirmation.txt:18
+msgid "Avboka bokningen:"
+msgstr "Cancel the booking:"
+
+#: templates/common/booking/my_bookings.html:30
+msgid "Avboka"
+msgstr "Cancel"
+
+#: templates/common/booking/cancel_booking.html:48
+msgid "Visa bokningen"
+msgstr "Show the booking"
+
+#: templates/common/booking/email/booking_confirmation.html:29
+#: templates/common/booking/email/booking_confirmation.txt:1
+msgid "Bokningen är bekräftad"
+msgstr "Your booking is confirmed"
+
+#: templates/common/booking/email/booking_confirmation.html:57
+#: templates/common/booking/email/booking_confirmation.txt:8
+msgid "Om tiden inte passar"
+msgstr "If the time no longer suits"
+
+#: templates/common/booking/cancel_booking.html:20
+msgid ""
+"Stämmer bokningen nedan? Avboka den bara om du verkligen vill ta bort den."
+msgstr "Is this the right booking? Only cancel it if you really want it gone."
+
+#: templates/common/booking/cancel_booking.html:35
+msgid ""
+"Bokade du utan konto fick du en avbokningskod i bekräftelsemejlet. Klistra "
+"in den här."
+msgstr ""
+"If you booked without an account, the confirmation email has a cancellation "
+"code. Paste it here."
+
+#: templates/common/booking/email/booking_confirmation.html:60
+#: templates/common/booking/email/booking_confirmation.txt:10
+msgid "Avboka bokningen på avbokningssidan. Där anger du koden nedan."
+msgstr ""
+"Cancel the booking on the cancellation page. You enter the code below there."
+
+#: templates/common/booking/email/booking_confirmation.html:62
+#: templates/common/booking/email/booking_confirmation.txt:11
+msgid "Kontakta styrelsen om du vill avboka bokningen. Uppge koden nedan."
+msgstr ""
+"Contact the board if you want to cancel the booking. Give them the code "
+"below."
+
+#: templates/common/booking/email/booking_confirmation.html:80
+#: templates/common/booking/email/booking_confirmation.txt:14
+msgid "Spara koden. Den behövs för att avboka bokningen."
+msgstr "Keep the code. You need it to cancel the booking."
+
+#: templates/common/booking/email/booking_confirmation.html:109
+#: templates/common/booking/email/booking_confirmation.txt:16
+msgid "Kontakta styrelsen om du vill avboka bokningen."
+msgstr "Contact the board if you want to cancel the booking."
+
+#: templates/common/booking/email/booking_confirmation.html:128
+#: templates/common/booking/email/booking_confirmation.txt:20
+#, python-format
+msgid ""
+"Har du frågor om bokningen, kontakta styrelsen via %(association_email)s."
+msgstr ""
+"If you have questions about the booking, contact the board at "
+"%(association_email)s."
+
+#: templates/common/booking/email/booking_confirmation.html:130
+#: templates/common/booking/email/booking_confirmation.txt:21
+msgid "Har du frågor om bokningen, kontakta styrelsen."
+msgstr "If you have questions about the booking, contact the board."
+
+#: templates/common/booking/email/booking_confirmation.html:135
+#: templates/common/booking/email/booking_confirmation.txt:22
+msgid "Du får det här meddelandet för att du bokade ett utrymme."
+msgstr "You are getting this message because you booked a room."
+
+#: templates/common/booking/email/booking_confirmation.txt:3
+msgid "Utrymme:"
+msgstr "Room:"
+
+#: templates/common/booking/email/booking_confirmation.txt:4
+msgid "Tid:"
+msgstr "Time:"
+
+#: templates/common/booking/email/booking_confirmation.txt:6
+msgid "Beskrivning:"
+msgstr "Description:"
+
+#: templates/common/booking/email/booking_confirmation.txt:24
+msgid "Webbplatsen:"
+msgstr "Website:"
+
+#: templates/common/booking/index.html:24
+#: templates/common/booking/my_bookings.html:6
+#: templates/common/booking/my_bookings.html:18
+msgid "Mina bokningar"
+msgstr "My bookings"
+
+#: templates/common/booking/my_bookings.html:20
+msgid ""
+"Här ser du dina kommande bokningar och kan ta bort en som inte längre passar."
+msgstr ""
+"Here are your upcoming bookings, and you can remove one that no longer suits."
+
+#: templates/common/booking/my_bookings.html:36
+msgid "Du har inga kommande bokningar."
+msgstr "You have no upcoming bookings."
+
+#: templates/common/booking/email/booking_confirmation.html:96
+#: templates/common/booking/email/booking_confirmation.txt:15
+msgid "Logga in på Mina bokningar och ta bort bokningen där."
+msgstr "Sign in on My bookings and remove the booking there."
+
+#: booking/admin.py:250
+msgid "Bokningen hann tas bort av någon annan och sparades därför inte."
+msgstr ""
+"The booking was removed by somebody else in the meantime, so it was not "
+"saved."
+
+#: core/admin_ui.py:114
+msgid "Closed periods"
+msgstr "Closed periods"
+
+#: core/admin_ui.py:120
+msgid "Booking settings"
+msgstr "Booking settings"
+
+#: booking/admin.py:52 booking/admin.py:53
+msgid "Två bokningar i samma utrymme överlappar varandra."
+msgstr "Two bookings in the same room overlap each other."
+
+#: templates/date/date/components/bookings.html:39
+msgid "Inga kommande bokningar hittades"
+msgstr "No upcoming bookings found"
+
+#: attendance/models.py:30
+msgid "Tillåt icke-medlemmar att delta"
+msgstr "Allow non-member attendees"
+
+#: attendance/models.py:31
+msgid "Kodens genereringsnyckel"
+msgstr "Code generation secret"
+
+#: attendance/models.py:32
+msgid "Kodens giltighetsperiod (sekunder)"
+msgstr "Code validity period (seconds)"
+
+#: attendance/models.py:41
+msgctxt "singular"
+msgid "närvaroevenemang"
+msgstr "attendance event"
+
+#: attendance/models.py:42
+msgctxt "plural"
+msgid "närvaroevenemang"
+msgstr "attendance events"
+
+#: attendance/models.py:135
+msgid "deltagare, icke-medlem"
+msgstr "attendee, non-member"
+
+#: attendance/models.py:136
+msgid "deltagare, icke-medlemmar"
+msgstr "attendees, non-members"
+
+#: attendance/models.py:143
+msgid "icke-medlem"
+msgstr "non-member"
+
+#: attendance/models.py:147
+msgid "Icke-medlem"
+msgstr "Non-member"
+
+#: attendance/models.py:155
+msgid "Anlände"
+msgstr "Entered"
+
+#: attendance/models.py:156
+msgid "Lämnade"
+msgstr "Left"
+
+#: attendance/models.py:160
+msgctxt "left/entered some event"
+msgid "Anlände"
+msgstr "Entered"
+
+#: attendance/models.py:161
+msgctxt "left/entered some event"
+msgid "Lämnade"
+msgstr "Left"
+
+#: attendance/models.py:162
+msgctxt "left/entered in general"
+msgid "Anlände"
+msgstr "Entered"
+
+#: attendance/models.py:163
+msgctxt "left/entered in general"
+msgid "Lämnade"
+msgstr "Left"
+
+#: attendance/models.py:165 templates/common/attendance/index.html:12
+msgid "Närvaroevenemang"
+msgstr "Attendance event"
+
+#: attendance/models.py:176
+msgid "Tidpunkt"
+msgstr "Timestamp"
+
+#: attendance/models.py:183
+msgid "närvaroändring"
+msgstr "attendance change"
+
+#: attendance/models.py:184
+msgid "närvaroändringar"
+msgstr "attendance changes"
+
+#: attendance/models.py:210
+msgid "närvarokrav"
+msgstr "attendance requirement"
+
+#: polls/admin.py:54
+msgid "Närvarokrav"
+msgstr "Attendance requirement"
+
+#: polls/admin.py:172
+msgid "Närvarande i mötet nu"
+msgstr "Present at the meeting now"
+
+#: polls/admin.py:182
+msgid "Har röstat"
+msgstr "Have voted"
+
+#: templates/common/attendance/overview.html:28
+msgid "Skanna med telefonens kamera"
+msgstr "Scan it with your phone's camera"
+
+#: attendance/models.py:195
+#, python-format
+msgid "Exakt en av '%(user)s' eller '%(non_member)s' måste anges."
+msgstr "One and only one of '%(user)s' or '%(non_member)s' must be specified."
+
+#: attendance/models.py:220
+msgid "<ogiltig>"
+msgstr "<invalid>"
+
+#: attendance/models.py:225
+#, python-format
+msgid "%(user)s %(action)s %(event)s den %(date)s kl %(time)s"
+msgstr "%(user)s %(action)s %(event)s at %(date)s, %(time)s"
+
+#: attendance/views.py:79
+msgid "Fel kod"
+msgstr "Incorrect code"
+
+#, python-format
+#: attendance/views.py:65
+msgid "För många felaktiga koder. Försök igen om %(seconds)s sekunder."
+msgstr "Too many wrong codes. Try again in %(seconds)s seconds."
+
+#: attendance/views.py:85
+msgid "Namn måste anges om du inte är inloggad"
+msgstr "Name must be specified if you are not signed in"
+
+#: attendance/views.py:102
+msgid "Du kan inte gå in i ett evenemang var du redan är närvarande"
+msgstr "You cannot enter an event where you are already present"
+
+#: attendance/views.py:106
+msgid "Du kan inte gå ut ur ett evenemang var du inte är närvarande"
+msgstr "You cannot leave an event where you are not present"
+
+#: templates/common/attendance/detail.html:5
+#: templates/common/attendance/overview.html:5
+#, python-format
+msgid "Närvaro för %(title)s"
+msgstr "Attendance for %(title)s"
+
+#: templates/common/attendance/detail.html:21
+msgid "Till översiktsvyn"
+msgstr "To overview"
+
+#: templates/common/attendance/detail.html:31
+#, python-format
+msgid "Börjar: %(start)s"
+msgstr "Starts: %(start)s"
+
+#: templates/common/attendance/detail.html:36
+#, python-format
+msgid "Slutar: %(end)s"
+msgstr "Ends: %(end)s"
+
+#: templates/common/attendance/detail.html:43
+msgid "Du är"
+msgstr "You are"
+
+#: templates/common/attendance/detail.html:45
+msgid "närvarande"
+msgstr "present"
+
+#: templates/common/attendance/detail.html:47
+msgid "inte närvarande"
+msgstr "not present"
+
+#: templates/common/attendance/detail.html:64
+msgid ""
+"Du är inte inloggad. Fyll i ditt namn nedan om du inte har ett konto. Om du "
+"har ett konto var vänlig och logga in."
+msgstr ""
+"You are not signed in. Enter your name below if you do not have an account. "
+"Please sign in if you have an account."
+
+#: templates/common/attendance/detail.html:94
+msgid "Kod"
+msgstr "Code"
+
+#: templates/common/attendance/detail.html:99
+msgid "Skanna QR-kod"
+msgstr "Scan QR code"
+
+#: templates/common/attendance/detail.html:102
+msgid "Sluta skanna"
+msgstr "Stop scanning"
+
+#: templates/common/attendance/detail.html:111
+msgid "Tillåt JavaScript för att skanna QR-koder"
+msgstr "Allow JavaScript to scan QR codes"
+
+#: templates/common/attendance/detail.html:122
+msgid "Gå in"
+msgstr "Enter"
+
+#: templates/common/attendance/detail.html:125
+msgid "Gå ut"
+msgstr "Leave"
+
+#: templates/common/attendance/detail.html:133
+#: templates/common/attendance/overview.html:29
+msgid "Närvarande"
+msgstr "Present"
+
+#: templates/common/attendance/detail.html:143
+msgid "Närvaroändringar"
+msgstr "Attendance changes"
+
+#: templates/common/attendance/detail.html:148
+#, python-format
+msgid "%(name)s %(type_l)s den %(date)s kl %(time)s"
+msgstr "%(name)s %(type_l)s at %(date)s, %(time)s"
+
+#: templates/common/attendance/index.html:5
+msgid "Närvaro"
+msgstr "Attendance"
+
+#: templates/common/attendance/index.html:17
+msgid "Inga evenemang"
+msgstr "No events"
+
+#: templates/common/attendance/overview.html:35
+msgid "Ingen är närvarande"
+msgstr "Nobody is present"
+
+#: attendance/admin.py:178 attendance/admin.py:183
+msgid "Rapport"
+msgstr "Report"
+
+#: attendance/admin.py:99 templates/common/admin/attendance/report.html:106
+msgid "Medlem"
+msgstr "Member"
+
+#: templates/common/admin/attendance/report.html:5 templates/common/admin/attendance/report.html:14
+msgid "Närvarorapport"
+msgstr "Attendance report"
+
+#: templates/common/admin/attendance/report.html:17
+msgid "Tillbaka till listan"
+msgstr "Back to the list"
+
+#: templates/common/admin/attendance/report.html:19
+msgid "Ladda ner tidslinjen som CSV"
+msgstr "Download the timeline as CSV"
+
+#: templates/common/admin/attendance/report.html:22
+msgid "Ladda ner omröstningarna som CSV"
+msgstr "Download the polls as CSV"
+
+#: templates/common/admin/attendance/report.html:25
+msgid "Mötet"
+msgstr "The meeting"
+
+#: templates/common/admin/attendance/report.html:58
+msgid "Ja"
+msgstr "Yes"
+
+#: templates/common/admin/attendance/report.html:60
+msgid "Nej"
+msgstr "No"
+
+#: templates/common/admin/attendance/report.html:63
+msgid "Status"
+msgstr "Status"
+
+#: templates/common/admin/attendance/report.html:66
+msgid "Avslutat"
+msgstr "Ended"
+
+#: templates/common/admin/attendance/report.html:68
+msgid "Pågår"
+msgstr "Ongoing"
+
+#: templates/common/admin/attendance/report.html:72
+msgid "Situationen"
+msgstr "The situation"
+
+#: templates/common/admin/attendance/report.html:75
+msgid "Närvarande vid slutet"
+msgstr "Present at the end"
+
+#: templates/common/admin/attendance/report.html:78
+msgid "Närvarande vid sista ändringen"
+msgstr "Present at the last change"
+
+#: templates/common/admin/attendance/report.html:78
+msgid "Som mest närvarande"
+msgstr "Peak present"
+
+#: templates/common/admin/attendance/report.html:81
+msgid "Unika deltagare"
+msgstr "Distinct attendees"
+
+#: templates/common/admin/attendance/report.html:84
+msgid "Ändringsrader"
+msgstr "Change rows"
+
+#: templates/common/admin/attendance/report.html:87
+msgid "Tidslinje"
+msgstr "Timeline"
+
+#: attendance/admin.py:27 templates/common/admin/attendance/report.html:93
+msgid "Deltagare"
+msgstr "Attendee"
+
+#: attendance/admin.py:27 templates/common/admin/attendance/report.html:94
+msgid "Ändring"
+msgstr "Change"
+
+#: templates/common/admin/attendance/report.html:116
+msgid "Inga närvaroändringar registrerade."
+msgstr "No attendance changes recorded."
+
+#: templates/common/admin/attendance/report.html:118
+msgid "Omröstningar"
+msgstr "Polls"
+
+#: templates/common/admin/attendance/report.html:120
+msgid "Omröstningarna döljs utan behörigheten att visa frågor."
+msgstr "The polls are hidden without permission to view questions."
+
+#: templates/common/admin/attendance/report.html:127
+msgid "Röstandet är avslutat"
+msgstr "Voting has ended"
+
+#: templates/common/admin/attendance/report.html:129
+msgid "Röstandet är öppet"
+msgstr "Voting is open"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:136
+msgid "Röster"
+msgstr "Votes"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:137
+msgid "Andel (%)"
+msgstr "Share (%)"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:152
+msgid "Röstsedlar"
+msgstr "Ballots"
+
+#: attendance/admin.py:28 templates/common/admin/attendance/report.html:155
+msgid "Röstande"
+msgstr "Voters"
+
+#: templates/common/admin/attendance/report.html:163
+msgid "Flervalsfråga: en röstande får lämna flera val, så röstsedlarna kan vara fler än antalet röstande."
+msgstr "Multiple-choice poll: one voter can pick several choices, so the ballots can be more than the number of voters."
+
+#: templates/common/admin/attendance/report.html:168
+msgid "Frågan är öppen för vem som helst: en röstande kan rösta flera gånger, så röstsedlarna kan vara fler än antalet röstande."
+msgstr "The poll is open to anyone: one voter can vote several times, so the ballots can be more than the number of voters."
+
+#: templates/common/admin/attendance/report.html:174
+msgid "Inga omröstningar är kopplade till mötet."
+msgstr "No polls are attached to the meeting."
 
 #~ msgid "Författare"
 #~ msgstr "Author"
@@ -2433,60 +3559,154 @@ msgstr "Do you want to collaborate with Pulterit ry?"
 
 #~ msgid "Mera nyheter..."
 #~ msgstr "More news..."
-#: templates/impuls/date/components/header.html:12
-msgid "Impuls"
-msgstr "Impuls"
 
-#: templates/impuls/date/components/about.html:8
+#: polls/vote.py:24
+msgid "Du måste vara närvarande på mötet för att rösta."
+msgstr "You must be present at the meeting to vote."
+
+#: polls/vote.py:25
+msgid "Du valde ett alternativ som inte hör till frågan."
+msgstr "You selected an option that does not belong to the question."
+
+#: templates/common/admin/attendance/report.html:123
 msgid ""
-"Impuls r.f. är ämnesföreningen för psykologi vid Åbo Akademi. Föreningen "
-"strävar efter att förbättra och fördjupa undervisningen i psykologi, samt "
-"öka samvaron och trivseln för våra psykologistuderande."
+"Mötesnärvaron är ett sammanhangsvärde, inte en exakt nämnare vid "
+"omröstningstillfället: den läses vid mötets slut eller sista ändringen och "
+"kan omfatta gäster och personer utan rösträtt."
 msgstr ""
-"Impuls r.f. is the student association for psychology at Åbo Akademi "
-"University. The association works to improve and deepen psychology education "
-"and to strengthen community and well-being among psychology students."
+"The meeting headcount is contextual, not an exact poll-time denominator. It "
+"is read at the meeting end or last change and can include guests and members "
+"who are not eligible to vote."
 
-#: templates/impuls/date/components/about.html:13
+#: templates/common/attendance/overview.html
+msgid "Aktuell möteskod"
+msgstr "Current meeting code"
+
+#: templates/common/attendance/detail.html
+msgid "Inte startat"
+msgstr "Not started"
+
+#: templates/common/polls/detail.html
+msgid "Svarsalternativ"
+msgstr "Answer choices"
+
+#: templates/common/polls/detail.html
+msgid "Rösta"
+msgstr "Vote"
+
+#: templates/common/attendance/detail.html
 msgid ""
-"En central del av Impuls verksamhet är att ordna diverse evenemang för sina "
-"medlemmar och att vara aktiv över fakultets- och föreningsgränserna, såväl "
-"inom psykologi som andra ämnen."
+"Koden visas i mötesrummet. Välj Gå in när du kommer och Gå ut när du "
+"lämnar mötet."
 msgstr ""
-"A central part of Impuls' work is arranging events for its members and being "
-"active across faculty and association boundaries, both within psychology and "
-"with other subjects."
+"The code is shown in the meeting room. Choose Enter when you arrive and "
+"Leave when you leave the meeting."
 
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
-msgid "Klotterplanket"
-msgstr "Scribble board"
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
-msgid "Skriv ett inlägg anonymt med en pseudonym. Inlägg som bryter mot reglerna för webbplatsen kan tas bort."
-msgstr "Write a post anonymously with a pseudonym. Posts that break the website rules may be removed."
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
-msgid "Pseudonym"
-msgstr "Pseudonym"
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
-msgid "Meddelande"
-msgstr "Message"
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
-msgid "Inlägg"
-msgstr "Posts"
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
-msgid "Inga inlägg ännu. Skriv det första!"
-msgstr "No posts yet. Write the first one!"
-#: klotterplanket/views.py klotterplanket/models.py templates/common/klotterplanket/index.html
-msgid "Ditt inlägg har lagts till!"
-msgstr "Your post has been added!"
+#: templates/common/attendance/overview.html
+msgid "Närvaroflöde"
+msgstr "Attendance feed"
 
-#: klotterplanket/views.py
-msgid "Botkontrollen misslyckades, försök igen."
-msgstr "The bot check failed, try again."
-#: klotterplanket/views.py
-msgid "Kontrollera pseudonymen och meddelandet."
-msgstr "Check the pseudonym and the message."
+#: templates/common/attendance/overview.html
+msgid "Varje in- och utcheckning, senaste först."
+msgstr "Every check-in and check-out, newest first."
 
-#: exambank/views.py
-#, python-format
-msgid "Kunde inte ladda upp följande filer: %(files)s"
-msgstr "Could not upload the following files: %(files)s"
+#: templates/common/attendance/overview.html
+msgid "Inga ändringar ännu"
+msgstr "No changes yet"
+
+#: attendance/admin.py
+msgid "Länkar"
+msgstr "Links"
+
+#: attendance/admin.py
+msgid "Öppna incheckningen"
+msgstr "Open the check-in page"
+
+#: attendance/admin.py
+msgid "Visa möteskoden"
+msgstr "Show the meeting code"
+
+#: attendance/admin.py
+msgid ""
+"Koden som visas på översiktsvyn räknas fram ur hemligheten, så en ny "
+"hemlighet gör att koden som gäller just nu slutar fungera med en gång. "
+"Giltighetsperioden är hur många sekunder varje kod är giltig."
+msgstr ""
+"The code shown on the overview page is derived from the secret, so a new "
+"secret stops the code in force immediately. The validity period is how "
+"many seconds each code stays valid."
+
+#: attendance/admin.py
+msgid "Koden"
+msgstr "The code"
+
+#: templates/common/attendance/overview.html
+msgid "Visa fler"
+msgstr "Show more"
+
+#: templates/common/attendance/overview.html
+msgid "Hela loggen finns på mötets sida."
+msgstr "The whole log is on the meeting's page."
+
+#: templates/common/attendance/overview.html
+msgid "Till mötessidan"
+msgstr "Go to the meeting page"
+
+#: templates/common/attendance/detail.html
+msgid ""
+"Hela loggen, nyaste först. Listan uppdateras när sidan laddas om."
+msgstr ""
+"The whole log, newest first. The list refreshes when the page is "
+"reloaded."
+
+#: templates/common/attendance/detail.html
+msgid "Nyaste först. Listan uppdateras när sidan laddas om."
+msgstr "Newest first. The list refreshes when the page is reloaded."
+
+#: templates/common/attendance/detail.html
+msgid "Hela loggen finns i rapporten."
+msgstr "The whole log is in the report."
+
+#: templates/common/attendance/detail.html
+msgid "Öppna rapporten"
+msgstr "Open the report"
+
+#: attendance/admin.py
+msgid "Visa ändringarna"
+msgstr "Show the changes"
+
+#: attendance/models.py:119
+msgid "Sluttiden måste vara senare än starttiden."
+msgstr "The end time must be later than the start time."
+
+#: attendance/admin.py
+msgid "Mötets del av webbadressen, till exempel hostmote för /attendance/hostmote/. Bara a-z, 0-9, bindestreck och understreck."
+msgstr "The meeting's part of the address, for example hostmote for /attendance/hostmote/. Only a-z, 0-9, hyphens and underscores."
+
+#: attendance/admin.py
+msgid "Lämna tomt om sluttiden inte är känd. Mötet lämnar då den publika listan 24 timmar efter starttiden, och rapporten räknar närvaron vid den sista registrerade ändringen. Måste vara senare än starttiden."
+msgstr "Leave it empty when the end is not known. The meeting then leaves the public list 24 hours after its start, and the report reads attendance at the last recorded change. It must be later than the start."
+
+#: attendance/admin.py
+msgid "Visar de första %(shown)s av %(total)s ändringar. Hela loggen finns i CSV-filen."
+msgstr "Showing the first %(shown)s of %(total)s changes. The CSV file has the whole log."
+
+#: attendance/admin.py
+msgid "Icke-medlemmar"
+msgstr "Non-members"
+
+#: attendance/admin.py
+msgid "Ändringar"
+msgstr "Changes"
+
+#: templates/common/booking/room_detail.html:97
+msgid "Slutar nästa dag"
+msgstr "Ends the next day"
+
+#: templates/common/booking/room_detail.html:98
+msgid "Flera dagar"
+msgstr "Several days"
+
+#: templates/common/booking/room_detail.html:99
+msgid "Till datum"
+msgstr "End date"

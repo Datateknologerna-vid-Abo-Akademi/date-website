@@ -1,35 +1,13 @@
-{% extends 'core/base.html' %}
-{% load cache %}
-{% load i18n %}
-{% load static %}
-{% block extra_head %}
-  {{ block.super }}
-  <link rel="stylesheet"
-        href="{% static 'date/css/homepage.css' %}"
-        type="text/css">
-  <link rel="stylesheet"
-        href="{% static 'date/css/vanilla-calendar.min.css' %}"
-        type="text/css">
-  <link rel="stylesheet"
-        href="{% static 'date/css/vanilla-calendar-theme.css' %}"
-        type="text/css">
-  <script src="{% static 'date/js/vanilla-calendar.min.js' %}"></script>
-{% endblock %}
-{% block content %}
-  {% get_current_language as LANGUAGE_CODE %}
-  {% cache 300 main_page_fixed LANGUAGE_CODE %}
-    <div class="container-fluid min-vh-100 pulterit-homepage-shell">
-      {% include "date/components/header.html" %}
-      <section id="news" class="news-events">
-        <div id="main" class="main-container">
-          {% include "date/components/news.html" %}
-          {% include "date/components/events.html" %}
-          {% include "date/components/partners.html" %}
-        </div>
-      </section>
-      <section id="reklam" class="text-size">
-      </section>
-    </div>
-    {% include "date/components/scripts.html" %}
-  {% endcache %}
+{% extends 'date/start.html' %}
+{% comment %}
+Pulterit drops the X-UA-Compatible meta tag and uses its own shell classes. It has
+no about section, and fills the homepage with the calendar, the event list and the
+partners.
+{% endcomment %}
+{% block homepage_meta %}{% endblock %}
+{% block homepage_shell_classes %}container-fluid min-vh-100 pulterit-homepage-shell{% endblock %}
+{% block homepage_sections %}
+  {% include "date/components/news.html" %}
+  {% include "date/components/events.html" %}
+  {% include "date/components/partners.html" %}
 {% endblock %}

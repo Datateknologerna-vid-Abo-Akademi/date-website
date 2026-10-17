@@ -16,14 +16,15 @@ Swedish (`sv`) is the default language. The exact non-default languages exposed 
 - Shared locale catalogs in the repo: `sv`, `en`, `fi`
 - DaTe runtime languages: `sv`, `en`
 - Impuls runtime languages: `sv`, `en`
+- Biocum runtime languages: `sv`, `en`
 - Some other associations still expose `fi`
-- Settings sources: `core/settings/common.py`, `core/settings/date.py`, `core/settings/impuls.py`
+- Settings sources: `core/settings/common.py`, `core/settings/date.py`, `core/settings/impuls.py`, `core/settings/biocum.py`
 
 Important settings:
 
 - `LANGUAGE_CODE = "sv"`
 - `ALL_LANGUAGES = (("sv", "Svenska"), ("en", "English"), ("fi", "Suomi"))`
-- `DATE_LANGUAGES = (("sv", "Svenska"), ("en", "English"))` overrides DaTe's active language list
+- `DATE_LANGUAGES = (("sv", "Svenska"), ("en", "English"))` narrows an association's active language list (DaTe, Impuls, Biocum)
 - `ENABLE_LANGUAGE_FEATURES` controls whether the project exposes the active association's full language set or only Swedish
 - `LOCALE_PATHS = ("locale",)` points Django to the `.po` and `.mo` files
 
@@ -83,6 +84,7 @@ Static UI strings are not enough for this project because editors need translate
 
 The project registers translated fields in these files:
 
+- `ctf/translation.py`
 - `events/translation.py`
 - `functionaries/translation.py`
 - `news/translation.py`
@@ -91,6 +93,7 @@ The project registers translated fields in these files:
 
 Examples of translated model fields:
 
+- `Ctf.title`, `Ctf.content`
 - `Event.title`, `Event.content`
 - `FunctionaryRole.title`
 - `Post.title`, `Post.content`

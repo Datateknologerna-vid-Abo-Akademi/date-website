@@ -92,6 +92,58 @@ SIDEBAR_NAVIGATION = (
             ),
         ),
     ),
+    # Only appears for a user who holds one of the booking permissions, and only
+    # on an association that installs the app: an unresolvable permission or URL
+    # name drops the link.
+    AdminSidebarGroup(
+        _('Booking'),
+        (
+            AdminLink(
+                _('Bookings'),
+                icon='event_available',
+                url_name='admin:booking_booking_changelist',
+                permission='booking.view_booking',
+            ),
+            AdminLink(
+                _('Rooms'),
+                icon='meeting_room',
+                url_name='admin:booking_room_changelist',
+                permission='booking.view_room',
+            ),
+            AdminLink(
+                _('Closed periods'),
+                icon='event_busy',
+                url_name='admin:booking_closure_changelist',
+                permission='booking.view_closure',
+            ),
+            AdminLink(
+                _('Booking settings'),
+                icon='key',
+                url_name='admin:booking_bookingsettings_changelist',
+                permission='booking.view_bookingsettings',
+            ),
+        ),
+    ),
+    # The same rule as the booking group: a link whose permission or URL name
+    # does not resolve drops out, so the group is absent on an association that
+    # does not install the app.
+    AdminSidebarGroup(
+        _('Attendance'),
+        (
+            AdminLink(
+                _('Attendance events'),
+                icon='how_to_reg',
+                url_name='admin:attendance_attendanceevent_changelist',
+                permission='attendance.view_attendanceevent',
+            ),
+            AdminLink(
+                _('Icke-medlemmar'),
+                icon='person',
+                url_name='admin:attendance_nonmemberattendee_changelist',
+                permission='attendance.view_nonmemberattendee',
+            ),
+        ),
+    ),
     AdminSidebarGroup(
         _('Members'),
         (
@@ -185,6 +237,12 @@ SIDEBAR_NAVIGATION = (
         (
             AdminLink(_('CTF'), icon='military_tech', url_name='admin:ctf_ctf_changelist', permission='ctf.view_ctf'),
             AdminLink(
+                _('CTF Post-mortems'),
+                icon='flag',
+                url_name='admin:ctf_postmortem_changelist',
+                any_permissions=('ctf.add_ctf', 'ctf.change_ctf', 'ctf.add_flag', 'ctf.change_flag'),
+            ),
+            AdminLink(
                 _('Lucia'), icon='stars', url_name='admin:lucia_candidate_changelist', permission='lucia.view_candidate'
             ),
         ),
@@ -218,6 +276,24 @@ SIDEBAR_NAVIGATION = (
                     'harassment.view_harassmentemailrecipient',
                     'social.view_harassmentemailrecipient',
                 ),
+            ),
+            AdminLink(
+                _('Feedback'),
+                icon='forum',
+                url_name='admin:feedback_feedbacksubmission_changelist',
+                permission='feedback.view_feedbacksubmission',
+            ),
+            AdminLink(
+                _('Feedback Recipients'),
+                icon='mail',
+                url_name='admin:feedback_feedbackemailrecipient_changelist',
+                permission='feedback.view_feedbackemailrecipient',
+            ),
+            AdminLink(
+                _('Feedback Settings'),
+                icon='edit_note',
+                url_name='admin:feedback_feedbackformsettings_changelist',
+                permission='feedback.view_feedbackformsettings',
             ),
         ),
     ),

@@ -14,9 +14,15 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import json
 import os
 
+import django_stubs_ext
 import environ
 from django.templatetags.static import static
 from django.utils.translation import gettext_lazy as _
+
+# Annotations that become runtime expressions, such as
+# `SingleObjectMixin[Model]` in a class definition, need django-stubs' generic
+# support at runtime and not only while type checking.
+django_stubs_ext.monkeypatch()
 
 from .dependencies.ckeditor import *  # noqa
 
@@ -404,6 +410,14 @@ APRIL_HOMEPAGE_ENABLED = False
 REGISTRATION_TERMS_ENABLED = False
 EQUALITY_PLAN_ENABLED = False
 KK_EVENT_TEMPLATES_ENABLED = False
+BOOKING_ENABLED = False
+INSTAGRAM_USERNAME = ''
+
+# The public functionaries listing applies the year and role query parameters
+# for logged-out visitors only when this is on. Off by default because the year
+# filter exposes earlier years; pulterit enables it because it has no member
+# accounts to sign in with.
+FUNCTIONARIES_ANONYMOUS_FILTERS = False
 
 # The runtime image is built with each association's static collected into
 # /code/static-collected/<PROJECT_NAME>; pick that tree when present so every
@@ -604,6 +618,18 @@ LOGGING = {
         },
         'simple': {'()': 'core.redaction.RedactingFormatter', 'format': '%(levelname)s %(message)s'},
     },
+    'filters': {
+        # Python 3.14 reports exceptions from shielded futures that nobody
+        # retrieves through the event loop exception handler, which logs them on
+        # the 'asyncio' logger at ERROR. A client disconnect cancels the request
+        # task while asgiref's sync bridge is often awaiting asyncio.shield(...),
+        # so the shielded future finishes with a harmless CancelledError. The
+        # filter drops only those cancellation records; any other shielded-future
+        # failure still reaches the log.
+        'shielded_future_cancellation': {
+            '()': 'core.redaction.ShieldedFutureCancellationFilter',
+        },
+    },
     'handlers': {
         'console': {'level': 'NOTSET', 'class': 'logging.StreamHandler', 'formatter': 'simple'},
         'console_debug': {'level': 'DEBUG', 'class': 'logging.StreamHandler', 'formatter': 'simple'},
@@ -639,6 +665,18 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
+        },
+        # Without an entry here the record falls through to logging.lastResort
+        # and prints unformatted. Keep the handler and an INFO level so genuine
+        # asyncio errors and warnings stay visible with normal formatting, and
+        # gate only the benign shielded-future cancellations with the filter.
+        # The filter belongs on this logger: a filter on an ancestor logger does
+        # not gate records that propagate up to it, and asyncio logs on itself.
+        'asyncio': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'filters': ['shielded_future_cancellation'],
+            'propagate': False,
         },
     },
 }

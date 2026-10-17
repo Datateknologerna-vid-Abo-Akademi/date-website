@@ -1,0 +1,45 @@
+{% extends 'core/base.html' %}
+{% load booking_dates %}
+{% load static %}
+{% load i18n %}
+{% block title %}
+  {% trans "Mina bokningar" %}
+{% endblock %}
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet"
+        href="{% static 'booking/css/booking.css' %}"
+        type="text/css">
+{% endblock %}
+{% block content %}
+  <div class="container-md min-vh-100 container-margin-top">
+    <div class="container-size break-words">
+      <div class="content">
+        <h1 class="booking-heading">{% trans "Mina bokningar" %}</h1>
+        {% if bookings %}
+          <p class="booking-help">{% trans "Här ser du dina kommande bokningar och kan ta bort en som inte längre passar." %}</p>
+          <ul class="booking-list">
+            {% for booking in bookings %}
+              <li class="booking-list-item">
+                <span class="booking-badge">{{ booking.start|short_date }}</span>
+                <span class="booking-time">{{ booking.start|date:"H:i" }} - {% if booking.start|date:"Ymd" != booking.end|date:"Ymd" %}{{ booking.end|short_date }} {% endif %}{{ booking.end|date:"H:i" }}</span>
+                <span class="booking-room-name">{{ booking.room.name }}</span>
+                <form method="post" class="booking-cancel-form">
+                  {% csrf_token %}
+                  <input type="hidden" name="booking" value="{{ booking.pk }}">
+                  <button class="theme-button booking-cancel-button" type="submit">{% trans "Avboka" %}</button>
+                </form>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="booking-help">{% trans "Du har inga kommande bokningar." %}</p>
+        {% endif %}
+        <p class="booking-help booking-back">
+          <a href="{% url 'booking:index' %}">{% trans "Tillbaka till utrymmena" %}</a>
+        </p>
+        {% include 'booking/partials/board_contact.html' %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

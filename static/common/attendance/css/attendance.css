@@ -1,0 +1,283 @@
+/* Screen styles for the two public attendance pages: the participant check-in
+   page and the staff overview. report.css owns the admin report page, this file
+   owns these two, and both templates load it.
+
+   It depends on no association's variables, so the colours below are fallbacks
+   that a theme can override by setting --attendance-present, --attendance-absent
+   and --attendance-muted. */
+
+/* Bootstrap's text-success is 3.6 to 1 on this card and text-warning is a little
+   better, both under the 4.5 to 1 floor for body text. The state colours are
+   raised here, scoped to these pages, rather than changed in the markup: the
+   templates and the tests pin those two class names. */
+.attendance-page .text-success {
+    color: var(--attendance-present, #7fe3a9) !important;
+}
+
+.attendance-page .text-warning {
+    color: var(--attendance-absent, #ffd479) !important;
+}
+
+/* The title block. The pages used line-height 1 to keep the heading and the
+   description close, which crowds a description that wraps to two lines. */
+.attendance-head {
+    margin-bottom: 1.25rem;
+    line-height: 1.35;
+}
+
+.attendance-head h1 {
+    margin-bottom: 0.35rem;
+}
+
+.attendance-head p {
+    margin-bottom: 0.25rem;
+}
+
+/* The rotating code. The staff page is read from across a meeting room, so it
+   scales with the viewport instead of sitting at heading size. */
+.attendance-code-block {
+    margin-bottom: 1.5rem;
+}
+
+.attendance-code-block #current-code {
+    margin-bottom: 0.25rem;
+    font-size: clamp(3rem, 11vw, 5.5rem);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.1em;
+    line-height: 1.1;
+}
+
+.attendance-countdown {
+    margin-bottom: 0.25rem;
+    color: var(--attendance-muted, #c9c9c9);
+    font-variant-numeric: tabular-nums;
+}
+
+.attendance-countdown--stale {
+    color: var(--attendance-absent, #ffd479);
+    font-weight: 600;
+}
+
+/* A code that has stopped rotating must not look current, and the QR code must
+   not be offered at all: it carries the same expired value, so a scan fills the
+   form with a code the server refuses, and five of those start a lockout. The
+   digits stay, dimmed, because they are what the room is reading. */
+.attendance-page--code-stale #current-code {
+    opacity: 0.45;
+}
+
+.attendance-page--code-stale .attendance-qr,
+.attendance-page--code-stale .attendance-qr-caption {
+    display: none;
+}
+
+/* The QR code holds a full event URL, so its canvas grows with the link. The
+   cap keeps a long production URL inside the card on a phone. */
+.attendance-qr {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+}
+
+.attendance-qr canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+.attendance-qr-caption {
+    margin-bottom: 1.5rem;
+    color: var(--attendance-muted, #c9c9c9);
+    text-align: center;
+}
+
+/* The two actions of the check-in form. They were an input-group, which joined
+   them into one segmented control: a participant then had to read a disabled
+   half to work out which half applied. */
+.attendance-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.attendance-hint {
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--attendance-muted, #c9c9c9);
+    font-size: 0.95rem;
+}
+
+.attendance-presence {
+    display: inline-block;
+    margin-bottom: 1rem;
+    padding: 0.2rem 0.7rem;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.attendance-section {
+    margin-top: 1.75rem;
+}
+
+.attendance-list {
+    margin-bottom: 0;
+    padding-left: 1.2rem;
+}
+
+.attendance-list li {
+    margin-bottom: 0.3rem;
+}
+
+/* A log of check-ins and check-outs, used twice: the live feed on the staff
+   overview page, and the whole log on the event page. One row per change with
+   its time, and the two directions are told apart by colour as well as by the
+   word in the last column, so the colour is never the only signal. */
+.attendance-changes {
+    --attendance-enter: var(--attendance-present, #7fe3a9);
+    --attendance-leave: var(--attendance-absent, #ffd479);
+
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.attendance-changes-wrap {
+    overflow-x: auto;
+}
+
+.attendance-changes th,
+.attendance-changes td {
+    padding: 0.4rem 0.5rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid rgba(127, 127, 127, 0.25);
+    border-bottom-color: color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.attendance-changes thead th {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.attendance-changes__time {
+    color: var(--attendance-muted, #c9c9c9);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.attendance-changes__name {
+    font-weight: 600;
+}
+
+.attendance-changes__action--enter {
+    color: var(--attendance-enter);
+    font-weight: 600;
+}
+
+.attendance-changes__action--leave {
+    color: var(--attendance-leave);
+    font-weight: 600;
+}
+
+.attendance-changes__row--enter td:first-child {
+    border-left: 3px solid var(--attendance-enter);
+}
+
+.attendance-changes__row--leave td:first-child {
+    border-left: 3px solid var(--attendance-leave);
+}
+
+.attendance-changes__hint {
+    margin-bottom: 0.5rem;
+    color: var(--attendance-muted, #c9c9c9);
+    font-size: 0.95rem;
+}
+
+/* The line under the table, or the paging button when there is more to show. The
+   room between the table and whichever of them is visible belongs to them: the
+   table sits inside a wrapper, so a margin on the table would not collapse with
+   theirs and the gap would come out twice as wide. */
+.attendance-changes__end {
+    margin: 1rem 0 0;
+    color: var(--attendance-muted, #c9c9c9);
+    font-size: 0.95rem;
+}
+
+/* The paging control under a changes table, and under the roster, which pages the
+   same way. It is a button because it acts on the page rather than navigating,
+   but it reads as the quiet text affordance that pagination wants, in the site's
+   own link colour, instead of a second primary action competing with the table. */
+.attendance-changes__more,
+.attendance-list__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 1rem 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--linkColorLight, rgb(208, 255, 0));
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+}
+
+.attendance-changes__more .bi,
+.attendance-list__more .bi {
+    font-size: 0.8em;
+}
+
+.attendance-changes__more:hover,
+.attendance-list__more:hover {
+    color: var(--linkColorLightHover, rgb(146, 179, 0));
+}
+
+.attendance-changes__more:focus-visible,
+.attendance-list__more:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+/* The list of meetings. Each row is one tappable block carrying the meeting's
+   start, so a participant on a phone does not have to aim at a bare link. */
+.attendance-events {
+    margin-bottom: 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.attendance-events li + li {
+    margin-top: 0.5rem;
+}
+
+.attendance-event-link {
+    display: block;
+    padding: 0.6rem 0.9rem;
+    border: 1px solid rgba(127, 127, 127, 0.35);
+    border-color: color-mix(in srgb, currentColor 35%, transparent);
+    border-radius: 0.4rem;
+    text-align: left;
+}
+
+.attendance-event-link__title {
+    display: block;
+    font-weight: 600;
+}
+
+.attendance-event-link__when {
+    display: block;
+    color: var(--attendance-muted, #c9c9c9);
+    font-size: 0.9rem;
+}
+
+/* A phone is the device most participants use, so the two actions take the full
+   width there instead of wrapping into a ragged pair. */
+@media (max-width: 480px) {
+    .attendance-actions > .btn {
+        flex: 1 1 8rem;
+    }
+
+    .attendance-code-block #current-code {
+        letter-spacing: 0.06em;
+    }
+}
