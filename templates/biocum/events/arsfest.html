@@ -12,20 +12,7 @@ one's name.
   </div>
 {% endblock %}
 {% block arsfest_content_classes %}text-content lava-container{% endblock %}
-{% block arsfest_background_style %}        .background-img {
-  background: url("https://albin-storage.cdn.datateknologerna.org/biologica/public/events/arsfest-7.jpg") no-repeat center center;
-  background-attachment: fixed;
-  -webkit-background-size: cover;
-  -moz-background-size: cover;
-  -o-background-size: cover;
-  background-size: cover;
-  }
-  @media (max-width: 768px) {
-  .background-img {
-  background-attachment: scroll;
-  }
-  }
-{% endblock %}
+{% block arsfest_background_style %}{% include "events/partials/arsfest_background.html" with url="https://albin-storage.cdn.datateknologerna.org/biologica/public/events/arsfest-7.jpg" %}{% endblock %}
 {% block arsfest_heading_block %}<h1 class="age" style="font-size:64px; text-align:center;">{{ event.title }}</h1>{% endblock %}
 {% block arsfest_logo %}
   <div class="periodic-table-square" aria-label="Biologica logo">{% include "svg/logo.svg" %}</div>
