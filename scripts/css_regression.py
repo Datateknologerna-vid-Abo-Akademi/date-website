@@ -1955,6 +1955,26 @@ def cmd_compare(args: argparse.Namespace) -> int:
         if other and other != info["base_url"]:
             print(f"note: {name} was captured at {other} before and {info['base_url']} after")
 
+    # Content that follows the clock changes between two captures for reasons that are
+    # not the stylesheet: the homepage calendar marks today, the event list filters on
+    # whether an event has ended, and relative times are computed from the request time.
+    # Say so when the pair is far enough apart for it to matter, because the symptoms
+    # look exactly like a style regression.
+    try:
+        gap_minutes = (
+            abs((datetime.fromisoformat(after["created"]) - datetime.fromisoformat(before["created"])).total_seconds())
+            / 60
+        )
+    except KeyError, ValueError:
+        gap_minutes = None
+    if gap_minutes is not None and gap_minutes > 5:
+        print(
+            f"note: the captures are {gap_minutes:.0f} minutes apart. Pages whose content follows "
+            "the clock can differ for that reason alone: the homepage calendar marks today (so a "
+            "pair taken across local midnight always shows it), the homepage event list drops an "
+            "event once it has ended, and relative sign-up times move"
+        )
+
     same_tree = bool(before.get("tree")) and before.get("tree") == after.get("tree")
     if same_tree and not args.same_tree_ok:
         tree = before.get("tree") or {}

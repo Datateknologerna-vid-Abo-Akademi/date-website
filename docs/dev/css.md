@@ -493,6 +493,11 @@ run as proof, know the boundaries:
   probe records `transition-property` but not the animation properties.
 - Masked pixels are ignored, and so is the decoded content of an image whose dimensions do
   not change. Replacing artwork behind `img.balloon` would not be caught.
+- Content that follows the clock moves without any stylesheet change. The homepage
+  calendar marks today, so a capture pair taken across local midnight always shows a
+  difference on the day cell; the homepage event list drops an event once it has ended;
+  relative sign-up times move. Capture the before and after back to back, and read the
+  `note:` line `compare` prints when the pair is more than five minutes apart.
 - Images that load lazily below the fold may be unloaded in both captures, so a broken
   image URL there can hide. The page is captured with `captureBeyondViewport` after a
   scroll to the top, not after a scroll sweep.
