@@ -10,6 +10,7 @@
 {% block content %}
   <div class="container-md container-margin-top min-vh-100 p-1">
     <div class="container-size break-words">
+      {% block article_badge %}{% endblock %}
       <div class="content overflow-auto">
         <h2>{{ article.title }}</h2>
         <h4 class="author">
