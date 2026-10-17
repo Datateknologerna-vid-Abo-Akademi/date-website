@@ -1259,8 +1259,27 @@ class BookingMemberFlowTests(TestCase):
         # One visible label covers both inputs, so each carries its own name.
         self.assertContains(response, 'aria-label="Starttid"')
         self.assertContains(response, 'aria-label="Sluttid"')
+        # The two longer options take their words from the template.
+        self.assertContains(response, 'data-booking-range-overnight-label="Slutar nästa dag"')
+        self.assertContains(response, 'data-booking-range-multi-day-label="Flera dagar"')
+        self.assertContains(response, 'data-booking-range-end-date-label="Till datum"')
         # The controls are native, so the page no longer loads a picker bundle.
         self.assertNotContains(response, 'flatpickr')
+
+    def test_the_longer_options_are_offered_only_where_the_server_takes_them(self):
+        # A daily window refuses a booking that crosses the night, so a room with
+        # hours must not be shown a control that can only fail.
+        room_with_hours = Room.objects.create(
+            name='Med tider',
+            bookable_from=datetime.time(8),
+            bookable_until=datetime.time(22),
+        )
+
+        with_hours = self.client.get(reverse('booking:room_detail', args=[room_with_hours.pk]))
+        without_hours = self.client.get(self.room_url)
+
+        self.assertContains(with_hours, 'data-booking-longer="0"')
+        self.assertContains(without_hours, 'data-booking-longer="1"')
 
     def test_one_empty_range_is_reported_once(self):
         response = self.client.post(self.room_url, self.booking_payload(start='', end=''))

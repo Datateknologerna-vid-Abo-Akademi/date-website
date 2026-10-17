@@ -83,13 +83,20 @@
                   {% comment %}
                     Start and end are one question, so they are one row under one
                     label. The script picks the date once and asks for the two
-                    clock times, and the pair stays what posts.
+                    clock times, and the pair stays what posts. A room with a
+                    daily window cannot take a booking that crosses the night, so
+                    the two longer options are only offered for a room without
+                    hours.
                   {% endcomment %}
                   <p class="booking-when"
                      id="booking-when"
                      data-booking-time-range
                      data-booking-range-separator="{% trans 'till' %}"
-                     data-booking-range-date-label="{% trans 'Datum' %}">
+                     data-booking-range-date-label="{% trans 'Datum' %}"
+                     data-booking-longer="{% if room.has_bookable_hours %}0{% else %}1{% endif %}"
+                     data-booking-range-overnight-label="{% trans 'Slutar nästa dag' %}"
+                     data-booking-range-multi-day-label="{% trans 'Flera dagar' %}"
+                     data-booking-range-end-date-label="{% trans 'Till datum' %}">
                     <label for="{{ field.id_for_label }}">{% trans "Tid" %}:</label>
                     <span class="booking-when-fields" data-booking-range-fields>
                       {{ field }}

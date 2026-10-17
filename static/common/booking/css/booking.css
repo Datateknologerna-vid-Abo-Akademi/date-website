@@ -282,6 +282,74 @@
     grid-column: 2;
 }
 
+/* The two longer options sit under the row: an end on the next day, and a link
+   that reveals an end date for a booking over several days. Only a room without a
+   daily window renders them, because only such a room can take them. */
+.booking-when > .booking-when-extras {
+    grid-column: 2;
+}
+
+.booking-when-extras {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.booking-when-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--textColorLightish, var(--textColorLight));
+    cursor: pointer;
+}
+
+.booking-when-option input {
+    width: auto;
+    margin: 0;
+    accent-color: var(--linkColorLight, var(--textColorLight));
+}
+
+/* A link rather than a button: booking over several days is not something to put
+   in front of every visitor. */
+.booking-when-toggle {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--helpText);
+    font: inherit;
+    font-size: 0.9rem;
+    text-decoration: underline;
+    text-underline-offset: 0.2rem;
+    cursor: pointer;
+}
+
+.booking-when-toggle:hover,
+.booking-when-toggle-on {
+    color: var(--linkColorLight, var(--textColorLight));
+}
+
+.booking-when > .booking-when-end {
+    grid-column: 2;
+}
+
+.booking-when-end {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.9rem;
+}
+
+.booking-when-end label {
+    color: var(--helpText);
+}
+
+.booking-when-end .booking-when-end-date {
+    width: auto;
+    min-width: 10rem;
+}
+
 /* A native date or time field draws its own calendar and its own indicator icon,
    and those follow the colour scheme rather than the field's colours. On a white
    field with the dark scheme the icon turns white and disappears, so the field
@@ -398,6 +466,20 @@
     }
 
     .booking-when-split .booking-when-clock {
+        width: 100%;
+    }
+
+    /* The longer options and the end date follow the row into the one column. */
+    .booking-when > .booking-when-extras,
+    .booking-when > .booking-when-end {
+        grid-column: 1;
+    }
+
+    .booking-when-end {
+        flex-wrap: wrap;
+    }
+
+    .booking-when-end .booking-when-end-date {
         width: 100%;
     }
 

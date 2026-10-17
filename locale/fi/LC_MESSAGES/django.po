@@ -3194,3 +3194,15 @@ msgstr "Kaksi varausta samassa tilassa menevät päällekkäin."
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"
 msgstr "Tulevia varauksia ei löytynyt"
+
+#: templates/common/booking/room_detail.html:97
+msgid "Slutar nästa dag"
+msgstr "Päättyy seuraavana päivänä"
+
+#: templates/common/booking/room_detail.html:98
+msgid "Flera dagar"
+msgstr "Useampi päivä"
+
+#: templates/common/booking/room_detail.html:99
+msgid "Till datum"
+msgstr "Päättymispäivä"

@@ -3158,3 +3158,15 @@ msgstr "Two bookings in the same room overlap each other."
 #: templates/date/date/components/bookings.html:39
 msgid "Inga kommande bokningar hittades"
 msgstr "No upcoming bookings found"
+
+#: templates/common/booking/room_detail.html:97
+msgid "Slutar nästa dag"
+msgstr "Ends the next day"
+
+#: templates/common/booking/room_detail.html:98
+msgid "Flera dagar"
+msgstr "Several days"
+
+#: templates/common/booking/room_detail.html:99
+msgid "Till datum"
+msgstr "End date"
