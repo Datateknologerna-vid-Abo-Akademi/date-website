@@ -7,7 +7,7 @@ for that system: where a sheet lives, which copy wins, what belongs in a
 variant's palette, and the policies for load order, `!important`, breakpoints,
 `z-index` and JavaScript hooks.
 
-The tree holds 86 hand-written stylesheets (88 `.css` files minus the two
+The tree holds 89 hand-written stylesheets (91 `.css` files minus the two
 vendored minified bundles, `static/common/date/css/vanilla-calendar.min.css` and
 `static/common/core/css/flatpickr.min.css`). A handful of them are linked by
 `templates/common/core/base.html` and therefore load on every page; the rest are
@@ -252,7 +252,7 @@ existing uses have no such comment, so treating that as the standard is
 aspirational: the comment is the rule for new work, and the uncommented
 existing uses are debt.
 
-The tree has 351 `!important` declarations across 38 hand-written stylesheets
+The tree has 360 `!important` declarations across 40 hand-written stylesheets
 (comment text excluded); the largest concentrations are 41 in each of
 `static/biocum/events/css/arsfest.css`, `static/date/events/css/arsfest.css` and
 `static/pulterit/events/css/arsfest.css`.
@@ -276,13 +276,17 @@ project is written against:
 Prefer mobile-first `min-width: Npx`, and use `max-width: (N - 0.02)px` when a
 desktop-first rule is genuinely needed.
 
-The tree does not follow this today. It contains 33 distinct media query
-strings as written, including whitespace variants such as `(max-width : 992px)`
-and `(min-width : 992px)`, prefixed variants such as `only screen and
-(max-width: 900px)`, and near-duplicates such as `767px`, `767.98px` and
-`768px`. A guard test normalises whitespace only, so it freezes 31 keys and
-treats `(max-width : 992px)` as a repeat of `(max-width: 992px)`. Adding any
-other query is a reviewed change that regenerates the baseline, and the query
+The tree does not follow this today. It contains 36 distinct media query
+strings as written, 31 of them width based, including whitespace variants such
+as `(max-width : 992px)` and `(min-width : 992px)`, prefixed variants such as
+`only screen and (max-width: 900px)`, and near-duplicates such as `767px`,
+`767.98px` and `768px`. A guard test normalises whitespace, so it freezes 29
+keys and treats `(max-width : 992px)` as a repeat of `(max-width: 992px)`.
+Queries that are not about a viewport width are not breakpoints and are ignored
+by that ratchet: `@media print`, `(hover: hover)`, `(pointer: coarse)` and
+`(prefers-reduced-motion: reduce)` are media types and feature tests, and
+freezing them would flag a print stylesheet as a new breakpoint. Adding any new
+width query is a reviewed change that regenerates the baseline, and the query
 must use the documented scale; the existing oddities are debt rather than
 precedent.
 

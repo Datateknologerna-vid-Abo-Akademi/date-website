@@ -565,7 +565,9 @@ def build_baseline(root: Path = BASE_DIR) -> dict[str, Any]:
         values = sorted({value for value, _ in z_index_declarations(text)})
         if values:
             z_index_values[relative] = values
-        media_queries.update(normalise_media_query(prelude) for prelude in media_query_preludes(text))
+        media_queries.update(
+            normalise_media_query(prelude) for prelude in media_query_preludes(text) if is_breakpoint_query(prelude)
+        )
     linked = template_static_references(root / "templates")
     empty_linked = sorted(
         path.relative_to(root).as_posix()
@@ -777,6 +779,18 @@ class ZIndexRatchetTests(SimpleTestCase):
         self.assertEqual(z_index_declarations(".a { Z-INDEX: 5; }"), [("5", ".a")])
 
 
+def is_breakpoint_query(query: str) -> bool:
+    """True for a media query that actually keys off a viewport width.
+
+    The ratchet exists to keep breakpoints on the Bootstrap scale, so ``@media
+    print`` and feature queries such as ``(hover: hover)`` or
+    ``(prefers-reduced-motion: reduce)`` are not its business: they are media
+    types and feature tests, not widths, and freezing them would flag a print
+    stylesheet as a new breakpoint.
+    """
+    return "width" in normalise_media_query(query).lower()
+
+
 class BreakpointRatchetTests(SimpleTestCase):
     def test_no_new_breakpoint_query(self):
         frozen = set(baseline_section("media_queries"))
@@ -784,11 +798,20 @@ class BreakpointRatchetTests(SimpleTestCase):
         for path in project_stylesheets(STATIC_DIR):
             relative = path.relative_to(BASE_DIR).as_posix()
             for prelude in media_query_preludes(path.read_text(encoding="utf-8")):
+                if not is_breakpoint_query(prelude):
+                    continue
                 key = normalise_media_query(prelude)
                 if key not in frozen:
                     raw = f" (raw: {prelude})" if prelude != key else ""
                     offenders.append(f"{relative}: @media {key}{raw}")
         self.assertEqual(offenders, [], "A stylesheet introduced a new breakpoint; reuse a documented one")
+
+    def test_media_types_and_feature_queries_are_not_breakpoints(self):
+        self.assertFalse(is_breakpoint_query("print"))
+        self.assertFalse(is_breakpoint_query("(hover: hover) and (pointer: fine)"))
+        self.assertFalse(is_breakpoint_query("(prefers-reduced-motion: reduce)"))
+        self.assertTrue(is_breakpoint_query("(max-width: 992px)"))
+        self.assertTrue(is_breakpoint_query("only screen and (min-width: 576px)"))
 
     def test_whitespace_around_the_colon_shares_one_key(self):
         self.assertEqual(normalise_media_query("(max-width : 992px)"), "(max-width: 992px)")
