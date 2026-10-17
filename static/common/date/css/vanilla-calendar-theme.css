@@ -16,17 +16,35 @@
   --vc-color: var(--primaryColor);
   --vc-header-color: var(--primaryColor);
   --vc-title-color: var(--primaryColor);
+  --vc-title-color-hover: var(--primaryColorLighter);
+  --vc-title-color-disabled: #d3d3d3;
+
+  /* keyboard focus follows the site's ring colour, not the vendor orange */
+  --vc-focus-outline-color: var(--linkColorLight);
 
   /* weekday headings */
   --vc-week-day-color: var(--primaryColorLighter);
   --vc-week-day-off-color: var(--primaryColorLighter);
+  --vc-week-day-color-hover: var(--primaryColorLighter);
+  --vc-week-day-off-color-hover: var(--primaryColorLighter);
 
-  /* day cells: transparent, so only today and a selection get a fill */
+  /* day cells: transparent, so only today and an event get a fill */
   --vc-date-bg: transparent;
   --vc-date-color: var(--primaryColor);
   --vc-date-bg-hover: var(--secondaryColorDarker);
   --vc-date-hover-bg: var(--secondaryColorDarker);
+  --vc-date-hover-edge-bg: var(--secondaryColorDarker);
   --vc-date-disabled-color: #d3d3d3;
+
+  /* days outside the current month */
+  --vc-date-outside-color: darkgray;
+  --vc-date-today-outside-color: var(--vc-date-outside-color);
+  --vc-date-selected-outside-bg: transparent;
+  --vc-date-selected-outside-color: var(--vc-date-outside-color);
+  --vc-date-weekend-outside-bg: transparent;
+  --vc-date-weekend-outside-color: var(--vc-date-outside-color);
+  --vc-date-weekend-outside-bg-hover: var(--vc-date-bg-hover);
+  --vc-date-weekend-outside-hover-bg: var(--vc-date-hover-bg);
 
   /* today */
   --vc-date-today-bg: var(--secondaryColorDarker);
@@ -38,15 +56,37 @@
   --vc-date-selected-bg: transparent;
   --vc-date-selected-color: var(--primaryColor);
 
-  /* days outside the current month */
-  --vc-date-outside-color: darkgray;
-  --vc-date-weekend-outside-bg: transparent;
-  --vc-date-weekend-outside-color: darkgray;
-
-  /* weekends */
+  /* weekends follow the palette, including the today and selected combinations:
+     the vendored sheet would otherwise paint a weekend-today number and a
+     selected weekend day with its own rose. */
   --vc-date-weekend-color: var(--primaryColor);
-  --vc-date-weekend-bg-hover: var(--secondaryColorDarker);
-  --vc-date-weekend-hover-bg: var(--secondaryColorDarker);
+  --vc-date-weekend-today-color: var(--vc-date-today-color);
+  --vc-date-weekend-bg-hover: var(--vc-date-bg-hover);
+  --vc-date-weekend-hover-bg: var(--vc-date-hover-bg);
+  --vc-date-weekend-hover-edge-bg: var(--vc-date-hover-bg);
+  --vc-date-weekend-selected-bg: transparent;
+  --vc-date-weekend-selected-color: var(--primaryColor);
+  --vc-date-weekend-disabled-color: var(--vc-date-disabled-color);
+  --vc-date-weekend-today-disabled-color: var(--vc-date-disabled-color);
+  --vc-date-weekend-disabled-outside-color: var(--vc-date-disabled-color);
+  --vc-date-weekend-today-outside-color: var(--vc-date-outside-color);
+
+  /* range modes are unused here, but they must not fall back to the vendored
+     cyan and rose either */
+  --vc-date-range-middle-bg: var(--vc-date-bg-hover);
+  --vc-date-range-middle-color: var(--vc-date-color);
+  --vc-date-range-middle-weekend-bg: var(--vc-date-bg-hover);
+  --vc-date-range-middle-weekend-color: var(--vc-date-color);
+  --vc-date-range-middle-outside-bg: var(--vc-date-bg-hover);
+  --vc-date-range-middle-outside-color: var(--vc-date-color);
+
+  /* month and year views, reachable by clicking the title */
+  --vc-months-years-bg: var(--secondaryColor);
+  --vc-months-years-color: var(--primaryColorLight);
+  --vc-months-years-bg-hover: var(--secondaryColorDarker);
+  --vc-months-years-bg-selected: var(--primaryColorLight);
+  --vc-months-years-color-selected: var(--secondaryColor);
+  --vc-months-years-color-disabled: #d3d3d3;
 
   /* event popup */
   --vc-date-popup-bg: var(--secondaryColorDarker);
@@ -133,11 +173,6 @@
   font-size: 16px;
   line-height: 20px;
   font-weight: 700;
-}
-
-.vc [data-vc-month]:hover,
-.vc [data-vc-year]:hover {
-  color: var(--primaryColorLighter);
 }
 
 /* The arrows are two thin bars in the 2.x sheet rather than the 3.x SVG, so draw
