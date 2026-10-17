@@ -5,7 +5,7 @@ The `attendance` app owns the digital meeting attendance list: an event gets a p
 
 The app is installed for the `date` variant only: `core/settings/date.py` lists `attendance` in its `get_installed_apps([...])` call, and no other `core/settings/<variant>.py` does. It has no capability flag of its own. `core/urls/date.py` passes the `attendance` route key to `build_urlpatterns(...)` unconditionally, next to `booking`, which is mounted only when `settings.BOOKING_ENABLED` is true. Removing attendance from a release would be a code change, not an environment variable.
 
-Access is not a permission of the app either. The overview page and the websocket both test `user.is_staff`, and `members.Member.is_staff` is membership of a group named in `settings.STAFF_GROUPS` (for `date`: `styrelse`, `admin`, `fotograf`, `rösträknare`) or a superuser. Every one of those groups can therefore read the current code and the change log. That is wider than "the board", and it is the app's main access limit.
+Access is a permission of the app: the overview page, the websocket that feeds it and the change log on the event page all test `attendance.view_attendanceevent`, the same permission the report asks for. An association grants it to a group in the admin, so it decides which groups read the code, the feed and the log, and membership of a staff group (`settings.STAFF_GROUPS`, which for `date` is `styrelse`, `admin`, `fotograf` and `rösträknare`) is not enough on its own: being staff only opens the admin and nothing about attendance. `polls` and `attendance` both hold readers who hold the permission without being staff, which is the point of using it rather than staff status.
 
 ## Models
 `attendance/models.py` defines everything, in four models.

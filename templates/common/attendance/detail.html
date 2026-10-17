@@ -17,7 +17,7 @@
   <div class="container-md min-vh-100 container-margin-top d-flex justify-content-center">
     <div class="container-size">
       <div class="content attendance-page" style="width: fit-content">
-        {% if can_see_overview %}
+        {% if can_see_attendance %}
           <div class="mb-2">
             <a href="{% url 'attendance-event-overview' object.slug %}">{% trans "Till översiktsvyn" %}</a>
           </div>
@@ -135,7 +135,7 @@
             {% endfor %}
           </ul>
         </section>
-        {% if user.is_staff %}
+        {% if can_see_attendance %}
           <section class="attendance-section">
             <h2 id="changes-heading">{% trans "Närvaroändringar" %}</h2>
             <p class="attendance-changes__hint">{% trans "Nyaste först. Listan uppdateras när sidan laddas om." %}</p>
@@ -174,9 +174,7 @@
                class="attendance-changes__end"
                {% if changes|length > changes_visible %}hidden{% endif %}>
               {% trans "Hela loggen finns i rapporten." %}
-              {% if perms.attendance.view_attendanceevent %}
-                <a href="{% url 'admin:attendance_event_report' object.pk %}">{% trans "Öppna rapporten" %}</a>
-              {% endif %}
+              <a href="{% url 'admin:attendance_event_report' object.pk %}">{% trans "Öppna rapporten" %}</a>
             </p>
           </section>
         {% endif %}

@@ -99,6 +99,25 @@ def make_member(username, **kwargs):
     return Member.objects.create_user(username=username, password="pwd", **kwargs)
 
 
+def staff_group():
+    """The staff group, carrying the permission the attendance views ask for.
+
+    Granting it on the group rather than on the user is the route an association
+    takes in the admin, and it is what lets the socket test clear the membership and
+    watch the connection close.
+    """
+    group, _created = Group.objects.get_or_create(name=STAFF_GROUP)
+    group.permissions.add(Permission.objects.get(content_type__app_label="attendance", codename="view_attendanceevent"))
+    return group
+
+
+def unpermitted_staff_group():
+    """The staff group of an association that has not granted the attendance permission."""
+    group = staff_group()
+    group.permissions.clear()
+    return group
+
+
 def make_event(slug="mote", title="Möte", start_datetime=None, **kwargs):
     """An attendance event that is open right now and uses the pinned code key."""
     kwargs.setdefault("code_secret", TOTP_KEY)
@@ -984,7 +1003,7 @@ class AttendanceViewTestCase(TestCase):
         self.event = make_event(allow_non_members=True)
         self.member = make_member("medlem", first_name="Maja", last_name="Andersson")
         self.staff = make_member("funktionar", first_name="Stina", last_name="Styrelse")
-        self.staff.groups.add(Group.objects.create(name=STAFF_GROUP))
+        self.staff.groups.add(staff_group())
         self.detail_url = reverse("attendance-event-view", args=[self.event.slug])
         self.overview_url = reverse("attendance-event-overview", args=[self.event.slug])
 
@@ -1364,14 +1383,34 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         start = content.index('<p id="log-end"')
         self.assertNotIn("hidden", content[start : content.index(">", start)])
 
-    def test_the_change_log_hides_the_report_link_without_the_permission(self):
-        record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=1))
-        self.client.force_login(self.staff)
+    def test_the_change_log_needs_the_permission_not_staff_status(self):
+        """A staff group member without the attendance permission sees no log."""
+        unpermitted = make_member("utan-behorighet", first_name="Ulla", last_name="Utan")
+        unpermitted.groups.add(unpermitted_staff_group())
+        self.client.force_login(unpermitted)
 
         response = self.client.get(self.detail_url)
 
-        self.assertContains(response, "Hela loggen finns i rapporten.")
-        self.assertNotContains(response, reverse("admin:attendance_event_report", args=[self.event.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["changes"], [])
+        self.assertNotContains(response, "Närvaroändringar")
+        self.assertNotContains(response, 'id="change-log"')
+        self.assertNotContains(response, reverse("attendance-event-overview", args=[self.event.slug]))
+
+    def test_a_member_holding_the_permission_sees_the_code_and_the_log(self):
+        """The permission is the whole gate, so a member outside the staff groups can hold it."""
+        permitted = make_member("behorig", first_name="Pia", last_name="Behörig")
+        permitted.user_permissions.add(
+            Permission.objects.get(content_type__app_label="attendance", codename="view_attendanceevent")
+        )
+        self.client.force_login(permitted)
+
+        detail = self.client.get(self.detail_url)
+        overview = self.client.get(self.overview_url)
+
+        self.assertEqual(overview.status_code, 200)
+        self.assertContains(detail, "Närvaroändringar")
+        self.assertContains(detail, reverse("attendance-event-overview", args=[self.event.slug]))
 
     def test_the_change_log_renders_a_bounded_slice(self):
         for index in range(LOG_CHANGES_ON_EVENT_PAGE + 5):
@@ -2000,6 +2039,23 @@ class AttendanceOverviewViewTests(AttendanceViewTestCase):
         self.client.force_login(self.member)
 
         self.assertEqual(self.client.get(self.overview_url).status_code, 403)
+
+    def test_a_staff_member_without_the_permission_is_forbidden(self):
+        """Being in a staff group is not the gate; the attendance permission is."""
+        unpermitted = make_member("utan-behorighet", first_name="Ulla", last_name="Utan")
+        unpermitted.groups.add(unpermitted_staff_group())
+        self.client.force_login(unpermitted)
+
+        self.assertEqual(self.client.get(self.overview_url).status_code, 403)
+
+    def test_a_member_holding_the_permission_reaches_the_overview(self):
+        permitted = make_member("behorig", first_name="Pia", last_name="Behörig")
+        permitted.user_permissions.add(
+            Permission.objects.get(content_type__app_label="attendance", codename="view_attendanceevent")
+        )
+        self.client.force_login(permitted)
+
+        self.assertEqual(self.client.get(self.overview_url).status_code, 200)
 
     def test_the_qr_code_names_the_address_the_page_is_served_from(self):
         """A phone camera opens a link, so a bare path would be useless to it.
@@ -2780,7 +2836,7 @@ class AttendanceOriginValidationTests(TestCase):
         self.websocket_application = websocket_application
         self.event = make_event(slug="origin-check")
         self.staff = make_member("origin-staff", is_superuser=False)
-        self.staff.groups.add(Group.objects.create(name=STAFF_GROUP))
+        self.staff.groups.add(staff_group())
         self.client.force_login(self.staff)
         session_key = self.client.cookies[settings.SESSION_COOKIE_NAME].value
         self.cookie_header = f"{settings.SESSION_COOKIE_NAME}={session_key}".encode()
@@ -2861,7 +2917,7 @@ class AttendanceConsumerTests(TestCase):
     def setUp(self):
         self.event = make_event(slug="motesal")
         self.staff = make_member("funktionar", first_name="Stina", last_name="Styrelse")
-        self.staff.groups.add(Group.objects.create(name=STAFF_GROUP))
+        self.staff.groups.add(staff_group())
         self.member = make_member("medlem", first_name="Maja", last_name="Andersson")
         self.channel_layer = get_channel_layer()
 
@@ -2989,6 +3045,34 @@ class AttendanceConsumerTests(TestCase):
         connected, snapshot = async_to_sync(flow)()
 
         self.assertTrue(connected)
+        self.assertEqual(snapshot["type"], "attendance_snapshot")
+
+    def test_a_staff_member_without_the_permission_is_refused(self):
+        """Being staff is not enough: the socket serves the code, so it takes the permission."""
+        unpermitted = make_member("utan-behorighet")
+        unpermitted.groups.add(unpermitted_staff_group())
+
+        async def flow():
+            communicator = await connect_as(unpermitted, self.event.slug)
+            connected, _ = await communicator.connect(timeout=10)
+            return connected
+
+        self.assertFalse(async_to_sync(flow)())
+
+    def test_a_member_holding_the_permission_is_accepted(self):
+        permitted = make_member("behorig")
+        permitted.user_permissions.add(
+            Permission.objects.get(content_type__app_label="attendance", codename="view_attendanceevent")
+        )
+
+        async def flow():
+            communicator = await connect_as(permitted, self.event.slug)
+            snapshot = await self.connect_and_drain_the_snapshot(communicator)
+            await communicator.disconnect(timeout=10)
+            return snapshot
+
+        snapshot = async_to_sync(flow)()
+
         self.assertEqual(snapshot["type"], "attendance_snapshot")
 
     def test_staff_removed_from_the_staff_group_mid_connection_gets_no_code(self):

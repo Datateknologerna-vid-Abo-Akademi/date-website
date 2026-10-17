@@ -44,6 +44,12 @@ CHANGES_VISIBLE_ON_LOAD = 10
 # How many further rows one click reveals.
 CHANGES_PAGE_SIZE = 20
 
+# Who may see the meeting code, the live feed, the change log and the report. It is
+# the permission the report already asks for, so an association grants it to the
+# groups it wants through the admin; being staff is not enough on its own, because
+# the staff groups include roles that have no business reading who was in a meeting.
+ATTENDANCE_VIEW_PERMISSION = "attendance.view_attendanceevent"
+
 # The name a guest typed, kept in a cookie so their next visit is one tap. The
 # cookie is convenience only: the log's identity is the typed name, not the
 # cookie, so a different name is a different attendee (case and stray spaces
@@ -106,15 +112,15 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
         ctx = {**kwargs}
 
         ctx["object"] = self.object
-        ctx["can_see_overview"] = AttendanceEventOverview.is_user_allowed(self.request.user)
+        ctx["can_see_attendance"] = AttendanceEventOverview.is_user_allowed(self.request.user)
         ctx["user"] = self.request.user
         ctx["present_attendees"] = self.object.present_attendees()
-        # The log is staff-only and paged on the page itself: the newest slice is
-        # rendered, the page hides all but the first page of it, and the rest is a
-        # click away. The report carries the whole record as CSV and as a printed
-        # page, so bounding this table loses nothing. A reader who is not staff
-        # never runs the query at all.
-        if self.request.user.is_staff:
+        # The log is for readers who hold the attendance permission, and it is paged
+        # on the page itself: the newest slice is rendered, the page hides all but
+        # the first page of it, and the rest is a click away. The report carries the
+        # whole record as CSV and as a printed page, so bounding this table loses
+        # nothing. A reader without the permission never runs the query at all.
+        if ctx["can_see_attendance"]:
             ctx["changes"] = list(
                 self.object.attendance_changes.select_related("user", "non_member")[:LOG_CHANGES_ON_EVENT_PAGE]
             )
@@ -320,10 +326,10 @@ class AttendanceEventOverview(UserPassesTestMixin, AttendanceEventObjectMixin[At
 
     @staticmethod
     def is_user_allowed(user) -> bool:
-        return user.is_authenticated and user.is_staff
+        return user.is_authenticated and user.has_perm(ATTENDANCE_VIEW_PERMISSION)
 
     def test_func(self) -> bool:
-        """Only allows staff to access the code view page"""
+        """Only a reader holding the attendance permission reaches the code page."""
         self.object = self.get_object()
 
         return self.is_user_allowed(self.request.user)
