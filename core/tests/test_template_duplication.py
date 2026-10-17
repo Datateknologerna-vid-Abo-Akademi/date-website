@@ -50,12 +50,6 @@ DRIFT_MARGIN = 0.02
 # Every frozen path needs a reason. This is the only place a new copy is allowed to
 # be recorded, so it is also the place a maintainer explains why.
 REASONS: dict[str, str] = {
-    "date/start.html": (
-        "The homepage composition. Each association renders a different set of "
-        "sections, but the outer shell, the head stylesheets and the scripts "
-        "include are the same in all six; extracting that shell is the next step "
-        "and is not part of this change."
-    ),
     "events/arsfest.html": (
         "The Pulterit arsfest page is still a copy of DaTe's, and biocum's is a "
         "third rewrite. `templates/common/events/arsfest_base.html` is the shared "

@@ -1,41 +1,14 @@
-{% extends 'core/base.html' %}
-{% load cache %}
+{% extends 'date/start.html' %}
 {% load i18n %}
-{% load static %}
-{% block extra_head %}
-  {{ block.super }}
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  {# Shared core of the per-association homepage sheets: it loads first, so the association's own rules still win. #}
-  <link rel="stylesheet"
-        href="{% static 'date/css/homepage-core.css' %}"
-        type="text/css">
-  <link rel="stylesheet"
-        href="{% static 'date/css/homepage.css' %}"
-        type="text/css">
-  <link rel="stylesheet"
-        href="{% static 'date/css/vanilla-calendar.min.css' %}"
-        type="text/css">
-  {% get_current_language as LANGUAGE_CODE %}
-  <script src="{% static 'date/js/vanilla-calendar.min.js' %}"></script>
-{% endblock %}
-{% block content %}
-  {% load static %}
-  {% cache 300 main_page_fixed LANGUAGE_CODE %}
-    <div class="container-fluid p-0 min-vh-100">
-      {% include "date/components/header.html" %}
-      {% include "date/components/about.html" %}
-      <section id="news" class="news-events">
-        <div id="main" class="main-container">
-          {% include "date/components/news.html" %}
-          {% include "date/components/events.html" %}
-          {% include "date/components/extras.html" %}
-          {% translate "Senaste Instagram-inlägg" as instagram_title %}
-          {% include "date/components/instagram.html" with instagram_title=instagram_title %}
-        </div>
-      </section>
-      <section id="reklam" class="text-size">
-      </section>
-    </div>
-    {% include "date/components/scripts.html" %}
-  {% endcache %}
+{% comment %}
+Impuls inherits DaTe's about section and drops the shell padding, then fills the
+homepage with the calendar, the event list, the extras and its Instagram feed.
+{% endcomment %}
+{% block homepage_shell_classes %}container-fluid p-0 min-vh-100{% endblock %}
+{% block homepage_sections %}
+  {% include "date/components/news.html" %}
+  {% include "date/components/events.html" %}
+  {% include "date/components/extras.html" %}
+  {% translate "Senaste Instagram-inlägg" as instagram_title %}
+  {% include "date/components/instagram.html" with instagram_title=instagram_title %}
 {% endblock %}
