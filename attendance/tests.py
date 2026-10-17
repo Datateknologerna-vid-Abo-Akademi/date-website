@@ -2523,6 +2523,10 @@ class AttendanceAdminTests(TestCase):
         self.admin_user = make_member("admin", is_superuser=True)
         self.changelist_url = reverse("admin:attendance_attendanceevent_changelist")
 
+    def change_changelist_url(self, event):
+        """The change list is only ever shown for one meeting."""
+        return f"{reverse('admin:attendance_attendancechange_changelist')}?event__id__exact={event.pk}"
+
     def test_event_changelist_lists_the_events(self):
         make_event(slug="hostmote", title="Höstmöte")
         self.client.force_login(self.admin_user)
@@ -2561,7 +2565,7 @@ class AttendanceAdminTests(TestCase):
         record_change(event, LEAVE, user=member, timestamp=now() - timedelta(minutes=1))
         self.client.force_login(self.admin_user)
 
-        response = self.client.get(reverse("admin:attendance_attendancechange_changelist"))
+        response = self.client.get(self.change_changelist_url(event))
 
         self.assertContains(response, 'class="attendance-change--enter">Anlände<')
         self.assertContains(response, 'class="attendance-change--leave">Lämnade<')
@@ -2574,7 +2578,7 @@ class AttendanceAdminTests(TestCase):
         record_change(event, ENTER, user=maja, timestamp=now())
         self.client.force_login(self.admin_user)
 
-        response = self.client.get(reverse("admin:attendance_attendancechange_changelist"))
+        response = self.client.get(self.change_changelist_url(event))
 
         self.assertContains(response, ">Maja Andersson</a>")
         self.assertContains(response, reverse("admin:members_member_change", args=[maja.pk]))
@@ -2586,7 +2590,7 @@ class AttendanceAdminTests(TestCase):
         record_change(event, ENTER, user=nameless, timestamp=now())
         self.client.force_login(self.admin_user)
 
-        response = self.client.get(reverse("admin:attendance_attendancechange_changelist"))
+        response = self.client.get(self.change_changelist_url(event))
 
         self.assertContains(response, ">namnlos</a>")
 
@@ -2608,11 +2612,86 @@ class AttendanceAdminTests(TestCase):
         record_change(event, ENTER, non_member=guest, timestamp=now())
         self.client.force_login(self.admin_user)
 
-        response = self.client.get(reverse("admin:attendance_attendancechange_changelist"))
+        response = self.client.get(self.change_changelist_url(event))
 
         self.assertContains(response, "Deltagare")
         self.assertContains(response, "Olof Backman")
         self.assertContains(response, "icke-medlem")
+
+    def test_the_change_changelist_without_a_meeting_goes_to_the_meeting_list(self):
+        """The list belongs to a meeting: without one there is no list to show."""
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:attendance_attendancechange_changelist"))
+
+        self.assertRedirects(response, reverse("admin:attendance_attendanceevent_changelist"))
+
+    def test_the_change_changelist_names_its_meeting_and_drops_the_event_column(self):
+        """The meeting is the page the list belongs to, so a column naming it is noise."""
+        event = make_event(slug="mote", title="Årsmöte 2026")
+        member = make_member("medlem")
+        record_change(event, ENTER, user=member, timestamp=now())
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.change_changelist_url(event))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Närvaroändringar: Årsmöte 2026")
+        self.assertEqual(response.context["attendance_event"], event)
+        self.assertNotIn("event", response.context["cl"].list_display)
+
+    def test_saving_a_correction_returns_to_its_meeting(self):
+        event = make_event(slug="mote")
+        member = make_member("medlem")
+        change = record_change(event, ENTER, user=member, timestamp=now() - timedelta(minutes=1))
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse("admin:attendance_attendancechange_change", args=[change.pk]),
+            {
+                "event": event.pk,
+                "user": member.pk,
+                "non_member": "",
+                "timestamp": timezone.localtime(change.timestamp).strftime("%Y-%m-%d %H:%M:%S"),
+                "type": str(LEAVE.value),
+                "_save": "Spara",
+            },
+        )
+
+        self.assertRedirects(response, self.change_changelist_url(event))
+
+    def test_adding_a_change_returns_to_its_meeting(self):
+        event = make_event(slug="mote")
+        member = make_member("medlem")
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse("admin:attendance_attendancechange_add"),
+            {
+                "event": event.pk,
+                "user": member.pk,
+                "non_member": "",
+                "timestamp": timezone.localtime(now()).strftime("%Y-%m-%d %H:%M:%S"),
+                "type": str(ENTER.value),
+                "_save": "Spara",
+            },
+        )
+
+        self.assertRedirects(response, self.change_changelist_url(event))
+
+    def test_deleting_a_change_returns_to_its_meeting(self):
+        event = make_event(slug="mote")
+        member = make_member("medlem")
+        change = record_change(event, ENTER, user=member, timestamp=now())
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(
+            reverse("admin:attendance_attendancechange_delete", args=[change.pk]),
+            {"post": "yes"},
+        )
+
+        self.assertRedirects(response, self.change_changelist_url(event))
+        self.assertFalse(AttendanceChange.objects.filter(pk=change.pk).exists())
 
     def test_event_changelist_shows_the_status(self):
         """The list is ordered by start time, so the running meeting is not on top."""

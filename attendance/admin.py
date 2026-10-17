@@ -5,7 +5,7 @@ from typing import Any
 from django import forms
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import re_path, reverse
 from django.utils.html import format_html
@@ -567,8 +567,8 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
     formfield_overrides = {**UNFOLD_FORMFIELD_OVERRIDES}
     form = AttendanceChangeAdminForm
 
-    list_display = ("timestamp", "event", "attendee", "change_direction")
-    list_filter = ("type", "event")
+    list_display = ("timestamp", "attendee", "change_direction")
+    list_filter = ("type",)
     search_fields = (
         "event__title",
         "user__username",
@@ -580,7 +580,74 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
     ordering = ("-timestamp",)
     # The attendee column reads both attendee relations per row, and a method in
     # `list_display` no longer gets the automatic select_related a plain field got.
-    list_select_related = ("event", "user", "non_member")
+    list_select_related = ("user", "non_member")
+    # Unfold's header is a breadcrumb built from the model, not the `title` this
+    # view sets, so the meeting is named in this line above the table. The classic
+    # admin ignores the attribute and carries the meeting in the page title.
+    list_before_template = "admin/attendance/attendancechange/meeting.html"
+
+    def changelist_view(self, request, extra_context=None):
+        """The list belongs to one meeting, so it is only shown for one.
+
+        A meeting is the page the board works from, and a meeting's changes are
+        read in the context of that meeting: an unfiltered list of every change
+        ever recorded is not a page anybody opens on purpose. Without a meeting in
+        the query string the operator is sent to the meeting list, which is where
+        one is chosen.
+        """
+        event = self._event_for_request(request)
+        if event is None:
+            return HttpResponseRedirect(reverse("admin:attendance_attendanceevent_changelist"))
+
+        extra_context = {
+            **(extra_context or {}),
+            "title": f"{_('Närvaroändringar')}: {event.title}",
+            "attendance_event": event,
+            "attendance_event_change_url": reverse("admin:attendance_attendanceevent_change", args=[event.pk]),
+        }
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def _event_for_request(self, request):
+        """The meeting the query string names, or None when it names none or an unknown one."""
+        event_id = request.GET.get("event__id__exact")
+        if not event_id:
+            return None
+        try:
+            return AttendanceEvent.objects.get(pk=event_id)
+        except AttendanceEvent.DoesNotExist, TypeError, ValueError:
+            return None
+
+    def _event_changelist_redirect(self, event_id):
+        return HttpResponseRedirect(
+            f"{reverse('admin:attendance_attendancechange_changelist')}?event__id__exact={event_id}"
+        )
+
+    def response_add(self, request, obj, post_url_continue=None):
+        response = super().response_add(request, obj, post_url_continue)
+        if "_continue" in request.POST or "_addanother" in request.POST:
+            return response
+        return self._event_changelist_redirect(obj.event_id)
+
+    def response_change(self, request, obj):
+        response = super().response_change(request, obj)
+        if "_continue" in request.POST or "_addanother" in request.POST:
+            return response
+        return self._event_changelist_redirect(obj.event_id)
+
+    def delete_view(self, request, object_id, extra_context=None):
+        # The row is gone by the time the redirect is chosen, so the meeting it
+        # belonged to is kept on the request here.
+        obj = self.get_object(request, object_id)
+        if obj is not None:
+            request.attendance_event_id = obj.event_id
+        return super().delete_view(request, object_id, extra_context)
+
+    def response_delete(self, request, obj_display, obj_id):
+        response = super().response_delete(request, obj_display, obj_id)
+        event_id = getattr(request, "attendance_event_id", None)
+        if event_id is None:
+            return response
+        return self._event_changelist_redirect(event_id)
 
     @admin.display(description=_("Deltagare"))
     def attendee(self, obj):

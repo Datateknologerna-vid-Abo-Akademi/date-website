@@ -136,12 +136,6 @@ SIDEBAR_NAVIGATION = (
                 url_name='admin:attendance_attendanceevent_changelist',
                 permission='attendance.view_attendanceevent',
             ),
-            AdminLink(
-                _('Attendance changes'),
-                icon='history',
-                url_name='admin:attendance_attendancechange_changelist',
-                permission='attendance.view_attendancechange',
-            ),
         ),
     ),
     AdminSidebarGroup(
