@@ -13,6 +13,13 @@ from django.utils.timezone import localtime
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext_lazy
 
+from core.admin_base import UNFOLD_FORMFIELD_OVERRIDES, ModelAdmin
+from core.admin_widgets import (
+    FLATPICKR_ADMIN_CSS,
+    FLATPICKR_ADMIN_JS,
+    FlatpickrDateTimeAdminMixin,
+)
+
 from . import models
 from .models import AttendanceChange, AttendanceEvent
 
@@ -155,7 +162,16 @@ def csv_row(fieldnames: tuple[str, ...], values: list[Any]) -> dict[str, Any]:
     return dict(zip(fieldnames, safe_values, strict=True))
 
 
-class AttendanceEventAdmin(admin.ModelAdmin):
+class AttendanceEventAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
+    # The two times are one field each with the calendar picker the events, news and
+    # polls forms use, rather than Django's split date and hour boxes: a board member
+    # filling this in should not meet a widget that looks unfinished in dark mode.
+    flatpickr_datetime_fields = ("start_datetime", "end_datetime")
+    # Every other field takes the shared Unfold widget overrides, the way the events,
+    # news, polls and static page admins do. Without them a CharField renders as a
+    # bare `vTextField` with no border and no padding under Unfold, which on a dark
+    # page reads as a grey stripe rather than as something to type in.
+    formfield_overrides = {**UNFOLD_FORMFIELD_OVERRIDES}
     # The workflow is "find the event, open its overview page", so the list is
     # ordered newest first and carries the times and the guest switch. Without
     # this the changelist shows titles only and cannot be searched.
@@ -164,6 +180,12 @@ class AttendanceEventAdmin(admin.ModelAdmin):
     search_fields = ("title", "description", "slug")
     date_hierarchy = "start_datetime"
     ordering = ("-start_datetime",)
+
+    # The shared picker's stylesheet and script. Admin Media is not inherited from the
+    # mixin, so both admins that use the widget declare it themselves.
+    class Media:
+        css = {"all": FLATPICKR_ADMIN_CSS}
+        js = ("admin/js/jquery.init.js",) + FLATPICKR_ADMIN_JS
 
     # No inline of the changes: Django does not paginate an inline, so a meeting
     # with a few hundred people draws one editable form per check-in and the page
@@ -441,7 +463,12 @@ class AttendanceEventAdmin(admin.ModelAdmin):
         return response
 
 
-class AttendanceChangeAdmin(admin.ModelAdmin):
+class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
+    # A correction of last resort, so the time is edited with the same picker as the
+    # meeting's own times rather than with the split date and hour boxes.
+    flatpickr_datetime_fields = ("timestamp",)
+    formfield_overrides = {**UNFOLD_FORMFIELD_OVERRIDES}
+
     list_display = ("timestamp", "event", "user", "non_member", "type")
     list_filter = ("type", "event")
     search_fields = (
@@ -453,6 +480,10 @@ class AttendanceChangeAdmin(admin.ModelAdmin):
     )
     date_hierarchy = "timestamp"
     ordering = ("-timestamp",)
+
+    class Media:
+        css = {"all": FLATPICKR_ADMIN_CSS}
+        js = ("admin/js/jquery.init.js",) + FLATPICKR_ADMIN_JS
 
 
 admin.site.register(models.AttendanceEvent, AttendanceEventAdmin)

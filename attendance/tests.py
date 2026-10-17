@@ -3193,6 +3193,29 @@ class AttendanceEventAdminFormTests(TestCase):
         self.assertIn("collapse", sections["Koden"]["classes"])
         self.assertEqual(sections["Koden"]["fields"], ("code_secret", "code_validity_time"))
 
+    def test_the_times_are_one_field_with_the_shared_picker(self):
+        """The same flatpickr widget the events, news and polls forms use."""
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.change_url)
+
+        self.assertContains(response, "flatpickr-datetime")
+        self.assertContains(response, "core/css/admin-datetime.css")
+        self.assertContains(response, "core/js/flatpickr.min.js")
+        self.assertContains(response, timezone.localtime(self.event.start_datetime).strftime("%Y-%m-%d %H:%M"))
+        self.assertNotContains(response, "vDateField")
+        self.assertNotContains(response, "vTimeField")
+
+    def test_a_change_s_time_uses_the_same_picker(self):
+        change = record_change(self.event, ENTER, user=make_member("medlem"), timestamp=now())
+        self.client.force_login(self.staff)
+
+        response = self.client.get(reverse("admin:attendance_attendancechange_change", args=[change.pk]))
+
+        self.assertContains(response, "flatpickr-datetime")
+        self.assertContains(response, "core/css/admin-datetime.css")
+        self.assertNotContains(response, "vDateField")
+
     def test_the_change_page_links_to_the_check_in_page_and_the_overview(self):
         """An operator should not have to build a URL out of the slug."""
         self.client.force_login(self.staff)
