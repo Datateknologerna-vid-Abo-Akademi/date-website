@@ -1,9 +1,11 @@
+from datetime import timedelta
+
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from members.models import Member
-from news.models import Post
+from news.models import Category, Post
 
 
 class NewsTestCase(TestCase):
@@ -13,7 +15,7 @@ class NewsTestCase(TestCase):
             title='Test news',
             slug='test',
             author_id=self.member.id,
-            published_time=timezone.now() - timezone.timedelta(seconds=1),
+            published_time=timezone.now() - timedelta(seconds=1),
         )
         self.assertIsNotNone(self.post)
         self.assertTrue(self.post.published)
@@ -205,3 +207,40 @@ class PageWindowTestCase(TestCase):
 def _fake_page(number, total):
     paginator = type('FakePaginator', (), {'num_pages': total})()
     return type('FakePage', (), {'number': number, 'paginator': paginator})()
+
+
+class AlbinsAngelsBadgeTests(TestCase):
+    """The badge is an opt-in block override, and the snippet gates on the name.
+
+    DaTe and Pulterit show it by overriding the block in the shared article and
+    index templates, so the shared templates render nothing for associations that
+    do not ask for it. The dev database has no post in this category, which is why
+    this is asserted here rather than in a capture.
+    """
+
+    def make_post(self, *, category_name: str, slug: str) -> Post:
+        author = Member.objects.create(username=f"author-{slug}", password="test")
+        category = Category.objects.create(name=category_name, slug=f"{slug}-category")
+        return Post.objects.create(
+            title=f"Post {slug}",
+            slug=slug,
+            author=author,
+            category=category,
+            published_time=timezone.now() - timedelta(seconds=1),
+        )
+
+    def test_the_article_page_shows_the_badge_for_that_category(self):
+        post = self.make_post(category_name="Albins Angels", slug="aa-post")
+
+        response = self.client.get(post.get_absolute_url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "aa-img")
+
+    def test_another_category_renders_no_badge(self):
+        post = self.make_post(category_name="Nyheter", slug="plain-post")
+
+        response = self.client.get(post.get_absolute_url())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "aa-img")

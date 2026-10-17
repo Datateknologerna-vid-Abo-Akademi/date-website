@@ -523,6 +523,7 @@ dev = [
     { name = "pre-commit" },
     { name = "ruff" },
     { name = "types-requests" },
+    { name = "websockets" },
 ]
 
 [package.metadata]
@@ -575,6 +576,7 @@ dev = [
     { name = "pre-commit", specifier = ">=4.6.2" },
     { name = "ruff", specifier = ">=0.15.20" },
     { name = "types-requests", specifier = ">=2.33.0.20260518" },
+    { name = "websockets", specifier = ">=17.1" },
 ]
 
 [[package]]

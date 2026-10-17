@@ -5,7 +5,7 @@
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js"
         async
         defer></script>
-<p>
+<p class="registration-timing">
   {% trans "Anmälan stängs" %} {{ event.sign_up_deadline|date:"j.n H:i" }}{{ event.sign_up_deadline|localized_timeuntil|comma_if }}
 </p>
 <small>{% trans "OBS!" %} {% trans "Anmälningen är bindande om inget annat meddelas." %}

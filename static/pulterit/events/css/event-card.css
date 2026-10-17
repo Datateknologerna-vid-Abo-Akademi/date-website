@@ -1,3 +1,10 @@
+/* This association keeps its own event card sheet instead of the shared
+   static/common/events/css/event-card.css. The card rules are nearly the same,
+   but this file also carries page chrome (the body background image and the
+   association footer colour) that belongs only on the pages linking it, and its
+   card-body link uses a different active colour. Delete it once that chrome and
+   that colour have a home of their own. */
+
 body {
     background: url("/static/core/images/Pulterit-mineral.jpg") no-repeat center center fixed;
     background-size: cover;

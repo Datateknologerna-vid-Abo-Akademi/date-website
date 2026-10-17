@@ -1,0 +1,48 @@
+{% extends 'core/base.html' %}
+{% load cache %}
+{% load i18n %}
+{% load static %}
+{% comment %}
+The homepage shell every association shares: the head stylesheets, the grid, the
+header, the scripts, and the cache. An association overrides only the blocks below:
+which scripts its head loads, the classes on the shell, whether the about section
+appears, and which components fill `#main`.
+{% endcomment %}
+{% block extra_head %}
+  {{ block.super }}
+  {% block homepage_meta %}<meta http-equiv="X-UA-Compatible" content="ie=edge">{% endblock %}
+  {# Shared core of the per-association homepage sheets: it loads first, so the association's own rules still win. #}
+  <link rel="stylesheet"
+        href="{% static 'date/css/homepage-core.css' %}"
+        type="text/css">
+  <link rel="stylesheet"
+        href="{% static 'date/css/homepage.css' %}"
+        type="text/css">
+  <link rel="stylesheet"
+        href="{% static 'date/css/vanilla-calendar.min.css' %}"
+        type="text/css">
+  {% block homepage_head_scripts %}
+    <script src="{% static 'date/js/vanilla-calendar.min.js' %}"></script>
+  {% endblock %}
+  {% get_current_language as LANGUAGE_CODE %}
+{% endblock %}
+{% block content %}
+  {% cache 300 main_page_fixed LANGUAGE_CODE %}
+    <div class="{% block homepage_shell_classes %}container-fluid p-2 min-vh-100{% endblock %}">
+      {% include "date/components/header.html" %}
+      {% block homepage_about %}{% endblock %}
+      <section id="news" class="news-events">
+        <div id="main" class="main-container">
+          {% block homepage_sections %}
+            {% include "date/components/news.html" %}
+            {% include "date/components/events.html" %}
+          {% endblock %}
+        </div>
+      </section>
+      <section id="reklam" class="text-size">
+      </section>
+    </div>
+    {% block homepage_body_scripts %}{% endblock %}
+    {% include "date/components/scripts.html" %}
+  {% endcache %}
+{% endblock %}

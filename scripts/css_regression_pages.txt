@@ -1,0 +1,80 @@
+# Curated page list for the CSS regression harness.
+#
+#   uv run python scripts/css_regression.py capture --label before \
+#       --pages scripts/css_regression_pages.txt
+#
+# This set exists to give every shared and association stylesheet at least one
+# page that loads it, so an appearance-neutral claim can actually be checked.
+# The five seasonal event paths (/events/arsfest/, /events/baal/,
+# /events/kk100/, /events/tomtejakt/, /events/wappmiddag/) only resolve when an
+# event exists whose title or slug selects that template; the dynamic fixtures
+# create one of each for exactly this reason.
+#
+# Some paths are only reachable when signed in. Captured without credentials they
+# redirect to the sign-in page, and the harness would record that sign-in page as
+# if it were the requested path. Capture them with
+# CSS_REGRESSION_USERNAME and CSS_REGRESSION_PASSWORD set (or --username and
+# --password); the login object in manifest.json then says the capture was
+# authenticated. Those paths are marked below.
+#
+# Three kinds of content change between any two captures even when the
+# stylesheet change is appearance-neutral, so a capture intended to reach a green
+# verdict masks them:
+#
+#   #clock-wrapper        /members/cert/ paints a wall clock here and refreshes
+#                         it every 500 ms.
+#   .registration-timing  every branch of the event sign-up block that prints a
+#                         relative time carries this class: a closed sign-up
+#                         reads "39 minuter sedan", one that has not opened reads
+#                         "om 3 dagar", and an open one counts down.
+#   img.balloon           the seasonal event art is animated, so a few pixels on
+#                         its edges can land differently between two runs.
+#
+#   uv run python scripts/css_regression.py capture --label after \
+#       --pages scripts/css_regression_pages.txt \
+#       --mask '#clock-wrapper' --mask '.registration-timing' --mask 'img.balloon'
+#
+# One more difference is not nondeterminism but the clock, and no mask can fix
+# it: the homepage event list is filtered with `event_date_end >= now()`, so an
+# event drops out of the list as its end time passes and the calendar day cells
+# that carried it restyle. Two captures taken close together agree; two taken an
+# hour apart can legitimately differ on every homepage. Capture the before and
+# after of a change back to back, as the guide's workflow does, rather than
+# comparing against a reference recorded much earlier.
+#
+# The mask sets visibility: hidden on just those elements (never display: none,
+# which would remove them from layout and shift everything below them), so the
+# rest of each page is still compared, and masked elements stay in the
+# computed-style probe so a real style change on one is still reported.
+#
+# One path per line. Blank lines are ignored and everything from a '#' to the
+# end of the line is a comment. Every path must start with '/'.
+/
+/events/
+/events/arsfest/
+/events/baal/
+/events/kk100/
+/events/tomtejakt/
+/events/wappmiddag/
+/events/valentines-sitsit/
+/news/
+/news/articles/lunchguide/
+/news/articles/styrelsens-halsning/
+/pages/om-oss/
+/pages/styrelsen/
+/publications/
+/archive/documents/  # login_required, needs credentials
+/archive/pictures/  # login_required, needs credentials
+/archive/exams/  # sign-in gate, needs credentials
+/members/signup/
+/members/login/
+/members/info/  # member page, needs credentials
+/members/funktionarer/
+/members/cert/  # login_required, needs credentials
+/ctf/  # redirects to the login page when signed out, needs credentials
+/forms/
+/polls/
+/social/harassment/
+/alumni/signup/
+/ads/
+/booking/

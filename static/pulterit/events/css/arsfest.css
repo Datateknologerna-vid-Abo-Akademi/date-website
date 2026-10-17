@@ -7,6 +7,11 @@
   --opacityColor: rgba(6, 56, 32, 0.85);
   /*--opacityColor: rgba(223, 223, 223, 0.55);*/
   --backdropBlur: blur(2px);
+  /* The shared event palette that defined the silver scale was removed, so the
+     three steps this sheet consumes are kept local until the sheets merge. */
+  --silver: #adb5bd;
+  --lightSilver2: #e9ecef;
+  --darkSilver2: #495057;
   --mainArsfestColor: var(--silver);
   --mainArsfestTextColor: var(--lightSilver2);
   --mainArsfestButtonHoverColor: var(--darkSilver2);
@@ -58,16 +63,6 @@
 
 .ball-content {
   color: var(--mainArsfestTextColor);
-}
-
-/* fade animations start*/
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
 }
 
 /* fade animations start*/
@@ -174,9 +169,32 @@
   overflow: hidden;
 }
 
+/* Association event logo in the arsfest header. The markup is the same inline
+   hero logo the start page uses, from svg/pulterit.svg, and the colour below is
+   the same one that makes it white there (static/pulterit/date/css/homepage.css
+   styles .albin .drawing-path); this sheet has to repeat it because the arsfest
+   page does not load the homepage sheet. Sizing follows the shared
+   .event-template-logo rule in static/common/events/css/arsfest.css. */
+.event-template-logo {
+  margin: 0 auto 1rem;
+  animation: fadeIn ease 5s;
+}
+
+.event-template-logo svg {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(320px, 62vw);
+  max-height: 300px;
+  margin: 0 auto;
+}
+
+.event-template-logo .drawing-path {
+  fill: rgba(255, 255, 255, 1);
+  stroke: rgba(255, 255, 255, 0.92);
+}
+
 .periodic-table-square {
-  --text-glow-base-color: #ff7833;
-  --text-glow-color: white;
   width: 300px !important;
   height: 300px !important;
   display: flex;

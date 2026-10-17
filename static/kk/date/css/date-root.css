@@ -1,10 +1,10 @@
 /* Root colors */
-/* use with var(--color); included in base.html*/
 
 :root {
+    /* Primary colour ladder, darkest to lightest: --primaryColor, --primaryColorLight, --primaryColorMid, --primaryColorLighter. */
     --primaryColor: rgb(10, 140, 65);
     --primaryColorLight:#2a693d;
-    --primaryColorLighte:#3b8b53;
+    --primaryColorMid:#3b8b53;
     --primaryColorLighter: rgb(10, 170, 77);
     --linkColorDark: #3a80c3;
     --linkColorDarkHover: #26547f;
@@ -31,4 +31,16 @@
     --navHoverHighlight: rgba(255, 255, 255, 0.15);
     --defaultPadding: 20px;
     --defaultRadius: 5px;
+
+    /* Event card roles, consumed by the shared events/css/event-card.css. The div
+       card takes the colour events/css/style.css gives .card on /events/. The anchor
+       card on the archive index does not load that sheet, so it takes the plain link
+       colour from div a in core/css/base.css. */
+    --event-card-fg: var(--textColorDark);
+    --event-card-anchor-fg: var(--linkColorSecondary);
+    --event-card-badge-bg: var(--primaryColorLighter);
+    --event-card-badge-fg: #fff; /* Bootstrap's .badge colour, never overridden here */
+    --event-card-bg: var(--secondaryColor);
+    --event-card-link: var(--linkColor);
+    --event-card-link-hover: var(--linkSecondaryHover);
 }

@@ -7,6 +7,11 @@
   --opacityColor: rgba(6, 56, 32, 0.85);
   /*--opacityColor: rgba(223, 223, 223, 0.55);*/
   --backdropBlur: blur(2px);
+  /* The shared event palette that defined the silver scale was removed, so the
+     three steps this sheet consumes are kept local until the sheets merge. */
+  --silver: #adb5bd;
+  --lightSilver2: #e9ecef;
+  --darkSilver2: #495057;
   --mainArsfestColor: var(--silver);
   --mainArsfestTextColor: var(--lightSilver2);
   --mainArsfestButtonHoverColor: var(--darkSilver2);
@@ -58,16 +63,6 @@
 
 .ball-content {
   color: var(--mainArsfestTextColor);
-}
-
-/* fade animations start*/
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
 }
 
 /* fade animations start*/
@@ -175,8 +170,6 @@
 }
 
 .periodic-table-square {
-  --text-glow-base-color: #ff7833;
-  --text-glow-color: white;
   width: 300px !important;
   height: 300px !important;
   display: flex;

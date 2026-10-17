@@ -1,0 +1,173 @@
+{
+  "important_counts": {
+    "static/biocum/core/css/base.css": 3,
+    "static/biocum/core/css/header.css": 2,
+    "static/biocum/date/css/homepage.css": 5,
+    "static/biocum/events/css/arsfest.css": 41,
+    "static/common/archive/css/detailed.css": 4,
+    "static/common/attendance/css/attendance.css": 2,
+    "static/common/attendance/css/report.css": 7,
+    "static/common/core/css/ck-content.css": 3,
+    "static/common/core/css/ckeditor.css": 1,
+    "static/common/core/css/header.css": 4,
+    "static/common/date/css/homepage-core.css": 2,
+    "static/common/events/css/arsfest.css": 15,
+    "static/common/events/css/baal.css": 12,
+    "static/common/events/css/kk100.css": 17,
+    "static/common/events/css/tomtejakt.css": 4,
+    "static/common/events/css/wappmiddag.css": 12,
+    "static/common/lucia/css/style.css": 3,
+    "static/common/members/style.css": 1,
+    "static/common/publications/css/publications.css": 1,
+    "static/date/core/css/base.css": 2,
+    "static/date/date/css/homepage.css": 10,
+    "static/date/events/css/arsfest.css": 41,
+    "static/demo/core/css/base.css": 2,
+    "static/demo/date/css/homepage.css": 12,
+    "static/impuls/core/css/base.css": 3,
+    "static/impuls/core/css/header.css": 6,
+    "static/impuls/date/css/homepage.css": 9,
+    "static/kk/core/css/base.css": 3,
+    "static/kk/date/css/april_homepage.css": 10,
+    "static/kk/date/css/homepage.css": 4,
+    "static/kk/events/css/baal_anmalan.css": 9,
+    "static/kk/events/css/tomtejakt.css": 4,
+    "static/kk/events/css/wappmiddag.css": 15,
+    "static/pulterit/core/css/base.css": 3,
+    "static/pulterit/core/css/header-overrides.css": 9,
+    "static/pulterit/date/css/homepage.css": 17,
+    "static/pulterit/events/css/arsfest.css": 41,
+    "static/sf/core/css/base.css": 3,
+    "static/sf/core/css/header.css": 8,
+    "static/sf/date/css/homepage.css": 10
+  },
+  "media_queries": [
+    "(max-width: 1024px)",
+    "(max-width: 380px)",
+    "(max-width: 480px)",
+    "(max-width: 560px)",
+    "(max-width: 600px)",
+    "(max-width: 640px)",
+    "(max-width: 767.98px)",
+    "(max-width: 767px)",
+    "(max-width: 768px)",
+    "(max-width: 991.98px)",
+    "(max-width: 992px)",
+    "(min-width: 1200px)",
+    "(min-width: 992px)",
+    "only screen and (max-width: 1000px)",
+    "only screen and (max-width: 1200px)",
+    "only screen and (max-width: 575px)",
+    "only screen and (max-width: 768px)",
+    "only screen and (max-width: 850px)",
+    "only screen and (max-width: 900px)",
+    "only screen and (min-width: 1000px)",
+    "only screen and (min-width: 576px)",
+    "only screen and (min-width: 992px)",
+    "screen and (max-width: 1400px)",
+    "screen and (max-width: 420px)",
+    "screen and (max-width: 550px)",
+    "screen and (max-width: 600px)",
+    "screen and (max-width: 768px)",
+    "screen and (max-width: 800px)",
+    "screen and (max-width: 991px)"
+  ],
+  "near_duplicate_shadows": {
+    "biocum: core/css/footer.css": {
+      "ratio": 0.8839,
+      "reason": "the biocum footer rewrites the footer image sizing, drops the shared partner link rules and adds an invert filter; delete it or split it into a shared core sheet plus a small biocum delta"
+    },
+    "kk: events/css/tomtejakt.css": {
+      "ratio": 0.9889,
+      "reason": "the kk tomtejakt sheet is a copy of the shared sheet that never got the event-association-logo rule the shared sheet gained, which is exactly the drift the rule exists to stop"
+    },
+    "sf: core/css/footer.css": {
+      "ratio": 0.7633,
+      "reason": "the sf footer replaces the footer image sizing, drops the shared partner link rules and adds its own social link rules; delete it or split it into a shared core sheet plus a small sf delta"
+    },
+    "sf: events/css/detail.css": {
+      "ratio": 0.9617,
+      "reason": "the sf event detail sheet differs from the shared sheet only in whitespace and one hover background token, so the fix is to delete it and move that color into the sf palette"
+    }
+  },
+  "z_index_values": {
+    "static/biocum/events/css/arsfest.css": [
+      "-1",
+      "1",
+      "3",
+      "inherit"
+    ],
+    "static/common/archive/css/detailed.css": [
+      "1000000"
+    ],
+    "static/common/core/css/cookie-banner.css": [
+      "1000"
+    ],
+    "static/common/events/css/arsfest.css": [
+      "-1",
+      "1",
+      "3",
+      "inherit"
+    ],
+    "static/common/events/css/baal.css": [
+      "-10"
+    ],
+    "static/common/events/css/kk100.css": [
+      "-10",
+      "-100",
+      "-149",
+      "-150",
+      "10"
+    ],
+    "static/common/events/css/wappmiddag.css": [
+      "-10"
+    ],
+    "static/common/lucia/css/style.css": [
+      "9999"
+    ],
+    "static/common/members/style.css": [
+      "1"
+    ],
+    "static/common/publications/css/publications.css": [
+      "1",
+      "2",
+      "4",
+      "5"
+    ],
+    "static/date/events/css/arsfest.css": [
+      "-1",
+      "1",
+      "3",
+      "inherit"
+    ],
+    "static/impuls/date/css/homepage.css": [
+      "1"
+    ],
+    "static/kk/events/css/wappmiddag.css": [
+      "-10"
+    ],
+    "static/pulterit/core/css/base.css": [
+      "1"
+    ],
+    "static/pulterit/date/css/homepage.css": [
+      "1"
+    ],
+    "static/pulterit/events/css/arsfest.css": [
+      "-1",
+      "1",
+      "3",
+      "inherit"
+    ],
+    "static/sf/events/css/arsfest-sf.css": [
+      "-1",
+      "1"
+    ]
+  },
+  "zero_byte_stylesheets_linked": [
+    "static/common/events/css/style.css",
+    "static/common/members/css/userinfo.css",
+    "static/common/news/css/article.css",
+    "static/common/polls/css/style.css",
+    "static/common/staticpages/css/staticpage.css"
+  ]
+}

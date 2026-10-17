@@ -66,6 +66,54 @@ Adding an empty block to the common template is safe: associations that don't ov
 
 **You cannot inject content into the middle of a parent template's HTML from a child template** — only into defined `{% raw %}{% block %}{% endraw %}` slots. A block defined in a child template that has no corresponding slot in the parent is a no-op; the content is silently discarded.
 
+## Shared Components, Not Copies
+
+A component that several associations render belongs in `templates/common/`, even
+when each association already carries its own working copy. The copies are what
+drift: the homepage event list existed as five copies, two of them byte
+identical, and every difference any of them carried was a handful of lines.
+
+Put the whole component in the shared template, with a block for each piece that
+really differs, and give an association that differs a short file that extends
+it:
+
+{% raw %}
+```
+templates/common/date/components/events.html   the component, and a block per icon
+templates/sf/date/components/events.html       {% extends %} plus four block overrides
+```
+{% endraw %}
+
+The association file then holds only its difference, so a change to the shared
+structure reaches every association at once and a reviewer can see the whole
+per-association delta in one screen. The same rule covers the seasonal event
+pages: `templates/common/events/arsfest_base.html` is the shared page, and the
+association files should be overrides of it rather than standalone copies.
+
+Two things that are not blocks:
+
+- A fragment repeated **within one template** (the same row, badge or icon drawn
+  twice) is a `{% raw %}{% partialdef %}{% endraw %}` with `{% raw %}{% partial %}{% endraw %}`,
+  which Django 6 provides natively. The partial renders nothing where it is
+  defined unless it is declared `inline`.
+- A single fragment that a view or an htmx endpoint should return on its own is
+  loaded by name with the `template.html#partial` syntax, so one template can
+  serve both the full page and the fragment.
+
+Before adding a template under `templates/<association>/`, check whether the
+same path already exists for another association. Two association copies of one
+component are almost always one shared component plus two overrides, and
+`templates/` should not gain a third.
+
+`core/tests/test_template_duplication.py` enforces that. It compares the copies of
+every logical path across the six associations and the shared tree, and fails when
+two copies of 15 lines or more are 70 percent alike, unless the pair is frozen in
+`core/tests/template_near_copy_baseline.json` with a reason. A frozen pair that
+gets closer also fails, and so does a baseline entry whose copies have since
+diverged, so the frozen set stays honest. Regenerate it with
+`uv run python -m core.tests.test_template_duplication --write-baseline` after a
+deliberate exception, and add the reason to the `REASONS` mapping in the test.
+
 ## Footer Social Icons
 
 Each association lists its footer buttons in `CONTENT_VARIABLES["SOCIAL_BUTTONS"]` as `[icon, url]` pairs; an entry with a blank URL is skipped. The shared footer (`templates/common/core/footer.html`, `footer_social_buttons` block) picks the icon for each entry:
@@ -85,13 +133,9 @@ Shared icons so far: `tiktok`, `linktree` (Font Awesome Free 7.3.1, CC BY 4.0). 
 
 ## Shared CSS And Element Selectors
 
-An association's stylesheets are loaded on every page of that association, and the shared sheets under `static/common/` are loaded on every page of every association that does not shadow them. A selector that matches a bare HTML element therefore reaches parts of the page it was not written for.
+An association's stylesheets are loaded on every page of that association, and a selector that matches a bare HTML element therefore reaches parts of the page it was not written for. Two rules are enforced:
 
-The header sheets are the trap. The site header is `<nav class="navbar ...">` (from `templates/common/core/header.html`), but the pagination widgets are `<nav>` elements too: django-tables2's table pagination (`<nav aria-label="Table navigation">`, rendered on the archive documents and exam pages), the gallery fallback, and `publications-pagination`. A rule written as `nav { ... }` to style the header also painted a table's pagination bar with the header background, which on the associations whose link colour matches their background made the page numbers effectively invisible.
+- Scope header rules to the header nav, e.g. `nav.navbar { ... }`. `core/tests/test_static_css.py` fails on any unscoped `nav` selector under `static/`: a `nav` type selector must be qualified immediately by a class, id or attribute, because an ancestor alone such as `.content nav` can still contain a pagination nav.
+- Link `static/common/core/css/pagination.css` from every site shell and keep its rules under django-tables2's `.table-container` wrapper, so the news, publications and gallery paginations keep their own styling. The guard test fails on a `templates/**/core/base.html` that neither links the sheet nor extends the common shell, and `date/tests.py` renders every association's shell and asserts the link is present.
 
-Rules to follow:
-
-- Scope header rules to the header nav, e.g. `nav.navbar { ... }`. The same applies to rules that hide the chrome for a full page takeover, e.g. `nav.navbar, footer { display: none !important; }` on the Lucia and April pages.
-- Scope table pagination styling to django-tables2's wrapper. `static/common/core/css/pagination.css` keeps every rule under `.table-container`, which is the wrapper the package template emits, so the news, publications and gallery paginations keep their own styling.
-- Link that sheet from every site shell. The shared `templates/common/core/base.html` does, and the standalone `templates/sf/core/base.html` has to as well; a new shell needs the link too.
-- `core/tests/test_static_css.py` enforces both selector rules: it fails on any unscoped `nav` selector under `static/` (a `nav` type selector must be qualified immediately by a class, id or attribute, because an ancestor alone such as `.content nav` can still contain a pagination nav) and on a `templates/**/core/base.html` that neither links the pagination sheet nor extends the common shell. `date/tests.py` renders every association's shell and asserts the link is present.
+The rest of the contract, including why element selectors are the trap, the palette tokens, load order, `!important`, breakpoints, `z-index` and JavaScript hooks, is in [Shared CSS & Association Overrides](css.md).
