@@ -260,9 +260,10 @@
     display: none;
 }
 
-/* The start is one pair and the end is another. Each pair is a row of its own
-   when the space runs out, which keeps an end's day beside its own clock instead
-   of leaving the date on one line and the time on another. */
+/* The start is one pair and the end is another. On one line they read
+   "day clock till clock"; once the end has a day of its own the row turns into
+   the grid below, so the two days sit in one column and the two clocks in
+   another. */
 .booking-when-split {
     display: flex;
     flex-wrap: wrap;
@@ -306,15 +307,63 @@
     min-width: 0;
 }
 
-/* Once the end has a day of its own the row needs two lines, so the start keeps
-   its natural width there instead of stretching across the first one. */
-.booking-when-split-long .booking-when-date {
-    flex: 0 0 auto;
-    width: 12rem;
-}
-
 .booking-when > .booking-when-split {
     grid-column: 2;
+}
+
+/* The row with the end's own day: two lines that share their columns, so both
+   days start at the same x and both clocks do too. "till" moves into the label
+   column on the second line, where it reads against the first one instead of
+   pushing the end day out of the start day's column. */
+.booking-form > p.booking-when-long {
+    grid-template-columns: 9rem minmax(0, 1fr) 8rem;
+    column-gap: 0.75rem;
+    align-items: center;
+}
+
+.booking-when-long > label {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+/* The wrappers exist for the one line layout; on two lines their children take
+   the grid themselves. */
+.booking-when-long > .booking-when-split,
+.booking-when-long .booking-when-from-pair,
+.booking-when-long .booking-when-till-pair {
+    display: contents;
+}
+
+.booking-when-long .booking-when-date {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.booking-when-long .booking-when-from-pair input[type="time"] {
+    grid-column: 3;
+    grid-row: 1;
+}
+
+.booking-when-long .booking-when-sep {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: end;
+}
+
+.booking-when-long .booking-when-end-date {
+    grid-column: 2;
+    grid-row: 2;
+}
+
+.booking-when-long .booking-when-till-pair input[type="time"] {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+.booking-when-long .booking-when-date,
+.booking-when-long .booking-when-end-date,
+.booking-when-long .booking-when-clock {
+    width: 100%;
 }
 
 /* The two longer options sit under the row: an end on the next day, and a
@@ -323,6 +372,16 @@
    them. */
 .booking-when > .booking-when-extras {
     grid-column: 2;
+}
+
+.booking-when-long > .booking-when-extras {
+    grid-column: 2 / -1;
+    grid-row: 3;
+}
+
+.booking-when-long > .booking-error {
+    grid-column: 1 / -1;
+    grid-row: 4;
 }
 
 .booking-when-extras {
@@ -456,29 +515,62 @@
         grid-column: 1;
     }
 
-    /* The two pairs take a line each, the start above and its own end below, so a
-       wrapped row still keeps each day beside its clock. */
-    .booking-when-split {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    /* The start day takes whatever is left of the line rather than a fixed width
-       that pushes the row past the panel. */
-    .booking-when-split .booking-when-date,
-    .booking-when-split-long .booking-when-date {
+    /* One line here wraps into "day clock" and then "till clock", and every
+       control keeps the width of its own text, since a fixed width clips an "AM"
+       off in a 12 hour locale. */
+    .booking-when-split .booking-when-date {
         flex: 1 1 auto;
         width: auto;
     }
 
-    /* A clock keeps the width of its own text here too: at 6.5rem a 12 hour
-       locale clips the "AM" off the end of it. */
     .booking-when-split .booking-when-clock {
         flex: 0 0 auto;
     }
 
     .booking-when-split .booking-when-end-date {
         flex: 1 1 auto;
+    }
+
+    /* Two lines that share their columns, with "till" trailing the first one: a
+       phone has no room for a label column beside them. */
+    .booking-form > p.booking-when-long {
+        grid-template-columns: minmax(0, 1fr) 8rem auto;
+    }
+
+    .booking-when-long > label {
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+
+    .booking-when-long .booking-when-date {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .booking-when-long .booking-when-from-pair input[type="time"] {
+        grid-column: 2;
+        grid-row: 2;
+    }
+
+    .booking-when-long .booking-when-sep {
+        grid-column: 3;
+        grid-row: 2;
+        justify-self: start;
+    }
+
+    .booking-when-long .booking-when-end-date {
+        grid-column: 1;
+        grid-row: 3;
+    }
+
+    .booking-when-long .booking-when-till-pair input[type="time"] {
+        grid-column: 2;
+        grid-row: 3;
+    }
+
+    .booking-when-long > .booking-when-extras {
+        grid-column: 1 / -1;
+        grid-row: 4;
     }
 
     .booking-form .theme-button,

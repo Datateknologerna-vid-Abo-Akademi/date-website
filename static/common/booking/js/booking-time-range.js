@@ -97,12 +97,13 @@ function buildBookingTimeControls(row, startInput, endInput, fields, label) {
     }
 
     fromPair.append(dateInput, fromInput);
-    tillPair.append(between);
-    if (endDateInput) {
-        tillPair.append(endDateInput);
-    }
     tillPair.append(toInput);
-    group.append(fromPair, tillPair);
+    if (endDateInput) {
+        // The end's own day goes first in its pair, so the pair reads
+        // "till [day] [clock]" and keeps the day beside the clock either way.
+        tillPair.prepend(endDateInput);
+    }
+    group.append(fromPair, between, tillPair);
     fields.after(group);
     label.htmlFor = dateInput.id;
 
@@ -186,7 +187,7 @@ function buildBookingTimeControls(row, startInput, endInput, fields, label) {
             var open = multiBox.checked;
             endDateInput.hidden = !open;
             overnightLabel.hidden = open;
-            group.classList.toggle("booking-when-split-long", open);
+            row.classList.toggle("booking-when-long", open);
             if (open) {
                 revealEndDay();
             }
@@ -216,7 +217,7 @@ function buildBookingTimeControls(row, startInput, endInput, fields, label) {
             multiBox.checked = true;
             endDateInput.hidden = false;
             overnightLabel.hidden = true;
-            group.classList.add("booking-when-split-long");
+            row.classList.add("booking-when-long");
             endDateInput.value = existingEnd[0];
         }
     }
