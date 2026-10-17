@@ -664,11 +664,24 @@ class BookingDateFilterTests(PinnedNowMixin, SimpleTestCase):
 
 
 class BookingAvailabilityRulesTests(TestCase):
-    """When a room may be booked: length, daily hours, closures."""
+    """When a room may be booked: length, daily hours, closures.
+
+    The clock is pinned to a fixed date in June, so a booking of exactly a week
+    is exactly seven days of real time. Built on the real clock instead, the same
+    booking was seven days and one hour whenever its span contained the October
+    clock change, because the length rule measures real time through UTC and a
+    wall-clock week across a transition is an hour longer. That made the length
+    tests fail for part of every October, and only then.
+    """
 
     def setUp(self):
+        self.now = timezone.make_aware(datetime.datetime(2026, 6, 1, 12, 0))
+        now_patcher = patch('booking.access.now_at', new=lambda: self.now)
+        now_patcher.start()
+        self.addCleanup(now_patcher.stop)
+
         self.room = make_room(name='Bastun')
-        self.start = timezone.localtime(timezone.now()).replace(second=0, microsecond=0) + datetime.timedelta(days=1)
+        self.start = self.now.replace(second=0, microsecond=0) + datetime.timedelta(days=1)
 
     def booking(self, room=None, start=None, hours=1, **kwargs):
         start = start or self.start
@@ -690,6 +703,22 @@ class BookingAvailabilityRulesTests(TestCase):
 
     def test_a_booking_of_exactly_a_week_is_allowed(self):
         self.booking(hours=24 * 7).full_clean()
+
+    def test_a_wall_clock_week_across_the_clock_change_is_refused(self):
+        """The rule measures real time, so the week the clocks go back has an hour more.
+
+        Monday noon to the next Monday noon is what a board member would call a
+        week, and in the week the clocks change it is 169 hours, so the rule
+        refuses it. Pinned here so that the difference between a wall-clock week
+        and a real one stays a decision on the record: allowing the civil week
+        instead would be a change to the rule, not to a test.
+        """
+        start = timezone.make_aware(datetime.datetime(2026, 10, 19, 12, 0))
+
+        with self.assertRaises(ValidationError) as raised:
+            self.booking(start=start, hours=24 * 7).full_clean()
+
+        self.assertIn('end', raised.exception.message_dict)
 
     def test_a_room_without_bookable_hours_takes_any_time_of_day(self):
         self.assertEqual(self.room.bookable_from, None)
