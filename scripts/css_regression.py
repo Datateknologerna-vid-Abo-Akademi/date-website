@@ -172,24 +172,6 @@ DEFAULT_REQUIRE_LOGIN_PATH = "/members/info/"
 USERNAME_ENV_VAR = "CSS_REGRESSION_USERNAME"
 PASSWORD_ENV_VAR = "CSS_REGRESSION_PASSWORD"
 
-# Values that must never reach a log line. A browser or protocol error can echo the
-# sign-in script that carried the password, and an error is exactly the moment someone
-# pastes a run into a ticket, so every path that prints goes through `redact` first.
-_SECRETS: list[str] = []
-
-
-def remember_secret(value: str | None) -> None:
-    """Register a value that `redact` must strip from every message."""
-    if value and value not in _SECRETS:
-        _SECRETS.append(value)
-
-
-def redact(message: str) -> str:
-    """Return the message with every registered secret replaced."""
-    for secret in _SECRETS:
-        message = message.replace(secret, "***")
-    return message
-
 
 VIEWPORTS: dict[str, tuple[int, int]] = {"desktop": (1600, 1000), "mobile": (390, 844)}
 
@@ -347,10 +329,8 @@ INIT_SCRIPT = """
 # `member_login_view-current_step` field, and a name lookup survives a prefix change.
 # The fields are set first and the submit is deferred by one tick, so the evaluate call
 # returns its (password-free) summary before the navigation destroys the context.
-LOGIN_FILL_JS = """
-(() => {
-  const username = __USERNAME__;
-  const password = __PASSWORD__;
+LOGIN_FILL_FN = """
+function (username, password) {
   const passwordField = document.querySelector('input[type="password"]');
   if (!passwordField) return JSON.stringify({ok: false, error: 'the page has no password field, so it is not a sign-in form'});
   const form = passwordField.form;
@@ -377,7 +357,7 @@ LOGIN_FILL_JS = """
     else form.submit();
   }, 0);
   return JSON.stringify(summary);
-})()
+}
 """
 
 # One pass over every element: the DOM path key, the fixed property subset, and the
@@ -526,7 +506,7 @@ def fail(message: str) -> NoReturn:
     Exit codes are 0 for identical, 1 for differences found, 2 for bad input or
     incomparable captures, and 3 for a broken browser session.
     """
-    print(f"error: {redact(message)}", file=sys.stderr)
+    print(f"error: {message}", file=sys.stderr)
     raise SystemExit(2)
 
 
@@ -991,6 +971,47 @@ def evaluate(connection: CdpConnection, expression: str, *, await_promise: bool 
     return (result.get("result") or {}).get("value")
 
 
+def evaluate_handle(connection: CdpConnection, expression: str, *, timeout: float = 30.0) -> str | None:
+    """Evaluate an expression and return a handle to the resulting object.
+
+    A handle is what `call_function_on` needs, and that call takes its arguments as
+    values rather than as script text, so a credential handed to the page is never
+    part of a script source string.
+    """
+    result = connection.call(
+        "Runtime.evaluate",
+        {"expression": expression, "returnByValue": False},
+        timeout=timeout,
+    )
+    if "exceptionDetails" in result:
+        raise CdpError(f"page script failed: {result['exceptionDetails'].get('text')}")
+    return (result.get("result") or {}).get("objectId")
+
+
+def call_function_on(
+    connection: CdpConnection,
+    object_id: str,
+    function_declaration: str,
+    arguments: list[str],
+    *,
+    timeout: float = 30.0,
+) -> Any:
+    """Call a function on a page object, passing the arguments as values."""
+    result = connection.call(
+        "Runtime.callFunctionOn",
+        {
+            "objectId": object_id,
+            "functionDeclaration": function_declaration,
+            "arguments": [{"value": argument} for argument in arguments],
+            "returnByValue": True,
+        },
+        timeout=timeout,
+    )
+    if "exceptionDetails" in result:
+        raise CdpError(f"page script failed: {result['exceptionDetails'].get('text')}")
+    return (result.get("result") or {}).get("value")
+
+
 def navigate_and_settle(
     connection: CdpConnection, tracker: NetworkTracker, url: str, timeout: float
 ) -> tuple[int | None, str]:
@@ -1022,15 +1043,16 @@ def submit_login_form(
     """Fill and submit the sign-in form, then wait for the page it returns.
 
     Returns a dict with `ok` plus, on success, the field names that were filled and the
-    status/final URL of the page that answered. The password is only ever placed in the
-    page; it is not returned, printed or written to the manifest.
+    status/final URL of the page that answered. The credentials are passed to the page as
+    call arguments, never as script text, and they are not returned, printed or written
+    to the manifest.
     """
-    expression = LOGIN_FILL_JS.replace("__USERNAME__", json.dumps(username)).replace(
-        "__PASSWORD__", json.dumps(password)
-    )
     tracker.reset()
     connection.clear_events()
-    filled = evaluate(connection, expression, timeout=timeout)
+    document = evaluate_handle(connection, "document", timeout=timeout)
+    if not document:
+        return {"ok": False, "error": "the page has no document to fill"}
+    filled = call_function_on(connection, document, LOGIN_FILL_FN, [username, password], timeout=timeout)
     payload: dict[str, Any] = json.loads(filled) if filled else {}
     if not payload.get("ok"):
         return {"ok": False, "error": str(payload.get("error") or "the sign-in form could not be filled")}
@@ -1140,7 +1162,6 @@ def resolve_credentials(args: argparse.Namespace) -> tuple[str | None, str | Non
         fail(f"a username was supplied without a password (pass --password or set {PASSWORD_ENV_VAR})")
     if password and not username:
         fail(f"a password was supplied without a username (pass --username or set {USERNAME_ENV_VAR})")
-    remember_secret(password)
     return username, password
 
 
@@ -1466,7 +1487,7 @@ def cmd_capture(args: argparse.Namespace) -> int:
                         aborted.add(variant)
                         errors += 1
                         print(f"### {variant}: login FAILED, skipping every page of this variant")
-                        print(f"    {redact(str(login_record['error']))}")
+                        print(f"    {login_record['error']}")
                         continue
                     print(
                         f"    login ok: {login_record['final_url']} "
