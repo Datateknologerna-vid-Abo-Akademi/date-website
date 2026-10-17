@@ -3734,3 +3734,7 @@ msgstr "Näytetään ensimmäiset %(shown)s muutosta %(total)s muutoksesta. Koko
 #: attendance/admin.py
 msgid "Icke-medlemmar"
 msgstr "Ei-jäsenet"
+
+#: attendance/admin.py
+msgid "Ändringar"
+msgstr "Muutokset"

@@ -3694,3 +3694,7 @@ msgstr "Showing the first %(shown)s of %(total)s changes. The CSV file has the w
 #: attendance/admin.py
 msgid "Icke-medlemmar"
 msgstr "Non-members"
+
+#: attendance/admin.py
+msgid "Ändringar"
+msgstr "Changes"

@@ -3678,3 +3678,7 @@ msgstr "Visar de första %(shown)s av %(total)s ändringar. Hela loggen finns i 
 #: attendance/admin.py
 msgid "Icke-medlemmar"
 msgstr "Icke-medlemmar"
+
+#: attendance/admin.py
+msgid "Ändringar"
+msgstr "Ändringar"

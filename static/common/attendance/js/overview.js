@@ -355,7 +355,31 @@ const addChangeToFeed = (change) => {
     if (changeEmptyState) {
         changeEmptyState.hidden = true;
     }
+
+    syncFeedPager();
 }
+
+/**
+ * Retire the pager when a live arrival has aged out the rows it was holding back.
+ *
+ * The feed keeps its newest rows and drops the oldest, which are exactly the ones
+ * the pager had hidden. Without this the button stays visible and a click reveals
+ * nothing, because there is nothing left to reveal.
+ */
+const syncFeedPager = () => {
+    if (!changeFeed || changeFeed.querySelector("tr[hidden]")) {
+        return;
+    }
+
+    const more = document.getElementById("feed-more");
+    const end = document.getElementById("feed-end");
+    if (more) {
+        more.hidden = true;
+    }
+    if (end) {
+        end.hidden = false;
+    }
+};
 
 /**
  * @param {WebSocket} ws

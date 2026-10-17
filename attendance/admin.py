@@ -192,15 +192,19 @@ class AttendanceEventAdminForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["slug"].help_text = _(
-            "Mötets del av webbadressen, till exempel hostmote för /attendance/hostmote/. "
-            "Bara a-z, 0-9, bindestreck och understreck."
-        )
-        self.fields["end_datetime"].help_text = _(
-            "Lämna tomt om sluttiden inte är känd. Mötet lämnar då den publika listan 24 timmar efter "
-            "starttiden, och rapporten räknar närvaron vid den sista registrerade ändringen. Måste vara "
-            "senare än starttiden."
-        )
+        # A reader with only the view permission gets a read-only form, and Django
+        # leaves its editable fields out of `self.fields` entirely.
+        if "slug" in self.fields:
+            self.fields["slug"].help_text = _(
+                "Mötets del av webbadressen, till exempel hostmote för /attendance/hostmote/. "
+                "Bara a-z, 0-9, bindestreck och understreck."
+            )
+        if "end_datetime" in self.fields:
+            self.fields["end_datetime"].help_text = _(
+                "Lämna tomt om sluttiden inte är känd. Mötet lämnar då den publika listan 24 timmar efter "
+                "starttiden, och rapporten räknar närvaron vid den sista registrerade ändringen. Måste vara "
+                "senare än starttiden."
+            )
 
 
 class AttendanceEventAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
@@ -622,7 +626,7 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
     ordering = ("-timestamp",)
     # The attendee column reads both attendee relations per row, and a method in
     # `list_display` no longer gets the automatic select_related a plain field got.
-    list_select_related = ("user", "non_member")
+    list_select_related = ("event", "user", "non_member")
     # Unfold's header is a breadcrumb built from the model, not the `title` this
     # view sets, so the meeting is named in this line above the table. The classic
     # admin ignores the attribute and carries the meeting in the page title.
@@ -687,7 +691,16 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
         """
         return False
 
-    def _event_changelist_redirect(self, event_id):
+    def _event_changelist_redirect(self, event_id, request=None):
+        """The meeting's list, with whatever the operator was looking at kept intact."""
+        filters = request.GET.get("_changelist_filters") if request is not None else None
+        if filters:
+            query = QueryDict(filters, mutable=True)
+            query["event__id__exact"] = event_id
+            return HttpResponseRedirect(
+                f"{reverse('admin:attendance_attendancechange_changelist')}?{query.urlencode()}"
+            )
+
         return HttpResponseRedirect(
             f"{reverse('admin:attendance_attendancechange_changelist')}?event__id__exact={event_id}"
         )
@@ -696,13 +709,13 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
         response = super().response_add(request, obj, post_url_continue)
         if "_continue" in request.POST or "_addanother" in request.POST:
             return response
-        return self._event_changelist_redirect(obj.event_id)
+        return self._event_changelist_redirect(obj.event_id, request)
 
     def response_change(self, request, obj):
         response = super().response_change(request, obj)
         if "_continue" in request.POST or "_addanother" in request.POST:
             return response
-        return self._event_changelist_redirect(obj.event_id)
+        return self._event_changelist_redirect(obj.event_id, request)
 
     def delete_view(self, request, object_id, extra_context=None):
         # The row is gone by the time the redirect is chosen, so the meeting it
@@ -717,7 +730,7 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
         event_id = getattr(request, "attendance_event_id", None)
         if event_id is None:
             return response
-        return self._event_changelist_redirect(event_id)
+        return self._event_changelist_redirect(event_id, request)
 
     @admin.display(description=_("Deltagare"))
     def attendee(self, obj):
@@ -747,14 +760,24 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
         colour is a second signal rather than the only one.
         """
         css = "enter" if obj.type == AttendanceChange.Type.ENTER else "leave"
-        return format_html('<span class="attendance-change--{}">{}</span>', css, obj.get_type_display())
+        return format_html('<span class="attendance-change--{}">{}</span>', css, change_action_label(obj))
 
     def save_model(self, request, obj, form, change):
+        # A correction can move a row to another meeting, so the meeting it left
+        # needs telling too.
+        previous_event_id = None
+        if change and obj.pk:
+            previous_event_id = AttendanceChange.objects.filter(pk=obj.pk).values_list("event_id", flat=True).first()
+
         super().save_model(request, obj, form, change)
         # An open overview page was built from the row as it stood, and a
         # correction produces no change the feed can append. Reloading it is the
         # only answer that also repairs the feed.
         websocket.send_attendance_invalidate(obj.event.slug)
+        if previous_event_id is not None and previous_event_id != obj.event_id:
+            previous = AttendanceEvent.objects.filter(pk=previous_event_id).first()
+            if previous is not None:
+                websocket.send_attendance_invalidate(previous.slug)
 
     def delete_model(self, request, obj):
         slug = obj.event.slug

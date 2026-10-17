@@ -9,6 +9,16 @@
           crossorigin="anonymous"
           referrerpolicy="no-referrer"></script>
   <link rel="stylesheet" href="{% static 'attendance/css/attendance.css' %}">
+  {# Without JavaScript the pagers cannot reveal the rows they are hiding, so both lists would stop at their first page. #}
+  <noscript>
+    <style>
+      #present-roster li[hidden] { display: list-item !important; }
+      #roster-more { display: none !important; }
+      #change-log tr[hidden] { display: table-row !important; }
+      #log-more { display: none !important; }
+      #log-end[hidden] { display: block !important; }
+    </style>
+  </noscript>
   <script src="{% url 'javascript-catalog' %}"></script>
   <script src="{% static 'attendance/js/changes-table.js' %}" defer></script>
   <script src="{% static 'attendance/js/detail.js' %}" defer></script>
@@ -144,13 +154,6 @@
                 {% trans "Visa fler" %} <i class="bi bi-chevron-down" aria-hidden="true"></i>
               </button>
             {% endif %}
-            {# Without JavaScript the pager cannot reveal the names it is hiding, so the roster would stop at its first page. #}
-            <noscript>
-              <style>
-                #present-roster li[hidden] { display: list-item !important; }
-                #roster-more { display: none !important; }
-              </style>
-            </noscript>
           {% endif %}
         </section>
         {% if can_see_attendance %}
@@ -196,14 +199,6 @@
                 <a href="{% url 'admin:attendance_event_report' object.pk %}">{% trans "Öppna rapporten" %}</a>
               </p>
             {% endif %}
-            {# Without JavaScript the pager cannot reveal the rows it is hiding, so the log would stop at its first page. #}
-            <noscript>
-              <style>
-                #change-log tr[hidden] { display: table-row !important; }
-                #log-more { display: none !important; }
-                #log-end[hidden] { display: block !important; }
-              </style>
-            </noscript>
           </section>
         {% endif %}
       </div>

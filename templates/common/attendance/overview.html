@@ -9,6 +9,14 @@
           crossorigin="anonymous"
           referrerpolicy="no-referrer"></script>
   <link rel="stylesheet" href="{% static 'attendance/css/attendance.css' %}">
+  {# Without JavaScript the pager cannot reveal the rows it is hiding, so the feed would stop at its first page. #}
+  <noscript>
+    <style>
+      #change-feed tr[hidden] { display: table-row !important; }
+      #feed-more { display: none !important; }
+      #feed-end[hidden] { display: block !important; }
+    </style>
+  </noscript>
   <script src="{% url 'javascript-catalog' %}"></script>
   <script src="{% static 'attendance/js/changes-table.js' %}" defer></script>
   <script src="{% static 'attendance/js/overview.js' %}" defer></script>
@@ -80,25 +88,15 @@
               {% trans "Visa fler" %} <i class="bi bi-chevron-down" aria-hidden="true"></i>
             </button>
           {% endif %}
-          {% if recent_changes %}
-            <p id="feed-end"
-               class="attendance-changes__end"
-               {% if recent_changes|length > changes_visible %}hidden{% endif %}>
-              {% trans "Hela loggen finns på mötets sida." %}
-              <a href="{% url 'attendance-event-view' object.slug %}">{% trans "Till mötessidan" %}</a>
-            </p>
-          {% endif %}
+          <p id="feed-end"
+             class="attendance-changes__end"
+             {% if not recent_changes or recent_changes|length > changes_visible %}hidden{% endif %}>
+            {% trans "Hela loggen finns på mötets sida." %}
+            <a href="{% url 'attendance-event-view' object.slug %}">{% trans "Till mötessidan" %}</a>
+          </p>
           <p id="no-changes"
              class="attendance-changes__end"
              {% if recent_changes %}hidden{% endif %}>{% trans "Inga ändringar ännu" %}</p>
-          {# Without JavaScript the pager cannot reveal the rows it is hiding, so the feed would stop at its first page. #}
-          <noscript>
-            <style>
-              #change-feed tr[hidden] { display: table-row !important; }
-              #feed-more { display: none !important; }
-              #feed-end[hidden] { display: block !important; }
-            </style>
-          </noscript>
         </section>
       </div>
     </div>

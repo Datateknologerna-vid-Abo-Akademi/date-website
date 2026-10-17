@@ -2605,6 +2605,22 @@ class AttendanceAdminTests(TestCase):
         self.assertContains(response, "Maja Andersson</option>")
         self.assertNotContains(response, ">maja</option>")
 
+    def test_the_change_changelist_translates_the_direction(self):
+        """`get_type_display()` is a `gettext_noop` source string, not a translation."""
+        event = make_event(slug="mote")
+        member = make_member("medlem")
+        record_change(event, ENTER, user=member, timestamp=now())
+        self.client.force_login(self.admin_user)
+
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
+
+        response = self.client.get(self.change_changelist_url(event))
+
+        # The filter sidebar still carries the choice's source string, so the cell
+        # is what this pins: the direction is rendered through the translated label.
+        self.assertContains(response, 'attendance-change--enter">Entered<')
+        self.assertNotContains(response, 'attendance-change--enter">Anlände<')
+
     def test_the_change_changelist_names_a_guest(self):
         """One attendee column: a member is a link, a guest is the name and the marker."""
         event = make_event(slug="mote")
@@ -2701,6 +2717,32 @@ class AttendanceAdminTests(TestCase):
 
         self.assertRedirects(response, self.change_changelist_url(event))
 
+    def test_a_saved_correction_keeps_the_list_filters(self):
+        """The operator's search, filter and page should survive a correction."""
+        event = make_event(slug="mote")
+        member = make_member("medlem")
+        change = record_change(event, ENTER, user=member, timestamp=now() - timedelta(minutes=1))
+        self.client.force_login(self.admin_user)
+        url = reverse("admin:attendance_attendancechange_change", args=[change.pk])
+        filters = f"type__exact%3D{LEAVE.value}%26event__id__exact%3D{event.pk}"
+
+        response = self.client.post(
+            f"{url}?_changelist_filters={filters}",
+            {
+                "event": event.pk,
+                "user": member.pk,
+                "non_member": "",
+                "timestamp": timezone.localtime(change.timestamp).strftime("%Y-%m-%d %H:%M:%S"),
+                "type": str(LEAVE.value),
+                "_save": "Spara",
+            },
+        )
+
+        self.assertEqual(
+            response["Location"],
+            f"{reverse('admin:attendance_attendancechange_changelist')}?type__exact={LEAVE.value}&event__id__exact={event.pk}",
+        )
+
     def test_deleting_a_change_returns_to_its_meeting(self):
         event = make_event(slug="mote")
         member = make_member("medlem")
@@ -2757,6 +2799,15 @@ class NonMemberAttendeeAdminTests(TestCase):
         self.guest = NonMemberAttendee.objects.create(name="Olof Backman")
         self.changelist_url = reverse("admin:attendance_nonmemberattendee_changelist")
         self.change_url = reverse("admin:attendance_nonmemberattendee_change", args=[self.guest.pk])
+
+    def test_the_guest_list_translates_its_column(self):
+        self.client.force_login(self.admin_user)
+
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
+
+        response = self.client.get(self.changelist_url)
+
+        self.assertContains(response, "Changes")
 
     def test_the_guest_list_names_the_guests_and_their_change_count(self):
         event = make_event(slug="mote")
@@ -2829,6 +2880,16 @@ class AttendanceChangeAdminCorrectionTests(TestCase):
 
         invalidate.assert_called_once_with("mote")
         self.assertFalse(AttendanceChange.objects.filter(pk=self.change.pk).exists())
+
+    def test_moving_a_change_between_meetings_invalidates_both(self):
+        """The meeting a row left is as stale as the one it arrived at."""
+        other = make_event(slug="annat")
+        self.change.event = other
+
+        with patch("attendance.admin.websocket.send_attendance_invalidate") as invalidate:
+            self.model_admin.save_model(self.request, self.change, form=None, change=True)
+
+        self.assertEqual({call.args[0] for call in invalidate.call_args_list}, {"mote", "annat"})
 
     def test_a_bulk_delete_invalidates_every_meeting_it_touched(self):
         other_member = make_member("annan")
@@ -3823,6 +3884,16 @@ class AttendanceEventAdminFormTests(TestCase):
         self.assertContains(response, timezone.localtime(self.event.start_datetime).strftime("%Y-%m-%d %H:%M"))
         self.assertNotContains(response, "vDateField")
         self.assertNotContains(response, "vTimeField")
+
+    def test_a_view_only_reader_opens_the_meeting_read_only(self):
+        """Django leaves every editable field out of the form for a view-only reader."""
+        viewer = make_member("lasare")
+        viewer.groups.add(staff_group())
+        self.client.force_login(viewer)
+
+        response = self.client.get(self.change_url)
+
+        self.assertEqual(response.status_code, 200)
 
     def test_the_event_form_explains_the_slug_and_the_end(self):
         """The two rules an editor would otherwise only meet in the guide."""
