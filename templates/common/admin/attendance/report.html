@@ -101,7 +101,9 @@
       {% if changes %}
         {% if timeline_shown < timeline_total %}
           <p class="attendance-report__muted">
-            {% blocktrans trimmed with shown=timeline_shown total=timeline_total %}Visar de första {{ shown }} av {{ total }} ändringar. Hela loggen finns i CSV-filen.{% endblocktrans %}
+            {% blocktrans trimmed with shown=timeline_shown total=timeline_total %}
+              Visar de första {{ shown }} av {{ total }} ändringar. Hela loggen finns i CSV-filen.
+            {% endblocktrans %}
           </p>
         {% endif %}
         <div class="attendance-report__table-wrap">
