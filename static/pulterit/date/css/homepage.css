@@ -428,11 +428,3 @@ div.calendar-container a {
 .vc-date[data-vc-date-today] .vc-date__btn:hover {
     background-color: #282828 !important;
 }
-
-.vc-date[data-vc-date-selected] .vc-date__btn {
-    background-color: var(--accentColorBright) !important;
-}
-
-.vc-date[data-vc-date-selected] .vc-date__btn:hover {
-    background-color: var(--accentColorBrightHover) !important;
-}
