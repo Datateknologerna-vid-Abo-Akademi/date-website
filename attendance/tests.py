@@ -2565,7 +2565,7 @@ class AttendanceAdminTests(TestCase):
 
         self.assertContains(response, 'class="attendance-change--enter">Anlände<')
         self.assertContains(response, 'class="attendance-change--leave">Lämnade<')
-        self.assertContains(response, "attendance/css/change-colours.css")
+        self.assertContains(response, "attendance/css/admin-colours.css")
 
     def test_the_change_changelist_shows_the_member_by_name(self):
         """A row of "medlem054" tells the board nothing; the name, linked, does."""
@@ -2600,6 +2600,46 @@ class AttendanceAdminTests(TestCase):
 
         self.assertContains(response, "Maja Andersson</option>")
         self.assertNotContains(response, ">maja</option>")
+
+    def test_the_change_changelist_names_a_guest(self):
+        """One attendee column: a member is a link, a guest is the name and the marker."""
+        event = make_event(slug="mote")
+        guest = NonMemberAttendee.objects.create(name="Olof Backman")
+        record_change(event, ENTER, non_member=guest, timestamp=now())
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:attendance_attendancechange_changelist"))
+
+        self.assertContains(response, "Deltagare")
+        self.assertContains(response, "Olof Backman")
+        self.assertContains(response, "icke-medlem")
+
+    def test_event_changelist_shows_the_status(self):
+        """The list is ordered by start time, so the running meeting is not on top."""
+        make_event(
+            slug="forr", title="Förr", start_datetime=now() - timedelta(days=3), end_datetime=now() - timedelta(days=2)
+        )
+        make_event(
+            slug="nu", title="Nu", start_datetime=now() - timedelta(hours=1), end_datetime=now() + timedelta(hours=1)
+        )
+        make_event(slug="snart", title="Snart", start_datetime=now() + timedelta(days=2))
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.changelist_url)
+
+        self.assertContains(response, 'attendance-status--ended">Avslutat<')
+        self.assertContains(response, 'attendance-status--running">Pågår<')
+        self.assertContains(response, 'attendance-status--upcoming">Inte startat<')
+
+    def test_event_changelist_links_to_the_code(self):
+        """An operator starts from the list, so the code should be one click from it."""
+        event = make_event(slug="hostmote", title="Höstmöte")
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.changelist_url)
+
+        self.assertContains(response, "Visa möteskoden")
+        self.assertContains(response, reverse("attendance-event-overview", args=[event.slug]))
 
 
 class AttendanceChangeAdminCorrectionTests(TestCase):
@@ -2685,7 +2725,7 @@ class AttendanceReportAdminTests(TestCase):
 
         self.assertContains(response, 'class="attendance-change--enter"')
         self.assertContains(response, 'class="attendance-change--leave"')
-        self.assertContains(response, "attendance/css/change-colours.css")
+        self.assertContains(response, "attendance/css/admin-colours.css")
 
     def test_the_report_renders_the_numbers_the_timeline_and_the_polls(self):
         maja = make_member("maja", first_name="Maja", last_name="Andersson")
@@ -3586,6 +3626,15 @@ class AttendanceEventAdminFormTests(TestCase):
         self.assertContains(response, timezone.localtime(self.event.start_datetime).strftime("%Y-%m-%d %H:%M"))
         self.assertNotContains(response, "vDateField")
         self.assertNotContains(response, "vTimeField")
+
+    def test_the_event_form_explains_the_slug_and_the_end(self):
+        """The two rules an editor would otherwise only meet in the guide."""
+        self.client.force_login(self.staff)
+
+        response = self.client.get(self.change_url)
+
+        self.assertContains(response, "Bara a-z, 0-9, bindestreck och understreck.")
+        self.assertContains(response, "24 timmar efter starttiden")
 
     def test_a_change_s_time_uses_the_same_picker(self):
         change = record_change(self.event, ENTER, user=make_member("medlem"), timestamp=now())

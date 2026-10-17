@@ -164,6 +164,39 @@ def csv_row(fieldnames: tuple[str, ...], values: list[Any]) -> dict[str, Any]:
     return dict(zip(fieldnames, safe_values, strict=True))
 
 
+class AttendanceEventAdminForm(forms.ModelForm):
+    """The meeting form, with the two rules an editor would otherwise only find in the guide.
+
+    Both are on the form rather than in the model: help text on a model field is a
+    schema change and a migration, and neither of these describes the column.
+    """
+
+    class Meta:
+        model = AttendanceEvent
+        fields = (
+            "title",
+            "description",
+            "start_datetime",
+            "end_datetime",
+            "allow_non_members",
+            "slug",
+            "code_secret",
+            "code_validity_time",
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["slug"].help_text = _(
+            "Mötets del av webbadressen, till exempel hostmote för /attendance/hostmote/. "
+            "Bara a-z, 0-9, bindestreck och understreck."
+        )
+        self.fields["end_datetime"].help_text = _(
+            "Lämna tomt om sluttiden inte är känd. Mötet lämnar då den publika listan 24 timmar efter "
+            "starttiden, och rapporten räknar närvaron vid den sista registrerade ändringen. Måste vara "
+            "senare än starttiden."
+        )
+
+
 class AttendanceEventAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
     # The two times are one field each with the calendar picker the events, news and
     # polls forms use, rather than Django's split date and hour boxes: a board member
@@ -174,10 +207,19 @@ class AttendanceEventAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
     # bare `vTextField` with no border and no padding under Unfold, which on a dark
     # page reads as a grey stripe rather than as something to type in.
     formfield_overrides = {**UNFOLD_FORMFIELD_OVERRIDES}
-    # The workflow is "find the event, open its overview page", so the list is
-    # ordered newest first and carries the times and the guest switch. Without
+    form = AttendanceEventAdminForm
+    # The workflow is "find the event, open its overview page", so the list carries
+    # the status and the times, and the row offers the code and the report. Without
     # this the changelist shows titles only and cannot be searched.
-    list_display = ("title", "start_datetime", "end_datetime", "allow_non_members", "report_link")
+    list_display = (
+        "title",
+        "status",
+        "start_datetime",
+        "end_datetime",
+        "allow_non_members",
+        "code_link",
+        "report_link",
+    )
     list_filter = ("allow_non_members", "start_datetime")
     search_fields = ("title", "description", "slug")
     date_hierarchy = "start_datetime"
@@ -268,6 +310,32 @@ class AttendanceEventAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
             '<a class="button admin-inline-action" href="{}">{}</a>',
             reverse("admin:attendance_event_report", args=[obj.pk]),
             _("Rapport"),
+        )
+
+    @admin.display(description=_("Status"))
+    def status(self, obj):
+        """The three states the report names, so the running meeting is findable here too.
+
+        The list is ordered by start time, which puts a meeting scheduled for next
+        week above the one happening now; the coloured word is what tells them
+        apart without opening a row.
+        """
+        if obj.has_ended:
+            css, label = "ended", _("Avslutat")
+        elif obj.has_started:
+            css, label = "running", _("Pågår")
+        else:
+            css, label = "upcoming", _("Inte startat")
+
+        return format_html('<span class="attendance-status--{}">{}</span>', css, label)
+
+    @admin.display(description=_("Kod"))
+    def code_link(self, obj):
+        """The overview page with the current code, which is what an operator needs mid-meeting."""
+        return format_html(
+            '<a class="button admin-inline-action" href="{}" target="_blank" rel="noopener noreferrer">{}</a>',
+            reverse("attendance-event-overview", args=[obj.slug]),
+            _("Visa möteskoden"),
         )
 
     @admin.display(description=_("Länkar"))
@@ -499,7 +567,7 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
     formfield_overrides = {**UNFOLD_FORMFIELD_OVERRIDES}
     form = AttendanceChangeAdminForm
 
-    list_display = ("timestamp", "event", "member_name", "non_member", "change_direction")
+    list_display = ("timestamp", "event", "attendee", "change_direction")
     list_filter = ("type", "event")
     search_fields = (
         "event__title",
@@ -510,18 +578,28 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
     )
     date_hierarchy = "timestamp"
     ordering = ("-timestamp",)
+    # The attendee column reads both attendee relations per row, and a method in
+    # `list_display` no longer gets the automatic select_related a plain field got.
+    list_select_related = ("event", "user", "non_member")
 
-    @admin.display(description=_("Användare"), ordering="user__first_name")
-    def member_name(self, obj):
-        """The member by name, linked to their own page; the guest column stays its own."""
-        if obj.user_id is None:
-            return "-"
+    @admin.display(description=_("Deltagare"))
+    def attendee(self, obj):
+        """One column for the person, which is one field of two in the model.
 
-        return format_html(
-            '<a href="{}">{}</a>',
-            reverse("admin:members_member_change", args=[obj.user_id]),
-            member_display_name(obj.user),
-        )
+        A member is linked to their own page; a guest has no admin page, so the
+        name and the marker are the whole cell. Two side by side columns wasted a
+        dash on every row and made the list read unlike the site's own tables.
+        """
+        if obj.user_id is not None:
+            return format_html(
+                '<a href="{}">{}</a>',
+                reverse("admin:members_member_change", args=[obj.user_id]),
+                member_display_name(obj.user),
+            )
+        if obj.non_member_id is not None:
+            return str(obj.non_member)
+
+        return "-"
 
     @admin.display(description=_("Typ"), ordering="type")
     def change_direction(self, obj):
@@ -553,7 +631,7 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
             websocket.send_attendance_invalidate(slug)
 
     class Media:
-        css = {"all": FLATPICKR_ADMIN_CSS + ("attendance/css/change-colours.css",)}
+        css = {"all": FLATPICKR_ADMIN_CSS + ("attendance/css/admin-colours.css",)}
         js = ("admin/js/jquery.init.js",) + FLATPICKR_ADMIN_JS
 
 

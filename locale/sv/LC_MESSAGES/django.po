@@ -3662,3 +3662,11 @@ msgstr "Visa ändringarna"
 #: attendance/models.py:119
 msgid "Sluttiden måste vara senare än starttiden."
 msgstr "Sluttiden måste vara senare än starttiden."
+
+#: attendance/admin.py
+msgid "Mötets del av webbadressen, till exempel hostmote för /attendance/hostmote/. Bara a-z, 0-9, bindestreck och understreck."
+msgstr "Mötets del av webbadressen, till exempel hostmote för /attendance/hostmote/. Bara a-z, 0-9, bindestreck och understreck."
+
+#: attendance/admin.py
+msgid "Lämna tomt om sluttiden inte är känd. Mötet lämnar då den publika listan 24 timmar efter starttiden, och rapporten räknar närvaron vid den sista registrerade ändringen. Måste vara senare än starttiden."
+msgstr "Lämna tomt om sluttiden inte är känd. Mötet lämnar då den publika listan 24 timmar efter starttiden, och rapporten räknar närvaron vid den sista registrerade ändringen. Måste vara senare än starttiden."
