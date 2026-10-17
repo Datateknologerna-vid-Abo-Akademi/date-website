@@ -55,10 +55,10 @@
   --calendar-arrow-color: var(--primaryColor);
   --calendar-arrow-hover-color: var(--primaryColorLight);
 
-  /* The 2.x sheet had no border-box, so its 12 px padding sat outside the width
-     the homepage column gave it. */
-  box-sizing: content-box;
+  /* 3.x refuses to shrink below 272 px; 2.x shrank to its own content, which is
+     what the narrow homepage column did on smaller screens. */
   width: 100%;
+  min-width: min-content;
   padding: 12px;
   border-radius: 4px;
 }
