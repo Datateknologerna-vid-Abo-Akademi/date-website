@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from typing import Any, cast
 
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import F, Q, Window, constraints
@@ -113,6 +114,20 @@ class AttendanceEvent(models.Model):
         built from the model agree on where the meeting lives.
         """
         return reverse("attendance-event-view", args=[self.slug])
+
+    def clean(self) -> None:
+        """Refuse a meeting that ends before it starts.
+
+        The status, the public listing and the report's headcount all read these
+        two fields, so an inverted pair reads as a meeting that has ended while
+        it has not begun, and the report would count who was in the room at a
+        moment the meeting could not have started at. There is no upper bound on
+        either field: a meeting is allowed to run long, and one is allowed to be
+        entered after the fact.
+        """
+        super().clean()
+        if self.end_datetime is not None and self.end_datetime <= self.start_datetime:
+            raise ValidationError({"end_datetime": _("Sluttiden måste vara senare än starttiden.")})
 
     @property
     def has_ended(self) -> bool:

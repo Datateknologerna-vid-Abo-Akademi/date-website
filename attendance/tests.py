@@ -3327,6 +3327,67 @@ class AttendanceConsumerTests(TestCase):
         self.assertEqual(async_to_sync(flow)(), {"type": "attendance_change", "data": change})
 
 
+class AttendanceEventTimeValidationTests(TestCase):
+    """A meeting cannot end before it starts, and the admin form is where that is caught.
+
+    The status, the public listing and the report headcount all read the two
+    fields, so an inverted pair is a meeting that reads as ended before it began.
+    """
+
+    def event_ending(self, delta):
+        start = datetime(2026, 5, 1, 12, 0, tzinfo=UTC)
+        return AttendanceEvent(
+            title="Möte",
+            slug="tidsprov",
+            start_datetime=start,
+            end_datetime=None if delta is None else start + delta,
+        )
+
+    def test_an_end_before_the_start_is_refused(self):
+        with self.assertRaises(ValidationError) as caught:
+            self.event_ending(timedelta(hours=-1)).clean()
+
+        self.assertIn("end_datetime", caught.exception.message_dict)
+
+    def test_an_end_equal_to_the_start_is_refused(self):
+        with self.assertRaises(ValidationError) as caught:
+            self.event_ending(timedelta(0)).clean()
+
+        self.assertIn("end_datetime", caught.exception.message_dict)
+
+    def test_an_end_after_the_start_is_accepted(self):
+        self.event_ending(timedelta(hours=2)).clean()
+
+    def test_a_meeting_without_an_end_is_accepted(self):
+        self.event_ending(None).clean()
+
+    def test_the_admin_form_shows_the_error_on_the_end_field(self):
+        """The board member sees which field to fix, not a page that will not save."""
+        staff = make_member("admin", is_superuser=True)
+        event = make_event(slug="tidsprov")
+        request = RequestFactory().get(reverse("admin:attendance_attendanceevent_change", args=[event.pk]))
+        request.user = staff
+        form_class = admin.site._registry[AttendanceEvent].get_form(request)
+
+        form = form_class(
+            data={
+                "title": "Tidsprov",
+                "description": "",
+                "start_datetime": "2026-05-01 12:00:00",
+                "end_datetime": "2026-05-01 11:00:00",
+                "allow_non_members": "",
+                "code_secret": event.code_secret,
+                "code_validity_time": "30",
+                "slug": "tidsprov",
+            },
+            instance=event,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("end_datetime", form.errors)
+        self.assertNotIn("start_datetime", form.errors)
+
+
 class AttendanceEventAdminFormTests(TestCase):
     """The event form a board member fills in: its sections and its links."""
 

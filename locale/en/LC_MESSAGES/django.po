@@ -3582,3 +3582,7 @@ msgstr "Open the report"
 #: attendance/admin.py
 msgid "Visa ändringarna"
 msgstr "Show the changes"
+
+#: attendance/models.py:119
+msgid "Sluttiden måste vara senare än starttiden."
+msgstr "The end time must be later than the start time."
