@@ -7,7 +7,7 @@
   --backdropBlur: blur(2px);
   --mainArsfestColor: var(--primaryColorLighter);
   --mainArsfestTextColor: var(--textColorLight);
-  --mainArsfestButtonHoverColor: var(--primaryColorLighte);
+  --mainArsfestButtonHoverColor: var(--primaryColorMid);
   --arsfest-font: "Josefin Sans", sans-serif;
   z-index: inherit;
 }
@@ -183,8 +183,6 @@
 }
 
 .periodic-table-square {
-  --text-glow-base-color: #ff7833;
-  --text-glow-color: white;
   width: 230px;
   height: 230px;
   display: flex;

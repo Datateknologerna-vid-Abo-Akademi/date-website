@@ -1,0 +1,265 @@
+/* Shared core of the per-association homepage sheets.
+
+   Every rule here was declared identically by all six association homepage sheets
+   (date/css/homepage.css, one per association). Keeping one copy here means a change
+   to a calendar widget, an event card, a news panel or a layout helper is a one-file
+   edit.
+
+   Each association's homepage template links this sheet immediately before its own
+   homepage sheet, so this one loads first and the association's own rules still win:
+   only declarations that were identical in all six sheets and appeared once per sheet
+   moved here, and every divergent or variant-only rule stayed behind. The calendar
+   widget rules, the events grid, the news panel rules and the small layout helpers all
+   come from the tails of those sheets, so the selectors below keep the order they had
+   there. */
+
+/* Hero */
+
+.hero-text-box {
+    text-align: center;
+}
+
+/* News panel */
+
+.news-events {
+    color: var(--textColorDark);
+    hyphens: auto;
+}
+
+.section-title p {
+    text-align: center;
+    font-weight: 500;
+    line-height: 2.2;
+    color: #878787;
+}
+
+.main-container {
+    display: grid;
+    grid-template-columns: 1fr 850px 350px 1fr;
+    grid-template-rows: auto;
+    grid-column-gap: 3vw;
+}
+
+.text-size {
+    font-weight: bold;
+}
+
+.feed-container {
+    grid-area: news;
+}
+
+.news-container {
+    display: grid;
+    grid-row-gap: 1vh;
+    padding-bottom: 10px;
+}
+
+.news-box {
+    background-color: var(--secondaryColor);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.news-content img {
+    max-height: 30vh;
+    max-width: 100%;
+    width: auto !important;
+    height: auto !important;
+    border-radius: 3px;
+}
+
+.news-date {
+    color: var(--helpText);
+}
+
+div.news-content a {
+    display: inline-block;
+}
+
+.news-header {
+    position: relative;
+}
+
+/* Event card, the block every homepage sheet used to duplicate */
+
+.card {
+    border-radius: var(--defaultRadius);
+}
+
+.card .fa-chevron-right {
+    transition: .3s;
+}
+
+.card a:hover .fa-chevron-right {
+    transform: translateX(10px);
+}
+
+.event-card > .card .list-inline-item {
+    color: var(--helpText);
+    font-size: 14px;
+}
+
+.event-card > .card {
+    background: var(--secondaryColor);
+}
+
+.event-card a:hover {
+    background-color: inherit;
+}
+
+.event-card a:focus {
+    background-color: inherit;
+    box-shadow: none;
+}
+
+.chevron-box {
+    margin: auto;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.text-color {
+    color: var(--textColorDark);
+}
+
+.card {
+    box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
+}
+
+.card:hover {
+    transform: scale(1.01);
+}
+
+.card:hover .fa-chevron-right {
+    transform: translateX(10px);
+}
+
+/* Events grid */
+
+.events-container {
+    display: block;
+}
+
+.events {
+    display: grid;
+    grid-row-gap: 10px;
+}
+
+.event-box {
+    background-color: var(--secondaryColor);
+    color: var(--textColorDark);
+    text-align: left;
+    padding: 1px;
+    -webkit-transition: all 0.2s;
+    -moz-transition: all 0.2s;
+    transition: all 0.2s;
+    box-shadow: 3px 3px 5px 0px rgba(133,133,133,1);
+    grid-template-columns: 3fr 1fr;
+    border-radius: 5px;
+}
+
+.event-box:hover {
+    color: var(--textColorLight);
+    background-color: var(--primaryColorLighter);
+}
+
+.event-title {
+    padding-top: 5px;
+    margin: 5px;
+    border-radius: 3px;
+    padding: 5px;
+}
+
+.event-date {
+    padding-top: 5px;
+    padding-left: 5px;
+    border-left: 1px solid var(--primaryColorLight);
+    margin: 5px;
+}
+
+.header-border-bottom {
+    border-bottom: solid;
+    border-width: 2px;
+    border-color: var(--helpTextLighter);
+}
+
+.more-events-button {
+    display: inline-block;
+}
+
+.more-events-button:hover {
+    transition: 0.2s;
+    scale: 1.01;
+}
+
+/* Calendar widget */
+
+.calendar-container {
+    display: grid;
+    grid-template-columns: 0 1fr 0;
+    grid-template-areas: ". box ."
+    ". calendar .";
+}
+
+.calendar {
+    margin-bottom: 1rem;
+}
+
+.calendar-box {
+    grid-area: box;
+    border-radius: 5px;
+    padding: 3px;
+}
+
+.month {
+    padding-top: 10px;
+    margin: 0;
+    text-align: center;
+}
+
+.day {
+    border-bottom: 1px solid rgb(190, 190, 190);
+}
+
+.left {
+    float: left;
+}
+
+.right {
+    float: right;
+}
+
+.cal-btn {
+    outline: none;
+    color: var(--textColorDark);
+    background-color: transparent;
+    box-shadow: 0 0 0 0;
+}
+
+.clearfix {
+    padding: 10px;
+    text-align: center;
+}
+
+.calendar-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.calendar-eventday-popup {
+    font-size: 0.75rem;
+}
+
+/* Width responsiveness */
+
+@media screen and (max-width: 1400px) {
+    .main-container {
+        grid-template-columns: 5vw 5fr 2fr 5vw;
+    }
+}
+
+@media screen and (max-width: 991px) {
+    .main-container {
+        grid-template-columns: 1vw 1fr 1vw;
+    }
+}

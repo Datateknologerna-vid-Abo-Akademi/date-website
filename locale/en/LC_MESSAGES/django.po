@@ -3698,6 +3698,7 @@ msgstr "Non-members"
 #: attendance/admin.py
 msgid "Ändringar"
 msgstr "Changes"
+
 #: templates/common/booking/room_detail.html:97
 msgid "Slutar nästa dag"
 msgstr "Ends the next day"

@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@500&display=swap');
 
 :root {
-    --opacityColor: var(--primaryColorLighte);
+    --opacityColor: var(--primaryColorMid);
     --backdropBlur:  blur(10px);
 }
 
@@ -20,7 +20,7 @@
 }
 
 .content{
-    background-color: var(--primaryColorLighte);
+    background-color: var(--primaryColorMid);
     border: 1px solid var(--primaryColorLighter);
     color: var(--textColorLightish);
     font-size: 1.1em;
@@ -138,7 +138,7 @@
 .baal-nav a{
     margin: 0;
     padding: 10px;
-    background-color: var(--primaryColorLighte);
+    background-color: var(--primaryColorMid);
     border-radius: 5px;
     transition: .3s;
     box-shadow: 1px 1px 5px 0px rgb(32, 32, 32);
@@ -187,7 +187,7 @@ form input {
 
 form button {
     font-family: 'Comfortaa', cursive !important;
-    background-color: var(--primaryColorLighte) !important;
+    background-color: var(--primaryColorMid) !important;
     color: var(--textColorLight) !important;
     transition: .3s;
 }

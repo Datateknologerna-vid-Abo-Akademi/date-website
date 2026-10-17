@@ -80,7 +80,7 @@ div a:hover{
 }
 
 .theme-button:hover {
-    background-color: var(--primaryColorLighte);
+    background-color: var(--primaryColorMid);
     color: var(--linkColorLightHover);
 }
 

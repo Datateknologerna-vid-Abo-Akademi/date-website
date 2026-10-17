@@ -1,10 +1,10 @@
 /* Root colors */
-/* use with var(--color); included in base.html*/
 
 :root {
+    /* Primary colour ladder, darkest to lightest: --primaryColor, --primaryColorLight, --primaryColorMid, --primaryColorLighter. */
     --primaryColor: #225E41;
     --primaryColorLight:  #2F4C42;
-    --primaryColorLighte:#35564a;
+    --primaryColorMid:#35564a;
     --primaryColorLighter:#3c6153;
     --primaryColorTransparent: #225e41ad;
     --primaryColorTransparenter: rgba(0,0,0,0.8);
@@ -14,15 +14,32 @@
     --textColorLightish: #eaeaea;
     --textColorDark: #000;
     --textColorDarkish: #202020;
+    --textColorMedium: #606060;
     --helpText: rgb(171, 171, 171);
     --helpTextLighter: rgb(199, 199, 199);
     --linkColor: #49796b;
     --linkColorHover: #225E41;
     --linkColorSecondary: #49796b;
     --linkSecondaryHover: #225E41;
+    /* Shared sheets consume a light link pair; biocum plays that role with its
+       secondary link pair, which the variant sheets already use in its place. */
+    --linkColorLight: var(--linkColorSecondary);
+    --linkColorLightHover: var(--linkSecondaryHover);
     --warning: rgb(216, 153, 146);
+    --warning-darker: rgb(213, 91, 78);
     --badgeColor: #49796b;
     --defaultPadding: 20px;
     --defaultRadius: 5px;
     --pubListHeadingFg: var(--textColorLight);
+
+    /* Event card roles, consumed by the shared events/css/event-card.css. The div
+       card and the anchor card resolve the same colour here: the card rule this
+       association used to keep in its own event card sheet applied to both. */
+    --event-card-fg: var(--textColorDarkish);
+    --event-card-anchor-fg: var(--textColorDarkish);
+    --event-card-badge-bg: var(--badgeColor);
+    --event-card-badge-fg: #fff; /* Bootstrap's .badge colour, never overridden here */
+    --event-card-bg: var(--secondaryColor);
+    --event-card-link: var(--linkColorSecondary);
+    --event-card-link-hover: var(--linkSecondaryHover);
 }

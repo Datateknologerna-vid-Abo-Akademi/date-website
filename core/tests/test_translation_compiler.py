@@ -90,6 +90,27 @@ class TranslationCompilerTests(SimpleTestCase):
         self.assertEqual(catalog["singular\x04närvaroevenemang"], "läsnäolotapahtuma")
         self.assertEqual(catalog["Närvaroevenemang"], "Närvaroevenemang")
 
+    def test_an_entry_without_a_blank_line_before_the_next_is_kept(self):
+        # A catalog that has lost the blank line between two entries is malformed,
+        # but dropping the first one silently is worse than reading it: that is how
+        # the English attendance column lost its "Changes" label while every other
+        # entry in the file still compiled.
+        catalog, _po, _mo = self.compile(
+            'msgid ""\n'
+            'msgstr ""\n'
+            '"Content-Type: text/plain; charset=UTF-8\\n"\n'
+            "\n"
+            "#: attendance/admin.py\n"
+            'msgid "Ändringar"\n'
+            'msgstr "Changes"\n'
+            "#: templates/common/booking/room_detail.html:97\n"
+            'msgid "Slutar nästa dag"\n'
+            'msgstr "Ends the next day"\n'
+        )
+
+        self.assertEqual(catalog["Ändringar"], "Changes")
+        self.assertEqual(catalog["Slutar nästa dag"], "Ends the next day")
+
     def test_a_plural_entry_keeps_every_form(self):
         catalog, _po, _mo = self.compile()
 

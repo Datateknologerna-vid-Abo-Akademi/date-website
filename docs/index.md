@@ -52,6 +52,7 @@ Use the sections below to jump to either editor-facing instructions or implement
 - [Attendance Development Notes](dev/attendance.md)
 - [Billing Development Notes](dev/billing.md)
 - [Booking Development Notes](dev/booking.md)
+- [Shared CSS & Association Overrides](dev/css.md)
 - [CTF Development Notes](dev/ctf.md)
 - [Site Shell (date app) Development Notes](dev/date.md)
 - [Events Development Notes](dev/events.md)
