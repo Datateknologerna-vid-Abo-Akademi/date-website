@@ -249,6 +249,10 @@
 }
 
 .booking-when-sep {
+    /* Never squeezed, and never broken: the word is the only thing separating the
+       two ends, so a clipped "til" would read as a typo. */
+    flex: 0 0 auto;
+    white-space: nowrap;
     color: var(--helpText);
 }
 
@@ -256,17 +260,34 @@
     display: none;
 }
 
-/* The date is picked once and the two clock times beside it, so the row reads
-   "24.10.2026 18:00 till 20:00" without the visitor being asked for the day
-   twice. */
+/* The start is one pair and the end is another. Each pair is a row of its own
+   when the space runs out, which keeps an end's day beside its own clock instead
+   of leaving the date on one line and the time on another. */
 .booking-when-split {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto auto;
-    gap: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
     align-items: center;
+    gap: 0.5rem;
+}
+
+.booking-when-from-pair,
+.booking-when-till-pair {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.booking-when-from-pair {
+    flex: 1 1 auto;
+}
+
+.booking-when-till-pair {
+    flex: 0 0 auto;
 }
 
 .booking-when-split .booking-when-date {
+    flex: 1 1 10rem;
     min-width: 0;
 }
 
@@ -274,17 +295,32 @@
     /* Sized by its own content rather than a fixed width: a clock shows "18:00"
        in a 24 hour locale and "06:00 PM" in a 12 hour one, and a width chosen for
        the first clips the second. */
+    flex: 0 0 auto;
     width: auto;
     min-width: 6.5rem;
+}
+
+.booking-when-split .booking-when-end-date {
+    flex: 0 1 10rem;
+    width: auto;
+    min-width: 0;
+}
+
+/* Once the end has a day of its own the row needs two lines, so the start keeps
+   its natural width there instead of stretching across the first one. */
+.booking-when-split-long .booking-when-date {
+    flex: 0 0 auto;
+    width: 12rem;
 }
 
 .booking-when > .booking-when-split {
     grid-column: 2;
 }
 
-/* The two longer options sit under the row: an end on the next day, and a link
-   that reveals an end date for a booking over several days. Only a room without a
-   daily window renders them, because only such a room can take them. */
+/* The two longer options sit under the row: an end on the next day, and a
+   checkbox that adds the end's own day for a booking over several days. Only a
+   room without a daily window renders them, because only such a room can take
+   them. */
 .booking-when > .booking-when-extras {
     grid-column: 2;
 }
@@ -309,45 +345,6 @@
     width: auto;
     margin: 0;
     accent-color: var(--linkColorLight, var(--textColorLight));
-}
-
-/* A link rather than a button: booking over several days is not something to put
-   in front of every visitor. */
-.booking-when-toggle {
-    padding: 0;
-    border: 0;
-    background: none;
-    color: var(--helpText);
-    font: inherit;
-    font-size: 0.9rem;
-    text-decoration: underline;
-    text-underline-offset: 0.2rem;
-    cursor: pointer;
-}
-
-.booking-when-toggle:hover,
-.booking-when-toggle-on {
-    color: var(--linkColorLight, var(--textColorLight));
-}
-
-.booking-when > .booking-when-end {
-    grid-column: 2;
-}
-
-.booking-when-end {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    font-size: 0.9rem;
-}
-
-.booking-when-end label {
-    color: var(--helpText);
-}
-
-.booking-when-end .booking-when-end-date {
-    width: auto;
-    min-width: 10rem;
 }
 
 /* A native date or time field draws its own calendar and its own indicator icon,
@@ -451,36 +448,37 @@
         grid-template-columns: 1fr;
     }
 
-    .booking-when > .booking-when-split {
+    /* The controls the script builds have to be moved into the one remaining
+       column by hand: their rule above names the second column, which a
+       one-column grid would otherwise create as an implicit one. */
+    .booking-when > .booking-when-split,
+    .booking-when > .booking-when-extras {
         grid-column: 1;
     }
 
-    /* The date takes its own line and the two times share the next one, which is
-       enough for a clock and leaves both ends readable. */
+    /* The two pairs take a line each, the start above and its own end below, so a
+       wrapped row still keeps each day beside its clock. */
     .booking-when-split {
-        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        flex-direction: column;
+        align-items: stretch;
     }
 
-    .booking-when-split .booking-when-date {
-        grid-column: 1 / -1;
+    /* The start day takes whatever is left of the line rather than a fixed width
+       that pushes the row past the panel. */
+    .booking-when-split .booking-when-date,
+    .booking-when-split-long .booking-when-date {
+        flex: 1 1 auto;
+        width: auto;
     }
 
+    /* A clock keeps the width of its own text here too: at 6.5rem a 12 hour
+       locale clips the "AM" off the end of it. */
     .booking-when-split .booking-when-clock {
-        width: 100%;
+        flex: 0 0 auto;
     }
 
-    /* The longer options and the end date follow the row into the one column. */
-    .booking-when > .booking-when-extras,
-    .booking-when > .booking-when-end {
-        grid-column: 1;
-    }
-
-    .booking-when-end {
-        flex-wrap: wrap;
-    }
-
-    .booking-when-end .booking-when-end-date {
-        width: 100%;
+    .booking-when-split .booking-when-end-date {
+        flex: 1 1 auto;
     }
 
     .booking-form .theme-button,

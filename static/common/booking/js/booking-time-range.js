@@ -3,16 +3,19 @@
 // The form posts two datetime-local inputs, `start` and `end`, and that pair is
 // what the server validates: nothing here changes what is submitted, only what
 // the visitor sees. This script hides the pair and shows a date plus two clocks
-// instead. One date, because a room booking happens on one day and the visitor
-// should not be asked for it twice; two clocks, because the two ends of that day
-// are the only thing that differs. Without the script the pair is left exactly
-// as the template rendered it, so a visitor with JavaScript off still books in
-// two steps.
+// instead, arranged as two pairs: the start is a day and a clock, the end is a
+// clock, or a day and a clock when the booking runs past midnight. Each pair
+// wraps and stays together, so the end never ends up as a day on one line and a
+// clock on another.
+//
+// One date is asked for, because a room booking usually happens on one day, and
+// the second one only appears when the visitor asks for a booking over several
+// days. Nothing is pre-filled, so no time is chosen for the visitor.
 //
 // A room without a daily window can also take a booking that runs into the next
 // day or over several days. Both are offered only for such a room, because a room
 // with bookable hours refuses both on the server, and an option that can only
-// fail is worse than no option. The multi day one stays behind a single link
+// fail is worse than no option. The multi day one stays behind a single checkbox
 // until it is wanted.
 //
 // Two details are deliberate:
@@ -46,6 +49,14 @@ function buildBookingTimeControls(row, startInput, endInput, fields, label) {
     var group = document.createElement("span");
     group.className = "booking-when-split";
 
+    // The start is one pair, the end is another: wrapping the row then keeps each
+    // end's day and clock on the same line.
+    var fromPair = document.createElement("span");
+    fromPair.className = "booking-when-from-pair";
+
+    var tillPair = document.createElement("span");
+    tillPair.className = "booking-when-till-pair";
+
     var dateInput = document.createElement("input");
     dateInput.type = "date";
     dateInput.className = "booking-when-date";
@@ -73,21 +84,37 @@ function buildBookingTimeControls(row, startInput, endInput, fields, label) {
     between.className = "booking-when-sep";
     between.textContent = row.dataset.bookingRangeSeparator || "till";
 
-    group.append(dateInput, fromInput, between, toInput);
+    // The two longer options, only for a room that can take them.
+    var longer = row.dataset.bookingLonger === "1";
+    var endDateInput = null;
+    if (longer) {
+        endDateInput = document.createElement("input");
+        endDateInput.type = "date";
+        endDateInput.className = "booking-when-end-date";
+        endDateInput.id = (row.id || "booking-when") + "-end-date";
+        endDateInput.hidden = true;
+        endDateInput.setAttribute("aria-label", row.dataset.bookingRangeEndDateLabel || "Till datum");
+    }
+
+    fromPair.append(dateInput, fromInput);
+    tillPair.append(between);
+    if (endDateInput) {
+        tillPair.append(endDateInput);
+    }
+    tillPair.append(toInput);
+    group.append(fromPair, tillPair);
     fields.after(group);
     label.htmlFor = dateInput.id;
 
-    // The two longer options, only for a room that can take them.
     var overnightBox = null;
-    var toggle = null;
-    var endGroup = null;
-    var endDateInput = null;
+    var overnightLabel = null;
+    var multiBox = null;
 
-    if (row.dataset.bookingLonger === "1") {
+    if (longer) {
         var extras = document.createElement("span");
         extras.className = "booking-when-extras";
 
-        var overnightLabel = document.createElement("label");
+        overnightLabel = document.createElement("label");
         overnightLabel.className = "booking-when-option";
         overnightBox = document.createElement("input");
         overnightBox.type = "checkbox";
@@ -96,34 +123,18 @@ function buildBookingTimeControls(row, startInput, endInput, fields, label) {
             document.createTextNode(row.dataset.bookingRangeOvernightLabel || "Slutar nästa dag"),
         );
 
-        toggle = document.createElement("button");
-        toggle.type = "button";
-        toggle.className = "booking-when-toggle";
-        toggle.setAttribute("aria-pressed", "false");
-        toggle.textContent = row.dataset.bookingRangeMultiDayLabel || "Flera dagar";
+        var multiLabel = document.createElement("label");
+        multiLabel.className = "booking-when-option";
+        multiBox = document.createElement("input");
+        multiBox.type = "checkbox";
+        multiLabel.append(multiBox, document.createTextNode(row.dataset.bookingRangeMultiDayLabel || "Flera dagar"));
 
-        extras.append(overnightLabel, toggle);
+        extras.append(overnightLabel, multiLabel);
         group.after(extras);
-
-        endGroup = document.createElement("span");
-        endGroup.className = "booking-when-end";
-        endGroup.hidden = true;
-
-        endDateInput = document.createElement("input");
-        endDateInput.type = "date";
-        endDateInput.id = (row.id || "booking-when") + "-end-date";
-        endDateInput.className = "booking-when-end-date";
-
-        var endLabel = document.createElement("label");
-        endLabel.htmlFor = endDateInput.id;
-        endLabel.textContent = row.dataset.bookingRangeEndDateLabel || "Till datum";
-
-        endGroup.append(endLabel, endDateInput);
-        extras.after(endGroup);
     }
 
     function multiDay() {
-        return Boolean(endGroup) && !endGroup.hidden;
+        return Boolean(multiBox) && multiBox.checked;
     }
 
     function overnight() {
@@ -152,31 +163,32 @@ function buildBookingTimeControls(row, startInput, endInput, fields, label) {
             endDateInput.required = multiDay();
             endDateInput.min = day || "";
             endDateInput.max = day ? bookingAddDays(day, 7) : "";
-            if (multiDay() && !endDateInput.value) {
-                endDateInput.value = day || "";
-            }
-            if (day && endDateInput.value && endDateInput.value < day) {
-                endDateInput.value = day;
-            }
         }
     }
 
-    if (toggle) {
-        toggle.addEventListener("click", function () {
-            var open = toggle.getAttribute("aria-pressed") !== "true";
-            toggle.setAttribute("aria-pressed", String(open));
-            toggle.classList.toggle("booking-when-toggle-on", open);
-            endGroup.hidden = !open;
-            overnightBox.parentElement.hidden = open;
-            if (open && (!endDateInput.value || endDateInput.value === dateInput.value)) {
-                // Opened with the two clocks already set the same day: the same
-                // day cannot hold an end before the start, so the end date starts
-                // on the next day and the visitor moves it from there.
-                if (fromInput.value && toInput.value && toInput.value < fromInput.value) {
-                    endDateInput.value = bookingAddDays(dateInput.value, 1);
-                } else if (!endDateInput.value) {
-                    endDateInput.value = dateInput.value || "";
-                }
+    // Opening the second day starts from the day already picked, and moves to the
+    // next one when the two clocks already cross midnight.
+    function revealEndDay() {
+        var day = dateInput.value;
+        if (!day) {
+            return;
+        }
+        if (!endDateInput.value || endDateInput.value === day) {
+            var crossing = fromInput.value && toInput.value && toInput.value < fromInput.value;
+            endDateInput.value = crossing ? bookingAddDays(day, 1) : day;
+        } else if (endDateInput.value < day) {
+            endDateInput.value = day;
+        }
+    }
+
+    if (multiBox) {
+        multiBox.addEventListener("change", function () {
+            var open = multiBox.checked;
+            endDateInput.hidden = !open;
+            overnightLabel.hidden = open;
+            group.classList.toggle("booking-when-split-long", open);
+            if (open) {
+                revealEndDay();
             }
             compose();
             if (open) {
@@ -197,14 +209,14 @@ function buildBookingTimeControls(row, startInput, endInput, fields, label) {
     if (existingEnd[1]) {
         toInput.value = existingEnd[1];
     }
-    if (existingEnd[0] && existingStart[0] && existingEnd[0] !== existingStart[0] && endGroup) {
-        if (existingEnd[0] === bookingAddDays(existingStart[0], 1) && overnightBox) {
+    if (existingEnd[0] && existingStart[0] && existingEnd[0] !== existingStart[0] && endDateInput) {
+        if (existingEnd[0] === bookingAddDays(existingStart[0], 1)) {
             overnightBox.checked = true;
         } else {
-            toggle.setAttribute("aria-pressed", "true");
-            toggle.classList.add("booking-when-toggle-on");
-            endGroup.hidden = false;
-            overnightBox.parentElement.hidden = true;
+            multiBox.checked = true;
+            endDateInput.hidden = false;
+            overnightLabel.hidden = true;
+            group.classList.add("booking-when-split-long");
             endDateInput.value = existingEnd[0];
         }
     }
