@@ -1,28 +1,3 @@
 {% load include_clean %}
+{# The dad joke is DaTe's: no other association fetches it, and this page has no #joke-string to put it in. #}
 {% include_clean "date/partials/calendar_scripts.html" %}
-<script>
-    async function getJoke() {
-        return await fetch("https://icanhazdadjoke.com", {
-                headers: {
-                    "Accept": "application/json"
-                }
-            })
-            .then(response => response.json())
-            .then(function(data) {
-                return data ? data.joke : ""
-            })
-            .catch(function(e) {
-                document.querySelectorAll("#joke-header")
-                    .forEach(function(elem) {
-                        elem.innerText = "";
-                    });
-                return ""
-            }) ||
-            "";
-    }
-    getJoke().then((joke) => {
-        document.querySelectorAll("#joke-string").forEach(function(elem) {
-            elem.innerText = joke;
-        })
-    })
-</script>
