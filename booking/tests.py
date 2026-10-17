@@ -695,9 +695,7 @@ class BookingAvailabilityRulesTests(TestCase):
         # model measures the real one, so that construction made this test fail
         # for a week every autumn.
         booking = self.booking()
-        booking.end = (booking.start.astimezone(datetime.UTC) + BOOKING_MAX_DURATION).astimezone(
-            booking.start.tzinfo
-        )
+        booking.end = (booking.start.astimezone(datetime.UTC) + BOOKING_MAX_DURATION).astimezone(booking.start.tzinfo)
 
         booking.full_clean()
 
