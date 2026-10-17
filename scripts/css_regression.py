@@ -1159,9 +1159,12 @@ def resolve_credentials(args: argparse.Namespace) -> tuple[str | None, str | Non
     username = args.username or os.environ.get(USERNAME_ENV_VAR) or None
     password = args.password or os.environ.get(PASSWORD_ENV_VAR) or None
     if username and not password:
-        fail(f"a username was supplied without a password (pass --password or set {PASSWORD_ENV_VAR})")
+        # The env var names stay out of these messages: naming a password variable in a
+        # string that reaches an error print is what CodeQL's clear-text rule reports,
+        # even when the string is only the variable's name. --help lists both.
+        fail("a username was supplied without a password; pass both, or set both environment variables")
     if password and not username:
-        fail(f"a password was supplied without a username (pass --username or set {USERNAME_ENV_VAR})")
+        fail("a password was supplied without a username; pass both, or set both environment variables")
     return username, password
 
 
