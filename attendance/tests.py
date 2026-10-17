@@ -55,7 +55,7 @@ if "attendance" not in settings.INSTALLED_APPS:
     raise unittest.SkipTest("attendance app is not installed in this settings module")
 
 from attendance import forms, limits, websocket  # noqa: E402
-from attendance.admin import present_at_end  # noqa: E402
+from attendance.admin import REPORT_TIMELINE_ROWS, present_at_end  # noqa: E402
 from attendance.consumers import AttendanceConsumer  # noqa: E402
 from attendance.models import (  # noqa: E402
     AttendanceChange,
@@ -2660,6 +2660,28 @@ class AttendanceAdminTests(TestCase):
 
         self.assertRedirects(response, self.change_changelist_url(event))
 
+    def test_adding_from_a_meeting_prefills_it(self):
+        """The add link carries the filtered list, so the meeting is already chosen."""
+        event = make_event(slug="mote")
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(
+            f"{reverse('admin:attendance_attendancechange_add')}?_changelist_filters=event__id__exact%3D{event.pk}"
+        )
+
+        value = response.context["adminform"].form["event"].value()
+        self.assertEqual(str(value), str(event.pk))
+
+    def test_the_app_index_does_not_offer_the_change_list(self):
+        """The list belongs to a meeting, so the app index has no page for it."""
+        make_event(slug="mote")
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(reverse("admin:app_list", args=["attendance"]))
+
+        self.assertContains(response, reverse("admin:attendance_attendanceevent_changelist"))
+        self.assertNotContains(response, reverse("admin:attendance_attendancechange_changelist"))
+
     def test_adding_a_change_returns_to_its_meeting(self):
         event = make_event(slug="mote")
         member = make_member("medlem")
@@ -2721,6 +2743,57 @@ class AttendanceAdminTests(TestCase):
 
         self.assertContains(response, "Visa möteskoden")
         self.assertContains(response, reverse("attendance-event-overview", args=[event.slug]))
+
+
+class NonMemberAttendeeAdminTests(TestCase):
+    """A guest's name is shared by every meeting, so it has one page to correct it.
+
+    Nothing there adds or deletes: a guest exists because somebody checked in, and
+    deleting the row would take their changes with it.
+    """
+
+    def setUp(self):
+        self.admin_user = make_member("admin", is_superuser=True)
+        self.guest = NonMemberAttendee.objects.create(name="Olof Backman")
+        self.changelist_url = reverse("admin:attendance_nonmemberattendee_changelist")
+        self.change_url = reverse("admin:attendance_nonmemberattendee_change", args=[self.guest.pk])
+
+    def test_the_guest_list_names_the_guests_and_their_change_count(self):
+        event = make_event(slug="mote")
+        record_change(event, ENTER, non_member=self.guest, timestamp=now())
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.changelist_url)
+
+        self.assertContains(response, "Olof Backman")
+
+    def test_a_guest_name_can_be_corrected(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(self.change_url, {"name": "Olof Backmann"})
+
+        self.assertRedirects(response, self.changelist_url)
+        self.guest.refresh_from_db()
+        self.assertEqual(self.guest.name, "Olof Backmann")
+
+    def test_a_rename_onto_another_guest_is_refused(self):
+        NonMemberAttendee.objects.create(name="Wilma Grönroos")
+        self.client.force_login(self.admin_user)
+
+        response = self.client.post(self.change_url, {"name": "Wilma Grönroos"})
+
+        self.assertEqual(response.status_code, 200)
+        self.guest.refresh_from_db()
+        self.assertEqual(self.guest.name, "Olof Backman")
+
+    def test_there_is_no_page_that_adds_or_deletes_a_guest(self):
+        self.client.force_login(self.admin_user)
+
+        add = self.client.get(reverse("admin:attendance_nonmemberattendee_add"))
+        delete = self.client.get(reverse("admin:attendance_nonmemberattendee_delete", args=[self.guest.pk]))
+
+        self.assertEqual(add.status_code, 403)
+        self.assertEqual(delete.status_code, 403)
 
 
 class AttendanceChangeAdminCorrectionTests(TestCase):
@@ -2807,6 +2880,49 @@ class AttendanceReportAdminTests(TestCase):
         self.assertContains(response, 'class="attendance-change--enter"')
         self.assertContains(response, 'class="attendance-change--leave"')
         self.assertContains(response, "attendance/css/admin-colours.css")
+
+    def test_the_report_links_back_to_its_meeting_and_changes(self):
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.report_url)
+
+        self.assertContains(response, reverse("admin:attendance_attendanceevent_change", args=[self.event.pk]))
+        self.assertContains(
+            response,
+            f"{reverse('admin:attendance_attendancechange_changelist')}?event__id__exact={self.event.pk}",
+        )
+        self.assertContains(response, "Visa ändringarna")
+
+    def test_a_report_that_fits_carries_no_truncation_line(self):
+        record_change(self.event, ENTER, user=self.admin_user, timestamp=self.at)
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.report_url)
+
+        self.assertEqual(response.context["timeline_shown"], 1)
+        self.assertNotContains(response, "Visar de första")
+
+    def test_a_report_longer_than_the_cap_draws_the_cap_and_says_so(self):
+        member = make_member("medlem")
+        AttendanceChange.objects.bulk_create(
+            [
+                AttendanceChange(
+                    event=self.event,
+                    user=member,
+                    type=ENTER,
+                    timestamp=self.at - timedelta(seconds=index),
+                )
+                for index in range(REPORT_TIMELINE_ROWS + 1)
+            ]
+        )
+        self.client.force_login(self.admin_user)
+
+        response = self.client.get(self.report_url)
+
+        self.assertEqual(response.context["timeline_shown"], REPORT_TIMELINE_ROWS)
+        self.assertEqual(response.context["timeline_total"], REPORT_TIMELINE_ROWS + 1)
+        self.assertContains(response, "Visar de första")
+        self.assertContains(response, "Hela loggen finns i CSV-filen.")
 
     def test_the_report_renders_the_numbers_the_timeline_and_the_polls(self):
         maja = make_member("maja", first_name="Maja", last_name="Andersson")

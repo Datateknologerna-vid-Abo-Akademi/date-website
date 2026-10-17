@@ -3726,3 +3726,11 @@ msgstr "Kokouksen osa verkko-osoitteesta, esimerkiksi hostmote osoitteessa /atte
 #: attendance/admin.py
 msgid "Lämna tomt om sluttiden inte är känd. Mötet lämnar då den publika listan 24 timmar efter starttiden, och rapporten räknar närvaron vid den sista registrerade ändringen. Måste vara senare än starttiden."
 msgstr "Jätä tyhjäksi, jos päättymisaika ei ole tiedossa. Kokous poistuu julkisesta listasta 24 tuntia alkamisen jälkeen, ja raportti lukee läsnäolon viimeisimmästä kirjatusta muutoksesta. Sen on oltava aloitusaikaa myöhempi."
+
+#: attendance/admin.py
+msgid "Visar de första %(shown)s av %(total)s ändringar. Hela loggen finns i CSV-filen."
+msgstr "Näytetään ensimmäiset %(shown)s muutosta %(total)s muutoksesta. Koko loki on CSV-tiedostossa."
+
+#: attendance/admin.py
+msgid "Icke-medlemmar"
+msgstr "Ei-jäsenet"

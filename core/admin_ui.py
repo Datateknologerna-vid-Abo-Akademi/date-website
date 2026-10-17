@@ -136,6 +136,12 @@ SIDEBAR_NAVIGATION = (
                 url_name='admin:attendance_attendanceevent_changelist',
                 permission='attendance.view_attendanceevent',
             ),
+            AdminLink(
+                _('Icke-medlemmar'),
+                icon='person',
+                url_name='admin:attendance_nonmemberattendee_changelist',
+                permission='attendance.view_nonmemberattendee',
+            ),
         ),
     ),
     AdminSidebarGroup(

@@ -50,6 +50,7 @@ class AdminUiRegistryTests(TestCase):
         # whose overview page runs the check-in. A meeting's changes are opened
         # from the meeting, so the change list is not a page of its own.
         self.assertIn("/admin/attendance/attendanceevent/", links)
+        self.assertIn("/admin/attendance/nonmemberattendee/", links)
         self.assertNotIn("/admin/attendance/attendancechange/", links)
         self.assertNotIn("/admin/billing/eventinvoice/", links)
         self.assertNotIn("/admin/functionaries/functionary/", links)
@@ -109,7 +110,15 @@ class AdminUiRegistryTests(TestCase):
         links = {item["link"] for group in get_sidebar_navigation(request) for item in group["items"]}
 
         self.assertIn("/admin/attendance/attendanceevent/", links)
+        self.assertNotIn("/admin/attendance/nonmemberattendee/", links)
         self.assertNotIn("/admin/attendance/attendancechange/", links)
+
+        request.user.user_permissions.add(Permission.objects.get(codename="view_nonmemberattendee"))
+        request.user = get_user_model().objects.get(pk=request.user.pk)
+
+        links = {item["link"] for group in get_sidebar_navigation(request) for item in group["items"]}
+
+        self.assertIn("/admin/attendance/nonmemberattendee/", links)
 
     def test_sidebar_registry_requires_permissions(self):
         request = self.factory.get("/admin/")

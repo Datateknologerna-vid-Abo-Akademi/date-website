@@ -19,6 +19,8 @@
     <p class="attendance-report__actions">
       <a class="button admin-inline-action"
          href="{% url 'admin:attendance_attendanceevent_changelist' %}">{% trans "Tillbaka till listan" %}</a>
+      <a class="button admin-inline-action" href="{{ event_change_url }}">{% trans "Mötet" %}</a>
+      <a class="button admin-inline-action" href="{{ changes_url }}">{% trans "Visa ändringarna" %}</a>
       <a class="button admin-inline-action"
          href="{% url 'admin:attendance_event_report_timeline_csv' event.pk %}">{% trans "Ladda ner tidslinjen som CSV" %}</a>
       {% if show_polls %}
@@ -97,6 +99,11 @@
     <section class="attendance-report__section">
       <h2>{% trans "Tidslinje" %}</h2>
       {% if changes %}
+        {% if timeline_shown < timeline_total %}
+          <p class="attendance-report__muted">
+            {% blocktrans trimmed with shown=timeline_shown total=timeline_total %}Visar de första {{ shown }} av {{ total }} ändringar. Hela loggen finns i CSV-filen.{% endblocktrans %}
+          </p>
+        {% endif %}
         <div class="attendance-report__table-wrap">
           <table>
             <thead>

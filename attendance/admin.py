@@ -5,7 +5,8 @@ from typing import Any
 from django import forms
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.db.models import Count
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, QueryDict
 from django.shortcuts import get_object_or_404, render
 from django.urls import re_path, reverse
 from django.utils.html import format_html
@@ -33,6 +34,11 @@ CSV_DELIMITER = ";"
 # What makes Excel read the file as UTF-8 rather than as the local codepage,
 # which would mangle every "å", "ä" and "ö" in a name.
 UTF8_BOM = "\ufeff"
+
+# How many rows of the meeting's timeline the report draws. The CSV carries every
+# row, and a meeting with thousands of changes should not build a page with that
+# many; this is high enough that an ordinary meeting is shown whole.
+REPORT_TIMELINE_ROWS = 1000
 
 TIMELINE_FIELDNAMES = (_("Tid"), _("Deltagare"), _("Ändring"), _("Typ"))
 POLL_FIELDNAMES = (_("Fråga"), _("Val"), _("Röster"), _("Andel (%)"), _("Röstsedlar"), _("Röstande"))
@@ -442,7 +448,11 @@ class AttendanceEventAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
             # template's `title` block and in the subtitle under the h1.
             "opts": self.model._meta,
             "event": event,
-            "changes": changes,
+            # The rows the page draws, capped; the numbers above them and the two
+            # downloads still read every change.
+            "changes": changes[:REPORT_TIMELINE_ROWS],
+            "timeline_shown": min(len(changes), REPORT_TIMELINE_ROWS),
+            "timeline_total": len(changes),
             "present_at_end": headcount,
             # Which of the two numbers ``present_at_end()`` returned, so the page
             # can label it honestly: a meeting without an end time has no end to
@@ -455,6 +465,8 @@ class AttendanceEventAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
             "show_polls": show_polls,
             "hidden_polls": not show_polls and event.polls.exists(),
             "polls": self._polls(event, headcount) if show_polls else [],
+            "event_change_url": reverse("admin:attendance_attendanceevent_change", args=[event.pk]),
+            "changes_url": f"{reverse('admin:attendance_attendancechange_changelist')}?event__id__exact={event.pk}",
             "timeline_csv_url": reverse("admin:attendance_event_report_timeline_csv", args=[event.pk]),
             "polls_csv_url": reverse("admin:attendance_event_report_polls_csv", args=[event.pk]),
         }
@@ -560,6 +572,36 @@ class AttendanceChangeAdminForm(forms.ModelForm):
             user_field.label_from_instance = member_display_name
 
 
+class NonMemberAttendeeAdmin(ModelAdmin):
+    """The one place a guest's name is corrected, because one row serves every meeting.
+
+    There is no add: a guest row is created by a check-in, so an editor adding one
+    would invent an attendee. There is no delete either, because deleting the row
+    takes every change recorded under that name with it, which is the history the
+    report reads. A rename that collides with another guest is refused by the
+    model's two constraints and shown as a field error.
+    """
+
+    list_display = ("name", "changes")
+    search_fields = ("name",)
+    fields = ("name",)
+    ordering = ("name",)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.annotate(change_count=Count("attendancechange"))
+
+    @admin.display(description=_("Ändringar"), ordering="change_count")
+    def changes(self, obj):
+        return obj.change_count
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
     # A correction of last resort, so the time is edited with the same picker as the
     # meeting's own times rather than with the split date and hour boxes.
@@ -607,15 +649,43 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
         }
         return super().changelist_view(request, extra_context=extra_context)
 
-    def _event_for_request(self, request):
-        """The meeting the query string names, or None when it names none or an unknown one."""
-        event_id = request.GET.get("event__id__exact")
+    def _event_by_id(self, event_id):
+        """The meeting that id names, or None for an empty or unknown one."""
         if not event_id:
             return None
         try:
             return AttendanceEvent.objects.get(pk=event_id)
         except AttendanceEvent.DoesNotExist, TypeError, ValueError:
             return None
+
+    def _event_for_request(self, request):
+        """The meeting the query string names, or None when it names none or an unknown one."""
+        return self._event_by_id(request.GET.get("event__id__exact"))
+
+    def get_changeform_initial_data(self, request):
+        """A row added from a meeting's list starts in that meeting.
+
+        The add link carries the filtered list in ``_changelist_filters``, which is
+        how Django already knows where to return after saving; the meeting is in
+        that query string, so the select does not have to be filled in by hand.
+        """
+        initial = super().get_changeform_initial_data(request)
+        event = self._event_for_request(request)
+        if event is None:
+            filters = QueryDict(request.GET.get("_changelist_filters", ""))
+            event = self._event_by_id(filters.get("event__id__exact"))
+        if event is not None:
+            initial["event"] = event.pk
+        return initial
+
+    def has_module_permission(self, request):
+        """The list is not a module of its own: it belongs to a meeting.
+
+        Its changelist still answers for a meeting's URL, which is the only one
+        there is, but the app index and the classic sidebar do not offer a page
+        that would only redirect them to the meeting list.
+        """
+        return False
 
     def _event_changelist_redirect(self, event_id):
         return HttpResponseRedirect(
@@ -704,3 +774,4 @@ class AttendanceChangeAdmin(FlatpickrDateTimeAdminMixin, ModelAdmin):
 
 admin.site.register(models.AttendanceEvent, AttendanceEventAdmin)
 admin.site.register(models.AttendanceChange, AttendanceChangeAdmin)
+admin.site.register(models.NonMemberAttendee, NonMemberAttendeeAdmin)

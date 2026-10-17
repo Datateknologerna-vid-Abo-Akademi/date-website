@@ -3670,3 +3670,11 @@ msgstr "Mötets del av webbadressen, till exempel hostmote för /attendance/host
 #: attendance/admin.py
 msgid "Lämna tomt om sluttiden inte är känd. Mötet lämnar då den publika listan 24 timmar efter starttiden, och rapporten räknar närvaron vid den sista registrerade ändringen. Måste vara senare än starttiden."
 msgstr "Lämna tomt om sluttiden inte är känd. Mötet lämnar då den publika listan 24 timmar efter starttiden, och rapporten räknar närvaron vid den sista registrerade ändringen. Måste vara senare än starttiden."
+
+#: attendance/admin.py
+msgid "Visar de första %(shown)s av %(total)s ändringar. Hela loggen finns i CSV-filen."
+msgstr "Visar de första %(shown)s av %(total)s ändringar. Hela loggen finns i CSV-filen."
+
+#: attendance/admin.py
+msgid "Icke-medlemmar"
+msgstr "Icke-medlemmar"

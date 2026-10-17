@@ -3686,3 +3686,11 @@ msgstr "The meeting's part of the address, for example hostmote for /attendance/
 #: attendance/admin.py
 msgid "Lämna tomt om sluttiden inte är känd. Mötet lämnar då den publika listan 24 timmar efter starttiden, och rapporten räknar närvaron vid den sista registrerade ändringen. Måste vara senare än starttiden."
 msgstr "Leave it empty when the end is not known. The meeting then leaves the public list 24 hours after its start, and the report reads attendance at the last recorded change. It must be later than the start."
+
+#: attendance/admin.py
+msgid "Visar de första %(shown)s av %(total)s ändringar. Hela loggen finns i CSV-filen."
+msgstr "Showing the first %(shown)s of %(total)s changes. The CSV file has the whole log."
+
+#: attendance/admin.py
+msgid "Icke-medlemmar"
+msgstr "Non-members"
