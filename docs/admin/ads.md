@@ -1,7 +1,7 @@
 # Ads Admin Guide
 
 ## Purpose
-The Ads app controls the rotating banner graphics that appear on the public front page. Each entry simply links a banner image URL to an optional company landing page URL.
+The Ads app controls the rotating banner graphics that appear on the public front page (except on Impuls, whose front page shows an Instagram slider instead). Each entry simply links a banner image URL to an optional company landing page URL.
 
 ## Access
 1. Sign in to the Django admin (`/admin`).
@@ -19,6 +19,8 @@ The Ads app controls the rotating banner graphics that appear on the public fron
 1. Click the banner entry from the list.
 2. Replace the **Ad url** or **Company url** as needed.
 3. Click **Save**. Use **Delete** if the campaign is over.
+
+The Albins Angels logo is no longer a sponsor row: if an `ads.AdUrl` row still points at `partner-logos/aa-logo-small.png`, delete it in the admin in each environment, otherwise the logo appears both in the sponsors block and in the footer.
 
 ## Tips for Non-Technical Editors
 - Keep banner dimensions consistent with the existing creatives to avoid layout jumps.

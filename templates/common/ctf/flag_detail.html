@@ -34,7 +34,7 @@
             {% endif %}
             <div class="ctf-clue">{{ flag.clues | safe }}</div>
             {% if flag.solver or solved %}
-              <p class="ctf-status">
+              <p class="ctf-status ctf-centered">
                 <span class="valid">[SOLVED]</span>
                 <br>
                 av: {{ flag.solver }}
@@ -52,10 +52,10 @@
               <button type="submit" class="theme-button">Submit</button>
             </form>
             {% if valid %}
-              <p class="ctf-message valid" role="status">{{ valid }}</p>
+              <p class="ctf-message valid ctf-centered" role="status">{{ valid }}</p>
             {% endif %}
             {% if invalid %}
-              <p class="ctf-message invalid" role="status">{{ invalid }}</p>
+              <p class="ctf-message invalid ctf-centered" role="status">{{ invalid }}</p>
             {% endif %}
           {% endif %}
         {% else %}

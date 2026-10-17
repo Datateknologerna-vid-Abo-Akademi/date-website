@@ -452,6 +452,8 @@ div.calendar-container a {
 /*ig scroll*/
 
 .ig-scroll{
+    /* The track is the doubled --ig-items, so the duration is halved below. */
+    --ig-seconds-per-item: 4.5s;
     grid-area: ig-scroll;
     display: grid;
     grid-template-columns: 0 1fr 0;
@@ -472,32 +474,48 @@ div.scroll-content img{
     overflow: hidden;
     border-radius: 5px;
     min-height: 130px;
-  }
+}
 
-  .images {
+.images {
     position: absolute;
     left: 0;
     top: 0;
     height: 100%;
-    width: 35000px;
-    animation: slideshow 60s linear infinite;
-    transform: translate3d(0, 0, 0);
-  }
+    display: flex;
+    align-items: center;
+    width: max-content;
+    animation: slideshow calc(var(--ig-items, 32) * var(--ig-seconds-per-item) / 2) linear infinite;
+}
 
-  .scroll-content:hover .images {
+.images a {
+    flex: none;
+    margin-right: 0.5rem;
+}
+
+.scroll-content:hover .images,
+.scroll-content:focus-within .images {
     animation-play-state: paused;
-  }
+}
 
-  .scroll-content img:hover{
+.scroll-content img:hover{
     box-shadow: 4px 6px 9px 0px rgba(0,0,0,0.5);
     transition: .2s ease;
-  }
+}
 
-  @keyframes slideshow {
-    100% {
-      -webkit-transform: translateX(-5%);
+@keyframes slideshow {
+    from {
+        transform: translateX(0);
     }
-  }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .images {
+        animation: none;
+    }
+}
 
 /* Generic animations*/
 

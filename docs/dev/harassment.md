@@ -20,7 +20,7 @@ The old public route and reverse name stay available as `/social/harassment/` an
 ## Forms & Views
 - `HarassmentForm` is a simple `ModelForm` that adds Bootstrap classes. The captcha token is read directly from `request.POST['cf-turnstile-response']`.
 - `harassment.views.harassment_form` handles the PRG flow:
-  - Shows the success page once when the `harass_submitted` session flag is set.
+  - Consumes the `harass_submitted` session flag on GET only. A GET with the flag set renders the success page once; a POST with the flag still set (the redirect GET never landed: back button, dropped connection, a second tab) is validated and saved instead of being answered with the success page and silently dropped. `social.tests.HarassmentViewTests` covers both.
   - On POST with valid form and captcha, saves the report, schedules notification email after commit, sets the session flag, and redirects back to itself.
 
 ## Email Template

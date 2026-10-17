@@ -411,6 +411,13 @@ REGISTRATION_TERMS_ENABLED = False
 EQUALITY_PLAN_ENABLED = False
 KK_EVENT_TEMPLATES_ENABLED = False
 BOOKING_ENABLED = False
+INSTAGRAM_USERNAME = ''
+
+# The public functionaries listing applies the year and role query parameters
+# for logged-out visitors only when this is on. Off by default because the year
+# filter exposes earlier years; pulterit enables it because it has no member
+# accounts to sign in with.
+FUNCTIONARIES_ANONYMOUS_FILTERS = False
 
 # The runtime image is built with each association's static collected into
 # /code/static-collected/<PROJECT_NAME>; pick that tree when present so every

@@ -128,6 +128,7 @@ def generate():
         ("Min profil", "/members/info/", 2, 20, True),
         ("Bli medlem", "/members/signup/", 2, 30, False),
         ("Trakasserianmälan", "/social/harassment/", 2, 40, False),
+        ("Feedback", "/forms/", 2, 50, False),
         ("Kommande evenemang", "/events/", 3, 10, False),
         ("Omröstningar", "/polls/", 3, 20, False),
         ("CTF", "/ctf/", 3, 30, True),

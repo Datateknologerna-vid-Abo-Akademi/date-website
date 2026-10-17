@@ -1,4 +1,6 @@
-nav {
+/* Scope to the site header. A bare `nav` selector also matches the pagination
+   navs (django-tables2's table pagination, the gallery fallback, publications). */
+nav.navbar {
     background-color: var(--primaryColorTransparent);
     min-height: 58px;
 }

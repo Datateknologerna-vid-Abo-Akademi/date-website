@@ -15,6 +15,7 @@ The public routes remain under the members URL namespace for compatibility:
 ## Forms & Selectors
 - `FunctionaryForm` enforces uniqueness per `(member, role, year)` for member-managed entries.
 - `functionaries.selectors` groups and filters functionaries by year, role, and board/non-board status for the public listing.
+- The public listing is public: signed-out visitors can always view it. The year and role query parameters are applied for anonymous visitors only when `FUNCTIONARIES_ANONYMOUS_FILTERS` is on. The default is off so earlier years are not browsable without signing in. `pulterit` enables the setting because it has no member accounts to sign in with.
 
 ## Admin
 - `FunctionaryRoleAdmin` includes an inline `Functionary` table so role metadata and yearly assignments can be edited together. The full assignment list is available through an **All assignments** tool link rather than a separate sidebar entry.

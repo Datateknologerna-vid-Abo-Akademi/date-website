@@ -27,7 +27,8 @@
           {% include "date/components/news.html" %}
           {% include "date/components/events.html" %}
           {% include "date/components/extras.html" %}
-          {% include "date/components/partners.html" %}
+          {% translate "Senaste Instagram-inlägg" as instagram_title %}
+          {% include "date/components/instagram.html" with instagram_title=instagram_title %}
         </div>
       </section>
       <section id="reklam" class="text-size">

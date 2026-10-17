@@ -189,6 +189,27 @@
   `KK_EVENT_TEMPLATES_ENABLED` (kk) adds the kk event-template choices to the
   admin forms. Defaults live in `core/settings/common.py`; enable them per
   association in its settings module rather than adding `PROJECT_NAME` checks.
+- The Årsfest layout lives in `templates/common/events/arsfest_base.html` with the
+  `arsfest_logo`, `arsfest_heading`, `arsfest_signup_tab` and `arsfest_attendee_tab`
+  block slots, so an association can replace the logo or heading, or customize the
+  navigation, without copying the page. Dropping a registration tab needs no override:
+  which tabs appear follows the event. Adding a tab means adding a link whose `data-nav`
+  and `#/` hash carry the key, plus a `.ball-content` panel carrying that key as its
+  `id`: both the click handler and the hash navigation select the panel by id, and fall
+  back to the main panel when no id matches.
+- The Årsfest tabs follow the event rather than the layout: the Anmälan tab and the
+  sign-up panel render only while the event has `sign_up` set, and the Anmälda tab
+  only while `Event.show_attendee_tab` holds, which means the list is shown for that
+  event and the event either takes sign-ups or already holds registrations. An event
+  with sign-up off and no registrations is therefore a plain information page with no
+  registration tabs, while an event that takes sign-ups offers the Anmälda tab for as
+  long as its attendee list is shown.
+  DaTe, Biocum and Pulterit render their own standalone copies of the page and apply
+  the same conditions; Baal, KK100 and Wappmiddag still carry unconditional tabs, and
+  Tomtejakt renders its registration sections without a tab row.
+- The tabs are presentation only. The sign-up POST is accepted whenever the event has
+  `sign_up` set and its registration window is open, whether or not a tab points at
+  the form, and hiding a tab never disables registration.
 - Any changes to registration fields must keep `Event.make_registration_form()`
   in sync; inconsistent `choice_list` formatting breaks multiple-choice inputs.
 - When altering attendee serialization, update both the model and the JS that

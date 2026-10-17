@@ -113,6 +113,10 @@ div a:hover{
     .association-footer-brand .footer-img {
         margin-left: 8px;
     }
+
+    .date-footer-partner .footer-img {
+        max-height: 120px;
+    }
 }
 
 /* Basic table colors */

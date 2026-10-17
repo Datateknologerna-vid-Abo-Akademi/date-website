@@ -15,6 +15,7 @@ INSTALLED_APPS = get_installed_apps(
         'harassment',
         'social',
         'staticpages',
+        'feedback',
         'publications',
         'alumni',
         'billing',
@@ -50,6 +51,8 @@ CONTENT_VARIABLES = {
     "SOCIAL_BUTTONS": [
         ["fa-facebook-f", "https://www.facebook.com/Impulsrf/"],
         ["fa-instagram", "https://www.instagram.com/impulsrf/"],
+        ["tiktok", "https://www.tiktok.com/@impulsrf"],
+        ["linktree", "https://linktr.ee/impulsrf"],
     ],
     # Alumni
     "ALUMNI_ASSOCIATION_NAME": "",

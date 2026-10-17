@@ -16,6 +16,7 @@ urlpatterns = build_urlpatterns(
     'archive',
     'events',
     'pages',
+    'forms',
     'ads',
     'social',
     'polls',

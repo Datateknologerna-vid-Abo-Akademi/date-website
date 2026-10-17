@@ -1,0 +1,27 @@
+{% load instagram_slider %}
+{% if posts %}
+  {% with track=posts|conveyor %}
+    <div class="ig-scroll" style="--ig-items: {{ track|length }}">
+      {% if instagram_title %}<h3 class="ig-title header-border-bottom">{{ instagram_title }}</h3>{% endif %}
+      <div class="scroll-content">
+        <div class="slideshow">
+          <div class="images">
+            {% for post, is_repeat in track %}
+              {% if is_repeat %}
+                <a href="https://www.instagram.com/p/{{ post.shortcode }}/"
+                   aria-hidden="true"
+                   tabindex="-1">
+                  <img src="{{ post.image_url }}" alt="">
+                </a>
+              {% else %}
+                <a href="https://www.instagram.com/p/{{ post.shortcode }}/">
+                  <img src="{{ post.image_url }}" alt="image">
+                </a>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endwith %}
+{% endif %}

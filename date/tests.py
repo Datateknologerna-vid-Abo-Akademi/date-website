@@ -13,7 +13,7 @@ from django.contrib import admin
 from django.contrib.admin.models import ADDITION, LogEntry
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.db import connection
+from django.db import DatabaseError, connection
 from django.http import HttpResponse
 from django.template import Context, Template
 from django.template.loader import render_to_string
@@ -22,9 +22,12 @@ from django.test.utils import CaptureQueriesContext, override_settings
 from django.urls import clear_url_caches, reverse, set_urlconf
 from django.utils import timezone, translation
 
+from ads.models import AdUrl
 from core.admin import admin_site
 from date.language_utils import localize_url, strip_language_prefix
 from date.middleware import ConnectionLifecycleMiddleware
+from date.templatetags.albins_angels import aa_news_url
+from date.templatetags.social_icons import social_icon_template
 from date.views import (
     _homepage_context,
     _homepage_version_key,
@@ -35,6 +38,7 @@ from date.views import (
     handler500,
 )
 from events.models import Event
+from instagram.models import IgUrl
 from news.models import Category, Post
 
 ASSOCIATION_SETTINGS_MODULES = {
@@ -44,6 +48,7 @@ ASSOCIATION_SETTINGS_MODULES = {
     "demo": "core.settings.demo",
     "pulterit": "core.settings.pulterit",
     "sf": "core.settings.sf",
+    "impuls": "core.settings.impuls",
 }
 
 # The Font Awesome compatible build of Line Awesome. Shared templates use fa-* /
@@ -108,6 +113,17 @@ class SiteShellTemplateTests(TestCase):
                 self.assertIn(FA_COMPATIBLE_ICON_CSS, rendered)
                 self.assertIn(FA_COMPATIBLE_ICON_CSS_SRI, rendered)
                 self.assertNotIn(plain_line_awesome, rendered)
+
+    def test_every_association_shell_loads_the_shared_pagination_css(self):
+        # The table pagination markup comes from django-tables2 rather than from a
+        # project template, so the sheet that styles it has to be linked by every
+        # shell. sf is the only standalone one; the rest extend templates/common.
+        for association, settings_module in ASSOCIATION_SETTINGS_MODULES.items():
+            with self.subTest(association=association):
+                module = importlib.import_module(settings_module)
+                with override_settings(PROJECT_NAME=association, TEMPLATES=module.TEMPLATES):
+                    rendered = render_to_string("core/base.html", self._content_context())
+                self.assertIn("core/css/pagination.css", rendered)
 
     def test_header_uses_unique_dropdown_ids_for_categories(self):
         categories = [
@@ -200,6 +216,77 @@ class SiteShellTemplateTests(TestCase):
         self.assertIn("association-footer-copy pulterit-footer-copy", rendered)
         self.assertNotIn("association-footerpulterit-footer", rendered)
 
+    def test_impuls_partner_link_is_named_for_its_destination(self):
+        impuls_settings = importlib.import_module("core.settings.impuls")
+        rendered = {}
+
+        with override_settings(
+            TEMPLATES=impuls_settings.TEMPLATES,
+            STATICFILES_DIRS=impuls_settings.STATICFILES_DIRS,
+        ):
+            for language in ("sv", "en"):
+                with translation.override(language):
+                    rendered[language] = render_to_string("core/footer.html", self._content_context())
+
+        self.assertIn('aria-label="Åbo Akademi – psykologi"', rendered["sv"])
+        self.assertIn('aria-label="Åbo Akademi University – Psychology"', rendered["en"])
+
+        for language in ("sv", "en"):
+            page = rendered[language]
+            self.assertIn('href="https://www.abo.fi/utbildningsprogram/psykologi/"', page)
+            self.assertIn('target="_blank"', page)
+            self.assertIn('rel="noopener"', page)
+            self.assertIn("<svg", page)
+            self.assertIn("<path", page)
+
+    def test_aa_partner_badge_only_renders_in_date_footer(self):
+        # A fresh database seeds the category as "albins-angels", while
+        # production uses the slug "aa". Creating it here with the seeded slug
+        # proves the footer resolves the link through the category name.
+        category = Category.objects.create(name="Albins Angels", slug="albins-angels")
+
+        for association, settings_module in ASSOCIATION_SETTINGS_MODULES.items():
+            with self.subTest(association=association):
+                module = importlib.import_module(settings_module)
+                with override_settings(TEMPLATES=module.TEMPLATES):
+                    template = Template("{% include 'core/footer.html' %}")
+                    rendered = template.render(Context(self._content_context()))
+                if association == "date":
+                    link = re.search(r'<a class="partner-link" href="([^"]*)"', rendered)
+                    self.assertIsNotNone(link)
+                    self.assertEqual(link.group(1), category.get_absolute_url())
+                    self.assertEqual(rendered.count("date-footer-partner"), 1)
+                    self.assertEqual(rendered.count("aa-logo-small.png"), 1)
+                    badge = re.search(r"<img[^>]*aa-logo-small\.png[^>]*>", rendered)
+                    self.assertIsNotNone(badge)
+                    alt = re.search(r'alt="([^"]*)"', badge.group(0))
+                    self.assertIsNotNone(alt)
+                    self.assertTrue(alt.group(1).strip())
+                else:
+                    self.assertNotIn("aa-logo-small.png", rendered)
+
+        # Impuls is checked separately: it layers the date templates but
+        # overrides footer_right, and it is deliberately not part of
+        # ASSOCIATION_SETTINGS_MODULES.
+        impuls_settings = importlib.import_module("core.settings.impuls")
+        with override_settings(TEMPLATES=impuls_settings.TEMPLATES):
+            template = Template("{% include 'core/footer.html' %}")
+            rendered = template.render(Context(self._content_context()))
+        self.assertNotIn("aa-logo-small.png", rendered)
+
+    def test_aa_news_url_falls_back_to_the_news_index(self):
+        # Both a missing category and an unreachable database must degrade to the
+        # news index: the footer also renders on the error pages, so the tag must
+        # never raise out of a 500.
+        self.assertEqual(aa_news_url(), reverse("news:index"))
+
+        category = Category.objects.create(name="Albins Angels", slug="albins-angels")
+        self.assertEqual(aa_news_url(), category.get_absolute_url())
+
+        with patch("date.templatetags.albins_angels.Category.objects") as manager:
+            manager.filter.side_effect = DatabaseError
+            self.assertEqual(aa_news_url(), reverse("news:index"))
+
     def test_language_picker_hides_when_disabled_in_header_template(self):
         template = Template("{% include 'core/header.html' %}")
         rendered = template.render(Context(self._content_context()))
@@ -225,6 +312,99 @@ class SiteShellTemplateTests(TestCase):
         self.assertNotIn('href=""', rendered)
         self.assertIn("test@example.com", rendered)
         self.assertNotIn("test@example.com<br>", rendered)
+
+    def test_footer_mixes_shared_svg_icons_with_icon_font_fallback(self):
+        template = Template("{% include 'core/footer.html' %}")
+        rendered = template.render(
+            Context(
+                {
+                    **self._content_context(),
+                    "SOCIAL_BUTTONS": [
+                        ["fa-facebook-f", "https://example.com/facebook"],
+                        ["tiktok", "https://example.com/tiktok"],
+                        ["linktree", "https://example.com/linktree"],
+                    ],
+                }
+            )
+        )
+
+        self.assertIn('<i class="fab fa-facebook-f"></i>', rendered)
+        self.assertNotIn("fab tiktok", rendered)
+        self.assertNotIn("fab linktree", rendered)
+        self.assertEqual(rendered.count("<svg"), 2)
+        self.assertIn('role="img" aria-label="TikTok"', rendered)
+        self.assertIn('role="img" aria-label="Linktree"', rendered)
+        self.assertNotIn('aria-label="Tiktok"', rendered)
+
+    def test_footer_falls_back_to_the_icon_font_for_a_hostile_icon_name(self):
+        hostile_name = "a" * 300
+        template = Template("{% include 'core/footer.html' %}")
+        rendered = template.render(
+            Context(
+                {
+                    **self._content_context(),
+                    "SOCIAL_BUTTONS": [
+                        [hostile_name, "https://example.com/hostile"],
+                        ["tiktok", "https://example.com/tiktok"],
+                    ],
+                }
+            )
+        )
+
+        self.assertIn("association-footer", rendered)
+        self.assertIn(f'<i class="fab {hostile_name}"></i>', rendered)
+        self.assertIn('aria-label="TikTok"', rendered)
+
+    def _render_impuls_footer(self, language="sv"):
+        impuls_settings = importlib.import_module("core.settings.impuls")
+
+        with (
+            override_settings(
+                TEMPLATES=impuls_settings.TEMPLATES,
+                STATICFILES_DIRS=impuls_settings.STATICFILES_DIRS,
+            ),
+            translation.override(language),
+        ):
+            return render_to_string(
+                "core/footer.html",
+                {
+                    **self._content_context(),
+                    "SOCIAL_BUTTONS": impuls_settings.CONTENT_VARIABLES["SOCIAL_BUTTONS"],
+                },
+            )
+
+    def test_impuls_footer_renders_its_configured_social_icons(self):
+        rendered = self._render_impuls_footer()
+
+        self.assertIn('<i class="fab fa-facebook-f"></i>', rendered)
+        self.assertIn('<i class="fab fa-instagram"></i>', rendered)
+        self.assertIn('aria-label="TikTok"', rendered)
+        self.assertIn('aria-label="Linktree"', rendered)
+        self.assertNotIn("fab tiktok", rendered)
+        self.assertNotIn("fab linktree", rendered)
+        # The Impuls footer overrides footer_logo, so this asset proves which
+        # template rendered and not just that the shared footer was used.
+        self.assertIn("impuls-logo-transparent.png", rendered)
+        self.assertNotIn("core/images/footerlogo.png", rendered)
+
+
+class SocialIconTemplateTagTests(SimpleTestCase):
+    def test_returns_the_shared_svg_template_when_one_exists(self):
+        self.assertEqual(social_icon_template("tiktok"), "core/svg/social/tiktok.svg")
+        self.assertEqual(social_icon_template("linktree"), "core/svg/social/linktree.svg")
+
+    def test_returns_empty_for_icon_font_classes_without_an_svg(self):
+        self.assertEqual(social_icon_template("fa-facebook-f"), "")
+
+    def test_rejects_names_that_could_escape_the_icon_directory(self):
+        for name in ("../../../svg/albin", "core/footer", "TikTok", "tiktok.svg", "", None):
+            with self.subTest(name=name):
+                self.assertEqual(social_icon_template(name), "")
+
+    def test_rejects_names_longer_than_the_filesystem_limit(self):
+        # A 300 character name is longer than the per-name filesystem limit, so
+        # the lookup must be refused instead of raising OSError.
+        self.assertEqual(social_icon_template("a" * 300), "")
 
 
 class HealthCheckTests(TestCase):
@@ -922,6 +1102,62 @@ class AssociationHomepageSmokeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "date/april_start.html")
 
+    def test_impuls_homepage_shows_instagram_slider_instead_of_partners(self):
+        cache.clear()
+        IgUrl.objects.create(image="instagram/impuls-post.png", shortcode="ImpulsPost1")
+        AdUrl.objects.create(ad_url="https://example.com/partner-logo.png", company_url="https://example.com/partner")
+
+        response = self._get_association_homepage("impuls")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'href="https://www.instagram.com/p/ImpulsPost1/"')
+        self.assertContains(response, "--ig-items: 32")
+        self.assertContains(response, '<h3 class="ig-title header-border-bottom">Senaste Instagram-inlägg</h3>')
+        original, *repeats = re.findall(
+            r'<a href="https://www\.instagram\.com/p/ImpulsPost1/"([^>]*)>', response.content.decode()
+        )
+        self.assertEqual(len(repeats), 31)
+        self.assertNotIn("aria-hidden", original)
+        self.assertTrue(all('aria-hidden="true"' in attrs and 'tabindex="-1"' in attrs for attrs in repeats))
+        self.assertNotContains(response, "Samarbetspartners")
+        self.assertNotContains(response, "https://example.com/partner-logo.png")
+
+    def test_impuls_homepage_omits_instagram_slider_without_posts(self):
+        cache.clear()
+
+        response = self._get_association_homepage("impuls")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'class="ig-scroll"')
+        self.assertNotContains(response, "Senaste Instagram-inlägg")
+
+    def test_impuls_instagram_heading_is_translated_to_english(self):
+        impuls_settings = importlib.import_module("core.settings.impuls")
+        cache.clear()
+        IgUrl.objects.create(image="instagram/impuls-post.png", shortcode="ImpulsPost1")
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "en"
+
+        response = self._get_association_homepage(
+            "impuls",
+            ENABLE_LANGUAGE_FEATURES=True,
+            LANGUAGES=impuls_settings.DATE_LANGUAGES,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, ">Latest Instagram posts</h3>")
+
+    @patch("date.views.timezone.localdate", return_value=date(2026, 10, 6))
+    def test_kk_homepage_uses_the_shared_instagram_slider(self, _localdate):
+        cache.clear()
+        IgUrl.objects.create(url="https://cdn.example/kk-post.jpg", shortcode="KkPost1")
+
+        response = self._get_association_homepage("kk")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "date/components/instagram.html")
+        self.assertContains(response, 'href="https://www.instagram.com/p/KkPost1/"')
+        self.assertNotContains(response, "ig-title")
+
 
 class HomepageQueryTests(TestCase):
     """The homepage evaluates each data queryset exactly once and caches the
@@ -956,10 +1192,11 @@ class HomepageQueryTests(TestCase):
         with CaptureQueriesContext(connection) as second:
             response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        # Second load is a pure cache hit: the homepage context and the
-        # anonymous navigation are both cached.
+        # Second load reuses the cached homepage context and anonymous
+        # navigation; the remaining query is the footer Albins Angels category
+        # lookup, which runs on every page since the badge resolves by name.
         self.assertLess(len(second), len(first))
-        self.assertEqual(len(second), 0)
+        self.assertEqual(len(second), 1)
 
     def test_logged_in_homepage_is_not_cached(self):
         cache.clear()
@@ -992,12 +1229,12 @@ class HomepageQueryTests(TestCase):
 
     def test_cache_key_is_isolated_by_language(self):
         cache.clear()
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             self.client.get("/")
         # A different active language must not reuse the Swedish entry (set
         # via the language cookie; the locale middleware drives get_language).
         self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "fi"
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             self.client.get("/")
 
     def test_admin_edit_invalidates_anonymous_cache(self):
@@ -1056,17 +1293,18 @@ class HomepageQueryTests(TestCase):
         # Simulate the version key being evicted while the homepage entry
         # is still alive: the next load must not reuse the old generation.
         cache.delete(_homepage_version_key())
-        # The context rebuilds from scratch (6 queries); the navigation is
-        # still served from its own cache.
-        with self.assertNumQueries(6):
+        # The context rebuilds from scratch (7 queries, including the footer
+        # Albins Angels category lookup); the navigation is still served from
+        # its own cache.
+        with self.assertNumQueries(7):
             self.client.get("/")
 
     def test_dummy_cache_never_caches(self):
         cache.clear()
         with override_settings(CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}):
-            with self.assertNumQueries(8):
+            with self.assertNumQueries(9):
                 self.client.get("/")
-            with self.assertNumQueries(8):
+            with self.assertNumQueries(9):
                 self.client.get("/")
 
 

@@ -247,7 +247,6 @@
     color: var(--textColorDark);
     margin-top: 0;
     background: linear-gradient(180deg, var(--secondaryColorDarker) 0%, var(--secondaryColor) 100%);
-    min-height: 100vh;
     word-break: break-all;
     word-break: break-word;
     hyphens: auto;
@@ -269,8 +268,7 @@
     grid-template-areas: 
       ". news events ."
       ". news extras ."
-      ". ig-scroll ig-scroll ."
-      ". logos logos .";
+      ". ig-scroll ig-scroll .";
     grid-column-gap: 3vw;
 }
 
@@ -649,34 +647,89 @@ div.calendar-container a {
 
 /*Sidebar end*/
 
-/*Logos start*/
+/*Instagram start*/
 
-.logo-container {
-    grid-area: logos;
-    margin-top: 20px;
+.ig-scroll {
+    --ig-height: 150px;
+    /* The track is the doubled --ig-items, so the duration is halved below. */
+    --ig-seconds-per-item: 4.5s;
+    grid-area: ig-scroll;
+    display: grid;
+    grid-template-columns: 0 1fr 0;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      ". ig-title ."
+      ". ig-image .";
+    padding-top: 2rem;
+    padding-bottom: 2rem;
 }
 
-.logo-container a {
-    color: var(--linkColorDark);
-    margin-top: 20px;
-    display: inline-block;
-    transition: transform 0.2s, opacity 0.2s, color 0.2s;
+.ig-title {
+    grid-area: ig-title;
 }
 
-.logo-container a:hover {
-    color: var(--linkColorDarkHover);
-    transform: scale(1.03);
-    opacity: 0.75;
+div.scroll-content img {
+    height: var(--ig-height);
+    width: auto;
 }
 
-.logo-container img {
-    max-width: 300px;
-    max-height: 200px;
-    width: auto !important;
-    height: auto !important;
+.scroll-content {
+    grid-area: ig-image;
+    position: relative;
+    overflow: hidden;
+    border-radius: 5px;
+    height: var(--ig-height);
 }
 
-/*Logos end*/
+.images {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    width: max-content;
+    animation: slideshow calc(var(--ig-items, 32) * var(--ig-seconds-per-item) / 2) linear infinite;
+}
+
+.images a {
+    flex: none;
+    margin-right: 0.5rem;
+}
+
+.scroll-content:hover .images,
+.scroll-content:focus-within .images {
+    animation-play-state: paused;
+}
+
+.scroll-content img:hover {
+    box-shadow: 4px 6px 9px 0px rgba(0, 0, 0, 0.5);
+    transition: .2s ease;
+}
+
+@keyframes slideshow {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .images {
+        animation: none;
+    }
+}
+
+@media screen and (max-width: 550px) {
+    .ig-scroll {
+        --ig-height: 112px;
+        --ig-seconds-per-item: 3.4s;
+    }
+}
+
+/*Instagram end*/
 
 /* Generic animations*/
 
@@ -721,7 +774,6 @@ div.calendar-container a {
           ". events ."
           ". news ."
           ". extras ."
-          ". logos ."
           ". ig-scroll .";
     }
 
