@@ -246,6 +246,10 @@
 }
 
 @media print {
+  /* The admin's own navigation is already gone with `#header` and
+     `#nav-sidebar`, so no bare `nav` selector is needed here: one would also
+     hide the pagination navs django-tables2 renders on other pages, which is
+     what `core/tests/test_static_css.py` exists to prevent. */
   #header,
   #main > .bg-white.border-b,
   #user-tools,
@@ -255,7 +259,6 @@
   .toggle-nav-sidebar,
   [x-on\:click*="sidebarToggle"],
   #footer,
-  nav,
   .attendance-report__actions {
     display: none !important;
   }
