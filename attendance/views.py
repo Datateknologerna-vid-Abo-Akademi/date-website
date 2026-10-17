@@ -113,6 +113,10 @@ class AttendanceEventDetailView(UserPassesTestMixin, AttendanceEventObjectMixin[
 
         ctx["object"] = self.object
         ctx["can_see_attendance"] = AttendanceEventOverview.is_user_allowed(self.request.user)
+        # The report lives in the admin, and the admin asks for staff status on top
+        # of the model permission. Offering the link to a reader the admin will
+        # bounce is worse than not offering it, so the page asks both questions.
+        ctx["can_see_report"] = ctx["can_see_attendance"] and self.request.user.is_staff
         ctx["user"] = self.request.user
         ctx["present_attendees"] = self.object.present_attendees()
         # The log is for readers who hold the attendance permission, and it is paged

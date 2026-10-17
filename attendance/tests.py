@@ -1269,8 +1269,9 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         self.assertFalse(response.context["is_present"])
         self.assertNotContains(response, 'name="non_member_name"')
 
-    def test_present_attendees_are_listed(self):
+    def test_a_permitted_reader_sees_the_present_names(self):
         guest = NonMemberAttendee.objects.create(name="Gäst I Närvarolistan")
+        self.client.force_login(self.staff)
         with patch.object(AttendanceEvent, "present_attendees", return_value=[self.member, guest]) as present:
             response = self.client.get(self.detail_url)
 
@@ -1278,6 +1279,18 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         present.assert_called_once_with()
         self.assertContains(response, f"<li>{self.member.get_full_name()}</li>")
         self.assertContains(response, f"<li>{guest.get_full_name()}</li>")
+
+    def test_a_participant_without_the_permission_sees_the_number_but_no_names(self):
+        """Who is in the room is the log's information, not the page's."""
+        guest = NonMemberAttendee.objects.create(name="Gäst I Närvarolistan")
+        with patch.object(AttendanceEvent, "present_attendees", return_value=[self.member, guest]):
+            response = self.client.get(self.detail_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<h2>Närvarande: <span id="present-count">2</span></h2>')
+        self.assertNotContains(response, self.member.get_full_name())
+        self.assertNotContains(response, guest.get_full_name())
+        self.assertNotContains(response, "attendance-list")
 
     def test_present_attendees_are_counted_in_the_heading(self):
         """A participant reads how many are in the room, in the overview's own shape."""
@@ -1382,6 +1395,23 @@ class AttendanceDetailViewGetTests(AttendanceViewTestCase):
         content = response.content.decode()
         start = content.index('<p id="log-end"')
         self.assertNotIn("hidden", content[start : content.index(">", start)])
+
+    def test_the_report_line_is_not_offered_to_a_reader_who_cannot_open_it(self):
+        """The report is an admin page, so a permitted member without staff status would be bounced."""
+        record_change(self.event, ENTER, user=self.member, timestamp=now() - timedelta(minutes=1))
+        permitted = make_member("behorig-utan-admin", first_name="Bo", last_name="Behörig")
+        permitted.user_permissions.add(
+            Permission.objects.get(codename="view_attendanceevent", content_type__app_label="attendance")
+        )
+        self.client.force_login(permitted)
+
+        response = self.client.get(self.detail_url)
+
+        self.assertTrue(response.context["can_see_attendance"])
+        self.assertFalse(response.context["can_see_report"])
+        self.assertContains(response, "Närvaroändringar")
+        self.assertNotContains(response, "Hela loggen finns i rapporten.")
+        self.assertNotContains(response, 'id="log-end"')
 
     def test_the_change_log_needs_the_permission_not_staff_status(self):
         """A staff group member without the attendance permission sees no log."""

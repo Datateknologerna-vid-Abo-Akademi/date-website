@@ -129,11 +129,14 @@
         </div>
         <section class="attendance-section">
           <h2>{% trans "Närvarande" %}: <span id="present-count">{{ present_attendees|length }}</span></h2>
-          <ul class="attendance-list">
-            {% for a in present_attendees %}
-              <li>{{ a.get_full_name }}</li>
-            {% endfor %}
-          </ul>
+          {# The number is the room's size and costs nobody anything. The names are a list of who is in the room, so they follow the same permission as the log below. #}
+          {% if can_see_attendance %}
+            <ul class="attendance-list">
+              {% for a in present_attendees %}
+                <li>{{ a.get_full_name }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
         </section>
         {% if can_see_attendance %}
           <section class="attendance-section">
@@ -170,12 +173,14 @@
                 {% trans "Visa fler" %} <i class="bi bi-chevron-down" aria-hidden="true"></i>
               </button>
             {% endif %}
-            <p id="log-end"
-               class="attendance-changes__end"
-               {% if changes|length > changes_visible %}hidden{% endif %}>
-              {% trans "Hela loggen finns i rapporten." %}
-              <a href="{% url 'admin:attendance_event_report' object.pk %}">{% trans "Öppna rapporten" %}</a>
-            </p>
+            {% if can_see_report %}
+              <p id="log-end"
+                 class="attendance-changes__end"
+                 {% if changes|length > changes_visible %}hidden{% endif %}>
+                {% trans "Hela loggen finns i rapporten." %}
+                <a href="{% url 'admin:attendance_event_report' object.pk %}">{% trans "Öppna rapporten" %}</a>
+              </p>
+            {% endif %}
           </section>
         {% endif %}
       </div>
