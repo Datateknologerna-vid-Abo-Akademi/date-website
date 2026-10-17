@@ -37,8 +37,8 @@ a relative time such as "39 minuter sedan" computed server side from the request
 Those pixels differ between any two captures, so such a page can never reach a green
 verdict even when the stylesheet change is appearance-neutral. `--mask CSS_SELECTOR`
 (repeatable) sets `visibility: hidden` on every element matching the selector, after the
-page has settled and before the computed-style probe and the screenshot, so those pixels
-stop being compared while the rest of the page keeps being compared:
+page has settled and after the computed-style probe, and before the screenshot, so those
+pixels stop being compared while the rest of the page keeps being compared:
 
     uv run python scripts/css_regression.py capture --label after --mask '#some-id'
 
@@ -46,10 +46,11 @@ stop being compared while the rest of the page keeps being compared:
 out of layout and shifts everything below it, which makes two captures differ for a
 reason that is not the stylesheet. A match that has no layout box of its own is left in
 place and the document is not otherwise changed. The mask is applied identically in every
-capture, and masked elements are deliberately kept in the computed-style probe: their
-other computed properties keep being compared, so a real style regression on a masked
-element is still caught, and only the masked pixels are ignored. Masking is for live
-content only, not for hiding a difference a reviewer should see. The selectors are
+capture. The style channel is unaffected by masking, because the probe runs before the
+mask is applied: the computed properties of a masked element, and of everything inside
+it, are compared exactly as the page built them, and only the masked pixels are ignored.
+Masking is for live content only, not for hiding a difference a reviewer should see. The
+selectors are
 recorded in manifest.json together with the number of elements each matched per view, and
 a selector that matches nothing is warned about instead of being assumed to have worked.
 
@@ -268,6 +269,85 @@ STYLE_PROPERTIES: tuple[str, ...] = (
     "outline-style",
     "outline-width",
     "outline-color",
+    "outline-offset",
+    "border-right-style",
+    "border-bottom-style",
+    "border-left-style",
+    "background-attachment",
+    "background-position",
+    "background-size",
+    "background-repeat",
+    "box-sizing",
+    "float",
+    "clear",
+    "vertical-align",
+    "table-layout",
+    "border-collapse",
+    "border-spacing",
+    "caption-side",
+    "flex-grow",
+    "flex-shrink",
+    "flex-basis",
+    "align-self",
+    "align-content",
+    "justify-self",
+    "justify-items",
+    "grid-column-start",
+    "grid-column-end",
+    "grid-row-start",
+    "grid-row-end",
+    "grid-auto-flow",
+    "list-style-type",
+    "scale",
+    "rotate",
+    "translate",
+    "row-gap",
+    "column-gap",
+    "white-space",
+    "text-indent",
+    "text-overflow",
+    "text-shadow",
+    "text-underline-offset",
+    "word-break",
+    "overflow-wrap",
+    "hyphens",
+    "aspect-ratio",
+    "object-fit",
+    "object-position",
+    "clip-path",
+    "backdrop-filter",
+    "transform-origin",
+    "transform-style",
+    "perspective",
+    "perspective-origin",
+    "backface-visibility",
+    "isolation",
+    "pointer-events",
+    "user-select",
+    "resize",
+    "scroll-behavior",
+    "overscroll-behavior",
+    "will-change",
+    "content",
+    "break-inside",
+    "break-after",
+    "color-scheme",
+    "accent-color",
+    "font-stretch",
+    "font-variant-caps",
+    "font-variant-ligatures",
+    "font-variant-numeric",
+    "font-variant-east-asian",
+    "fill",
+    "fill-opacity",
+    "fill-rule",
+    "stroke",
+    "stroke-width",
+    "stroke-opacity",
+    "stroke-dasharray",
+    "stroke-dashoffset",
+    "stroke-linecap",
+    "stroke-linejoin",
 )
 
 # Severity split for the style report. A property is "cosmetic metadata" when a
@@ -418,9 +498,9 @@ PROBE_JS = """
 # `display: none` removes the element from layout and shifts everything below it, which
 # would make two captures differ for a reason that is not the stylesheet under test. The
 # element is otherwise left alone, including a match that has no layout box of its own:
-# nothing is wrapped, moved, removed or otherwise changed. Run after the settle and before
-# the computed-style probe and the screenshot, so both channels record the same masked
-# document, and masked elements stay in the probe so only their pixels are dropped.
+# nothing is wrapped, moved, removed or otherwise changed. Run after the settle and after
+# the computed-style probe, so the style channel records the unmasked document, and before
+# the screenshot, so only the pixels of the live content are dropped.
 MASK_JS = """
 (() => {
   const selectors = __SELECTORS__;
@@ -1207,10 +1287,10 @@ def capture_page(
     try:
         navigation = connection.call("Page.navigate", {"url": url}, timeout=remaining())
         connection.wait_for_event("Page.loadEventFired", frame_id=navigation.get("frameId"), timeout=remaining())
-    except CdpError as error:
+    except CdpError as navigation_error:
         # One unreachable page must not abort the whole capture run.
         return {
-            "error": f"navigation failed: {error}",
+            "error": f"navigation failed: {navigation_error}",
             "warnings": warnings,
             "seconds": round(time.monotonic() - started, 3),
         }
@@ -1226,8 +1306,8 @@ def capture_page(
     ):
         try:
             evaluate(connection, expression, await_promise=promise, timeout=min(FONTS_TIMEOUT, remaining()))
-        except CdpError as error:
-            warnings.append(f"{label}: {error}")
+        except CdpError as readiness_error:
+            warnings.append(f"{label}: {readiness_error}")
 
     settle_js = SETTLE_JS.replace("__QUIET__", str(SETTLE_QUIET_MS)).replace("__CAP__", str(SETTLE_CAP_MS))
     try:
@@ -1238,28 +1318,6 @@ def capture_page(
             warnings.append("document element disappeared before the capture")
     except CdpError as error:
         warnings.append(f"settle: {error}")
-
-    # Mask the live content that cannot be part of a parity claim (see MASK_JS). This
-    # runs after the settle and before the computed-style probe and the screenshot, so
-    # both channels see the same masked document. The masked elements stay in the probe:
-    # only their pixels are dropped, not their computed styles.
-    masked: dict[str, int] = {}
-    if masks:
-        try:
-            masked, mask_errors = apply_masks(connection, masks, timeout=min(30.0, remaining()))
-        except CdpError as error:
-            return {
-                "error": f"applying --mask failed: {error}",
-                "warnings": warnings,
-                "seconds": round(time.monotonic() - started, 3),
-            }
-        for selector, message in mask_errors.items():
-            warnings.append(f"--mask {selector!r} is not a usable CSS selector: {message}")
-        try:
-            # Let the paint catch up with the mask before the screenshot is taken.
-            evaluate(connection, FRAME_JS, await_promise=True, timeout=min(10.0, remaining()))
-        except CdpError as error:
-            warnings.append(f"repaint after --mask: {error}")
 
     try:
         evaluate(connection, "window.scrollTo(0, 0)", timeout=min(10.0, remaining()))
@@ -1295,18 +1353,40 @@ def capture_page(
     if probe["animated"]:
         warnings.append(f"{probe['animated']} elements still report a CSS animation")
 
+    # Mask the live content that cannot be part of a parity claim (see MASK_JS). This
+    # runs after the computed-style probe and before the screenshot, so the style
+    # channel sees the document as the page built it, including inside a masked
+    # element, and only the pixels of the live content are dropped.
+    masked: dict[str, int] = {}
+    if masks:
+        try:
+            masked, mask_errors = apply_masks(connection, masks, timeout=min(30.0, remaining()))
+        except CdpError as error:
+            return {
+                "error": f"applying --mask failed: {error}",
+                "warnings": warnings,
+                "seconds": round(time.monotonic() - started, 3),
+            }
+        for selector, message in mask_errors.items():
+            warnings.append(f"--mask {selector!r} is not a usable CSS selector: {message}")
+        try:
+            # Let the paint catch up with the mask before the screenshot is taken.
+            evaluate(connection, FRAME_JS, await_promise=True, timeout=min(10.0, remaining()))
+        except CdpError as error:
+            warnings.append(f"repaint after --mask: {error}")
+
     try:
         metrics = connection.call("Page.getLayoutMetrics", timeout=remaining())
-    except CdpError as error:
+    except CdpError as metrics_error:
         return {
-            "error": f"layout metrics failed: {error}",
+            "error": f"layout metrics failed: {metrics_error}",
             "warnings": warnings,
             "seconds": round(time.monotonic() - started, 3),
         }
     content = metrics.get("cssContentSize") or metrics.get("contentSize") or {}
     width = max(1.0, float(content.get("width") or 1.0))
     height = max(1.0, float(content.get("height") or 1.0))
-    error: str | None = None
+    capture_error: str | None = None
     png_bytes: int | None = None
     try:
         shot = connection.call(
@@ -1325,7 +1405,7 @@ def capture_page(
         png_path.write_bytes(base64.b64decode(shot["data"]))
         png_bytes = png_path.stat().st_size
     except (CdpError, KeyError) as screenshot_error:
-        error = f"screenshot failed: {screenshot_error}"
+        capture_error = f"screenshot failed: {screenshot_error}"
 
     final_status = 200
     final_url = probe["url"]
@@ -1357,7 +1437,7 @@ def capture_page(
         "masked": masked,
         "png_bytes": png_bytes,
         "warnings": warnings,
-        "error": error,
+        "error": capture_error,
         "seconds": round(time.monotonic() - started, 3),
     }
 
@@ -1422,11 +1502,13 @@ def cmd_capture(args: argparse.Namespace) -> int:
     store = Path(args.out).expanduser().resolve() if args.out else (DEFAULT_STORE / args.label).expanduser().resolve()
     prepare_capture_dir(store, force=args.force)
     username, password = resolve_credentials(args)
+    viewports = parse_viewports(list(args.viewport))
 
     started = time.monotonic()
     created = datetime.now(UTC).isoformat(timespec="seconds")
     print(f"### capture {args.label!r} -> {store}")
     print(f"    chrome {chrome}")
+    print(f"    viewports: {', '.join(f'{name}={size[0]}x{size[1]}' for name, size in viewports.items())}")
     print(f"    variants: {', '.join(f'{name}={url}' for name, url in bases.items())}")
     if username:
         print(f"    login: {args.login_path} as {username!r}, verified against {args.require_login_path}")
@@ -1497,7 +1579,7 @@ def cmd_capture(args: argparse.Namespace) -> int:
                         f"(status {login_record['status']}), fields {login_record['fields']}"
                     )
                 login_records[variant] = login_record
-                for viewport, (width, height) in VIEWPORTS.items():
+                for viewport, (width, height) in viewports.items():
                     connection.call(
                         "Emulation.setDeviceMetricsOverride",
                         {"width": width, "height": height, "deviceScaleFactor": 1, "mobile": False},
@@ -1553,8 +1635,9 @@ def cmd_capture(args: argparse.Namespace) -> int:
             note = "" if totals["elements"] else "  WARNING: matched no element in any captured view"
             print(f"    {selector!r}: {totals['elements']} elements in {totals['views']} views{note}")
     manifest = {
-        "version": 1,
+        "version": 2,
         "kind": "css-regression-capture",
+        "properties": list(STYLE_PROPERTIES),
         "label": args.label,
         "created": created,
         "store": str(store),
@@ -1562,7 +1645,8 @@ def cmd_capture(args: argparse.Namespace) -> int:
         "blocked_urls": list(UNSTABLE_URL_PATTERNS),
         "masks": list(args.mask),
         "mask_matches": mask_matches,
-        "viewports": {name: list(size) for name, size in VIEWPORTS.items()},
+        "viewports": {name: list(size) for name, size in viewports.items()},
+        "tree": tree_identity(),
         "variants": {
             name: {
                 "base_url": url,
@@ -1597,6 +1681,55 @@ def cmd_capture(args: argparse.Namespace) -> int:
 # --------------------------------------------------------------------------
 
 
+def parse_viewports(values: list[str]) -> dict[str, tuple[int, int]]:
+    """Return the viewport set to capture, defaulting to VIEWPORTS.
+
+    `--viewport name=WIDTHxHEIGHT` replaces the default set, so a thorough run can add
+    the widths between the two defaults without changing what a routine run costs.
+    """
+    if not values:
+        return dict(VIEWPORTS)
+    viewports: dict[str, tuple[int, int]] = {}
+    for value in values:
+        name, _, size = value.partition("=")
+        width, _, height = size.lower().partition("x")
+        if not name or not width.isdigit() or not height.isdigit():
+            fail(f"--viewport expects NAME=WIDTHxHEIGHT, got {value!r}")
+        viewports[name] = (int(width), int(height))
+    return viewports
+
+
+def tree_identity() -> dict[str, Any]:
+    """Identify the working tree a capture was taken from.
+
+    A capture pair from the same tree proves determinism, not parity, and the two are
+    indistinguishable afterwards without this. The git commit plus the dirty flag is
+    enough to tell them apart, and it is cheap; a tree outside git records empty
+    fields and comparisons then simply cannot make the same-tree claim.
+    """
+
+    def git(*arguments: str) -> str:
+        try:
+            completed = subprocess.run(
+                ["git", *arguments],
+                capture_output=True,
+                text=True,
+                timeout=15,
+                check=False,
+            )
+        except OSError, subprocess.SubprocessError:
+            return ""
+        return completed.stdout.strip() if completed.returncode == 0 else ""
+
+    head = git("rev-parse", "HEAD")
+    status = git("status", "--porcelain")
+    return {
+        "head": head,
+        "dirty": bool(status) if head else None,
+        "dirty_files": len(status.splitlines()) if head else None,
+    }
+
+
 def load_manifest(directory: Path) -> dict[str, Any]:
     path = directory / "manifest.json"
     if not path.exists():
@@ -1609,8 +1742,33 @@ def load_manifest(directory: Path) -> dict[str, Any]:
 
 def compatibility_refusal(before: dict[str, Any], after: dict[str, Any]) -> str | None:
     """Describe why two captures cannot be compared, or None when they can."""
+    if before.get("version") != after.get("version"):
+        return f"capture format version differs: {before.get('version')} vs {after.get('version')}"
+    if before.get("properties") != after.get("properties"):
+        before_props = set(before.get("properties") or [])
+        after_props = set(after.get("properties") or [])
+        return (
+            "the captures probed different properties "
+            f"(+{len(after_props - before_props)} only in after, -{len(before_props - after_props)} only in before); "
+            "recapture both sides with one harness version"
+        )
     if before["viewports"] != after["viewports"]:
         return f"viewports differ: {before['viewports']} vs {after['viewports']}"
+    for label, manifest in (("before", before), ("after", after)):
+        viewport_count = len(manifest.get("viewports") or {})
+        recorded: dict[str, int] = {}
+        for entry in manifest["pages"]:
+            recorded[entry["variant"]] = recorded.get(entry["variant"], 0) + 1
+        for variant, page_list in (manifest.get("page_list") or {}).items():
+            expected = len(page_list) * viewport_count
+            seen = recorded.get(variant, 0)
+            if seen != expected:
+                return (
+                    f"the {label} capture holds {seen} of {expected} views for {variant} "
+                    f"({len(page_list)} pages x {viewport_count} viewports). A variant whose "
+                    "sign-in failed is dropped from both sides, so comparing would silently "
+                    "accept a capture with no pages for it"
+                )
     before_pages = {(p["variant"], p["viewport"], p["page"]) for p in before["pages"]}
     after_pages = {(p["variant"], p["viewport"], p["page"]) for p in after["pages"]}
     only_before = sorted(f"{v}/{vp}/{page}" for v, vp, page in before_pages - after_pages)
@@ -1797,6 +1955,34 @@ def cmd_compare(args: argparse.Namespace) -> int:
         if other and other != info["base_url"]:
             print(f"note: {name} was captured at {other} before and {info['base_url']} after")
 
+    same_tree = bool(before.get("tree")) and before.get("tree") == after.get("tree")
+    if same_tree and not args.same_tree_ok:
+        tree = before.get("tree") or {}
+        reason = (
+            "both captures come from the same working tree "
+            f"(HEAD {str(tree.get('head'))[:12] or 'unknown'}, dirty files {tree.get('dirty_files')}); "
+            "comparing a tree against itself proves determinism, not parity. "
+            "Pass --same-tree-ok when that is what you mean to check"
+        )
+        print(f"\nrefusing to compare: {reason}")
+        (out / "comparison.json").write_text(
+            json.dumps(
+                {
+                    "kind": "css-regression-comparison",
+                    "refused": True,
+                    "reason": reason,
+                    "same_tree": True,
+                    "tree": before.get("tree"),
+                    "before": str(before_dir),
+                    "after": str(after_dir),
+                },
+                indent=1,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        return 2
+
     refusal = compatibility_refusal(before, after)
     if refusal:
         print(f"\nrefusing to compare: {refusal}")
@@ -1829,6 +2015,12 @@ def cmd_compare(args: argparse.Namespace) -> int:
             "status": {"before": other.get("status"), "after": entry.get("status")},
         }
         reasons: list[str] = []
+        before_status = other.get("status")
+        after_status = entry.get("status")
+        if before_status != after_status:
+            reasons.append(f"status {before_status} -> {after_status} (the page answered differently)")
+        elif after_status is not None and after_status != 200:
+            reasons.append(f"status {after_status} (not 200, so this view proves nothing)")
         before_png = before_dir / other["png"]
         after_png = after_dir / entry["png"]
         if entry.get("error") or other.get("error"):
@@ -1996,6 +2188,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="file with one path per line, replacing the seed list and detail discovery",
     )
     capture.add_argument(
+        "--viewport",
+        action="append",
+        default=[],
+        metavar="NAME=WIDTHxHEIGHT",
+        help=(
+            "viewport to capture, replacing the default set (repeatable, for example "
+            "--viewport tablet=900x1000). Default: desktop=1600x1000 and mobile=390x844; "
+            "everything between them is a breakpoint band nothing checks"
+        ),
+    )
+    capture.add_argument(
         "--mask",
         action="append",
         default=[],
@@ -2053,6 +2256,14 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         default=0.0,
         help="differing pixel percentage permitted per view (default 0.0); a view fails when it exceeds either limit",
+    )
+    compare.add_argument(
+        "--same-tree-ok",
+        action="store_true",
+        help=(
+            "allow comparing two captures of the same working tree; that proves the "
+            "harness is deterministic, not that a change left the page alone"
+        ),
     )
     compare.add_argument(
         "--allow-style-changes",

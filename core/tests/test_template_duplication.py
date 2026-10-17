@@ -33,6 +33,7 @@ import difflib
 import json
 import re
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -81,31 +82,42 @@ COMMENT_BODY = re.compile(r"\{%\s*comment\s*%\}.*?\{%\s*endcomment\s*%\}", re.S)
 TEMPLATE_PREAMBLE = re.compile(r"\{%\s*(?:extends|load)\s+[^%]*%\}")
 
 
-def is_pure_override(path: Path) -> bool:
-    """True when the file renders nothing but the blocks it fills.
+def is_small_override(path: Path) -> bool:
+    """True when the file is a short override of another template.
 
     Such a file has no page body of its own, so two of them resembling each other is
-    the pattern this repository wants and not a copy. A pasted page keeps its markup
-    outside blocks, which is what the ratchet is looking for.
+    the pattern this repository wants and not a copy. Two things do not earn the
+    exemption: markup outside the blocks (a pasted page), and a block body big enough to
+    hold a page, because a whole page pasted inside `{% block content %}` is still a
+    copy. A pair is only skipped when both sides are small overrides, so a large file is
+    always compared against whatever else defines the same path.
     """
     text = path.read_text(encoding="utf-8")
-    text = BLOCK_BODY.sub("", text)
-    text = COMMENT_BODY.sub("", text)
-    text = TEMPLATE_PREAMBLE.sub("", text)
-    return not text.strip()
+    body_lines = sum(
+        len([line for line in match.group(0).splitlines() if line.strip()]) for match in BLOCK_BODY.finditer(text)
+    )
+    if body_lines >= MIN_LINES:
+        return False
+    stripped = BLOCK_BODY.sub("", text)
+    stripped = COMMENT_BODY.sub("", stripped)
+    stripped = TEMPLATE_PREAMBLE.sub("", stripped)
+    return not stripped.strip()
 
 
-def copies_by_path() -> dict[str, dict[str, Path]]:
+def copies_by_path(root: Path | None = None) -> dict[str, dict[str, Path]]:
     """Return ``{logical path: {owner: file}}`` for the shared and association trees."""
     found: dict[str, dict[str, Path]] = {}
+    base = root or TEMPLATES_DIR
     for owner in (SHARED, *ASSOCIATIONS):
-        root = TEMPLATES_DIR / owner
-        for path in root.rglob("*.html"):
-            found.setdefault(path.relative_to(root).as_posix(), {})[owner] = path
+        owner_root = base / owner
+        if not owner_root.is_dir():
+            continue
+        for path in owner_root.rglob("*.html"):
+            found.setdefault(path.relative_to(owner_root).as_posix(), {})[owner] = path
     return found
 
 
-def near_copy_pairs() -> list[dict[str, Any]]:
+def near_copy_pairs(root: Path | None = None) -> list[dict[str, Any]]:
     """Return every pair of copies that is alike enough to be one pasted component.
 
     Each entry carries the logical path, the two owners, the similarity ratio and
@@ -113,11 +125,11 @@ def near_copy_pairs() -> list[dict[str, Any]]:
     stable.
     """
     pairs: list[dict[str, Any]] = []
-    for relative, owners in sorted(copies_by_path().items()):
+    for relative, owners in sorted(copies_by_path(root).items()):
         names = sorted(owners)
         for index, first in enumerate(names):
             for second in names[index + 1 :]:
-                if is_pure_override(owners[first]) or is_pure_override(owners[second]):
+                if is_small_override(owners[first]) and is_small_override(owners[second]):
                     continue
                 one, other = normalise(owners[first]), normalise(owners[second])
                 if min(len(one), len(other)) < MIN_LINES:
@@ -229,3 +241,61 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def _page_body(lines: int = 30) -> str:
+    return "\n".join(f'<div class="row m-{index}">row {index}</div>' for index in range(lines))
+
+
+class NearCopyDetectorTests(SimpleTestCase):
+    """The detector has to fire on a copy and stay quiet on a real override.
+
+    Without these, the tests above only prove that the current tree has no copies,
+    which is also true of a detector that never fires.
+    """
+
+    def tree(self, files: dict[str, str]) -> Path:
+        root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        for relative, text in files.items():
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8")
+        return root
+
+    def test_a_pasted_page_is_flagged(self):
+        body = _page_body()
+        root = self.tree({"date/news.html": body, "kk/news.html": body})
+        pairs = near_copy_pairs(root)
+        self.assertEqual(len(pairs), 1, pairs)
+        self.assertEqual(pairs[0]["path"], "news.html")
+        self.assertEqual(pairs[0]["variants"], ["date", "kk"])
+
+    def test_a_page_pasted_inside_a_block_is_flagged(self):
+        page = "{% extends 'core/base.html' %}\n{% block content %}\n" + _page_body() + "\n{% endblock %}\n"
+        root = self.tree({"date/news.html": page, "biocum/news.html": page})
+        pairs = near_copy_pairs(root)
+        self.assertEqual(
+            len(pairs),
+            1,
+            "a whole page pasted inside {% block content %} is still a copy, not an override",
+        )
+
+    def test_two_short_overrides_are_not_flagged(self):
+        one = "{% extends 'date/page.html' %}\n{% block logo %}<b>one</b>{% endblock %}\n"
+        other = "{% extends 'date/page.html' %}\n{% block logo %}<i>two</i>{% endblock %}\n"
+        root = self.tree({"date/page.html": one, "pulterit/page.html": other})
+        self.assertEqual(near_copy_pairs(root), [], "two thin overrides are the shape we want")
+
+    def test_a_single_copy_is_not_flagged(self):
+        root = self.tree({"date/news.html": _page_body()})
+        self.assertEqual(near_copy_pairs(root), [], "one copy of a path is not duplication")
+
+    def test_a_large_body_is_compared_even_when_the_file_only_fills_blocks(self):
+        body = _page_body(40)
+        big = "{% extends 'core/base.html' %}\n{% block content %}\n" + body + "\n{% endblock %}\n"
+        small = "{% extends 'core/base.html' %}\n{% block content %}\n<p>short</p>{% endblock %}\n"
+        root = self.tree({"date/news.html": big, "kk/news.html": big, "sf/news.html": small})
+        pairs = near_copy_pairs(root)
+        paths = {(pair["variants"][0], pair["variants"][1]) for pair in pairs}
+        self.assertIn(("date", "kk"), paths, "two large copies must be compared")
+        self.assertNotIn(("date", "sf"), paths, "a large file against a short override is not a copy")

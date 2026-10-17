@@ -412,12 +412,16 @@ uv run python scripts/css_regression.py compare --before ~/.cache/date-website/c
   --after ~/.cache/date-website/css-regression/after
 ```
 
-`scripts/css_regression_pages.txt` is the curated page list that gives every
-shared and association stylesheet at least one page which loads it, including
-the five seasonal event templates, so a change claimed to be neutral has
-somewhere to show up. Without `--pages` the harness falls back to a small seed
-list plus deterministic detail-page discovery, which does not reach the seasonal
-sheets.
+`scripts/css_regression_pages.txt` is the curated page list: the shared pages, each
+association's home page, the five seasonal event templates, the news article, the
+archive, exam and member pages, polls, publications and the plain forms. It does not
+reach every stylesheet this tree changes. `publications/css/viewer.css` loads on the
+publication viewer, which the list has no route to, and the attendance pages
+(`attendance/css/attendance.css`, `attendance/css/report.css`) are not in it either, so
+a change confined to those needs its own capture or a new path, and no guard test
+checks that the list covers every sheet. Without `--pages` the harness falls back to a
+small seed list plus deterministic detail-page discovery, which does not reach the
+seasonal sheets.
 
 Some of those paths sit behind `login_required`. Supplied with credentials, the
 harness signs in once per association, verifies the session against a page that
@@ -435,20 +439,26 @@ by every branch of the event sign-up block (`.registration-timing`, which is
 running countdown while it is open), and the animated seasonal art
 (`img.balloon`). `--mask` sets `visibility: hidden` on the matching elements
 only, never `display: none`, so nothing below them moves, and masked elements
-stay in the computed-style probe, so a real style change on one is still
-reported. A selector that matches nothing is warned about, so a mask that quietly
-stopped working is visible.
+keep being compared, because the computed-style probe runs before the mask is applied:
+the style channel sees the document as the page built it, masked elements and everything
+inside them included, and only the masked pixels are ignored. A selector that matches
+nothing is warned about, so a mask that quietly stopped working is visible.
 
 A canvas that composites a blurred panel can still land a handful of pixels
 differently between two runs even with Chrome's deterministic rendering flags
-enabled. The documented command therefore allows a few pixels per view
-(`--tolerance 20 --max-percent 0.002`) while still failing on any computed-style
-change, which is the channel a real stylesheet change moves by orders of
-magnitude more than that.
+enabled, so `--tolerance 20 --max-percent 0.002` exists for that case. The gate above
+passes no tolerance at all, and that is deliberate: the strict verdict is zero differing
+pixels and zero computed-style changes, and a tolerance is something a reviewer adds to a
+named run with a reason, not the default the next person inherits.
 
 Captures land under `~/.cache/date-website/css-regression/<label>/` unless
 `--out` names a directory. The harness covers the six shipped variants (it skips
-`demo`) at a 1600x1000 desktop viewport and a 390x844 mobile one.
+`demo`) at a 1600x1000 desktop viewport and a 390x844 mobile one, which samples only the
+ends of the breakpoint scale: 576, 768, 992 and 1200 are never exercised, so a rule that
+only applies between two of them can change appearance invisibly. Add the widths a change
+touches with `--viewport NAME=WIDTHxHEIGHT` (repeatable), for example
+`--viewport tablet=900x1000` for the 768 to 992 band. `compare` refuses captures whose
+viewport sets differ, so both sides have to be captured with the same set.
 
 `compare` exits 2 when the two captures resolved different page sets or
 viewports, and exits 1 by default on any difference: `--tolerance` and
@@ -466,6 +476,36 @@ own, so it cannot shift layout. Any other element appearing or disappearing is
 treated as a geometry change and does fail. Every page also warns when its final
 URL differs from the requested one, so a redirect to the sign-in page shows up in
 the report instead of being compared as the page that was asked for.
+
+### What the harness does not see
+
+The gate is sound for what it samples and silent about the rest. Before treating a green
+run as proof, know the boundaries:
+
+- Two viewports by default, so the widths between 390 and 1600 are unchecked unless a run
+  adds them with `--viewport`.
+- No interaction: nothing is hovered, focused, pressed, typed or opened. The shared focus
+  ring (`common/core/css/focus.css`) and any `:hover` rule are only visible after the
+  event that triggers them, and the seasonal panels that start hidden are compared in
+  their hidden state.
+- Animations and transitions are suppressed by an injected rule, so a change to a
+  `@keyframes` body, a duration or a delay is not visible to either channel. The style
+  probe records `transition-property` but not the animation properties.
+- Masked pixels are ignored, and so is the decoded content of an image whose dimensions do
+  not change. Replacing artwork behind `img.balloon` would not be caught.
+- Images that load lazily below the fold may be unloaded in both captures, so a broken
+  image URL there can hide. The page is captured with `captureBeyondViewport` after a
+  scroll to the top, not after a scroll sweep.
+- The style channel records a fixed list of properties (`STYLE_PROPERTIES`), not every
+  computed property, and no pseudo-elements. `core/tests/test_css_harness.py` fails when a
+  stylesheet declares a property the list does not cover, so the list cannot silently fall
+  behind the sheets, but a property it deliberately omits stays invisible.
+
+A comparison is also refused when both captures came from the same working tree, because
+that proves the harness is deterministic rather than proving a change was neutral. Pass
+`--same-tree-ok` when a determinism check is what you mean. A view whose page answered
+with a status other than 200, or with a different status than its counterpart, fails: a
+404 or an error page photographed twice is not evidence.
 
 The stylesheet guard tests are:
 
