@@ -1,19 +1,5 @@
 {
   "min_lines": 15,
-  "near_copies": [
-    {
-      "lines": [
-        248,
-        249
-      ],
-      "path": "events/arsfest.html",
-      "ratio": 0.9738,
-      "reason": "The Pulterit arsfest page is still a copy of DaTe's, and biocum's is a third rewrite. `templates/common/events/arsfest_base.html` is the shared page and sf already extends it; moving date, pulterit and biocum onto it changes what visitors see, so it belongs in its own change.",
-      "variants": [
-        "date",
-        "pulterit"
-      ]
-    }
-  ],
+  "near_copies": [],
   "threshold": 0.7
 }

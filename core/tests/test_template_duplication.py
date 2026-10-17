@@ -15,6 +15,12 @@ regenerated with a reason. Copies below `MIN_LINES` are ignored on purpose: a sm
 `{% extends %}` plus one block override is the shape this repo wants, and it is
 supposed to look similar to the association next door.
 
+A file that only fills blocks is not compared against another override: after its
+`{% block %}` bodies, comments and `{% extends %}`/`{% load %}` lines are removed
+there is no markup left, so there is no page body to have been copied. That is the
+shape this repository wants (`{% extends %}` plus the blocks that differ), and two
+such files are supposed to look alike.
+
 Regenerate the baseline after a deliberate change, and write the reason for every
 frozen path:
 
@@ -25,6 +31,7 @@ from __future__ import annotations
 
 import difflib
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -69,6 +76,25 @@ def normalise(path: Path) -> list[str]:
     return [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+BLOCK_BODY = re.compile(r"\{%\s*block\s+\w+\s*%\}.*?\{%\s*endblock\s*\w*\s*%\}", re.S)
+COMMENT_BODY = re.compile(r"\{%\s*comment\s*%\}.*?\{%\s*endcomment\s*%\}", re.S)
+TEMPLATE_PREAMBLE = re.compile(r"\{%\s*(?:extends|load)\s+[^%]*%\}")
+
+
+def is_pure_override(path: Path) -> bool:
+    """True when the file renders nothing but the blocks it fills.
+
+    Such a file has no page body of its own, so two of them resembling each other is
+    the pattern this repository wants and not a copy. A pasted page keeps its markup
+    outside blocks, which is what the ratchet is looking for.
+    """
+    text = path.read_text(encoding="utf-8")
+    text = BLOCK_BODY.sub("", text)
+    text = COMMENT_BODY.sub("", text)
+    text = TEMPLATE_PREAMBLE.sub("", text)
+    return not text.strip()
+
+
 def copies_by_path() -> dict[str, dict[str, Path]]:
     """Return ``{logical path: {owner: file}}`` for the shared and association trees."""
     found: dict[str, dict[str, Path]] = {}
@@ -91,6 +117,8 @@ def near_copy_pairs() -> list[dict[str, Any]]:
         names = sorted(owners)
         for index, first in enumerate(names):
             for second in names[index + 1 :]:
+                if is_pure_override(owners[first]) or is_pure_override(owners[second]):
+                    continue
                 one, other = normalise(owners[first]), normalise(owners[second])
                 if min(len(one), len(other)) < MIN_LINES:
                     continue
