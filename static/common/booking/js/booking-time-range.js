@@ -1,84 +1,96 @@
-// Pick the booking's start and end in one field.
+// Ask for the booking's start and end as a date and two clock times.
 //
 // The form posts two datetime-local inputs, `start` and `end`, and that pair is
 // what the server validates: nothing here changes what is submitted, only what
-// the visitor sees. When flatpickr is available the pair is hidden and a single
-// range field takes its place, showing both ends at once. When it is not, the
-// pair is left exactly as the template rendered it, so a visitor without this
-// script still books in two steps.
+// the visitor sees. This script hides the pair and shows a date plus two clocks
+// instead. One date, because a room booking happens on one day and the visitor
+// should not be asked for it twice; two clocks, because the two ends of that day
+// are the only thing that differs. Without the script the pair is left exactly
+// as the template rendered it, so a visitor with JavaScript off still books in
+// two steps.
 //
 // Two details are deliberate:
 //
 // - The hidden pair stops being `required`. A hidden required input is refused
-//   by the browser with a message it has nowhere to show, so an empty range is
-//   left for the server, which answers with the same field error it already
-//   renders.
-// - The submitted values are written from flatpickr's own Date objects, never
-//   parsed back out of the visible text, so the field format the form accepts
-//   is produced here rather than guessed at.
+//   by the browser with a message it has nowhere to show, so a half-filled row
+//   is left for the server, which answers with the same field error it already
+//   renders. The three visible controls are required instead, and they can show
+//   the browser's own message.
+// - The submitted values are composed from what the visitor picked, in the
+//   format the form accepts (BOOKING_DATETIME_FORMAT), never by parsing any
+//   displayed text.
 
-function bookingRangeValue(date) {
-    function pad(number) {
-        return (number < 10 ? "0" : "") + number;
+function buildBookingTimeControls(row, startInput, endInput, fields, label) {
+    var existingStart = startInput.value ? startInput.value.split("T") : [];
+    var existingEnd = endInput.value ? endInput.value.split("T") : [];
+
+    var group = document.createElement("span");
+    group.className = "booking-when-split";
+
+    var dateInput = document.createElement("input");
+    dateInput.type = "date";
+    dateInput.className = "booking-when-date";
+    dateInput.id = (row.id || "booking-when") + "-date";
+    dateInput.required = true;
+    dateInput.setAttribute("aria-label", row.dataset.bookingRangeDateLabel || "Datum");
+    // The earliest day the server accepts, taken from the input it replaced.
+    dateInput.min = (startInput.getAttribute("min") || "").split("T")[0] || "";
+
+    var fromInput = document.createElement("input");
+    fromInput.type = "time";
+    fromInput.className = "booking-when-clock";
+    fromInput.id = (row.id || "booking-when") + "-from";
+    fromInput.required = true;
+    fromInput.setAttribute("aria-label", startInput.getAttribute("aria-label") || "Starttid");
+
+    var toInput = document.createElement("input");
+    toInput.type = "time";
+    toInput.className = "booking-when-clock";
+    toInput.id = (row.id || "booking-when") + "-to";
+    toInput.required = true;
+    toInput.setAttribute("aria-label", endInput.getAttribute("aria-label") || "Sluttid");
+
+    var between = document.createElement("span");
+    between.className = "booking-when-sep";
+    between.textContent = row.dataset.bookingRangeSeparator || "till";
+
+    group.append(dateInput, fromInput, between, toInput);
+    fields.after(group);
+    label.htmlFor = dateInput.id;
+
+    // A page re-rendered after a validation error brings back what was chosen.
+    if (existingStart[0]) {
+        dateInput.value = existingStart[0];
     }
-    return (
-        date.getFullYear() +
-        "-" +
-        pad(date.getMonth() + 1) +
-        "-" +
-        pad(date.getDate()) +
-        "T" +
-        pad(date.getHours()) +
-        ":" +
-        pad(date.getMinutes())
-    );
-}
-
-function writeBookingRange(startInput, endInput, dates) {
-    var chosen = (dates || []).filter(Boolean).slice(0, 2).map(bookingRangeValue);
-    startInput.value = chosen[0] || "";
-    endInput.value = chosen[1] || "";
-}
-
-// flatpickr's own month and weekday names are English, and the vendored bundle
-// carries no translations with it. The page declares its language and the
-// browser can name a month in it, so the calendar is built from that rather
-// than from a table of translated words in here. The two reference dates are
-// fixed: any January gives the twelve month names in order, and 2026-01-04 is
-// a Sunday, which is where flatpickr's weekday list starts.
-function bookingRangeLocale(separator) {
-    var locale = { firstDayOfWeek: 1, rangeSeparator: " " + separator + " " };
-    var language = document.documentElement.getAttribute("lang") || "en";
-    try {
-        var longMonth = new Intl.DateTimeFormat(language, { month: "long" });
-        var shortMonth = new Intl.DateTimeFormat(language, { month: "short" });
-        var longDay = new Intl.DateTimeFormat(language, { weekday: "long" });
-        var shortDay = new Intl.DateTimeFormat(language, { weekday: "short" });
-        var months = { longhand: [], shorthand: [] };
-        var weekdays = { longhand: [], shorthand: [] };
-        for (var month = 0; month < 12; month += 1) {
-            var date = new Date(2026, month, 1);
-            months.longhand.push(longMonth.format(date));
-            months.shorthand.push(shortMonth.format(date));
-        }
-        for (var day = 0; day < 7; day += 1) {
-            var weekday = new Date(2026, 0, 4 + day);
-            weekdays.longhand.push(longDay.format(weekday));
-            weekdays.shorthand.push(shortDay.format(weekday));
-        }
-        locale.months = months;
-        locale.weekdays = weekdays;
-    } catch (error) {
-        // An engine without Intl keeps flatpickr's own English names.
+    if (existingStart[1]) {
+        fromInput.value = existingStart[1];
     }
-    return locale;
+    if (existingEnd[0] && !dateInput.value) {
+        dateInput.value = existingEnd[0];
+    }
+    if (existingEnd[1]) {
+        toInput.value = existingEnd[1];
+    }
+
+    function compose() {
+        startInput.value =
+            dateInput.value && fromInput.value ? dateInput.value + "T" + fromInput.value : "";
+        endInput.value = dateInput.value && toInput.value ? dateInput.value + "T" + toInput.value : "";
+        // Both ends are on the picked day, so an end before the start is the one
+        // mistake this row can still invite; the browser is told the earliest end
+        // it may offer.
+        toInput.min = fromInput.value || "";
+    }
+
+    [dateInput, fromInput, toInput].forEach(function (input) {
+        input.addEventListener("input", compose);
+        input.addEventListener("change", compose);
+    });
+    compose();
+    row.classList.add("booking-when-split-ready");
 }
 
 function initBookingTimeRange(root) {
-    if (typeof flatpickr === "undefined") {
-        return;
-    }
-
     root = root || document;
 
     root.querySelectorAll("[data-booking-time-range]").forEach(function (row) {
@@ -98,41 +110,7 @@ function initBookingTimeRange(root) {
         startInput.required = false;
         endInput.required = false;
 
-        var picker = document.createElement("input");
-        picker.type = "text";
-        picker.id = row.id ? row.id + "-field" : "booking-time-range";
-        picker.className = "booking-when-picker";
-        picker.autocomplete = "off";
-        picker.readOnly = true;
-        picker.placeholder = row.dataset.bookingRangePlaceholder || "";
-        fields.after(picker);
-        label.htmlFor = picker.id;
-
-        // The words come from the template rather than from a string in here.
-        var separator = row.dataset.bookingRangeSeparator || "-";
-        var chosen = [startInput.value, endInput.value].filter(Boolean);
-
-        var calendar = flatpickr(picker, {
-            mode: "range",
-            enableTime: true,
-            time_24hr: true,
-            minuteIncrement: 15,
-            dateFormat: "Y-m-d H:i",
-            minDate: startInput.getAttribute("min") || null,
-            locale: bookingRangeLocale(separator),
-            onChange: function (dates) {
-                writeBookingRange(startInput, endInput, dates);
-            },
-            onClose: function (dates) {
-                writeBookingRange(startInput, endInput, dates);
-            },
-        });
-
-        if (chosen.length) {
-            calendar.setDate(chosen, false);
-        }
-        writeBookingRange(startInput, endInput, calendar.selectedDates);
-        row.classList.add("booking-when-enhanced");
+        buildBookingTimeControls(row, startInput, endInput, fields, label);
     });
 }
 

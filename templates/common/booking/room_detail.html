@@ -9,17 +9,12 @@
   {{ block.super }}
   {% comment %}
     The booking form asks for a start and an end once, not twice: the pair of
-    datetime inputs is what posts, and the script below turns it into a single
-    range field when flatpickr is available. flatpickr's stylesheet is loaded
-    first so booking.css can re-skin the calendar.
+    datetime inputs is what posts, and the script below turns it into a date and
+    two clock times.
   {% endcomment %}
-  <link rel="stylesheet"
-        href="{% static 'core/css/flatpickr.min.css' %}"
-        type="text/css">
   <link rel="stylesheet"
         href="{% static 'booking/css/booking.css' %}"
         type="text/css">
-  <script src="{% static 'core/js/flatpickr.min.js' %}" defer></script>
   <script src="{% static 'booking/js/booking-time-range.js' %}" defer></script>
   {% if not user.is_authenticated %}
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js"
@@ -86,15 +81,15 @@
               {% for field in form %}
                 {% if field.name == "start" %}
                   {% comment %}
-                    Start and end are one question, so they are one row: the label
-                    covers both, and the script replaces the pair with a range
-                    field when it can.
+                    Start and end are one question, so they are one row under one
+                    label. The script picks the date once and asks for the two
+                    clock times, and the pair stays what posts.
                   {% endcomment %}
                   <p class="booking-when"
                      id="booking-when"
                      data-booking-time-range
                      data-booking-range-separator="{% trans 'till' %}"
-                     data-booking-range-placeholder="{% trans 'Välj start och sluttid' %}">
+                     data-booking-range-date-label="{% trans 'Datum' %}">
                     <label for="{{ field.id_for_label }}">{% trans "Tid" %}:</label>
                     <span class="booking-when-fields" data-booking-range-fields>
                       {{ field }}

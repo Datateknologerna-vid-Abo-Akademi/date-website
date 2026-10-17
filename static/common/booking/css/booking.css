@@ -237,11 +237,10 @@
 
 /* ---- the start and end of a booking, as one field ---- */
 
-/* The two datetime inputs are what posts. Beside each other under one label
-   they read as a single question, and the script replaces them with one range
-   field when flatpickr is available, which is what the `-enhanced` class
-   records. Without the script this row is the whole control, and it stays
-   usable. */
+/* The two datetime inputs are what posts. Beside each other under one label they
+   read as a single question, and the script replaces them with a date and two
+   clock times, which the `-split-ready` class records. Without the script this
+   row is the whole control, and it stays usable. */
 .booking-when-fields {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -253,144 +252,48 @@
     color: var(--helpText);
 }
 
-.booking-when > .booking-when-picker {
-    grid-column: 2;
-}
-
-.booking-when-enhanced > .booking-when-fields {
+.booking-when-split-ready > .booking-when-fields {
     display: none;
 }
 
-/* ---- the range picker ---- */
+/* The date is picked once and the two clock times beside it, so the row reads
+   "24.10.2026 18:00 till 20:00" without the visitor being asked for the day
+   twice. */
+.booking-when-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    gap: 0.5rem;
+    align-items: center;
+}
 
-/* flatpickr's own stylesheet draws a light calendar, which would be the one
-   light card on these pages. It is re-skinned with the variables the panel
-   already uses, so the field looks like the rest of the form. Every rule is
-   written under `.flatpickr-calendar` to outweigh the single-class rules in
-   that stylesheet, which is loaded before this one. */
-.flatpickr-calendar {
-    border: 1px solid var(--primaryColorLighter);
-    border-radius: var(--defaultRadius);
+.booking-when-split .booking-when-date {
+    min-width: 0;
+}
+
+.booking-when-split .booking-when-clock {
+    /* Sized by its own content rather than a fixed width: a clock shows "18:00"
+       in a 24 hour locale and "06:00 PM" in a 12 hour one, and a width chosen for
+       the first clips the second. */
+    width: auto;
+    min-width: 6.5rem;
+}
+
+.booking-when > .booking-when-split {
+    grid-column: 2;
+}
+
+/* A native date or time field draws its own calendar and its own indicator icon,
+   and those follow the colour scheme rather than the field's colours. On a white
+   field with the dark scheme the icon turns white and disappears, so the field
+   takes the panel's dark colours as well: the icon, the text and the calendar
+   that opens all belong to the same scheme. */
+.booking-form input[type="date"],
+.booking-form input[type="time"],
+.booking-form input[type="datetime-local"] {
+    color-scheme: dark;
+    border-color: var(--primaryColorLighter);
     background-color: var(--primaryColorLight);
     color: var(--textColorLight);
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
-}
-
-.flatpickr-calendar.arrowTop:after {
-    border-bottom-color: var(--primaryColorLight);
-}
-
-.flatpickr-calendar.arrowBottom:after {
-    border-top-color: var(--primaryColorLight);
-}
-
-.flatpickr-calendar .flatpickr-months .flatpickr-month,
-.flatpickr-calendar .flatpickr-months .flatpickr-prev-month,
-.flatpickr-calendar .flatpickr-months .flatpickr-next-month {
-    color: var(--textColorLight);
-    fill: var(--textColorLight);
-}
-
-.flatpickr-calendar .flatpickr-months .flatpickr-prev-month:hover,
-.flatpickr-calendar .flatpickr-months .flatpickr-next-month:hover {
-    color: var(--linkColorLight, var(--textColorLight));
-    fill: var(--linkColorLight, var(--textColorLight));
-}
-
-.flatpickr-calendar span.flatpickr-weekday {
-    color: var(--helpText);
-}
-
-.flatpickr-calendar .flatpickr-day {
-    color: var(--textColorLight);
-}
-
-.flatpickr-calendar .flatpickr-day.prevMonthDay,
-.flatpickr-calendar .flatpickr-day.nextMonthDay,
-.flatpickr-calendar .flatpickr-day.flatpickr-disabled,
-.flatpickr-calendar .flatpickr-day.notAllowed {
-    color: var(--helpText);
-}
-
-.flatpickr-calendar .flatpickr-day:hover,
-.flatpickr-calendar .flatpickr-day:focus,
-.flatpickr-calendar .flatpickr-day.inRange {
-    background-color: var(--primaryColorLighter);
-    border-color: var(--primaryColorLighter);
-    box-shadow: none;
-}
-
-.flatpickr-calendar .flatpickr-day.today {
-    border-color: var(--linkColorLight, var(--textColorLight));
-}
-
-.flatpickr-calendar .flatpickr-day.today:hover,
-.flatpickr-calendar .flatpickr-day.today:focus {
-    background-color: var(--linkColorLight, var(--textColorLight));
-    color: var(--textColorDark);
-}
-
-.flatpickr-calendar .flatpickr-day.selected,
-.flatpickr-calendar .flatpickr-day.startRange,
-.flatpickr-calendar .flatpickr-day.endRange,
-.flatpickr-calendar .flatpickr-day.selected:hover,
-.flatpickr-calendar .flatpickr-day.startRange:hover,
-.flatpickr-calendar .flatpickr-day.endRange:hover {
-    background-color: var(--linkColorLight, var(--textColorLight));
-    border-color: var(--linkColorLight, var(--textColorLight));
-    color: var(--textColorDark);
-}
-
-.flatpickr-calendar.hasTime .flatpickr-time {
-    border-top-color: var(--primaryColorLighter);
-}
-
-.flatpickr-calendar .flatpickr-time input,
-.flatpickr-calendar .flatpickr-time .flatpickr-time-separator {
-    color: var(--textColorLight);
-}
-
-.flatpickr-calendar .flatpickr-time input:hover,
-.flatpickr-calendar .flatpickr-time input:focus {
-    background-color: var(--primaryColorLighter);
-}
-
-.flatpickr-calendar .flatpickr-time .numInputWrapper span.arrowUp:after {
-    border-bottom-color: var(--textColorLight);
-}
-
-.flatpickr-calendar .flatpickr-time .numInputWrapper span.arrowDown:after {
-    border-top-color: var(--textColorLight);
-}
-
-.flatpickr-calendar .flatpickr-current-month .numInputWrapper span.arrowUp:after {
-    border-bottom-color: var(--textColorLight);
-}
-
-.flatpickr-calendar .flatpickr-current-month .numInputWrapper span.arrowDown:after {
-    border-top-color: var(--textColorLight);
-}
-
-/* The board's contact line ends the page, whichever element it follows: the
-   form's last field, the submit button, or the link back to the room list. It
-   is a note of its own, so it keeps its distance from all of them. */
-.booking-contact {
-    margin: 1.25rem 0 0;
-}
-
-/* Errors used to be drawn in --primaryColorLight, which is the colour of the
-   panel behind them, so a wrong code or a rejected field was invisible. It is a
-   span rather than a div because a field row is a <p>, which cannot hold one. */
-.booking-error {
-    display: block;
-    margin: 0.35rem 0;
-    padding: 0.45rem 0.65rem;
-    border-left: 3px solid var(--warning-darker, var(--warning));
-    border-radius: var(--defaultRadius);
-    background-color: rgba(213, 91, 78, 0.14);
-    color: var(--warning, #ffb3a7);
-    font-size: 0.95rem;
-    line-height: 1.5;
 }
 
 /* ---- the code gate ---- */
@@ -472,16 +375,30 @@
     }
 
     /* A phone has no room for two datetime inputs side by side, so the pair
-       stacks and the separator keeps the order readable. The single range field
-       has to be moved into the one remaining column by hand: its rule above
-       names the second column, which a one-column grid would otherwise create
-       as an implicit one. */
+       stacks and the separator keeps the order readable. The controls the script
+       builds have to be moved into the one remaining column by hand: their rule
+       above names the second column, which a one-column grid would otherwise
+       create as an implicit one. */
     .booking-when-fields {
         grid-template-columns: 1fr;
     }
 
-    .booking-when > .booking-when-picker {
+    .booking-when > .booking-when-split {
         grid-column: 1;
+    }
+
+    /* The date takes its own line and the two times share the next one, which is
+       enough for a clock and leaves both ends readable. */
+    .booking-when-split {
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    }
+
+    .booking-when-split .booking-when-date {
+        grid-column: 1 / -1;
+    }
+
+    .booking-when-split .booking-when-clock {
+        width: 100%;
     }
 
     .booking-form .theme-button,
